@@ -16,14 +16,21 @@ PRINT_LEVEL = logging.DEBUG
 # id will be used as article's 'source' attribute in the similar.xml file.
 # file system path will be scanned for directories starting with '#' and articles 
 # from these directories will be used for similarity computation
+#INPUT_PATHS = {
+#               'dmlcz-serial': '/data/dmlcz/data/share/serial',
+#               'dmlcz-monograph': '/data/dmlcz/data/share/monograph',
+#               'dmlcz-proceedings': '/data/dmlcz/data/share/proceedings',
+#               'numdam': '/data/dmlcz/data/share/numdam',
+#               }
+
 INPUT_PATHS = {
                'numdam': '/Users/kofola/workspace/dml/data/numdam',
                'dmlcz': '/Users/kofola/workspace/dml/data/share',
                }
 
-#INPUT_PATHS = {
-#               'cmj': '/Users/kofola/workspace/dml/data/share/serial/CzechMathJ',
-#               }
+INPUT_PATHS = {
+               'cmj': '/Users/kofola/workspace/dml/data/share/serial/CzechMathJ',
+               }
 
 # all intermediate files will be stored into this directory
 OUTPUT_PATH = '/Users/kofola/workspace/dml/data/results'
