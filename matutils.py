@@ -125,6 +125,22 @@ def normalized_sparse(_mat): # FIXME depends on scipy.sparse implementation deta
             mat.data[mat.indptr[col]:mat.indptr[col+1]] *= ilen
     return mat
 
+def normalizeColumns(mat, inplace = False): # FIXME depends on scipy.sparse implementation details in an ugly way, but anything else is WAAAAy too slow..
+    """normalize columns of a sparse matrix to unit length"""
+    if inplace:
+        if not isinstance(mat, scipy.sparse.csc_matrix):
+            raise NotImplementedError("can only normalize CSC matrices inplace")
+    else:
+        # for not inplace normalization, just copy the matrix and convert it to csc
+        mat = mat.copy().tocsc()
+    for col in xrange(mat.shape[1]):
+        dat = mat.data[mat.indptr[col]:mat.indptr[col+1]]
+        len = numpy.dot(dat, dat)
+        if len != 1:
+            ilen = 1.0 / numpy.sqrt(len)
+            mat.data[mat.indptr[col]:mat.indptr[col+1]] *= ilen
+    return mat
+
 def normalizeSparseRows(mat):
     return normalized_sparse(mat.T).T
 

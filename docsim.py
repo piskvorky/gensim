@@ -5,6 +5,8 @@ import sys
 import os.path
 import codecs
 import cPickle
+import gc
+
 import numpy
 import scipy
 
@@ -79,17 +81,20 @@ def buildTFIDFMatrices(dbFile, prefix, contentType = 'alphanum_nohtml', saveMatr
         coll = getCollection(dbFile, encoding = 'utf8', contentType = contentType) # we are given the list of articles directly
 
     pruneCollection(coll)
+    gc.collect()
     coll.saveLex(common.OUTPUT_PATH, prefix)
-    matTFIDF = coll.getTFIDFMatrix(sparse = True)
+    gc.collect()
+    matTFIDF = coll.getTFIDFMatrix(sparse = True).tocsc()
+    gc.collect()
     if saveMatrices:
         matutils.saveMatrix(matTFIDF, common.matrixFile(prefix + 'TFIDFraw.mm'), sparse = True)
     logging.info("normalizing sparse TFIDF matrix")
-    matNorm = matutils.normalized_sparse(matTFIDF)
-    matTFIDF = None
+    matutils.normalizeColumns(matTFIDF, inplace = True)
     if saveMatrices:
-        matutils.saveMatrix(matNorm, common.matrixFile(prefix + 'TFIDF.mm'), sparse = True)
-    matTFIDF_T = matNorm.T
-    matNorm = None
+        matutils.saveMatrix(matTFIDF, common.matrixFile(prefix + 'TFIDF.mm'), sparse = True)
+    matTFIDF_T = matTFIDF.T
+    matTFIDF = None
+    gc.collect()
     matutils.saveMatrix(matTFIDF_T, common.matrixFile(prefix + 'TFIDF_T.mm'), sparse = True)
     return matTFIDF_T
 
