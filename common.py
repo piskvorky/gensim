@@ -28,9 +28,9 @@ INPUT_PATHS = {
                'dmlcz': '/Users/kofola/workspace/dml/data/share',
                }
 
-INPUT_PATHS = {
-               'cmj': '/Users/kofola/workspace/dml/data/share/serial/CzechMathJ',
-               }
+#INPUT_PATHS = {
+#               'cmj': '/Users/kofola/workspace/dml/data/share/serial/CzechMathJ',
+#               }
 
 # all intermediate files will be stored into this directory
 OUTPUT_PATH = '/Users/kofola/workspace/dml/data/results'
