@@ -34,8 +34,8 @@ class DocumentCollection:
         dic = self.getDictionary()
         rdic = utils_dml.reverseDict(dic)
         saveMapping(rdic, os.path.join(fpath, prefix + '_tokenids.txt'))
-        saveMapping(dict([(rdic[k], v) for k, v in self.getDocFreqMap().iteritems()]), os.path.join(fpath, prefix + '_docfreq.txt'))
-        saveMapping(dict([(rdic[k], v) for k, v in self.getFreqMap().iteritems()]), os.path.join(fpath, prefix + '_colfreq.txt'))
+#        saveMapping(dict([(rdic[k], v) for k, v in self.getDocFreqMap().iteritems()]), os.path.join(fpath, prefix + '_docfreq.txt'))
+#        saveMapping(dict([(rdic[k], v) for k, v in self.getFreqMap().iteritems()]), os.path.join(fpath, prefix + '_colfreq.txt'))
 
     def docPos(self, docid):
         """return self.docs position of document with docid; -1 if no such document exists"""
@@ -253,7 +253,7 @@ class DocumentCollection:
                 if (iterm + 1) % 10000 == 0:
                     logging.info(" progress: idf#%i" % iterm)
                 result.data[iterm] = [val * idfs[iterm] for val in result.data[iterm]]
-            result = result.tocsr()
+            result = result.tocsc()
             logging.info("TFIDF sparsity: %i/%i = %.3f%%" % (result.getnnz(), result.shape[0] * result.shape[1], 100.0 * result.getnnz() / (result.shape[0] * result.shape[1])))
 
         else:
