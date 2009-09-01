@@ -6,6 +6,7 @@ import random
 import string
 import logging
 import tempfile
+from itertools import izip
 
 import numpy
 import numpy.random
@@ -19,17 +20,34 @@ import matutils
 
 UID_LENGTH = 8
 
+def iterateCsc(mat):
+    """
+    Iterate over CSC matrix, returning (key, value) pairs, where key = (row, column) 2-tuple.
+    Ie. simulate mat.iteritems() as it should have been in scipy.sparse...
+    
+    Depends on scipy.sparse.csc_matrix implementation details!
+    """
+    if not isinstance(mat, scipy.sparse.csc_matrix):
+        raise TypeError("iterateCsc expexts an CSC matrix on input!")
+    for col in xrange(mat.shape[1]):
+        if col % 1000 == 0:
+            logging.debug("iterating over column %i/%i" % (col, mat.shape[1]))
+        for i in xrange(mat.indptr[col], mat.indptr[col + 1]):
+            row, value = mat.indices[i], mat.data[i]
+            yield (row, col), value
+
+
 def doSVD(mat, num, val_only = False):
     """
     Do Singular Value Decomposition on mat using an external program (LIBSVDC via divisi). 
-    If mat is a string, it is taken to be prefix for .hb, .S, .U and .VT files. 
-    Otherwise, mat is taken to be a matrix, and is stored to disk under a randomized name (MATPATH + random hash).
+    mat is a scipy.sparse matrix in CSC format.
     Returns:
     - array of 'num' largest singular values if val_only is set
     - otherwise return the triple (U, S, VT) = (left eigenvectors, singular values, right eigenvectors)
     """
-    logging.info("converting scipy sparse to divisi sparse")
-    sparseTensor = divisi.make_sparse_labeled_tensor(ndim = 2, initial = mat.todok())
+    logging.info("initializing divisi sparse tensor")
+    sparseTensor = divisi.DictTensor(ndim = 2)
+    sparseTensor.update(iterateCsc(mat.tocsc()))
     
     logging.info("computing sparse svd of %s matrix" % (sparseTensor.shape,))
     svdResult = divisi.svd.svd_sparse(sparseTensor, k = num)
