@@ -28,9 +28,9 @@ def iterateCsc(mat):
     Depends on scipy.sparse.csc_matrix implementation details!
     """
     if not isinstance(mat, scipy.sparse.csc_matrix):
-        raise TypeError("iterateCsc expexts an CSC matrix on input!")
+        raise TypeError("iterateCsc expects an CSC matrix on input!")
     for col in xrange(mat.shape[1]):
-        if col % 1000 == 0:
+        if col % 10000 == 0:
             logging.debug("iterating over column %i/%i" % (col, mat.shape[1]))
         for i in xrange(mat.indptr[col], mat.indptr[col + 1]):
             row, value = mat.indices[i], mat.data[i]

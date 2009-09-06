@@ -11,7 +11,7 @@ any, eng, fre, ita, ger, rus, ..).
 This script has to be run prior to running gensim.py. Its output is a matrix file \
 which serves as input to gensim.py
 
-Example: ./build_tfidf.py eng
+Example: ./build_tfidf.py eng 2>&1 | tee ~/xrehurek/results/build_eng.log
 """
 
 

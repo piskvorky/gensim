@@ -33,6 +33,7 @@ INPUT_PATHS = {
 #               }
 
 # all intermediate files will be stored into this directory
+#OUTPUT_PATH = '/data/dmlcz/xrehurek/results'
 OUTPUT_PATH = '/Users/kofola/workspace/dml/data/results'
 assert os.path.isdir(OUTPUT_PATH), "directory %s for storing intermediate files is invalid" % OUTPUT_PATH
 
