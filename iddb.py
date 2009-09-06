@@ -68,7 +68,7 @@ def create_maindb(dbId, dbBaseDir):
                 art = Article.Article(record = meta)
                 db.insertArticle(art)
             except Exception, e:
-                logging.error('invalid entries in %s; ignoring article (%s)' % (root, e))
+                logging.warning('invalid entries in %s; ignoring article (%s)' % (root, e))
                 continue
     db.commit()
 
