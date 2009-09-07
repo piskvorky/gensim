@@ -27,7 +27,7 @@ MIN_SCORE = 0.0
 MAX_SIMILAR = 10 # set to 0 to save *WHOLE* similarity list 
 
 DIM_RP = 300 # dimensionality for the random projections
-DIM_LSI = 200 # dimensionality for lantent semantic indexing
+DIM_LSI = 300 # dimensionality for lantent semantic indexing
 
 SAVE_EMPTY = True
 
