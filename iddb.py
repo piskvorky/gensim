@@ -50,7 +50,9 @@ def create_maindb(dbId, dbBaseDir):
     From these subdirs, try to load ./fulltext.txt and ./meta.xml files, create an article and insert it into database. 
     Store the database persistently as PyDbLite (pickle) file 'gensim_dbId.pdl'.
     """
-    db = ArticleDB.ArticleDB(common.dbFile('gensim', dbId), mode = 'override', autocommit = False)
+    dbFname = common.dbFile('gensim', dbId)
+    logging.info("opening database %s" % dbFname)
+    db = ArticleDB.ArticleDB(dbFname, mode = 'override', autocommit = False)
 
     proc_total = 0
     logging.info("processing database %s, directory %s" % (dbId, dbBaseDir))

@@ -26,6 +26,9 @@ DRY_RUN = False # set to True to do everything EXCEPT actually writing out simil
 MIN_SCORE = 0.0
 MAX_SIMILAR = 10 # set to 0 to save *WHOLE* similarity list 
 
+DIM_RP = 300 # dimensionality for the random projections
+DIM_LSI = 200 # dimensionality for lantent semantic indexing
+
 SAVE_EMPTY = True
 
 ARTICLE = """
@@ -112,9 +115,9 @@ if __name__ == '__main__':
     if method == 'tfidf':
         mat = loadTfIdf(language)
     elif method == 'lsi':
-        mat = docsim.buildLSIMatrices(language, factors = 200)
+        mat = docsim.buildLSIMatrices(language, factors = DIM_LSI)
     elif method == 'rp':
-        mat = docsim.buildRPMatrices(language, dimensions = 300)
+        mat = docsim.buildRPMatrices(language, dimensions = DIM_RP)
     else:
         assert False, "unknown method '%s'" % method
     

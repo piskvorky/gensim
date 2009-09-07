@@ -2,11 +2,8 @@
 
 """
 USAGE: %s LANGUAGE
-    Build tfidf term-document matrix from all articles in directories specified \
-in the common.py config file. The directories must be in DML-CZ format. Program \
-searches for articles with fulltext.txt and meta.xml files. \
-Each meta.xml is parsed for MSCs and language, which must match LANGUAGE (eg. \
-any, eng, fre, ita, ger, rus, ..).
+    Build tfidf term-document matrix from all articles in the specified language, \
+    eg. any, eng, fre, ita, ger, rus, ....
 
 This script has to be run prior to running gensim.py. Its output is a matrix file \
 which serves as input to gensim.py
@@ -40,13 +37,7 @@ if __name__ == '__main__':
     inputs = common.INPUT_PATHS
     prefix = common.PREFIX
     
-    # build individual input databases
-    # each input database contains ALL articles (not only those with the selected language)
-    for id, path in inputs.iteritems():
-        iddb.create_maindb(id, path) # create main article databases (all languages)
-        gc.collect() # try giving a hint to garbage collector to clean up...
-    
-    # merge databases into one, keeping only articles in the specified language (or 'any')
+    # merge databases into one, keeping only articles in the specified language (or 'any' to keep all languages)
     iddb.merge(inputs, prefix, language)
     
     # build and store tfidf matrix

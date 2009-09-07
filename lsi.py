@@ -13,9 +13,10 @@ class LSIEngine:
         if useSparse:
             if cover <= 1.0:
                 raise RuntimeError, "ratio SVD coverage not supported with sparse matrices!"
-            result = sparseSVD.doSVD(docmatrix, num = cover, val_only = False)
+            result = sparseSVD.doSVD(docmatrix, num = cover)
         else:
             assert False, "SVD on dense matrices not supported (why do you need that anyway)?"
+        
         if result == None:
             logging.critical("LSIEngine init failed")
             return

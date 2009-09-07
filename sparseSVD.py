@@ -20,11 +20,6 @@ import matutils
 
 UID_LENGTH = 8
 
-def toTensor(mat):
-    logging.info("creating divisi sparse tensor of shape %s" % (mat.shape,))
-    sparseTensor = divisi.DictTensor(ndim = 2)
-    sparseTensor.update(iterateCsc(mat.tocsc()))
-    return sparseTensor
 
 def iterateCsc(mat):
     """
@@ -42,10 +37,16 @@ def iterateCsc(mat):
             row, value = mat.indices[i], mat.data[i]
             yield (row, col), value
 
+def toTensor(mat):
+    logging.info("creating divisi sparse tensor of shape %s" % (mat.shape,))
+    sparseTensor = divisi.DictTensor(ndim = 2)
+    sparseTensor.update(iterateCsc(mat.tocsc()))
+    return sparseTensor
 
-def doSVD(sparseTensor, num, val_only = False):
+
+def doSVD(sparseTensor, num):
     """
-    Do Singular Value Decomposition on mat using an external program (LIBSVDC via divisi). 
+    Do Singular Value Decomposition on mat using an external program (SVDLIBC via divisi). 
     mat is a scipy.sparse matrix in CSC format.
     Returns:
     - array of 'num' largest singular values if val_only is set
@@ -60,12 +61,8 @@ def doSVD(sparseTensor, num, val_only = False):
     s = svdResult.svals.unwrap()
     logging.info("result of svd: u=%s, s=%s, v=%s" % (u.shape, s.shape, v.shape))
     assert len(s) <= num # make sure we didn't get more than we asked for
-    
-    if not val_only:
-        assert len(s) == u.shape[1] == v.shape[1] # make sure the dimensions fit
-        return u, s, v.T
-    else:
-        return s
+    assert len(s) == u.shape[1] == v.shape[1] # make sure the dimensions fit
+    return u, s, v.T
 
 
 if __name__ == '__main__':
