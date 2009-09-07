@@ -119,7 +119,9 @@ def buildLSIMatrices(language, factors = 200):
 
 
 def buildRPMatrices(language, dimensions = 200):
+    # load original tfidf matrix
     tfidf = gensim.loadTfIdf(language)
+
     # get random projection matrix
     projection = randomprojections.getRPMatrix(tfidf.shape[1], dimensions)
 
