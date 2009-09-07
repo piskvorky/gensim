@@ -19,6 +19,8 @@ import ArticleDB
 import Article
 import randomprojections
 
+import gensim
+
 def convertId(fpath):
     dir = os.path.split(fpath)[0]
     dir, artNum = os.path.split(dir)
@@ -98,9 +100,17 @@ def buildTFIDFMatrices(dbFile, prefix, contentType = 'alphanum_nohtml', saveMatr
     matutils.saveMatrix(matTFIDF_T, common.matrixFile(prefix + 'TFIDF_T.mm'), sparse = True)
     return matTFIDF_T
 
-def buildLSIMatrices(tfidf, factors = 200):
-    # compute SVD
-    lsie = lsi.LSIEngine(docmatrix = tfidf.T, cover = factors, useSparse = True)
+def buildLSIMatrices(language, factors = 200):
+    # load up scipy.sparse matrix, convert it to divisi tensor, then forget the scipy.sparse (to save RAM)
+    import sparseSVD
+    tfidf = sparseSVD.toTensor(gensim.loadTfIdf(language).T)
+    
+    # perform SVD on the tensor
+    lsie = lsi.LSIEngine(docmatrix = tfidf, cover = factors, useSparse = True)
+
+    # free up memory
+    del tfidf
+    del lsie.U
     
     # normalize all documents vectors to unit length
     result = scipy.sparse.lil_matrix(lsie.VT.T)
@@ -108,13 +118,13 @@ def buildLSIMatrices(tfidf, factors = 200):
     return result
 
 
-def buildRPMatrices(tfidf, dimensions = 200):
+def buildRPMatrices(language, dimensions = 200):
+    tfidf = gensim.loadTfIdf(language)
     # get random projection matrix
     projection = randomprojections.getRPMatrix(tfidf.shape[1], dimensions)
 
     # perform the actual projection
     logging.info("computing %s through %s random projection" % (projection.shape, tfidf.shape))
-    rp = (tfidf.tocsr() * projection.T.tocsc()).T # project and force unit length on document vectors
     rp = matutils.normalized_sparse(tfidf.tocsr() * projection.T.tocsc()) # project and force unit length on document vectors
     return rp
 
