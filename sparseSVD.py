@@ -20,6 +20,12 @@ import matutils
 
 UID_LENGTH = 8
 
+def toTensor(mat):
+    logging.info("creating divisi sparse tensor of shape %s" % (mat.shape,))
+    sparseTensor = divisi.DictTensor(ndim = 2)
+    sparseTensor.update(iterateCsc(mat.tocsc()))
+    return sparseTensor
+
 def iterateCsc(mat):
     """
     Iterate over CSC matrix, returning (key, value) pairs, where key = (row, column) 2-tuple.
@@ -30,14 +36,14 @@ def iterateCsc(mat):
     if not isinstance(mat, scipy.sparse.csc_matrix):
         raise TypeError("iterateCsc expects an CSC matrix on input!")
     for col in xrange(mat.shape[1]):
-        if col % 10000 == 0:
+        if col % 1000 == 0:
             logging.debug("iterating over column %i/%i" % (col, mat.shape[1]))
         for i in xrange(mat.indptr[col], mat.indptr[col + 1]):
             row, value = mat.indices[i], mat.data[i]
             yield (row, col), value
 
 
-def doSVD(mat, num, val_only = False):
+def doSVD(sparseTensor, num, val_only = False):
     """
     Do Singular Value Decomposition on mat using an external program (LIBSVDC via divisi). 
     mat is a scipy.sparse matrix in CSC format.
@@ -45,10 +51,6 @@ def doSVD(mat, num, val_only = False):
     - array of 'num' largest singular values if val_only is set
     - otherwise return the triple (U, S, VT) = (left eigenvectors, singular values, right eigenvectors)
     """
-    logging.info("initializing divisi sparse tensor")
-    sparseTensor = divisi.DictTensor(ndim = 2)
-    sparseTensor.update(iterateCsc(mat.tocsc()))
-    
     logging.info("computing sparse svd of %s matrix" % (sparseTensor.shape,))
     svdResult = divisi.svd.svd_sparse(sparseTensor, k = num)
     

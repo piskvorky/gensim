@@ -8,20 +8,14 @@ import sparseSVD
 class LSIEngine:
     def __init__(self, docmatrix, cover = 0.5, useSparse = True):
         """cover: minimum data variance to keep: value from <0.0,1.0> is variance percentage; >1 is absolute number of factors"""
-        if docmatrix.shape[0] * docmatrix.shape[1] <= 10000:
-            sparse = False # for tiny matrices, force dense solver
-        else:
-            sparse = useSparse
-        logging.info("computing SVD of a %ix%i matrix, sparse = %s" % (docmatrix.shape[0], docmatrix.shape[1], sparse))
+        logging.info("computing SVD of a %ix%i matrix, sparse = %s" % (docmatrix.shape[0], docmatrix.shape[1], useSparse))
         
-        if sparse:
+        if useSparse:
             if cover <= 1.0:
                 raise RuntimeError, "ratio SVD coverage not supported with sparse matrices!"
             result = sparseSVD.doSVD(docmatrix, num = cover, val_only = False)
         else:
-            if isinstance(docmatrix, scipy.sparse.spmatrix):
-                docmatrix = docmatrix.todense()
-            result = scipy.linalg.svd(docmatrix) #currently scipy only supports dense routines
+            assert False, "SVD on dense matrices not supported (why do you need that anyway)?"
         if result == None:
             logging.critical("LSIEngine init failed")
             return

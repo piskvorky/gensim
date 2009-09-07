@@ -107,20 +107,16 @@ if __name__ == '__main__':
     # load document_id<->document_index, term<->term_index mappings
     ipyutils.loadDicts(prefix = common.PREFIX + '_' + language)
     
-    # load input matrix (tfidf created by build_tfidf.py)
-    tfidf = loadTfIdf(language)
-    
     # next, create a method matrix which will serve for cossim computations.
     # different methods create different matrices, but all return a sparse matrix of the shape (numDocs x N)
     if method == 'tfidf':
-        mat = tfidf # do nothing -- for tfidf, we have got the matrix in the correct format already
+        mat = loadTfIdf(language)
     elif method == 'lsi':
-        mat = docsim.buildLSIMatrices(tfidf = tfidf, factors = 200)
+        mat = docsim.buildLSIMatrices(language, factors = 200)
     elif method == 'rp':
-        mat = docsim.buildRPMatrices(tfidf = tfidf, dimensions = 300)
+        mat = docsim.buildRPMatrices(language, dimensions = 300)
     else:
         assert False, "unknown method '%s'" % method
-    assert mat.shape[0] == tfidf.shape[0], "mismatch in number of documents: tfidf.shape=%s, method.shape=%s" % (tfidf.shape, mat.shape)
     
     # make sure method matrix contains documents (=rows) of unit length
     logging.info("normalizing all vectors to unit length")
