@@ -21,6 +21,35 @@ import matutils
 UID_LENGTH = 8
 
 
+def tensorFromMtx(fname, transposed = False):
+    """
+    Read sparse matrix from fname (coordinate matrix market format) and return it 
+    as sparse divisi tensor.
+    """
+    result = divisi.DictTensor(ndim = 2)
+    first = True
+    for linenum, line in enumerate(open(fname)):
+        if linenum == 0:
+            if not 'coordinate' in line:
+                raise ValueError('invalid matrix type (expected coordinate format) in %s' %
+                                 fname)
+        if line.startswith('%'):
+            continue
+        if first:
+            info = line.split()
+            docs, terms, nnz = int(info[0]), int(info[1]), int(info[2])
+            logging.info("reading %i non-zero entries of %ix%i matrix from %s" %
+                         (nnz, docs, terms, fname))
+            first = False
+            continue
+        parts = line.split()
+        i, j = int(parts[0]), int(parts[1])
+        if transposed:
+            j, i = i, j
+        value = float(parts[2])
+        result[(i - 1, j - 1)] = value # -1 because matrix market format starts numbering from 1
+    return result
+
 def iterateCsc(mat):
     """
     Iterate over CSC matrix, returning (key, value) pairs, where key = (row, column) 2-tuple.
@@ -37,10 +66,10 @@ def iterateCsc(mat):
             row, value = mat.indices[i], mat.data[i]
             yield (row, col), value
 
-def toTensor(mat):
-    logging.info("creating divisi sparse tensor of shape %s" % (mat.shape,))
+def toTensor(sparseMat):
+    logging.info("creating divisi sparse tensor of shape %s" % (sparseMat.shape,))
     sparseTensor = divisi.DictTensor(ndim = 2)
-    sparseTensor.update(iterateCsc(mat.tocsc()))
+    sparseTensor.update(iterateCsc(sparseMat.tocsc()))
     return sparseTensor
 
 

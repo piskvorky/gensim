@@ -335,7 +335,7 @@ def mse(a, b): # MSE of two matrices
 
 def rmse(data1, data2):
     return numpy.sqrt(mse(data1, data2))
-    
+
 if __name__ == '__main__':
     logging.basicConfig(level = logging.DEBUG)
     
