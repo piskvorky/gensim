@@ -101,9 +101,8 @@ def buildTFIDFMatrices(dbFile, prefix, contentType = 'alphanum_nohtml', saveMatr
     return matTFIDF_T
 
 def buildLSIMatrices(language, factors = 200):
-    # load up scipy.sparse matrix, convert it to divisi tensor, then forget the scipy.sparse (to save RAM)
-    import sparseSVD
-    tfidf = sparseSVD.toTensor(gensim.loadTfIdf(language).T)
+    # load up divisi tensor directly from file
+    tfidf = gensim.loadTfIdf(language, asTensor = True)
     
     # perform SVD on the tensor
     lsie = lsi.LSIEngine(docmatrix = tfidf, cover = factors, useSparse = True)
@@ -113,7 +112,7 @@ def buildLSIMatrices(language, factors = 200):
     del lsie.U
     
     # normalize all documents vectors to unit length
-    result = scipy.sparse.lil_matrix(lsie.VT.T)
+    result = scipy.sparse.coo_matrix(lsie.VT.T)
     
     return result
 

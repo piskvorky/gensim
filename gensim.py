@@ -83,15 +83,19 @@ def generateSimilarXML(method, docId, tops):
     else:
         logging.debug("skipping %s (no similar found)" % outfile)
 
-def loadTfIdf(language):
+def loadTfIdf(language, asTensor = False):
     tfidfFile = common.matrixFile(common.PREFIX + '_' + language + 'TFIDF_T.mm')
     logging.info("loading TFIDF matrix from %s" % tfidfFile)
-    mat = matutils.loadMatrix(tfidfFile)
+    if asTensor:
+        import sparseSVD
+        mat = sparseSVD.tensorFromMtx(tfidfFile, transposed = True)
+    else:
+        mat = matutils.loadMatrix(tfidfFile)
     logging.info("loaded TFIDF matrix of %i documents and %i terms" % (mat.shape[0], mat.shape[1]))
     return mat
 
 
-# main program entry point
+#==============================================================================
 if __name__ == '__main__':
     logging.basicConfig(level = common.PRINT_LEVEL)
     logging.root.level = common.PRINT_LEVEL
