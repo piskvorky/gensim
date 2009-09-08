@@ -28,6 +28,7 @@ def tensorFromMtx(fname, transposed = False):
     """
     result = divisi.DictTensor(ndim = 2)
     first = True
+    i, j, li, lj = 0, 0, -1, -1
     for linenum, line in enumerate(open(fname)):
         if linenum == 0:
             if not 'coordinate' in line:
@@ -43,11 +44,16 @@ def tensorFromMtx(fname, transposed = False):
             first = False
             continue
         parts = line.split()
+        if li != i and i % 1000 == 0:
+            logging.info("PROGRESS: at item %i/%i" % (i, docs))
+        li, lj = i, j
         i, j = int(parts[0]), int(parts[1])
         if transposed:
-            j, i = i, j
+            i1, i2 = j, i
+        else:
+            i1, i2 = i, j
         value = float(parts[2])
-        result[(i - 1, j - 1)] = value # -1 because matrix market format starts numbering from 1
+        result[(i1 - 1, i2 - 1)] = value # -1 because matrix market format starts numbering from 1
     return result
 
 def iterateCsc(mat):
