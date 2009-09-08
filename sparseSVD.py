@@ -25,6 +25,8 @@ def tensorFromMtx(fname, transposed = False):
     """
     Read sparse matrix from fname (coordinate matrix market format) and return it 
     as sparse divisi tensor.
+    
+    If transposed is set, return the 2d tensor transposed.
     """
     result = divisi.DictTensor(ndim = 2)
     first = True
