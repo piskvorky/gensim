@@ -9,18 +9,19 @@ import re
 
 import common
 
-PAT_LANG = re.compile('langue=\"(.*?)\"')
-PAT_IDMR = re.compile('mrid=\"(.*?)\"')
-PAT_MSCS = re.compile('msc=\"(.*?)\"')
-PAT_IDZBL = re.compile('zblid=\"(.*?)\"')
-PAT_IDART = re.compile('idart=\"(.*?)\"')
-
+PAT_LANG = re.compile('langue=\"(.*?)\"', re.MULTILINE)
+PAT_IDMR = re.compile('mrid=\"(.*?)\"', re.MULTILINE)
+PAT_MSCS = re.compile('msc=\"(.*?)\"', re.MULTILINE)
+PAT_IDZBL = re.compile('zblid=\"(.*?)\"', re.MULTILINE)
+PAT_IDART = re.compile('idart=\"(.*?)\"', re.MULTILINE)
+PAT_TITLE = re.compile('<title>(.*?)</title>', re.MULTILINE + re.DOTALL)
 
 LANG_MAP = { # map language id from numdam notation to dml notation
             'en' : 'eng', 
             'fr' : 'fre', 
             'de' : 'ger',
             'it' : 'ita',
+            'ru' : 'rus',
             'unknown' : 'unknown' 
             }
 
@@ -42,8 +43,7 @@ META_XML = """\
 \t<language>%(lang)s</language>
 \t<idJFM></idJFM>
 \t<range></range>
-\t<title lang="fre"></title>
-\t<title lang="eng"></title>
+\t<title lang="%(lang)s">%(title)s</title>
 \t<number></number>
 \t<idUlrych></idUlrych>
 \t%(mscsxml)s
@@ -56,7 +56,7 @@ MSC_XML = """<msc>%s</msc>"""
 def saveNumdamDML(contents, pathname):
     head, outfile = os.path.split(pathname)
     dirName = outfile.split('_')[0]
-    finaldir = os.path.join(common.INPUT_PATH, 'numdam', dirName, '#' + os.path.splitext(outfile)[0])
+    finaldir = os.path.join(common.INPUT_PATHS['numdam'], dirName, '#' + os.path.splitext(outfile)[0])
     
     logging.debug("saving article files to %s" % finaldir)
     
@@ -82,14 +82,11 @@ def processNumdamXml(fname):
     logging.debug("processing %s" % fname)
     lines = codecs.open(fname, 'r', encoding="iso-8859-1").readlines()
     headLen = 0
-    while headLen < len(lines) and  lines[headLen].find('<body>') < 0:
+    while headLen < len(lines) and lines[headLen].find('<body>') < 0:
         headLen += 1
     if headLen >= len(lines):
         raise Exception("bad file (no <body>) in %s" % fname)
-    if headLen == 1:
-        header = lines[1]
-    else:
-        header = ' '.join(lines[1 : headLen])
+    header = ' '.join(lines[ : headLen + 1]) # header are all the lines preceding the first line containing <body>, plus the <body> line itself
     lang = re.findall(PAT_LANG, header)
     if not lang:
         lang = 'unknown'
@@ -114,6 +111,7 @@ def processNumdamXml(fname):
     idart = re.findall(PAT_IDART, header)[0]
     idzbl = re.findall(PAT_IDZBL, header)[0]
     mscs = re.findall(PAT_MSCS, header)[0].split(' ')
+    title = re.findall(PAT_TITLE, header, re.MULTILINE)[0]
     if not set([len(msc) for msc in mscs]) == set([5]):
         logging.warning("incorrect msc='%s' in article %s" % (re.findall(PAT_MSCS, header)[0], fname))
     body = ''.join(lines[headLen + 1 : -2])
@@ -121,7 +119,7 @@ def processNumdamXml(fname):
 
 def processDir(baseDir):
     proc_total = proc_ok = 0
-    logging.info("processing directory %s" % common.inputPath(baseDir))
+    logging.info("processing directory %s" % baseDir)
     for root, dirs, files in os.walk(baseDir):
         root = os.path.normpath(root)
         for f in filter(lambda f: f.endswith('.xml'), files):
@@ -141,13 +139,12 @@ def processDir(baseDir):
 if __name__ == '__main__':
     import sys
     import os.path
-    logging.basicConfig(level = common.PRINT_LEVEL) # set to logging.INFO to print statistics as well
+    logging.basicConfig(level = logging.INFO) # set to logging.INFO to print statistics as well
     
     prog = os.path.basename(sys.argv[0])
 
     if len(sys.argv) < 2:
-        print "USAGE: %s INPUTPATH\n\tparse (tidy'ed) numdam xml files and output fulltext.txt and meta.xml" % prog
+        print "USAGE: %s INPUTPATH\n\tparse (tidy'ed) numdam xml files and output fulltext.txt and meta.xml under directory %s" % (prog, common.INPUT_PATHS['numdam'])
         sys.exit(1)
 
-    logging.root.level = 10
     processDir(sys.argv[1])
