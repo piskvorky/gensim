@@ -12,6 +12,7 @@ Example: ./gensim.py tfidf eng
 import logging
 import sys
 import os.path
+import re
 
 import scipy.sparse
 
@@ -24,7 +25,7 @@ import matutils
 DRY_RUN = False # set to True to do everything EXCEPT actually writing out similar.xml files to disk
 
 MIN_SCORE = 0.0
-MAX_SIMILAR = 10 # set to 0 to save *WHOLE* similarity list 
+MAX_SIMILAR = 10 # set to 0 to save *WHOLE* similarity list, otherwise save only the first MAX_SIMILAR articles
 
 DIM_RP = 300 # dimensionality for the random projections
 DIM_LSI = 300 # dimensionality for lantent semantic indexing
@@ -50,13 +51,25 @@ SIMILAR = """\
 """
 
 def decomposeId(docId):
-    """Decompose an article id back into (source, path from source base dir) 2-tuple.
+    """Decompose an article id back into (source, path from source base dir, full filesystem path) 3-tuple.
     """
     sep = docId.find(os.sep)
     assert sep >= 0, "failed to decompose docId into source and path, '%s'" % docId
     source, path = docId[ : sep], docId[sep + 1 : ]
     fullPath = os.path.join(common.INPUT_PATHS[source], path) # create full path by merging source base dir and the id
     return source, path, fullPath
+
+def getMeta(fname):
+    """Parse out author and title information from a meta.xml file, if possible.
+    """
+    author, title = "", ""
+    try:
+        meta = open(fname).read()
+        title = re.findall('<title.*?>(.*?)</title>', meta, re.MULTILINE)[0]
+        author = re.findall('<author.*?>(.*?)</author>', meta, re.MULTILINE)[0]
+    except Exception, e:
+        logging.warning("failed to parse meta at %s" % fname)
+    return author, title
 
 def generateSimilarXML(method, docId, tops):
     inputSource, inputId, outdir = decomposeId(docId)
@@ -66,17 +79,16 @@ def generateSimilarXML(method, docId, tops):
     for _simId, score in tops:
         simId = ipyutils.docids[_simId]
         if score > MIN_SCORE and simId != docId: # at least MIN_SCORE and not identity
-            author = ""
-            title = ""
-            suffix = ""
-            source, id, _ = decomposeId(simId)
+            suffix = "" # FIXME k cemu byl vubec zamyslen tag 'suffix' v similar.xml?
+            source, id, simdir = decomposeId(simId)
+            author, title = getMeta(os.path.join(simdir, 'meta.xml'))
             articles += ARTICLE % locals()
             numArticles += 1
             if numArticles >= MAX_SIMILAR:
                 break
     if SAVE_EMPTY or numArticles:
         logging.info("generating %s (%i similars)" % (outfile, numArticles))
-        if not DRY_RUN:
+        if not DRY_RUN: # only open output files for writing if DRY_RUN is false
             outfile = open(outfile, 'w')
             outfile.write(SIMILAR % locals())
             outfile.close()
