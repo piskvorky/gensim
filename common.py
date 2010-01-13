@@ -17,10 +17,8 @@ PRINT_LEVEL = logging.DEBUG
 # file system path will be scanned for directories starting with '#' and articles 
 # from these directories will be used for similarity computation
 INPUT_PATHS = {
-               'dmlcz.serial': '/data/dmlcz/data/share/serial',
-               'dmlcz.monograph': '/data/dmlcz/data/share/monograph',
-               'dmlcz.proceedings': '/data/dmlcz/data/share/proceedings',
-               'numdam': '/data/dmlcz/data/share/numdam',
+               'dmlcz': '/data/dmlcz/data/share',
+               'numdam': '/data/dmlcz/data/numdam',
                }
 
 INPUT_PATHS = { 
