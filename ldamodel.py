@@ -40,13 +40,15 @@ class LdaModel(object):
     
     The code is based on Blei's C implementation, see http://www.cs.princeton.edu/~blei/lda-c/
     
-    This Python code uses numpy heavily, and is about 4x to 5x slower than the original 
+    This Python code uses numpy heavily, and is about 4-5x slower than the original 
     C version. The up side is that it is much more straightforward and concise, 
     using vector operations ala MATLAB, easily pluggable/extensible etc.
     
-    The main function is LdaModel.fromCorpus, which accepts a corpus (an iterable 
-    returning documents and len()) and infers latent LDA parameters from it. After that
-    the model can be persistently saved via the load/save methods.
+    The main functions are LdaModel.fromCorpus() and LdaModel.infer().
+    Both accept a corpus (an iterable returning documents and len()) and realize
+    the tasks of parameter estimation/LDA inference respectively.
+    
+    The model can be persistently saved via the load/save methods.
     """
     def __init__(self, id2word, numTopics = 200, alpha = None):
         """
@@ -97,7 +99,7 @@ class LdaModel(object):
         from numInitDocs random documents.
         """
         logging.info("initializing model with %i random document(s) per topic" % numInitDocs)
-        self.classWord = numpy.ones(shape = (self.numTopics, self.numTerms)) # add-one smooth
+        result = numpy.ones(shape = (self.numTopics, self.numTerms)) # add-one smooth
         # next we precompute the all the random document indices, so that we can 
         # update the counts in a single sweep over the corpus. 
         # all this drama is because the corpus doesn't necessarily support 
@@ -110,22 +112,27 @@ class LdaModel(object):
             for k in xrange(self.numTopics):
                 if i in initDocs[k]: # do we want to initialize this topic with this document?
                     for wordIndex, wordCount in doc: # for each word in the document...
-                        self.classWord[k, wordIndex] += wordCount # ...add its count to the word-topic count
-        
-        # update model parameters with these initial counts; don't do anything with alpha
-        self.mle(estimateAlpha = False)
-
+                        result[k, wordIndex] += wordCount # ...add its count to the word-topic count
+        return result
+    
     @staticmethod
-    def fromCorpus(corpus, numTopics):
+    def fromCorpus(corpus, numTopics, initMode = 'random'):
         """
         Run LDA parameter estimation from a training corpus, using the EM algorithm.
         """
         # initialize the model
-        logging.info("initializing LDA model")
+        logging.info("initializing LDA model with '%s'" % initMode)
         model = LdaModel(corpus.id2word, numTopics)
 
-        # set initial model parameters
-        model.initializeFromCorpus(corpus, numInitDocs = 1)
+        # set initial word counts
+        if initMode == 'seeded':
+            counts = model.initializeFromCorpus(corpus, numInitDocs = 2)
+        else:
+            counts = 1.0 / model.numTerms + numpy.random.rand(model.numTopics, model.numTerms) # add noise from <0, 1)
+        model.classWord = counts
+            
+        # update model parameters with these initial counts; don't do anything with alpha
+        model.mle(estimateAlpha = False)
         
         # set up temporary vars needed for EM
         likelihood = likelihoodOld = converged = numpy.NAN
@@ -297,8 +304,9 @@ class LdaModel(object):
             likelihood, phi, gamma = self.inference(doc)
             
             # for the printing, sort topics in decreasing order of probability
-            topicVals = [(val, topic) for  topic, val in enumerate(gamma)]
-            gammaStr = ' '.join("%s:%.4f" % i for i in sorted(topicVals, reverse = True))
+            sumGamma = sum(gamma)
+            topicVals = [(1.0 * val / sumGamma, topic) for  topic, val in enumerate(gamma)]
+            gammaStr = ' '.join("%i:%.4f" % (topic, val) for (val, topic) in sorted(topicVals, reverse = True))
             
             # for word topics, don't store the full topic distribution phi for 
             # each word -- only pick out the most probable topic, and store its 
@@ -342,4 +350,3 @@ class LdaModel(object):
             # print best numWords, with a space between words
             print "topic #%i: %s" % (i, ' '.join('%s:%.3f' % (word, prob) for (score, prob, word) in best))
 #endclass LdaModel
-
