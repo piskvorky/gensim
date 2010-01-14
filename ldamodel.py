@@ -8,29 +8,10 @@ import logging
 import cPickle # for persistent storage of LDA models
 
 import numpy # for arrays, array broadcasting etc.
-import numpy.random # for initializing model parameters
-from scipy.special import gammaln, digamma # gamma function utils
+from scipy.special import gammaln, digamma, polygamma # gamma function utils
 from scipy.maxentropy import logsumexp # sum of logarithms
 
-
-def trigamma(x):
-    """
-    Second derivative of the gamma function.
-    
-    I couldn't find this function in the standard numpy portfolio, so i used the
-    implementation from Blei's LDA-C. Doing this in pure Python is slower than 
-    necessary, but on the other hand this function only gets called a couple of 
-    times per full EM iteration, to estimate the new scalar alpha, so its speed is 
-    absolutely irrelevant.
-    """
-    x += 6.0
-    p = 1.0 / (x * x)
-    p = (((((0.075757575757576 * p - 0.033333333333333) * p + 0.0238095238095238) * p -\
-        0.033333333333333) * p + 0.166666666666667) * p + 1) / x + 0.5 * p
-    for i in xrange(6):
-        x -= 1
-        p += 1.0 / (x*x)
-    return p
+trigamma = lambda x: polygamma(1, x) # second derivative of the gamma fnc
 
 
 class LdaModel(object):
@@ -294,6 +275,8 @@ class LdaModel(object):
         The output format of this file is one doc per line:
         doc_likelihood[TAB]topic1:prob ... topicK:prob[TAB]word1:topic ... wordN:topic
         
+        Topics are sorted by probability, words are in the same order as in the input.
+        
         The model itself is not affected in any way (it is read-only=const for this method).
         """
         fname = corpus.fname + '.lda_inferred'
@@ -306,7 +289,7 @@ class LdaModel(object):
             # for the printing, sort topics in decreasing order of probability
             sumGamma = sum(gamma)
             topicVals = [(1.0 * val / sumGamma, topic) for  topic, val in enumerate(gamma)]
-            gammaStr = ' '.join("%i:%.4f" % (topic, val) for (val, topic) in sorted(topicVals, reverse = True))
+            gammaStr = ["%i:%.4f" % (topic, val) for (val, topic) in sorted(topicVals, reverse = True)]
             
             # for word topics, don't store the full topic distribution phi for 
             # each word -- only pick out the most probable topic, and store its 
@@ -314,15 +297,17 @@ class LdaModel(object):
             # information about second-best topic, numerical differences in the 
             # distribution etc. are lost.
             words = [self.id2word[wordIndex] for wordIndex, _ in doc]
-            bestTopic = numpy.argmax(phi, axis = 1)
-            assert len(words) == len(bestTopic)
-            phiStr = ' '.join("%s:%s" % pair for pair in zip(words, bestTopic))
-            fout.write("%s\t%s\t%s\n" % (likelihood, gammaStr, phiStr))
+            bestTopics = numpy.argmax(phi, axis = 1)
+            assert len(words) == len(bestTopics)
+            phiStr = ["%s:%s" % pair for pair in zip(words, bestTopics)]
+            
+            fout.write("%s\t%s\t%s\n" % (likelihood, ' '.join(gammaStr), ' '.join(phiStr)))
         fout.close()
     
     def printTopics(self, numWords = 10):
         """
-        Print the top 'numTerms' words for each topic.
+        Print the top 'numTerms' words for each topic, along with the log of their 
+        probability.
         
         Which words are 'at the top' is determined by a sort of TF-IDF score, 
         where the word gets higher score if it's probable in this topic (the TF 
@@ -331,7 +316,7 @@ class LdaModel(object):
         
         The exact formula is taken from Blei&Laffery: "Topic Models", 2009
         """
-        # compute the geometric mean across all topics
+        # compute the geometric mean of words' probability across all topics
         idf = numpy.sum(self.logProbW, axis = 0) / self.numTopics # note: vector operation
         assert idf.shape == (self.numTerms,), "idf.shape=%s" % idf.shape
         
@@ -347,6 +332,6 @@ class LdaModel(object):
             # sort words -- words with best scores come first; keep only the best numWords
             best = sorted(termScores, reverse = True)[:numWords]
            
-            # print best numWords, with a space between words
+            # print best numWords, with a space between the words
             print "topic #%i: %s" % (i, ' '.join('%s:%.3f' % (word, prob) for (score, prob, word) in best))
 #endclass LdaModel
