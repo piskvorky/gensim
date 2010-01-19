@@ -147,7 +147,7 @@ if __name__ == "__main__":
         # load corpus and run estimation
         corpus = CorpusLow(datafile)
         #corpus.saveAsBlei()
-        model = LdaModel.fromCorpus(corpus, numTopics = k)
+        model = LdaModel.fromCorpus(corpus, id2word = corpus.id2word, numTopics = k)
         model.save(datafile + '.model')
         if PRINT_TOPICS:
             logging.info("printing topics (top %i words)" % PRINT_TOPICS)

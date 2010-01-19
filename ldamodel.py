@@ -97,13 +97,21 @@ class LdaModel(object):
         return result
     
     @staticmethod
-    def fromCorpus(corpus, numTopics, initMode = 'random'):
+    def fromCorpus(corpus, id2word, numTopics, initMode = 'random'):
         """
         Run LDA parameter estimation from a training corpus, using the EM algorithm.
+        
+        The init mode can be either 'random', for a fast random initialization of 
+        the model parameters, or 'seeded', for an initialization based on a handful
+        of real documents. The 'seeded' mode requires a sweep over the entire 
+        corpus, and is thus much slower.
+        
+        id2word is a mapping between word ids (integers) and words themselves 
+        (utf8 strings).
         """
         # initialize the model
         logging.info("initializing LDA model with '%s'" % initMode)
-        model = LdaModel(corpus.id2word, numTopics)
+        model = LdaModel(id2word, numTopics)
 
         # set initial word counts
         if initMode == 'seeded':
@@ -226,7 +234,7 @@ class LdaModel(object):
 #                          (i, converged, likelihood, likelihoodOld))
             
             if numpy.isfinite(converged) and converged <= self.VAR_CONVERGED:
-#                logging.debug("document converged in %i iterations" % i)
+                logging.debug("document converged in %i iterations" % i)
                 break
             
             for n, (wordIndex, wordCount) in enumerate(doc):
