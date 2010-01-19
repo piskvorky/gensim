@@ -5,19 +5,20 @@ import sys
 import os.path
 import codecs
 import cPickle
-import gc
 
 import numpy
 import scipy
 
-import lsi
+import lsi # needed for Latent Semantic Indexing
+import ldamodel # needed for Latent Dirichlet Allocation
+import randomprojections # needed for Random Projections
+
 from DocumentCollection import DocumentCollection
 import document
 import matutils
 import common
 import ArticleDB
 import Article
-import randomprojections
 
 import gensim
 
@@ -29,21 +30,19 @@ def convertId(fpath):
 
 def pruneCollection(coll):
     coll.filterExtremes(extremes = 2)
-
 #    for doc in coll.getDocs():
 #        doc.setId(convertId(doc.getId()))
     coll.removeEmptyDocuments()
 
 def getCollectionFS(basedir):
     """
-    Create DocumentCollection from file system directory (use all 'fulltxt.txt' files)
+    Create DocumentCollection from file system directory (use all 'fulltext.txt' files)
     """
     coll = DocumentCollection.fromDir(
         basedir,
         document.DocumentFactory(encoding = 'utf8', sourceType = 'file', contentType = 'alphanum_nohtml', lowercase = True, keepTexts = False, keepTokens = False, keepPositions = False),
         walk = True, 
         accept = lambda fname: fname.endswith('fulltext.txt'))
-##     m*n = m*k x k*k x k*n
 
 def getCollection(arts, encoding = 'utf8', contentType = 'alphanum_nohtml'):
     logging.info('creating collection of %i documents' % (len(arts)))
@@ -83,11 +82,8 @@ def buildTFIDFMatrices(dbFile, prefix, contentType = 'alphanum_nohtml', saveMatr
         coll = getCollection(dbFile, encoding = 'utf8', contentType = contentType) # we are given the list of articles directly
 
     pruneCollection(coll)
-    gc.collect()
     coll.saveLex(common.OUTPUT_PATH, prefix)
-    gc.collect()
     matTFIDF = coll.getTFIDFMatrix(sparse = True).tocsc()
-    gc.collect()
     if saveMatrices:
         matutils.saveMatrix(matTFIDF, common.matrixFile(prefix + 'TFIDFraw.mm'), sparse = True)
     logging.info("normalizing sparse TFIDF matrix")
@@ -96,22 +92,51 @@ def buildTFIDFMatrices(dbFile, prefix, contentType = 'alphanum_nohtml', saveMatr
         matutils.saveMatrix(matTFIDF, common.matrixFile(prefix + 'TFIDF.mm'), sparse = True)
     matTFIDF_T = matTFIDF.T
     matTFIDF = None
-    gc.collect()
     matutils.saveMatrix(matTFIDF_T, common.matrixFile(prefix + 'TFIDF_T.mm'), sparse = True)
     return matTFIDF_T
 
-def buildLSIMatrices(language, factors = 200):
+def saveTopics(fname, topicMatrix, id2word):
+    """
+    Store topics from topicMatrix into a file, one topic per line. The line format
+    is: 
+    word1:value1[TAB]word2:value2[TAB]...
+    where words are stored in decreasing order of value.
+    
+    topicMatrix is a (numWords x numTopics) dense matrix. Each entry in the topic
+    matrix quantifies the important of a particular word for a particular topic.
+     
+    id2word is a mapping between word ids (matrix row indices) and the words 
+    themselves (strings).
+    
+    Note that the order of topics matters, as the line number is later used as 
+    topic id.
+    """
+    logging.info("storing %i topics (vocabulary of %i words) to %s" %
+                 (topicMatrix.shape[1], topicMatrix.shape[0], fname))
+    fout = open(fname, 'w')
+    for topic in topicMatrix.T:
+        sortedTopic = topic.argsort()[::-1] # words with the highest score come first
+        wordStrings = ["%s:%f" % (id2word[i].encode('utf8'), topic[i]) for i in sortedTopic]
+        fout.write("\t".join(wordStrings) + '\n')
+    fout.close()
+
+                
+def buildLSIMatrices(language, factors = 200, saveConcepts = None):
     # load up divisi tensor directly from file
     tfidf = gensim.loadTfIdf(language, asTensor = True)
     
     # perform SVD on the tensor
     lsie = lsi.LSIEngine(docmatrix = tfidf, cover = factors, useSparse = True)
 
-    # free up memory
-    del tfidf
-    del lsie.U
+    # save the concepts as lists of words (human readable)
+    del tfidf # free up memory
+    if saveConcepts:
+        import ipyutils
+        assert len(ipyutils.tokenids) == lsie.U.shape[0] # make sure there is no word/index mismatch
+        saveTopics(saveConcepts, lsie.U, ipyutils.tokenids)
+    del lsie.U # free up memory
     
-    # normalize all documents vectors to unit length
+    # convert the matrix to sparse coo format, documents as rows
     result = scipy.sparse.coo_matrix(lsie.VT.T)
     
     return result
@@ -129,6 +154,81 @@ def buildRPMatrices(language, dimensions = 200):
     rp = matutils.normalized_sparse(tfidf.tocsr() * projection.T.tocsc()) # project and force unit length on document vectors
     return rp
 
+class MmCorpus(object):
+    """
+    Wrap a corpus represented as term-document matrix on disk in matrix-market 
+    format, and present it as an object which supports iteration over documents. 
+    A document = list of (word, weight) 2-tuples. This iterable format is used 
+    internally in LDA inference.
+    
+    Note that the file is read into memory one document at a time, not whole 
+    corpus at once. This allows for representing corpora which do not wholly fit 
+    in RAM.
+    """
+    def __init__(self, fname):
+        """
+        Initialize the corpus reader. The fname is a path to a file on local 
+        filesystem, which is expected to be sparse (coordinate) matrix
+        market format. Documents are assumed to be rows of the matrix -- if 
+        documents are columns, save the matrix transposed.
+        """
+        logging.info("initializing corpus reader from %s" % fname)
+        self.fname = fname
+        fin = open(fname)
+        header = fin.next()
+        if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
+            raise ValueError("File %s not in Matrix Market format with coordinate real general" % fname)
+        self.noRows = self.noCols = self.noElements = 0
+        for lineNo, line in enumerate(fin):
+            if not line.startswith('%'):
+                self.noRows, self.noCols, self.noElements = map(int, line.split())
+                break
+        logging.info("accepted corpus with %i documents, %i terms, %i non-zero entries" %
+                     (self.noRows, self.noCols, self.noElements))
+    
+    def __len__(self):
+        return self.noRows
+        
+    def __iter__(self):
+        fin = open(self.fname)
+        
+        # skip headers
+        for line in fin:
+            if line.startswith('%'):
+                continue
+            break
+        
+        prevId = None
+        for line in fin:
+            docId, termId, val = line.split()
+            if docId != prevId:
+                if prevId is not None:
+                    yield document
+                prevId = docId
+                document = []
+            document.append((int(termId) - 1, float(val),)) # -1 because matrix market indexes are 1-based => convert to 0-based
+        if prevId is not None: # handle the last document, as a special case
+            yield document
+
+
+def buildLDAMatrix(language, id2word, numTopics = 200):
+    # initialize the corpus
+    tfidfFile = common.matrixFile(common.PREFIX + '_' + language + 'TFIDF_T.mm')
+    corpus = MmCorpus(tfidfFile)
+    
+    # train the LDA model
+    lda = LdaModel.fromCorpus(corpus, id2word = id2word, numTopics = numTopics, initMode = 'random')
+    
+    # now do another sweep over the corpus, estimating topic distribution for each 
+    # corpus document
+    logging.info("model trained; computing topic distributions")
+    result = numpy.column_stack(lda.inference(doc)[2] for doc in corpus) # [2] because third result is the gamma
+    
+    logging.info("estimated topic distributions into a %s matrix" % result.shape)
+    return result
+        
+        
+    
 
 def getMostSimilar(docId, mat, n):
     """

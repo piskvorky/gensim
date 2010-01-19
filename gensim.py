@@ -22,16 +22,23 @@ import ipyutils
 import matutils
 
 
-DRY_RUN = False # set to True to do everything EXCEPT actually writing out similar.xml files to disk
+# set to True to do everything EXCEPT actually writing out similar.xml files to disk.
+# similar.xml files are NOT written if DRY_RUN is true.
+DRY_RUN = False
 
-MIN_SCORE = 0.0
-MAX_SIMILAR = 10 # set to 0 to save *WHOLE* similarity list, otherwise save only the first MAX_SIMILAR articles
+# how many 'most similar' documents to store in each similar.xml?
+MIN_SCORE = 0.0 # prune based on similarity score (all below MIN_SCORE are ignored)
+MAX_SIMILAR = 10 # prune based on rank (at most MAX_SIMILAR are stored). set to 0 to all of them (no limit).
 
+# internal method parameters
 DIM_RP = 300 # dimensionality for the random projections
-DIM_LSI = 300 # dimensionality for lantent semantic indexing
+DIM_LSI = 200 # for lantent semantic indexing
+DIM_LDA = 100 # for latent dirichlet allocation
 
+# if there are no similar articles (after the pruning), do we still want to generate similar.xml?
 SAVE_EMPTY = True
 
+# template for similar article
 ARTICLE = """
     <article weight="%(score)f">
         <authors>
@@ -44,14 +51,17 @@ ARTICLE = """
         </links>
     </article>"""
 
+# template for the whole similar.xml file (will be filled with multiple ARTICLE instances)
 SIMILAR = """\
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <related>%(articles)s
 </related>
 """
 
+
 def decomposeId(docId):
-    """Decompose an article id back into (source, path from source base dir, full filesystem path) 3-tuple.
+    """
+    Decompose an article id back into (source, path from source base dir, full filesystem path) 3-tuple.
     """
     sep = docId.find(os.sep)
     assert sep >= 0, "failed to decompose docId into source and path, '%s'" % docId
@@ -59,8 +69,10 @@ def decomposeId(docId):
     fullPath = os.path.join(common.INPUT_PATHS[source], path) # create full path by merging source base dir and the id
     return source, path, fullPath
 
+
 def getMeta(fname):
-    """Parse out author and title information from a meta.xml file, if possible.
+    """
+    Parse out author and title information from a meta.xml file, if possible.
     """
     author, title = "", ""
     try:
@@ -70,6 +82,7 @@ def getMeta(fname):
     except Exception, e:
         logging.warning("failed to parse meta at %s" % fname)
     return author, title
+
 
 def generateSimilarXML(method, docId, tops):
     inputSource, inputId, outdir = decomposeId(docId)
@@ -94,6 +107,7 @@ def generateSimilarXML(method, docId, tops):
             outfile.close()
     else:
         logging.debug("skipping %s (no similar found)" % outfile)
+
 
 def loadTfIdf(language, asTensor = False):
     tfidfFile = common.matrixFile(common.PREFIX + '_' + language + 'TFIDF_T.mm')
@@ -131,9 +145,12 @@ if __name__ == '__main__':
     if method == 'tfidf':
         mat = loadTfIdf(language)
     elif method == 'lsi':
-        mat = docsim.buildLSIMatrices(language, factors = DIM_LSI)
+        conceptFile = common.dataFile(common.PREFIX + '_' + language + '.lsa_concepts%i' % DIM_LSI)
+        mat = docsim.buildLSIMatrices(language, factors = DIM_LSI, saveConcepts = conceptFile)
     elif method == 'rp':
         mat = docsim.buildRPMatrices(language, dimensions = DIM_RP)
+    elif method == 'lda':
+        mat = docsim.buildLDAMatrix(ipyutils.tokenids, language, topics = DIM_LDA)
     else:
         assert False, "unknown method '%s'" % method
     
