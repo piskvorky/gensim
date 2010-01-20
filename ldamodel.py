@@ -48,16 +48,16 @@ class LdaModel(object):
         self.numTerms = len(id2word) # size of vocabulary
         self.id2word = id2word
         self.numTopics = numTopics # number of latent topics
-        self.ESTIMATE_ALPHA = alpha is None
+        self.ESTIMATE_ALPHA = False #alpha is None
         if alpha is None: # no alpha supplied by user => get some initial estimate
             alpha = 10.0 / numTopics # initial estimate is 50 / numTopics, as suggested in Steyvers&Griffiths: Probabilistic Topic Models
         self.alpha = min(0.99999, max(0.00001, alpha)) # dirichlet prior; make sure it's within bounds
 
         # set EM training constants
-        self.EM_MAX_ITER = 1000 # maximum number of EM iterations; usually converges much earlier
-        self.EM_CONVERGED = 1e-4 # relative difference between two iterations; if lower than this, stop the EM training 
+        self.EM_MAX_ITER = 50 # maximum number of EM iterations; usually converges much earlier
+        self.EM_CONVERGED = 0.0005 # relative difference between two iterations; if lower than this, stop the EM training 
         self.VAR_MAX_ITER = 20 # maximum number of document inference iterations
-        self.VAR_CONVERGED = 1e-6 # relative difference between document inference iterations needed to stop sooner than VAR_MAX_ITER
+        self.VAR_CONVERGED = 0.000001 # relative difference between document inference iterations needed to stop sooner than VAR_MAX_ITER
     
     @staticmethod
     def load(fname):
@@ -312,6 +312,29 @@ class LdaModel(object):
             fout.write("%s\t%s\t%s\n" % (likelihood, ' '.join(gammaStr), ' '.join(phiStr)))
         fout.close()
     
+    def getTopicsMatrix(self):
+        """
+        Transform topic-word distribution via a tf-idf score and return it instead
+        of the (more straightforward) self.logProbW.
+        
+        The returned matrix is of the same shape as logProbW, but the common words
+        have penalized weights.
+        """
+        # compute the geometric mean of words' probability across all topics
+        idf = numpy.sum(self.logProbW, axis = 0) / self.numTopics # note: vector operation
+        assert idf.shape == (self.numTerms,), "idf.shape=%s" % idf.shape
+        
+        # transform the weights, one topic after another
+        result = numpy.empty_like(self.logProbW)
+        for i in xrange(self.numTopics):
+            # determine the score of all words, in this topic
+            scores = numpy.exp(self.logProbW[i]) * (self.logProbW[i] - idf)
+            assert scores.shape == (self.numTerms,), scores.shape
+            result[i] = scores
+        
+        return result
+        
+    
     def printTopics(self, numWords = 10):
         """
         Print the top 'numTerms' words for each topic, along with the log of their 
@@ -324,16 +347,11 @@ class LdaModel(object):
         
         The exact formula is taken from Blei&Laffery: "Topic Models", 2009
         """
-        # compute the geometric mean of words' probability across all topics
-        idf = numpy.sum(self.logProbW, axis = 0) / self.numTopics # note: vector operation
-        assert idf.shape == (self.numTerms,), "idf.shape=%s" % idf.shape
+        transformed = self.getTopicsMatrix()
         
         # print top words, one topic after another
-        for i in xrange(self.numTopics):
+        for i, scores in enumerate(transformed):
             # determine the score of all words, in this topic
-            scores = numpy.exp(self.logProbW[i]) * (self.logProbW[i] - idf)
-            assert scores.shape == (self.numTerms,), scores.shape
-            
             # link scores with the actual strings
             termScores = zip(scores, self.logProbW[i], map(self.id2word.get, xrange(len(scores))))
             

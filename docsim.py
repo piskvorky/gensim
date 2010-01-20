@@ -217,14 +217,25 @@ def buildLDAMatrix(language, id2word, numTopics = 200):
     corpus = MmCorpus(tfidfFile)
     
     # train the LDA model
-    lda = LdaModel.fromCorpus(corpus, id2word = id2word, numTopics = numTopics, initMode = 'random')
+    lda = ldamodel.LdaModel.fromCorpus(corpus, id2word = id2word, numTopics = numTopics, initMode = 'random')
+#    lda = ldamodel.LdaModel.load('/Users/kofola/workspace/dml/data/results/cmj_topic100.lda_model')
+    
+    # store the trained LDA model
+    ldaFile = common.dataFile(common.PREFIX + '_' + language + '.lda_model')
+    lda.save(ldaFile)
+    
+    # store the topics in human-readable format (for inspection)
+    saveTopics(ldaFile + '.topics', lda.getTopicsMatrix().T, lda.id2word)
     
     # now do another sweep over the corpus, estimating topic distribution for each 
     # corpus document
     logging.info("model trained; computing topic distributions")
     result = numpy.column_stack(lda.inference(doc)[2] for doc in corpus) # [2] because third result is the gamma
     
-    logging.info("estimated topic distributions into a %s matrix" % result.shape)
+    # convert the result to scipy sparse format
+    result = scipy.sparse.coo_matrix(result.T)
+    
+    logging.info("estimated topic distributions into a %sx%s matrix" % result.shape)
     return result
         
         

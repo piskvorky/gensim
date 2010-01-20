@@ -150,7 +150,7 @@ if __name__ == '__main__':
     elif method == 'rp':
         mat = docsim.buildRPMatrices(language, dimensions = DIM_RP)
     elif method == 'lda':
-        mat = docsim.buildLDAMatrix(ipyutils.tokenids, language, topics = DIM_LDA)
+        mat = docsim.buildLDAMatrix(language, ipyutils.tokenids, numTopics = DIM_LDA)
     else:
         assert False, "unknown method '%s'" % method
     
