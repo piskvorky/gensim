@@ -93,7 +93,7 @@ PAT_TAG = re.compile('<(.*?)>(.*)</.*?>')
 def parseMeta(xmlfile):
     """parse out all fields from meta.xml, return as dictionary"""
     result = {'msc': []}
-    xml = open(xmlfile, 'r')
+    xml = open(xmlfile)
     for line in xml:
         if line.find('<article>') >= 0:
             break

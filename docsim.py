@@ -154,67 +154,11 @@ def buildRPMatrices(language, dimensions = 200):
     rp = matutils.normalized_sparse(tfidf.tocsr() * projection.T.tocsc()) # project and force unit length on document vectors
     return rp
 
-class MmCorpus(object):
-    """
-    Wrap a corpus represented as term-document matrix on disk in matrix-market 
-    format, and present it as an object which supports iteration over documents. 
-    A document = list of (word, weight) 2-tuples. This iterable format is used 
-    internally in LDA inference.
-    
-    Note that the file is read into memory one document at a time, not whole 
-    corpus at once. This allows for representing corpora which do not wholly fit 
-    in RAM.
-    """
-    def __init__(self, fname):
-        """
-        Initialize the corpus reader. The fname is a path to a file on local 
-        filesystem, which is expected to be sparse (coordinate) matrix
-        market format. Documents are assumed to be rows of the matrix -- if 
-        documents are columns, save the matrix transposed.
-        """
-        logging.info("initializing corpus reader from %s" % fname)
-        self.fname = fname
-        fin = open(fname)
-        header = fin.next()
-        if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
-            raise ValueError("File %s not in Matrix Market format with coordinate real general" % fname)
-        self.noRows = self.noCols = self.noElements = 0
-        for lineNo, line in enumerate(fin):
-            if not line.startswith('%'):
-                self.noRows, self.noCols, self.noElements = map(int, line.split())
-                break
-        logging.info("accepted corpus with %i documents, %i terms, %i non-zero entries" %
-                     (self.noRows, self.noCols, self.noElements))
-    
-    def __len__(self):
-        return self.noRows
-        
-    def __iter__(self):
-        fin = open(self.fname)
-        
-        # skip headers
-        for line in fin:
-            if line.startswith('%'):
-                continue
-            break
-        
-        prevId = None
-        for line in fin:
-            docId, termId, val = line.split()
-            if docId != prevId:
-                if prevId is not None:
-                    yield document
-                prevId = docId
-                document = []
-            document.append((int(termId) - 1, float(val),)) # -1 because matrix market indexes are 1-based => convert to 0-based
-        if prevId is not None: # handle the last document, as a special case
-            yield document
-
 
 def buildLDAMatrix(language, id2word, numTopics = 200):
     # initialize the corpus
     tfidfFile = common.matrixFile(common.PREFIX + '_' + language + 'TFIDF_T.mm')
-    corpus = MmCorpus(tfidfFile)
+    corpus = matutils.MmCorpus(tfidfFile)
     
     # train the LDA model
     lda = ldamodel.LdaModel.fromCorpus(corpus, id2word = id2word, numTopics = numTopics, initMode = 'random')

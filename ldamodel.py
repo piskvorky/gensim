@@ -26,7 +26,7 @@ class LdaModel(object):
     using vector operations ala MATLAB, easily pluggable/extensible etc.
     
     The main functions are LdaModel.fromCorpus() and LdaModel.infer().
-    Both accept a corpus (an iterable returning documents and len()) and realize
+    Both accept a corpus (an iterable returning documents) and realize
     the tasks of parameter estimation/LDA inference respectively.
     
     The model can be persistently saved via the load/save methods.
@@ -48,7 +48,7 @@ class LdaModel(object):
         self.numTerms = len(id2word) # size of vocabulary
         self.id2word = id2word
         self.numTopics = numTopics # number of latent topics
-        self.ESTIMATE_ALPHA = False #alpha is None
+        self.ESTIMATE_ALPHA = alpha is None
         if alpha is None: # no alpha supplied by user => get some initial estimate
             alpha = 10.0 / numTopics # initial estimate is 50 / numTopics, as suggested in Steyvers&Griffiths: Probabilistic Topic Models
         self.alpha = min(0.99999, max(0.00001, alpha)) # dirichlet prior; make sure it's within bounds
@@ -59,10 +59,12 @@ class LdaModel(object):
         self.VAR_MAX_ITER = 20 # maximum number of document inference iterations
         self.VAR_CONVERGED = 0.000001 # relative difference between document inference iterations needed to stop sooner than VAR_MAX_ITER
     
+    
     @staticmethod
     def load(fname):
         logging.info("loading LdaModel from %s" % fname)
         return cPickle.load(open(fname))
+
 
     def save(self, fname):
         logging.info("saving %s to %s" % (self, fname))
@@ -70,9 +72,11 @@ class LdaModel(object):
         cPickle.dump(self, f)
         f.close()
 
+
     def __str__(self):
         return "LdaModel(numTerms=%s, numTopics=%s, alpha=%s (estimated=%s))" % \
                 (self.numTerms, self.numTopics, self.alpha, self.ESTIMATE_ALPHA)
+
     
     def initializeFromCorpus(self, corpus, numInitDocs = 1):
         """
@@ -95,6 +99,7 @@ class LdaModel(object):
                     for wordIndex, wordCount in doc: # for each word in the document...
                         result[k, wordIndex] += wordCount # ...add its count to the word-topic count
         return result
+    
     
     @staticmethod
     def fromCorpus(corpus, id2word, numTopics, initMode = 'random'):
@@ -157,6 +162,7 @@ class LdaModel(object):
         
         return model
 
+
     def docEStep(self, doc):
         # posterior inference
         likelihood, phi, gamma = self.inference(doc)
@@ -168,6 +174,7 @@ class LdaModel(object):
         self.numDocs += 1
         
         return likelihood
+
 
     def mle(self, estimateAlpha):
         """
@@ -185,6 +192,7 @@ class LdaModel(object):
             self.alpha = self.optAlpha()
         
         logging.debug("updated model to %s" % self)
+    
     
     def optAlpha(self, MAX_ALPHA_ITER = 1000, NEWTON_THRESH = 1e-5):
         """
@@ -211,6 +219,7 @@ class LdaModel(object):
         result = numpy.exp(logA) # convert back from log space
         logging.info("estimated old alpha %s to new alpha %s" % (self.alpha, result))
         return result
+
 
     def inference(self, doc):
         """
@@ -252,6 +261,7 @@ class LdaModel(object):
             likelihoodOld = likelihood
         return likelihood, phi, gamma
 
+
     def computeLikelihood(self, doc, phi, gamma):
         """
         Compute the document likelihood, given all model parameters.
@@ -273,6 +283,7 @@ class LdaModel(object):
         
         return likelihood
     
+    
     def infer(self, corpus):
         """
         Perform inference on a corpus of documents.
@@ -285,7 +296,8 @@ class LdaModel(object):
         
         Topics are sorted by probability, words are in the same order as in the input.
         
-        The model itself is not affected in any way (it is read-only=const for this method).
+        The model itself is not affected in any way (this function is read-only aka 
+        const).
         """
         fname = corpus.fname + '.lda_inferred'
         logging.info("writing inferences to %s" % fname)
@@ -312,13 +324,19 @@ class LdaModel(object):
             fout.write("%s\t%s\t%s\n" % (likelihood, ' '.join(gammaStr), ' '.join(phiStr)))
         fout.close()
     
+    
     def getTopicsMatrix(self):
         """
         Transform topic-word distribution via a tf-idf score and return it instead
-        of the (more straightforward) self.logProbW.
+        of the simple self.logProbW word-topic probabilities.
         
-        The returned matrix is of the same shape as logProbW, but the common words
-        have penalized weights.
+        The transformation is a sort of TF-IDF score, where the word gets higher 
+        score if it's probable in this topic (the TF part) and lower score if 
+        it's probable across the whole corpus (the IDF part).
+        
+        The exact formula is taken from Blei&Laffery: "Topic Models", 2009
+        
+        The returned matrix is of the same shape as logProbW.
         """
         # compute the geometric mean of words' probability across all topics
         idf = numpy.sum(self.logProbW, axis = 0) / self.numTopics # note: vector operation
@@ -338,26 +356,21 @@ class LdaModel(object):
     def printTopics(self, numWords = 10):
         """
         Print the top 'numTerms' words for each topic, along with the log of their 
-        probability.
+        probability. 
         
-        Which words are 'at the top' is determined by a sort of TF-IDF score, 
-        where the word gets higher score if it's probable in this topic (the TF 
-        part) and lower score if it's probable across the whole corpus (the IDF 
-        part).
-        
-        The exact formula is taken from Blei&Laffery: "Topic Models", 2009
+        Uses getTopicsMatrix() method to determine the 'top words'.
         """
+        # determine the score of all words, in all topics
         transformed = self.getTopicsMatrix()
         
         # print top words, one topic after another
         for i, scores in enumerate(transformed):
-            # determine the score of all words, in this topic
-            # link scores with the actual strings
+            # link scores with the actual words (strings)
             termScores = zip(scores, self.logProbW[i], map(self.id2word.get, xrange(len(scores))))
             
             # sort words -- words with best scores come first; keep only the best numWords
             best = sorted(termScores, reverse = True)[:numWords]
            
-            # print best numWords, with a space between the words
+            # print best numWords, with a space separating each word:prob entry
             print "topic #%i: %s" % (i, ' '.join('%s:%.3f' % (word, prob) for (score, prob, word) in best))
 #endclass LdaModel
