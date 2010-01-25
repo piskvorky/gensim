@@ -346,4 +346,139 @@ if __name__ == '__main__':
     
     d = loadMatrix('/home/radim/workspace/plagiarism/data/tstmat2', format = 'bmat', bintype = numpy.float32)
     print d
+
+
+class MmWriter(object):
+    def __init__(self, fname, numDocs, numTerms, numNnz):
+        logging.info("saving %sx%s matrix with %i non-zero entries to %s" %
+                     (numDocs, numTerms, numNnz, fname))
+        self.fname = fname
+        self.fout = open(fname, 'w')
+        # write headers
+        self.fout.write('%%matrixmarket matrix coordinate real general\n')
+        self.fout.write('%i %i %i\n' % (numDocs, numTerms, numNnz))
+        self.lastDocNo = -1
     
+    def __del__(self):
+        """
+        Automatic destructor which closes the underlying file. You can also close 
+        the file explicitly, via the close() method.
+        
+        There must be no circular references contained in the object for 
+        this to work!
+        """
+        self.close()
+    
+    def close(self):
+        logging.debug("closing %s" % self.fname)
+        self.fout.close()
+        
+    def writeBowVector(self, docNo, pairs):
+        """
+        Write a single bag-of-words vector to the file.
+        """
+        assert self.lastDocNo < docNo, "documents %i and %i not in sequential order!" % (self.lastDocNo, docNo)
+        for termId, weight in sorted(pairs):
+            if weight != 0.0:
+                self.fout.write("%i %i %f\n" % (docNo + 1, termId + 1, weight)) # +1 because MM format starts counting from 1
+        self.lastDocNo = docNo
+    
+    def writeCorpus(self, corpus, ignoreWords = set()):
+        """
+        Build bag-of-words representation of an entire corpus.
+        
+        ignoreWords is a set of wordIds (not strings) which are to be ignored (not 
+        saved to disk), such as stop words, hapax legomena etc.
+        
+        Note that the documents are processed one at a time, so the whole corpus 
+        is allowed to be much larger than the available RAM.
+        """
+        logging.info("saving %i documents to %s" % (len(corpus), self.fname))
+        # The Matrix Market format dictates that the matrix dimensions as well as
+        # the number of non-zero element be known in advance and included in the 
+        # file header.
+        # This would require two sweeps over the corpus, first to determine the 
+        # vocabulary and nnz and second to actually save the vectors.
+        # Since the headers are only useful for memory pre-allocation and totally
+        # irrelevant in Python, i set them to zero and return the proper numbers
+        # as the result of this function. 
+        # If you care about the headers being correct, write the same file twice, the 
+        # second time populating the parameters numTerms and numNnz with values
+        # returned from the first call.
+        numWords = numNnz = 0
+        for docNo, bow in enumerate(corpus):
+            if docNo % 1000 == 0:
+                logging.info("PROGRESS: processing document %i/%i (%s)" % 
+                             (docNo, len(docLens), doc))
+            bow = [(wordId, count) for wordId, count in bow if wordId not in ignoreWords]
+            numWords = max([wordId for wordId, _ in bow]) + 1
+            numNnz += len(bow)
+            self.writeBowVector(docNo, bow)
+        return numWords, numNnz
+#endclass MmWriter
+
+
+class MmReader(object):
+    """
+    Wrap a corpus represented as term-document matrix on disk in matrix-market 
+    format, and present it as an object which supports iteration over documents. 
+    A document = list of (word, weight) 2-tuples. This iterable format is used 
+    internally in LDA inference.
+    
+    Note that the file is read into memory one document at a time, not whole 
+    corpus at once. This allows for representing corpora which do not wholly fit 
+    in RAM.
+    """
+    def __init__(self, fname):
+        """
+        Initialize the corpus reader. The fname is a path to a file on local 
+        filesystem, which is expected to be sparse (coordinate) matrix
+        market format. Documents are assumed to be rows of the matrix -- if 
+        documents are columns, save the matrix transposed.
+        """
+        logging.info("initializing corpus reader from %s" % fname)
+        self.fname = fname
+        fin = open(fname)
+        header = fin.next()
+        if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
+            raise ValueError("File %s not in Matrix Market format with coordinate real general" % fname)
+        self.noRows = self.noCols = self.noElements = 0
+        for lineNo, line in enumerate(fin):
+            if not line.startswith('%'):
+                self.noRows, self.noCols, self.noElements = map(int, line.split())
+                break
+        logging.info("accepted corpus with %i documents, %i terms, %i non-zero entries" %
+                     (self.noRows, self.noCols, self.noElements))
+    
+    def __len__(self):
+        return self.noRows
+        
+    def __iter__(self):
+        fin = open(self.fname)
+        
+        # skip headers
+        for line in fin:
+            if line.startswith('%'):
+                continue
+            break
+        
+        prevId = None
+        for line in fin:
+            docId, termId, val = line.split()
+            if docId != prevId:
+                if prevId is not None:
+                    yield prevId, document
+                prevId = docId
+                document = []
+            # add (termId, weight) pair to the document
+            document.append((int(termId) - 1, float(val),)) # -1 because matrix market indexes are 1-based => convert to 0-based
+        if prevId is not None: # handle the last document, as a special case
+            yield prevId, document
+#endclass MmWriter
+
+
+class MmCorpus(MmReader):
+    def __iter__(self):
+        for docId, doc in super(MmCorpus, self).__iter__():
+            yield doc # get rid of docId, return the document only
+#endclass MmCorpus
