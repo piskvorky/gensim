@@ -349,23 +349,45 @@ if __name__ == '__main__':
 
 
 class MmWriter(object):
-    def __init__(self, fname, numDocs, numTerms, numNnz):
-        logging.info("saving %sx%s matrix with %i non-zero entries to %s" %
-                     (numDocs, numTerms, numNnz, fname))
+    def __init__(self, fname):
         self.fname = fname
-        self.fout = open(fname, 'w')
-        # write headers
+    
+    @staticmethod
+    def determineNnz(corpus):
+        logging.info("calculating matrix shape and density")
+        numDocs = numTerms = numNnz = 0
+        for docNo, bow in enumerate(corpus):
+            if docNo % 10000 == 0:
+                logging.info("PROGRESS: at document %i/%i" % 
+                             (docNo, len(corpus)))
+            if len(bow) > 0:
+                numDocs = max(numDocs, docNo + 1)
+                numTerms = max(wordId for wordId, _ in bow) + 1
+                numNnz += len(bow)
+        
+        logging.info("BOW of %ix%i matrix, density=%.3f%% (%i/%i)" % 
+                     (numDocs, numTerms,
+                      100.0 * numNnz / (numDocs * numTerms),
+                      numNnz,
+                      numDocs * numTerms))
+        return numDocs, numTerms, numNnz
+    
+
+    def writeHeaders(self, numDocs, numTerms, numNnz):
+        logging.info("saving sparse %sx%s matrix with %i non-zero entries to %s" %
+                     (numDocs, numTerms, numNnz, self.fname))
+        self.fout = open(self.fname, 'w')
         self.fout.write('%%matrixmarket matrix coordinate real general\n')
         self.fout.write('%i %i %i\n' % (numDocs, numTerms, numNnz))
         self.lastDocNo = -1
     
     def __del__(self):
         """
-        Automatic destructor which closes the underlying file. You can also close 
-        the file explicitly, via the close() method.
+        Automatic destructor which closes the underlying file. 
         
-        There must be no circular references contained in the object for 
-        this to work!
+        There must be no circular references contained in the object for __del__
+        to work! Closing the file explicitly via the close() method is preferred
+        and safer.
         """
         self.close()
     
@@ -378,43 +400,24 @@ class MmWriter(object):
         Write a single bag-of-words vector to the file.
         """
         assert self.lastDocNo < docNo, "documents %i and %i not in sequential order!" % (self.lastDocNo, docNo)
-        for termId, weight in sorted(pairs):
+        for termId, weight in sorted(pairs): # write term ids in sorted order
             if weight != 0.0:
                 self.fout.write("%i %i %f\n" % (docNo + 1, termId + 1, weight)) # +1 because MM format starts counting from 1
         self.lastDocNo = docNo
     
-    def writeCorpus(self, corpus, ignoreWords = set()):
+    def writeCorpus(self, corpus):
         """
-        Build bag-of-words representation of an entire corpus.
-        
-        ignoreWords is a set of wordIds (not strings) which are to be ignored (not 
-        saved to disk), such as stop words, hapax legomena etc.
+        Save bag-of-words representation of an entire corpus to disk.
         
         Note that the documents are processed one at a time, so the whole corpus 
-        is allowed to be much larger than the available RAM.
+        is allowed to be larger than the available RAM.
         """
-        logging.info("saving %i documents to %s" % (len(corpus), self.fname))
-        # The Matrix Market format dictates that the matrix dimensions as well as
-        # the number of non-zero element be known in advance and included in the 
-        # file header.
-        # This would require two sweeps over the corpus, first to determine the 
-        # vocabulary and nnz and second to actually save the vectors.
-        # Since the headers are only useful for memory pre-allocation and totally
-        # irrelevant in Python, i set them to zero and return the proper numbers
-        # as the result of this function. 
-        # If you care about the headers being correct, write the same file twice, the 
-        # second time populating the parameters numTerms and numNnz with values
-        # returned from the first call.
-        numWords = numNnz = 0
+        logging.info("saving %i BOW vectors to %s" % (len(corpus), self.fname))
         for docNo, bow in enumerate(corpus):
             if docNo % 1000 == 0:
-                logging.info("PROGRESS: processing document %i/%i (%s)" % 
-                             (docNo, len(docLens), doc))
-            bow = [(wordId, count) for wordId, count in bow if wordId not in ignoreWords]
-            numWords = max([wordId for wordId, _ in bow]) + 1
-            numNnz += len(bow)
+                logging.info("PROGRESS: saving document %i/%i" % 
+                             (docNo, len(corpus)))
             self.writeBowVector(docNo, bow)
-        return numWords, numNnz
 #endclass MmWriter
 
 
