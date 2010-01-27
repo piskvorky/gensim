@@ -11,6 +11,7 @@ This module contains various general utility functions.
 import logging
 import re
 import unicodedata
+import cPickle
 
 
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
@@ -62,3 +63,33 @@ def toUtf8(text):
         return text.encode('utf8')
     return unicode(text, 'utf8').encode('utf8') # do bytestring -> unicode -> utf8 circle, to ensure valid utf8
 
+
+class SaveLoad(object):
+    """
+    Objects which inherit from this class have save/load functions, which un/pickle 
+    them to disk.
+    
+    Uses cPickle for serializing objects, so objects must not contains unpicklable 
+    attributes, such as lambda functions etc.
+    """
+    @classmethod
+    def load(cls, fname):
+        """
+        Load a previously saved object from file (also see save()).
+        """
+        logging.info("loading %s object from %s" % (cls.__name__, fname))
+        return cPickle.load(open(fname))
+
+
+    def save(self, fname):
+        """
+        Save the object to file via pickling (also see load()).
+        """
+        logging.info("saving %s object to %s" % (self.__class__.__name__, fname))
+        f = open(fname, 'w')
+        cPickle.dump(self, f)
+        f.close()
+
+
+def identity(p):
+    return p

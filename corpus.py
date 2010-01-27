@@ -20,107 +20,11 @@ locations and be in different formats (see the sources module).
 
 import logging
 import itertools
-import cPickle
 import os.path
 
-
 import matutils
-
-
-class Token(object):
-    __slots__ = ['token', 'intId', 'surfaceForms']
-
-    def __init__(self, token, intId, surfaceForms):
-        self.token = token # preprocessed word form (string)
-        self.intId = intId # id of the form (integer)
-        self.surfaceForms = set(surfaceForms) # set of all words which map to this token after preprocessing
-#endclass Token
-
-
-class Dictionary(object):
-    """
-    Dictionary encapsulates mappings between words, their normalized forms and ids
-    of those normalized forms.
-    
-    An example of a word is 'answering', normalized word here could be for example
-    'answer' and the id 42.
-    
-    Main function is doc2bow, which coverts a collection of words to its bow 
-    representation, optionally also updating the mappings with new words and ids.
-    """
-    def __init__(self):
-        self.id2token = {} # tokenId -> token
-        self.token2id = {} # token -> tokenId
-        self.word2id = {} # surface form (word as appearing in text) -> tokenId
-        self.docFreq = {} # tokenId -> in how many documents this token appeared
-    
-    
-    def addToken(self, token):
-        if token.intId in self.id2token:
-            logging.debug("overwriting old token %s (id %i); is this intended?" %
-                          (token.token, token.intId))
-        self.id2token[token.intId] = token
-        self.token2id[token.token] = token.intId
-        for surfaceForm in token.surfaceForms:
-            self.word2id[surfaceForm] = token.intId
-    
-    
-    def doc2bow(self, document, wordNormalizer = lambda word: word, allowUpdate = False):
-        """
-        Convert document (list of words) into bag-of-words format = list of 
-        (tokenId, tokenCount) 2-tuples.
-        
-        If update is set, then also update dictionary in the process: create ids 
-        for new words etc. At the same time update document frequencies -- for 
-        each word appearing in this document, increase its self.docFreq by one.
-        """
-        # construct (word, frequency) mapping. in python3 this is done simply 
-        # using Counter(), but here i use itertools.groupby()
-        result = {}
-        for word, group in itertools.groupby(sorted(document)):
-            frequency = len(list(group)) # how many times does this word appear in the input document
-
-            # determine the Token object of this word, creating it if necessary
-            tokenId = self.word2id.get(word, None)
-            if tokenId is None:
-                # first time we see this surface form
-                wordNorm = wordNormalizer(word)
-                tokenId = self.token2id.get(wordNorm, None)
-                if tokenId is None: 
-                    # first time we see this token (normalized form)
-                    if not allowUpdate: # if we aren't allowed to create new tokens, continue with the next word
-                        continue
-                    tokenId = len(self.token2id)
-                    token = Token(wordNorm, tokenId, set([word]))
-                    self.addToken(token)
-                else:
-                    token = self.id2token[tokenId]
-                    # add original word to the set of observed surface forms
-                    token.surfaceForms.add(word)
-                    self.word2id[word] = tokenId
-            else:
-                token = self.id2token[tokenId]
-            # post condition -- now both tokenId and token object are properly set
-            
-            # update how many times a token appeared in the document
-            result[tokenId] = result.get(tokenId, 0) + frequency
-            
-        # increase document count for each unique token that appeared in the document
-        for tokenId in result.iterkeys():
-            self.docFreq[tokenId] = self.docFreq.get(tokenId, 0) + 1
-        
-        return sorted(result.iteritems()) # return tokenIds in ascending order
-
-    
-    def __len__(self):
-        assert len(self.token2id) == len(self.id2token)
-        return len(self.token2id)
-
-
-    def __str__(self):
-        return ("Dictionary(%i tokens covering %i surface forms)" %
-                (len(self), len(self.word2id)))
-#endclass Dictionary
+import utils
+import dictionary
 
 
 
@@ -171,7 +75,7 @@ class DmlConfig(object):
 
 
 
-class DmlCorpus(object):
+class DmlCorpus(utils.SaveLoad):
     """
     DmlCorpus implements a collection of articles. It is initialized via a DmlConfig
     object, which holds information about where to look for the articles and how 
@@ -181,38 +85,30 @@ class DmlCorpus(object):
     DmlCorpus has methods for building and storing its dictionary (mapping between
     words and their ids).
     """
-    def __init__(self, config = None):
+    def __init__(self):
         self.documents = []
-        self.config = config
-        self.dictionary = Dictionary()
-        if self.config is not None:
-            self.processConfig(config)
-            self.buildDictionary()
+        self.config = None
+        self.dictionary = dictionary.Dictionary()
 
-    @staticmethod
-    def load(fname):
-        logging.info("loading DmlCorpus object from %s" % fname)
-        return cPickle.load(open(fname))
-
-
-    def save(self, fname):
-        logging.info("saving DmlCorpus object to %s" % (self, fname))
-        f = open(fname, 'w')
-        cPickle.dump(self, f)
-        f.close()
-    
     
     def __len__(self):
         return len(self.documents)
 
+
     def __iter__(self):
+        """
+        The function that defines a corpus -- iterating over the corpus yields 
+        bag-of-words vectors, one for each document.
+        
+        A bag-of-words vector is simply a list of (tokenId, tokenCount) 2-tuples.
+        """
         for docNo, (sourceId, docUri) in enumerate(self.documents):
             source = self.config.sources[sourceId]
 
             contents = source.getContent(docUri)
             words = source.tokenize(contents)
-            yield self.dictionary.doc2bow(words, source.wordNormalizer, allowUpdate = False)
-    
+            yield self.dictionary.doc2bow(words, source.normalizeWord, allowUpdate = False)
+
     
     def buildDictionary(self):
         """
@@ -222,23 +118,14 @@ class DmlCorpus(object):
         them into tokens and converting tokens to their ids (creating new ids as 
         necessary).
         """
-        self.dictionary = Dictionary()
         logging.info("creating dictionary from %i articles" % len(self.documents))
+        self.dictionary = dictionary.Dictionary()
         for docNo, (sourceId, docUri) in enumerate(self.documents):
-            if docNo % 1000 == 0:
-                logging.info("PROGRESS: at article %i/%i" % (docNo, len(self.documents)))
-            
             source = self.config.sources[sourceId]
-
             contents = source.getContent(docUri)
             words = source.tokenize(contents)
-            self.dictionary.doc2bow(words, source.wordNormalizer, allowUpdate = True) # ignore the resulting bow vector -- here we are only interested in updating the dictionary
-    
-    
-    def pruneDictionary(self):
-#        self.dictionary = dictionary without too frequent/rare terms
-#        rebuild dictionary (shrink id gaps)
-        pass
+            _ = self.dictionary.doc2bow(words, source.normalizeWord, allowUpdate = True) # ignore the result, here we only care about updating token ids
+        logging.info("built %s" % self.dictionary)
 
     
     def processConfig(self, config):
@@ -281,7 +168,8 @@ class DmlCorpus(object):
         in '*bow.mm'.
         """
         # determine matrix shape and density (only needed for the MM format headers, 
-        # so it is a HUGE overkill to do an extra corpus sweep just for that...)
+        # which are irrelevant in Python anyway, so it is a HUGE overkill to do 
+        # an extra corpus sweep just for that...)
         numDocs, numTerms, numNnz = matutils.MmWriter.determineNnz(self)
         
         # write bow to a file in matrix market format
