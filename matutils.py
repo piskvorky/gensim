@@ -351,6 +351,7 @@ if __name__ == '__main__':
 class MmWriter(object):
     def __init__(self, fname):
         self.fname = fname
+        self.fout = open(self.fname, 'w')
     
     @staticmethod
     def determineNnz(corpus):
@@ -362,7 +363,7 @@ class MmWriter(object):
                              (docNo, len(corpus)))
             if len(bow) > 0:
                 numDocs = max(numDocs, docNo + 1)
-                numTerms = max(wordId for wordId, _ in bow) + 1
+                numTerms = max(numTerms, max(wordId for wordId, _ in bow) + 1)
                 numNnz += len(bow)
         
         logging.info("BOW of %ix%i matrix, density=%.3f%% (%i/%i)" % 
@@ -376,7 +377,6 @@ class MmWriter(object):
     def writeHeaders(self, numDocs, numTerms, numNnz):
         logging.info("saving sparse %sx%s matrix with %i non-zero entries to %s" %
                      (numDocs, numTerms, numNnz, self.fname))
-        self.fout = open(self.fname, 'w')
         self.fout.write('%%matrixmarket matrix coordinate real general\n')
         self.fout.write('%i %i %i\n' % (numDocs, numTerms, numNnz))
         self.lastDocNo = -1
@@ -389,7 +389,7 @@ class MmWriter(object):
         to work! Closing the file explicitly via the close() method is preferred
         and safer.
         """
-        self.close()
+        self.close() # does nothing if called twice (on an already closed file), so no worries
     
     def close(self):
         logging.debug("closing %s" % self.fname)

@@ -58,7 +58,7 @@ class ArticleSource(object):
     def tokenize(self, content):
         raise NotImplementedError('Abstract Base Class')
     
-    def wordNormalizer(self, word):
+    def normalizeWord(self, word):
         raise NotImplementedError('Abstract Base Class')
 #endclass Source
 
@@ -135,7 +135,7 @@ class DmlSource(ArticleSource):
         return [token.encode('utf8') for token in utils.tokenize(content)]
     
     
-    def wordNormalizer(self, word):
+    def normalizeWord(self, word):
         wordU = unicode(word, 'utf8')
         return wordU.lower().encode('utf8') # lowercase and then convert back to bytestring
 #endclass DmlSource
