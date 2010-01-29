@@ -28,7 +28,7 @@ for num, line in enumerate(open('index.html')):
     content = conn.read()
     conn.close()
     os.makedirs(dest)
-    fout = open(os.path.join(dest, 'fulltext.xml'), 'w')
+    fout = open(os.path.join(dest, 'tex.xml'), 'w')
     fout.write(content)
     fout.close()
     print "processed url #%i: %s" % (num, url)

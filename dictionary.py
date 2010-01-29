@@ -160,7 +160,7 @@ class Dictionary(utils.SaveLoad):
         
         # determine which tokens to drop
         badIds = [tokenId for tokenId, docFreq in self.docFreq.iteritems() if docFreq < noBelow or docFreq > noAboveAbs]
-        logging.info("removing %i tokens which were in less than %i or more than %i (=%.2f%%) documents" %
+        logging.info("removing %i tokens which were in less than %i or more than %i (=%.1f%%) documents" %
                      (len(badIds), noBelow, noAboveAbs, 100.0 * noAbove))
         
         # print some sanity check debug info
