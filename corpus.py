@@ -27,6 +27,9 @@ import utils
 import dictionary
 
 
+#FIXME REMOVE
+import xml.sax
+
 
 class DmlConfig(object):
     """
@@ -121,9 +124,17 @@ class DmlCorpus(utils.SaveLoad):
         logging.info("creating dictionary from %i articles" % len(self.documents))
         self.dictionary = dictionary.Dictionary()
         for docNo, (sourceId, docUri) in enumerate(self.documents):
+            if docNo % 1000 == 0:
+                logging.info("PROGRESS: at document #%i/%i (%s, %s)" % 
+                             (docNo, len(self.documents), sourceId, docUri))
             source = self.config.sources[sourceId]
             contents = source.getContent(docUri)
-            words = source.tokenize(contents)
+            try:
+                words = source.tokenize(contents)
+            except xml.sax.SAXParseException, e:
+                logging.error("error parsing %s: %s" % (docUri, e))
+                ascsa
+
             _ = self.dictionary.doc2bow(words, source.normalizeWord, allowUpdate = True) # ignore the result, here we only care about updating token ids
         logging.info("built %s" % self.dictionary)
 
