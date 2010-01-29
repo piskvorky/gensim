@@ -219,13 +219,9 @@ class ArxmlivSource(ArticleSource):
         # This is not really a problem with arxmliv xml files themselved, so ignore
         # these errors silently.
         def error(self, exception):
-            logging.info("SAX error parsing xml: %s" % exception)
+            logging.debug("SAX error parsing xml: %s" % exception)
         
-        def fatalError(self, exception):
-            logging.info("SAX error parsing xml: %s" % exception)
-        
-        def warning(self, exception):
-            logging.info("SAX error parsing xml: %s" % exception)
+        warning = fatalError = error
     #endclass ArxmlivErrorHandler
 
 
