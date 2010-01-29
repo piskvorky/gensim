@@ -13,12 +13,9 @@ The actual process of id translation proceeds in three steps:
 1) map word to its normalized form (eg. 'answer')
 2) map the normalized form to integer id (eg. 42)
 
-The Dictionary objects contains information both about the normalized forms 
-(called tokens) and about the original, pre-normalized words (called surface 
-forms). All of this is held in memory, so be careful when processing huge corpora.
-
-Dictionary can be created from a corpus and can be later pruned according to
-document frequency (removing (un)common words), saved to disk etc.
+Dictionaries can be created from a corpus and can later be pruned according to
+document frequency (removing (un)common words via the filterExtremes() method), 
+save/loaded from disk via save() and load() methods etc.
 """
 
 
@@ -31,16 +28,21 @@ import utils
 
 
 class Token(object):
-#    __slots__ = ['token', 'intId', 'surfaceForms']
-    def __init__(self, token, intId, surfaceForms):
+    __slots__ = ['token', 'intId']
+    
+    def __init__(self, token, intId):
         self.token = token # postprocessed word form (string)
         self.intId = intId # id of the token (integer)
-        self.surfaceForms = set(surfaceForms) # set of all words which map to this token before preprocessing
+    
+    def __getstate__(self):
+        return [(name, self.__getattribute__(name)) for name in self.__slots__]
+    
+    def __setstate__(self, state):
+        for key, val in state:
+            self.__setattr__(key, val)
 
     def __str__(self):
-        forms = ["'%s'" % str(form) for form in sorted(self.surfaceForms)]
-        return ("Token(id=%i, norm='%s', orig=[%s])" % 
-                (self.intId, self.token, ', '.join(forms)))
+        return ("Token(id=%i, norm='%s')" % (self.intId, self.token))
 #endclass Token
 
 
@@ -74,10 +76,11 @@ class Dictionary(utils.SaveLoad):
     def fromDocuments(documents, normalizeWord):
         """
         Build dictionary from a collection of documents. Each document is a list 
-        of words.
+        of words (ie. tokenized strings).
         
-        The normalizeWord function is used to convert each word to its base form
-        (lowercasing, stemming, ...).
+        The normalizeWord function is used to convert each word to its *utf8 encoded*
+        base form (identity, lowercasing, stemming, ...); use whichever normalization
+        suits you.
         """
         result = Dictionary()
         for document in documents:
@@ -91,8 +94,6 @@ class Dictionary(utils.SaveLoad):
                           (token.token, token.intId))
         self.id2token[token.intId] = token
         self.token2id[token.token] = token.intId
-        for surfaceForm in token.surfaceForms:
-            self.word2id[surfaceForm] = token.intId
     
     
     def doc2bow(self, document, normalizeWord, allowUpdate = False):
@@ -121,13 +122,11 @@ class Dictionary(utils.SaveLoad):
                     if not allowUpdate: # if we aren't allowed to create new tokens, continue with the next word
                         continue
                     tokenId = len(self.token2id)
-                    token = Token(wordNorm, tokenId, set([word]))
+                    token = Token(wordNorm, tokenId)
                     self.addToken(token)
                 else:
                     token = self.id2token[tokenId]
-                    # add original word to the set of observed surface forms
-                    token.surfaceForms.add(word)
-                    self.word2id[word] = tokenId
+                self.word2id[word] = tokenId
             else:
                 token = self.id2token[tokenId]
             # post condition -- now both tokenId and token object are properly set
@@ -148,10 +147,11 @@ class Dictionary(utils.SaveLoad):
         """
         Filter out tokens that appear in 
         1) less than noBelow documents (absolute number) or 
-        2) more than fracAbove documents (fraction of total corpus size).
+        2) more than noAbove documents (fraction of total corpus size, *not* 
+        absolute number).
         
         At the same time rebuild the dictionary, shrinking resulting gaps in 
-        tokenIds (and lowering len(self) in the process). 
+        tokenIds (lowering len(self) and freeing memory in the process). 
         
         Note that the same token may have a different tokenId before and after
         the call to this function!
@@ -168,7 +168,7 @@ class Dictionary(utils.SaveLoad):
         someTokens = [self.id2token[tokenId].token for tokenId in someIds]
         logging.info("some of the removed tokens: [%s]" % ', '.join(someTokens))
         
-        # do the actual filtering, rebuild dictionary to remove gaps in ids
+        # do the actual filtering, then rebuild dictionary to remove gaps in ids
         self.filterTokens(badIds)
         self.rebuildDictionary()
         logging.info("resulting dictionary: %s" % self)
