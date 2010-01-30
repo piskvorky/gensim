@@ -156,7 +156,7 @@ class Dictionary(utils.SaveLoad):
         Note that the same token may have a different tokenId before and after
         the call to this function!
         """
-        noAboveAbs = int(noAbove * self.numDocs)
+        noAboveAbs = int(noAbove * self.numDocs) # convert fractional threshold to absolute threshold
         
         # determine which tokens to drop
         badIds = [tokenId for tokenId, docFreq in self.docFreq.iteritems() if docFreq < noBelow or docFreq > noAboveAbs]
@@ -164,9 +164,10 @@ class Dictionary(utils.SaveLoad):
                      (len(badIds), noBelow, noAboveAbs, 100.0 * noAbove))
         
         # print some sanity check debug info
-        someIds = random.sample(badIds, 10) # choose 10 random ids
-        someTokens = [self.id2token[tokenId].token for tokenId in someIds]
-        logging.info("some of the removed tokens: [%s]" % ', '.join(someTokens))
+        someIds = random.sample(badIds, 10) # choose 10 random ids that will be removed
+        someTokenFreqs = [(self.id2token[tokenId].token, self.docFreq[tokenId]) for tokenId in someIds]
+        logging.info("document frequencies of some of the removed tokens: [%s]" % 
+                     ', '.join("%s:%i" % i for i in someTokenFreqs))
         
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
         self.filterTokens(badIds)
@@ -190,7 +191,8 @@ class Dictionary(utils.SaveLoad):
         Assign new tokenIds to all tokens. 
         
         This is done to make tokenIds more compact, ie. after some tokens have 
-        been removed via filterTokens() and there are now gaps in the tokenId series. 
+        been removed via filterTokens() and there are gaps in the tokenId series.
+        Calling this method will remove the gaps.
         """
         logging.debug("rebuilding dictionary, shrinking gaps")
         

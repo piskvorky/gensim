@@ -22,6 +22,49 @@ import Article
 
 import gensim
 
+import sources
+import corpus
+
+
+def buildDmlCorpus(language):
+    numdam = sources.DmlSource('numdam', sourcePath['numdam'])
+    dmlcz = sources.DmlSource('dmlcz', sourcePath['dmlcz'])
+    arxmliv = sources.ArxmlivSource('arxmliv', sourcePath['arxmliv'])
+    
+    config = corpus.DmlConfig('gensim', resultDir = sourcePath['results'], acceptLangs = [language])
+    
+    dml = corpus.DmlCorpus()
+    dml.processConfig(config)
+    dml.buildDictionary()
+    dml.dictionary.filterExtremes()
+    
+    dml.save()
+    dml.saveDebug()
+    dml.saveAsBow()
+    
+                                                               
+def generateSimilar(method, docSim):
+    
+
+dml-cz gensim workflow:
+    for tfidf/lsi:
+        make an incremental tfidf wrapper over bag-of-words (precompute idfs, make tfidf vectors from bow on the fly)
+        for tfidf:
+            mat = whole tfidf in memory (scipy.sparse)
+        for lsi:
+            mat = lsi(tfidf wrapper)
+    for lda:
+        mat = lda(bow wrapper)
+    mat now contains in-memory representation of the corpus (dense doc x 200 for lsi/lda, sparse doc x terms for tfidf)
+    interface for similarities?
+    iterative getSim(mat, doc): return most similar documents (do not explicitly realize the whole doc x doc matrix!)
+    
+    for dml, iterate over corpus documents:
+        call the general docsim.getSim(mat, docNo)
+        store MAX_SIMILAR to the same dir as input in dml similar.xml format
+    
+    
+    
 def convertId(fpath):
     dir = os.path.split(fpath)[0]
     dir, artNum = os.path.split(dir)

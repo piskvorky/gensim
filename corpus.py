@@ -341,7 +341,7 @@ class DmlCorpus(utils.SaveLoad):
         
         logging.info("accepted total of %i articles for %s" % 
                      (len(self.documents), str(config)))
-        
+    
     def saveAsBow(self):
         """
         Store the corpus to a file, as a term-document matrix with bag-of-words 
@@ -350,15 +350,7 @@ class DmlCorpus(utils.SaveLoad):
         The exact path and filename is determined from the config, but always ends 
         in '*bow.mm'.
         """
-        # determine matrix shape and density (only needed for the MM format headers, 
-        # which are irrelevant in Python anyway, so it is a HUGE overkill to do 
-        # an extra corpus sweep just for that... but let's be nice)
-        numDocs, numTerms, numNnz = matutils.MmWriter.determineNnz(self)
-        
         # write bow to a file in matrix market format
-        outfile = matutils.MmWriter(self.config.resultFile('bow.mm'))
-        outfile.writeHeaders(numDocs, numTerms, numNnz)
-        outfile.writeCorpus(self)
-        outfile.close()
+        matutils.MmWriter.writeCorpus(self.config.resultFile('bow.mm'), self)
 #endclass DmlCorpus
 

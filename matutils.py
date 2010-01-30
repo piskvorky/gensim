@@ -14,11 +14,6 @@ import logging
 class MmWriter(object):
     """
     Store corpus in Matrix Market format.
-    
-    Note the static determineNnz method, which lets you determine the MM format 
-    headers from a corpus (matrix dimensions, number of non-zero entries). If
-    these headers are known beforehand from elsewhere, you can skip calling 
-    determineNnz() and use writeHeaders() directly.
     """
     
     def __init__(self, fname):
@@ -29,14 +24,14 @@ class MmWriter(object):
     @staticmethod
     def determineNnz(corpus):
         logging.info("calculating matrix shape and density")
-        numDocs = numTerms = numNnz = 0
+        numDocs = len(corpus)
+        numTerms = numNnz = 0
         for docNo, bow in enumerate(corpus):
             if docNo % 10000 == 0:
                 logging.info("PROGRESS: at document %i/%i" % 
                              (docNo, len(corpus)))
             if len(bow) > 0:
-                numDocs = max(numDocs, docNo + 1)
-                numTerms = max(numTerms, max(wordId for wordId, _ in bow) + 1)
+                numTerms = max(numTerms, 1 + max(wordId for wordId, val in bow))
                 numNnz += len(bow)
         
         logging.info("BOW of %ix%i matrix, density=%.3f%% (%i/%i)" % 
@@ -72,31 +67,36 @@ class MmWriter(object):
         self.fout.close()
     
     
-    def writeBowVector(self, docNo, pairs):
+    def writeVector(self, docNo, vector):
         """
-        Write a single bag-of-words vector to the file.
+        Write a single sparse vector to the file.
+        
+        Sparse vector is any iterable yielding (field id, field value) pairs.
         """
         assert self.headersWritten, "must write MM file headers before writing data!"
         assert self.lastDocNo < docNo, "documents %i and %i not in sequential order!" % (self.lastDocNo, docNo)
-        for termId, weight in sorted(pairs): # write term ids in sorted order
-            if weight != 0.0:
-                self.fout.write("%i %i %f\n" % (docNo + 1, termId + 1, weight)) # +1 because MM format starts counting from 1
+        for termId, weight in sorted(vector): # write term ids in sorted order
+            # to ensure len(doc) does what is expected, there must not be any zero elements in the sparse document
+            assert weight != 0, "zero weights not allowed in sparse documents; check your document generator"
+            self.fout.write("%i %i %f\n" % (docNo + 1, termId + 1, weight)) # +1 because MM format starts counting from 1
         self.lastDocNo = docNo
 
-    
-    def writeCorpus(self, corpus):
+    @staticmethod
+    def writeCorpus(fname, corpus):
         """
         Save bag-of-words representation of an entire corpus to disk.
         
         Note that the documents are processed one at a time, so the whole corpus 
         is allowed to be larger than the available RAM.
         """
-        logging.info("saving %i BOW vectors to %s" % (len(corpus), self.fname))
+        mw = MmWriter(fname)
+        mw.writeHeaders(*MmWriter.determineNnz(corpus))
         for docNo, bow in enumerate(corpus):
             if docNo % 1000 == 0:
                 logging.info("PROGRESS: saving document %i/%i" % 
                              (docNo, len(corpus)))
-            self.writeBowVector(docNo, bow)
+            mw.writeVector(docNo, bow)
+        mw.close()
 #endclass MmWriter
 
 
@@ -108,8 +108,8 @@ class MmReader(object):
     internally in LDA inference.
     
     Note that the file is read into memory one document at a time, not whole 
-    corpus at once. This allows for representing corpora which do not wholly fit 
-    in RAM.
+    corpus at once. This allows for representing corpora which are larger than 
+    available RAM.
     """
     def __init__(self, fname):
         """
@@ -144,17 +144,30 @@ class MmReader(object):
                 continue
             break
         
-        prevId = None
+        prevId = -1
         for line in fin:
             docId, termId, val = line.split()
+            docId, termId, val = int(docId) - 1, int(termId) - 1, float(val) # -1 because matrix market indexes are 1-based => convert to 0-based
             if docId != prevId:
-                if prevId is not None:
+                # change of document: return the document read so far (its id is prevId)
+                if prevId >= 0:
                     yield prevId, document
+                                
+                # return implicit (empty) documents between previous id and new id 
+                # too, to keep consistent document numbering and corpus length
+                for prevId in xrange(prevId + 1, docId):
+                    yield prevId, []
+                
+                # from now on start adding fields to a new document, with a new id
                 prevId = docId
                 document = []
-            # add (termId, weight) pair to the document
-            document.append((int(termId) - 1, float(val),)) # -1 because matrix market indexes are 1-based => convert to 0-based
-        if prevId is not None: # handle the last document, as a special case
+            
+            document.append((termId, val,)) # add another field to the current document
+        
+        # handle the last document, as a special case
+        if prevId >= 0:
             yield prevId, document
+        for prevId in xrange(prevId + 1, self.noRows):
+            yield prevId, []
 #endclass MmReader
 

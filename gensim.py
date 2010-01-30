@@ -2,7 +2,7 @@
 
 """
 USAGE: %s METHOD LANGUAGE
-    Generate similar.xml files from the matrix created by the build_tfidf.py script.
+    Generate similar_method.xml files from the matrix created by the build_tfidf.py script.
     METHOD is currently either tfidf, lsi or rp.
 
 Example: ./gensim.py tfidf eng
