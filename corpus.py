@@ -301,13 +301,10 @@ class DmlCorpus(utils.SaveLoad):
                              (docNo, len(self.documents), sourceId, docUri))
             source = self.config.sources[sourceId]
             contents = source.getContent(docUri)
-            try:
-                words = source.tokenize(contents)
-            except xml.sax.SAXParseException, e:
-                logging.error("error parsing %s: %s" % (docUri, e))
-                ascsa
+            words = source.tokenize(contents)
 
-            _ = self.dictionary.doc2bow(words, source.normalizeWord, allowUpdate = True) # ignore the result, here we only care about updating token ids
+            # convert to bag-of-words, but ignore the result -- here we only care about updating token ids
+            _ = self.dictionary.doc2bow(words, source.normalizeWord, allowUpdate = True)
         logging.info("built %s" % self.dictionary)
 
     
@@ -342,15 +339,17 @@ class DmlCorpus(utils.SaveLoad):
         logging.info("accepted total of %i articles for %s" % 
                      (len(self.documents), str(config)))
     
-    def saveAsBow(self):
+    def saveAsMatrix(self):
         """
-        Store the corpus to a file, as a term-document matrix with bag-of-words 
-        counts in Matrix Market format.
+        Store the corpus to a file, in Matrix Market format.
         
-        The exact path and filename is determined from the config, but always ends 
-        in '*bow.mm'.
+        This actually saves two files -- one with pure term frequency counts, 
+        and one with tf-idf vectors (weight of frequent terms lowered).
+        
+        The exact filesystem paths and filenames are determined from the config, 
+        but always end in '*bow.mm' and '*tfidf.mm' respectively.
         """
-        # write bow to a file in matrix market format
-        matutils.MmWriter.writeCorpus(self.config.resultFile('bow.mm'), self)
+        matutils.MmWriter.writeCounts(self.config.resultFile('bow.mm'), self)
+        matutils.MmWriter.writeTfidf(self.config.resultFile('tfidf.mm'), self, normalize = False)
 #endclass DmlCorpus
 

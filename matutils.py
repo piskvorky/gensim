@@ -8,6 +8,7 @@ This module contains math helper functions.
 """
 
 import logging
+import math
 
 
 
@@ -76,15 +77,16 @@ class MmWriter(object):
         assert self.headersWritten, "must write MM file headers before writing data!"
         assert self.lastDocNo < docNo, "documents %i and %i not in sequential order!" % (self.lastDocNo, docNo)
         for termId, weight in sorted(vector): # write term ids in sorted order
-            # to ensure len(doc) does what is expected, there must not be any zero elements in the sparse document
-            assert weight != 0, "zero weights not allowed in sparse documents; check your document generator"
+            if weight == 0:
+                # to ensure len(doc) does what is expected, there must not be any zero elements in the sparse document
+                raise ValueError("zero weights not allowed in sparse documents; check your document generator")
             self.fout.write("%i %i %f\n" % (docNo + 1, termId + 1, weight)) # +1 because MM format starts counting from 1
         self.lastDocNo = docNo
 
     @staticmethod
-    def writeCorpus(fname, corpus):
+    def writeCounts(fname, corpus):
         """
-        Save bag-of-words representation of an entire corpus to disk.
+        Save term-frequency representation of an entire corpus to disk.
         
         Note that the documents are processed one at a time, so the whole corpus 
         is allowed to be larger than the available RAM.
@@ -96,6 +98,54 @@ class MmWriter(object):
                 logging.info("PROGRESS: saving document %i/%i" % 
                              (docNo, len(corpus)))
             mw.writeVector(docNo, bow)
+        mw.close()
+    
+    @staticmethod
+    def writeTfidf(fname, corpus, normalize = False):
+        """
+        Save TF-IDF (term-frequency*inverse-document-frequency) representation 
+        of an entire corpus to disk.
+        
+        If normalize is set, then normalize each tf-idf vector to unit length 
+        before writing it out.
+        
+        Note that the documents are processed one at a time, so the whole corpus 
+        is allowed to be larger than the available RAM.
+        """
+        # first, determine the IDF weights; this requires a separate sweep over the corpus
+        logging.info("calculating IDF weights over %i documents" % len(corpus))
+        idfs = {}
+        fs = {}
+        for docNo, bow in enumerate(corpus):
+            if docNo % 5000 == 0:
+                logging.info("PROGRESS: processing document %i/%i" % 
+                             (docNo, len(corpus)))
+            for termId, termCount in bow:
+                idfs[termId] = idfs.get(termId, 0) + 1
+                fs[termId] = fs.get(termId, 0) + termCount
+        idfs = dict((termId, math.log(1.0 * docNo / docFreq, 2)) 
+                    for termId, docFreq in idfs.iteritems())
+        
+        # determine MM format headers write them to file
+        numDocs = len(corpus)
+        numTerms = max(idfs.iterkeys()) + 1
+        numNnz = sum(count for termId, count in fs.iteritems() if idfs[termId] > 0)
+        mw = MmWriter(fname)
+        mw.writeHeaders(numDocs, numTerms, numNnz)
+
+        # finally, iterate over the documents again, saving tf-idf vectors
+        for docNo, bow in enumerate(corpus):
+            if docNo % 1000 == 0:
+                logging.info("PROGRESS: saving document %i/%i" % 
+                             (docNo, len(corpus)))
+            vector = [(termId, tf * idfs[termId]) for termId, tf in bow if idfs[termId] > 0]
+            if not vector:
+                logging.debug("skipping empty document #%i" % docNo)
+                continue
+            if normalize:
+                vecLen = 1.0 * math.sqrt(sum(val * val for _, val in vector))
+                vector = [(termId, val / vecLen) for termId, val in vector]
+            mw.writeVector(docNo, vector)
         mw.close()
 #endclass MmWriter
 
@@ -136,6 +186,14 @@ class MmReader(object):
         return self.noRows
         
     def __iter__(self):
+        """
+        Iteratively yield vectors from the underlying file.
+        
+        Note that the total number of documents returned is always equal to the 
+        number of rows specified in the header; empty documents are inserted and
+        yielded where appropriate, even if they are not explicitly stored in the 
+        Matrix Market file.
+        """
         fin = open(self.fname)
         
         # skip headers
