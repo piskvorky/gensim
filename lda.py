@@ -57,7 +57,8 @@ if __name__ == "__main__":
             id2word = corpus.id2word
         #corpus.saveAsBlei()
         # run parameter estimation; this is the step that takes the most time
-        model = LdaModel.fromCorpus(corpus, id2word = id2word, numTopics = k)
+        model = LdaModel(id2word = id2word, numTopics = k)
+        model.initialize(corpus)
         
         # store parameters, print topics info (for sanity check)
         model.save(datafile + '.model')
@@ -76,11 +77,11 @@ if __name__ == "__main__":
         datafile = sys.argv[2]
         
         # load model
+        model = LdaModel.load(modelfile)
         if datafile.endswith('.mm'):
             corpus = corpus.MmCorpus(datafile)
         else:
-            corpus = corpus.CorpusLow(datafile)
-        model = LdaModel.load(modelfile)
+            corpus = corpus.CorpusLow(datafile, id2word = model.id2word)
         # do the actual inference
         model.infer(corpus) # output is saved to datafile.lda_inferred
     else:
