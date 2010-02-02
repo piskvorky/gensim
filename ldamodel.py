@@ -5,7 +5,6 @@
 
 
 import logging
-import cPickle # for persistent storage of LDA models
 
 import numpy # for arrays, array broadcasting etc.
 from scipy.special import gammaln, digamma, polygamma # gamma function utils
@@ -14,7 +13,7 @@ from scipy.maxentropy import logsumexp # sum of logarithms
 trigamma = lambda x: polygamma(1, x) # second derivative of the gamma fnc
 
 
-class LdaModel(object):
+class LdaModel(utils.SaveLoad):
     """
     Objects of this class allow building and maintaining a model of Latent Dirichlet
     Allocation.
@@ -55,23 +54,10 @@ class LdaModel(object):
 
         # set EM training constants
         self.EM_MAX_ITER = 50 # maximum number of EM iterations; usually converges much earlier
-        self.EM_CONVERGED = 0.0005 # relative difference between two iterations; if lower than this, stop the EM training 
+        self.EM_CONVERGED = 0.0001 # relative difference between two iterations; if lower than this, stop the EM training 
         self.VAR_MAX_ITER = 20 # maximum number of document inference iterations
         self.VAR_CONVERGED = 0.000001 # relative difference between document inference iterations needed to stop sooner than VAR_MAX_ITER
     
-    
-    @staticmethod
-    def load(fname):
-        logging.info("loading LdaModel from %s" % fname)
-        return cPickle.load(open(fname))
-
-
-    def save(self, fname):
-        logging.info("saving %s to %s" % (self, fname))
-        f = open(fname, 'w')
-        cPickle.dump(self, f)
-        f.close()
-
 
     def __str__(self):
         return "LdaModel(numTerms=%s, numTopics=%s, alpha=%s (estimated=%s))" % \
@@ -102,7 +88,7 @@ class LdaModel(object):
     
     
     @staticmethod
-    def fromCorpus(corpus, id2word, numTopics, initMode = 'random'):
+    def fromCorpus(corpus, id2word, numTopics, initMode = 'random', alpha = None):
         """
         Run LDA parameter estimation from a training corpus, using the EM algorithm.
         
@@ -116,7 +102,7 @@ class LdaModel(object):
         """
         # initialize the model
         logging.info("initializing LDA model with '%s'" % initMode)
-        model = LdaModel(id2word, numTopics)
+        model = LdaModel(id2word, numTopics, alpha = alpha)
 
         # set initial word counts
         if initMode == 'seeded':
@@ -373,4 +359,31 @@ class LdaModel(object):
            
             # print best numWords, with a space separating each word:prob entry
             print "topic #%i: %s" % (i, ' '.join('%s:%.3f' % (word, prob) for (score, prob, word) in best))
+    
+    
+    def setCorpus(self, corpus):
+        self.corpus = corpus
+    
+    
+    def __iter__(self):
+        """
+        Iterate over corpus, estimating topic distribution for each document.
+        
+        Return this topic distribution as another.
+        
+        This method effectively wraps an underlying word-count corpus into another
+        corpus, of the same length but with terms replaced by topics.
+        
+        Internally, this method performs LDA inference on each document, using 
+        all the previously estimated model parameters.
+        """
+        assert self.corpus, "call setCorpus() first to assign the corpus to infer over"
+        logging.info("performing inference on corpus with %i documents" % len(self.corpus))
+        for docNo, bow in enumerate(self.corpus):
+            if docNo % 1000 == 0:
+                logging.info("PROGRESS: inferring LDA topics of doc #%i/%i" %
+                             (docNo, len(self.corpus)))
+            likelihood, phi, gamma = self.inference(bow)
+            topicDist = gamma / numpy.sum(gamma)
+            yield list(enumerate(topicDist))
 #endclass LdaModel
