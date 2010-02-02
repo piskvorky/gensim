@@ -97,7 +97,8 @@ class SparseMatrixSimilarity(SimilarityABC):
         if not numBest:
             return allSims
         else:
-            tops = sorted(enumerate(allSims), key = lambda item: -item[1]) # sort by -sim => highest cossim first
+            tops = [(docNo, sim) for docNo, sim in enumerate(allSims) if sim > 0]
+            tops = sorted(tops, key = lambda item: -item[1]) # sort by -sim => highest cossim first
             return tops[ : numBest] # return at most numBest top 2-tuples (docId, docSim)
 #endclass SparseMatrixSimilarity
 

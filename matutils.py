@@ -13,7 +13,7 @@ import math
 
 
 def unitVec(vec):
-    if not vec:
+    if len(vec) == 0:
         return vec
     vecLen = 1.0 * math.sqrt(sum(val * val for _, val in vec))
     assert vecLen > 0.0, "sparse documents must not contain any explicit zero entries"

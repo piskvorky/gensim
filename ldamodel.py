@@ -10,6 +10,9 @@ import numpy # for arrays, array broadcasting etc.
 from scipy.special import gammaln, digamma, polygamma # gamma function utils
 from scipy.maxentropy import logsumexp # sum of logarithms
 
+import utils
+
+
 trigamma = lambda x: polygamma(1, x) # second derivative of the gamma fnc
 
 
@@ -28,25 +31,31 @@ class LdaModel(utils.SaveLoad):
     Both accept a corpus (an iterable returning documents) and realize
     the tasks of parameter estimation/LDA inference respectively.
     
-    The model can be persistently saved via the load/save methods.
+    Model persistency is achieved via its load/save methods.
     """
     def __init__(self, id2word, numTopics = 200, alpha = None):
         """
         Initialize the model's hyperparameters and constants.
+        
+        This constructor should be followed by a call to initialize(corpus), which
+        estimates the necessary posterior distributions.
         
         id2word is a mapping between word ids (integers) to words (strings). It is
         used to determine the vocabulary size, as well as for debugging and topic 
         printing.
         
         numTopics is the number of requested topics.
-        
+                
         alpha is either None (to be estimated during training) or a fixed number 
         from (0.0, 1.0).
         """
         # store user-supplied parameters
-        self.numTerms = len(id2word) # size of vocabulary
+        self.numTerms = 1 + max(id2word.iterkeys()) # size of the vocabulary
         self.id2word = id2word
         self.numTopics = numTopics # number of latent topics
+        self.corpus = None  # corpus of new documents to infer topics on (not used for estimation)
+        
+        # internal constants; can be manually changed after having called the init
         self.ESTIMATE_ALPHA = alpha is None
         if alpha is None: # no alpha supplied by user => get some initial estimate
             alpha = 10.0 / numTopics # initial estimate is 50 / numTopics, as suggested in Steyvers&Griffiths: Probabilistic Topic Models
@@ -63,7 +72,73 @@ class LdaModel(utils.SaveLoad):
         return "LdaModel(numTerms=%s, numTopics=%s, alpha=%s (estimated=%s))" % \
                 (self.numTerms, self.numTopics, self.alpha, self.ESTIMATE_ALPHA)
 
+
+    def __len__(self):
+        assert self.corpus is not None, "must call setCorpus() before inferring topics of a corpus"
+        return len(self.corpus)
+
     
+    def initialize(self, corpus, initMode = 'random'):
+        """
+        Run LDA parameter estimation from a training corpus, using the EM algorithm.
+        
+        After the model has been initialized, you can assign an arbitrary corpus
+        with setCorpus() and infer topic distribution for its documents via iter(self).
+        
+        The init mode can be either 'random', for a fast random initialization of 
+        the model parameters, or 'seeded', for an initialization based on a handful
+        of real documents. The 'seeded' mode requires a sweep over the entire 
+        corpus, and is thus much slower.
+        
+        id2word is a mapping between word ids (integers) and words themselves 
+        (utf8 strings).
+        """
+        # initialize the model
+        logging.info("initializing LDA model with '%s'" % initMode)
+
+        # set initial word counts
+        if initMode == 'seeded':
+            counts = self.initializeFromCorpus(corpus, numInitDocs = 2)
+        else:
+            counts = 1.0 / self.numTerms + numpy.random.rand(self.numTopics, self.numTerms) # add noise from <0, 1)
+        self.classWord = counts
+            
+        # update model parameters with these initial counts; don't do anything with alpha
+        self.mle(estimateAlpha = False)
+        
+        # set up temporary vars needed for EM
+        likelihood = likelihoodOld = converged = numpy.NAN
+        
+        # main EM loop
+        for i in xrange(self.EM_MAX_ITER):
+            logging.info("starting EM iteration #%i, converged=%s, likelihood=%s" % 
+                         (i, converged, likelihood))
+
+            if numpy.isfinite(converged) and (converged <= self.EM_CONVERGED): # solution good enough?
+                logging.info("EM converged in %i iterations" % i)
+                break
+            
+            # initialize help structures for this iteration
+            self.classWord[:] = 0.0 # reset counts
+            self.alphaSuffStats = 0.0 # reset alpha stats
+            self.numDocs = 0
+            
+            # E step: iterate over individual documents, using old beta and updating new word counts
+            logging.info("performing E step #%i" % i)
+            likelihood = sum(self.docEStep(doc) for doc in corpus)
+            assert numpy.isfinite(likelihood), "bad likelihood %s" % likelihood
+
+            # M step -- update alpha and beta
+            logging.info("performing M step #%i" % i)
+            self.mle(estimateAlpha = self.ESTIMATE_ALPHA)
+            
+            # check for convergence
+            converged = numpy.divide(likelihoodOld - likelihood, likelihoodOld)
+            logging.info("finished iteration #%i: likelihood %f, likelihoodOld %f, converged %f" % 
+                         (i, likelihood, likelihoodOld, converged))
+            likelihoodOld = likelihood
+
+
     def initializeFromCorpus(self, corpus, numInitDocs = 1):
         """
         Initialize the model word counts from the corpus. Each topic will be initialized
@@ -87,68 +162,6 @@ class LdaModel(utils.SaveLoad):
         return result
     
     
-    @staticmethod
-    def fromCorpus(corpus, id2word, numTopics, initMode = 'random', alpha = None):
-        """
-        Run LDA parameter estimation from a training corpus, using the EM algorithm.
-        
-        The init mode can be either 'random', for a fast random initialization of 
-        the model parameters, or 'seeded', for an initialization based on a handful
-        of real documents. The 'seeded' mode requires a sweep over the entire 
-        corpus, and is thus much slower.
-        
-        id2word is a mapping between word ids (integers) and words themselves 
-        (utf8 strings).
-        """
-        # initialize the model
-        logging.info("initializing LDA model with '%s'" % initMode)
-        model = LdaModel(id2word, numTopics, alpha = alpha)
-
-        # set initial word counts
-        if initMode == 'seeded':
-            counts = model.initializeFromCorpus(corpus, numInitDocs = 2)
-        else:
-            counts = 1.0 / model.numTerms + numpy.random.rand(model.numTopics, model.numTerms) # add noise from <0, 1)
-        model.classWord = counts
-            
-        # update model parameters with these initial counts; don't do anything with alpha
-        model.mle(estimateAlpha = False)
-        
-        # set up temporary vars needed for EM
-        likelihood = likelihoodOld = converged = numpy.NAN
-        
-        # main EM loop
-        for i in xrange(model.EM_MAX_ITER):
-            logging.info("starting EM iteration #%i, converged=%s, likelihood=%s" % 
-                         (i, converged, likelihood))
-
-            if numpy.isfinite(converged) and (converged <= model.EM_CONVERGED): # solution good enough?
-                logging.info("EM converged in %i iterations" % i)
-                break
-            
-            # initialize help structures for this iteration
-            model.classWord[:] = 0.0 # reset counts
-            model.alphaSuffStats = 0.0 # reset alpha stats
-            model.numDocs = 0
-            
-            # E step: iterate over individual documents, using old beta and updating new word counts
-            logging.info("performing E step #%i" % i)
-            likelihood = sum(model.docEStep(doc) for doc in corpus)
-            assert numpy.isfinite(likelihood), "bad likelihood %s" % likelihood
-
-            # M step -- update alpha and beta
-            logging.info("performing M step #%i" % i)
-            model.mle(estimateAlpha = model.ESTIMATE_ALPHA)
-            
-            # check for convergence
-            converged = numpy.divide(likelihoodOld - likelihood, likelihoodOld)
-            logging.info("finished iteration #%i: likelihood %f, likelihoodOld %f, converged %f" % 
-                         (i, likelihood, likelihoodOld, converged))
-            likelihoodOld = likelihood
-        
-        return model
-
-
     def docEStep(self, doc):
         # posterior inference
         likelihood, phi, gamma = self.inference(doc)
@@ -367,23 +380,25 @@ class LdaModel(utils.SaveLoad):
     
     def __iter__(self):
         """
-        Iterate over corpus, estimating topic distribution for each document.
+        Iterate over corpus provided in setCorpus(), estimating topic distribution 
+        for each of its document.
         
-        Return this topic distribution as another.
-        
-        This method effectively wraps an underlying word-count corpus into another
-        corpus, of the same length but with terms replaced by topics.
+        This method effectively wraps the underlying word-count corpus into another
+        corpus (same interface), of the same length, but of topic-document rather
+        than term-document nature.
         
         Internally, this method performs LDA inference on each document, using 
-        all the previously estimated model parameters.
+        previously estimated model parameters.
         """
-        assert self.corpus, "call setCorpus() first to assign the corpus to infer over"
         logging.info("performing inference on corpus with %i documents" % len(self.corpus))
         for docNo, bow in enumerate(self.corpus):
             if docNo % 1000 == 0:
                 logging.info("PROGRESS: inferring LDA topics of doc #%i/%i" %
                              (docNo, len(self.corpus)))
             likelihood, phi, gamma = self.inference(bow)
-            topicDist = gamma / numpy.sum(gamma)
+            sumGamma = numpy.sum(gamma)
+            if numpy.allclose(sumGamma, 0.0): # if there were no topics found, return nothing (ie for empty documents)
+                yield []
+            topicDist = gamma / sumGamma
             yield list(enumerate(topicDist))
 #endclass LdaModel
