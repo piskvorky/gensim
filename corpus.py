@@ -256,9 +256,9 @@ class DmlCorpus(utils.SaveLoad):
     object, which holds information about where to look for the articles and how 
     to process them.
     
-    Apart from being a regular corpus (bag-of-words iterable with a len() function),
-    DmlCorpus has methods for building and storing its dictionary (mapping between
-    words and their ids).
+    Apart from being a regular corpus (bag-of-words iterable with a len() method),
+    DmlCorpus has methods for building a dictionary (mapping between words and 
+    their ids).
     """
     def __init__(self):
         self.documents = []

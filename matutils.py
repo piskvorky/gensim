@@ -12,6 +12,14 @@ import math
 
 
 
+def unitVec(vec):
+    if not vec:
+        return vec
+    vecLen = 1.0 * math.sqrt(sum(val * val for _, val in vec))
+    assert vecLen > 0.0, "sparse documents must not contain any explicit zero entries"
+    return [(termId, val / vecLen) for termId, val in vec]
+
+
 class MmWriter(object):
     """
     Store corpus in Matrix Market format.
@@ -143,8 +151,7 @@ class MmWriter(object):
                 logging.debug("skipping empty document #%i" % docNo)
                 continue
             if normalize:
-                vecLen = 1.0 * math.sqrt(sum(val * val for _, val in vector))
-                vector = [(termId, val / vecLen) for termId, val in vector]
+                vector = unitVec(vector)
             mw.writeVector(docNo, vector)
         mw.close()
 #endclass MmWriter

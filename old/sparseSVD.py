@@ -58,6 +58,7 @@ def tensorFromMtx(fname, transposed = False):
         result[(i1 - 1, i2 - 1)] = value # -1 because matrix market format starts numbering from 1
     return result
 
+
 def iterateCsc(mat):
     """
     Iterate over CSC matrix, returning (key, value) pairs, where key = (row, column) 2-tuple.
@@ -66,13 +67,14 @@ def iterateCsc(mat):
     Depends on scipy.sparse.csc_matrix implementation details!
     """
     if not isinstance(mat, scipy.sparse.csc_matrix):
-        raise TypeError("iterateCsc expects an CSC matrix on input!")
+        raise TypeError("iterateCsc expects a CSC matrix on input!")
     for col in xrange(mat.shape[1]):
         if col % 1000 == 0:
             logging.debug("iterating over column %i/%i" % (col, mat.shape[1]))
         for i in xrange(mat.indptr[col], mat.indptr[col + 1]):
             row, value = mat.indices[i], mat.data[i]
             yield (row, col), value
+
 
 def toTensor(sparseMat):
     logging.info("creating divisi sparse tensor of shape %s" % (sparseMat.shape,))
@@ -83,11 +85,12 @@ def toTensor(sparseMat):
 
 def doSVD(sparseTensor, num):
     """
-    Do Singular Value Decomposition on mat using an external program (SVDLIBC via divisi). 
-    mat is a scipy.sparse matrix in CSC format.
-    Returns:
-    - array of 'num' largest singular values if val_only is set
-    - otherwise return the triple (U, S, VT) = (left eigenvectors, singular values, right eigenvectors)
+    Do Singular Value Decomposition on mat using an external program (SVDLIBC via divisi).
+     
+    mat is a sparse matrix in divisi tensor format.
+    
+    Returns return the triple (U, S, VT) = (left eigenvectors, singular values, right eigenvectors)
+    of num most greatest factors.
     """
     logging.info("computing sparse svd of %s matrix" % (sparseTensor.shape,))
     svdResult = divisi.svd.svd_sparse(sparseTensor, k = num)
