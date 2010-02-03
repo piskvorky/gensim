@@ -34,7 +34,6 @@ class LsiModel(utils.SaveLoad):
         """
         self.numTerms = len(id2word)
         self.numTopics = numTopics # number of latent topics
-        self.corpus = None
 
     
     def __str__(self):
@@ -42,11 +41,6 @@ class LsiModel(utils.SaveLoad):
                 (self.numTerms, self.numTopics)
 
 
-    def __len__(self):
-        assert self.corpus is not None, "must call setCorpus() before inferring topics of a corpus"
-        return len(self.corpus)
-
-    
     def initialize(corpus):
         """
         Run SVD decomposition on the corpus, which defines the latent space into 
@@ -62,39 +56,16 @@ class LsiModel(utils.SaveLoad):
         u, s, vt = self.doSvd(corpus)
         
         # calculate projection needed to get document-topic matrix from term-document matrix
-        # note that vt (topics for the training corpus) are discarded and not used at all
-        # if you care about topics of the training corpus, call setCorpus(trainingCorpus)
-        # and iterate over its topics with itetr(self).
+        # note that vt (topics of the training corpus) are discarded and not used at all
         self.projection = numpy.dot(numpy.diag(1.0 / s), u.T) # S^(-1) * U^(-1)
 
     
-    def setCorpus(self, corpus):
-        self.corpus = corpus
-    
-    
-    def __iter__(self):
+    def __getitem__(self, bow):
         """
-        Iterate over corpus, estimating topic distribution for each document.
-        
-        Return this topic distribution as another.
-        
-        This method effectively wraps an underlying word-count corpus into another
-        corpus, of the same length but with terms replaced by topics.
-        
-        Internally, this method performs LDA inference on each document, using 
-        all the previously estimated model parameters.
+        Return topic distribution, as a list of (topic_id, topic_value) 2-tuples.
         """
-        logging.info("performing inference on corpus of %i documents" % len(self.corpus))
-        for docNo, bow in enumerate(self.corpus):
-            if docNo % 1000 == 0:
-                logging.info("PROGRESS: inferring LSI topics of doc #%i/%i" %
-                             (docNo, len(self.corpus)))
-            
-            topicDist = numpy.sum(self.projection[termId] * val for termId, val in bow)
-            topicDist = numpy.where(topicDist > 0, topicDist, 0.0)
-            sumDist = numpy.sum(topicDist)
-            if numpy.allclose(sumDist, 0.0): # if there were no topics found, return nothing (ie for empty documents)
-                yield []
-            topicDist = topicDist / sumDist
-            yield list(enumerate(topicDist))
+        topicDist = numpy.sum(self.projection[termId] * val for termId, val in bow)
+        print 'topicDist.shape', topicDist.shape
+        return [(topicId, topicValue) for topicId, topicValue in enumerate(topicDist)
+                if not numpy.allclose(topicValue, 0.0)]
 #endclass LsiModel
