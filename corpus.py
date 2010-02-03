@@ -362,6 +362,17 @@ class DmlCorpus(utils.SaveLoad):
 
 
 class TopicsCorpus(utils.SaveLoad):
+    """
+    A simple wrapper which transparently converts corpora from the term-document
+    space into topic-document space.
+    
+    The conversion is done using a topic model, such as Latent Semantic Indexing 
+    (LSI, the lsimodel module), Latent Dirichlet Allocation (LDA, ldamodel module), 
+    Random Projections (RP) etc. 
+    
+    The model object must provide a dictionary [] operator, which accept a document 
+    represented in the old space and returns its representation in the topic space.
+    """
     def __init__(self, model, corpus):
         self.model = model
         self.corpus = corpus
@@ -376,17 +387,17 @@ class TopicsCorpus(utils.SaveLoad):
         of its document.
         
         This method effectively wraps the underlying word-count corpus into another
-        corpus (same interface), of the same length, but of topic-document rather
+        corpus of the same length, but of topic-document rather
         than term-document nature.
         
         Internally, this method performs topic inference on each document, using 
         previously estimated model parameters.
         """
-        logging.info("performing inference on a corpus with %i documents" % len(self.corpus))
+        logging.info("performing topic inference on a corpus with %i documents" % len(self.corpus))
         for docNo, bow in enumerate(self.corpus):
             if docNo % 1000 == 0:
                 logging.info("PROGRESS: calculating topics of doc #%i/%i" %
                              (docNo, len(self.corpus)))
             yield self.model[bow]
-#endclass LdaCorpus
+#endclass TopicsCorpus
 

@@ -3,6 +3,16 @@
 #
 # author Radim Rehurek, radimrehurek@seznam.cz
 
+"""
+This module contains functions for the Latent Dirichlet Allocation algorithm. 
+It allows both model estimation from a training corpus and inference on new, 
+unseen documents.
+
+The implementation is based on Blei et al., Latent Dirichlet Allocation, 2003,
+and on Blei's LDA-C software in particular. This means it uses variational EM
+inference rather than Gibbs sampling to estimate model parameters.
+"""
+
 
 import logging
 
@@ -27,18 +37,15 @@ class LdaModel(utils.SaveLoad):
     C version. The up side is that it is much more straightforward and concise, 
     using vector operations ala MATLAB, easily pluggable/extensible etc.
     
-    The main functions are LdaModel.fromCorpus() and LdaModel.infer().
-    Both accept a corpus (an iterable returning documents) and realize
-    the tasks of parameter estimation/LDA inference respectively.
+    The constructor estimates model parameters based on a ctraining orpus (any 
+    iterable returning BOW documents). You can then infer topic distributions on
+    new, unseed documents by simply calling model[bow].
     
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, id2word, numTopics = 200, alpha = None):
+    def __init__(self, corpus, id2word, numTopics = 200, alpha = None, initMode = 'random'):
         """
-        Initialize the model's hyperparameters and constants.
-        
-        This constructor should be followed by a call to initialize(corpus), which
-        estimates the necessary posterior distributions.
+        Initialize the model based on corpus.
         
         id2word is a mapping between word ids (integers) to words (strings). It is
         used to determine the vocabulary size, as well as for debugging and topic 
@@ -46,8 +53,11 @@ class LdaModel(utils.SaveLoad):
         
         numTopics is the number of requested topics.
                 
-        alpha is either None (to be estimated during training) or a fixed number 
-        from (0.0, 1.0).
+        alpha is either None (to be estimated during training) or a number 
+        between (0.0, 1.0).
+        
+        After the model has been initialized, you can estimate topics for an
+        arbitrary, unseen document, using the topics = model[bow] dictionary notation.
         """
         # store user-supplied parameters
         self.numTerms = 1 + max(id2word.iterkeys()) # size of the vocabulary
@@ -65,6 +75,9 @@ class LdaModel(utils.SaveLoad):
         self.EM_CONVERGED = 0.0001 # relative difference between two iterations; if lower than this, stop the EM training 
         self.VAR_MAX_ITER = 20 # maximum number of document inference iterations
         self.VAR_CONVERGED = 0.000001 # relative difference between document inference iterations needed to stop sooner than VAR_MAX_ITER
+        
+        if corpus is not None:
+            self.initialize(corpus, initMode)
     
 
     def __str__(self):
@@ -92,7 +105,7 @@ class LdaModel(utils.SaveLoad):
 
         # set initial word counts
         if initMode == 'seeded':
-            counts = self.initializeFromCorpus(corpus, numInitDocs = 2)
+            counts = self.countsFromCorpus(corpus, numInitDocs = 2)
         else:
             counts = 1.0 / self.numTerms + numpy.random.rand(self.numTopics, self.numTerms) # add noise from <0, 1)
         self.classWord = counts
@@ -133,30 +146,10 @@ class LdaModel(utils.SaveLoad):
             likelihoodOld = likelihood
 
 
-    def initializeFromCorpus(self, corpus, numInitDocs = 1):
-        """
-        Initialize the model word counts from the corpus. Each topic will be initialized
-        from numInitDocs random documents.
-        """
-        logging.info("initializing model with %i random document(s) per topic" % numInitDocs)
-        result = numpy.ones(shape = (self.numTopics, self.numTerms)) # add-one smooth
-        # next we precompute the all the random document indices, so that we can 
-        # update the counts in a single sweep over the corpus. 
-        # all this drama is because the corpus doesn't necessarily support 
-        # random access (indexing) -- it only supports sequential iteration over 
-        # the documents (streaming).
-        initDocs = numpy.random.randint(0, len(corpus), (self.numTopics, numInitDocs)) # get document indices
-        
-        # go over the corpus, updating counts
-        for i, doc in enumerate(corpus):
-            for k in xrange(self.numTopics):
-                if i in initDocs[k]: # do we want to initialize this topic with this document?
-                    for wordIndex, wordCount in doc: # for each word in the document...
-                        result[k, wordIndex] += wordCount # ...add its count to the word-topic count
-        return result
-    
-    
     def docEStep(self, doc):
+        """
+        Find optimizing parameters for phi and gamma, and update sufficient statistics.
+        """
         # posterior inference
         likelihood, phi, gamma = self.inference(doc)
         
@@ -173,13 +166,13 @@ class LdaModel(utils.SaveLoad):
         """
         Maximum likelihood estimate.
         
-        Bring conditional word probabilities up to date with word-topic counts, 
-        estimate new alpha (if requested).
+        This maximizes the lower bound on log likelihood wrt. to the alpha and beta
+        parameters.
         """
         marginal = numpy.log(numpy.sum(self.classWord, axis = 1)) 
         marginal.shape += (1,) # alter array shape from (n,) to (n, 1); needed for correct broadcasting on the following line
         logProbW = numpy.log(self.classWord) - marginal # (logarithm of) the beta parameter = word-topic distribution
-        self.logProbW = numpy.where(numpy.isfinite(logProbW), logProbW, -100.0) # replace log(0) with -100.0
+        self.logProbW = numpy.where(numpy.isfinite(logProbW), logProbW, -100.0) # replace log(0) with -100.0 (almost zero probability)
         
         if estimateAlpha:
             self.alpha = self.optAlpha()
@@ -189,7 +182,8 @@ class LdaModel(utils.SaveLoad):
     
     def optAlpha(self, MAX_ALPHA_ITER = 1000, NEWTON_THRESH = 1e-5):
         """
-        Estimate alpha.
+        Estimate new Dirichlet priors (actually just one scalar shared across all
+        topics).
         """
         initA = 100.0
         logA = numpy.log(initA) # keep computations in log space
@@ -219,10 +213,13 @@ class LdaModel(utils.SaveLoad):
         Perform inference on a single document.
         
         Return 3-tuple of (likelihood of this document, word-topic distribution
-        phi, topic distribution gamma).
+        phi, expected word counts gamma (~topic distribution)).
         
         A document is simply a bag-of-words collection which supports len() and 
         iteration over (wordIndex, wordCount) 2-tuples.
+        
+        The model itself is not affected in any way (this function is read-only aka 
+        const).
         """
         # init help structures
         totalWords = sum(wordCount for _, wordCount in doc)
@@ -230,7 +227,7 @@ class LdaModel(utils.SaveLoad):
         phi = numpy.zeros(shape = (len(doc), self.numTopics)) + 1.0 / self.numTopics
         likelihood = likelihoodOld = converged = numpy.NAN
         
-        # compute posterior dirichlet
+        # variational estimate
         for i in xrange(self.VAR_MAX_ITER):
 #            logging.debug("inference step #%s, converged=%s, likelihood=%s, likelikelihoodOld=%s" % 
 #                          (i, converged, likelihood, likelihoodOld))
@@ -277,6 +274,29 @@ class LdaModel(utils.SaveLoad):
         return likelihood
     
     
+    def countsFromCorpus(self, corpus, numInitDocs = 1):
+        """
+        Initialize the model word counts from the corpus. Each topic will be initialized
+        from numInitDocs random documents.
+        """
+        logging.info("initializing model with %i random document(s) per topic" % numInitDocs)
+        result = numpy.ones(shape = (self.numTopics, self.numTerms)) # add-one smooth
+        # next we precompute the all the random document indices, so that we can 
+        # update the counts in a single sweep over the corpus. 
+        # all this drama is because the corpus doesn't necessarily support 
+        # random access (indexing) -- it only supports sequential iteration over 
+        # the documents (streaming).
+        initDocs = numpy.random.randint(0, len(corpus), (self.numTopics, numInitDocs)) # get document indices
+        
+        # go over the corpus, updating counts
+        for i, doc in enumerate(corpus):
+            for k in xrange(self.numTopics):
+                if i in initDocs[k]: # do we want to initialize this topic with this document?
+                    for wordIndex, wordCount in doc: # for each word in the document...
+                        result[k, wordIndex] += wordCount # ...add its count to the word-topic count
+        return result
+    
+    
     def infer(self, corpus):
         """
         Perform inference on a corpus of documents.
@@ -288,9 +308,6 @@ class LdaModel(utils.SaveLoad):
         doc_likelihood[TAB]topic1:prob ... topicK:prob[TAB]word1:topic ... wordN:topic
         
         Topics are sorted by probability, words are in the same order as in the input.
-        
-        The model itself is not affected in any way (this function is read-only aka 
-        const).
         """
         fname = corpus.fname + '.lda_inferred'
         logging.info("writing inferences to %s" % fname)
@@ -361,7 +378,7 @@ class LdaModel(utils.SaveLoad):
             # link scores with the actual words (strings)
             termScores = zip(scores, self.logProbW[i], map(self.id2word.get, xrange(len(scores))))
             
-            # sort words -- words with best scores come first; keep only the best numWords
+            # sort words -- words with the best scores come first; keep only the best numWords
             best = sorted(termScores, reverse = True)[:numWords]
            
             # print best numWords, with a space separating each word:prob entry
@@ -370,16 +387,18 @@ class LdaModel(utils.SaveLoad):
 
     def __getitem__(self, bow):
         """
-        Return topic distribution, as a list of (topic_id, topic_value) 2-tuples.
+        Return topic distribution for the given document, as a list of 
+        (topic_id, topic_value) 2-tuples.
         
         Ignore topics with very low probability (below 0.001).
         """
         likelihood, phi, gamma = self.inference(bow)
+        gamma -= self.alpha # subtract the dirichlet prior, to get the expected no of words for each topic
         sumGamma = numpy.sum(gamma)
-        if numpy.allclose(sumGamma, 0.0): # if there were no topics found, return nothing (ie for empty documents)
+        if numpy.allclose(sumGamma, 0): # if there were no topics found, return nothing (ie for empty documents)
             return []
-        topicDist = gamma / sumGamma
+        topicDist = gamma / sumGamma # convert to proper distribution
         return [(topicId, topicValue) for topicId, topicValue in enumerate(topicDist)
-                if topicValue >= 1e-3] # ignore topics with prob < 0.001
+                if topicValue >= 0.001] # ignore topics with prob < 0.001
 #endclass LdaModel
 
