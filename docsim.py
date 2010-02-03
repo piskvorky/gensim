@@ -22,7 +22,7 @@ import ldamodel # needed for Latent Dirichlet Allocation
 import randomprojections # needed for Random Projections
 
 import sources
-import corpus
+import corpora
 
 
 
@@ -109,9 +109,9 @@ def buildDmlCorpus(language):
     dmlcz = sources.DmlSource('dmlcz', sourcePath['dmlcz'])
     arxmliv = sources.ArxmlivSource('arxmliv', sourcePath['arxmliv'])
     
-    config = corpus.DmlConfig('gensim', resultDir = sourcePath['results'], acceptLangs = [language])
+    config = corpora.DmlConfig('gensim', resultDir = sourcePath['results'], acceptLangs = [language])
     
-    dml = corpus.DmlCorpus()
+    dml = corpora.DmlCorpus()
     dml.processConfig(config)
     dml.buildDictionary()
     dml.dictionary.filterExtremes(noBelow = 5, noAbove = 0.3)

@@ -11,7 +11,7 @@ A document source is basically a collection of articles sharing the same format,
 same location (type of access), same way of parsing them etc.
 
 Different sources can be aggregated into a single corpus, which is what the 
-DmlCorpus class does (see the corpus.py module).
+DmlCorpus class does (see the corpora module).
 """
 
 import logging
