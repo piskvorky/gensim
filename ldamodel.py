@@ -53,7 +53,6 @@ class LdaModel(utils.SaveLoad):
         self.numTerms = 1 + max(id2word.iterkeys()) # size of the vocabulary
         self.id2word = id2word
         self.numTopics = numTopics # number of latent topics
-        self.corpus = None  # corpus of new documents to infer topics on (not used for estimation)
         
         # internal constants; can be manually changed after having called the init
         self.ESTIMATE_ALPHA = alpha is None
@@ -73,17 +72,12 @@ class LdaModel(utils.SaveLoad):
                 (self.numTerms, self.numTopics, self.alpha, self.ESTIMATE_ALPHA)
 
 
-    def __len__(self):
-        assert self.corpus is not None, "must call setCorpus() before inferring topics of a corpus"
-        return len(self.corpus)
-
-    
     def initialize(self, corpus, initMode = 'random'):
         """
         Run LDA parameter estimation from a training corpus, using the EM algorithm.
         
-        After the model has been initialized, you can assign an arbitrary corpus
-        with setCorpus() and infer topic distribution for its documents via iter(self).
+        After the model has been initialized, you can infer topic distribution over
+        other, different corpora, using this estimated model; see corpus.LdaCorpus.
         
         The init mode can be either 'random', for a fast random initialization of 
         the model parameters, or 'seeded', for an initialization based on a handful
@@ -373,32 +367,19 @@ class LdaModel(utils.SaveLoad):
             # print best numWords, with a space separating each word:prob entry
             print "topic #%i: %s" % (i, ' '.join('%s:%.3f' % (word, prob) for (score, prob, word) in best))
     
-    
-    def setCorpus(self, corpus):
-        self.corpus = corpus
-    
-    
-    def __iter__(self):
+
+    def __getitem__(self, bow):
         """
-        Iterate over corpus provided in setCorpus(), estimating topic distribution 
-        for each of its document.
+        Return topic distribution, as a list of (topic_id, topic_value) 2-tuples.
         
-        This method effectively wraps the underlying word-count corpus into another
-        corpus (same interface), of the same length, but of topic-document rather
-        than term-document nature.
-        
-        Internally, this method performs LDA inference on each document, using 
-        previously estimated model parameters.
+        Ignore topics with very low probability (below 0.001).
         """
-        logging.info("performing inference on corpus with %i documents" % len(self.corpus))
-        for docNo, bow in enumerate(self.corpus):
-            if docNo % 1000 == 0:
-                logging.info("PROGRESS: inferring LDA topics of doc #%i/%i" %
-                             (docNo, len(self.corpus)))
-            likelihood, phi, gamma = self.inference(bow)
-            sumGamma = numpy.sum(gamma)
-            if numpy.allclose(sumGamma, 0.0): # if there were no topics found, return nothing (ie for empty documents)
-                yield []
-            topicDist = gamma / sumGamma
-            yield list(enumerate(topicDist))
+        likelihood, phi, gamma = self.inference(bow)
+        sumGamma = numpy.sum(gamma)
+        if numpy.allclose(sumGamma, 0.0): # if there were no topics found, return nothing (ie for empty documents)
+            return []
+        topicDist = gamma / sumGamma
+        return [(topicId, topicValue) for topicId, topicValue in enumerate(topicDist)
+                if topicValue >= 1e-3] # ignore topics with prob < 0.001
 #endclass LdaModel
+

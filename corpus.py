@@ -5,15 +5,21 @@
 
 
 """
-This module implements classes which represent a collection of documents as a corpus \
-in the bag-of-words format.
+This module implements classes which represent documents as a collection of sparse \
+vectors in vector space (the bag-of-words, Vector Space Model).
 
 A corpus is any object which supports iteration over the bag-of-words representation \
-of its constituent documents, without the need to keep all articles in memory at the same time.
+of its constituent documents, without the need to keep all articles in memory at \
+the same time.
 This allows corpora to be much larger than the available RAM.
 
-A trivial example of a corpus containing two documents would be for example:
+A trivial example of a corpus containing two documents would be:
 >>> corpus = [[(1, 2), (3, 10)], [(0, 1)]]
+The first document contains 12 words of two types (ids 1 and 3), the second document 
+a single word of another type (id 0).
+
+The word ids may actually refer to concept ids, it is up to application how to \
+interpret these document vectors.
 
 There are several corpora classes included in this module, which differ in the way \
 they are initialized:
@@ -352,4 +358,35 @@ class DmlCorpus(utils.SaveLoad):
         matutils.MmWriter.writeCounts(self.config.resultFile('bow.mm'), self)
         matutils.MmWriter.writeTfidf(self.config.resultFile('tfidf.mm'), self, normalize = False)
 #endclass DmlCorpus
+
+
+
+class TopicsCorpus(utils.SaveLoad):
+    def __init__(self, model, corpus):
+        self.model = model
+        self.corpus = corpus
+        
+    def __len__(self):
+        return len(self.corpus)
+
+    
+    def __iter__(self):
+        """
+        Iterate over the provided corpus, estimating topic distribution for each 
+        of its document.
+        
+        This method effectively wraps the underlying word-count corpus into another
+        corpus (same interface), of the same length, but of topic-document rather
+        than term-document nature.
+        
+        Internally, this method performs topic inference on each document, using 
+        previously estimated model parameters.
+        """
+        logging.info("performing inference on a corpus with %i documents" % len(self.corpus))
+        for docNo, bow in enumerate(self.corpus):
+            if docNo % 1000 == 0:
+                logging.info("PROGRESS: calculating topics of doc #%i/%i" %
+                             (docNo, len(self.corpus)))
+            yield self.model[bow]
+#endclass LdaCorpus
 
