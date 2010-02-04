@@ -55,7 +55,7 @@ class LsiModel(utils.SaveLoad):
         (utf8 strings).
         """
         # do the actual work -- perform iterative singular value decomposition
-        u, s, vt = self.doSvd(corpus)
+        u, s, vt = iterSvd(corpus, k = self.numTopics)
         
         # calculate projection needed to get document-topic matrix from term-document matrix
         # note that vt (topics of the training corpus) are discarded and not used at all
@@ -69,7 +69,60 @@ class LsiModel(utils.SaveLoad):
         topicDist = numpy.sum(self.projection[termId] * val for termId, val in bow)
         return [(topicId, topicValue) for topicId, topicValue in enumerate(topicDist)
                 if not numpy.allclose(topicValue, 0.0)]
-    
-    def doSvd(self, corpus):
-        pass # FIXME TODO
 #endclass LsiModel
+
+
+def iterSvd(corpus, numTerms, numFactors, nIter = 100, learnRate = 0.001, cache = True, dtype = numpy.float64):
+    """
+    Performs iterative Singular Value Decomposition on a streaming matrix (corpus).
+    
+    Return numFactors greatest factors (only performs partial SVD).
+    
+    nIter (maximum number of iterations) and learnRate (gradient descent step size) 
+    guide convergency of the algorithm.
+    
+    If cache is True, cache intermediate results between the computation of 
+    successive factors; this requires *placing the entire matrix in memory* but 
+    is faster than False (default).
+    
+    dtype determines the basic numeric type for operations as well as resulting
+    vectors; default is double (numpy.float64).
+    """
+    logging.info("performing incremental SVD for %i factors" % numFactors)
+    
+    u = numpy.zeros((len(corpus), numFactors,), dtype = dtype) + 0.01 # FIXME add random rather than 0.01?
+    v = numpy.zeros((numTerms, numFactors,), dtype = dtype) + 0.01
+    
+    if cache:
+        cached = scipy.sparse.dok_matrix((len(corpus), numTerms), dtype = dtype)
+    
+    for factor in xrange(numFactors):
+        # update the vectors for nIter iterations (or until convergence)
+        for iterNo in xrange(nIter):
+            for cur_row, vector in corpus:
+                for cur_col, value in vector:
+                    error = value - (cached[cur_row, cur_col] + u[cur_row, factor] * v[cur_col, factor])
+                    u_value = u[cur_row, factor]
+                    u[cur_row, axis] += learnRate * error * v[cur_col, factor]
+                    v[cur_col, axis] += learnRate * error * u_value
+    
+        # after each factor, update the cache
+        if cache:
+            for (cur_row, cur_col), value in cached.iteritems():
+                cached[cur_row, cur_col] += u[cur_row, factor] * v[cur_col, factor]
+    
+    # Factor out the svals from u and v
+    u_sigma = numpy.sqrt(numpy.sum(u * u))
+    v_sigma = numpy.sqrt(numpy.sum(v * v))
+    
+    u_tensor = DenseTensor(np.divide(u, u_sigma))
+    v_tensor = DenseTensor(np.divide(v, v_sigma))
+    sigma = DenseTensor(np.multiply(u_sigma, v_sigma))
+    
+    svdFreeSMat(predicted)
+    
+    if self.transposed:
+        return v_tensor, u_tensor, sigma
+    else:
+        return u_tensor, v_tensor, sigma
+
