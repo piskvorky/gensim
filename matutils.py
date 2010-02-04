@@ -11,13 +11,42 @@ import logging
 import math
 
 
+def vecLen(vec):
+    if len(vec) == 0:
+        return 0.0
+    vecLen = 1.0 * math.sqrt(sum(val * val for _, val in vec))
+    assert vecLen > 0.0, "sparse documents must not contain any explicit zero entries"
+    return vecLen
+
 
 def unitVec(vec):
     if len(vec) == 0:
         return vec
     vecLen = 1.0 * math.sqrt(sum(val * val for _, val in vec))
     assert vecLen > 0.0, "sparse documents must not contain any explicit zero entries"
-    return [(termId, val / vecLen) for termId, val in vec]
+    if vecLen != 1.0:
+        vec = [(termId, val / vecLen) for termId, val in vec]
+    return vec
+
+
+def cossim(vec1, vec2, norm1 = True, norm2 = True):
+    vec1, vec2 = dict(vec1), dict(vec2)
+    if not vec1 or not vec2:
+        return 0.0
+    if norm1:
+        vec1Len = 1.0 * math.sqrt(sum(val * val for val in vec1.itervalues()))
+    else:
+        vec1Len = 1.0
+    if norm2:
+        vec2Len = 1.0 * math.sqrt(sum(val * val for val in vec2.itervalues()))
+    else:
+        vec2Len = 1.0
+    assert vec1Len > 0.0 and vec2Len > 0.0, "sparse documents must not contain any explicit zero entries"
+    if len(vec2) < len(vec1):
+        vec1, vec2 = vec2, vec1 # swap references so that we iterate over the shorter vector
+    result = sum(value * vec2.get(index, 0.0) for index, value in vec1.iteritems())
+    result /= vec1Len * vec2Len # rescale by vector lengths
+    return result
 
 
 class MmWriter(object):
