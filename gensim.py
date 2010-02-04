@@ -59,6 +59,29 @@ SIMILAR = """\
 """
 
 
+
+def buildDmlCorpus(language):
+    numdam = sources.DmlSource('numdam', sourcePath['numdam'])
+    dmlcz = sources.DmlSource('dmlcz', sourcePath['dmlcz'])
+    arxmliv = sources.ArxmlivSource('arxmliv', sourcePath['arxmliv'])
+    
+    config = corpora.DmlConfig('gensim', resultDir = sourcePath['results'], acceptLangs = [language])
+    
+    dml = corpora.DmlCorpus()
+    dml.processConfig(config)
+    dml.buildDictionary()
+    dml.dictionary.filterExtremes(noBelow = 5, noAbove = 0.3)
+    
+    dml.save() # save the whole object as binary data
+    dml.saveDebug() # save docNo->docId mapping, and termId->term mapping in text format
+    dml.saveAsMatrix() # save word count matrix and tfidf matrix
+    
+                                                               
+def generateSimilar(method, docSim):
+    pass
+
+    
+
 def decomposeId(docId):
     """
     Decompose an article id back into (source, path from source base dir, full filesystem path) 3-tuple.
