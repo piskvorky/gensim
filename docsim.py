@@ -4,8 +4,28 @@
 # author Radim Rehurek, radimrehurek@seznam.cz
 
 """
-This module contains functions and classes for computing similarity in Vector
-Space Model.
+This module contains functions and classes for computing cosine similarity across
+a corpus of documents in the Vector Space Model.
+
+The documents may come from the TF-IDF model, LSI model, LDA model etc -- as long
+as they can be iterated over, it's good.
+
+Two main classes are 
+1) Similarity -- computes similarity by linearly scanning over the corpus (slower,
+memory independent)
+
+2) SparseMatrixSimilarity -- stores the whole corpus in memory, computes similarity 
+by in-memory matrix-vector multiplication. This is much faster than the general 
+Similarity, so use this when dealing with small corpora that fit in RAM.
+
+Once the similarity object has been initialized, you can query for document
+similarity simply by 
+>>> similarities = similarity_object[document]
+
+or iterate over within-corpus similarities with
+ 
+>>> for similarities in similarity_object:
+>>>     ...
 """
 
 
@@ -24,24 +44,38 @@ class SimilarityABC(utils.SaveLoad):
         """
         Initialize the similarity search.
         
-        If numBest is left unspecified, iter(self) will yield similarities as a list 
-        (one float for every document in the corpus, including the query document).
+        If numBest is left unspecified, similarities return a full list (one float 
+        for every document in the corpus, including the query document).
         
-        If numBest is set, iter(self) will yield indices and similarities of numBest most 
-        similar documents, as a sorted list, eg. [(docIndex1, 1.0), (docIndex2, 0.95), 
-        ..., (docIndexnumBest, 0.45)].
+        If numBest is set, similarities return numBest most similar documents, 
+        as a sorted list, eg. [(docIndex1, 1.0), (docIndex2, 0.95), ..., (docIndexnumBest, 0.45)].
         """
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 
 
-    def __getitem__(self, doc):
+    def getSimilarities(self, doc):
         """
         Return similarity of doc to all documents in the corpus.
         
         doc may be either a bag-of-words iterable (corpus document), or a numpy 
         array, or a scipy.sparse matrix.
+        
+        The document is assumed to be either unit length or empty.
         """
         raise NotImplementedError("cannot instantiate Abstract Base Class")
+
+
+    def __getitem__(self, doc):
+        # get similarities of doc to all documents in the corpus
+        allSims = self.getSimilarities(doc)
+        
+        # return either all similarities as a list, or only self.numBest most similar, depending on settings from the constructor
+        if self.numBest is None:
+            return allSims
+        else:
+            tops = [(docNo, sim) for docNo, sim in enumerate(allSims) if sim > 0]
+            tops = sorted(tops, key = lambda item: -item[1]) # sort by -sim => highest cossim first
+            return tops[ : self.numBest] # return at most numBest top 2-tuples (docId, docSim)
 
 
     def __iter__(self):
@@ -50,26 +84,19 @@ class SimilarityABC(utils.SaveLoad):
         and yield the result.
         """
         for docNo, doc in enumerate(self.corpus):
-            # compute cosine similarity against every other document in the collection
-            allSims = self[doc]
-            
-            # return either all similarities as a list, or only self.numBest most similar, depending on settings from the constructor
-            if self.numBest is None:
-                yield allSims
-            else:
-                tops = [(docNo, sim) for docNo, sim in enumerate(allSims) if sim > 0]
-                tops = sorted(tops, key = lambda item: -item[1]) # sort by -sim => highest cossim first
-                yield tops[ : self.numBest] # return at most numBest top 2-tuples (docId, docSim)
+            yield self[doc]
 #endclass SimilarityABC
         
 
 class Similarity(SimilarityABC):
     """
     Compute cosine similary against a corpus of documents. This is done by a full 
-    sequential scan of the corpus. If your corpus is reasonably small (fits in RAM), 
-    consider using SparseMatrixSimilarity for (much) faster similarity searches.
+    sequential scan of the corpus. 
+    
+    If your corpus is reasonably small (fits in RAM), consider using SparseMatrixSimilarity 
+    instead of Similarity, for (much) faster similarity searches.
     """
-    def __init__(self, corpus, numBest = None, normalize = True):
+    def __init__(self, corpus, numBest = None):
         """
         If numBest is left unspecified, similarities will be returned as a full
         list (one float for every document in the corpus, including itself).
@@ -79,24 +106,15 @@ class Similarity(SimilarityABC):
         ..., (docIndexnumBest, 0.45)].
         
         Set normalize to False of the vectors in corpus are all either unit length 
-        or zero (faster search).
+        or empty (saves time during the search). Default is True = normalize each 
+        corpus document.
         """
         self.corpus = corpus
         self.numBest = numBest
-        self.normalize = normalize
     
     
-    def __getitem__(self, doc):
-        """
-        Return similarity of doc to all documents in the corpus.
-        
-        doc may be either a bag-of-words iterable (corpus document), or a numpy 
-        array, or a scipy.sparse matrix.
-        """
-        doc = matutils.unitVec(doc)
-        result = [matutils.cossim(doc, other, norm1 = False, norm2 = self.normalize)
-                  for other in self.corpus]
-        return result
+    def getSimilarities(self, doc):
+        return [matutils.cossim(doc, other) for other in self.corpus]
 #endclass Similarity    
 
 
@@ -142,15 +160,12 @@ class SparseMatrixSimilarity(SimilarityABC):
         logging.info("created %s" % repr(self.corpus))
     
     
-    def __getitem__(self, doc):
+    def getSimilarities(self, doc):
         """
         Return similarity of doc to all documents in the corpus.
         
         doc may be either a bag-of-words iterable (corpus document), or a numpy 
         array, or a scipy.sparse matrix.
-        
-        The document is assumed to be unit length -- ie. it is up to you to ensure
-        that it is either empty or sum(val**2) == 1.0.
         """
         if scipy.sparse.issparse(doc):
             vec = doc.T
