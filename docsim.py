@@ -23,7 +23,6 @@ similarity simply by
 >>> similarities = similarity_object[document]
 
 or iterate over within-corpus similarities with
- 
 >>> for similarities in similarity_object:
 >>>     ...
 """
@@ -40,15 +39,30 @@ import matutils
 
 
 class SimilarityABC(utils.SaveLoad):
+    """
+    Abstract interface for the similarity searches over documents.
+    
+    In all instances, there is a corpus against which we want to perform the 
+    similarity search.
+    
+    For a similarity search, the input is a document (either from the corpus or
+    even unrelated) and the output are its similarities to individual corpus 
+    documents.
+    
+    Similarity queries are realized by calling self[query_document].
+    
+    There is also a convenience wrapper, where iterating over self yields 
+    similarities of each document in the corpus against the whole corpus.
+    """
     def __init__(self, corpus, numBest = None):
         """
         Initialize the similarity search.
         
-        If numBest is left unspecified, similarities return a full list (one float 
-        for every document in the corpus, including the query document).
+        If numBest is left unspecified, similarity queries return a full list (one 
+        float for every document in the corpus, including the query document).
         
-        If numBest is set, similarities return numBest most similar documents, 
-        as a sorted list, eg. [(docIndex1, 1.0), (docIndex2, 0.95), ..., (docIndexnumBest, 0.45)].
+        If numBest is set, queries return numBest most similar documents, as a 
+        sorted list, eg. [(docIndex1, 1.0), (docIndex2, 0.95), ..., (docIndexnumBest, 0.45)].
         """
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 
@@ -80,8 +94,8 @@ class SimilarityABC(utils.SaveLoad):
 
     def __iter__(self):
         """
-        For each document, compute cosine similarity against all other documents 
-        and yield the result.
+        For each corpus document, compute cosine similarity against all other 
+        documents and yield the result.
         """
         for docNo, doc in enumerate(self.corpus):
             yield self[doc]
@@ -98,16 +112,11 @@ class Similarity(SimilarityABC):
     """
     def __init__(self, corpus, numBest = None):
         """
-        If numBest is left unspecified, similarities will be returned as a full
-        list (one float for every document in the corpus, including itself).
+        If numBest is left unspecified, similarity queries return a full list (one 
+        float for every document in the corpus, including the query document).
         
-        If numBest is set, return indices and similarities of numBest most 
-        similar documents, as a sorted list of eg. [(docIndex1, 1.0), (docIndex2, 0.95), 
-        ..., (docIndexnumBest, 0.45)].
-        
-        Set normalize to False of the vectors in corpus are all either unit length 
-        or empty (saves time during the search). Default is True = normalize each 
-        corpus document.
+        If numBest is set, queries return numBest most similar documents, as a 
+        sorted list, eg. [(docIndex1, 1.0), (docIndex2, 0.95), ..., (docIndexnumBest, 0.45)].
         """
         self.corpus = corpus
         self.numBest = numBest
@@ -132,12 +141,11 @@ class SparseMatrixSimilarity(SimilarityABC):
     """
     def __init__(self, corpus, numBest = None, dtype = numpy.float32):
         """
-        If numBest is left unspecified, similarities will be returned as a full
-        list (one float for every document in the corpus, including itself).
+        If numBest is left unspecified, similarity queries return a full list (one 
+        float for every document in the corpus, including the query document).
         
-        If numBest is set, return indices and similarities of numBest most 
-        similar documents, as a sorted list of eg. [(docIndex1, 1.0), (docIndex2, 0.95), 
-        ..., (docIndexnumBest, 0.45)].
+        If numBest is set, queries return numBest most similar documents, as a 
+        sorted list, eg. [(docIndex1, 1.0), (docIndex2, 0.95), ..., (docIndexnumBest, 0.45)].
         """
         logging.info("creating sparse matrix for %i documents" % len(corpus))
         self.numBest = numBest
