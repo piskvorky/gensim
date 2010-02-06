@@ -202,7 +202,7 @@ class MmCorpus(matutils.MmReader):
         fnameVocab = fname + '.vocab'
         logging.info("saving vocabulary to %s" % fnameVocab)
         fout = open(fnameVocab + '.vocab', 'w')
-        for wordId in xrange(self.noCols):
+        for wordId in xrange(self.numTerms):
             fout.write("%s\n" % str(wordId))
         fout.close()
 #endclass MmCorpus

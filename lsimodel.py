@@ -74,12 +74,12 @@ class LsiModel(utils.SaveLoad):
 
 
 
-def iterSvd(corpus, numTerms, numFactors, numIter = 200, learnRate = 0.1, minIter = 20, convergence = 1e-5):
+def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = 0.5, convergence = 1e-4):
     """
     Performs iterative Singular Value Decomposition on a streaming matrix (corpus),
     returning numFactors greatest factors (not necessarily full spectrum).
     
-    The parameters nIter (maximum number of iterations) and learnRate (gradient 
+    The parameters numIter (maximum number of iterations) and initRate (gradient 
     descent step size) guide convergency of the algorithm.
     """
     logging.info("performing incremental SVD for %i factors" % numFactors)
@@ -87,34 +87,53 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, learnRate = 0.1, minIte
     # define the document/term singular vectors, fill them with a little random noise
     sdoc = 0.01 * numpy.random.randn(len(corpus), numFactors)
     sterm = 0.01 * numpy.random.randn(numTerms, numFactors)
-    rmse = rmseOld = numpy.inf
     
+    rmse = rmseOld = numpy.inf
     for factor in xrange(numFactors):
+        learnRate = initRate
         for iterNo in xrange(numIter):
             errors = 0.0
-            rate = learnRate / (1.0 + iterNo / 100.0) # halve the learning rate after every 100 iterations
+            rate = learnRate / (1.0 + 9.0 * iterNo / numIter) # gradually decrease the learning rate
             logging.debug("setting learning rate to %f" % rate)
             for docNo, doc in enumerate(corpus):
-                recon = numpy.dot(sdoc[docNo, :factor], sterm[:, :factor].T) # reconstruct one row of the matrix, using all previous factors 0..factor-1
-                for termId, value in doc:
-                    error = value - (recon[termId] + sdoc[docNo, factor] * sterm[termId, factor])
+                vec = dict(doc)
+                vdoc = sdoc[docNo, factor]
+                vterm = sterm[:, factor]
+                
+                # reconstruct one document, using all previous factors <0..factor-1>
+                recon = numpy.dot(sdoc[docNo, :factor], sterm[:, :factor].T)
+                
+                for termId in xrange(numTerms):
+                    # error of one matrix element = real value - reconstructed value
+                    error = vec.get(termId, 0.0) - (recon[termId] + vdoc * vterm[termId])
                     errors += error * error
-                    tmp = sdoc[docNo, factor]
-                    sdoc[docNo, factor] += rate * error * sterm[termId, factor]
-                    sterm[termId, factor] += rate * error * tmp
+                    
+                    # update the singular vectors
+                    tmp = vdoc
+                    vdoc += rate * error * vterm[termId]
+                    vterm[termId] += rate * error * tmp
+                sdoc[docNo, factor] = vdoc
             
             # compute rmse = root mean square error of the reconstructed matrix
-            rmse = numpy.sqrt(errors / (len(corpus) * numTerms))
+            # rmse = numpy.sqrt(errors / (len(corpus) * numTerms))
+            rmse = numpy.exp(0.5 * (numpy.log(errors) - numpy.log(len(corpus)) - numpy.log(numTerms)))
+            if rmse > rmseOld:
+                learnRate /= 2.0 # if we are not converging (oscillating), halve the learning rate
+                logging.info("iteration %i diverged; halving the learning rate to %f" %
+                             (iterNo, learnRate))
             
-            # check convergence, looking for an early exit (before numIter iterations)
+            # check convergence, looking for an early exit (but no sooner than 10% 
+            # of numIter have passed)
             converged = numpy.divide(numpy.abs(rmseOld - rmse), rmseOld)
-            logging.debug("factor %i, finished iteration %i, rmse=%f, converged=%f" %
-                          (factor, iterNo, rmse, converged))
-            if iterNo >= minIter and numpy.isfinite(converged) and converged <= convergence:
+            logging.info("factor %i, finished iteration %i, rmse=%f, rate=%f, converged=%f" %
+                          (factor, iterNo, rmse, rate, converged))
+            if iterNo > numIter / 10 and numpy.isfinite(converged) and converged <= convergence:
                 logging.debug("factor %i converged in %i iterations" % (factor, iterNo + 1))
                 break
             rmseOld = rmse
-        logging.info("PROGRESS: finished SVD factor %i/%i" % (factor + 1, numFactors))
+        
+        logging.info("PROGRESS: finished SVD factor %i/%i in %i iterations" % 
+                     (factor + 1, numFactors, numIter))
     
     # normalize the vectors to unit length; also keep the scale
     sdocLens = numpy.sqrt(numpy.sum(sdoc * sdoc, axis = 0))

@@ -51,7 +51,7 @@ if __name__ == "__main__":
         if datafile.endswith('.mm'):
             corpus = corpora.MmCorpus(datafile)
             # there is no word id mapping in MM format; use word=wordId
-            id2word = dict((wordId, str(wordId)) for wordId in xrange(corpus.noCols))
+            id2word = dict((wordId, str(wordId)) for wordId in xrange(corpus.numTerms))
         else:
             corpus = corpora.CorpusLow(datafile)
             id2word = corpus.id2word
