@@ -7,6 +7,7 @@
 import logging
 
 import numpy
+from scipy.maxentropy import logsumexp # sum of logarithms
 
 import utils
 
@@ -72,57 +73,56 @@ class LsiModel(utils.SaveLoad):
 #endclass LsiModel
 
 
-def iterSvd(corpus, numTerms, numFactors, nIter = 100, learnRate = 0.001, cache = True, dtype = numpy.float64):
+
+def iterSvd(corpus, numTerms, numFactors, numIter = 200, learnRate = 0.1, minIter = 20, convergence = 1e-5):
     """
-    Performs iterative Singular Value Decomposition on a streaming matrix (corpus).
+    Performs iterative Singular Value Decomposition on a streaming matrix (corpus),
+    returning numFactors greatest factors (not necessarily full spectrum).
     
-    Return numFactors greatest factors (only performs partial SVD).
-    
-    nIter (maximum number of iterations) and learnRate (gradient descent step size) 
-    guide convergency of the algorithm.
-    
-    If cache is True, cache intermediate results between the computation of 
-    successive factors; this requires *placing the entire matrix in memory* but 
-    is faster than False (default).
-    
-    dtype determines the basic numeric type for operations as well as resulting
-    vectors; default is double (numpy.float64).
+    The parameters nIter (maximum number of iterations) and learnRate (gradient 
+    descent step size) guide convergency of the algorithm.
     """
     logging.info("performing incremental SVD for %i factors" % numFactors)
-    
-    u = numpy.zeros((len(corpus), numFactors,), dtype = dtype) + 0.01 # FIXME add random rather than 0.01?
-    v = numpy.zeros((numTerms, numFactors,), dtype = dtype) + 0.01
-    
-    if cache:
-        cached = scipy.sparse.dok_matrix((len(corpus), numTerms), dtype = dtype)
+
+    # define the document/term singular vectors, fill them with a little random noise
+    sdoc = 0.01 * numpy.random.randn(len(corpus), numFactors)
+    sterm = 0.01 * numpy.random.randn(numTerms, numFactors)
+    rmse = rmseOld = numpy.inf
     
     for factor in xrange(numFactors):
-        # update the vectors for nIter iterations (or until convergence)
-        for iterNo in xrange(nIter):
-            for cur_row, vector in corpus:
-                for cur_col, value in vector:
-                    error = value - (cached[cur_row, cur_col] + u[cur_row, factor] * v[cur_col, factor])
-                    u_value = u[cur_row, factor]
-                    u[cur_row, axis] += learnRate * error * v[cur_col, factor]
-                    v[cur_col, axis] += learnRate * error * u_value
+        for iterNo in xrange(numIter):
+            errors = 0.0
+            rate = learnRate / (1.0 + iterNo / 100.0) # halve the learning rate after every 100 iterations
+            logging.debug("setting learning rate to %f" % rate)
+            for docNo, doc in enumerate(corpus):
+                recon = numpy.dot(sdoc[docNo, :factor], sterm[:, :factor].T) # reconstruct one row of the matrix, using all previous factors 0..factor-1
+                for termId, value in doc:
+                    error = value - (recon[termId] + sdoc[docNo, factor] * sterm[termId, factor])
+                    errors += error * error
+                    tmp = sdoc[docNo, factor]
+                    sdoc[docNo, factor] += rate * error * sterm[termId, factor]
+                    sterm[termId, factor] += rate * error * tmp
+            
+            # compute rmse = root mean square error of the reconstructed matrix
+            rmse = numpy.sqrt(errors / (len(corpus) * numTerms))
+            
+            # check convergence, looking for an early exit (before numIter iterations)
+            converged = numpy.divide(numpy.abs(rmseOld - rmse), rmseOld)
+            logging.debug("factor %i, finished iteration %i, rmse=%f, converged=%f" %
+                          (factor, iterNo, rmse, converged))
+            if iterNo >= minIter and numpy.isfinite(converged) and converged <= convergence:
+                logging.debug("factor %i converged in %i iterations" % (factor, iterNo + 1))
+                break
+            rmseOld = rmse
+        logging.info("PROGRESS: finished SVD factor %i/%i" % (factor + 1, numFactors))
     
-        # after each factor, update the cache
-        if cache:
-            for (cur_row, cur_col), value in cached.iteritems():
-                cached[cur_row, cur_col] += u[cur_row, factor] * v[cur_col, factor]
+    # normalize the vectors to unit length; also keep the scale
+    sdocLens = numpy.sqrt(numpy.sum(sdoc * sdoc, axis = 0))
+    stermLens = numpy.sqrt(numpy.sum(sterm * sterm, axis = 0))
+    sdoc /= sdocLens
+    sterm /= stermLens
     
-    # Factor out the svals from u and v
-    u_sigma = numpy.sqrt(numpy.sum(u * u))
-    v_sigma = numpy.sqrt(numpy.sum(v * v))
-    
-    u_tensor = DenseTensor(np.divide(u, u_sigma))
-    v_tensor = DenseTensor(np.divide(v, v_sigma))
-    sigma = DenseTensor(np.multiply(u_sigma, v_sigma))
-    
-    svdFreeSMat(predicted)
-    
-    if self.transposed:
-        return v_tensor, u_tensor, sigma
-    else:
-        return u_tensor, v_tensor, sigma
+    # singular value 
+    svals = sdocLens * stermLens
+    return sterm, svals, sdoc.T
 

@@ -173,7 +173,7 @@ class SparseMatrixSimilarity(SimilarityABC):
         Return similarity of doc to all documents in the corpus.
         
         doc may be either a bag-of-words iterable (corpus document), or a numpy 
-        array, or a scipy.sparse matrix.
+        array, or a scipy.sparse matrix. It is assumed to be of unit length.
         """
         if scipy.sparse.issparse(doc):
             vec = doc.T
