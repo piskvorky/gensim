@@ -204,17 +204,17 @@ class MmReader(object):
         header = fin.next()
         if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
             raise ValueError("File %s not in Matrix Market format with coordinate real general" % fname)
-        self.noRows = self.noCols = self.noElements = 0
+        self.numDocs = self.numTerms = self.numElements = 0
         for lineNo, line in enumerate(fin):
             if not line.startswith('%'):
-                self.noRows, self.noCols, self.noElements = map(int, line.split())
+                self.numDocs, self.numTerms, self.numElements = map(int, line.split())
                 break
         logging.info("accepted corpus with %i documents, %i terms, %i non-zero entries" %
-                     (self.noRows, self.noCols, self.noElements))
+                     (self.numDocs, self.numTerms, self.numElements))
     
     def __len__(self):
-        return self.noRows
-        
+        return self.numDocs
+    
     def __iter__(self):
         """
         Iteratively yield vectors from the underlying file.
@@ -240,7 +240,7 @@ class MmReader(object):
                 # change of document: return the document read so far (its id is prevId)
                 if prevId >= 0:
                     yield prevId, document
-                                
+                
                 # return implicit (empty) documents between previous id and new id 
                 # too, to keep consistent document numbering and corpus length
                 for prevId in xrange(prevId + 1, docId):
@@ -255,7 +255,7 @@ class MmReader(object):
         # handle the last document, as a special case
         if prevId >= 0:
             yield prevId, document
-        for prevId in xrange(prevId + 1, self.noRows):
+        for prevId in xrange(prevId + 1, self.numDocs):
             yield prevId, []
 #endclass MmReader
 
