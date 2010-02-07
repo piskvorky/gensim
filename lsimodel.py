@@ -27,7 +27,7 @@ class LsiModel(utils.SaveLoad):
     
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, corpus, id2word, numTopics = 200):
+    def __init__(self, corpus, numTerms, numTopics = 200):
         """
         Find latent space based on the corpus provided.
 
@@ -36,7 +36,7 @@ class LsiModel(utils.SaveLoad):
         After the model has been initialized, you can estimate topics for an
         arbitrary, unseen document, using the topics = self[bow] dictionary notation.
         """
-        self.numTerms = len(id2word)
+        self.numTerms = numTerms
         self.numTopics = numTopics # number of latent topics
         if corpus is not None:
             self.initialize(corpus)
@@ -56,7 +56,7 @@ class LsiModel(utils.SaveLoad):
         (utf8 strings).
         """
         # do the actual work -- perform iterative singular value decomposition
-        u, s, vt = iterSvd(corpus, k = self.numTopics)
+        u, s, vt = iterSvd(corpus, self.numTerms, numFactors = self.numTopics)
         
         # calculate projection needed to get document-topic matrix from term-document matrix
         # note that vt (topics of the training corpus) are discarded and not used at all
@@ -66,15 +66,17 @@ class LsiModel(utils.SaveLoad):
     def __getitem__(self, bow):
         """
         Return topic distribution, as a list of (topic_id, topic_value) 2-tuples.
+        
+        This is done by folding-in the input document into the latent topic space.
         """
-        topicDist = numpy.sum(self.projection[termId] * val for termId, val in bow)
+        topicDist = numpy.sum(self.projection[:, termId] * val for termId, val in bow)
         return [(topicId, topicValue) for topicId, topicValue in enumerate(topicDist)
                 if not numpy.allclose(topicValue, 0.0)]
 #endclass LsiModel
 
 
 
-def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = 0.5, convergence = 1e-4):
+def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, convergence = 1e-4):
     """
     Performs iterative Singular Value Decomposition on a streaming matrix (corpus),
     returning numFactors greatest factors (not necessarily full spectrum).
@@ -87,18 +89,23 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = 0.5, converg
     # define the document/term singular vectors, fill them with a little random noise
     sdoc = 0.01 * numpy.random.randn(len(corpus), numFactors)
     sterm = 0.01 * numpy.random.randn(numTerms, numFactors)
-    
+    if initRate is None:
+        initRate = 1.0 / numpy.sqrt(numTerms)
+        logging.info("using initial learn rate of %f" % initRate)
+
     rmse = rmseOld = numpy.inf
     for factor in xrange(numFactors):
         learnRate = initRate
         for iterNo in xrange(numIter):
             errors = 0.0
-            rate = learnRate / (1.0 + 9.0 * iterNo / numIter) # gradually decrease the learning rate
+            rate = learnRate / (1.0 + 9.0 * iterNo / numIter) # gradually decrease the learning rate to 1/10 of the initial value
             logging.debug("setting learning rate to %f" % rate)
             for docNo, doc in enumerate(corpus):
                 vec = dict(doc)
+                if docNo % 10 == 0:
+                    logging.debug('PROGRESS: at document %i/%i' % (docNo, len(corpus)))
                 vdoc = sdoc[docNo, factor]
-                vterm = sterm[:, factor]
+                vterm = sterm[:, factor] # create a view (not copy!) of a matrix row
                 
                 # reconstruct one document, using all previous factors <0..factor-1>
                 recon = numpy.dot(sdoc[docNo, :factor], sterm[:, :factor].T)
@@ -107,6 +114,8 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = 0.5, converg
                     # error of one matrix element = real value - reconstructed value
                     error = vec.get(termId, 0.0) - (recon[termId] + vdoc * vterm[termId])
                     errors += error * error
+                    if not numpy.isfinite(errors):
+                        acavdsv # FIXME  remove
                     
                     # update the singular vectors
                     tmp = vdoc
@@ -115,7 +124,6 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = 0.5, converg
                 sdoc[docNo, factor] = vdoc
             
             # compute rmse = root mean square error of the reconstructed matrix
-            # rmse = numpy.sqrt(errors / (len(corpus) * numTerms))
             rmse = numpy.exp(0.5 * (numpy.log(errors) - numpy.log(len(corpus)) - numpy.log(numTerms)))
             if rmse > rmseOld:
                 learnRate /= 2.0 # if we are not converging (oscillating), halve the learning rate
@@ -132,8 +140,8 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = 0.5, converg
                 break
             rmseOld = rmse
         
-        logging.info("PROGRESS: finished SVD factor %i/%i in %i iterations" % 
-                     (factor + 1, numFactors, numIter))
+        logging.info("PROGRESS: finished SVD factor %i/%i, RMSE<=%f" % 
+                     (factor + 1, numFactors, rmse))
     
     # normalize the vectors to unit length; also keep the scale
     sdocLens = numpy.sqrt(numpy.sum(sdoc * sdoc, axis = 0))

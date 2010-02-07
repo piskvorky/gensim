@@ -355,7 +355,7 @@ class DmlCorpus(utils.SaveLoad):
         The exact filesystem paths and filenames are determined from the config, 
         but always end in '*bow.mm' and '*tfidf.mm' respectively.
         """
-        matutils.MmWriter.writeCounts(self.config.resultFile('bow.mm'), self)
+        matutils.MmWriter.writeCorpus(self.config.resultFile('bow.mm'), self)
         matutils.MmWriter.writeTfidf(self.config.resultFile('tfidf.mm'), self, normalize = False)
 #endclass DmlCorpus
 

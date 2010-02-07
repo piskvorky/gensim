@@ -115,9 +115,9 @@ class MmWriter(object):
         self.lastDocNo = docNo
 
     @staticmethod
-    def writeCounts(fname, corpus):
+    def writeCorpus(fname, corpus):
         """
-        Save term-frequency representation of an entire corpus to disk.
+        Save the vector space representation of an entire corpus to disk.
         
         Note that the documents are processed one at a time, so the whole corpus 
         is allowed to be larger than the available RAM.

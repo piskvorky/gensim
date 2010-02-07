@@ -81,6 +81,8 @@ class SimilarityABC(utils.SaveLoad):
 
     def __getitem__(self, doc):
         # get similarities of doc to all documents in the corpus
+        if self.normalize:
+            doc = matutils.unitVec(doc)
         allSims = self.getSimilarities(doc)
         
         # return either all similarities as a list, or only self.numBest most similar, depending on settings from the constructor
@@ -120,6 +122,7 @@ class Similarity(SimilarityABC):
         """
         self.corpus = corpus
         self.numBest = numBest
+        self.normalize = True
     
     
     def getSimilarities(self, doc):
@@ -150,6 +153,7 @@ class SparseMatrixSimilarity(SimilarityABC):
         logging.info("creating sparse matrix for %i documents" % len(corpus))
         self.numBest = numBest
         self.corpus = scipy.sparse.lil_matrix((len(corpus), 1), dtype = dtype) # set no of columns to 1 for now, as the number of terms is unknown yet
+        self.normalize = False
         
         # iterate over the corpus, filling the sparse matrix
         for docNo, vector in enumerate(corpus):
