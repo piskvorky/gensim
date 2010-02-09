@@ -153,3 +153,38 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
     svals = sdocLens * stermLens
     return sterm, svals, sdoc.T
 
+
+def svdUpdate(U, S, V, a, b):
+    rank = U.shape[1]
+    m = U.T * a
+    p = a - U * m
+    Ra = numpy.sqrt(p.T * p)
+    P = (1.0 / float(Ra)) * p
+    assert float(Ra) > 1e-10
+    n = V.T * b
+    q = b - V * n
+    Rb = numpy.sqrt(q.T * q)
+    Q = (1.0 / float(Rb)) * q
+    assert float(Rb) > 1e-10
+    
+    K = numpy.matrix(numpy.diag(list(numpy.diag(S)) + [0.0])) + numpy.bmat('m ; Ra') * numpy.bmat(' n; Rb').T
+    u, s, vt = numpy.linalg.svd(K, full_matrices = False)
+    tUp = numpy.matrix(u[:, :rank])
+    tVp = numpy.matrix(vt.T[:, :rank])
+    tSp = numpy.matrix(numpy.diag(s[: rank]))
+    Up = numpy.bmat('U P') * tUp
+    Vp = numpy.bmat('V Q') * tVp
+    Sp = tSp
+    return Up, Sp, Vp
+
+def svdAddDocs(sdoc, sval, sterm, docs):
+    numDocs, rank = sdoc.shape
+    numTerms, rank2 = sval.shape
+    assert rank == rank2
+    empty = numpy.matrix(numpy.zeros(len(docs), rank))
+    sdocNew = numpy.bmat('sdoc; empty') # TODO factor this out into matutils.addRow/Column or something 
+    a = numpy.matrix(numpy.zeros(numDocs + 1)).T
+    a[-1, -1] = 1.0 # no change to terms, only add one document
+    b = numpy.matrix(doc).T
+    return svdUpdate(sdocNew, sval, sterm, a, b)
+

@@ -182,18 +182,16 @@ class MmWriter(object):
 
 class MmReader(object):
     """
-    Wrap a corpus represented as term-document matrix on disk in matrix-market 
-    format, and present it as an object which supports iteration over documents. 
-    A document = list of (word, weight) 2-tuples. This iterable format is used 
-    internally in LDA inference.
+    Wrap a term-document matrix on disk (in matrix-market format), and present it 
+    as an object which supports iteration over the rows (~documents).
     
-    Note that the file is read into memory one document at a time, not whole 
-    corpus at once. This allows for representing corpora which are larger than 
-    available RAM.
+    Note that the file is read into memory one document at a time, not the whole 
+    matrix at once (unlike scipy.io.mmread). This allows for representing corpora 
+    which are larger than the available RAM.
     """
     def __init__(self, fname):
         """
-        Initialize the corpus reader. The fname is a path to a file on local 
+        Initialize the matrix reader. The fname is a path to a file on local 
         filesystem, which is expected to be sparse (coordinate) matrix
         market format. Documents are assumed to be rows of the matrix -- if 
         documents are columns, save the matrix transposed.
@@ -201,9 +199,10 @@ class MmReader(object):
         logging.info("initializing corpus reader from %s" % fname)
         self.fname = fname
         fin = open(fname)
-        header = fin.next()
+        header = fin.next().strip()
         if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
-            raise ValueError("File %s not in Matrix Market format with coordinate real general" % fname)
+            raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found \n%s" % 
+                             (fname, header))
         self.numDocs = self.numTerms = self.numElements = 0
         for lineNo, line in enumerate(fin):
             if not line.startswith('%'):
@@ -217,9 +216,10 @@ class MmReader(object):
     
     def __iter__(self):
         """
-        Iteratively yield vectors from the underlying file.
+        Iteratively yield vectors from the underlying file, in the format (rowNo, vector),
+        where vector is a list of (colId, value) 2-tuples.
         
-        Note that the total number of documents returned is always equal to the 
+        Note that the total number of vectors returned is always equal to the 
         number of rows specified in the header; empty documents are inserted and
         yielded where appropriate, even if they are not explicitly stored in the 
         Matrix Market file.

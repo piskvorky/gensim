@@ -193,7 +193,7 @@ class SparseMatrixSimilarity(SimilarityABC):
         
         # compute cosine similarity against every other document in the collection
         allSims = self.corpus * vec.tocsc() # N x T * T x 1 = N x 1
-        allSims = list(allSims.toarray().flatten()) # convert to plain python list
+        allSims = list(allSims.toarray().flat) # convert to plain python list
         assert len(allSims) == self.corpus.shape[0] # make sure no document got lost!
         return allSims
 #endclass SparseMatrixSimilarity

@@ -169,7 +169,7 @@ class LdaModel(utils.SaveLoad):
         This maximizes the lower bound on log likelihood wrt. to the alpha and beta
         parameters.
         """
-        marginal = numpy.log(numpy.sum(self.classWord, axis = 1)) 
+        marginal = numpy.log(self.classWord.sum(axis = 1)) 
         marginal.shape += (1,) # alter array shape from (n,) to (n, 1); needed for correct broadcasting on the following line
         logProbW = numpy.log(self.classWord) - marginal # (logarithm of) the beta parameter = word-topic distribution
         self.logProbW = numpy.where(numpy.isfinite(logProbW), logProbW, -100.0) # replace log(0) with -100.0 (almost zero probability)
@@ -256,7 +256,7 @@ class LdaModel(utils.SaveLoad):
         """
         Compute the document likelihood, given all model parameters.
         """
-        gammaSum = numpy.sum(gamma)
+        gammaSum = gamma.sum()
         digSum = digamma(gammaSum)
         dig = digamma(gamma) - digSum # precompute the difference
         
@@ -269,7 +269,7 @@ class LdaModel(utils.SaveLoad):
         for n, (wordIndex, wordCount) in enumerate(doc):
             partial = phi[n] * (dig - numpy.log(phi[n]) + self.logProbW[:, wordIndex]) # array broadcast
             partial = numpy.where(numpy.isfinite(partial), partial, 0.0) # silently replace NaNs (from 0 * log(0) in phi) with 0.0
-            likelihood += wordCount * numpy.sum(partial)
+            likelihood += wordCount * partial.sum()
         
         return likelihood
     
@@ -349,7 +349,7 @@ class LdaModel(utils.SaveLoad):
         The returned matrix is of the same shape as logProbW.
         """
         # compute the geometric mean of words' probability across all topics
-        idf = numpy.sum(self.logProbW, axis = 0) / self.numTopics # note: vector operation
+        idf = self.logProbW.sum(axis = 0) / self.numTopics # note: vector operation
         assert idf.shape == (self.numTerms,), "idf.shape=%s" % idf.shape
         
         # transform the weights, one topic after another
@@ -393,8 +393,8 @@ class LdaModel(utils.SaveLoad):
         Ignore topics with very low probability (below 0.001).
         """
         likelihood, phi, gamma = self.inference(bow)
-        gamma -= self.alpha # subtract the dirichlet prior, to get the expected no of words for each topic
-        sumGamma = numpy.sum(gamma)
+        gamma -= self.alpha # subtract topic prior, to get the expected number of words for each topic
+        sumGamma = gamma.sum()
         if numpy.allclose(sumGamma, 0): # if there were no topics found, return nothing (ie for empty documents)
             return []
         topicDist = gamma / sumGamma # convert to proper distribution
