@@ -43,12 +43,37 @@ import itertools
 import os.path
 
 import utils
-import matutils # for Matrix Market MmReader/MmWriter
+import matutils # for the Matrix Market corpus
 import dictionary # for constructing word->id mappings
 
 
+class CorpusABC(utils.SaveLoad):
+    """
+    Interface for the corpora. A 'corpus' is simply an iterable, where each 
+    iteration step yields one document.
+    
+    Note that although a default len() method is provided, it is very inefficient
+    (performs a linear scan through the corpus). Whereever the corpus size is known
+    in advance (or at least doesn't change so that it can be cached), the len() method 
+    should be overridden.
+    """
+    def __iter__(self):
+        raise NotImplementedError('cannot instantiate abstract base class')
 
-class CorpusLow(object):
+    
+    def __len__(self):
+        """
+        Return the number of documents in the corpus. 
+        
+        This method is just the least common denominator and should really be 
+        overridden when possible.
+        """
+        logging.warning("performing full corpus scan to determine its length; was this intended?")
+        return sum(1 for doc in self) # sum(empty generator) is 0, so this works even for an empty corpus
+#endclass CorpusABC
+
+
+class CorpusLow(CorpusABC):
     """
     List_Of_Words corpus handles input in GibbsLda++ format.
     
@@ -152,6 +177,9 @@ class CorpusLow(object):
     def saveAsBlei(self, fname = None):
         """
         Save the corpus in a format compatible with Blei's LDA-C.
+        
+        There are actually two files saved: INPUT.blei and INPUT.blei.vocab, where
+        INPUT is the filename of the original LOW corpus.
         """
         if fname is None:
             fname = self.fname + '.blei'
@@ -173,7 +201,7 @@ class CorpusLow(object):
 
 
 
-class MmCorpus(matutils.MmReader):
+class MmCorpus(matutils.MmReader, CorpusABC):
     def __iter__(self):
         """
         Interpret a matrix in Matrix Market format as a corpus.
@@ -256,7 +284,7 @@ class DmlConfig(object):
 
 
 
-class DmlCorpus(utils.SaveLoad):
+class DmlCorpus(CorpusABC):
     """
     DmlCorpus implements a collection of articles. It is initialized via a DmlConfig
     object, which holds information about where to look for the articles and how 
@@ -345,7 +373,7 @@ class DmlCorpus(utils.SaveLoad):
         logging.info("accepted total of %i articles for %s" % 
                      (len(self.documents), str(config)))
     
-    def saveAsMatrix(self):
+    def saveAsMatrix(self, normalizeTfidf = False):
         """
         Store the corpus to a file, in Matrix Market format.
         
@@ -356,19 +384,19 @@ class DmlCorpus(utils.SaveLoad):
         but always end in '*bow.mm' and '*tfidf.mm' respectively.
         """
         matutils.MmWriter.writeCorpus(self.config.resultFile('bow.mm'), self)
-        matutils.MmWriter.writeTfidf(self.config.resultFile('tfidf.mm'), self, normalize = False)
+        matutils.MmWriter.writeTfidf(self.config.resultFile('tfidf.mm'), self, normalize = normalizeTfidf)
 #endclass DmlCorpus
 
 
 
-class TopicsCorpus(utils.SaveLoad):
+class TopicsCorpus(CorpusABC):
     """
     A simple wrapper which transparently converts corpora from the term-document
     space into topic-document space.
     
     The conversion is done using a topic model, such as Latent Semantic Indexing 
-    (LSI, the lsimodel module), Latent Dirichlet Allocation (LDA, ldamodel module), 
-    Random Projections (RP) etc. 
+    (LSI, the lsimodel.py module), Latent Dirichlet Allocation (LDA, ldamodel.py 
+    module), Random Projections (RP) etc. 
     
     The model object must provide a dictionary [] operator, which accept a document 
     represented in the old space and returns its representation in the topic space.
