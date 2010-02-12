@@ -18,7 +18,7 @@ import logging
 
 import numpy # for arrays, array broadcasting etc.
 from scipy.special import gammaln, digamma, polygamma # gamma function utils
-from scipy.maxentropy import logsumexp # sum of logarithms
+from scipy.maxentropy import logsumexp # log of sum
 
 import utils
 

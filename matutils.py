@@ -10,6 +10,30 @@ This module contains math helper functions.
 import logging
 import math
 
+import numpy
+
+
+def pad(mat, padRow, padCol):
+    """
+    Add additional rows/columns to a numpy.matrix. The new rows/columns will be initialized
+    with zeros.
+    """
+    assert padRow >= 0, padCol >= 0
+    rows, cols = mat.shape
+    return numpy.bmat([[mat, numpy.matrix(numpy.zeros((rows, padCol)))],
+                      [numpy.matrix(numpy.zeros((padRow, cols + padCol)))]])
+
+
+def doc2vec(doc, length):
+    """
+    Convert document in sparse format (sequence of 2-tuples) into a full numpy
+    array (of size length).
+    """
+    doc = dict(doc)
+    result = numpy.zeros(length)
+    result[doc.keys()] = doc.values()
+    return result
+
 
 def vecLen(vec):
     if len(vec) == 0:
