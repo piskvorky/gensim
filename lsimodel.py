@@ -17,14 +17,15 @@ import matutils
 
 class LsiModel(utils.SaveLoad):
     """
-    Objects of this class allow building and maintaining a model of Latent 
+    Objects of this class allow building and maintaining a model for Latent 
     Semantic Indexing.
     
     The main methods are:
-    1) LsiModel.fromCorpus(), which calculates the latent topics, initializing 
-    the model,
+    1) the constructor, which calculates the latent topics space, effectively 
+    initializing the model,
     
-    2) the [] method, which returns representation of a document in the new, latent space.
+    2) the [] method, which returns representation of anyy input document in the 
+    new, latent space.
     
     Model persistency is achieved via its load/save methods.
     """
@@ -59,19 +60,19 @@ class LsiModel(utils.SaveLoad):
         # initialize decomposition (zero documents so far)
         u = numpy.matrix(numpy.zeros((self.numTerms, self.numTopics)))
         s = numpy.matrix(numpy.zeros((self.numTopics, self.numTopics)))
-        v = numpy.matrix(numpy.zeros((0, self.numTopics)))
+        v = None # numpy.matrix(numpy.zeros((0, self.numTopics)))
         
         # do the actual work -- perform iterative singular value decomposition
         # this is done by sequentially updating SVD with `chunks` new documents
         chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
-        for key, group in chunker:
+        for chunkNo, (key, group) in enumerate(chunker):
             # create a chunk of documents of size `chunks`; except the last one which may be shorter
             docs = [matutils.doc2vec(doc, self.numTerms) for docNo, doc in group]
-            # FIXME! remove keepV, remove self.u, self.v, ...
-            u, s, v = svdAddCols(u, s, v, docs, keepV = True, reorth = True)
+#            u, s, v = svdAddCols(u, s, v, docs, keepV = True, reorth = chunkNo % 10 == 9) # reorthogonalize once in 10 * chunks documents
+            u, s, v = svdAddCols(u, s, v, docs, keepV = False, reorth = False)
             logging.info("processed documents up to #%s" % docNo)
-        
-        self.u, self.s, self.v = u, s, v
+#        self.u, self.s, self.v = u, s, v
+
         # calculate projection needed to get document-topic matrix from term-document matrix
         # note that v (topics of the training corpus) are discarded and not used at all
         invS = numpy.diag(numpy.diag(1.0 / s))
@@ -84,8 +85,12 @@ class LsiModel(utils.SaveLoad):
         
         This is done by folding the input document into the latent topic space.
         """
-        vec = matutils.doc2vec(bow, self.numTerms)
-        topicDist = self.projection * vec.T
+        if isinstance(bow, numpy.ndarray): # input already a numpy array
+            vec = bow
+        else:
+            vec = matutils.doc2vec(bow, self.numTerms)
+        vec.shape = (self.numTerms, 1)
+        topicDist = self.projection * vec
         return [(topicId, float(topicValue)) for topicId, topicValue in enumerate(topicDist)
                 if numpy.isfinite(topicValue) and not numpy.allclose(topicValue, 0.0)]
     
@@ -93,16 +98,16 @@ class LsiModel(utils.SaveLoad):
     def printTopic(self, topicNo, topN = 10):
         c = numpy.asarray(self.u[:, topicNo]).flatten()
         most = numpy.abs(c).argsort()[::-1][:topN]
-        print ' + '.join(['%.3f*"%s"' % (c[val], self.id2word[val]) for val in most])
+        print ' + '.join(['%.3f * "%s"' % (c[val], self.id2word[val]) for val in most])
 #endclass LsiModel
 
 
 def orth(A):
     """
     Like scipy.linalg.orth, but does not allocate full matrices (we would get quickly
-    out of memory otherwise).
+    out of memory otherwise!).
     """
-    # compute the orthonormal basis
+    # compute the orthonormal basis, via singular value decomposition
     u, s, vh = numpy.linalg.svd(A, full_matrices = False)
     
     # now ignore entries which are suspiciously near machine representation limits
@@ -113,9 +118,10 @@ def orth(A):
     return Q
 
 
-def svdAddCols(u, s, v, docs, decay = 1.0, keepV = True, reorth = False):
+def svdAddCols(u, s, v, docs, decay = 1.0, reorth = False):
     """
-    Update singular value decomposition factors to take into account new documents.
+    Update singular value decomposition factors to take into account new 
+    documents (matrix columns).
     
     The documents are assumed to be a list of full vectors (ie. not sparse 2-tuples).
     
@@ -123,12 +129,16 @@ def svdAddCols(u, s, v, docs, decay = 1.0, keepV = True, reorth = False):
     u * s * v.T == X , then
     u' * s' * v'.T == [X docs.T]
     
-    If keepV is False, then ignore the right singular vectors (~documents). This 
-    saves a bit of speed and a lot of memory, especially for huge corpora. The 
-    value of v is then ignored and returned unchanged (can be set to None).
+    v can be set to None, in which case it is completely ignored. This saves a
+    bit of speed and a lot of memory, especially for huge corpora (size of v is
+    linear in the number of added documents). If v is set to None, the returned v'
+    is also None.
     """
     logging.debug("updating SVD with %i new documents" % len(docs))
-    a = numpy.matrix(numpy.array(docs)).T
+    keepV = v is not None
+    if not keepV and reorth:
+        raise TypeError("cannot reorthogonalize without the right singular vectors (v must not be None)")
+    a = numpy.matrix(numpy.asarray(docs)).T
     m, k = u.shape
     if keepV:
         n, k2 = v.shape
@@ -144,10 +154,10 @@ def svdAddCols(u, s, v, docs, decay = 1.0, keepV = True, reorth = False):
     Ra = P.T * p # (c x m) * (m x c) = (c x c)
     
     # now we're ready to construct K; K will be mostly diagonal and sparse, with
-    # lots of structure, and of shape only (k + c, k + c), 
-    # so its direct SVD ought to be fast for reasonably small additions of new 
-    # documents (ie. tens or hundreds of new documents at a time).
-    s = decay * s # allow rotation towards new data trends, by giving less emphasis on old values
+    # lots of structure, and of shape only (k + c, k + c), so its direct SVD 
+    # ought to be fast for reasonably small additions of new documents (ie. tens 
+    # or hundreds of new documents at a time).
+    s *= decay # allow rotation towards new data trends in the document stream, by giving less emphasis on old values
     empty = matutils.pad(numpy.matrix([]).reshape(0, 0), c, k)
     K = numpy.bmat('s m; empty Ra' )
     uK, sK, vK = numpy.linalg.svd(K, full_matrices = False) # there is no python wrapper for partial svd => request all factors :(
@@ -175,18 +185,19 @@ def svdAddCols(u, s, v, docs, decay = 1.0, keepV = True, reorth = False):
             # from the subspaces (decomping V into Vsubspace * Vrotate), which further reduces 
             # complexity and improves numerical properties for rank-1 updates.
             #
-            # I did not implement this step yet; instead, i explicitly force the (expensive)
-            # reorthogonalization from time to time, by setting reOrth = True
-            logging.debug("re-orthogonalizing the singular vectors")
+            # I did not implement this step yet; instead, force the (expensive)
+            # reorthogonalization explicitly from time to time, by setting reorth = True
+            logging.debug("re-orthogonalizing singular vectors")
             uQ, uR = scipy.linalg.qr(u, econ = True)
             vQ, vR = scipy.linalg.qr(v, econ = True)
             uK, sK, vK = numpy.linalg.svd(uR * s * vR.T, full_matrices = False)
             uK = numpy.matrix(uK[:, :k])
             sK = numpy.matrix(numpy.diag(sK[: k]))
             vK = numpy.matrix(vK.T[:, :k])
-            u = uQ * uK
+            
             logging.debug("adjusting singular values by %f%%" % 
                           (100.0 * numpy.sum(numpy.abs(s - sK)) / numpy.sum(numpy.abs(s))))
+            u = uQ * uK
             s = sK
             v = vQ * vK
     
@@ -199,8 +210,8 @@ def svdUpdate(U, S, V, a, b):
     [X + a * b.T] = U' * S' * V'^T
     and return U', S', V'.
     
-    a and b are (m, 1) and (n, 1) rank-1 matrices (so that svdUpdate can simulate 
-    addition of a new document/term).
+    a and b are (m, 1) and (n, 1) rank-1 matrices, so that svdUpdate can simulate 
+    incremental addition of one new document and/or term.
     """
     rank = U.shape[1]
     m = U.T * a
@@ -235,6 +246,11 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
     
     See Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 
     Value Decomposition in Natural Language Processing. EACL 2006.
+    
+    Use of this function deprecated; while it works, it is several orders of magnitude 
+    slower than the direct (non-stochastic) version based on Brand. Use 
+    svdAddCols/svdUpdate to compute SVD iteratively. I keep this function here 
+    purely for backup reasons.
     """
     logging.info("performing incremental SVD for %i factors" % numFactors)
 
@@ -302,4 +318,5 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
     # singular value 
     svals = sdocLens * stermLens
     return sterm, svals, sdoc.T
+
 
