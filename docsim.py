@@ -8,15 +8,15 @@ This module contains functions and classes for computing cosine similarity acros
 a corpus of documents in the Vector Space Model.
 
 The documents may come from the TF-IDF model, LSI model, LDA model etc -- as long
-as they can be iterated over, it's good.
+as they can be iterated over, they're good.
 
-Two main classes are 
+The two main classes are 
 1) Similarity -- computes similarity by linearly scanning over the corpus (slower,
 memory independent)
 
 2) SparseMatrixSimilarity -- stores the whole corpus in memory, computes similarity 
 by in-memory matrix-vector multiplication. This is much faster than the general 
-Similarity, so use this when dealing with small corpora that fit in RAM.
+Similarity, so use this when dealing with smaller corpora that fit in RAM.
 
 Once the similarity object has been initialized, you can query for document
 similarity simply by 
@@ -155,7 +155,7 @@ class SparseMatrixSimilarity(SimilarityABC):
         self.corpus = scipy.sparse.lil_matrix((len(corpus), 1), dtype = dtype) # set no of columns to 1 for now, as the number of terms is unknown yet
         self.normalize = False
         
-        # iterate over the corpus, filling the sparse matrix
+        # iterate over the corpus, populating the sparse matrix
         for docNo, vector in enumerate(corpus):
             if docNo % 10000 == 0:
                 logging.info("PROGRESS: at document #%i/%i" % (docNo, len(corpus)))
@@ -164,7 +164,7 @@ class SparseMatrixSimilarity(SimilarityABC):
             self.corpus.data[docNo] = [dtype(val) for _, val in vector]
         
         # now set the shape properly, using no. columns = highest term index in the corpus + 1
-        numTerms = 1 + max(max(row + [-1]) for row in self.corpus.rows) # + [0] to avoid exceptions from max([]) 
+        numTerms = 1 + max(max(row + [-1]) for row in self.corpus.rows) # + [-1] to avoid exceptions from max(empty)
         self.corpus._shape = (len(corpus), numTerms)
         
         # convert to Compressed Sparse Row for efficient row slicing and multiplications

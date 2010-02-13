@@ -372,6 +372,7 @@ class DmlCorpus(CorpusABC):
         
         logging.info("accepted total of %i articles for %s" % 
                      (len(self.documents), str(config)))
+
     
     def saveAsMatrix(self, normalizeTfidf = False):
         """
@@ -404,7 +405,8 @@ class TopicsCorpus(CorpusABC):
     def __init__(self, model, corpus):
         self.model = model
         self.corpus = corpus
-        
+    
+    
     def __len__(self):
         return len(self.corpus)
 
