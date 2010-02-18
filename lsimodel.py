@@ -58,7 +58,7 @@ class LsiModel(utils.SaveLoad):
         The SVD is created incrementally, in blocks of `chunks` documents.
         """
         # initialize decomposition (zero documents so far)
-        u = numpy.matrix(numpy.zeros((self.numTerms, self.numTopics)))
+        u = numpy.matrix(numpy.zeros((self.numTerms, self.numTopics))) # leave default numeric type (=double)
         s = numpy.matrix(numpy.zeros((self.numTopics, self.numTopics)))
         v = None # numpy.matrix(numpy.zeros((0, self.numTopics)))
         
@@ -66,17 +66,17 @@ class LsiModel(utils.SaveLoad):
         # this is done by sequentially updating SVD with `chunks` new documents
         chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
         for chunkNo, (key, group) in enumerate(chunker):
-            # create a chunk of documents of size `chunks`; except the last one which may be shorter
+            # convert the chunk of documents to vectors
             docs = [matutils.doc2vec(doc, self.numTerms) for docNo, doc in group]
-#            u, s, v = svdAddCols(u, s, v, docs, keepV = True, reorth = chunkNo % 10 == 9) # reorthogonalize once in 10 * chunks documents
-            u, s, v = svdAddCols(u, s, v, docs, keepV = False, reorth = False)
+#            u, s, v = svdAddCols(u, s, v, docs, reorth = chunkNo % 10 == 9) # reorthogonalize once in every "10*chunks" documents
+            u, s, v = svdAddCols(u, s, v, docs, reorth = False)
             logging.info("processed documents up to #%s" % docNo)
-#        self.u, self.s, self.v = u, s, v
+        self.u, self.s, self.v = u, s, v # DEBUG not needed; can be safely commented out to save memory
 
-        # calculate projection needed to get document-topic matrix from term-document matrix
-        # note that v (topics of the training corpus) are discarded and not used at all
+        # calculate projection needed to get document-topic matrix from term-document matrix.
+        # note that v (topics of the training corpus) are not used at all for the transformation
         invS = numpy.diag(numpy.diag(1.0 / s))
-        self.projection = numpy.dot(invS, u.T) # (k, k) * (k, m) = (k, m)
+        self.projection = numpy.dot(invS, u.T) # s^-1 * u^-1; (k, k) * (k, m) = (k, m)
 
     
     def __getitem__(self, bow):
@@ -96,9 +96,18 @@ class LsiModel(utils.SaveLoad):
     
 
     def printTopic(self, topicNo, topN = 10):
-        c = numpy.asarray(self.u[:, topicNo]).flatten()
+        """
+        Print a specified topic (0 <= topicNo < numTopics) in human readable format.
+        
+        Example:
+        >>> lsimodel.printTopic(10, topN = 5)
+        -0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + -0.174 * "functor" + -0.168 * "operator"
+        """
+#        c = numpy.asarray(self.u[:, topicNo]).flatten()
+        c = numpy.asarray(self.projection[topicNo, :]).flatten()
+        norm = numpy.sqrt(numpy.sum(c * c))
         most = numpy.abs(c).argsort()[::-1][:topN]
-        print ' + '.join(['%.3f * "%s"' % (c[val], self.id2word[val]) for val in most])
+        print ' + '.join(['%.3f * "%s"' % (1.0 * c[val] / norm, self.id2word[val]) for val in most])
 #endclass LsiModel
 
 
@@ -247,8 +256,8 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
     See Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 
     Value Decomposition in Natural Language Processing. EACL 2006.
     
-    Use of this function deprecated; while it works, it is several orders of magnitude 
-    slower than the direct (non-stochastic) version based on Brand. Use 
+    Use of this function deprecated; although it works, it is several orders of 
+    magnitude slower than the direct (non-stochastic) version based on Brand. Use 
     svdAddCols/svdUpdate to compute SVD iteratively. I keep this function here 
     purely for backup reasons.
     """
