@@ -14,12 +14,23 @@ import sys
 import os.path
 import re
 
-import scipy.sparse
-
 import common
 import docsim
-import ipyutils
-import matutils
+import lsimodel
+import ldamodel
+import tfidfmodel
+
+
+#TODO:
+# 1) tfidf prepsat z matutils do samostatneho tfidfmodel.py (plus __getitem__, aby 
+#    to byla transformace)
+# 2) dodelat DmlCzSource, ktery dedi z DmlSource ale navic kontroluje existenci 
+#    souboru dspace_id (a vraci jeho obsah jako id); uri = (docId, dirPath)
+# 3) pospravovat cesty (common.py, cesty ke slovniku, bow)
+# 4) pustit a odladit
+# 5) prevest lda modely z blei na asteria01 na LdaModel objekt (trva tydny, nepoustet
+#    znova...
+# 5.5) dat do modelu id2word = None a dopocitat z korpusu jako default?
 
 
 # set to True to do everything EXCEPT actually writing out similar.xml files to disk.
@@ -38,7 +49,7 @@ DIM_LDA = 100 # for latent dirichlet allocation
 # if there are no similar articles (after the pruning), do we still want to generate similar.xml?
 SAVE_EMPTY = True
 
-# template for similar article
+# xml template for similar article
 ARTICLE = """
     <article weight="%(score)f">
         <authors>
@@ -47,7 +58,7 @@ ARTICLE = """
         <title>%(title)s</title>
         <suffix>%(suffix)s</suffix>
         <links>
-            <link source="%(source)s" id="%(id)s" />
+            <link source="%(source)s" id="%(docId)s" />
         </links>
     </article>"""
 
@@ -58,39 +69,6 @@ SIMILAR = """\
 </related>
 """
 
-
-
-def buildDmlCorpus(language):
-    numdam = sources.DmlSource('numdam', sourcePath['numdam'])
-    dmlcz = sources.DmlSource('dmlcz', sourcePath['dmlcz'])
-    arxmliv = sources.ArxmlivSource('arxmliv', sourcePath['arxmliv'])
-    
-    config = corpora.DmlConfig('gensim', resultDir = sourcePath['results'], acceptLangs = [language])
-    
-    dml = corpora.DmlCorpus()
-    dml.processConfig(config)
-    dml.buildDictionary()
-    dml.dictionary.filterExtremes(noBelow = 5, noAbove = 0.3)
-    
-    dml.save() # save the whole object as binary data
-    dml.saveDebug() # save docNo->docId mapping, and termId->term mapping in text format
-    dml.saveAsMatrix() # save word count matrix and tfidf matrix
-    
-                                                               
-def generateSimilar(method, docSim):
-    pass
-
-    
-
-def decomposeId(docId):
-    """
-    Decompose an article id back into (source, path from source base dir, full filesystem path) 3-tuple.
-    """
-    sep = docId.find(os.sep)
-    assert sep >= 0, "failed to decompose docId into source and path, '%s'" % docId
-    source, path = docId[ : sep], docId[sep + 1 : ]
-    fullPath = os.path.join(common.INPUT_PATHS[source], path) # create full path by merging source base dir and the id
-    return source, path, fullPath
 
 
 def getMeta(fname):
@@ -107,41 +85,50 @@ def getMeta(fname):
     return author, title
 
 
-def generateSimilarXML(method, docId, tops):
-    inputSource, inputId, outdir = decomposeId(docId)
-    outfile = os.path.join(outdir, 'similar_%s.xml' % method)
-    articles = ""
-    numArticles = 0
-    for _simId, score in tops:
-        simId = ipyutils.docids[_simId]
-        if score > MIN_SCORE and simId != docId: # at least MIN_SCORE and not identity
-            suffix = "" # FIXME k cemu byl vubec zamyslen tag 'suffix' v similar.xml?
-            source, id, simdir = decomposeId(simId)
-            author, title = getMeta(os.path.join(simdir, 'meta.xml'))
-            articles += ARTICLE % locals()
-            numArticles += 1
-            if numArticles >= MAX_SIMILAR:
-                break
-    if SAVE_EMPTY or numArticles:
-        logging.info("generating %s (%i similars)" % (outfile, numArticles))
-        if not DRY_RUN: # only open output files for writing if DRY_RUN is false
-            outfile = open(outfile, 'w')
-            outfile.write(SIMILAR % locals())
-            outfile.close()
-    else:
-        logging.debug("skipping %s (no similar found)" % outfile)
+def buildDmlCorpus(language):
+    numdam = sources.DmlSource('numdam', sourcePath['numdam'])
+    dmlcz = sources.DmlCzSource('dmlcz', sourcePath['dmlcz'])
+    arxmliv = sources.ArxmlivSource('arxmliv', sourcePath['arxmliv'])
+    
+    config = corpora.DmlConfig('gensim', resultDir = sourcePath['results'], acceptLangs = [language])
+    
+    dml = corpora.DmlCorpus()
+    dml.processConfig(config)
+    dml.buildDictionary()
+    dml.dictionary.filterExtremes(noBelow = 5, noAbove = 0.3) # ignore too (in)frequent words
+    
+    dml.save() # save the whole object as binary data
+    dml.saveDebug() # save docNo->docId mapping, and termId->term mapping in text format
+    dml.saveAsMatrix() # save word count matrix
+    return dml
 
 
-def loadTfIdf(language, asTensor = False):
-    tfidfFile = common.matrixFile(common.PREFIX + '_' + language + 'TFIDF_T.mm')
-    logging.info("loading TFIDF matrix from %s" % tfidfFile)
-    if asTensor:
-        import sparseSVD
-        mat = sparseSVD.tensorFromMtx(tfidfFile, transposed = True)
-    else:
-        mat = matutils.loadMatrix(tfidfFile)
-    logging.info("loaded TFIDF matrix of %i documents and %i terms" % (mat.shape[0], mat.shape[1]))
-    return mat
+def generateSimilar(corpus, similarities, method):
+    for docNo, topSims in enumerate(similarities): # for each document
+        sourceId, (_, outPath) = corpus.documents[docNo]
+        outfile = os.path.join(outPath, '_similar_%s.xml' % method) # similarities will be stored to this file
+        articles = []
+        for docNo2, score in topSims: # for each most similar
+            source, (docId, docPath) = corpus.documents[docNo2]
+            if score > MIN_SCORE and docNo != docNo2: # if similarity is above MIN_SCORE and not identity (=always maximum similarity, boring)
+                suffix = ""
+                author, title = getMeta(os.path.join(docPath, 'meta.xml')) # try to read metadata from meta.xml, if present
+                articles.append(ARTICLE % locals()) # add the similar article to output
+                if len(articles) >= MAX_SIMILAR:
+                    break
+        # now `articles` holds multiple strings in similar_*.xml format 
+        if SAVE_EMPTY or articles:
+            if not DRY_RUN: # only open output files for writing if DRY_RUN is false
+                logging.info("generating %s (%i similars)" % (outfile, len(articles)))
+                articles = ''.join(articles) # concat all similars to one string
+                outfile = open(outfile, 'w')
+                outfile.write(SIMILAR % locals()) # add xml headers and print to file
+                outfile.close()
+            else:
+                logging.info("would be generating %s (%i similars)" % (outfile, len(articles)))
+        else:
+            logging.debug("skipping %s (no similar found)" % outfile)
+
 
 
 #==============================================================================
@@ -158,46 +145,49 @@ if __name__ == '__main__':
         sys.exit(1)
     method = sys.argv[1]
     language = sys.argv[2]
-    inputs = common.INPUT_PATHS
     
-    # load document_id<->document_index, term<->term_index mappings
-    ipyutils.loadDicts(prefix = common.PREFIX + '_' + language)
+    if 'build' in program:
+        buildDmlCorpus(language)
+        sys.exit(0)
+    if 'genmodel' in program:
+        if 'tfidf' in program:
+            corpus = corpora.MmCorpus(dml_bow)
+            model = tfidfmodel.TfidfModel(corpus)
+            model.save(modelfname('tfidf'))
+        if 'lda' in program:
+            corpus = corpora.MmCorpus(dml_bow)
+            id2word = loadDictionary(dml_dict.txt)
+            model = ldamodel.LdaModel(corpus, id2word, numTopics = DIM_LDA)
+            model.save(modelfname('lda'))
+        elif 'lsi' in program:
+            # first, transform word counts to tf-idf weights
+            corpus = corpora.MmCorpus(dml_bow)
+            model = tfidfmodel.TfidfModel(corpus)
+            tfidf = corpora.TopicsCorpus(model, corpus)
+            # then find the transformation from tf-idf to latent space
+            id2word = loadDictionary(dml_dict.txt)
+            model = lsimodel.LsiModel(tfidf, id2word, numTopics = DIM_LSI)
+            model.save(modelfname('lsi'))
+        else:
+            logging.critical('unknown topic extraction method in %s' % program)
+        sys.exit(0)
     
-    # next, create a method matrix which will serve for cossim computations.
-    # different methods create different matrices, but all return a sparse matrix of the shape (numDocs x N)
-    if method == 'tfidf':
-        mat = loadTfIdf(language)
-    elif method == 'lsi':
-        conceptFile = common.dataFile(common.PREFIX + '_' + language + '.lsa_concepts%i' % DIM_LSI)
-        mat = docsim.buildLSIMatrices(language, factors = DIM_LSI, saveConcepts = conceptFile)
-    elif method == 'rp':
-        mat = docsim.buildRPMatrices(language, dimensions = DIM_RP)
-    elif method == 'lda':
-        mat = docsim.buildLDAMatrix(language, ipyutils.tokenids, numTopics = DIM_LDA)
-    else:
-        assert False, "unknown method '%s'" % method
-    
-    # make sure method matrix contains documents (=rows) of unit length
-    logging.info("normalizing all vectors to unit length")
-    mat = matutils.normalizeSparseRows(mat).tocsr()
-
-    # and for each document, output its most similar documents to the file similar_METHOD.xml 
-    for intId, docId in ipyutils.docids.iteritems():
-        logging.info("processing document intId=%i, docId=%s" % (intId, docId))
+    if 'gensim' in program:
+        corpus = corpora.DmlCorpus.load(dml.pkl)
+        input = corpora.MmCorpus(bow.mm)
         
-        # get the document vector, of shape 1xN
-        vec = mat[intId, :].T
+        if model == 'tfidf':
+            model = tfidfmodel.TfidfModel.load(modelfname('tfidf'))
+        elif method == 'lsi':
+            tfidf = tfidfmodel.TfidfModel.load(modelfname('tfidf'))
+            input = corpora.TopicsCorpus(tfidf, input)
+            model = lsimodel.LsiModel.load(modelfname('lsi'))
+        elif method == 'lda':
+            model = ldamodel.LdaModel.load(modelfname('lda'))
         
-        # compute cosine similarity against every other document in the collection
-        tops = (mat * vec).todense() # multiply (=cossim for unit length  vectors) sparse matrix and sparse vector and convert the result to dense vector (normal numpy array)
-        
-        # sort the documents by their similarity, most similar come first
-        sims = [tops.A[i, 0] for i in xrange(tops.shape[0])]
-        tops = zip(xrange(tops.shape[0]), sims)
-        tops.sort(key = lambda item: -item[1]) # sort by -sim => highest cossim first
-
-        # and generate the files (unless DRY_RUN global var is set, in which case no file is actually written to disk)
-        logging.debug("first ten most similar documents: %s" % (tops[:10]))
-        generateSimilarXML(method, docId, tops)
-        
+        topics = corpora.TopicsCorpus(model, input) # documents from 'input' will be represented via 'model'
+        sims = docsim.SparseMatrixSimilarity(topics, numBest = MAX_SIMILAR) # initialize structure which searches for similar documents
+        generateSimilar(corpus, sims, method) # for each document, print MAX_SIMILAR nearest documents to a xml file, in dml-cz format
+            
     logging.info("finished running %s" % program)
+

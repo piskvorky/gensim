@@ -21,11 +21,11 @@ class LsiModel(utils.SaveLoad):
     Semantic Indexing.
     
     The main methods are:
-    1) the constructor, which calculates the latent topics space, effectively 
+    1) constructor, which calculates the latent topics space, effectively 
     initializing the model,
     
-    2) the [] method, which returns representation of anyy input document in the 
-    new, latent space.
+    2) the [] method, which returns representation of any input document in the 
+    computed latent space.
     
     Model persistency is achieved via its load/save methods.
     """

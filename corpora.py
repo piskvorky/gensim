@@ -396,8 +396,8 @@ class TopicsCorpus(CorpusABC):
     space into topic-document space.
     
     The conversion is done using a topic model, such as Latent Semantic Indexing 
-    (LSI, the lsimodel.py module), Latent Dirichlet Allocation (LDA, ldamodel.py 
-    module), Random Projections (RP) etc. 
+    (LSI, the lsimodel.py module), Latent Dirichlet Allocation (LDA, ldamodel.py), 
+    Random Projections (RP) etc. 
     
     The model object must provide a dictionary [] operator, which accept a document 
     represented in the old space and returns its representation in the topic space.

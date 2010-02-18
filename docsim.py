@@ -102,7 +102,7 @@ class SimilarityABC(utils.SaveLoad):
         for docNo, doc in enumerate(self.corpus):
             yield self[doc]
 #endclass SimilarityABC
-        
+
 
 class Similarity(SimilarityABC):
     """

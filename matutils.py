@@ -181,14 +181,14 @@ class MmWriter(object):
         idfs = dict((termId, math.log(1.0 * docNo / docFreq, 2)) 
                     for termId, docFreq in idfs.iteritems())
         
-        # determine MM format headers write them to file
+        # determine MM format headers and write them to file
         numDocs = len(corpus)
         numTerms = max(idfs.iterkeys()) + 1
         numNnz = sum(count for termId, count in fs.iteritems() if idfs[termId] > 0)
         mw = MmWriter(fname)
         mw.writeHeaders(numDocs, numTerms, numNnz)
 
-        # finally, iterate over the documents again, saving tf-idf vectors
+        # finally, iterate over all documents again, saving tf-idf vectors
         for docNo, bow in enumerate(corpus):
             if docNo % 1000 == 0:
                 logging.info("PROGRESS: saving document %i/%i" % 
