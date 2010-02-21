@@ -83,7 +83,7 @@ class MmWriter(object):
         numDocs = len(corpus)
         numTerms = numNnz = 0
         for docNo, bow in enumerate(corpus):
-            if docNo % 10000 == 0:
+            if docNo % 1000 == 0:
                 logging.info("PROGRESS: at document %i/%i" % 
                              (docNo, len(corpus)))
             if len(bow) > 0:
@@ -170,21 +170,20 @@ class MmWriter(object):
         # first, determine the IDF weights; this requires a separate sweep over the corpus
         logging.info("calculating IDF weights over %i documents" % len(corpus))
         idfs = {}
-        fs = {}
+        numNnz = 0
         for docNo, bow in enumerate(corpus):
             if docNo % 5000 == 0:
                 logging.info("PROGRESS: processing document %i/%i" % 
                              (docNo, len(corpus)))
+            numNnz += len(bow)
             for termId, termCount in bow:
                 idfs[termId] = idfs.get(termId, 0) + 1
-                fs[termId] = fs.get(termId, 0) + termCount
-        idfs = dict((termId, math.log(1.0 * docNo / docFreq, 2)) 
+        idfs = dict((termId, math.log(1.0 * (docNo + 1) / docFreq, 2)) 
                     for termId, docFreq in idfs.iteritems())
         
         # determine MM format headers and write them to file
         numDocs = len(corpus)
         numTerms = max(idfs.iterkeys()) + 1
-        numNnz = sum(count for termId, count in fs.iteritems() if idfs[termId] > 0)
         mw = MmWriter(fname)
         mw.writeHeaders(numDocs, numTerms, numNnz)
 

@@ -37,7 +37,7 @@ class ArticleSource(object):
     
     What is NOT abstracted away (ie. must hold for all sources) is the idea of
     article identifiers (URIs), which uniquely identify each article within 
-    one source. 
+    one source.
 
     This class is just an ABC interface; see eg. DmlSource or ArxmlivSource classes 
     for concrete instances.
@@ -68,7 +68,7 @@ class ArticleSource(object):
 
 class DmlSource(ArticleSource):
     """
-    Article source for articles in DML-CZ format: 
+    Article source for articles in DML format: 
     1) articles = directories starting with '#'
     2) content is stored in fulltext.txt
     3) metadata are stored in meta.xml 
@@ -117,7 +117,9 @@ class DmlSource(ArticleSource):
     
     def idFromDir(self, path):
         assert len(path) > len(self.baseDir)
-        return path[len(self.baseDir) + 1 : ] # by default, internal id is the filesystem path following the base dir
+        intId = path[1 + path.rfind('#') : ]
+        pathId = path[len(self.baseDir) + 1 : ]
+        return (intId, pathId)
     
     
     def isArticle(self, path):
@@ -126,11 +128,11 @@ class DmlSource(ArticleSource):
             return False
         # and contain the fulltext.txt file
         if not os.path.exists(os.path.join(path, 'fulltext.txt')):
-            logging.warning('missing fulltext.txt in %s' % path)
+            logging.info('missing fulltext in %s' % path)
             return False
         # and also the meta.xml file
         if not os.path.exists(os.path.join(path, 'meta.xml')):
-            logging.warning('missing meta.xml in %s' % path)
+            logging.info('missing meta.xml in %s' % path)
             return False
         return True
     
@@ -153,7 +155,8 @@ class DmlSource(ArticleSource):
         """
         Return article content as a single large string.
         """
-        filename = os.path.join(self.baseDir, uri, 'fulltext.txt')
+        intId, pathId = uri
+        filename = os.path.join(self.baseDir, pathId, 'fulltext.txt')
         return open(filename).read()
     
     
@@ -161,18 +164,78 @@ class DmlSource(ArticleSource):
         """
         Return article metadata as a attribute->value dictionary.
         """
-        filename = os.path.join(self.baseDir, uri, 'meta.xml')
+        intId, pathId = uri
+        filename = os.path.join(self.baseDir, pathId, 'meta.xml')
         return DmlSource.parseDmlMeta(filename)
     
     
     def tokenize(self, content):
-        return [token.encode('utf8') for token in utils.tokenize(content)]
+        return [token.encode('utf8') for token in utils.tokenize(content, errors = 'ignore')]
     
     
     def normalizeWord(self, word):
         wordU = unicode(word, 'utf8')
         return wordU.lower().encode('utf8') # lowercase and then convert back to bytestring
 #endclass DmlSource
+
+
+class DmlCzSource(DmlSource):
+    """
+    Article source for articles in DML-CZ format: 
+    1) articles = directories starting with '#'
+    2) content is stored in fulltext.txt or fulltext_dspace.txt
+    3) there exists a dspace_id file, containing internal dmlcz id
+    3) metadata are stored in meta.xml 
+    
+    See the ArticleSource class for general info on sources. 
+    """
+    def idFromDir(self, path):
+        assert len(path) > len(self.baseDir)
+        dmlczId = open(os.path.join(path, 'dspace_id')).read().strip()
+        pathId = path[len(self.baseDir) + 1 : ]
+        return (dmlczId, pathId)
+    
+    
+    def isArticle(self, path):
+        # in order to be valid, the article directory must start with '#'
+        if not os.path.basename(path).startswith('#'):
+            return False
+        # and contain a dspace_id file
+        if not (os.path.exists(os.path.join(path, 'dspace_id'))):
+            logging.info('missing dspace_id in %s' % path)
+            return False
+        # and contain either fulltext.txt or fulltext_dspace.txt file
+        if not (os.path.exists(os.path.join(path, 'fulltext.txt')) or os.path.exists(os.path.join(path, 'fulltext-dspace.txt'))):
+            logging.info('missing fulltext in %s' % path)
+            return False
+        # and contain the meta.xml file
+        if not os.path.exists(os.path.join(path, 'meta.xml')):
+            logging.info('missing meta.xml in %s' % path)
+            return False
+        return True
+    
+    
+    def getContent(self, uri):
+        """
+        Return article content as a single large string.
+        """
+        intId, pathId = uri
+        filename1 = os.path.join(self.baseDir, pathId, 'fulltext.txt')
+        filename2 = os.path.join(self.baseDir, pathId, 'fulltext-dspace.txt')
+        
+        if os.path.exists(filename1) and os.path.exists(filename2):
+            # if both fulltext and dspace files exist, pick the larger one
+            if os.path.getsize(filename1) < os.path.getsize(filename2):
+                filename = filename2
+            else:
+                filename = filename1
+        elif os.path.exists(filename1):
+            filename = filename1
+        else:
+            assert os.path.exists(filename2)
+            filename = filename2
+        return open(filename).read()
+#endclass DmlCzSource
 
 
 
@@ -206,7 +269,7 @@ class ArxmlivSource(ArticleSource):
         def characters(self, text):
             # for text, we only care about tokens directly within the <p> tag
             if self.path[-1] == 'p':
-                tokens = [token.encode('utf8') for token in utils.tokenize(text)]
+                tokens = [token.encode('utf8') for token in utils.tokenize(text, errors = 'ignore')]
                 self.tokens.extend(tokens)
     #endclass ArxmlivHandler
     
@@ -236,7 +299,9 @@ class ArxmlivSource(ArticleSource):
     
     def idFromDir(self, path):
         assert len(path) > len(self.baseDir)
-        return path[len(self.baseDir) + 1 : ] # by default, internal id is the filesystem path following the base dir
+        intId = path[1 + path.rfind('#') : ]
+        pathId = path[len(self.baseDir) + 1 : ]
+        return (intId, pathId)
     
     
     def isArticle(self, path):
@@ -268,7 +333,8 @@ class ArxmlivSource(ArticleSource):
         """
         Return article content as a single large string.
         """
-        filename = os.path.join(self.baseDir, uri, 'tex.xml')
+        intId, pathId = uri
+        filename = os.path.join(self.baseDir, pathId, 'tex.xml')
         return open(filename).read()
     
     
@@ -276,7 +342,8 @@ class ArxmlivSource(ArticleSource):
         """
         Return article metadata as a attribute->value dictionary.
         """
-        filename = os.path.join(self.baseDir, uri, 'tex.xml')
+#        intId, pathId = uri
+#        filename = os.path.join(self.baseDir, pathId, 'tex.xml')
         return {'language': 'eng'} # TODO maybe parse out some meta; but currently not needed for anything...
     
     
