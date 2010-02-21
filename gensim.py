@@ -5,7 +5,7 @@ USAGE: %s METHOD LANGUAGE
     Generate similar_method.xml files from the matrix created by the build_tfidf.py script.
     METHOD is currently either tfidf, lsi or rp.
 
-Example: ./gensim.py tfidf eng
+Example: ./gensim_build.py eng
 """
 
 
@@ -14,24 +14,31 @@ import sys
 import os.path
 import re
 
-import common
+import sources
+import corpora
+
 import docsim
 import lsimodel
 import ldamodel
-import tfidfmodel
+#import tfidfmodel
 
 
 #TODO:
 # 1) tfidf prepsat z matutils do samostatneho tfidfmodel.py (plus __getitem__, aby 
 #    to byla transformace)
-# 2) dodelat DmlCzSource, ktery dedi z DmlSource ale navic kontroluje existenci 
-#    souboru dspace_id (a vraci jeho obsah jako id); uri = (docId, dirPath)
-# 3) pospravovat cesty (common.py, cesty ke slovniku, bow)
-# 4) pustit a odladit
 # 5) prevest lda modely z blei na asteria01 na LdaModel objekt (trva tydny, nepoustet
 #    znova...
-# 5.5) dat do modelu id2word = None a dopocitat z korpusu jako default?
+# 6) pridat random projections
+# 7) logging per module -- ne vsechno pres logging.root, zlepseni prehlednosti logu
 
+
+SOURCE_LIST = [
+               sources.DmlCzSource('dmlcz', '/Users/kofola/workspace/dml/data/dmlcz/'),
+               sources.DmlSource('numdam', '/Users/kofola/workspace/dml/data/numdam/'),
+               sources.ArxmlivSource('arxmliv', '/Users/kofola/workspace/dml/data/arxmliv/'),
+               ]
+
+RESULT_DIR = '/Users/kofola/gensim/results'
 
 # set to True to do everything EXCEPT actually writing out similar.xml files to disk.
 # similar.xml files are NOT written if DRY_RUN is true.
@@ -86,20 +93,17 @@ def getMeta(fname):
 
 
 def buildDmlCorpus(language):
-    numdam = sources.DmlSource('numdam', sourcePath['numdam'])
-    dmlcz = sources.DmlCzSource('dmlcz', sourcePath['dmlcz'])
-    arxmliv = sources.ArxmlivSource('arxmliv', sourcePath['arxmliv'])
-    
-    config = corpora.DmlConfig('gensim', resultDir = sourcePath['results'], acceptLangs = [language])
+    config = corpora.DmlConfig('gensim_%s' % language, resultDir = RESULT_DIR, acceptLangs = [language])
+    for source in SOURCE_LIST:
+        config.addSource(source)
     
     dml = corpora.DmlCorpus()
     dml.processConfig(config)
     dml.buildDictionary()
     dml.dictionary.filterExtremes(noBelow = 5, noAbove = 0.3) # ignore too (in)frequent words
     
-    dml.save() # save the whole object as binary data
-    dml.saveDebug() # save docNo->docId mapping, and termId->term mapping in text format
-    dml.saveAsMatrix() # save word count matrix
+    dml.save(config.resultFile('.pkl')) # save the whole object as binary data
+    dml.saveAsText() # save id mappings and matrices as text data
     return dml
 
 
@@ -133,23 +137,21 @@ def generateSimilar(corpus, similarities, method):
 
 #==============================================================================
 if __name__ == '__main__':
-    logging.basicConfig(level = common.PRINT_LEVEL)
-    logging.root.level = common.PRINT_LEVEL
+    logging.basicConfig(level = logging.INFO)
+    logging.root.level = logging.DEBUG
     logging.info("running %s" % ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
 
     # check and process input arguments
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2:
         print globals()['__doc__'] % (program)
         sys.exit(1)
-    method = sys.argv[1]
-    language = sys.argv[2]
+    language = sys.argv[1]
     
     if 'build' in program:
         buildDmlCorpus(language)
-        sys.exit(0)
-    if 'genmodel' in program:
+    elif 'genmodel' in program:
         if 'tfidf' in program:
             corpus = corpora.MmCorpus(dml_bow)
             model = tfidfmodel.TfidfModel(corpus)
@@ -169,10 +171,8 @@ if __name__ == '__main__':
             model = lsimodel.LsiModel(tfidf, id2word, numTopics = DIM_LSI)
             model.save(modelfname('lsi'))
         else:
-            logging.critical('unknown topic extraction method in %s' % program)
-        sys.exit(0)
-    
-    if 'gensim' in program:
+            raise ValueError('unknown topic extraction method in %s' % program)
+    elif 'gensim' in program:
         corpus = corpora.DmlCorpus.load(dml.pkl)
         input = corpora.MmCorpus(bow.mm)
         

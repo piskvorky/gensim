@@ -29,7 +29,7 @@ class LsiModel(utils.SaveLoad):
     
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, corpus, id2word, numTopics = 200):
+    def __init__(self, corpus, id2word = None, numTopics = 200):
         """
         Find latent space based on the corpus provided.
 
@@ -39,7 +39,6 @@ class LsiModel(utils.SaveLoad):
         arbitrary, unseen document, using the topics = self[bow] dictionary notation.
         """
         self.id2word = id2word
-        self.numTerms = 1 + max(id2word.iterkeys())
         self.numTopics = numTopics # number of latent topics
         if corpus is not None:
             self.initialize(corpus)
@@ -52,11 +51,21 @@ class LsiModel(utils.SaveLoad):
 
     def initialize(self, corpus, chunks = 200):
         """
-        Run SVD decomposition on the corpus, which defines the latent space into 
+        Run SVD decomposition on the corpus. This will define the latent space into 
         which terms and documents will be mapped.
         
         The SVD is created incrementally, in blocks of `chunks` documents.
         """
+        if id2word is None:
+            logging.info("no word id mapping provided; initializing from corpus, assuming identity")
+            maxId = 0
+            for document in corpus:
+                maxId = max(maxId, max([-1] + [fieldId for fieldId, _ in document]))
+            self.numTerms = 1 + maxId
+            self.id2word = dict(zip(xrange(self.numTerms), xrange(self.numTerms)))
+        else:
+            self.numTerms = 1 + max(self.id2word.iterkeys())
+        
         # initialize decomposition (zero documents so far)
         u = numpy.matrix(numpy.zeros((self.numTerms, self.numTopics))) # leave default numeric type (=double)
         s = numpy.matrix(numpy.zeros((self.numTopics, self.numTopics)))

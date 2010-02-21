@@ -329,6 +329,7 @@ class DmlCorpus(CorpusABC):
         """
         logging.info("creating dictionary from %i articles" % len(self.documents))
         self.dictionary = dictionary.Dictionary()
+        numPositions = 0
         for docNo, (sourceId, docUri) in enumerate(self.documents):
             if docNo % 1000 == 0:
                 logging.info("PROGRESS: at document #%i/%i (%s, %s)" % 
@@ -336,10 +337,12 @@ class DmlCorpus(CorpusABC):
             source = self.config.sources[sourceId]
             contents = source.getContent(docUri)
             words = source.tokenize(contents)
+            numPositions += len(words)
 
             # convert to bag-of-words, but ignore the result -- here we only care about updating token ids
             _ = self.dictionary.doc2bow(words, source.normalizeWord, allowUpdate = True)
-        logging.info("built %s" % self.dictionary)
+        logging.info("built %s from %i documents (total %i corpus positions)" % 
+                     (self.dictionary, len(self.documents), numPositions))
 
     
     def processConfig(self, config):
@@ -374,16 +377,39 @@ class DmlCorpus(CorpusABC):
                      (len(self.documents), str(config)))
 
     
-    def saveAsMatrix(self, normalizeTfidf = False):
+    def saveDictionary(self, fname):
+        logging.info("saving dictionary mapping to %s" % fname)
+        fout = open(fname, 'w')
+        for tokenId, token in self.dictionary.id2token.iteritems():
+            fout.write("%i\t%s\n" % (tokenId, token.token))
+        fout.close()
+    
+    
+    def saveDocuments(self, fname):
+        logging.info("saving documents mapping to %s" % fname)
+        fout = open(fname, 'w')
+        for docNo, docId in enumerate(self.documents):
+            sourceId, docUri = docId
+            intId, pathId = docUri
+            fout.write("%i\t%s\n" % (docNo, repr(docId)))
+        fout.close()
+
+    
+    def saveAsText(self, normalizeTfidf = False):
         """
-        Store the corpus to a file, in Matrix Market format.
+        Store the corpus to a file in Matrix Market format.
         
-        This actually saves two files -- one with pure term frequency counts, 
-        and one with tf-idf vectors (weight of frequent terms lowered).
+        This actually saves multiple files:
+        1) pure document-term co-occurence frequency counts,
+        2) tf-idf (weight of frequent terms lowered),
+        3) token to integer mapping
+        4) document to integer mapping
         
         The exact filesystem paths and filenames are determined from the config, 
-        but always end in '*bow.mm' and '*tfidf.mm' respectively.
+        see source.
         """
+        self.saveDictionary(self.config.resultFile('wordids.txt'))
+        self.saveDocuments(self.config.resultFile('docids.txt'))
         matutils.MmWriter.writeCorpus(self.config.resultFile('bow.mm'), self)
         matutils.MmWriter.writeTfidf(self.config.resultFile('tfidf.mm'), self, normalize = normalizeTfidf)
 #endclass DmlCorpus
