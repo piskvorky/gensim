@@ -170,7 +170,7 @@ class DmlSource(ArticleSource):
     
     
     def tokenize(self, content):
-        return [token.encode('utf8') for token in utils.tokenize(content, errors = 'ignore')]
+        return [token.encode('utf8') for token in utils.tokenize(content, errors = 'ignore') if not token.isdigit()]
     
     
     def normalizeWord(self, word):
@@ -259,7 +259,7 @@ class ArxmlivSource(ArticleSource):
             # for math tokens, we only care about Math elements directly below <p>
             if name == 'Math' and self.path[-1] == 'p' and attr.get('mode', '') == 'inline':
                 tex = attr.get('tex', '')
-                if tex:
+                if tex and not tex.isdigit():
                     self.tokens.append('$%s$' % tex.encode('utf8'))
             self.path.append(name)
         
@@ -269,7 +269,7 @@ class ArxmlivSource(ArticleSource):
         def characters(self, text):
             # for text, we only care about tokens directly within the <p> tag
             if self.path[-1] == 'p':
-                tokens = [token.encode('utf8') for token in utils.tokenize(text, errors = 'ignore')]
+                tokens = [token.encode('utf8') for token in utils.tokenize(text, errors = 'ignore') if not token.idigit()]
                 self.tokens.extend(tokens)
     #endclass ArxmlivHandler
     
@@ -282,7 +282,8 @@ class ArxmlivSource(ArticleSource):
         # This is not really a problem with arxmliv xml files themselved, so ignore
         # these errors silently.
         def error(self, exception):
-            logging.debug("SAX error parsing xml: %s" % exception)
+            pass
+#            logging.debug("SAX error parsing xml: %s" % exception)
         
         warning = fatalError = error
     #endclass ArxmlivErrorHandler
@@ -340,7 +341,7 @@ class ArxmlivSource(ArticleSource):
     
     def getMeta(self, uri):
         """
-        Return article metadata as a attribute->value dictionary.
+        Return article metadata as an attribute->value dictionary.
         """
 #        intId, pathId = uri
 #        filename = os.path.join(self.baseDir, pathId, 'tex.xml')
