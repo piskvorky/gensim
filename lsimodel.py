@@ -49,14 +49,14 @@ class LsiModel(utils.SaveLoad):
                 (self.numTerms, self.numTopics)
 
 
-    def initialize(self, corpus, chunks = 200):
+    def initialize(self, corpus, chunks = 100):
         """
         Run SVD decomposition on the corpus. This will define the latent space into 
         which terms and documents will be mapped.
         
         The SVD is created incrementally, in blocks of `chunks` documents.
         """
-        if id2word is None:
+        if self.id2word is None:
             logging.info("no word id mapping provided; initializing from corpus, assuming identity")
             maxId = 0
             for document in corpus:
@@ -67,9 +67,10 @@ class LsiModel(utils.SaveLoad):
             self.numTerms = 1 + max(self.id2word.iterkeys())
         
         # initialize decomposition (zero documents so far)
-        u = numpy.matrix(numpy.zeros((self.numTerms, self.numTopics))) # leave default numeric type (=double)
-        s = numpy.matrix(numpy.zeros((self.numTopics, self.numTopics)))
-        v = None # numpy.matrix(numpy.zeros((0, self.numTopics)))
+        self.u = numpy.matrix(numpy.zeros((self.numTerms, self.numTopics))) # leave default numeric type (=double)
+        self.s = numpy.matrix(numpy.zeros((self.numTopics, self.numTopics)))
+        # self.v = numpy.matrix(numpy.zeros((0, self.numTopics)))
+        self.v = None
         
         # do the actual work -- perform iterative singular value decomposition
         # this is done by sequentially updating SVD with `chunks` new documents
@@ -77,17 +78,107 @@ class LsiModel(utils.SaveLoad):
         for chunkNo, (key, group) in enumerate(chunker):
             # convert the chunk of documents to vectors
             docs = [matutils.doc2vec(doc, self.numTerms) for docNo, doc in group]
-#            u, s, v = svdAddCols(u, s, v, docs, reorth = chunkNo % 10 == 9) # reorthogonalize once in every "10*chunks" documents
-            u, s, v = svdAddCols(u, s, v, docs, reorth = False)
+#            self.svdAddCols(docs, reorth = chunkNo % 100 == 99) # reorthogonalize once in every "100*chunks" documents
+            self.svdAddCols(docs, reorth = False)
             logging.info("processed documents up to #%s" % docNo)
-        self.u, self.s, self.v = u, s, v # DEBUG not needed; can be safely commented out to save memory
+        
 
         # calculate projection needed to get document-topic matrix from term-document matrix.
         # note that v (topics of the training corpus) are not used at all for the transformation
-        invS = numpy.diag(numpy.diag(1.0 / s))
-        self.projection = numpy.dot(invS, u.T) # s^-1 * u^-1; (k, k) * (k, m) = (k, m)
+        invS = numpy.diag(numpy.diag(1.0 / self.s))
+        self.projection = numpy.dot(invS, self.u.T) # s^-1 * u^-1; (k, k) * (k, m) = (k, m)
+        del self.u, self.s, self.v # once we have the projection, discard the decomposition to free up memory
 
     
+    def svdAddCols(self, docs, decay = 1.0, reorth = False):
+        """
+        Update singular value decomposition factors to take into account new 
+        documents (matrix columns).
+        
+        The documents are assumed to be a list of full vectors (ie. not sparse 2-tuples).
+        
+        compute new decomposition u', s', v' so that if the current matrix X decomposes to
+        self.u * self.s * self.v.T ~= X , then
+        self.u' * self.s' * self.v'.T ~= [X docs.T]
+        
+        self.v can be set to None, in which case it is completely ignored. This saves a
+        bit of speed and a lot of memory, especially for huge corpora (size of v is
+        linear in the number of added documents). If self.v is set to None, 
+        reorthogonalization is not possible.
+        """
+        logging.debug("updating SVD with %i new documents" % len(docs))
+        keepV = self.v is not None
+        if not keepV and reorth:
+            raise TypeError("cannot reorthogonalize without the right singular vectors (v must not be None)")
+        a = numpy.matrix(numpy.asarray(docs)).T
+        m, k = self.u.shape
+        if keepV:
+            n, k2 = self.v.shape
+            assert k == k2, "left/right singular vectors shape mismatch!"
+        m2, c = a.shape
+        assert m == m2, "new documents must be in the same term-space as the original documents (old %s, new %s)" % (u.shape, a.shape)
+        
+        logging.debug("constructing orthonormal basis")
+        # construct orthogonal basis for (I - U * U^T) * A
+        m = self.u.T * a # (k, m) * (m, c) = (k, c)
+        p = a - self.u * m # (m, c) - (m, k) * (k, c) = (m, c)
+        logging.debug("orthogonalizing")
+        P = orth(p)
+        P = matutils.pad(P, 0, p.shape[1] - P.shape[1]) # pad with zeros in case A was already partly contained in U (rank not full)
+        Ra = P.T * p # (c, m) * (m, c) = (c, c)
+        del p # free up mem
+        self.u = numpy.bmat([self.u, P]) # (m, k + c)
+        del P # free up mem
+        
+        # now we're ready to construct K; K will be mostly diagonal and sparse, with
+        # lots of structure, and of shape only (k + c, k + c), so its direct SVD 
+        # ought to be fast for reasonably small additions of new documents (ie. tens 
+        # or hundreds of new documents at a time).
+        self.s *= decay # allow rotation towards new data trends in the document stream, by giving less emphasis on old values
+        empty = matutils.pad(numpy.matrix([]).reshape(0, 0), c, k)
+        K = numpy.bmat([[self.s, m], [empty, Ra]]) # (k + c, k + c)
+        logging.debug("computing %s SVD" % str(K.shape))
+        uK, sK, vK = numpy.linalg.svd(K, full_matrices = False) # there is no python wrapper for partial svd => request all factors :(
+        lost = 1.0 - numpy.sum(sK[: k]) / numpy.sum(sK)
+        logging.debug("discarding %.1f%% of data variation" % (100 * lost))
+        
+        # clip the full decomposition only to requested rank
+        uK = numpy.matrix(uK[:, :k])
+        sK = numpy.matrix(numpy.diag(sK[: k]))
+        vK = numpy.matrix(vK.T[:, :k]) # .T because numpy transposes the right vectors V, so we need to transpose it back: V.T.T = V
+        
+        # and finally update the left/right singular vectors
+        logging.debug('updating singular vectors')
+        self.s = sK
+        self.u = self.u * uK # (m, k + c) * (k + c, k) = (m, k)
+        if keepV:
+            self.v = self.v * vK[:k, :] # (n + c, k) * (k, k) = (n + c, k)
+            rot = vK[k:, :]
+            self.v = numpy.bmat([[self.v], [rot]])
+            
+            if reorth:
+                # The original article contains section 4.2 on keeping the rotations separate
+                # from the subspaces (decomping V into Vsubspace * Vrotate), which further reduces 
+                # complexity and improves numerical properties for rank-1 updates.
+                #
+                # I did not implement this step yet; instead, force the (expensive)
+                # reorthogonalization explicitly from time to time, by setting reorth = True
+                logging.debug("re-orthogonalizing singular vectors")
+                uQ, uR = scipy.linalg.qr(self.u, econ = True)
+                vQ, vR = scipy.linalg.qr(self.v, econ = True)
+                uK, sK, vK = numpy.linalg.svd(uR * self.s * vR.T, full_matrices = False)
+                uK = numpy.matrix(uK[:, :k])
+                sK = numpy.matrix(numpy.diag(sK[: k]))
+                vK = numpy.matrix(vK.T[:, :k])
+                
+                logging.debug("adjusting singular values by %f%%" % 
+                              (100.0 * numpy.sum(numpy.abs(self.s - sK)) / numpy.sum(numpy.abs(self.s))))
+                self.u = uQ * uK
+                self.s = sK
+                self.v = vQ * vK
+        logging.debug("added %i documents" % len(docs))
+
+
     def __getitem__(self, bow):
         """
         Return topic distribution, as a list of (topic_id, topic_value) 2-tuples.
@@ -127,99 +218,13 @@ def orth(A):
     """
     # compute the orthonormal basis, via singular value decomposition
     u, s, vh = numpy.linalg.svd(A, full_matrices = False)
+    del vh # not needed, free up mem
     
     # now ignore entries which are suspiciously near machine representation limits
     M, N = A.shape
     tol = max(M, N) * numpy.amax(s) * numpy.finfo(float).eps
     num = numpy.sum(s > tol, dtype = int)
-    Q = u[:, :num]
-    return Q
-
-
-def svdAddCols(u, s, v, docs, decay = 1.0, reorth = False):
-    """
-    Update singular value decomposition factors to take into account new 
-    documents (matrix columns).
-    
-    The documents are assumed to be a list of full vectors (ie. not sparse 2-tuples).
-    
-    Return the new decomposition u', s', v' so that if the input was
-    u * s * v.T == X , then
-    u' * s' * v'.T == [X docs.T]
-    
-    v can be set to None, in which case it is completely ignored. This saves a
-    bit of speed and a lot of memory, especially for huge corpora (size of v is
-    linear in the number of added documents). If v is set to None, the returned v'
-    is also None.
-    """
-    logging.debug("updating SVD with %i new documents" % len(docs))
-    keepV = v is not None
-    if not keepV and reorth:
-        raise TypeError("cannot reorthogonalize without the right singular vectors (v must not be None)")
-    a = numpy.matrix(numpy.asarray(docs)).T
-    m, k = u.shape
-    if keepV:
-        n, k2 = v.shape
-        assert k == k2, "left/right singular vectors shape mismatch!"
-    m2, c = a.shape
-    assert m == m2, "new documents must be in the same term-space as the original documents (old %s, new %s)" % (u.shape, a.shape)
-    
-    # construct orthogonal basis for (I - U * U^T) * A
-    m = u.T * a # (k, m) * (m, c) = (k, c)
-    p = a - u * m # (m x c) - (m x k) * (k x c) = (m x c)
-    P = orth(p)
-    P = matutils.pad(P, 0, p.shape[1] - P.shape[1]) # pad with zeros in case A was already partly contained in U (rank not full)
-    Ra = P.T * p # (c x m) * (m x c) = (c x c)
-    
-    # now we're ready to construct K; K will be mostly diagonal and sparse, with
-    # lots of structure, and of shape only (k + c, k + c), so its direct SVD 
-    # ought to be fast for reasonably small additions of new documents (ie. tens 
-    # or hundreds of new documents at a time).
-    s *= decay # allow rotation towards new data trends in the document stream, by giving less emphasis on old values
-    empty = matutils.pad(numpy.matrix([]).reshape(0, 0), c, k)
-    K = numpy.bmat('s m; empty Ra' )
-    uK, sK, vK = numpy.linalg.svd(K, full_matrices = False) # there is no python wrapper for partial svd => request all factors :(
-    lost = 1.0 - numpy.sum(sK[: k]) / numpy.sum(sK)
-    logging.debug("discarding %.1f%% of data variation" % (100 * lost))
-    
-    # clip the full decomposition only to requested rank
-    uK = numpy.matrix(uK[:, :k])
-    sK = numpy.matrix(numpy.diag(sK[: k]))
-    if keepV:
-        vK = numpy.matrix(vK.T[:, :k]) # .T because numpy transposes the right vectors V, so we need to transpose it back: V.T.T = V
-    else:
-        del vK
-    
-    # and finally update the left/right singular vectors
-    s = sK
-    u = numpy.bmat('u P') * uK
-    if keepV:
-        v = v * vK[:k, :] # (n + c x k) * (k x k) = (n + c x k)
-        rot = vK[k:, :]
-        v = numpy.bmat('v ; rot')
-    
-        if reorth:
-            # The original article contains section 4.2 on keeping the rotations separate
-            # from the subspaces (decomping V into Vsubspace * Vrotate), which further reduces 
-            # complexity and improves numerical properties for rank-1 updates.
-            #
-            # I did not implement this step yet; instead, force the (expensive)
-            # reorthogonalization explicitly from time to time, by setting reorth = True
-            logging.debug("re-orthogonalizing singular vectors")
-            uQ, uR = scipy.linalg.qr(u, econ = True)
-            vQ, vR = scipy.linalg.qr(v, econ = True)
-            uK, sK, vK = numpy.linalg.svd(uR * s * vR.T, full_matrices = False)
-            uK = numpy.matrix(uK[:, :k])
-            sK = numpy.matrix(numpy.diag(sK[: k]))
-            vK = numpy.matrix(vK.T[:, :k])
-            
-            logging.debug("adjusting singular values by %f%%" % 
-                          (100.0 * numpy.sum(numpy.abs(s - sK)) / numpy.sum(numpy.abs(s))))
-            u = uQ * uK
-            s = sK
-            v = vQ * vK
-    
-    return u, s, v
+    return u[:, :num]
 
 
 def svdUpdate(U, S, V, a, b):
