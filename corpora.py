@@ -42,35 +42,10 @@ import logging
 import itertools
 import os.path
 
-import utils
-import matutils # for the Matrix Market corpus
+from interfaces import CorpusABC
+import matutils # for the Matrix Market wrapper-corpus
 import dictionary # for constructing word->id mappings
 
-
-class CorpusABC(utils.SaveLoad):
-    """
-    Interface for the corpora. A 'corpus' is simply an iterable, where each 
-    iteration step yields one document.
-    
-    Note that although a default len() method is provided, it is very inefficient
-    (performs a linear scan through the corpus). Whereever the corpus size is known
-    in advance (or at least doesn't change so that it can be cached), the len() method 
-    should be overridden.
-    """
-    def __iter__(self):
-        raise NotImplementedError('cannot instantiate abstract base class')
-
-    
-    def __len__(self):
-        """
-        Return the number of documents in the corpus. 
-        
-        This method is just the least common denominator and should really be 
-        overridden when possible.
-        """
-        logging.warning("performing full corpus scan to determine its length; was this intended?")
-        return sum(1 for doc in self) # sum(empty generator) is 0, so this works even for an empty corpus
-#endclass CorpusABC
 
 
 class CorpusLow(CorpusABC):
@@ -411,7 +386,6 @@ class DmlCorpus(CorpusABC):
         self.saveDictionary(self.config.resultFile('wordids.txt'))
         self.saveDocuments(self.config.resultFile('docids.txt'))
         matutils.MmWriter.writeCorpus(self.config.resultFile('bow.mm'), self)
-        matutils.MmWriter.writeTfidf(self.config.resultFile('tfidf.mm'), self, normalize = normalizeTfidf)
 #endclass DmlCorpus
 
 

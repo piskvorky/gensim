@@ -61,7 +61,7 @@ def tokenize(text, lowercase = False, deacc = False, errors = "strict", toLower 
 def toUtf8(text):
     if isinstance(text, unicode):
         return text.encode('utf8')
-    return unicode(text, 'utf8').encode('utf8') # do bytestring -> unicode -> utf8 circle, to ensure valid utf8
+    return unicode(text, 'utf8').encode('utf8') # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
 
 
 class SaveLoad(object):
@@ -69,7 +69,7 @@ class SaveLoad(object):
     Objects which inherit from this class have save/load functions, which un/pickle 
     them to disk.
     
-    Uses cPickle for serializing objects, so objects must not contains unpicklable 
+    This uses cPickle for serializing objects, so objects must not contains unpicklable 
     attributes, such as lambda functions etc.
     """
     @classmethod
@@ -89,6 +89,7 @@ class SaveLoad(object):
         f = open(fname, 'w')
         cPickle.dump(self, f, protocol = -1) # use the highest available protocol, for efficiency
         f.close()
+#endclass SaveLoad
 
 
 def identity(p):

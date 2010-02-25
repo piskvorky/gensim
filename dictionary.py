@@ -210,3 +210,4 @@ class Dictionary(utils.SaveLoad):
             token.intId = idmap[token.intId]
             assert token.intId == tokenId # make sure that the mapping matches
 #endclass Dictionary
+

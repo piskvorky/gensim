@@ -198,4 +198,3 @@ class SparseMatrixSimilarity(SimilarityABC):
         return allSims
 #endclass SparseMatrixSimilarity
 
-
