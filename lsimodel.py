@@ -8,17 +8,15 @@ import logging
 import itertools
 
 import numpy
-import scipy.linalg # for orth
-from scipy.maxentropy import logsumexp # log of sum
 
-import utils
-import matutils
+import interfaces
+import matutils # for converting sparse vectors to numpy arrays, matrix padding etc.
 
 
-class LsiModel(utils.SaveLoad):
+class LsiModel(interfaces.TransformationABC):
     """
     Objects of this class allow building and maintaining a model for Latent 
-    Semantic Indexing.
+    Semantic Indexing (also known ad Latent Semantic Analysis).
     
     The main methods are:
     1) constructor, which calculates the latent topics space, effectively 
@@ -58,7 +56,7 @@ class LsiModel(utils.SaveLoad):
         """
         if self.id2word is None:
             logging.info("no word id mapping provided; initializing from corpus, assuming identity")
-            maxId = 0
+            maxId = -1
             for document in corpus:
                 maxId = max(maxId, max([-1] + [fieldId for fieldId, _ in document]))
             self.numTerms = 1 + maxId
@@ -69,7 +67,7 @@ class LsiModel(utils.SaveLoad):
         # initialize decomposition (zero documents so far)
         self.u = numpy.matrix(numpy.zeros((self.numTerms, self.numTopics))) # leave default numeric type (=double)
         self.s = numpy.matrix(numpy.zeros((self.numTopics, self.numTopics)))
-        # self.v = numpy.matrix(numpy.zeros((0, self.numTopics)))
+        #self.v = numpy.matrix(numpy.zeros((0, self.numTopics)))
         self.v = None
         
         # do the actual work -- perform iterative singular value decomposition
@@ -87,7 +85,7 @@ class LsiModel(utils.SaveLoad):
         # note that v (topics of the training corpus) are not used at all for the transformation
         invS = numpy.diag(numpy.diag(1.0 / self.s))
         self.projection = numpy.dot(invS, self.u.T) # s^-1 * u^-1; (k, k) * (k, m) = (k, m)
-        del self.u, self.s, self.v # once we have the projection, discard the decomposition to free up memory
+#        del self.u, self.s, self.v # once we have the projection, discard the decomposition to free up memory
 
     
     def svdAddCols(self, docs, decay = 1.0, reorth = False):
@@ -95,16 +93,18 @@ class LsiModel(utils.SaveLoad):
         Update singular value decomposition factors to take into account new 
         documents (matrix columns).
         
+        This function corresponds to the general update of Brand06 (section 2), 
+        specialized for A = docs.T and B trivial (no update).
+
         The documents are assumed to be a list of full vectors (ie. not sparse 2-tuples).
         
-        compute new decomposition u', s', v' so that if the current matrix X decomposes to
+        Compute new decomposition u', s', v' so that if the current matrix X decomposes to
         self.u * self.s * self.v.T ~= X , then
         self.u' * self.s' * self.v'.T ~= [X docs.T]
         
         self.v can be set to None, in which case it is completely ignored. This saves a
         bit of speed and a lot of memory, especially for huge corpora (size of v is
-        linear in the number of added documents). If self.v is set to None, 
-        reorthogonalization is not possible.
+        linear in the number of added documents).
         """
         logging.debug("updating SVD with %i new documents" % len(docs))
         keepV = self.v is not None
@@ -118,39 +118,37 @@ class LsiModel(utils.SaveLoad):
         m2, c = a.shape
         assert m == m2, "new documents must be in the same term-space as the original documents (old %s, new %s)" % (u.shape, a.shape)
         
-        logging.debug("constructing orthonormal basis")
         # construct orthogonal basis for (I - U * U^T) * A
+        logging.debug("constructing orthogonal component")
         m = self.u.T * a # (k, m) * (m, c) = (k, c)
-        p = a - self.u * m # (m, c) - (m, k) * (k, c) = (m, c)
-        logging.debug("orthogonalizing")
-        P = orth(p)
-        P = matutils.pad(P, 0, p.shape[1] - P.shape[1]) # pad with zeros in case A was already partly contained in U (rank not full)
-        Ra = P.T * p # (c, m) * (m, c) = (c, c)
-        del p # free up mem
+        logging.debug("computing orthogonal basis")
+        P, Ra = numpy.linalg.qr(a - self.u * m) # equation (2)
         self.u = numpy.bmat([self.u, P]) # (m, k + c)
         del P # free up mem
+
+        # allow re-orientation towards new data trends in the document stream, by giving less emphasis on old values
+        self.s *= decay
         
         # now we're ready to construct K; K will be mostly diagonal and sparse, with
         # lots of structure, and of shape only (k + c, k + c), so its direct SVD 
         # ought to be fast for reasonably small additions of new documents (ie. tens 
         # or hundreds of new documents at a time).
-        self.s *= decay # allow rotation towards new data trends in the document stream, by giving less emphasis on old values
         empty = matutils.pad(numpy.matrix([]).reshape(0, 0), c, k)
-        K = numpy.bmat([[self.s, m], [empty, Ra]]) # (k + c, k + c)
+        K = numpy.bmat([[self.s, m], [empty, Ra]]) # (k + c, k + c), equation (4)
         logging.debug("computing %s SVD" % str(K.shape))
-        uK, sK, vK = numpy.linalg.svd(K, full_matrices = False) # there is no python wrapper for partial svd => request all factors :(
+        uK, sK, vK = numpy.linalg.svd(K, full_matrices = False) # there is no python wrapper for partial svd => request all k + c factors :(
         lost = 1.0 - numpy.sum(sK[: k]) / numpy.sum(sK)
         logging.debug("discarding %.1f%% of data variation" % (100 * lost))
         
-        # clip the full decomposition only to requested rank
+        # clip full decomposition to the requested rank
         uK = numpy.matrix(uK[:, :k])
         sK = numpy.matrix(numpy.diag(sK[: k]))
         vK = numpy.matrix(vK.T[:, :k]) # .T because numpy transposes the right vectors V, so we need to transpose it back: V.T.T = V
         
         # and finally update the left/right singular vectors
-        logging.debug('updating singular vectors')
+        logging.debug('rotating subspaces')
         self.s = sK
-        self.u = self.u * uK # (m, k + c) * (k + c, k) = (m, k)
+        self.u = self.u * uK # (m, k + c) * (k + c, k) = (m, k), equation (5)
         if keepV:
             self.v = self.v * vK[:k, :] # (n + c, k) * (k, k) = (n + c, k)
             rot = vK[k:, :]
@@ -164,8 +162,8 @@ class LsiModel(utils.SaveLoad):
                 # I did not implement this step yet; instead, force the (expensive)
                 # reorthogonalization explicitly from time to time, by setting reorth = True
                 logging.debug("re-orthogonalizing singular vectors")
-                uQ, uR = scipy.linalg.qr(self.u, econ = True)
-                vQ, vR = scipy.linalg.qr(self.v, econ = True)
+                uQ, uR = numpy.linalg.qr(self.u)
+                vQ, vR = numpy.linalg.qr(self.v)
                 uK, sK, vK = numpy.linalg.svd(uR * self.s * vR.T, full_matrices = False)
                 uK = numpy.matrix(uK[:, :k])
                 sK = numpy.matrix(numpy.diag(sK[: k]))
@@ -211,22 +209,6 @@ class LsiModel(utils.SaveLoad):
 #endclass LsiModel
 
 
-def orth(A):
-    """
-    Like scipy.linalg.orth, but does not allocate full matrices (we would get quickly
-    out of memory otherwise!).
-    """
-    # compute the orthonormal basis, via singular value decomposition
-    u, s, vh = numpy.linalg.svd(A, full_matrices = False)
-    del vh # not needed, free up mem
-    
-    # now ignore entries which are suspiciously near machine representation limits
-    M, N = A.shape
-    tol = max(M, N) * numpy.amax(s) * numpy.finfo(float).eps
-    num = numpy.sum(s > tol, dtype = int)
-    return u[:, :num]
-
-
 def svdUpdate(U, S, V, a, b):
     """
     Update SVD of X = U * S * V^T so that
@@ -261,7 +243,7 @@ def svdUpdate(U, S, V, a, b):
 
 def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, convergence = 1e-4):
     """
-    Performs iterative Singular Value Decomposition on a streaming matrix (corpus),
+    Perform iterative Singular Value Decomposition on a streaming matrix (corpus),
     returning numFactors greatest factors (ie., not necessarily full spectrum).
     
     The parameters numIter (maximum number of iterations) and initRate (gradient 

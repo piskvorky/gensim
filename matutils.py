@@ -154,52 +154,6 @@ class MmWriter(object):
                              (docNo, len(corpus)))
             mw.writeVector(docNo, bow)
         mw.close()
-    
-    @staticmethod
-    def writeTfidf(fname, corpus, normalize = False):
-        """
-        Save TF-IDF (term-frequency*inverse-document-frequency) representation 
-        of an entire corpus to disk.
-        
-        If normalize is set, then normalize each tf-idf vector to unit length 
-        before writing it out.
-        
-        Note that the documents are processed one at a time, so the whole corpus 
-        is allowed to be larger than the available RAM.
-        """
-        # first, determine the IDF weights; this requires a separate sweep over the corpus
-        logging.info("calculating IDF weights over %i documents" % len(corpus))
-        idfs = {}
-        numNnz = 0
-        for docNo, bow in enumerate(corpus):
-            if docNo % 5000 == 0:
-                logging.info("PROGRESS: processing document %i/%i" % 
-                             (docNo, len(corpus)))
-            numNnz += len(bow)
-            for termId, termCount in bow:
-                idfs[termId] = idfs.get(termId, 0) + 1
-        idfs = dict((termId, math.log(1.0 * (docNo + 1) / docFreq, 2)) 
-                    for termId, docFreq in idfs.iteritems())
-        
-        # determine MM format headers and write them to file
-        numDocs = len(corpus)
-        numTerms = max(idfs.iterkeys()) + 1
-        mw = MmWriter(fname)
-        mw.writeHeaders(numDocs, numTerms, numNnz)
-
-        # finally, iterate over all documents again, saving tf-idf vectors
-        for docNo, bow in enumerate(corpus):
-            if docNo % 1000 == 0:
-                logging.info("PROGRESS: saving document %i/%i" % 
-                             (docNo, len(corpus)))
-            vector = [(termId, tf * idfs[termId]) for termId, tf in bow if idfs[termId] > 0]
-            if not vector:
-                logging.debug("skipping empty document #%i" % docNo)
-                continue
-            if normalize:
-                vector = unitVec(vector)
-            mw.writeVector(docNo, vector)
-        mw.close()
 #endclass MmWriter
 
 

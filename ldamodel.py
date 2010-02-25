@@ -20,13 +20,13 @@ import numpy # for arrays, array broadcasting etc.
 from scipy.special import gammaln, digamma, polygamma # gamma function utils
 from scipy.maxentropy import logsumexp # log of sum
 
-import utils
+import interfaces
 
 
 trigamma = lambda x: polygamma(1, x) # second derivative of the gamma fnc
 
 
-class LdaModel(utils.SaveLoad):
+class LdaModel(interfaces.TransformationABC):
     """
     Objects of this class allow building and maintaining a model of Latent Dirichlet
     Allocation.
@@ -43,7 +43,7 @@ class LdaModel(utils.SaveLoad):
     
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, corpus, id2word, numTopics = 200, alpha = None, initMode = 'random'):
+    def __init__(self, corpus, id2word = None, numTopics = 200, alpha = None, initMode = 'random'):
         """
         Initialize the model based on corpus.
         
@@ -60,8 +60,16 @@ class LdaModel(utils.SaveLoad):
         arbitrary, unseen document, using the topics = model[bow] dictionary notation.
         """
         # store user-supplied parameters
-        self.numTerms = 1 + max(id2word.iterkeys()) # size of the vocabulary
         self.id2word = id2word
+        if self.id2word is None:
+            logging.info("no word id mapping provided; initializing from corpus, assuming identity")
+            maxId = -1
+            for document in corpus:
+                maxId = max(maxId, max([-1] + [fieldId for fieldId, _ in document]))
+            self.numTerms = 1 + maxId
+            self.id2word = dict(zip(xrange(self.numTerms), xrange(self.numTerms)))
+        else:
+            self.numTerms = 1 + max(self.id2word.iterkeys())
         self.numTopics = numTopics # number of latent topics
         
         # internal constants; can be manually changed after having called the init

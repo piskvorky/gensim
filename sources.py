@@ -369,3 +369,4 @@ class ArxmlivSource(ArticleSource):
         return wordU.lower().encode('utf8') # lowercase and then convert back to bytestring
 #endclass ArxmlivSource
 
+
