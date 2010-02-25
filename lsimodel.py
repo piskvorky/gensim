@@ -16,7 +16,7 @@ import matutils # for converting sparse vectors to numpy arrays, matrix padding 
 class LsiModel(interfaces.TransformationABC):
     """
     Objects of this class allow building and maintaining a model for Latent 
-    Semantic Indexing (also known ad Latent Semantic Analysis).
+    Semantic Indexing (also known as Latent Semantic Analysis).
     
     The main methods are:
     1) constructor, which calculates the latent topics space, effectively 
@@ -34,7 +34,7 @@ class LsiModel(interfaces.TransformationABC):
         numTopics is the number of requested factors (latent dimensions).
         
         After the model has been initialized, you can estimate topics for an
-        arbitrary, unseen document, using the topics = self[bow] dictionary notation.
+        arbitrary, unseen document, using the topics = self[vector] dictionary notation.
         """
         self.id2word = id2word
         self.numTopics = numTopics # number of latent topics
@@ -53,6 +53,9 @@ class LsiModel(interfaces.TransformationABC):
         which terms and documents will be mapped.
         
         The SVD is created incrementally, in blocks of `chunks` documents.
+        
+        The algorithm is adapted from:
+        M. Brand. 2006. Fast low-rank modifications of the thin singular value decomposition
         """
         if self.id2word is None:
             logging.info("no word id mapping provided; initializing from corpus, assuming identity")
@@ -93,7 +96,7 @@ class LsiModel(interfaces.TransformationABC):
         Update singular value decomposition factors to take into account new 
         documents (matrix columns).
         
-        This function corresponds to the general update of Brand06 (section 2), 
+        This function corresponds to the general update of Brand (section 2), 
         specialized for A = docs.T and B trivial (no update).
 
         The documents are assumed to be a list of full vectors (ie. not sparse 2-tuples).
