@@ -184,12 +184,9 @@ class LsiModel(interfaces.TransformationABC):
         """
         Return topic distribution, as a list of (topic_id, topic_value) 2-tuples.
         
-        This is done by folding the input document into the latent topic space.
+        This is done by folding input document into the latent topic space.
         """
-        if isinstance(bow, numpy.ndarray): # input already a numpy array
-            vec = bow
-        else:
-            vec = matutils.doc2vec(bow, self.numTerms)
+        vec = matutils.doc2vec(bow, self.numTerms)
         vec.shape = (self.numTerms, 1)
         topicDist = self.projection * vec
         return [(topicId, float(topicValue)) for topicId, topicValue in enumerate(topicDist)

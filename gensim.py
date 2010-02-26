@@ -20,16 +20,14 @@ import corpora
 import docsim
 import lsimodel
 import ldamodel
-#import tfidfmodel
+import tfidfmodel
 
 
 #TODO:
-# 1) tfidf prepsat z matutils do samostatneho tfidfmodel.py (plus __getitem__, aby 
-#    to byla transformace)
-# 5) prevest lda modely z blei na asteria01 na LdaModel objekt (trva tydny, nepoustet
-#    znova...
-# 6) pridat random projections
-# 7) logging per module -- ne vsechno pres logging.root, zlepseni prehlednosti logu
+# * prevest lda modely z blei na asteria01 na LdaModel objekt (trva tydny, nepoustet
+#   znova...
+# * prepsat random projections
+# * logging per module -- ne vsechno pres logging.root, zlepseni prehlednosti logu
 
 
 SOURCE_LIST = [
@@ -42,11 +40,11 @@ RESULT_DIR = '/Users/kofola/gensim/results'
 
 # set to True to do everything EXCEPT actually writing out similar.xml files to disk.
 # similar.xml files are NOT written if DRY_RUN is true.
-DRY_RUN = False
+DRY_RUN = True # False
 
 # how many 'most similar' documents to store in each similar.xml?
 MIN_SCORE = 0.0 # prune based on similarity score (all below MIN_SCORE are ignored)
-MAX_SIMILAR = 10 # prune based on rank (at most MAX_SIMILAR are stored). set to 0 to all of them (no limit).
+MAX_SIMILAR = 10 # prune based on rank (at most MAX_SIMILAR are stored). set to 0 to store all of them (no limit).
 
 # internal method parameters
 DIM_RP = 300 # dimensionality for the random projections
@@ -92,18 +90,14 @@ def getMeta(fname):
     return author, title
 
 
-def buildDmlCorpus(language):
-    config = corpora.DmlConfig('gensim_%s' % language, resultDir = RESULT_DIR, acceptLangs = [language])
-    for source in SOURCE_LIST:
-        config.addSource(source)
-    
+def buildDmlCorpus(config, language):
     dml = corpora.DmlCorpus()
-    dml.processConfig(config)
+    dml.processConfig(config, shuffle = True)
     dml.buildDictionary()
     dml.dictionary.filterExtremes(noBelow = 5, noAbove = 0.3) # ignore too (in)frequent words
     
-    dml.save(config.resultFile('.pkl')) # save the whole object as binary data
-    dml.saveAsText() # save id mappings and matrices as text data
+    dml.save(config.resultFile('.pkl')) # save the mappings as binary data (actual documents are not saved, only their uris) 
+    dml.saveAsText() # save id mappings and documents as text data (matrix market format)
     return dml
 
 
@@ -149,29 +143,41 @@ if __name__ == '__main__':
         sys.exit(1)
     language = sys.argv[1]
     
+    # construct the config, which holds information about sources, data file filenames etc.
+    config = corpora.DmlConfig('gensim_%s' % language, resultDir = RESULT_DIR, acceptLangs = [language])
+    for source in SOURCE_LIST:
+        config.addSource(source)
+    
     if 'build' in program:
-        buildDmlCorpus(language)
+        buildDmlCorpus(config, language)
     elif 'genmodel' in program:
-        if 'tfidf' in program:
-            corpus = corpora.MmCorpus(dml_bow)
-            model = tfidfmodel.TfidfModel(corpus)
-            model.save(modelfname('tfidf'))
-        if 'lda' in program:
-            corpus = corpora.MmCorpus(dml_bow)
-            id2word = loadDictionary(dml_dict.txt)
-            model = ldamodel.LdaModel(corpus, id2word, numTopics = DIM_LDA)
-            model.save(modelfname('lda'))
-        elif 'lsi' in program:
+        if len(sys.argv) < 3:
+            print globals()['__doc__'] % (program)
+            sys.exit(1)
+        method = sys.argv[2].strip().lower()
+        try:
+            dml = corpora.DmlCorpus.load(config.resultFile('.pkl'))
+        except IOError, e:
+            raise IOError("no word-count corpus found at %s; you must first generate it through gensim_build.py")
+
+        id2word = corpora.DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
+        if method == 'tfidf':
+            corpus = corpora.MmCorpus(config.resultFile('bow.mm'))
+            model = tfidfmodel.TfidfModel(corpus, id2word = id2word, normalize = True)
+            model.save(config.resultFile('tfidfmodel.pkl'))
+        elif method == 'lda':
+            corpus = corpora.MmCorpus(config.resultFile('bow.mm'))
+            model = ldamodel.LdaModel(corpus, id2word = id2word, numTopics = DIM_LDA)
+            model.save(config.resultFile('ldamodel%i.pkl' % DIM_LDA))
+        elif method == 'lsi' or method == 'lsa':
             # first, transform word counts to tf-idf weights
-            corpus = corpora.MmCorpus(dml_bow)
-            model = tfidfmodel.TfidfModel(corpus)
-            tfidf = corpora.TopicsCorpus(model, corpus)
+            corpus = corpora.MmCorpus(config.resultFile('bow.mm'))
+            tfidf = tfidfmodel.TfidfModel(corpus, id2word = id2word, normalize = True)
             # then find the transformation from tf-idf to latent space
-            id2word = loadDictionary(dml_dict.txt)
-            model = lsimodel.LsiModel(tfidf, id2word, numTopics = DIM_LSI)
-            model.save(modelfname('lsi'))
+            lsi = lsimodel.LsiModel(tfidf.apply(corpus), id2word = id2word, numTopics = DIM_LSI)
+            model.save(config.resultFile('lsimodel%i.pkl' % DIM_LSI))
         else:
-            raise ValueError('unknown topic extraction method in %s' % program)
+            raise ValueError('unknown topic extraction method: %s' % repr(method))
     elif 'gensim' in program:
         corpus = corpora.DmlCorpus.load(dml.pkl)
         input = corpora.MmCorpus(bow.mm)

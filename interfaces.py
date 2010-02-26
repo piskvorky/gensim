@@ -15,9 +15,9 @@ class CorpusABC(utils.SaveLoad):
     See the corpora module for some example corpus implementations.
     
     Note that although a default len() method is provided, it is very inefficient
-    (performs a linear scan through the corpus). Wherever the corpus size is known
-    in advance (or at least doesn't change so that it can be cached), the len() method 
-    should be overridden.
+    (performs a linear scan through the corpus to determine its length). Wherever 
+    the corpus size is known in advance (or at least doesn't change so that it can 
+    be cached), the len() method should be overridden.
     """
     def __iter__(self):
         raise NotImplementedError('cannot instantiate abstract base class')
@@ -43,6 +43,28 @@ class TransformationABC(utils.SaveLoad):
     
     See the tfidfmodel module for an example of a transformation.
     """
+    class TransformedCorpus(CorpusABC):
+        def __init__(self, fnc, corpus):
+            self.fnc, self.corpus = fnc, corpus
+        
+        def __len__(self):
+            return len(self.corpus)
+        
+        def __iter__(self):
+            for doc in self.corpus:
+                yield self.fnc(doc) 
+    #endclass TransformedCorpus
+    
     def __getitem__(self):
         raise NotImplementedError('cannot instantiate abstract base class')
+
+
+    def apply(self, corpus):
+        """
+        Helper function used in derived classes. Applies the transformation to 
+        a whole corpus (as opposed to a single document) and returns another corpus.
+        """
+        return TransformationABC.TransformedCorpus(self.__getitem__, corpus)
 #endclass TransformationABC
+
+
