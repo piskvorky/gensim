@@ -320,7 +320,7 @@ class DmlCorpus(CorpusABC):
                      (self.dictionary, len(self.documents), numPositions))
 
     
-    def processConfig(self, config):
+    def processConfig(self, config, shuffle = False):
         """
         Parse the directories specified in the config, looking for suitable articles.
         
@@ -348,6 +348,11 @@ class DmlCorpus(CorpusABC):
         if not self.documents:
             logging.warning('no articles at all found from the config; something went wrong!')
         
+        if shuffle:
+            logging.info("shuffling the documents to random order")
+            import random
+            random.shuffle(self.documents)
+        
         logging.info("accepted total of %i articles for %s" % 
                      (len(self.documents), str(config)))
 
@@ -359,6 +364,11 @@ class DmlCorpus(CorpusABC):
             fout.write("%i\t%s\n" % (tokenId, token.token))
         fout.close()
     
+    @staticmethod
+    def loadDictionary(fname):
+        words = [line.split('\t')[1].strip() for line in open(fname) if len(line.split('\t')) == 2]
+        id2word = dict(itertools.izip(xrange(len(words)), words))
+        return id2word
     
     def saveDocuments(self, fname):
         logging.info("saving documents mapping to %s" % fname)
@@ -376,9 +386,8 @@ class DmlCorpus(CorpusABC):
         
         This actually saves multiple files:
         1) pure document-term co-occurence frequency counts,
-        2) tf-idf (weight of frequent terms lowered),
-        3) token to integer mapping
-        4) document to integer mapping
+        2) token to integer mapping
+        3) document to document URI mapping
         
         The exact filesystem paths and filenames are determined from the config, 
         see source.
