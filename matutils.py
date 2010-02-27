@@ -91,11 +91,12 @@ class MmWriter(object):
                 numTerms = max(numTerms, 1 + max(wordId for wordId, val in bow))
                 numNnz += len(bow)
         
-        logging.info("BOW of %ix%i matrix, density=%.3f%% (%i/%i)" % 
-                     (numDocs, numTerms,
-                      100.0 * numNnz / (numDocs * numTerms),
-                      numNnz,
-                      numDocs * numTerms))
+        if numDocs * numTerms != 0:
+            logging.info("BOW of %ix%i matrix, density=%.3f%% (%i/%i)" % 
+                         (numDocs, numTerms,
+                          100.0 * numNnz / (numDocs * numTerms),
+                          numNnz,
+                          numDocs * numTerms))
         return numDocs, numTerms, numNnz
     
 
