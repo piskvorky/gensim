@@ -66,7 +66,7 @@ class LsiModel(interfaces.TransformationABC):
             self.numTerms = 1 + maxId
             self.id2word = dict(zip(xrange(self.numTerms), xrange(self.numTerms)))
         else:
-            self.numTerms = 1 + max(self.id2word.iterkeys())
+            self.numTerms = 1 + max([-1] + self.id2word.keys())
         
         # initialize decomposition (zero documents so far)
         self.u = numpy.matrix(numpy.zeros((self.numTerms, self.numTopics))) # leave default numeric type (=double)

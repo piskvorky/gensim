@@ -192,7 +192,7 @@ if __name__ == '__main__':
             corpus = corpora.MmCorpus(config.resultFile('bow.mm'))
             tfidf = tfidfmodel.TfidfModel(corpus, id2word = id2word, normalize = True)
             # then find the transformation from tf-idf to latent space
-            lsi = lsimodel.LsiModel(tfidf.apply(corpus), id2word = id2word, numTopics = DIM_LSI)
+            model = lsimodel.LsiModel(tfidf.apply(corpus), id2word = id2word, numTopics = DIM_LSI)
             model.save(config.resultFile('lsimodel%i.pkl' % DIM_LSI))
         elif method == 'rp':
             raise NotImplementedError("Random Projections not converted to the new interface yet")

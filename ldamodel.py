@@ -69,7 +69,7 @@ class LdaModel(interfaces.TransformationABC):
             self.numTerms = 1 + maxId
             self.id2word = dict(zip(xrange(self.numTerms), xrange(self.numTerms)))
         else:
-            self.numTerms = 1 + max(self.id2word.iterkeys())
+            self.numTerms = 1 + max([-1] + self.id2word.keys())
         self.numTopics = numTopics # number of latent topics
         
         # internal constants; can be manually changed after having called the init
@@ -112,6 +112,8 @@ class LdaModel(interfaces.TransformationABC):
         logging.info("initializing LDA model with '%s'" % initMode)
 
         # set initial word counts
+        if self.numTerms == 0:
+            raise ValueError("cannot compute LDA over an empty collection (no terms)")
         if initMode == 'seeded':
             counts = self.countsFromCorpus(corpus, numInitDocs = 2)
         else:
