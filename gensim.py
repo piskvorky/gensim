@@ -4,11 +4,23 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-USAGE: %s METHOD LANGUAGE
-    Generate similar_method.xml files from the matrix created by the build_tfidf.py script.
-    METHOD is currently either tfidf, lsi or rp.
-
+USAGE: gensim_build.py LANGUAGE
+    Process the repository, accepting articles in LANGUAGE (or 'any'). 
+    Store the word co-occurence matrix and id mappings, whic aren eeded for subsequent processing.
 Example: ./gensim_build.py eng
+    
+-- or --
+
+USAGE: gensim_genmodel.py LANGUAGE METHOD
+    Generate topic models for the specified subcorpus. METHOD is currently one 
+    of 'tfidf', 'lsi', 'lda', 'rp'.
+Example: ./gensim_genmodel.py eng lsi
+
+-- or --
+
+USAGE: gensim.py LANGUAGE METHOD
+    Generate similar.xml files, using a previously built model for METHOD.
+Example: ./gensim.py eng lsi
 """
 
 
@@ -142,7 +154,7 @@ if __name__ == '__main__':
 
     # check and process input arguments
     if len(sys.argv) < 2:
-        print globals()['__doc__'] % (program)
+        print globals()['__doc__']
         sys.exit(1)
     language = sys.argv[1]
     
@@ -155,7 +167,7 @@ if __name__ == '__main__':
         buildDmlCorpus(config, language)
     elif 'genmodel' in program:
         if len(sys.argv) < 3:
-            print globals()['__doc__'] % (program)
+            print globals()['__doc__']
             sys.exit(1)
         method = sys.argv[2].strip().lower()
         try:
@@ -163,7 +175,10 @@ if __name__ == '__main__':
         except IOError, e:
             raise IOError("no word-count corpus found at %s; you must first generate it through gensim_build.py")
 
+        logging.info("loading word id mapping from %s" % config.resultFile('wordids.txt'))
         id2word = corpora.DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
+        logging.info("loaded %i word ids" % len(id2word))
+
         if method == 'tfidf':
             corpus = corpora.MmCorpus(config.resultFile('bow.mm'))
             model = tfidfmodel.TfidfModel(corpus, id2word = id2word, normalize = True)
@@ -179,13 +194,19 @@ if __name__ == '__main__':
             # then find the transformation from tf-idf to latent space
             lsi = lsimodel.LsiModel(tfidf.apply(corpus), id2word = id2word, numTopics = DIM_LSI)
             model.save(config.resultFile('lsimodel%i.pkl' % DIM_LSI))
+        elif method == 'rp':
+            raise NotImplementedError("Random Projections not converted to the new interface yet")
         else:
             raise ValueError('unknown topic extraction method: %s' % repr(method))
-    elif 'gensim' in program:
+    else:
+        if len(sys.argv) < 3:
+            print globals()['__doc__']
+            sys.exit(1)
+        method = sys.argv[2].strip().lower()
         corpus = corpora.DmlCorpus.load(dml.pkl)
         input = corpora.MmCorpus(bow.mm)
         
-        if model == 'tfidf':
+        if method == 'tfidf':
             model = tfidfmodel.TfidfModel.load(modelfname('tfidf'))
         elif method == 'lsi':
             tfidf = tfidfmodel.TfidfModel.load(modelfname('tfidf'))
@@ -193,6 +214,8 @@ if __name__ == '__main__':
             model = lsimodel.LsiModel.load(modelfname('lsi'))
         elif method == 'lda':
             model = ldamodel.LdaModel.load(modelfname('lda'))
+        else:
+            raise ValueError('unknown method: %s' % repr(method))
         
         topics = corpora.TopicsCorpus(model, input) # documents from 'input' will be represented via 'model'
         sims = docsim.SparseMatrixSimilarity(topics, numBest = MAX_SIMILAR) # initialize structure which searches for similar documents
