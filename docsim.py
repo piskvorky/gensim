@@ -1,7 +1,8 @@
 #!/usr/bin/env python2.5
 # -*- coding: utf-8 -*-
 #
-# author Radim Rehurek, radimrehurek@seznam.cz
+# Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
 This module contains functions and classes for computing cosine similarity across

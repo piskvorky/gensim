@@ -1,7 +1,8 @@
 #!/usr/bin/env python2.5
 # -*- coding: utf-8 -*-
 #
-# author Radim Rehurek, radimrehurek@seznam.cz
+# Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
 This module contains various general utility functions.
@@ -24,8 +25,8 @@ def deaccent(text):
     Input text is either a unicode string or utf8 encoded bytestring. Return
     input string with accents removed, as unicode.
     
-    >>> deaccent("Já to v libutf dělám, v příkladu pro ICU to také dělají")
-    u'Ja to v libutf delam, v prikladu pro ICU to take delaji'
+    >>> deaccent("Šéf chomutovských komunistů dostal poštou bílý prášek")
+    u'Sef chomutovskych komunistu dostal postou bily prasek'
     """
     if not isinstance(text, unicode):
         text = unicode(text, 'utf8') # assume utf8 for byte strings, use default (strict) error handling 
@@ -87,7 +88,7 @@ class SaveLoad(object):
         """
         logging.info("saving %s object to %s" % (self.__class__.__name__, fname))
         f = open(fname, 'w')
-        cPickle.dump(self, f, protocol = -1) # use the highest available protocol, for efficiency
+        cPickle.dump(self, f, protocol = -1) # -1 to use the highest available protocol, for efficiency
         f.close()
 #endclass SaveLoad
 
