@@ -65,7 +65,7 @@ class TfidfModel(interfaces.TransformationABC):
             self.numTerms = 1 + maxId
             self.id2word = dict(zip(xrange(self.numTerms), xrange(self.numTerms)))
         else:
-            self.numTerms = 1 + max(self.id2word.iterkeys())
+            self.numTerms = 1 + max([-1] + self.id2word.keys())
         
         logging.info("calculating IDF weights over %i documents" % len(corpus))
         idfs = {}
