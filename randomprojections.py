@@ -1,3 +1,10 @@
+#!/usr/bin/env python2.5
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
+
 import logging
 from itertools import izip
 import math
@@ -22,7 +29,9 @@ def getRPVector(dim):
     return result
 
 def getRPMatrix(oldDim, newDim):
-    """return random projection matrix in compressed sparse row format"""
+    """
+    Return random projection matrix in compressed sparse row format
+    """
     logging.info("building random projection matrix of size %ix%i" % (oldDim, newDim))
     result = scipy.sparse.dok_matrix((newDim, oldDim), dtype = numpy.float32)
     for i in xrange(oldDim):

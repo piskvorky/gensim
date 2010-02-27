@@ -1,4 +1,7 @@
 #!/usr/bin/env python2.5
+#
+# Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
 USAGE: %s METHOD LANGUAGE
