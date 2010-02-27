@@ -42,8 +42,8 @@ import tfidfmodel
 # * prevest lda modely z blei na asteria01 na LdaModel objekt (trva tydny, nepoustet
 #   znova...
 # * prepsat random projections
-# * logging per module -- ne vsechno pres logging.root, zlepseni prehlednosti logu
-
+# * logging per module -- ne vsechno pres logging.root, zlepseni modulovou prehlednost logu
+# * rozdelit gensim.py na vic souboru, ne pres symlinky
 
 SOURCE_LIST = [
                sources.DmlCzSource('dmlcz', '/Users/kofola/workspace/dml/data/dmlcz/'),

@@ -165,10 +165,11 @@ class Dictionary(utils.SaveLoad):
                      (len(badIds), noBelow, noAboveAbs, 100.0 * noAbove))
         
         # print some sanity check debug info
-        someIds = random.sample(badIds, 10) # choose 10 random ids that will be removed
-        someTokenFreqs = [(self.id2token[tokenId].token, self.docFreq[tokenId]) for tokenId in someIds]
-        logging.info("document frequencies of some of the removed tokens: [%s]" % 
-                     ', '.join("%s:%i" % i for i in someTokenFreqs))
+        if len(badIds) >= 10:
+            someIds = random.sample(badIds, 10) # choose 10 random ids that will be removed
+            someTokenFreqs = [(self.id2token[tokenId].token, self.docFreq[tokenId]) for tokenId in someIds]
+            logging.info("document frequencies of some of the removed tokens: [%s]" % 
+                         ', '.join("%s:%i" % i for i in someTokenFreqs))
         
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
         self.filterTokens(badIds)
