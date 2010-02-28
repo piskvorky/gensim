@@ -10,8 +10,7 @@ import itertools
 
 import math
 
-import interfaces
-import matutils
+from gensim import interfaces, matutils
 
 
 

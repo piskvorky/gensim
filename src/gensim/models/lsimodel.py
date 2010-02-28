@@ -10,8 +10,7 @@ import itertools
 
 import numpy
 
-import interfaces
-import matutils # for converting sparse vectors to numpy arrays, matrix padding etc.
+from gensim import interfaces, matutils
 
 
 class LsiModel(interfaces.TransformationABC):

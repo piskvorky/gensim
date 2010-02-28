@@ -34,8 +34,7 @@ import logging
 import numpy
 import scipy.sparse
 
-import utils
-import matutils
+from gensim import utils, matutils
 
 
 

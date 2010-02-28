@@ -43,13 +43,12 @@ import logging
 import itertools
 import os.path
 
-from interfaces import CorpusABC
-import matutils # for the Matrix Market wrapper-corpus
+from gensim import interfaces, matutils
 import dictionary # for constructing word->id mappings
 
 
 
-class CorpusLow(CorpusABC):
+class CorpusLow(interfaces.CorpusABC):
     """
     List_Of_Words corpus handles input in GibbsLda++ format.
     
@@ -177,7 +176,7 @@ class CorpusLow(CorpusABC):
 
 
 
-class MmCorpus(matutils.MmReader, CorpusABC):
+class MmCorpus(matutils.MmReader, interfaces.CorpusABC):
     def __iter__(self):
         """
         Interpret a matrix in Matrix Market format as a corpus.
@@ -260,7 +259,7 @@ class DmlConfig(object):
 
 
 
-class DmlCorpus(CorpusABC):
+class DmlCorpus(interfaces.CorpusABC):
     """
     DmlCorpus implements a collection of articles. It is initialized via a DmlConfig
     object, which holds information about where to look for the articles and how 
@@ -350,7 +349,7 @@ class DmlCorpus(CorpusABC):
             logging.warning('no articles at all found from the config; something went wrong!')
         
         if shuffle:
-            logging.info("shuffling the documents to random order")
+            logging.info("shuffling the documents for random order")
             import random
             random.shuffle(self.documents)
         
@@ -400,7 +399,7 @@ class DmlCorpus(CorpusABC):
 
 
 
-class TopicsCorpus(CorpusABC):
+class TopicsCorpus(interfaces.CorpusABC):
     """
     A simple wrapper which transparently converts corpora from the term-document
     space into topic-document space.
