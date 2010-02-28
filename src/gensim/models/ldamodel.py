@@ -405,7 +405,7 @@ class LdaModel(interfaces.TransformationABC):
         likelihood, phi, gamma = self.inference(bow)
         gamma -= self.alpha # subtract topic prior, to get the expected number of words for each topic
         sumGamma = gamma.sum()
-        if numpy.allclose(sumGamma, 0): # if there were no topics found, return nothing (ie for empty documents)
+        if numpy.allclose(sumGamma, 0): # if there were no topics found, return nothing (eg for empty documents)
             return []
         topicDist = gamma / sumGamma # convert to proper distribution
         return [(topicId, topicValue) for topicId, topicValue in enumerate(topicDist)

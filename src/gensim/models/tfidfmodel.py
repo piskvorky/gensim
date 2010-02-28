@@ -89,8 +89,6 @@ class TfidfModel(interfaces.TransformationABC):
     def __getitem__(self, bow):
         """
         Return tf-idf representation of the input vector.
-        
-        This is done by folding the input document into the latent topic space.
         """
         # unknown (new) terms will be given zero weight (NOT infinity/huge weight,
         # as would the strict application of the IDF formula suggest
