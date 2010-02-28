@@ -6,7 +6,7 @@
 """
 USAGE: %(program)s LANGUAGE
     Process the repository, accepting articles in LANGUAGE (or 'any'). 
-    Store the word co-occurence matrix and id mappings, whic aren eeded for subsequent processing.
+    Store the word co-occurence matrix and id mappings, which are needed for subsequent processing.
 
 Example: ./gensim_build.py eng
 """
@@ -23,8 +23,8 @@ from gensim.corpora import sources, corpora
 
 SOURCE_LIST = [
                sources.DmlCzSource('dmlcz', '/Users/kofola/workspace/dml/data/dmlcz/'),
-#               sources.DmlSource('numdam', '/Users/kofola/workspace/dml/data/numdam/'),
-#               sources.ArxmlivSource('arxmliv', '/Users/kofola/workspace/dml/data/arxmliv/'),
+               sources.DmlSource('numdam', '/Users/kofola/workspace/dml/data/numdam/'),
+               sources.ArxmlivSource('arxmliv', '/Users/kofola/workspace/dml/data/arxmliv/'),
                ]
 
 RESULT_DIR = '/Users/kofola/workspace/dml/data/results'
@@ -41,7 +41,6 @@ def buildDmlCorpus(config, language):
     return dml
 
 
-#==============================================================================
 if __name__ == '__main__':
     logging.basicConfig(level = logging.INFO)
     logging.root.level = logging.DEBUG
