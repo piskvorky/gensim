@@ -5,8 +5,8 @@
 
 """
 USAGE: %(program)s LANGUAGE METHOD
-    Generate topic models for the specified subcorpus. METHOD is currently one 
-    of 'tfidf', 'lsi', 'lda', 'rp'.
+    Generate topic models for the specified subcorpus. METHOD is currently one \
+of 'tfidf', 'lsi', 'lda', 'rp'.
 
 Example: ./gensim_genmodel.py eng lsi
 """
@@ -30,7 +30,6 @@ DIM_LSI = 200 # for lantent semantic indexing
 DIM_LDA = 100 # for latent dirichlet allocation
 
 
-#==============================================================================
 if __name__ == '__main__':
     logging.basicConfig(level = logging.INFO)
     logging.root.level = logging.DEBUG
