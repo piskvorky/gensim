@@ -20,7 +20,7 @@ import numpy # for arrays, array broadcasting etc.
 from scipy.special import gammaln, digamma, polygamma # gamma function utils
 from scipy.maxentropy import logsumexp # log of sum
 
-import interfaces
+from gensim import interfaces
 
 
 trigamma = lambda x: polygamma(1, x) # second derivative of the gamma fnc

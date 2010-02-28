@@ -24,7 +24,7 @@ import logging
 import itertools
 import random
 
-import utils
+from gensim import utils
 
 
 

@@ -22,7 +22,7 @@ import re
 
 import xml.sax # for parsing arxmliv articles
 
-import utils
+from gensim import utils
 
 
 PAT_TAG = re.compile('<(.*?)>(.*)</.*?>')

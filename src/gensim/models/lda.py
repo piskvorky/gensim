@@ -5,13 +5,14 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Estimate parameters for Latent Dirichlet Allocation (LDA) and/or perform inference.
+Standalone program that can estimate parameters for Latent Dirichlet Allocation \
+(LDA) and/or perform inference.
 
-How to estimate (model will be written to datafile.model): 
+To estimate (model will be written to datafile.model): 
 ./lda_estimate.py k datafile
 example: ./lda_estimate.py 200 ~/ldadata/trndocs.low
 
-How to do inference (document likelihoods and gammas will be written to datafile.lda_inferred):
+To do inference (document likelihoods and gammas will be written to datafile.lda_inferred):
 ./lda_infer.py modelfile datafile
 example: ./lda_infer.py ~/ldadata/trndocs.low.model ~/ldadata/newdocs.low
 
@@ -24,8 +25,9 @@ import logging
 import sys
 import os.path
 
+from gensim.corpora import corpora # for input data i/o
+
 from ldamodel import LdaModel # lda inference/estimation
-import corpora # for input data i/o
 
 
 PRINT_TOPICS = 10 # when printing model topics, how many top words to print out?
