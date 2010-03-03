@@ -10,14 +10,15 @@ This module implements the concept of Dictionary -- a mapping between words and
 their internal ids.
 
 The actual process of id translation proceeds in three steps:
-1) get the input word (eg. 'Answering')
-1) map word to its normalized form (eg. 'answer')
-2) map the normalized form to integer id (eg. 42)
+ 1. get the input word (eg. 'Answering')
+ 2. map word to its normalized form (eg. 'answer')
+ 3. map the normalized form to integer id (eg. 42)
 
 Dictionaries can be created from a corpus and can later be pruned according to
 document frequency (removing (un)common words via the filterExtremes() method), 
 save/loaded from disk via save() and load() methods etc.
 """
+
 
 
 import logging
@@ -147,8 +148,8 @@ class Dictionary(utils.SaveLoad):
     def filterExtremes(self, noBelow = 5, noAbove = 0.5):
         """
         Filter out tokens that appear in 
-        1) less than noBelow documents (absolute number) or 
-        2) more than noAbove documents (fraction of total corpus size, *not* 
+         1. less than noBelow documents (absolute number) or 
+         2. more than noAbove documents (fraction of total corpus size, *not* 
         absolute number).
         
         At the same time rebuild the dictionary, shrinking resulting gaps in 

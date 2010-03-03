@@ -6,8 +6,8 @@
 
 
 """
-This module implements classes which represent documents as a collection of sparse \
-vectors in vector space (the bag-of-words, Vector Space Model).
+This module implements classes for I/O over various corpus formats in the Vector 
+Space Model.
 
 A corpus is any object which supports iteration over the bag-of-words representation \
 of its constituent documents, without the need to keep all articles in memory at \
@@ -31,8 +31,9 @@ words separated by space (used by GibbsLda++ soft).
 2) MmCorpus: initialized from a single file in Matrix Market coordinate format (standard \
 sparse matrix format).
 
-3) DmlCorpus: more complex, can be initialized from many different sources (local FS/network) \
-and different data formats, includes methods for creating word->wordId mappings.
+3) DmlCorpus: more complex, can be initialized from many different sources (local 
+filesystem/network) and different data formats, includes methods for creating 
+word->wordId mappings.
 
 Also in this module is the DmlConfig class, which encapsulates parameters necessary for \
 initialization of the DmlCorpus.
@@ -396,47 +397,4 @@ class DmlCorpus(interfaces.CorpusABC):
         self.saveDocuments(self.config.resultFile('docids.txt'))
         matutils.MmWriter.writeCorpus(self.config.resultFile('bow.mm'), self)
 #endclass DmlCorpus
-
-
-
-class TopicsCorpus(interfaces.CorpusABC):
-    """
-    A simple wrapper which transparently converts corpora from the term-document
-    space into topic-document space.
-    
-    The conversion is done using a topic model, such as Latent Semantic Indexing 
-    (LSI, the lsimodel.py module), Latent Dirichlet Allocation (LDA, ldamodel.py), 
-    Random Projections (RP) etc. 
-    
-    The model object must provide a dictionary [] operator, which accept a document 
-    represented in the old space and returns its representation in the topic space.
-    """
-    def __init__(self, model, corpus):
-        self.model = model
-        self.corpus = corpus
-    
-    
-    def __len__(self):
-        return len(self.corpus)
-
-    
-    def __iter__(self):
-        """
-        Iterate over the provided corpus, estimating topic distribution for each 
-        of its document.
-        
-        This method effectively wraps the underlying word-count corpus into another
-        corpus of the same length, but of topic-document rather
-        than term-document nature.
-        
-        Internally, this method performs topic inference on each document, using 
-        previously estimated model parameters.
-        """
-        logging.info("performing topic inference on a corpus with %i documents" % len(self.corpus))
-        for docNo, bow in enumerate(self.corpus):
-            if docNo % 1000 == 0:
-                logging.info("PROGRESS: calculating topics of doc #%i/%i" %
-                             (docNo, len(self.corpus)))
-            yield self.model[bow]
-#endclass TopicsCorpus
 

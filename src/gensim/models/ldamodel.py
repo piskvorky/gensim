@@ -4,7 +4,8 @@
 # author Radim Rehurek, radimrehurek@seznam.cz
 
 """
-This module contains functions for the Latent Dirichlet Allocation algorithm. 
+This module encapsulates functionality for the Latent Dirichlet Allocation algorithm.
+
 It allows both model estimation from a training corpus and inference on new, 
 unseen documents.
 
@@ -37,9 +38,9 @@ class LdaModel(interfaces.TransformationABC):
     C version. The up side is that it is much more straightforward and concise, 
     using vector operations ala MATLAB, easily pluggable/extensible etc.
     
-    The constructor estimates model parameters based on a ctraining orpus (any 
-    iterable returning BOW documents). You can then infer topic distributions on
-    new, unseed documents by simply calling model[bow].
+    The constructor estimates model parameters based on a training corpus. You can
+    then infer topic distributions on new, unseed documents by calling 
+    model[document].
     
     Model persistency is achieved via its load/save methods.
     """
