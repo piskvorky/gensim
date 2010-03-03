@@ -6,7 +6,7 @@
 
 """
 This module contains implementations (= different classes) which encapsulate the
-idea of a document source. 
+idea of a Digital Library document source. 
 
 A document source is basically a collection of articles sharing the same format, 
 same location (type of access), same way of parsing them etc.

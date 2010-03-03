@@ -4,7 +4,14 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
- 
+"""
+This module contains basic interfaces used throughout the whole gensim package.
+
+The interfaces are realized as abstract base classes (ie., some optional functionality 
+is provided in the interface itself, so that the interfaces can be subclassed).
+"""
+
+
 import utils
 
 
@@ -18,8 +25,8 @@ class CorpusABC(utils.SaveLoad):
     
     Note that although a default len() method is provided, it is very inefficient
     (performs a linear scan through the corpus to determine its length). Wherever 
-    the corpus size is known in advance (or at least doesn't change so that it can 
-    be cached), the len() method should be overridden.
+    the corpus size is needed and known in advance (or at least doesn't change so 
+    that it can be cached), the len() method should be overridden.
     """
     def __iter__(self):
         raise NotImplementedError('cannot instantiate abstract base class')
@@ -56,7 +63,7 @@ class TransformationABC(utils.SaveLoad):
             for doc in self.corpus:
                 yield self.fnc(doc) 
     #endclass TransformedCorpus
-    
+
     def __getitem__(self):
         raise NotImplementedError('cannot instantiate abstract base class')
 

@@ -4,6 +4,11 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+"""
+Module for LSA, Latent Semantic Analysis (sometimes also called Latent Semantic 
+Indexing, LSI).
+"""
+
 
 import logging
 import itertools
@@ -19,10 +24,11 @@ class LsiModel(interfaces.TransformationABC):
     Semantic Indexing (also known as Latent Semantic Analysis).
     
     The main methods are:
-    1) constructor, which calculates the latent topics space, effectively 
+    
+     1. constructor, which calculates the latent topics space, effectively 
     initializing the model,
     
-    2) the [] method, which returns representation of any input document in the 
+     2. the [] method, which returns representation of any input document in the 
     computed latent space.
     
     Model persistency is achieved via its load/save methods.
@@ -31,10 +37,10 @@ class LsiModel(interfaces.TransformationABC):
         """
         Find latent space based on the corpus provided.
 
-        numTopics is the number of requested factors (latent dimensions).
+        `numTopics` is the number of requested factors (latent dimensions).
         
         After the model has been initialized, you can estimate topics for an
-        arbitrary, unseen document, using the topics = self[vector] dictionary notation.
+        arbitrary, unseen document, using the topics = self[document] dictionary notation.
         """
         self.id2word = id2word
         self.numTopics = numTopics # number of latent topics
@@ -94,16 +100,19 @@ class LsiModel(interfaces.TransformationABC):
     def svdAddCols(self, docs, decay = 1.0, reorth = False):
         """
         Update singular value decomposition factors to take into account new 
-        documents (matrix columns).
+        documents `docs`.
         
         This function corresponds to the general update of Brand (section 2), 
-        specialized for A = docs.T and B trivial (no update).
+        specialized for A = docs.T and B trivial (no update to matrix rows).
 
         The documents are assumed to be a list of full vectors (ie. not sparse 2-tuples).
         
         Compute new decomposition u', s', v' so that if the current matrix X decomposes to
-        self.u * self.s * self.v.T ~= X , then
-        self.u' * self.s' * self.v'.T ~= [X docs.T]
+        M{u * s * v^T ~= X}, then
+        M{u' * s' * v'^T ~= [X docs^T]}
+        
+        u, s, v and their new values u', s', v' are stored within self (ie. as 
+        self.u, self.v etc.).
         
         self.v can be set to None, in which case it is completely ignored. This saves a
         bit of speed and a lot of memory, especially for huge corpora (size of v is
@@ -212,23 +221,24 @@ class LsiModel(interfaces.TransformationABC):
 def svdUpdate(U, S, V, a, b):
     """
     Update SVD of X = U * S * V^T so that
-    [X + a * b.T] = U' * S' * V'^T
+    [X + a * b^T] = U' * S' * V'^T
     and return U', S', V'.
     
     a and b are (m, 1) and (n, 1) rank-1 matrices, so that svdUpdate can simulate 
-    incremental addition of one new document and/or term.
+    incremental addition of one new document and/or term to an already existing 
+    decomposition.
     """
     rank = U.shape[1]
     m = U.T * a
     p = a - U * m
     Ra = numpy.sqrt(p.T * p)
-    P = (1.0 / float(Ra)) * p
     assert float(Ra) > 1e-10
+    P = (1.0 / float(Ra)) * p
     n = V.T * b
     q = b - V * n
     Rb = numpy.sqrt(q.T * q)
-    Q = (1.0 / float(Rb)) * q
     assert float(Rb) > 1e-10
+    Q = (1.0 / float(Rb)) * q
     
     K = numpy.matrix(numpy.diag(list(numpy.diag(S)) + [0.0])) + numpy.bmat('m ; Ra') * numpy.bmat(' n; Rb').T
     u, s, vt = numpy.linalg.svd(K, full_matrices = False)
