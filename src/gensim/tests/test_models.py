@@ -12,14 +12,14 @@ Automated tests for checking transformation algorithms (the models package).
 import logging
 import unittest
 
-from gensim.corpora import corpora
+from gensim.corpora import mmcorpus
 from gensim.models import lsimodel, ldamodel, tfidfmodel
 
 # FIXME TODO
 
 class TestLsiModel(unittest.TestCase):
     def setUp(self):
-        self.corpus = corpora.MmCorpus('deerwester.mm')
+        self.corpus = mmcorpus.MmCorpus('testcorpus.mm')
     
     def tearDown(self):
         pass
@@ -46,6 +46,21 @@ class TestLdaModel(unittest.TestCase):
     def testPersistence(self):
         pass
 #endclass TestLdaModel
+
+
+class TestRPModel(unittest.TestCase):
+    def setUp(self):
+        pass
+    
+    def tearDown(self):
+        pass
+    
+    def testInference(self):
+        pass
+    
+    def testPersistence(self):
+        pass
+#endclass TestRPModel
 
 
 if __name__ == '__main__':

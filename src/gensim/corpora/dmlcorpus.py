@@ -28,7 +28,7 @@ class DmlConfig(object):
     sources in one place (= the self.sources attribute).
     
     Apart from glueing together sources, DmlConfig also decides where to store
-    output files and which articles to accept for the corpus (= additional filter 
+    output files and which articles to accept for the corpus (= an additional filter 
     over the sources).
     """
     def __init__(self, configId, resultDir, acceptLangs = None):

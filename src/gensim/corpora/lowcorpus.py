@@ -12,7 +12,7 @@ Corpus in GibbsLda++ format of List-Of-Words.
 
 import logging
 
-from gensim import interfaces
+from gensim import interfaces, utils
 
 
 class LowCorpus(interfaces.CorpusABC):
@@ -117,17 +117,30 @@ class LowCorpus(interfaces.CorpusABC):
     
     
     @staticmethod
-    def saveCorpus(fname, corpus, id2word):
+    def saveCorpus(fname, corpus, id2word = None):
         """
         Save a corpus in the List-of-words format.
         """
+        if id2word is None:
+            logging.info("no word id mapping provided; initializing from corpus")
+            id2word = utils.dictFromCorpus(corpus)
+        
+        logging.info("storing corpus in List-Of-Words format: %s" % fname)
+        truncated = 0
         fout = open(fname, 'w')
         fout.write('%i\n' % len(corpus))
         for doc in corpus:
             words = []
             for wordId, value in doc:
-                words.extend([id2word[wordId]] * int(value))
+                if abs(int(value) - value) > 1e-6:
+                    truncated += 1
+                words.extend([str(id2word[wordId])] * int(value))
             fout.write('%s\n' % ' '.join(words))
         fout.close()
+        
+        if truncated:
+            logging.warning("List-of-words format can only save vectors with \
+            integer entries; %i float entries were truncated to integer value" % 
+            truncated)
 #endclass LowCorpus
 
