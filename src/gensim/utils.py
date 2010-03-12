@@ -95,3 +95,20 @@ class SaveLoad(object):
 
 def identity(p):
     return p
+
+
+def dictFromCorpus(corpus):
+    """
+    Scan corpus for all word ids that appear in it, then contruct and return a mapping
+    which maps each wordId -> str(wordId).
+    
+    This function is used whenever words need to be displayed (as opposed to just 
+    their ids) but no wordId->word mapping was provided. The resulting mapping 
+    only covers words actually used in the corpus, up to the highest wordId found.
+    """
+    maxId = -1
+    for document in corpus:
+        maxId = max(maxId, max([-1] + [fieldId for fieldId, _ in document]))
+    numTerms = 1 + maxId
+    id2word = dict((fieldId, str(fieldId)) for fieldId in xrange(numTerms))
+    return id2word

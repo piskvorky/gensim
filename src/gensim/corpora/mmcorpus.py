@@ -32,6 +32,7 @@ class MmCorpus(matutils.MmReader, interfaces.CorpusABC):
         """
         Save a corpus in the Matrix Market format.
         """
+        logging.info("storing corpus in Matrix Market format: %s" % fname)
         matutils.MmWriter.writeCorpus(fname, corpus)
 #endclass MmCorpus
 

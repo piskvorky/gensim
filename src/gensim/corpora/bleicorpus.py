@@ -12,7 +12,7 @@ Blei's LDA-C format.
 
 import logging
 
-from gensim import interfaces
+from gensim import interfaces, utils
 
 
 class BleiCorpus(interfaces.CorpusABC):
@@ -60,7 +60,7 @@ class BleiCorpus(interfaces.CorpusABC):
         """
         for lineNo, line in enumerate(open(self.fname)):
             parts = line.split()
-            if int(parts[0]) != len(parts) + 1:
+            if int(parts[0]) != len(parts) - 1:
                 raise ValueError("invalid format at line %i in %s" %
                                  (lineNo, self.fname))
             doc = [part.rsplit(':', 1) for part in parts[1:]]
@@ -76,20 +76,17 @@ class BleiCorpus(interfaces.CorpusABC):
         There are actually two files saved: fname and fname.vocab, where
         fname.vocab is the vocabulary file.
         """
-        if self.id2word is None:
+        if id2word is None:
             logging.info("no word id mapping provided; initializing from corpus")
-            maxId = -1
-            for document in corpus:
-                maxId = max(maxId, max([-1] + [fieldId for fieldId, _ in document]))
-            numTerms = 1 + maxId
-            id2word = dict(zip(xrange(numTerms), xrange(numTerms))) # word id mapping will be identity
+            id2word = utils.dictFromCorpus(corpus)
+            numTerms = len(id2word)
         else:
             numTerms = 1 + max([-1] + id2word.keys())
         
-        logging.info("converting corpus to Blei's LDA-C format: %s" % fname)
+        logging.info("storing corpus in Blei's LDA-C format: %s" % fname)
         fout = open(fname, 'w')
         for doc in corpus:
-            fout.write("%i %s\n" % (len(doc), ' '.join("%i:%i" % p for p in doc)))
+            fout.write("%i %s\n" % (len(doc), ' '.join("%i:%f" % p for p in doc)))
         fout.close()
         
         # write out vocabulary, in a format compatible with Blei's topics.py script

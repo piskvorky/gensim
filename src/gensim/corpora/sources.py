@@ -12,7 +12,7 @@ A document source is basically a collection of articles sharing the same format,
 same location (type of access), same way of parsing them etc.
 
 Different sources can be aggregated into a single corpus, which is what the 
-DmlCorpus class does (see the corpora module).
+DmlCorpus class does (see the dmlcorpus module).
 """
 
 import logging
@@ -63,7 +63,7 @@ class ArticleSource(object):
     
     def normalizeWord(self, word):
         raise NotImplementedError('Abstract Base Class')
-#endclass Source
+#endclass ArticleSource
 
 
 
@@ -280,7 +280,7 @@ class ArxmlivSource(ArticleSource):
         # byte encodings of InputSource are ignored, bad things sometimes happen 
         # in buffering of multi-byte files (such as utf8), characters get cut in 
         # the middle, resulting in invalid tokens...
-        # This is not really a problem with arxmliv xml files themselved, so ignore
+        # This is not really a problem with arxmliv xml files themselves, so ignore
         # these errors silently.
         def error(self, exception):
             pass

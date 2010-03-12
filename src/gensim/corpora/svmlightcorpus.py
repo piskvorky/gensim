@@ -55,9 +55,13 @@ class SvmLightCorpus(interfaces.CorpusABC):
         Iterate over the corpus, returning one sparse vector at a time.
         """
         for lineNo, line in enumerate(open(self.fname)):
-            if line.startswith('#'):
-                continue
+            line = line[: line.find('#')].strip()
+            if not line:
+                continue # ignore comments and empty lines
             parts = line.split()
+            if not parts:
+                raise ValueError('invalid format at line no. %i in %s' %
+                                 (lineNo, self.fname))
             target, fields = parts[0], [part.rsplit(':', 1) for part in parts[1:]]
             doc = [(int(p1), float(p2)) for p1, p2 in fields if p1 != 'qid'] # ignore 'qid' features
             yield doc
@@ -71,7 +75,7 @@ class SvmLightCorpus(interfaces.CorpusABC):
         logging.info("converting corpus to SVMlight format: %s" % fname)
         fout = open(fname, 'w')
         for doc in corpus:
-            fout.write("%i %s\n" % (0, ' '.join("%i:%i" % p for p in doc)))
+            fout.write("%i %s\n" % (0, ' '.join("%i:%f" % p for p in doc)))
         fout.close()
 #endclass SvmLightCorpus
 
