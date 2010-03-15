@@ -53,7 +53,7 @@ class LsiModel(interfaces.TransformationABC):
                 (self.numTerms, self.numTopics)
 
 
-    def initialize(self, corpus, chunks = 100):
+    def initialize(self, corpus, chunks = 100, keepDecomposition = False):
         """
         Run SVD decomposition on the corpus. This will define the latent space into 
         which terms and documents will be mapped.
@@ -94,7 +94,9 @@ class LsiModel(interfaces.TransformationABC):
         # note that v (topics of the training corpus) are not used at all for the transformation
         invS = numpy.diag(numpy.diag(1.0 / self.s))
         self.projection = numpy.dot(invS, self.u.T) # s^-1 * u^-1; (k, k) * (k, m) = (k, m)
-#        del self.u, self.s, self.v # once we have the projection, discard the decomposition to free up memory
+        if keepDecomposition:
+            # once we have the projection stored in self, discard u*s*v decomposition to free up memory
+            del self.u, self.s, self.v
 
     
     def svdAddCols(self, docs, decay = 1.0, reorth = False):
