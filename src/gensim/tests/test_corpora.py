@@ -19,7 +19,7 @@ from gensim.corpora import dmlcorpus, bleicorpus, mmcorpus, lowcorpus, svmlightc
 
 def testfile():
     # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim.tst')
+    return os.path.join(tempfile.gettempdir(), 'gensim_corpus.tst')
 
 
 class CorpusTesterABC(object):
@@ -72,5 +72,5 @@ class TestBleiCorpus(unittest.TestCase, CorpusTesterABC):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level = logging.ERROR)
+    logging.basicConfig(level = logging.WARNING)
     unittest.main()
