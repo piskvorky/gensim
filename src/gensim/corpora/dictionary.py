@@ -30,12 +30,16 @@ from gensim import utils
 
 
 class Token(object):
-    __slots__ = ['token', 'intId']
+    """
+    Object representing a single token.
+    """
+    __slots__ = ['token', 'intId'] # keep in slots to save a little memory
     
     def __init__(self, token, intId):
         self.token = token # postprocessed word form (string)
         self.intId = intId # id of the token (integer)
     
+    # provide getstate/setstate methods, so that Token objects can be pickled
     def __getstate__(self):
         return [(name, self.__getattribute__(name)) for name in self.__slots__]
     
@@ -66,6 +70,9 @@ class Dictionary(utils.SaveLoad):
     
 
     def __len__(self):
+        """
+        Return the number of word->id mappings in the dictionary.
+        """
         assert len(self.token2id) == len(self.id2token)
         return len(self.token2id)
 

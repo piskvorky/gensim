@@ -170,10 +170,11 @@ class MmReader(object):
     """
     def __init__(self, fname):
         """
-        Initialize the matrix reader. The fname is a path to a file on local 
-        filesystem, which is expected to be sparse (coordinate) matrix
-        market format. Documents are assumed to be rows of the matrix -- if 
-        documents are columns, save the matrix transposed.
+        Initialize the matrix reader. 
+        
+        The `fname` is a path to a file on local filesystem, which is expected to 
+        be in sparse (coordinate) Matrix Market format. Documents are assumed to 
+        be rows of the matrix (and document features are columns).
         """
         logging.info("initializing corpus reader from %s" % fname)
         self.fname = fname
