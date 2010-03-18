@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>lowcorpus &mdash; gensim v1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="gensim v1.0 documentation" href="../index.html" />
+    <link rel="up" title="API Reference" href="../apiref.html" />
+    <link rel="next" title="mmcorpus" href="mmcorpus.html" />
+    <link rel="prev" title="dmlcorpus" href="dmlcorpus.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="mmcorpus.html" title="mmcorpus"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dmlcorpus.html" title="dmlcorpus"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">gensim v1.0 documentation</a> &raquo;</li>
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-gensim.corpora.lowcorpus">
+<h1><tt class="xref docutils literal"><span class="pre">lowcorpus</span></tt><a class="headerlink" href="#module-gensim.corpora.lowcorpus" title="Permalink to this headline">¶</a></h1>
+<p>Corpus in GibbsLda++ format of List-Of-Words.</p>
+<dl class="class">
+<dt id="gensim.corpora.lowcorpus.LowCorpus">
+<em class="property">class </em><tt class="descclassname">gensim.corpora.lowcorpus.</tt><tt class="descname">LowCorpus</tt><big>(</big><em>fname</em>, <em>id2word=None</em>, <em>line2words=&lt;function splitOnSpace at 0x1638d70&gt;</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>List_Of_Words corpus handles input in GibbsLda++ format.</p>
+<p>Quoting <a class="reference external" href="http://gibbslda.sourceforge.net/#3.2_Input_Data_Format">http://gibbslda.sourceforge.net/#3.2_Input_Data_Format</a>:</p>
+<div class="highlight-python"><pre>Both data for training/estimating the model and new data (i.e., previously 
+unseen data) have the same format as follows:
+
+[M]
+[document1]
+[document2]
+...
+[documentM]
+
+in which the first line is the total number for documents [M]. Each line 
+after that is one document. [documenti] is the ith document of the dataset 
+that consists of a list of Ni words/terms.
+
+[documenti] = [wordi1] [wordi2] ... [wordiNi]
+
+in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated 
+by the blank character.</pre>
+</div>
+<p>Initialize the corpus from a file.</p>
+<p><cite>id2word</cite> and <cite>line2words</cite> are optional parameters.</p>
+<p>If provided, <cite>id2word</cite> is a dictionary mapping between wordIds (integers) 
+and words (strings). If not provided, the mapping is constructed from 
+the documents.</p>
+<p><cite>line2words</cite> is a function which converts lines into tokens. Defaults to 
+simple splitting on spaces.</p>
+<dl class="classmethod">
+<dt id="gensim.corpora.lowcorpus.LowCorpus.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus.load" title="Permalink to this definition">¶</a></dt>
+<dd>Load a previously saved object from file (also see save()).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.lowcorpus.LowCorpus.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus.save" title="Permalink to this definition">¶</a></dt>
+<dd>Save the object to file via pickling (also see load()).</dd></dl>
+
+<dl class="staticmethod">
+<dt id="gensim.corpora.lowcorpus.LowCorpus.saveCorpus">
+<em class="property">static </em><tt class="descname">saveCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus.saveCorpus" title="Permalink to this definition">¶</a></dt>
+<dd>Save a corpus in the List-of-words format.</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="dmlcorpus.html"
+                                  title="previous chapter"><tt class="docutils literal"><span class="pre">dmlcorpus</span></tt></a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="mmcorpus.html"
+                                  title="next chapter"><tt class="docutils literal"><span class="pre">mmcorpus</span></tt></a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="../_sources/corpora/lowcorpus.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="../search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="mmcorpus.html" title="mmcorpus"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dmlcorpus.html" title="dmlcorpus"
+             >previous</a> |</li>
+        <li><a href="../index.html">gensim v1.0 documentation</a> &raquo;</li>
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, Radim Řehůřek.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>dictionary &mdash; gensim v1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="gensim v1.0 documentation" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li><a href="../index.html">gensim v1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-gensim.corpora.dictionary">
+<h1><tt class="xref docutils literal"><span class="pre">dictionary</span></tt><a class="headerlink" href="#module-gensim.corpora.dictionary" title="Permalink to this headline">¶</a></h1>
+<p>This module implements the concept of Dictionary &#8211; a mapping between words and 
+their internal ids.</p>
+<dl class="docutils">
+<dt>The actual process of id translation proceeds in three steps:</dt>
+<dd><ol class="first last arabic simple">
+<li>get the input word (eg. &#8216;Answering&#8217;)</li>
+<li>map word to its normalized form (eg. &#8216;answer&#8217;)</li>
+<li>map the normalized form to integer id (eg. 42)</li>
+</ol>
+</dd>
+</dl>
+<p>Dictionaries can be created from a corpus and can later be pruned according to
+document frequency (removing (un)common words via the filterExtremes() method), 
+save/loaded from disk via save() and load() methods etc.</p>
+<dl class="class">
+<dt id="gensim.corpora.dictionary.Dictionary">
+<em class="property">class </em><tt class="descclassname">gensim.corpora.dictionary.</tt><tt class="descname">Dictionary</tt><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary encapsulates mappings between words, their normalized forms and ids
+of those normalized forms.</p>
+<p>The main function is <cite>doc2bow</cite>, which coverts a collection of words to its bow 
+representation, optionally also updating the dictionary mappings with new 
+words and their ids.</p>
+<dl class="method">
+<dt id="gensim.corpora.dictionary.Dictionary.doc2bow">
+<tt class="descname">doc2bow</tt><big>(</big><em>document</em>, <em>normalizeWord</em>, <em>allowUpdate=False</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.doc2bow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert <cite>document</cite> (a list of words) into bag-of-words format = list of 
+(tokenId, tokenCount) 2-tuples.</p>
+<p><cite>normalizeWord</cite> must be a function that accepts one utf-8 encoded string
+and returns another. Possible choices are identity, lowercasing etc.</p>
+<p>If <cite>allowUpdate</cite> is set, then also update dictionary in the process: create ids 
+for new words. At the same time, update document frequencies &#8211; for 
+each word appearing in this document, increase its self.docFreq by one.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.dictionary.Dictionary.filterExtremes">
+<tt class="descname">filterExtremes</tt><big>(</big><em>noBelow=5</em>, <em>noAbove=0.5</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.filterExtremes" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Filter out tokens that appear in </dt>
+<dd><ol class="first last arabic simple">
+<li>less than <cite>noBelow</cite> documents (absolute number) or</li>
+<li>more than <cite>noAbove</cite> documents (fraction of total corpus size, <em>not</em> 
+absolute number).</li>
+</ol>
+</dd>
+</dl>
+<p>At the same time rebuild the dictionary, shrinking resulting gaps in 
+tokenIds (lowering len(self) and freeing up memory in the process).</p>
+<p>Note that the same token may have a different <cite>tokenId</cite> before and after
+the call to this function!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.dictionary.Dictionary.filterTokens">
+<tt class="descname">filterTokens</tt><big>(</big><em>badIds</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.filterTokens" title="Permalink to this definition">¶</a></dt>
+<dd>Remove the selected tokens from all dictionary mappings.</dd></dl>
+
+<dl class="staticmethod">
+<dt id="gensim.corpora.dictionary.Dictionary.fromDocuments">
+<em class="property">static </em><tt class="descname">fromDocuments</tt><big>(</big><em>documents</em>, <em>normalizeWord</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.fromDocuments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build dictionary from a collection of documents. Each document is a list 
+of words (ie. tokenized strings).</p>
+<p>The normalizeWord function is used to convert each word to its utf-8 encoded
+canonical form (identity, lowercasing, stemming, ...); use whichever normalization
+suits you.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">Dictionary</span><span class="o">.</span><span class="n">fromDocuments</span><span class="p">([</span><span class="s">&quot;máma mele maso&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="s">&quot;ema má mama&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">()],</span> <span class="n">utils</span><span class="o">.</span><span class="n">deaccent</span><span class="p">)</span>
+<span class="go">Dictionary(5 unique tokens covering 6 surface forms)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="gensim.corpora.dictionary.Dictionary.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.load" title="Permalink to this definition">¶</a></dt>
+<dd>Load a previously saved object from file (also see save()).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.dictionary.Dictionary.rebuildDictionary">
+<tt class="descname">rebuildDictionary</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.rebuildDictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign new tokenIds to all tokens.</p>
+<p>This is done to make tokenIds more compact, ie. after some tokens have 
+been removed via filterTokens() and there are gaps in the tokenId series.
+Calling this method will remove the gaps.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.dictionary.Dictionary.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.save" title="Permalink to this definition">¶</a></dt>
+<dd>Save the object to file via pickling (also see load()).</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="gensim.corpora.dictionary.Token">
+<em class="property">class </em><tt class="descclassname">gensim.corpora.dictionary.</tt><tt class="descname">Token</tt><big>(</big><em>token</em>, <em>intId</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Token" title="Permalink to this definition">¶</a></dt>
+<dd>Object representing a single token.</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="../_sources/corpora/dictionary.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="../search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">gensim v1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, Radim Řehůřek.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+    </div>
+  </body>
+</html>

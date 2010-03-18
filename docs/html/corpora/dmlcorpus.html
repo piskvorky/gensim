@@ -1,0 +1,186 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>dmlcorpus &mdash; gensim v1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="gensim v1.0 documentation" href="../index.html" />
+    <link rel="up" title="API Reference" href="../apiref.html" />
+    <link rel="next" title="lowcorpus" href="lowcorpus.html" />
+    <link rel="prev" title="dictionary" href="dictionary.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="lowcorpus.html" title="lowcorpus"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dictionary.html" title="dictionary"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">gensim v1.0 documentation</a> &raquo;</li>
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-gensim.corpora.dmlcorpus">
+<h1><tt class="xref docutils literal"><span class="pre">dmlcorpus</span></tt><a class="headerlink" href="#module-gensim.corpora.dmlcorpus" title="Permalink to this headline">¶</a></h1>
+<p>Corpus for the DML-CZ project.</p>
+<dl class="class">
+<dt id="gensim.corpora.dmlcorpus.DmlConfig">
+<em class="property">class </em><tt class="descclassname">gensim.corpora.dmlcorpus.</tt><tt class="descname">DmlConfig</tt><big>(</big><em>configId</em>, <em>resultDir</em>, <em>acceptLangs=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.dmlcorpus.DmlConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>DmlConfig contains parameters necessary for the abstraction of a &#8216;corpus of 
+articles&#8217; (see the DmlCorpus class).</p>
+<p>Articles may come from different sources (=different locations on disk/netword,
+different file formats etc), so the main purpose of DmlConfig is to keep all
+sources in one place (= the self.sources attribute).</p>
+<p>Apart from glueing together sources, DmlConfig also decides where to store
+output files and which articles to accept for the corpus (= an additional filter 
+over the sources).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="gensim.corpora.dmlcorpus.DmlCorpus">
+<em class="property">class </em><tt class="descclassname">gensim.corpora.dmlcorpus.</tt><tt class="descname">DmlCorpus</tt><a class="headerlink" href="#gensim.corpora.dmlcorpus.DmlCorpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>DmlCorpus implements a collection of articles. It is initialized via a DmlConfig
+object, which holds information about where to look for the articles and how 
+to process them.</p>
+<p>Apart from being a regular corpus (bag-of-words iterable with a len() method),
+DmlCorpus has methods for building a dictionary (mapping between words and 
+their ids).</p>
+<dl class="method">
+<dt id="gensim.corpora.dmlcorpus.DmlCorpus.buildDictionary">
+<tt class="descname">buildDictionary</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.corpora.dmlcorpus.DmlCorpus.buildDictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populate dictionary mapping and statistics.</p>
+<p>This is done by sequentially retrieving the article fulltexts, splitting
+them into tokens and converting tokens to their ids (creating new ids as 
+necessary).</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="gensim.corpora.dmlcorpus.DmlCorpus.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.dmlcorpus.DmlCorpus.load" title="Permalink to this definition">¶</a></dt>
+<dd>Load a previously saved object from file (also see save()).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.dmlcorpus.DmlCorpus.processConfig">
+<tt class="descname">processConfig</tt><big>(</big><em>config</em>, <em>shuffle=False</em><big>)</big><a class="headerlink" href="#gensim.corpora.dmlcorpus.DmlCorpus.processConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the directories specified in the config, looking for suitable articles.</p>
+<p>This updates the self.documents var, which keeps a list of (source id, 
+article uri) 2-tuples. Each tuple is a unique identifier of one article.</p>
+<p>Note that some articles are ignored based on config settings (for example 
+if the article&#8217;s language doesn&#8217;t match any language specified in the 
+config etc.).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.dmlcorpus.DmlCorpus.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.dmlcorpus.DmlCorpus.save" title="Permalink to this definition">¶</a></dt>
+<dd>Save the object to file via pickling (also see load()).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.dmlcorpus.DmlCorpus.saveAsText">
+<tt class="descname">saveAsText</tt><big>(</big><em>normalizeTfidf=False</em><big>)</big><a class="headerlink" href="#gensim.corpora.dmlcorpus.DmlCorpus.saveAsText" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store the corpus to disk, in a human-readable text format.</p>
+<dl class="docutils">
+<dt>This actually saves multiple files:</dt>
+<dd><ol class="first last arabic simple">
+<li>Pure document-term co-occurence frequency counts, as a Matrix Market file.</li>
+<li>Token to integer mapping, as a text file.</li>
+<li>Document to document URI mapping, as a text file.</li>
+</ol>
+</dd>
+</dl>
+<p>The exact filesystem paths and filenames are determined from the config.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="dictionary.html"
+                                  title="previous chapter"><tt class="docutils literal"><span class="pre">dictionary</span></tt></a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="lowcorpus.html"
+                                  title="next chapter"><tt class="docutils literal"><span class="pre">lowcorpus</span></tt></a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="../_sources/corpora/dmlcorpus.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="../search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lowcorpus.html" title="lowcorpus"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dictionary.html" title="dictionary"
+             >previous</a> |</li>
+        <li><a href="../index.html">gensim v1.0 documentation</a> &raquo;</li>
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, Radim Řehůřek.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+    </div>
+  </body>
+</html>
