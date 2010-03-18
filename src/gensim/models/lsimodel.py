@@ -263,9 +263,9 @@ def svdUpdate(U, S, V, a, b):
 def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, convergence = 1e-4):
     """
     Perform iterative Singular Value Decomposition on a streaming matrix (corpus),
-    returning numFactors greatest factors (ie., not necessarily full spectrum).
+    returning `numFactors` greatest factors (ie., not necessarily full spectrum).
     
-    The parameters numIter (maximum number of iterations) and initRate (gradient 
+    The parameters `numIter` (maximum number of iterations) and `initRate` (gradient 
     descent step size) guide convergency of the algorithm.
     
     See Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 

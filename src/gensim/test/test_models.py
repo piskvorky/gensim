@@ -12,6 +12,7 @@ Automated tests for checking transformation algorithms (the models package).
 import logging
 import unittest
 import os
+import os.path
 import tempfile
 
 import numpy
@@ -21,6 +22,9 @@ from gensim.models import lsimodel, ldamodel, tfidfmodel
 from gensim import matutils
 
 
+module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+
+
 def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
@@ -28,7 +32,7 @@ def testfile():
 
 class TestLsiModel(unittest.TestCase):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus('testcorpus.mm')
+        self.corpus = mmcorpus.MmCorpus(os.path.join(module_path, 'testcorpus.mm'))
     
     def testTransform(self):
         # create the transformation model
@@ -54,7 +58,7 @@ class TestLsiModel(unittest.TestCase):
 
 class TestLdaModel(unittest.TestCase):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus('testcorpus.mm')
+        self.corpus = mmcorpus.MmCorpus(os.path.join(module_path, 'testcorpus.mm'))
     
     def testTransform(self):
         # create the transformation model
@@ -80,7 +84,7 @@ class TestLdaModel(unittest.TestCase):
 
 class TestTfidfModel(unittest.TestCase):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus('testcorpus.mm')
+        self.corpus = mmcorpus.MmCorpus(os.path.join(module_path, 'testcorpus.mm'))
     
     def testTransform(self):
         # create the transformation model

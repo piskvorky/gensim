@@ -1,6 +1,12 @@
 Changes
 =======
 
+0.4.0
+
+* support for ``python setup.py test``
+* fixing package metadata
+* documentation clean-up
+
 0.2.0
 
 * First version

@@ -17,6 +17,9 @@ import tempfile
 from gensim.corpora import dmlcorpus, bleicorpus, mmcorpus, lowcorpus, svmlightcorpus
 
 
+module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+
+
 def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_corpus.tst')
@@ -30,7 +33,8 @@ class CorpusTesterABC(object):
     
     
     def testLoad(self):
-        corpus = self.corpusClass('testcorpus.' + self.fileExtension.lstrip('.'))
+        fname = os.path.join(module_path, 'testcorpus.' + self.fileExtension.lstrip('.'))
+        corpus = self.corpusClass(fname)
         docs = list(corpus)
         self.assertEqual(len(docs), 9) # the deerwester corpus always has nine documents, no matter what format
 
