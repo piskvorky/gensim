@@ -57,7 +57,7 @@ class Dictionary(utils.SaveLoad):
     Dictionary encapsulates mappings between words, their normalized forms and ids
     of those normalized forms.
     
-    The main function is doc2bow, which coverts a collection of words to its bow 
+    The main function is `doc2bow`, which coverts a collection of words to its bow 
     representation, optionally also updating the dictionary mappings with new 
     words and their ids.
     """
@@ -87,9 +87,13 @@ class Dictionary(utils.SaveLoad):
         Build dictionary from a collection of documents. Each document is a list 
         of words (ie. tokenized strings).
         
-        The normalizeWord function is used to convert each word to its *utf8 encoded*
-        base form (identity, lowercasing, stemming, ...); use whichever normalization
+        The normalizeWord function is used to convert each word to its utf-8 encoded
+        canonical form (identity, lowercasing, stemming, ...); use whichever normalization
         suits you.
+        
+        >>> print Dictionary.fromDocuments(["máma mele maso".split(), "ema má mama".split()], utils.deaccent)
+        Dictionary(5 unique tokens covering 6 surface forms)
+        
         """
         result = Dictionary()
         for document in documents:
@@ -107,11 +111,14 @@ class Dictionary(utils.SaveLoad):
     
     def doc2bow(self, document, normalizeWord, allowUpdate = False):
         """
-        Convert document (a list of words) into bag-of-words format = list of 
+        Convert `document` (a list of words) into bag-of-words format = list of 
         (tokenId, tokenCount) 2-tuples.
         
-        If update is set, then also update dictionary in the process: create ids 
-        for new words etc. At the same time update document frequencies -- for 
+        `normalizeWord` must be a function that accepts one utf-8 encoded string
+        and returns another. Possible choices are identity, lowercasing etc.
+        
+        If `allowUpdate` is set, then also update dictionary in the process: create ids 
+        for new words. At the same time, update document frequencies -- for 
         each word appearing in this document, increase its self.docFreq by one.
         """
         # construct (word, frequency) mapping. in python3 this is done simply 
@@ -155,14 +162,14 @@ class Dictionary(utils.SaveLoad):
     def filterExtremes(self, noBelow = 5, noAbove = 0.5):
         """
         Filter out tokens that appear in 
-         1. less than noBelow documents (absolute number) or 
-         2. more than noAbove documents (fraction of total corpus size, *not* 
-        absolute number).
+         1. less than `noBelow` documents (absolute number) or 
+         2. more than `noAbove` documents (fraction of total corpus size, *not* 
+            absolute number).
         
         At the same time rebuild the dictionary, shrinking resulting gaps in 
-        tokenIds (lowering len(self) and freeing memory in the process). 
+        tokenIds (lowering len(self) and freeing up memory in the process). 
         
-        Note that the same token may have a different tokenId before and after
+        Note that the same token may have a different `tokenId` before and after
         the call to this function!
         """
         noAboveAbs = int(noAbove * self.numDocs) # convert fractional threshold to absolute threshold

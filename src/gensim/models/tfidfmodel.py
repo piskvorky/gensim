@@ -24,22 +24,22 @@ class TfidfModel(interfaces.TransformationABC):
     documents to unit length.
     
     The main methods are:
-    1) constructor, which calculates IDF weights for all terms in the training corpus.
+      1. constructor, which calculates IDF weights for all terms in the training corpus.
+      2. the [] method, which transforms a simple count representation into the TfIdf 
+         space.
     
-    2) the [] method, which transforms a simple count representation into the TfIdf 
-    space.
+    >>> tfidf = TfidfModel(corpus)
+    >>> doc_tfidf = tfidf[doc_tf]
     
     Model persistency is achieved via its load/save methods.
     """
     def __init__(self, corpus, id2word = None, normalize = True):
         """
-        Find latent space based on the corpus provided.
+        `id2word` is a mapping from word ids (integers) to words (strings). It is
+        used to determine the vocabulary size, as well as for debugging and topic 
+        printing. If not set, it will be determined from the corpus.
 
-        numTopics is the number of requested factors (latent dimensions).
-        normalize dictates whether the resulting vectors will be set to unit length.
-        
-        After the model has been initialized, you can estimate topics for an
-        arbitrary, unseen document, using the topics = self[bow] dictionary notation.
+        `normalize` dictates whether the resulting vectors will be set to unit length.
         """
         self.id2word = id2word
         self.normalize = normalize

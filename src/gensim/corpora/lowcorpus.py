@@ -15,41 +15,47 @@ import logging
 from gensim import interfaces, utils
 
 
+
+def splitOnSpace(s):
+    return s.strip().split(' ')
+
+
 class LowCorpus(interfaces.CorpusABC):
     """
     List_Of_Words corpus handles input in GibbsLda++ format.
     
-    Quoting http://gibbslda.sourceforge.net/#3.2_Input_Data_Format :
-    Both data for training/estimating the model and new data (i.e., previously 
-    unseen data) have the same format as follows:
-
-    [M]
-    [document1]
-    [document2]
-    ...
-    [documentM]
-
-    in which the first line is the total number for documents [M]. Each line 
-    after that is one document. [documenti] is the ith document of the dataset 
-    that consists of a list of Ni words/terms.
-
-    [documenti] = [wordi1] [wordi2] ... [wordiNi]
-
-    in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated 
-    by the blank character.
+    Quoting http://gibbslda.sourceforge.net/#3.2_Input_Data_Format::
+    
+        Both data for training/estimating the model and new data (i.e., previously 
+        unseen data) have the same format as follows:
+    
+        [M]
+        [document1]
+        [document2]
+        ...
+        [documentM]
+    
+        in which the first line is the total number for documents [M]. Each line 
+        after that is one document. [documenti] is the ith document of the dataset 
+        that consists of a list of Ni words/terms.
+    
+        [documenti] = [wordi1] [wordi2] ... [wordiNi]
+    
+        in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated 
+        by the blank character.
     """
-    def __init__(self, fname, id2word = None, line2words = lambda line: line.strip().split(' ')):
+    def __init__(self, fname, id2word = None, line2words = splitOnSpace):
         """
         Initialize the corpus from a file.
         
-        id2word and line2words are optional parameters. 
+        `id2word` and `line2words` are optional parameters. 
         
-        If provided, id2word is a dictionary mapping between wordIds (integers) 
+        If provided, `id2word` is a dictionary mapping between wordIds (integers) 
         and words (strings). If not provided, the mapping is constructed from 
         the documents.
         
-        line2words is a function which converts lines into tokens. Default is 
-        splitting on spaces.
+        `line2words` is a function which converts lines into tokens. Defaults to 
+        simple splitting on spaces.
         """
         logging.info("loading corpus from %s" % fname)
         
