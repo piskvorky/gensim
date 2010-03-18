@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ldamodel &mdash; gensim v1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="gensim v1.0 documentation" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li><a href="../index.html">gensim v1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-gensim.models.ldamodel">
+<h1><tt class="xref docutils literal"><span class="pre">ldamodel</span></tt><a class="headerlink" href="#module-gensim.models.ldamodel" title="Permalink to this headline">¶</a></h1>
+<p>This module encapsulates functionality for the Latent Dirichlet Allocation algorithm.</p>
+<p>It allows both model estimation from a training corpus and inference on new, 
+unseen documents.</p>
+<p>The implementation is based on Blei et al., Latent Dirichlet Allocation, 2003,
+and on Blei&#8217;s LDA-C software in particular. This means it uses variational EM
+inference rather than Gibbs sampling to estimate model parameters.</p>
+<dl class="class">
+<dt id="gensim.models.ldamodel.LdaModel">
+<em class="property">class </em><tt class="descclassname">gensim.models.ldamodel.</tt><tt class="descname">LdaModel</tt><big>(</big><em>corpus</em>, <em>id2word=None</em>, <em>numTopics=200</em>, <em>alpha=None</em>, <em>initMode='random'</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Objects of this class allow building and maintaining a model of Latent Dirichlet
+Allocation.</p>
+<p>The code is based on Blei&#8217;s C implementation, see <a class="reference external" href="http://www.cs.princeton.edu/~blei/lda-c/">http://www.cs.princeton.edu/~blei/lda-c/</a> .</p>
+<p>This Python code uses numpy heavily, and is about 4-5x slower than the original 
+C version. The up side is that it is much more straightforward and concise, 
+using vector operations ala MATLAB, easily pluggable/extensible etc.</p>
+<p>The constructor estimates model parameters based on a training corpus:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can then infer topic distributions on new, unseen documents:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc_lda</span> <span class="o">=</span> <span class="n">lda</span><span class="p">[</span><span class="n">doc_bow</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Model persistency is achieved via its load/save methods.</p>
+<p>Initialize the model based on corpus.</p>
+<p><cite>id2word</cite> is a mapping from word ids (integers) to words (strings). It is
+used to determine the vocabulary size, as well as for debugging and topic 
+printing.</p>
+<p><cite>numTopics</cite> is the number of requested topics.</p>
+<p><cite>alpha</cite> is either None (to be estimated during training) or a number 
+between (0.0, 1.0).</p>
+<dl class="method">
+<dt id="gensim.models.ldamodel.LdaModel.apply">
+<tt class="descname">apply</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.apply" title="Permalink to this definition">¶</a></dt>
+<dd>Helper function used in derived classes. Applies the transformation to 
+a whole corpus (as opposed to a single document) and returns another corpus.</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.ldamodel.LdaModel.computeLikelihood">
+<tt class="descname">computeLikelihood</tt><big>(</big><em>doc</em>, <em>phi</em>, <em>gamma</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.computeLikelihood" title="Permalink to this definition">¶</a></dt>
+<dd>Compute the document likelihood, given all model parameters.</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.ldamodel.LdaModel.countsFromCorpus">
+<tt class="descname">countsFromCorpus</tt><big>(</big><em>corpus</em>, <em>numInitDocs=1</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.countsFromCorpus" title="Permalink to this definition">¶</a></dt>
+<dd>Initialize the model word counts from the corpus. Each topic will be initialized
+from <cite>numInitDocs</cite> random documents.</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.ldamodel.LdaModel.docEStep">
+<tt class="descname">docEStep</tt><big>(</big><em>doc</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.docEStep" title="Permalink to this definition">¶</a></dt>
+<dd>Find optimizing parameters for phi and gamma, and update sufficient statistics.</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.ldamodel.LdaModel.getTopicsMatrix">
+<tt class="descname">getTopicsMatrix</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.getTopicsMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform topic-word distribution via a tf-idf score and return it instead
+of the simple self.logProbW word-topic probabilities.</p>
+<p>The transformation is a sort of TF-IDF score, where the word gets higher 
+score if it&#8217;s probable in this topic (the TF part) and lower score if 
+it&#8217;s probable across the whole corpus (the IDF part).</p>
+<p>The exact formula is taken from Blei&amp;Laffery: &#8220;Topic Models&#8221;, 2009</p>
+<p>The returned matrix is of the same shape as logProbW.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.ldamodel.LdaModel.infer">
+<tt class="descname">infer</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.infer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform inference on a corpus of documents.</p>
+<p>This means that a standard inference step is taken for each document from 
+the corpus and the results are saved into file corpus.fname.lda_inferred.</p>
+<p>The output format of this file is one doc per line::
+doc_likelihood[TAB]topic1:prob ... topicK:prob[TAB]word1:topic ... wordN:topic</p>
+<p>Topics are sorted by probability, words are in the same order as in the input.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.ldamodel.LdaModel.inference">
+<tt class="descname">inference</tt><big>(</big><em>doc</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.inference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform inference on a single document.</p>
+<p>Return 3-tuple of (likelihood of this document, word-topic distribution
+phi, expected word counts gamma (~topic distribution)).</p>
+<p>A document is simply a bag-of-words collection which supports len() and 
+iteration over (wordIndex, wordCount) 2-tuples.</p>
+<p>The model itself is not affected in any way (this function is read-only aka 
+const).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.ldamodel.LdaModel.initialize">
+<tt class="descname">initialize</tt><big>(</big><em>corpus</em>, <em>initMode='random'</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run LDA parameter estimation from a training corpus, using the EM algorithm.</p>
+<p>After the model has been initialized, you can infer topic distribution over
+other, different corpora, using this estimated model.</p>
+<p><cite>initMode</cite> can be either &#8216;random&#8217;, for a fast random initialization of 
+the model parameters, or &#8216;seeded&#8217;, for an initialization based on a handful
+of real documents. The &#8216;seeded&#8217; mode requires a sweep over the entire 
+corpus, and is thus much slower.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="gensim.models.ldamodel.LdaModel.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.load" title="Permalink to this definition">¶</a></dt>
+<dd>Load a previously saved object from file (also see save()).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.ldamodel.LdaModel.mle">
+<tt class="descname">mle</tt><big>(</big><em>estimateAlpha</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.mle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum likelihood estimate.</p>
+<p>This maximizes the lower bound on log likelihood wrt. to the alpha and beta
+parameters.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.ldamodel.LdaModel.optAlpha">
+<tt class="descname">optAlpha</tt><big>(</big><em>MAX_ALPHA_ITER=1000</em>, <em>NEWTON_THRESH=1.0000000000000001e-05</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.optAlpha" title="Permalink to this definition">¶</a></dt>
+<dd>Estimate new Dirichlet priors (actually just one scalar shared across all
+topics).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.ldamodel.LdaModel.printTopics">
+<tt class="descname">printTopics</tt><big>(</big><em>numWords=10</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.printTopics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the top <cite>numTerms</cite> words for each topic, along with the log of their 
+probability.</p>
+<p>Uses getTopicsMatrix() method to determine the &#8216;top words&#8217;.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.ldamodel.LdaModel.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.save" title="Permalink to this definition">¶</a></dt>
+<dd>Save the object to file via pickling (also see load()).</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="../_sources/models/ldamodel.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="../search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">gensim v1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, Radim Řehůřek.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+    </div>
+  </body>
+</html>

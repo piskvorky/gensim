@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>matutils &mdash; gensim v1.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '1.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="gensim v1.0 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li><a href="index.html">gensim v1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-gensim.matutils">
+<h1><tt class="xref docutils literal"><span class="pre">matutils</span></tt><a class="headerlink" href="#module-gensim.matutils" title="Permalink to this headline">¶</a></h1>
+<p>This module contains math helper functions.</p>
+<dl class="class">
+<dt id="gensim.matutils.MmReader">
+<em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">MmReader</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap a term-document matrix on disk (in matrix-market format), and present it 
+as an object which supports iteration over the rows (~documents).</p>
+<p>Note that the file is read into memory one document at a time, not the whole 
+matrix at once (unlike scipy.io.mmread). This allows for representing corpora 
+which are larger than the available RAM.</p>
+<p>Initialize the matrix reader.</p>
+<p>The <cite>fname</cite> is a path to a file on local filesystem, which is expected to 
+be in sparse (coordinate) Matrix Market format. Documents are assumed to 
+be rows of the matrix (and document features are columns).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="gensim.matutils.MmWriter">
+<em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">MmWriter</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store corpus in Matrix Market format.</p>
+<dl class="staticmethod">
+<dt id="gensim.matutils.MmWriter.writeCorpus">
+<em class="property">static </em><tt class="descname">writeCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.writeCorpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the vector space representation of an entire corpus to disk.</p>
+<p>Note that the documents are processed one at a time, so the whole corpus 
+is allowed to be larger than the available RAM.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.matutils.MmWriter.writeVector">
+<tt class="descname">writeVector</tt><big>(</big><em>docNo</em>, <em>vector</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.writeVector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a single sparse vector to the file.</p>
+<p>Sparse vector is any iterable yielding (field id, field value) pairs.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.matutils.doc2vec">
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">doc2vec</tt><big>(</big><em>doc</em>, <em>length</em><big>)</big><a class="headerlink" href="#gensim.matutils.doc2vec" title="Permalink to this definition">¶</a></dt>
+<dd>Convert document in sparse format (sequence of 2-tuples) into a full numpy
+array (of size <cite>length</cite>).</dd></dl>
+
+<dl class="function">
+<dt id="gensim.matutils.pad">
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">pad</tt><big>(</big><em>mat</em>, <em>padRow</em>, <em>padCol</em><big>)</big><a class="headerlink" href="#gensim.matutils.pad" title="Permalink to this definition">¶</a></dt>
+<dd>Add additional rows/columns to a numpy.matrix <cite>mat</cite>. The new rows/columns 
+will be initialized with zeros.</dd></dl>
+
+<dl class="function">
+<dt id="gensim.matutils.unitVec">
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">unitVec</tt><big>(</big><em>vec</em><big>)</big><a class="headerlink" href="#gensim.matutils.unitVec" title="Permalink to this definition">¶</a></dt>
+<dd>Scale a sparse vector to another sparse vector of unit length.</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/matutils.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">gensim v1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, Radim Řehůřek.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+    </div>
+  </body>
+</html>
