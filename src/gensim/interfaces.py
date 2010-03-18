@@ -17,11 +17,11 @@ import utils
 
 class CorpusABC(utils.SaveLoad):
     """
-    Interface for corpora. A 'corpus' is simply an iterable, where each 
+    Interface for corpora. A *corpus* is simply an iterable, where each 
     iteration step yields one document. A document is a list of (fieldId, fieldValue)
     2-tuples.
     
-    See the corpora module for some example corpus implementations.
+    See the corpora package for some example corpus implementations.
     
     Note that although a default len() method is provided, it is very inefficient
     (performs a linear scan through the corpus to determine its length). Wherever 
@@ -29,6 +29,9 @@ class CorpusABC(utils.SaveLoad):
     that it can be cached), the len() method should be overridden.
     """
     def __iter__(self):
+        """
+        Iterate over the corpus, yielding one document at a time.
+        """
         raise NotImplementedError('cannot instantiate abstract base class')
 
     
@@ -50,7 +53,7 @@ class TransformationABC(utils.SaveLoad):
     a sparse document via the dictionary notation [] and returns another sparse
     document in its stead.
     
-    See the tfidfmodel module for an example of a transformation.
+    See the :mod:`tfidfmodel` module for an example of a transformation.
     """
     class TransformedCorpus(CorpusABC):
         def __init__(self, fnc, corpus):
@@ -64,14 +67,17 @@ class TransformationABC(utils.SaveLoad):
                 yield self.fnc(doc) 
     #endclass TransformedCorpus
 
-    def __getitem__(self):
+    def __getitem__(self, vec):
+        """
+        Transform vector from one vector space into another.
+        """
         raise NotImplementedError('cannot instantiate abstract base class')
 
 
     def apply(self, corpus):
         """
-        Helper function used in derived classes. Applies the transformation to 
-        a whole corpus (as opposed to a single document) and returns another corpus.
+        Apply the transformation to a whole corpus (as opposed to a single document) 
+        and return the result as another another corpus.
         """
         return TransformationABC.TransformedCorpus(self.__getitem__, corpus)
 #endclass TransformationABC
