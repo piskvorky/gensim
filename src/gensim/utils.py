@@ -76,7 +76,7 @@ class SaveLoad(object):
     @classmethod
     def load(cls, fname):
         """
-        Load a previously saved object from file (also see save()).
+        Load a previously saved object from file (also see `save`).
         """
         logging.info("loading %s object from %s" % (cls.__name__, fname))
         return cPickle.load(open(fname))
@@ -84,7 +84,7 @@ class SaveLoad(object):
 
     def save(self, fname):
         """
-        Save the object to file via pickling (also see load()).
+        Save the object to file via pickling (also see `load`).
         """
         logging.info("saving %s object to %s" % (self.__class__.__name__, fname))
         f = open(fname, 'w')
@@ -100,7 +100,7 @@ def identity(p):
 def dictFromCorpus(corpus):
     """
     Scan corpus for all word ids that appear in it, then contruct and return a mapping
-    which maps each wordId -> str(wordId).
+    which maps each ``wordId -> str(wordId)``.
     
     This function is used whenever *words* need to be displayed (as opposed to just 
     their ids) but no wordId->word mapping was provided. The resulting mapping 

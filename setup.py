@@ -25,20 +25,20 @@ Once found, documents can be succinctly expressed in terms of this structure, qu
 for topical similarity and so on.
 
 Gensim includes the following features:
-    * Memory independence -- there is no need for the whole text corpus (or any 
-      intermediate term-document matrices) to reside fully in RAM at any one time.
-    * Provides implementations for several popular topic inference algorithms, 
-      including Latent Semantic Analysis (LSA, LSI) and Latent Dirichlet Allocation (LDA), 
-      and makes adding new ones simple.
-    * Contains I/O wrappers and converters around several popular data formats.
-    * Allows similarity queries across documents in their latent, topical representation.
+* Memory independence -- there is no need for the whole text corpus (or any 
+  intermediate term-document matrices) to reside fully in RAM at any one time.
+* Provides implementations for several popular topic inference algorithms, 
+  including Latent Semantic Analysis (LSA, LSI) and Latent Dirichlet Allocation (LDA), 
+  and makes adding new ones simple.
+* Contains I/O wrappers and converters around several popular data formats.
+* Allows similarity queries across documents in their latent, topical representation.
 
 The principal design objectives behind gensim are:
-    1. Straightforward interfaces and low API learning curve for developers, 
-       facilitating modifications and rapid prototyping.
-    2. Memory independence with respect to the size of the input corpus; all intermediate 
-       steps and algorithms operate in a streaming fashion, processing one document 
-       at a time.
+1. Straightforward interfaces and low API learning curve for developers, 
+   facilitating modifications and rapid prototyping.
+2. Memory independence with respect to the size of the input corpus; all intermediate 
+   steps and algorithms operate in a streaming fashion, processing one document 
+   at a time.
 """
 
 
@@ -58,7 +58,9 @@ setup(
     package_dir = {'': 'src'},
     packages = find_packages('src'),
 
-    author = 'Radim Rehurek', # there is a bug in python2.5, preventing distutils from using non-ascii characters :( http://bugs.python.org/issue2562 
+    # there is a bug in python2.5, preventing distutils from using non-ascii characters :(
+    author = 'Radim Rehurek', 
+    # author = u'Radim Řehůřek', # <- should really be this.. see http://bugs.python.org/issue2562
     author_email = 'radimrehurek@seznam.cz',
     url = 'http://nlp.fi.muni.cz/projekty/gensim',
     download_url = 'http://pypi.python.org/pypi/gensim',
@@ -82,6 +84,6 @@ setup(
     
     include_package_data = True,
 
-    entry_points = "",
+    entry_points = {},
 
 )
