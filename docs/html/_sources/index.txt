@@ -6,8 +6,6 @@
 gensim
 ===============================================
 
-.. --- Python Environment for Topic Modeling
-
 
 For an introduction on what gensim does (or does not do), go to the :doc:`introduction <intro>`.
 

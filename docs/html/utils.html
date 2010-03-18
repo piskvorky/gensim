@@ -19,7 +19,10 @@
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="gensim v1.0 documentation" href="index.html" /> 
+    <link rel="top" title="gensim v1.0 documentation" href="index.html" />
+    <link rel="up" title="API Reference" href="apiref.html" />
+    <link rel="next" title="matutils" href="matutils.html" />
+    <link rel="prev" title="interfaces" href="interfaces.html" /> 
   </head>
   <body>
     <div class="related">
@@ -31,7 +34,14 @@
         <li class="right" >
           <a href="modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
-        <li><a href="index.html">gensim v1.0 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="matutils.html" title="matutils"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="interfaces.html" title="interfaces"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">gensim v1.0 documentation</a> &raquo;</li>
+          <li><a href="apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -53,12 +63,12 @@ attributes, such as lambda functions etc.</p>
 <dl class="classmethod">
 <dt id="gensim.utils.SaveLoad.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.utils.SaveLoad.load" title="Permalink to this definition">¶</a></dt>
-<dd>Load a previously saved object from file (also see save()).</dd></dl>
+<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
 
 <dl class="method">
 <dt id="gensim.utils.SaveLoad.save">
 <tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.utils.SaveLoad.save" title="Permalink to this definition">¶</a></dt>
-<dd>Save the object to file via pickling (also see load()).</dd></dl>
+<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
 
 </dd></dl>
 
@@ -78,7 +88,7 @@ input string with accents removed, as unicode.</p>
 <dt id="gensim.utils.dictFromCorpus">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">dictFromCorpus</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.utils.dictFromCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scan corpus for all word ids that appear in it, then contruct and return a mapping
-which maps each wordId -&gt; str(wordId).</p>
+which maps each <tt class="docutils literal"><span class="pre">wordId</span> <span class="pre">-&gt;</span> <span class="pre">str(wordId)</span></tt>.</p>
 <p>This function is used whenever <em>words</em> need to be displayed (as opposed to just 
 their ids) but no wordId-&gt;word mapping was provided. The resulting mapping 
 only covers words actually used in the corpus, up to the highest wordId found.</p>
@@ -106,6 +116,12 @@ characters (no digits!).</p>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="interfaces.html"
+                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">interfaces</span></tt></a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="matutils.html"
+                                  title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">matutils</span></tt></a></p>
             <h3>This Page</h3>
             <ul class="this-page-menu">
               <li><a href="_sources/utils.txt"
@@ -137,7 +153,14 @@ characters (no digits!).</p>
         <li class="right" >
           <a href="modindex.html" title="Global Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">gensim v1.0 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="matutils.html" title="matutils"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="interfaces.html" title="interfaces"
+             >previous</a> |</li>
+        <li><a href="index.html">gensim v1.0 documentation</a> &raquo;</li>
+          <li><a href="apiref.html" >API Reference</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

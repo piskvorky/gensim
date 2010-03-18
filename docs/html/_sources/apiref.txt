@@ -8,6 +8,7 @@ Modules:
 .. toctree::
     :maxdepth: 0
 
+    interfaces
     utils
     matutils
     corpora/bleicorpus
