@@ -9,6 +9,8 @@ Run with:
 python2.5 ./setup.py develop
 """
 
+import os
+
 import ez_setup
 ez_setup.use_setuptools()
 
@@ -43,21 +45,20 @@ The principal design objectives behind gensim are:
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-
-long_description = "\n%s\n" % read('docs/src/intro.rst')
+# long_desc = "\n%s\n" % read('docs/src/intro.rst')
 
 
 
 setup(
     name = 'gensim',
-    version = '1.0',
+    version = '0.2',
     description = 'Python Framework for Topic Modeling',
     long_description = long_desc,
     
     package_dir = {'': 'src'},
     packages = find_packages('src'),
 
-    author = 'Radim Řehůřek',
+    author = 'Radim Rehurek', # there is a bug in python2.5, preventing distutils from using non-ascii characters :( http://bugs.python.org/issue2562 
     author_email = 'radimrehurek@seznam.cz',
     url = 'http://nlp.fi.muni.cz/projekty/gensim',
     download_url = 'http://pypi.python.org/pypi/gensim',
@@ -75,12 +76,12 @@ setup(
     ],
 
     install_requires=[
-        'numpy >= 1.3.0',
+        'numpy >= 1.2.0',
         'scipy >= 0.7.0',
     ],
     
     include_package_data = True,
 
-    entry_points = {},
+    entry_points = "",
 
 )
