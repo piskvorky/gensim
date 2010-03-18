@@ -22,15 +22,15 @@ class SvmLightCorpus(interfaces.CorpusABC):
     Quoting http://svmlight.joachims.org/:
     The input file example_file contains the training examples. The first lines 
     may contain comments and are ignored if they start with #. Each of the following 
-    lines represents one training example and is of the following format:
+    lines represents one training example and is of the following format::
     
-    <line> .=. <target> <feature>:<value> <feature>:<value> ... <feature>:<value> # <info>
-    <target> .=. +1 | -1 | 0 | <float> 
-    <feature> .=. <integer> | "qid"
-    <value> .=. <float>
-    <info> .=. <string>
+        <line> .=. <target> <feature>:<value> <feature>:<value> ... <feature>:<value> # <info>
+        <target> .=. +1 | -1 | 0 | <float> 
+        <feature> .=. <integer> | "qid"
+        <value> .=. <float>
+        <info> .=. <string>
     
-    The 'qid' feature (used for SVM ranking), if present, is ignored.
+    The "qid" feature (used for SVMlight ranking), if present, is ignored.
     """
     
     def __init__(self, fname):

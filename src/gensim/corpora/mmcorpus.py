@@ -6,7 +6,7 @@
 
 
 """
-Corpus in Matrix Market format.
+Corpus in the Matrix Market format.
 """
 
 
@@ -17,6 +17,9 @@ from gensim import interfaces, matutils
 
 
 class MmCorpus(matutils.MmReader, interfaces.CorpusABC):
+    """
+    Corpus in the Matrix Market format.
+    """
     def __iter__(self):
         """
         Interpret a matrix in Matrix Market format as a streaming corpus.

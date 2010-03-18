@@ -16,8 +16,8 @@ import numpy
 
 def pad(mat, padRow, padCol):
     """
-    Add additional rows/columns to a numpy.matrix. The new rows/columns will be initialized
-    with zeros.
+    Add additional rows/columns to a numpy.matrix `mat`. The new rows/columns 
+    will be initialized with zeros.
     """
     assert padRow >= 0, padCol >= 0
     rows, cols = mat.shape
@@ -28,7 +28,7 @@ def pad(mat, padRow, padCol):
 def doc2vec(doc, length):
     """
     Convert document in sparse format (sequence of 2-tuples) into a full numpy
-    array (of size length).
+    array (of size `length`).
     """
     doc = dict(doc)
     result = numpy.zeros(length)
@@ -45,6 +45,9 @@ def vecLen(vec):
 
 
 def unitVec(vec):
+    """
+    Scale a sparse vector to another sparse vector of unit length.
+    """
     if len(vec) == 0:
         return vec
     vecLen = 1.0 * math.sqrt(sum(val * val for _, val in vec))

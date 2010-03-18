@@ -32,15 +32,19 @@ class LdaModel(interfaces.TransformationABC):
     Objects of this class allow building and maintaining a model of Latent Dirichlet
     Allocation.
     
-    The code is based on Blei's C implementation, see http://www.cs.princeton.edu/~blei/lda-c/
+    The code is based on Blei's C implementation, see http://www.cs.princeton.edu/~blei/lda-c/ .
     
     This Python code uses numpy heavily, and is about 4-5x slower than the original 
     C version. The up side is that it is much more straightforward and concise, 
     using vector operations ala MATLAB, easily pluggable/extensible etc.
     
-    The constructor estimates model parameters based on a training corpus. You can
-    then infer topic distributions on new, unseed documents by calling 
-    model[document].
+    The constructor estimates model parameters based on a training corpus:
+    
+    >>> lda = LdaModel(corpus, numTopics = 10)
+    
+    You can then infer topic distributions on new, unseen documents:
+    
+    >>> doc_lda = lda[doc_bow]
     
     Model persistency is achieved via its load/save methods.
     """
@@ -48,17 +52,14 @@ class LdaModel(interfaces.TransformationABC):
         """
         Initialize the model based on corpus.
         
-        id2word is a mapping between word ids (integers) to words (strings). It is
+        `id2word` is a mapping from word ids (integers) to words (strings). It is
         used to determine the vocabulary size, as well as for debugging and topic 
         printing.
         
-        numTopics is the number of requested topics.
-                
-        alpha is either None (to be estimated during training) or a number 
-        between (0.0, 1.0).
+        `numTopics` is the number of requested topics.
         
-        After the model has been initialized, you can estimate topics for an
-        arbitrary, unseen document, using the topics = model[bow] dictionary notation.
+        `alpha` is either None (to be estimated during training) or a number 
+        between (0.0, 1.0).
         """
         # store user-supplied parameters
         self.id2word = id2word
@@ -99,15 +100,12 @@ class LdaModel(interfaces.TransformationABC):
         Run LDA parameter estimation from a training corpus, using the EM algorithm.
         
         After the model has been initialized, you can infer topic distribution over
-        other, different corpora, using this estimated model; see corpus.LdaCorpus.
+        other, different corpora, using this estimated model.
         
-        The init mode can be either 'random', for a fast random initialization of 
+        `initMode` can be either 'random', for a fast random initialization of 
         the model parameters, or 'seeded', for an initialization based on a handful
         of real documents. The 'seeded' mode requires a sweep over the entire 
         corpus, and is thus much slower.
-        
-        id2word is a mapping between word ids (integers) and words themselves 
-        (utf8 strings).
         """
         # initialize the model
         logging.info("initializing LDA model with '%s'" % initMode)
@@ -288,7 +286,7 @@ class LdaModel(interfaces.TransformationABC):
     def countsFromCorpus(self, corpus, numInitDocs = 1):
         """
         Initialize the model word counts from the corpus. Each topic will be initialized
-        from numInitDocs random documents.
+        from `numInitDocs` random documents.
         """
         logging.info("initializing model with %i random document(s) per topic" % numInitDocs)
         result = numpy.ones(shape = (self.numTopics, self.numTerms)) # add-one smooth
@@ -315,7 +313,7 @@ class LdaModel(interfaces.TransformationABC):
         This means that a standard inference step is taken for each document from 
         the corpus and the results are saved into file corpus.fname.lda_inferred.
         
-        The output format of this file is one doc per line:
+        The output format of this file is one doc per line::
         doc_likelihood[TAB]topic1:prob ... topicK:prob[TAB]word1:topic ... wordN:topic
         
         Topics are sorted by probability, words are in the same order as in the input.
@@ -376,7 +374,7 @@ class LdaModel(interfaces.TransformationABC):
     
     def printTopics(self, numWords = 10):
         """
-        Print the top 'numTerms' words for each topic, along with the log of their 
+        Print the top `numTerms` words for each topic, along with the log of their 
         probability. 
         
         Uses getTopicsMatrix() method to determine the 'top words'.

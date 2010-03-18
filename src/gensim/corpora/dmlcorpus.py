@@ -188,12 +188,12 @@ class DmlCorpus(interfaces.CorpusABC):
     
     def saveAsText(self, normalizeTfidf = False):
         """
-        Store the corpus to a file in Matrix Market format.
+        Store the corpus to disk, in a human-readable text format.
         
         This actually saves multiple files:
-        1) pure document-term co-occurence frequency counts,
-        2) token to integer mapping
-        3) document to document URI mapping
+          1. Pure document-term co-occurence frequency counts, as a Matrix Market file. 
+          2. Token to integer mapping, as a text file.
+          3. Document to document URI mapping, as a text file.
         
         The exact filesystem paths and filenames are determined from the config.
         """

@@ -70,7 +70,7 @@ class SaveLoad(object):
     Objects which inherit from this class have save/load functions, which un/pickle 
     them to disk.
     
-    This uses cPickle for serializing objects, so objects must not contains unpicklable 
+    This uses cPickle for de/serializing, so objects must not contains unpicklable 
     attributes, such as lambda functions etc.
     """
     @classmethod
@@ -102,7 +102,7 @@ def dictFromCorpus(corpus):
     Scan corpus for all word ids that appear in it, then contruct and return a mapping
     which maps each wordId -> str(wordId).
     
-    This function is used whenever words need to be displayed (as opposed to just 
+    This function is used whenever *words* need to be displayed (as opposed to just 
     their ids) but no wordId->word mapping was provided. The resulting mapping 
     only covers words actually used in the corpus, up to the highest wordId found.
     """

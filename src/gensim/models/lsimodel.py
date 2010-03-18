@@ -5,8 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Module for LSA, Latent Semantic Analysis (sometimes also called Latent Semantic 
-Indexing, LSI).
+Module for Latent Semantic Indexing.
 """
 
 
@@ -26,10 +25,9 @@ class LsiModel(interfaces.TransformationABC):
     The main methods are:
     
      1. constructor, which calculates the latent topics space, effectively 
-    initializing the model,
-    
+        initializing the model,
      2. the [] method, which returns representation of any input document in the 
-    computed latent space.
+        computed latent space.
     
     Model persistency is achieved via its load/save methods.
     """
@@ -40,7 +38,14 @@ class LsiModel(interfaces.TransformationABC):
         `numTopics` is the number of requested factors (latent dimensions).
         
         After the model has been initialized, you can estimate topics for an
-        arbitrary, unseen document, using the topics = self[document] dictionary notation.
+        arbitrary, unseen document, using the ``topics = self[document]`` dictionary 
+        notation.
+        
+        Example:
+        
+        >>> lsi = LsiModel(corpus, numTopics = 10)
+        >>> doc_lsi = lsi[doc_tfidf]
+        
         """
         self.id2word = id2word
         self.numTopics = numTopics # number of latent topics
@@ -110,8 +115,8 @@ class LsiModel(interfaces.TransformationABC):
         The documents are assumed to be a list of full vectors (ie. not sparse 2-tuples).
         
         Compute new decomposition u', s', v' so that if the current matrix X decomposes to
-        M{u * s * v^T ~= X}, then
-        M{u' * s' * v'^T ~= [X docs^T]}
+        u * s * v^T ~= X, then
+        u' * s' * v'^T ~= [X docs^T]
         
         u, s, v and their new values u', s', v' are stored within self (ie. as 
         self.u, self.v etc.).
@@ -209,8 +214,10 @@ class LsiModel(interfaces.TransformationABC):
         Print a specified topic (0 <= topicNo < numTopics) in human readable format.
         
         Example:
+        
         >>> lsimodel.printTopic(10, topN = 5)
         -0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + -0.174 * "functor" + -0.168 * "operator"
+        
         """
 #        c = numpy.asarray(self.u[:, topicNo]).flatten()
         c = numpy.asarray(self.projection[topicNo, :]).flatten()
@@ -222,11 +229,11 @@ class LsiModel(interfaces.TransformationABC):
 
 def svdUpdate(U, S, V, a, b):
     """
-    Update SVD of X = U * S * V^T so that
+    Update SVD of an (m x n) matrix X = U * S * V^T so that
     [X + a * b^T] = U' * S' * V'^T
     and return U', S', V'.
     
-    a and b are (m, 1) and (n, 1) rank-1 matrices, so that svdUpdate can simulate 
+    `a` and `b` are (m, 1) and (n, 1) rank-1 matrices, so that svdUpdate can simulate 
     incremental addition of one new document and/or term to an already existing 
     decomposition.
     """
@@ -264,7 +271,7 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
     See Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 
     Value Decomposition in Natural Language Processing. EACL 2006.
     
-    Use of this function deprecated; although it works, it is several orders of 
+    Use of this function is deprecated; although it works, it is several orders of 
     magnitude slower than the direct (non-stochastic) version based on Brand. Use 
     svdAddCols/svdUpdate to compute SVD iteratively. I keep this function here 
     purely for backup reasons.
