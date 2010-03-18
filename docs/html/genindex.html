@@ -52,8 +52,9 @@
 <table width="100%" class="indextable"><tr><td width="33%" valign="top">
 <dl>
 
-<dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.apply">apply() (gensim.models.ldamodel.LdaModel method)</a></dt>
+<dt><a href="interfaces.html#gensim.interfaces.TransformationABC.apply">apply() (gensim.interfaces.TransformationABC method)</a></dt>
   <dd><dl>
+    <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.apply">(gensim.models.ldamodel.LdaModel method)</a></dt>
     <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel.apply">(gensim.models.lsimodel.LsiModel method)</a></dt>
     <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.TfidfModel.apply">(gensim.models.tfidfmodel.TfidfModel method)</a></dt>
   </dl></dd></dl></td><td width="33%" valign="top"><dl>
@@ -72,7 +73,8 @@
 <dl>
 
 <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.computeLikelihood">computeLikelihood() (gensim.models.ldamodel.LdaModel method)</a></dt>
-<dt><a href="intro.html#term-corpus">Corpus</a></dt></dl></td><td width="33%" valign="top"><dl>
+<dt><a href="intro.html#term-corpus">Corpus</a></dt>
+<dt><a href="interfaces.html#gensim.interfaces.CorpusABC">CorpusABC (class in gensim.interfaces)</a></dt></dl></td><td width="33%" valign="top"><dl>
 <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.countsFromCorpus">countsFromCorpus() (gensim.models.ldamodel.LdaModel method)</a></dt>
 </dl></td></tr></table>
 
@@ -110,7 +112,8 @@
 <dt><a href="corpora/lowcorpus.html#module-gensim.corpora.lowcorpus">gensim.corpora.lowcorpus (module)</a></dt>
 <dt><a href="corpora/mmcorpus.html#module-gensim.corpora.mmcorpus">gensim.corpora.mmcorpus (module)</a></dt>
 <dt><a href="corpora/svmlightcorpus.html#module-gensim.corpora.svmlightcorpus">gensim.corpora.svmlightcorpus (module)</a></dt>
-<dt><a href="matutils.html#module-gensim.matutils">gensim.matutils (module)</a></dt></dl></td><td width="33%" valign="top"><dl>
+<dt><a href="interfaces.html#module-gensim.interfaces">gensim.interfaces (module)</a></dt></dl></td><td width="33%" valign="top"><dl>
+<dt><a href="matutils.html#module-gensim.matutils">gensim.matutils (module)</a></dt>
 <dt><a href="models/models.html#module-gensim.models">gensim.models (module)</a></dt>
 <dt><a href="models/ldamodel.html#module-gensim.models.ldamodel">gensim.models.ldamodel (module)</a></dt>
 <dt><a href="models/lsimodel.html#module-gensim.models.lsimodel">gensim.models.lsimodel (module)</a></dt>
@@ -145,6 +148,8 @@
     <dt><a href="corpora/lowcorpus.html#gensim.corpora.lowcorpus.LowCorpus.load">(gensim.corpora.lowcorpus.LowCorpus class method)</a></dt>
     <dt><a href="corpora/mmcorpus.html#gensim.corpora.mmcorpus.MmCorpus.load">(gensim.corpora.mmcorpus.MmCorpus class method)</a></dt>
     <dt><a href="corpora/svmlightcorpus.html#gensim.corpora.svmlightcorpus.SvmLightCorpus.load">(gensim.corpora.svmlightcorpus.SvmLightCorpus class method)</a></dt>
+    <dt><a href="interfaces.html#gensim.interfaces.CorpusABC.load">(gensim.interfaces.CorpusABC class method)</a></dt>
+    <dt><a href="interfaces.html#gensim.interfaces.TransformationABC.load">(gensim.interfaces.TransformationABC class method)</a></dt>
     <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.load">(gensim.models.ldamodel.LdaModel class method)</a></dt>
     <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel.load">(gensim.models.lsimodel.LsiModel class method)</a></dt>
     <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.TfidfModel.load">(gensim.models.tfidfmodel.TfidfModel class method)</a></dt>
@@ -200,12 +205,14 @@
     <dt><a href="corpora/lowcorpus.html#gensim.corpora.lowcorpus.LowCorpus.save">(gensim.corpora.lowcorpus.LowCorpus method)</a></dt>
     <dt><a href="corpora/mmcorpus.html#gensim.corpora.mmcorpus.MmCorpus.save">(gensim.corpora.mmcorpus.MmCorpus method)</a></dt>
     <dt><a href="corpora/svmlightcorpus.html#gensim.corpora.svmlightcorpus.SvmLightCorpus.save">(gensim.corpora.svmlightcorpus.SvmLightCorpus method)</a></dt>
+    <dt><a href="interfaces.html#gensim.interfaces.CorpusABC.save">(gensim.interfaces.CorpusABC method)</a></dt>
+    <dt><a href="interfaces.html#gensim.interfaces.TransformationABC.save">(gensim.interfaces.TransformationABC method)</a></dt>
     <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.save">(gensim.models.ldamodel.LdaModel method)</a></dt>
     <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel.save">(gensim.models.lsimodel.LsiModel method)</a></dt>
     <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.TfidfModel.save">(gensim.models.tfidfmodel.TfidfModel method)</a></dt>
     <dt><a href="utils.html#gensim.utils.SaveLoad.save">(gensim.utils.SaveLoad method)</a></dt>
-  </dl></dd>
-<dt><a href="corpora/dmlcorpus.html#gensim.corpora.dmlcorpus.DmlCorpus.saveAsText">saveAsText() (gensim.corpora.dmlcorpus.DmlCorpus method)</a></dt></dl></td><td width="33%" valign="top"><dl>
+  </dl></dd></dl></td><td width="33%" valign="top"><dl>
+<dt><a href="corpora/dmlcorpus.html#gensim.corpora.dmlcorpus.DmlCorpus.saveAsText">saveAsText() (gensim.corpora.dmlcorpus.DmlCorpus method)</a></dt>
 <dt><a href="corpora/bleicorpus.html#gensim.corpora.bleicorpus.BleiCorpus.saveCorpus">saveCorpus() (gensim.corpora.bleicorpus.BleiCorpus static method)</a></dt>
   <dd><dl>
     <dt><a href="corpora/lowcorpus.html#gensim.corpora.lowcorpus.LowCorpus.saveCorpus">(gensim.corpora.lowcorpus.LowCorpus static method)</a></dt>
@@ -224,8 +231,9 @@
 <dl>
 
 <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.TfidfModel">TfidfModel (class in gensim.models.tfidfmodel)</a></dt>
-<dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Token">Token (class in gensim.corpora.dictionary)</a></dt></dl></td><td width="33%" valign="top"><dl>
-<dt><a href="utils.html#gensim.utils.tokenize">tokenize() (in module gensim.utils)</a></dt>
+<dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Token">Token (class in gensim.corpora.dictionary)</a></dt>
+<dt><a href="utils.html#gensim.utils.tokenize">tokenize() (in module gensim.utils)</a></dt></dl></td><td width="33%" valign="top"><dl>
+<dt><a href="interfaces.html#gensim.interfaces.TransformationABC">TransformationABC (class in gensim.interfaces)</a></dt>
 </dl></td></tr></table>
 
 <h2 id="U">U</h2>
