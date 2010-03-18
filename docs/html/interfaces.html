@@ -1,0 +1,166 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>interfaces &mdash; gensim v1.0 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '1.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="gensim v1.0 documentation" href="index.html" />
+    <link rel="up" title="API Reference" href="apiref.html" />
+    <link rel="next" title="utils" href="utils.html" />
+    <link rel="prev" title="API Reference" href="apiref.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="utils.html" title="utils"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="apiref.html" title="API Reference"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">gensim v1.0 documentation</a> &raquo;</li>
+          <li><a href="apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-gensim.interfaces">
+<h1><tt class="xref docutils literal"><span class="pre">interfaces</span></tt><a class="headerlink" href="#module-gensim.interfaces" title="Permalink to this headline">¶</a></h1>
+<p>This module contains basic interfaces used throughout the whole gensim package.</p>
+<p>The interfaces are realized as abstract base classes (ie., some optional functionality 
+is provided in the interface itself, so that the interfaces can be subclassed).</p>
+<dl class="class">
+<dt id="gensim.interfaces.CorpusABC">
+<em class="property">class </em><tt class="descclassname">gensim.interfaces.</tt><tt class="descname">CorpusABC</tt><a class="headerlink" href="#gensim.interfaces.CorpusABC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interface for corpora. A <em>corpus</em> is simply an iterable, where each 
+iteration step yields one document. A document is a list of (fieldId, fieldValue)
+2-tuples.</p>
+<p>See the corpora package for some example corpus implementations.</p>
+<p>Note that although a default len() method is provided, it is very inefficient
+(performs a linear scan through the corpus to determine its length). Wherever 
+the corpus size is needed and known in advance (or at least doesn&#8217;t change so 
+that it can be cached), the len() method should be overridden.</p>
+<dl class="classmethod">
+<dt id="gensim.interfaces.CorpusABC.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.interfaces.CorpusABC.load" title="Permalink to this definition">¶</a></dt>
+<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.interfaces.CorpusABC.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.interfaces.CorpusABC.save" title="Permalink to this definition">¶</a></dt>
+<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="gensim.interfaces.TransformationABC">
+<em class="property">class </em><tt class="descclassname">gensim.interfaces.</tt><tt class="descname">TransformationABC</tt><a class="headerlink" href="#gensim.interfaces.TransformationABC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interface for transformations. A &#8216;transformation&#8217; is any object which accepts
+a sparse document via the dictionary notation [] and returns another sparse
+document in its stead.</p>
+<p>See the <tt class="xref docutils literal"><span class="pre">tfidfmodel</span></tt> module for an example of a transformation.</p>
+<dl class="method">
+<dt id="gensim.interfaces.TransformationABC.apply">
+<tt class="descname">apply</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.interfaces.TransformationABC.apply" title="Permalink to this definition">¶</a></dt>
+<dd>Apply the transformation to a whole corpus (as opposed to a single document) 
+and return the result as another another corpus.</dd></dl>
+
+<dl class="classmethod">
+<dt id="gensim.interfaces.TransformationABC.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.interfaces.TransformationABC.load" title="Permalink to this definition">¶</a></dt>
+<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.interfaces.TransformationABC.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.interfaces.TransformationABC.save" title="Permalink to this definition">¶</a></dt>
+<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="apiref.html"
+                                  title="previous chapter">API Reference</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="utils.html"
+                                  title="next chapter"><tt class="docutils literal"><span class="pre">utils</span></tt></a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/interfaces.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="utils.html" title="utils"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="apiref.html" title="API Reference"
+             >previous</a> |</li>
+        <li><a href="index.html">gensim v1.0 documentation</a> &raquo;</li>
+          <li><a href="apiref.html" >API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, Radim Řehůřek.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+    </div>
+  </body>
+</html>
