@@ -51,7 +51,7 @@ def read(fname):
 
 setup(
     name = 'gensim',
-    version = '0.2',
+    version = '0.2.1',
     description = 'Python Framework for Topic Modeling',
     long_description = long_desc,
     
