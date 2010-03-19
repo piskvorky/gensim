@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.5
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
@@ -34,8 +34,8 @@ class BleiCorpus(interfaces.CorpusABC):
         """
         Initialize the corpus from a file.
         
-        fnameVocab is the file with vocabulary; if not specified, it defaults to
-        `fname.vocab`
+        `fnameVocab` is the file with vocabulary; if not specified, it defaults to
+        `fname.vocab`.
         """
         logging.info("loading corpus from %s" % fname)
         
