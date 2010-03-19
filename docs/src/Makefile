@@ -32,8 +32,9 @@ clean:
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	cp -r $(BUILDDIR)/html/* ../html/
 	@echo
-	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+	@echo "Build finished. The HTML pages are in ../html."
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
@@ -71,6 +72,8 @@ latex:
 	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
 	@echo "Run \`make all-pdf' or \`make all-ps' in that directory to" \
 	      "run these through (pdf)latex."
+	cd $(BUILDDIR)/latex && make all-pdf
+	cp  $(BUILDDIR)/latex/gensim.pdf ../html/gensim_manual.pdf
 
 changes:
 	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) $(BUILDDIR)/changes

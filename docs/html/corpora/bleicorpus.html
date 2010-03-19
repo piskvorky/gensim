@@ -59,13 +59,14 @@
 <dd><p>Corpus in Blei&#8217;s LDA-C format.</p>
 <p>The corpus is represented as two files: one describing the documents, and another
 describing the mapping between words and their ids.</p>
-<p>Each document is one line:
-N fieldId1:fieldValue1 fieldId2:fieldValue2 ... fieldIdN:fieldValueN</p>
+<p>Each document is one line:</p>
+<div class="highlight-python"><pre>N fieldId1:fieldValue1 fieldId2:fieldValue2 ... fieldIdN:fieldValueN</pre>
+</div>
 <p>The vocabulary is a file with words, one word per line; word at line K has an
-implicit id=K.</p>
+implicit <tt class="docutils literal"><span class="pre">id=K</span></tt>.</p>
 <p>Initialize the corpus from a file.</p>
-<p>fnameVocab is the file with vocabulary; if not specified, it defaults to
-&#8216;fname.vocab&#8217;</p>
+<p><cite>fnameVocab</cite> is the file with vocabulary; if not specified, it defaults to
+<cite>fname.vocab</cite>.</p>
 <dl class="classmethod">
 <dt id="gensim.corpora.bleicorpus.BleiCorpus.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.bleicorpus.BleiCorpus.load" title="Permalink to this definition">¶</a></dt>
@@ -80,8 +81,8 @@ implicit id=K.</p>
 <dt id="gensim.corpora.bleicorpus.BleiCorpus.saveCorpus">
 <em class="property">static </em><tt class="descname">saveCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.bleicorpus.BleiCorpus.saveCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save a corpus in the Matrix Market format.</p>
-<p>There are actually two files saved: fname and fname.vocab, where
-fname.vocab is the vocabulary file.</p>
+<p>There are actually two files saved: <cite>fname</cite> and <cite>fname.vocab</cite>, where
+<cite>fname.vocab</cite> is the vocabulary file.</p>
 </dd></dl>
 
 </dd></dl>
