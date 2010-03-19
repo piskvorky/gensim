@@ -22,11 +22,12 @@ class BleiCorpus(interfaces.CorpusABC):
     The corpus is represented as two files: one describing the documents, and another
     describing the mapping between words and their ids.
     
-    Each document is one line:
-    N fieldId1:fieldValue1 fieldId2:fieldValue2 ... fieldIdN:fieldValueN
+    Each document is one line::
+    
+      N fieldId1:fieldValue1 fieldId2:fieldValue2 ... fieldIdN:fieldValueN
     
     The vocabulary is a file with words, one word per line; word at line K has an
-    implicit id=K.
+    implicit ``id=K``.
     """
     
     def __init__(self, fname, fnameVocab = None):
@@ -34,7 +35,7 @@ class BleiCorpus(interfaces.CorpusABC):
         Initialize the corpus from a file.
         
         fnameVocab is the file with vocabulary; if not specified, it defaults to
-        'fname.vocab'
+        `fname.vocab`
         """
         logging.info("loading corpus from %s" % fname)
         
@@ -73,8 +74,8 @@ class BleiCorpus(interfaces.CorpusABC):
         """
         Save a corpus in the Matrix Market format.
         
-        There are actually two files saved: fname and fname.vocab, where
-        fname.vocab is the vocabulary file.
+        There are actually two files saved: `fname` and `fname.vocab`, where
+        `fname.vocab` is the vocabulary file.
         """
         if id2word is None:
             logging.info("no word id mapping provided; initializing from corpus")

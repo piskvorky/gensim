@@ -21,13 +21,13 @@ import dictionary # for constructing word->id mappings
 class DmlConfig(object):
     """
     DmlConfig contains parameters necessary for the abstraction of a 'corpus of 
-    articles' (see the DmlCorpus class).
+    articles' (see the `DmlCorpus` class).
     
     Articles may come from different sources (=different locations on disk/netword,
-    different file formats etc), so the main purpose of DmlConfig is to keep all
-    sources in one place (= the self.sources attribute).
+    different file formats etc.), so the main purpose of DmlConfig is to keep all
+    sources in one place.
     
-    Apart from glueing together sources, DmlConfig also decides where to store
+    Apart from glueing sources together, DmlConfig also decides where to store
     output files and which articles to accept for the corpus (= an additional filter 
     over the sources).
     """
@@ -35,9 +35,11 @@ class DmlConfig(object):
         self.resultDir = resultDir # output files will be stored in this directory 
         self.configId = configId # configId is a string that is used as filename prefix for all files, so keep it simple
         self.sources = {} # all article sources; see sources.DmlSource class for an example of source
+        
         if acceptLangs is None: # which languages to accept
             acceptLangs = set(['any']) # if not specified, accept all languages (including unknown/unspecified)
         self.acceptLangs = set(acceptLangs)
+        
         logging.info('initialized %s' % self)
         
     
@@ -71,7 +73,7 @@ class DmlCorpus(interfaces.CorpusABC):
     object, which holds information about where to look for the articles and how 
     to process them.
     
-    Apart from being a regular corpus (bag-of-words iterable with a len() method),
+    Apart from being a regular corpus (bag-of-words iterable with a `len()` method),
     DmlCorpus has methods for building a dictionary (mapping between words and 
     their ids).
     """
@@ -90,7 +92,7 @@ class DmlCorpus(interfaces.CorpusABC):
         The function that defines a corpus -- iterating over the corpus yields 
         bag-of-words vectors, one for each document.
         
-        A bag-of-words vector is simply a list of (tokenId, tokenCount) 2-tuples.
+        A bag-of-words vector is simply a list of ``(tokenId, tokenCount)`` 2-tuples.
         """
         for docNo, (sourceId, docUri) in enumerate(self.documents):
             source = self.config.sources[sourceId]
@@ -191,9 +193,9 @@ class DmlCorpus(interfaces.CorpusABC):
         Store the corpus to disk, in a human-readable text format.
         
         This actually saves multiple files:
-          1. Pure document-term co-occurence frequency counts, as a Matrix Market file. 
-          2. Token to integer mapping, as a text file.
-          3. Document to document URI mapping, as a text file.
+        1. Pure document-term co-occurence frequency counts, as a Matrix Market file. 
+        2. Token to integer mapping, as a text file.
+        3. Document to document URI mapping, as a text file.
         
         The exact filesystem paths and filenames are determined from the config.
         """

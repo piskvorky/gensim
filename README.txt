@@ -7,7 +7,7 @@ the conversion of natural language texts to the Vector Space Model as simple and
 natural as possible.
 
 Gensim contains algorithms for unsupervised learning from raw, unstructured digital texts,
-such as Latent Semantic Analysis and Latent Dirichlet Allocation.
+such as **Latent Semantic Analysis** and **Latent Dirichlet Allocation**.
 These algorithms discover hidden (*latent*) corpus structure.
 Once found, documents can be succinctly expressed in terms of this structure, queried for topical similarity and so on.
 
@@ -56,5 +56,4 @@ project's homepage <http://nlp/fi.muni.cz/projekty/gensim/>.
 
 Gensim is open source software, and has been released under 
 `GNU LPGL license <http://www.gnu.org/licenses/lgpl.html>`_.
-
-Copyright (c) 2010 Radim Řehůřek
+Copyright (c) 2010 Radim Rehurek
