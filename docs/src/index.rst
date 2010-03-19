@@ -6,7 +6,6 @@
 gensim
 ===============================================
 
-
 For an introduction on what gensim does (or does not do), go to the :doc:`introduction <intro>`.
 
 To download and install `gensim`, consult the :doc:`install <install>` page.
