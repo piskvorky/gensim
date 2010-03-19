@@ -5,13 +5,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title><no title> &mdash; gensim v1.0 documentation</title>
+    <title>Installation &mdash; gensim documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '1.0',
+        VERSION:     '0.4',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -19,8 +19,8 @@
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="gensim v1.0 documentation" href="index.html" />
-    <link rel="next" title="<no title>" href="tutorial.html" />
+    <link rel="top" title="gensim documentation" href="index.html" />
+    <link rel="next" title="Tutorial" href="tutorial.html" />
     <link rel="prev" title="Introduction" href="intro.html" /> 
   </head>
   <body>
@@ -34,12 +34,12 @@
           <a href="modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
         <li class="right" >
-          <a href="tutorial.html" title="<no title>"
+          <a href="tutorial.html" title="Tutorial"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="intro.html" title="Introduction"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">gensim v1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">gensim documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -48,24 +48,106 @@
         <div class="bodywrapper">
           <div class="body">
             
-  
+  <div class="section" id="installation">
+<span id="intro"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>Gensim is known to run on Linux and Mac OS X and should also run on Windows and
+any platform that supports Python 2.5 and NumPy. Gensim depends on the following
+software:</p>
+<ul class="simple">
+<li>3.0 &gt; <a class="reference external" href="http://www.python.org">Python</a> &gt;= 2.5. Tested with version 2.5.</li>
+<li><a class="reference external" href="http://www.numpy.org">NumPy</a> &gt;= 1.2. Tested with version 1.3.0rc2.</li>
+<li><a class="reference external" href="http://www.scipy.org">SciPy</a> &gt;= 0.7. Tested with version 0.7.1.</li>
+</ul>
+<div class="section" id="install-python">
+<h2>Install Python<a class="headerlink" href="#install-python" title="Permalink to this headline">¶</a></h2>
+<p>Check what version of Python you have with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">python</span> <span class="o">--</span><span class="n">version</span>
+</pre></div>
+</div>
+<p>You can download Python 2.5 from <a class="reference external" href="http://python.org/download">http://python.org/download</a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Gensim requires Python 2.5 or greater and will not run under earlier versions.</p>
+</div>
+</div>
+<div class="section" id="install-scipy-numpy">
+<h2>Install SciPy &amp; NumPy<a class="headerlink" href="#install-scipy-numpy" title="Permalink to this headline">¶</a></h2>
+<p>These are quite popular Python packages, so chances are there are pre-built binary
+distributions available for your platform. You can try installing from source using easy_install:</p>
+<div class="highlight-python"><pre>sudo easy_install numpy
+sudo easy_install scipy</pre>
+</div>
+<p>If that doesn&#8217;t work or if you&#8217;d rather install using a binary package, consult
+<a class="reference external" href="http://www.scipy.org/Download">http://www.scipy.org/Download</a>.</p>
+</div>
+<div class="section" id="install-gensim">
+<h2>Install gensim<a class="headerlink" href="#install-gensim" title="Permalink to this headline">¶</a></h2>
+<p>You can now install (or upgrade) gensim with:</p>
+<div class="highlight-python"><pre>sudo easy_install gensim</pre>
+</div>
+<p>That&#8217;s it!</p>
+<p>There are also alternative routes:</p>
+<ol class="arabic">
+<li><p class="first">If you have downloaded and unzipped the <a class="reference external" href="http://pypi.python.org/pypi/gensim">tar.gz source</a>
+for gensim (or you&#8217;re installing gensim from <a class="reference external" href="http://my-trac.assembla.com/gensim">svn</a>),
+you can run:</p>
+<div class="highlight-python"><pre>sudo python setup.py install</pre>
+</div>
+<p>to install gensim into your <tt class="docutils literal"><span class="pre">site-packages</span></tt> folder.</p>
+</li>
+<li><p class="first">If you wish to make local changes to gensim code (gensim is, after all, a
+package which targets research prototyping and modifications), a preferred
+way may be installing with:</p>
+<div class="highlight-python"><pre>sudo python setup.py develop</pre>
+</div>
+<p>This will only place a symlink into your <tt class="docutils literal"><span class="pre">site-packages</span></tt> directory. The actual
+files will stay wherever you unpacked them.</p>
+</li>
+<li><p class="first">If you don&#8217;t have root priviledges (or just don&#8217;t want to put the package into
+your <tt class="docutils literal"><span class="pre">site-packages</span></tt>), simply unpack the package somewhere and that&#8217;s it! No
+compilation or installation needed. Just don&#8217;t forget to set your PYTHONPATH
+(or modify <tt class="docutils literal"><span class="pre">sys.path</span></tt>), so that Python can find the package when importing.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="testing-gensim">
+<h2>Testing gensim<a class="headerlink" href="#testing-gensim" title="Permalink to this headline">¶</a></h2>
+<p>To test the package, run:</p>
+<div class="highlight-python"><pre>python setup.py test</pre>
+</div>
+<p>from the unzipped source directory.</p>
+</div>
+<div class="section" id="contact">
+<h2>Contact<a class="headerlink" href="#contact" title="Permalink to this headline">¶</a></h2>
+<p>If you encounter problems or have any questions regarding gensim, please let us
+know by emailing &lt;radimrehurek(at)seznam.cz&gt;.</p>
+</div>
+</div>
+
 
           </div>
         </div>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Installation</a><ul>
+<li><a class="reference external" href="#install-python">Install Python</a></li>
+<li><a class="reference external" href="#install-scipy-numpy">Install SciPy &amp; NumPy</a></li>
+<li><a class="reference external" href="#install-gensim">Install gensim</a></li>
+<li><a class="reference external" href="#testing-gensim">Testing gensim</a></li>
+<li><a class="reference external" href="#contact">Contact</a></li>
+</ul>
+</li>
+</ul>
+
             <h4>Previous topic</h4>
             <p class="topless"><a href="intro.html"
                                   title="previous chapter">Introduction</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="tutorial.html"
-                                  title="next chapter">&lt;no title&gt;</a></p>
-            <h3>This Page</h3>
-            <ul class="this-page-menu">
-              <li><a href="_sources/install.txt"
-                     rel="nofollow">Show Source</a></li>
-            </ul>
+                                  title="next chapter">Tutorial</a></p>
           <div id="searchbox" style="display: none">
             <h3>Quick search</h3>
               <form class="search" action="search.html" method="get">
@@ -93,17 +175,16 @@
           <a href="modindex.html" title="Global Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="tutorial.html" title="<no title>"
+          <a href="tutorial.html" title="Tutorial"
              >next</a> |</li>
         <li class="right" >
           <a href="intro.html" title="Introduction"
              >previous</a> |</li>
-        <li><a href="index.html">gensim v1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">gensim documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>
 </html>

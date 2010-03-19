@@ -1,14 +1,19 @@
-.. _intro:
-
+============
 Introduction 
 ============
 
-Gensim is a Python library for unsupervised learning from raw, unstructured digital texts.
-It provides a framework for learning hidden (*latent*) corpus structure.
+Gensim is a Python framework designed to help make
+the conversion of natural language texts to the Vector Space Model as simple and 
+natural as possible.
+
+Gensim contains algorithms for unsupervised learning from raw, unstructured digital texts,
+such as Latent Semantic Analysis and Latent Dirichlet Allocation.
+These algorithms discover hidden (*latent*) corpus structure.
 Once found, documents can be succinctly expressed in terms of this structure, queried for topical similarity and so on.
 
-If the previous paragraph left you confused, you can read more about unsupervised document analysis 
-at e.g. `Wikipedia <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_.
+If the previous paragraphs left you confused, you can read more about the `Vector 
+Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised 
+document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ at Wikipedia.
 
 .. note::
   Gensim's target audience is the NLP research community and interested general public; 
@@ -81,7 +86,7 @@ The whole gensim package revolves around the concepts of :term:`corpus`, :term:`
         3. How many fonts does the document use? Five.
         
         The question is usually represented only by its integer id, so that the
-        representation of a document becomes a series of pairs: ``(1, 0.0), (2, 2.0), (3, 5.0)``.
+        representation of a document becomes a series of pairs like ``(1, 0.0), (2, 2.0), (3, 5.0)``.
         If we know all the questions in advance, we may leave them implicit 
         and simply write ``(0.0, 2.0, 5.0)``.
         This sequence of answers can be thought of as a high-dimensional (in our case 3-dimensional)
@@ -90,15 +95,16 @@ The whole gensim package revolves around the concepts of :term:`corpus`, :term:`
         
         The questions are the same for each document, so that looking at two 
         vectors (representing two documents), we will hopefully be able to make
-        conclusions like ``the numbers in the two vectors are very similar, and 
-        therefore the original documents are similar, too''. Of course, whether 
+        conclusions such as "The numbers in these two vectors are very similar, and 
+        therefore the original documents must be similar, too". Of course, whether 
         such conclusions correspond to reality depends on how well we picked our questions.
         
     Sparse vector
         Typically, the answer to most questions will be ``0.0``. To save space,
-        we omit them from the document's representation, and write only ``(1, 2.0), (2, 5.0)``.
+        we omit them from the document's representation, and write only ``(2, 2.0), 
+        (3, 5.0)`` (note the missing ``(1, 0.0)``).
         Since the set of all questions is known in advance, all the missing features
-        are implicitly zero, ``0.0``.
+        in sparse representation of a document can be unambiguously resolved to zero, ``0.0``.
     
     Model
         For our purposes, a model is a transformation from one document representation
@@ -114,4 +120,4 @@ The whole gensim package revolves around the concepts of :term:`corpus`, :term:`
  
 .. seealso::
 
-    For some examples on how this works out in code, go to the :doc:`tutorials <tutorial>` page.
+    For some examples on how this works out in code, go to :doc:`tutorials <tutorial>`.
