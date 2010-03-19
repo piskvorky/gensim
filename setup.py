@@ -49,7 +49,7 @@ The principal design objectives behind gensim are:
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-# long_desc = "\n%s\n" % read('docs/src/intro.rst')
+long_desc = read('README.txt')
 
 
 
