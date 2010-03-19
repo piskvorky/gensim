@@ -97,14 +97,31 @@ html_theme = 'default'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+#main_colour = "#ffbbbb"
+
+#html_theme_options = {
+#"rightsidebar": "true",
+#"stickysidebar": "true",
+##"bodyfont": "'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif'",
+#"headfont": "'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif'",
+#"sidebarbgcolor": "#f0f0ff",
+#"footerbgcolor": "#771111",
+#"relbarbgcolor": "#993333",
+#"sidebartextcolor": "#000000",
+#"sidebarlinkcolor": "#330000",
+#"codebgcolor": "#fffff0",
+#"headtextcolor": "#000080",
+#"headbgcolor": "#f0f0ff",
+#"bgcolor": "#ffffff",
+#}
+
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-#html_title = None
+html_title = "gensim documentation"
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
@@ -148,7 +165,7 @@ html_static_path = ['_static']
 #html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
-#html_show_sourcelink = True
+html_show_sourcelink = False
 
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the
@@ -161,6 +178,7 @@ html_static_path = ['_static']
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'gensimdoc'
 
+html_show_sphinx = False
 
 # -- Options for LaTeX output --------------------------------------------------
 
