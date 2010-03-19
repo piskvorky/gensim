@@ -1,6 +1,11 @@
 Changes
 =======
 
+0.4.1
+
+* pdf documentation
+* removed dependency on python2.5 (theoretically, gensim now runs on 2.6 and 2.7 as well).
+
 0.4.0
 
 * support for ``python setup.py test``

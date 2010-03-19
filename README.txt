@@ -33,7 +33,7 @@ you can get them from <http://www.scipy.org/Download>.
 
     sudo easy_install gensim
 
-2. If you have instead downloaded and unzipped the `source tar.gz package <http://pypi.python.org/pypi/gensim>`, 
+2. If you have instead downloaded and unzipped the `source tar.gz package <http://pypi.python.org/pypi/gensim>`_, 
    you'll need to run::
 
     python setup.py test
@@ -47,10 +47,10 @@ installation), see the `documentation <http://nlp/fi.muni.cz/projekty/gensim/ins
 Documentation
 -------------
 
-Manual for the gensim package is available as HTML and as PDF. It
+Manual for the gensim package is available as `HTML <http://nlp/fi.muni.cz/projekty/gensim/>'_
+and as `PDF <http://nlp/fi.muni.cz/projekty/gensim/gensim_manual.pdf>`_. It
 contains a walk-through of all the features and a complete reference section.
-It is part of the source package and it can also be viewed on the
-project's homepage <http://nlp/fi.muni.cz/projekty/gensim/>.
+It is included in the source package.
 
 -------
 
