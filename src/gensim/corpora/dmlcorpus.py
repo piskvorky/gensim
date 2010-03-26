@@ -98,8 +98,8 @@ class DmlCorpus(interfaces.CorpusABC):
             source = self.config.sources[sourceId]
 
             contents = source.getContent(docUri)
-            words = source.tokenize(contents)
-            yield self.dictionary.doc2bow(words, source.normalizeWord, allowUpdate = False)
+            words = [source.normalizeWord(word) for word in source.tokenize(contents)]
+            yield self.dictionary.doc2bow(words, allowUpdate = False)
 
     
     def buildDictionary(self):
@@ -119,11 +119,11 @@ class DmlCorpus(interfaces.CorpusABC):
                              (docNo, len(self.documents), sourceId, docUri))
             source = self.config.sources[sourceId]
             contents = source.getContent(docUri)
-            words = source.tokenize(contents)
+            words = [source.normalizeWord(word) for word in source.tokenize(contents)]
             numPositions += len(words)
 
             # convert to bag-of-words, but ignore the result -- here we only care about updating token ids
-            _ = self.dictionary.doc2bow(words, source.normalizeWord, allowUpdate = True)
+            _ = self.dictionary.doc2bow(words, allowUpdate = True)
         logging.info("built %s from %i documents (total %i corpus positions)" % 
                      (self.dictionary, len(self.documents), numPositions))
 
