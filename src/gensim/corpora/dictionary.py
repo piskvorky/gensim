@@ -64,40 +64,34 @@ class Dictionary(utils.SaveLoad):
     def __init__(self):
         self.id2token = {} # tokenId -> token
         self.token2id = {} # token -> tokenId
-        self.word2id = {} # surface form (word as appearing in text) -> tokenId
         self.docFreq = {} # tokenId -> in how many documents this token appeared
         self.numDocs = 0
     
 
     def __len__(self):
         """
-        Return the number of word->id mappings in the dictionary.
+        Return the number of token->id mappings in the dictionary.
         """
         assert len(self.token2id) == len(self.id2token)
         return len(self.token2id)
 
 
     def __str__(self):
-        return ("Dictionary(%i unique tokens covering %i surface forms)" %
-                (len(self), len(self.word2id)))
+        return ("Dictionary(%i unique tokens)" % len(self))
 
     @staticmethod
-    def fromDocuments(documents, normalizeWord):
+    def fromDocuments(documents):
         """
         Build dictionary from a collection of documents. Each document is a list 
-        of words (ie. tokenized strings).
+        of tokens (ie. **tokenized and normalized** utf-8 encoded strings).
         
-        The normalizeWord function is used to convert each word to its utf-8 encoded
-        canonical form (identity, lowercasing, stemming, ...); use whichever normalization
-        suits you.
-        
-        >>> print Dictionary.fromDocuments(["máma mele maso".split(), "ema má mama".split()], utils.deaccent)
-        Dictionary(5 unique tokens covering 6 surface forms)
+        >>> print Dictionary.fromDocuments(["máma mele maso".split(), "ema má mama".split()])
+        Dictionary(6 unique tokens)
         
         """
         result = Dictionary()
         for document in documents:
-            _ = result.doc2bow(document, normalizeWord, allowUpdate = True) # ignore the result, here we only care about updating token ids
+            _ = result.doc2bow(document, allowUpdate = True) # ignore the result, here we only care about updating token ids
         return result
 
 
@@ -109,40 +103,32 @@ class Dictionary(utils.SaveLoad):
         self.token2id[token.token] = token.intId
     
     
-    def doc2bow(self, document, normalizeWord, allowUpdate = False):
+    def doc2bow(self, document, allowUpdate = False):
         """
-        Convert `document` (a list of words) into bag-of-words format = list of 
+        Convert `document` (a list of words) into the bag-of-words format = list of 
         (tokenId, tokenCount) 2-tuples.
         
-        `normalizeWord` must be a function that accepts one utf-8 encoded string
-        and returns another. Possible choices are identity, lowercasing etc.
+        Each word is assumed to be a **tokenized and normalized**, utf-8 encoded string.
         
-        If `allowUpdate` is set, then also update dictionary in the process: create ids 
+        If `allowUpdate` is set, then also update of dictionary in the process: create ids 
         for new words. At the same time, update document frequencies -- for 
         each word appearing in this document, increase its self.docFreq by one.
         """
         # construct (word, frequency) mapping. in python3 this is done simply 
         # using Counter(), but here i use itertools.groupby()
         result = {}
-        for word, group in itertools.groupby(sorted(document)):
+        for wordNorm, group in itertools.groupby(sorted(document)):
             frequency = len(list(group)) # how many times does this word appear in the input document
 
             # determine the Token object of this word, creating it if necessary
-            tokenId = self.word2id.get(word, None)
-            if tokenId is None:
-                # first time we see this surface form
-                wordNorm = normalizeWord(word)
-                tokenId = self.token2id.get(wordNorm, None)
-                if tokenId is None: 
-                    # first time we see this token (normalized form)
-                    if not allowUpdate: # if we aren't allowed to create new tokens, continue with the next word
-                        continue
-                    tokenId = len(self.token2id)
-                    token = Token(wordNorm, tokenId)
-                    self.addToken(token)
-                else:
-                    token = self.id2token[tokenId]
-                self.word2id[word] = tokenId
+            tokenId = self.token2id.get(wordNorm, None)
+            if tokenId is None: 
+                # first time we see this token (normalized form)
+                if not allowUpdate: # if we aren't allowed to create new tokens, continue with the next token
+                    continue
+                tokenId = len(self.token2id) # new id = number of ids made so far; NOTE this assumes there are no gaps in the id sequence!
+                token = Token(wordNorm, tokenId)
+                self.addToken(token)
             else:
                 token = self.id2token[tokenId]
             # post condition -- now both tokenId and token object are properly set
@@ -156,7 +142,7 @@ class Dictionary(utils.SaveLoad):
             for tokenId in result.iterkeys():
                 self.docFreq[tokenId] = self.docFreq.get(tokenId, 0) + 1
         
-        return sorted(result.iteritems()) # return tokenIds in ascending order
+        return sorted(result.iteritems()) # return tokenIds, in ascending id order
 
 
     def filterExtremes(self, noBelow = 5, noAbove = 0.5):

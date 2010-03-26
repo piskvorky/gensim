@@ -153,7 +153,7 @@ class SparseMatrixSimilarity(SimilarityABC):
         logging.info("creating sparse matrix for %i documents" % len(corpus))
         self.numBest = numBest
         self.corpus = scipy.sparse.lil_matrix((len(corpus), 1), dtype = dtype) # set no of columns to 1 for now, as the number of terms is unknown yet
-        self.normalize = False
+        self.normalize = True
         
         # iterate over the corpus, populating the sparse matrix
         for docNo, vector in enumerate(corpus):
