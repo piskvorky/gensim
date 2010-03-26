@@ -96,13 +96,40 @@ class LsiModel(interfaces.TransformationABC):
         
 
         # calculate projection needed to get document-topic matrix from term-document matrix.
-        # note that v (topics of the training corpus) are not used at all for the transformation
-        invS = numpy.diag(numpy.diag(1.0 / self.s))
-        self.projection = numpy.dot(invS, self.u.T) # s^-1 * u^-1; (k, k) * (k, m) = (k, m)
-        if keepDecomposition:
+        #
+        # the way to represent vector `x` in latent space is v = self.s^-1 * self.u^-1 * x
+        #
+        # the way to compare two documents `v1`, `v2` is to compute v1 * self.s^2 * v2.T, so
+        # we pre-multiply v * s (ie., scale axis by singular values), and return
+        # that directly as the representation of `x` in LSI space.
+        #
+        # this conveniently simplifies to lsi[X] = self.u.T * X 
+        # note that neither `v` (the right singular vectors) nor `s` (the singular 
+        # values) are used at all in this transformation
+        self.projection = self.u.T
+        
+        if not keepDecomposition:
             # once we have the projection stored in self, discard u*s*v decomposition to free up memory
-            del self.u, self.s, self.v
+            del self.u, self.v
 
+
+    def __getitem__(self, bow):
+        """
+        Return topic distribution, as a list of (topic_id, topic_value) 2-tuples.
+        
+        This is done by folding input document into the latent topic space. Note
+        that this function returns the latent space representation **scaled by the
+        singular values**. 
+        """
+        vec = matutils.doc2vec(bow, self.numTerms)
+        vec.shape = (self.numTerms, 1)
+        topicDist = self.projection * vec
+        # to obtain an unscaled version of the document's latent representation, uncomment the following line:
+#        topicDist = numpy.diag(numpy.diag(1.0 / self.s)) * topicDist
+        
+        return [(topicId, float(topicValue)) for topicId, topicValue in enumerate(topicDist)
+                if numpy.isfinite(topicValue) and not numpy.allclose(topicValue, 0.0)]
+    
     
     def svdAddCols(self, docs, decay = 1.0, reorth = False):
         """
@@ -195,19 +222,6 @@ class LsiModel(interfaces.TransformationABC):
                 self.v = vQ * vK
         logging.debug("added %i documents" % len(docs))
 
-
-    def __getitem__(self, bow):
-        """
-        Return topic distribution, as a list of (topic_id, topic_value) 2-tuples.
-        
-        This is done by folding input document into the latent topic space.
-        """
-        vec = matutils.doc2vec(bow, self.numTerms)
-        vec.shape = (self.numTerms, 1)
-        topicDist = self.projection * vec
-        return [(topicId, float(topicValue)) for topicId, topicValue in enumerate(topicDist)
-                if numpy.isfinite(topicValue) and not numpy.allclose(topicValue, 0.0)]
-    
 
     def printTopic(self, topicNo, topN = 10):
         """
