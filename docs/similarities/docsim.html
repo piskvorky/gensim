@@ -1,0 +1,186 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>docsim &mdash; gensim documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.4.1',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="gensim documentation" href="../index.html" />
+    <link rel="up" title="API Reference" href="../apiref.html" />
+    <link rel="prev" title="tfidfmodel" href="../models/tfidfmodel.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="../models/tfidfmodel.html" title="tfidfmodel"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">gensim documentation</a> &raquo;</li>
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-gensim.similarities.docsim">
+<h1><tt class="xref docutils literal"><span class="pre">docsim</span></tt><a class="headerlink" href="#module-gensim.similarities.docsim" title="Permalink to this headline">¶</a></h1>
+<p>This module contains functions and classes for similarities across
+a corpus of documents in the Vector Space Model.</p>
+<p>The documents are sparse vectors coming from the TF-IDF model, LSI model, LDA model etc.</p>
+<p>The two main classes are :</p>
+<ol class="arabic simple">
+<li><cite>Similarity</cite> &#8211; computes similarity by linearly scanning over the corpus (slower,</li>
+</ol>
+<blockquote>
+memory independent)</blockquote>
+<ol class="arabic simple" start="2">
+<li><cite>SparseMatrixSimilarity</cite> &#8211; stores the whole corpus in memory, computes similarity</li>
+</ol>
+<blockquote>
+by in-memory matrix-vector multiplication. This is much faster than the general 
+Similarity, so use this when dealing with smaller corpora, that fit in RAM.</blockquote>
+<p>Once the similarity object has been initialized, you can query for document
+similarity simply by</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">similarities</span> <span class="o">=</span> <span class="n">similarity_object</span><span class="p">[</span><span class="n">query_vector</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>or iterate over within-corpus similarities with</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">similarities</span> <span class="ow">in</span> <span class="n">similarity_object</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="o">...</span>
+</pre></div>
+</div>
+<hr class="docutils" />
+<dl class="class">
+<dt id="gensim.similarities.docsim.Similarity">
+<em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">Similarity</tt><big>(</big><em>corpus</em>, <em>numBest=None</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute cosine similary against a corpus of documents. This is done by a full 
+sequential scan of the corpus.</p>
+<p>If your corpus is reasonably small (fits in RAM), consider using <cite>SparseMatrixSimilarity</cite> 
+instead of <cite>Similarity</cite>, for (much) faster similarity searches.</p>
+<p>If <cite>numBest</cite> is left unspecified, similarity queries return a full list (one 
+float for every document in the corpus, including the query document).</p>
+<p>If <cite>numBest</cite> is set, queries return <cite>numBest</cite> most similar documents, as a 
+sorted list, eg. [(docIndex1, 1.0), (docIndex2, 0.95), ..., (docIndexnumBest, 0.45)].</p>
+<dl class="classmethod">
+<dt id="gensim.similarities.docsim.Similarity.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.load" title="Permalink to this definition">¶</a></dt>
+<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.similarities.docsim.Similarity.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.save" title="Permalink to this definition">¶</a></dt>
+<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="gensim.similarities.docsim.SparseMatrixSimilarity">
+<em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">SparseMatrixSimilarity</tt><big>(</big><em>corpus</em>, <em>numBest=None</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.SparseMatrixSimilarity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute similarity against a corpus of documents by storing its sparse 
+term-document (or concept-document) matrix in memory. The similarity measure 
+used is cosine between two vectors.</p>
+<p>This allows for faster similarity searches (simple sparse matrix-vector multiplication),
+but loses the memory-independence of an iterative corpus.</p>
+<p>The matrix is internally stored as a <cite>scipy.sparse.csr</cite> matrix.</p>
+<p>If <cite>numBest</cite> is left unspecified, similarity queries return a full list (one 
+float for every document in the corpus, including the query document):</p>
+<p>If <cite>numBest</cite> is set, queries return <cite>numBest</cite> most similar documents, as a 
+sorted list:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sms</span> <span class="o">=</span> <span class="n">SparseMatrixSimilarity</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numBest</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sms</span><span class="p">[</span><span class="n">vec12</span><span class="p">]</span>
+<span class="go">[(12, 1.0), (30, 0.95), (5, 0.45)]</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="gensim.similarities.docsim.SparseMatrixSimilarity.getSimilarities">
+<tt class="descname">getSimilarities</tt><big>(</big><em>doc</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.SparseMatrixSimilarity.getSimilarities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return similarity of sparse vector <cite>doc</cite> to all documents in the corpus.</p>
+<p><cite>doc</cite> may be either a bag-of-words iterable (standard corpus document), 
+or a numpy array, or a <cite>scipy.sparse</cite> matrix. It is assumed to be of unit length.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="gensim.similarities.docsim.SparseMatrixSimilarity.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.SparseMatrixSimilarity.load" title="Permalink to this definition">¶</a></dt>
+<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.similarities.docsim.SparseMatrixSimilarity.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.SparseMatrixSimilarity.save" title="Permalink to this definition">¶</a></dt>
+<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="../models/tfidfmodel.html"
+                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">tfidfmodel</span></tt></a></p>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="../search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../models/tfidfmodel.html" title="tfidfmodel"
+             >previous</a> |</li>
+        <li><a href="../index.html">gensim documentation</a> &raquo;</li>
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, Radim Řehůřek.
+    </div>
+  </body>
+</html>

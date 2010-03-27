@@ -37,9 +37,8 @@ setup(
     package_dir = {'': 'src'},
     packages = find_packages('src'),
 
-    # there is a bug in python2.5, preventing distutils from using non-ascii characters :(
-    author = 'Radim Rehurek', 
-    # author = u'Radim Řehůřek', # <- should really be this.. see http://bugs.python.org/issue2562
+    # there is a bug in python2.5, preventing distutils from using any non-ascii characters :( http://bugs.python.org/issue2562
+    author = 'Radim Rehurek', # u'Radim Řehůřek', # <- should really be this...
     author_email = 'radimrehurek@seznam.cz',
     url = 'http://nlp.fi.muni.cz/projekty/gensim',
     download_url = 'http://pypi.python.org/pypi/gensim',

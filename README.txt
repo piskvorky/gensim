@@ -20,8 +20,6 @@ document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ at W
   Gensim's target audience is the NLP research community and interested general public; 
   gensim is not meant to be a production tool for commercial environments.
 
-This version has been tested under Python 2.5, but should run on any 2.5 <= Python < 3.0.
-
 Installation
 ------------
 
@@ -29,12 +27,12 @@ gensim depends on NumPy and Scipy, two Python packages for scientific computing.
 You need to have them installed prior to using gensim; if you don't have them yet, 
 you can get them from <http://www.scipy.org/Download>.
 
-1. The simple way to install `gensim` is::
+The simple way to install `gensim` is::
 
     sudo easy_install gensim
 
-2. If you have instead downloaded and unzipped the `source tar.gz package <http://pypi.python.org/pypi/gensim>`_, 
-   you'll need to run::
+Or, if you have instead downloaded and unzipped the `source tar.gz <http://pypi.python.org/pypi/gensim>`_ package, 
+you'll need to run::
 
     python setup.py test
     sudo python setup.py install
@@ -43,17 +41,18 @@ you can get them from <http://www.scipy.org/Download>.
 For alternative modes of installation (without root priviledges, development 
 installation), see the `documentation <http://nlp/fi.muni.cz/projekty/gensim/install.html>`_.
 
+This version has been tested under Python 2.5, but should run on any 2.5 <= Python < 3.0.
 
 Documentation
 -------------
 
-Manual for the gensim package is available as `HTML <http://nlp/fi.muni.cz/projekty/gensim/>'_
+Manual for the gensim package is available as `HTML <http://nlp/fi.muni.cz/projekty/gensim/>`_
 and as `PDF <http://nlp/fi.muni.cz/projekty/gensim/gensim_manual.pdf>`_. It
 contains a walk-through of all the features and a complete reference section.
-It is included in the source package.
+It is also included in the source package.
 
 -------
 
-Gensim is open source software, and has been released under 
+Gensim is open source software, and has been released under the
 `GNU LPGL license <http://www.gnu.org/licenses/lgpl.html>`_.
 Copyright (c) 2010 Radim Rehurek

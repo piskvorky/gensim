@@ -13,18 +13,22 @@ The documents are sparse vectors coming from the TF-IDF model, LSI model, LDA mo
 The two main classes are :
 
 1. `Similarity` -- computes similarity by linearly scanning over the corpus (slower,
-memory independent)
+ memory independent)
 2. `SparseMatrixSimilarity` -- stores the whole corpus in memory, computes similarity 
-by in-memory matrix-vector multiplication. This is much faster than the general 
-Similarity, so use this when dealing with smaller corpora, that fit in RAM.
+ by in-memory matrix-vector multiplication. This is much faster than the general 
+ Similarity, so use this when dealing with smaller corpora, that fit in RAM.
 
 Once the similarity object has been initialized, you can query for document
-similarity simply by 
+similarity simply by
+ 
 >>> similarities = similarity_object[query_vector]
 
 or iterate over within-corpus similarities with
+
 >>> for similarities in similarity_object:
 >>>     ...
+
+-------
 """
 
 
@@ -42,15 +46,15 @@ class Similarity(interfaces.SimilarityABC):
     Compute cosine similary against a corpus of documents. This is done by a full 
     sequential scan of the corpus. 
     
-    If your corpus is reasonably small (fits in RAM), consider using SparseMatrixSimilarity 
-    instead of Similarity, for (much) faster similarity searches.
+    If your corpus is reasonably small (fits in RAM), consider using `SparseMatrixSimilarity` 
+    instead of `Similarity`, for (much) faster similarity searches.
     """
     def __init__(self, corpus, numBest = None):
         """
-        If numBest is left unspecified, similarity queries return a full list (one 
+        If `numBest` is left unspecified, similarity queries return a full list (one 
         float for every document in the corpus, including the query document).
         
-        If numBest is set, queries return numBest most similar documents, as a 
+        If `numBest` is set, queries return `numBest` most similar documents, as a 
         sorted list, eg. [(docIndex1, 1.0), (docIndex2, 0.95), ..., (docIndexnumBest, 0.45)].
         """
         self.corpus = corpus
@@ -73,15 +77,20 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
     This allows for faster similarity searches (simple sparse matrix-vector multiplication),
     but loses the memory-independence of an iterative corpus.
 
-    The matrix is internally stored as a scipy.sparse array.
+    The matrix is internally stored as a `scipy.sparse.csr` matrix.
     """
     def __init__(self, corpus, numBest = None, dtype = numpy.float32):
         """
-        If numBest is left unspecified, similarity queries return a full list (one 
-        float for every document in the corpus, including the query document).
+        If `numBest` is left unspecified, similarity queries return a full list (one 
+        float for every document in the corpus, including the query document):
         
-        If numBest is set, queries return numBest most similar documents, as a 
-        sorted list, eg. [(docIndex1, 1.0), (docIndex2, 0.95), ..., (docIndexnumBest, 0.45)].
+        If `numBest` is set, queries return `numBest` most similar documents, as a 
+        sorted list:
+        
+        >>> sms = SparseMatrixSimilarity(corpus, numBest = 3)
+        >>> sms[vec12]
+        [(12, 1.0), (30, 0.95), (5, 0.45)]
+        
         """
         logging.info("creating sparse matrix for %i documents" % len(corpus))
         self.numBest = numBest
@@ -107,10 +116,10 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
     
     def getSimilarities(self, doc):
         """
-        Return similarity of doc to all documents in the corpus.
+        Return similarity of sparse vector `doc` to all documents in the corpus.
         
-        doc may be either a bag-of-words iterable (corpus document), or a numpy 
-        array, or a scipy.sparse matrix. It is assumed to be of unit length.
+        `doc` may be either a bag-of-words iterable (standard corpus document), 
+        or a numpy array, or a `scipy.sparse` matrix. It is assumed to be of unit length.
         """
         if scipy.sparse.issparse(doc):
             vec = doc.T
