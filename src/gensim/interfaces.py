@@ -69,7 +69,11 @@ class TransformationABC(utils.SaveLoad):
 
     def __getitem__(self, vec):
         """
-        Transform vector from one vector space into another.
+        Transform vector from one vector space into another
+        
+        **or**
+        
+        Transform a whole corpus into another.
         """
         raise NotImplementedError('cannot instantiate abstract base class')
 
@@ -82,4 +86,66 @@ class TransformationABC(utils.SaveLoad):
         return TransformationABC.TransformedCorpus(self.__getitem__, corpus)
 #endclass TransformationABC
 
+
+class SimilarityABC(utils.SaveLoad):
+    """
+    Abstract interface for similarity searches over a corpus.
+    
+    In all instances, there is a corpus against which we want to perform the 
+    similarity search.
+    
+    For similarity search, the input is a document and the output are its 
+    similarities to individual corpus documents.
+    
+    Similarity queries are realized by calling self[query_document].
+    
+    There is also a convenience wrapper, where iterating over self yields 
+    similarities of each document in the corpus against the whole corpus (ie.,
+    the query is each corpus document in turn).
+    """
+    def __init__(self, corpus, numBest = None):
+        """
+        Initialize the similarity search.
+        
+        If numBest is left unspecified, similarity queries return a full list (one 
+        float for every document in the corpus, including the query document).
+        
+        If numBest is set, queries return numBest most similar documents, as a 
+        sorted list, eg. [(docIndex1, 1.0), (docIndex2, 0.95), ..., (docIndexnumBest, 0.45)].
+        """
+        raise NotImplementedError("cannot instantiate Abstract Base Class")
+
+
+    def getSimilarities(self, doc):
+        """
+        Return similarity of a sparse vector `doc` to all documents in the corpus.
+        
+        The document is assumed to be either of unit length or empty.
+        """
+        raise NotImplementedError("cannot instantiate Abstract Base Class")
+
+
+    def __getitem__(self, doc):
+        # get similarities of doc to all documents in the corpus
+        if self.normalize:
+            doc = matutils.unitVec(doc)
+        allSims = self.getSimilarities(doc)
+        
+        # return either all similarities as a list, or only self.numBest most similar, depending on settings from the constructor
+        if self.numBest is None:
+            return allSims
+        else:
+            tops = [(docNo, sim) for docNo, sim in enumerate(allSims) if sim > 0]
+            tops = sorted(tops, key = lambda item: -item[1]) # sort by -sim => highest cossim first
+            return tops[ : self.numBest] # return at most numBest top 2-tuples (docId, docSim)
+
+
+    def __iter__(self):
+        """
+        For each corpus document, compute cosine similarity against all other 
+        documents and yield the result.
+        """
+        for docNo, doc in enumerate(self.corpus):
+            yield self[doc]
+#endclass SimilarityABC
 
