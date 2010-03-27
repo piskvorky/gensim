@@ -14,7 +14,7 @@ import itertools
 
 import numpy
 
-from gensim import interfaces, matutils
+from gensim import interfaces, matutils, utils
 
 
 class LsiModel(interfaces.TransformationABC):
@@ -63,7 +63,11 @@ class LsiModel(interfaces.TransformationABC):
         Run SVD decomposition on the corpus. This will define the latent space into 
         which terms and documents will be mapped.
         
-        The SVD is created incrementally, in blocks of `chunks` documents.
+        The SVD is created incrementally, in blocks of `chunks` documents. In the
+        end, a `self.projection` matrix is constructed that can be used to transform 
+        documents into the latent space. The `U, S, V` decomposition itself is 
+        discarded, unless keepDecomposition is True, in which case it is stored 
+        in `self.u`, `self.s` and `self.v`.
         
         The algorithm is adapted from:
         M. Brand. 2006. Fast low-rank modifications of the thin singular value decomposition
@@ -97,15 +101,18 @@ class LsiModel(interfaces.TransformationABC):
 
         # calculate projection needed to get document-topic matrix from term-document matrix.
         #
-        # the way to represent vector `x` in latent space is v = self.s^-1 * self.u^-1 * x
+        # the way to represent a vector `x` in latent space is lsi[x] = v = self.s^-1 * self.u^-1 * x,
+        # so the projection is self.s^-1 * self.u^-1.
         #
-        # the way to compare two documents `v1`, `v2` is to compute v1 * self.s^2 * v2.T, so
-        # we pre-multiply v * s (ie., scale axis by singular values), and return
+        # the way to compare two documents `x1`, `x2` is to compute v1 * self.s^2 * v2.T, so
+        # we pre-multiply v * s (ie., scale axes by singular values), and return
         # that directly as the representation of `x` in LSI space.
         #
-        # this conveniently simplifies to lsi[X] = self.u.T * X 
+        # this conveniently simplifies to lsi[x] = self.u.T * x, so the projection is 
+        # just self.u.T
+        # 
         # note that neither `v` (the right singular vectors) nor `s` (the singular 
-        # values) are used at all in this transformation
+        # values) are used at all in the transformation
         self.projection = self.u.T
         
         if not keepDecomposition:
@@ -113,20 +120,24 @@ class LsiModel(interfaces.TransformationABC):
             del self.u, self.v
 
 
-    def __getitem__(self, bow):
+    def __getitem__(self, bow, scaled = True):
         """
-        Return topic distribution, as a list of (topic_id, topic_value) 2-tuples.
+        Return latent distribution, as a list of (topic_id, topic_value) 2-tuples.
         
-        This is done by folding input document into the latent topic space. Note
-        that this function returns the latent space representation **scaled by the
-        singular values**. 
+        This is done by folding input document into the latent topic space. 
+        
+        Note that this function returns the latent space representation **scaled by the
+        singular values**. To return non-scaled embedding, set `scaled` to False.
         """
+        # if the input vector is in fact a corpus, return a transformed corpus as result
+        if utils.isCorpus(bow):
+            return self.apply(bow)
+        
         vec = matutils.doc2vec(bow, self.numTerms)
         vec.shape = (self.numTerms, 1)
         topicDist = self.projection * vec
-        # to obtain an unscaled version of the document's latent representation, uncomment the following line:
-#        topicDist = numpy.diag(numpy.diag(1.0 / self.s)) * topicDist
-        
+        if not scaled:
+            topicDist = numpy.diag(numpy.diag(1.0 / self.s)) * topicDist
         return [(topicId, float(topicValue)) for topicId, topicValue in enumerate(topicDist)
                 if numpy.isfinite(topicValue) and not numpy.allclose(topicValue, 0.0)]
     

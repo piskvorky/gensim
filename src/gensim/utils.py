@@ -112,3 +112,19 @@ def dictFromCorpus(corpus):
     numTerms = 1 + maxId
     id2word = dict((fieldId, str(fieldId)) for fieldId in xrange(numTerms))
     return id2word
+
+
+def isCorpus(obj):
+    """
+    Check whether `obj` is a corpus. 
+    
+    **NOTE**: When called on an empty corpus (no documents), will return False.
+    """
+    try:
+        doc1 = iter(obj).next() # obj supports iteration and is not empty
+        if len(doc1) == 0: # first document is empty
+            return True
+        id1, val1 = iter(doc1).next() # or first document is a 2-tuple
+        return True
+    except:
+        return False

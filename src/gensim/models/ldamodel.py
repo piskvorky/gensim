@@ -21,7 +21,7 @@ import numpy # for arrays, array broadcasting etc.
 from scipy.special import gammaln, digamma, polygamma # gamma function utils
 from scipy.maxentropy import logsumexp # log of sum
 
-from gensim import interfaces
+from gensim import interfaces, utils
 
 
 trigamma = lambda x: polygamma(1, x) # second derivative of the gamma fnc
@@ -401,6 +401,10 @@ class LdaModel(interfaces.TransformationABC):
         
         Ignore topics with very low probability (below 0.001).
         """
+        # if the input vector is in fact a corpus, return a transformed corpus as result
+        if utils.isCorpus(bow):
+            return self.apply(bow)
+        
         likelihood, phi, gamma = self.inference(bow)
         gamma -= self.alpha # subtract topic prior, to get the expected number of words for each topic
         sumGamma = gamma.sum()
