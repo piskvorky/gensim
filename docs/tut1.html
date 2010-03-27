@@ -1,0 +1,313 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Corpora and the Vector Space Model &mdash; gensim documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.4.1',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="gensim documentation" href="index.html" />
+    <link rel="up" title="Tutorial" href="tutorial.html" />
+    <link rel="next" title="<no title>" href="tut2.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="tut2.html" title="<no title>"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">gensim documentation</a> &raquo;</li>
+          <li><a href="tutorial.html" accesskey="U">Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="corpora-and-the-vector-space-model">
+<span id="tut1"></span><h1>Corpora and the Vector Space Model<a class="headerlink" href="#corpora-and-the-vector-space-model" title="Permalink to this headline">¶</a></h1>
+<p>All the examples can be directly copied to your Python interpreter shell (assuming
+you have <a class="reference external" href="install.html"><em>gensim installed</em></a>, of course).</p>
+<p><a class="reference external" href="http://ipython.scipy.org">IPython</a>&#8216;s <tt class="docutils literal"><span class="pre">cpaste</span></tt> command is especially handy for copypasting code fragments which include superfluous
+characters, such as the leading <tt class="docutils literal"><span class="pre">&gt;&gt;&gt;</span></tt>.</p>
+<div class="section" id="quick-example">
+<span id="first-example"></span><h2>Quick Example<a class="headerlink" href="#quick-example" title="Permalink to this headline">¶</a></h2>
+<p>First, let&#8217;s import some classes and create a corpus:
+[footnote]: This is the same corpus as used in FIXME Deerwester et al. (1990), Table 2, Part 1.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">similarities</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[[(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">9</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">9</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">9</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">8</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)]]</span>
+</pre></div>
+</div>
+<p>Corpus is simply an object which, when iterated over, returns its documents represented
+as sparse vectors.</p>
+<p>If you&#8217;re familiar with the <a class="reference external" href="http://en.wikipedia.org/wiki/Vector_space_model">Vector Space Model (VSM)</a>,
+you&#8217;ll probably know that the way you parse your documents and convert them to vectors
+has major impact on the quality of any subsequent applications. If you&#8217;re not familiar
+with VSM, we&#8217;ll bridge the gap between raw texts and vectors in the <a class="reference internal" href="#second-example">second example</a> a
+bit later.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In this example, the whole corpus is stored in memory, as a Python list. However,
+the corpus interface only dictates that a corpus must support iteration over its
+constituent documents. For very large corpora, it is advantageous to keep the
+corpus on disk, and access its documents sequentially, one at a time. All the
+operations and corpora transformations
+are implemented in such a way that makes them independent of the size of the corpus,
+RAM-wise.</p>
+</div>
+<p>Next, let&#8217;s initialize a transformation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tfidf</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TfidfModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A transformation is used to convert documents from one vector representation into another:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">vec</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">tfidf</span><span class="p">[</span><span class="n">vec</span><span class="p">]</span>
+<span class="go">[(0, 0.8075244), (4, 0.5898342)]</span>
+</pre></div>
+</div>
+<p>Here, we used <a class="reference external" href="http://en.wikipedia.org/wiki/Tf%E2%80%93idf">Tf-Idf</a>, a simple
+transformation which takes documents represented as bag-of-words counts and applies
+a weighting which discounts common terms (or, equivalently, promotes rare terms).</p>
+<p>To index and prepare the whole TfIdf corpus for similarity queries:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">SparseMatrixSimilarity</span><span class="p">(</span><span class="n">tfidf</span><span class="p">[</span><span class="n">corpus</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>and to query the similarity of our vector <tt class="docutils literal"><span class="pre">vec</span></tt> against every document in the corpus:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sims</span> <span class="o">=</span> <span class="n">sim</span><span class="p">[</span><span class="n">tfidf</span><span class="p">[</span><span class="n">vec</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">sims</span><span class="p">))</span>
+<span class="go">[(0, 0.4662244), (1, 0.19139354), (2, 0.24600551), (3, 0.82094586), (4, 0.0), (5, 0.0), (6, 0.0), (7, 0.0), (8, 0.0)]</span>
+</pre></div>
+</div>
+<p>According to TfIdf and cosine similarity, the most similar to our query
+document <cite>vec</cite> is document no. 3, with a similarity score of 82.1%. Note
+that in the TfIdf representation, all documents which do not share any common features
+with <tt class="docutils literal"><span class="pre">vec</span></tt> at all (documents no. 4&#8211;8) get a similarity score of 0.0.</p>
+</div>
+<div class="section" id="a-more-complete-example">
+<span id="second-example"></span><h2>A More Complete Example<a class="headerlink" href="#a-more-complete-example" title="Permalink to this headline">¶</a></h2>
+<p>This time, let&#8217;s start from documents represented as strings:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">similarities</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">documents</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;Human machine interface for lab abc computer applications&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>             <span class="s">&quot;A survey of user opinion of computer system response time&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>             <span class="s">&quot;The EPS user interface management system&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>             <span class="s">&quot;System and human system engineering testing of EPS&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>             <span class="s">&quot;Relation of user perceived response time to error measurement&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>             <span class="s">&quot;The generation of random binary unordered trees&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>             <span class="s">&quot;The intersection graph of paths in trees&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>             <span class="s">&quot;Graph minors IV Widths of trees and well quasi ordering&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>             <span class="s">&quot;Graph minors A survey&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>This is a tiny corpus of nine documents, each consisting of only a single sentence.</p>
+<p>Firstly, let&#8217;s tokenize the documents, remove common words (using a toy stoplist)
+as well as words that only appear once in the corpus:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># remove common words and tokenize</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stoplist</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="s">&#39;for a of the and to in&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">texts</span> <span class="o">=</span> <span class="p">[[</span><span class="n">word</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">document</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stoplist</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>         <span class="k">for</span> <span class="n">document</span> <span class="ow">in</span> <span class="n">documents</span><span class="p">]</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># remove words that appear only once</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">allTokens</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="p">[])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tokensOnce</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">word</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">allTokens</span><span class="p">)</span> <span class="k">if</span> <span class="n">allTokens</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">texts</span> <span class="o">=</span> <span class="p">[[</span><span class="n">word</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">text</span> <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tokensOnce</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>         <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">texts</span><span class="p">]</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">texts</span>
+<span class="go">[[&#39;human&#39;, &#39;interface&#39;, &#39;computer&#39;],</span>
+<span class="go"> [&#39;survey&#39;, &#39;user&#39;, &#39;computer&#39;, &#39;system&#39;, &#39;response&#39;, &#39;time&#39;],</span>
+<span class="go"> [&#39;eps&#39;, &#39;user&#39;, &#39;interface&#39;, &#39;system&#39;],</span>
+<span class="go"> [&#39;system&#39;, &#39;human&#39;, &#39;system&#39;, &#39;eps&#39;],</span>
+<span class="go"> [&#39;user&#39;, &#39;response&#39;, &#39;time&#39;],</span>
+<span class="go"> [&#39;trees&#39;],</span>
+<span class="go"> [&#39;graph&#39;, &#39;trees&#39;],</span>
+<span class="go"> [&#39;graph&#39;, &#39;minors&#39;, &#39;trees&#39;],</span>
+<span class="go"> [&#39;graph&#39;, &#39;minors&#39;, &#39;survey&#39;]]</span>
+</pre></div>
+</div>
+<p>Your way of processing the documents will likely vary; here, we only split on whitespace
+to tokenize, followed by lowercasing each word. In fact, we use this particular
+(simplistic) setup to mimick the experiment done in Deerwester&#8217;s original LSA article [ref FIXME].</p>
+<p>The ways to process documents are so versatile and application- and language-dependent that we
+decided to <em>not</em> constrain them by any interface. Instead, a document is represented
+by the features extracted from it, not by its &#8220;surface&#8221; string form. How you get to
+the features is up to you; what follows is just one common scenario.</p>
+<p>To convert documents to vectors, we will use a document representation called
+<a class="reference external" href="http://en.wikipedia.org/wiki/Bag_of_words">bag-of-words</a>. In this representation,
+each vector element is a question-answer pair, in the style of:</p>
+<blockquote>
+&#8220;How many times does the word <cite>system</cite> appear in the document? Once.&#8221;</blockquote>
+<p>There are twelve distinct words in the preprocessed corpus, so each document will
+be represented by twelve numbers (ie., by a 12-D vector).</p>
+<p>The <tt class="xref docutils literal"><span class="pre">gensim.corpora.Dictionary</span></tt> class can be used to convert tokenized texts
+to vectors:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[</span><span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">allowUpdate</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">texts</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Here we passed a list of tokens to <tt class="xref docutils literal"><span class="pre">Dictionary.doc2bow()</span></tt>, one list for each
+document. As a matter of fact, we have arrived at exactly the same corpus of vectors as in
+the <a class="reference internal" href="#first-example">first example</a>, except that we now know what each vector dimension stands for:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">token2id</span>
+<span class="go">{&#39;minors&#39;: 11, &#39;graph&#39;: 10, &#39;system&#39;: 5, &#39;trees&#39;: 9, &#39;eps&#39;: 8, &#39;computer&#39;: 0,</span>
+<span class="go">&#39;survey&#39;: 4, &#39;user&#39;: 7, &#39;human&#39;: 1, &#39;time&#39;: 6, &#39;interface&#39;: 2, &#39;response&#39;: 3}</span>
+</pre></div>
+</div>
+<p>For example, the vector feature with <tt class="docutils literal"><span class="pre">id=10</span></tt> stands for the question &#8220;How many
+times does the word <cite>graph</cite> appear in the document?&#8221;. The answer is &#8220;zero&#8221; for
+the first six documents and &#8220;one&#8221; for the remaining three.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">corpus</span>
+<span class="go">[[(0, 1.0), (1, 1.0), (2, 1.0)],</span>
+<span class="go"> [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],</span>
+<span class="go"> [(1, 1.0), (3, 1.0), (4, 1.0), (7, 1.0)],</span>
+<span class="go"> [(0, 1.0), (4, 2.0), (7, 1.0)],</span>
+<span class="go"> [(3, 1.0), (5, 1.0), (6, 1.0)],</span>
+<span class="go"> [(9, 1.0)],</span>
+<span class="go"> [(9, 1.0), (10, 1.0)],</span>
+<span class="go"> [(9, 1.0), (10, 1.0), (11, 1.0)],</span>
+<span class="go"> [(8, 1.0), (10, 1.0), (11, 1.0)]]</span>
+</pre></div>
+</div>
+<p>The function <tt class="docutils literal"><span class="pre">doc2bow</span></tt> simply counts the number of occurences of
+each distinct word, converts the word to its integer <cite>question id</cite> and returns
+the result as a sparse vector. With the <tt class="docutils literal"><span class="pre">allowUpdate</span></tt> option set, newly introduced
+words will be assigned a new id; otherwise, they are ignored. Put differently,
+this option decides whether new questions should be created upon encountering
+new words, or whether we&#8217;re only interested in answering a fixed, pre-determined
+set of questions.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">newDoc</span> <span class="o">=</span> <span class="s">&quot;Human computer interaction&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">newVec</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">newDoc</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="n">allowUpdate</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">newVec</span> <span class="c"># the word &quot;interaction&quot; is ignored</span>
+<span class="go">[(0, 1), (1, 1)]</span>
+</pre></div>
+</div>
+<p>To finish the example, we transform our <tt class="docutils literal"><span class="pre">&quot;Human</span> <span class="pre">computer</span> <span class="pre">interaction&quot;</span></tt> document
+via <a class="reference external" href="http://en.wikipedia.org/wiki/Latent_semantic_indexing">Latent Semantic Indexing</a>
+into a 2-D space:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">newVecLsi</span> <span class="o">=</span> <span class="n">lsi</span><span class="p">[</span><span class="n">newVec</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">newVecLsi</span>
+<span class="go">[(0, -0.4618210045327153), (1, 0.070027665279000631)]</span>
+</pre></div>
+</div>
+<p>and print proximity of this query document against our original corpus of nine
+documents:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">SparseMatrixSimilarity</span><span class="p">(</span><span class="n">lsi</span><span class="p">[</span><span class="n">corpus</span><span class="p">])</span> <span class="c"># &quot;index&quot; the corpus in LSI space</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">index</span><span class="p">[</span><span class="n">newVecLsi</span><span class="p">]))</span> <span class="c"># perform query against the corpus</span>
+<span class="go">[(0, 0.99809301), (1, 0.93748635), (2, 0.99844527), (3, 0.9865886), (4, 0.90755945),</span>
+<span class="go">(5, -0.12416792), (6, -0.1063926), (7, -0.098794639), (8, 0.05004178)]</span>
+</pre></div>
+</div>
+<p>The thing to note here is that documents no. 2 (<tt class="docutils literal"><span class="pre">&quot;The</span> <span class="pre">EPS</span> <span class="pre">user</span> <span class="pre">interface</span> <span class="pre">management</span> <span class="pre">system&quot;</span></tt>)
+and 4 (<tt class="docutils literal"><span class="pre">&quot;Relation</span> <span class="pre">of</span> <span class="pre">user</span> <span class="pre">perceived</span> <span class="pre">response</span> <span class="pre">time</span> <span class="pre">to</span> <span class="pre">error</span> <span class="pre">measurement&quot;</span></tt>) would never be returned by
+a standard fulltext search, because they do not share any common words with <tt class="docutils literal"><span class="pre">&quot;Human</span>
+<span class="pre">computer</span> <span class="pre">interaction&quot;</span></tt>. However, after applying LSI, we can observe that both of
+them received high similarity scores, which corresponds better to our intuition of
+them sharing a &#8220;computer-related&#8221; topic with the query. In fact, this is the reason
+why we apply transformations and do topic modeling in the first place.</p>
+</div>
+<div class="section" id="corpus-formats">
+<h2>Corpus Formats<a class="headerlink" href="#corpus-formats" title="Permalink to this headline">¶</a></h2>
+<p>Continuing with the previous examples, do saveCorpus.</p>
+<p>Transform SVMlight into MatrixMarket. Opposite transform &#8211; no class tags.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Corpora and the Vector Space Model</a><ul>
+<li><a class="reference external" href="#quick-example">Quick Example</a></li>
+<li><a class="reference external" href="#a-more-complete-example">A More Complete Example</a></li>
+<li><a class="reference external" href="#corpus-formats">Corpus Formats</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="tutorial.html"
+                                  title="previous chapter">Tutorial</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="tut2.html"
+                                  title="next chapter">&lt;no title&gt;</a></p>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tut2.html" title="<no title>"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             >previous</a> |</li>
+        <li><a href="index.html">gensim documentation</a> &raquo;</li>
+          <li><a href="tutorial.html" >Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, Radim Řehůřek.
+    </div>
+  </body>
+</html>
