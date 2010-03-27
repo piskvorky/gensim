@@ -18,7 +18,7 @@ import os.path
 import re
 
 
-from gensim.corpora import sources, corpora
+from gensim.corpora import sources, DmlCorpus, MmCorpus
 from gensim.models import lsimodel, ldamodel, tfidfmodel
 
 import gensim_build
@@ -45,27 +45,27 @@ if __name__ == '__main__':
     method = sys.argv[2].strip().lower()
     
     logging.info("loading corpus mappings")
-    config = corpora.DmlConfig('gensim_%s' % language, resultDir = gensim_build.RESULT_DIR, acceptLangs = [language])
+    config = DmlConfig('gensim_%s' % language, resultDir = gensim_build.RESULT_DIR, acceptLangs = [language])
     try:
-        dml = corpora.DmlCorpus.load(config.resultFile('.pkl'))
+        dml = DmlCorpus.load(config.resultFile('.pkl'))
     except IOError, e:
         raise IOError("no word-count corpus found at %s; you must first generate it through gensim_build.py")
 
     logging.info("loading word id mapping from %s" % config.resultFile('wordids.txt'))
-    id2word = corpora.DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
+    id2word = DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
     logging.info("loaded %i word ids" % len(id2word))
 
     if method == 'tfidf':
-        corpus = corpora.MmCorpus(config.resultFile('bow.mm'))
+        corpus = MmCorpus(config.resultFile('bow.mm'))
         model = tfidfmodel.TfidfModel(corpus, id2word = id2word, normalize = True)
         model.save(config.resultFile('tfidfmodel.pkl'))
     elif method == 'lda':
-        corpus = corpora.MmCorpus(config.resultFile('bow.mm'))
+        corpus = MmCorpus(config.resultFile('bow.mm'))
         model = ldamodel.LdaModel(corpus, id2word = id2word, numTopics = DIM_LDA)
         model.save(config.resultFile('ldamodel%i.pkl' % DIM_LDA))
     elif method == 'lsi' or method == 'lsa':
         # first, transform word counts to tf-idf weights
-        corpus = corpora.MmCorpus(config.resultFile('bow.mm'))
+        corpus = MmCorpus(config.resultFile('bow.mm'))
         tfidf = tfidfmodel.TfidfModel(corpus, id2word = id2word, normalize = True)
         # then find the transformation from tf-idf to latent space
         model = lsimodel.LsiModel(tfidf.apply(corpus), id2word = id2word, numTopics = DIM_LSI)
