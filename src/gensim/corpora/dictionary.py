@@ -106,17 +106,20 @@ class Dictionary(utils.SaveLoad):
     def doc2bow(self, document, allowUpdate = False):
         """
         Convert `document` (a list of words) into the bag-of-words format = list of 
-        (tokenId, tokenCount) 2-tuples.
+        `(tokenId, tokenCount)` 2-tuples.
         
         Each word is assumed to be a **tokenized and normalized**, utf-8 encoded string.
         
         If `allowUpdate` is set, then also update of dictionary in the process: create ids 
         for new words. At the same time, update document frequencies -- for 
         each word appearing in this document, increase its self.docFreq by one.
+        
+        If `allowUpdate` is **not** set, this function is `const`, ie. read-only.
         """
-        # construct (word, frequency) mapping. in python3 this is done simply 
-        # using Counter(), but here i use itertools.groupby()
         result = {}
+        
+        # construct (word, frequency) mapping. in python3 this is done simply 
+        # using Counter(), but here i use itertools.groupby() for the job
         for wordNorm, group in itertools.groupby(sorted(document)):
             frequency = len(list(group)) # how many times does this word appear in the input document
 
@@ -124,7 +127,7 @@ class Dictionary(utils.SaveLoad):
             tokenId = self.token2id.get(wordNorm, None)
             if tokenId is None: 
                 # first time we see this token (normalized form)
-                if not allowUpdate: # if we aren't allowed to create new tokens, continue with the next token
+                if not allowUpdate: # if we aren't allowed to create new tokens, continue with the next unique token
                     continue
                 tokenId = len(self.token2id) # new id = number of ids made so far; NOTE this assumes there are no gaps in the id sequence!
                 token = Token(wordNorm, tokenId)

@@ -17,10 +17,9 @@ import os.path
 import re
 
 
-import docsim
-from gensim.corpora import sources, corpora
+from gensim.corpora import sources, DmlCorpus, MmCorpus
 from gensim.models import lsimodel, ldamodel, tfidfmodel
-
+from gensim.similarities import SparseMatrixSimilarity
 
 # set to True to do everything EXCEPT actually writing out similar.xml files to disk.
 # similar.xml files are NOT written if DRY_RUN is true.
@@ -113,31 +112,31 @@ if __name__ == '__main__':
     
     logging.info("loading corpus mappings")
     try:
-        dml = corpora.DmlCorpus.load(config.resultFile('.pkl'))
+        dml = DmlCorpus.load(config.resultFile('.pkl'))
     except IOError, e:
         raise IOError("no word-count corpus found at %s; you must first generate it through gensim_build.py")
     config = dml.config
 
     logging.info("loading word id mapping from %s" % config.resultFile('wordids.txt'))
-    id2word = corpora.DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
+    id2word = DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
     logging.info("loaded %i word ids" % len(id2word))
 
 
-    input = corpora.MmCorpus(bow.mm)
+    input = MmCorpus(bow.mm)
     
     if method == 'tfidf':
         model = tfidfmodel.TfidfModel.load(modelfname('tfidf'))
     elif method == 'lsi':
         tfidf = tfidfmodel.TfidfModel.load(modelfname('tfidf'))
-        input = corpora.TopicsCorpus(tfidf, input)
+        input = tfidf[input] # transform to tfidf
         model = lsimodel.LsiModel.load(modelfname('lsi'))
     elif method == 'lda':
         model = ldamodel.LdaModel.load(modelfname('lda'))
     else:
         raise ValueError('unknown method: %s' % repr(method))
     
-    topics = corpora.TopicsCorpus(model, input) # documents from 'input' will be represented via 'model'
-    sims = docsim.SparseMatrixSimilarity(topics, numBest = MAX_SIMILAR) # initialize structure which searches for similar documents
+    topics = model[input] # documents from 'input' will be represented via 'model'
+    sims = SparseMatrixSimilarity(topics, numBest = MAX_SIMILAR) # initialize structure which searches for similar documents
     generateSimilar(corpus, sims, method) # for each document, print MAX_SIMILAR nearest documents to a xml file, in dml-cz format
             
     logging.info("finished running %s" % program)
