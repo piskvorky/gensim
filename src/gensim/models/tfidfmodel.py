@@ -10,7 +10,7 @@ import itertools
 
 import math
 
-from gensim import interfaces, matutils
+from gensim import interfaces, matutils, utils
 
 
 
@@ -88,8 +88,12 @@ class TfidfModel(interfaces.TransformationABC):
 
     def __getitem__(self, bow):
         """
-        Return tf-idf representation of the input vector.
+        Return tf-idf representation of the input vector and/or corpus.
         """
+        # if the input vector is in fact a corpus, return a transformed corpus as result
+        if utils.isCorpus(bow):
+            return self.apply(bow)
+        
         # unknown (new) terms will be given zero weight (NOT infinity/huge weight,
         # as would the strict application of the IDF formula suggest
         vector = [(termId, tf * self.idfs.get(termId, 0.0)) 

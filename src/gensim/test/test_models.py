@@ -41,10 +41,12 @@ class TestLsiModel(unittest.TestCase):
         # transform one document
         doc = list(self.corpus)[0]
         transformed = model[doc]
-        
         vec = matutils.doc2vec(transformed, 2) # convert to dense vector, for easier equality tests
-        expected = [0.1973928, 0.05591352]
-        self.assertTrue(numpy.allclose(abs(vec), expected)) # transformed entries must be equal up to sign
+        
+        expected = numpy.array([-0.6594664, 0.142115444]) # scaled LSI version
+        # expected = numpy.array([-0.1973928, 0.05591352]) # non-scaled LSI version
+        
+        self.assertTrue(numpy.allclose(abs(vec), abs(expected))) # transformed entries must be equal up to sign
         
     
     def testPersistence(self):

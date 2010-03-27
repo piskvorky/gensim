@@ -12,7 +12,7 @@ is provided in the interface itself, so that the interfaces can be subclassed).
 """
 
 
-import utils
+import utils, matutils
 
 
 class CorpusABC(utils.SaveLoad):
