@@ -39,15 +39,15 @@ you'll need to run::
 
 
 For alternative modes of installation (without root priviledges, development 
-installation), see the `documentation <http://nlp/fi.muni.cz/projekty/gensim/install.html>`_.
+installation), see the `documentation <http://nlp.fi.muni.cz/projekty/gensim/install.html>`_.
 
 This version has been tested under Python 2.5, but should run on any 2.5 <= Python < 3.0.
 
 Documentation
 -------------
 
-Manual for the gensim package is available as `HTML <http://nlp/fi.muni.cz/projekty/gensim/>`_
-and as `PDF <http://nlp/fi.muni.cz/projekty/gensim/gensim_manual.pdf>`_. It
+Manual for the gensim package is available as `HTML <http://nlp.fi.muni.cz/projekty/gensim/>`_
+and as `PDF <http://nlp.fi.muni.cz/projekty/gensim/gensim_manual.pdf>`_. It
 contains a walk-through of all the features and a complete reference section.
 It is also included in the source package.
 
