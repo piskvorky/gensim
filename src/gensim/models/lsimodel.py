@@ -24,10 +24,10 @@ class LsiModel(interfaces.TransformationABC):
     
     The main methods are:
     
-     1. constructor, which calculates the latent topics space, effectively 
-        initializing the model,
-     2. the [] method, which returns representation of any input document in the 
-        computed latent space.
+    1. constructor, which calculates the latent topics space, effectively 
+       initializing the model,
+    2. the [] method, which returns representation of any input document in the 
+       computed latent space.
     
     Model persistency is achieved via its load/save methods.
     """
@@ -131,7 +131,7 @@ class LsiModel(interfaces.TransformationABC):
         """
         # if the input vector is in fact a corpus, return a transformed corpus as result
         if utils.isCorpus(bow):
-            return self.apply(bow)
+            return self._apply(bow)
         
         vec = matutils.doc2vec(bow, self.numTerms)
         vec.shape = (self.numTerms, 1)

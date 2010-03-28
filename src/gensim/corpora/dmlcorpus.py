@@ -193,6 +193,7 @@ class DmlCorpus(interfaces.CorpusABC):
         Store the corpus to disk, in a human-readable text format.
         
         This actually saves multiple files:
+        
         1. Pure document-term co-occurence frequency counts, as a Matrix Market file. 
         2. Token to integer mapping, as a text file.
         3. Document to document URI mapping, as a text file.

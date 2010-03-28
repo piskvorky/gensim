@@ -184,7 +184,7 @@ class MmReader(object):
         fin = open(fname)
         header = fin.next().strip()
         if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
-            raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found \n%s" % 
+            raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found: \n%s" % 
                              (fname, header))
         self.numDocs = self.numTerms = self.numElements = 0
         for lineNo, line in enumerate(fin):

@@ -9,14 +9,9 @@
 This module implements the concept of Dictionary -- a mapping between words and 
 their internal ids.
 
-The actual process of id translation proceeds in three steps:
- 1. get the input word (eg. 'Answering')
- 2. map word to its normalized form (eg. 'answer')
- 3. map the normalized form to integer id (eg. 42)
-
 Dictionaries can be created from a corpus and can later be pruned according to
-document frequency (removing (un)common words via the filterExtremes() method), 
-save/loaded from disk via save() and load() methods etc.
+document frequency (removing (un)common words via the :func:`Dictionary.filterExtremes` method), 
+save/loaded from disk via :func:`Dictionary.save` and :func:`Dictionary.load` methods etc.
 """
 
 
@@ -54,11 +49,10 @@ class Token(object):
 
 class Dictionary(utils.SaveLoad):
     """
-    Dictionary encapsulates mappings between words, their normalized forms and ids
-    of those normalized forms.
+    Dictionary encapsulates mappings between normalized words and their integer ids.
     
     The main function is `doc2bow`, which coverts a collection of words to its bow 
-    representation, optionally also updating the dictionary mappings with new 
+    representation, optionally also updating the dictionary mapping with new 
     words and their ids.
     """
     def __init__(self):
@@ -106,9 +100,8 @@ class Dictionary(utils.SaveLoad):
     def doc2bow(self, document, allowUpdate = False):
         """
         Convert `document` (a list of words) into the bag-of-words format = list of 
-        `(tokenId, tokenCount)` 2-tuples.
-        
-        Each word is assumed to be a **tokenized and normalized**, utf-8 encoded string.
+        `(tokenId, tokenCount)` 2-tuples. Each word is assumed to be a 
+        **tokenized and normalized** utf-8 encoded string.
         
         If `allowUpdate` is set, then also update of dictionary in the process: create ids 
         for new words. At the same time, update document frequencies -- for 
@@ -150,15 +143,15 @@ class Dictionary(utils.SaveLoad):
 
     def filterExtremes(self, noBelow = 5, noAbove = 0.5):
         """
-        Filter out tokens that appear in 
-         1. less than `noBelow` documents (absolute number) or 
-         2. more than `noAbove` documents (fraction of total corpus size, *not* 
-            absolute number).
+        Filter out tokens that appear in
         
-        At the same time rebuild the dictionary, shrinking resulting gaps in 
-        tokenIds (lowering len(self) and freeing up memory in the process). 
+        1. less than `noBelow` documents (absolute number) or 
+        2. more than `noAbove` documents (fraction of total corpus size, *not* 
+           absolute number).
         
-        Note that the same token may have a different `tokenId` before and after
+        After the pruning, shrink resulting gaps in word ids. 
+        
+        **Note**: The same word may have a different word id before and after
         the call to this function!
         """
         noAboveAbs = int(noAbove * self.numDocs) # convert fractional threshold to absolute threshold
@@ -184,6 +177,8 @@ class Dictionary(utils.SaveLoad):
     def filterTokens(self, badIds):
         """
         Remove the selected tokens from all dictionary mappings.
+        
+        `badIds` is a collection of word ids to be removed.
         """
         badIds = set(badIds)
         self.id2token = dict((tokenId, token) for tokenId, token in self.id2token.iteritems() if tokenId not in badIds)
@@ -194,10 +189,10 @@ class Dictionary(utils.SaveLoad):
     
     def rebuildDictionary(self):
         """
-        Assign new tokenIds to all tokens. 
+        Assign new word ids to all words. 
         
-        This is done to make tokenIds more compact, ie. after some tokens have 
-        been removed via filterTokens() and there are gaps in the tokenId series.
+        This is done to make the ids more compact, ie. after some tokens have 
+        been removed via :func:`filterTokens` and there are gaps in the id series.
         Calling this method will remove the gaps.
         """
         logging.debug("rebuilding dictionary, shrinking gaps")

@@ -33,9 +33,9 @@ class MmCorpus(matutils.MmReader, interfaces.CorpusABC):
     @staticmethod
     def saveCorpus(fname, corpus, id2word = None):
         """
-        Save a corpus in the Matrix Market format.
+        Save a corpus in the Matrix Market format to disk.
         """
-        logging.info("storing corpus in Matrix Market format: %s" % fname)
+        logging.info("storing corpus in Matrix Market format to %s" % fname)
         matutils.MmWriter.writeCorpus(fname, corpus)
 #endclass MmCorpus
 
