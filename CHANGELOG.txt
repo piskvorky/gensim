@@ -1,6 +1,11 @@
 Changes
 =======
 
+0.4.2
+
+* finally, a tutorial!
+* similarity queries got their own package
+
 0.4.1
 
 * pdf documentation
