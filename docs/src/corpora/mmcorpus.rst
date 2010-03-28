@@ -1,5 +1,5 @@
-:mod:`mmcorpus`
-==================
+:mod:`corpora.mmcorpus` -- Corpus in Matrix Market format
+==========================================================
 
 .. automodule:: gensim.corpora.mmcorpus
     :synopsis: Corpus in Matrix Market format

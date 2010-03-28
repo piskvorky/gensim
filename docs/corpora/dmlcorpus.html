@@ -5,13 +5,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>dmlcorpus &mdash; gensim documentation</title>
+    <title>corpora.dmlcorpus – Corpus in DML-CZ format &mdash; gensim documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.4.1',
+        VERSION:     '0.4.2',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -21,8 +21,8 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
-    <link rel="next" title="lowcorpus" href="lowcorpus.html" />
-    <link rel="prev" title="dictionary" href="dictionary.html" /> 
+    <link rel="next" title="corpora.lowcorpus – Corpus in List-of-Words format" href="lowcorpus.html" />
+    <link rel="prev" title="corpora.dictionary – Construct word<->id mappings" href="dictionary.html" /> 
   </head>
   <body>
     <div class="related">
@@ -35,10 +35,10 @@
           <a href="../modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
         <li class="right" >
-          <a href="lowcorpus.html" title="lowcorpus"
+          <a href="lowcorpus.html" title="corpora.lowcorpus – Corpus in List-of-Words format"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="dictionary.html" title="dictionary"
+          <a href="dictionary.html" title="corpora.dictionary – Construct word<->id mappings"
              accesskey="P">previous</a> |</li>
         <li><a href="../index.html">gensim documentation</a> &raquo;</li>
           <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
@@ -51,7 +51,7 @@
           <div class="body">
             
   <div class="section" id="module-gensim.corpora.dmlcorpus">
-<h1><tt class="xref docutils literal"><span class="pre">dmlcorpus</span></tt><a class="headerlink" href="#module-gensim.corpora.dmlcorpus" title="Permalink to this headline">¶</a></h1>
+<h1><tt class="xref docutils literal"><span class="pre">corpora.dmlcorpus</span></tt> &#8211; Corpus in DML-CZ format<a class="headerlink" href="#module-gensim.corpora.dmlcorpus" title="Permalink to this headline">¶</a></h1>
 <p>Corpus for the DML-CZ project.</p>
 <dl class="class">
 <dt id="gensim.corpora.dmlcorpus.DmlConfig">
@@ -109,10 +109,12 @@ config etc.).</p>
 <dt id="gensim.corpora.dmlcorpus.DmlCorpus.saveAsText">
 <tt class="descname">saveAsText</tt><big>(</big><em>normalizeTfidf=False</em><big>)</big><a class="headerlink" href="#gensim.corpora.dmlcorpus.DmlCorpus.saveAsText" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store the corpus to disk, in a human-readable text format.</p>
-<p>This actually saves multiple files:
-1. Pure document-term co-occurence frequency counts, as a Matrix Market file. 
-2. Token to integer mapping, as a text file.
-3. Document to document URI mapping, as a text file.</p>
+<p>This actually saves multiple files:</p>
+<ol class="arabic simple">
+<li>Pure document-term co-occurence frequency counts, as a Matrix Market file.</li>
+<li>Token to integer mapping, as a text file.</li>
+<li>Document to document URI mapping, as a text file.</li>
+</ol>
 <p>The exact filesystem paths and filenames are determined from the config.</p>
 </dd></dl>
 
@@ -128,10 +130,10 @@ config etc.).</p>
         <div class="sphinxsidebarwrapper">
             <h4>Previous topic</h4>
             <p class="topless"><a href="dictionary.html"
-                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">dictionary</span></tt></a></p>
+                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">corpora.dictionary</span></tt> &#8211; Construct word&lt;-&gt;id mappings</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="lowcorpus.html"
-                                  title="next chapter"><tt class="docutils literal"><span class="pre">lowcorpus</span></tt></a></p>
+                                  title="next chapter"><tt class="docutils literal"><span class="pre">corpora.lowcorpus</span></tt> &#8211; Corpus in List-of-Words format</a></p>
           <div id="searchbox" style="display: none">
             <h3>Quick search</h3>
               <form class="search" action="../search.html" method="get">
@@ -159,10 +161,10 @@ config etc.).</p>
           <a href="../modindex.html" title="Global Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="lowcorpus.html" title="lowcorpus"
+          <a href="lowcorpus.html" title="corpora.lowcorpus – Corpus in List-of-Words format"
              >next</a> |</li>
         <li class="right" >
-          <a href="dictionary.html" title="dictionary"
+          <a href="dictionary.html" title="corpora.dictionary – Construct word<->id mappings"
              >previous</a> |</li>
         <li><a href="../index.html">gensim documentation</a> &raquo;</li>
           <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 

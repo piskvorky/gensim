@@ -21,7 +21,6 @@ gensim.corpora.dmlcorpus.DmlCorpus.buildDictionary method corpora/dmlcorpus.html
 gensim.corpora.svmlightcorpus.SvmLightCorpus.save method corpora/svmlightcorpus.html
 gensim.interfaces.SimilarityABC class interfaces.html
 gensim.matutils.MmWriter class matutils.html
-gensim.models.lsimodel.LsiModel.apply method models/lsimodel.html
 gensim.models.ldamodel.LdaModel.optAlpha method models/ldamodel.html
 gensim.corpora.dmlcorpus.DmlConfig class corpora/dmlcorpus.html
 gensim.corpora.lowcorpus.LowCorpus.saveCorpus staticmethod corpora/lowcorpus.html
@@ -82,13 +81,11 @@ gensim.interfaces.SimilarityABC.save method interfaces.html
 gensim.interfaces.CorpusABC.load classmethod interfaces.html
 gensim.similarities.docsim.Similarity.save method similarities/docsim.html
 gensim.models.lsimodel.svdUpdate function models/lsimodel.html
-gensim.models.tfidfmodel.TfidfModel.apply method models/tfidfmodel.html
 gensim.interfaces.TransformationABC class interfaces.html
 gensim.corpora.mmcorpus.MmCorpus.load classmethod corpora/mmcorpus.html
 gensim.corpora.mmcorpus.MmCorpus.save method corpora/mmcorpus.html
 gensim.similarities.docsim.SparseMatrixSimilarity.load classmethod similarities/docsim.html
 gensim.models.ldamodel.LdaModel.inference method models/ldamodel.html
-gensim.interfaces.TransformationABC.apply method interfaces.html
 gensim.utils.dictFromCorpus function utils.html
 gensim.corpora.dictionary.Dictionary.filterExtremes method corpora/dictionary.html
 gensim.models.lsimodel.LsiModel.save method models/lsimodel.html
@@ -105,6 +102,5 @@ gensim.corpora.bleicorpus.BleiCorpus.load classmethod corpora/bleicorpus.html
 gensim.corpora.svmlightcorpus.SvmLightCorpus class corpora/svmlightcorpus.html
 gensim.interfaces.CorpusABC.save method interfaces.html
 gensim.corpora.bleicorpus.BleiCorpus.save method corpora/bleicorpus.html
-gensim.models.ldamodel.LdaModel.apply method models/ldamodel.html
 gensim.corpora.dictionary.Dictionary.save method corpora/dictionary.html
 gensim.models.ldamodel.LdaModel.save method models/ldamodel.html

@@ -63,7 +63,7 @@ There are also alternative routes:
    This will only place a symlink into your ``site-packages`` directory. The actual
    files will stay wherever you unpacked them.
 3. If you don't have root priviledges (or just don't want to put the package into
-   your ``site-packages``), simply unpack the package somewhere and that's it! No
+   your ``site-packages``), simply unpack the source package somewhere and that's it! No
    compilation or installation needed. Just don't forget to set your PYTHONPATH
    (or modify ``sys.path``), so that Python can find the package when importing.
 
@@ -71,14 +71,13 @@ There are also alternative routes:
 Testing gensim
 ----------------
 
-To test the package, run::
+To test the package, unzip the source and run::
 
     python setup.py test
 
-from the unzipped source directory.
 
 Contact
 --------
 
-If you encounter problems or have any questions regarding gensim, please let us 
+If you encounter problems or have any questions regarding `gensim`, please let us 
 know by emailing <radimrehurek(at)seznam.cz>.

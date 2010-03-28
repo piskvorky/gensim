@@ -1,5 +1,5 @@
-:mod:`ldamodel`
-==================
+:mod:`models.ldamodel` -- Latent Dirichlet Allocation
+======================================================
 
 .. automodule:: gensim.models.ldamodel
     :synopsis: Latent Dirichlet Allocation

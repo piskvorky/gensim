@@ -5,13 +5,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>interfaces &mdash; gensim documentation</title>
+    <title>interfaces – Core gensim interfaces &mdash; gensim documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.1',
+        VERSION:     '0.4.2',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -21,7 +21,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="index.html" />
     <link rel="up" title="API Reference" href="apiref.html" />
-    <link rel="next" title="utils" href="utils.html" />
+    <link rel="next" title="utils – Various utility functions" href="utils.html" />
     <link rel="prev" title="API Reference" href="apiref.html" /> 
   </head>
   <body>
@@ -35,7 +35,7 @@
           <a href="modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
         <li class="right" >
-          <a href="utils.html" title="utils"
+          <a href="utils.html" title="utils – Various utility functions"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="apiref.html" title="API Reference"
@@ -51,7 +51,7 @@
           <div class="body">
             
   <div class="section" id="module-gensim.interfaces">
-<h1><tt class="xref docutils literal"><span class="pre">interfaces</span></tt><a class="headerlink" href="#module-gensim.interfaces" title="Permalink to this headline">¶</a></h1>
+<h1><tt class="xref docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces<a class="headerlink" href="#module-gensim.interfaces" title="Permalink to this headline">¶</a></h1>
 <p>This module contains basic interfaces used throughout the whole gensim package.</p>
 <p>The interfaces are realized as abstract base classes (ie., some optional functionality 
 is provided in the interface itself, so that the interfaces can be subclassed).</p>
@@ -61,11 +61,11 @@ is provided in the interface itself, so that the interfaces can be subclassed).<
 <dd><p>Interface for corpora. A <em>corpus</em> is simply an iterable, where each 
 iteration step yields one document. A document is a list of (fieldId, fieldValue)
 2-tuples.</p>
-<p>See the corpora package for some example corpus implementations.</p>
-<p>Note that although a default len() method is provided, it is very inefficient
+<p>See the <cite>corpora</cite> package for some example corpus implementations.</p>
+<p>Note that although a default <tt class="xref docutils literal"><span class="pre">len()</span></tt> method is provided, it is very inefficient
 (performs a linear scan through the corpus to determine its length). Wherever 
 the corpus size is needed and known in advance (or at least doesn&#8217;t change so 
-that it can be cached), the len() method should be overridden.</p>
+that it can be cached), the <tt class="xref docutils literal"><span class="pre">len()</span></tt> method should be overridden.</p>
 <dl class="classmethod">
 <dt id="gensim.interfaces.CorpusABC.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.interfaces.CorpusABC.load" title="Permalink to this definition">¶</a></dt>
@@ -86,15 +86,20 @@ that it can be cached), the len() method should be overridden.</p>
 similarity search.</p>
 <p>For similarity search, the input is a document and the output are its 
 similarities to individual corpus documents.</p>
-<p>Similarity queries are realized by calling self[query_document].</p>
-<p>There is also a convenience wrapper, where iterating over self yields 
+<p>Similarity queries are realized by calling <tt class="docutils literal"><span class="pre">self[query_document]</span></tt>.</p>
+<p>There is also a convenience wrapper, where iterating over <cite>self</cite> yields 
 similarities of each document in the corpus against the whole corpus (ie.,
 the query is each corpus document in turn).</p>
 <p>Initialize the similarity search.</p>
-<p>If numBest is left unspecified, similarity queries return a full list (one 
-float for every document in the corpus, including the query document).</p>
-<p>If numBest is set, queries return numBest most similar documents, as a 
-sorted list, eg. [(docIndex1, 1.0), (docIndex2, 0.95), ..., (docIndexnumBest, 0.45)].</p>
+<p>If <cite>numBest</cite> is left unspecified, similarity queries return a full list (one 
+float for every document in the corpus, including the query document):</p>
+<p>If <cite>numBest</cite> is set, queries return <cite>numBest</cite> most similar documents, as a 
+sorted list:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sms</span> <span class="o">=</span> <span class="n">SparseMatrixSimilarity</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numBest</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sms</span><span class="p">[</span><span class="n">vec</span><span class="p">]</span> <span class="c"># result in order of decreasing similarity</span>
+<span class="go">[(12, 1.0), (30, 0.95), (5, 0.45)]</span>
+</pre></div>
+</div>
 <dl class="method">
 <dt id="gensim.interfaces.SimilarityABC.getSimilarities">
 <tt class="descname">getSimilarities</tt><big>(</big><em>doc</em><big>)</big><a class="headerlink" href="#gensim.interfaces.SimilarityABC.getSimilarities" title="Permalink to this definition">¶</a></dt>
@@ -118,15 +123,9 @@ sorted list, eg. [(docIndex1, 1.0), (docIndex2, 0.95), ..., (docIndexnumBest, 0.
 <dt id="gensim.interfaces.TransformationABC">
 <em class="property">class </em><tt class="descclassname">gensim.interfaces.</tt><tt class="descname">TransformationABC</tt><a class="headerlink" href="#gensim.interfaces.TransformationABC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Interface for transformations. A &#8216;transformation&#8217; is any object which accepts
-a sparse document via the dictionary notation [] and returns another sparse
+a sparse document via the dictionary notation <cite>[]</cite> and returns another sparse
 document in its stead.</p>
-<p>See the <tt class="xref docutils literal"><span class="pre">tfidfmodel</span></tt> module for an example of a transformation.</p>
-<dl class="method">
-<dt id="gensim.interfaces.TransformationABC.apply">
-<tt class="descname">apply</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.interfaces.TransformationABC.apply" title="Permalink to this definition">¶</a></dt>
-<dd>Apply the transformation to a whole corpus (as opposed to a single document) 
-and return the result as another another corpus.</dd></dl>
-
+<p>See the <a title="TF-IDF model" class="reference external" href="models/tfidfmodel.html#module-gensim.models.tfidfmodel"><tt class="xref docutils literal"><span class="pre">gensim.models.tfidfmodel</span></tt></a> module for an example of a transformation.</p>
 <dl class="classmethod">
 <dt id="gensim.interfaces.TransformationABC.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.interfaces.TransformationABC.load" title="Permalink to this definition">¶</a></dt>
@@ -152,7 +151,7 @@ and return the result as another another corpus.</dd></dl>
                                   title="previous chapter">API Reference</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="utils.html"
-                                  title="next chapter"><tt class="docutils literal"><span class="pre">utils</span></tt></a></p>
+                                  title="next chapter"><tt class="docutils literal"><span class="pre">utils</span></tt> &#8211; Various utility functions</a></p>
           <div id="searchbox" style="display: none">
             <h3>Quick search</h3>
               <form class="search" action="search.html" method="get">
@@ -180,7 +179,7 @@ and return the result as another another corpus.</dd></dl>
           <a href="modindex.html" title="Global Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="utils.html" title="utils"
+          <a href="utils.html" title="utils – Various utility functions"
              >next</a> |</li>
         <li class="right" >
           <a href="apiref.html" title="API Reference"

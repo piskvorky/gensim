@@ -15,8 +15,7 @@ characters, such as the leading ``>>>``.
 Quick Example
 -------------
 
-First, let's import some classes and create a corpus:
-[footnote]: This is the same corpus as used in FIXME Deerwester et al. (1990), Table 2, Part 1.
+First, let's import some classes and create a small corpus of nine documents [1]_:
 
 >>> from gensim import corpora, models, similarities
 >>> 
@@ -69,7 +68,7 @@ To index and prepare the whole TfIdf corpus for similarity queries:
 
 and to query the similarity of our vector ``vec`` against every document in the corpus:
 
->>> sims = sim[tfidf[vec]]
+>>> sims = index[tfidf[vec]]
 >>> print list(enumerate(sims))
 [(0, 0.4662244), (1, 0.19139354), (2, 0.24600551), (3, 0.82094586), (4, 0.0), (5, 0.0), (6, 0.0), (7, 0.0), (8, 0.0)]
 
@@ -128,7 +127,7 @@ as well as words that only appear once in the corpus:
 
 Your way of processing the documents will likely vary; here, we only split on whitespace
 to tokenize, followed by lowercasing each word. In fact, we use this particular 
-(simplistic) setup to mimick the experiment done in Deerwester's original LSA article [ref FIXME].
+(simplistic) setup to mimick the experiment done in Deerwester et al.'s original LSA article [1]_.
 
 The ways to process documents are so versatile and application- and language-dependent that we
 decided to *not* constrain them by any interface. Instead, a document is represented
@@ -194,7 +193,7 @@ into a 2-D space:
 >>> lsi = models.LsiModel(corpus, numTopics = 2)
 >>> newVecLsi = lsi[newVec]
 >>> print newVecLsi
-[(0, -0.4618210045327153), (1, 0.070027665279000631)]
+[(0, -0.461821), (1, 0.0700277)]
 
 and print proximity of this query document against our original corpus of nine 
 documents:
@@ -206,16 +205,56 @@ documents:
 
 The thing to note here is that documents no. 2 (``"The EPS user interface management system"``)
 and 4 (``"Relation of user perceived response time to error measurement"``) would never be returned by
-a standard fulltext search, because they do not share any common words with ``"Human 
+a standard boolean fulltext search, because they do not share any common words with ``"Human 
 computer interaction"``. However, after applying LSI, we can observe that both of 
 them received high similarity scores, which corresponds better to our intuition of
 them sharing a "computer-related" topic with the query. In fact, this is the reason 
 why we apply transformations and do topic modeling in the first place.
 
+
 Corpus Formats
 ---------------
 
-Continuing with the previous examples, do saveCorpus.
+There exist several file formats for storing a collection of vectors to disk.
+`Gensim` implements them via the *streaming corpus interface* mentioned earlier:
+documents are read from disk in a lazy fashion, one document at a time, without the whole
+corpus being read into main memory at once.
 
-Transform SVMlight into MatrixMarket. Opposite transform -- no class tags.
+One of the most notable formats is the `Market Matrix format <http://math.nist.gov/MatrixMarket/formats.html>`_.
+To save a corpus in the Matrix Market format:
+
+>>> from gensim import corpora
+>>> corpora.MmCorpus.saveCorpus('/tmp/corpus.mm', corpus)
+
+Other formats include `Joachim's SVMlight format <svmlight.joachims.org/>`_, 
+`Blei's LDA-C format <www.cs.princeton.edu/~blei/lda-c/>`_ and 
+`GibbsLDA++ format <http://gibbslda.sourceforge.net/>`_. 
+
+Conversely, to load a corpus iterator from a Matrix Market file:
+
+>>> corpus = corpora.MmCorpus('/tmp/corpus.mm')
+>>> print list(corpus) # convert from MmCorpus object (document stream) to plain Python list
+[[(0, 1.0), (1, 1.0), (2, 1.0)],
+ [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],
+ [(1, 1.0), (3, 1.0), (4, 1.0), (7, 1.0)],
+ [(0, 1.0), (4, 2.0), (7, 1.0)],
+ [(3, 1.0), (5, 1.0), (6, 1.0)],
+ [(9, 1.0)],
+ [(9, 1.0), (10, 1.0)],
+ [(9, 1.0), (10, 1.0), (11, 1.0)],
+ [(8, 1.0), (10, 1.0), (11, 1.0)]]
+ 
+and to save it in Blei's LDA-C format again,
+
+>>> corpora.BleiCorpus.saveCorpus('/tmp/corpus.lda-c', corpus)
+
+In this way, `gensim` can also be used as a simple I/O format conversion tool.
+
+For a complete reference, see the :doc:`API documentation <apiref>`.
+
+
+------
+
+.. [1]  This is the same corpus as used in 
+        `Deerwester et al. (1990): Indexing by Latent Semantic Analysis <http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf>`_, Table 2.
 

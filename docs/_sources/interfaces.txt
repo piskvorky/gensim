@@ -1,8 +1,8 @@
-:mod:`interfaces`
-==================
+:mod:`interfaces` -- Core gensim interfaces
+============================================
 
 .. automodule:: gensim.interfaces
-    :synopsis: Core gensim interfces
+    :synopsis: Core gensim interfaces
     :members:
     :inherited-members:
 
