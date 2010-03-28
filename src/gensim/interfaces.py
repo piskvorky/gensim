@@ -21,12 +21,12 @@ class CorpusABC(utils.SaveLoad):
     iteration step yields one document. A document is a list of (fieldId, fieldValue)
     2-tuples.
     
-    See the corpora package for some example corpus implementations.
+    See the `corpora` package for some example corpus implementations.
     
-    Note that although a default len() method is provided, it is very inefficient
+    Note that although a default :func:`len` method is provided, it is very inefficient
     (performs a linear scan through the corpus to determine its length). Wherever 
     the corpus size is needed and known in advance (or at least doesn't change so 
-    that it can be cached), the len() method should be overridden.
+    that it can be cached), the :func:`len` method should be overridden.
     """
     def __iter__(self):
         """
@@ -50,10 +50,10 @@ class CorpusABC(utils.SaveLoad):
 class TransformationABC(utils.SaveLoad):
     """
     Interface for transformations. A 'transformation' is any object which accepts
-    a sparse document via the dictionary notation [] and returns another sparse
+    a sparse document via the dictionary notation `[]` and returns another sparse
     document in its stead.
     
-    See the :mod:`tfidfmodel` module for an example of a transformation.
+    See the :mod:`gensim.models.tfidfmodel` module for an example of a transformation.
     """
     class TransformedCorpus(CorpusABC):
         def __init__(self, fnc, corpus):
@@ -78,10 +78,10 @@ class TransformationABC(utils.SaveLoad):
         raise NotImplementedError('cannot instantiate abstract base class')
 
 
-    def apply(self, corpus):
+    def _apply(self, corpus):
         """
         Apply the transformation to a whole corpus (as opposed to a single document) 
-        and return the result as another another corpus.
+        and return the result as another corpus.
         """
         return TransformationABC.TransformedCorpus(self.__getitem__, corpus)
 #endclass TransformationABC
@@ -97,9 +97,9 @@ class SimilarityABC(utils.SaveLoad):
     For similarity search, the input is a document and the output are its 
     similarities to individual corpus documents.
     
-    Similarity queries are realized by calling self[query_document].
+    Similarity queries are realized by calling ``self[query_document]``.
     
-    There is also a convenience wrapper, where iterating over self yields 
+    There is also a convenience wrapper, where iterating over `self` yields 
     similarities of each document in the corpus against the whole corpus (ie.,
     the query is each corpus document in turn).
     """
@@ -107,11 +107,16 @@ class SimilarityABC(utils.SaveLoad):
         """
         Initialize the similarity search.
         
-        If numBest is left unspecified, similarity queries return a full list (one 
-        float for every document in the corpus, including the query document).
+        If `numBest` is left unspecified, similarity queries return a full list (one 
+        float for every document in the corpus, including the query document):
         
-        If numBest is set, queries return numBest most similar documents, as a 
-        sorted list, eg. [(docIndex1, 1.0), (docIndex2, 0.95), ..., (docIndexnumBest, 0.45)].
+        If `numBest` is set, queries return `numBest` most similar documents, as a 
+        sorted list:
+        
+        >>> sms = SparseMatrixSimilarity(corpus, numBest = 3)
+        >>> sms[vec] # result in order of decreasing similarity
+        [(12, 1.0), (30, 0.95), (5, 0.45)]
+        
         """
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 

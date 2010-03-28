@@ -92,7 +92,7 @@ class TfidfModel(interfaces.TransformationABC):
         """
         # if the input vector is in fact a corpus, return a transformed corpus as result
         if utils.isCorpus(bow):
-            return self.apply(bow)
+            return self._apply(bow)
         
         # unknown (new) terms will be given zero weight (NOT infinity/huge weight,
         # as would the strict application of the IDF formula suggest

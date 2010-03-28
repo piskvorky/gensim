@@ -403,7 +403,7 @@ class LdaModel(interfaces.TransformationABC):
         """
         # if the input vector is in fact a corpus, return a transformed corpus as result
         if utils.isCorpus(bow):
-            return self.apply(bow)
+            return self._apply(bow)
         
         likelihood, phi, gamma = self.inference(bow)
         gamma -= self.alpha # subtract topic prior, to get the expected number of words for each topic
