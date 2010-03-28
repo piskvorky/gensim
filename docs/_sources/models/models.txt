@@ -1,5 +1,5 @@
-:mod:`models`
-==================
+:mod:`models` -- Package for transformation models 
+======================================================
 
 .. automodule:: gensim.models
     :synopsis: Package for transformation models

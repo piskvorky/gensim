@@ -1,7 +1,7 @@
-:mod:`utils`
-==================
+:mod:`utils` -- Various utility functions 
+==========================================
 
 .. automodule:: gensim.utils
-    :synopsis: Utility functions
+    :synopsis: Various utility functions
     :members:
     :inherited-members:

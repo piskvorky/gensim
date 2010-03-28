@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.1',
+        VERSION:     '0.4.2',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -58,8 +58,7 @@ you have <a class="reference external" href="install.html"><em>gensim installed<
 characters, such as the leading <tt class="docutils literal"><span class="pre">&gt;&gt;&gt;</span></tt>.</p>
 <div class="section" id="quick-example">
 <span id="first-example"></span><h2>Quick Example<a class="headerlink" href="#quick-example" title="Permalink to this headline">¶</a></h2>
-<p>First, let&#8217;s import some classes and create a corpus:
-[footnote]: This is the same corpus as used in FIXME Deerwester et al. (1990), Table 2, Part 1.</p>
+<p>First, let&#8217;s import some classes and create a small corpus of nine documents <a class="footnote-reference" href="#id3" id="id1">[1]</a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">similarities</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[[(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
@@ -108,7 +107,7 @@ a weighting which discounts common terms (or, equivalently, promotes rare terms)
 </pre></div>
 </div>
 <p>and to query the similarity of our vector <tt class="docutils literal"><span class="pre">vec</span></tt> against every document in the corpus:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sims</span> <span class="o">=</span> <span class="n">sim</span><span class="p">[</span><span class="n">tfidf</span><span class="p">[</span><span class="n">vec</span><span class="p">]]</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sims</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">tfidf</span><span class="p">[</span><span class="n">vec</span><span class="p">]]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">sims</span><span class="p">))</span>
 <span class="go">[(0, 0.4662244), (1, 0.19139354), (2, 0.24600551), (3, 0.82094586), (4, 0.0), (5, 0.0), (6, 0.0), (7, 0.0), (8, 0.0)]</span>
 </pre></div>
@@ -162,7 +161,7 @@ as well as words that only appear once in the corpus:</p>
 </div>
 <p>Your way of processing the documents will likely vary; here, we only split on whitespace
 to tokenize, followed by lowercasing each word. In fact, we use this particular
-(simplistic) setup to mimick the experiment done in Deerwester&#8217;s original LSA article [ref FIXME].</p>
+(simplistic) setup to mimick the experiment done in Deerwester et al.&#8217;s original LSA article <a class="footnote-reference" href="#id3" id="id2">[1]</a>.</p>
 <p>The ways to process documents are so versatile and application- and language-dependent that we
 decided to <em>not</em> constrain them by any interface. Instead, a document is represented
 by the features extracted from it, not by its &#8220;surface&#8221; string form. How you get to
@@ -222,7 +221,7 @@ into a 2-D space:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">newVecLsi</span> <span class="o">=</span> <span class="n">lsi</span><span class="p">[</span><span class="n">newVec</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">newVecLsi</span>
-<span class="go">[(0, -0.4618210045327153), (1, 0.070027665279000631)]</span>
+<span class="go">[(0, -0.461821), (1, 0.0700277)]</span>
 </pre></div>
 </div>
 <p>and print proximity of this query document against our original corpus of nine
@@ -235,7 +234,7 @@ documents:</p>
 </div>
 <p>The thing to note here is that documents no. 2 (<tt class="docutils literal"><span class="pre">&quot;The</span> <span class="pre">EPS</span> <span class="pre">user</span> <span class="pre">interface</span> <span class="pre">management</span> <span class="pre">system&quot;</span></tt>)
 and 4 (<tt class="docutils literal"><span class="pre">&quot;Relation</span> <span class="pre">of</span> <span class="pre">user</span> <span class="pre">perceived</span> <span class="pre">response</span> <span class="pre">time</span> <span class="pre">to</span> <span class="pre">error</span> <span class="pre">measurement&quot;</span></tt>) would never be returned by
-a standard fulltext search, because they do not share any common words with <tt class="docutils literal"><span class="pre">&quot;Human</span>
+a standard boolean fulltext search, because they do not share any common words with <tt class="docutils literal"><span class="pre">&quot;Human</span>
 <span class="pre">computer</span> <span class="pre">interaction&quot;</span></tt>. However, after applying LSI, we can observe that both of
 them received high similarity scores, which corresponds better to our intuition of
 them sharing a &#8220;computer-related&#8221; topic with the query. In fact, this is the reason
@@ -243,8 +242,47 @@ why we apply transformations and do topic modeling in the first place.</p>
 </div>
 <div class="section" id="corpus-formats">
 <h2>Corpus Formats<a class="headerlink" href="#corpus-formats" title="Permalink to this headline">¶</a></h2>
-<p>Continuing with the previous examples, do saveCorpus.</p>
-<p>Transform SVMlight into MatrixMarket. Opposite transform &#8211; no class tags.</p>
+<p>There exist several file formats for storing a collection of vectors to disk.
+<cite>Gensim</cite> implements them via the <em>streaming corpus interface</em> mentioned earlier:
+documents are read from disk in a lazy fashion, one document at a time, without the whole
+corpus being read into main memory at once.</p>
+<p>One of the most notable formats is the <a class="reference external" href="http://math.nist.gov/MatrixMarket/formats.html">Market Matrix format</a>.
+To save a corpus in the Matrix Market format:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Other formats include <a class="reference external" href="svmlight.joachims.org/">Joachim&#8217;s SVMlight format</a>,
+<a class="reference external" href="www.cs.princeton.edu/~blei/lda-c/">Blei&#8217;s LDA-C format</a> and
+<a class="reference external" href="http://gibbslda.sourceforge.net/">GibbsLDA++ format</a>.</p>
+<p>Conversely, to load a corpus iterator from a Matrix Market file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.mm&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span> <span class="c"># convert from MmCorpus object (document stream) to plain Python list</span>
+<span class="go">[[(0, 1.0), (1, 1.0), (2, 1.0)],</span>
+<span class="go"> [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],</span>
+<span class="go"> [(1, 1.0), (3, 1.0), (4, 1.0), (7, 1.0)],</span>
+<span class="go"> [(0, 1.0), (4, 2.0), (7, 1.0)],</span>
+<span class="go"> [(3, 1.0), (5, 1.0), (6, 1.0)],</span>
+<span class="go"> [(9, 1.0)],</span>
+<span class="go"> [(9, 1.0), (10, 1.0)],</span>
+<span class="go"> [(9, 1.0), (10, 1.0), (11, 1.0)],</span>
+<span class="go"> [(8, 1.0), (10, 1.0), (11, 1.0)]]</span>
+</pre></div>
+</div>
+<p>and to save it in Blei&#8217;s LDA-C format again,</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">BleiCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.lda-c&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this way, <cite>gensim</cite> can also be used as a simple I/O format conversion tool.</p>
+<p>For a complete reference, see the <a class="reference external" href="apiref.html"><em>API documentation</em></a>.</p>
+<hr class="docutils" />
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> This is the same corpus as used in
+<a class="reference external" href="http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf">Deerwester et al. (1990): Indexing by Latent Semantic Analysis</a>, Table 2.</td></tr>
+</tbody>
+</table>
 </div>
 </div>
 
