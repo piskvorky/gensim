@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.4.2',
+        VERSION:     '0.4.3',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -84,10 +84,10 @@ which terms and documents will be mapped.</p>
 <p>The SVD is created incrementally, in blocks of <cite>chunks</cite> documents. In the
 end, a <cite>self.projection</cite> matrix is constructed that can be used to transform 
 documents into the latent space. The <cite>U, S, V</cite> decomposition itself is 
-discarded, unless keepDecomposition is True, in which case it is stored 
+discarded, unless <cite>keepDecomposition</cite> is True, in which case it is stored 
 in <cite>self.u</cite>, <cite>self.s</cite> and <cite>self.v</cite>.</p>
 <p>The algorithm is adapted from:
-M. Brand. 2006. Fast low-rank modifications of the thin singular value decomposition</p>
+<strong>M. Brand. 2006. Fast low-rank modifications of the thin singular value decomposition</strong></p>
 </dd></dl>
 
 <dl class="classmethod">
@@ -98,8 +98,7 @@ M. Brand. 2006. Fast low-rank modifications of the thin singular value decomposi
 <dl class="method">
 <dt id="gensim.models.lsimodel.LsiModel.printTopic">
 <tt class="descname">printTopic</tt><big>(</big><em>topicNo</em>, <em>topN=10</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.printTopic" title="Permalink to this definition">¶</a></dt>
-<dd><p>Print a specified topic (0 &lt;= topicNo &lt; numTopics) in human readable format.</p>
-<p>Example:</p>
+<dd><p>Print a specified topic (0 &lt;= <cite>topicNo</cite> &lt; <cite>self.numTopics</cite>) in human readable format.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsimodel</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">topN</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
 <span class="go">-0.340 * &quot;category&quot; + 0.298 * &quot;$M$&quot; + 0.183 * &quot;algebra&quot; + -0.174 * &quot;functor&quot; + -0.168 * &quot;operator&quot;</span>
 </pre></div>
@@ -117,15 +116,15 @@ M. Brand. 2006. Fast low-rank modifications of the thin singular value decomposi
 <dd><p>Update singular value decomposition factors to take into account new 
 documents <cite>docs</cite>.</p>
 <p>This function corresponds to the general update of Brand (section 2), 
-specialized for A = docs.T and B trivial (no update to matrix rows).</p>
+specialized for <cite>A = docs.T</cite> and <cite>B</cite> trivial (no update to matrix rows).</p>
 <p>The documents are assumed to be a list of full vectors (ie. not sparse 2-tuples).</p>
-<p>Compute new decomposition u&#8217;, s&#8217;, v&#8217; so that if the current matrix X decomposes to
-u * s * v^T ~= X, then
-u&#8217; * s&#8217; * v&#8217;^T ~= [X docs^T]</p>
-<p>u, s, v and their new values u&#8217;, s&#8217;, v&#8217; are stored within self (ie. as 
-self.u, self.v etc.).</p>
-<p>self.v can be set to None, in which case it is completely ignored. This saves a
-bit of speed and a lot of memory, especially for huge corpora (size of v is
+<p>Compute new decomposition <cite>u&#8217;</cite>, <cite>s&#8217;</cite>, <cite>v&#8217;</cite> so that if the current matrix <cite>X</cite> decomposes to
+<cite>u * s * v^T ~= X</cite>, then
+<cite>u&#8217; * s&#8217; * v&#8217;^T ~= [X docs^T]</cite></p>
+<p><cite>u</cite>, <cite>s</cite>, <cite>v</cite> and their new values <cite>u&#8217;</cite>, <cite>s&#8217;</cite>, <cite>v&#8217;</cite> are stored within <cite>self</cite> (ie. as 
+<cite>self.u</cite>, <cite>self.v</cite> etc.).</p>
+<p><cite>self.v</cite> can be set to <cite>None</cite>, in which case it is completely ignored. This saves a
+bit of speed and a lot of memory, especially for huge corpora (size of <cite>v</cite> is
 linear in the number of added documents).</p>
 </dd></dl>
 
@@ -138,8 +137,8 @@ linear in the number of added documents).</p>
 returning <cite>numFactors</cite> greatest factors (ie., not necessarily full spectrum).</p>
 <p>The parameters <cite>numIter</cite> (maximum number of iterations) and <cite>initRate</cite> (gradient 
 descent step size) guide convergency of the algorithm.</p>
-<p>See Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 
-Value Decomposition in Natural Language Processing. EACL 2006.</p>
+<p>See <strong>Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 
+Value Decomposition in Natural Language Processing. EACL 2006.</strong></p>
 <p>Use of this function is deprecated; although it works, it is several orders of 
 magnitude slower than the direct (non-stochastic) version based on Brand. Use 
 svdAddCols/svdUpdate to compute SVD iteratively. I keep this function here 
@@ -149,9 +148,9 @@ purely for backup reasons.</p>
 <dl class="function">
 <dt id="gensim.models.lsimodel.svdUpdate">
 <tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">svdUpdate</tt><big>(</big><em>U</em>, <em>S</em>, <em>V</em>, <em>a</em>, <em>b</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.svdUpdate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update SVD of an (m x n) matrix X = U * S * V^T so that
-[X + a * b^T] = U&#8217; * S&#8217; * V&#8217;^T
-and return U&#8217;, S&#8217;, V&#8217;.</p>
+<dd><p>Update SVD of an (m x n) matrix <cite>X = U * S * V^T</cite> so that
+<cite>[X + a * b^T] = U&#8217; * S&#8217; * V&#8217;^T</cite>
+and return <cite>U&#8217;</cite>, <cite>S&#8217;</cite>, <cite>V&#8217;</cite>.</p>
 <p><cite>a</cite> and <cite>b</cite> are (m, 1) and (n, 1) rank-1 matrices, so that svdUpdate can simulate 
 incremental addition of one new document and/or term to an already existing 
 decomposition.</p>

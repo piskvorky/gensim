@@ -66,11 +66,11 @@ class LsiModel(interfaces.TransformationABC):
         The SVD is created incrementally, in blocks of `chunks` documents. In the
         end, a `self.projection` matrix is constructed that can be used to transform 
         documents into the latent space. The `U, S, V` decomposition itself is 
-        discarded, unless keepDecomposition is True, in which case it is stored 
+        discarded, unless `keepDecomposition` is True, in which case it is stored 
         in `self.u`, `self.s` and `self.v`.
         
         The algorithm is adapted from:
-        M. Brand. 2006. Fast low-rank modifications of the thin singular value decomposition
+        **M. Brand. 2006. Fast low-rank modifications of the thin singular value decomposition**
         """
         if self.id2word is None:
             logging.info("no word id mapping provided; initializing from corpus, assuming identity")
@@ -148,19 +148,19 @@ class LsiModel(interfaces.TransformationABC):
         documents `docs`.
         
         This function corresponds to the general update of Brand (section 2), 
-        specialized for A = docs.T and B trivial (no update to matrix rows).
+        specialized for `A = docs.T` and `B` trivial (no update to matrix rows).
 
         The documents are assumed to be a list of full vectors (ie. not sparse 2-tuples).
         
-        Compute new decomposition u', s', v' so that if the current matrix X decomposes to
-        u * s * v^T ~= X, then
-        u' * s' * v'^T ~= [X docs^T]
+        Compute new decomposition `u'`, `s'`, `v'` so that if the current matrix `X` decomposes to
+        `u * s * v^T ~= X`, then
+        `u' * s' * v'^T ~= [X docs^T]`
         
-        u, s, v and their new values u', s', v' are stored within self (ie. as 
-        self.u, self.v etc.).
+        `u`, `s`, `v` and their new values `u'`, `s'`, `v'` are stored within `self` (ie. as 
+        `self.u`, `self.v` etc.).
         
-        self.v can be set to None, in which case it is completely ignored. This saves a
-        bit of speed and a lot of memory, especially for huge corpora (size of v is
+        `self.v` can be set to `None`, in which case it is completely ignored. This saves a
+        bit of speed and a lot of memory, especially for huge corpora (size of `v` is
         linear in the number of added documents).
         """
         logging.debug("updating SVD with %i new documents" % len(docs))
@@ -236,9 +236,7 @@ class LsiModel(interfaces.TransformationABC):
 
     def printTopic(self, topicNo, topN = 10):
         """
-        Print a specified topic (0 <= topicNo < numTopics) in human readable format.
-        
-        Example:
+        Print a specified topic (0 <= `topicNo` < `self.numTopics`) in human readable format.
         
         >>> lsimodel.printTopic(10, topN = 5)
         -0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + -0.174 * "functor" + -0.168 * "operator"
@@ -254,9 +252,9 @@ class LsiModel(interfaces.TransformationABC):
 
 def svdUpdate(U, S, V, a, b):
     """
-    Update SVD of an (m x n) matrix X = U * S * V^T so that
-    [X + a * b^T] = U' * S' * V'^T
-    and return U', S', V'.
+    Update SVD of an (m x n) matrix `X = U * S * V^T` so that
+    `[X + a * b^T] = U' * S' * V'^T`
+    and return `U'`, `S'`, `V'`.
     
     `a` and `b` are (m, 1) and (n, 1) rank-1 matrices, so that svdUpdate can simulate 
     incremental addition of one new document and/or term to an already existing 
@@ -293,8 +291,8 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
     The parameters `numIter` (maximum number of iterations) and `initRate` (gradient 
     descent step size) guide convergency of the algorithm.
     
-    See Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 
-    Value Decomposition in Natural Language Processing. EACL 2006.
+    See **Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 
+    Value Decomposition in Natural Language Processing. EACL 2006.**
     
     Use of this function is deprecated; although it works, it is several orders of 
     magnitude slower than the direct (non-stochastic) version based on Brand. Use 

@@ -12,6 +12,24 @@ To download and install `gensim`, consult the :doc:`install <install>` page.
 
 For examples on how to use it, try the :doc:`tutorials <tutorial>`.
 
+Quick Reference Example
+------------------------
+
+>>> from gensim import corpora, models, similarities
+>>>
+>>> # load corpus iterator from a Matrix Market file on disk
+>>> corpus = corpora.MmCorpus('/path/to/corpus.mm')
+>>>
+>>> # initialize a transformation (Latent Semantic Indexing with twenty latent dimensions)
+>>> lsi = models.LsiModel(corpus, numTopics = 20)
+>>>
+>>> # convert corpus to latent space and index it
+>>> index = similarities.SparseMatrixSimilarity(lsi[corpus])
+>>> 
+>>> # perform similarity query of a new vector in LSI space against the whole corpus
+>>> sims = index[query])
+
+
 Contents
 ---------
 

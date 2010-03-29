@@ -1,1 +1,4 @@
-Tutorial on :doc:`Tutorial on document similarity`
+.. _tut3:
+
+Similarity Queries
+===========================
