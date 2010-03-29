@@ -1,6 +1,11 @@
 Changes
 =======
 
+0.4.3
+
+* documentation changes
+* added gensim reference to Wiki articles (SVD, LSI, LDA, TFIDF, ...)
+
 0.4.2
 
 * finally, a tutorial!
