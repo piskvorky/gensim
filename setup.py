@@ -30,7 +30,7 @@ long_desc = read('README.txt')
 
 setup(
     name = 'gensim',
-    version = '0.4.2',
+    version = '0.4.3',
     description = 'Python Framework for Topic Modeling',
     long_description = long_desc,
     
