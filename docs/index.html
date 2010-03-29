@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.2',
+        VERSION:     '0.4.3',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -49,6 +49,24 @@
 <p>For an introduction on what gensim does (or does not do), go to the <a class="reference external" href="intro.html"><em>introduction</em></a>.</p>
 <p>To download and install <cite>gensim</cite>, consult the <a class="reference external" href="install.html"><em>install</em></a> page.</p>
 <p>For examples on how to use it, try the <a class="reference external" href="tutorial.html"><em>tutorials</em></a>.</p>
+<div class="section" id="quick-reference-example">
+<h2>Quick Reference Example<a class="headerlink" href="#quick-reference-example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">similarities</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># load corpus iterator from a Matrix Market file on disk</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/path/to/corpus.mm&#39;</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># initialize a transformation (Latent Semantic Indexing with twenty latent dimensions)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># convert corpus to latent space and index it</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">SparseMatrixSimilarity</span><span class="p">(</span><span class="n">lsi</span><span class="p">[</span><span class="n">corpus</span><span class="p">])</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># perform similarity query of a new vector in LSI space against the whole corpus</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sims</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">query</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <ul>
@@ -77,6 +95,7 @@
             <h3><a href="#">Table Of Contents</a></h3>
             <ul>
 <li><a class="reference external" href="#">gensim</a><ul>
+<li><a class="reference external" href="#quick-reference-example">Quick Reference Example</a></li>
 <li><a class="reference external" href="#contents">Contents</a><ul>
 </ul>
 </li>
