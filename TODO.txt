@@ -1,0 +1,9 @@
+Changes for future releases:
+
+* fix unittest for LDA; due to the model's random initiazation, it sometimes 
+  returns different result than expected on the testing toy corpus.
+* finish tutorials
+* implement LDA differently; see Asuncion: "On Smoothing and Inference for Topic Models"
+* and the big one: find a reasonable framework for distributed computing in Python
+  and translate algorithms into their distributed variants. Avoid Java frameworks
+  and over-complex stuff; the main design principles of gensim must still hold.
