@@ -52,10 +52,6 @@
             
   <div class="section" id="corpora-and-the-vector-space-model">
 <span id="tut1"></span><h1>Corpora and the Vector Space Model<a class="headerlink" href="#corpora-and-the-vector-space-model" title="Permalink to this headline">¶</a></h1>
-<p>All the examples can be directly copied to your Python interpreter shell (assuming
-you have <a class="reference external" href="install.html"><em>gensim installed</em></a>, of course).</p>
-<p><a class="reference external" href="http://ipython.scipy.org">IPython</a>&#8216;s <tt class="docutils literal"><span class="pre">cpaste</span></tt> command is especially handy for copypasting code fragments which include superfluous
-characters, such as the leading <tt class="docutils literal"><span class="pre">&gt;&gt;&gt;</span></tt>.</p>
 <div class="section" id="quick-example">
 <span id="first-example"></span><h2>Quick Example<a class="headerlink" href="#quick-example" title="Permalink to this headline">¶</a></h2>
 <p>First, let&#8217;s import gensim and create a small corpus of nine documents <a class="footnote-reference" href="#id3" id="id1">[1]</a>:</p>
@@ -135,7 +131,7 @@ with <tt class="docutils literal"><span class="pre">vec</span></tt> at all (docu
 </pre></div>
 </div>
 <p>This is a tiny corpus of nine documents, each consisting of only a single sentence.</p>
-<p>Firstly, let&#8217;s tokenize the documents, remove common words (using a toy stoplist)
+<p>First, let&#8217;s tokenize the documents, remove common words (using a toy stoplist)
 as well as words that only appear once in the corpus:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># remove common words and tokenize</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">stoplist</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="s">&#39;for a of the and to in&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
@@ -162,11 +158,12 @@ as well as words that only appear once in the corpus:</p>
 </div>
 <p>Your way of processing the documents will likely vary; here, we only split on whitespace
 to tokenize, followed by lowercasing each word. In fact, we use this particular
-(simplistic) setup to mimick the experiment done in Deerwester et al.&#8217;s original LSA article <a class="footnote-reference" href="#id3" id="id2">[1]</a>.</p>
+(simplistic and inefficient) setup to mimick the experiment done in Deerwester et al.&#8217;s
+original LSA article <a class="footnote-reference" href="#id3" id="id2">[1]</a>.</p>
 <p>The ways to process documents are so varied and application- and language-dependent that we
 decided to <em>not</em> constrain them by any interface. Instead, a document is represented
 by the features extracted from it, not by its &#8220;surface&#8221; string form. How you get to
-the features is up to you; what follows is just one common scenario.</p>
+the features is up to you; what follows below is just one common scenario.</p>
 <p>To convert documents to vectors, we will use a document representation called
 <a class="reference external" href="http://en.wikipedia.org/wiki/Bag_of_words">bag-of-words</a>. In this representation,
 each vector element is a question-answer pair, in the style of:</p>
@@ -190,7 +187,7 @@ the <a class="reference internal" href="#first-example">first example</a>, excep
 </div>
 <p>For example, the vector feature with <tt class="docutils literal"><span class="pre">id=10</span></tt> stands for the question &#8220;How many
 times does the word <cite>graph</cite> appear in the document?&#8221;. The answer is &#8220;zero&#8221; for
-the first six documents and &#8220;one&#8221; for the remaining three.</p>
+the first six documents and &#8220;one&#8221; for the remaining three:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">corpus</span>
 <span class="go">[[(0, 1.0), (1, 1.0), (2, 1.0)],</span>
 <span class="go"> [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],</span>
@@ -204,10 +201,10 @@ the first six documents and &#8220;one&#8221; for the remaining three.</p>
 </pre></div>
 </div>
 <p>The function <tt class="docutils literal"><span class="pre">doc2bow</span></tt> simply counts the number of occurences of
-each distinct word, converts the word to its integer <cite>question id</cite> and returns
-the result as a sparse vector. With the <tt class="docutils literal"><span class="pre">allowUpdate</span></tt> option set, newly introduced
-words will be assigned a new id; otherwise, they are ignored. Put differently,
-this option decides whether new questions should be created upon encountering
+each distinct word, converts the word to its integer <cite>question id</cite> = <cite>word id</cite> = <cite>feature id</cite>
+and returns the result as a sparse vector. With the <tt class="docutils literal"><span class="pre">allowUpdate</span></tt> option set,
+newly introduced words will be assigned a new id; otherwise, they are ignored.
+Put differently, this option decides whether new questions should be created upon encountering
 new words, or whether we&#8217;re only interested in answering a fixed, pre-determined
 set of questions.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">newDoc</span> <span class="o">=</span> <span class="s">&quot;Human computer interaction&quot;</span>
