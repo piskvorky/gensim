@@ -188,7 +188,7 @@ class DmlCorpus(interfaces.CorpusABC):
         fout.close()
 
     
-    def saveAsText(self, normalizeTfidf = False):
+    def saveAsText(self):
         """
         Store the corpus to disk, in a human-readable text format.
         

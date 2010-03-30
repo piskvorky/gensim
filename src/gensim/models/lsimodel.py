@@ -173,7 +173,7 @@ class LsiModel(interfaces.TransformationABC):
             n, k2 = self.v.shape
             assert k == k2, "left/right singular vectors shape mismatch!"
         m2, c = a.shape
-        assert m == m2, "new documents must be in the same term-space as the original documents (old %s, new %s)" % (u.shape, a.shape)
+        assert m == m2, "new documents must be in the same term-space as the original documents (old %s, new %s)" % (self.u.shape, a.shape)
         
         # construct orthogonal basis for (I - U * U^T) * A
         logging.debug("constructing orthogonal component")
