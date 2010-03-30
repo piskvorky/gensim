@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.4.4
+
+* added missing test files to MANIFEST.in
+
 0.4.3
 
 * documentation changes

@@ -30,8 +30,8 @@ long_desc = read('README.txt')
 
 setup(
     name = 'gensim',
-    version = '0.4.3',
-    description = 'Python Framework for Topic Modeling',
+    version = '0.4.4',
+    description = 'Python Framework for Vector Space Modeling',
     long_description = long_desc,
     
     package_dir = {'': 'src'},
