@@ -17,9 +17,13 @@ import os.path
 import re
 
 
-from gensim.corpora import sources, DmlCorpus, MmCorpus
+from gensim.corpora import sources, dmlcorpus, MmCorpus
 from gensim.models import lsimodel, ldamodel, tfidfmodel
 from gensim.similarities import SparseMatrixSimilarity
+
+import gensim_build
+from gensim_genmodel import  DIM_RP, DIM_LSI, DIM_LDA
+
 
 # set to True to do everything EXCEPT actually writing out similar.xml files to disk.
 # similar.xml files are NOT written if DRY_RUN is true.
@@ -63,13 +67,13 @@ def getMeta(fname):
         meta = open(fname).read()
         title = re.findall('<title.*?>(.*?)</title>', meta, re.MULTILINE)[0]
         author = re.findall('<author.*?>(.*?)</author>', meta, re.MULTILINE)[0]
-    except Exception, e:
+    except Exception:
         logging.warning("failed to parse meta at %s" % fname)
     return author, title
 
 
-def generateSimilar(corpus, similarities, method):
-    for docNo, topSims in enumerate(similarities): # for each document
+def generateSimilar(corpus, index, method):
+    for docNo, topSims in enumerate(index): # for each document
         sourceId, (_, outPath) = corpus.documents[docNo]
         outfile = os.path.join(outPath, '_similar_%s.xml' % method) # similarities will be stored to this file
         articles = []
@@ -111,33 +115,28 @@ if __name__ == '__main__':
     method = sys.argv[2].strip().lower()
     
     logging.info("loading corpus mappings")
-    try:
-        dml = DmlCorpus.load(config.resultFile('.pkl'))
-    except IOError, e:
-        raise IOError("no word-count corpus found at %s; you must first generate it through gensim_build.py")
-    config = dml.config
+    config = dmlcorpus.DmlConfig('gensim_%s' % language, resultDir = gensim_build.RESULT_DIR, acceptLangs = [language])
 
     logging.info("loading word id mapping from %s" % config.resultFile('wordids.txt'))
-    id2word = DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
+    id2word = dmlcorpus.DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
     logging.info("loaded %i word ids" % len(id2word))
-
-
-    input = MmCorpus(bow.mm)
     
+    corpus = MmCorpus(config.resultFile('bow.mm'))
+
     if method == 'tfidf':
-        model = tfidfmodel.TfidfModel.load(modelfname('tfidf'))
-    elif method == 'lsi':
-        tfidf = tfidfmodel.TfidfModel.load(modelfname('tfidf'))
-        input = tfidf[input] # transform to tfidf
-        model = lsimodel.LsiModel.load(modelfname('lsi'))
+        model = tfidfmodel.TfidfModel.load(config.resultFile('tfidfmodel.pkl'))
     elif method == 'lda':
-        model = ldamodel.LdaModel.load(modelfname('lda'))
+        model = ldamodel.LdaModel.load(config.resultFile('ldamodel.pkl'))
+    elif method == 'lsi' or method == 'lsa':
+        model = lsimodel.LsiModel.load(config.resultFile('lsimodel.pkl'))
+    elif method == 'rp':
+        raise NotImplementedError("Random Projections not converted to the new interface yet")
     else:
-        raise ValueError('unknown method: %s' % repr(method))
+        raise ValueError('unknown topic extraction method: %s' % repr(method))
     
-    topics = model[input] # documents from 'input' will be represented via 'model'
-    sims = SparseMatrixSimilarity(topics, numBest = MAX_SIMILAR) # initialize structure which searches for similar documents
-    generateSimilar(corpus, sims, method) # for each document, print MAX_SIMILAR nearest documents to a xml file, in dml-cz format
-            
+    topics = model[corpus] # transform corpus by the selected model
+    index = SparseMatrixSimilarity(topics, numBest = MAX_SIMILAR) # initialize structure for similarity queries
+    generateSimilar(corpus, index, method) # for each document, print MAX_SIMILAR nearest documents to a xml file, in dml-cz format
+    
     logging.info("finished running %s" % program)
 

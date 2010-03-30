@@ -18,15 +18,15 @@ import os.path
 import re
 
 
-from gensim.corpora import sources, DmlCorpus, MmCorpus
+from gensim.corpora import sources, dmlcorpus, MmCorpus
 from gensim.models import lsimodel, ldamodel, tfidfmodel
 
 import gensim_build
 
 
 # internal method parameters
-DIM_RP = 200 # dimensionality for the random projections
-DIM_LSI = 200 # for lantent semantic indexing
+DIM_RP = 300 # dimensionality for the random projections
+DIM_LSI = 300 # for lantent semantic indexing
 DIM_LDA = 100 # for latent dirichlet allocation
 
 
@@ -45,14 +45,10 @@ if __name__ == '__main__':
     method = sys.argv[2].strip().lower()
     
     logging.info("loading corpus mappings")
-    config = DmlConfig('gensim_%s' % language, resultDir = gensim_build.RESULT_DIR, acceptLangs = [language])
-    try:
-        dml = DmlCorpus.load(config.resultFile('.pkl'))
-    except IOError, e:
-        raise IOError("no word-count corpus found at %s; you must first generate it through gensim_build.py")
+    config = dmlcorpus.DmlConfig('gensim_%s' % language, resultDir = gensim_build.RESULT_DIR, acceptLangs = [language])
 
     logging.info("loading word id mapping from %s" % config.resultFile('wordids.txt'))
-    id2word = DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
+    id2word = dmlcorpus.DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
     logging.info("loaded %i word ids" % len(id2word))
 
     if method == 'tfidf':
@@ -62,14 +58,14 @@ if __name__ == '__main__':
     elif method == 'lda':
         corpus = MmCorpus(config.resultFile('bow.mm'))
         model = ldamodel.LdaModel(corpus, id2word = id2word, numTopics = DIM_LDA)
-        model.save(config.resultFile('ldamodel%i.pkl' % DIM_LDA))
+        model.save(config.resultFile('ldamodel.pkl'))
     elif method == 'lsi' or method == 'lsa':
         # first, transform word counts to tf-idf weights
         corpus = MmCorpus(config.resultFile('bow.mm'))
         tfidf = tfidfmodel.TfidfModel(corpus, id2word = id2word, normalize = True)
         # then find the transformation from tf-idf to latent space
         model = lsimodel.LsiModel(tfidf.apply(corpus), id2word = id2word, numTopics = DIM_LSI)
-        model.save(config.resultFile('lsimodel%i.pkl' % DIM_LSI))
+        model.save(config.resultFile('lsimodel.pkl'))
     elif method == 'rp':
         raise NotImplementedError("Random Projections not converted to the new interface yet")
     else:

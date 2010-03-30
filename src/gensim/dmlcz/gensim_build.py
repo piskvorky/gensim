@@ -18,7 +18,7 @@ import os.path
 import re
 
 
-from gensim.corpora import sources, DmlCorpus
+from gensim.corpora import sources, dmlcorpus
 
 
 SOURCE_LIST = [
@@ -30,8 +30,8 @@ SOURCE_LIST = [
 RESULT_DIR = '/Users/kofola/workspace/dml/data/results'
 
 
-def buildDmlCorpus(config, language):
-    dml = DmlCorpus()
+def buildDmlCorpus(config):
+    dml = dmlcorpus.DmlCorpus()
     dml.processConfig(config, shuffle = True)
     dml.buildDictionary()
     dml.dictionary.filterExtremes(noBelow = 5, noAbove = 0.3) # ignore too (in)frequent words
@@ -55,10 +55,10 @@ if __name__ == '__main__':
     language = sys.argv[1]
     
     # construct the config, which holds information about sources, data file filenames etc.
-    config = DmlConfig('gensim_%s' % language, resultDir = RESULT_DIR, acceptLangs = [language])
+    config = dmlcorpus.DmlConfig('gensim_%s' % language, resultDir = RESULT_DIR, acceptLangs = [language])
     for source in SOURCE_LIST:
         config.addSource(source)
-    buildDmlCorpus(config, language)
-            
+    buildDmlCorpus(config)
+    
     logging.info("finished running %s" % program)
 

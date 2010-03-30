@@ -70,7 +70,9 @@ class SvmLightCorpus(interfaces.CorpusABC):
     @staticmethod
     def saveCorpus(fname, corpus, id2word = None):
         """
-        Save a corpus in the SVMlight format.
+        Save a corpus in the SVMlight format. 
+        
+        The SVMlight `<target>` class tag is set to 0 for all documents.
         """
         logging.info("converting corpus to SVMlight format: %s" % fname)
         fout = open(fname, 'w')

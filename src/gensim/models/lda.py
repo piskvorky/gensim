@@ -25,7 +25,7 @@ import logging
 import sys
 import os.path
 
-from gensim.corpora import corpora # for input data i/o
+from gensim import corpora # for input data i/o
 
 from ldamodel import LdaModel # lda inference/estimation
 
