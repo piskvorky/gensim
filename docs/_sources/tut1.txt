@@ -4,12 +4,6 @@ Corpora and the Vector Space Model
 ===================================
 
 
-All the examples can be directly copied to your Python interpreter shell (assuming 
-you have :doc:`gensim installed <install>`, of course). 
-
-`IPython <http://ipython.scipy.org>`_'s ``cpaste`` command is especially handy for copypasting code fragments which include superfluous 
-characters, such as the leading ``>>>``.
-
 .. _first example:
 
 Quick Example
@@ -101,7 +95,7 @@ This time, let's start from documents represented as strings:
 
 This is a tiny corpus of nine documents, each consisting of only a single sentence.
 
-Firstly, let's tokenize the documents, remove common words (using a toy stoplist) 
+First, let's tokenize the documents, remove common words (using a toy stoplist) 
 as well as words that only appear once in the corpus:
 
 >>> # remove common words and tokenize
@@ -128,12 +122,13 @@ as well as words that only appear once in the corpus:
 
 Your way of processing the documents will likely vary; here, we only split on whitespace
 to tokenize, followed by lowercasing each word. In fact, we use this particular 
-(simplistic) setup to mimick the experiment done in Deerwester et al.'s original LSA article [1]_.
+(simplistic and inefficient) setup to mimick the experiment done in Deerwester et al.'s 
+original LSA article [1]_.
 
 The ways to process documents are so varied and application- and language-dependent that we
 decided to *not* constrain them by any interface. Instead, a document is represented
 by the features extracted from it, not by its "surface" string form. How you get to
-the features is up to you; what follows is just one common scenario.
+the features is up to you; what follows below is just one common scenario.
 
 To convert documents to vectors, we will use a document representation called 
 `bag-of-words <http://en.wikipedia.org/wiki/Bag_of_words>`_. In this representation, 
@@ -160,7 +155,7 @@ the `first example`_, except that we now know what each vector dimension stands 
 
 For example, the vector feature with ``id=10`` stands for the question "How many 
 times does the word `graph` appear in the document?". The answer is "zero" for 
-the first six documents and "one" for the remaining three.
+the first six documents and "one" for the remaining three:
 
 >>> print corpus
 [[(0, 1.0), (1, 1.0), (2, 1.0)],
@@ -174,10 +169,10 @@ the first six documents and "one" for the remaining three.
  [(8, 1.0), (10, 1.0), (11, 1.0)]]
  
 The function ``doc2bow`` simply counts the number of occurences of 
-each distinct word, converts the word to its integer `question id` and returns 
-the result as a sparse vector. With the ``allowUpdate`` option set, newly introduced
-words will be assigned a new id; otherwise, they are ignored. Put differently,
-this option decides whether new questions should be created upon encountering 
+each distinct word, converts the word to its integer `question id` = `word id` = `feature id`
+and returns the result as a sparse vector. With the ``allowUpdate`` option set, 
+newly introduced words will be assigned a new id; otherwise, they are ignored. 
+Put differently, this option decides whether new questions should be created upon encountering 
 new words, or whether we're only interested in answering a fixed, pre-determined 
 set of questions.
 

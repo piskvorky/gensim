@@ -1,8 +1,8 @@
-:mod:`similarities.docsim` -- Pairwise similarity queries
+:mod:`similarities.docsim` -- Document similarity queries
 ========================================================================
 
 .. automodule:: gensim.similarities.docsim
-    :synopsis: Pairwise similarity queries
+    :synopsis: Document similarity queries
     :members:
     :inherited-members:
 

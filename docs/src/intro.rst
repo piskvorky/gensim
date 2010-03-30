@@ -39,7 +39,7 @@ Creation of gensim was motivated by a perceived lack of available, scalable soft
 frameworks that realize topic modeling, and/or their overwhelming internal complexity. 
 You can read more about the motivation in our `LREC 2010 workshop paper <http://nlp.fi.muni.cz/projekty/gensim/lrec2010_final.pdf>`_.
 
-The principal design objectives behind gensim are:
+The **principal design objectives** behind gensim are:
 
 1. Straightforward interfaces and low API learning curve for developers, 
    facilitating modifications and rapid prototyping.
