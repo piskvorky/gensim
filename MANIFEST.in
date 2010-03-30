@@ -1,4 +1,5 @@
 recursive-include docs *
+recursive-include src/test/*
 prune docs/src*
 include COPYING
 include COPYING.LESSER
