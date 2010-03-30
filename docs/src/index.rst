@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-gensim
-===============================================
+Gensim -- Python Framework for Vector Space Modeling
+=====================================================
 
 For an introduction on what gensim does (or does not do), go to the :doc:`introduction <intro>`.
 

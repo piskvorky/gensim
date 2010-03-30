@@ -80,4 +80,6 @@ Contact
 --------
 
 If you encounter problems or have any questions regarding `gensim`, please let us 
-know by emailing <radimrehurek(at)seznam.cz>.
+know by emailing at:
+
+>>> '@'.join(['radimrehurek', '.'.join(['seznam', 'cz'])])
