@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.3',
+        VERSION:     '0.4.4',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -58,7 +58,7 @@ you have <a class="reference external" href="install.html"><em>gensim installed<
 characters, such as the leading <tt class="docutils literal"><span class="pre">&gt;&gt;&gt;</span></tt>.</p>
 <div class="section" id="quick-example">
 <span id="first-example"></span><h2>Quick Example<a class="headerlink" href="#quick-example" title="Permalink to this headline">¶</a></h2>
-<p>First, let&#8217;s import some classes and create a small corpus of nine documents <a class="footnote-reference" href="#id3" id="id1">[1]</a>:</p>
+<p>First, let&#8217;s import gensim and create a small corpus of nine documents <a class="footnote-reference" href="#id3" id="id1">[1]</a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">similarities</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[[(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
@@ -101,7 +101,8 @@ RAM-wise.</p>
 </div>
 <p>Here, we used <a class="reference external" href="http://en.wikipedia.org/wiki/Tf%E2%80%93idf">Tf-Idf</a>, a simple
 transformation which takes documents represented as bag-of-words counts and applies
-a weighting which discounts common terms (or, equivalently, promotes rare terms).</p>
+a weighting which discounts common terms (or, equivalently, promotes rare terms) and
+scales the resulting vector to unit length.</p>
 <p>To index and prepare the whole TfIdf corpus for similarity queries:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">SparseMatrixSimilarity</span><span class="p">(</span><span class="n">tfidf</span><span class="p">[</span><span class="n">corpus</span><span class="p">])</span>
 </pre></div>
@@ -162,7 +163,7 @@ as well as words that only appear once in the corpus:</p>
 <p>Your way of processing the documents will likely vary; here, we only split on whitespace
 to tokenize, followed by lowercasing each word. In fact, we use this particular
 (simplistic) setup to mimick the experiment done in Deerwester et al.&#8217;s original LSA article <a class="footnote-reference" href="#id3" id="id2">[1]</a>.</p>
-<p>The ways to process documents are so versatile and application- and language-dependent that we
+<p>The ways to process documents are so varied and application- and language-dependent that we
 decided to <em>not</em> constrain them by any interface. Instead, a document is represented
 by the features extracted from it, not by its &#8220;surface&#8221; string form. How you get to
 the features is up to you; what follows is just one common scenario.</p>

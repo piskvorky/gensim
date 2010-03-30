@@ -15,7 +15,7 @@ characters, such as the leading ``>>>``.
 Quick Example
 -------------
 
-First, let's import some classes and create a small corpus of nine documents [1]_:
+First, let's import gensim and create a small corpus of nine documents [1]_:
 
 >>> from gensim import corpora, models, similarities
 >>> 
@@ -60,7 +60,8 @@ A transformation is used to convert documents from one vector representation int
 
 Here, we used `Tf-Idf <http://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_, a simple 
 transformation which takes documents represented as bag-of-words counts and applies 
-a weighting which discounts common terms (or, equivalently, promotes rare terms). 
+a weighting which discounts common terms (or, equivalently, promotes rare terms) and
+scales the resulting vector to unit length.
 
 To index and prepare the whole TfIdf corpus for similarity queries:
 
@@ -129,7 +130,7 @@ Your way of processing the documents will likely vary; here, we only split on wh
 to tokenize, followed by lowercasing each word. In fact, we use this particular 
 (simplistic) setup to mimick the experiment done in Deerwester et al.'s original LSA article [1]_.
 
-The ways to process documents are so versatile and application- and language-dependent that we
+The ways to process documents are so varied and application- and language-dependent that we
 decided to *not* constrain them by any interface. Instead, a document is represented
 by the features extracted from it, not by its "surface" string form. How you get to
 the features is up to you; what follows is just one common scenario.
