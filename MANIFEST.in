@@ -1,5 +1,5 @@
 recursive-include docs *
-recursive-include src/test/*
+recursive-include src/gensim/test testcorpus*
 prune docs/src*
 include COPYING
 include COPYING.LESSER
