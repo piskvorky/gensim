@@ -27,17 +27,18 @@ gensim.corpora.lowcorpus.LowCorpus.saveCorpus staticmethod corpora/lowcorpus.htm
 gensim.corpora.dmlcorpus.DmlCorpus.processConfig method corpora/dmlcorpus.html
 gensim.matutils.MmWriter.writeCorpus staticmethod matutils.html
 gensim.corpora.dmlcorpus.DmlCorpus.saveAsText method corpora/dmlcorpus.html
+gensim.similarities.docsim.MatrixSimilarity.getSimilarities method similarities/docsim.html
 gensim.models.lsimodel.LsiModel.load classmethod models/lsimodel.html
 gensim.corpora.dictionary.Dictionary.doc2bow method corpora/dictionary.html
 gensim.models.tfidfmodel.TfidfModel.load classmethod models/tfidfmodel.html
+gensim.utils.getMaxId function utils.html
 gensim.models.lsimodel.LsiModel.printTopic method models/lsimodel.html
 gensim.utils.SaveLoad class utils.html
 gensim.models.ldamodel.LdaModel.getTopicsMatrix method models/ldamodel.html
 gensim.models.ldamodel.LdaModel.load classmethod models/ldamodel.html
 gensim.models.ldamodel.LdaModel.computeLikelihood method models/ldamodel.html
-gensim.matutils.doc2vec function matutils.html
+gensim.interfaces.TransformationABC.save method interfaces.html
 gensim.corpora.svmlightcorpus.SvmLightCorpus.load classmethod corpora/svmlightcorpus.html
-gensim.corpora.dictionary.Token class corpora/dictionary.html
 gensim.models.lsimodel.iterSvd function models/lsimodel.html
 gensim.corpora.lowcorpus.LowCorpus.load classmethod corpora/lowcorpus.html
 gensim.corpora.mmcorpus.MmCorpus class corpora/mmcorpus.html
@@ -54,7 +55,6 @@ gensim.models.ldamodel.LdaModel.infer method models/ldamodel.html
 gensim.models.tfidfmodel.TfidfModel class models/tfidfmodel.html
 gensim.similarities.docsim.SparseMatrixSimilarity.getSimilarities method similarities/docsim.html
 gensim.corpora.dictionary.Dictionary.rebuildDictionary method corpora/dictionary.html
-gensim.interfaces.TransformationABC.save method interfaces.html
 gensim.interfaces.TransformationABC.load classmethod interfaces.html
 gensim.corpora.svmlightcorpus.SvmLightCorpus.saveCorpus staticmethod corpora/svmlightcorpus.html
 gensim.models.ldamodel.LdaModel.printTopics method models/ldamodel.html
@@ -77,6 +77,8 @@ gensim.models.ldamodel.LdaModel class models/ldamodel.html
 gensim.corpora.dictionary.Dictionary.filterTokens method corpora/dictionary.html
 gensim.similarities.docsim.Similarity class similarities/docsim.html
 gensim.corpora.dictionary.Dictionary.load classmethod corpora/dictionary.html
+gensim.similarities.docsim.MatrixSimilarity.save method similarities/docsim.html
+gensim.similarities.docsim.MatrixSimilarity class similarities/docsim.html
 gensim.interfaces.SimilarityABC.save method interfaces.html
 gensim.interfaces.CorpusABC.load classmethod interfaces.html
 gensim.similarities.docsim.Similarity.save method similarities/docsim.html
@@ -86,6 +88,7 @@ gensim.corpora.mmcorpus.MmCorpus.load classmethod corpora/mmcorpus.html
 gensim.corpora.mmcorpus.MmCorpus.save method corpora/mmcorpus.html
 gensim.similarities.docsim.SparseMatrixSimilarity.load classmethod similarities/docsim.html
 gensim.models.ldamodel.LdaModel.inference method models/ldamodel.html
+gensim.matutils.sparse2full function matutils.html
 gensim.utils.dictFromCorpus function utils.html
 gensim.corpora.dictionary.Dictionary.filterExtremes method corpora/dictionary.html
 gensim.models.lsimodel.LsiModel.save method models/lsimodel.html
@@ -102,5 +105,6 @@ gensim.corpora.bleicorpus.BleiCorpus.load classmethod corpora/bleicorpus.html
 gensim.corpora.svmlightcorpus.SvmLightCorpus class corpora/svmlightcorpus.html
 gensim.interfaces.CorpusABC.save method interfaces.html
 gensim.corpora.bleicorpus.BleiCorpus.save method corpora/bleicorpus.html
+gensim.similarities.docsim.MatrixSimilarity.load classmethod similarities/docsim.html
 gensim.corpora.dictionary.Dictionary.save method corpora/dictionary.html
 gensim.models.ldamodel.LdaModel.save method models/ldamodel.html

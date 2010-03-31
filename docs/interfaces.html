@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.4',
+        VERSION:     '0.4.5',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -66,6 +66,7 @@ iteration step yields one document. A document is a list of (fieldId, fieldValue
 (performs a linear scan through the corpus to determine its length). Wherever 
 the corpus size is needed and known in advance (or at least doesn&#8217;t change so 
 that it can be cached), the <tt class="xref docutils literal"><span class="pre">len()</span></tt> method should be overridden.</p>
+<p>See the <a title="Corpus in Matrix Market format" class="reference external" href="corpora/mmcorpus.html#module-gensim.corpora.mmcorpus"><tt class="xref docutils literal"><span class="pre">gensim.corpora.mmcorpus</span></tt></a> module for an example of a corpus.</p>
 <dl class="classmethod">
 <dt id="gensim.interfaces.CorpusABC.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.interfaces.CorpusABC.load" title="Permalink to this definition">¶</a></dt>
@@ -80,7 +81,7 @@ that it can be cached), the <tt class="xref docutils literal"><span class="pre">
 
 <dl class="class">
 <dt id="gensim.interfaces.SimilarityABC">
-<em class="property">class </em><tt class="descclassname">gensim.interfaces.</tt><tt class="descname">SimilarityABC</tt><big>(</big><em>corpus</em>, <em>numBest=None</em><big>)</big><a class="headerlink" href="#gensim.interfaces.SimilarityABC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.interfaces.</tt><tt class="descname">SimilarityABC</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.interfaces.SimilarityABC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract interface for similarity searches over a corpus.</p>
 <p>In all instances, there is a corpus against which we want to perform the 
 similarity search.</p>
@@ -90,16 +91,6 @@ similarities to individual corpus documents.</p>
 <p>There is also a convenience wrapper, where iterating over <cite>self</cite> yields 
 similarities of each document in the corpus against the whole corpus (ie.,
 the query is each corpus document in turn).</p>
-<p>Initialize the similarity search.</p>
-<p>If <cite>numBest</cite> is left unspecified, similarity queries return a full list (one 
-float for every document in the corpus, including the query document):</p>
-<p>If <cite>numBest</cite> is set, queries return <cite>numBest</cite> most similar documents, as a 
-sorted list:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sms</span> <span class="o">=</span> <span class="n">SparseMatrixSimilarity</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numBest</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sms</span><span class="p">[</span><span class="n">vec</span><span class="p">]</span> <span class="c"># result in order of decreasing similarity</span>
-<span class="go">[(12, 1.0), (30, 0.95), (5, 0.45)]</span>
-</pre></div>
-</div>
 <dl class="method">
 <dt id="gensim.interfaces.SimilarityABC.getSimilarities">
 <tt class="descname">getSimilarities</tt><big>(</big><em>doc</em><big>)</big><a class="headerlink" href="#gensim.interfaces.SimilarityABC.getSimilarities" title="Permalink to this definition">¶</a></dt>

@@ -36,7 +36,7 @@ Gensim includes the following features:
 * Allows similarity queries across documents in their latent, topical representation.
  
 Creation of gensim was motivated by a perceived lack of available, scalable software 
-frameworks that realize topic modeling, and/or their overwhelming internal complexity. 
+frameworks that realize topic modeling, and/or their overwhelming internal complexity.
 You can read more about the motivation in our `LREC 2010 workshop paper <http://nlp.fi.muni.cz/projekty/gensim/lrec2010_final.pdf>`_.
 
 The **principal design objectives** behind gensim are:

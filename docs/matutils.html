@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.4',
+        VERSION:     '0.4.5',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -89,21 +89,24 @@ is allowed to be larger than the available RAM.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="gensim.matutils.doc2vec">
-<tt class="descclassname">gensim.matutils.</tt><tt class="descname">doc2vec</tt><big>(</big><em>doc</em>, <em>length</em><big>)</big><a class="headerlink" href="#gensim.matutils.doc2vec" title="Permalink to this definition">¶</a></dt>
-<dd>Convert document in sparse format (sequence of 2-tuples) into a full numpy
-array (of size <cite>length</cite>).</dd></dl>
-
-<dl class="function">
 <dt id="gensim.matutils.pad">
 <tt class="descclassname">gensim.matutils.</tt><tt class="descname">pad</tt><big>(</big><em>mat</em>, <em>padRow</em>, <em>padCol</em><big>)</big><a class="headerlink" href="#gensim.matutils.pad" title="Permalink to this definition">¶</a></dt>
 <dd>Add additional rows/columns to a numpy.matrix <cite>mat</cite>. The new rows/columns 
 will be initialized with zeros.</dd></dl>
 
 <dl class="function">
+<dt id="gensim.matutils.sparse2full">
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">sparse2full</tt><big>(</big><em>doc</em>, <em>length</em><big>)</big><a class="headerlink" href="#gensim.matutils.sparse2full" title="Permalink to this definition">¶</a></dt>
+<dd>Convert document in sparse format (sequence of 2-tuples) into a full numpy
+array (of size <cite>length</cite>).</dd></dl>
+
+<dl class="function">
 <dt id="gensim.matutils.unitVec">
 <tt class="descclassname">gensim.matutils.</tt><tt class="descname">unitVec</tt><big>(</big><em>vec</em><big>)</big><a class="headerlink" href="#gensim.matutils.unitVec" title="Permalink to this definition">¶</a></dt>
-<dd>Scale a sparse vector to another sparse vector of unit length.</dd></dl>
+<dd><p>Scale a vector to unit length. The only exception is zero vector, which
+is returned back unchanged.</p>
+<p>If the input is sparse (list of 2-tuples), output will also be sparse.</p>
+</dd></dl>
 
 </div>
 
