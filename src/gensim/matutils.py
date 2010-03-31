@@ -91,42 +91,94 @@ class MmWriter(object):
     Store corpus in Matrix Market format.
     """
     
+    HEADER_LINE = '%%matrixmarket matrix coordinate real general\n'
+    
     def __init__(self, fname):
         self.fname = fname
-        self.fout = open(self.fname, 'w')
+        tmp = open(self.fname, 'w')
+        tmp.close()
+        self.fout = open(self.fname, 'r+')
         self.headersWritten = False
-    
-    @staticmethod
-    def determineNnz(corpus):
-        logging.info("calculating matrix shape and density")
-        numDocs = len(corpus)
-        numTerms = numNnz = 0
-        for docNo, bow in enumerate(corpus):
-            if docNo % 1000 == 0:
-                logging.info("PROGRESS: at document %i/%i" % 
-                             (docNo, len(corpus)))
-            if len(bow) > 0:
-                numTerms = max(numTerms, 1 + max(wordId for wordId, val in bow))
-                numNnz += len(bow)
-        
-        if numDocs * numTerms != 0:
-            logging.info("BOW of %ix%i matrix, density=%.3f%% (%i/%i)" % 
-                         (numDocs, numTerms,
-                          100.0 * numNnz / (numDocs * numTerms),
-                          numNnz,
-                          numDocs * numTerms))
-        return numDocs, numTerms, numNnz
     
 
     def writeHeaders(self, numDocs, numTerms, numNnz):
-        logging.info("saving sparse %sx%s matrix with %i non-zero entries to %s" %
-                     (numDocs, numTerms, numNnz, self.fname))
-        self.fout.write('%%matrixmarket matrix coordinate real general\n')
-        self.fout.write('%i %i %i\n' % (numDocs, numTerms, numNnz))
+        self.fout.write(MmWriter.HEADER_LINE)
+        
+        if numNnz < 0:
+            # we don't know the matrix shape/density yet, so only log a general line
+            logging.info("saving sparse matrix to %s" % self.fname)
+            self.fout.write(' ' * 50 + '\n') # 48 digits must be enough for everybody
+        else:
+            logging.info("saving sparse %sx%s matrix with %i non-zero entries to %s" %
+                         (numDocs, numTerms, numNnz, self.fname))
+            self.fout.write('%s %s %s\n' % (numDocs, numTerms, numNnz))
         self.lastDocNo = -1
         self.headersWritten = True
     
     
+    def fakeHeaders(self, numDocs, numTerms, numNnz):
+        stats = '%i %i %i' % (numDocs, numTerms, numNnz)
+        if len(stats) > 50:
+            raise ValueError('Invalid stats: matrix too large!')
+        self.fout.seek(len(MmWriter.HEADER_LINE))
+        self.fout.write(stats)
+    
+    
+    def writeVector(self, docNo, vector):
+        """
+        Write a single sparse vector to the file.
+        
+        Sparse vector is any iterable yielding (field id, field value) pairs.
+        """
+        assert self.headersWritten, "must write Matrix Market file headers before writing data!"
+        assert self.lastDocNo < docNo, "documents %i and %i not in sequential order!" % (self.lastDocNo, docNo)
+        for termId, weight in sorted(vector): # write term ids in sorted order
+            if weight == 0:
+                # to ensure len(doc) does what is expected, there must not be any zero elements in the sparse document
+                raise ValueError("zero weights not allowed in sparse documents; check your document generator")
+            self.fout.write("%i %i %f\n" % (docNo + 1, termId + 1, weight)) # +1 because MM format starts counting from 1
+        self.lastDocNo = docNo
+
+
+    @staticmethod
+    def writeCorpus(fname, corpus):
+        """
+        Save the vector space representation of an entire corpus to disk.
+        
+        Note that the documents are processed one at a time, so the whole corpus 
+        is allowed to be larger than the available RAM.
+        """
+        mw = MmWriter(fname)
+        
+        # write empty headers to the file (with enough space to be overwritten later)
+        mw.writeHeaders(-1, -1, -1) # will print 50 spaces followed by newline on the stats line
+        
+        # calculate necessary header info (nnz elements, num terms, num docs) while writing out vectors
+        numDocs = len(corpus)
+        numTerms = numNnz = 0
+        
+        for docNo, bow in enumerate(corpus):
+            if docNo % 1000 == 0:
+                logging.info("PROGRESS: saving document %i/%i" % 
+                             (docNo, len(corpus)))
+            if len(bow) > 0:
+                numTerms = max(numTerms, 1 + max(wordId for wordId, val in bow))
+                numNnz += len(bow)
+            mw.writeVector(docNo, bow)
+            
+        if numDocs * numTerms != 0:
+            logging.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" % 
+                         (numDocs, numTerms,
+                          100.0 * numNnz / (numDocs * numTerms),
+                          numNnz,
+                          numDocs * numTerms))
+            
+        # now write proper headers, by seeking and overwriting a part of the file
+        mw.fakeHeaders(numDocs, numTerms, numNnz)
+        
+        mw.close()
+
+
     def __del__(self):
         """
         Automatic destructor which closes the underlying file. 
@@ -141,40 +193,8 @@ class MmWriter(object):
     def close(self):
         logging.debug("closing %s" % self.fname)
         self.fout.close()
-    
-    
-    def writeVector(self, docNo, vector):
-        """
-        Write a single sparse vector to the file.
-        
-        Sparse vector is any iterable yielding (field id, field value) pairs.
-        """
-        assert self.headersWritten, "must write MM file headers before writing data!"
-        assert self.lastDocNo < docNo, "documents %i and %i not in sequential order!" % (self.lastDocNo, docNo)
-        for termId, weight in sorted(vector): # write term ids in sorted order
-            if weight == 0:
-                # to ensure len(doc) does what is expected, there must not be any zero elements in the sparse document
-                raise ValueError("zero weights not allowed in sparse documents; check your document generator")
-            self.fout.write("%i %i %f\n" % (docNo + 1, termId + 1, weight)) # +1 because MM format starts counting from 1
-        self.lastDocNo = docNo
-
-    @staticmethod
-    def writeCorpus(fname, corpus):
-        """
-        Save the vector space representation of an entire corpus to disk.
-        
-        Note that the documents are processed one at a time, so the whole corpus 
-        is allowed to be larger than the available RAM.
-        """
-        mw = MmWriter(fname)
-        mw.writeHeaders(*MmWriter.determineNnz(corpus))
-        for docNo, bow in enumerate(corpus):
-            if docNo % 1000 == 0:
-                logging.info("PROGRESS: saving document %i/%i" % 
-                             (docNo, len(corpus)))
-            mw.writeVector(docNo, bow)
-        mw.close()
 #endclass MmWriter
+
 
 
 class MmReader(object):
