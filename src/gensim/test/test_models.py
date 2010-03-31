@@ -41,7 +41,7 @@ class TestLsiModel(unittest.TestCase):
         # transform one document
         doc = list(self.corpus)[0]
         transformed = model[doc]
-        vec = matutils.doc2vec(transformed, 2) # convert to dense vector, for easier equality tests
+        vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
         
         expected = numpy.array([-0.6594664, 0.142115444]) # scaled LSI version
         # expected = numpy.array([-0.1973928, 0.05591352]) # non-scaled LSI version
@@ -70,7 +70,7 @@ class TestLdaModel(unittest.TestCase):
         doc = list(self.corpus)[0]
         transformed = model[doc]
         
-        vec = matutils.doc2vec(transformed, 2) # convert to dense vector, for easier equality tests
+        vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
         expected = [0.0, 1.0]
         self.assertTrue(numpy.allclose(sorted(vec), sorted(expected))) # must contain the same values, up to re-ordering
         
