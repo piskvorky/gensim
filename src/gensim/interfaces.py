@@ -27,6 +27,8 @@ class CorpusABC(utils.SaveLoad):
     (performs a linear scan through the corpus to determine its length). Wherever 
     the corpus size is needed and known in advance (or at least doesn't change so 
     that it can be cached), the :func:`len` method should be overridden.
+    
+    See the :mod:`gensim.corpora.mmcorpus` module for an example of a corpus.
     """
     def __iter__(self):
         """
@@ -103,21 +105,7 @@ class SimilarityABC(utils.SaveLoad):
     similarities of each document in the corpus against the whole corpus (ie.,
     the query is each corpus document in turn).
     """
-    def __init__(self, corpus, numBest = None):
-        """
-        Initialize the similarity search.
-        
-        If `numBest` is left unspecified, similarity queries return a full list (one 
-        float for every document in the corpus, including the query document):
-        
-        If `numBest` is set, queries return `numBest` most similar documents, as a 
-        sorted list:
-        
-        >>> sms = SparseMatrixSimilarity(corpus, numBest = 3)
-        >>> sms[vec] # result in order of decreasing similarity
-        [(12, 1.0), (30, 0.95), (5, 0.45)]
-        
-        """
+    def __init__(self, corpus):
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 
 

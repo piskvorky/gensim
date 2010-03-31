@@ -23,30 +23,6 @@ import random
 from gensim import utils
 
 
-
-class Token(object):
-    """
-    Object representing a single token.
-    """
-    __slots__ = ['token', 'intId'] # keep in slots to save a little memory
-    
-    def __init__(self, token, intId):
-        self.token = token # postprocessed word form (string)
-        self.intId = intId # id of the token (integer)
-    
-    # provide getstate/setstate methods, so that Token objects can be pickled
-    def __getstate__(self):
-        return [(name, self.__getattribute__(name)) for name in self.__slots__]
-    
-    def __setstate__(self, state):
-        for key, val in state:
-            self.__setattr__(key, val)
-
-    def __str__(self):
-        return ("Token(id=%i, norm='%s')" % (self.intId, self.token))
-#endclass Token
-
-
 class Dictionary(utils.SaveLoad):
     """
     Dictionary encapsulates mappings between normalized words and their integer ids.
@@ -79,9 +55,11 @@ class Dictionary(utils.SaveLoad):
         Build dictionary from a collection of documents. Each document is a list 
         of tokens (ie. **tokenized and normalized** utf-8 encoded strings).
         
-        >>> print Dictionary.fromDocuments(["máma mele maso".split(), "ema má mama".split()])
-        Dictionary(6 unique tokens)
+        This is only a convenience wrapper for calling `doc2bow` on each document
+        with `allowUpdate` set to True.
         
+        >>> print Dictionary.fromDocuments(["máma mele maso".split(), "ema má máma".split()])
+        Dictionary(5 unique tokens)
         """
         result = Dictionary()
         for document in documents:
@@ -89,12 +67,12 @@ class Dictionary(utils.SaveLoad):
         return result
 
 
-    def addToken(self, token):
-        if token.intId in self.id2token:
+    def addToken(self, token, tokenId):
+        if tokenId in self.id2token:
             logging.debug("overwriting old token %s (id %i); is this intended?" %
-                          (token.token, token.intId))
-        self.id2token[token.intId] = token
-        self.token2id[token.token] = token.intId
+                          (token, tokenId))
+        self.id2token[tokenId] = token
+        self.token2id[token] = tokenId
     
     
     def doc2bow(self, document, allowUpdate = False):
@@ -116,18 +94,13 @@ class Dictionary(utils.SaveLoad):
         for wordNorm, group in itertools.groupby(sorted(document)):
             frequency = len(list(group)) # how many times does this word appear in the input document
 
-            # determine the Token object of this word, creating it if necessary
             tokenId = self.token2id.get(wordNorm, None)
             if tokenId is None: 
-                # first time we see this token (normalized form)
+                # first time we see this token (~normalized form)
                 if not allowUpdate: # if we aren't allowed to create new tokens, continue with the next unique token
                     continue
                 tokenId = len(self.token2id) # new id = number of ids made so far; NOTE this assumes there are no gaps in the id sequence!
-                token = Token(wordNorm, tokenId)
-                self.addToken(token)
-            else:
-                token = self.id2token[tokenId]
-            # post condition -- now both tokenId and token object are properly set
+                self.addToken(wordNorm, tokenId)
             
             # update how many times a token appeared in the document
             result[tokenId] = result.get(tokenId, 0) + frequency
@@ -164,7 +137,7 @@ class Dictionary(utils.SaveLoad):
         # print some sanity check debug info
         if len(badIds) >= 10:
             someIds = random.sample(badIds, 10) # choose 10 random ids that will be removed
-            someTokenFreqs = [(self.id2token[tokenId].token, self.docFreq[tokenId]) for tokenId in someIds]
+            someTokenFreqs = [(self.id2token[tokenId], self.docFreq[tokenId]) for tokenId in someIds]
             logging.info("document frequencies of some of the removed tokens: [%s]" % 
                          ', '.join("%s:%i" % i for i in someTokenFreqs))
         
@@ -183,7 +156,6 @@ class Dictionary(utils.SaveLoad):
         badIds = set(badIds)
         self.id2token = dict((tokenId, token) for tokenId, token in self.id2token.iteritems() if tokenId not in badIds)
         self.token2id = dict((token, tokenId) for token, tokenId in self.token2id.iteritems() if tokenId not in badIds)
-        self.word2id = dict((word, tokenId) for word, tokenId in self.word2id.iteritems() if tokenId not in badIds)
         self.docFreq = dict((tokenId, freq) for tokenId, freq in self.docFreq.iteritems() if tokenId not in badIds)
 
     
@@ -203,12 +175,6 @@ class Dictionary(utils.SaveLoad):
         # reassign all mappings to new ids
         self.id2token = dict((idmap[tokenId], token) for tokenId, token in self.id2token.iteritems())
         self.token2id = dict((token, idmap[tokenId]) for token, tokenId in self.token2id.iteritems())
-        self.word2id = dict((word, idmap[tokenId]) for word, tokenId in self.word2id.iteritems())
         self.docFreq = dict((idmap[tokenId], freq) for tokenId, freq in self.docFreq.iteritems())
-        
-        # also change ids inside Token objects
-        for tokenId, token in self.id2token.iteritems():
-            token.intId = idmap[token.intId]
-            assert token.intId == tokenId # make sure that the mapping matches
 #endclass Dictionary
 
