@@ -97,6 +97,18 @@ def identity(p):
     return p
 
 
+def getMaxId(corpus):
+    """
+    Return highest feature id that appears in the corpus.
+    
+    For empty corpora (no features at all), return -1.
+    """
+    maxId = -1
+    for document in corpus:
+        maxId = max(maxId, max([-1] + [fieldId for fieldId, _ in document])) # [-1] to avoid exceptions from max(empty) 
+    return maxId
+
+
 def dictFromCorpus(corpus):
     """
     Scan corpus for all word ids that appear in it, then contruct and return a mapping
@@ -106,10 +118,7 @@ def dictFromCorpus(corpus):
     their ids) but no wordId->word mapping was provided. The resulting mapping 
     only covers words actually used in the corpus, up to the highest wordId found.
     """
-    maxId = -1
-    for document in corpus:
-        maxId = max(maxId, max([-1] + [fieldId for fieldId, _ in document]))
-    numTerms = 1 + maxId
+    numTerms = 1 + getMaxId(corpus)
     id2word = dict((fieldId, str(fieldId)) for fieldId in xrange(numTerms))
     return id2word
 

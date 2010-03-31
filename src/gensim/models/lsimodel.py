@@ -93,7 +93,7 @@ class LsiModel(interfaces.TransformationABC):
         chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
         for chunkNo, (key, group) in enumerate(chunker):
             # convert the chunk of documents to vectors
-            docs = [matutils.doc2vec(doc, self.numTerms) for docNo, doc in group]
+            docs = [matutils.sparse2full(doc, self.numTerms) for docNo, doc in group]
 #            self.svdAddCols(docs, reorth = chunkNo % 100 == 99) # reorthogonalize once in every "100*chunks" documents
             self.svdAddCols(docs, reorth = False)
             logging.info("processed documents up to #%s" % docNo)
@@ -133,7 +133,7 @@ class LsiModel(interfaces.TransformationABC):
         if utils.isCorpus(bow):
             return self._apply(bow)
         
-        vec = matutils.doc2vec(bow, self.numTerms)
+        vec = matutils.sparse2full(bow, self.numTerms)
         vec.shape = (self.numTerms, 1)
         topicDist = self.projection * vec
         if not scaled:

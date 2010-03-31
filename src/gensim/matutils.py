@@ -25,7 +25,7 @@ def pad(mat, padRow, padCol):
                       [numpy.matrix(numpy.zeros((padRow, cols + padCol)))]])
 
 
-def doc2vec(doc, length):
+def sparse2full(doc, length):
     """
     Convert document in sparse format (sequence of 2-tuples) into a full numpy
     array (of size `length`).
@@ -46,15 +46,30 @@ def vecLen(vec):
 
 def unitVec(vec):
     """
-    Scale a sparse vector to another sparse vector of unit length.
+    Scale a vector to unit length. The only exception is zero vector, which
+    is returned back unchanged.
+    
+    If the input is sparse (list of 2-tuples), output will also be sparse.
     """
     if len(vec) == 0:
         return vec
-    vecLen = 1.0 * math.sqrt(sum(val * val for _, val in vec))
-    assert vecLen > 0.0, "sparse documents must not contain any explicit zero entries"
-    if vecLen != 1.0:
-        vec = [(termId, val / vecLen) for termId, val in vec]
-    return vec
+    first = iter(vec).next()
+    if isinstance(first, tuple):
+        vecLen = 1.0 * math.sqrt(sum(val * val for _, val in vec))
+        assert vecLen > 0.0, "sparse documents must not contain any explicit zero entries"
+        if vecLen != 1.0:
+            result = [(termId, val / vecLen) for termId, val in vec]
+        else:
+            result = vec
+    else:
+        vec = numpy.asarray(vec, dtype = float)
+        vecLen = numpy.sqrt(numpy.sum(vec * vec))
+        if vecLen > 0.0:
+            result = vec / vecLen
+        else:
+            result = vec
+            
+    return result
 
 
 def cossim(vec1, vec2):
