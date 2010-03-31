@@ -5,13 +5,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Corpora and the Vector Space Model &mdash; gensim documentation</title>
+    <title>Corpora and Vector Spaces &mdash; gensim documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.4',
+        VERSION:     '0.4.5',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -50,8 +50,8 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="corpora-and-the-vector-space-model">
-<span id="tut1"></span><h1>Corpora and the Vector Space Model<a class="headerlink" href="#corpora-and-the-vector-space-model" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="corpora-and-vector-spaces">
+<span id="tut1"></span><h1>Corpora and Vector Spaces<a class="headerlink" href="#corpora-and-vector-spaces" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="quick-example">
 <span id="first-example"></span><h2>Quick Example<a class="headerlink" href="#quick-example" title="Permalink to this headline">¶</a></h2>
 <p>First, let&#8217;s import gensim and create a small corpus of nine documents <a class="footnote-reference" href="#id3" id="id1">[1]</a>:</p>
@@ -114,8 +114,8 @@ document <cite>vec</cite> is document no. 3, with a similarity score of 82.1%. N
 that in the TfIdf representation, all documents which do not share any common features
 with <tt class="docutils literal"><span class="pre">vec</span></tt> at all (documents no. 4&#8211;8) get a similarity score of 0.0.</p>
 </div>
-<div class="section" id="a-more-complete-example">
-<span id="second-example"></span><h2>A More Complete Example<a class="headerlink" href="#a-more-complete-example" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="from-strings-to-vectors">
+<span id="second-example"></span><h2>From Strings to Vectors<a class="headerlink" href="#from-strings-to-vectors" title="Permalink to this headline">¶</a></h2>
 <p>This time, let&#8217;s start from documents represented as strings:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">similarities</span>
 <span class="go">&gt;&gt;&gt;</span>
@@ -169,26 +169,35 @@ the features is up to you; what follows below is just one common scenario.</p>
 each vector element is a question-answer pair, in the style of:</p>
 <blockquote>
 &#8220;How many times does the word <cite>system</cite> appear in the document? Once.&#8221;</blockquote>
-<p>There are twelve distinct words in the preprocessed corpus, so each document will
-be represented by twelve numbers (ie., by a 12-D vector).</p>
 <p>The <tt class="xref docutils literal"><span class="pre">gensim.corpora.Dictionary</span></tt> class can be used to convert tokenized texts
-to vectors:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[</span><span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">allowUpdate</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">texts</span><span class="p">]</span>
+to vectors.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">fromDocuments</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">dictionary</span>
+<span class="go">Dictionary(12 unique tokens)</span>
 </pre></div>
 </div>
-<p>Here we passed a list of tokens to <tt class="xref docutils literal"><span class="pre">Dictionary.doc2bow()</span></tt>, one list for each
-document. As a matter of fact, we have arrived at exactly the same corpus of vectors as in
-the <a class="reference internal" href="#first-example">first example</a>, except that we now know what each vector dimension stands for:</p>
+<p>Here we assigned a unique integer id to all words appearing in the corpus by calling
+<tt class="xref docutils literal"><span class="pre">fromDocuments()</span></tt>. This sweeps across the texts, collecting words and relevant statistics.
+In the end, there are twelve distinct words in the preprocessed corpus, so each document will
+be represented by twelve numbers (ie., by a 12-D vector).
+To see the mapping between words and their ids:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">token2id</span>
 <span class="go">{&#39;minors&#39;: 11, &#39;graph&#39;: 10, &#39;system&#39;: 5, &#39;trees&#39;: 9, &#39;eps&#39;: 8, &#39;computer&#39;: 0,</span>
 <span class="go">&#39;survey&#39;: 4, &#39;user&#39;: 7, &#39;human&#39;: 1, &#39;time&#39;: 6, &#39;interface&#39;: 2, &#39;response&#39;: 3}</span>
 </pre></div>
 </div>
-<p>For example, the vector feature with <tt class="docutils literal"><span class="pre">id=10</span></tt> stands for the question &#8220;How many
-times does the word <cite>graph</cite> appear in the document?&#8221;. The answer is &#8220;zero&#8221; for
-the first six documents and &#8220;one&#8221; for the remaining three:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">corpus</span>
+<p>To actually convert tokenized documents to vectors:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">newDoc</span> <span class="o">=</span> <span class="s">&quot;Human computer interaction&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">newVec</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">newDoc</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">newVec</span> <span class="c"># the word &quot;interaction&quot; does not appear in the dictionary and is ignored</span>
+<span class="go">[(0, 1), (1, 1)]</span>
+</pre></div>
+</div>
+<p>The function <tt class="xref docutils literal"><span class="pre">doc2bow()</span></tt> simply counts the number of occurences of
+each distinct word, converts the word to its integer word id
+and returns the result as a sparse vector.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[</span><span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">texts</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">corpus</span>
 <span class="go">[[(0, 1.0), (1, 1.0), (2, 1.0)],</span>
 <span class="go"> [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],</span>
 <span class="go"> [(1, 1.0), (3, 1.0), (4, 1.0), (7, 1.0)],</span>
@@ -200,32 +209,25 @@ the first six documents and &#8220;one&#8221; for the remaining three:</p>
 <span class="go"> [(8, 1.0), (10, 1.0), (11, 1.0)]]</span>
 </pre></div>
 </div>
-<p>The function <tt class="docutils literal"><span class="pre">doc2bow</span></tt> simply counts the number of occurences of
-each distinct word, converts the word to its integer <cite>question id</cite> = <cite>word id</cite> = <cite>feature id</cite>
-and returns the result as a sparse vector. With the <tt class="docutils literal"><span class="pre">allowUpdate</span></tt> option set,
-newly introduced words will be assigned a new id; otherwise, they are ignored.
-Put differently, this option decides whether new questions should be created upon encountering
-new words, or whether we&#8217;re only interested in answering a fixed, pre-determined
-set of questions.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">newDoc</span> <span class="o">=</span> <span class="s">&quot;Human computer interaction&quot;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">newVec</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">newDoc</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="n">allowUpdate</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">newVec</span> <span class="c"># the word &quot;interaction&quot; is ignored</span>
-<span class="go">[(0, 1), (1, 1)]</span>
-</pre></div>
-</div>
+<p>For example, the vector feature with <tt class="docutils literal"><span class="pre">id=10</span></tt> stands for the question &#8220;How many
+times does the word <cite>graph</cite> appear in the document?&#8221;. The answer is &#8220;zero&#8221; for
+the first six documents and &#8220;one&#8221; for the remaining three. As a matter of fact,
+we have arrived at exactly the same corpus of vectors as in the <a class="reference internal" href="#first-example">first example</a>.</p>
 <p>To finish the example, we transform our <tt class="docutils literal"><span class="pre">&quot;Human</span> <span class="pre">computer</span> <span class="pre">interaction&quot;</span></tt> document
 via <a class="reference external" href="http://en.wikipedia.org/wiki/Latent_semantic_indexing">Latent Semantic Indexing</a>
 into a 2-D space:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">newVecLsi</span> <span class="o">=</span> <span class="n">lsi</span><span class="p">[</span><span class="n">newVec</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">newVecLsi</span>
 <span class="go">[(0, -0.461821), (1, 0.0700277)]</span>
 </pre></div>
 </div>
-<p>and print proximity of this query document against our original corpus of nine
-documents:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">SparseMatrixSimilarity</span><span class="p">(</span><span class="n">lsi</span><span class="p">[</span><span class="n">corpus</span><span class="p">])</span> <span class="c"># &quot;index&quot; the corpus in LSI space</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">index</span><span class="p">[</span><span class="n">newVecLsi</span><span class="p">]))</span> <span class="c"># perform query against the corpus</span>
+<p>and print proximity of this query document against every one of the nine original
+documents, in the same 2-D LSI space:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">MatrixSimilarity</span><span class="p">(</span><span class="n">lsi</span><span class="p">[</span><span class="n">corpus</span><span class="p">])</span> <span class="c"># transform corpus to LSI space and &quot;index&quot; it</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sims</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">newVecLsi</span><span class="p">]</span> <span class="c"># perform similarity query against the corpus</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">sims</span><span class="p">))</span>
 <span class="go">[(0, 0.99809301), (1, 0.93748635), (2, 0.99844527), (3, 0.9865886), (4, 0.90755945),</span>
 <span class="go">(5, -0.12416792), (6, -0.1063926), (7, -0.098794639), (8, 0.05004178)]</span>
 </pre></div>
@@ -244,7 +246,7 @@ why we apply transformations and do topic modeling in the first place.</p>
 <cite>Gensim</cite> implements them via the <em>streaming corpus interface</em> mentioned earlier:
 documents are read from disk in a lazy fashion, one document at a time, without the whole
 corpus being read into main memory at once.</p>
-<p>One of the most notable formats is the <a class="reference external" href="http://math.nist.gov/MatrixMarket/formats.html">Market Matrix format</a>.
+<p>One of the more notable formats is the <a class="reference external" href="http://math.nist.gov/MatrixMarket/formats.html">Market Matrix format</a>.
 To save a corpus in the Matrix Market format:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
@@ -292,9 +294,9 @@ To save a corpus in the Matrix Market format:</p>
         <div class="sphinxsidebarwrapper">
             <h3><a href="index.html">Table Of Contents</a></h3>
             <ul>
-<li><a class="reference external" href="#">Corpora and the Vector Space Model</a><ul>
+<li><a class="reference external" href="#">Corpora and Vector Spaces</a><ul>
 <li><a class="reference external" href="#quick-example">Quick Example</a></li>
-<li><a class="reference external" href="#a-more-complete-example">A More Complete Example</a></li>
+<li><a class="reference external" href="#from-strings-to-vectors">From Strings to Vectors</a></li>
 <li><a class="reference external" href="#corpus-formats">Corpus Formats</a></li>
 </ul>
 </li>

@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.4.4',
+        VERSION:     '0.4.5',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -48,21 +48,18 @@
             
   <div class="section" id="module-gensim.similarities.docsim">
 <h1><tt class="xref docutils literal"><span class="pre">similarities.docsim</span></tt> &#8211; Document similarity queries<a class="headerlink" href="#module-gensim.similarities.docsim" title="Permalink to this headline">¶</a></h1>
-<p>This module contains functions and classes for similarities across
-a corpus of documents in the Vector Space Model.</p>
-<p>The documents are sparse vectors coming from the TF-IDF model, LSI model, LDA model etc.</p>
-<p>The two main classes are :</p>
+<p>This module contains functions and classes for computing similarities across
+a collection of vectors=documents in the Vector Space Model.</p>
+<p>The main classes are :</p>
 <ol class="arabic simple">
-<li><cite>Similarity</cite> &#8211; computes similarity by linearly scanning over the corpus (slower,</li>
-</ol>
-<blockquote>
-memory independent)</blockquote>
-<ol class="arabic simple" start="2">
-<li><cite>SparseMatrixSimilarity</cite> &#8211; stores the whole corpus in memory, computes similarity</li>
-</ol>
-<blockquote>
+<li><cite>Similarity</cite> &#8211; answers similarity queries by linearly scanning over the corpus.
+This is slow but memory independent.</li>
+<li><cite>MatrixSimilarity</cite> &#8211; stores the whole corpus <strong>in memory</strong>, computes similarity 
 by in-memory matrix-vector multiplication. This is much faster than the general 
-Similarity, so use this when dealing with smaller corpora, that fit in RAM.</blockquote>
+<cite>Similarity</cite>, so use this when dealing with smaller corpora (must fit in RAM).</li>
+<li><cite>SparseMatrixSimilarity</cite> &#8211; same as <cite>MatrixSimilarity</cite>, but uses less memory 
+if the vectors are sparse.</li>
+</ol>
 <p>Once the similarity object has been initialized, you can query for document
 similarity simply by</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">similarities</span> <span class="o">=</span> <span class="n">similarity_object</span><span class="p">[</span><span class="n">query_vector</span><span class="p">]</span>
@@ -75,16 +72,59 @@ similarity simply by</p>
 </div>
 <hr class="docutils" />
 <dl class="class">
+<dt id="gensim.similarities.docsim.MatrixSimilarity">
+<em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">MatrixSimilarity</tt><big>(</big><em>corpus</em>, <em>numBest=None</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em>, <em>numFeatures=None</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.MatrixSimilarity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute similarity against a corpus of documents by storing its 
+term-document (or concept-document) matrix in memory. The similarity measure 
+used is cosine between two vectors.</p>
+<p>This allows fast similarity searches (simple sparse matrix-vector multiplication),
+but loses the memory-independence of an iterative corpus.</p>
+<p>The matrix is internally stored as a numpy array.</p>
+<p>If <cite>numBest</cite> is left unspecified, similarity queries return a full list (one 
+float for every document in the corpus, including the query document):</p>
+<p>If <cite>numBest</cite> is set, queries return <cite>numBest</cite> most similar documents, as a 
+sorted list:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sms</span> <span class="o">=</span> <span class="n">MatrixSimilarity</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numBest</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sms</span><span class="p">[</span><span class="n">vec12</span><span class="p">]</span>
+<span class="go">[(12, 1.0), (30, 0.95), (5, 0.45)]</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="gensim.similarities.docsim.MatrixSimilarity.getSimilarities">
+<tt class="descname">getSimilarities</tt><big>(</big><em>doc</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.MatrixSimilarity.getSimilarities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return similarity of sparse vector <cite>doc</cite> to all documents in the corpus.</p>
+<p><cite>doc</cite> may be either a bag-of-words iterable (standard corpus document), 
+or a numpy array, or a <cite>scipy.sparse</cite> matrix.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="gensim.similarities.docsim.MatrixSimilarity.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.MatrixSimilarity.load" title="Permalink to this definition">¶</a></dt>
+<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.similarities.docsim.MatrixSimilarity.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.MatrixSimilarity.save" title="Permalink to this definition">¶</a></dt>
+<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="gensim.similarities.docsim.Similarity">
 <em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">Similarity</tt><big>(</big><em>corpus</em>, <em>numBest=None</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute cosine similary against a corpus of documents. This is done by a full 
+<dd><p>Compute cosine similarity against a corpus of documents. This is done by a full 
 sequential scan of the corpus.</p>
-<p>If your corpus is reasonably small (fits in RAM), consider using <cite>SparseMatrixSimilarity</cite> 
-instead of <cite>Similarity</cite>, for (much) faster similarity searches.</p>
+<p>If your corpus is reasonably small (fits in RAM), consider using <cite>MatrixSimilarity</cite>
+or <cite>SparseMatrixSimilarity</cite> instead, for (much) faster similarity searches.</p>
 <p>If <cite>numBest</cite> is left unspecified, similarity queries return a full list (one 
-float for every document in the corpus, including the query document).</p>
+float for every document in the corpus, including the query document):</p>
 <p>If <cite>numBest</cite> is set, queries return <cite>numBest</cite> most similar documents, as a 
-sorted list, eg. [(docIndex1, 1.0), (docIndex2, 0.95), ..., (docIndexnumBest, 0.45)].</p>
+sorted list:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sms</span> <span class="o">=</span> <span class="n">MatrixSimilarity</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numBest</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sms</span><span class="p">[</span><span class="n">vec12</span><span class="p">]</span>
+<span class="go">[(12, 1.0), (30, 0.95), (5, 0.45)]</span>
+</pre></div>
+</div>
 <dl class="classmethod">
 <dt id="gensim.similarities.docsim.Similarity.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.load" title="Permalink to this definition">¶</a></dt>
@@ -103,7 +143,7 @@ sorted list, eg. [(docIndex1, 1.0), (docIndex2, 0.95), ..., (docIndexnumBest, 0.
 <dd><p>Compute similarity against a corpus of documents by storing its sparse 
 term-document (or concept-document) matrix in memory. The similarity measure 
 used is cosine between two vectors.</p>
-<p>This allows for faster similarity searches (simple sparse matrix-vector multiplication),
+<p>This allows fast similarity searches (simple sparse matrix-vector multiplication),
 but loses the memory-independence of an iterative corpus.</p>
 <p>The matrix is internally stored as a <cite>scipy.sparse.csr</cite> matrix.</p>
 <p>If <cite>numBest</cite> is left unspecified, similarity queries return a full list (one 
@@ -120,7 +160,7 @@ sorted list:</p>
 <tt class="descname">getSimilarities</tt><big>(</big><em>doc</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.SparseMatrixSimilarity.getSimilarities" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return similarity of sparse vector <cite>doc</cite> to all documents in the corpus.</p>
 <p><cite>doc</cite> may be either a bag-of-words iterable (standard corpus document), 
-or a numpy array, or a <cite>scipy.sparse</cite> matrix. It is assumed to be of unit length.</p>
+or a numpy array, or a <cite>scipy.sparse</cite> matrix.</p>
 </dd></dl>
 
 <dl class="classmethod">

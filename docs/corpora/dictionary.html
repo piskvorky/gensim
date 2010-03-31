@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.4.4',
+        VERSION:     '0.4.5',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -102,8 +102,10 @@ the call to this function!</p>
 <em class="property">static </em><tt class="descname">fromDocuments</tt><big>(</big><em>documents</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.fromDocuments" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build dictionary from a collection of documents. Each document is a list 
 of tokens (ie. <strong>tokenized and normalized</strong> utf-8 encoded strings).</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">Dictionary</span><span class="o">.</span><span class="n">fromDocuments</span><span class="p">([</span><span class="s">&quot;máma mele maso&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="s">&quot;ema má mama&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">()])</span>
-<span class="go">Dictionary(6 unique tokens)</span>
+<p>This is only a convenience wrapper for calling <cite>doc2bow</cite> on each document
+with <cite>allowUpdate</cite> set to True.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">Dictionary</span><span class="o">.</span><span class="n">fromDocuments</span><span class="p">([</span><span class="s">&quot;máma mele maso&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="s">&quot;ema má máma&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">()])</span>
+<span class="go">Dictionary(5 unique tokens)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -128,11 +130,6 @@ Calling this method will remove the gaps.</p>
 <dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
 
 </dd></dl>
-
-<dl class="class">
-<dt id="gensim.corpora.dictionary.Token">
-<em class="property">class </em><tt class="descclassname">gensim.corpora.dictionary.</tt><tt class="descname">Token</tt><big>(</big><em>token</em>, <em>intId</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Token" title="Permalink to this definition">¶</a></dt>
-<dd>Object representing a single token.</dd></dl>
 
 </div>
 

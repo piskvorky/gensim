@@ -23,11 +23,11 @@ Quick Reference Example
 >>> # initialize a transformation (Latent Semantic Indexing with twenty latent dimensions)
 >>> lsi = models.LsiModel(corpus, numTopics = 20)
 >>>
->>> # convert corpus to latent space and index it
->>> index = similarities.SparseMatrixSimilarity(lsi[corpus])
+>>> # convert the same corpus to latent space and index it
+>>> index = similarities.MatrixSimilarity(lsi[corpus])
 >>> 
->>> # perform similarity query of a new vector in LSI space against the whole corpus
->>> sims = index[query])
+>>> # perform similarity query of another vector in LSI space against the whole corpus
+>>> sims = index[query]
 
 
 Contents

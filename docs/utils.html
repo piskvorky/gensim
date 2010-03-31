@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.4',
+        VERSION:     '0.4.5',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -92,6 +92,13 @@ which maps each <tt class="docutils literal"><span class="pre">wordId</span> <sp
 <p>This function is used whenever <em>words</em> need to be displayed (as opposed to just 
 their ids) but no wordId-&gt;word mapping was provided. The resulting mapping 
 only covers words actually used in the corpus, up to the highest wordId found.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.utils.getMaxId">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">getMaxId</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.utils.getMaxId" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return highest feature id that appears in the corpus.</p>
+<p>For empty corpora (no features at all), return -1.</p>
 </dd></dl>
 
 <dl class="function">

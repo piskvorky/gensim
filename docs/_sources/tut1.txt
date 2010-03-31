@@ -1,6 +1,6 @@
 .. _tut1:
 
-Corpora and the Vector Space Model
+Corpora and Vector Spaces
 ===================================
 
 
@@ -75,7 +75,7 @@ with ``vec`` at all (documents no. 4--8) get a similarity score of 0.0.
 
 .. _second example:
 
-A More Complete Example
+From Strings to Vectors
 ------------------------
 
 This time, let's start from documents represented as strings:
@@ -136,27 +136,35 @@ each vector element is a question-answer pair, in the style of:
 
  "How many times does the word `system` appear in the document? Once."
 
-There are twelve distinct words in the preprocessed corpus, so each document will 
-be represented by twelve numbers (ie., by a 12-D vector).
-
 The :class:`gensim.corpora.Dictionary` class can be used to convert tokenized texts
-to vectors:
+to vectors.
 
->>> dictionary = corpora.Dictionary()
->>> corpus = [dictionary.doc2bow(text, allowUpdate = True) for text in texts]
+>>> dictionary = corpora.Dictionary.fromDocuments(texts)
+>>> print dictionary
+Dictionary(12 unique tokens)
 
-Here we passed a list of tokens to :func:`Dictionary.doc2bow`, one list for each 
-document. As a matter of fact, we have arrived at exactly the same corpus of vectors as in 
-the `first example`_, except that we now know what each vector dimension stands for:
-
+Here we assigned a unique integer id to all words appearing in the corpus by calling
+:func:`fromDocuments`. This sweeps across the texts, collecting words and relevant statistics. 
+In the end, there are twelve distinct words in the preprocessed corpus, so each document will 
+be represented by twelve numbers (ie., by a 12-D vector). 
+To see the mapping between words and their ids:
+ 
 >>> print dictionary.token2id
 {'minors': 11, 'graph': 10, 'system': 5, 'trees': 9, 'eps': 8, 'computer': 0, 
 'survey': 4, 'user': 7, 'human': 1, 'time': 6, 'interface': 2, 'response': 3}
 
-For example, the vector feature with ``id=10`` stands for the question "How many 
-times does the word `graph` appear in the document?". The answer is "zero" for 
-the first six documents and "one" for the remaining three:
+To actually convert tokenized documents to vectors:
 
+>>> newDoc = "Human computer interaction"
+>>> newVec = dictionary.doc2bow(newDoc.lower().split())
+>>> print newVec # the word "interaction" does not appear in the dictionary and is ignored
+[(0, 1), (1, 1)]
+
+The function :func:`doc2bow` simply counts the number of occurences of 
+each distinct word, converts the word to its integer word id
+and returns the result as a sparse vector. 
+
+>>> corpus = [dictionary.doc2bow(text) for text in texts]
 >>> print corpus
 [[(0, 1.0), (1, 1.0), (2, 1.0)],
  [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],
@@ -167,37 +175,33 @@ the first six documents and "one" for the remaining three:
  [(9, 1.0), (10, 1.0)],
  [(9, 1.0), (10, 1.0), (11, 1.0)],
  [(8, 1.0), (10, 1.0), (11, 1.0)]]
+
+For example, the vector feature with ``id=10`` stands for the question "How many 
+times does the word `graph` appear in the document?". The answer is "zero" for 
+the first six documents and "one" for the remaining three. As a matter of fact, 
+we have arrived at exactly the same corpus of vectors as in the `first example`_.
+
  
-The function ``doc2bow`` simply counts the number of occurences of 
-each distinct word, converts the word to its integer `question id` = `word id` = `feature id`
-and returns the result as a sparse vector. With the ``allowUpdate`` option set, 
-newly introduced words will be assigned a new id; otherwise, they are ignored. 
-Put differently, this option decides whether new questions should be created upon encountering 
-new words, or whether we're only interested in answering a fixed, pre-determined 
-set of questions.
-
->>> newDoc = "Human computer interaction"
->>> newVec = dictionary.doc2bow(newDoc.lower().split(), allowUpdate = False)
->>> print newVec # the word "interaction" is ignored
-[(0, 1), (1, 1)]
-
-
 To finish the example, we transform our ``"Human computer interaction"`` document
 via `Latent Semantic Indexing <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
 into a 2-D space:
 
 >>> lsi = models.LsiModel(corpus, numTopics = 2)
+>>>
 >>> newVecLsi = lsi[newVec]
 >>> print newVecLsi
 [(0, -0.461821), (1, 0.0700277)]
 
-and print proximity of this query document against our original corpus of nine 
-documents:
+and print proximity of this query document against every one of the nine original 
+documents, in the same 2-D LSI space:
 
->>> index = similarities.SparseMatrixSimilarity(lsi[corpus]) # "index" the corpus in LSI space
->>> print list(enumerate(index[newVecLsi])) # perform query against the corpus
+>>> index = similarities.MatrixSimilarity(lsi[corpus]) # transform corpus to LSI space and "index" it
+>>> sims = index[newVecLsi] # perform similarity query against the corpus
+>>> print list(enumerate(sims))
 [(0, 0.99809301), (1, 0.93748635), (2, 0.99844527), (3, 0.9865886), (4, 0.90755945), 
 (5, -0.12416792), (6, -0.1063926), (7, -0.098794639), (8, 0.05004178)]
+
+.. decades of research in a single sentence (including 3 effective lines of code) there :-) yay
 
 The thing to note here is that documents no. 2 (``"The EPS user interface management system"``)
 and 4 (``"Relation of user perceived response time to error measurement"``) would never be returned by
@@ -216,7 +220,7 @@ There exist several file formats for storing a collection of vectors to disk.
 documents are read from disk in a lazy fashion, one document at a time, without the whole
 corpus being read into main memory at once.
 
-One of the most notable formats is the `Market Matrix format <http://math.nist.gov/MatrixMarket/formats.html>`_.
+One of the more notable formats is the `Market Matrix format <http://math.nist.gov/MatrixMarket/formats.html>`_.
 To save a corpus in the Matrix Market format:
 
 >>> from gensim import corpora

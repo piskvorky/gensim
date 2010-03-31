@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.4',
+        VERSION:     '0.4.5',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -20,7 +20,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="index.html" />
-    <link rel="next" title="Corpora and the Vector Space Model" href="tut1.html" />
+    <link rel="next" title="Corpora and Vector Spaces" href="tut1.html" />
     <link rel="prev" title="Installation" href="install.html" /> 
   </head>
   <body>
@@ -34,7 +34,7 @@
           <a href="modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
         <li class="right" >
-          <a href="tut1.html" title="Corpora and the Vector Space Model"
+          <a href="tut1.html" title="Corpora and Vector Spaces"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="install.html" title="Installation"
@@ -53,15 +53,9 @@
 <p>This tutorial is organized as a series of examples that highlight various features
 of <cite>gensim</cite>. It is assumed that the reader is familiar with the Python language
 and has read the <a class="reference external" href="intro.html"><em>Introduction</em></a>.</p>
-<p>The examples are divided into parts on:</p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="tut1.html">Corpora and the Vector Space Model</a></li>
-<li class="toctree-l1"><a class="reference external" href="tut2.html">Topics and Transformations</a></li>
-<li class="toctree-l1"><a class="reference external" href="tut3.html">Similarity Queries</a></li>
-</ul>
 <p>All the examples can be directly copied to your Python interpreter shell (assuming
-you have <a class="reference external" href="install.html"><em>gensim installed</em></a>, of course).</p>
-<p><a class="reference external" href="http://ipython.scipy.org">IPython</a>&#8216;s <tt class="docutils literal"><span class="pre">cpaste</span></tt> command is especially handy for copypasting code fragments which include superfluous
+you have <a class="reference external" href="install.html"><em>gensim installed</em></a>, of course).
+<a class="reference external" href="http://ipython.scipy.org">IPython</a>&#8216;s <tt class="docutils literal"><span class="pre">cpaste</span></tt> command is especially handy for copypasting code fragments which include superfluous
 characters, such as the leading <tt class="docutils literal"><span class="pre">&gt;&gt;&gt;</span></tt>.</p>
 <p>Gensim uses Python&#8217;s standard <tt class="xref docutils literal"><span class="pre">logging</span></tt> module to log various stuff at various
 priority levels; to activate logging (optional), run</p>
@@ -69,6 +63,17 @@ priority levels; to activate logging (optional), run</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span> <span class="c"># will suppress DEBUG level events</span>
 </pre></div>
 </div>
+<p>The examples are divided into parts on:</p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="tut1.html">Corpora and Vector Spaces</a><ul>
+<li class="toctree-l2"><a class="reference external" href="tut1.html#quick-example">Quick Example</a></li>
+<li class="toctree-l2"><a class="reference external" href="tut1.html#from-strings-to-vectors">From Strings to Vectors</a></li>
+<li class="toctree-l2"><a class="reference external" href="tut1.html#corpus-formats">Corpus Formats</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="tut2.html">Topics and Transformations</a></li>
+<li class="toctree-l1"><a class="reference external" href="tut3.html">Similarity Queries</a></li>
+</ul>
 </div>
 
 
@@ -82,7 +87,7 @@ priority levels; to activate logging (optional), run</p>
                                   title="previous chapter">Installation</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="tut1.html"
-                                  title="next chapter">Corpora and the Vector Space Model</a></p>
+                                  title="next chapter">Corpora and Vector Spaces</a></p>
           <div id="searchbox" style="display: none">
             <h3>Quick search</h3>
               <form class="search" action="search.html" method="get">
@@ -110,7 +115,7 @@ priority levels; to activate logging (optional), run</p>
           <a href="modindex.html" title="Global Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="tut1.html" title="Corpora and the Vector Space Model"
+          <a href="tut1.html" title="Corpora and Vector Spaces"
              >next</a> |</li>
         <li class="right" >
           <a href="install.html" title="Installation"
