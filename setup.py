@@ -6,7 +6,8 @@
 
 """
 Run with:
-python ./setup.py install
+
+sudo python ./setup.py install
 """
 
 import os
@@ -30,7 +31,7 @@ long_desc = read('README.txt')
 
 setup(
     name = 'gensim',
-    version = '0.4.4',
+    version = '0.4.5',
     description = 'Python Framework for Vector Space Modeling',
     long_description = long_desc,
     
@@ -57,12 +58,11 @@ setup(
     ],
     
     test_suite = "gensim.test",
-
-    install_requires=[
-        'numpy >= 1.2.0',
-        'scipy >= 0.7.0',
-    ],
     
+    install_requires=[
+        'scipy >= 0.6.0',
+    ],
+
     include_package_data = True,
 
     entry_points = {},
