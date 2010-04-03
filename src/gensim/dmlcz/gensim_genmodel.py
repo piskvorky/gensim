@@ -30,6 +30,7 @@ DIM_LSI = 300 # for lantent semantic indexing
 DIM_LDA = 100 # for latent dirichlet allocation
 
 
+
 if __name__ == '__main__':
     logging.basicConfig(level = logging.INFO)
     logging.root.level = logging.DEBUG
@@ -39,7 +40,7 @@ if __name__ == '__main__':
 
     # check and process input arguments
     if len(sys.argv) < 3:
-        print globals()['__doc__'] % program
+        print globals()['__doc__'] % locals()
         sys.exit(1)
     language = sys.argv[1]
     method = sys.argv[2].strip().lower()
@@ -50,26 +51,28 @@ if __name__ == '__main__':
     logging.info("loading word id mapping from %s" % config.resultFile('wordids.txt'))
     id2word = dmlcorpus.DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
     logging.info("loaded %i word ids" % len(id2word))
+    
+    corpus = MmCorpus(config.resultFile('bow.mm'))
 
     if method == 'tfidf':
-        corpus = MmCorpus(config.resultFile('bow.mm'))
         model = tfidfmodel.TfidfModel(corpus, id2word = id2word, normalize = True)
         model.save(config.resultFile('tfidfmodel.pkl'))
     elif method == 'lda':
-        corpus = MmCorpus(config.resultFile('bow.mm'))
         model = ldamodel.LdaModel(corpus, id2word = id2word, numTopics = DIM_LDA)
         model.save(config.resultFile('ldamodel.pkl'))
-    elif method == 'lsi' or method == 'lsa':
+    elif method == 'lsi':
         # first, transform word counts to tf-idf weights
-        corpus = MmCorpus(config.resultFile('bow.mm'))
         tfidf = tfidfmodel.TfidfModel(corpus, id2word = id2word, normalize = True)
         # then find the transformation from tf-idf to latent space
-        model = lsimodel.LsiModel(tfidf.apply(corpus), id2word = id2word, numTopics = DIM_LSI)
+        model = lsimodel.LsiModel(tfidf[corpus], id2word = id2word, numTopics = DIM_LSI)
         model.save(config.resultFile('lsimodel.pkl'))
     elif method == 'rp':
         raise NotImplementedError("Random Projections not converted to the new interface yet")
     else:
         raise ValueError('unknown topic extraction method: %s' % repr(method))
+    
+    if True:
+        MmCorpus.saveCorpus(config.resultFile('corpus_%s.mm' % method), model[corpus])
             
     logging.info("finished running %s" % program)
 

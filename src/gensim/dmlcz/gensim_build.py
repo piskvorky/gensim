@@ -27,6 +27,10 @@ SOURCE_LIST = [
                sources.ArxmlivSource('arxmliv', '/Users/kofola/workspace/dml/data/arxmliv/'),
                ]
 
+#SOURCE_LIST = [
+#               sources.DmlCzSource('dmlcz', '/Users/kofola/workspace/dml/data/dmlcz/CzechMathJ'),
+#               ]
+
 RESULT_DIR = '/Users/kofola/workspace/dml/data/results'
 
 

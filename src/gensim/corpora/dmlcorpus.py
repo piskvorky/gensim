@@ -169,14 +169,19 @@ class DmlCorpus(interfaces.CorpusABC):
         logging.info("saving dictionary mapping to %s" % fname)
         fout = open(fname, 'w')
         for tokenId, token in self.dictionary.id2token.iteritems():
-            fout.write("%i\t%s\n" % (tokenId, token.token))
+            fout.write("%i\t%s\n" % (tokenId, token))
         fout.close()
     
     @staticmethod
     def loadDictionary(fname):
-        words = [line.split('\t')[1].strip() for line in open(fname) if len(line.split('\t')) == 2]
-        id2word = dict(itertools.izip(xrange(len(words)), words))
-        return id2word
+        result = {}
+        for lineNo, line in enumerate(open(fname)):
+            pair = line[:-1].split('\t')
+            if len(pair) != 2:
+                continue
+            wordId, word = pair
+            result[int(wordId)] = word
+        return result
     
     def saveDocuments(self, fname):
         logging.info("saving documents mapping to %s" % fname)
@@ -203,5 +208,23 @@ class DmlCorpus(interfaces.CorpusABC):
         self.saveDictionary(self.config.resultFile('wordids.txt'))
         self.saveDocuments(self.config.resultFile('docids.txt'))
         matutils.MmWriter.writeCorpus(self.config.resultFile('bow.mm'), self)
+    
+    
+    def articleDir(self, docNo):
+        """
+        Return absolute normalized path on filesystem to article no. `docNo`.
+        """
+        sourceId, (_, outPath) = self.documents[docNo]
+        source = self.config.sources[sourceId]
+        return os.path.join(source.baseDir, outPath)
+
+
+    def getMeta(self, docNo):
+        """
+        Return metadata for article no. `docNo`.
+        """
+        sourceId, uri = self.documents[docNo]
+        source = self.config.sources[sourceId]
+        return source.getMeta(uri)
 #endclass DmlCorpus
 
