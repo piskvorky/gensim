@@ -132,7 +132,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         else:
             vec = matutils.sparse2full(doc, self.numFeatures)
         
-        vec.shape = (len(vec), 1)
+        vec.shape = (vec.size, 1)
         if vec.shape != (self.corpus.shape[1], 1):
             raise ValueError("vector shape mismatch; expected %s, got %s" % 
                              ((self.corpus.shape[1], 1,), vec.shape))

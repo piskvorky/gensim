@@ -270,7 +270,7 @@ class ArxmlivSource(ArticleSource):
         def characters(self, text):
             # for text, we only care about tokens directly within the <p> tag
             if self.path[-1] == 'p':
-                tokens = [token.encode('utf8') for token in utils.tokenize(text, errors = 'ignore') if not token.idigit()]
+                tokens = [token.encode('utf8') for token in utils.tokenize(text, errors = 'ignore') if not token.isdigit()]
                 self.tokens.extend(tokens)
     #endclass ArxmlivHandler
     

@@ -19,7 +19,7 @@ import re
 
 from gensim.corpora import sources, dmlcorpus, MmCorpus
 from gensim.models import lsimodel, ldamodel, tfidfmodel
-from gensim.similarities import SparseMatrixSimilarity
+from gensim.similarities import MatrixSimilarity, SparseMatrixSimilarity
 
 import gensim_build
 from gensim_genmodel import  DIM_RP, DIM_LSI, DIM_LDA
@@ -36,7 +36,7 @@ MAX_SIMILAR = 10 # prune based on rank (at most MAX_SIMILAR are stored). set to 
 # if there are no similar articles (after the pruning), do we still want to generate similar.xml?
 SAVE_EMPTY = True
 
-# xml template for similar article
+# xml template for similar articles
 ARTICLE = """
     <article weight="%(score)f">
         <authors>
@@ -45,56 +45,44 @@ ARTICLE = """
         <title>%(title)s</title>
         <suffix>%(suffix)s</suffix>
         <links>
-            <link source="%(source)s" id="%(docId)s" />
+            <link source="%(source)s" id="%(intId)s" path="%(pathId)s"/>
         </links>
     </article>"""
 
 # template for the whole similar.xml file (will be filled with multiple ARTICLE instances)
 SIMILAR = """\
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
-<related>%(articles)s
+<related>%s
 </related>
 """
 
 
 
-def getMeta(fname):
-    """
-    Parse out author and title information from a meta.xml file, if possible.
-    """
-    author, title = "", ""
-    try:
-        meta = open(fname).read()
-        title = re.findall('<title.*?>(.*?)</title>', meta, re.MULTILINE)[0]
-        author = re.findall('<author.*?>(.*?)</author>', meta, re.MULTILINE)[0]
-    except Exception:
-        logging.warning("failed to parse meta at %s" % fname)
-    return author, title
-
-
 def generateSimilar(corpus, index, method):
     for docNo, topSims in enumerate(index): # for each document
-        sourceId, (_, outPath) = corpus.documents[docNo]
-        outfile = os.path.join(outPath, '_similar_%s.xml' % method) # similarities will be stored to this file
-        articles = []
-        for docNo2, score in topSims: # for each most similar
-            source, (docId, docPath) = corpus.documents[docNo2]
+        # store similarities to the following file
+        outfile = os.path.join(corpus.articleDir(docNo), 'similar_%s.xml' % method)
+        
+        articles = [] # collect partial entries in this list
+        for docNo2, score in topSims: # for each most similar article
             if score > MIN_SCORE and docNo != docNo2: # if similarity is above MIN_SCORE and not identity (=always maximum similarity, boring)
-                suffix = ""
-                author, title = getMeta(os.path.join(docPath, 'meta.xml')) # try to read metadata from meta.xml, if present
+                source, (intId, pathId) = corpus.documents[docNo2]
+                meta = corpus.getMeta(docNo2)
+                suffix, author, title = '', meta.get('author', ''), meta.get('title', '')
                 articles.append(ARTICLE % locals()) # add the similar article to output
                 if len(articles) >= MAX_SIMILAR:
                     break
+        
         # now `articles` holds multiple strings in similar_*.xml format 
         if SAVE_EMPTY or articles:
+            output = ''.join(articles) # concat all similars to one string
             if not DRY_RUN: # only open output files for writing if DRY_RUN is false
                 logging.info("generating %s (%i similars)" % (outfile, len(articles)))
-                articles = ''.join(articles) # concat all similars to one string
                 outfile = open(outfile, 'w')
-                outfile.write(SIMILAR % locals()) # add xml headers and print to file
+                outfile.write(SIMILAR % output) # add xml headers and print to file
                 outfile.close()
             else:
-                logging.info("would be generating %s (%i similars)" % (outfile, len(articles)))
+                logging.info("would be generating %s (%i similars):\n%s" % (outfile, len(articles), output))
         else:
             logging.debug("skipping %s (no similar found)" % outfile)
 
@@ -109,7 +97,7 @@ if __name__ == '__main__':
     
     # check and process input arguments
     if len(sys.argv) < 3:
-        print globals()['__doc__'] % program
+        print globals()['__doc__'] % locals()
         sys.exit(1)
     language = sys.argv[1]
     method = sys.argv[2].strip().lower()
@@ -121,21 +109,16 @@ if __name__ == '__main__':
     id2word = dmlcorpus.DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
     logging.info("loaded %i word ids" % len(id2word))
     
-    corpus = MmCorpus(config.resultFile('bow.mm'))
+    corpus = dmlcorpus.DmlCorpus.load(config.resultFile('.pkl'))
+    input = MmCorpus(config.resultFile('corpus_%s.mm' % method))
+    assert len(input) == len(corpus), "corpus size mismatch (%i vs %i): run ./gensim_genmodel again" % (len(input), len(corpus))
 
-    if method == 'tfidf':
-        model = tfidfmodel.TfidfModel.load(config.resultFile('tfidfmodel.pkl'))
-    elif method == 'lda':
-        model = ldamodel.LdaModel.load(config.resultFile('ldamodel.pkl'))
-    elif method == 'lsi' or method == 'lsa':
-        model = lsimodel.LsiModel.load(config.resultFile('lsimodel.pkl'))
-    elif method == 'rp':
-        raise NotImplementedError("Random Projections not converted to the new interface yet")
+     # initialize structure for similarity queries
+    if method == 'lsi':
+        index = MatrixSimilarity(input, numBest = MAX_SIMILAR + 1, numFeatures = input.numTerms)
     else:
-        raise ValueError('unknown topic extraction method: %s' % repr(method))
+        index = SparseMatrixSimilarity(input, numBest = MAX_SIMILAR + 1)
     
-    topics = model[corpus] # transform corpus by the selected model
-    index = SparseMatrixSimilarity(topics, numBest = MAX_SIMILAR) # initialize structure for similarity queries
     generateSimilar(corpus, index, method) # for each document, print MAX_SIMILAR nearest documents to a xml file, in dml-cz format
     
     logging.info("finished running %s" % program)
