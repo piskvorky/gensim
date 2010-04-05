@@ -32,9 +32,6 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
-             accesskey="M">modules</a> |</li>
-        <li class="right" >
           <a href="matutils.html" title="matutils – Math utils"
              accesskey="N">next</a> |</li>
         <li class="right" >
@@ -50,78 +47,8 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="module-gensim.utils">
-<h1><tt class="xref docutils literal"><span class="pre">utils</span></tt> &#8211; Various utility functions<a class="headerlink" href="#module-gensim.utils" title="Permalink to this headline">¶</a></h1>
-<p>This module contains various general utility functions.</p>
-<dl class="class">
-<dt id="gensim.utils.SaveLoad">
-<em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">SaveLoad</tt><a class="headerlink" href="#gensim.utils.SaveLoad" title="Permalink to this definition">¶</a></dt>
-<dd><p>Objects which inherit from this class have save/load functions, which un/pickle 
-them to disk.</p>
-<p>This uses cPickle for de/serializing, so objects must not contains unpicklable 
-attributes, such as lambda functions etc.</p>
-<dl class="classmethod">
-<dt id="gensim.utils.SaveLoad.load">
-<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.utils.SaveLoad.load" title="Permalink to this definition">¶</a></dt>
-<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
-
-<dl class="method">
-<dt id="gensim.utils.SaveLoad.save">
-<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.utils.SaveLoad.save" title="Permalink to this definition">¶</a></dt>
-<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="gensim.utils.deaccent">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">deaccent</tt><big>(</big><em>text</em><big>)</big><a class="headerlink" href="#gensim.utils.deaccent" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove accentuation from the given string.</p>
-<p>Input text is either a unicode string or utf8 encoded bytestring. Return
-input string with accents removed, as unicode.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">deaccent</span><span class="p">(</span><span class="s">&quot;Šéf chomutovských komunistů dostal poštou bílý prášek&quot;</span><span class="p">)</span>
-<span class="go">u&#39;Sef chomutovskych komunistu dostal postou bily prasek&#39;</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="gensim.utils.dictFromCorpus">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">dictFromCorpus</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.utils.dictFromCorpus" title="Permalink to this definition">¶</a></dt>
-<dd><p>Scan corpus for all word ids that appear in it, then contruct and return a mapping
-which maps each <tt class="docutils literal"><span class="pre">wordId</span> <span class="pre">-&gt;</span> <span class="pre">str(wordId)</span></tt>.</p>
-<p>This function is used whenever <em>words</em> need to be displayed (as opposed to just 
-their ids) but no wordId-&gt;word mapping was provided. The resulting mapping 
-only covers words actually used in the corpus, up to the highest wordId found.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="gensim.utils.getMaxId">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">getMaxId</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.utils.getMaxId" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return highest feature id that appears in the corpus.</p>
-<p>For empty corpora (no features at all), return -1.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="gensim.utils.isCorpus">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">isCorpus</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#gensim.utils.isCorpus" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check whether <cite>obj</cite> is a corpus.</p>
-<p><strong>NOTE</strong>: When called on an empty corpus (no documents), will return False.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="gensim.utils.tokenize">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">tokenize</tt><big>(</big><em>text</em>, <em>lowercase=False</em>, <em>deacc=False</em>, <em>errors='strict'</em>, <em>toLower=False</em>, <em>lower=False</em><big>)</big><a class="headerlink" href="#gensim.utils.tokenize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Iteratively yield tokens as unicode strings, optionally also lowercasing them 
-and removing accent marks.</p>
-<p>Input text may be either unicode or utf8-encoded byte string.</p>
-<p>The tokens on output are maximal contiguous sequences of alphabetic 
-characters (no digits!).</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">tokenize</span><span class="p">(</span><span class="s">&#39;Nic nemůže letět rychlostí vyšší, než 300 tisíc kilometrů za sekundu!&#39;</span><span class="p">,</span> <span class="n">deacc</span> <span class="o">=</span> <span class="bp">True</span><span class="p">))</span>
-<span class="go">[u&#39;Nic&#39;, u&#39;nemuze&#39;, u&#39;letet&#39;, u&#39;rychlosti&#39;, u&#39;vyssi&#39;, u&#39;nez&#39;, u&#39;tisic&#39;, u&#39;kilometru&#39;, u&#39;za&#39;, u&#39;sekundu&#39;]</span>
-</pre></div>
-</div>
-</dd></dl>
-
+  <div class="section" id="utils-various-utility-functions">
+<h1><tt class="xref docutils literal"><span class="pre">utils</span></tt> &#8211; Various utility functions<a class="headerlink" href="#utils-various-utility-functions" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
@@ -159,9 +86,6 @@ characters (no digits!).</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
-             >modules</a> |</li>
         <li class="right" >
           <a href="matutils.html" title="matutils – Math utils"
              >next</a> |</li>

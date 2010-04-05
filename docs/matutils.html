@@ -32,9 +32,6 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
-             accesskey="M">modules</a> |</li>
-        <li class="right" >
           <a href="corpora/bleicorpus.html" title="corpora.bleicorpus – Corpus in Blei’s LDA-C format"
              accesskey="N">next</a> |</li>
         <li class="right" >
@@ -50,64 +47,8 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="module-gensim.matutils">
-<h1><tt class="xref docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils<a class="headerlink" href="#module-gensim.matutils" title="Permalink to this headline">¶</a></h1>
-<p>This module contains math helper functions.</p>
-<dl class="class">
-<dt id="gensim.matutils.MmReader">
-<em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">MmReader</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmReader" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrap a term-document matrix on disk (in matrix-market format), and present it 
-as an object which supports iteration over the rows (~documents).</p>
-<p>Note that the file is read into memory one document at a time, not the whole 
-matrix at once (unlike scipy.io.mmread). This allows for representing corpora 
-which are larger than the available RAM.</p>
-<p>Initialize the matrix reader.</p>
-<p>The <cite>fname</cite> is a path to a file on local filesystem, which is expected to 
-be in sparse (coordinate) Matrix Market format. Documents are assumed to 
-be rows of the matrix (and document features are columns).</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="gensim.matutils.MmWriter">
-<em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">MmWriter</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Store corpus in Matrix Market format.</p>
-<dl class="staticmethod">
-<dt id="gensim.matutils.MmWriter.writeCorpus">
-<em class="property">static </em><tt class="descname">writeCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.writeCorpus" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save the vector space representation of an entire corpus to disk.</p>
-<p>Note that the documents are processed one at a time, so the whole corpus 
-is allowed to be larger than the available RAM.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="gensim.matutils.MmWriter.writeVector">
-<tt class="descname">writeVector</tt><big>(</big><em>docNo</em>, <em>vector</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.writeVector" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write a single sparse vector to the file.</p>
-<p>Sparse vector is any iterable yielding (field id, field value) pairs.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="gensim.matutils.pad">
-<tt class="descclassname">gensim.matutils.</tt><tt class="descname">pad</tt><big>(</big><em>mat</em>, <em>padRow</em>, <em>padCol</em><big>)</big><a class="headerlink" href="#gensim.matutils.pad" title="Permalink to this definition">¶</a></dt>
-<dd>Add additional rows/columns to a numpy.matrix <cite>mat</cite>. The new rows/columns 
-will be initialized with zeros.</dd></dl>
-
-<dl class="function">
-<dt id="gensim.matutils.sparse2full">
-<tt class="descclassname">gensim.matutils.</tt><tt class="descname">sparse2full</tt><big>(</big><em>doc</em>, <em>length</em><big>)</big><a class="headerlink" href="#gensim.matutils.sparse2full" title="Permalink to this definition">¶</a></dt>
-<dd>Convert document in sparse format (sequence of 2-tuples) into a full numpy
-array (of size <cite>length</cite>).</dd></dl>
-
-<dl class="function">
-<dt id="gensim.matutils.unitVec">
-<tt class="descclassname">gensim.matutils.</tt><tt class="descname">unitVec</tt><big>(</big><em>vec</em><big>)</big><a class="headerlink" href="#gensim.matutils.unitVec" title="Permalink to this definition">¶</a></dt>
-<dd><p>Scale a vector to unit length. The only exception is zero vector, which
-is returned back unchanged.</p>
-<p>If the input is sparse (list of 2-tuples), output will also be sparse.</p>
-</dd></dl>
-
+  <div class="section" id="matutils-math-utils">
+<h1><tt class="xref docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils<a class="headerlink" href="#matutils-math-utils" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
@@ -145,9 +86,6 @@ is returned back unchanged.</p>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
-             >modules</a> |</li>
         <li class="right" >
           <a href="corpora/bleicorpus.html" title="corpora.bleicorpus – Corpus in Blei’s LDA-C format"
              >next</a> |</li>
