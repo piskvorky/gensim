@@ -82,7 +82,7 @@ def generateSimilar(corpus, index, method):
                 outfile.write(SIMILAR % output) # add xml headers and print to file
                 outfile.close()
             else:
-                logging.info("would be generating %s (%i similars):\n%s" % (outfile, len(articles), output))
+                logging.info("would be generating %s (%i similars):%s\n" % (outfile, len(articles), output))
         else:
             logging.debug("skipping %s (no similar found)" % outfile)
 
