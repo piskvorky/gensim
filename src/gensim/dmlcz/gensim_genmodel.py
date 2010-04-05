@@ -26,7 +26,7 @@ import gensim_build
 
 # internal method parameters
 DIM_RP = 300 # dimensionality for the random projections
-DIM_LSI = 300 # for lantent semantic indexing
+DIM_LSI = 200 # for lantent semantic indexing
 DIM_LDA = 100 # for latent dirichlet allocation
 
 
