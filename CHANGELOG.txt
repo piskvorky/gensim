@@ -1,6 +1,11 @@
 Changes
 =======
 
+0.4.5
+
+* updated documentation
+* further memory optimizations in SVD (LSI)
+
 0.4.4
 
 * added missing test files to MANIFEST.in
