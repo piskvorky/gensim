@@ -58,7 +58,7 @@ class LsiModel(interfaces.TransformationABC):
                 (self.numTerms, self.numTopics)
 
 
-    def initialize(self, corpus, chunks = 100, keepDecomposition = False):
+    def initialize(self, corpus, chunks = 100, keepDecomposition = False, dtype = numpy.float64):
         """
         Run SVD decomposition on the corpus. This will define the latent space into 
         which terms and documents will be mapped.
@@ -83,16 +83,16 @@ class LsiModel(interfaces.TransformationABC):
             self.numTerms = 1 + max([-1] + self.id2word.keys())
         
         # initialize decomposition (zero documents so far)
-        self.u = numpy.matrix(numpy.zeros((self.numTerms, self.numTopics))) # leave default numeric type (=double)
-        self.s = numpy.matrix(numpy.zeros((self.numTopics, self.numTopics)))
-        #self.v = numpy.matrix(numpy.zeros((0, self.numTopics)))
+        self.u = numpy.matrix(numpy.zeros((self.numTerms, self.numTopics)), dtype = dtype)
+        self.s = numpy.matrix(numpy.zeros((self.numTopics, self.numTopics)), dtype = dtype)
+        #self.v = numpy.matrix(numpy.zeros((0, self.numTopics)), dtype = dtype)
         self.v = None
         
-        # do the actual work -- perform iterative singular value decomposition
+        # do the actual work -- perform iterative singular value decomposition.
         # this is done by sequentially updating SVD with `chunks` new documents
         chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
         for chunkNo, (key, group) in enumerate(chunker):
-            # convert the chunk of documents to vectors
+            # convert the chunk of sparse documents to full vectors
             docs = [matutils.sparse2full(doc, self.numTerms) for docNo, doc in group]
 #            self.svdAddCols(docs, reorth = chunkNo % 100 == 99) # reorthogonalize once in every "100*chunks" documents
             self.svdAddCols(docs, reorth = False)
@@ -180,8 +180,6 @@ class LsiModel(interfaces.TransformationABC):
         m = self.u.T * a # (k, m) * (m, c) = (k, c)
         logging.debug("computing orthogonal basis")
         P, Ra = numpy.linalg.qr(a - self.u * m) # equation (2)
-        self.u = numpy.bmat([self.u, P]) # (m, k + c)
-        del P # free up mem
 
         # allow re-orientation towards new data trends in the document stream, by giving less emphasis on old values
         self.s *= decay
@@ -205,7 +203,13 @@ class LsiModel(interfaces.TransformationABC):
         # and finally update the left/right singular vectors
         logging.debug('rotating subspaces')
         self.s = sK
-        self.u = self.u * uK # (m, k + c) * (k + c, k) = (m, k), equation (5)
+        
+        # update U piece by piece, to avoid creating (huge) temporary arrays in a complex expression
+        P = P * uK[k:]
+        self.u = self.u * uK[:k]
+        self.u += P # (m, k) * (k, k) + (m, c) * (c, k) = (m, k), equation (5)
+        del P # free up memory
+        
         if keepV:
             self.v = self.v * vK[:k, :] # (n + c, k) * (k, k) = (n + c, k)
             rot = vK[k:, :]
