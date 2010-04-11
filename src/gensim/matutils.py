@@ -12,6 +12,7 @@ import logging
 import math
 
 import numpy
+import scipy.sparse
 
 
 def pad(mat, padRow, padCol):
@@ -49,18 +50,23 @@ def unitVec(vec):
     Scale a vector to unit length. The only exception is zero vector, which
     is returned back unchanged.
     
-    If the input is sparse (list of 2-tuples), output will also be sparse.
+    If the input is sparse (list of 2-tuples), output will also be sparse. Otherwise,
+    output will be a numpy array.
     """
-    if len(vec) == 0:
+    if scipy.sparse.issparse(vec):
+        vec = vec.toarray().flatten()
+    try:
+        first = iter(vec).next()
+    except:
         return vec
-    first = iter(vec).next()
+    
     if isinstance(first, tuple):
         vecLen = 1.0 * math.sqrt(sum(val * val for _, val in vec))
         assert vecLen > 0.0, "sparse documents must not contain any explicit zero entries"
         if vecLen != 1.0:
             result = [(termId, val / vecLen) for termId, val in vec]
         else:
-            result = vec
+            result = list(vec)
     else:
         vec = numpy.asarray(vec, dtype = float)
         vecLen = numpy.sqrt(numpy.sum(vec * vec))
@@ -232,6 +238,10 @@ class MmReader(object):
     def __len__(self):
         return self.numDocs
     
+    def __str__(self):
+        return ("MmCorpus(%i documents, %i features, %i non-zero entries)" % 
+                (self.numDocs, self.numTerms, self.numElements))
+        
     def __iter__(self):
         """
         Iteratively yield vectors from the underlying file, in the format (rowNo, vector),
