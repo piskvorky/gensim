@@ -72,7 +72,10 @@ class TestLdaModel(unittest.TestCase):
         
         vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
         expected = [0.0, 1.0]
-        self.assertTrue(numpy.allclose(sorted(vec), sorted(expected))) # must contain the same values, up to re-ordering
+        passed = False
+        for i in xrange(10): # lda is randomized, so allow 10 iterations to test for equality
+            passed = passed or numpy.allclose(sorted(vec), sorted(expected))  # must contain the same values, up to re-ordering
+        self.assertTrue(passed, "Error in randomized LDA test")
         
     
     def testPersistence(self):
