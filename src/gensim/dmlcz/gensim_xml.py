@@ -27,7 +27,7 @@ from gensim_genmodel import  DIM_RP, DIM_LSI, DIM_LDA
 
 # set to True to do everything EXCEPT actually writing out similar.xml files to disk.
 # similar.xml files are NOT written if DRY_RUN is true.
-DRY_RUN = True # False
+DRY_RUN = False # True
 
 # how many 'most similar' documents to store in each similar.xml?
 MIN_SCORE = 0.0 # prune based on similarity score (all below MIN_SCORE are ignored)
@@ -63,7 +63,7 @@ def generateSimilar(corpus, index, method):
         # store similarities to the following file
         outfile = os.path.join(corpus.articleDir(docNo), 'similar_%s.xml' % method)
         
-        articles = [] # collect partial entries in this list
+        articles = [] # collect similars in this list
         for docNo2, score in topSims: # for each most similar article
             if score > MIN_SCORE and docNo != docNo2: # if similarity is above MIN_SCORE and not identity (=always maximum similarity, boring)
                 source, (intId, pathId) = corpus.documents[docNo2]
@@ -119,7 +119,8 @@ if __name__ == '__main__':
     else:
         index = SparseMatrixSimilarity(input, numBest = MAX_SIMILAR + 1)
     
-    generateSimilar(corpus, index, method) # for each document, print MAX_SIMILAR nearest documents to a xml file, in dml-cz format
+    index.normalize = False # do not normalize vector during similarity queries (the index is already built normalized, so it would be a no-op)
+    generateSimilar(corpus, index, method) # for each document, print MAX_SIMILAR nearest documents to a xml file, in dml-cz specific format
     
     logging.info("finished running %s" % program)
 
