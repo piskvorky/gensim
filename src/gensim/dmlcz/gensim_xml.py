@@ -18,16 +18,14 @@ import re
 
 
 from gensim.corpora import sources, dmlcorpus, MmCorpus
-from gensim.models import lsimodel, ldamodel, tfidfmodel
 from gensim.similarities import MatrixSimilarity, SparseMatrixSimilarity
 
 import gensim_build
-from gensim_genmodel import  DIM_RP, DIM_LSI, DIM_LDA
 
 
 # set to True to do everything EXCEPT actually writing out similar.xml files to disk.
 # similar.xml files are NOT written if DRY_RUN is true.
-DRY_RUN = False # True
+DRY_RUN = True # False
 
 # how many 'most similar' documents to store in each similar.xml?
 MIN_SCORE = 0.0 # prune based on similarity score (all below MIN_SCORE are ignored)
@@ -89,7 +87,7 @@ def generateSimilar(corpus, index, method):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level = logging.INFO)
+    logging.basicConfig(level = logging.INFO, format='%(asctime)s : %(levelname)s : %(message)s')
     logging.root.level = logging.DEBUG
     logging.info("running %s" % ' '.join(sys.argv))
 
@@ -114,12 +112,12 @@ if __name__ == '__main__':
     assert len(input) == len(corpus), "corpus size mismatch (%i vs %i): run ./gensim_genmodel again" % (len(input), len(corpus))
 
      # initialize structure for similarity queries
-    if method == 'lsi':
+    if method == 'lsi' or method == 'rp': # for these methods, use dense vectors
         index = MatrixSimilarity(input, numBest = MAX_SIMILAR + 1, numFeatures = input.numTerms)
     else:
         index = SparseMatrixSimilarity(input, numBest = MAX_SIMILAR + 1)
     
-    index.normalize = False # do not normalize vector during similarity queries (the index is already built normalized, so it would be a no-op)
+    index.normalize = False # do not normalize query vectors during similarity queries (the index is already built normalized, so it would be a no-op)
     generateSimilar(corpus, index, method) # for each document, print MAX_SIMILAR nearest documents to a xml file, in dml-cz specific format
     
     logging.info("finished running %s" % program)
