@@ -43,9 +43,9 @@ You can now install (or upgrade) gensim with::
 
     sudo easy_install gensim
 
-That's it!
+That's it! Congratulations, you can now proceed to the :doc:`tutorials <tutorial>`.
 
-There are also alternative routes:
+There are also alternative routes to install:
 
 1. If you have downloaded and unzipped the `tar.gz source <http://pypi.python.org/pypi/gensim>`_
    for gensim (or you're installing gensim from `svn <http://my-trac.assembla.com/gensim>`_), 
@@ -71,7 +71,7 @@ There are also alternative routes:
 Testing gensim
 ----------------
 
-To test the package, unzip the source and run::
+To test the package, unzip the `tar.gz source <http://pypi.python.org/pypi/gensim>`_ and run::
 
     python setup.py test
 
