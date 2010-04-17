@@ -32,6 +32,9 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
           <a href="../models/ldamodel.html" title="models.ldamodel – Latent Dirichlet Allocation"
              accesskey="N">next</a> |</li>
         <li class="right" >
@@ -47,8 +50,44 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="corpora-svmlightcorpus-corpus-in-svmlight-format">
-<h1><tt class="xref docutils literal"><span class="pre">corpora.svmlightcorpus</span></tt> &#8211; Corpus in SVMlight format<a class="headerlink" href="#corpora-svmlightcorpus-corpus-in-svmlight-format" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-gensim.corpora.svmlightcorpus">
+<h1><tt class="xref docutils literal"><span class="pre">corpora.svmlightcorpus</span></tt> &#8211; Corpus in SVMlight format<a class="headerlink" href="#module-gensim.corpora.svmlightcorpus" title="Permalink to this headline">¶</a></h1>
+<p>Corpus in SVMlight format.</p>
+<dl class="class">
+<dt id="gensim.corpora.svmlightcorpus.SvmLightCorpus">
+<em class="property">class </em><tt class="descclassname">gensim.corpora.svmlightcorpus.</tt><tt class="descname">SvmLightCorpus</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Corpus in SVMlight format.</p>
+<p>Quoting <a class="reference external" href="http://svmlight.joachims.org/">http://svmlight.joachims.org/</a>:
+The input file example_file contains the training examples. The first lines 
+may contain comments and are ignored if they start with #. Each of the following 
+lines represents one training example and is of the following format:</p>
+<div class="highlight-python"><pre>&lt;line&gt; .=. &lt;target&gt; &lt;feature&gt;:&lt;value&gt; &lt;feature&gt;:&lt;value&gt; ... &lt;feature&gt;:&lt;value&gt; # &lt;info&gt;
+&lt;target&gt; .=. +1 | -1 | 0 | &lt;float&gt; 
+&lt;feature&gt; .=. &lt;integer&gt; | "qid"
+&lt;value&gt; .=. &lt;float&gt;
+&lt;info&gt; .=. &lt;string&gt;</pre>
+</div>
+<p>The &#8220;qid&#8221; feature (used for SVMlight ranking), if present, is ignored.</p>
+<p>Initialize the corpus from a file.</p>
+<dl class="classmethod">
+<dt id="gensim.corpora.svmlightcorpus.SvmLightCorpus.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus.load" title="Permalink to this definition">¶</a></dt>
+<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.svmlightcorpus.SvmLightCorpus.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus.save" title="Permalink to this definition">¶</a></dt>
+<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+
+<dl class="staticmethod">
+<dt id="gensim.corpora.svmlightcorpus.SvmLightCorpus.saveCorpus">
+<em class="property">static </em><tt class="descname">saveCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus.saveCorpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a corpus in the SVMlight format.</p>
+<p>The SVMlight <cite>&lt;target&gt;</cite> class tag is set to 0 for all documents.</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 
@@ -86,6 +125,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="../models/ldamodel.html" title="models.ldamodel – Latent Dirichlet Allocation"
              >next</a> |</li>

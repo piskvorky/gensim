@@ -32,6 +32,9 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
           <a href="tfidfmodel.html" title="models.tfidfmodel – TF-IDF model"
              accesskey="N">next</a> |</li>
         <li class="right" >
@@ -47,8 +50,112 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="models-lsimodel-latent-semantic-indexing">
-<h1><tt class="xref docutils literal"><span class="pre">models.lsimodel</span></tt> &#8211; Latent Semantic Indexing<a class="headerlink" href="#models-lsimodel-latent-semantic-indexing" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-gensim.models.lsimodel">
+<h1><tt class="xref docutils literal"><span class="pre">models.lsimodel</span></tt> &#8211; Latent Semantic Indexing<a class="headerlink" href="#module-gensim.models.lsimodel" title="Permalink to this headline">¶</a></h1>
+<p>Module for Latent Semantic Indexing.</p>
+<dl class="class">
+<dt id="gensim.models.lsimodel.LsiModel">
+<em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus</em>, <em>id2word=None</em>, <em>numTopics=200</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Objects of this class allow building and maintaining a model for Latent 
+Semantic Indexing (also known as Latent Semantic Analysis).</p>
+<p>The main methods are:</p>
+<ol class="arabic simple">
+<li>constructor, which calculates the latent topics space, effectively 
+initializing the model,</li>
+<li>the [] method, which returns representation of any input document in the 
+computed latent space.</li>
+</ol>
+<p>Model persistency is achieved via its load/save methods.</p>
+<p>Find latent space based on the corpus provided.</p>
+<p><cite>numTopics</cite> is the number of requested factors (latent dimensions).</p>
+<p>After the model has been initialized, you can estimate topics for an
+arbitrary, unseen document, using the <tt class="docutils literal"><span class="pre">topics</span> <span class="pre">=</span> <span class="pre">self[document]</span></tt> dictionary 
+notation.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">lsi</span><span class="p">[</span><span class="n">doc_tfidf</span><span class="p">]</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="gensim.models.lsimodel.LsiModel.initialize">
+<tt class="descname">initialize</tt><big>(</big><em>corpus</em>, <em>chunks=100</em>, <em>keepDecomposition=False</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run SVD decomposition on the corpus. This will define the latent space into 
+which terms and documents will be mapped.</p>
+<p>The SVD is created incrementally, in blocks of <cite>chunks</cite> documents. In the
+end, a <cite>self.projection</cite> matrix is constructed that can be used to transform 
+documents into the latent space. The <cite>U, S, V</cite> decomposition itself is 
+discarded, unless <cite>keepDecomposition</cite> is True, in which case it is stored 
+in <cite>self.u</cite>, <cite>self.s</cite> and <cite>self.v</cite>.</p>
+<p>The algorithm is adapted from:
+<strong>M. Brand. 2006. Fast low-rank modifications of the thin singular value decomposition</strong></p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="gensim.models.lsimodel.LsiModel.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.load" title="Permalink to this definition">¶</a></dt>
+<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.lsimodel.LsiModel.printTopic">
+<tt class="descname">printTopic</tt><big>(</big><em>topicNo</em>, <em>topN=10</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.printTopic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a specified topic (0 &lt;= <cite>topicNo</cite> &lt; <cite>self.numTopics</cite>) in human readable format.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsimodel</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">topN</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">-0.340 * &quot;category&quot; + 0.298 * &quot;$M$&quot; + 0.183 * &quot;algebra&quot; + -0.174 * &quot;functor&quot; + -0.168 * &quot;operator&quot;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.lsimodel.LsiModel.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.save" title="Permalink to this definition">¶</a></dt>
+<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.lsimodel.LsiModel.svdAddCols">
+<tt class="descname">svdAddCols</tt><big>(</big><em>docs</em>, <em>decay=1.0</em>, <em>reorth=False</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.svdAddCols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update singular value decomposition factors to take into account new 
+documents <cite>docs</cite>.</p>
+<p>This function corresponds to the general update of Brand (section 2), 
+specialized for <cite>A = docs.T</cite> and <cite>B</cite> trivial (no update to matrix rows).</p>
+<p>The documents are assumed to be a list of full vectors (ie. not sparse 2-tuples).</p>
+<p>Compute new decomposition <cite>u&#8217;</cite>, <cite>s&#8217;</cite>, <cite>v&#8217;</cite> so that if the current matrix <cite>X</cite> decomposes to
+<cite>u * s * v^T ~= X</cite>, then
+<cite>u&#8217; * s&#8217; * v&#8217;^T ~= [X docs^T]</cite></p>
+<p><cite>u</cite>, <cite>s</cite>, <cite>v</cite> and their new values <cite>u&#8217;</cite>, <cite>s&#8217;</cite>, <cite>v&#8217;</cite> are stored within <cite>self</cite> (ie. as 
+<cite>self.u</cite>, <cite>self.v</cite> etc.).</p>
+<p><cite>self.v</cite> can be set to <cite>None</cite>, in which case it is completely ignored. This saves a
+bit of speed and a lot of memory, especially for huge corpora (size of <cite>v</cite> is
+linear in the number of added documents).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.models.lsimodel.iterSvd">
+<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">iterSvd</tt><big>(</big><em>corpus</em>, <em>numTerms</em>, <em>numFactors</em>, <em>numIter=200</em>, <em>initRate=None</em>, <em>convergence=0.0001</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.iterSvd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform iterative Singular Value Decomposition on a streaming matrix (corpus),
+returning <cite>numFactors</cite> greatest factors (ie., not necessarily full spectrum).</p>
+<p>The parameters <cite>numIter</cite> (maximum number of iterations) and <cite>initRate</cite> (gradient 
+descent step size) guide convergency of the algorithm.</p>
+<p>See <strong>Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 
+Value Decomposition in Natural Language Processing. EACL 2006.</strong></p>
+<p>Use of this function is deprecated; although it works, it is several orders of 
+magnitude slower than the direct (non-stochastic) version based on Brand. Use 
+svdAddCols/svdUpdate to compute SVD iteratively. I keep this function here 
+purely for backup reasons.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.models.lsimodel.svdUpdate">
+<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">svdUpdate</tt><big>(</big><em>U</em>, <em>S</em>, <em>V</em>, <em>a</em>, <em>b</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.svdUpdate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update SVD of an (m x n) matrix <cite>X = U * S * V^T</cite> so that
+<cite>[X + a * b^T] = U&#8217; * S&#8217; * V&#8217;^T</cite>
+and return <cite>U&#8217;</cite>, <cite>S&#8217;</cite>, <cite>V&#8217;</cite>.</p>
+<p><cite>a</cite> and <cite>b</cite> are (m, 1) and (n, 1) rank-1 matrices, so that svdUpdate can simulate 
+incremental addition of one new document and/or term to an already existing 
+decomposition.</p>
+</dd></dl>
+
 </div>
 
 
@@ -86,6 +193,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="tfidfmodel.html" title="models.tfidfmodel – TF-IDF model"
              >next</a> |</li>
