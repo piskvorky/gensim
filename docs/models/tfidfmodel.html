@@ -32,6 +32,9 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
           <a href="../similarities/docsim.html" title="similarities.docsim – Document similarity queries"
              accesskey="N">next</a> |</li>
         <li class="right" >
@@ -47,8 +50,50 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="models-tfidfmodel-tf-idf-model">
-<h1><tt class="xref docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model<a class="headerlink" href="#models-tfidfmodel-tf-idf-model" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-gensim.models.tfidfmodel">
+<h1><tt class="xref docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model<a class="headerlink" href="#module-gensim.models.tfidfmodel" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="gensim.models.tfidfmodel.TfidfModel">
+<em class="property">class </em><tt class="descclassname">gensim.models.tfidfmodel.</tt><tt class="descname">TfidfModel</tt><big>(</big><em>corpus</em>, <em>id2word=None</em>, <em>normalize=True</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Objects of this class realize the transformation between word-document co-occurence
+matrix (integers) into a locally/globally weighted matrix (positive floats).</p>
+<p>This is done by combining the term frequency counts (the TF part) with inverse
+document frequency counts (the IDF part), optionally normalizing the resulting
+documents to unit length.</p>
+<p>The main methods are:</p>
+<ol class="arabic simple">
+<li>constructor, which calculates IDF weights for all terms in the training corpus.</li>
+<li>the [] method, which transforms a simple count representation into the TfIdf 
+space.</li>
+</ol>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tfidf</span> <span class="o">=</span> <span class="n">TfidfModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="o">=</span> <span class="n">tfidf</span><span class="p">[</span><span class="n">some_doc</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tfidf</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&#39;/tmp/foo.tfidf_model&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Model persistency is achieved via its load/save methods.</p>
+<p><cite>id2word</cite> is a mapping from word ids (integers) to words (strings). It is
+used to determine the vocabulary size, as well as for debugging and topic 
+printing. If not set, it will be determined from the corpus.</p>
+<p><cite>normalize</cite> dictates whether the resulting vectors will be set to unit length.</p>
+<dl class="method">
+<dt id="gensim.models.tfidfmodel.TfidfModel.initialize">
+<tt class="descname">initialize</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel.initialize" title="Permalink to this definition">¶</a></dt>
+<dd>Compute inverse document weights, which will be used to modify term 
+frequencies for documents.</dd></dl>
+
+<dl class="classmethod">
+<dt id="gensim.models.tfidfmodel.TfidfModel.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel.load" title="Permalink to this definition">¶</a></dt>
+<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.tfidfmodel.TfidfModel.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel.save" title="Permalink to this definition">¶</a></dt>
+<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+
+</dd></dl>
+
 </div>
 
 
@@ -86,6 +131,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="../modindex.html" title="Global Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="../similarities/docsim.html" title="similarities.docsim – Document similarity queries"
              >next</a> |</li>
