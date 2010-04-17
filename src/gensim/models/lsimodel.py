@@ -44,7 +44,7 @@ class LsiModel(interfaces.TransformationABC):
         Example:
         
         >>> lsi = LsiModel(corpus, numTopics = 10)
-        >>> doc_lsi = lsi[doc_tfidf]
+        >>> print lsi[doc_tfidf]
         
         """
         self.id2word = id2word
@@ -74,11 +74,8 @@ class LsiModel(interfaces.TransformationABC):
         """
         if self.id2word is None:
             logging.info("no word id mapping provided; initializing from corpus, assuming identity")
-            maxId = -1
-            for document in corpus:
-                maxId = max(maxId, max([-1] + [fieldId for fieldId, _ in document]))
-            self.numTerms = 1 + maxId
-            self.id2word = dict(zip(xrange(self.numTerms), xrange(self.numTerms)))
+            self.id2word = utils.dictFromCorpus(corpus)
+            self.numTerms = len(self.id2word)
         else:
             self.numTerms = 1 + max([-1] + self.id2word.keys())
         

@@ -31,8 +31,8 @@ def sparse2full(doc, length):
     Convert document in sparse format (sequence of 2-tuples) into a full numpy
     array (of size `length`).
     """
+    result = numpy.zeros(length, dtype = numpy.float32)
     doc = dict(doc)
-    result = numpy.zeros(length)
     result[doc.keys()] = doc.values()
     return result
 

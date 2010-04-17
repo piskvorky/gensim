@@ -24,12 +24,14 @@ class TfidfModel(interfaces.TransformationABC):
     documents to unit length.
     
     The main methods are:
-      1. constructor, which calculates IDF weights for all terms in the training corpus.
-      2. the [] method, which transforms a simple count representation into the TfIdf 
-         space.
+    
+    1. constructor, which calculates IDF weights for all terms in the training corpus.
+    2. the [] method, which transforms a simple count representation into the TfIdf 
+       space.
     
     >>> tfidf = TfidfModel(corpus)
-    >>> doc_tfidf = tfidf[doc_tf]
+    >>> print = tfidf[some_doc]
+    >>> tfidf.save('/tmp/foo.tfidf_model')
     
     Model persistency is achieved via its load/save methods.
     """
@@ -58,11 +60,8 @@ class TfidfModel(interfaces.TransformationABC):
         """
         if self.id2word is None:
             logging.info("no word id mapping provided; initializing from corpus, assuming identity")
-            maxId = 0
-            for document in corpus:
-                maxId = max(maxId, max([-1] + [fieldId for fieldId, _ in document]))
-            self.numTerms = 1 + maxId
-            self.id2word = dict(zip(xrange(self.numTerms), xrange(self.numTerms)))
+            self.id2word = utils.dictFromCorpus(corpus)
+            self.numTerms = len(self.id2word)
         else:
             self.numTerms = 1 + max([-1] + self.id2word.keys())
         
