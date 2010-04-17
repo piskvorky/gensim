@@ -157,7 +157,7 @@ class DmlCorpus(interfaces.CorpusABC):
             logging.warning('no articles at all found from the config; something went wrong!')
         
         if shuffle:
-            logging.info("shuffling the documents for random order")
+            logging.info("shuffling %i documents for random order" % len(self.documents))
             import random
             random.shuffle(self.documents)
         
