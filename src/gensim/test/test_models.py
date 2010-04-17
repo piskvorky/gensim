@@ -18,7 +18,7 @@ import tempfile
 import numpy
 
 from gensim.corpora import mmcorpus
-from gensim.models import lsimodel, ldamodel, tfidfmodel
+from gensim.models import lsimodel, ldamodel, tfidfmodel, rpmodel
 from gensim import matutils
 
 
@@ -58,23 +58,53 @@ class TestLsiModel(unittest.TestCase):
 #endclass TestLsiModel
 
 
+class TestRpModel(unittest.TestCase):
+    def setUp(self):
+        self.corpus = mmcorpus.MmCorpus(os.path.join(module_path, 'testcorpus.mm'))
+    
+    def testTransform(self):
+        # create the transformation model
+        numpy.random.seed(13) # HACK; set fixed seed so that we always get the same random matrix (and can compare against expected results) 
+        model = rpmodel.RpModel(self.corpus, numTopics = 2)
+        
+        # transform one document
+        doc = list(self.corpus)[0]
+        transformed = model[doc]
+        vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
+        
+        expected = numpy.array([-0.70710677, 0.70710677])
+        self.assertTrue(numpy.allclose(vec, expected)) # transformed entries must be equal up to sign
+        
+    
+    def testPersistence(self):
+        model = rpmodel.RpModel(self.corpus, numTopics = 2)
+        model.save(testfile())
+        model2 = rpmodel.RpModel.load(testfile())
+        self.assertEqual(model.numTopics, model2.numTopics)
+        self.assertTrue(numpy.allclose(model.projection, model2.projection))
+#endclass TestRpModel
+
+
 class TestLdaModel(unittest.TestCase):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(os.path.join(module_path, 'testcorpus.mm'))
     
     def testTransform(self):
         # create the transformation model
-        model = ldamodel.LdaModel(self.corpus, numTopics = 2)
-        
-        # transform one document
-        doc = list(self.corpus)[0]
-        transformed = model[doc]
-        
-        vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
-        expected = [0.0, 1.0]
         passed = False
+        numpy.random.seed(13)
         for i in xrange(10): # lda is randomized, so allow 10 iterations to test for equality
+            model = ldamodel.LdaModel(self.corpus, numTopics = 2)
+            
+            # transform one document
+            doc = list(self.corpus)[0]
+            transformed = model[doc]
+            
+            vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
+            expected = [0.0, 1.0]
             passed = passed or numpy.allclose(sorted(vec), sorted(expected))  # must contain the same values, up to re-ordering
+            if passed:
+                break
         self.assertTrue(passed, "Error in randomized LDA test")
         
     
