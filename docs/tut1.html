@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.5',
+        VERSION:     '0.4.6',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -49,6 +49,12 @@
             
   <div class="section" id="corpora-and-vector-spaces">
 <span id="tut1"></span><h1>Corpora and Vector Spaces<a class="headerlink" href="#corpora-and-vector-spaces" title="Permalink to this headline">¶</a></h1>
+<p>Don&#8217;t forget to set</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span>
+</pre></div>
+</div>
+<p>if you want to see logging events on <cite>stderr</cite>.</p>
 <div class="section" id="quick-example">
 <span id="first-example"></span><h2>Quick Example<a class="headerlink" href="#quick-example" title="Permalink to this headline">¶</a></h2>
 <p>First, let&#8217;s import gensim and create a small corpus of nine documents <a class="footnote-reference" href="#id3" id="id1">[1]</a>:</p>
@@ -78,9 +84,8 @@ bit later.</p>
 the corpus interface only dictates that a corpus must support iteration over its
 constituent documents. For very large corpora, it is advantageous to keep the
 corpus on disk, and access its documents sequentially, one at a time. All the
-operations and corpora transformations
-are implemented in such a way that makes them independent of the size of the corpus,
-RAM-wise.</p>
+operations and transformations are implemented in such a way that makes
+them independent of the size of the corpus, memory-wise.</p>
 </div>
 <p>Next, let&#8217;s initialize a transformation:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tfidf</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TfidfModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
@@ -246,6 +251,9 @@ corpus being read into main memory at once.</p>
 <p>One of the more notable formats is the <a class="reference external" href="http://math.nist.gov/MatrixMarket/formats.html">Market Matrix format</a>.
 To save a corpus in the Matrix Market format:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span> <span class="p">[]]</span> <span class="c"># create a toy corpus of 2 documents (one of them empty)</span>
+<span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -254,24 +262,32 @@ To save a corpus in the Matrix Market format:</p>
 <a class="reference external" href="http://gibbslda.sourceforge.net/">GibbsLDA++ format</a>.</p>
 <p>Conversely, to load a corpus iterator from a Matrix Market file:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.mm&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span> <span class="c"># convert from MmCorpus object (document stream) to plain Python list</span>
-<span class="go">[[(0, 1.0), (1, 1.0), (2, 1.0)],</span>
-<span class="go"> [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],</span>
-<span class="go"> [(1, 1.0), (3, 1.0), (4, 1.0), (7, 1.0)],</span>
-<span class="go"> [(0, 1.0), (4, 2.0), (7, 1.0)],</span>
-<span class="go"> [(3, 1.0), (5, 1.0), (6, 1.0)],</span>
-<span class="go"> [(9, 1.0)],</span>
-<span class="go"> [(9, 1.0), (10, 1.0)],</span>
-<span class="go"> [(9, 1.0), (10, 1.0), (11, 1.0)],</span>
-<span class="go"> [(8, 1.0), (10, 1.0), (11, 1.0)]]</span>
 </pre></div>
 </div>
-<p>and to save it in Blei&#8217;s LDA-C format again,</p>
+<p>Corpus objects are streams, so typically you won&#8217;t be able to print them directly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">corpus</span>
+<span class="go">MmCorpus(2 documents, 2 features, 1 non-zero entries)</span>
+</pre></div>
+</div>
+<p>Instead, to view the contents of a corpus:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># one way of printing a corpus: load it entirely into memory</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span> <span class="c"># calling list() will convert any sequence to a plain Python list</span>
+<span class="go">[[(1, 0.5)], []]</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># another way of doing it: print one document at a time, making use of the streaming interface</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">corpus</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">print</span> <span class="n">doc</span>
+<span class="go">[(1, 0.5)]</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+<p>To save the same corpus in Blei&#8217;s LDA-C format,</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">BleiCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.lda-c&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>In this way, <cite>gensim</cite> can also be used as a simple I/O format conversion tool.</p>
-<p>For a complete reference, see the <a class="reference external" href="apiref.html"><em>API documentation</em></a>.</p>
+<p>For a complete reference, see the <a class="reference external" href="apiref.html"><em>API documentation</em></a>. Or continue
+to the next tutorial on <a class="reference external" href="tut2.html"><em>Topics and Transformations</em></a>.</p>
 <hr class="docutils" />
 <table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>

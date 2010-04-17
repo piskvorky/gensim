@@ -1,6 +1,11 @@
 Changes
 =======
 
+0.4.6
+
+* added Random Projections (aka Random Indexing), as another transformation model.
+* several DML-CZ specific updates
+
 0.4.5
 
 * updated documentation

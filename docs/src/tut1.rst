@@ -3,6 +3,12 @@
 Corpora and Vector Spaces
 ===================================
 
+Don't forget to set
+
+>>> import logging
+>>> logging.root.level = logging.INFO
+
+if you want to see logging events on `stderr`.
 
 .. _first example:
 
@@ -37,9 +43,8 @@ bit later.
     the corpus interface only dictates that a corpus must support iteration over its 
     constituent documents. For very large corpora, it is advantageous to keep the 
     corpus on disk, and access its documents sequentially, one at a time. All the 
-    operations and corpora transformations
-    are implemented in such a way that makes them independent of the size of the corpus,
-    RAM-wise.
+    operations and transformations are implemented in such a way that makes 
+    them independent of the size of the corpus, memory-wise.
 
 
 Next, let's initialize a transformation:
@@ -224,6 +229,9 @@ One of the more notable formats is the `Market Matrix format <http://math.nist.g
 To save a corpus in the Matrix Market format:
 
 >>> from gensim import corpora
+>>>
+>>> corpus = [[(1, 0.5)], []] # create a toy corpus of 2 documents (one of them empty)
+>>>
 >>> corpora.MmCorpus.saveCorpus('/tmp/corpus.mm', corpus)
 
 Other formats include `Joachim's SVMlight format <svmlight.joachims.org/>`_, 
@@ -233,24 +241,33 @@ Other formats include `Joachim's SVMlight format <svmlight.joachims.org/>`_,
 Conversely, to load a corpus iterator from a Matrix Market file:
 
 >>> corpus = corpora.MmCorpus('/tmp/corpus.mm')
->>> print list(corpus) # convert from MmCorpus object (document stream) to plain Python list
-[[(0, 1.0), (1, 1.0), (2, 1.0)],
- [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],
- [(1, 1.0), (3, 1.0), (4, 1.0), (7, 1.0)],
- [(0, 1.0), (4, 2.0), (7, 1.0)],
- [(3, 1.0), (5, 1.0), (6, 1.0)],
- [(9, 1.0)],
- [(9, 1.0), (10, 1.0)],
- [(9, 1.0), (10, 1.0), (11, 1.0)],
- [(8, 1.0), (10, 1.0), (11, 1.0)]]
- 
-and to save it in Blei's LDA-C format again,
+
+Corpus objects are streams, so typically you won't be able to print them directly:
+
+>>> print corpus
+MmCorpus(2 documents, 2 features, 1 non-zero entries)
+
+Instead, to view the contents of a corpus:
+
+>>> # one way of printing a corpus: load it entirely into memory
+>>> print list(corpus) # calling list() will convert any sequence to a plain Python list
+[[(1, 0.5)], []]
+>>>
+>>> # another way of doing it: print one document at a time, making use of the streaming interface
+>>> for doc in corpus:
+>>>     print doc
+[(1, 0.5)]
+[]
+
+To save the same corpus in Blei's LDA-C format,
 
 >>> corpora.BleiCorpus.saveCorpus('/tmp/corpus.lda-c', corpus)
 
 In this way, `gensim` can also be used as a simple I/O format conversion tool.
 
-For a complete reference, see the :doc:`API documentation <apiref>`.
+
+For a complete reference, see the :doc:`API documentation <apiref>`. Or continue
+to the next tutorial on :doc:`tut2`.
 
 
 ------
