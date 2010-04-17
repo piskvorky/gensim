@@ -21,17 +21,28 @@ import re
 from gensim.corpora import sources, dmlcorpus
 
 
-SOURCE_LIST = [
-               sources.DmlCzSource('dmlcz', '/Users/kofola/workspace/dml/data/dmlcz/'),
-               sources.DmlSource('numdam', '/Users/kofola/workspace/dml/data/numdam/'),
-               sources.ArxmlivSource('arxmliv', '/Users/kofola/workspace/dml/data/arxmliv/'),
-               ]
+AT_HOME = True
 
-#SOURCE_LIST = [
-#               sources.DmlCzSource('dmlcz', '/Users/kofola/workspace/dml/data/dmlcz/CzechMathJ'),
-#               ]
-
-RESULT_DIR = '/Users/kofola/workspace/dml/data/results'
+if AT_HOME:
+#    SOURCE_LIST = [
+#                   sources.DmlCzSource('dmlcz', '/Users/kofola/workspace/dml/data/dmlcz/'),
+#                   sources.DmlSource('numdam', '/Users/kofola/workspace/dml/data/numdam/'),
+#                   sources.ArxmlivSource('arxmliv', '/Users/kofola/workspace/dml/data/arxmliv/'),
+#                   ]
+    
+    SOURCE_LIST = [
+                   sources.DmlCzSource('dmlcz', '/Users/kofola/workspace/dml/data/dmlcz/CzechMathJ'),
+                   ]
+    
+    RESULT_DIR = '/Users/kofola/workspace/dml/data/results'
+else:
+    SOURCE_LIST = [
+                   sources.DmlCzSource('dmlcz', '/data/dmlcz/data/share'),
+                   sources.DmlSource('numdam', '/data/dmlcz/data/numdam'),
+                   sources.ArxmlivSource('arxmliv', '/data/dmlcz/data/arxmliv'),
+                   ]
+    
+    RESULT_DIR = '/data/dmlcz/xrehurek/results'
 
 
 def buildDmlCorpus(config):
@@ -46,8 +57,8 @@ def buildDmlCorpus(config):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level = logging.INFO)
-    logging.root.level = logging.DEBUG
+    logging.basicConfig(level = logging.INFO, format='%(asctime)s : %(levelname)s : %(message)s')
+    logging.root.level = logging.DEBUG # FIXME remove
     logging.info("running %s" % ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
