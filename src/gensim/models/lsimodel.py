@@ -110,7 +110,7 @@ class LsiModel(interfaces.TransformationABC):
         # 
         # note that neither `v` (the right singular vectors) nor `s` (the singular 
         # values) are used at all in the transformation
-        self.projection = self.u.T
+        self.projection = self.u.T.astype(numpy.float32).copy(order = 'C')
         
         if not keepDecomposition:
             # once we have the projection stored in self, discard u*s*v decomposition to free up memory
@@ -132,6 +132,7 @@ class LsiModel(interfaces.TransformationABC):
         
         vec = matutils.sparse2full(bow, self.numTerms)
         vec.shape = (self.numTerms, 1)
+        assert vec.dtype == numpy.float32 and self.projection.dtype == numpy.float32
         topicDist = self.projection * vec
         if not scaled:
             topicDist = numpy.diag(numpy.diag(1.0 / self.s)) * topicDist
