@@ -25,7 +25,7 @@ import gensim_build
 
 # set to True to do everything EXCEPT actually writing out similar.xml files to disk.
 # similar.xml files are NOT written if DRY_RUN is true.
-DRY_RUN = True # False
+DRY_RUN = False
 
 # how many 'most similar' documents to store in each similar.xml?
 MIN_SCORE = 0.0 # prune based on similarity score (all below MIN_SCORE are ignored)
@@ -88,7 +88,6 @@ def generateSimilar(corpus, index, method):
 
 if __name__ == '__main__':
     logging.basicConfig(level = logging.INFO, format='%(asctime)s : %(levelname)s : %(message)s')
-    logging.root.level = logging.DEBUG
     logging.info("running %s" % ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
