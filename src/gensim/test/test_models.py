@@ -109,11 +109,11 @@ class TestLdaModel(unittest.TestCase):
         
     
     def testPersistence(self):
-        model = lsimodel.LsiModel(self.corpus, numTopics = 2)
+        model = ldamodel.LdaModel(self.corpus, numTopics = 2)
         model.save(testfile())
-        model2 = lsimodel.LsiModel.load(testfile())
+        model2 = ldamodel.LdaModel.load(testfile())
         self.assertEqual(model.numTopics, model2.numTopics)
-        self.assertTrue(numpy.allclose(model.projection, model2.projection))
+        self.assertTrue(numpy.allclose(model.logProbW, model2.logProbW))
 #endclass TestLdaModel
 
 

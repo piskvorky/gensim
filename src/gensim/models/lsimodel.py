@@ -110,7 +110,7 @@ class LsiModel(interfaces.TransformationABC):
         # 
         # note that neither `v` (the right singular vectors) nor `s` (the singular 
         # values) are used at all in the transformation
-        self.projection = self.u.T.astype(numpy.float32).copy(order = 'C')
+        self.projection = self.u.T.astype(numpy.float32).copy('C')
         
         if not keepDecomposition:
             # once we have the projection stored in self, discard u*s*v decomposition to free up memory
