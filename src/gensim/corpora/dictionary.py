@@ -7,7 +7,7 @@
 
 """
 This module implements the concept of Dictionary -- a mapping between words and 
-their internal ids.
+their integer ids.
 
 Dictionaries can be created from a corpus and can later be pruned according to
 document frequency (removing (un)common words via the :func:`Dictionary.filterExtremes` method), 
@@ -27,8 +27,8 @@ class Dictionary(utils.SaveLoad):
     """
     Dictionary encapsulates mappings between normalized words and their integer ids.
     
-    The main function is `doc2bow`, which coverts a collection of words to its bow 
-    representation, optionally also updating the dictionary mapping with new 
+    The main function is `doc2bow`, which converts a collection of words to its 
+    bag-of-words representation, optionally also updating the dictionary mapping with new 
     words and their ids.
     """
     def __init__(self):
@@ -56,7 +56,7 @@ class Dictionary(utils.SaveLoad):
         of tokens (ie. **tokenized and normalized** utf-8 encoded strings).
         
         This is only a convenience wrapper for calling `doc2bow` on each document
-        with `allowUpdate` set to True.
+        with `allowUpdate=True`.
         
         >>> print Dictionary.fromDocuments(["máma mele maso".split(), "ema má máma".split()])
         Dictionary(5 unique tokens)

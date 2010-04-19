@@ -33,7 +33,6 @@ DIM_LDA = 100 # for latent dirichlet allocation
 
 if __name__ == '__main__':
     logging.basicConfig(level = logging.INFO, format='%(asctime)s : %(levelname)s : %(message)s')
-    logging.root.level = logging.DEBUG
     logging.info("running %s" % ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])

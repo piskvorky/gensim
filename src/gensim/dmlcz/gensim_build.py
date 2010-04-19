@@ -21,7 +21,7 @@ import re
 from gensim.corpora import sources, dmlcorpus
 
 
-AT_HOME = True
+AT_HOME = False
 
 if AT_HOME:
 #    SOURCE_LIST = [
@@ -58,7 +58,6 @@ def buildDmlCorpus(config):
 
 if __name__ == '__main__':
     logging.basicConfig(level = logging.INFO, format='%(asctime)s : %(levelname)s : %(message)s')
-    logging.root.level = logging.DEBUG # FIXME remove
     logging.info("running %s" % ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
