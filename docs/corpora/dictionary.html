@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.4.6',
+        VERSION:     '0.4.7',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -53,7 +53,7 @@
   <div class="section" id="module-gensim.corpora.dictionary">
 <h1><tt class="xref docutils literal"><span class="pre">corpora.dictionary</span></tt> &#8211; Construct word&lt;-&gt;id mappings<a class="headerlink" href="#module-gensim.corpora.dictionary" title="Permalink to this headline">¶</a></h1>
 <p>This module implements the concept of Dictionary &#8211; a mapping between words and 
-their internal ids.</p>
+their integer ids.</p>
 <p>Dictionaries can be created from a corpus and can later be pruned according to
 document frequency (removing (un)common words via the <a title="gensim.corpora.dictionary.Dictionary.filterExtremes" class="reference internal" href="#gensim.corpora.dictionary.Dictionary.filterExtremes"><tt class="xref docutils literal"><span class="pre">Dictionary.filterExtremes()</span></tt></a> method), 
 save/loaded from disk via <a title="gensim.corpora.dictionary.Dictionary.save" class="reference internal" href="#gensim.corpora.dictionary.Dictionary.save"><tt class="xref docutils literal"><span class="pre">Dictionary.save()</span></tt></a> and <a title="gensim.corpora.dictionary.Dictionary.load" class="reference internal" href="#gensim.corpora.dictionary.Dictionary.load"><tt class="xref docutils literal"><span class="pre">Dictionary.load()</span></tt></a> methods etc.</p>
@@ -61,8 +61,8 @@ save/loaded from disk via <a title="gensim.corpora.dictionary.Dictionary.save" c
 <dt id="gensim.corpora.dictionary.Dictionary">
 <em class="property">class </em><tt class="descclassname">gensim.corpora.dictionary.</tt><tt class="descname">Dictionary</tt><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dictionary encapsulates mappings between normalized words and their integer ids.</p>
-<p>The main function is <cite>doc2bow</cite>, which coverts a collection of words to its bow 
-representation, optionally also updating the dictionary mapping with new 
+<p>The main function is <cite>doc2bow</cite>, which converts a collection of words to its 
+bag-of-words representation, optionally also updating the dictionary mapping with new 
 words and their ids.</p>
 <dl class="method">
 <dt id="gensim.corpora.dictionary.Dictionary.doc2bow">
@@ -103,7 +103,7 @@ the call to this function!</p>
 <dd><p>Build dictionary from a collection of documents. Each document is a list 
 of tokens (ie. <strong>tokenized and normalized</strong> utf-8 encoded strings).</p>
 <p>This is only a convenience wrapper for calling <cite>doc2bow</cite> on each document
-with <cite>allowUpdate</cite> set to True.</p>
+with <cite>allowUpdate=True</cite>.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">Dictionary</span><span class="o">.</span><span class="n">fromDocuments</span><span class="p">([</span><span class="s">&quot;máma mele maso&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="s">&quot;ema má máma&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">()])</span>
 <span class="go">Dictionary(5 unique tokens)</span>
 </pre></div>

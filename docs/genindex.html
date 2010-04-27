@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.6',
+        VERSION:     '0.4.7',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -109,8 +109,9 @@
 <dt><a href="interfaces.html#module-gensim.interfaces">gensim.interfaces (module)</a></dt>
 <dt><a href="matutils.html#module-gensim.matutils">gensim.matutils (module)</a></dt>
 <dt><a href="models/models.html#module-gensim.models">gensim.models (module)</a></dt>
-<dt><a href="models/ldamodel.html#module-gensim.models.ldamodel">gensim.models.ldamodel (module)</a></dt></dl></td><td width="33%" valign="top"><dl>
-<dt><a href="models/lsimodel.html#module-gensim.models.lsimodel">gensim.models.lsimodel (module)</a></dt>
+<dt><a href="models/ldamodel.html#module-gensim.models.ldamodel">gensim.models.ldamodel (module)</a></dt>
+<dt><a href="models/lsimodel.html#module-gensim.models.lsimodel">gensim.models.lsimodel (module)</a></dt></dl></td><td width="33%" valign="top"><dl>
+<dt><a href="models/rpmodel.html#module-gensim.models.rpmodel">gensim.models.rpmodel (module)</a></dt>
 <dt><a href="models/tfidfmodel.html#module-gensim.models.tfidfmodel">gensim.models.tfidfmodel (module)</a></dt>
 <dt><a href="similarities/docsim.html#module-gensim.similarities.docsim">gensim.similarities.docsim (module)</a></dt>
 <dt><a href="utils.html#module-gensim.utils">gensim.utils (module)</a></dt>
@@ -133,6 +134,7 @@
 <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.initialize">initialize() (gensim.models.ldamodel.LdaModel method)</a></dt>
   <dd><dl>
     <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel.initialize">(gensim.models.lsimodel.LsiModel method)</a></dt>
+    <dt><a href="models/rpmodel.html#gensim.models.rpmodel.RpModel.initialize">(gensim.models.rpmodel.RpModel method)</a></dt>
     <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.TfidfModel.initialize">(gensim.models.tfidfmodel.TfidfModel method)</a></dt>
   </dl></dd></dl></td><td width="33%" valign="top"><dl>
 <dt><a href="utils.html#gensim.utils.isCorpus">isCorpus() (in module gensim.utils)</a></dt>
@@ -156,6 +158,7 @@
     <dt><a href="interfaces.html#gensim.interfaces.TransformationABC.load">(gensim.interfaces.TransformationABC class method)</a></dt>
     <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.load">(gensim.models.ldamodel.LdaModel class method)</a></dt>
     <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel.load">(gensim.models.lsimodel.LsiModel class method)</a></dt>
+    <dt><a href="models/rpmodel.html#gensim.models.rpmodel.RpModel.load">(gensim.models.rpmodel.RpModel class method)</a></dt>
     <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.TfidfModel.load">(gensim.models.tfidfmodel.TfidfModel class method)</a></dt>
     <dt><a href="similarities/docsim.html#gensim.similarities.docsim.MatrixSimilarity.load">(gensim.similarities.docsim.MatrixSimilarity class method)</a></dt>
     <dt><a href="similarities/docsim.html#gensim.similarities.docsim.Similarity.load">(gensim.similarities.docsim.Similarity class method)</a></dt>
@@ -199,7 +202,8 @@
 <table width="100%" class="indextable"><tr><td width="33%" valign="top">
 <dl>
 
-<dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.rebuildDictionary">rebuildDictionary() (gensim.corpora.dictionary.Dictionary method)</a></dt></dl></td><td width="33%" valign="top"><dl>
+<dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.rebuildDictionary">rebuildDictionary() (gensim.corpora.dictionary.Dictionary method)</a></dt>
+<dt><a href="models/rpmodel.html#gensim.models.rpmodel.RpModel">RpModel (class in gensim.models.rpmodel)</a></dt></dl></td><td width="33%" valign="top"><dl>
 </dl></td></tr></table>
 
 <h2 id="S">S</h2>
@@ -218,6 +222,7 @@
     <dt><a href="interfaces.html#gensim.interfaces.TransformationABC.save">(gensim.interfaces.TransformationABC method)</a></dt>
     <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.save">(gensim.models.ldamodel.LdaModel method)</a></dt>
     <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel.save">(gensim.models.lsimodel.LsiModel method)</a></dt>
+    <dt><a href="models/rpmodel.html#gensim.models.rpmodel.RpModel.save">(gensim.models.rpmodel.RpModel method)</a></dt>
     <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.TfidfModel.save">(gensim.models.tfidfmodel.TfidfModel method)</a></dt>
     <dt><a href="similarities/docsim.html#gensim.similarities.docsim.MatrixSimilarity.save">(gensim.similarities.docsim.MatrixSimilarity method)</a></dt>
     <dt><a href="similarities/docsim.html#gensim.similarities.docsim.Similarity.save">(gensim.similarities.docsim.Similarity method)</a></dt>

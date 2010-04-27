@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.6',
+        VERSION:     '0.4.7',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -52,6 +52,26 @@
             
   <div class="section" id="similarity-queries">
 <span id="tut3"></span><h1>Similarity Queries<a class="headerlink" href="#similarity-queries" title="Permalink to this headline">¶</a></h1>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">TODO</p>
+</div>
+<p>To print proximity of this query document against every one of the nine original
+documents, in the same 2-D LSI space:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">MatrixSimilarity</span><span class="p">(</span><span class="n">lsi</span><span class="p">[</span><span class="n">corpus</span><span class="p">])</span> <span class="c"># transform corpus to LSI space and &quot;index&quot; it</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sims</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">lsi</span><span class="p">[</span><span class="n">doc_bow</span><span class="p">]]</span> <span class="c"># perform similarity query against the corpus</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">sims</span><span class="p">))</span>
+<span class="go">[(0, 0.99809301), (1, 0.93748635), (2, 0.99844527), (3, 0.9865886), (4, 0.90755945),</span>
+<span class="go">(5, -0.12416792), (6, -0.1063926), (7, -0.098794639), (8, 0.05004178)]</span>
+</pre></div>
+</div>
+<p>The thing to note here is that documents no. 2 (<tt class="docutils literal"><span class="pre">&quot;The</span> <span class="pre">EPS</span> <span class="pre">user</span> <span class="pre">interface</span> <span class="pre">management</span> <span class="pre">system&quot;</span></tt>)
+and 4 (<tt class="docutils literal"><span class="pre">&quot;Relation</span> <span class="pre">of</span> <span class="pre">user</span> <span class="pre">perceived</span> <span class="pre">response</span> <span class="pre">time</span> <span class="pre">to</span> <span class="pre">error</span> <span class="pre">measurement&quot;</span></tt>) would never be returned by
+a standard boolean fulltext search, because they do not share any common words with <tt class="docutils literal"><span class="pre">&quot;Human</span>
+<span class="pre">computer</span> <span class="pre">interaction&quot;</span></tt>. However, after applying LSI, we can observe that both of
+them received quite high similarity scores, which corresponds better to our intuition of
+them sharing a &#8220;computer-related&#8221; topic with the query. In fact, this is the reason
+why we apply transformations and do topic modeling in the first place.</p>
 </div>
 
 

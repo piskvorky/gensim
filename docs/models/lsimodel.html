@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.4.6',
+        VERSION:     '0.4.7',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -86,6 +86,8 @@ end, a <cite>self.projection</cite> matrix is constructed that can be used to tr
 documents into the latent space. The <cite>U, S, V</cite> decomposition itself is 
 discarded, unless <cite>keepDecomposition</cite> is True, in which case it is stored 
 in <cite>self.u</cite>, <cite>self.s</cite> and <cite>self.v</cite>.</p>
+<p><cite>dtype</cite> dictates precision used for intermediate computations; the final 
+projection will however always be of type numpy.float32.</p>
 <p>The algorithm is adapted from:
 <strong>M. Brand. 2006. Fast low-rank modifications of the thin singular value decomposition</strong></p>
 </dd></dl>
@@ -98,9 +100,9 @@ in <cite>self.u</cite>, <cite>self.s</cite> and <cite>self.v</cite>.</p>
 <dl class="method">
 <dt id="gensim.models.lsimodel.LsiModel.printTopic">
 <tt class="descname">printTopic</tt><big>(</big><em>topicNo</em>, <em>topN=10</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.printTopic" title="Permalink to this definition">¶</a></dt>
-<dd><p>Print a specified topic (0 &lt;= <cite>topicNo</cite> &lt; <cite>self.numTopics</cite>) in human readable format.</p>
+<dd><p>Return a specified topic (0 &lt;= <cite>topicNo</cite> &lt; <cite>self.numTopics</cite>) as string in human readable format.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsimodel</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">topN</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
-<span class="go">-0.340 * &quot;category&quot; + 0.298 * &quot;$M$&quot; + 0.183 * &quot;algebra&quot; + -0.174 * &quot;functor&quot; + -0.168 * &quot;operator&quot;</span>
+<span class="go">&#39;-0.340 * &quot;category&quot; + 0.298 * &quot;$M$&quot; + 0.183 * &quot;algebra&quot; + -0.174 * &quot;functor&quot; + -0.168 * &quot;operator&quot;&#39;</span>
 </pre></div>
 </div>
 </dd></dl>
