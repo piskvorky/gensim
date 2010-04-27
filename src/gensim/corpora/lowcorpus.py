@@ -145,8 +145,8 @@ class LowCorpus(interfaces.CorpusABC):
         fout.close()
         
         if truncated:
-            logging.warning("List-of-words format can only save vectors with \
-            integer entries; %i float entries were truncated to integer value" % 
-            truncated)
+            logging.warning("List-of-words format can only save vectors with "
+                            "integer elements; %i float entries were truncated to integer value" %
+                            truncated)
 #endclass LowCorpus
 
