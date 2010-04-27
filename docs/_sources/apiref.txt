@@ -20,5 +20,6 @@ Modules:
     models/ldamodel
     models/lsimodel
     models/tfidfmodel
+    models/rpmodel
     similarities/docsim
  

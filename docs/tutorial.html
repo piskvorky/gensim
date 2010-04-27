@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.6',
+        VERSION:     '0.4.7',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -53,27 +53,103 @@
 <p>This tutorial is organized as a series of examples that highlight various features
 of <cite>gensim</cite>. It is assumed that the reader is familiar with the Python language
 and has read the <a class="reference external" href="intro.html"><em>Introduction</em></a>.</p>
+<p>The examples are divided into parts on:</p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="tut1.html">Corpora and Vector Spaces</a><ul>
+<li class="toctree-l2"><a class="reference external" href="tut1.html#from-strings-to-vectors">From Strings to Vectors</a></li>
+<li class="toctree-l2"><a class="reference external" href="tut1.html#corpus-formats">Corpus Formats</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="tut2.html">Topics and Transformations</a><ul>
+<li class="toctree-l2"><a class="reference external" href="tut2.html#transformation-interface">Transformation interface</a></li>
+<li class="toctree-l2"><a class="reference external" href="tut2.html#available-transformations">Available transformations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="tut3.html">Similarity Queries</a></li>
+</ul>
+<div class="section" id="preliminaries">
+<h2>Preliminaries<a class="headerlink" href="#preliminaries" title="Permalink to this headline">¶</a></h2>
 <p>All the examples can be directly copied to your Python interpreter shell (assuming
 you have <a class="reference external" href="install.html"><em>gensim installed</em></a>, of course).
 <a class="reference external" href="http://ipython.scipy.org">IPython</a>&#8216;s <tt class="docutils literal"><span class="pre">cpaste</span></tt> command is especially handy for copypasting code fragments which include superfluous
 characters, such as the leading <tt class="docutils literal"><span class="pre">&gt;&gt;&gt;</span></tt>.</p>
 <p>Gensim uses Python&#8217;s standard <tt class="xref docutils literal"><span class="pre">logging</span></tt> module to log various stuff at various
-priority levels; to activate logging (optional), run</p>
+priority levels; to activate logging (this is optional), run</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span> <span class="c"># will suppress DEBUG level events</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span> <span class="c"># will suppress DEBUG level events</span>
 </pre></div>
 </div>
-<p>The examples are divided into parts on:</p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="tut1.html">Corpora and Vector Spaces</a><ul>
-<li class="toctree-l2"><a class="reference external" href="tut1.html#quick-example">Quick Example</a></li>
-<li class="toctree-l2"><a class="reference external" href="tut1.html#from-strings-to-vectors">From Strings to Vectors</a></li>
-<li class="toctree-l2"><a class="reference external" href="tut1.html#corpus-formats">Corpus Formats</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference external" href="tut2.html">Topics and Transformations</a></li>
-<li class="toctree-l1"><a class="reference external" href="tut3.html">Similarity Queries</a></li>
-</ul>
+</div>
+<div class="section" id="quick-example">
+<span id="first-example"></span><h2>Quick Example<a class="headerlink" href="#quick-example" title="Permalink to this headline">¶</a></h2>
+<p>First, let&#8217;s import gensim and create a small corpus of nine documents <a class="footnote-reference" href="#id3" id="id2">[1]</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">similarities</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[[(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">9</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">9</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">9</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="p">[(</span><span class="mi">8</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)]]</span>
+</pre></div>
+</div>
+<p><em>Corpus</em> is simply an object which, when iterated over, returns its documents represented
+as sparse vectors.</p>
+<p>If you&#8217;re familiar with the <a class="reference external" href="http://en.wikipedia.org/wiki/Vector_space_model">Vector Space Model</a>,
+you&#8217;ll probably know that the way you parse your documents and convert them to vectors
+has major impact on the quality of any subsequent applications. If you&#8217;re not familiar
+with <abbr title="Vector Space Model">VSM</abbr>, we&#8217;ll bridge the gap between raw strings and sparse vectors in the next tutorial
+on <a class="reference external" href="tut1.html"><em>Corpora and Vector Spaces</em></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In this example, the whole corpus is stored in memory, as a Python list. However,
+the corpus interface only dictates that a corpus must support iteration over its
+constituent documents. For very large corpora, it is advantageous to keep the
+corpus on disk, and access its documents sequentially, one at a time. All the
+operations and transformations are implemented in such a way that makes
+them independent of the size of the corpus, memory-wise.</p>
+</div>
+<p>Next, let&#8217;s initialize a <em>transformation</em>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tfidf</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TfidfModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A transformation is used to convert documents from one vector representation into another:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">vec</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">tfidf</span><span class="p">[</span><span class="n">vec</span><span class="p">]</span>
+<span class="go">[(0, 0.8075244), (4, 0.5898342)]</span>
+</pre></div>
+</div>
+<p>Here, we used <a class="reference external" href="http://en.wikipedia.org/wiki/Tf%E2%80%93idf">Tf-Idf</a>, a simple
+transformation which takes documents represented as bag-of-words counts and applies
+a weighting which discounts common terms (or, equivalently, promotes rare terms).
+It also scales the resulting vector to unit length (in the <a class="reference external" href="http://en.wikipedia.org/wiki/Norm_%28mathematics%29#Euclidean_norm">Euclidean norm</a>).</p>
+<p>Transformations are covered in detail in the tutorial on <a class="reference external" href="tut2.html"><em>Topics and Transformations</em></a>.</p>
+<p>To transform the whole corpus via TfIdf and index it, in preparation for similarity queries:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">SparseMatrixSimilarity</span><span class="p">(</span><span class="n">tfidf</span><span class="p">[</span><span class="n">corpus</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>and to query the similarity of our query vector <tt class="docutils literal"><span class="pre">vec</span></tt> against every document in the corpus:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sims</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">tfidf</span><span class="p">[</span><span class="n">vec</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">sims</span><span class="p">))</span>
+<span class="go">[(0, 0.4662244), (1, 0.19139354), (2, 0.24600551), (3, 0.82094586), (4, 0.0), (5, 0.0), (6, 0.0), (7, 0.0), (8, 0.0)]</span>
+</pre></div>
+</div>
+<p>Thus, according to TfIdf document representation and cosine similarity measure,
+the most similar to our query document <cite>vec</cite> is document no. 3, with a similarity score of 82.1%.
+Note that in the TfIdf representation, all documents which do not share any common features
+with <tt class="docutils literal"><span class="pre">vec</span></tt> at all (documents no. 4&#8211;8) get a similarity score of 0.0. See the <a class="reference external" href="tut3.html"><em>Similarity Queries</em></a> tutorial for more detail.</p>
+<hr class="docutils" />
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[1]</a></td><td>This is the same corpus as used in
+<a class="reference external" href="http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf">Deerwester et al. (1990): Indexing by Latent Semantic Analysis</a>, Table 2.</td></tr>
+</tbody>
+</table>
+</div>
 </div>
 
 
@@ -82,6 +158,15 @@ priority levels; to activate logging (optional), run</p>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Tutorial</a><ul>
+<li><a class="reference external" href="#preliminaries">Preliminaries</a></li>
+<li><a class="reference external" href="#quick-example">Quick Example</a></li>
+</ul>
+</li>
+</ul>
+
             <h4>Previous topic</h4>
             <p class="topless"><a href="install.html"
                                   title="previous chapter">Installation</a></p>

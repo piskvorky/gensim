@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>models.tfidfmodel – TF-IDF model &mdash; gensim documentation</title>
+    <title>models.rpmodel – Random Projections &mdash; gensim documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -21,8 +21,8 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
-    <link rel="next" title="models.rpmodel – Random Projections" href="rpmodel.html" />
-    <link rel="prev" title="models.lsimodel – Latent Semantic Indexing" href="lsimodel.html" /> 
+    <link rel="next" title="similarities.docsim – Document similarity queries" href="../similarities/docsim.html" />
+    <link rel="prev" title="models.tfidfmodel – TF-IDF model" href="tfidfmodel.html" /> 
   </head>
   <body>
     <div class="related">
@@ -35,10 +35,10 @@
           <a href="../modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
         <li class="right" >
-          <a href="rpmodel.html" title="models.rpmodel – Random Projections"
+          <a href="../similarities/docsim.html" title="similarities.docsim – Document similarity queries"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="lsimodel.html" title="models.lsimodel – Latent Semantic Indexing"
+          <a href="tfidfmodel.html" title="models.tfidfmodel – TF-IDF model"
              accesskey="P">previous</a> |</li>
         <li><a href="../index.html">gensim documentation</a> &raquo;</li>
           <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
@@ -50,46 +50,43 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="module-gensim.models.tfidfmodel">
-<h1><tt class="xref docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model<a class="headerlink" href="#module-gensim.models.tfidfmodel" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-gensim.models.rpmodel">
+<h1><tt class="xref docutils literal"><span class="pre">models.rpmodel</span></tt> &#8211; Random Projections<a class="headerlink" href="#module-gensim.models.rpmodel" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="gensim.models.tfidfmodel.TfidfModel">
-<em class="property">class </em><tt class="descclassname">gensim.models.tfidfmodel.</tt><tt class="descname">TfidfModel</tt><big>(</big><em>corpus</em>, <em>id2word=None</em>, <em>normalize=True</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Objects of this class realize the transformation between word-document co-occurence
-matrix (integers) into a locally/globally weighted matrix (positive floats).</p>
-<p>This is done by combining the term frequency counts (the TF part) with inverse
-document frequency counts (the IDF part), optionally normalizing the resulting
-documents to unit length.</p>
+<dt id="gensim.models.rpmodel.RpModel">
+<em class="property">class </em><tt class="descclassname">gensim.models.rpmodel.</tt><tt class="descname">RpModel</tt><big>(</big><em>corpus</em>, <em>id2word=None</em>, <em>numTopics=300</em><big>)</big><a class="headerlink" href="#gensim.models.rpmodel.RpModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Objects of this class allow building and maintaining a model for Random Projections
+(also known as Random Indexing). For theoretical background on RP, see:</p>
+<blockquote>
+Kanerva et al.: &#8220;Random indexing of text samples for Latent Semantic Analysis.&#8221;</blockquote>
 <p>The main methods are:</p>
 <ol class="arabic simple">
-<li>constructor, which calculates IDF weights for all terms in the training corpus.</li>
+<li>constructor, which creates the random projection matrix</li>
 <li>the [] method, which transforms a simple count representation into the TfIdf 
 space.</li>
 </ol>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tfidf</span> <span class="o">=</span> <span class="n">TfidfModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="o">=</span> <span class="n">tfidf</span><span class="p">[</span><span class="n">some_doc</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">tfidf</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&#39;/tmp/foo.tfidf_model&#39;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">rp</span> <span class="o">=</span> <span class="n">RpModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">rp</span><span class="p">[</span><span class="n">some_doc</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rp</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&#39;/tmp/foo.rp_model&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Model persistency is achieved via its load/save methods.</p>
 <p><cite>id2word</cite> is a mapping from word ids (integers) to words (strings). It is
 used to determine the vocabulary size, as well as for debugging and topic 
 printing. If not set, it will be determined from the corpus.</p>
-<p><cite>normalize</cite> dictates whether the resulting vectors will be set to unit length.</p>
 <dl class="method">
-<dt id="gensim.models.tfidfmodel.TfidfModel.initialize">
-<tt class="descname">initialize</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel.initialize" title="Permalink to this definition">¶</a></dt>
-<dd>Compute inverse document weights, which will be used to modify term 
-frequencies for documents.</dd></dl>
+<dt id="gensim.models.rpmodel.RpModel.initialize">
+<tt class="descname">initialize</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.models.rpmodel.RpModel.initialize" title="Permalink to this definition">¶</a></dt>
+<dd>Initialize the random projection matrix.</dd></dl>
 
 <dl class="classmethod">
-<dt id="gensim.models.tfidfmodel.TfidfModel.load">
-<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel.load" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.models.rpmodel.RpModel.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.rpmodel.RpModel.load" title="Permalink to this definition">¶</a></dt>
 <dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
 
 <dl class="method">
-<dt id="gensim.models.tfidfmodel.TfidfModel.save">
-<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel.save" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.models.rpmodel.RpModel.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.rpmodel.RpModel.save" title="Permalink to this definition">¶</a></dt>
 <dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
 
 </dd></dl>
@@ -103,11 +100,11 @@ frequencies for documents.</dd></dl>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
             <h4>Previous topic</h4>
-            <p class="topless"><a href="lsimodel.html"
-                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.lsimodel</span></tt> &#8211; Latent Semantic Indexing</a></p>
+            <p class="topless"><a href="tfidfmodel.html"
+                                  title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model</a></p>
             <h4>Next topic</h4>
-            <p class="topless"><a href="rpmodel.html"
-                                  title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">models.rpmodel</span></tt> &#8211; Random Projections</a></p>
+            <p class="topless"><a href="../similarities/docsim.html"
+                                  title="next chapter"><tt class="docutils literal"><span class="pre">similarities.docsim</span></tt> &#8211; Document similarity queries</a></p>
           <div id="searchbox" style="display: none">
             <h3>Quick search</h3>
               <form class="search" action="../search.html" method="get">
@@ -135,10 +132,10 @@ frequencies for documents.</dd></dl>
           <a href="../modindex.html" title="Global Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="rpmodel.html" title="models.rpmodel – Random Projections"
+          <a href="../similarities/docsim.html" title="similarities.docsim – Document similarity queries"
              >next</a> |</li>
         <li class="right" >
-          <a href="lsimodel.html" title="models.lsimodel – Latent Semantic Indexing"
+          <a href="tfidfmodel.html" title="models.tfidfmodel – TF-IDF model"
              >previous</a> |</li>
         <li><a href="../index.html">gensim documentation</a> &raquo;</li>
           <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 

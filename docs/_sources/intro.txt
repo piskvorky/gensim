@@ -9,7 +9,7 @@ the conversion of natural language texts to the Vector Space Model as simple and
 natural as possible.
 
 Gensim contains algorithms for unsupervised learning from raw, unstructured digital texts,
-such as Latent Semantic Analysis and Latent Dirichlet Allocation.
+such as **Latent Semantic Analysis**, **Latent Dirichlet Allocation** or **Random Projections**.
 These algorithms discover hidden (*latent*) corpus structure.
 Once found, documents can be succinctly expressed in terms of this structure, queried for topical similarity and so on.
 
@@ -29,9 +29,9 @@ Gensim includes the following features:
 
 * Memory independence -- there is no need for the whole text corpus (or any 
   intermediate term-document matrices) to reside fully in RAM at any one time.
-* Provides implementations for several popular topic inference algorithms, 
-  including Latent Semantic Analysis (LSA/LSI via `incremental SVD <http://en.wikipedia.org/wiki/Singular_value_decomposition>`_) 
-  and Latent Dirichlet Allocation (LDA), and makes adding new ones simple.
+* Provides implementations for several popular vector space algorithms, 
+  including Tf-Idf, Latent Semantic Analysis (LSA/LSI via `incremental SVD <http://en.wikipedia.org/wiki/Singular_value_decomposition>`_), 
+  Latent Dirichlet Allocation (LDA) or Random Projection, and makes adding new ones simple.
 * Contains I/O wrappers and converters around several popular data formats.
 * Allows similarity queries across documents in their latent, topical representation.
  
