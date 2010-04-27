@@ -69,6 +69,9 @@ class LsiModel(interfaces.TransformationABC):
         discarded, unless `keepDecomposition` is True, in which case it is stored 
         in `self.u`, `self.s` and `self.v`.
         
+        `dtype` dictates precision used for intermediate computations; the final 
+        projection will however always be of type numpy.float32.
+        
         The algorithm is adapted from:
         **M. Brand. 2006. Fast low-rank modifications of the thin singular value decomposition**
         """
@@ -238,17 +241,17 @@ class LsiModel(interfaces.TransformationABC):
 
     def printTopic(self, topicNo, topN = 10):
         """
-        Print a specified topic (0 <= `topicNo` < `self.numTopics`) in human readable format.
+        Return a specified topic (0 <= `topicNo` < `self.numTopics`) as string in human readable format.
         
         >>> lsimodel.printTopic(10, topN = 5)
-        -0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + -0.174 * "functor" + -0.168 * "operator"
+        '-0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + -0.174 * "functor" + -0.168 * "operator"'
         
         """
 #        c = numpy.asarray(self.u[:, topicNo]).flatten()
         c = numpy.asarray(self.projection[topicNo, :]).flatten()
         norm = numpy.sqrt(numpy.sum(c * c))
         most = numpy.abs(c).argsort()[::-1][:topN]
-        print ' + '.join(['%.3f * "%s"' % (1.0 * c[val] / norm, self.id2word[val]) for val in most])
+        return ' + '.join(['%.3f * "%s"' % (1.0 * c[val] / norm, self.id2word[val]) for val in most])
 #endclass LsiModel
 
 

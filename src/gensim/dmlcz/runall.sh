@@ -21,8 +21,7 @@ ${BIN_PATH}/gensim_build.py $language 2>&1 | tee ${RESULT_PATH}/gensim_build.log
 
 
 # ========== build transformation models =======================================
-# generation of tfidf and rp models is very memory-undemanding, so process both in parallel 
-for method in tfidf rp;
+for method in tfidf rp lsi;
 do
 	( ${BIN_PATH}/gensim_genmodel.py $language $method 2>&1 | tee ${RESULT_PATH}/gensim_genmodel_${method}.log ) &
 done
