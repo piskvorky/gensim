@@ -7,7 +7,7 @@ the conversion of natural language texts to the Vector Space Model as simple and
 natural as possible.
 
 Gensim contains algorithms for unsupervised learning from raw, unstructured digital texts,
-such as **Latent Semantic Analysis** and **Latent Dirichlet Allocation**.
+such as **Latent Semantic Analysis**, **Latent Dirichlet Allocation** or **Random Projections**.
 These algorithms discover hidden (*latent*) corpus structure.
 Once found, documents can be succinctly expressed in terms of this structure, queried for topical similarity and so on.
 
