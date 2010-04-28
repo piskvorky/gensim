@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.7',
+        VERSION:     '0.5.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -85,7 +85,7 @@ that it can be cached), the <tt class="xref docutils literal"><span class="pre">
 <dd><p>Abstract interface for similarity searches over a corpus.</p>
 <p>In all instances, there is a corpus against which we want to perform the 
 similarity search.</p>
-<p>For similarity search, the input is a document and the output are its 
+<p>For each similarity search, the input is a document and the output are its 
 similarities to individual corpus documents.</p>
 <p>Similarity queries are realized by calling <tt class="docutils literal"><span class="pre">self[query_document]</span></tt>.</p>
 <p>There is also a convenience wrapper, where iterating over <cite>self</cite> yields 

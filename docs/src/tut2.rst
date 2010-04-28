@@ -18,7 +18,7 @@ In the previous tutorial on :doc:`tut1`, we created a corpus of documents repres
 as a stream of vectors. To continue, let's fire up gensim and use that corpus:
 
 >>> from gensim import corpora, models, similarities
->>> dictionary = corpora.Dictionary.load('/tmp/dictionary.pkl')
+>>> dictionary = corpora.Dictionary.load('/tmp/deerwester.dict')
 >>> corpus = corpora.MmCorpus('/tmp/deerwester.mm')
 >>> print corpus
 MmCorpus(9 documents, 12 features, 28 non-zero entries)
@@ -33,35 +33,55 @@ into another. This process serves two goals:
    (new representation consumes less resources) and efficacy (marginal data 
    trends are ignored, so that transformations can be thought of as noise-reduction). 
 
+Creating a transformation
+++++++++++++++++++++++++++
+
 The transformations are standard Python objects, typically initialized by means of 
 a :dfn:`training corpus`:
 
->>> tfidf = models.TfidfModel(corpus)
+>>> tfidf = models.TfidfModel(corpus) # step 1 -- initialize a model
 
-We used our old corpus to initialize (train) the transformation model. In case of TfIdf, the 
-"training" consists of going through the corpus once and computing document frequencies
-of all its features.
+We used our old corpus to initialize (train) the transformation model. Different
+transformations may require different initialization parameters; in case of TfIdf, the 
+"training" consists simply of going through the supplied corpus once and computing document frequencies
+of all its features. Training other models, such as Latent Semantic Analysis or Latent Dirichlet
+Allocation, is much more involved and, consequently, takes much more time.
+
+.. note::
+
+  Transformations are initialized to convert between two specific vector 
+  spaces. Failure to use the same input feature space (such as applying a different string 
+  preprocessing, using different feature ids, or using bag-of-words vectors where 
+  TfIdf vectors are expected) will result in feature mismatch during transformation calls, 
+  and consequently in either garbage output and/or runtime exceptions.
+
+
+Transforming vectors
++++++++++++++++++++++
 
 From now on, ``tfidf`` is treated as a read-only object that can be used to convert 
-any vector from the old representation (bag-of-words counts) to the new representation
-(TfIdf):
+any vector from the old representation (bag-of-words integer counts) to the new representation
+(TfIdf real-valued weights):
 
 >>> doc_bow = [(0, 1), (1, 1)]
->>> print tfidf[doc_bow]
+>>> print tfidf[doc_bow] # step 2 -- use the model to transform vectors
 [(0, 0.70710678), (1, 0.70710678)]
 
-To apply a transformation to the whole corpus:
+Or to apply a transformation to a whole corpus:
 
 >>> corpus_tfidf = tfidf[corpus]
 
-This creates a standard corpus (stream of documents), which can be iterated over,
-saved to disk etc.
+In this particular case, we are transforming the same corpus that we used 
+for training, but this is only incidental. Once the transformation model has been initialized,
+it can be used on any vectors (provided they come from the correct vector space, of course),
+even if they were not used in the training corpus at all. This is achieved by a process called
+folding-in for LSA, by topic inference for LDA etc.
 
 .. warning::
-  Calling ``transformation[corpus]`` only creates a wrapper around the old ``corpus``
+  Calling ``model[corpus]`` only creates a wrapper around the old ``corpus``
   document stream -- actual conversions are done on-the-fly, during document iteration. 
-  Conversion at the time of calling ``corpus2 = transformation[corpus]`` would mean
-  storing the result in memory, which contradicts gensim's objective of memory-indepedence.
+  This is because conversion at the time of calling ``corpus2 = model[corpus]`` would mean
+  storing the result in main memory, which contradicts gensim's objective of memory-indepedence.
   If you will be iterating over the transformed ``corpus2`` multiple times, and the 
   transformation is costly, :ref:`store the resulting corpus to disk first <corpus-formats>` and continue
   using that.
@@ -72,8 +92,8 @@ Transformations can also be serialized, one on top of another, in a sort of chai
 >>> corpus_lsi = lsi[corpus_tfidf] # create a double wrapper over the original corpus: bow->tfidf->fold-in-lsi
 
 Here we transformed our Tf-Idf corpus via `Latent Semantic Indexing <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
-into a latent 2-D space. Now you're probably wondering what these two latent 
-dimensions stand for, so let's inspect with :func:`models.LsiModel.printTopics`:
+into a latent 2-D space (2-D because we set ``numTopics=2``). Now you're probably wondering: what do these two latent 
+dimensions stand for? Let's inspect with :func:`models.LsiModel.printTopics`:
 
 >>> for topicNo in range(lsi.numTopics):
 >>>     print 'topic %i: %s' % (topicNo, lsi.printTopic(topicNo))
@@ -99,15 +119,7 @@ remaining four documents to the first topic:
 [(0, -0.617), (1, 0.054)] # "Graph minors A survey"
 
 
-.. note::
-
-  Transformations are initialized to convert between two specific vector 
-  spaces. Failure to use the same input feature space (such as applying a different string 
-  preprocessing, or using bag-of-words vectors where TfIdf vectors are expected) 
-  will result in feature mismatch during the transformation, and consequently in 
-  either garbage output and/or runtime exceptions.
-
-Model persistency is handled via the :func:`save` and :func:`load` functions:
+Model persistency is achieved via the :func:`save` and :func:`load` functions:
 
 >>> lsi.save('/tmp/model.lsi') # same for tfidf, lda, ...
 >>> lsi = models.LsiModel.load('/tmp/model.lsi')
@@ -123,22 +135,39 @@ Available transformations
 
 Gensim implements several popular Vector Space Model algorithms:
 
-* `Latent Semantic Indexing, LSI, LSA <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
+* `Term Frequency * Inverse Document Frequency, Tf-Idf <http://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_
+  expects a bag-of-words (integer values) training corpus during initialization. 
+  During transformation, it will take a vector and return another vector of the 
+  same dimensionality, except that features which were rare in the training corpus 
+  will have their value increased.
+  It therefore converts integer-valued vectors into real-valued ones, while leaving 
+  the number of dimensions intact. It can also optionally normalize the resulting
+  vectors to (Euclidean) unit length.
+
+  >>> model = tfidfmodel.TfidfModel(bow_corpus, normalize = True)
+
+* `Latent Semantic Indexing, LSI (or sometimes LSA) <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
   transforms documents from either bag-of-words or (preferrably) TfIdf-weighted space into
   a latent space of a lower dimensionality. For the toy corpus above we used only 
   2 latent dimensions, but on real corpora, target dimensionality of 200--500 is recommended
   as a "golden standard" [1]_.
+  
+  >>> model = lsimodel.LsiModel(tfidf_corpus, id2word = dictionary.id2token, numTopics = 300)
 
 * `Random Projections, RP <www.cis.hut.fi/ella/publications/randproj_kdd.pdf>`_ aim to
   reduce vector space dimensionality. This is a very efficient (both memory- and
-  CPU-friendly) approach to approximating TfIdf through randomness. Recommended
-  target dimensionality is again in the hundreds/thousands, depending on your dataset.
+  CPU-friendly) approach to approximating TfIdf by throwing in a little randomness. 
+  Recommended target dimensionality is again in the hundreds/thousands, depending on your dataset.
+
+  >>> model = rpmodel.RpModel(tfidf_corpus, numTopics = 500)
 
 * `Latent Dirichlet Allocation, LDA <http://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
-  is yet another transformation, from bag-of-words counts into a topic space of low 
-  dimensionality (a few hundreds). LDA is **much** slower than the other algorithms,
-  and we are currently looking into ways of making it faster (see eg. [2]_). If you'd like
-  to contribute, `let us know <mailto:radimrehurek@seznam.cz>`_!
+  is yet another transformation from bag-of-words counts into a topic space of lower 
+  dimensionality. LDA is **much** slower than the other algorithms,
+  so we are currently looking into ways of making it faster (see eg. [2]_). If you 
+  could help, `let us know <mailto:radimrehurek@seznam.cz>`_!
+
+  >>> model = ldamodel.LdaModel(bow_corpus, id2word = dictionary.id2token, numTopics = 200)
 
 Adding new :abbr:`VSM (Vector Space Model)` transformations (such as different weighting schemes) is rather trivial;
 see the :doc:`API reference <apiref>` or directly the Python code for more info and examples.

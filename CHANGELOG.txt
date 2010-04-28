@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.5.0
+
+* finished all tutorials, stable version
+
 0.4.7
 
 * tutorial on transformations

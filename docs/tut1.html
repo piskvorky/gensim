@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.7',
+        VERSION:     '0.5.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -119,7 +119,7 @@ a question-answer pair, in the style of:</p>
 <p>It is advantageous to represent the questions only by their (integer) ids. The mapping
 between the questions and ids is called a dictionary:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">fromDocuments</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&#39;/tmp/dictionary.pkl&#39;</span><span class="p">)</span> <span class="c"># store the dictionary, for future reference</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.dict&#39;</span><span class="p">)</span> <span class="c"># store the dictionary, for future reference</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">dictionary</span>
 <span class="go">Dictionary(12 unique tokens)</span>
 </pre></div>
@@ -226,8 +226,9 @@ purposes, nothing beats the simplicity of calling <tt class="docutils literal"><
 </div>
 <p>In this way, <cite>gensim</cite> can also be used as a simple <strong>I/O format conversion tool</strong>:
 just load a document stream using one format and immediately save it in another format.</p>
-<p>For a complete reference, see the <a class="reference external" href="apiref.html"><em>API documentation</em></a>. Or continue
-to the next tutorial on <a class="reference external" href="tut2.html"><em>Topics and Transformations</em></a>.</p>
+<p>For a complete reference (want to prune the dictionary to a smaller size? convert between
+sparse vectors and numpy/scipy arrays?), see the <a class="reference external" href="apiref.html"><em>API documentation</em></a>.
+Or continue to the next tutorial on <a class="reference external" href="tut2.html"><em>Topics and Transformations</em></a>.</p>
 <hr class="docutils" />
 <table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>

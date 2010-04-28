@@ -1,6 +1,6 @@
 # Sphinx inventory version 1
 # Project: gensim
-# Version: 0.4
+# Version: 0.5
 gensim.corpora.dictionary mod corpora/dictionary.html
 gensim.models.ldamodel mod models/ldamodel.html
 gensim.matutils mod matutils.html
