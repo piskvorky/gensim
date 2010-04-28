@@ -81,7 +81,7 @@ It is advantageous to represent the questions only by their (integer) ids. The m
 between the questions and ids is called a dictionary:
 
 >>> dictionary = corpora.Dictionary.fromDocuments(texts)
->>> dictionary.save('/tmp/dictionary.pkl') # store the dictionary, for future reference
+>>> dictionary.save('/tmp/deerwester.dict') # store the dictionary, for future reference
 >>> print dictionary
 Dictionary(12 unique tokens)
 
@@ -196,8 +196,9 @@ To save the same corpus in Blei's LDA-C format,
 In this way, `gensim` can also be used as a simple **I/O format conversion tool**: 
 just load a document stream using one format and immediately save it in another format.
 
-For a complete reference, see the :doc:`API documentation <apiref>`. Or continue
-to the next tutorial on :doc:`tut2`.
+For a complete reference (want to prune the dictionary to a smaller size? convert between
+sparse vectors and numpy/scipy arrays?), see the :doc:`API documentation <apiref>`. 
+Or continue to the next tutorial on :doc:`tut2`.
 
 
 ------

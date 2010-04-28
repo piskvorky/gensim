@@ -39,8 +39,6 @@ Contents
    intro
    install
    tutorial
-   devguide
-   paramref
    apiref    
 
 

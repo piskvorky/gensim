@@ -96,7 +96,7 @@ class SimilarityABC(utils.SaveLoad):
     In all instances, there is a corpus against which we want to perform the 
     similarity search.
     
-    For similarity search, the input is a document and the output are its 
+    For each similarity search, the input is a document and the output are its 
     similarities to individual corpus documents.
     
     Similarity queries are realized by calling ``self[query_document]``.

@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.4.7',
+        VERSION:     '0.5.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -52,19 +52,108 @@
             
   <div class="section" id="similarity-queries">
 <span id="tut3"></span><h1>Similarity Queries<a class="headerlink" href="#similarity-queries" title="Permalink to this headline">¶</a></h1>
+<p>Don&#8217;t forget to set</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span> <span class="c"># will suppress DEBUG level events</span>
+</pre></div>
+</div>
+<p>if you want to see logging events.</p>
+<div class="section" id="similarity-interface">
+<h2>Similarity interface<a class="headerlink" href="#similarity-interface" title="Permalink to this headline">¶</a></h2>
+<p>In the previous tutorials on <a class="reference external" href="tut1.html"><em>Corpora and Vector Spaces</em></a> and <a class="reference external" href="tut2.html"><em>Topics and Transformations</em></a>, we covered what it means
+to create a corpus in the Vector Space Model and how to transform it between different
+vector spaces. A common reason for such a charade is that we want to determine
+<strong>similarity between pairs of documents</strong>, or the <strong>similarity between a specific document
+and a set of other documents</strong> (such as a user query vs. indexed documents).</p>
+<p>To show how this can be done in gensim, let us consider the same corpus as in the
+previous examples (which really originally comes from Deerwester et al.&#8217;s
+<a class="reference external" href="http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf">&#8220;Indexing by Latent Semantic Analysis&#8221;</a>
+seminal 1990 article):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">similarities</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.dict&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.mm&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">corpus</span>
+<span class="go">MmCorpus(9 documents, 12 features, 28 non-zero entries)</span>
+</pre></div>
+</div>
+<p>To follow Deerwester&#8217;s example, we first use this tiny corpus to define a 2-dimensional
+LSI space:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">id2token</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now suppose a user typed in the query <cite>&#8220;Human computer interaction&#8221;</cite>. We would
+like to sort our nine corpus documents in decreasing order of relevance to this query.
+Unlike modern search engines, here we only concentrate on a single aspect of possible
+similarities &#8211; on apparent semantic relatedness of their texts (words). No hyperlinks,
+no random-walk static ranks, just an extension over a boolean keyword match:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="s">&quot;Human computer interaction&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vec_bow</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vec_lsi</span> <span class="o">=</span> <span class="n">lsi</span><span class="p">[</span><span class="n">vec_bow</span><span class="p">]</span> <span class="c"># convert the query to LSI space</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">vec_lsi</span> <span class="c"># result is already scaled by singular values</span>
+<span class="go">[(0, -0.461821), (1, 0.070028)]</span>
+</pre></div>
+</div>
+<p>In addition, we will be considering <a class="reference external" href="http://en.wikipedia.org/wiki/Cosine_similarity">cosine similarity</a>
+to determine the similarity of two vectors. Cosine similarity is a standard measure
+in Vector Space Modeling, but wherever the vectors represent probability distributions,
+<a class="reference external" href="http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence#Symmetrised_divergence">different similarity measures</a>
+may be more appropriate.</p>
+<div class="section" id="initializing-query-structures">
+<h3>Initializing query structures<a class="headerlink" href="#initializing-query-structures" title="Permalink to this headline">¶</a></h3>
+<p>To prepare for similarity queries, we need to enter all documents which we want
+to compare against subsequent queries. In our case, they are the nine documents,
+converted to a 2-D latent space:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">MatrixSimilarity</span><span class="p">(</span><span class="n">lsi</span><span class="p">[</span><span class="n">corpus</span><span class="p">])</span> <span class="c"># transform corpus to LSI space and &quot;index&quot; it</span>
+</pre></div>
+</div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">TODO</p>
+<p class="last">The class <tt class="xref docutils literal"><span class="pre">similarities.MatrixSimilarity</span></tt> is only appropriate when the whole
+set of vectors fits into memory. For example, a corpus of one million documents
+would require 1GB of RAM in a 256-dimensional LSI space, when used with this class.
+Without 1GB of free RAM, you would need to use the <tt class="xref docutils literal"><span class="pre">similarities.Similarity</span></tt> class.
+This class operates in constant memory, in a streaming (and more gensim-like)
+fashion, but is also much slower than <tt class="xref docutils literal"><span class="pre">similarities.MatrixSimilarity</span></tt>, which uses
+fast level-2 <a class="reference external" href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms">BLAS routines</a>
+to determine similarities. We are currently searching for a lightweight Python
+framework for distributed computing, which will allow us to perform fast queries
+without compromising gensim&#8217;s memory independence, by spreading the query load
+over many computers.</p>
 </div>
-<p>To print proximity of this query document against every one of the nine original
-documents, in the same 2-D LSI space:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">MatrixSimilarity</span><span class="p">(</span><span class="n">lsi</span><span class="p">[</span><span class="n">corpus</span><span class="p">])</span> <span class="c"># transform corpus to LSI space and &quot;index&quot; it</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sims</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">lsi</span><span class="p">[</span><span class="n">doc_bow</span><span class="p">]]</span> <span class="c"># perform similarity query against the corpus</span>
+<p>Index persistency is handled via the <tt class="xref docutils literal"><span class="pre">save()</span></tt> and <tt class="xref docutils literal"><span class="pre">load()</span></tt> functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.index&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">MatrixSimilarity</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.index&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="performing-queries">
+<h3>Performing queries<a class="headerlink" href="#performing-queries" title="Permalink to this headline">¶</a></h3>
+<p>To obtain similarities of our query document against the nine indexed documents:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sims</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">vec_lsi</span><span class="p">]</span> <span class="c"># perform a similarity query against the corpus</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">sims</span><span class="p">))</span>
 <span class="go">[(0, 0.99809301), (1, 0.93748635), (2, 0.99844527), (3, 0.9865886), (4, 0.90755945),</span>
 <span class="go">(5, -0.12416792), (6, -0.1063926), (7, -0.098794639), (8, 0.05004178)]</span>
 </pre></div>
 </div>
+<p>Cosine measure returns similarities in the range <cite>&lt;-1, 1&gt;</cite> (the greater, the more similar),
+so that the first document has a score of 0.99809301 etc.</p>
+<p>With some standard Python magic we sort these similarities into descending
+order, and obtain the final answer to the query <cite>&#8220;Human computer interaction&#8221;</cite>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sims</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">sims</span><span class="p">)),</span> <span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="o">-</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">sims</span>
+<span class="go">[(2, 0.99844527), # The EPS user interface management system</span>
+<span class="go">(0, 0.99809301), # Human machine interface for lab abc computer applications</span>
+<span class="go">(3, 0.9865886), # System and human system engineering testing of EPS</span>
+<span class="go">(1, 0.93748635), # A survey of user opinion of computer system response time</span>
+<span class="go">(4, 0.90755945), # Relation of user perceived response time to error measurement</span>
+<span class="go">(8, 0.050041795), # Graph minors A survey</span>
+<span class="go">(7, -0.098794639), # Graph minors IV Widths of trees and well quasi ordering</span>
+<span class="go">(6, -0.1063926), # The intersection graph of paths in trees</span>
+<span class="go">(5, -0.12416792)] # The generation of random binary unordered trees</span>
+</pre></div>
+</div>
+<p>(We added the original documents in their original &#8220;string form&#8221; to the output, to
+improve clarity.)</p>
 <p>The thing to note here is that documents no. 2 (<tt class="docutils literal"><span class="pre">&quot;The</span> <span class="pre">EPS</span> <span class="pre">user</span> <span class="pre">interface</span> <span class="pre">management</span> <span class="pre">system&quot;</span></tt>)
 and 4 (<tt class="docutils literal"><span class="pre">&quot;Relation</span> <span class="pre">of</span> <span class="pre">user</span> <span class="pre">perceived</span> <span class="pre">response</span> <span class="pre">time</span> <span class="pre">to</span> <span class="pre">error</span> <span class="pre">measurement&quot;</span></tt>) would never be returned by
 a standard boolean fulltext search, because they do not share any common words with <tt class="docutils literal"><span class="pre">&quot;Human</span>
@@ -73,6 +162,19 @@ them received quite high similarity scores, which corresponds better to our intu
 them sharing a &#8220;computer-related&#8221; topic with the query. In fact, this is the reason
 why we apply transformations and do topic modeling in the first place.</p>
 </div>
+</div>
+<div class="section" id="where-next">
+<h2>Where next?<a class="headerlink" href="#where-next" title="Permalink to this headline">¶</a></h2>
+<p>Congratulations, you have finished the tutorials &#8211; now you know how gensim works :-)
+To delve into more details, you can browse through the <a class="reference external" href="apiref.html"><em>API documentation</em></a>.</p>
+<p>Please remember that gensim is an experimental package, aimed at the NLP research community.
+This means that:</p>
+<ul class="simple">
+<li>there certainly are parts that may be implemented more efficiently (in C, for example), and there may also be bugs in the code</li>
+<li>your <strong>feedback is most welcome</strong> and appreciated, be it in code and idea contributions, bug reports or just user stories.</li>
+</ul>
+</div>
+</div>
 
 
           </div>
@@ -80,6 +182,19 @@ why we apply transformations and do topic modeling in the first place.</p>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Similarity Queries</a><ul>
+<li><a class="reference external" href="#similarity-interface">Similarity interface</a><ul>
+<li><a class="reference external" href="#initializing-query-structures">Initializing query structures</a></li>
+<li><a class="reference external" href="#performing-queries">Performing queries</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#where-next">Where next?</a></li>
+</ul>
+</li>
+</ul>
+
             <h4>Previous topic</h4>
             <p class="topless"><a href="tut2.html"
                                   title="previous chapter">Topics and Transformations</a></p>
