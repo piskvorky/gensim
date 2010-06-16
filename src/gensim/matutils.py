@@ -10,6 +10,7 @@ This module contains math helper functions.
 
 import logging
 import math
+import os
 
 import numpy
 import scipy.sparse
@@ -101,9 +102,9 @@ class MmWriter(object):
     
     def __init__(self, fname):
         self.fname = fname
-        tmp = open(self.fname, 'w')
+        tmp = open(self.fname, 'w') # reset/create the target file
         tmp.close()
-        self.fout = open(self.fname, 'r+')
+        self.fout = open(self.fname, 'rb+') # open for both reading and writing
         self.headersWritten = False
     
 

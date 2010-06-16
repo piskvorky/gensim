@@ -79,7 +79,7 @@ class SaveLoad(object):
         Load a previously saved object from file (also see `save`).
         """
         logging.info("loading %s object from %s" % (cls.__name__, fname))
-        return cPickle.load(open(fname))
+        return cPickle.load(open(fname, 'rb')) # 'b' for binary, needed on Windows
 
 
     def save(self, fname):
@@ -87,7 +87,7 @@ class SaveLoad(object):
         Save the object to file via pickling (also see `load`).
         """
         logging.info("saving %s object to %s" % (self.__class__.__name__, fname))
-        f = open(fname, 'w')
+        f = open(fname, 'wb')
         cPickle.dump(self, f, protocol = -1) # -1 to use the highest available protocol, for efficiency
         f.close()
 #endclass SaveLoad
