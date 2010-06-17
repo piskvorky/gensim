@@ -221,8 +221,8 @@ class LdaModel(interfaces.TransformationABC):
         """
         Perform inference on a single document.
         
-        Return 3-tuple of (likelihood of this document, word-topic distribution
-        phi, expected word counts gamma (~topic distribution)).
+        Return 3-tuple of `(likelihood of this document, word-topic distribution
+        phi, expected word counts gamma (~topic distribution))`.
         
         A document is simply a bag-of-words collection which supports len() and 
         iteration over (wordIndex, wordCount) 2-tuples.
@@ -308,13 +308,14 @@ class LdaModel(interfaces.TransformationABC):
     
     def infer(self, corpus):
         """
-        Perform inference on a corpus of documents.
+        Convenience wrapper for making inference over a corpus of documents.
         
-        This means that a standard inference step is taken for each document from 
-        the corpus and the results are saved into file corpus.fname.lda_inferred.
+        This means that a standard :func:`inference` step is taken for each document from 
+        the corpus and the results are saved into file `corpus.fname.lda_inferred`.
         
-        The output format of this file is one doc per line::
-        doc_likelihood[TAB]topic1:prob ... topicK:prob[TAB]word1:topic ... wordN:topic
+        The output format of this file is one document per line::
+        
+          doc_likelihood[TAB]topic1:prob topic2:prob ... topicK:prob[TAB]word1:topic word2:topic ... wordN:topic
         
         Topics are sorted by probability, words are in the same order as in the input.
         """
