@@ -54,7 +54,8 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2.5',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
-        'Topic :: Scientific/Engineering :: Information Analysis'
+        'Topic :: Scientific/Engineering :: Information Analysis',
+        'Topic :: Text Processing :: Linguistic',
     ],
     
     test_suite = "gensim.test",
