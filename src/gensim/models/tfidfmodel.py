@@ -37,20 +37,17 @@ class TfidfModel(interfaces.TransformationABC):
     """
     def __init__(self, corpus, id2word = None, normalize = True):
         """
-        `id2word` is a mapping from word ids (integers) to words (strings). It is
-        used to determine the vocabulary size, as well as for debugging and topic 
-        printing. If not set, it will be determined from the corpus.
-
         `normalize` dictates whether the resulting vectors will be set to unit length.
         """
-        self.id2word = id2word
         self.normalize = normalize
+        self.numDocs = 0
+        self.numNnz = 0
         if corpus is not None:
             self.initialize(corpus)
 
     
     def __str__(self):
-        return "TfidfModel(numTerms=%s)" % (self.numTerms)
+        return "TfidfModel(numDocs=%s, numNnz=%s)" % (self.numDocs, self.numNnz)
 
 
     def initialize(self, corpus):
@@ -58,44 +55,38 @@ class TfidfModel(interfaces.TransformationABC):
         Compute inverse document weights, which will be used to modify term 
         frequencies for documents.
         """
-        if self.id2word is None:
-            logging.info("no word id mapping provided; initializing from corpus, assuming identity")
-            self.id2word = utils.dictFromCorpus(corpus)
-            self.numTerms = len(self.id2word)
-        else:
-            self.numTerms = 1 + max([-1] + self.id2word.keys())
-        
-        logging.info("calculating IDF weights over %i documents" % len(corpus))
+        logging.info("calculating counts")
         idfs = {}
         numNnz = 0
         for docNo, bow in enumerate(corpus):
             if docNo % 5000 == 0:
-                logging.info("PROGRESS: processing document %i/%i" % 
-                             (docNo, len(corpus)))
+                logging.info("PROGRESS: processing document #%i" % docNo)
             numNnz += len(bow)
             for termId, termCount in bow:
                 idfs[termId] = idfs.get(termId, 0) + 1
-        idfs = dict((termId, math.log(1.0 * (docNo + 1) / docFreq, 2)) # the IDF weight formula 
-                    for termId, docFreq in idfs.iteritems())
-        
-        self.idfs = idfs
-        
+
         # keep some stats about the training corpus
-        self.numDocs = len(corpus)
+        self.numDocs = docNo + 1 # HACK using leftover from enumerate(corpus) above
         self.numNnz = numNnz
+        
+        # and finally compute the idf weights
+        logging.info("calculating IDF weights for %i documents and %i features (%i matrix non-zeros)" %
+                     (self.numDocs, 1 + max([-1] + idfs.keys()), self.numNnz))
+        self.idfs = dict((termId, math.log(1.0 * self.numDocs / docFreq, 2)) # the IDF weight formula
+                         for termId, docFreq in idfs.iteritems())
 
 
     def __getitem__(self, bow):
         """
         Return tf-idf representation of the input vector and/or corpus.
         """
-        # if the input vector is in fact a corpus, return a transformed corpus as result
+        # if the input vector is in fact a corpus, return a transformed corpus as a result
         if utils.isCorpus(bow):
             return self._apply(bow)
         
         # unknown (new) terms will be given zero weight (NOT infinity/huge weight,
-        # as would the strict application of the IDF formula suggest
-        vector = [(termId, tf * self.idfs.get(termId, 0.0)) 
+        # as strict application of the IDF formula would dictate
+        vector = [(termId, tf * self.idfs.get(termId, 0.0))
                   for termId, tf in bow if self.idfs.get(termId, 0.0) != 0.0]
         if self.normalize:
             vector = matutils.unitVec(vector)
