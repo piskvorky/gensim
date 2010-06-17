@@ -23,7 +23,7 @@ document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ at W
 Installation
 ------------
 
-gensim depends on NumPy and Scipy, two Python packages for scientific computing.
+Gensim depends on NumPy and Scipy, two Python packages for scientific computing.
 You need to have them installed prior to using gensim; if you don't have them yet, 
 you can get them from <http://www.scipy.org/Download>.
 

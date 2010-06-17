@@ -2,7 +2,7 @@ Changes for future releases:
 -----------------------------
 
 * more extensive unit testing
-* finish tutorials!
+* improve documentation
 * re-implement LDA after Asuncion: "On Smoothing and Inference for Topic Models"
 * and the big one: find a reasonable framework for distributed computing in Python
   and translate algorithms into their distributed variants. Avoid Java frameworks
