@@ -50,10 +50,12 @@ Allocation, is much more involved and, consequently, takes much more time.
 .. note::
 
   Transformations are initialized to convert between two specific vector 
-  spaces. Failure to use the same input feature space (such as applying a different string 
-  preprocessing, using different feature ids, or using bag-of-words vectors where 
-  TfIdf vectors are expected) will result in feature mismatch during transformation calls, 
-  and consequently in either garbage output and/or runtime exceptions.
+  spaces. The same vector space (= the same set of feature ids) must be used for training 
+  as well as for subsequent vector transformations. Failure to use the same input 
+  feature space, such as applying a different string preprocessing, using different 
+  feature ids, or using bag-of-words vectors where TfIdf vectors are expected, will 
+  result in feature mismatch during transformation calls and consequently in either 
+  garbage output and/or runtime exceptions.
 
 
 Transforming vectors
@@ -83,12 +85,12 @@ folding-in for LSA, by topic inference for LDA etc.
   This is because conversion at the time of calling ``corpus2 = model[corpus]`` would mean
   storing the result in main memory, which contradicts gensim's objective of memory-indepedence.
   If you will be iterating over the transformed ``corpus2`` multiple times, and the 
-  transformation is costly, :ref:`store the resulting corpus to disk first <corpus-formats>` and continue
+  transformation is costly, :ref:`serialize the resulting corpus to disk first <corpus-formats>` and continue
   using that.
 
 Transformations can also be serialized, one on top of another, in a sort of chain:
 
->>> lsi = models.LsiModel(corpus_tfidf, id2word = dictionary.id2token, numTopics = 2) # initialize LSI transformation
+>>> lsi = models.LsiModel(corpus_tfidf, id2word = dictionary.id2token, numTopics = 2) # initialize an LSI transformation
 >>> corpus_lsi = lsi[corpus_tfidf] # create a double wrapper over the original corpus: bow->tfidf->fold-in-lsi
 
 Here we transformed our Tf-Idf corpus via `Latent Semantic Indexing <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
@@ -103,10 +105,10 @@ topic 1: 0.460 * "system" + 0.373 * "user" + 0.332 * "eps" + 0.328 * "interface"
 It appears that according to LSI, "trees", "graphs" and "minors" are all related 
 words (and contribute the most to the direction of the first topic), while the 
 second topic practically concerns itself with all the other words. As expected, 
-the first five documents are more strongly related to the second topic and the 
+the first five documents are more strongly related to the second topic while the 
 remaining four documents to the first topic:
 
->>> for doc in corpus_lsi: # both bow->tfidf and tfidf->lsi transformations are actually executed here 
+>>> for doc in corpus_lsi: # both bow->tfidf and tfidf->lsi transformations are actually executed here, on the fly
 >>>     print doc
 [(0, -0.066), (1, 0.520)] # "Human machine interface for lab abc computer applications"
 [(0, -0.197), (1, 0.761)] # "A survey of user opinion of computer system response time"
@@ -119,14 +121,14 @@ remaining four documents to the first topic:
 [(0, -0.617), (1, 0.054)] # "Graph minors A survey"
 
 
-Model persistency is achieved via the :func:`save` and :func:`load` functions:
+Model persistency is achieved with the :func:`save` and :func:`load` functions:
 
 >>> lsi.save('/tmp/model.lsi') # same for tfidf, lda, ...
 >>> lsi = models.LsiModel.load('/tmp/model.lsi')
 
 
 The next question might be: just how exactly similar are those documents to each other?
-Is there a way to formalize the similarity, so that for a given document, we can
+Is there a way to formalize the similarity, so that for a given input document, we can
 order some other set of documents according to their similarity? Similarity queries
 are covered in the :doc:`next tutorial <tut3>`.
 
@@ -154,9 +156,9 @@ Gensim implements several popular Vector Space Model algorithms:
   
   >>> model = lsimodel.LsiModel(tfidf_corpus, id2word = dictionary.id2token, numTopics = 300)
 
-* `Random Projections, RP <www.cis.hut.fi/ella/publications/randproj_kdd.pdf>`_ aim to
+* `Random Projections, RP <http://www.cis.hut.fi/ella/publications/randproj_kdd.pdf>`_ aim to
   reduce vector space dimensionality. This is a very efficient (both memory- and
-  CPU-friendly) approach to approximating TfIdf by throwing in a little randomness. 
+  CPU-friendly) approach to approximating TfIdf distances between documents, by throwing in a little randomness. 
   Recommended target dimensionality is again in the hundreds/thousands, depending on your dataset.
 
   >>> model = rpmodel.RpModel(tfidf_corpus, numTopics = 500)
@@ -164,7 +166,7 @@ Gensim implements several popular Vector Space Model algorithms:
 * `Latent Dirichlet Allocation, LDA <http://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
   is yet another transformation from bag-of-words counts into a topic space of lower 
   dimensionality. LDA is **much** slower than the other algorithms,
-  so we are currently looking into ways of making it faster (see eg. [2]_). If you 
+  so we are currently looking into ways of making it faster (see eg. [2]_, [3]_). If you 
   could help, `let us know <mailto:radimrehurek@seznam.cz>`_!
 
   >>> model = ldamodel.LdaModel(bow_corpus, id2word = dictionary.id2token, numTopics = 200)
@@ -172,7 +174,7 @@ Gensim implements several popular Vector Space Model algorithms:
 Adding new :abbr:`VSM (Vector Space Model)` transformations (such as different weighting schemes) is rather trivial;
 see the :doc:`API reference <apiref>` or directly the Python code for more info and examples.
 
-It is probably worth repeating that these are all unique, **incremental** implementations, 
+It is worth repeating that these are all unique, **incremental** implementations, 
 which do not require the whole training corpus to be present in main memory at once.
 With memory taken care of, we are now investigating available lightweight Python 
 frameworks for distributed computing, to improve CPU efficiency, too. 
@@ -184,3 +186,5 @@ If you feel you could contribute, please `let us know <mailto:radimrehurek@sezna
 .. [1] Bradford, R.B., 2008. An empirical study of required dimensionality for large-scale latent semantic indexing applications.
 
 .. [2] Asuncion, A., 2009. On Smoothing and Inference for Topic Models.
+
+.. [3] Yao, Mimno, McCallum, 2009. Efficient Methods for Topic Model Inference on Streaming Document Collections
