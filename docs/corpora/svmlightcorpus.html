@@ -68,6 +68,10 @@ lines represents one training example and is of the following format:</p>
 &lt;info&gt; .=. &lt;string&gt;</pre>
 </div>
 <p>The &#8220;qid&#8221; feature (used for SVMlight ranking), if present, is ignored.</p>
+<p>Although not mentioned in the specification above, SVMlight also expect its 
+feature ids to be 1-based (counting starts at 1). We convert features to 0-base
+internally by decrementing all ids when loading a SVMlight input file, and 
+increment them again when saving as SVMlight.</p>
 <p>Initialize the corpus from a file.</p>
 <dl class="classmethod">
 <dt id="gensim.corpora.svmlightcorpus.SvmLightCorpus.load">

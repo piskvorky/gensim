@@ -57,7 +57,7 @@ may be more appropriate.
 Initializing query structures
 ++++++++++++++++++++++++++++++++
 
-To prepare for similarity queries, we need to enter all documents which we want
+To prepare for similarity queries, we need to enter all documents which we will want
 to compare against subsequent queries. In our case, they are the nine documents, 
 converted to a 2-D latent space:
 
@@ -98,8 +98,8 @@ so that the first document has a score of 0.99809301 etc.
 With some standard Python magic we sort these similarities into descending 
 order, and obtain the final answer to the query `"Human computer interaction"`:
 
->>> sims = sorted(list(enumerate(sims)), key = lambda item: -item[1])
->>> print sims
+>>> sims = sorted(enumerate(sims), key = lambda item: -item[1])
+>>> print sims # print sorted (document number, similarity score) 2-tuples
 [(2, 0.99844527), # The EPS user interface management system
 (0, 0.99809301), # Human machine interface for lab abc computer applications
 (3, 0.9865886), # System and human system engineering testing of EPS
@@ -110,7 +110,7 @@ order, and obtain the final answer to the query `"Human computer interaction"`:
 (6, -0.1063926), # The intersection graph of paths in trees
 (5, -0.12416792)] # The generation of random binary unordered trees
 
-(We added the original documents in their original "string form" to the output, to 
+(We added the original documents in their "string form" to the output, to 
 improve clarity.)
 
 The thing to note here is that documents no. 2 (``"The EPS user interface management system"``)
@@ -118,8 +118,9 @@ and 4 (``"Relation of user perceived response time to error measurement"``) woul
 a standard boolean fulltext search, because they do not share any common words with ``"Human 
 computer interaction"``. However, after applying LSI, we can observe that both of 
 them received quite high similarity scores, which corresponds better to our intuition of
-them sharing a "computer-related" topic with the query. In fact, this is the reason 
-why we apply transformations and do topic modeling in the first place.
+them sharing a "computer-human" related topic with the query. In fact, this semantic
+generalization is the reason why we apply transformations and do topic modeling 
+in the first place.
 
 
 Where next?
@@ -131,6 +132,14 @@ To delve into more details, you can browse through the :doc:`API documentation <
 Please remember that gensim is an experimental package, aimed at the NLP research community.
 This means that:
 
-* there certainly are parts that may be implemented more efficiently (in C, for example), and there may also be bugs in the code
+* there certainly are parts that could be implemented more efficiently (in C, for example), and there may also be bugs in the code
 * your **feedback is most welcome** and appreciated, be it in code and idea contributions, bug reports or just user stories.
 
+Gensim has no ambition to become a production-level tool, with robust failure handling
+and error recoveries. Its main goal is to help NLP newcomers try out popular algorithms 
+and to facilitate prototyping new algorithms for NLP researchers.
+
+.. note::
+  Gensim is released under the `GNU LGPL license <http://www.gnu.org/licenses/lgpl.html>`_, 
+  so for production environments, feel free to adapt (parts) of the code to whatever 
+  scenarios are relevant to you.
