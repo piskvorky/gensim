@@ -48,27 +48,28 @@ def vecLen(vec):
 
 def unitVec(vec):
     """
-    Scale a vector to unit length. The only exception is zero vector, which
+    Scale a vector to unit length. The only exception is the zero vector, which
     is returned back unchanged.
     
     If the input is sparse (list of 2-tuples), output will also be sparse. Otherwise,
     output will be a numpy array.
     """
-    if scipy.sparse.issparse(vec):
+    if scipy.sparse.issparse(vec): # convert scipy.sparse to standard numpy array
         vec = vec.toarray().flatten()
+    
     try:
-        first = iter(vec).next()
+        first = iter(vec).next() # is there at least one element?
     except:
         return vec
     
-    if isinstance(first, tuple):
+    if isinstance(first, tuple): # sparse format?
         vecLen = 1.0 * math.sqrt(sum(val * val for _, val in vec))
         assert vecLen > 0.0, "sparse documents must not contain any explicit zero entries"
         if vecLen != 1.0:
             result = [(termId, val / vecLen) for termId, val in vec]
         else:
             result = list(vec)
-    else:
+    else: # dense format
         vec = numpy.asarray(vec, dtype = float)
         vecLen = numpy.sqrt(numpy.sum(vec * vec))
         if vecLen > 0.0:
