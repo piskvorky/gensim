@@ -109,9 +109,49 @@ def getMaxId(corpus):
     return maxId
 
 
+class FakeDict(object):
+    """
+    Objects of this class act as dictionaries that map integer->str(integer), for 
+    a specified range of integers <0, numTerms).
+    
+    This is meant to avoid allocating real dictionaries when numTerms is huge, which
+    is a waste of memory.
+    """
+    def __init__(self, numTerms):
+        self.numTerms = numTerms
+    
+
+    def __str__(self):
+        return "FakeDict(numTerms=%s)" % self.numTerms
+    
+    
+    def __getitem__(self, val):
+        if 0 <= val < self.numTerms:
+            return str(val)
+        raise ValueError("internal id out of bounds (%s, expected <0..%s))" % 
+                         (val, self.numTerms))
+    
+    def iteritems(self):
+        for i in xrange(self.numTerms):
+            yield i, str(i)
+    
+    def keys(self):
+        """
+        Override the dict.keys() function, which is used to determine the maximum 
+        internal id of a corpus = the vocabulary dimensionality.
+        
+        HACK: To avoid materializing the whole range(0, self.numTerms), we 
+        return [self.numTerms - 1] only.
+        """
+        return [self.numTerms - 1]
+    
+    def __len__(self):
+        return self.numTerms
+
+
 def dictFromCorpus(corpus):
     """
-    Scan corpus for all word ids that appear in it, then contruct and return a mapping
+    Scan corpus for all word ids that appear in it, then construct and return a mapping
     which maps each ``wordId -> str(wordId)``.
     
     This function is used whenever *words* need to be displayed (as opposed to just 
@@ -119,7 +159,7 @@ def dictFromCorpus(corpus):
     only covers words actually used in the corpus, up to the highest wordId found.
     """
     numTerms = 1 + getMaxId(corpus)
-    id2word = dict((fieldId, str(fieldId)) for fieldId in xrange(numTerms))
+    id2word = FakeDict(numTerms)
     return id2word
 
 
@@ -131,9 +171,10 @@ def isCorpus(obj):
     """
     try:
         doc1 = iter(obj).next() # obj supports iteration and is not empty
-        if len(doc1) == 0: # first document is empty
+        if len(doc1) == 0: # the first document is empty
             return True
-        id1, val1 = iter(doc1).next() # or first document is a 2-tuple
+        id1, val1 = iter(doc1).next() # or the first document is a 2-tuple
+        id1, val1 = int(id1), float(val1) # id must be an integer, weight a float
         return True
     except:
         return False
