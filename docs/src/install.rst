@@ -79,7 +79,6 @@ To test the package, unzip the `tar.gz source <http://pypi.python.org/pypi/gensi
 Contact
 --------
 
-If you encounter problems or have any questions regarding `gensim`, please let us 
-know by emailing at:
+If you encounter problems or have any questions regarding `gensim`, let me know at:
 
 >>> '@'.join(['radimrehurek', '.'.join(['seznam', 'cz'])])

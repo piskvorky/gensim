@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.0',
+        VERSION:     '0.6.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,6 +25,14 @@
     <link rel="prev" title="models.ldamodel – Latent Dirichlet Allocation" href="ldamodel.html" /> 
   </head>
   <body>
+
+<!--
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../index.html"><img src="../_static/logo.png" border="0" alt="py4sci"/></a>
+</div>
+--!>
+
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -40,10 +48,37 @@
         <li class="right" >
           <a href="ldamodel.html" title="models.ldamodel – Latent Dirichlet Allocation"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">gensim documentation</a> &raquo;</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
+       <li><a href="../contents.html">documentation </a> &raquo;</li>
+
           <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
       </ul>
-    </div>  
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="ldamodel.html"
+                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="tfidfmodel.html"
+                                  title="next chapter"><tt class="docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model</a></p>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="../search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
 
     <div class="document">
       <div class="documentwrapper">
@@ -55,43 +90,57 @@
 <p>Module for Latent Semantic Indexing.</p>
 <dl class="class">
 <dt id="gensim.models.lsimodel.LsiModel">
-<em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus</em>, <em>id2word=None</em>, <em>numTopics=200</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus=None</em>, <em>id2word=None</em>, <em>numTopics=200</em>, <em>extraDims=10</em>, <em>chunks=100</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Objects of this class allow building and maintaining a model for Latent 
 Semantic Indexing (also known as Latent Semantic Analysis).</p>
 <p>The main methods are:</p>
 <ol class="arabic simple">
-<li>constructor, which calculates the latent topics space, effectively 
-initializing the model,</li>
-<li>the [] method, which returns representation of any input document in the 
-computed latent space.</li>
+<li>constructor, which initializes the projection into latent topics space,</li>
+<li>the <tt class="docutils literal"><span class="pre">[]</span></tt> method, which returns representation of any input document in the 
+latent space,</li>
+<li>the <cite>addDocuments()</cite> method, which allows for updating the model with new documents.</li>
 </ol>
 <p>Model persistency is achieved via its load/save methods.</p>
-<p>Find latent space based on the corpus provided.</p>
 <p><cite>numTopics</cite> is the number of requested factors (latent dimensions).</p>
-<p>After the model has been initialized, you can estimate topics for an
+<p>After the model has been trained, you can estimate topics for an
 arbitrary, unseen document, using the <tt class="docutils literal"><span class="pre">topics</span> <span class="pre">=</span> <span class="pre">self[document]</span></tt> dictionary 
-notation.</p>
+notation. You can also add new training documents, with <tt class="docutils literal"><span class="pre">self.addDocuments</span></tt>,
+so that training can be stopped and resumed at any time, and the
+LSI transformation is available at any point.</p>
+<p><cite>extraDims</cite> is the number of extra dimensions that will be internally 
+computed (ie. <cite>numTopics + extraDims</cite>) to improve numerical properties of 
+the SVD algorithm. These extra dimensions will be eventually chopped off
+for the final projection. Set to 0 to save memory; set to ~10 to
+2*numTopics for increased SVD precision.</p>
+<p>If you specify a <cite>corpus</cite>, it will be used to train the model. See the 
+method <cite>addDocuments</cite> for a description of the <cite>chunks</cite> and <cite>decay</cite> parameters.</p>
+<p>The algorithm is based on
+<strong>Brand, 2006: Fast low-rank modifications of the thin singular value decomposition</strong>.</p>
 <p>Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">lsi</span><span class="p">[</span><span class="n">doc_tfidf</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">addDocuments</span><span class="p">(</span><span class="n">corpus2</span><span class="p">)</span> <span class="c"># update LSI on additional documents</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">lsi</span><span class="p">[</span><span class="n">doc_tfidf</span><span class="p">]</span>
 </pre></div>
 </div>
 <dl class="method">
-<dt id="gensim.models.lsimodel.LsiModel.initialize">
-<tt class="descname">initialize</tt><big>(</big><em>corpus</em>, <em>chunks=100</em>, <em>keepDecomposition=False</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.initialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run SVD decomposition on the corpus. This will define the latent space into 
-which terms and documents will be mapped.</p>
-<p>The SVD is created incrementally, in blocks of <cite>chunks</cite> documents. In the
-end, a <cite>self.projection</cite> matrix is constructed that can be used to transform 
-documents into the latent space. The <cite>U, S, V</cite> decomposition itself is 
-discarded, unless <cite>keepDecomposition</cite> is True, in which case it is stored 
-in <cite>self.u</cite>, <cite>self.s</cite> and <cite>self.v</cite>.</p>
-<p><cite>dtype</cite> dictates precision used for intermediate computations (defaults to double
-precision; set to single precision to decrease memory footprint <em>at the cost 
-of accuracy</em>). The final projection will, however, always be stored as numpy.float32,
-no matter what intermediate precision is chosen.</p>
-<p>The algorithm is adapted from:
-<strong>M. Brand. 2006. Fast low-rank modifications of the thin singular value decomposition</strong></p>
+<dt id="gensim.models.lsimodel.LsiModel.addDocuments">
+<tt class="descname">addDocuments</tt><big>(</big><em>corpus</em>, <em>chunks=100</em>, <em>decay=1.0</em>, <em>reorth=False</em>, <em>updateProjection=True</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.addDocuments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update singular value decomposition factors to take into account a new 
+corpus of documents.</p>
+<p>Training proceeds in chunks of <cite>chunks</cite> documents at a time.
+This parameter is a tradeoff between increased speed (bigger <cite>chunks</cite>) vs. 
+lower memory footprint (smaller <cite>chunks</cite>). Default is processing 100 documents
+at a time.</p>
+<p>Setting <cite>decay</cite> &lt; 1.0 causes re-orientation towards new data trends in the 
+input document stream, by giving less emphasis to old observations. This allows
+SVD to gradually &#8220;forget&#8221; old observations and give more preference to 
+new ones. The decay is applied once after every <cite>chunks</cite> documents.</p>
+<p>This function corresponds to the general update of Brand (section 2), 
+specialized for <cite>A = docs.T</cite> and <cite>B</cite> trivial (only append the new columns).
+For a function that supports arbitrary updates (appending columns, erasing 
+columns, column revisions and recentering), see the <cite>svdUpdate</cite> function in
+this module.</p>
 </dd></dl>
 
 <dl class="classmethod">
@@ -117,23 +166,10 @@ no matter what intermediate precision is chosen.</p>
 <dl class="method">
 <dt id="gensim.models.lsimodel.LsiModel.svdAddCols">
 <tt class="descname">svdAddCols</tt><big>(</big><em>docs</em>, <em>decay=1.0</em>, <em>reorth=False</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.svdAddCols" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update singular value decomposition factors to take into account new 
-documents <cite>docs</cite>.</p>
-<p>This function corresponds to the general update of Brand (section 2), 
-specialized for <cite>A = docs.T</cite> and <cite>B</cite> trivial (only update the new columns).</p>
-<p>The documents are assumed to be a list of full vectors (ie. not sparse 2-tuples).</p>
-<p>Compute new decomposition <cite>u&#8217;</cite>, <cite>s&#8217;</cite>, <cite>v&#8217;</cite> so that if the current matrix <cite>X</cite> decomposes to
-<cite>u * s * v^T ~= X</cite>, then
-<cite>u&#8217; * s&#8217; * v&#8217;^T ~= [X docs^T]</cite></p>
-<p><cite>u</cite>, <cite>s</cite>, <cite>v</cite> and their new values <cite>u&#8217;</cite>, <cite>s&#8217;</cite>, <cite>v&#8217;</cite> are stored within <cite>self</cite> (ie. as 
-<cite>self.u</cite>, <cite>self.v</cite> etc.).</p>
-<p><cite>self.v</cite> can be set to <cite>None</cite>, in which case it is completely ignored. This saves a
-bit of speed and a lot of memory, especially for huge corpora (size of <cite>v</cite> is
-linear in the number of added documents).</p>
-<p>Setting <cite>decay</cite> &lt; 1.0 allows re-orientation towards new data trends in the 
-input document stream, by giving less emphasis on old values. This allows
-SVD to gradually &#8220;forget&#8221; old observations and give more preference to 
-new ones.</p>
+<dd><p>If <cite>X = self.u * self.s * self.v^T</cite> is the current decomposition,
+update it so that <cite>self.u * self.s * self.v^T = [X docs.T]</cite>,
+that is, append new columns to the original matrix.</p>
+<p><cite>docs</cite> is a <strong>dense</strong> matrix containing the new observations as rows.</p>
 </dd></dl>
 
 </dd></dl>
@@ -160,38 +196,19 @@ iteratively. I keep this function here purely for backup reasons.</p>
 <dd><p>Update SVD of an (m x n) matrix <cite>X = U * S * V^T</cite> so that
 <cite>[X + a * b^T] = U&#8217; * S&#8217; * V&#8217;^T</cite>
 and return <cite>U&#8217;</cite>, <cite>S&#8217;</cite>, <cite>V&#8217;</cite>.</p>
-<p><cite>a</cite> and <cite>b</cite> are (m, 1) and (n, 1) rank-1 matrices, so that svdUpdate can simulate 
-incremental addition of one new document and/or term to an already existing 
-decomposition.</p>
+<p>The original matrix X is not needed at all, so this function implements flexible 
+<em>online</em> updates to an existing decomposition.</p>
+<p><cite>a</cite> and <cite>b</cite> are (m, 1) and (n, 1) matrices.</p>
+<p>You can set V to None if you&#8217;re not interested in the right singular
+vectors. In that case, the returned V&#8217; will also be None (saves memory).</p>
+<p>This is the rank-1 update as described in
+<em>Brand, 2006: Fast low-rank modifications of the thin singular value decomposition</em></p>
 </dd></dl>
 
 </div>
 
 
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="ldamodel.html"
-                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="tfidfmodel.html"
-                                  title="next chapter"><tt class="docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="../search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -211,7 +228,10 @@ decomposition.</p>
         <li class="right" >
           <a href="ldamodel.html" title="models.ldamodel – Latent Dirichlet Allocation"
              >previous</a> |</li>
-        <li><a href="../index.html">gensim documentation</a> &raquo;</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
+       <li><a href="../contents.html">documentation </a> &raquo;</li>
+
           <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
       </ul>
     </div>

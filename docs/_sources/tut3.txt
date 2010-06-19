@@ -138,8 +138,3 @@ This means that:
 Gensim has no ambition to become a production-level tool, with robust failure handling
 and error recoveries. Its main goal is to help NLP newcomers try out popular algorithms 
 and to facilitate prototyping new algorithms for NLP researchers.
-
-.. note::
-  Gensim is released under the `GNU LGPL license <http://www.gnu.org/licenses/lgpl.html>`_, 
-  so for production environments, feel free to adapt (parts) of the code to whatever 
-  scenarios are relevant to you.

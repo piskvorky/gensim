@@ -53,7 +53,7 @@ Allocation, is much more involved and, consequently, takes much more time.
   spaces. The same vector space (= the same set of feature ids) must be used for training 
   as well as for subsequent vector transformations. Failure to use the same input 
   feature space, such as applying a different string preprocessing, using different 
-  feature ids, or using bag-of-words vectors where TfIdf vectors are expected, will 
+  feature ids, or using bag-of-words input vectors where TfIdf vectors are expected, will 
   result in feature mismatch during transformation calls and consequently in either 
   garbage output and/or runtime exceptions.
 
@@ -72,6 +72,8 @@ any vector from the old representation (bag-of-words integer counts) to the new 
 Or to apply a transformation to a whole corpus:
 
 >>> corpus_tfidf = tfidf[corpus]
+>>> for doc in corpus_tfidf:
+>>>     print doc
 
 In this particular case, we are transforming the same corpus that we used 
 for training, but this is only incidental. Once the transformation model has been initialized,
@@ -79,7 +81,7 @@ it can be used on any vectors (provided they come from the correct vector space,
 even if they were not used in the training corpus at all. This is achieved by a process called
 folding-in for LSA, by topic inference for LDA etc.
 
-.. warning::
+.. note::
   Calling ``model[corpus]`` only creates a wrapper around the old ``corpus``
   document stream -- actual conversions are done on-the-fly, during document iteration. 
   This is because conversion at the time of calling ``corpus2 = model[corpus]`` would mean
@@ -155,6 +157,23 @@ Gensim implements several popular Vector Space Model algorithms:
   as a "golden standard" [1]_.
   
   >>> model = lsimodel.LsiModel(tfidf_corpus, id2word = dictionary.id2token, numTopics = 300)
+
+  The LSI transformation is unique in that it only inspects each input document
+  once. This allows us to continue "training" at any point, and transformations are
+  available all the time, in a truly online fashion. Because of this feature, the
+  input document stream may even be infinite -- just keep feeding LSI new documents
+  as they arrive!
+  
+  >>> model.addDocuments(another_tfidf_corpus)
+  >>> lsi_vec = model[tfidf_vec]
+  >>> ...
+  >>> model.addDocuments(more_documents)
+  >>> lsi_vec = model[tfidf_vec]
+  >>> ...
+  
+  See the :mod:`gensim.models.lsimodel` documentation for details on how to make
+  LSI gradually "forget" old observations in infinite streams and how tweak parameters
+  affecting speed vs. memory footprint vs. numerical precision of the algorithm.
 
 * `Random Projections, RP <http://www.cis.hut.fi/ella/publications/randproj_kdd.pdf>`_ aim to
   reduce vector space dimensionality. This is a very efficient (both memory- and

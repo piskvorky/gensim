@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.5.0',
+        VERSION:     '0.6.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,6 +25,14 @@
     <link rel="prev" title="interfaces – Core gensim interfaces" href="interfaces.html" /> 
   </head>
   <body>
+
+<!--
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="index.html"><img src="_static/logo.png" border="0" alt="py4sci"/></a>
+</div>
+--!>
+
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -40,10 +48,37 @@
         <li class="right" >
           <a href="interfaces.html" title="interfaces – Core gensim interfaces"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">gensim documentation</a> &raquo;</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+       <li><a href="contents.html">documentation </a> &raquo;</li>
+
           <li><a href="apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
       </ul>
-    </div>  
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="interfaces.html"
+                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="matutils.html"
+                                  title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils</a></p>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
 
     <div class="document">
       <div class="documentwrapper">
@@ -53,6 +88,24 @@
   <div class="section" id="module-gensim.utils">
 <h1><tt class="xref docutils literal"><span class="pre">utils</span></tt> &#8211; Various utility functions<a class="headerlink" href="#module-gensim.utils" title="Permalink to this headline">¶</a></h1>
 <p>This module contains various general utility functions.</p>
+<dl class="class">
+<dt id="gensim.utils.FakeDict">
+<em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">FakeDict</tt><big>(</big><em>numTerms</em><big>)</big><a class="headerlink" href="#gensim.utils.FakeDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Objects of this class act as dictionaries that map integer-&gt;str(integer), for 
+a specified range of integers &lt;0, numTerms).</p>
+<p>This is meant to avoid allocating real dictionaries when numTerms is huge, which
+is a waste of memory.</p>
+<dl class="method">
+<dt id="gensim.utils.FakeDict.keys">
+<tt class="descname">keys</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.utils.FakeDict.keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override the dict.keys() function, which is used to determine the maximum 
+internal id of a corpus = the vocabulary dimensionality.</p>
+<p>HACK: To avoid materializing the whole range(0, self.numTerms), we 
+return [self.numTerms - 1] only.</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="class">
 <dt id="gensim.utils.SaveLoad">
 <em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">SaveLoad</tt><a class="headerlink" href="#gensim.utils.SaveLoad" title="Permalink to this definition">¶</a></dt>
@@ -87,7 +140,7 @@ input string with accents removed, as unicode.</p>
 <dl class="function">
 <dt id="gensim.utils.dictFromCorpus">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">dictFromCorpus</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.utils.dictFromCorpus" title="Permalink to this definition">¶</a></dt>
-<dd><p>Scan corpus for all word ids that appear in it, then contruct and return a mapping
+<dd><p>Scan corpus for all word ids that appear in it, then construct and return a mapping
 which maps each <tt class="docutils literal"><span class="pre">wordId</span> <span class="pre">-&gt;</span> <span class="pre">str(wordId)</span></tt>.</p>
 <p>This function is used whenever <em>words</em> need to be displayed (as opposed to just 
 their ids) but no wordId-&gt;word mapping was provided. The resulting mapping 
@@ -128,29 +181,6 @@ characters (no digits!).</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="interfaces.html"
-                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="matutils.html"
-                                  title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
       <div class="clearer"></div>
     </div>
     <div class="related">
@@ -168,7 +198,10 @@ characters (no digits!).</p>
         <li class="right" >
           <a href="interfaces.html" title="interfaces – Core gensim interfaces"
              >previous</a> |</li>
-        <li><a href="index.html">gensim documentation</a> &raquo;</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+       <li><a href="contents.html">documentation </a> &raquo;</li>
+
           <li><a href="apiref.html" >API Reference</a> &raquo;</li> 
       </ul>
     </div>
