@@ -27,7 +27,7 @@ class LsiModel(interfaces.TransformationABC):
     1. constructor, which initializes the projection into latent topics space,
     2. the ``[]`` method, which returns representation of any input document in the 
        latent space,
-    3. the `addDocuments()` method, which allows for updating the model with new documents. 
+    3. the `addDocuments()` method, which allows for incrementally updating the model with new documents. 
 
     Model persistency is achieved via its load/save methods.
     
