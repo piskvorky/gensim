@@ -47,7 +47,42 @@ class TestLsiModel(unittest.TestCase):
         # expected = numpy.array([-0.1973928, 0.05591352]) # non-scaled LSI version
         
         self.assertTrue(numpy.allclose(abs(vec), abs(expected))) # transformed entries must be equal up to sign
+    
+    
+    def testOnlineTransform(self):
+        corpus = list(self.corpus)
+        doc = corpus[0] # use the corpus' first document for testing
         
+        # create the transformation model
+        model2 = lsimodel.LsiModel(corpus = corpus, numTopics = 5) # compute everything at once
+        model = lsimodel.LsiModel(corpus = None, id2word = model2.id2word, numTopics = 5, extraDims = 2) # start with no documents, we will add then later
+        
+        # train model on a single document
+        model.addDocuments([corpus[0]])
+        
+        # transform the testing document with this partial transformation
+        transformed = model[doc]
+        vec = matutils.sparse2full(transformed, model.numTopics) # convert to dense vector, for easier equality tests
+        expected = numpy.array([-1.73205078, 0.0, 0.0, 0.0, 0.0]) # scaled LSI version
+        self.assertTrue(numpy.allclose(abs(vec), abs(expected), atol = 1e-6)) # transformed entries must be equal up to sign
+        
+        # train on another 4 documents
+        model.addDocuments(corpus[1:5], chunks = 2) # train in chunks of 2 documents, for the lols
+        
+        # transform a document with this partial transformation
+        transformed = model[doc]
+        vec = matutils.sparse2full(transformed, model.numTopics) # convert to dense vector, for easier equality tests
+        expected = numpy.array([-0.66493785, -0.28314203, -1.56376302,  0.05488682,  0.17123269]) # scaled LSI version
+        self.assertTrue(numpy.allclose(abs(vec), abs(expected), atol = 1e-6)) # transformed entries must be equal up to sign
+        
+        # train on the rest of documents
+        model.addDocuments(corpus[5:])
+        
+        # make sure the final transformation is the same as if we had decomposed the whole corpus at once
+        vec1 = matutils.sparse2full(model[doc], model.numTopics)
+        vec2 = matutils.sparse2full(model2[doc], model2.numTopics)
+        self.assertTrue(numpy.allclose(abs(vec1), abs(vec2), atol = 1e-6)) # the two LSI representations must equal up to sign
+
     
     def testPersistence(self):
         model = lsimodel.LsiModel(self.corpus, numTopics = 2)
@@ -64,7 +99,7 @@ class TestRpModel(unittest.TestCase):
     
     def testTransform(self):
         # create the transformation model
-        numpy.random.seed(13) # HACK; set fixed seed so that we always get the same random matrix (and can compare against expected results) 
+        numpy.random.seed(13) # HACK; set fixed seed so that we always get the same random matrix (and can compare against expected results)
         model = rpmodel.RpModel(self.corpus, numTopics = 2)
         
         # transform one document
