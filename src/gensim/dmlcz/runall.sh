@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # full path to gensim executables
-BIN_PATH=/data/dmlcz/xrehurek/gensim/dmlcz
+BIN_PATH=~/xrehurek/gensim/dmlcz
 
 # intermediate data will be stored to this dir
-RESULT_PATH=/data/dmlcz/xrehurek/results
+RESULT_PATH=~/xrehurek/results
 
 # set python path, so that python can find and import gensim modules
 export PYTHONPATH=~/xrehurek:$PYTHONPATH
@@ -21,7 +21,7 @@ ${BIN_PATH}/gensim_build.py $language 2>&1 | tee ${RESULT_PATH}/gensim_build.log
 
 
 # ========== build transformation models =======================================
-for method in tfidf rp lsi;
+for method in tfidf rp;
 do
 	( ${BIN_PATH}/gensim_genmodel.py $language $method 2>&1 | tee ${RESULT_PATH}/gensim_genmodel_${method}.log ) &
 done

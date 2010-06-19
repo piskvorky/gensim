@@ -1,11 +1,11 @@
 # Sphinx inventory version 1
 # Project: gensim
-# Version: 0.5
+# Version: 0.6
 gensim.corpora.dictionary mod corpora/dictionary.html
 gensim.models.ldamodel mod models/ldamodel.html
 gensim.matutils mod matutils.html
-gensim.corpora.svmlightcorpus mod corpora/svmlightcorpus.html
 gensim.corpora.bleicorpus mod corpora/bleicorpus.html
+gensim.corpora.svmlightcorpus mod corpora/svmlightcorpus.html
 gensim.corpora mod corpora/corpora.html
 gensim.corpora.mmcorpus mod corpora/mmcorpus.html
 gensim.corpora.lowcorpus mod corpora/lowcorpus.html
@@ -20,7 +20,7 @@ gensim.models.tfidfmodel mod models/tfidfmodel.html
 gensim.corpora.lowcorpus.LowCorpus class corpora/lowcorpus.html
 gensim.corpora.dmlcorpus.DmlCorpus.buildDictionary method corpora/dmlcorpus.html
 gensim.corpora.svmlightcorpus.SvmLightCorpus.save method corpora/svmlightcorpus.html
-gensim.interfaces.SimilarityABC class interfaces.html
+gensim.utils.FakeDict.keys method utils.html
 gensim.matutils.MmWriter class matutils.html
 gensim.corpora.dmlcorpus.DmlCorpus.articleDir method corpora/dmlcorpus.html
 gensim.models.rpmodel.RpModel class models/rpmodel.html
@@ -38,6 +38,7 @@ gensim.models.tfidfmodel.TfidfModel.load classmethod models/tfidfmodel.html
 gensim.utils.getMaxId function utils.html
 gensim.models.lsimodel.LsiModel.printTopic method models/lsimodel.html
 gensim.utils.SaveLoad class utils.html
+gensim.interfaces.SimilarityABC class interfaces.html
 gensim.models.ldamodel.LdaModel.getTopicsMatrix method models/ldamodel.html
 gensim.models.ldamodel.LdaModel.load classmethod models/ldamodel.html
 gensim.models.ldamodel.LdaModel.computeLikelihood method models/ldamodel.html
@@ -56,6 +57,7 @@ gensim.corpora.dmlcorpus.DmlCorpus class corpora/dmlcorpus.html
 gensim.utils.tokenize function utils.html
 gensim.matutils.MmWriter.writeVector method matutils.html
 gensim.models.ldamodel.LdaModel.mle method models/ldamodel.html
+gensim.utils.FakeDict class utils.html
 gensim.matutils.unitVec function matutils.html
 gensim.models.ldamodel.LdaModel.infer method models/ldamodel.html
 gensim.models.tfidfmodel.TfidfModel class models/tfidfmodel.html
@@ -76,8 +78,8 @@ gensim.corpora.dictionary.Dictionary.fromDocuments staticmethod corpora/dictiona
 gensim.similarities.docsim.Similarity.load classmethod similarities/docsim.html
 gensim.matutils.pad function matutils.html
 gensim.corpora.dmlcorpus.DmlCorpus.save method corpora/dmlcorpus.html
-gensim.models.lsimodel.LsiModel.initialize method models/lsimodel.html
 gensim.corpora.dictionary.Dictionary class corpora/dictionary.html
+gensim.models.lsimodel.LsiModel.addDocuments method models/lsimodel.html
 gensim.models.lsimodel.LsiModel class models/lsimodel.html
 gensim.utils.SaveLoad.load classmethod utils.html
 gensim.models.ldamodel.LdaModel class models/ldamodel.html

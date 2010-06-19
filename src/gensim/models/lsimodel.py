@@ -24,43 +24,42 @@ class LsiModel(interfaces.TransformationABC):
     
     The main methods are:
     
-    1. constructor, which calculates the latent topics space, effectively 
-       initializing the model,
-    2. the [] method, which returns representation of any input document in the 
-       computed latent space.
-    
+    1. constructor, which initializes the projection into latent topics space,
+    2. the ``[]`` method, which returns representation of any input document in the 
+       latent space,
+    3. the `addDocuments()` method, which allows for updating the model with new documents. 
+
     Model persistency is achieved via its load/save methods.
+    
     """
     def __init__(self, corpus = None, id2word = None, numTopics = 200, extraDims = 10, 
                  chunks = 100, dtype = numpy.float64):
         """
-        Find latent space based on the corpus provided.
-
         `numTopics` is the number of requested factors (latent dimensions). 
         
-        After the model has been initialized, you can estimate topics for an
+        After the model has been trained, you can estimate topics for an
         arbitrary, unseen document, using the ``topics = self[document]`` dictionary 
-        notation. You can also add new training documents, via self.addDocuments,
+        notation. You can also add new training documents, with ``self.addDocuments``,
         so that training can be stopped and resumed at any time, and the
-        transformation is available at any point.
+        LSI transformation is available at any point.
 
         `extraDims` is the number of extra dimensions that will be internally 
-        computed (ie. numTopics + extraDims) to improve numerical properties of 
+        computed (ie. `numTopics + extraDims`) to improve numerical properties of 
         the SVD algorithm. These extra dimensions will be eventually chopped off
-        for the final projection. Set to 0 to save memory (default); set to ~10 to
+        for the final projection. Set to 0 to save memory; set to ~10 to
         2*numTopics for increased SVD precision.
         
-        See the method addDocuments() for a description of the `chunks` and `decay` 
-        parameters.
+        If you specify a `corpus`, it will be used to train the model. See the 
+        method `addDocuments` for a description of the `chunks` and `decay` parameters.
         
         The algorithm is based on
-        *Brand, 2006: Fast low-rank modifications of the thin singular value decomposition*
+        **Brand, 2006: Fast low-rank modifications of the thin singular value decomposition**.
     
         Example:
         
         >>> lsi = LsiModel(corpus, numTopics = 10)
         >>> print lsi[doc_tfidf]
-        >>> lsi.addDocuments(corpus2) # re-train LSI on additional documents
+        >>> lsi.addDocuments(corpus2) # update LSI on additional documents
         >>> print lsi[doc_tfidf]
         
         """
@@ -95,7 +94,7 @@ class LsiModel(interfaces.TransformationABC):
         corpus of documents.
         
         Training proceeds in chunks of `chunks` documents at a time.
-        This parameter is a tradeoff between increased speed (higher `chunks`) vs. 
+        This parameter is a tradeoff between increased speed (bigger `chunks`) vs. 
         lower memory footprint (smaller `chunks`). Default is processing 100 documents
         at a time.
 
@@ -104,13 +103,10 @@ class LsiModel(interfaces.TransformationABC):
         SVD to gradually "forget" old observations and give more preference to 
         new ones. The decay is applied once after every `chunks` documents.
         
-        Optionally also update the projection that is used to transform new documents
-        into the newly adjusted latent space (on by default).
-        
         This function corresponds to the general update of Brand (section 2), 
         specialized for `A = docs.T` and `B` trivial (only append the new columns).
         For a function that supports arbitrary updates (appending columns, erasing 
-        columns, column revisions and recentering), see the svdUpdate function in
+        columns, column revisions and recentering), see the `svdUpdate` function in
         this module.
         """
         logging.debug("updating SVD with %i new documents" % len(corpus))
@@ -162,12 +158,11 @@ class LsiModel(interfaces.TransformationABC):
     
     def svdAddCols(self, docs, decay = 1.0, reorth = False):
         """
-        If `X = U * S * V^T` is the current decomposition,
-        update U, S, V so that `U * S * V^T = [X docs.T]`,
+        If `X = self.u * self.s * self.v^T` is the current decomposition,
+        update it so that `self.u * self.s * self.v^T = [X docs.T]`,
         that is, append new columns to the original matrix.
         
-        `docs` is a dense matrix containing the new observations as rows (ie. not 
-        a corpus of sparse vectors -- see self.addDocuments for that).
+        `docs` is a **dense** matrix containing the new observations as rows.
         """
         keepV = self.v is not None
         if not keepV and reorth:

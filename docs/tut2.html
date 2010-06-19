@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.5.0',
+        VERSION:     '0.6.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,6 +25,14 @@
     <link rel="prev" title="Corpora and Vector Spaces" href="tut1.html" /> 
   </head>
   <body>
+
+<!--
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="index.html"><img src="_static/logo.png" border="0" alt="py4sci"/></a>
+</div>
+--!>
+
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -40,10 +48,50 @@
         <li class="right" >
           <a href="tut1.html" title="Corpora and Vector Spaces"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">gensim documentation</a> &raquo;</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+       <li><a href="contents.html">documentation </a> &raquo;</li>
+
           <li><a href="tutorial.html" accesskey="U">Tutorial</a> &raquo;</li> 
       </ul>
-    </div>  
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Topics and Transformations</a><ul>
+<li><a class="reference external" href="#transformation-interface">Transformation interface</a><ul>
+<li><a class="reference external" href="#creating-a-transformation">Creating a transformation</a></li>
+<li><a class="reference external" href="#transforming-vectors">Transforming vectors</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#available-transformations">Available transformations</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="tut1.html"
+                                  title="previous chapter">Corpora and Vector Spaces</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="tut3.html"
+                                  title="next chapter">Similarity Queries</a></p>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
 
     <div class="document">
       <div class="documentwrapper">
@@ -97,7 +145,7 @@ Allocation, is much more involved and, consequently, takes much more time.</p>
 spaces. The same vector space (= the same set of feature ids) must be used for training
 as well as for subsequent vector transformations. Failure to use the same input
 feature space, such as applying a different string preprocessing, using different
-feature ids, or using bag-of-words vectors where TfIdf vectors are expected, will
+feature ids, or using bag-of-words input vectors where TfIdf vectors are expected, will
 result in feature mismatch during transformation calls and consequently in either
 garbage output and/or runtime exceptions.</p>
 </div>
@@ -114,6 +162,8 @@ any vector from the old representation (bag-of-words integer counts) to the new 
 </div>
 <p>Or to apply a transformation to a whole corpus:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus_tfidf</span> <span class="o">=</span> <span class="n">tfidf</span><span class="p">[</span><span class="n">corpus</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">corpus_tfidf</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">print</span> <span class="n">doc</span>
 </pre></div>
 </div>
 <p>In this particular case, we are transforming the same corpus that we used
@@ -121,8 +171,8 @@ for training, but this is only incidental. Once the transformation model has bee
 it can be used on any vectors (provided they come from the correct vector space, of course),
 even if they were not used in the training corpus at all. This is achieved by a process called
 folding-in for LSA, by topic inference for LDA etc.</p>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
 <p class="last">Calling <tt class="docutils literal"><span class="pre">model[corpus]</span></tt> only creates a wrapper around the old <tt class="docutils literal"><span class="pre">corpus</span></tt>
 document stream &#8211; actual conversions are done on-the-fly, during document iteration.
 This is because conversion at the time of calling <tt class="docutils literal"><span class="pre">corpus2</span> <span class="pre">=</span> <span class="pre">model[corpus]</span></tt> would mean
@@ -198,6 +248,22 @@ as a &#8220;golden standard&#8221; <a class="footnote-reference" href="#id5" id=
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">tfidf_corpus</span><span class="p">,</span> <span class="n">id2word</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">id2token</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">300</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>The LSI transformation is unique in that it only inspects each input document
+once. This allows us to continue &#8220;training&#8221; at any point, and transformations are
+available all the time, in a truly online fashion. Because of this feature, the
+input document stream may even be infinite &#8211; just keep feeding LSI new documents
+as they arrive!</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">addDocuments</span><span class="p">(</span><span class="n">another_tfidf_corpus</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi_vec</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="n">tfidf_vec</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">addDocuments</span><span class="p">(</span><span class="n">more_documents</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi_vec</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="n">tfidf_vec</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">...</span>
+</pre></div>
+</div>
+<p>See the <a title="Latent Semantic Indexing" class="reference external" href="models/lsimodel.html#module-gensim.models.lsimodel"><tt class="xref docutils literal"><span class="pre">gensim.models.lsimodel</span></tt></a> documentation for details on how to make
+LSI gradually &#8220;forget&#8221; old observations in infinite streams and how tweak parameters
+affecting speed vs. memory footprint vs. numerical precision of the algorithm.</p>
 </li>
 <li><p class="first"><a class="reference external" href="http://www.cis.hut.fi/ella/publications/randproj_kdd.pdf">Random Projections, RP</a> aim to
 reduce vector space dimensionality. This is a very efficient (both memory- and
@@ -250,42 +316,6 @@ If you feel you could contribute, please <a class="reference external" href="mai
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-            <h3><a href="index.html">Table Of Contents</a></h3>
-            <ul>
-<li><a class="reference external" href="#">Topics and Transformations</a><ul>
-<li><a class="reference external" href="#transformation-interface">Transformation interface</a><ul>
-<li><a class="reference external" href="#creating-a-transformation">Creating a transformation</a></li>
-<li><a class="reference external" href="#transforming-vectors">Transforming vectors</a></li>
-</ul>
-</li>
-<li><a class="reference external" href="#available-transformations">Available transformations</a></li>
-</ul>
-</li>
-</ul>
-
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="tut1.html"
-                                  title="previous chapter">Corpora and Vector Spaces</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="tut3.html"
-                                  title="next chapter">Similarity Queries</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
       <div class="clearer"></div>
     </div>
     <div class="related">
@@ -303,7 +333,10 @@ If you feel you could contribute, please <a class="reference external" href="mai
         <li class="right" >
           <a href="tut1.html" title="Corpora and Vector Spaces"
              >previous</a> |</li>
-        <li><a href="index.html">gensim documentation</a> &raquo;</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+       <li><a href="contents.html">documentation </a> &raquo;</li>
+
           <li><a href="tutorial.html" >Tutorial</a> &raquo;</li> 
       </ul>
     </div>

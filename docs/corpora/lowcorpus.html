@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.5.0',
+        VERSION:     '0.6.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,6 +25,14 @@
     <link rel="prev" title="corpora.dmlcorpus – Corpus in DML-CZ format" href="dmlcorpus.html" /> 
   </head>
   <body>
+
+<!--
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../index.html"><img src="../_static/logo.png" border="0" alt="py4sci"/></a>
+</div>
+--!>
+
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -40,10 +48,37 @@
         <li class="right" >
           <a href="dmlcorpus.html" title="corpora.dmlcorpus – Corpus in DML-CZ format"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">gensim documentation</a> &raquo;</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
+       <li><a href="../contents.html">documentation </a> &raquo;</li>
+
           <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
       </ul>
-    </div>  
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="dmlcorpus.html"
+                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">corpora.dmlcorpus</span></tt> &#8211; Corpus in DML-CZ format</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="mmcorpus.html"
+                                  title="next chapter"><tt class="docutils literal"><span class="pre">corpora.mmcorpus</span></tt> &#8211; Corpus in Matrix Market format</a></p>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="../search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
 
     <div class="document">
       <div class="documentwrapper">
@@ -55,7 +90,7 @@
 <p>Corpus in GibbsLda++ format of List-Of-Words.</p>
 <dl class="class">
 <dt id="gensim.corpora.lowcorpus.LowCorpus">
-<em class="property">class </em><tt class="descclassname">gensim.corpora.lowcorpus.</tt><tt class="descname">LowCorpus</tt><big>(</big><em>fname</em>, <em>id2word=None</em>, <em>line2words=&lt;function splitOnSpace at 0x191d770&gt;</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.corpora.lowcorpus.</tt><tt class="descname">LowCorpus</tt><big>(</big><em>fname</em>, <em>id2word=None</em>, <em>line2words=&lt;function splitOnSpace at 0x191e870&gt;</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>List_Of_Words corpus handles input in GibbsLda++ format.</p>
 <p>Quoting <a class="reference external" href="http://gibbslda.sourceforge.net/#3.2_Input_Data_Format">http://gibbslda.sourceforge.net/#3.2_Input_Data_Format</a>:</p>
 <div class="highlight-python"><pre>Both data for training/estimating the model and new data (i.e., previously 
@@ -106,29 +141,6 @@ simple splitting on spaces.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="dmlcorpus.html"
-                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">corpora.dmlcorpus</span></tt> &#8211; Corpus in DML-CZ format</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="mmcorpus.html"
-                                  title="next chapter"><tt class="docutils literal"><span class="pre">corpora.mmcorpus</span></tt> &#8211; Corpus in Matrix Market format</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="../search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
       <div class="clearer"></div>
     </div>
     <div class="related">
@@ -146,7 +158,10 @@ simple splitting on spaces.</p>
         <li class="right" >
           <a href="dmlcorpus.html" title="corpora.dmlcorpus – Corpus in DML-CZ format"
              >previous</a> |</li>
-        <li><a href="../index.html">gensim documentation</a> &raquo;</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
+       <li><a href="../contents.html">documentation </a> &raquo;</li>
+
           <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
       </ul>
     </div>
