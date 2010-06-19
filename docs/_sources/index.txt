@@ -6,7 +6,7 @@
 Gensim -- Python Framework for Vector Space Modeling
 =====================================================
 
-.. admonition:: What's new
+.. admonition:: What's new?
 
    Version |version| is `out <http://pypi.python.org/pypi/gensim>`_!
    
@@ -48,12 +48,3 @@ Contents
    install
    tutorial
    apiref    
-
-
-Indices and tables
-------------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
