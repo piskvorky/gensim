@@ -134,6 +134,8 @@ Is there a way to formalize the similarity, so that for a given input document, 
 order some other set of documents according to their similarity? Similarity queries
 are covered in the :doc:`next tutorial <tut3>`.
 
+.. _transformations:
+
 Available transformations
 --------------------------
 
@@ -158,21 +160,22 @@ Gensim implements several popular Vector Space Model algorithms:
   
   >>> model = lsimodel.LsiModel(tfidf_corpus, id2word = dictionary.id2token, numTopics = 300)
 
-  The LSI transformation is unique in that it only inspects each input document
-  once. This allows us to continue "training" at any point, and transformations are
-  available all the time, in a truly online fashion. Because of this feature, the
+  LSI training is unique in that it only inspects each input document
+  once. This allows us to continue "training" at any point, simply by providing more
+  training documents. This is done by incremental updates to the underlying model,
+  in a process called `online training`. Because of this feature, the
   input document stream may even be infinite -- just keep feeding LSI new documents
-  as they arrive!
+  as they arrive, while using the computed transformation model as read-only in the meanwhile!
   
-  >>> model.addDocuments(another_tfidf_corpus)
-  >>> lsi_vec = model[tfidf_vec]
+  >>> model.addDocuments(another_tfidf_corpus) # now LSI has been trained on tfidf_corpus + another_tfidf_corpus
+  >>> lsi_vec = model[tfidf_vec] # convert a new document into the LSI space, without affecting the model 
   >>> ...
-  >>> model.addDocuments(more_documents)
+  >>> model.addDocuments(more_documents) # tfidf_corpus + another_tfidf_corpus + more_documents
   >>> lsi_vec = model[tfidf_vec]
   >>> ...
   
   See the :mod:`gensim.models.lsimodel` documentation for details on how to make
-  LSI gradually "forget" old observations in infinite streams and how tweak parameters
+  LSI gradually "forget" old observations in infinite streams and how to tweak parameters
   affecting speed vs. memory footprint vs. numerical precision of the algorithm.
 
 * `Random Projections, RP <http://www.cis.hut.fi/ella/publications/randproj_kdd.pdf>`_ aim to

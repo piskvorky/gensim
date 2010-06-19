@@ -137,4 +137,4 @@ This means that:
 
 Gensim has no ambition to become a production-level tool, with robust failure handling
 and error recoveries. Its main goal is to help NLP newcomers try out popular algorithms 
-and to facilitate prototyping new algorithms for NLP researchers.
+and to facilitate prototyping of new algorithms for NLP researchers.

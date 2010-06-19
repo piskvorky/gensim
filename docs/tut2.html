@@ -225,7 +225,7 @@ are covered in the <a class="reference external" href="tut3.html"><em>next tutor
 </div>
 </div>
 <div class="section" id="available-transformations">
-<h2>Available transformations<a class="headerlink" href="#available-transformations" title="Permalink to this headline">¶</a></h2>
+<span id="transformations"></span><h2>Available transformations<a class="headerlink" href="#available-transformations" title="Permalink to this headline">¶</a></h2>
 <p>Gensim implements several popular Vector Space Model algorithms:</p>
 <ul>
 <li><p class="first"><a class="reference external" href="http://en.wikipedia.org/wiki/Tf%E2%80%93idf">Term Frequency * Inverse Document Frequency, Tf-Idf</a>
@@ -248,21 +248,22 @@ as a &#8220;golden standard&#8221; <a class="footnote-reference" href="#id5" id=
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">tfidf_corpus</span><span class="p">,</span> <span class="n">id2word</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">id2token</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">300</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The LSI transformation is unique in that it only inspects each input document
-once. This allows us to continue &#8220;training&#8221; at any point, and transformations are
-available all the time, in a truly online fashion. Because of this feature, the
+<p>LSI training is unique in that it only inspects each input document
+once. This allows us to continue &#8220;training&#8221; at any point, simply by providing more
+training documents. This is done by incremental updates to the underlying model,
+in a process called <cite>online training</cite>. Because of this feature, the
 input document stream may even be infinite &#8211; just keep feeding LSI new documents
-as they arrive!</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">addDocuments</span><span class="p">(</span><span class="n">another_tfidf_corpus</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi_vec</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="n">tfidf_vec</span><span class="p">]</span>
+as they arrive, while using the computed transformation model as read-only in the meanwhile!</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">addDocuments</span><span class="p">(</span><span class="n">another_tfidf_corpus</span><span class="p">)</span> <span class="c"># now LSI has been trained on tfidf_corpus + another_tfidf_corpus</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi_vec</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="n">tfidf_vec</span><span class="p">]</span> <span class="c"># convert a new document into the LSI space, without affecting the model</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="o">...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">addDocuments</span><span class="p">(</span><span class="n">more_documents</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">addDocuments</span><span class="p">(</span><span class="n">more_documents</span><span class="p">)</span> <span class="c"># tfidf_corpus + another_tfidf_corpus + more_documents</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi_vec</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="n">tfidf_vec</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="o">...</span>
 </pre></div>
 </div>
 <p>See the <a title="Latent Semantic Indexing" class="reference external" href="models/lsimodel.html#module-gensim.models.lsimodel"><tt class="xref docutils literal"><span class="pre">gensim.models.lsimodel</span></tt></a> documentation for details on how to make
-LSI gradually &#8220;forget&#8221; old observations in infinite streams and how tweak parameters
+LSI gradually &#8220;forget&#8221; old observations in infinite streams and how to tweak parameters
 affecting speed vs. memory footprint vs. numerical precision of the algorithm.</p>
 </li>
 <li><p class="first"><a class="reference external" href="http://www.cis.hut.fi/ella/publications/randproj_kdd.pdf">Random Projections, RP</a> aim to
