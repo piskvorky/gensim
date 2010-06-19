@@ -3,13 +3,14 @@ Changes
 
 0.6.0
 
-* optimized the tf-idf transformation, so that it is a strictly one-pass algorithm  (thx to Brian Merrell).
-* added 'Topic :: Text Processing :: Linguistic' to gensim's pypi classifiers
-* added option for online training to LSI. The transformation can now be
+* added option for online LSI training (yay!). the transformation can now be
   used after any amount of training, and training can be continued at any time 
-  with more data, in a truly streaming fashion.
+  with more data.
+* optimized the tf-idf transformation, so that it is a strictly one-pass algorithm in all cases  (thx to Brian Merrell).
 * fixed Windows-specific bug in handling binary files (thx to Sutee Sudprasert)
 * fixed 1-based feature counting bug in SVMlight format (thx to Richard Berendsen)
+* added 'Topic :: Text Processing :: Linguistic' to gensim's pypi classifiers
+* change of sphinx documentation css and layout
 
 0.5.0
 

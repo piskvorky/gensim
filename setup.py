@@ -31,7 +31,7 @@ long_desc = read('README.txt')
 
 setup(
     name = 'gensim',
-    version = '0.5.0',
+    version = '0.6.0',
     description = 'Python Framework for Vector Space Modeling',
     long_description = long_desc,
     

@@ -147,6 +147,11 @@ class FakeDict(object):
     
     def __len__(self):
         return self.numTerms
+    
+    def get(self, val, default):
+        if 0 <= val < self.numTerms:
+            return str(val)
+        return default
 
 
 def dictFromCorpus(corpus):
