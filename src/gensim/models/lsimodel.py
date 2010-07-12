@@ -145,7 +145,7 @@ class LsiModel(interfaces.TransformationABC):
             # values) are used at all in this scaled transformation
             logging.debug("computing transformation projection, clipping extra %i dimensions" %
                           (self.extraDims))
-            self.projection = self.u[:, :self.numTopics].T.astype(numpy.float32).copy('C') # make sure we get a row-contiguous array
+            self.projection = self.u[:, :self.numTopics].T.astype(numpy.float32).copy('C') # make sure we get a row-contiguous array, for fast mat*vec multiplications
             self.u = None # free up memory
             # this whole self.u/self.projection business is meant to save memory,
             # so that we don't need to keep both matrices in the memory, or at least
