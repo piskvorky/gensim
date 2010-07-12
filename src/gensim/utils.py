@@ -8,14 +8,34 @@
 This module contains various general utility functions.
 """
 
+from __future__ import with_statement
 
 import logging
 import re
 import unicodedata
 import cPickle
+from functools import wraps
 
 
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
+
+
+def synchronous(tlockname):
+    """
+    A decorator to place an instance based lock around a method.
+    
+    Adapted from http://code.activestate.com/recipes/577105-synchronization-decorator-for-class-methods/
+    """
+    def _synched(func):
+        @wraps(func)
+        def _synchronizer(self, *args, **kwargs):
+            tlock = self.__getattribute__(tlockname)
+            with tlock: # use lock as a context manager to perform safe acquire/release pairs
+                return func(self, *args, **kwargs)
+        return _synchronizer
+    return _synched
+
+
 
 
 def deaccent(text):
