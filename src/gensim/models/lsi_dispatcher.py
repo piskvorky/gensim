@@ -5,21 +5,26 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
+USAGE: %(program)s SIZE_OF_JOBS_QUEUE
+
+    Dispatcher process which orchestrates distributed LSI computations. Run this \
+script only once, on any node in your cluster.
+
+Example: python lsi_dispatcher.py
 """
 
 
 from __future__ import with_statement
 import os, sys, logging, threading
-import itertools
 from Queue import Queue
-import time
 
 import Pyro
+
 from gensim.utils import synchronous
 
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
-logger = logging.getLogger("lsi_dispatcher")
+logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
+logger = logging.getLogger("dispatcher")
 logger.setLevel(logging.DEBUG)
 
 
@@ -42,26 +47,32 @@ class Dispatcher(object):
     
     There should never be more than one dispatcher running at any one time.
     """
-    worker_id = 0
     
     def __init__(self, maxsize = 100):
+        """
+        Note that the constructor does not fully initialize the dispatcher;
+        use the `initialize()` function to populate it with workers etc.
+        """
+        self.maxsize = maxsize
+        self.callback = None # a pyro proxy to this object (unknown at init time, but will be set later)
+    
+    
+    def initialize(self, **model_params):
+        """
+        `model_params` are parameters used to initialize individual workers (gets
+        handed all the way down to worker.initialize()).
+        """
+        Dispatcher.worker_id = 0
         self.jobs = Queue(maxsize = maxsize)
         self.lock_collect = threading.Lock()
-    
-    
-    def initialize(self, callback, prefix = 'gensim.worker'):
-        """
-        Callback is a pyro proxy object for this same Dispatcher. It is used 
-        for callbacks from workers, so that Workers and Dispatchers can 
-        communicate both ways.
-        """
         self.update_no = 0
+        self.callback._pyroOneway.add("collect_result") # make sure workers transfer control back to dispatcher asynchronously
 
         # locate all available workers and store their proxies, for subsequent RMI calls
         self.workers = {}
         with Pyro.naming.locateNS() as ns:
-            for name, uri in ns.list(prefix = prefix).iteritems():
-                if not self.register_worker(uri, callback = callback):
+            for name, uri in ns.list(prefix = 'gensim.worker').iteritems():
+                if not self.register_worker(uri, **model_params):
                     logger.warning("unresponsive worker at %s, deleting it from name server" % uri)
                     ns.remove(name)
         
@@ -70,13 +81,19 @@ class Dispatcher(object):
             raise RuntimeError('no workers found; run some worker scripts on your machines first!')
     
     
-    def register_worker(self, uri, callback = None):
+    def register_worker(self, uri, **model_params):
+        """
+        Register a single worker, located at `uri`.
+        
+        This includes resetting its internal state and initializing it.
+        """
         try:
             worker = Pyro.core.Proxy(uri)
-            worker.initialize(Dispatcher.worker_id, callback = callback)
+            worker.initialize(Dispatcher.worker_id, dispatcher = self.callback, **model_params)
             
             # make time consuming methods work asynchronously
             worker._pyroOneway.add("request_job")
+            worker._pyroOneway.add("add_update")
             
             logger.debug("registering worker #%i at %s" % (Dispatcher.worker_id, uri))
             self.workers[Dispatcher.worker_id] = worker
@@ -93,22 +110,33 @@ class Dispatcher(object):
 
 
     def put_job(self, job):
-        logging.debug("adding a new job (new queue size %i items)" % (1 + self.jobs.qsize()))
         self.jobs.put(job, block = True, timeout = HUGE_TIMEOUT)
+        logging.debug("added a new job (len(queue)=%i items)" % self.jobs.qsize())
 
 
     def broadcast_update(self, update):
         """
-        Broadcast an update across all workers. This call is blocking.
+        Broadcast an update across all workers.
         """
-        updateId, result = update
-        logger.debug("broadcasting update #%i to %i workers" % (updateId, len(self.workers)))
+        update_id, result = update
+        logger.debug("broadcasting update #%i to %i workers" % (update_id, len(self.workers)))
         for worker in self.workers.itervalues():
             worker.add_update(update)
 
-
-    def save_state(self, fname):
-        logger.info("saving intermediate state to %s" % fname)
+    
+    def get_state(self):
+        """
+        Return the state of an arbitrary worker.
+        
+        The states of all workers should be equivalent, so just pick any).
+        """
+        worker_id, worker = self.workers.items()[0]
+        logger.info("pulling state from worker %s" % worker_id)
+        return worker.get_state()
+        
+        
+    def updates_done(self):
+        return self.update_no
 
 
     @synchronous('lock_collect')
@@ -124,59 +152,28 @@ class Dispatcher(object):
         logger.info("collecting result from worker #%s" % worker_id)
         worker = self.workers[worker_id]
         result = worker.get_result() # retrieve the result
-        if self.save_every and self.update_no % self.save_every == 0:
-            self.save_state("intermediate.%i" % self.update_no)
         update = (self.update_no, result)
         self.broadcast_update(update) # distribute the update to all workers
         self.update_no += 1
         worker.request_job() # tell the worker to ask for another job; asynchronous call (one-way)
-
-
-    def process(self, corpus, chunks = 100, save_every = 100, save_to = "/tmp/"):
-        """
-        Process whole corpus, in chunks of `chunks` documents. 
-        
-        Save intermediate state to `save_to`/intermediate.xy after every `save_every`
-        chunks.
-        
-        Note that after this function has returned, all workers will have finished their
-        jobs, but not necessarily applied all updates (the queue of pending updates
-        may be non-empty). Call worker.process_updates() to finalize the computation,
-        if needed.
-        """
-        self.save_every = save_every
-        chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
-        for chunkNo, (key, group) in enumerate(chunker):
-            logger.info("creating job #%i" % chunkNo)
-            job = [doc for docNo, doc in group]
-            self.put_job(job) # put jobs into queue; this will eventually block, because the queue has a finite (small) size
-        
-        while self.update_no < chunkNo:
-            print 'waiting...'
-            time.sleep(1)
-        print 'done!'
 #endclass Dispatcher
 
 
 
 def main(maxsize):
-    ns = Pyro.naming.locateNS()
-    with Pyro.core.Daemon() as daemon:
-        dispatcher = Dispatcher(maxsize = maxsize)
-        uri = daemon.register(dispatcher)
-        
-        # prepare callback object for the workers
-        callback = Pyro.core.Proxy(uri)
-        callback._pyroOneway.add("collect_result") # make sure we transfer control back to dispatcher asynchronously
-        callback._pyroOneway.add("process") # not needed, but why not...
-        dispatcher.initialize(callback)
-        
-        name = 'gensim.dispatcher'
-        ns.remove(name)
-        ns.register(name, uri)
-        logger.info("dispatcher is ready at URI %s" % uri)
-        daemon.requestLoop()
-    
+    with Pyro.naming.locateNS() as ns:
+        with Pyro.core.Daemon() as daemon:
+            dispatcher = Dispatcher(maxsize = maxsize)
+            uri = daemon.register(dispatcher)
+            # prepare callback object for the workers
+            dispatcher.callback = Pyro.core.Proxy(uri)
+            
+            name = 'gensim.dispatcher'
+            ns.remove(name)
+            ns.register(name, uri)
+            logger.info("dispatcher is ready at URI %s" % uri)
+            daemon.requestLoop()
+
 
 
 if __name__ == '__main__':
