@@ -19,6 +19,7 @@ import os, sys, logging, threading
 from Queue import Queue
 
 import Pyro
+import Pyro.config
 
 from gensim.utils import synchronous
 
@@ -161,6 +162,9 @@ class Dispatcher(object):
 
 
 def main(maxsize):
+    import socket
+    Pyro.config.HOST = socket.gethostname()
+    
     with Pyro.naming.locateNS() as ns:
         with Pyro.core.Daemon() as daemon:
             dispatcher = Dispatcher(maxsize = maxsize)
