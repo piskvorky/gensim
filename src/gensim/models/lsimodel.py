@@ -116,7 +116,8 @@ class LsiModel(interfaces.TransformationABC):
             try:
                 import Pyro
                 ns = Pyro.naming.locateNS()
-                dispatcher = Pyro.core.Proxy('PYRONAME:gensim.dispatcher')
+                dispatcher = Pyro.core.Proxy('PYRONAME:gensim.dispatcher@%s' % ns._pyroUri.location)
+                logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word = self.id2word, numTopics = numTopics, 
                                       extraDims = extraDims, chunks = chunks, 
                                       decay = decay, dtype = dtype, 
@@ -124,7 +125,7 @@ class LsiModel(interfaces.TransformationABC):
                 self.dispatcher = dispatcher
                 logger.info("using distributed version")
             except Exception, err:
-                logger.info("failed to initialize distributed LSI: %s" % err)
+                logger.info("failed to initialize distributed LSI (%s)" % err)
                 self.dispatcher = None
 
         if corpus is not None:

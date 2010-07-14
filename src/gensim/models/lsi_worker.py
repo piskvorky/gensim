@@ -22,6 +22,8 @@ from Queue import Queue
 import threading
 
 import Pyro
+import Pyro.config
+
 
 from gensim.utils import synchronous
 from gensim.models import LsiModel
@@ -120,6 +122,9 @@ class Worker(object):
 
 
 def main():
+    import socket
+    Pyro.config.HOST = socket.gethostname()
+
     with Pyro.naming.locateNS() as ns:
         with Pyro.core.Daemon() as daemon:
             worker = Worker()
