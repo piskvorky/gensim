@@ -203,3 +203,26 @@ def isCorpus(obj):
         return True
     except:
         return False
+
+
+def get_ip():
+    """
+    Try to obtain our external ip (from the pyro nameserver's point of view)
+    
+    This tries to sidestep the issue of bogus `/etc/hosts` entries and other 
+    local misconfigurations which often mess up hostname resolution.
+    
+    If the nameserver trick fails, fall back to simple `socket.gethostbyname()` 
+    lookup.
+    """
+    import socket
+    import Pyro
+    try:
+        # we know the nameserver must exist, so use it as our anchor point
+        ns = Pyro.naming.locateNS()
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect((ns._pyroUri.host, ns._pyroUri.port))
+        result, port = s.getsockname()
+    except:
+        result = socket.gethostbyname(socket.gethostname())
+    return result
