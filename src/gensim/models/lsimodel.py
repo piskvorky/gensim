@@ -123,7 +123,7 @@ class LsiModel(interfaces.TransformationABC):
                                       decay = decay, dtype = dtype, 
                                       serial_only = True)
                 self.dispatcher = dispatcher
-                logger.info("using distributed version")
+                logger.info("using distributed version with %i workers" % len(dispatcher.get_workers()))
             except Exception, err:
                 logger.info("failed to initialize distributed LSI (%s)" % err)
                 self.dispatcher = None
@@ -174,6 +174,7 @@ class LsiModel(interfaces.TransformationABC):
                 # distributed version: add this job to the job queue, so workers can work on it
 #                log_size("job", job)
                 self.dispatcher.put_job(job) # put jobs into queue; this will eventually block, because the queue has a small finite size
+                logger.info("dispatched documents up to #%s" % (doc_no + 1))
             else:
                 # serial version, there is only one "worker" (myself), so just process the job directly...
                 self.apply_update(self.compute_update(job, decay = decay))

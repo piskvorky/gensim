@@ -216,13 +216,19 @@ def get_ip():
     lookup.
     """
     import socket
-    import Pyro
     try:
+        import Pyro
         # we know the nameserver must exist, so use it as our anchor point
         ns = Pyro.naming.locateNS()
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect((ns._pyroUri.host, ns._pyroUri.port))
         result, port = s.getsockname()
     except:
-        result = socket.gethostbyname(socket.gethostname())
+        try:
+            # see what ifconfig says about our default interface
+            import commands
+            result = commands.getoutput("ifconfig").split("\n")[1].split()[1][5:]
+        except:
+            # give up, leave the resolution to gethostbyname
+            result = socket.gethostbyname(socket.gethostname())
     return result
