@@ -105,6 +105,13 @@ class Dispatcher(object):
             logger.warning("worker %s failed with: %s" % (uri, err))
 
 
+    def get_workers(self):
+        """
+        Return pyro URIs of all registered workers.
+        """
+        return [worker._pyroUri for worker in self.workers.itervalues()]
+
+
     def get_job(self, worker_id):
         logger.debug("worker #%i requesting a new job" % worker_id)
         return self.jobs.get(block = True, timeout = HUGE_TIMEOUT)

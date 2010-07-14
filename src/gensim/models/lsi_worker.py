@@ -24,7 +24,7 @@ import threading
 import Pyro
 import Pyro.config
 
-
+from gensim.models import LsiModel
 from gensim import utils
 
 logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
