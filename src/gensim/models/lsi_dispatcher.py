@@ -21,7 +21,7 @@ from Queue import Queue
 import Pyro
 import Pyro.config
 
-from gensim.utils import synchronous
+from gensim import utils
 
 
 logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
@@ -140,7 +140,7 @@ class Dispatcher(object):
         return self.update_no
 
 
-    @synchronous('lock_collect')
+    @utils.synchronous('lock_collect')
     def collect_result(self, worker_id):
         """
         A worker has finished its job, so pull the results to the dispatcher and
@@ -162,8 +162,7 @@ class Dispatcher(object):
 
 
 def main(maxsize):
-    import socket
-    Pyro.config.HOST = socket.gethostname()
+    Pyro.config.HOST = utils.get_ip()
     
     with Pyro.naming.locateNS() as ns:
         with Pyro.core.Daemon() as daemon:

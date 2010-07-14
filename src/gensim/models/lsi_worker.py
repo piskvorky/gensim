@@ -25,8 +25,7 @@ import Pyro
 import Pyro.config
 
 
-from gensim.utils import synchronous
-from gensim.models import LsiModel
+from gensim import utils
 
 logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
 logger = logging.getLogger('lsi_worker')
@@ -56,7 +55,7 @@ class Worker(object):
         return result
 
 
-    @synchronous('lock_update')
+    @utils.synchronous('lock_update')
     def add_update(self, update):
         logger.debug("enqueueing update #%i, len(queue)=%i items" % 
                      (update[0], 1 + self.updates.qsize()))
@@ -69,7 +68,7 @@ class Worker(object):
         self.state += 1
     
     
-    @synchronous('lock_update')
+    @utils.synchronous('lock_update')
     def process_updates(self):
         """
         Make sure all pending updates (from other workers) have been applied.
@@ -121,10 +120,11 @@ class Worker(object):
 #endclass Worker
 
 
-def main():
-    import socket
-    Pyro.config.HOST = socket.gethostname()
+    
 
+def main():
+    Pyro.config.HOST = utils.get_ip()
+    
     with Pyro.naming.locateNS() as ns:
         with Pyro.core.Daemon() as daemon:
             worker = Worker()
