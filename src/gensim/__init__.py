@@ -4,5 +4,5 @@ similarities within a corpus of documents.
 """
 
 # for IPython tab-completion
-import utils, matutils, interfaces
+import utils, matutils, interfaces, corpora, models, similarities
 

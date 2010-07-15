@@ -18,13 +18,12 @@ Example: python lsi_worker.py
 
 from __future__ import with_statement
 import os, sys, logging
-from Queue import Queue
 import threading
 
 import Pyro
 import Pyro.config
 
-from gensim.models import LsiModel
+from gensim.models import lsimodel
 from gensim import utils
 
 logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
@@ -40,36 +39,61 @@ class Worker(object):
     
     def initialize(self, my_id, dispatcher, **model_params):
         self.lock_update = threading.Lock()
-        self.updates = Queue() # infinite size queue for keeping updates
         self.state = 0 # state of this worker (=number of updates applied so far)
         self.jobs_done = 0 # how many jobs has this worker completed itself
         self.my_id = my_id # id of this worker in the dispatcher; just a convenience var for easy access TODO remove?
         self.dispatcher = dispatcher
         logger.info("initializing worker #%s" % my_id)
-        self.model = LsiModel(**model_params)
+        self.model = lsimodel.LsiModel(**model_params)
+        self.model.projection_on(False)
+        self.update = self.model.empty_state() # initialize pending updates to empty
     
+    
+    def alive(self):
+        return True
+    
+    
+    def getid(self):
+        return self.my_id
+    
+    
+    def add_workers(self, uris):
+        logger.debug("worker #%s taking note of %i fellow workers" % 
+                     (self.my_id, len(uris) - 1))
+        self.workers = {}
+        for uri in uris:
+            worker = Pyro.core.Proxy(uri)
+            worker._pyroOneway.add("request_job")
+            worker._pyroOneway.add("add_update")
+            self.workers[worker.getid()] = worker
+        
 
-    def get_result(self):
-        logger.info("worker #%s finished job from state %s" % (self.my_id, self.state))
-        result, self.result = self.result, None
-        return result
+    def broadcast_update(self, update_id):
+        """
+        Broadcast an update across all workers.
+        """
+        logger.info("worker #%s broadcasting update #%i from state #%s" % 
+                    (self.my_id, update_id, self.state))
+        update = update_id, self.result
+        for worker_id, worker in self.workers.iteritems():
+            if worker_id != self.my_id: # don't send to self, less elegant but saves some bandwidth :-)
+                worker.add_update(update)
+        self.add_update(update) # update self directly instead
+        self.result = None
 
 
     @utils.synchronous('lock_update')
     def add_update(self, update):
-        logger.debug("enqueueing update #%i, len(queue)=%i items" % 
-                     (update[0], 1 + self.updates.qsize()))
-        self.updates.put(update)
+        update_id, lsi_update = update
+        if update_id != self.state + self.update.pending:
+            raise ValueError("received state update #%i, expected #%i" %
+                             (update_id, self.state))
+        logger.debug("enqueuing update #%i" % update_id)
+        self.update.add_update(lsi_update)
 
 
-    def apply_update(self, update):
-        logger.debug("worker #%s applying update %i" % (self.my_id, self.state))
-        self.model.apply_update(update)
-        self.state += 1
-    
-    
     @utils.synchronous('lock_update')
-    def process_updates(self):
+    def apply_update(self):
         """
         Make sure all pending updates (from other workers) have been applied.
         
@@ -79,19 +103,16 @@ class Worker(object):
         
         Return True if state was updated, False otherwise.
         """
-        old_state = self.state
-        while not self.updates.empty():
-            update_id, update = self.updates.get(block = False)
-            if update_id != self.state:
-                raise ValueError("received state update #%i, expected #%i" %
-                                 (update_id, self.state))
-            self.apply_update(update)
-        result = old_state != self.state
-        if result:
+        if self.update.pending > 0:
+            logger.debug("worker #%s is applying %i pending updates since state %i" % 
+                         (self.my_id, self.update.pending, self.state))
+            self.state += self.update.pending
+            self.model.update_state(self.update)
+            self.update = None # give Python some (slim) chance to reclaim the memory before reallocating it, to avoid having two copies in memory at the same time
+            self.update = self.model.empty_state() # reset updates to empty
             logger.debug("worker #%s now at state %s" % (self.my_id, self.state))
-        return result
-
-
+    
+    
     def request_job(self):
         """
         Request a new job from the dispatcher and process it asynchronously.
@@ -102,9 +123,8 @@ class Worker(object):
         """
         if self.model is None:
             raise RuntimeError("worker must be initialized before receiving jobs")
-        self.process_updates()
         job = self.dispatcher.get_job(self.my_id) # blocks until a new job is available from the dispatcher
-        self.process_updates() # call process_updates again, to stay as up-to-date as possible, in case the get_job() call blocked for a long period of time
+        self.apply_update() # try to stay as up-to-date as possible
         logger.debug("worker #%s received a new job" % self.my_id)
         self.result = self.model.compute_update(job)
         self.jobs_done += 1
@@ -112,7 +132,7 @@ class Worker(object):
 
     
     def get_state(self):
-        self.process_updates() # make sure all pending updates have been applied
+        self.apply_update() # make sure all pending updates have been applied
         logger.info("worker #%i returning its state after %s updates" % 
                     (self.my_id, self.state))
         self.model.projection_on(True)
