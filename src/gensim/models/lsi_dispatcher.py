@@ -73,36 +73,28 @@ class Dispatcher(object):
         self.workers = {}
         with Pyro.naming.locateNS() as ns:
             for name, uri in ns.list(prefix = 'gensim.worker').iteritems():
-                if not self.register_worker(uri, **model_params):
+                try:
+                    worker = Pyro.core.Proxy(uri)
+                    # make time consuming methods work asynchronously
+                    worker._pyroOneway.add("request_job")
+                    worker._pyroOneway.add("add_update")
+                    assert worker.alive()
+                    logger.debug("registering worker #%i at %s" % (len(self.workers), uri))
+                    self.workers[len(self.workers)] = worker
+                except Pyro.errors.PyroError, err:
                     logger.warning("unresponsive worker at %s, deleting it from name server" % uri)
                     ns.remove(name)
         
-        logger.info("found %i workers" % len(self.workers))
         if len(self.workers) == 0:
             raise RuntimeError('no workers found; run some worker scripts on your machines first!')
-    
-    
-    def register_worker(self, uri, **model_params):
-        """
-        Register a single worker, located at `uri`.
         
-        This includes resetting its internal state and initializing it.
-        """
-        try:
-            worker = Pyro.core.Proxy(uri)
-            worker.initialize(Dispatcher.worker_id, dispatcher = self.callback, **model_params)
-            
-            # make time consuming methods work asynchronously
-            worker._pyroOneway.add("request_job")
-            worker._pyroOneway.add("add_update")
-            
-            logger.debug("registering worker #%i at %s" % (Dispatcher.worker_id, uri))
-            self.workers[Dispatcher.worker_id] = worker
-            Dispatcher.worker_id += 1
+        # set all workers to initial state, let them know about each other, tell them to start working
+        logger.info("initializing %i workers" % len(self.workers))
+        for worker_id, worker in self.workers.iteritems():
+            worker.initialize(worker_id, dispatcher = self.callback, **model_params)
+        for worker in self.workers.itervalues():
+            worker.add_workers(self.get_workers())
             worker.request_job()
-            return True
-        except Pyro.errors.PyroError, err:
-            logger.warning("worker %s failed with: %s" % (uri, err))
 
 
     def get_workers(self):
@@ -121,22 +113,12 @@ class Dispatcher(object):
         self.jobs.put(job, block = True, timeout = HUGE_TIMEOUT)
         logging.debug("added a new job (len(queue)=%i items)" % self.jobs.qsize())
 
-
-    def broadcast_update(self, update):
-        """
-        Broadcast an update across all workers.
-        """
-        update_id, result = update
-        logger.debug("broadcasting update #%i to %i workers" % (update_id, len(self.workers)))
-        for worker in self.workers.itervalues():
-            worker.add_update(update)
-
     
     def get_state(self):
         """
         Return the state of an arbitrary worker.
         
-        The states of all workers should be equivalent, so just pick any).
+        The states across all workers should be equivalent, so just pick any.
         """
         worker_id, worker = self.workers.items()[0]
         logger.info("pulling state from worker %s" % worker_id)
@@ -150,18 +132,17 @@ class Dispatcher(object):
     @utils.synchronous('lock_collect')
     def collect_result(self, worker_id):
         """
-        A worker has finished its job, so pull the results to the dispatcher and
-        distribute them amongst all workers. Once this is done, tell the same 
-        worker to request another job, to keep it busy.
+        A worker has finished its job. Tell it to distribute the result to all 
+        other workers. Note that this method has a lock on it -- only one 
+        simultaneous update is allowed at any time.
         
-        In this way, control flow basically oscillates between this function and
-        worker.request_job() in an asynchronous, non-blocking way.
+        After the broadcast, asynchronously transfer control back to the worker.
+        In this way, control flow basically oscillates between dispatcher.collect_result()
+        worker.request_job().
         """
-        logger.info("collecting result from worker #%s" % worker_id)
+        logger.info("collecting result %i from worker #%s" % (self.update_no, worker_id))
         worker = self.workers[worker_id]
-        result = worker.get_result() # retrieve the result
-        update = (self.update_no, result)
-        self.broadcast_update(update) # distribute the update to all workers
+        worker.broadcast_update(self.update_no)
         self.update_no += 1
         worker.request_job() # tell the worker to ask for another job; asynchronous call (one-way)
 #endclass Dispatcher

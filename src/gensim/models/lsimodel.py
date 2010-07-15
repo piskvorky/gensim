@@ -20,13 +20,36 @@ from gensim import interfaces, matutils, utils
 #logging.basicConfig(format = '%(asctime)s : %(module)s(%(funcName)s) : %(levelname)s : %(message)s')
 logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
 logger = logging.getLogger('lsimodel')
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class LsiUpdate(object):
     def __init__(self, sK, uK, P):
         self.sK, self.uK, self.P = sK, uK, P
 #endclass LsiUpdate
+
+
+class LsiUpdateState(object):
+    def __init__(self, lsi):
+        self.k = lsi.s.shape[0]
+        self.rotations = numpy.asmatrix(numpy.eye(self.k))
+        self.basis = numpy.asmatrix(numpy.zeros_like(lsi.u))
+        self.s = None
+        self.pending = 0
+
+    
+    def add_update(self, update):
+        self.s = update.sK
+        self.rotations = self.rotations * update.uK[:self.k]
+        self.basis = self.basis * update.uK[:self.k] # (m, k) * (k, k) = (m, k)
+        if update.P is not None:
+            # TODO may this rotation could be done on the sending end, not receiving?
+            # pro: faster (only done once, in one worker, instead of N times in each worker)
+            # con: would need to transfer (m, k) matrix instead of just (m, c), which is usually much bigger
+            update.P = update.P * update.uK[self.k:] # (m, c) * (c, k) = (m, k) 
+            self.basis += update.P
+        self.pending += 1
+#endclass LsiUpdateState
 
 
 def log_size(name, obj):
@@ -105,6 +128,7 @@ class LsiModel(interfaces.TransformationABC):
         else:
             self.numTerms = 1 + max([-1] + self.id2word.keys())
         
+        self.docs_processed = 0
         self.projection = numpy.asmatrix(numpy.zeros((self.numTopics, self.numTerms), dtype = dtype))
         self.u = None
         self.s = numpy.asmatrix(numpy.zeros((self.numTopics + self.extraDims, self.numTopics + self.extraDims)), dtype = dtype)
@@ -281,8 +305,16 @@ class LsiModel(interfaces.TransformationABC):
         sK = numpy.matrix(numpy.diag(sK[: k]))
         vK = numpy.matrix(vK.T[:, :k]) # .T because numpy transposes the right vectors V, so we need to transpose it back: V.T.T = V
         
-        update = LsiUpdate(sK, uK, P)
+        update_basis = lost > 0.1 or self.docs_processed < k + c # if the variation covered by the last `c` rotation vectors is small, don't bother adjusting the basis (saves a lot of memory and speed)
+        if update_basis:
+            logger.debug("updating basis with %s matrix" % str(P.shape))
+            update = LsiUpdate(sK, uK, P)
+        else:
+            logger.debug("ignoring basis update, rotating only (at %i+%i documents)" % 
+                         (self.docs_processed, len(docs)))
+            update = LsiUpdate(sK, uK, None)
 #        log_size("update", update)
+        self.docs_processed += len(docs)
         return update
         
 
@@ -293,10 +325,23 @@ class LsiModel(interfaces.TransformationABC):
         self.s = update.sK
         # update U piece by piece, to avoid creating (huge) temporary arrays in a complex expression and running out of memory
         self.u = self.u * update.uK[:k] # (m, k) * (k, k) = (m, k)
-        update.P = update.P * update.uK[k:] # (m, c) * (c, k) = (m, k)
-        self.u += update.P # equation (5)
+        if update.P is not None:
+            update.P = update.P * update.uK[k:] # (m, c) * (c, k) = (m, k)
+            self.u += update.P # equation (5)
     
     
+    def empty_state(self):
+        if self.u is None:
+            raise ValueError("cannot access state from projection mode")
+        return LsiUpdateState(self)
+
+    
+    def update_state(self, state):
+        self.s = state.s
+        self.u = self.u * state.rotations
+        self.u = self.u + state.basis
+
+
     def __str__(self):
         return "LsiModel(numTerms=%s, numTopics=%s, extraDims=%s, chunks=%s)" % \
                 (self.numTerms, self.numTopics, self.extraDims, self.chunks)
@@ -311,6 +356,7 @@ class LsiModel(interfaces.TransformationABC):
         Note that this function returns the latent space representation **scaled by the
         singular values**. To return non-scaled embedding, set `scaled` to False.
         """
+        self.projection_on(True)
         # if the input vector is in fact a corpus, return a transformed corpus as result
         if utils.isCorpus(bow):
             return self._apply(bow)
@@ -333,6 +379,7 @@ class LsiModel(interfaces.TransformationABC):
         '-0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + -0.174 * "functor" + -0.168 * "operator"'
         
         """
+        self.projection_on(True)
 #        c = numpy.asarray(self.u[:, topicNo]).flatten()
         c = numpy.asarray(self.projection[topicNo, :]).flatten()
         norm = numpy.sqrt(numpy.sum(c * c))
@@ -402,9 +449,9 @@ def svdUpdate(U, S, V, a, b):
     tUp = numpy.matrix(u[:, :rank])
     tVp = numpy.matrix(vt.T[:, :rank])
     tSp = numpy.matrix(numpy.diag(s[: rank]))
-    Up = numpy.bmat('U P') * tUp # FIXME: keep the tUp rotations separate ala eq (11)? this would mean discarding every P as soon as we hit the target rank, is that ok?
+    Up = numpy.bmat('U P') * tUp
     if V is not None:
-        Vp = numpy.bmat('V Q') * tVp # ditto
+        Vp = numpy.bmat('V Q') * tVp
     else:
         Vp = None
     Sp = tSp
