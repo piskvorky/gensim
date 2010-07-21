@@ -13,7 +13,8 @@ import logging
 import itertools
 
 import numpy
-import scipy.linalg
+import scipy.sparse
+
 
 from gensim import interfaces, matutils, utils
 
@@ -68,24 +69,21 @@ class Projection(object):
         """
         Compute (U, S) projection from a corpus.
         
-        `docs` is a corpus which, when converted to a sparse matrix, must fit 
-        entirely into memory.
+        `docs` is either a spare matrix or a corpus which, when converted to a 
+        sparse matrix, must fit entirely into memory.
         
-        Use the `merge` method to merge several such projections together.
+        This is the "base step" for computing incremental SVDs of extremely
+        large matrices -- SVDs are computed from sparse submatrices that fit
+        in memory, and then merged via the `merge()` method.
         """
         self.m, self.k, self.dtype = m, k, dtype
         if docs is not None:
             if utils.isCorpus(docs):
-                logger.debug("constructing sparse document matrix")
-                mat = numpy.asmatrix(numpy.column_stack(matutils.sparse2full(doc, m) for doc in docs), dtype = self.dtype)
-            else:
-                mat = numpy.asmatrix(numpy.asarray(docs), dtype = self.dtype)
-            logger.info("computing sparse SVD of %s matrix" % str(mat.shape))
-            # perform sparse SVD here
-            # FIXME only need top k singular triplets, and the matrix is sparse... use something sane, not full dense svd of lapack!
-            self.u, self.s, _ = numpy.linalg.svd(mat, full_matrices = False) 
-            self.u = self.u[:, :k]
-            self.s = numpy.diag(self.s[:k])
+                docs = matutils.corpus2csc(m, docs, dtype = dtype)
+            logger.info("computing sparse SVD of %s matrix" % str(docs.shape))
+            import sparseSVD
+            self.u, self.s, _ = sparseSVD.doSVD(docs, k)
+            self.u, self.s = numpy.matrix(self.u[:k].T), numpy.asmatrix(numpy.diag(self.s[:k]))
         else:
             self.u, self.s = None, None
         
@@ -96,61 +94,75 @@ class Projection(object):
         
         `other` is destroyed in the process.
         """
-        assert self.m == other.m
+        if not isinstance(other, Projection):
+            if utils.isCorpus(other):
+                logger.debug("constructing dense document matrix")
+                other = numpy.asmatrix(numpy.column_stack(matutils.sparse2full(doc, self.m) for doc in other), dtype = self.dtype)
+            else:
+                other = numpy.asmatrix(numpy.asarray(other), dtype = self.dtype)
+            logger.info("updating SVD with %i new documents" % (other.shape[1]))
+            if self.u is None:
+                u, s, _ = numpy.linalg.svd(other, full_matrices = False)
+                self.u, self.s = u[:, :self.k], numpy.diag(s[:self.k])
+                return
+            n1, n2 = self.u.shape[1], other.shape[1]
+            m = self.u.T * other
+            other -= self.u * m
+            logger.debug("computing QR of %s dense matrix" % str(other.shape))
+            p, r = numpy.linalg.qr(other)
+            del other
+            k = numpy.bmat([[decay * self.s, m], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r]])
+            logger.debug("computing SVD of %s dense matrix" % str(k.shape))
+            u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False)
+            u_k, s_k = u_k[:, :self.k], numpy.diag(s_k[:self.k])
+            self.u = self.u * u_k[:n1] # rotate current basis
+            p = p * u_k[n1:] # rotate the update
+            self.u += p # then add them together (avoid explicitly creating [U,P] matrix in memory)
+            self.s = s_k
+            return
         if self.u is None:
             self.u = other.u.copy()
             self.s = other.s.copy()
-#            self.u = numpy.zeros((self.m, self.k), dtype = self.dtype)
-#            self.s = numpy.zeros((self.k, self.k), dtype = self.dtype)
-#            if self.k >= other.k:
-#                print (self.u[:, :other.k]).shape
-#                print (other.u).shape
-#                self.u[:, :other.k] = other.u
-#                self.s[:other.k, :other.k] = other.s
-#            else:
-#                self.u[:, :] = other.u[:, :self.k]
-#                self.s[:, :] = other.s[:self.k, :self.k]
+            return
+        assert self.m == other.m
+        logger.info("merging projections: %s + %s" % (str(self.u.shape), str(other.u.shape)))
+        if method == 'svd':
+            # merge two projections t1,t2 directly by computing svd[t1,t2]
+            logger.debug("constructing update matrix")
+            smat = numpy.bmat([decay * self.u, other.u])
+            del self.u, other.u
+            logger.debug("computing SVD of %s dense matrix" % str(smat.shape))
+            # we need in-core dense SVD => might as well use LAPACK
+            self.u, s, _ = numpy.linalg.svd(smat, full_matrices = False)
+            self.s = numpy.diag(s[:self.k])
+            self.u = self.u[:, :self.k] * self.s
+        elif method == 'qr+svd':
+            logger.debug("constructing update matrix")
+            smat = numpy.bmat([decay * self.u, other.u])
+            del self.u, other.u
+            logger.debug("computing QR of %s dense matrix" % str(smat.shape))
+            self.u, r = numpy.linalg.qr(smat)
+            u_r, s_r, _ = numpy.linalg.svd(r, full_matrices = False)
+            u_r, s_r = u_r[:, :self.k], numpy.diag(s_r[:self.k])
+            self.u = self.u * (u_r * s_r)
+            self.s = s_r
+        elif method == 'qr+svd:inplace':
+            n1, n2 = self.u.shape[1], other.u.shape[1]
+            m = self.u.T * other.u
+            other.u -= self.u * m
+            logger.debug("computing QR of %s dense matrix" % str(other.u.shape))
+            p, r = numpy.linalg.qr(other.u)
+            del other.u
+            k = numpy.bmat([[decay * self.s, m * other.s], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r * other.s]])
+            logger.debug("computing SVD of %s dense matrix" % str(k.shape))
+            u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False)
+            u_k, s_k = u_k[:, :self.k], numpy.diag(s_k[:self.k])
+            self.u = self.u * u_k[:n1] # rotate current basis
+            p = p * u_k[n1:] # rotate the update
+            self.u += p # then add them together (avoid explicitly creating [U,P] matrix in memory)
+            self.s = s_k
         else:
-            logger.info("merging projections: %s + %s" % (str(self.u.shape), str(other.u.shape)))
-            if method == 'svd':
-                # merge two projections t1,t2 directly by computing svd[t1,t2]
-                logger.debug("constructing update matrix")
-                smat = numpy.bmat([decay * self.u, other.u])
-                del self.u, other.u
-                logger.debug("computing SVD of %s dense matrix" % str(smat.shape))
-                # we need in-core dense SVD => might as well use LAPACK
-                self.u, s, _ = numpy.linalg.svd(smat, full_matrices = False)
-                self.s = numpy.diag(s[:self.k])
-                self.u = self.u[:, :self.k] * self.s
-            elif method == 'qr+svd':
-                # merge by qr+svd
-                logger.debug("constructing update matrix")
-                smat = numpy.bmat([decay * self.u, other.u])
-                del self.u, other.u
-                logger.debug("computing QR of %s dense matrix" % str(smat.shape))
-                self.u, r = numpy.linalg.qr(smat)
-                u_r, s_r, _ = numpy.linalg.svd(r, full_matrices = False)
-                u_r, s_r = u_r[:, :self.k], numpy.diag(s_r[:self.k])
-                self.u = self.u * (u_r * s_r)
-                self.s = s_r
-            elif method == 'qr+svd:inplace':
-                n1, n2 = self.u.shape[1], other.u.shape[1]
-                m = self.u.T * other.u
-                other.u -= self.u * m
-                logger.debug("computing QR of %s dense matrix" % str(other.u.shape))
-                p, r = numpy.linalg.qr(other.u)
-#                p, r = scipy.linalg.qr(other.u, econ = 1, overwrite_a = 1)
-                del other.u
-                k = numpy.bmat([[decay * self.s, m * other.s], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r * other.s]])
-                logger.debug("computing SVD of %s dense matrix" % str(k.shape))
-                u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False)
-                u_k, s_k = u_k[:, :self.k], numpy.diag(s_k[:self.k])
-                self.u = self.u * u_k[:n1] # rotate current basis
-                p = p * u_k[n1:] # rotate the update
-                self.u += p # then add them together (avoid explicitly creating [U,P] matrix in memory)
-                self.s = s_k
-            else:
-                raise ValueError("unknown merge method: %s" % MERGE_METHOD)
+            raise ValueError("unknown merge method: %s" % MERGE_METHOD)
     
 
     def as_matrix(self):
@@ -170,10 +182,11 @@ class Projection(object):
         mat = mat.T
         result = Projection(m = mat.shape[0], k = mat.shape[1], docs = None, dtype = dtype)
         lens = numpy.sqrt(numpy.sum(numpy.multiply(mat, mat), axis = 0))
-        self.u = numpy.asmatrix(numpy.divide(mat.astype(dtype), lens))
-        for i, row in enumerate(self.u):
+        result.u = numpy.asmatrix(numpy.divide(mat.astype(dtype), lens))
+        for i, row in enumerate(result.u):
             result.u[i] = numpy.where(numpy.isfinite(row), row, 0.0) # substitute all NaNs/infs with 0.0, but proceed row-by-row to save memory
-        self.s = numpy.diag(lens)
+        result.s = numpy.diag(lens)
+        return result
 #endclass Projection
 
 
@@ -261,7 +274,7 @@ class LsiModel(interfaces.TransformationABC):
             self.add_documents(corpus, chunks = chunks)
     
     
-    def add_documents(self, corpus, chunks = None, decay = None, update_projection = True):
+    def add_documents(self, corpus, chunks = None, decay = None, update_projection = False): # FIXME test=>update True!!!
         """
         Update singular value decomposition factors to take into account a new 
         corpus of documents.
@@ -289,17 +302,22 @@ class LsiModel(interfaces.TransformationABC):
         
         # do the actual work -- perform iterative singular value decomposition.
         chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
+        doc_no = 0
         for chunk_no, (key, group) in enumerate(chunker):
-            job = [list(doc) for doc_no, doc in group]
+            # construct the job as a sparse matrix, to minimize memory overhead
+            # definitely avoid materializing it as a dense matrix
+            job = matutils.corpus2csc(self.numTerms, (doc for _, doc in group), dtype = self.dtype)
+            doc_no += job.shape[1]
             if self.dispatcher:
                 # distributed version: add this job to the job queue, so workers can work on it
                 logger.debug("creating job #%i" % chunk_no)
                 self.dispatcher.putjob(job) # put jobs into queue; this will eventually block, because the queue has a small finite size
-                logger.info("dispatched documents up to #%s" % (doc_no + 1))
+                logger.info("dispatched documents up to #%s" % doc_no)
             else:
                 # serial version, there is only one "worker" (myself) => process the job directly
-                self.projection.merge(Projection(self.projection.m, self.projection.k, docs = job), decay = decay)
-                logger.info("processed documents up to #%s" % (doc_no + 1))
+#                self.projection.merge(other = job, decay = decay)
+                self.projection.merge(Projection(self.numTerms, self.numTopics, job), decay = decay)
+                logger.info("processed documents up to #%s" % doc_no)
         
         if self.dispatcher:
             logger.info("reached the end of input; now waiting for all remaining jobs to finish")
@@ -347,64 +365,7 @@ class LsiModel(interfaces.TransformationABC):
                 logger.info("initializing Projection object from matrix")
                 self.projection = Projection.from_matrix(self.projection)
 
-        
-    def update(self, docs, decay = 1.0):
-        """
-        If `X = self.u * self.s * self.v^T` is the current decomposition,
-        find update to self.u, self.s, self.v that will cause
-        `self.u * self.s * self.v^T = [X docs.T]`.
-        
-        `docs` is a either a dense matrix containing the new observations as columns,
-        or directly a corpus-like sequence of documents (which will be
-        converted to a matrix internally).
-        """
-        if utils.isCorpus(docs):
-            a = numpy.asmatrix([matutils.sparse2full(doc, self.numTerms) for doc in docs]).T
-        else:
-            a = numpy.asmatrix(numpy.asarray(docs))
-        # now `a` is a matrix that contains the new documents as columns
-        self.projection_on(False)
-        m, k = self.u.shape
-        m2, c = a.shape
-        assert m == m2, "new documents must be in the same term-space as the original documents (old %s, new %s)" % (self.u.shape, a.shape)
-        
-        # construct orthogonal basis for (I - U * U^T) * A
-        logger.debug("constructing orthogonal component")
-        m = self.u.T * a # project documents into eigenspace; (k, m) * (m, c) = (k, c)
-        logger.debug("computing orthogonal basis")
-        P, Ra = numpy.linalg.qr(a - self.u * m) # equation (2)
-
-        # allow re-orientation towards new data trends in the document stream, by giving less emphasis to old values
-        self.s *= decay
-        
-        # now we're ready to construct K; K will be mostly diagonal and sparse, with
-        # lots of structure, and of shape only (k + c, k + c), so its direct SVD 
-        # ought to be fast for reasonably small additions of new documents (ie. tens 
-        # or hundreds of new documents at a time).
-        empty = matutils.pad(numpy.matrix([]).reshape(0, 0), c, k)
-        K = numpy.bmat([[self.s, m], [empty, Ra]]) # (k + c, k + c), equation (4)
-        logger.debug("computing %s SVD" % str(K.shape))
-        uK, sK, vK = numpy.linalg.svd(K, full_matrices = False) # there is no python linalg wrapper for partial svd => request all k + c factors :(
-        lost = 1.0 - numpy.sum(sK[: k] ** 2) / numpy.sum(sK ** 2)
-        logger.debug("truncating will discard %.1f%% of data variation" % (100 * lost))
-        
-        # clip full decomposition to the requested rank
-        uK = numpy.matrix(uK[:, :k])
-        sK = numpy.matrix(numpy.diag(sK[: k]))
-        vK = numpy.matrix(vK.T[:, :k]) # .T because numpy transposes the right vectors V, so we need to transpose it back: V.T.T = V
-        
-        update_basis = lost > 0.05 or self.docs_processed < k + c # if the variation covered by the clipped values is small, don't bother adjusting the basis (saves a lot of memory and speed), only rotate
-        if update_basis:
-            logger.debug("updating basis with %s matrix" % str(P.shape))
-            update = LsiUpdate(sK, uK, P)
-        else:
-            logger.debug("ignoring basis update, rotating only (at %i+%i documents)" % 
-                         (self.docs_processed, len(docs)))
-            update = LsiUpdate(sK, uK, None)
-        self.docs_processed += len(docs)
-        return update
-        
-
+    
     def __str__(self):
         return "LsiModel(numTerms=%s, numTopics=%s, chunks=%s)" % \
                 (self.numTerms, self.numTopics, self.chunks)

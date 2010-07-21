@@ -16,6 +16,34 @@ import numpy
 import scipy.sparse
 
 
+logger = logging.getLogger("matutils")
+logger.setLevel(logging.INFO)
+
+
+
+def corpus2csc(m, corpus, dtype = numpy.float64):
+    """
+    Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format.
+    
+    The corpus must not be empty (at least one document).
+    """
+    logger.info("constructing sparse document matrix")
+    # construct the sparse matrix as lil_matrix first, convert to csc later
+    # lil_matrix can quickly update rows, so initialize it transposed (documents=rows)
+    mat = scipy.sparse.lil_matrix((1, 1), dtype = dtype)
+    mat.rows, mat.data = [], []
+    for i, doc in enumerate(corpus):
+        doc = sorted(doc)
+        mat.rows.append([fid for fid, _ in doc])
+        mat.data.append([val for _, val in doc])
+    docs = i + 1
+    mat._shape = (docs, m)
+    mat = mat.tocsr()
+    mat = mat.transpose() # transpose back to documents=columns
+    assert isinstance(mat, scipy.sparse.csc_matrix)
+    return mat
+
+
 def pad(mat, padRow, padCol):
     """
     Add additional rows/columns to a numpy.matrix `mat`. The new rows/columns 
