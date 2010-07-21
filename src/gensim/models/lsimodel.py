@@ -13,6 +13,7 @@ import logging
 import itertools
 
 import numpy
+import scipy.linalg
 
 from gensim import interfaces, matutils, utils
 
@@ -23,42 +24,159 @@ logger = logging.getLogger('lsimodel')
 logger.setLevel(logging.DEBUG)
 
 
-class LsiUpdate(object):
-    def __init__(self, sK, uK, P):
-        self.sK, self.uK, self.P = sK, uK, P
-#endclass LsiUpdate
+
+def update0(u1, s1, u2, s2):
+    u_u, u_s, _ = numpy.linalg.svd(numpy.bmat([u1, u2]), full_matrices = False)
+    u_s = numpy.diag(u_s)
+    return u_u * u_s, u_s
 
 
-class LsiUpdateState(object):
-    def __init__(self, lsi):
-        self.k = lsi.s.shape[0]
-        self.rotations = numpy.asmatrix(numpy.eye(self.k))
-        self.basis = numpy.asmatrix(numpy.zeros_like(lsi.u))
-        self.s = None
-        self.pending = 0
+def update1(u1, s1, u2, s2):
+    p, r = numpy.linalg.qr(numpy.bmat([u1, u2]))
+    u_r, u_s, _ = numpy.linalg.svd(r, full_matrices = False)
+    return p * numpy.multiply(u_r, u_s), numpy.diag(u_s)
+
+
+def update2(u1, s1, u2, s2):
+    n1, n2 = u1.shape[1], u2.shape[1]
+    m = u1.T * u2 # (n1, t) * (t, n2) * (n2, n2) = (n1, n2)
+    p, r = numpy.linalg.qr(u2 - u1 * m) # (t, n2)
+    k = numpy.bmat([[s1, m * s2], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r * s2]])
+    r1, s, _ = numpy.linalg.svd(k, full_matrices = False)
+    r1 = r1 * numpy.diag(s)
+    return numpy.bmat([u1, p]) * r1, numpy.diag(s)
+
+
+def update3(u1, s1, u2, s2):
+    n1, n2 = u1.shape[1], u2.shape[1]
+    m = u1.T * u2 # (n1, t) * (t, n2) * (n2, n2) = (n1, n2)
+    p, r = numpy.linalg.qr(u2 - u1 * m) # (t, n2)
+    k = numpy.bmat([[s1, m * s2], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r * s2]])
+    r1, s, _ = numpy.linalg.svd(k, full_matrices = False)
+    r1 = r1 * numpy.diag(s)
+    u1 = u1 * r1[:n1] # rotate current basis
+    p = p * r1[n1:] # rotate the update
+    u1 += p
+    return u1, numpy.diag(s)
+
+
+MERGE_METHOD = 'qr+svd:inplace'
+
+
+class Projection(object):
+    def __init__(self, m, k, docs = None, dtype = numpy.float64):
+        """
+        Compute (U, S) projection from a corpus.
+        
+        `docs` is a corpus which, when converted to a sparse matrix, must fit 
+        entirely into memory.
+        
+        Use the `merge` method to merge several such projections together.
+        """
+        self.m, self.k, self.dtype = m, k, dtype
+        if docs is not None:
+            if utils.isCorpus(docs):
+                logger.debug("constructing sparse document matrix")
+                mat = numpy.asmatrix(numpy.column_stack(matutils.sparse2full(doc, m) for doc in docs), dtype = self.dtype)
+            else:
+                mat = numpy.asmatrix(numpy.asarray(docs), dtype = self.dtype)
+            logger.info("computing sparse SVD of %s matrix" % str(mat.shape))
+            # perform sparse SVD here
+            # FIXME only need top k singular triplets, and the matrix is sparse... use something sane, not full dense svd of lapack!
+            self.u, self.s, _ = numpy.linalg.svd(mat, full_matrices = False) 
+            self.u = self.u[:, :k]
+            self.s = numpy.diag(self.s[:k])
+        else:
+            self.u, self.s = None, None
+        
+
+    def merge(self, other, decay = 1.0, method = MERGE_METHOD):
+        """
+        Merge this projection with another.
+        
+        `other` is destroyed in the process.
+        """
+        assert self.m == other.m
+        if self.u is None:
+            self.u = other.u.copy()
+            self.s = other.s.copy()
+#            self.u = numpy.zeros((self.m, self.k), dtype = self.dtype)
+#            self.s = numpy.zeros((self.k, self.k), dtype = self.dtype)
+#            if self.k >= other.k:
+#                print (self.u[:, :other.k]).shape
+#                print (other.u).shape
+#                self.u[:, :other.k] = other.u
+#                self.s[:other.k, :other.k] = other.s
+#            else:
+#                self.u[:, :] = other.u[:, :self.k]
+#                self.s[:, :] = other.s[:self.k, :self.k]
+        else:
+            logger.info("merging projections: %s + %s" % (str(self.u.shape), str(other.u.shape)))
+            if method == 'svd':
+                # merge two projections t1,t2 directly by computing svd[t1,t2]
+                logger.debug("constructing update matrix")
+                smat = numpy.bmat([decay * self.u, other.u])
+                del self.u, other.u
+                logger.debug("computing SVD of %s dense matrix" % str(smat.shape))
+                # we need in-core dense SVD => might as well use LAPACK
+                self.u, s, _ = numpy.linalg.svd(smat, full_matrices = False)
+                self.s = numpy.diag(s[:self.k])
+                self.u = self.u[:, :self.k] * self.s
+            elif method == 'qr+svd':
+                # merge by qr+svd
+                logger.debug("constructing update matrix")
+                smat = numpy.bmat([decay * self.u, other.u])
+                del self.u, other.u
+                logger.debug("computing QR of %s dense matrix" % str(smat.shape))
+                self.u, r = numpy.linalg.qr(smat)
+                u_r, s_r, _ = numpy.linalg.svd(r, full_matrices = False)
+                u_r, s_r = u_r[:, :self.k], numpy.diag(s_r[:self.k])
+                self.u = self.u * (u_r * s_r)
+                self.s = s_r
+            elif method == 'qr+svd:inplace':
+                n1, n2 = self.u.shape[1], other.u.shape[1]
+                m = self.u.T * other.u
+                other.u -= self.u * m
+                logger.debug("computing QR of %s dense matrix" % str(other.u.shape))
+                p, r = numpy.linalg.qr(other.u)
+#                p, r = scipy.linalg.qr(other.u, econ = 1, overwrite_a = 1)
+                del other.u
+                k = numpy.bmat([[decay * self.s, m * other.s], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r * other.s]])
+                logger.debug("computing SVD of %s dense matrix" % str(k.shape))
+                u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False)
+                u_k, s_k = u_k[:, :self.k], numpy.diag(s_k[:self.k])
+                self.u = self.u * u_k[:n1] # rotate current basis
+                p = p * u_k[n1:] # rotate the update
+                self.u += p # then add them together (avoid explicitly creating [U,P] matrix in memory)
+                self.s = s_k
+            else:
+                raise ValueError("unknown merge method: %s" % MERGE_METHOD)
+    
+
+    def as_matrix(self):
+        """
+        Return projection as a single matrix, in single precision and row-major 
+        order.
+        
+        Currently, this returns U^{-1}; for some applications, (U*S)^{-1} may be
+        more appropriate.
+        """
+        # make sure we return a row-contiguous array (C-style), for fast mat*vec multiplications
+        return numpy.ascontiguousarray(self.u.T, dtype = numpy.float32)
 
     
-    def add_update(self, update):
-        self.s = update.sK
-        self.rotations = self.rotations * update.uK[:self.k]
-        self.basis = self.basis * update.uK[:self.k] # (m, k) * (k, k) = (m, k)
-        if update.P is not None:
-            # TODO may this rotation could be done on the sending end, not receiving?
-            # pro: faster (only done once, in one worker, instead of N times in each worker)
-            # con: would need to transfer (m, k) matrix instead of just (m, c), which is usually much bigger
-            update.P = update.P * update.uK[self.k:] # (m, c) * (c, k) = (m, k) 
-            self.basis += update.P
-        self.pending += 1
-#endclass LsiUpdateState
+    @staticmethod
+    def from_matrix(mat, dtype = numpy.float64):
+        mat = mat.T
+        result = Projection(m = mat.shape[0], k = mat.shape[1], docs = None, dtype = dtype)
+        lens = numpy.sqrt(numpy.sum(numpy.multiply(mat, mat), axis = 0))
+        self.u = numpy.asmatrix(numpy.divide(mat.astype(dtype), lens))
+        for i, row in enumerate(self.u):
+            result.u[i] = numpy.where(numpy.isfinite(row), row, 0.0) # substitute all NaNs/infs with 0.0, but proceed row-by-row to save memory
+        self.s = numpy.diag(lens)
+#endclass Projection
 
 
-def log_size(name, obj):
-    import Pyro
-    s = Pyro.util.Serializer()
-    data, _ = s.serialize(obj, compress = False)
-    data2, _ = s.serialize(obj, compress = True)
-    logger.info("%s size=%ikB, compress=%ikB" % (name, len(data) / 1024, len(data2) / 1024))
-    
 
 class LsiModel(interfaces.TransformationABC):
     """
@@ -75,7 +193,7 @@ class LsiModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
     
     """
-    def __init__(self, corpus = None, id2word = None, numTopics = 200, extraDims = 10, 
+    def __init__(self, corpus = None, id2word = None, numTopics = 200, 
                  chunks = 100, decay = 1.0, dtype = numpy.float64, serial_only = False):
         """
         `numTopics` is the number of requested factors (latent dimensions). 
@@ -86,12 +204,6 @@ class LsiModel(interfaces.TransformationABC):
         so that training can be stopped and resumed at any time, and the
         LSI transformation is available at any point.
 
-        `extraDims` is the number of extra dimensions that will be internally 
-        computed (ie. `numTopics + extraDims`) to improve numerical properties of 
-        the SVD algorithm. These extra dimensions will be eventually chopped off
-        for the final projection. Set to 0 to save memory; set to ~10 to
-        2*numTopics for increased SVD precision.
-        
         If you specify a `corpus`, it will be used to train the model. See the 
         method `addDocuments` for a description of the `chunks` and `decay` parameters.
         
@@ -99,9 +211,6 @@ class LsiModel(interfaces.TransformationABC):
         and run in a distributed manner; if this fails, it falls back to serial mode
         (single core). To suppress distributed computing, enable the `serial_only`
         constructor parameter.
-        
-        The online SVD update algorithm is based on
-        **Brand, 2006: Fast low-rank modifications of the thin singular value decomposition**.
         
         Example:
         
@@ -113,7 +222,6 @@ class LsiModel(interfaces.TransformationABC):
         """
         self.id2word = id2word
         self.numTopics = numTopics # number of latent topics
-        self.extraDims = extraDims
         self.dtype = dtype
         self.chunks = chunks
         self.decay = decay
@@ -129,12 +237,10 @@ class LsiModel(interfaces.TransformationABC):
             self.numTerms = 1 + max([-1] + self.id2word.keys())
         
         self.docs_processed = 0
-        self.projection = numpy.asmatrix(numpy.zeros((self.numTopics, self.numTerms), dtype = dtype))
-        self.u = None
-        self.s = numpy.asmatrix(numpy.zeros((self.numTopics + self.extraDims, self.numTopics + self.extraDims)), dtype = dtype)
-        self.v = None # size of `v` is linear in the number of documents, and is therefore never used
+        self.projection = Projection(self.numTerms, self.numTopics, dtype = dtype)
 
         if serial_only:
+            logger.info("using serial LSI version on this machine")
             self.dispatcher = None
         else:
             try:
@@ -143,20 +249,19 @@ class LsiModel(interfaces.TransformationABC):
                 dispatcher = Pyro.core.Proxy('PYRONAME:gensim.dispatcher@%s' % ns._pyroUri.location)
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word = self.id2word, numTopics = numTopics, 
-                                      extraDims = extraDims, chunks = chunks, 
-                                      decay = decay, dtype = dtype, 
+                                      chunks = chunks, decay = decay, dtype = dtype, 
                                       serial_only = True)
                 self.dispatcher = dispatcher
-                logger.info("using distributed version with %i workers" % len(dispatcher.get_workers()))
+                logger.info("using distributed version with %i workers" % len(dispatcher.getworkers()))
             except Exception, err:
                 logger.info("failed to initialize distributed LSI (%s)" % err)
                 self.dispatcher = None
 
         if corpus is not None:
-            self.addDocuments(corpus, chunks = chunks)
+            self.add_documents(corpus, chunks = chunks)
     
     
-    def addDocuments(self, corpus, chunks = None, decay = None, update_projection = True):
+    def add_documents(self, corpus, chunks = None, decay = None, update_projection = True):
         """
         Update singular value decomposition factors to take into account a new 
         corpus of documents.
@@ -171,12 +276,6 @@ class LsiModel(interfaces.TransformationABC):
         input document stream, by giving less emphasis to old observations. This allows
         SVD to gradually "forget" old observations and give more preference to 
         new ones. The decay is applied once after every `chunks` documents.
-        
-        This function corresponds to the general update of Brand (section 2), 
-        specialized for `A = docs.T` and `B` trivial (only append the new columns).
-        For a function that supports arbitrary updates (appending columns, erasing 
-        columns, column revisions and recentering), see the `svdUpdate` function in
-        this module.
         """
         logger.info("updating SVD with new documents")
         
@@ -189,34 +288,31 @@ class LsiModel(interfaces.TransformationABC):
         self.projection_on(False) # from now on, work with the self.u matrix
         
         # do the actual work -- perform iterative singular value decomposition.
-        # this is done by updating SVD with `chunks` new documents
         chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
         for chunk_no, (key, group) in enumerate(chunker):
-            logger.info("creating job #%i" % chunk_no)
             job = [list(doc) for doc_no, doc in group]
             if self.dispatcher:
                 # distributed version: add this job to the job queue, so workers can work on it
-#                log_size("job", job)
-                self.dispatcher.put_job(job) # put jobs into queue; this will eventually block, because the queue has a small finite size
+                logger.debug("creating job #%i" % chunk_no)
+                self.dispatcher.putjob(job) # put jobs into queue; this will eventually block, because the queue has a small finite size
                 logger.info("dispatched documents up to #%s" % (doc_no + 1))
             else:
-                # serial version, there is only one "worker" (myself), so just process the job directly...
-                self.apply_update(self.compute_update(job, decay = decay))
+                # serial version, there is only one "worker" (myself) => process the job directly
+                self.projection.merge(Projection(self.projection.m, self.projection.k, docs = job), decay = decay)
                 logger.info("processed documents up to #%s" % (doc_no + 1))
         
         if self.dispatcher:
             logger.info("reached the end of input; now waiting for all remaining jobs to finish")
             import time
-            while self.dispatcher.updates_done() <= chunk_no:
+            while self.dispatcher.jobsdone() <= chunk_no:
                 time.sleep(0.5) # check every half a second
             logger.info("all jobs finished, downloading final projection")
-            self.u = None
-            self.projection = self.dispatcher.get_state()
+            self.projection = self.dispatcher.getstate()
         
         if update_projection:
             self.projection_on(True)
-
-
+    
+    
     def projection_on(self, on):
         """
         Calculate projection needed to get the topic-document matrix from 
@@ -233,48 +329,40 @@ class LsiModel(interfaces.TransformationABC):
         Note that neither `v` (the right singular vectors) nor `s` (the singular 
         values) are used at all in this scaled transformation.
         """
-        # this whole self.u/self.projection business is meant to save memory,
-        # so that we don't need to keep both matrices in the memory, or at least
-        # not for long.
+        # this whole Projection/matrix business is meant to save memory,
+        # so that we don't need to keep both matrices in memory at the same time, 
+        # or at least not for long.
         #
-        # the projection matrix is smaller, well-aligned and faster to use, while
-        # self.u offers more numerical precision. so use self.u during computation
-        # and switch to self.projection once finished.
-        #
-        # switching from self.u to self.projection causes precision loss; the other
-        # way round is errorless
-        assert (self.projection is None) or (self.u is None)
-        if on: # we want projection
-            if self.projection is None:
-                logger.debug("computing transformation projection, clipping extra %i dimensions" %
-                              (self.extraDims))
-                self.projection = self.u[:, :self.numTopics].T.astype(numpy.float32).copy('C') # make sure we get a row-contiguous array, for fast mat*vec multiplications
-                self.u = None # free up memory
-        else: # we want self.u
-            if self.u is None:
-                logger.debug("initializing U matrix with projection")
-                self.u = numpy.matrix(numpy.zeros((self.numTerms, self.numTopics + self.extraDims)), dtype = self.dtype)
-                self.u[:self.projection.shape[1], :self.projection.shape[0]] = self.projection.T
-                self.projection = None # free up memory
+        # The projection matrix is smaller, well-aligned and faster to use, while
+        # Projection objects offers more numerical precision. so use Projection 
+        # during computation and switch to matrix once finished.
+        if on: 
+            # we want matrix
+            if isinstance(self.projection, Projection):
+                logger.info("computing transformation projection")
+                self.projection = self.projection.as_matrix() # conversion to single => loses precision!
+        else:
+            # we want Projection opbject
+            if not isinstance(self.projection, Projection):
+                logger.info("initializing Projection object from matrix")
+                self.projection = Projection.from_matrix(self.projection)
 
-    
-    def compute_update(self, docs, decay = 1.0):
+        
+    def update(self, docs, decay = 1.0):
         """
         If `X = self.u * self.s * self.v^T` is the current decomposition,
-        find update to self.u, self.s, self.v that will cause 
+        find update to self.u, self.s, self.v that will cause
         `self.u * self.s * self.v^T = [X docs.T]`.
         
-        `docs` is a either a dense matrix containing the new observations as rows, 
-        or directly a corpus-like sequence of sparse documents (which will be 
-        converted to a dense matrix internally).
-        
-        Return all information necessary for the update (which can then be applied
-        via `apply_update()`).
+        `docs` is a either a dense matrix containing the new observations as columns,
+        or directly a corpus-like sequence of documents (which will be
+        converted to a matrix internally).
         """
         if utils.isCorpus(docs):
             a = numpy.asmatrix([matutils.sparse2full(doc, self.numTerms) for doc in docs]).T
         else:
-            a = numpy.asmatrix(numpy.asarray(docs)).T
+            a = numpy.asmatrix(numpy.asarray(docs))
+        # now `a` is a matrix that contains the new documents as columns
         self.projection_on(False)
         m, k = self.u.shape
         m2, c = a.shape
@@ -286,7 +374,7 @@ class LsiModel(interfaces.TransformationABC):
         logger.debug("computing orthogonal basis")
         P, Ra = numpy.linalg.qr(a - self.u * m) # equation (2)
 
-        # allow re-orientation towards new data trends in the document stream, by giving less emphasis on old values
+        # allow re-orientation towards new data trends in the document stream, by giving less emphasis to old values
         self.s *= decay
         
         # now we're ready to construct K; K will be mostly diagonal and sparse, with
@@ -297,15 +385,15 @@ class LsiModel(interfaces.TransformationABC):
         K = numpy.bmat([[self.s, m], [empty, Ra]]) # (k + c, k + c), equation (4)
         logger.debug("computing %s SVD" % str(K.shape))
         uK, sK, vK = numpy.linalg.svd(K, full_matrices = False) # there is no python linalg wrapper for partial svd => request all k + c factors :(
-        lost = 1.0 - numpy.sum(sK[: k]) / numpy.sum(sK)
-        logger.debug("discarding %.1f%% of data variation" % (100 * lost))
+        lost = 1.0 - numpy.sum(sK[: k] ** 2) / numpy.sum(sK ** 2)
+        logger.debug("truncating will discard %.1f%% of data variation" % (100 * lost))
         
         # clip full decomposition to the requested rank
         uK = numpy.matrix(uK[:, :k])
         sK = numpy.matrix(numpy.diag(sK[: k]))
         vK = numpy.matrix(vK.T[:, :k]) # .T because numpy transposes the right vectors V, so we need to transpose it back: V.T.T = V
         
-        update_basis = lost > 0.1 or self.docs_processed < k + c # if the variation covered by the last `c` rotation vectors is small, don't bother adjusting the basis (saves a lot of memory and speed)
+        update_basis = lost > 0.05 or self.docs_processed < k + c # if the variation covered by the clipped values is small, don't bother adjusting the basis (saves a lot of memory and speed), only rotate
         if update_basis:
             logger.debug("updating basis with %s matrix" % str(P.shape))
             update = LsiUpdate(sK, uK, P)
@@ -313,38 +401,13 @@ class LsiModel(interfaces.TransformationABC):
             logger.debug("ignoring basis update, rotating only (at %i+%i documents)" % 
                          (self.docs_processed, len(docs)))
             update = LsiUpdate(sK, uK, None)
-#        log_size("update", update)
         self.docs_processed += len(docs)
         return update
         
 
-    def apply_update(self, update):
-        logger.debug('applying update')
-        self.projection_on(False)
-        m, k = self.u.shape
-        self.s = update.sK
-        # update U piece by piece, to avoid creating (huge) temporary arrays in a complex expression and running out of memory
-        self.u = self.u * update.uK[:k] # (m, k) * (k, k) = (m, k)
-        if update.P is not None:
-            update.P = update.P * update.uK[k:] # (m, c) * (c, k) = (m, k)
-            self.u += update.P # equation (5)
-    
-    
-    def empty_state(self):
-        if self.u is None:
-            raise ValueError("cannot access state from projection mode")
-        return LsiUpdateState(self)
-
-    
-    def update_state(self, state):
-        self.s = state.s
-        self.u = self.u * state.rotations
-        self.u = self.u + state.basis
-
-
     def __str__(self):
-        return "LsiModel(numTerms=%s, numTopics=%s, extraDims=%s, chunks=%s)" % \
-                (self.numTerms, self.numTopics, self.extraDims, self.chunks)
+        return "LsiModel(numTerms=%s, numTopics=%s, chunks=%s)" % \
+                (self.numTerms, self.numTopics, self.chunks)
 
 
     def __getitem__(self, bow, scaled = True):
@@ -566,10 +629,3 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
 #    q = numpy.linalg.qr()
 #    
     
-
-
-
-
-
-
-
