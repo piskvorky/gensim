@@ -72,7 +72,7 @@ class Worker(object):
     @utils.synchronous('lock_update')
     def getstate(self):
         logger.info("worker #%i returning its state after %s jobs" % 
-                    (self.myid, self.jobs_done))
+                    (self.myid, self.jobsdone))
         assert isinstance(self.model.projection, lsimodel.Projection)
         return self.model.projection
 #endclass Worker
