@@ -205,15 +205,14 @@ def isCorpus(obj):
         return False
 
 
-def get_ip():
+def get_my_ip():
     """
     Try to obtain our external ip (from the pyro nameserver's point of view)
     
     This tries to sidestep the issue of bogus `/etc/hosts` entries and other 
-    local misconfigurations which often mess up hostname resolution.
+    local misconfigurations, which often mess up hostname resolution.
     
-    If the nameserver trick fails, fall back to simple `socket.gethostbyname()` 
-    lookup.
+    If all else fails, fall back to simple `socket.gethostbyname()` lookup.
     """
     import socket
     try:
@@ -228,6 +227,8 @@ def get_ip():
             # see what ifconfig says about our default interface
             import commands
             result = commands.getoutput("ifconfig").split("\n")[1].split()[1][5:]
+            if result.split('.') != 4:
+                raise Exception()
         except:
             # give up, leave the resolution to gethostbyname
             result = socket.gethostbyname(socket.gethostname())

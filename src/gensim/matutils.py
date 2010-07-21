@@ -21,7 +21,10 @@ def pad(mat, padRow, padCol):
     Add additional rows/columns to a numpy.matrix `mat`. The new rows/columns 
     will be initialized with zeros.
     """
-    assert padRow >= 0, padCol >= 0
+    if padRow < 0:
+        padRow = 0
+    if padCol < 0:
+        padCol = 0
     rows, cols = mat.shape
     return numpy.bmat([[mat, numpy.matrix(numpy.zeros((rows, padCol)))],
                       [numpy.matrix(numpy.zeros((padRow, cols + padCol)))]])

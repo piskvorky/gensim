@@ -24,7 +24,6 @@ import Pyro.config
 from gensim import utils
 
 
-logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
 logger = logging.getLogger("dispatcher")
 logger.setLevel(logging.DEBUG)
 
@@ -58,16 +57,23 @@ class Dispatcher(object):
         self.callback = None # a pyro proxy to this object (unknown at init time, but will be set later)
     
     
+    def exit(self):
+        """
+        Stop processing jobs.
+        """
+        self._exit = True
+    
+    
     def initialize(self, **model_params):
         """
         `model_params` are parameters used to initialize individual workers (gets
         handed all the way down to worker.initialize()).
         """
-        Dispatcher.worker_id = 0
         self.jobs = Queue(maxsize = maxsize)
-        self.lock_collect = threading.Lock()
-        self.update_no = 0
-        self.callback._pyroOneway.add("collect_result") # make sure workers transfer control back to dispatcher asynchronously
+        self.lock_update = threading.Lock()
+        self.callback._pyroOneway.add("jobdone") # make sure workers transfer control back to dispatcher asynchronously        
+        self._exit = False
+        self._jobsdone = 0
 
         # locate all available workers and store their proxies, for subsequent RMI calls
         self.workers = {}
@@ -75,82 +81,83 @@ class Dispatcher(object):
             for name, uri in ns.list(prefix = 'gensim.worker').iteritems():
                 try:
                     worker = Pyro.core.Proxy(uri)
+                    workerid = len(self.workers)
                     # make time consuming methods work asynchronously
-                    worker._pyroOneway.add("request_job")
-                    worker._pyroOneway.add("add_update")
-                    assert worker.alive()
-                    logger.debug("registering worker #%i at %s" % (len(self.workers), uri))
-                    self.workers[len(self.workers)] = worker
+                    worker._pyroOneway.add("requestjob")
+                    logger.debug("registering worker #%i at %s" % (workerid, uri))
+                    worker.initialize(workerid, dispatcher = self.callback, **model_params)
+                    self.workers[workerid] = worker
+                    worker.requestjob()
                 except Pyro.errors.PyroError, err:
                     logger.warning("unresponsive worker at %s, deleting it from name server" % uri)
                     ns.remove(name)
         
         if len(self.workers) == 0:
-            raise RuntimeError('no workers found; run some worker scripts on your machines first!')
-        
-        # set all workers to initial state, let them know about each other, tell them to start working
-        logger.info("initializing %i workers" % len(self.workers))
-        for worker_id, worker in self.workers.iteritems():
-            worker.initialize(worker_id, dispatcher = self.callback, **model_params)
-        for worker in self.workers.itervalues():
-            worker.add_workers(self.get_workers())
-            worker.request_job()
+            raise RuntimeError('no workers found; run some lsi_worker scripts on your machines first!')
 
 
-    def get_workers(self):
+    def getworkers(self):
         """
         Return pyro URIs of all registered workers.
         """
         return [worker._pyroUri for worker in self.workers.itervalues()]
 
 
-    def get_job(self, worker_id):
+    def getjob(self, worker_id):
         logger.debug("worker #%i requesting a new job" % worker_id)
         return self.jobs.get(block = True, timeout = HUGE_TIMEOUT)
 
 
-    def put_job(self, job):
+    def putjob(self, job):
+        if self._exit:
+            raise ValueError("Dispatcher is not receiving new jobs")
         self.jobs.put(job, block = True, timeout = HUGE_TIMEOUT)
-        logging.debug("added a new job (len(queue)=%i items)" % self.jobs.qsize())
+        logger.debug("added a new job (len(queue)=%i items)" % self.jobs.qsize())
 
     
-    def get_state(self):
+    def getstate(self):
         """
-        Return the state of an arbitrary worker.
-        
-        The states across all workers should be equivalent, so just pick any.
+        Merge projections from across all workers and return the final projection.
         """
-        worker_id, worker = self.workers.items()[0]
-        logger.info("pulling state from worker %s" % worker_id)
-        return worker.get_state()
-        
-        
-    def updates_done(self):
-        return self.update_no
+        # TODO: merge in parallel, so that we're done in `log_2(workers)` merges, 
+        # and not `workers - 1` merges!
+        # but merging only takes place once, after all input data has been processed,
+        # so the overall effect would be small... compared to the amount of coding :-)
+        logger.info("merging states from %i workers" % len(self.workers))
+        workers = self.workers.items()
+        result = workers[0][1].getstate()
+        for workerid, worker in workers[1:]:
+            logger.info("pulling state from worker %s" % workerid)
+            state = worker.getstate()
+            result.merge(state)
+        return result
 
-
-    @utils.synchronous('lock_collect')
-    def collect_result(self, worker_id):
+    
+    @utils.synchronous('lock_update')
+    def jobdone(self, workerid):
         """
-        A worker has finished its job. Tell it to distribute the result to all 
-        other workers. Note that this method has a lock on it -- only one 
-        simultaneous update is allowed at any time.
+        A worker has finished its job. Log this event and then asynchronously 
+        transfer control back to the worker.
         
-        After the broadcast, asynchronously transfer control back to the worker.
-        In this way, control flow basically oscillates between dispatcher.collect_result()
-        worker.request_job().
+        In this way, control flow basically oscillates between dispatcher.jobdone()
+        worker.requestjob().
         """
-        logger.info("collecting result %i from worker #%s" % (self.update_no, worker_id))
-        worker = self.workers[worker_id]
-        worker.broadcast_update(self.update_no)
-        self.update_no += 1
-        worker.request_job() # tell the worker to ask for another job; asynchronous call (one-way)
+        self._jobsdone += 1
+        logger.info("worker #%s finished job #%i" % (workerid, self._jobsdone))
+        if not self._exit:
+            worker = self.workers[workerid]
+            worker.requestjob() # tell the worker to ask for another job, asynchronously (one-way)
+
+    
+    def jobsdone(self):
+        """Wrap self._jobsdone, needed for remote access through proxies"""
+        return self._jobsdone
 #endclass Dispatcher
 
 
 
 def main(maxsize):
-    Pyro.config.HOST = utils.get_ip()
+    Pyro.config.HOST = utils.get_my_ip()
     
     with Pyro.naming.locateNS() as ns:
         with Pyro.core.Daemon() as daemon:
@@ -168,6 +175,7 @@ def main(maxsize):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
     logger.info("running %s" % " ".join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
