@@ -26,43 +26,6 @@ logger.setLevel(logging.DEBUG)
 
 
 
-def update0(u1, s1, u2, s2):
-    u_u, u_s, _ = numpy.linalg.svd(numpy.bmat([u1, u2]), full_matrices = False)
-    u_s = numpy.diag(u_s)
-    return u_u * u_s, u_s
-
-
-def update1(u1, s1, u2, s2):
-    p, r = numpy.linalg.qr(numpy.bmat([u1, u2]))
-    u_r, u_s, _ = numpy.linalg.svd(r, full_matrices = False)
-    return p * numpy.multiply(u_r, u_s), numpy.diag(u_s)
-
-
-def update2(u1, s1, u2, s2):
-    n1, n2 = u1.shape[1], u2.shape[1]
-    m = u1.T * u2 # (n1, t) * (t, n2) * (n2, n2) = (n1, n2)
-    p, r = numpy.linalg.qr(u2 - u1 * m) # (t, n2)
-    k = numpy.bmat([[s1, m * s2], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r * s2]])
-    r1, s, _ = numpy.linalg.svd(k, full_matrices = False)
-    r1 = r1 * numpy.diag(s)
-    return numpy.bmat([u1, p]) * r1, numpy.diag(s)
-
-
-def update3(u1, s1, u2, s2):
-    n1, n2 = u1.shape[1], u2.shape[1]
-    m = u1.T * u2 # (n1, t) * (t, n2) * (n2, n2) = (n1, n2)
-    p, r = numpy.linalg.qr(u2 - u1 * m) # (t, n2)
-    k = numpy.bmat([[s1, m * s2], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r * s2]])
-    r1, s, _ = numpy.linalg.svd(k, full_matrices = False)
-    r1 = r1 * numpy.diag(s)
-    u1 = u1 * r1[:n1] # rotate current basis
-    p = p * r1[n1:] # rotate the update
-    u1 += p
-    return u1, numpy.diag(s)
-
-
-MERGE_METHOD = 'qr+svd:inplace'
-
 
 class Projection(object):
     def __init__(self, m, k, docs = None):
@@ -87,9 +50,9 @@ class Projection(object):
             self.u, self.s = numpy.asmatrix(self.u[:k].T), numpy.asmatrix(numpy.diag(self.s[:k]))
         else:
             self.u, self.s = None, None
-        
+    
 
-    def merge(self, other, decay = 1.0, method = MERGE_METHOD):
+    def merge(self, other, decay = 1.0, method = 'qr_inplace'):
         """
         Merge this projection with another.
         
@@ -137,7 +100,7 @@ class Projection(object):
             self.u, s, _ = numpy.linalg.svd(smat, full_matrices = False)
             self.s = numpy.diag(s[:self.k])
             self.u = self.u[:, :self.k] * self.s
-        elif method == 'qr+svd':
+        elif method == 'qr':
             logger.debug("constructing update matrix")
             smat = numpy.bmat([decay * self.u, other.u])
             del self.u, other.u
@@ -147,7 +110,7 @@ class Projection(object):
             u_r, s_r = u_r[:, :self.k], numpy.diag(s_r[:self.k])
             self.u = self.u * (u_r * s_r)
             self.s = s_r
-        elif method == 'qr+svd:inplace':
+        elif method == 'qr_inplace':
             n1, n2 = self.u.shape[1], other.u.shape[1]
             m = self.u.T * other.u
             other.u -= self.u * m
@@ -298,36 +261,43 @@ class LsiModel(interfaces.TransformationABC):
         if decay is None:
             decay = self.decay
         
-        self.projection_on(False) # from now on, work with the self.u matrix
+        self.projection_on(False) # from now on, work with the self.projection.u matrix
         
-        # do the actual work -- perform iterative singular value decomposition.
-        chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
-        doc_no = 0
-        for chunk_no, (key, group) in enumerate(chunker):
-            # construct the job as a sparse matrix, to minimize memory overhead
-            # definitely avoid materializing it as a dense matrix
-            job = matutils.corpus2csc(self.numTerms, (doc for _, doc in group))
-            doc_no += job.shape[1]
+        if utils.isCorpus(corpus):
+            # do the actual work -- perform iterative singular value decomposition.
+            chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
+            doc_no = 0
+            for chunk_no, (key, group) in enumerate(chunker):
+                # construct the job as a sparse matrix, to minimize memory overhead
+                # definitely avoid materializing it as a dense matrix
+                job = matutils.corpus2csc(self.numTerms, (doc for _, doc in group))
+                doc_no += job.shape[1]
+                if self.dispatcher:
+                    # distributed version: add this job to the job queue, so workers can work on it
+                    logger.debug("creating job #%i" % chunk_no)
+                    self.dispatcher.putjob(job) # put jobs into queue; this will eventually block, because the queue has a small finite size
+                    logger.info("dispatched documents up to #%s" % doc_no)
+                else:
+                    # serial version, there is only one "worker" (myself) => process the job directly
+    #                self.projection.merge(other = job, decay = decay)
+                    update = Projection(self.numTerms, self.numTopics, job)
+                    del job
+                    self.projection.merge(update, decay = decay)
+                    logger.info("processed documents up to #%s" % doc_no)
+            
             if self.dispatcher:
-                # distributed version: add this job to the job queue, so workers can work on it
-                logger.debug("creating job #%i" % chunk_no)
-                self.dispatcher.putjob(job) # put jobs into queue; this will eventually block, because the queue has a small finite size
-                logger.info("dispatched documents up to #%s" % doc_no)
-            else:
-                # serial version, there is only one "worker" (myself) => process the job directly
-#                self.projection.merge(other = job, decay = decay)
-                update = Projection(self.numTerms, self.numTopics, job)
-                del job
-                self.projection.merge(update, decay = decay)
-                logger.info("processed documents up to #%s" % doc_no)
-        
-        if self.dispatcher:
-            logger.info("reached the end of input; now waiting for all remaining jobs to finish")
-            import time
-            while self.dispatcher.jobsdone() <= chunk_no:
-                time.sleep(0.5) # check every half a second
-            logger.info("all jobs finished, downloading final projection")
-            self.projection = self.dispatcher.getstate()
+                logger.info("reached the end of input; now waiting for all remaining jobs to finish")
+                import time
+                while self.dispatcher.jobsdone() <= chunk_no:
+                    time.sleep(0.5) # check every half a second
+                logger.info("all jobs finished, downloading final projection")
+                self.projection = self.dispatcher.getstate()
+        else:
+            # assume we recieved a job which is already a chunk in CSC format
+            assert not self.dispatcher, "must be in serial mode to receive jobs"
+            update = Projection(self.numTerms, self.numTopics, job)
+            self.projection.merge(update, decay = decay)
+            logger.info("processed sparse job pf %i documents" % (job.shape[1]))
         
         if update_projection:
             self.projection_on(True)
