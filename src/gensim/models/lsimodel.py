@@ -65,25 +65,26 @@ MERGE_METHOD = 'qr+svd:inplace'
 
 
 class Projection(object):
-    def __init__(self, m, k, docs = None, dtype = numpy.float64):
+    def __init__(self, m, k, docs = None):
         """
         Compute (U, S) projection from a corpus.
         
         `docs` is either a spare matrix or a corpus which, when converted to a 
-        sparse matrix, must fit entirely into memory.
+        sparse matrix, must fit comfortably into main memory.
         
         This is the "base step" for computing incremental SVDs of extremely
         large matrices -- SVDs are computed from sparse submatrices that fit
         in memory, and then merged via the `merge()` method.
         """
-        self.m, self.k, self.dtype = m, k, dtype
+        self.m, self.k = m, k
         if docs is not None:
             if utils.isCorpus(docs):
-                docs = matutils.corpus2csc(m, docs, dtype = dtype)
+                docs = matutils.corpus2csc(m, docs)
             logger.info("computing sparse SVD of %s matrix" % str(docs.shape))
             import sparseSVD
-            self.u, self.s, _ = sparseSVD.doSVD(docs, k)
-            self.u, self.s = numpy.matrix(self.u[:k].T), numpy.asmatrix(numpy.diag(self.s[:k]))
+            self.u, self.s, vt = sparseSVD.doSVD(docs, k)
+            del vt
+            self.u, self.s = numpy.asmatrix(self.u[:k].T), numpy.asmatrix(numpy.diag(self.s[:k]))
         else:
             self.u, self.s = None, None
         
@@ -97,9 +98,9 @@ class Projection(object):
         if not isinstance(other, Projection):
             if utils.isCorpus(other):
                 logger.debug("constructing dense document matrix")
-                other = numpy.asmatrix(numpy.column_stack(matutils.sparse2full(doc, self.m) for doc in other), dtype = self.dtype)
+                other = numpy.asmatrix(numpy.column_stack(matutils.sparse2full(doc, self.m) for doc in other))
             else:
-                other = numpy.asmatrix(numpy.asarray(other), dtype = self.dtype)
+                other = numpy.asmatrix(numpy.asarray(other))
             logger.info("updating SVD with %i new documents" % (other.shape[1]))
             if self.u is None:
                 u, s, _ = numpy.linalg.svd(other, full_matrices = False)
@@ -178,11 +179,11 @@ class Projection(object):
 
     
     @staticmethod
-    def from_matrix(mat, dtype = numpy.float64):
-        mat = mat.T
-        result = Projection(m = mat.shape[0], k = mat.shape[1], docs = None, dtype = dtype)
+    def from_matrix(mat):
+        mat = mat.T.astype(numpy.float64)
+        result = Projection(m = mat.shape[0], k = mat.shape[1], docs = None)
         lens = numpy.sqrt(numpy.sum(numpy.multiply(mat, mat), axis = 0))
-        result.u = numpy.asmatrix(numpy.divide(mat.astype(dtype), lens))
+        result.u = numpy.asmatrix(numpy.divide(mat, lens))
         for i, row in enumerate(result.u):
             result.u[i] = numpy.where(numpy.isfinite(row), row, 0.0) # substitute all NaNs/infs with 0.0, but proceed row-by-row to save memory
         result.s = numpy.diag(lens)
@@ -207,7 +208,7 @@ class LsiModel(interfaces.TransformationABC):
     
     """
     def __init__(self, corpus = None, id2word = None, numTopics = 200, 
-                 chunks = 100, decay = 1.0, dtype = numpy.float64, serial_only = False):
+                 chunks = 100, decay = 1.0, serial_only = False):
         """
         `numTopics` is the number of requested factors (latent dimensions). 
         
@@ -235,7 +236,6 @@ class LsiModel(interfaces.TransformationABC):
         """
         self.id2word = id2word
         self.numTopics = numTopics # number of latent topics
-        self.dtype = dtype
         self.chunks = chunks
         self.decay = decay
         
@@ -250,7 +250,7 @@ class LsiModel(interfaces.TransformationABC):
             self.numTerms = 1 + max([-1] + self.id2word.keys())
         
         self.docs_processed = 0
-        self.projection = Projection(self.numTerms, self.numTopics, dtype = dtype)
+        self.projection = Projection(self.numTerms, self.numTopics)
 
         if serial_only:
             logger.info("using serial LSI version on this machine")
@@ -262,7 +262,7 @@ class LsiModel(interfaces.TransformationABC):
                 dispatcher = Pyro.core.Proxy('PYRONAME:gensim.dispatcher@%s' % ns._pyroUri.location)
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word = self.id2word, numTopics = numTopics, 
-                                      chunks = chunks, decay = decay, dtype = dtype, 
+                                      chunks = chunks, decay = decay, 
                                       serial_only = True)
                 self.dispatcher = dispatcher
                 logger.info("using distributed version with %i workers" % len(dispatcher.getworkers()))
@@ -306,7 +306,7 @@ class LsiModel(interfaces.TransformationABC):
         for chunk_no, (key, group) in enumerate(chunker):
             # construct the job as a sparse matrix, to minimize memory overhead
             # definitely avoid materializing it as a dense matrix
-            job = matutils.corpus2csc(self.numTerms, (doc for _, doc in group), dtype = self.dtype)
+            job = matutils.corpus2csc(self.numTerms, (doc for _, doc in group))
             doc_no += job.shape[1]
             if self.dispatcher:
                 # distributed version: add this job to the job queue, so workers can work on it
@@ -316,7 +316,9 @@ class LsiModel(interfaces.TransformationABC):
             else:
                 # serial version, there is only one "worker" (myself) => process the job directly
 #                self.projection.merge(other = job, decay = decay)
-                self.projection.merge(Projection(self.numTerms, self.numTopics, job), decay = decay)
+                update = Projection(self.numTerms, self.numTopics, job)
+                del job
+                self.projection.merge(update, decay = decay)
                 logger.info("processed documents up to #%s" % doc_no)
         
         if self.dispatcher:
@@ -496,7 +498,7 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
     Value Decomposition in Natural Language Processing. EACL 2006.**
     
     Use of this function is deprecated; although it works, it is several orders of 
-    magnitude slower than the direct (non-stochastic) version based on Brand (which
+    magnitude slower than the direct (non-stochastic) version based  (which
     operates in a single pass, too) => use svdAddCols/svdUpdate to compute SVD 
     iteratively. I keep this function here purely for backup reasons.
     """
@@ -524,6 +526,7 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
                 vterm = sterm[:, factor] # create a view (not copy!) of a matrix row
                 
                 # reconstruct one document, using all previous factors <0..factor-1>
+                # we do not pre-cache the dot products because that takes insane amounts of memory (=doesn't scale)
                 recon = numpy.dot(sdoc[docNo, :factor], sterm[:, :factor].T)
                 
                 for termId in xrange(numTerms):

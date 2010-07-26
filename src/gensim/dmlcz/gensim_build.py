@@ -24,18 +24,20 @@ from gensim.corpora import sources, dmlcorpus
 AT_HOME = False
 
 if AT_HOME:
-#    SOURCE_LIST = [
-#                   sources.DmlCzSource('dmlcz', '/Users/kofola/workspace/dml/data/dmlcz/'),
-#                   sources.DmlSource('numdam', '/Users/kofola/workspace/dml/data/numdam/'),
-#                   sources.ArxmlivSource('arxmliv', '/Users/kofola/workspace/dml/data/arxmliv/'),
-#                   ]
-    
     SOURCE_LIST = [
-                   sources.DmlCzSource('dmlcz', '/Users/kofola/workspace/dml/data/dmlcz/CzechMathJ'),
+                   sources.DmlCzSource('dmlcz', '/Users/kofola/workspace/dml/data/dmlcz/'),
+                   sources.DmlSource('numdam', '/Users/kofola/workspace/dml/data/numdam/'),
+                   sources.ArxmlivSource('arxmliv', '/Users/kofola/workspace/dml/data/arxmliv/'),
                    ]
     
+#    SOURCE_LIST = [
+#                   sources.DmlCzSource('dmlcz', '/Users/kofola/workspace/dml/data/dmlcz/CzechMathJ'),
+#                   ]
+    
     RESULT_DIR = '/Users/kofola/workspace/dml/data/results'
+
 else:
+
     SOURCE_LIST = [
                    sources.DmlCzSource('dmlcz', '/data/dmlcz/data/share'),
                    sources.DmlSource('numdam', '/data/dmlcz/data/numdam'),
@@ -57,7 +59,8 @@ def buildDmlCorpus(config):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level = logging.INFO, format='%(asctime)s : %(levelname)s : %(message)s')
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
+    logging.root.setLevel(level = logging.INFO) 
     logging.info("running %s" % ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
