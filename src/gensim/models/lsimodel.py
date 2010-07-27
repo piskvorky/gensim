@@ -69,6 +69,7 @@ class Projection(object):
                 u, s, _ = numpy.linalg.svd(other, full_matrices = False)
                 self.u, self.s = u[:, :self.k], numpy.diag(s[:self.k])
                 return
+            logger.debug("constructing orthogonal component")
             n1, n2 = self.u.shape[1], other.shape[1]
             m = self.u.T * other
             other -= self.u * m
@@ -84,7 +85,11 @@ class Projection(object):
             self.u += p # then add them together (avoid explicitly creating [U,P] matrix in memory)
             self.s = s_k
             return
+        if other.u is None:
+            # the other projection is empty => do nothing
+            return
         if self.u is None:
+            # we are empty => result of merge is the other projection, whatever it is
             self.u = other.u.copy()
             self.s = other.s.copy()
             return
@@ -111,19 +116,25 @@ class Projection(object):
             self.u = self.u * (u_r * s_r)
             self.s = s_r
         elif method == 'qr_inplace':
+            logger.debug("constructing orthogonal component")
             n1, n2 = self.u.shape[1], other.u.shape[1]
+            # TODO Maybe keep the bases in their natural form (rotations), without 
+            # forming explicit matrices that occupy a lot of mem.
+            # The only operation we ever need is basis^T*basis ond basis*component.
+            # But how to do that in numpy?
             m = self.u.T * other.u
             other.u -= self.u * m
             logger.debug("computing QR of %s dense matrix" % str(other.u.shape))
-            p, r = numpy.linalg.qr(other.u)
-            del other.u
+            q, r = numpy.linalg.qr(other.u)
+            del other.u # free up mem
             k = numpy.bmat([[decay * self.s, m * other.s], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r * other.s]])
             logger.debug("computing SVD of %s dense matrix" % str(k.shape))
+            # TODO NOTE only need first self.k SVD factors... but there is no LAPACK routine for partial SVD :(
             u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False)
             u_k, s_k = u_k[:, :self.k], numpy.diag(s_k[:self.k])
             self.u = self.u * u_k[:n1] # rotate current basis
-            p = p * u_k[n1:] # rotate the update
-            self.u += p # then add them together (avoid explicitly creating [U,P] matrix in memory)
+            q = q * u_k[n1:] # rotate the update
+            self.u += q # then add them together (avoid explicitly creating [U,Q] matrix in memory)
             self.s = s_k
         else:
             raise ValueError("unknown merge method: %s" % MERGE_METHOD)
@@ -268,14 +279,21 @@ class LsiModel(interfaces.TransformationABC):
             chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
             doc_no = 0
             for chunk_no, (key, group) in enumerate(chunker):
+#                job = [doc for _, doc in group]
+#                doc_no += len(job)
+#                self.projection.merge(job)
+#                logger.info("processed documents up to #%s" % doc_no)
+#                continue
                 # construct the job as a sparse matrix, to minimize memory overhead
                 # definitely avoid materializing it as a dense matrix
+
                 job = matutils.corpus2csc(self.numTerms, (doc for _, doc in group))
                 doc_no += job.shape[1]
                 if self.dispatcher:
                     # distributed version: add this job to the job queue, so workers can work on it
                     logger.debug("creating job #%i" % chunk_no)
-                    self.dispatcher.putjob(job) # put jobs into queue; this will eventually block, because the queue has a small finite size
+                    self.dispatcher.putjob(job) # put job into queue; this will eventually block, because the queue has a small finite size
+                    del job
                     logger.info("dispatched documents up to #%s" % doc_no)
                 else:
                     # serial version, there is only one "worker" (myself) => process the job directly
@@ -283,6 +301,7 @@ class LsiModel(interfaces.TransformationABC):
                     update = Projection(self.numTerms, self.numTopics, job)
                     del job
                     self.projection.merge(update, decay = decay)
+                    del update
                     logger.info("processed documents up to #%s" % doc_no)
             
             if self.dispatcher:
@@ -295,9 +314,9 @@ class LsiModel(interfaces.TransformationABC):
         else:
             # assume we recieved a job which is already a chunk in CSC format
             assert not self.dispatcher, "must be in serial mode to receive jobs"
-            update = Projection(self.numTerms, self.numTopics, job)
+            update = Projection(self.numTerms, self.numTopics, corpus)
             self.projection.merge(update, decay = decay)
-            logger.info("processed sparse job pf %i documents" % (job.shape[1]))
+            logger.info("processed sparse job of %i documents" % (corpus.shape[1]))
         
         if update_projection:
             self.projection_on(True)
@@ -458,19 +477,21 @@ def svdUpdate(U, S, V, a, b):
 def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, convergence = 1e-4):
     """
     Perform iterative Singular Value Decomposition on a streaming corpus, returning 
-    `numFactors` greatest factors (ie., not necessarily the full spectrum).
+    `numFactors` greatest factors U,S,V^T (ie., not necessarily the full spectrum).
     
     The parameters `numIter` (maximum number of iterations) and `initRate` (gradient 
-    descent step size) guide convergency of the algorithm. It requires `numFactors`
-    passes over the corpus.
+    descent step size) guide convergency of the algorithm. 
+    
+    The algorithm performs at most `numFactors*numIters` passes over the corpus.
     
     See **Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 
     Value Decomposition in Natural Language Processing. EACL 2006.**
     
     Use of this function is deprecated; although it works, it is several orders of 
-    magnitude slower than the direct (non-stochastic) version based  (which
-    operates in a single pass, too) => use svdAddCols/svdUpdate to compute SVD 
-    iteratively. I keep this function here purely for backup reasons.
+    magnitude slower than our own, direct (non-stochastic) version (which
+    operates in a single pass, too, and can be distributed). 
+    
+    I keep this function here purely for backup reasons.
     """
     logger.info("performing incremental SVD for %i factors" % numFactors)
 
@@ -496,10 +517,10 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
                 vterm = sterm[:, factor] # create a view (not copy!) of a matrix row
                 
                 # reconstruct one document, using all previous factors <0..factor-1>
-                # we do not pre-cache the dot products because that takes insane amounts of memory (=doesn't scale)
-                recon = numpy.dot(sdoc[docNo, :factor], sterm[:, :factor].T)
+                # we do not pre-cache the dot products because that takes insane amounts of memory (=doesn't scale with corpus size)
+                recon = numpy.dot(sdoc[docNo, :factor], sterm[:, :factor].T) # numpy.dot is very fast anyway, this is not the bottleneck
                 
-                for termId in xrange(numTerms):
+                for termId in xrange(numTerms): # this loop is.
                     # error of one matrix element = real value - reconstructed value
                     error = vec.get(termId, 0.0) - (recon[termId] + vdoc * vterm[termId])
                     errors += error * error
@@ -530,13 +551,13 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
         logger.info("PROGRESS: finished SVD factor %i/%i, RMSE<=%f" % 
                      (factor + 1, numFactors, rmse))
     
-    # normalize the vectors to unit length; also keep the scale
+    # normalize the vectors to unit length; also keep the norms
     sdocLens = numpy.sqrt(numpy.sum(sdoc * sdoc, axis = 0))
     stermLens = numpy.sqrt(numpy.sum(sterm * sterm, axis = 0))
     sdoc /= sdocLens
     sterm /= stermLens
     
-    # singular value 
+    # singular values are the norms
     svals = sdocLens * stermLens
     return sterm, svals, sdoc.T
 

@@ -38,8 +38,7 @@ def corpus2csc(m, corpus, dtype = numpy.float64):
         mat.data.append([val for _, val in doc])
     docs = i + 1
     mat._shape = (docs, m)
-    mat = mat.tocsr()
-    mat = mat.transpose() # transpose back to documents=columns
+    mat = mat.tocsr().transpose() # transpose back to documents=columns
     assert isinstance(mat, scipy.sparse.csc_matrix)
     return mat
 
