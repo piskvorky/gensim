@@ -130,6 +130,8 @@ class Dispatcher(object):
             logger.info("pulling state from worker %s" % workerid)
             state = worker.getstate()
             result.merge(state)
+        if result:
+            result = result.as_matrix() # only send the projection matrix, not u, s separately
         return result
 
     

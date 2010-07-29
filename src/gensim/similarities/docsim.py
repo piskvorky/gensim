@@ -110,7 +110,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         
         # iterate over corpus, populating the numpy matrix
         for docNo, vector in enumerate(corpus):
-            if docNo % 10000 == 0:
+            if docNo % 1000 == 0:
                 logging.info("PROGRESS: at document #%i/%i" % (docNo, len(corpus)))
             vector = matutils.unitVec(matutils.sparse2full(vector, numFeatures))
             self.corpus[docNo] = vector
