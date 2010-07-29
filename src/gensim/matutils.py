@@ -17,7 +17,7 @@ import scipy.sparse
 
 
 logger = logging.getLogger("matutils")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.WARNING)
 
 
 

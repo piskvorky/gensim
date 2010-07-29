@@ -59,6 +59,8 @@ class Projection(object):
         `other` is destroyed in the process.
         """
         if not isinstance(other, Projection):
+            if not other:
+                return
             if utils.isCorpus(other):
                 logger.debug("constructing dense document matrix")
                 other = numpy.asmatrix(numpy.column_stack(matutils.sparse2full(doc, self.m) for doc in other))
@@ -149,7 +151,7 @@ class Projection(object):
         more appropriate.
         """
         # make sure we return a row-contiguous array (C-style), for fast mat*vec multiplications
-        return numpy.ascontiguousarray(self.u.T, dtype = numpy.float32)
+        return numpy.asmatrix(numpy.ascontiguousarray(self.u, dtype = numpy.float32).T)
 
     
     @staticmethod
@@ -286,7 +288,6 @@ class LsiModel(interfaces.TransformationABC):
 #                continue
                 # construct the job as a sparse matrix, to minimize memory overhead
                 # definitely avoid materializing it as a dense matrix
-
                 job = matutils.corpus2csc(self.numTerms, (doc for _, doc in group))
                 doc_no += job.shape[1]
                 if self.dispatcher:
