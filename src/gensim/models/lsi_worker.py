@@ -78,7 +78,6 @@ class Worker(object):
 #endclass Worker
 
 
-    
 
 def main():
     Pyro.config.HOST = utils.get_my_ip()
