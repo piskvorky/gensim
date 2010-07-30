@@ -47,7 +47,7 @@ class Projection(object):
             import sparseSVD
             self.u, self.s, vt = sparseSVD.doSVD(docs, k)
             del vt
-            self.u, self.s = numpy.asmatrix(self.u[:k].T), numpy.asmatrix(numpy.diag(self.s[:k]))
+            self.u, self.s = self.u[:k].T, self.s[:k]
         else:
             self.u, self.s = None, None
     
@@ -65,13 +65,16 @@ class Projection(object):
                 logger.debug("constructing dense document matrix")
                 other = numpy.asmatrix(numpy.column_stack(matutils.sparse2full(doc, self.m) for doc in other))
             else:
-                other = numpy.asmatrix(numpy.asarray(other))
+                other = numpy.asarray(other)
             logger.info("updating SVD with %i new documents" % (other.shape[1]))
             if self.u is None:
                 u, s, _ = numpy.linalg.svd(other, full_matrices = False)
-                self.u, self.s = u[:, :self.k], numpy.diag(s[:self.k])
+                u, s = u[:, :self.k], numpy.diag(s[:self.k])
+                self.u, self.s = numpy.asmatrix(numpy.asfortranarray(u)), s
                 return
             logger.debug("constructing orthogonal component")
+            self.u = numpy.asmatrix(numpy.asfortranarray(self.u))
+            other = numpy.asmatrix(numpy.asfortranarray(other))
             n1, n2 = self.u.shape[1], other.shape[1]
             m = self.u.T * other
             other -= self.u * m
@@ -118,25 +121,45 @@ class Projection(object):
             self.u = self.u * (u_r * s_r)
             self.s = s_r
         elif method == 'qr_inplace':
-            logger.debug("constructing orthogonal component")
-            n1, n2 = self.u.shape[1], other.u.shape[1]
+            m, n1, n2 = self.u.shape[0], self.u.shape[1], other.u.shape[1]
             # TODO Maybe keep the bases in their natural form (rotations), without 
             # forming explicit matrices that occupy a lot of mem.
             # The only operation we ever need is basis^T*basis ond basis*component.
             # But how to do that in numpy?
-            m = self.u.T * other.u
-            other.u -= self.u * m
+            
+            # find component of u2 orthogonal to u1
+            # IMPORTANT: keep matrices in suitable order for matrix products; failing to do so gives 8x lower performance :(
+            self.u = numpy.asfortranarray(self.u) # does nothing if input already fortran-order array
+            other.u = numpy.asfortranarray(other.u)
+            logger.debug("constructing orthogonal component")
+            c = scipy.linalg.fblas.dgemm(1.0, self.u, other.u, trans_a = True)
+            scipy.linalg.fblas.dgemm(-1.0, self.u, c, beta = 1.0, c = other.u, overwrite_c = True)
+            # perform q, r = qr(component); code hacked out of scipy.linalg.qr
             logger.debug("computing QR of %s dense matrix" % str(other.u.shape))
-            q, r = numpy.linalg.qr(other.u)
-            del other.u # free up mem
-            k = numpy.bmat([[decay * self.s, m * other.s], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r * other.s]])
+            qr, tau, work, info = scipy.linalg.flapack.dgeqrf(other.u, lwork = -1, overwrite_a = True)
+            lwork = work[0]
+            qr, tau, work, info = scipy.linalg.flapack.dgeqrf(other.u, lwork = lwork, overwrite_a = True)
+            del other.u
+            assert info >= 0
+            r = scipy.linalg.basic.triu(qr[:n2, :n2])
+            if m < n2:
+                q, work, info = scipy.linalg.flapack.dorgqr(qr[:,:m], tau, lwork = -1, overwrite_a = 1)
+                lwork = work[0]
+                q, work, info = scipy.linalg.flapack.dorgqr(qr[:,:m], tau, lwork = lwork, overwrite_a = 1)
+            else:
+                q, work, info = scipy.linalg.flapack.dorgqr(qr, tau, lwork = -1, overwrite_a = 1)
+                lwork = work[0]
+                q, work, info = scipy.linalg.flapack.dorgqr(qr, tau, lwork = lwork, overwrite_a = 1)            
+            assert q.flags.f_contiguous
+            assert info >= 0
+            # find rotation that diagonalizes r
+            k = numpy.bmat([[numpy.diag(decay * self.s), c * other.s], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r * other.s]])
             logger.debug("computing SVD of %s dense matrix" % str(k.shape))
-            # TODO NOTE only need first self.k SVD factors... but there is no LAPACK routine for partial SVD :(
-            u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False)
-            u_k, s_k = u_k[:, :self.k], numpy.diag(s_k[:self.k])
-            self.u = self.u * u_k[:n1] # rotate current basis
-            q = q * u_k[n1:] # rotate the update
-            self.u += q # then add them together (avoid explicitly creating [U,Q] matrix in memory)
+            u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False) # TODO NOTE only need first self.k SVD factors... but there is no LAPACK routine for partial SVD :(
+            u_k, s_k = u_k[:, :self.k], s_k[:self.k]
+            # update & rotate current basis U
+            self.u = scipy.linalg.fblas.dgemm(1.0, self.u, u_k[:n1]) # TODO temporarily creates an extra (m,k) dense array! find a way to avoid this!
+            scipy.linalg.fblas.dgemm(1.0, q, u_k[n1:], beta = 1.0, c = self.u, overwrite_c = True)
             self.s = s_k
         else:
             raise ValueError("unknown merge method: %s" % MERGE_METHOD)
@@ -311,9 +334,10 @@ class LsiModel(interfaces.TransformationABC):
                 while self.dispatcher.jobsdone() <= chunk_no:
                     time.sleep(0.5) # check every half a second
                 logger.info("all jobs finished, downloading final projection")
+                del self.projection
                 self.projection = self.dispatcher.getstate()
         else:
-            # assume we recieved a job which is already a chunk in CSC format
+            # assume we received a job which is already a chunk in CSC format
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             update = Projection(self.numTerms, self.numTopics, corpus)
             self.projection.merge(update, decay = decay)
