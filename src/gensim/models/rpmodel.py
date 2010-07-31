@@ -9,9 +9,13 @@ import logging
 import itertools
 
 import numpy
+import scipy
 
 from gensim import interfaces, matutils, utils
 
+
+logger = logging.getLogger('rpmodel')
+logger.setLevel(logging.INFO)
 
 
 class RpModel(interfaces.TransformationABC):
@@ -59,12 +63,14 @@ class RpModel(interfaces.TransformationABC):
             self.numTerms = len(self.id2word)
         else:
             self.numTerms = 1 + max([-1] + self.id2word.keys())
-            
+        
+        shape = self.numTopics, self.numTerms
+        logger.info("constructing %s random matrix" % str(shape))
         # Now construct the projection matrix itself.
         # Here i use a particular form, derived in "Achlioptas: Database-friendly random projection",
         # and his (1) scenario of Theorem 1.1 in particular (all entries are +1/-1).
-        randmat = 1 - 2 * numpy.random.binomial(1, 0.5, (self.numTopics, self.numTerms)) # convert from 0/1 to +1/-1
-        self.projection = numpy.asmatrix(randmat, dtype = numpy.float32) # convert from int32 to floats, for faster multiplications
+        randmat = 1 - 2 * numpy.random.binomial(1, 0.5, shape) # convert from 0/1 to +1/-1
+        self.projection = numpy.asfortranarray(randmat, dtype = numpy.float32) # convert from int32 to floats, for faster multiplications
     
 
     def __getitem__(self, bow):
@@ -76,8 +82,8 @@ class RpModel(interfaces.TransformationABC):
             return self._apply(bow)
         
         vec = matutils.sparse2full(bow, self.numTerms).reshape(self.numTerms, 1) / numpy.sqrt(self.numTopics)
-        assert vec.dtype == numpy.float32 and self.projection.dtype == numpy.float32
-        topicDist = self.projection * vec  # (1, d) * (d, k) = (1, k)
+        vec = numpy.asfortranarray(vec, dtype = numpy.float32)
+        topicDist = scipy.linalg.fblas.sgemv(1.0, self.projection, vec)  # (1, d) * (d, k) = (1, k)
         return [(topicId, float(topicValue)) for topicId, topicValue in enumerate(topicDist.flat)
                 if numpy.isfinite(topicValue) and not numpy.allclose(topicValue, 0.0)]
 #endclass RpModel
