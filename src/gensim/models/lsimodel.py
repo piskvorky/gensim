@@ -15,81 +15,65 @@ import itertools
 import numpy
 import scipy.sparse
 
+# scipy is still an experimental package and locations change, so try to work
+# around differences (currently only triu in scipy 0.7 vs. 0.8)
+from scipy.linalg.blas import get_blas_funcs
+from scipy.linalg.lapack import get_lapack_funcs, find_best_lapack_type
+try:
+    from scipy.linalg.basic import triu
+except ImportError:
+    from scipy.linalg.special_matrices import triu
+
 
 from gensim import interfaces, matutils, utils
 
 
-#logging.basicConfig(format = '%(asctime)s : %(module)s(%(funcName)s) : %(levelname)s : %(message)s')
-logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
 logger = logging.getLogger('lsimodel')
 logger.setLevel(logging.DEBUG)
 
 
 
-
-class Projection(object):
+class Projection(utils.SaveLoad):
     def __init__(self, m, k, docs = None):
         """
-        Compute (U, S) projection from a corpus.
+        Store (U, S) projection itself. This is the class taking care of 'core math';
+        interfacing with corpora, training etc is done through class LsiModel.
         
         `docs` is either a spare matrix or a corpus which, when converted to a 
         sparse matrix, must fit comfortably into main memory.
-        
-        This is the "base step" for computing incremental SVDs of extremely
-        large matrices -- SVDs are computed from sparse submatrices that fit
-        in memory, and then merged via the `merge()` method.
         """
         self.m, self.k = m, k
         if docs is not None:
+            # base case decomposition: given a job `docs`, compute its decomposition 
+            # in core, algorithm 1
             if utils.isCorpus(docs):
                 docs = matutils.corpus2csc(m, docs)
-            logger.info("computing sparse SVD of %s matrix" % str(docs.shape))
-            import sparseSVD
-            self.u, self.s, vt = sparseSVD.doSVD(docs, k)
+            if m * k < 10000:
+                docs = docs.todense()
+                logger.info("computing dense SVD of %s matrix" % str(docs.shape))
+                # SVDLIBC gives spurious results for small matrices.. run full
+                # LAPACK on them instead!
+                u, s, vt = numpy.linalg.svd(docs, full_matrices = False)
+            else:
+                logger.info("computing sparse SVD of %s matrix" % str(docs.shape))
+                import sparseSVD
+                ut, s, vt = sparseSVD.doSVD(docs, k + 30) # add extra dimensions, because for some reason SVDLIBC sometimes returns fewer factors than requested 
+                u = ut.T
             del vt
-            self.u, self.s = self.u[:k].T, self.s[:k]
+            self.u, self.s = u[:, :k], s[:k]
         else:
             self.u, self.s = None, None
     
 
-    def merge(self, other, decay = 1.0, method = 'qr_inplace'):
+    def merge(self, other, decay = 1.0):
         """
-        Merge this projection with another.
+        Merge this Projection with another. 
         
-        `other` is destroyed in the process.
+        Content of `other` is destroyed in the process, so pass this function a 
+        copy if you need it further.
+        
+        This is the optimized merge described in algorithm 5.
         """
-        if not isinstance(other, Projection):
-            if not other:
-                return
-            if utils.isCorpus(other):
-                logger.debug("constructing dense document matrix")
-                other = numpy.asmatrix(numpy.column_stack(matutils.sparse2full(doc, self.m) for doc in other))
-            else:
-                other = numpy.asarray(other)
-            logger.info("updating SVD with %i new documents" % (other.shape[1]))
-            if self.u is None:
-                u, s, _ = numpy.linalg.svd(other, full_matrices = False)
-                u, s = u[:, :self.k], numpy.diag(s[:self.k])
-                self.u, self.s = numpy.asmatrix(numpy.asfortranarray(u)), s
-                return
-            logger.debug("constructing orthogonal component")
-            self.u = numpy.asmatrix(numpy.asfortranarray(self.u))
-            other = numpy.asmatrix(numpy.asfortranarray(other))
-            n1, n2 = self.u.shape[1], other.shape[1]
-            m = self.u.T * other
-            other -= self.u * m
-            logger.debug("computing QR of %s dense matrix" % str(other.shape))
-            p, r = numpy.linalg.qr(other)
-            del other
-            k = numpy.bmat([[decay * self.s, m], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r]])
-            logger.debug("computing SVD of %s dense matrix" % str(k.shape))
-            u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False)
-            u_k, s_k = u_k[:, :self.k], numpy.diag(s_k[:self.k])
-            self.u = self.u * u_k[:n1] # rotate current basis
-            p = p * u_k[n1:] # rotate the update
-            self.u += p # then add them together (avoid explicitly creating [U,P] matrix in memory)
-            self.s = s_k
-            return
         if other.u is None:
             # the other projection is empty => do nothing
             return
@@ -98,95 +82,52 @@ class Projection(object):
             self.u = other.u.copy()
             self.s = other.s.copy()
             return
-        assert self.m == other.m
+        if self.m != other.m:
+            raise ValueError("vector space mismatch: update has %s features, expected %s" %
+                             (other.m, self.m))
         logger.info("merging projections: %s + %s" % (str(self.u.shape), str(other.u.shape)))
-        if method == 'svd':
-            # merge two projections t1,t2 directly by computing svd[t1,t2]
-            logger.debug("constructing update matrix")
-            smat = numpy.bmat([decay * self.u, other.u])
-            del self.u, other.u
-            logger.debug("computing SVD of %s dense matrix" % str(smat.shape))
-            # we need in-core dense SVD => might as well use LAPACK
-            self.u, s, _ = numpy.linalg.svd(smat, full_matrices = False)
-            self.s = numpy.diag(s[:self.k])
-            self.u = self.u[:, :self.k] * self.s
-        elif method == 'qr':
-            logger.debug("constructing update matrix")
-            smat = numpy.bmat([decay * self.u, other.u])
-            del self.u, other.u
-            logger.debug("computing QR of %s dense matrix" % str(smat.shape))
-            self.u, r = numpy.linalg.qr(smat)
-            u_r, s_r, _ = numpy.linalg.svd(r, full_matrices = False)
-            u_r, s_r = u_r[:, :self.k], numpy.diag(s_r[:self.k])
-            self.u = self.u * (u_r * s_r)
-            self.s = s_r
-        elif method == 'qr_inplace':
-            m, n1, n2 = self.u.shape[0], self.u.shape[1], other.u.shape[1]
-            # TODO Maybe keep the bases in their natural form (rotations), without 
-            # forming explicit matrices that occupy a lot of mem.
-            # The only operation we ever need is basis^T*basis ond basis*component.
-            # But how to do that in numpy?
-            
-            # find component of u2 orthogonal to u1
-            # IMPORTANT: keep matrices in suitable order for matrix products; failing to do so gives 8x lower performance :(
-            self.u = numpy.asfortranarray(self.u) # does nothing if input already fortran-order array
-            other.u = numpy.asfortranarray(other.u)
-            logger.debug("constructing orthogonal component")
-            c = scipy.linalg.fblas.dgemm(1.0, self.u, other.u, trans_a = True)
-            scipy.linalg.fblas.dgemm(-1.0, self.u, c, beta = 1.0, c = other.u, overwrite_c = True)
-            # perform q, r = qr(component); code hacked out of scipy.linalg.qr
-            logger.debug("computing QR of %s dense matrix" % str(other.u.shape))
-            qr, tau, work, info = scipy.linalg.flapack.dgeqrf(other.u, lwork = -1, overwrite_a = True)
-            lwork = work[0]
-            qr, tau, work, info = scipy.linalg.flapack.dgeqrf(other.u, lwork = lwork, overwrite_a = True)
-            del other.u
-            assert info >= 0
-            r = scipy.linalg.basic.triu(qr[:n2, :n2])
-            if m < n2:
-                q, work, info = scipy.linalg.flapack.dorgqr(qr[:,:m], tau, lwork = -1, overwrite_a = 1)
-                lwork = work[0]
-                q, work, info = scipy.linalg.flapack.dorgqr(qr[:,:m], tau, lwork = lwork, overwrite_a = 1)
-            else:
-                q, work, info = scipy.linalg.flapack.dorgqr(qr, tau, lwork = -1, overwrite_a = 1)
-                lwork = work[0]
-                q, work, info = scipy.linalg.flapack.dorgqr(qr, tau, lwork = lwork, overwrite_a = 1)            
-            assert q.flags.f_contiguous
-            assert info >= 0
-            # find rotation that diagonalizes r
-            k = numpy.bmat([[numpy.diag(decay * self.s), c * other.s], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r * other.s]])
-            logger.debug("computing SVD of %s dense matrix" % str(k.shape))
-            u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False) # TODO NOTE only need first self.k SVD factors... but there is no LAPACK routine for partial SVD :(
-            u_k, s_k = u_k[:, :self.k], s_k[:self.k]
-            # update & rotate current basis U
-            self.u = scipy.linalg.fblas.dgemm(1.0, self.u, u_k[:n1]) # TODO temporarily creates an extra (m,k) dense array! find a way to avoid this!
-            scipy.linalg.fblas.dgemm(1.0, q, u_k[n1:], beta = 1.0, c = self.u, overwrite_c = True)
-            self.s = s_k
-        else:
-            raise ValueError("unknown merge method: %s" % MERGE_METHOD)
-    
-
-    def as_matrix(self):
-        """
-        Return projection as a single matrix, in single precision and row-major 
-        order.
+        m, n1, n2 = self.u.shape[0], self.u.shape[1], other.u.shape[1]
+        # TODO Maybe keep the bases in their natural form (rotations), without 
+        # forming explicit matrices that occupy a lot of mem.
+        # The only operation we ever need is basis^T*basis ond basis*component.
+        # But how to do that in numpy? Is it fast(er)?
         
-        Currently, this returns U^{-1}; for some applications, (U*S)^{-1} may be
-        more appropriate.
-        """
-        # make sure we return a row-contiguous array (C-style), for fast mat*vec multiplications
-        return numpy.asmatrix(numpy.ascontiguousarray(self.u, dtype = numpy.float32).T)
-
-    
-    @staticmethod
-    def from_matrix(mat):
-        mat = mat.T.astype(numpy.float64)
-        result = Projection(m = mat.shape[0], k = mat.shape[1], docs = None)
-        lens = numpy.sqrt(numpy.sum(numpy.multiply(mat, mat), axis = 0))
-        result.u = numpy.asmatrix(numpy.divide(mat, lens))
-        for i, row in enumerate(result.u):
-            result.u[i] = numpy.where(numpy.isfinite(row), row, 0.0) # substitute all NaNs/infs with 0.0, but proceed row-by-row to save memory
-        result.s = numpy.diag(lens)
-        return result
+        # find component of u2 orthogonal to u1
+        # IMPORTANT: keep matrices in suitable order for matrix products; failing to do so gives 8x lower performance :(
+        self.u = numpy.asfortranarray(self.u) # does nothing if input already fortran-order array
+        other.u = numpy.asfortranarray(other.u)
+        gemm, = get_blas_funcs(('gemm',), (self.u,))
+        logger.debug("constructing orthogonal component")
+        c = gemm(1.0, self.u, other.u, trans_a = True)
+        gemm(-1.0, self.u, c, beta = 1.0, c = other.u, overwrite_c = True)
+        
+        # perform q, r = QR(component); code hacked out of scipy.linalg.qr
+        logger.debug("computing QR of %s dense matrix" % str(other.u.shape))
+        geqrf, = get_lapack_funcs(('geqrf',), (other.u,))
+        qr, tau, work, info = geqrf(other.u, lwork = -1, overwrite_a = True)
+        qr, tau, work, info = geqrf(other.u, lwork = work[0], overwrite_a = True)
+        del other.u
+        assert info >= 0
+        r = triu(qr[:n2, :n2])
+        if m < n2: # rare case...
+            qr = qr[:,:m] # retains fortran order
+        gorgqr, = get_lapack_funcs(('orgqr',), (qr,))
+        q, work, info = gorgqr(qr, tau, lwork = -1, overwrite_a = True)
+        q, work, info = gorgqr(qr, tau, lwork = work[0], overwrite_a = True)
+        assert info >= 0, "qr failed"
+        assert q.flags.f_contiguous
+        
+        # find rotation that diagonalizes r
+        k = numpy.bmat([[numpy.diag(decay * self.s), c * other.s], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r * other.s]])
+        logger.debug("computing SVD of %s dense matrix" % str(k.shape))
+        u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False) # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK routine for partial SVD :(
+        u_k, s_k = u_k[:, :self.k], s_k[:self.k]
+        
+        # update & rotate current basis U
+        logger.debug("updating orthonormal basis U")
+        self.u = gemm(1.0, self.u, u_k[:n1]) # TODO temporarily creates an extra (m,k) dense array! find a way to avoid this!
+        gemm(1.0, q, u_k[n1:], beta = 1.0, c = self.u, overwrite_c = True) # u = [u,u']*u_k
+        self.s = s_k
 #endclass Projection
 
 
@@ -252,7 +193,7 @@ class LsiModel(interfaces.TransformationABC):
         self.projection = Projection(self.numTerms, self.numTopics)
 
         if serial_only:
-            logger.info("using serial LSI version on this machine")
+            logger.info("using serial LSI version on this node")
             self.dispatcher = None
         else:
             try:
@@ -273,7 +214,7 @@ class LsiModel(interfaces.TransformationABC):
             self.add_documents(corpus, chunks = chunks)
     
     
-    def add_documents(self, corpus, chunks = None, decay = None, update_projection = False): # FIXME test=>update True!!!
+    def add_documents(self, corpus, chunks = None, decay = None): # FIXME test=>update True!!!
         """
         Update singular value decomposition factors to take into account a new 
         corpus of documents.
@@ -297,20 +238,13 @@ class LsiModel(interfaces.TransformationABC):
         if decay is None:
             decay = self.decay
         
-        self.projection_on(False) # from now on, work with the self.projection.u matrix
-        
         if utils.isCorpus(corpus):
             # do the actual work -- perform iterative singular value decomposition.
             chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
             doc_no = 0
             for chunk_no, (key, group) in enumerate(chunker):
-#                job = [doc for _, doc in group]
-#                doc_no += len(job)
-#                self.projection.merge(job)
-#                logger.info("processed documents up to #%s" % doc_no)
-#                continue
                 # construct the job as a sparse matrix, to minimize memory overhead
-                # definitely avoid materializing it as a dense matrix
+                # definitely avoid materializing it as a dense matrix!
                 job = matutils.corpus2csc(self.numTerms, (doc for _, doc in group))
                 doc_no += job.shape[1]
                 if self.dispatcher:
@@ -321,7 +255,6 @@ class LsiModel(interfaces.TransformationABC):
                     logger.info("dispatched documents up to #%s" % doc_no)
                 else:
                     # serial version, there is only one "worker" (myself) => process the job directly
-    #                self.projection.merge(other = job, decay = decay)
                     update = Projection(self.numTerms, self.numTopics, job)
                     del job
                     self.projection.merge(update, decay = decay)
@@ -336,77 +269,39 @@ class LsiModel(interfaces.TransformationABC):
                 logger.info("all jobs finished, downloading final projection")
                 del self.projection
                 self.projection = self.dispatcher.getstate()
+                logger.info("decomposition complete")
         else:
             # assume we received a job which is already a chunk in CSC format
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             update = Projection(self.numTerms, self.numTopics, corpus)
             self.projection.merge(update, decay = decay)
             logger.info("processed sparse job of %i documents" % (corpus.shape[1]))
-        
-        if update_projection:
-            self.projection_on(True)
-    
-    
-    def projection_on(self, on):
-        """
-        Calculate projection needed to get the topic-document matrix from 
-        a term-document matrix.
-       
-        The way to represent a vector `x` in latent space is lsi[x] = v = self.s^-1 * self.u^-1 * x,
-        so the projection is self.s^-1 * self.u^-1.
-       
-        The way to compare two documents `x1`, `x2` is to compute v1 * self.s^2 * v2.T, so
-        we pre-multiply v * s (ie., scale axes by singular values), and return
-        that directly as the representation of `x` in LSI space. This conveniently 
-        simplifies to lsi[x] = self.u.T * x, so the projection is just self.u.T
-        
-        Note that neither `v` (the right singular vectors) nor `s` (the singular 
-        values) are used at all in this scaled transformation.
-        """
-        # this whole Projection/matrix business is meant to save memory,
-        # so that we don't need to keep both matrices in memory at the same time, 
-        # or at least not for long.
-        #
-        # The projection matrix is smaller, well-aligned and faster to use, while
-        # Projection objects offers more numerical precision. so use Projection 
-        # during computation and switch to matrix once finished.
-        if on: 
-            # we want matrix
-            if isinstance(self.projection, Projection):
-                logger.info("computing transformation projection")
-                self.projection = self.projection.as_matrix() # conversion to single => loses precision!
-        else:
-            # we want Projection opbject
-            if not isinstance(self.projection, Projection):
-                logger.info("initializing Projection object from matrix")
-                self.projection = Projection.from_matrix(self.projection)
 
     
     def __str__(self):
-        return "LsiModel(numTerms=%s, numTopics=%s, chunks=%s)" % \
-                (self.numTerms, self.numTopics, self.chunks)
+        return "LsiModel(numTerms=%s, numTopics=%s, decay=%s, chunks=%s)" % \
+                (self.numTerms, self.numTopics, self.decay, self.chunks)
 
 
-    def __getitem__(self, bow, scaled = True):
+    def __getitem__(self, bow, scaled = False):
         """
-        Return latent distribution, as a list of (topic_id, topic_value) 2-tuples.
+        Return latent representation, as a list of (topic_id, topic_value) 2-tuples.
         
         This is done by folding input document into the latent topic space. 
         
         Note that this function returns the latent space representation **scaled by the
         singular values**. To return non-scaled embedding, set `scaled` to False.
         """
-        self.projection_on(True)
         # if the input vector is in fact a corpus, return a transformed corpus as result
         if utils.isCorpus(bow):
             return self._apply(bow)
         
-        vec = matutils.sparse2full(bow, self.numTerms)
+        assert self.projection.u is not None, "decomposition not initialized yet"
+        vec = numpy.asfortranarray(matutils.sparse2full(bow, self.numTerms), dtype = self.projection.u.dtype)
         vec.shape = (self.numTerms, 1)
-        assert vec.dtype == numpy.float32 and self.projection.dtype == numpy.float32
-        topicDist = self.projection * vec
-        if not scaled:
-            topicDist = numpy.diag(numpy.diag(1.0 / self.s)) * topicDist
+        topicDist = scipy.linalg.fblas.dgemv(1.0, self.projection.u, vec, trans = True) # u^T * x
+        if scaled:
+            topicDist = (1.0 / self.projection.s) * topicDist # s^-1 * u^T * x
         return [(topicId, float(topicValue)) for topicId, topicValue in enumerate(topicDist)
                 if numpy.isfinite(topicValue) and not numpy.allclose(topicValue, 0.0)]
     
@@ -419,9 +314,8 @@ class LsiModel(interfaces.TransformationABC):
         '-0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + -0.174 * "functor" + -0.168 * "operator"'
         
         """
-        self.projection_on(True)
 #        c = numpy.asarray(self.u[:, topicNo]).flatten()
-        c = numpy.asarray(self.projection[topicNo, :]).flatten()
+        c = numpy.asarray(self.projection.u.T[topicNo, :]).flatten()
         norm = numpy.sqrt(numpy.sum(c * c))
         most = numpy.abs(c).argsort()[::-1][:topN]
         return ' + '.join(['%.3f * "%s"' % (1.0 * c[val] / norm, self.id2word[val]) for val in most])
