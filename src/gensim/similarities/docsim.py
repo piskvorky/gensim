@@ -35,6 +35,7 @@ or iterate over within-corpus similarities with
 import logging
 
 import numpy
+import scipy
 import scipy.sparse
 
 from gensim import interfaces, utils, matutils
@@ -105,7 +106,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
                      (len(corpus), numFeatures))
         self.numFeatures = numFeatures
         self.numBest = numBest
-        self.corpus = numpy.empty(shape = (len(corpus), numFeatures), dtype = dtype)
+        self.corpus = numpy.empty(shape = (len(corpus), numFeatures), dtype = dtype, order = 'F')
         self.normalize = True
         
         # iterate over corpus, populating the numpy matrix
@@ -131,14 +132,11 @@ class MatrixSimilarity(interfaces.SimilarityABC):
             vec = doc
         else:
             vec = matutils.sparse2full(doc, self.numFeatures)
-        
-        vec.shape = (vec.size, 1)
-        if vec.shape != (self.corpus.shape[1], 1):
-            raise ValueError("vector shape mismatch; expected %s, got %s" % 
-                             ((self.corpus.shape[1], 1,), vec.shape))
+        vec = numpy.asfortranarray(vec, order = 'F', dtype = self.corpus.dtype).reshape(self.numFeatures, 1)
         
         # compute cosine similarity against every other document in the collection
-        allSims = self.corpus * vec # N x T * T x 1 = N x 1
+        gemv, = scipy.linalg.get_blas_funcs(('gemv',), (self.u,))
+        allSims = gemv(self.corpus, vec) # N x T * T x 1 = N x 1
         allSims = list(allSims.flat) # convert to plain python list
         assert len(allSims) == self.corpus.shape[0] # make sure no document got lost!
         return allSims

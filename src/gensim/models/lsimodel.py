@@ -29,7 +29,7 @@ from gensim import interfaces, matutils, utils
 
 
 logger = logging.getLogger('lsimodel')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 
@@ -148,7 +148,7 @@ class LsiModel(interfaces.TransformationABC):
     
     """
     def __init__(self, corpus = None, id2word = None, numTopics = 200, 
-                 chunks = 100, decay = 1.0, serial_only = False):
+                 chunks = 100, decay = 1.0, serial_only = None):
         """
         `numTopics` is the number of requested factors (latent dimensions). 
         
@@ -163,8 +163,8 @@ class LsiModel(interfaces.TransformationABC):
         
         The algorithm will automatically try to find active nodes on other computers
         and run in a distributed manner; if this fails, it falls back to serial mode
-        (single core). To suppress distributed computing, enable the `serial_only`
-        constructor parameter.
+        (single core). To suppress distributed computing, set the `serial_only`
+        constructor parameter to True.
         
         Example:
         
@@ -193,7 +193,7 @@ class LsiModel(interfaces.TransformationABC):
         self.projection = Projection(self.numTerms, self.numTopics)
 
         if serial_only:
-            logger.info("using serial LSI version on this node")
+            logger.info("using slave LSI version on this node")
             self.dispatcher = None
         else:
             try:
@@ -207,14 +207,20 @@ class LsiModel(interfaces.TransformationABC):
                 self.dispatcher = dispatcher
                 logger.info("using distributed version with %i workers" % len(dispatcher.getworkers()))
             except Exception, err:
-                logger.info("failed to initialize distributed LSI (%s)" % err)
+                if serial_only is not None: 
+                    # distributed version was specifically requested, so this is an error state
+                    logger.error("failed to initialize distributed LSI (%s)" % err)
+                    raise RuntimeError(err)
+                else:
+                    # user didn't request distributed specifically; just let him know we're running in serial
+                    logger.info("distributed LSI not available, running LSI in serial mode (%s)" % err)
                 self.dispatcher = None
 
         if corpus is not None:
-            self.add_documents(corpus, chunks = chunks)
+            self.addDocuments(corpus, chunks = chunks)
     
     
-    def add_documents(self, corpus, chunks = None, decay = None): # FIXME test=>update True!!!
+    def addDocuments(self, corpus, chunks = None, decay = None): # FIXME test=>update True!!!
         """
         Update singular value decomposition factors to take into account a new 
         corpus of documents.

@@ -24,6 +24,11 @@ from scipy.maxentropy import logsumexp # log of sum
 from gensim import interfaces, utils
 
 
+logger = logging.getLogger('ldamodel')
+logger.setLevel(logging.INFO)
+
+
+
 trigamma = lambda x: polygamma(1, x) # second derivative of the gamma fnc
 
 
@@ -64,7 +69,7 @@ class LdaModel(interfaces.TransformationABC):
         # store user-supplied parameters
         self.id2word = id2word
         if self.id2word is None:
-            logging.info("no word id mapping provided; initializing from corpus, assuming identity")
+            logger.info("no word id mapping provided; initializing from corpus, assuming identity")
             maxId = -1
             for document in corpus:
                 maxId = max(maxId, max([-1] + [fieldId for fieldId, _ in document]))
@@ -108,7 +113,7 @@ class LdaModel(interfaces.TransformationABC):
         corpus, and is thus much slower.
         """
         # initialize the model
-        logging.info("initializing LDA model with '%s'" % initMode)
+        logger.info("initializing LDA model with '%s'" % initMode)
 
         # set initial word counts
         if self.numTerms == 0:
@@ -127,11 +132,11 @@ class LdaModel(interfaces.TransformationABC):
         
         # main EM loop
         for i in xrange(self.EM_MAX_ITER):
-            logging.info("starting EM iteration #%i, converged=%s, likelihood=%s" % 
+            logger.info("starting EM iteration #%i, converged=%s, likelihood=%s" % 
                          (i, converged, likelihood))
 
             if numpy.isfinite(converged) and (converged <= self.EM_CONVERGED): # solution good enough?
-                logging.info("EM converged in %i iterations" % i)
+                logger.info("EM converged in %i iterations" % i)
                 break
             
             # initialize help structures for this iteration
@@ -140,17 +145,17 @@ class LdaModel(interfaces.TransformationABC):
             self.numDocs = 0
             
             # E step: iterate over individual documents, using old beta and updating new word counts
-            logging.info("performing E step #%i" % i)
+            logger.info("performing E step #%i" % i)
             likelihood = sum(self.docEStep(doc) for doc in corpus)
             assert numpy.isfinite(likelihood), "bad likelihood %s" % likelihood
 
             # M step -- update alpha and beta
-            logging.info("performing M step #%i" % i)
+            logger.info("performing M step #%i" % i)
             self.mle(estimateAlpha = self.ESTIMATE_ALPHA)
             
             # check for convergence
             converged = numpy.divide(likelihoodOld - likelihood, likelihoodOld)
-            logging.info("finished iteration #%i: likelihood %f, likelihoodOld %f, converged %f" % 
+            logger.info("finished iteration #%i: likelihood %f, likelihoodOld %f, converged %f" % 
                          (i, likelihood, likelihoodOld, converged))
             likelihoodOld = likelihood
 
@@ -186,7 +191,7 @@ class LdaModel(interfaces.TransformationABC):
         if estimateAlpha:
             self.alpha = self.optAlpha()
         
-        logging.debug("updated model to %s" % self)
+        logger.debug("updated model to %s" % self)
     
     
     def optAlpha(self, MAX_ALPHA_ITER = 1000, NEWTON_THRESH = 1e-5):
@@ -196,24 +201,24 @@ class LdaModel(interfaces.TransformationABC):
         """
         initA = 100.0
         logA = numpy.log(initA) # keep computations in log space
-        logging.debug("optimizing old alpha %s" % self.alpha)
+        logger.debug("optimizing old alpha %s" % self.alpha)
         
         for i in xrange(MAX_ALPHA_ITER):
             a = numpy.exp(logA)
             if not numpy.isfinite(a):
                 initA = initA * 10.0
-                logging.warning("alpha is NaN; new init alpha=%f" % initA)
+                logger.warning("alpha is NaN; new init alpha=%f" % initA)
                 a = initA
                 logA = numpy.log(a)
             f = self.numDocs * (gammaln(self.numTopics * a) - self.numTopics * gammaln(a)) + (a - 1) * self.alphaSuffStats
             df = self.alphaSuffStats + self.numDocs * (self.numTopics * digamma(self.numTopics * a) - self.numTopics * digamma(a))
             d2f = self.numDocs * (self.numTopics * self.numTopics * trigamma(self.numTopics * a) - self.numTopics * trigamma(a))
             logA -= df / (d2f * a + df)
-#            logging.debug("alpha maximization: f=%f, df=%f" % (f, df))
+#            logger.debug("alpha maximization: f=%f, df=%f" % (f, df))
             if numpy.abs(df) <= NEWTON_THRESH:
                 break
         result = numpy.exp(logA) # convert back from log space
-        logging.info("estimated old alpha %s to new alpha %s" % (self.alpha, result))
+        logger.info("estimated old alpha %s to new alpha %s" % (self.alpha, result))
         return result
 
 
@@ -238,11 +243,11 @@ class LdaModel(interfaces.TransformationABC):
         
         # variational estimate
         for i in xrange(self.VAR_MAX_ITER):
-#            logging.debug("inference step #%s, converged=%s, likelihood=%s, likelikelihoodOld=%s" % 
+#            logger.debug("inference step #%s, converged=%s, likelihood=%s, likelikelihoodOld=%s" % 
 #                          (i, converged, likelihood, likelihoodOld))
             
             if numpy.isfinite(converged) and converged <= self.VAR_CONVERGED:
-                logging.debug("document converged in %i iterations" % i)
+                logger.debug("document converged in %i iterations" % i)
                 break
             
             for n, (wordIndex, wordCount) in enumerate(doc):
@@ -288,7 +293,7 @@ class LdaModel(interfaces.TransformationABC):
         Initialize the model word counts from the corpus. Each topic will be initialized
         from `numInitDocs` random documents.
         """
-        logging.info("initializing model with %i random document(s) per topic" % numInitDocs)
+        logger.info("initializing model with %i random document(s) per topic" % numInitDocs)
         result = numpy.ones(shape = (self.numTopics, self.numTerms)) # add-one smooth
         # next we precompute the all the random document indices, so that we can 
         # update the counts in a single sweep over the corpus. 
@@ -320,7 +325,7 @@ class LdaModel(interfaces.TransformationABC):
         Topics are sorted by probability, words are in the same order as in the input.
         """
         fname = corpus.fname + '.lda_inferred'
-        logging.info("writing inferences to %s" % fname)
+        logger.info("writing inferences to %s" % fname)
         fout = open(fname, 'w')
         for doc in corpus:
             # do the inference
