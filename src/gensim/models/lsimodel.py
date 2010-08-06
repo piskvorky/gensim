@@ -24,6 +24,11 @@ try:
 except ImportError:
     from scipy.linalg.special_matrices import triu
 
+try:
+    import sparsesvd
+except ImportError:
+    raise ImportError("sparsesvd module not found; run `easy_install sparsesvd`")
+
 
 from gensim import interfaces, matutils, utils
 
@@ -56,8 +61,7 @@ class Projection(utils.SaveLoad):
                 u, s, vt = numpy.linalg.svd(docs, full_matrices = False)
             else:
                 logger.info("computing sparse SVD of %s matrix" % str(docs.shape))
-                import sparseSVD
-                ut, s, vt = sparseSVD.doSVD(docs, k + 30) # add extra dimensions, because for some reason SVDLIBC sometimes returns fewer factors than requested 
+                ut, s, vt = sparsesvd.sparsesvd(docs, k + 30) # add extra dimensions, because for some reason SVDLIBC sometimes returns fewer factors than requested 
                 u = ut.T
             del vt
             self.u, self.s = u[:, :k], s[:k]
@@ -87,10 +91,10 @@ class Projection(utils.SaveLoad):
                              (other.m, self.m))
         logger.info("merging projections: %s + %s" % (str(self.u.shape), str(other.u.shape)))
         m, n1, n2 = self.u.shape[0], self.u.shape[1], other.u.shape[1]
-        # TODO Maybe keep the bases in their natural form (rotations), without 
-        # forming explicit matrices that occupy a lot of mem.
+        # TODO Maybe keep the bases as elementary reflectors, without 
+        # forming explicit matrices with gorgqr.
         # The only operation we ever need is basis^T*basis ond basis*component.
-        # But how to do that in numpy? Is it fast(er)?
+        # But how to do that in numpy? And is it fast(er)?
         
         # find component of u2 orthogonal to u1
         # IMPORTANT: keep matrices in suitable order for matrix products; failing to do so gives 8x lower performance :(
@@ -120,7 +124,7 @@ class Projection(utils.SaveLoad):
         # find rotation that diagonalizes r
         k = numpy.bmat([[numpy.diag(decay * self.s), c * other.s], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r * other.s]])
         logger.debug("computing SVD of %s dense matrix" % str(k.shape))
-        u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False) # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK routine for partial SVD :(
+        u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False) # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK wrapper for partial svd/eigendecomp in numpy :(
         u_k, s_k = u_k[:, :self.k], s_k[:self.k]
         
         # update & rotate current basis U
