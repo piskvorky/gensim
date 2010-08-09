@@ -18,22 +18,19 @@ if sys.version_info[:2] < (2, 5):
 
 import ez_setup
 ez_setup.use_setuptools()
-
 from setuptools import setup, find_packages
 
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-long_desc = read('README.txt')
-
 
 
 setup(
     name = 'gensim',
-    version = '0.6.0',
+    version = '0.7.0',
     description = 'Python Framework for Vector Space Modeling',
-    long_description = long_desc,
+    long_description = read('README.txt'),
     
     package_dir = {'': 'src'},
     packages = find_packages('src'),
@@ -41,9 +38,16 @@ setup(
     # there is a bug in python2.5, preventing distutils from using any non-ascii characters :( http://bugs.python.org/issue2562
     author = 'Radim Rehurek', # u'Radim Řehůřek', # <- should really be this...
     author_email = 'radimrehurek@seznam.cz',
+    
     url = 'http://nlp.fi.muni.cz/projekty/gensim',
     download_url = 'http://pypi.python.org/pypi/gensim',
+    
+    keywords = 'Singular Value Decomposition, Latent Semantic Indexing, SVD, LSA, ' 
+    'LSI, LDA, Latent Dirichlet Allocation, VSM, Random Projections',
+    
     license = 'LGPL',
+    platforms = 'any',
+
     zip_safe = False,
     
     classifiers = [ # from http://pypi.python.org/pypi?%3Aaction=list_classifiers
@@ -60,12 +64,26 @@ setup(
     
     test_suite = "gensim.test",
     
-    install_requires=[
+    install_requires = [
         'scipy >= 0.6.0',
+        'sparsesvd >= 0.1',
     ],
+    
+    setup_requires = [
+        'sparsesvd >= 0.1',
+    ],
+    
+    extras_require = {
+        'distributed': ['Pyro >= 4.1'],
+    },
 
     include_package_data = True,
 
-    entry_points = {},
+    entry_points = {
+        'console_scripts': [
+            'lsi_worker = gensim.models.lsi_worker:main',
+            'lsi_dispatcher = gensim.models.lsi_dispatcher:main',
+        ],
+    },
 
 )

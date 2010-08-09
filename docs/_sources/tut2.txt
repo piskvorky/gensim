@@ -197,9 +197,9 @@ Adding new :abbr:`VSM (Vector Space Model)` transformations (such as different w
 see the :doc:`API reference <apiref>` or directly the Python code for more info and examples.
 
 It is worth repeating that these are all unique, **incremental** implementations, 
-which do not require the whole training corpus to be present in main memory at once.
-With memory taken care of, we are now investigating available lightweight Python 
-frameworks for distributed computing, to improve CPU efficiency, too. 
+which do not require the whole training corpus to be present in main memory all at once.
+With memory taken care of, we are now implementing :doc:`distributed`, 
+to improve CPU efficiency, too. 
 If you feel you could contribute, please `let us know <mailto:radimrehurek@seznam.cz>`_! 
 
 

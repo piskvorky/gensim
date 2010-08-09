@@ -1,6 +1,11 @@
 Changes
 =======
 
+0.7.0
+
+* changed sparse solver to SVDLIBC (sparsesvd on PyPi)
+* added distributed LSA
+
 0.6.0
 
 * added option for online LSI training (yay!). the transformation can now be

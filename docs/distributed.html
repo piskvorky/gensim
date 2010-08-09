@@ -1,0 +1,239 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Distributed Computing &mdash; gensim documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.6.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="gensim documentation" href="index.html" />
+    <link rel="next" title="API Reference" href="apiref.html" />
+    <link rel="prev" title="Similarity Queries" href="tut3.html" /> 
+  </head>
+  <body>
+
+<!--
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="index.html"><img src="_static/logo.png" border="0" alt="py4sci"/></a>
+</div>
+--!>
+
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="apiref.html" title="API Reference"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tut3.html" title="Similarity Queries"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
+       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Distributed Computing</a><ul>
+<li><a class="reference external" href="#why-distributed-computing">Why distributed computing?</a></li>
+<li><a class="reference external" href="#distributed-computing-in-gensim">Distributed computing in <cite>gensim</cite></a></li>
+<li><a class="reference external" href="#available-distributed-algorithms">Available distributed algorithms</a><ul>
+<li><a class="reference external" href="#distributed-lsa">Distributed LSA</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="tut3.html"
+                                  title="previous chapter">Similarity Queries</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="apiref.html"
+                                  title="next chapter">API Reference</a></p>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="distributed-computing">
+<span id="distributed"></span><h1>Distributed Computing<a class="headerlink" href="#distributed-computing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="why-distributed-computing">
+<h2>Why distributed computing?<a class="headerlink" href="#why-distributed-computing" title="Permalink to this headline">¶</a></h2>
+<p>Need to build semantic representation of a corpus that is millions of documents large and it&#8217;s
+taking forever? Have several idle machines at your disposal that you could use?
+<a class="reference external" href="http://en.wikipedia.org/wiki/Distributed_computing">Distributed computing</a> tries
+to accelerate computations by splitting a given task into several smaller subtasks,
+passing them on to several computing nodes in parallel.</p>
+<p>In the context of <cite>gensim</cite>, computing nodes are computers identified by their IP address/port,
+and communication happens over TCP/IP. The whole collection of available machines is called
+a <em>cluster</em>. The distribution is very coarse grained (not
+much communication going on), so the network is allowed to be of relatively high latency.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>The primary reason for using distributed computing is making things run faster. In <cite>gensim</cite>,
+most of the time consuming stuff is done inside low-level routines for linear algebra, inside
+NumPy, independent of any <cite>gensim</cite> code.
+<strong>Installing a fast</strong> <a class="reference external" href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms">BLAS (Basic Linear Algebra)</a> <strong>library
+for NumPy can improve performance up to 8 times!</strong> So before you start buying those extra computers,
+consider installing a fast, threaded BLAS first. Options include your vendor&#8217;s BLAS library (Intel&#8217;s MKL,
+AMD&#8217;s ACML, OS X&#8217;s vecLib, Sun&#8217;s Sunperf, ...) or some open-source alternative (GotoBLAS, ALTAS).</p>
+<p>To see what BLAS and LAPACK your NumPy&#8217;s using, type into your shell:</p>
+<div class="last highlight-python"><pre>python -c 'import numpy; numpy.show_config()'</pre>
+</div>
+</div>
+</div>
+<div class="section" id="distributed-computing-in-gensim">
+<h2>Distributed computing in <cite>gensim</cite><a class="headerlink" href="#distributed-computing-in-gensim" title="Permalink to this headline">¶</a></h2>
+<p>As always, <cite>gensim</cite> strives for a clear and straightforward API (see <a class="reference external" href="intro.html#design"><em>Design objectives</em></a>).
+To this end, <em>you do not need to make any changes in your code at all</em> in order to
+run it in distributed manner!</p>
+<p>What you need to do is run a worker script (see below) on each of your cluster nodes prior
+to starting your computation. Running this script tells <cite>gensim</cite> that it may use the node
+as a slave to delegate some work to it. During initialization, the algorithms
+inside <cite>gensim</cite> will automatically try to look for and enslave all available worker nodes.
+If at least one worker is found, things will run in the distributed mode; if not, in serial node.</p>
+<p>To remove a node from your cluster, simply kill its worker script process.</p>
+<p>For communication between nodes, <cite>gensim</cite> uses <a class="reference external" href="http://pypi.python.org/pypi/Pyro">Pyro (PYthon Remote Objects)</a>, version &gt;= 4.1. This is a library for low-level socket communication
+and remote procedure calls (RPC) in Python. <cite>Pyro</cite> is a pure-Python library, so installation
+is quite painless and only involves copying its <cite>*.py</cite> files somewhere onto your Python&#8217;s import path:</p>
+<div class="highlight-python"><pre>sudo easy_install Pyro</pre>
+</div>
+<p>You don&#8217;t have to install <cite>Pyro</cite> to run <cite>gensim</cite>, but if you don&#8217;t, you won&#8217;t be able
+to access the distributed features (i.e., everything will always run in serial mode).</p>
+</div>
+<div class="section" id="available-distributed-algorithms">
+<h2>Available distributed algorithms<a class="headerlink" href="#available-distributed-algorithms" title="Permalink to this headline">¶</a></h2>
+<p>Currently, there is only Latent Semantic Analysis (LSA, LSI). Latent Dirichlet Allocation is on its way.</p>
+<div class="section" id="distributed-lsa">
+<h3>Distributed LSA<a class="headerlink" href="#distributed-lsa" title="Permalink to this headline">¶</a></h3>
+<p>We will show how to run distributed Latent Semantic Analysis on an example. Let&#8217;s say
+we have 5 computers at our disposal, all on the same network segment.
+To start with, install <cite>gensim</cite> and <cite>Pyro</cite> on each one of them with:</p>
+<div class="highlight-python"><pre>$ sudo easy_install gensim[distributed]</pre>
+</div>
+<p>Let&#8217;s say our example cluster consists of five dual-core computers with loads of
+memory. We will therefore run <strong>two</strong> worker scripts on four of the physical machine,
+creating <strong>eight</strong> logical worker nodes:</p>
+<div class="highlight-python"><pre>$ lsi_worker</pre>
+</div>
+<p>That is, run the <cite>lsi_worker</cite> command from your shell, twice on each computer.
+This lets <cite>gensim</cite> know that it can run two jobs on each of the four computers in
+parallel, so that the computation will be done faster (but also taking up twice
+as much memory).</p>
+<p>Next, pick one computer that will be a job scheduler, in charge of worker
+synchronization, and on it run:</p>
+<div class="highlight-python"><pre>$ lsi_dispatcher</pre>
+</div>
+<p>The dispatcher can be one of the worker nodes, or it can be another, distinct computer.
+The dispatcher will only be queueing and distributing (&#8220;dispatching&#8221;) individual jobs
+to the workers, and otherwise not doing much, so pick a computer that has ample memory.
+In our example, we will use the fifth computer to act as the dispatcher and run
+<cite>lsi_dispatcher</cite> command from there.</p>
+<p>And that&#8217;s it! Now let&#8217;s test our distributed LSA. Open a Python shell on that
+same fifth computer the dispatcher is running on (again, this can be done on any computer
+on the same network segment, our choice of the &#8220;dispatcher&#8221; machine is incidental) and try:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">utils</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.mm&#39;</span><span class="p">)</span> <span class="c"># load a corpus of nine documents, from the Tutorials</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.dict&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">id2token</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="c"># run distributed LSA on nine documents</span>
+</pre></div>
+</div>
+<p>If you observe the log, you should see a line similar to:</p>
+<div class="highlight-python"><pre>2010-08-09 23:44:25,746 : INFO : using distributed version with 8 workers</pre>
+</div>
+<p>Success! But a corpus of nine documents is no challenge for our powerful cluster...
+In fact, we had to lower the job size (<cite>chunks</cite> parameter) to a single document
+at a time, otherwise they would all be done at once by a single worker.</p>
+<p>Let&#8217;s run LSA on a million documents instead:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus1m</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">RepeatCorpus</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">)</span> <span class="c"># inflate the corpus to 1M documents, by repeating them over</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus1m</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">serial_only</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span> <span class="c"># run distributed LSA on 1 million documents!</span>
+</pre></div>
+</div>
+<p>The <cite>serial_only</cite> parameter instructs <cite>gensim</cite> whether to run in serial or distributed mode.
+Setting it to <cite>True</cite> will result in LSA running inside the active Python shell, without
+any inter-node communication whatsoever, even if there are worker nodes available.
+Setting <cite>serial_only=False</cite> forces distributed mode (raising an exception in
+case of failure). And finally, leaving <cite>serial_only</cite> unspecified tells <cite>gensim</cite>
+to try running in distributed mode, or, failing that, run in serial mode.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="apiref.html" title="API Reference"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tut3.html" title="Similarity Queries"
+             >previous</a> |</li>
+        <li><a href="index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
+       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, Radim Řehůřek.
+      Last updated on Aug 10, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+    </div>
+  </body>
+</html>

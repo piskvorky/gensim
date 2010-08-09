@@ -22,8 +22,10 @@ document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ at W
   gensim is not meant to be a production tool for commercial environments.
 
 
-Design
-------
+.. _design:
+
+Design objectives
+------------------
  
 Gensim includes the following features:
 

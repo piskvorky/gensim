@@ -60,7 +60,7 @@
         <div class="sphinxsidebarwrapper">
             <h4>Previous topic</h4>
             <p class="topless"><a href="ldamodel.html"
-                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
+                                  title="previous chapter"><tt class="docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="tfidfmodel.html"
                                   title="next chapter"><tt class="docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model</a></p>
@@ -90,7 +90,7 @@
 <p>Module for Latent Semantic Indexing.</p>
 <dl class="class">
 <dt id="gensim.models.lsimodel.LsiModel">
-<em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus=None</em>, <em>id2word=None</em>, <em>numTopics=200</em>, <em>extraDims=10</em>, <em>chunks=100</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus=None</em>, <em>id2word=None</em>, <em>numTopics=200</em>, <em>chunks=10000</em>, <em>decay=1.0</em>, <em>serial_only=None</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Objects of this class allow building and maintaining a model for Latent 
 Semantic Indexing (also known as Latent Semantic Analysis).</p>
 <p>The main methods are:</p>
@@ -107,15 +107,12 @@ arbitrary, unseen document, using the <tt class="docutils literal"><span class="
 notation. You can also add new training documents, with <tt class="docutils literal"><span class="pre">self.addDocuments</span></tt>,
 so that training can be stopped and resumed at any time, and the
 LSI transformation is available at any point.</p>
-<p><cite>extraDims</cite> is the number of extra dimensions that will be internally 
-computed (ie. <cite>numTopics + extraDims</cite>) to improve numerical properties of 
-the SVD algorithm. These extra dimensions will be eventually chopped off
-for the final projection. Set to 0 to save memory; set to ~10 to
-2*numTopics for increased SVD precision.</p>
 <p>If you specify a <cite>corpus</cite>, it will be used to train the model. See the 
 method <cite>addDocuments</cite> for a description of the <cite>chunks</cite> and <cite>decay</cite> parameters.</p>
-<p>The algorithm is based on
-<strong>Brand, 2006: Fast low-rank modifications of the thin singular value decomposition</strong>.</p>
+<p>The algorithm will automatically try to find active nodes on other computers
+and run in a distributed manner; if this fails, it falls back to serial mode
+(single core). To suppress distributed computing, set the <cite>serial_only</cite>
+constructor parameter to True.</p>
 <p>Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">lsi</span><span class="p">[</span><span class="n">doc_tfidf</span><span class="p">]</span>
@@ -125,22 +122,18 @@ method <cite>addDocuments</cite> for a description of the <cite>chunks</cite> an
 </div>
 <dl class="method">
 <dt id="gensim.models.lsimodel.LsiModel.addDocuments">
-<tt class="descname">addDocuments</tt><big>(</big><em>corpus</em>, <em>chunks=100</em>, <em>decay=1.0</em>, <em>reorth=False</em>, <em>updateProjection=True</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.addDocuments" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">addDocuments</tt><big>(</big><em>corpus</em>, <em>chunks=None</em>, <em>decay=None</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.addDocuments" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update singular value decomposition factors to take into account a new 
 corpus of documents.</p>
-<p>Training proceeds in chunks of <cite>chunks</cite> documents at a time.
-This parameter is a tradeoff between increased speed (bigger <cite>chunks</cite>) vs. 
+<p>Training proceeds in chunks of <cite>chunks</cite> documents at a time. If the 
+distributed mode is on, each chunk is sent to a different worker/computer.
+Size of <cite>chunks</cite> is a tradeoff between increased speed (bigger <cite>chunks</cite>) vs. 
 lower memory footprint (smaller <cite>chunks</cite>). Default is processing 100 documents
 at a time.</p>
 <p>Setting <cite>decay</cite> &lt; 1.0 causes re-orientation towards new data trends in the 
 input document stream, by giving less emphasis to old observations. This allows
 SVD to gradually &#8220;forget&#8221; old observations and give more preference to 
 new ones. The decay is applied once after every <cite>chunks</cite> documents.</p>
-<p>This function corresponds to the general update of Brand (section 2), 
-specialized for <cite>A = docs.T</cite> and <cite>B</cite> trivial (only append the new columns).
-For a function that supports arbitrary updates (appending columns, erasing 
-columns, column revisions and recentering), see the <cite>svdUpdate</cite> function in
-this module.</p>
 </dd></dl>
 
 <dl class="classmethod">
@@ -163,31 +156,28 @@ this module.</p>
 <tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.save" title="Permalink to this definition">¶</a></dt>
 <dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
 
-<dl class="method">
-<dt id="gensim.models.lsimodel.LsiModel.svdAddCols">
-<tt class="descname">svdAddCols</tt><big>(</big><em>docs</em>, <em>decay=1.0</em>, <em>reorth=False</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.svdAddCols" title="Permalink to this definition">¶</a></dt>
-<dd><p>If <cite>X = self.u * self.s * self.v^T</cite> is the current decomposition,
-update it so that <cite>self.u * self.s * self.v^T = [X docs.T]</cite>,
-that is, append new columns to the original matrix.</p>
-<p><cite>docs</cite> is a <strong>dense</strong> matrix containing the new observations as rows.</p>
 </dd></dl>
 
-</dd></dl>
+<dl class="function">
+<dt id="gensim.models.lsimodel.clipSpectrum">
+<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">clipSpectrum</tt><big>(</big><em>s</em>, <em>k</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.clipSpectrum" title="Permalink to this definition">¶</a></dt>
+<dd>Given singular values <cite>s</cite>, return how many factors should be kept to avoid
+storing spurious values. The returned value is at most <cite>k</cite>.</dd></dl>
 
 <dl class="function">
 <dt id="gensim.models.lsimodel.iterSvd">
 <tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">iterSvd</tt><big>(</big><em>corpus</em>, <em>numTerms</em>, <em>numFactors</em>, <em>numIter=200</em>, <em>initRate=None</em>, <em>convergence=0.0001</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.iterSvd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform iterative Singular Value Decomposition on a streaming corpus, returning 
-<cite>numFactors</cite> greatest factors (ie., not necessarily the full spectrum).</p>
+<cite>numFactors</cite> greatest factors U,S,V^T (ie., not necessarily the full spectrum).</p>
 <p>The parameters <cite>numIter</cite> (maximum number of iterations) and <cite>initRate</cite> (gradient 
-descent step size) guide convergency of the algorithm. It requires <cite>numFactors</cite>
-passes over the corpus.</p>
+descent step size) guide convergency of the algorithm.</p>
+<p>The algorithm performs at most <cite>numFactors*numIters</cite> passes over the corpus.</p>
 <p>See <strong>Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 
 Value Decomposition in Natural Language Processing. EACL 2006.</strong></p>
 <p>Use of this function is deprecated; although it works, it is several orders of 
-magnitude slower than the direct (non-stochastic) version based on Brand (which
-operates in a single pass, too) =&gt; use svdAddCols/svdUpdate to compute SVD 
-iteratively. I keep this function here purely for backup reasons.</p>
+magnitude slower than our own, direct (non-stochastic) version (which
+operates in a single pass, too, and can be distributed).</p>
+<p>I keep this function here purely for backup reasons.</p>
 </dd></dl>
 
 <dl class="function">
@@ -237,6 +227,8 @@ vectors. In that case, the returned V&#8217; will also be None (saves memory).</
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek.
+      Last updated on Aug 10, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>
 </html>

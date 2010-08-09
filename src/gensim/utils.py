@@ -15,6 +15,11 @@ import re
 import unicodedata
 import cPickle
 from functools import wraps
+import itertools
+
+
+logger = logging.getLogger('utils')
+logger.setLevel(logging.INFO)
 
 
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
@@ -98,7 +103,7 @@ class SaveLoad(object):
         """
         Load a previously saved object from file (also see `save`).
         """
-        logging.info("loading %s object from %s" % (cls.__name__, fname))
+        logger.info("loading %s object from %s" % (cls.__name__, fname))
         return cPickle.load(open(fname, 'rb')) # 'b' for binary, needed on Windows
 
 
@@ -106,7 +111,7 @@ class SaveLoad(object):
         """
         Save the object to file via pickling (also see `load`).
         """
-        logging.info("saving %s object to %s" % (self.__class__.__name__, fname))
+        logger.info("saving %s object to %s" % (self.__class__.__name__, fname))
         f = open(fname, 'wb')
         cPickle.dump(self, f, protocol = -1) # -1 to use the highest available protocol, for efficiency
         f.close()
@@ -195,6 +200,8 @@ def isCorpus(obj):
     **NOTE**: When called on an empty corpus (no documents), will return False.
     """
     try:
+        if hasattr(obj, 'next'):
+            return False # iterators are not allowed to be corpora (need an iterable)
         doc1 = iter(obj).next() # obj supports iteration and is not empty
         if len(doc1) == 0: # the first document is empty
             return True
@@ -233,3 +240,27 @@ def get_my_ip():
             # give up, leave the resolution to gethostbyname
             result = socket.gethostbyname(socket.gethostname())
     return result
+
+
+class RepeatCorpus(SaveLoad):
+    """
+    Used in the tutorial on distributed computing and likely not useful anywhere else.
+    
+    """
+    def __init__(self, corpus, reps):
+        """
+        Wrap a `corpus` as another corpus of length `reps`. This is achieved by
+        repeating documents from `corpus` over and over again, until requested
+        length is reached. Repetition is done on-the-fly=efficiently, via 
+        itertools. 
+        
+        >>> corpus = [[(1, 0.5)], []] # 2 documents
+        >>> list(RepeatCorpus(corpus, 5)) # repeat 2.5 times to get 5 documents
+        >>> [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)]]
+
+        """
+        self.corpus = corpus
+        self.reps = reps
+    
+    def __iter__(self):
+        return itertools.islice(itertools.cycle(self.corpus), self.reps)

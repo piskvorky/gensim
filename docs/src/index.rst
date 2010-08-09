@@ -29,7 +29,7 @@ Quick Reference Example
 >>> corpus = corpora.MmCorpus('/path/to/corpus.mm')
 >>>
 >>> # initialize a transformation (Latent Semantic Indexing with twenty latent dimensions)
->>> lsi = models.LsiModel(corpus, numTopics = 20)
+>>> lsi = models.LsiModel(corpus, numTopics = 200)
 >>>
 >>> # convert the same corpus to latent space and index it
 >>> index = similarities.MatrixSimilarity(lsi[corpus])
@@ -47,4 +47,5 @@ Contents
    intro
    install
    tutorial
+   distributed
    apiref    

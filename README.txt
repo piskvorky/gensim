@@ -13,7 +13,7 @@ Once found, documents can be succinctly expressed in terms of this structure, qu
 
 If the previous paragraphs left you confused, you can first read more about the `Vector 
 Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised 
-document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ at Wikipedia.
+document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
 
 .. note::
 
@@ -41,7 +41,7 @@ you'll need to run::
 For alternative modes of installation (without root priviledges, development 
 installation), see the `documentation <http://nlp.fi.muni.cz/projekty/gensim/install.html>`_.
 
-This version has been tested under Python 2.5, but should run on any 2.5 <= Python < 3.0.
+This version has been tested under Python 2.5 and 2.6, but should run on any 2.5 <= Python < 3.0.
 
 Documentation
 -------------

@@ -50,10 +50,6 @@ class Worker(object):
         """
         Request jobs from the dispatcher in an infinite loop. The requests are 
         blocking, so if there are no jobs available, the thread will wait.  
-        
-        Once the job is finished, the dispatcher is notified that it should collect
-        the results, broadcast them to other workers etc., and eventually tell
-        this worker to request another job by calling this function again.
         """
         if self.model is None:
             raise RuntimeError("worker must be initialized before receiving jobs")
@@ -65,7 +61,7 @@ class Worker(object):
 
     @utils.synchronous('lock_update')
     def processjob(self, job):
-        self.model.add_documents(job, update_projection = False)
+        self.model.addDocuments(job)
         self.jobsdone += 1
 
 
@@ -74,12 +70,23 @@ class Worker(object):
         logger.info("worker #%i returning its state after %s jobs" % 
                     (self.myid, self.jobsdone))
         assert isinstance(self.model.projection, lsimodel.Projection)
-        return self.model.projection
+        result = self.model.projection
+        self.model.projection = self.model.projection.empty_like()
+        return result
 #endclass Worker
 
 
 
 def main():
+    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
+    logger.info("running %s" % " ".join(sys.argv))
+
+    program = os.path.basename(sys.argv[0])
+    # make sure we have enough cmd line parameters
+    if len(sys.argv) < 1:
+        print globals()["__doc__"] % locals()
+        sys.exit(1)
+    
     Pyro.config.HOST = utils.get_my_ip()
     
     with Pyro.naming.locateNS() as ns:
@@ -92,18 +99,9 @@ def main():
             logger.info("worker is ready at URI %s" % uri)
             daemon.requestLoop()
 
+    logger.info("finished running %s" % program)
+    
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
-    logger.info("running %s" % " ".join(sys.argv))
-
-    program = os.path.basename(sys.argv[0])
-    # make sure we have enough cmd line parameters
-    if len(sys.argv) < 1:
-        print globals()["__doc__"] % locals()
-        sys.exit(1)
-    
     main()
-    
-    logger.info("finished running %s" % program)

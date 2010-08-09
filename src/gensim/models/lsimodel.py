@@ -38,6 +38,21 @@ logger.setLevel(logging.INFO)
 
 
 
+def clipSpectrum(s, k):
+    """
+    Given singular values `s`, return how many factors should be kept to avoid
+    storing spurious values. The returned value is at most `k`.
+    """
+    # compute relative contribution of each singular value towards the energy spectrum
+    rel_spectrum = numpy.abs(1.0 - numpy.cumsum(s**2 / numpy.sum(s ** 2)))
+    # ignore the last 1/k percent of the spectrum
+    small = 1 + len(numpy.where(rel_spectrum > 1.0 / k)[0]) 
+    k = min(k, small) # clip against k
+    logger.info("keeping %i factors (discarding %.2f%% of the energy spectrum)" %
+                (k, 100 * rel_spectrum[k - 1]))
+    return k
+
+
 class Projection(utils.SaveLoad):
     def __init__(self, m, k, docs = None):
         """
@@ -61,12 +76,18 @@ class Projection(utils.SaveLoad):
                 u, s, vt = numpy.linalg.svd(docs, full_matrices = False)
             else:
                 logger.info("computing sparse SVD of %s matrix" % str(docs.shape))
-                ut, s, vt = sparsesvd.sparsesvd(docs, k + 30) # add extra dimensions, because for some reason SVDLIBC sometimes returns fewer factors than requested 
+                ut, s, vt = sparsesvd.sparsesvd(docs, k + 30) # ask for extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
                 u = ut.T
+                del ut
             del vt
+            k = clipSpectrum(s, self.k)
             self.u, self.s = u[:, :k], s[:k]
         else:
             self.u, self.s = None, None
+    
+    
+    def empty_like(self):
+        return Projection(self.m, self.k)
     
 
     def merge(self, other, decay = 1.0):
@@ -90,6 +111,8 @@ class Projection(utils.SaveLoad):
             raise ValueError("vector space mismatch: update has %s features, expected %s" %
                              (other.m, self.m))
         logger.info("merging projections: %s + %s" % (str(self.u.shape), str(other.u.shape)))
+#        diff = numpy.dot(self.u.T, self.u) - numpy.eye(self.u.shape[1])
+#        logger.error('orth error after=%f' % numpy.sum(diff * diff))
         m, n1, n2 = self.u.shape[0], self.u.shape[1], other.u.shape[1]
         # TODO Maybe keep the bases as elementary reflectors, without 
         # forming explicit matrices with gorgqr.
@@ -125,13 +148,17 @@ class Projection(utils.SaveLoad):
         k = numpy.bmat([[numpy.diag(decay * self.s), c * other.s], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r * other.s]])
         logger.debug("computing SVD of %s dense matrix" % str(k.shape))
         u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False) # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK wrapper for partial svd/eigendecomp in numpy :(
-        u_k, s_k = u_k[:, :self.k], s_k[:self.k]
+        
+        k = clipSpectrum(s_k, self.k)
+        u_k, s_k = u_k[:, :k], s_k[:k]
         
         # update & rotate current basis U
         logger.debug("updating orthonormal basis U")
         self.u = gemm(1.0, self.u, u_k[:n1]) # TODO temporarily creates an extra (m,k) dense array! find a way to avoid this!
         gemm(1.0, q, u_k[n1:], beta = 1.0, c = self.u, overwrite_c = True) # u = [u,u']*u_k
         self.s = s_k
+#        diff = numpy.dot(self.u.T, self.u) - numpy.eye(self.u.shape[1])
+#        logger.error('orth error after=%f' % numpy.sum(diff * diff))
 #endclass Projection
 
 
@@ -152,7 +179,7 @@ class LsiModel(interfaces.TransformationABC):
     
     """
     def __init__(self, corpus = None, id2word = None, numTopics = 200, 
-                 chunks = 100, decay = 1.0, serial_only = None):
+                 chunks = 10000, decay = 1.0, serial_only = None):
         """
         `numTopics` is the number of requested factors (latent dimensions). 
         
@@ -214,7 +241,7 @@ class LsiModel(interfaces.TransformationABC):
                 if serial_only is not None: 
                     # distributed version was specifically requested, so this is an error state
                     logger.error("failed to initialize distributed LSI (%s)" % err)
-                    raise RuntimeError(err)
+                    raise RuntimeError("failed to initialize distributed LSI (%s)" % err)
                 else:
                     # user didn't request distributed specifically; just let him know we're running in serial
                     logger.info("distributed LSI not available, running LSI in serial mode (%s)" % err)
