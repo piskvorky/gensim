@@ -21,7 +21,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="index.html" />
     <link rel="up" title="Tutorial" href="tutorial.html" />
-    <link rel="next" title="API Reference" href="apiref.html" />
+    <link rel="next" title="Distributed Computing" href="distributed.html" />
     <link rel="prev" title="Topics and Transformations" href="tut2.html" /> 
   </head>
   <body>
@@ -43,7 +43,7 @@
           <a href="modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
         <li class="right" >
-          <a href="apiref.html" title="API Reference"
+          <a href="distributed.html" title="Distributed Computing"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="tut2.html" title="Topics and Transformations"
@@ -75,8 +75,8 @@
             <p class="topless"><a href="tut2.html"
                                   title="previous chapter">Topics and Transformations</a></p>
             <h4>Next topic</h4>
-            <p class="topless"><a href="apiref.html"
-                                  title="next chapter">API Reference</a></p>
+            <p class="topless"><a href="distributed.html"
+                                  title="next chapter">Distributed Computing</a></p>
           <div id="searchbox" style="display: none">
             <h3>Quick search</h3>
               <form class="search" action="search.html" method="get">
@@ -119,7 +119,7 @@ previous examples (which really originally comes from Deerwester et al.&#8217;s
 seminal 1990 article):</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">similarities</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.dict&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.mm&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.mm&#39;</span><span class="p">)</span> <span class="c"># comes from the first tutorial, &quot;From strings to vectors&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">corpus</span>
 <span class="go">MmCorpus(9 documents, 12 features, 28 non-zero entries)</span>
 </pre></div>
@@ -149,9 +149,10 @@ may be more appropriate.</p>
 <div class="section" id="initializing-query-structures">
 <h3>Initializing query structures<a class="headerlink" href="#initializing-query-structures" title="Permalink to this headline">¶</a></h3>
 <p>To prepare for similarity queries, we need to enter all documents which we will want
-to compare against subsequent queries. In our case, they are the nine documents,
-converted to a 2-D latent space:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">MatrixSimilarity</span><span class="p">(</span><span class="n">lsi</span><span class="p">[</span><span class="n">corpus</span><span class="p">])</span> <span class="c"># transform corpus to LSI space and &quot;index&quot; it</span>
+to compare against subsequent queries. In our case, they are the same nine documents
+used for training LSI, converted to 2-D LSA space. But that&#8217;s only incidental, we
+might also be indexing a different corpus altogether.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">MatrixSimilarity</span><span class="p">(</span><span class="n">lsi</span><span class="p">[</span><span class="n">corpus</span><span class="p">])</span> <span class="c"># transform corpus to LSI space and index it</span>
 </pre></div>
 </div>
 <div class="admonition warning">
@@ -163,12 +164,9 @@ Without 1GB of free RAM, you would need to use the <tt class="xref docutils lite
 This class operates in constant memory, in a streaming (and more gensim-like)
 fashion, but is also much slower than <tt class="xref docutils literal"><span class="pre">similarities.MatrixSimilarity</span></tt>, which uses
 fast level-2 <a class="reference external" href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms">BLAS routines</a>
-to determine similarities. We are currently searching for a lightweight Python
-framework for distributed computing, which will allow us to perform fast queries
-without compromising gensim&#8217;s memory independence, by spreading the query load
-over many computers.</p>
+to determine similarities.</p>
 </div>
-<p>Index persistency is handled via the <tt class="xref docutils literal"><span class="pre">save()</span></tt> and <tt class="xref docutils literal"><span class="pre">load()</span></tt> functions:</p>
+<p>Index persistency is handled via the standard <tt class="xref docutils literal"><span class="pre">save()</span></tt> and <tt class="xref docutils literal"><span class="pre">load()</span></tt> functions:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.index&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">MatrixSimilarity</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.index&#39;</span><span class="p">)</span>
 </pre></div>
@@ -178,7 +176,7 @@ over many computers.</p>
 <h3>Performing queries<a class="headerlink" href="#performing-queries" title="Permalink to this headline">¶</a></h3>
 <p>To obtain similarities of our query document against the nine indexed documents:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sims</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">vec_lsi</span><span class="p">]</span> <span class="c"># perform a similarity query against the corpus</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">sims</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">sims</span><span class="p">))</span> <span class="c"># print (document_number, document_similarity) 2-tuples</span>
 <span class="go">[(0, 0.99809301), (1, 0.93748635), (2, 0.99844527), (3, 0.9865886), (4, 0.90755945),</span>
 <span class="go">(5, -0.12416792), (6, -0.1063926), (7, -0.098794639), (8, 0.05004178)]</span>
 </pre></div>
@@ -200,7 +198,7 @@ order, and obtain the final answer to the query <cite>&#8220;Human computer inte
 <span class="go">(5, -0.12416792)] # The generation of random binary unordered trees</span>
 </pre></div>
 </div>
-<p>(We added the original documents in their &#8220;string form&#8221; to the output, to
+<p>(We added the original documents in their &#8220;string form&#8221; to the output comments, to
 improve clarity.)</p>
 <p>The thing to note here is that documents no. 2 (<tt class="docutils literal"><span class="pre">&quot;The</span> <span class="pre">EPS</span> <span class="pre">user</span> <span class="pre">interface</span> <span class="pre">management</span> <span class="pre">system&quot;</span></tt>)
 and 4 (<tt class="docutils literal"><span class="pre">&quot;Relation</span> <span class="pre">of</span> <span class="pre">user</span> <span class="pre">perceived</span> <span class="pre">response</span> <span class="pre">time</span> <span class="pre">to</span> <span class="pre">error</span> <span class="pre">measurement&quot;</span></tt>) would never be returned by
@@ -244,7 +242,7 @@ and to facilitate prototyping of new algorithms for NLP researchers.</p>
           <a href="modindex.html" title="Global Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="apiref.html" title="API Reference"
+          <a href="distributed.html" title="Distributed Computing"
              >next</a> |</li>
         <li class="right" >
           <a href="tut2.html" title="Topics and Transformations"
@@ -258,6 +256,8 @@ and to facilitate prototyping of new algorithms for NLP researchers.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek.
+      Last updated on Aug 09, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>
 </html>

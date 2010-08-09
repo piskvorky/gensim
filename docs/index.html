@@ -107,7 +107,7 @@ use the resulting LSI transformation at each step. The training document stream 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/path/to/corpus.mm&#39;</span><span class="p">)</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># initialize a transformation (Latent Semantic Indexing with twenty latent dimensions)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">200</span><span class="p">)</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># convert the same corpus to latent space and index it</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">MatrixSimilarity</span><span class="p">(</span><span class="n">lsi</span><span class="p">[</span><span class="n">corpus</span><span class="p">])</span>
@@ -123,6 +123,7 @@ use the resulting LSI transformation at each step. The training document stream 
 <li class="toctree-l1"><a class="reference external" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference external" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference external" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference external" href="distributed.html">Distributed Computing</a></li>
 <li class="toctree-l1"><a class="reference external" href="apiref.html">API Reference</a></li>
 </ul>
 </div>
@@ -154,6 +155,8 @@ use the resulting LSI transformation at each step. The training document stream 
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek.
+      Last updated on Aug 10, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>
 </html>

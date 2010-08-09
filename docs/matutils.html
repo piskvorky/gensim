@@ -124,6 +124,13 @@ is allowed to be larger than the available RAM.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.matutils.corpus2csc">
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">corpus2csc</tt><big>(</big><em>m</em>, <em>corpus</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em><big>)</big><a class="headerlink" href="#gensim.matutils.corpus2csc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format.</p>
+<p>The corpus must not be empty (at least one document).</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.matutils.pad">
 <tt class="descclassname">gensim.matutils.</tt><tt class="descname">pad</tt><big>(</big><em>mat</em>, <em>padRow</em>, <em>padCol</em><big>)</big><a class="headerlink" href="#gensim.matutils.pad" title="Permalink to this definition">¶</a></dt>
 <dd>Add additional rows/columns to a numpy.matrix <cite>mat</cite>. The new rows/columns 
@@ -176,6 +183,8 @@ output will be a numpy array.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek.
+      Last updated on Aug 08, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>
 </html>

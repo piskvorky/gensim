@@ -69,7 +69,7 @@ class Dispatcher(object):
         `model_params` are parameters used to initialize individual workers (gets
         handed all the way down to worker.initialize()).
         """
-        self.jobs = Queue(maxsize = maxsize)
+        self.jobs = Queue(maxsize = self.maxsize)
         self.lock_update = threading.Lock()
         self.callback._pyroOneway.add("jobdone") # make sure workers transfer control back to dispatcher asynchronously        
         self._exit = False
@@ -156,7 +156,21 @@ class Dispatcher(object):
 
 
 
-def main(maxsize):
+def main():
+    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
+    logger.info("running %s" % " ".join(sys.argv))
+
+    program = os.path.basename(sys.argv[0])
+    # make sure we have enough cmd line parameters
+    if len(sys.argv) < 1:
+        print globals()["__doc__"] % locals()
+        sys.exit(1)
+    
+    if len(sys.argv) < 2:
+        maxsize = MAX_JOBS_QUEUE
+    else:
+        maxsize = int(sys.argv[1])
+    
     Pyro.config.HOST = utils.get_my_ip()
     
     with Pyro.naming.locateNS() as ns:
@@ -172,23 +186,9 @@ def main(maxsize):
             logger.info("dispatcher is ready at URI %s" % uri)
             daemon.requestLoop()
 
+    logger.info("finished running %s" % program)
+    
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
-    logger.info("running %s" % " ".join(sys.argv))
-
-    program = os.path.basename(sys.argv[0])
-    # make sure we have enough cmd line parameters
-    if len(sys.argv) < 1:
-        print globals()["__doc__"] % locals()
-        sys.exit(1)
-    
-    if len(sys.argv) < 2:
-        maxsize = MAX_JOBS_QUEUE
-    else:
-        maxsize = int(sys.argv[1])
-    
-    main(maxsize)
-    
-    logger.info("finished running %s" % program)
+    main()

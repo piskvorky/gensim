@@ -60,10 +60,10 @@
         <div class="sphinxsidebarwrapper">
             <h4>Previous topic</h4>
             <p class="topless"><a href="interfaces.html"
-                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces</a></p>
+                                  title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="matutils.html"
-                                  title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils</a></p>
+                                  title="next chapter"><tt class="docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils</a></p>
           <div id="searchbox" style="display: none">
             <h3>Quick search</h3>
               <form class="search" action="search.html" method="get">
@@ -103,6 +103,31 @@ internal id of a corpus = the vocabulary dimensionality.</p>
 <p>HACK: To avoid materializing the whole range(0, self.numTerms), we 
 return [self.numTerms - 1] only.</p>
 </dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="gensim.utils.RepeatCorpus">
+<em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">RepeatCorpus</tt><big>(</big><em>corpus</em>, <em>reps</em><big>)</big><a class="headerlink" href="#gensim.utils.RepeatCorpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used in the tutorial on distributed computing and likely not useful anywhere else.</p>
+<p>Wrap a <cite>corpus</cite> as another corpus of length <cite>reps</cite>. This is achieved by
+repeating documents from <cite>corpus</cite> over and over again, until requested
+length is reached. Repetition is done on-the-fly=efficiently, via 
+itertools.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span> <span class="p">[]]</span> <span class="c"># 2 documents</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">RepeatCorpus</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span> <span class="c"># repeat 2.5 times to get 5 documents</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span> <span class="p">[],</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span> <span class="p">[],</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)]]</span>
+</pre></div>
+</div>
+<dl class="classmethod">
+<dt id="gensim.utils.RepeatCorpus.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.utils.RepeatCorpus.load" title="Permalink to this definition">¶</a></dt>
+<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.utils.RepeatCorpus.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.utils.RepeatCorpus.save" title="Permalink to this definition">¶</a></dt>
+<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
 
 </dd></dl>
 
@@ -155,10 +180,26 @@ only covers words actually used in the corpus, up to the highest wordId found.</
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.utils.get_my_ip">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">get_my_ip</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.utils.get_my_ip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to obtain our external ip (from the pyro nameserver&#8217;s point of view)</p>
+<p>This tries to sidestep the issue of bogus <cite>/etc/hosts</cite> entries and other 
+local misconfigurations, which often mess up hostname resolution.</p>
+<p>If all else fails, fall back to simple <cite>socket.gethostbyname()</cite> lookup.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.utils.isCorpus">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">isCorpus</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#gensim.utils.isCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check whether <cite>obj</cite> is a corpus.</p>
 <p><strong>NOTE</strong>: When called on an empty corpus (no documents), will return False.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.utils.synchronous">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">synchronous</tt><big>(</big><em>tlockname</em><big>)</big><a class="headerlink" href="#gensim.utils.synchronous" title="Permalink to this definition">¶</a></dt>
+<dd><p>A decorator to place an instance based lock around a method.</p>
+<p>Adapted from <a class="reference external" href="http://code.activestate.com/recipes/577105-synchronization-decorator-for-class-methods/">http://code.activestate.com/recipes/577105-synchronization-decorator-for-class-methods/</a></p>
 </dd></dl>
 
 <dl class="function">
@@ -207,6 +248,8 @@ characters (no digits!).</p>
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek.
+      Last updated on Aug 10, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>
 </html>

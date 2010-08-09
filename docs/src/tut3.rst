@@ -27,7 +27,7 @@ seminal 1990 article):
 
 >>> from gensim import corpora, models, similarities
 >>> dictionary = corpora.Dictionary.load('/tmp/deerwester.dict')
->>> corpus = corpora.MmCorpus('/tmp/deerwester.mm')
+>>> corpus = corpora.MmCorpus('/tmp/deerwester.mm') # comes from the first tutorial, "From strings to vectors"
 >>> print corpus
 MmCorpus(9 documents, 12 features, 28 non-zero entries)
 
@@ -58,10 +58,11 @@ Initializing query structures
 ++++++++++++++++++++++++++++++++
 
 To prepare for similarity queries, we need to enter all documents which we will want
-to compare against subsequent queries. In our case, they are the nine documents, 
-converted to a 2-D latent space:
+to compare against subsequent queries. In our case, they are the same nine documents 
+used for training LSI, converted to 2-D LSA space. But that's only incidental, we
+might also be indexing a different corpus altogether.
 
->>> index = similarities.MatrixSimilarity(lsi[corpus]) # transform corpus to LSI space and "index" it
+>>> index = similarities.MatrixSimilarity(lsi[corpus]) # transform corpus to LSI space and index it
 
 .. warning::
   The class :class:`similarities.MatrixSimilarity` is only appropriate when the whole
@@ -71,12 +72,9 @@ converted to a 2-D latent space:
   This class operates in constant memory, in a streaming (and more gensim-like) 
   fashion, but is also much slower than :class:`similarities.MatrixSimilarity`, which uses
   fast level-2 `BLAS routines <http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms>`_
-  to determine similarities. We are currently searching for a lightweight Python
-  framework for distributed computing, which will allow us to perform fast queries
-  without compromising gensim's memory independence, by spreading the query load 
-  over many computers.
+  to determine similarities.
 
-Index persistency is handled via the :func:`save` and :func:`load` functions:
+Index persistency is handled via the standard :func:`save` and :func:`load` functions:
 
 >>> index.save('/tmp/deerwester.index')
 >>> index = similarities.MatrixSimilarity.load('/tmp/deerwester.index')
@@ -88,7 +86,7 @@ Performing queries
 To obtain similarities of our query document against the nine indexed documents:
 
 >>> sims = index[vec_lsi] # perform a similarity query against the corpus
->>> print list(enumerate(sims))
+>>> print list(enumerate(sims)) # print (document_number, document_similarity) 2-tuples
 [(0, 0.99809301), (1, 0.93748635), (2, 0.99844527), (3, 0.9865886), (4, 0.90755945), 
 (5, -0.12416792), (6, -0.1063926), (7, -0.098794639), (8, 0.05004178)]
 
@@ -110,7 +108,7 @@ order, and obtain the final answer to the query `"Human computer interaction"`:
 (6, -0.1063926), # The intersection graph of paths in trees
 (5, -0.12416792)] # The generation of random binary unordered trees
 
-(We added the original documents in their "string form" to the output, to 
+(We added the original documents in their "string form" to the output comments, to 
 improve clarity.)
 
 The thing to note here is that documents no. 2 (``"The EPS user interface management system"``)
