@@ -25,7 +25,7 @@ from gensim import utils
 
 
 logger = logging.getLogger("dispatcher")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 # How many jobs (=chunks of N documents) to keep "pre-fetched" in a queue?
@@ -84,7 +84,7 @@ class Dispatcher(object):
                     workerid = len(self.workers)
                     # make time consuming methods work asynchronously
                     worker._pyroOneway.add("requestjob")
-                    logger.debug("registering worker #%i at %s" % (workerid, uri))
+                    logger.info("registering worker #%i at %s" % (workerid, uri))
                     worker.initialize(workerid, dispatcher = self.callback, **model_params)
                     self.workers[workerid] = worker
                     worker.requestjob()
@@ -104,7 +104,7 @@ class Dispatcher(object):
 
 
     def getjob(self, worker_id):
-        logger.debug("worker #%i requesting a new job" % worker_id)
+        logger.info("worker #%i requesting a new job" % worker_id)
         return self.jobs.get(block = True, timeout = HUGE_TIMEOUT)
 
 
@@ -112,7 +112,7 @@ class Dispatcher(object):
         if self._exit:
             raise ValueError("Dispatcher is not receiving new jobs")
         self.jobs.put(job, block = True, timeout = HUGE_TIMEOUT)
-        logger.debug("added a new job (len(queue)=%i items)" % self.jobs.qsize())
+        logger.info("added a new job (len(queue)=%i items)" % self.jobs.qsize())
 
     
     def getstate(self):
