@@ -27,7 +27,7 @@ from gensim.models import lsimodel
 from gensim import utils
 
 logger = logging.getLogger('lsi_worker')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 
@@ -54,7 +54,7 @@ class Worker(object):
         if self.model is None:
             raise RuntimeError("worker must be initialized before receiving jobs")
         job = self.dispatcher.getjob(self.myid) # blocks until a new job is available from the dispatcher
-        logger.debug("worker #%s received job #%i" % (self.myid, self.jobsdone))
+        logger.info("worker #%s received job #%i" % (self.myid, self.jobsdone))
         self.processjob(job)
         self.dispatcher.jobdone(self.myid)
 

@@ -4,8 +4,8 @@
 gensim.corpora.dictionary mod corpora/dictionary.html
 gensim.models.ldamodel mod models/ldamodel.html
 gensim.matutils mod matutils.html
-gensim.corpora.bleicorpus mod corpora/bleicorpus.html
 gensim.corpora.svmlightcorpus mod corpora/svmlightcorpus.html
+gensim.corpora.bleicorpus mod corpora/bleicorpus.html
 gensim.corpora mod corpora/corpora.html
 gensim.corpora.mmcorpus mod corpora/mmcorpus.html
 gensim.corpora.lowcorpus mod corpora/lowcorpus.html

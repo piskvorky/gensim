@@ -170,27 +170,42 @@ The dispatcher will only be queueing and distributing (&#8220;dispatching&#8221;
 to the workers, and otherwise not doing much, so pick a computer that has ample memory.
 In our example, we will use the fifth computer to act as the dispatcher and run
 <cite>lsi_dispatcher</cite> command from there.</p>
-<p>And that&#8217;s it! Now let&#8217;s test our distributed LSA. Open a Python shell on that
-same fifth computer the dispatcher is running on (again, this can be done on any computer
-on the same network segment, our choice of the &#8220;dispatcher&#8221; machine is incidental) and try:</p>
+<p>And that&#8217;s it! The cluster is set up and running, ready to be accepting jobs. To remove
+a worker, simply terminate its <cite>lsi_worker</cite> process. To add another worker, run another
+<cite>lsi_worker</cite> (this will not affect a computation that is already running). If you terminate
+<cite>lsi_dispatcher</cite>, you won&#8217;t be able to run computations until you run it again on
+some node (existing workers can be re-used though).</p>
+<p>So let&#8217;s test our distributed LSA. Open a Python shell on any of the worker
+nodes (again, this can be done on any computer
+on the same network segment, our choice is incidental) and try:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">utils</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.mm&#39;</span><span class="p">)</span> <span class="c"># load a corpus of nine documents, from the Tutorials</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.dict&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">id2token</span>
+<span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="c"># run distributed LSA on nine documents</span>
 </pre></div>
 </div>
-<p>If you observe the log, you should see a line similar to:</p>
+<p>If you look at the log in your Python session, you should see a line similar to:</p>
 <div class="highlight-python"><pre>2010-08-09 23:44:25,746 : INFO : using distributed version with 8 workers</pre>
+</div>
+<p>which means all went well. You can also check the logs coming from your worker and dispatcher
+processes, which are especially helpful in case of problems.
+To check the LSA results, let&#8217;s print the first latent topic:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">topN</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s">&#39;0.644 * &quot;survey&quot; + 0.404 * &quot;response&quot; + 0.301 * &quot;user&quot; + 0.265 * &quot;time&quot; + 0.265 * &quot;system&quot;</span>
+</pre></div>
 </div>
 <p>Success! But a corpus of nine documents is no challenge for our powerful cluster...
 In fact, we had to lower the job size (<cite>chunks</cite> parameter) to a single document
-at a time, otherwise they would all be done at once by a single worker.</p>
+at a time, otherwise all documents would be processed at once by a single worker.</p>
 <p>Let&#8217;s run LSA on a million documents instead:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus1m</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">RepeatCorpus</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">)</span> <span class="c"># inflate the corpus to 1M documents, by repeating them over</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus1m</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">RepeatCorpus</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">)</span> <span class="c"># inflate the corpus to 1M documents, by repeating it over&amp;over</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus1m</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">serial_only</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span> <span class="c"># run distributed LSA on 1 million documents!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">topN</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s">&#39;-0.644 * &quot;survey&quot; + -0.404 * &quot;response&quot; + -0.301 * &quot;user&quot; + -0.265 * &quot;time&quot; + -0.265 * &quot;system&quot;</span>
 </pre></div>
 </div>
 <p>The <cite>serial_only</cite> parameter instructs <cite>gensim</cite> whether to run in serial or distributed mode.
@@ -199,6 +214,18 @@ any inter-node communication whatsoever, even if there are worker nodes availabl
 Setting <cite>serial_only=False</cite> forces distributed mode (raising an exception in
 case of failure). And finally, leaving <cite>serial_only</cite> unspecified tells <cite>gensim</cite>
 to try running in distributed mode, or, failing that, run in serial mode.</p>
+<p>On my Macbook (all 8 &#8220;distributed&#8221; workers on a single machine), the log from 1M LSA looks like:</p>
+<div class="highlight-python"><pre>2010-08-10 02:46:35,087 : INFO : using distributed version with 8 workers
+2010-08-10 02:46:35,087 : INFO : updating SVD with new documents
+2010-08-10 02:46:35,202 : INFO : dispatched documents up to #10000
+2010-08-10 02:46:35,296 : INFO : dispatched documents up to #20000
+...
+2010-08-10 02:46:46,524 : INFO : dispatched documents up to #990000
+2010-08-10 02:46:46,694 : INFO : dispatched documents up to #1000000
+2010-08-10 02:46:46,694 : INFO : reached the end of input; now waiting for all remaining jobs to finish
+2010-08-10 02:46:47,195 : INFO : all jobs finished, downloading final projection
+2010-08-10 02:46:47,200 : INFO : decomposition complete</pre>
+</div>
 </div>
 </div>
 </div>

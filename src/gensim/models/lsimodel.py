@@ -131,8 +131,8 @@ class Projection(utils.SaveLoad):
         # perform q, r = QR(component); code hacked out of scipy.linalg.qr
         logger.debug("computing QR of %s dense matrix" % str(other.u.shape))
         geqrf, = get_lapack_funcs(('geqrf',), (other.u,))
-        qr, tau, work, info = geqrf(other.u, lwork = -1, overwrite_a = True)
-        qr, tau, work, info = geqrf(other.u, lwork = work[0], overwrite_a = True)
+        qr, tau, work, info = geqrf(other.u, lwork = -1, overwrite_a = False) # segfaults for overwrite_a=True!!
+        qr, tau, work, info = geqrf(other.u, lwork = work[0], overwrite_a = False)
         del other.u
         assert info >= 0
         r = triu(qr[:n2, :n2])

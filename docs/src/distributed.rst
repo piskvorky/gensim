@@ -91,9 +91,15 @@ to the workers, and otherwise not doing much, so pick a computer that has ample 
 In our example, we will use the fifth computer to act as the dispatcher and run 
 `lsi_dispatcher` command from there.
 
-And that's it! Now let's test our distributed LSA. Open a Python shell on that 
-same fifth computer the dispatcher is running on (again, this can be done on any computer
-on the same network segment, our choice of the "dispatcher" machine is incidental) and try::
+And that's it! The cluster is set up and running, ready to be accepting jobs. To remove
+a worker, simply terminate its `lsi_worker` process. To add another worker, run another
+`lsi_worker` (this will not affect a computation that is already running). If you terminate
+`lsi_dispatcher`, you won't be able to run computations until you run it again on 
+some node (existing workers can be re-used though).
+
+So let's test our distributed LSA. Open a Python shell on any of the worker
+nodes (again, this can be done on any computer
+on the same network segment, our choice is incidental) and try::
 
 >>> from gensim import corpora, models, utils
 >>> import logging
@@ -101,20 +107,30 @@ on the same network segment, our choice of the "dispatcher" machine is incidenta
 >>> 
 >>> corpus = corpora.MmCorpus('/tmp/deerwester.mm') # load a corpus of nine documents, from the Tutorials
 >>> id2word = corpora.Dictionary.load('/tmp/deerwester.dict').id2token
+>>>
 >>> lsi = models.LsiModel(corpus, id2word, numTopics = 200, chunks = 1) # run distributed LSA on nine documents
 
-If you observe the log, you should see a line similar to::
+If you look at the log in your Python session, you should see a line similar to::
 
   2010-08-09 23:44:25,746 : INFO : using distributed version with 8 workers
 
+which means all went well. You can also check the logs coming from your worker and dispatcher
+processes, which are especially helpful in case of problems. 
+To check the LSA results, let's print the first latent topic:
+
+>>> lsi.printTopic(0, topN = 5)
+>>> '0.644 * "survey" + 0.404 * "response" + 0.301 * "user" + 0.265 * "time" + 0.265 * "system"
+
 Success! But a corpus of nine documents is no challenge for our powerful cluster...
 In fact, we had to lower the job size (`chunks` parameter) to a single document 
-at a time, otherwise they would all be done at once by a single worker.
+at a time, otherwise all documents would be processed at once by a single worker.
 
 Let's run LSA on a million documents instead::
 
->>> corpus1m = utils.RepeatCorpus(corpus, 1000000) # inflate the corpus to 1M documents, by repeating them over
+>>> corpus1m = utils.RepeatCorpus(corpus, 1000000) # inflate the corpus to 1M documents, by repeating it over&over
 >>> lsi1m = models.LsiModel(corpus1m, id2word, numTopics = 200, serial_only = False) # run distributed LSA on 1 million documents!
+>>> lsi1m.printTopic(0, topN = 5)
+>>> '-0.644 * "survey" + -0.404 * "response" + -0.301 * "user" + -0.265 * "time" + -0.265 * "system"
 
 The `serial_only` parameter instructs `gensim` whether to run in serial or distributed mode.
 Setting it to `True` will result in LSA running inside the active Python shell, without
@@ -122,3 +138,16 @@ any inter-node communication whatsoever, even if there are worker nodes availabl
 Setting `serial_only=False` forces distributed mode (raising an exception in
 case of failure). And finally, leaving `serial_only` unspecified tells `gensim`
 to try running in distributed mode, or, failing that, run in serial mode.
+
+On my Macbook (all 8 "distributed" workers on a single machine), the log from 1M LSA looks like::
+
+  2010-08-10 02:46:35,087 : INFO : using distributed version with 8 workers
+  2010-08-10 02:46:35,087 : INFO : updating SVD with new documents
+  2010-08-10 02:46:35,202 : INFO : dispatched documents up to #10000
+  2010-08-10 02:46:35,296 : INFO : dispatched documents up to #20000
+  ...
+  2010-08-10 02:46:46,524 : INFO : dispatched documents up to #990000
+  2010-08-10 02:46:46,694 : INFO : dispatched documents up to #1000000
+  2010-08-10 02:46:46,694 : INFO : reached the end of input; now waiting for all remaining jobs to finish
+  2010-08-10 02:46:47,195 : INFO : all jobs finished, downloading final projection
+  2010-08-10 02:46:47,200 : INFO : decomposition complete
