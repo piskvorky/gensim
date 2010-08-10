@@ -45,8 +45,8 @@ def clipSpectrum(s, k):
     """
     # compute relative contribution of each singular value towards the energy spectrum
     rel_spectrum = numpy.abs(1.0 - numpy.cumsum(s**2 / numpy.sum(s ** 2)))
-    # ignore the last 1/k percent of the spectrum
-    small = 1 + len(numpy.where(rel_spectrum > 1.0 / k)[0]) 
+    # ignore the last 0.1% (or 1/k percent, whichever is smaller) of the spectrum
+    small = 1 + len(numpy.where(rel_spectrum > min(0.001, 1.0 / k))[0]) 
     k = min(k, small) # clip against k
     logger.info("keeping %i factors (discarding %.2f%% of the energy spectrum)" %
                 (k, 100 * rel_spectrum[k - 1]))
