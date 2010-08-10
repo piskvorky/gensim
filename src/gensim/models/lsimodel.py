@@ -259,7 +259,7 @@ class LsiModel(interfaces.TransformationABC):
         Training proceeds in chunks of `chunks` documents at a time. If the 
         distributed mode is on, each chunk is sent to a different worker/computer.
         Size of `chunks` is a tradeoff between increased speed (bigger `chunks`) vs. 
-        lower memory footprint (smaller `chunks`). Default is processing 100 documents
+        lower memory footprint (smaller `chunks`). Default is processing 10,000 documents
         at a time.
 
         Setting `decay` < 1.0 causes re-orientation towards new data trends in the 
