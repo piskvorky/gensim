@@ -127,7 +127,7 @@ AMD&#8217;s ACML, OS X&#8217;s vecLib, Sun&#8217;s Sunperf, ...) or some open-so
 <h2>Distributed computing in <cite>gensim</cite><a class="headerlink" href="#distributed-computing-in-gensim" title="Permalink to this headline">¶</a></h2>
 <p>As always, <cite>gensim</cite> strives for a clear and straightforward API (see <a class="reference external" href="intro.html#design"><em>Design objectives</em></a>).
 To this end, <em>you do not need to make any changes in your code at all</em> in order to
-run it in distributed manner!</p>
+run it in a distributed manner!</p>
 <p>What you need to do is run a worker script (see below) on each of your cluster nodes prior
 to starting your computation. Running this script tells <cite>gensim</cite> that it may use the node
 as a slave to delegate some work to it. During initialization, the algorithms
@@ -140,44 +140,51 @@ is quite painless and only involves copying its <cite>*.py</cite> files somewher
 <div class="highlight-python"><pre>sudo easy_install Pyro</pre>
 </div>
 <p>You don&#8217;t have to install <cite>Pyro</cite> to run <cite>gensim</cite>, but if you don&#8217;t, you won&#8217;t be able
-to access the distributed features (i.e., everything will always run in serial mode).</p>
+to access the distributed features (i.e., everything will always run in serial mode).
+Currently, network broadcasting is used to discover and connect all communicating nodes,
+so the nodes must lie within the same <a class="reference external" href="http://en.wikipedia.org/wiki/Broadcast_domain">broadcast domain</a>.</p>
 </div>
 <div class="section" id="available-distributed-algorithms">
 <h2>Available distributed algorithms<a class="headerlink" href="#available-distributed-algorithms" title="Permalink to this headline">¶</a></h2>
-<p>Currently, there is only Latent Semantic Analysis (LSA, LSI). Latent Dirichlet Allocation is on its way.</p>
+<p>Currently, there is only distributed <em>Latent Semantic Analysis (LSA, LSI)</em>. Distributed <em>Latent Dirichlet Allocation</em> is on its way.</p>
 <div class="section" id="distributed-lsa">
 <h3>Distributed LSA<a class="headerlink" href="#distributed-lsa" title="Permalink to this headline">¶</a></h3>
 <p>We will show how to run distributed Latent Semantic Analysis on an example. Let&#8217;s say
-we have 5 computers at our disposal, all on the same network segment.
+we have 5 computers at our disposal, all in the same broadcast domain.
 To start with, install <cite>gensim</cite> and <cite>Pyro</cite> on each one of them with:</p>
 <div class="highlight-python"><pre>$ sudo easy_install gensim[distributed]</pre>
 </div>
 <p>Let&#8217;s say our example cluster consists of five dual-core computers with loads of
-memory. We will therefore run <strong>two</strong> worker scripts on four of the physical machine,
+memory. We will therefore run <strong>two</strong> worker scripts on four of the physical machines,
 creating <strong>eight</strong> logical worker nodes:</p>
-<div class="highlight-python"><pre>$ lsi_worker</pre>
+<div class="highlight-python"><pre>$ python -m gensim.models.lsi_worker &amp;</pre>
 </div>
-<p>That is, run the <cite>lsi_worker</cite> command from your shell, twice on each computer.
+<p>This will execute <cite>gensim</cite>&#8216;s <cite>lsi_worker.py</cite> script, to be run twice on each computer.
 This lets <cite>gensim</cite> know that it can run two jobs on each of the four computers in
 parallel, so that the computation will be done faster (but also taking up twice
-as much memory).</p>
+as much memory on each machine).</p>
 <p>Next, pick one computer that will be a job scheduler, in charge of worker
-synchronization, and on it run:</p>
-<div class="highlight-python"><pre>$ lsi_dispatcher</pre>
+synchronization, and on it, start Pyro&#8217;s name server and an <cite>LSA dispatcher</cite>:</p>
+<div class="highlight-python"><pre>$ python -m Pyro.naming &amp;
+$ python -m gensim.models.lsi_dispatcher &amp;</pre>
 </div>
-<p>The dispatcher can be one of the worker nodes, or it can be another, distinct computer.
-The dispatcher will only be queueing and distributing (&#8220;dispatching&#8221;) individual jobs
-to the workers, and otherwise not doing much, so pick a computer that has ample memory.
-In our example, we will use the fifth computer to act as the dispatcher and run
-<cite>lsi_dispatcher</cite> command from there.</p>
-<p>And that&#8217;s it! The cluster is set up and running, ready to be accepting jobs. To remove
-a worker, simply terminate its <cite>lsi_worker</cite> process. To add another worker, run another
+<p>The dispatcher can be run on the same machine as one of the worker nodes, or it
+can be another, distinct computer within the same broadcast domain.
+The dispatcher will be in charge of negotiating all computations, queueing and
+distributing (&#8220;dispatching&#8221;) individual jobs to the workers (not doing much with
+CPU most of the time), so pick a computer with ample memory. Computations never
+&#8220;talk&#8221; to worker nodes directly, only through the dispatcher.</p>
+<p>In our example, we will use the fifth computer to act as the dispatcher and run
+the <cite>lsi_dispatcher</cite> and <cite>Pyro.naming</cite> scripts from there.</p>
+<p>And that&#8217;s it! The cluster is set up and running, ready to accept jobs. To remove
+a worker later on, simply terminate its <cite>lsi_worker</cite> process. To add another worker, run another
 <cite>lsi_worker</cite> (this will not affect a computation that is already running). If you terminate
 <cite>lsi_dispatcher</cite>, you won&#8217;t be able to run computations until you run it again on
-some node (existing workers can be re-used though).</p>
-<p>So let&#8217;s test our distributed LSA. Open a Python shell on any of the worker
-nodes (again, this can be done on any computer
-on the same network segment, our choice is incidental) and try:</p>
+some node (surviving workers can be re-used though).</p>
+<p>So let&#8217;s test our setup and run one computation of distributed LSA. Open a Python
+shell on a worker node (again, this can be done on any computer
+in the same <a class="reference external" href="http://en.wikipedia.org/wiki/Broadcast_domain">broadcast domain</a>,
+our choice is incidental) and try:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">utils</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
@@ -188,24 +195,29 @@ on the same network segment, our choice is incidental) and try:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="c"># run distributed LSA on nine documents</span>
 </pre></div>
 </div>
-<p>If you look at the log in your Python session, you should see a line similar to:</p>
+<p>This uses the corpus and feature-token mapping created in the <a class="reference external" href="tut1.html"><em>Corpora and Vector Spaces</em></a> tutorial.
+If you look at the log in your Python session, you should see a line similar to:</p>
 <div class="highlight-python"><pre>2010-08-09 23:44:25,746 : INFO : using distributed version with 8 workers</pre>
 </div>
 <p>which means all went well. You can also check the logs coming from your worker and dispatcher
-processes, which are especially helpful in case of problems.
-To check the LSA results, let&#8217;s print the first latent topic:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">topN</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s">&#39;0.644 * &quot;survey&quot; + 0.404 * &quot;response&quot; + 0.301 * &quot;user&quot; + 0.265 * &quot;time&quot; + 0.265 * &quot;system&quot;</span>
+processes &#8212; this is especially helpful in case of problems.
+To check the LSA results, let&#8217;s print the first two latent topics:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="n">lsi</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">topN</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">0.644 * &quot;survey&quot; + 0.404 * &quot;response&quot; + 0.301 * &quot;user&quot; + 0.265 * &quot;time&quot; + 0.265 * &quot;system&quot;</span>
+<span class="go">0.623 * &quot;graph&quot; + 0.490 * &quot;trees&quot; + 0.451 * &quot;minors&quot; + 0.274 * &quot;eps&quot; + -0.167 * &quot;survey&quot;</span>
 </pre></div>
 </div>
 <p>Success! But a corpus of nine documents is no challenge for our powerful cluster...
 In fact, we had to lower the job size (<cite>chunks</cite> parameter) to a single document
 at a time, otherwise all documents would be processed at once by a single worker.</p>
-<p>Let&#8217;s run LSA on a million documents instead:</p>
+<p>So let&#8217;s run LSA on <strong>one million documents</strong> instead:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus1m</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">RepeatCorpus</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">)</span> <span class="c"># inflate the corpus to 1M documents, by repeating it over&amp;over</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus1m</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">serial_only</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span> <span class="c"># run distributed LSA on 1 million documents!</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">topN</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="s">&#39;-0.644 * &quot;survey&quot; + -0.404 * &quot;response&quot; + -0.301 * &quot;user&quot; + -0.265 * &quot;time&quot; + -0.265 * &quot;system&quot;</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="n">lsi1m</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">topN</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">-0.644 * &quot;survey&quot; + -0.404 * &quot;response&quot; + -0.301 * &quot;user&quot; + -0.265 * &quot;time&quot; + -0.265 * &quot;system</span>
+<span class="go">0.623 * &quot;graph&quot; + 0.490 * &quot;trees&quot; + 0.451 * &quot;minors&quot; + 0.274 * &quot;eps&quot; + -0.167 * &quot;survey&quot;</span>
 </pre></div>
 </div>
 <p>The <cite>serial_only</cite> parameter instructs <cite>gensim</cite> whether to run in serial or distributed mode.
@@ -214,7 +226,8 @@ any inter-node communication whatsoever, even if there are worker nodes availabl
 Setting <cite>serial_only=False</cite> forces distributed mode (raising an exception in
 case of failure). And finally, leaving <cite>serial_only</cite> unspecified tells <cite>gensim</cite>
 to try running in distributed mode, or, failing that, run in serial mode.</p>
-<p>On my Macbook (all 8 &#8220;distributed&#8221; workers on a single machine), the log from 1M LSA looks like:</p>
+<p>On my Macbook (all 8 &#8220;distributed&#8221; workers operating on a single physical machine),
+the log from 1M LSA looks like:</p>
 <div class="highlight-python"><pre>2010-08-10 02:46:35,087 : INFO : using distributed version with 8 workers
 2010-08-10 02:46:35,087 : INFO : updating SVD with new documents
 2010-08-10 02:46:35,202 : INFO : dispatched documents up to #10000
@@ -226,6 +239,8 @@ to try running in distributed mode, or, failing that, run in serial mode.</p>
 2010-08-10 02:46:47,195 : INFO : all jobs finished, downloading final projection
 2010-08-10 02:46:47,200 : INFO : decomposition complete</pre>
 </div>
+<p>Due to the small vocabulary size and trivial structure of our &#8220;one-million corpus&#8221;, the computation
+of LSA still takes only 12 seconds. To really stress-test our cluster, Wikipedia FIXME TODO.</p>
 </div>
 </div>
 </div>

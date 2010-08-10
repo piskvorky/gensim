@@ -28,8 +28,8 @@ def read(fname):
 
 setup(
     name = 'gensim',
-    version = '0.7.0',
-    description = 'Python Framework for Vector Space Modeling',
+    version = '0.7.0rc1',
+    description = 'Python framework for extracting semantic representations from raw texts via fast, distributed Vector Space Modelling',
     long_description = read('README.txt'),
     
     package_dir = {'': 'src'},
@@ -43,7 +43,7 @@ setup(
     download_url = 'http://pypi.python.org/pypi/gensim',
     
     keywords = 'Singular Value Decomposition, Latent Semantic Indexing, SVD, LSA, ' 
-    'LSI, LDA, Latent Dirichlet Allocation, VSM, Random Projections',
+    'LSI, LDA, Latent Dirichlet Allocation, VSM, Random Projections, TFIDF',
     
     license = 'LGPL',
     platforms = 'any',
@@ -79,11 +79,14 @@ setup(
 
     include_package_data = True,
 
-    entry_points = {
-        'console_scripts': [
-            'lsi_worker = gensim.models.lsi_worker:main',
-            'lsi_dispatcher = gensim.models.lsi_dispatcher:main',
-        ],
-    },
+    # avoid installing system-wide scripts; scripts shall be run by
+    # running `python -m module_name` instead. less flexible but more explicit
+    # and cleaner
+#    entry_points = {
+#        'console_scripts': [
+#            'lsi_worker = gensim.models.lsi_worker:main',
+#            'lsi_dispatcher = gensim.models.lsi_dispatcher:main',
+#        ],
+#    },
 
 )

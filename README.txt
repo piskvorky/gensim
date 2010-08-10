@@ -3,13 +3,15 @@ gensim -- Python Framework for Topic Modeling
 ==============================================
 
 **Gensim** is a Python framework designed to help make
-the conversion of natural language texts to the Vector Space Model as simple and 
-natural as possible.
+the conversion of natural language texts to their underlying semantic representation as 
+simple and natural as possible.
 
-Gensim contains algorithms for unsupervised learning from raw, unstructured digital texts,
+Gensim contains fast implementations of algorithms for 
+unsupervised learning from raw, unstructured digital texts,
 such as **Latent Semantic Analysis**, **Latent Dirichlet Allocation** or **Random Projections**.
 These algorithms discover hidden (*latent*) corpus structure.
-Once found, documents can be succinctly expressed in terms of this structure, queried for topical similarity and so on.
+Once found, documents can be succinctly expressed in terms of this structure, 
+queried for topical similarity and so on.
 
 If the previous paragraphs left you confused, you can first read more about the `Vector 
 Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised 
@@ -24,8 +26,7 @@ Installation
 ------------
 
 Gensim depends on NumPy and Scipy, two Python packages for scientific computing.
-You need to have them installed prior to using gensim; if you don't have them yet, 
-you can get them from <http://www.scipy.org/Download>.
+You must have them installed prior to installing gensim. You can get them from <http://www.scipy.org/Download>.
 
 The simple way to install `gensim` is::
 
