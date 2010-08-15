@@ -14,8 +14,10 @@ import logging
 import re
 import unicodedata
 import cPickle
-from functools import wraps
 import itertools
+from functools import wraps # for `synchronous` function lock
+from htmlentitydefs import name2codepoint as n2cp # for `decode_htmlentities`
+
 
 
 logger = logging.getLogger('utils')
@@ -23,6 +25,8 @@ logger.setLevel(logging.INFO)
 
 
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
+RE_HTML_ENTITY = re.compile(r'&(#?)(x?)(\w+);')
+
 
 
 def synchronous(tlockname):
@@ -39,7 +43,6 @@ def synchronous(tlockname):
                 return func(self, *args, **kwargs)
         return _synchronizer
     return _synched
-
 
 
 
@@ -264,3 +267,40 @@ class RepeatCorpus(SaveLoad):
     
     def __iter__(self):
         return itertools.islice(itertools.cycle(self.corpus), self.reps)
+
+
+def decode_htmlentities(text):
+    """
+    Decode HTML entities–hex, decimal, or named–in.
+    
+    Adapted from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
+    
+    >>> u = u'E tu vivrai nel terrore - L&#x27;aldil&#xE0; (1981)'
+    >>> print decode_htmlentities(u).encode('UTF-8')
+    E tu vivrai nel terrore - L'aldilà (1981)
+    >>> print decode_htmlentities("l&#39;eau")
+    l'eau
+    >>> print decode_htmlentities("foo &lt; bar")
+    foo < bar
+    
+    """
+    def substitute_entity(match):
+        ent = match.group(3)
+        if match.group(1) == "#":
+            # decoding by number
+            if match.group(2) == '':
+                # number is in decimal
+                return unichr(int(ent))
+            elif match.group(2) == 'x':
+                # number is in hex
+                return unichr(int('0x' + ent, 16))
+        else:
+            # they were using a name
+            cp = n2cp.get(ent)
+            if cp: 
+                return unichr(cp)
+            else:
+                return match.group()
+    
+    return RE_HTML_ENTITY.sub(substitute_entity, text)
+
