@@ -59,7 +59,7 @@ class TfidfModel(interfaces.TransformationABC):
         idfs = {}
         numNnz = 0
         for docNo, bow in enumerate(corpus):
-            if docNo % 5000 == 0:
+            if docNo % 10000 == 0:
                 logging.info("PROGRESS: processing document #%i" % docNo)
             numNnz += len(bow)
             for termId, termCount in bow:

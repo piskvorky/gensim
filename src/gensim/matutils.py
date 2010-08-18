@@ -17,7 +17,7 @@ import scipy.sparse
 
 
 logger = logging.getLogger("matutils")
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.INFO)
 
 
 
@@ -144,10 +144,10 @@ class MmWriter(object):
         
         if numNnz < 0:
             # we don't know the matrix shape/density yet, so only log a general line
-            logging.info("saving sparse matrix to %s" % self.fname)
+            logger.info("saving sparse matrix to %s" % self.fname)
             self.fout.write(' ' * 50 + '\n') # 48 digits must be enough for everybody
         else:
-            logging.info("saving sparse %sx%s matrix with %i non-zero entries to %s" %
+            logger.info("saving sparse %sx%s matrix with %i non-zero entries to %s" %
                          (numDocs, numTerms, numNnz, self.fname))
             self.fout.write('%s %s %s\n' % (numDocs, numTerms, numNnz))
         self.lastDocNo = -1
@@ -196,7 +196,7 @@ class MmWriter(object):
         
         for docNo, bow in enumerate(corpus):
             if docNo % 1000 == 0:
-                logging.info("PROGRESS: saving document %i" % docNo)
+                logger.info("PROGRESS: saving document %i" % docNo)
             if len(bow) > 0:
                 numTerms = max(numTerms, 1 + max(wordId for wordId, val in bow))
                 numNnz += len(bow)
@@ -204,7 +204,7 @@ class MmWriter(object):
         numDocs = docNo + 1
             
         if numDocs * numTerms != 0:
-            logging.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" % 
+            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" % 
                          (numDocs, numTerms,
                           100.0 * numNnz / (numDocs * numTerms),
                           numNnz,
@@ -243,27 +243,31 @@ class MmReader(object):
     matrix at once (unlike scipy.io.mmread). This allows for representing corpora 
     which are larger than the available RAM.
     """
-    def __init__(self, fname):
+    def __init__(self, input):
         """
         Initialize the matrix reader. 
         
-        The `fname` is a path to a file on local filesystem, which is expected to 
-        be in sparse (coordinate) Matrix Market format. Documents are assumed to 
-        be rows of the matrix (and document features are columns).
+        The `input` refers to a file on local filesystem, which is expected to 
+        be in the sparse (coordinate) Matrix Market format. Documents are assumed 
+        to be rows of the matrix (and document features are columns). 
+        
+        `input` is either a string (file path) or a file-like object that supports
+        `seek()` (gzip.GzipFile, bz2.BZ2File).
         """
-        logging.info("initializing corpus reader from %s" % fname)
-        self.fname = fname
-        fin = open(fname)
-        header = fin.next().strip()
+        logger.info("initializing corpus reader from %s" % input)
+        self.input = input
+        if isinstance(input, basestring):
+            input = open(input)
+        header = input.next().strip()
         if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
             raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found: \n%s" % 
-                             (fname, header))
+                             (self.input, header))
         self.numDocs = self.numTerms = self.numElements = 0
-        for lineNo, line in enumerate(fin):
+        for lineNo, line in enumerate(input):
             if not line.startswith('%'):
                 self.numDocs, self.numTerms, self.numElements = map(int, line.split())
                 break
-        logging.info("accepted corpus with %i documents, %i terms, %i non-zero entries" %
+        logger.info("accepted corpus with %i documents, %i terms, %i non-zero entries" %
                      (self.numDocs, self.numTerms, self.numElements))
     
     def __len__(self):
@@ -283,8 +287,11 @@ class MmReader(object):
         yielded where appropriate, even if they are not explicitly stored in the 
         Matrix Market file.
         """
-        fin = open(self.fname)
-        
+        if isinstance(self.input, basestring):
+            fin = open(self.input)
+        else:
+            fin = self.input
+            fin.seek(0)
         # skip headers
         for line in fin:
             if line.startswith('%'):

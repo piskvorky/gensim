@@ -71,6 +71,7 @@ def tokenize(content):
     
     Return tokens as utf8 bytestrings. 
     """
+    # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic etc.)
     return [token.encode('utf8') for token in utils.tokenize(content, lower = True, errors = 'ignore') 
             if len(token) <= 15]
 
@@ -88,18 +89,15 @@ class WikiCorpus(interfaces.CorpusABC):
         """
         Initialize the corpus. This scans the corpus once to determine its vocabulary.
         
-        **note** The scan takes more than 9 hours on the June 2010 wiki dump (
-        `enwiki-20100622-pages-articles.xml.bz2` of 6GB)!
+        **note** The scan takes more than 9 hours on my comp on the June 2010 wiki
+        dump (`enwiki-20100622-pages-articles.xml.bz2` of 6GB).
         """
         self.fname = fname
-        self.buildDictionary()
-        self._len = None
+        self.dictionary = dictionary.Dictionary(self.getArticles())
 
     
     def __len__(self):
-        if self._len is None:
-            raise RuntimeError("len(wiki) is too costly!")
-        return self._len
+        return self.numDocs
 
 
     def __iter__(self):
@@ -108,38 +106,16 @@ class WikiCorpus(interfaces.CorpusABC):
         vectors, one for each document.
         """
         for docNo, text in enumerate(self.getArticles()):
-            yield self.dictionary.doc2bow(tokenize(text), allowUpdate = False)
+            yield self.dictionary.doc2bow(text, allowUpdate = False)
 
-    
-    def buildDictionary(self):
-        """
-        Populate dictionary mapping and statistics.
         
-        This is done by sequentially retrieving the article fulltexts, splitting
-        them into tokens and converting tokens to their ids (creating new ids as 
-        necessary).
-        """
-        logger.info("creating dictionary from wiki dump %s" % self.fname)
-        self.dictionary = dictionary.Dictionary(id2word = False)
-        numPositions = 0
-        for docNo, text in enumerate(self.getArticles()):
-            if docNo % 1000 == 0:
-                logger.info("PROGRESS: at document #%i, %s" % (docNo, self.dictionary))
-            words = tokenize(text)
-            numPositions += len(words)
-            # convert to bag-of-words, but ignore the result -- here we only care about updating token ids
-            _ = self.dictionary.doc2bow(tokenize(text), allowUpdate = True)
-        logger.info("built %s from %i documents (total %i corpus positions)" % 
-                     (self.dictionary, docNo + 1, numPositions))
-    
-    
     def saveDictionary(self, fname):
         """
         Store id->word mapping to a file.
         """
         logger.info("saving dictionary mapping to %s" % fname)
         fout = open(fname, 'w')
-        for token, tokenId in self.dictionary.token2id.iteritems():
+        for token, tokenId in sorted(self.dictionary.token2id.iteritems()):
             fout.write("%i\t%s\n" % (tokenId, token))
         fout.close()
     
@@ -199,8 +175,8 @@ class WikiCorpus(interfaces.CorpusABC):
                 text = filterWiki(''.join(lines))
                 if len(text) > ARTICLE_MIN_CHARS: # article redirects are removed here
                     articles += 1
-                    yield text
+                    yield tokenize(text) # split text into tokens
         
-        self._len = articles # cache corpus length
+        self.numDocs = articles # cache corpus length
 #endclass WikiCorpus
 

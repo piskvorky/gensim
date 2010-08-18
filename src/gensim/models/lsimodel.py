@@ -154,7 +154,7 @@ class Projection(utils.SaveLoad):
         
         # update & rotate current basis U
         logger.debug("updating orthonormal basis U")
-        self.u = gemm(1.0, self.u, u_k[:n1]) # TODO temporarily creates an extra (m,k) dense array! find a way to avoid this!
+        self.u = gemm(1.0, self.u, u_k[:n1]) # TODO temporarily creates an extra (m,k) dense array in memory. find a way to avoid this!
         gemm(1.0, q, u_k[n1:], beta = 1.0, c = self.u, overwrite_c = True) # u = [u,u']*u_k
         self.s = s_k
 #        diff = numpy.dot(self.u.T, self.u) - numpy.eye(self.u.shape[1])
@@ -308,8 +308,8 @@ class LsiModel(interfaces.TransformationABC):
                 self.projection = self.dispatcher.getstate()
                 logger.info("decomposition complete")
         else:
-            # assume we received a job which is already a chunk in CSC format
             assert not self.dispatcher, "must be in serial mode to receive jobs"
+            assert isinstance(corpus, scipy.sparse.csc_matrix)
             update = Projection(self.numTerms, self.numTopics, corpus)
             self.projection.merge(update, decay = decay)
             logger.info("processed sparse job of %i documents" % (corpus.shape[1]))
@@ -351,8 +351,13 @@ class LsiModel(interfaces.TransformationABC):
         '-0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + -0.174 * "functor" + -0.168 * "operator"'
         
         """
-#        c = numpy.asarray(self.u[:, topicNo]).flatten()
-        c = numpy.asarray(self.projection.u.T[topicNo, :]).flatten()
+        # size of the projection matrix can actually be smaller than `self.numTopics`,
+        # if there were not enough factors (real rank of input matrix smaller than
+        # `self.numTopics`). in that case, assume zero projection vector for such topics.
+        if topicNo < len(self.projection.u.T):
+            c = numpy.asarray(self.projection.u.T[topicNo, :]).flatten()
+        else:
+            c = numpy.zeros(shape = (self.projection.u.shape[0]), dtype = self.projection.u.dtype)
         norm = numpy.sqrt(numpy.sum(c * c))
         most = numpy.abs(c).argsort()[::-1][:topN]
         return ' + '.join(['%.3f * "%s"' % (1.0 * c[val] / norm, self.id2word[val]) for val in most])

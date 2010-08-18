@@ -38,7 +38,8 @@ class Dictionary(utils.SaveLoad):
     def __init__(self, documents = None):
         self.token2id = {} # token -> tokenId
         self.docFreq = {} # tokenId -> in how many documents this token appeared
-        self.numDocs = 0
+        self.numDocs = 0 # number of documents processed
+        self.numPos = 0 # total number of corpus positions
         
         if documents:
             self.addDocuments(documents)
@@ -77,6 +78,8 @@ class Dictionary(utils.SaveLoad):
         """
         for document in documents:
             _ = self.doc2bow(document, allowUpdate = True) # ignore the result, here we only care about updating token ids
+        logger.info("built %s from %i documents (total %i corpus positions)" % 
+                     (self, self.numDocs, self.numPos))
         
     
     def doc2bow(self, document, allowUpdate = False):
@@ -92,7 +95,7 @@ class Dictionary(utils.SaveLoad):
         If `allowUpdate` is **not** set, this function is `const`, ie. read-only.
         """
         result = {}
-        
+        document = sorted(document)
         # construct (word, frequency) mapping. in python3 this is done simply 
         # using Counter(), but here i use itertools.groupby() for the job
         for wordNorm, group in itertools.groupby(sorted(document)):
@@ -110,6 +113,7 @@ class Dictionary(utils.SaveLoad):
         
         if allowUpdate:
             self.numDocs += 1
+            self.numPos += len(document)
             # increase document count for each unique token that appeared in the document
             for tokenId in result.iterkeys():
                 self.docFreq[tokenId] = self.docFreq.get(tokenId, 0) + 1
