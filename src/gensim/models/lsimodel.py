@@ -251,7 +251,7 @@ class LsiModel(interfaces.TransformationABC):
             self.addDocuments(corpus, chunks = chunks)
     
     
-    def addDocuments(self, corpus, chunks = None, decay = None): # FIXME test=>update True!!!
+    def addDocuments(self, corpus, chunks = None, decay = None):
         """
         Update singular value decomposition factors to take into account a new 
         corpus of documents.

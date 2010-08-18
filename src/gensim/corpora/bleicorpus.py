@@ -95,7 +95,7 @@ class BleiCorpus(interfaces.CorpusABC):
         logging.info("saving vocabulary of %i words to %s" % (numTerms, fnameVocab))
         fout = open(fnameVocab, 'w')
         for featureId in xrange(numTerms):
-            fout.write("%s\n" % id2word.get(featureId, '---'))
+            fout.write("%s\n" % utils.toUtf8(id2word.get(featureId, '---')))
         fout.close()
 #endclass BleiCorpus
 
