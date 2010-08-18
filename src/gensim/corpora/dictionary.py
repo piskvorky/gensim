@@ -76,7 +76,9 @@ class Dictionary(utils.SaveLoad):
         >>> print Dictionary.fromDocuments(["máma mele maso".split(), "ema má máma".split()])
         Dictionary(5 unique tokens)
         """
-        for document in documents:
+        for docno, document in enumerate(documents):
+            if docno % 10000 == 0:
+                logging.info("adding document #%i to %s" % (docno, self))
             _ = self.doc2bow(document, allowUpdate = True) # ignore the result, here we only care about updating token ids
         logger.info("built %s from %i documents (total %i corpus positions)" % 
                      (self, self.numDocs, self.numPos))
@@ -106,7 +108,8 @@ class Dictionary(utils.SaveLoad):
                 # first time we see this token (~normalized form)
                 if not allowUpdate: # if we aren't allowed to create new tokens, continue with the next unique token
                     continue
-                self.token2id[wordNorm] = len(self.token2id) # new id = number of ids made so far; NOTE this assumes there are no gaps in the id sequence!
+                tokenId = len(self.token2id)
+                self.token2id[wordNorm] = tokenId # new id = number of ids made so far; NOTE this assumes there are no gaps in the id sequence!
             
             # update how many times a token appeared in the document
             result[tokenId] = frequency
@@ -139,8 +142,8 @@ class Dictionary(utils.SaveLoad):
         noAboveAbs = int(noAbove * self.numDocs) # convert fractional threshold to absolute threshold
         
         # determine which tokens to keep
-        goodIds = (v for v in d.token2id.itervalues() if noBelow <= v <= noAboveAbs)
-        goodIds = sorted(goodIds, key = d.docFreq.get, reverse = True)
+        goodIds = (v for v in self.token2id.itervalues() if noBelow <= self.docFreq[v] <= noAboveAbs)
+        goodIds = sorted(goodIds, key = self.docFreq.get, reverse = True)
         if keepN is not None:
             goodIds = goodIds[:keepN]
         logger.info("keeping %i tokens which were in more than %i and less than %i (=%.1f%%) documents" %
@@ -165,8 +168,8 @@ class Dictionary(utils.SaveLoad):
             self.docFreq = dict((tokenId, freq) for tokenId, freq in self.docFreq.iteritems() if tokenId not in badIds)
         if goodIds is not None:
             goodIds = set(goodIds)
-            self.token2id = dict((token, tokenId) for token, tokenId in d.token2id.iteritems() if tokenId in goodIds)
-            self.docFreq = dict((tokenId, freq) for tokenId, freq in d.docFreq.iteritems() if tokenId in goodIds)
+            self.token2id = dict((token, tokenId) for token, tokenId in self.token2id.iteritems() if tokenId in goodIds)
+            self.docFreq = dict((tokenId, freq) for tokenId, freq in self.docFreq.iteritems() if tokenId in goodIds)
 
     
     def rebuildDictionary(self):

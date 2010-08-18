@@ -12,7 +12,7 @@ This wraps a compressed XML Wikipedia dump on disk so that iterating over the
 corpus yields directly bag-of-words sparse vectors.
 
 The input compressed file is processed incrementally, so that it need not be 
-uncompressed and may be of arbitrary size.
+uncompressed in whole.
 """
 
 
@@ -79,21 +79,27 @@ def tokenize(content):
 
 class WikiCorpus(interfaces.CorpusABC):
     """
-    Treat a wikipedia articles dump (*articles.xml.bz2) as a corpus.
+    Treat a wikipedia articles dump (*articles.xml.bz2) as a (read-only) corpus.
     
     The documents are extracted on-the-fly, so that the whole (massive) dump
     can stay compressed on disk.
-    """
     
-    def __init__(self, fname):
+    >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id, takes ~9h
+    >>> wiki.saveAsText('wiki_en_vocab200k') # another 8h, creates a file in MatrixMarket format plus file with id->word
+    
+    """
+    def __init__(self, fname, noBelow = 20, keep_words = 200000, dictionary = None):
         """
-        Initialize the corpus. This scans the corpus once to determine its vocabulary.
-        
-        **note** The scan takes more than 9 hours on my comp on the June 2010 wiki
-        dump (`enwiki-20100622-pages-articles.xml.bz2` of 6GB).
+        Initialize the corpus. This scans the corpus once, to determine its 
+        vocabulary (only the first `keep_words` most frequent words that 
+        appear in at least `noBelow` documents are kept).
         """
         self.fname = fname
-        self.dictionary = dictionary.Dictionary(self.getArticles())
+        if dictionary is None:
+            self.dictionary = dictionary.Dictionary(self.getArticles())
+            self.dictionary.filterExtremes(noBelow = noBelow, noAbove = 0.1, keepN = keep_words)
+        else:
+            self.dictionary = dictionary
 
     
     def __len__(self):
