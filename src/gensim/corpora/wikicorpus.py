@@ -93,10 +93,13 @@ class WikiCorpus(interfaces.CorpusABC):
         """
         self.fname = fname
         self.buildDictionary()
+        self._len = None
 
     
     def __len__(self):
-        raise RuntimeError("len(wiki) is too costly!")
+        if self._len is None:
+            raise RuntimeError("len(wiki) is too costly!")
+        return self._len
 
 
     def __iter__(self):
@@ -180,11 +183,11 @@ class WikiCorpus(interfaces.CorpusABC):
         Only articles of sufficient length are returned (short articles & redirects
         etc are ignored).
         """
-        intext, lines = False, []
+        articles, intext = 0, False
         for lineno, line in enumerate(bz2.BZ2File(self.fname)):
-        #for lineno, line in enumerate(open(self.fname, 'rb')):
             if line.startswith('      <text'):
                 intext = True
+                lines = []
             elif intext:
                 lines.append(line)
             pos = line.find('</text>') # can be on the same line as <text>
@@ -194,8 +197,10 @@ class WikiCorpus(interfaces.CorpusABC):
                     continue
                 lines[-1] = line[:pos]
                 text = filterWiki(''.join(lines))
-                lines = []
                 if len(text) > ARTICLE_MIN_CHARS: # article redirects are removed here
+                    articles += 1
                     yield text
+        
+        self._len = articles # cache corpus length
 #endclass WikiCorpus
 
