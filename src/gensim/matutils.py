@@ -192,17 +192,16 @@ class MmWriter(object):
         mw.writeHeaders(-1, -1, -1) # will print 50 spaces followed by newline on the stats line
         
         # calculate necessary header info (nnz elements, num terms, num docs) while writing out vectors
-        numDocs = len(corpus)
         numTerms = numNnz = 0
         
         for docNo, bow in enumerate(corpus):
             if docNo % 1000 == 0:
-                logging.info("PROGRESS: saving document %i/%i" % 
-                             (docNo, len(corpus)))
+                logging.info("PROGRESS: saving document %i" % docNo)
             if len(bow) > 0:
                 numTerms = max(numTerms, 1 + max(wordId for wordId, val in bow))
                 numNnz += len(bow)
             mw.writeVector(docNo, bow)
+        numDocs = docNo + 1
             
         if numDocs * numTerms != 0:
             logging.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" % 

@@ -25,7 +25,7 @@ logger.setLevel(logging.INFO)
 
 
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
-RE_HTML_ENTITY = re.compile(r'&(#?)(x?)(\w+);')
+RE_HTML_ENTITY = re.compile(r'&(#?)(x?)(\w+);', re.UNICODE)
 
 
 
@@ -271,7 +271,7 @@ class RepeatCorpus(SaveLoad):
 
 def decode_htmlentities(text):
     """
-    Decode HTML entities–hex, decimal, or named–in.
+    Decode HTML entities in text, coded as hex, decimal or named.
     
     Adapted from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
     
