@@ -179,7 +179,7 @@ class MmWriter(object):
 
 
     @staticmethod
-    def writeCorpus(fname, corpus):
+    def writeCorpus(fname, corpus, progressCnt = 1000):
         """
         Save the vector space representation of an entire corpus to disk.
         
@@ -195,7 +195,7 @@ class MmWriter(object):
         numTerms = numNnz = 0
         
         for docNo, bow in enumerate(corpus):
-            if docNo % 1000 == 0:
+            if docNo % progressCnt == 0:
                 logger.info("PROGRESS: saving document %i" % docNo)
             if len(bow) > 0:
                 numTerms = max(numTerms, 1 + max(wordId for wordId, val in bow))
@@ -240,7 +240,7 @@ class MmReader(object):
     as an object which supports iteration over the rows (~documents).
     
     Note that the file is read into memory one document at a time, not the whole 
-    matrix at once (unlike scipy.io.mmread). This allows for representing corpora 
+    matrix at once (unlike scipy.io.mmread). This allows us to process corpora 
     which are larger than the available RAM.
     """
     def __init__(self, input):
@@ -252,7 +252,7 @@ class MmReader(object):
         to be rows of the matrix (and document features are columns). 
         
         `input` is either a string (file path) or a file-like object that supports
-        `seek()` (gzip.GzipFile, bz2.BZ2File).
+        `seek(0)` (e.g. gzip.GzipFile, bz2.BZ2File).
         """
         logger.info("initializing corpus reader from %s" % input)
         self.input = input

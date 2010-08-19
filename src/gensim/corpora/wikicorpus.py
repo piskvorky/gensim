@@ -84,8 +84,8 @@ class WikiCorpus(interfaces.CorpusABC):
     The documents are extracted on-the-fly, so that the whole (massive) dump
     can stay compressed on disk.
     
-    >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id, takes ~9h
-    >>> wiki.saveAsText('wiki_en_vocab200k') # another 8h, creates a file in MatrixMarket format plus file with id->word
+    >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id, takes almost 7h
+    >>> wiki.saveAsText('wiki_en_vocab200k') # another 7.5h, creates a file in MatrixMarket format plus file with id->word
     
     """
     def __init__(self, fname, noBelow = 20, keep_words = 200000, dictionary = None):
@@ -117,12 +117,12 @@ class WikiCorpus(interfaces.CorpusABC):
         
     def saveDictionary(self, fname):
         """
-        Store id->word mapping to a file.
+        Store id->word mapping to a file, in format `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`.
         """
         logger.info("saving dictionary mapping to %s" % fname)
         fout = open(fname, 'w')
         for token, tokenId in sorted(self.dictionary.token2id.iteritems()):
-            fout.write("%i\t%s\n" % (tokenId, token))
+            fout.write("%i\t%s\t%i\n" % (tokenId, token, self.dictionary.docFreq[tokenId]))
         fout.close()
     
     
@@ -135,11 +135,14 @@ class WikiCorpus(interfaces.CorpusABC):
         """
         result = {}
         for lineNo, line in enumerate(open(fname)):
-            pair = line[:-1].split('\t')
-            if len(pair) != 2:
+            cols = line[:-1].split('\t')
+            if len(cols) == 2:
+                wordId, word = cols
+            elif len(cols) == 3:
+                wordId, word, docFreq = cols
+            else:
                 continue
-            wordId, word = pair
-            result[int(wordId)] = word
+            result[int(wordId)] = word # docFreq not used
         return result
     
     
@@ -155,7 +158,7 @@ class WikiCorpus(interfaces.CorpusABC):
         
         """
         self.saveDictionary(fname + '_wordids.txt')
-        matutils.MmWriter.writeCorpus(fname + '_bow.mm', self)
+        matutils.MmWriter.writeCorpus(fname + '_bow.mm', self, progressCnt = 10000)
         
     
     def getArticles(self):
