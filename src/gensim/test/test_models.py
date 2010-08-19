@@ -178,5 +178,5 @@ class TestTfidfModel(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level = logging.WARNING)
+    logging.root.setLevel(logging.WARNING)
     unittest.main()

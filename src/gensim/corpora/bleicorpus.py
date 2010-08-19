@@ -87,7 +87,7 @@ class BleiCorpus(interfaces.CorpusABC):
         logging.info("storing corpus in Blei's LDA-C format: %s" % fname)
         fout = open(fname, 'w')
         for doc in corpus:
-            fout.write("%i %s\n" % (len(doc), ' '.join("%i:%f" % p for p in doc)))
+            fout.write("%i %s\n" % (len(doc), ' '.join("%i:%s" % p for p in doc)))
         fout.close()
         
         # write out vocabulary, in a format compatible with Blei's topics.py script

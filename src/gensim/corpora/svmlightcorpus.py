@@ -82,7 +82,7 @@ class SvmLightCorpus(interfaces.CorpusABC):
         logging.info("converting corpus to SVMlight format: %s" % fname)
         fout = open(fname, 'w')
         for doc in corpus:
-            pairs = ' '.join("%i:%f" % (termId + 1, termVal) for termId, termVal  in doc) # +1 to convert 0-base to 1-base
+            pairs = ' '.join("%i:%s" % (termId + 1, termVal) for termId, termVal  in doc) # +1 to convert 0-base to 1-base
             fout.write("0 %s\n" % pairs) # target class is always 0
         fout.close()
 #endclass SvmLightCorpus
