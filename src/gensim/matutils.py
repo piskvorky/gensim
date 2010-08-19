@@ -174,7 +174,7 @@ class MmWriter(object):
             if weight == 0:
                 # to ensure len(doc) does what is expected, there must not be any zero elements in the sparse document
                 raise ValueError("zero weights not allowed in sparse documents; check your document generator")
-            self.fout.write("%i %i %f\n" % (docNo + 1, termId + 1, weight)) # +1 because MM format starts counting from 1
+            self.fout.write("%i %i %s\n" % (docNo + 1, termId + 1, weight)) # +1 because MM format starts counting from 1
         self.lastDocNo = docNo
 
 
