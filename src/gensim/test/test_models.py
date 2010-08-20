@@ -58,6 +58,7 @@ class TestLsiModel(unittest.TestCase):
         
         # train model on a single document
         model.addDocuments([corpus[0]])
+        model.printDebug()
         
         # transform the testing document with this partial transformation
         transformed = model[doc]
@@ -67,6 +68,7 @@ class TestLsiModel(unittest.TestCase):
         
         # train on another 4 documents
         model.addDocuments(corpus[1:5], chunks = 2) # train in chunks of 2 documents, for the lols
+        model.printDebug()
         
         # transform a document with this partial transformation
         transformed = model[doc]
@@ -77,6 +79,7 @@ class TestLsiModel(unittest.TestCase):
         
         # train on the rest of documents
         model.addDocuments(corpus[5:])
+        model.printDebug()
         
         # make sure the final transformation is the same as if we had decomposed the whole corpus at once
         vec1 = matutils.sparse2full(model[doc], model.numTopics)
