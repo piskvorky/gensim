@@ -23,7 +23,7 @@ import re
 import bz2
 
 from gensim import interfaces, matutils, utils
-from gensim.corpora import dictionary # for constructing word->id mappings
+from gensim.corpora.dictionary import Dictionary # for constructing word->id mappings
 
 
 
@@ -37,30 +37,38 @@ ARTICLE_MIN_CHARS = 500
 RE_P0 = re.compile('<!--.*?-->', re.DOTALL | re.UNICODE)
 RE_P1 = re.compile('<ref([> ].*?)(</ref>|/>)', re.DOTALL | re.UNICODE)
 RE_P2 = re.compile("(\n\[\[[a-z][a-z][\w-]*:[^:\]]+\]\])+$", re.UNICODE)
-RE_P3 = re.compile("{{([^}{]*)}}", re.UNICODE)
-RE_P4 = re.compile("{{([^}]*)}}", re.UNICODE)
-RE_P5 = re.compile("\[([^][|]*?):\/\/(.*?)\]", re.UNICODE)
-RE_P6 = re.compile("\[([^]|[:]*)\|([^][]*)\]", re.UNICODE)
+RE_P3 = re.compile("{{([^}{]*)}}", re.DOTALL | re.UNICODE)
+RE_P4 = re.compile("{{([^}]*)}}", re.DOTALL | re.UNICODE)
+RE_P5 = re.compile("\[([^][|]*?):\/\/(.*?)\]", re.DOTALL | re.UNICODE)
+RE_P6 = re.compile("\[([^][]*)\|([^][]*)\]", re.DOTALL | re.UNICODE)
 RE_P7 = re.compile('\n\[\[[iI]mage(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)
 RE_P8 = re.compile('\n\[\[[fF]ile(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)
-
+RE_P9 = re.compile('<nowiki([> ].*?)(</nowiki>|/>)', re.DOTALL | re.UNICODE)
+RE_P10 = re.compile('<math([> ].*?)(</math>|/>)', re.DOTALL | re.UNICODE)
+RE_P11 = re.compile('<(.*?)>', re.DOTALL | re.UNICODE)
 
 def filterWiki(raw):
     """
-    Filter out wiki markup from utf8 string `raw`, leaving only text.
+    Filter out wiki mark-up from utf8 string `raw`, leaving only text.
     """
-    # the parsing is far form perfect, but sufficient for our purposes
+    # the parsing the wiki markup is not perfect, but sufficient for our purposes
     # contributions to improving this code are welcome :)
     text = utils.decode_htmlentities(unicode(raw, 'utf8', 'ignore'))
+    text = text.replace('&nbsp;', '') # non-breaking space is double encoded as '&amp;nbsp;' so remove it manually
     text = re.sub(RE_P0, "", text) # remove comments
     text = re.sub(RE_P1, '', text) # remove footnotes
+    text = re.sub(RE_P9, "", text) # remove outside links
+    text = re.sub(RE_P10, "", text) # remove math content
+    text = re.sub(RE_P11, "", text) # remove all remaining tags
     text = re.sub(RE_P2, "", text) # remove the last list (=languages)
     text = re.sub(RE_P3, '', text) # remove templates
     text = re.sub(RE_P4, '', text) # remove templates (no recursion, only 2-level)
     text = re.sub(RE_P5, '', text) # remove urls
     text = re.sub(RE_P6, '\\2', text) # simplify links, keep description only
-    text = re.sub(RE_P7, '\\3', text) # simplify images, keep description only
-    text = re.sub(RE_P8, '\\3', text) # simpligy files, keep description only
+    text = re.sub(RE_P7, '\n\\3', text) # simplify images, keep description only
+    text = re.sub(RE_P8, '\n\\3', text) # simplify files, keep description only
+    # the following is needed to make the tokenizer see '[[socialist]]s' as a single word 'socialists'
+    text = text.replace('[', '').replace(']', '') # promote all remaining markup to plain text 
     return text
 
 
@@ -96,7 +104,7 @@ class WikiCorpus(interfaces.CorpusABC):
         """
         self.fname = fname
         if dictionary is None:
-            self.dictionary = dictionary.Dictionary(self.getArticles())
+            self.dictionary = Dictionary(self.getArticles())
             self.dictionary.filterExtremes(noBelow = noBelow, noAbove = 0.1, keepN = keep_words)
         else:
             self.dictionary = dictionary
@@ -172,7 +180,8 @@ class WikiCorpus(interfaces.CorpusABC):
         for lineno, line in enumerate(bz2.BZ2File(self.fname)):
             if line.startswith('      <text'):
                 intext = True
-                lines = []
+                line = line[line.find('>') + 1 : ]
+                lines = [line]
             elif intext:
                 lines.append(line)
             pos = line.find('</text>') # can be on the same line as <text>
@@ -182,7 +191,7 @@ class WikiCorpus(interfaces.CorpusABC):
                     continue
                 lines[-1] = line[:pos]
                 text = filterWiki(''.join(lines))
-                if len(text) > ARTICLE_MIN_CHARS: # article redirects are removed here
+                if len(text) > ARTICLE_MIN_CHARS: # article redirects are pruned here
                     articles += 1
                     yield tokenize(text) # split text into tokens
         

@@ -112,7 +112,7 @@ class Projection(utils.SaveLoad):
                              (other.m, self.m))
         logger.info("merging projections: %s + %s" % (str(self.u.shape), str(other.u.shape)))
 #        diff = numpy.dot(self.u.T, self.u) - numpy.eye(self.u.shape[1])
-#        logger.error('orth error after=%f' % numpy.sum(diff * diff))
+#        logger.info('orth error after=%f' % numpy.sum(diff * diff))
         m, n1, n2 = self.u.shape[0], self.u.shape[1], other.u.shape[1]
         # TODO Maybe keep the bases as elementary reflectors, without 
         # forming explicit matrices with gorgqr.
@@ -131,8 +131,9 @@ class Projection(utils.SaveLoad):
         # perform q, r = QR(component); code hacked out of scipy.linalg.qr
         logger.debug("computing QR of %s dense matrix" % str(other.u.shape))
         geqrf, = get_lapack_funcs(('geqrf',), (other.u,))
-        qr, tau, work, info = geqrf(other.u, lwork = -1, overwrite_a = False) # segfaults for overwrite_a=True!!
-        qr, tau, work, info = geqrf(other.u, lwork = work[0], overwrite_a = False)
+        qr, tau, work, info = geqrf(other.u, lwork = -1, overwrite_a = True) # segfaults for overwrite_a=True!!
+        logger.debug("GEQRF work size: %s" % work[0])
+        qr, tau, work, info = geqrf(other.u, lwork = work[0], overwrite_a = True)
         del other.u
         assert info >= 0
         r = triu(qr[:n2, :n2])
@@ -158,7 +159,7 @@ class Projection(utils.SaveLoad):
         gemm(1.0, q, u_k[n1:], beta = 1.0, c = self.u, overwrite_c = True) # u = [u,u']*u_k
         self.s = s_k
 #        diff = numpy.dot(self.u.T, self.u) - numpy.eye(self.u.shape[1])
-#        logger.error('orth error after=%f' % numpy.sum(diff * diff))
+#        logger.info('orth error after=%f' % numpy.sum(diff * diff))
 #endclass Projection
 
 
@@ -297,6 +298,7 @@ class LsiModel(interfaces.TransformationABC):
                     self.projection.merge(update, decay = decay)
                     del update
                     logger.info("processed documents up to #%s" % doc_no)
+                    self.printDebug(5)
             
             if self.dispatcher:
                 logger.info("reached the end of input; now waiting for all remaining jobs to finish")
@@ -313,6 +315,7 @@ class LsiModel(interfaces.TransformationABC):
             update = Projection(self.numTerms, self.numTopics, corpus)
             self.projection.merge(update, decay = decay)
             logger.info("processed sparse job of %i documents" % (corpus.shape[1]))
+            self.printDebug(5)
 
     
     def __str__(self):
@@ -353,14 +356,19 @@ class LsiModel(interfaces.TransformationABC):
         """
         # size of the projection matrix can actually be smaller than `self.numTopics`,
         # if there were not enough factors (real rank of input matrix smaller than
-        # `self.numTopics`). in that case, assume zero projection vector for such topics.
-        if topicNo < len(self.projection.u.T):
-            c = numpy.asarray(self.projection.u.T[topicNo, :]).flatten()
-        else:
-            c = numpy.zeros(shape = (self.projection.u.shape[0]), dtype = self.projection.u.dtype)
+        # `self.numTopics`). in that case, return empty string
+        if topicNo >= len(self.projection.u.T):
+            return ''
+        c = numpy.asarray(self.projection.u.T[topicNo, :]).flatten()
         norm = numpy.sqrt(numpy.sum(c * c))
         most = numpy.abs(c).argsort()[::-1][:topN]
         return ' + '.join(['%.3f * "%s"' % (1.0 * c[val] / norm, self.id2word[val]) for val in most])
+
+
+    def printDebug(self, numTopics = 5, numWords = 10):
+        for i in xrange(min(numTopics, self.numTopics)):
+            if i < len(self.projection.s):
+                logger.info("lsi topic %i (%s): %s" % (i, self.projection.s[i], self.printTopic(i, topN = numWords)))
 #endclass LsiModel
 
 
