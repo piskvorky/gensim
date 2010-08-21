@@ -54,7 +54,7 @@ def filterWiki(raw):
     # the parsing the wiki markup is not perfect, but sufficient for our purposes
     # contributions to improving this code are welcome :)
     text = utils.decode_htmlentities(unicode(raw, 'utf8', 'ignore'))
-    text = text.replace('&nbsp;', '') # non-breaking space is double encoded as '&amp;nbsp;' so remove it manually
+    text = utils.decode_htmlentities(text) # html is double encoded as '&amp;nbsp;' so decode it once more...
     text = re.sub(RE_P0, "", text) # remove comments
     text = re.sub(RE_P1, '', text) # remove footnotes
     text = re.sub(RE_P9, "", text) # remove outside links
@@ -68,7 +68,7 @@ def filterWiki(raw):
     text = re.sub(RE_P7, '\n\\3', text) # simplify images, keep description only
     text = re.sub(RE_P8, '\n\\3', text) # simplify files, keep description only
     # the following is needed to make the tokenizer see '[[socialist]]s' as a single word 'socialists'
-    text = text.replace('[', '').replace(']', '') # promote all remaining markup to plain text 
+    text = text.replace('[', '').replace(']', '') # promote all remaining markup to plain text # TODO is this really desirable?
     return text
 
 
