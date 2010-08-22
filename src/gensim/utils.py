@@ -302,5 +302,10 @@ def decode_htmlentities(text):
             else:
                 return match.group()
     
-    return RE_HTML_ENTITY.sub(substitute_entity, text)
+    try:
+        return RE_HTML_ENTITY.sub(substitute_entity, text)
+    except:
+        # in case of errors, return input
+        # e.g., ValueError: unichr() arg not in range(0x10000) (narrow Python build)
+        return text
 
