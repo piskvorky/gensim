@@ -39,13 +39,16 @@ RE_P1 = re.compile('<ref([> ].*?)(</ref>|/>)', re.DOTALL | re.UNICODE)
 RE_P2 = re.compile("(\n\[\[[a-z][a-z][\w-]*:[^:\]]+\]\])+$", re.UNICODE)
 RE_P3 = re.compile("{{([^}{]*)}}", re.DOTALL | re.UNICODE)
 RE_P4 = re.compile("{{([^}]*)}}", re.DOTALL | re.UNICODE)
-RE_P5 = re.compile("\[([^][|]*?):\/\/(.*?)\]", re.DOTALL | re.UNICODE)
+RE_P5 = re.compile('\[(\w+):\/\/(.*?)(( (.*?))|())\]', re.UNICODE)
 RE_P6 = re.compile("\[([^][]*)\|([^][]*)\]", re.DOTALL | re.UNICODE)
 RE_P7 = re.compile('\n\[\[[iI]mage(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)
 RE_P8 = re.compile('\n\[\[[fF]ile(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)
 RE_P9 = re.compile('<nowiki([> ].*?)(</nowiki>|/>)', re.DOTALL | re.UNICODE)
 RE_P10 = re.compile('<math([> ].*?)(</math>|/>)', re.DOTALL | re.UNICODE)
 RE_P11 = re.compile('<(.*?)>', re.DOTALL | re.UNICODE)
+RE_P12 = re.compile('\n(({\|)|(\|-)|(\|}))(.*?)(?=\n)', re.UNICODE)
+RE_P13 = re.compile('\n(\||\!)(.*?\|)*([^|]*?)', re.UNICODE)
+
 
 def filterWiki(raw):
     """
@@ -54,21 +57,37 @@ def filterWiki(raw):
     # the parsing the wiki markup is not perfect, but sufficient for our purposes
     # contributions to improving this code are welcome :)
     text = utils.decode_htmlentities(unicode(raw, 'utf8', 'ignore'))
-    text = utils.decode_htmlentities(text) # html is double encoded as '&amp;nbsp;' so decode it once more...
-    text = re.sub(RE_P0, "", text) # remove comments
-    text = re.sub(RE_P1, '', text) # remove footnotes
-    text = re.sub(RE_P9, "", text) # remove outside links
-    text = re.sub(RE_P10, "", text) # remove math content
-    text = re.sub(RE_P11, "", text) # remove all remaining tags
+    text = utils.decode_htmlentities(text) # '&amp;nbsp;' --> '\xa0'
     text = re.sub(RE_P2, "", text) # remove the last list (=languages)
-    text = re.sub(RE_P3, '', text) # remove templates
-    text = re.sub(RE_P4, '', text) # remove templates (no recursion, only 2-level)
-    text = re.sub(RE_P5, '', text) # remove urls
-    text = re.sub(RE_P6, '\\2', text) # simplify links, keep description only
-    text = re.sub(RE_P7, '\n\\3', text) # simplify images, keep description only
-    text = re.sub(RE_P8, '\n\\3', text) # simplify files, keep description only
+    # the wiki markup is recursive (markup inside markup etc)
+    # instead of writing a recursive grammar, here we deal with that by removing 
+    # markup in a loop, starting with inner-most expressions and working outwards,
+    # as long as something changes.
+    iters = 0
+    while True:
+        old, iters = text, iters + 1
+        text = re.sub(RE_P0, "", text) # remove comments
+        text = re.sub(RE_P1, '', text) # remove footnotes
+        text = re.sub(RE_P9, "", text) # remove outside links
+        text = re.sub(RE_P10, "", text) # remove math content
+        text = re.sub(RE_P11, "", text) # remove all remaining tags
+        text = re.sub(RE_P3, '', text) # remove templates
+        text = re.sub(RE_P4, '', text) # remove templates (no recursion, only 2-level)
+        text = re.sub(RE_P5, '\\3', text) # remove urls, keep description
+        text = re.sub(RE_P7, '\n\\3', text) # simplify images, keep description only
+        text = re.sub(RE_P8, '\n\\3', text) # simplify files, keep description only
+        text = re.sub(RE_P6, '\\2', text) # simplify links, keep description only
+        # remove table markup; TODO this is ugly...
+        text = text.replace('||', '\n|') # each table cell on a separate line
+        text = re.sub(RE_P12, '\n', text) # remove formatting lines
+        text = re.sub(RE_P13, '\n\\3', text) # leave only cell content
+        text = text.replace('[]', '')
+        if old == text or iters > 2: # stop if nothing changed or after a fixed number of iterations
+            break
+
     # the following is needed to make the tokenizer see '[[socialist]]s' as a single word 'socialists'
-    text = text.replace('[', '').replace(']', '') # promote all remaining markup to plain text # TODO is this really desirable?
+    # TODO is this really desirable?
+    text = text.replace('[', '').replace(']', '') # promote all remaining markup to plain text
     return text
 
 
@@ -81,7 +100,7 @@ def tokenize(content):
     """
     # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic etc.)
     return [token.encode('utf8') for token in utils.tokenize(content, lower = True, errors = 'ignore') 
-            if len(token) <= 15]
+            if len(token) <= 15 and not token.startswith('_')]
 
 
 
