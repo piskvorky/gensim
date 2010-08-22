@@ -5,19 +5,26 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""
-Wikipedia corpus.
+"""USAGE: %(program)s WIKI_XML_DUMP OUTPUT_PREFIX
 
-This wraps a compressed XML Wikipedia dump on disk so that iterating over the 
-corpus yields directly bag-of-words sparse vectors.
+Convert articles from a Wikipedia dump to (sparse) vectors. The input is a bz2-compressed \
+dump of Wikipedia articles, in XML format.
 
-The input compressed file is processed incrementally, so that it need not be 
-uncompressed in whole.
+This actually creates three files:
+ * OUTPUT_PREFIX_wordids.txt: mapping between words and their integer ids
+ * OUTPUT_PREFIX_bow.mm: bag-of-words (word counts) representation, in Matrix Matrix format
+ * OUTPUT_PREFIX_tfidf.mm: TF-IDF representation
+
+The output Matrix Market files can then be compressed (e.g., by bzip2) to save \
+disk space; gensim's corpus iterators can work with compressed input, too.
+
+Example: ./wikicorpus.py ~/gensim/results/enwiki-20100622-pages-articles.xml.bz2 ~/gensim/results/wiki_en
 """
 
 
 import logging
 import itertools
+import sys
 import os.path
 import re
 import bz2
@@ -82,7 +89,7 @@ def filterWiki(raw):
         text = re.sub(RE_P12, '\n', text) # remove formatting lines
         text = re.sub(RE_P13, '\n\\3', text) # leave only cell content
         text = text.replace('[]', '')
-        if old == text or iters > 2: # stop if nothing changed or after a fixed number of iterations
+        if old == text or iters > 2: # stop if nothing changed between two iterations or after a fixed number of iterations
             break
 
     # the following is needed to make the tokenizer see '[[socialist]]s' as a single word 'socialists'
@@ -98,7 +105,7 @@ def tokenize(content):
     
     Return tokens as utf8 bytestrings. 
     """
-    # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic etc.)
+    # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic, russian etc.)
     return [token.encode('utf8') for token in utils.tokenize(content, lower = True, errors = 'ignore') 
             if len(token) <= 15 and not token.startswith('_')]
 
@@ -216,4 +223,45 @@ class WikiCorpus(interfaces.CorpusABC):
         
         self.numDocs = articles # cache corpus length
 #endclass WikiCorpus
+
+
+
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
+    logging.root.setLevel(level = logging.INFO)
+    logging.info("running %s" % ' '.join(sys.argv))
+
+    program = os.path.basename(sys.argv[0])
+    
+    # check and process input arguments
+    if len(sys.argv) < 3:
+        print globals()['__doc__'] % locals()
+        sys.exit(1)
+    input, ouput = sys.argv[1:3]
+    
+    # build dictionary. only keep 200k most frequent words (out of total ~7m unique tokens)
+    # takes about 7.5h on a macbook pro
+    wiki = gensim.corpora.WikiCorpus('/Users/kofola/gensim/results/enwiki-20100622-pages-articles.xml.bz2',
+                                     keep_words = 200000)
+    
+    # save dictionary and bag-of-words
+    # ~7h
+    wiki.saveAsText(output)
+    del wiki
+    
+    # initialize corpus reader and word->id mapping
+    from gensim.corpora import MmCorpus
+    id2token = WikiCorpus.loadDictionary(output + '_wordids.txt')
+    mm = MmCorpus(output + '_bow.txt')
+    
+    # build tfidf
+    # ~0.5h
+    from gensim.models import TfidfModel
+    tfidf = TfidfModel(mm, id2word = id2token, normalize = True)
+    
+    # save tfidf vectors in matrix market format
+    # ~2h
+    MmCorpus.saveCorpus(output + '_tfidf.mm', tfidf[mm])
+    
+    logging.info("finished running %s" % program)
 
