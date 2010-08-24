@@ -1,0 +1,284 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Distributed Latent Semantic Analysis &mdash; gensim documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.7.0',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="gensim documentation" href="index.html" />
+    <link rel="up" title="Distributed Computing" href="distributed.html" />
+    <link rel="next" title="API Reference" href="apiref.html" />
+    <link rel="prev" title="Distributed Computing" href="distributed.html" /> 
+  </head>
+  <body>
+
+<!--
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="index.html"><img src="_static/logo.png" border="0" alt="py4sci"/></a>
+</div>
+--!>
+
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="apiref.html" title="API Reference"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="distributed.html" title="Distributed Computing"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
+       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
+
+          <li><a href="distributed.html" accesskey="U">Distributed Computing</a> &raquo;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Distributed Latent Semantic Analysis</a><ul>
+<li><a class="reference external" href="#setting-up-the-cluster">Setting up the cluster</a></li>
+<li><a class="reference external" href="#running-lsa">Running LSA</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="distributed.html"
+                                  title="previous chapter">Distributed Computing</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="apiref.html"
+                                  title="next chapter">API Reference</a></p>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="distributed-latent-semantic-analysis">
+<span id="dist-lsi"></span><h1>Distributed Latent Semantic Analysis<a class="headerlink" href="#distributed-latent-semantic-analysis" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See <a class="reference external" href="distributed.html"><em>Distributed Computing</em></a> for an introduction to distributed computing in <cite>gensim</cite>.</p>
+</div>
+<div class="section" id="setting-up-the-cluster">
+<h2>Setting up the cluster<a class="headerlink" href="#setting-up-the-cluster" title="Permalink to this headline">¶</a></h2>
+<p>We will show how to run distributed Latent Semantic Analysis by means of an example.
+Let&#8217;s say we have 5 computers at our disposal, all in the same broadcast domain.
+To start with, install <cite>gensim</cite> and <cite>Pyro</cite> on each one of them with:</p>
+<div class="highlight-python"><pre>$ sudo easy_install gensim[distributed]</pre>
+</div>
+<p>and run Pyro&#8217;s name server on exactly <em>one</em> of the machines (doesn&#8217;t matter which one):</p>
+<div class="highlight-python"><pre>$ python -m Pyro.naming &amp;</pre>
+</div>
+<p>Let&#8217;s say our example cluster consists of dual-core computers with loads of
+memory. We will therefore run <strong>two</strong> worker scripts on four of the physical machines,
+creating <strong>eight</strong> logical worker nodes:</p>
+<div class="highlight-python"><pre>$ python -m gensim.models.lsi_worker &amp;</pre>
+</div>
+<p>This will execute <cite>gensim</cite>&#8216;s <cite>lsi_worker.py</cite> script, to be run twice on each of the
+four computer.
+This lets <cite>gensim</cite> know that it can run two jobs on each of the four computers in
+parallel, so that the computation will be done faster (but also taking up twice
+as much memory on each machine).</p>
+<p>Next, pick one computer that will be a job scheduler in charge of worker
+synchronization, and on it, run <cite>LSA dispatcher</cite>. In our example, we will use the
+fifth computer to act as the dispatcher and from there run:</p>
+<div class="highlight-python"><pre>$ python -m gensim.models.lsi_dispatcher &amp;</pre>
+</div>
+<p>In general, the dispatcher can be run on the same machine as one of the worker nodes, or it
+can be another, distinct computer within the same broadcast domain. The dispatcher
+won&#8217;t be  doing much with CPU most of the time, but pick a computer with ample memory.</p>
+<p>And that&#8217;s it! The cluster is set up and running, ready to accept jobs. To remove
+a worker later on, simply terminate its <cite>lsi_worker</cite> process. To add another worker, run another
+<cite>lsi_worker</cite> (this will not affect a computation that is already running). If you terminate
+<cite>lsi_dispatcher</cite>, you won&#8217;t be able to run computations until you run it again on
+some node (surviving workers can be re-used though).</p>
+</div>
+<div class="section" id="running-lsa">
+<h2>Running LSA<a class="headerlink" href="#running-lsa" title="Permalink to this headline">¶</a></h2>
+<p>So let&#8217;s test our setup and run one computation of distributed LSA. Open a Python
+shell on one of the five machines (again, this can be done on any computer
+in the same <a class="reference external" href="http://en.wikipedia.org/wiki/Broadcast_domain">broadcast domain</a>,
+our choice is incidental) and try:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">utils</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.mm&#39;</span><span class="p">)</span> <span class="c"># load a corpus of nine documents, from the Tutorials</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.dict&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">id2token</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="c"># run distributed LSA on nine documents</span>
+</pre></div>
+</div>
+<p>This uses the corpus and feature-token mapping created in the <a class="reference external" href="tut1.html"><em>Corpora and Vector Spaces</em></a> tutorial.
+If you look at the log in your Python session, you should see a line similar to:</p>
+<div class="highlight-python"><pre>2010-08-09 23:44:25,746 : INFO : using distributed version with 8 workers</pre>
+</div>
+<p>which means all went well. You can also check the logs coming from your worker and dispatcher
+processes &#8212; this is especially helpful in case of problems.
+To check the LSA results, let&#8217;s print the first two latent topics:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="n">lsi</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">topN</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">0.644 * &quot;survey&quot; + 0.404 * &quot;response&quot; + 0.301 * &quot;user&quot; + 0.265 * &quot;time&quot; + 0.265 * &quot;system&quot;</span>
+<span class="go">0.623 * &quot;graph&quot; + 0.490 * &quot;trees&quot; + 0.451 * &quot;minors&quot; + 0.274 * &quot;eps&quot; + -0.167 * &quot;survey&quot;</span>
+</pre></div>
+</div>
+<p>Success! But a corpus of nine documents is no challenge for our powerful cluster...
+In fact, we had to lower the job size (<cite>chunks</cite> parameter above) to a single document
+at a time, otherwise all documents would be processed by a single worker all at once.</p>
+<p>So let&#8217;s run LSA on <strong>one million documents</strong> instead:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus1m</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">RepeatCorpus</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">)</span> <span class="c"># inflate the corpus to 1M documents, by repeating it over&amp;over</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus1m</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">serial_only</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span> <span class="c"># run distributed LSA on 1 million documents!</span>
+</pre></div>
+</div>
+<p>The <cite>serial_only</cite> parameter instructs <cite>gensim</cite> whether to run in serial or distributed mode.
+Setting <cite>serial_only=True</cite> will result in LSA running inside the active Python shell, without
+any inter-node communication whatsoever, even if there are worker nodes available.
+Setting <cite>serial_only=False</cite> forces distributed mode (raising an exception in
+case of failure). And finally, leaving <cite>serial_only</cite> unspecified tells <cite>gensim</cite>
+to try running in distributed mode, or, failing that, run in serial mode.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="n">lsi1m</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">topN</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">-0.644 * &quot;survey&quot; + -0.404 * &quot;response&quot; + -0.301 * &quot;user&quot; + -0.265 * &quot;time&quot; + -0.265 * &quot;system</span>
+<span class="go">0.623 * &quot;graph&quot; + 0.490 * &quot;trees&quot; + 0.451 * &quot;minors&quot; + 0.274 * &quot;eps&quot; + -0.167 * &quot;survey&quot;</span>
+</pre></div>
+</div>
+<p>The log from 1M LSA should look like:</p>
+<div class="highlight-python"><pre>2010-08-10 02:46:35,087 : INFO : using distributed version with 8 workers
+2010-08-10 02:46:35,087 : INFO : updating SVD with new documents
+2010-08-10 02:46:35,202 : INFO : dispatched documents up to #10000
+2010-08-10 02:46:35,296 : INFO : dispatched documents up to #20000
+...
+2010-08-10 02:46:46,524 : INFO : dispatched documents up to #990000
+2010-08-10 02:46:46,694 : INFO : dispatched documents up to #1000000
+2010-08-10 02:46:46,694 : INFO : reached the end of input; now waiting for all remaining jobs to finish
+2010-08-10 02:46:47,195 : INFO : all jobs finished, downloading final projection
+2010-08-10 02:46:47,200 : INFO : decomposition complete</pre>
+</div>
+<p>Due to the small vocabulary size and trivial structure of our &#8220;one-million corpus&#8221;, the computation
+of LSA still takes only 12 seconds. To really stress-test our cluster, let&#8217;s do
+Latent Semantic Analysis on the English Wikipedia.</p>
+<p>First, download the dump of all Wikipedia articles from <a class="reference external" href="http://download.wikimedia.org/enwiki/">http://download.wikimedia.org/enwiki/</a>
+(you want a file like <cite>enwiki-20100622-pages-articles.xml.bz2</cite>). This file is about 6GB in size
+and contains (compressed version) of all articles from the English Wikipedia.
+Before we can run LSA, we need to convert them to plain text (process and filter Wiki
+mark-up) and store the result as sparse TF-IDF vectors. In Python, this is
+easy to do and we don&#8217;t even need to uncompress the archive; the computation can
+be done incrementally, over the compressed file. We will however use a script that
+stores the resulting TF-IDF vectors to disk, to speed up subsequent corpus iterations:</p>
+<div class="highlight-python"><pre>$ python -m gensim.corpora.wikicorpus # will print cmdline help</pre>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This pre-processing step makes two passes over the 6GB wiki dump (one to extract
+the dictionary, one to covert and store the vectors) and takes about
+15 hours on a Macbook Pro, so you may want to go have a coffee or two.
+Also, you will need about 14GB of free disk space to store the output vectors.</p>
+</div>
+<p>Now we&#8217;re ready to compute LSA:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span><span class="o">,</span> <span class="nn">gensim</span><span class="o">,</span> <span class="nn">bz2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># load id-&gt;word mapping (the dictionary)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">wikicorpus</span><span class="o">.</span><span class="n">WikiCorpus</span><span class="o">.</span><span class="n">loadDictionary</span><span class="p">(</span><span class="s">&#39;wiki_en_wordids.txt&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># load corpus iterator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mm</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;wiki_en_tfidf.mm&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># mm = gensim.corpora.MmCorpus(bz2.BZ2File(&#39;wiki_en_tfidf.mm.bz2&#39;)) # use this if you compressed the output</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mm</span>
+<span class="go">MmCorpus(3146817 documents, 200000 features, 498484783 non-zero entries)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 400 LSI topics</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">20000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print the ten most contributing words (both positively and negatively) for the first ten topics</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">printDebug</span><span class="p">(</span><span class="n">numTopics</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">2010-08-24 17:43:23,727 : INFO : topic #0: debate(0.274), subsequent(0.194), deletion(0.381), appropriate(0.208), proposed(0.103), modify(0.213), comments(0.223), edits(0.220), delete(0.478), archived(0.109), ...,</span>
+<span class="go">2010-08-24 17:43:26,339 : INFO : topic #1: diff(0.238), link(0.226), together(0.023), every(0.034), image(0.234), become(0.015), fair(0.124), ever(0.012), alone(0.019), changing(0.004), ..., debate(-0.089), subsequent(-0.062), deletion(-0.116), appropriate(-0.066), modify(-0.068)</span>
+<span class="go">2010-08-24 17:43:28,720 : INFO : topic #2: diff(0.486), link(0.437), undo(0.221), added(0.124), resolves(0.065), blacklist(0.073), linkwatcher(0.062), reporting(0.060), reports(0.052), spamming(0.059), ..., together(-0.017), age(-0.087), alone(-0.017), older(-0.030), every(-0.027)</span>
+<span class="go">2010-08-24 17:43:31,009 : INFO : topic #3: age(0.243), residing(0.055), older(0.086), household(0.103), householder(0.056), capita(0.056), median(0.221), families(0.135), versus(0.051), households(0.164), ..., fair(-0.193), image(-0.349), licensing(-0.102), resolution(-0.123), copyright(-0.210)</span>
+<span class="go">2010-08-24 17:43:33,472 : INFO : topic #4: householder(0.045), residing(0.043), median(0.177), capita(0.045), household(0.080), households(0.130), makeup(0.044), versus(0.039), families(0.102), income(0.155), ..., ever(-0.012), six(-0.017), become(-0.014), coming(-0.007), twice(-0.007)</span>
+<span class="go">2010-08-24 17:43:35,900 : INFO : topic #5: players(0.500), goalkeepers(0.009), goalkeeper(0.015), football(0.323), defender(0.017), forwards(0.016), league(0.286), midfielder(0.019), striker(0.012), fullbacks(0.003), ..., everything(-0.008), come(-0.014), gone(-0.006), nowhere(-0.002), listen(-0.003)</span>
+<span class="go">2010-08-24 17:43:38,492 : INFO : topic #6: lyrically(0.002), album(0.414), rerecorded(0.001), daydream(0.001), tracklisting(0.006), catchy(0.002), anthemic(0.000), charting(0.008), studio(0.051), musically(0.003), ..., initiated(-0.003), consult(-0.001), necessary(-0.008), existing(-0.007), strongly(-0.004)</span>
+<span class="go">2010-08-24 17:43:40,986 : INFO : topic #7: why(0.066), regards(0.009), else(0.027), understand(0.026), occured(0.001), gotten(0.004), honestly(0.005), noticed(0.009), reply(0.010), need(0.065), ..., subsequent(-0.071), debate(-0.096), proposed(-0.037), delete(-0.181), appropriate(-0.066)</span>
+<span class="go">2010-08-24 17:43:43,299 : INFO : topic #8: 분류(0.097), kategória(0.117), kategori(0.471), categoría(0.153), kategoria(0.151), ja(0.093), категория(0.161), kategorie(0.219), categorie(0.139), kategorija(0.234), ..., formerly(-0.003), serving(-0.006), officially(-0.002), station(-0.061), newly(-0.001)</span>
+<span class="go">2010-08-24 17:43:45,720 : INFO : topic #9: film(0.556), directorial(0.007), directed(0.104), remake(0.007), cassavetes(0.001), theatrically(0.003), ebert(0.004), projectionist(0.001), starring(0.046), films(0.427), ..., 분류(-0.036), kategória(-0.044), kategori(-0.175), categoría(-0.057), kategoria(-0.056)</span>
+</pre></div>
+</div>
+<p>In serial mode, creating the LsiModel takes about 14h on my laptop. In distributed mode FIXME TODO.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="apiref.html" title="API Reference"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="distributed.html" title="Distributed Computing"
+             >previous</a> |</li>
+        <li><a href="index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
+       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
+
+          <li><a href="distributed.html" >Distributed Computing</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Aug 24, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+    </div>
+  </body>
+</html>

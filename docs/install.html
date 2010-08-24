@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.6.0',
+        VERSION:     '0.7.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -129,9 +129,23 @@ sudo easy_install scipy</pre>
 <div class="section" id="install-gensim">
 <h2>Install gensim<a class="headerlink" href="#install-gensim" title="Permalink to this headline">¶</a></h2>
 <p>You can now install (or upgrade) gensim with:</p>
-<div class="highlight-python"><pre>sudo easy_install gensim</pre>
+<div class="highlight-python"><pre>sudo easy_install --upgrade gensim[lsi]</pre>
 </div>
 <p>That&#8217;s it! Congratulations, you can now proceed to the <a class="reference external" href="tutorial.html"><em>tutorials</em></a>.</p>
+<p>In case you won&#8217;t be using Latent Semantic Analysis, you can omit the optional <cite>[lsi]</cite>
+feature and install with:</p>
+<div class="highlight-python"><pre>sudo easy_install gensim</pre>
+</div>
+<p>If you, on the other hand, also want to run the algorithms over a cluster
+of computers, in <a class="reference external" href="distributed.html"><em>Distributed Computing</em></a>, you should install with:</p>
+<div class="highlight-python"><pre>sudo easy_install gensim[lsi,distributed]</pre>
+</div>
+<p>The optional <cite>lsi</cite> feature will install the <a class="reference external" href="http://pypi.python.org/pypi/sparsesvd">sparsesvd</a> package;
+<cite>distributed</cite> feature installs <a class="reference external" href="http://pypi.python.org/pypi/Pyro">Pyro (PYthon Remote Objects)</a>. These
+optional extensions can also be installed separately with:</p>
+<div class="highlight-python"><pre>sudo easy_install sparsesvd Pyro</pre>
+</div>
+<hr class="docutils" />
 <p>There are also alternative routes to install:</p>
 <ol class="arabic">
 <li><p class="first">If you have downloaded and unzipped the <a class="reference external" href="http://pypi.python.org/pypi/gensim">tar.gz source</a>
@@ -199,8 +213,8 @@ compilation or installation needed. Just don&#8217;t forget to set your PYTHONPA
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek.
-      Last updated on Aug 10, 2010.
+      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Aug 24, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

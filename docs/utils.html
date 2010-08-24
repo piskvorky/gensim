@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.6.0',
+        VERSION:     '0.7.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -163,6 +163,22 @@ input string with accents removed, as unicode.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.utils.decode_htmlentities">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">decode_htmlentities</tt><big>(</big><em>text</em><big>)</big><a class="headerlink" href="#gensim.utils.decode_htmlentities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode HTML entities in text, coded as hex, decimal or named.</p>
+<p>Adapted from <a class="reference external" href="http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py">http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py</a></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="s">u&#39;E tu vivrai nel terrore - L&amp;#x27;aldil&amp;#xE0; (1981)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">decode_htmlentities</span><span class="p">(</span><span class="n">u</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;UTF-8&#39;</span><span class="p">)</span>
+<span class="go">E tu vivrai nel terrore - L&#39;aldilà (1981)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">decode_htmlentities</span><span class="p">(</span><span class="s">&quot;l&amp;#39;eau&quot;</span><span class="p">)</span>
+<span class="go">l&#39;eau</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">decode_htmlentities</span><span class="p">(</span><span class="s">&quot;foo &amp;lt; bar&quot;</span><span class="p">)</span>
+<span class="go">foo &lt; bar</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.utils.dictFromCorpus">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">dictFromCorpus</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.utils.dictFromCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scan corpus for all word ids that appear in it, then construct and return a mapping
@@ -247,8 +263,8 @@ characters (no digits!).</p>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek.
-      Last updated on Aug 10, 2010.
+      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Aug 24, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

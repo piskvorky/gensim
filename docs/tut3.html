@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.6.0',
+        VERSION:     '0.7.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -132,12 +132,12 @@ LSI space:</p>
 <p>Now suppose a user typed in the query <cite>&#8220;Human computer interaction&#8221;</cite>. We would
 like to sort our nine corpus documents in decreasing order of relevance to this query.
 Unlike modern search engines, here we only concentrate on a single aspect of possible
-similarities &#8211; on apparent semantic relatedness of their texts (words). No hyperlinks,
-no random-walk static ranks, just an extension over a boolean keyword match:</p>
+similarities&#8212;on apparent semantic relatedness of their texts (words). No hyperlinks,
+no random-walk static ranks, just an semantic extension over the boolean keyword match:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="s">&quot;Human computer interaction&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">vec_bow</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">vec_lsi</span> <span class="o">=</span> <span class="n">lsi</span><span class="p">[</span><span class="n">vec_bow</span><span class="p">]</span> <span class="c"># convert the query to LSI space</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">vec_lsi</span> <span class="c"># result is already scaled by singular values</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">vec_lsi</span>
 <span class="go">[(0, -0.461821), (1, 0.070028)]</span>
 </pre></div>
 </div>
@@ -148,7 +148,7 @@ in Vector Space Modeling, but wherever the vectors represent probability distrib
 may be more appropriate.</p>
 <div class="section" id="initializing-query-structures">
 <h3>Initializing query structures<a class="headerlink" href="#initializing-query-structures" title="Permalink to this headline">¶</a></h3>
-<p>To prepare for similarity queries, we need to enter all documents which we will want
+<p>To prepare for similarity queries, we need to enter all documents which we want
 to compare against subsequent queries. In our case, they are the same nine documents
 used for training LSI, converted to 2-D LSA space. But that&#8217;s only incidental, we
 might also be indexing a different corpus altogether.</p>
@@ -159,8 +159,8 @@ might also be indexing a different corpus altogether.</p>
 <p class="first admonition-title">Warning</p>
 <p class="last">The class <tt class="xref docutils literal"><span class="pre">similarities.MatrixSimilarity</span></tt> is only appropriate when the whole
 set of vectors fits into memory. For example, a corpus of one million documents
-would require 1GB of RAM in a 256-dimensional LSI space, when used with this class.
-Without 1GB of free RAM, you would need to use the <tt class="xref docutils literal"><span class="pre">similarities.Similarity</span></tt> class.
+would require 2GB of RAM in a 256-dimensional LSI space, when used with this class.
+Without 2GB of free RAM, you would need to use the <tt class="xref docutils literal"><span class="pre">similarities.Similarity</span></tt> class.
 This class operates in constant memory, in a streaming (and more gensim-like)
 fashion, but is also much slower than <tt class="xref docutils literal"><span class="pre">similarities.MatrixSimilarity</span></tt>, which uses
 fast level-2 <a class="reference external" href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms">BLAS routines</a>
@@ -213,7 +213,8 @@ in the first place.</p>
 <div class="section" id="where-next">
 <h2>Where next?<a class="headerlink" href="#where-next" title="Permalink to this headline">¶</a></h2>
 <p>Congratulations, you have finished the tutorials &#8211; now you know how gensim works :-)
-To delve into more details, you can browse through the <a class="reference external" href="apiref.html"><em>API documentation</em></a>.</p>
+To delve into more details, you can browse through the <a class="reference external" href="apiref.html"><em>API documentation</em></a> or
+perhaps check out <a class="reference external" href="distributed.html"><em>distributed computing</em></a> in <cite>gensim</cite>.</p>
 <p>Please remember that gensim is an experimental package, aimed at the NLP research community.
 This means that:</p>
 <ul class="simple">
@@ -255,8 +256,8 @@ and to facilitate prototyping of new algorithms for NLP researchers.</p>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek.
-      Last updated on Aug 10, 2010.
+      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Aug 24, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

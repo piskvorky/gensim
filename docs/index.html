@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.6.0',
+        VERSION:     '0.7.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -91,10 +91,19 @@
 <h1>Gensim &#8211; Python Framework for Vector Space Modeling<a class="headerlink" href="#gensim-python-framework-for-vector-space-modeling" title="Permalink to this headline">¶</a></h1>
 <div class="admonition-what-s-new admonition ">
 <p class="first admonition-title">What&#8217;s new?</p>
-<p>Version 0.6 is <a class="reference external" href="http://pypi.python.org/pypi/gensim">out</a>!</p>
-<p class="last">It contains several minor bug fixes and a <strong>fully online</strong> implementation of Latent Semanting Indexing!
-You can now <a class="reference external" href="tut2.html#transformations"><em>update LSI with new documents</em></a> at will, and
-use the resulting LSI transformation at each step. The training document stream may even be infinite!</p>
+<p>Version 0.7 is <a class="reference external" href="http://pypi.python.org/pypi/gensim">out</a>! There are big changes to <em>Latent Semantic Indexing</em>:</p>
+<ul class="simple">
+<li>LSI is now about 30x faster, consumes less memory, <strong>and</strong> can be run in <a class="reference external" href="distributed.html"><em>distributed mode</em></a>!</li>
+<li>Optimizations to vocabulary generation.</li>
+<li>Input corpus iterator can come from a compressed file (bzip2, gzip, ...), to save disk space when dealing with
+very large corpora.</li>
+</ul>
+<p class="last">If you have a cluster of computers, the time taken to process a given corpus
+with our distributed LSA algorithm drops almost
+linearly with the number of machines. Of course, the option of incrementally adding
+new documents to an existing decomposition, without the need to recompute everything
+from scratch, remains from the previous version. This means that your document
+input stream may even be infinite in size, with new documents coming in asynchronously.</p>
 </div>
 <p>For an introduction on what gensim does (or does not do), go to the <a class="reference external" href="intro.html"><em>introduction</em></a>.</p>
 <p>To download and install <cite>gensim</cite>, consult the <a class="reference external" href="install.html"><em>install</em></a> page.</p>
@@ -106,7 +115,7 @@ use the resulting LSI transformation at each step. The training document stream 
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># load corpus iterator from a Matrix Market file on disk</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/path/to/corpus.mm&#39;</span><span class="p">)</span>
 <span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># initialize a transformation (Latent Semantic Indexing with twenty latent dimensions)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># initialize a transformation (Latent Semantic Indexing with 200 latent dimensions)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">200</span><span class="p">)</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># convert the same corpus to latent space and index it</span>
@@ -154,8 +163,8 @@ use the resulting LSI transformation at each step. The training document stream 
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek.
-      Last updated on Aug 10, 2010.
+      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Aug 24, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

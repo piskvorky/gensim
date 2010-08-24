@@ -8,11 +8,22 @@ Gensim -- Python Framework for Vector Space Modeling
 
 .. admonition:: What's new?
 
-   Version |version| is `out <http://pypi.python.org/pypi/gensim>`_!
+   Version |version| is `out <http://pypi.python.org/pypi/gensim>`_! There are big changes to *Latent Semantic Indexing*:
    
-   It contains several minor bug fixes and a **fully online** implementation of Latent Semanting Indexing! 
-   You can now :ref:`update LSI with new documents <transformations>` at will, and 
-   use the resulting LSI transformation at each step. The training document stream may even be infinite!
+   * LSI is now about 30x faster, consumes less memory, **and** can be run in :doc:`distributed mode <distributed>`!
+   * Optimizations to vocabulary generation.
+   * Input corpus iterator can come from a compressed file (bzip2, gzip, ...), to save disk space when dealing with
+     very large corpora.
+   
+   If you have a cluster of computers, the time taken to process a given corpus 
+   with our distributed LSA algorithm drops almost
+   linearly with the number of machines. Of course, the option of incrementally adding 
+   new documents to an existing decomposition, without the need to recompute everything 
+   from scratch, remains from the previous version. This means that your document
+   input stream may even be infinite in size, with new documents coming in asynchronously.
+
+..
+   To read more about the theoretical side of things, check out our new `draft paper <http://todo>`_.
 
 For an introduction on what gensim does (or does not do), go to the :doc:`introduction <intro>`.
 
@@ -28,7 +39,7 @@ Quick Reference Example
 >>> # load corpus iterator from a Matrix Market file on disk
 >>> corpus = corpora.MmCorpus('/path/to/corpus.mm')
 >>>
->>> # initialize a transformation (Latent Semantic Indexing with twenty latent dimensions)
+>>> # initialize a transformation (Latent Semantic Indexing with 200 latent dimensions)
 >>> lsi = models.LsiModel(corpus, numTopics = 200)
 >>>
 >>> # convert the same corpus to latent space and index it

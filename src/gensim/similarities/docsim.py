@@ -132,11 +132,11 @@ class MatrixSimilarity(interfaces.SimilarityABC):
             vec = doc
         else:
             vec = matutils.sparse2full(doc, self.numFeatures)
-        vec = numpy.asfortranarray(vec, order = 'F', dtype = self.corpus.dtype).reshape(self.numFeatures, 1)
+        vec = numpy.asfortranarray(vec, dtype = self.corpus.dtype).reshape(self.numFeatures, 1)
         
         # compute cosine similarity against every other document in the collection
-        gemv, = scipy.linalg.get_blas_funcs(('gemv',), (self.u,))
-        allSims = gemv(self.corpus, vec) # N x T * T x 1 = N x 1
+        gemv, = scipy.linalg.get_blas_funcs(('gemv',), (self.corpus,))
+        allSims = gemv(1.0, self.corpus, vec) # N x T * T x 1 = N x 1
         allSims = list(allSims.flat) # convert to plain python list
         assert len(allSims) == self.corpus.shape[0] # make sure no document got lost!
         return allSims

@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.6.0',
+        VERSION:     '0.7.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -60,7 +60,7 @@
         <div class="sphinxsidebarwrapper">
             <h4>Previous topic</h4>
             <p class="topless"><a href="ldamodel.html"
-                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
+                                  title="previous chapter"><tt class="docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="tfidfmodel.html"
                                   title="next chapter"><tt class="docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model</a></p>
@@ -142,9 +142,21 @@ new ones. The decay is applied once after every <cite>chunks</cite> documents.</
 <dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
 
 <dl class="method">
+<dt id="gensim.models.lsimodel.LsiModel.printDebug">
+<tt class="descname">printDebug</tt><big>(</big><em>numTopics=5</em>, <em>numWords=10</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.printDebug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print (to log) the most salient words of the first <cite>numTopics</cite> topics.</p>
+<p>Unlike <cite>printTopic()</cite>, this looks for words that are significant for a 
+particular topic <em>and</em> not for others. This should result in a more
+human-interpretable description of topics.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="gensim.models.lsimodel.LsiModel.printTopic">
 <tt class="descname">printTopic</tt><big>(</big><em>topicNo</em>, <em>topN=10</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.printTopic" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a specified topic (0 &lt;= <cite>topicNo</cite> &lt; <cite>self.numTopics</cite>) as string in human readable format.</p>
+<dd><p>Return a specified topic (=left singular vector), 0 &lt;= <cite>topicNo</cite> &lt; <cite>self.numTopics</cite>, 
+as string.</p>
+<p>Return only the <cite>topN</cite> words which contribute the most to the direction 
+of the topic (both negative and positive).</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsimodel</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">topN</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
 <span class="go">&#39;-0.340 * &quot;category&quot; + 0.298 * &quot;$M$&quot; + 0.183 * &quot;algebra&quot; + -0.174 * &quot;functor&quot; + -0.168 * &quot;operator&quot;&#39;</span>
 </pre></div>
@@ -192,7 +204,8 @@ and return <cite>U&#8217;</cite>, <cite>S&#8217;</cite>, <cite>V&#8217;</cite>.<
 <p>You can set V to None if you&#8217;re not interested in the right singular
 vectors. In that case, the returned V&#8217; will also be None (saves memory).</p>
 <p>This is the rank-1 update as described in
-<em>Brand, 2006: Fast low-rank modifications of the thin singular value decomposition</em></p>
+<em>Brand, 2006: Fast low-rank modifications of the thin singular value decomposition</em>,
+but without separating the basis from rotations.</p>
 </dd></dl>
 
 </div>
@@ -226,8 +239,8 @@ vectors. In that case, the returned V&#8217; will also be None (saves memory).</
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek.
-      Last updated on Aug 10, 2010.
+      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Aug 24, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

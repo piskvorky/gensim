@@ -3,8 +3,11 @@ Changes
 
 0.7.0
 
+* optimized vocabulary generation in gensim.corpora.dictionary (faster and less memory-intense)
+* MmCorpus accepts compressed input (file-like objects such as GzipFile, BZ2File; to save disk space)
 * changed sparse solver to SVDLIBC (sparsesvd on PyPi)
-* added distributed LSA
+* added distributed LSA, updated tutorials (still experimental though)
+* several minor bug fixes
 
 0.6.0
 

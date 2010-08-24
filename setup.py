@@ -28,8 +28,8 @@ def read(fname):
 
 setup(
     name = 'gensim',
-    version = '0.7.0rc1',
-    description = 'Python framework for extracting semantic representations from raw texts via fast, distributed Vector Space Modelling',
+    version = '0.7.0rc2',
+    description = 'Python framework for fast Vector Space Modelling',
     long_description = read('README.txt'),
     
     package_dir = {'': 'src'},
@@ -66,22 +66,18 @@ setup(
     
     install_requires = [
         'scipy >= 0.6.0',
-        'sparsesvd >= 0.1',
-    ],
-    
-    setup_requires = [
-        'sparsesvd >= 0.1',
     ],
     
     extras_require = {
         'distributed': ['Pyro >= 4.1'],
+        'lsi': ['sparsesvd >= 0.1'],
     },
 
     include_package_data = True,
 
-    # avoid installing system-wide scripts; scripts shall be run by
-    # running `python -m module_name` instead. less flexible but more explicit
-    # and cleaner
+    # lines below are commented out to avoid installing system-wide scripts
+    # scripts can be run by running `python -m module_name` instead. this is
+    # less flexible but more explicit and imo cleaner
 #    entry_points = {
 #        'console_scripts': [
 #            'lsi_worker = gensim.models.lsi_worker:main',

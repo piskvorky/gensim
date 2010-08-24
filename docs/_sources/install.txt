@@ -40,12 +40,30 @@ Install gensim
 
 You can now install (or upgrade) gensim with::
 
-    sudo easy_install gensim
+    sudo easy_install --upgrade gensim[lsi]
 
 That's it! Congratulations, you can now proceed to the :doc:`tutorials <tutorial>`.
 
-There are also alternative routes to install:
+In case you won't be using Latent Semantic Analysis, you can omit the optional `[lsi]` 
+feature and install with::
 
+    sudo easy_install gensim
+    
+If you, on the other hand, also want to run the algorithms over a cluster 
+of computers, in :doc:`distributed`, you should install with::
+
+    sudo easy_install gensim[lsi,distributed]
+
+The optional `lsi` feature will install the `sparsesvd <http://pypi.python.org/pypi/sparsesvd>`_ package; 
+`distributed` feature installs `Pyro (PYthon Remote Objects) <http://pypi.python.org/pypi/Pyro>`_. These
+optional extensions can also be installed separately with::
+    
+    sudo easy_install sparsesvd Pyro
+
+-----
+
+There are also alternative routes to install:
+  
 1. If you have downloaded and unzipped the `tar.gz source <http://pypi.python.org/pypi/gensim>`_
    for gensim (or you're installing gensim from `svn <http://my-trac.assembla.com/gensim>`_), 
    you can run::

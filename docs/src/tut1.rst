@@ -80,17 +80,17 @@ a question-answer pair, in the style of:
 It is advantageous to represent the questions only by their (integer) ids. The mapping 
 between the questions and ids is called a dictionary:
 
->>> dictionary = corpora.Dictionary.fromDocuments(texts)
+>>> dictionary = corpora.Dictionary(texts)
 >>> dictionary.save('/tmp/deerwester.dict') # store the dictionary, for future reference
 >>> print dictionary
 Dictionary(12 unique tokens)
 
-Here we assigned a unique integer id to all words appearing in the corpus by calling
-:func:`Dictionary.fromDocuments`. This sweeps across the texts, collecting words 
+Here we assigned a unique integer id to all words appearing in the corpus with the
+:class:`gensim.corpora.dictionary.Dictionary` class. This sweeps across the texts, collecting word counts 
 and relevant statistics. In the end, we see there are twelve distinct words in the 
 processed corpus, which means each document will be represented by twelve numbers (ie., by a 12-D vector). 
 To see the mapping between words and their ids:
- 
+
 >>> print dictionary.token2id
 {'minors': 11, 'graph': 10, 'system': 5, 'trees': 9, 'eps': 8, 'computer': 0, 
 'survey': 4, 'user': 7, 'human': 1, 'time': 6, 'interface': 2, 'response': 3}
@@ -145,7 +145,7 @@ There exist several file formats for storing a Vector Space corpus (~sequence of
 documents are read from disk in a lazy fashion, one document at a time, without the whole
 corpus being read into main memory at once.
 
-One of the more notable formats is the `Market Matrix format <http://math.nist.gov/MatrixMarket/formats.html>`_.
+One of the more notable file formats is the `Market Matrix format <http://math.nist.gov/MatrixMarket/formats.html>`_.
 To save a corpus in the Matrix Market format:
 
 >>> from gensim import corpora
