@@ -8,9 +8,9 @@ Gensim -- Python Framework for Vector Space Modeling
 
 .. admonition:: What's new?
 
-   Version |version| is `out <http://pypi.python.org/pypi/gensim>`_! There are big changes to *Latent Semantic Indexing*:
+   Version |version| is `out <http://pypi.python.org/pypi/gensim>`_!
    
-   * LSI is now about 30x faster, consumes less memory, **and** can be run in :doc:`distributed mode <distributed>`!
+   * Latent Semantic Indexing is now about two orders of magnitude faster, consumes less memory, **and** can be run in :doc:`distributed mode <distributed>`!
    * Optimizations to vocabulary generation.
    * Input corpus iterator can come from a compressed file (bzip2, gzip, ...), to save disk space when dealing with
      very large corpora.
