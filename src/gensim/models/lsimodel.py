@@ -377,7 +377,10 @@ class LsiModel(interfaces.TransformationABC):
         human-interpretable description of topics.
         """
         # only wrap the module-level fnc
-        printDebug(self.id2word, self.projection.u, range(numTopics), numWords = numWords)
+        printDebug(self.id2word, 
+                   self.projection.u,
+                   range(min(numTopics, len(self.projection.u.T))), 
+                   numWords = numWords)
 #endclass LsiModel
 
 
@@ -389,10 +392,9 @@ def printDebug(id2token, u, topics, numWords = 10, numNeg = None):
     logger.info('computing word-topic salience for %i topics' % len(topics))
     topics, result = set(topics), {}
     for uvecno, uvec in enumerate(u):
-        uvec = numpy.abs(uvec)
-        # TODO speed up by block svd (process multiple words at once)
-        udiff, sdiff, vdiff = numpy.linalg.svd(uvec.reshape(uvec.size, 1), full_matrices = False)
-        udiff = numpy.abs(udiff.flatten())
+        uvec = numpy.abs(numpy.asarray(uvec).flatten())
+        # TODO speed up by block computation
+        udiff = uvec / numpy.sqrt(numpy.sum(uvec * uvec))
         for topic in topics:
             result.setdefault(topic, []).append((udiff[topic], uvecno))
     
@@ -405,6 +407,7 @@ def printDebug(id2token, u, topics, numWords = 10, numNeg = None):
         else:
             normalize = 1.0
         
+        # order features according to salience; ignore near-zero entries in u
         pos = ['%s(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]) 
                  for weight, uvecno in weights if normalize * u[uvecno, topic] > 0.0001]
         neg = ['%s(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]) 
