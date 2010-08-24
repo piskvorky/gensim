@@ -391,9 +391,9 @@ def printDebug(id2token, u, topics, numWords = 10, numNeg = None):
         
     logger.info('computing word-topic salience for %i topics' % len(topics))
     topics, result = set(topics), {}
+    # TODO speed up by block computation
     for uvecno, uvec in enumerate(u):
         uvec = numpy.abs(numpy.asarray(uvec).flatten())
-        # TODO speed up by block computation
         udiff = uvec / numpy.sqrt(numpy.sum(uvec * uvec))
         for topic in topics:
             result.setdefault(topic, []).append((udiff[topic], uvecno))
@@ -408,12 +408,20 @@ def printDebug(id2token, u, topics, numWords = 10, numNeg = None):
             normalize = 1.0
         
         # order features according to salience; ignore near-zero entries in u
-        pos = ['%s(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]) 
-                 for weight, uvecno in weights if normalize * u[uvecno, topic] > 0.0001]
-        neg = ['%s(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]) 
-                 for weight, uvecno in weights if normalize * u[uvecno, topic] < -0.0001]
-        logger.info('topic #%s: %s, ..., %s' % 
-                    (topic, ', '.join(pos[:numWords]), ', '.join(neg[:numNeg])))
+        pos, neg = [], []
+        for weight, uvecno in weights:
+            if normalize * u[uvecno, topic] > 0.0001:
+                pos.append('%s(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]))
+                if len(pos) >= numWords:
+                    break
+        
+        for weight, uvecno in weights:
+            if normalize * u[uvecno, topic] < -0.0001:
+                neg.append('%s(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]))
+                if len(neg) >= numNeg:
+                    break
+
+        logger.info('topic #%s: %s, ..., %s' % (topic, ', '.join(pos), ', '.join(neg)))
 
 
 def svdUpdate(U, S, V, a, b):
