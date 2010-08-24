@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.6.0',
+        VERSION:     '0.7.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -94,11 +94,24 @@ document frequency (removing (un)common words via the <a title="gensim.corpora.d
 save/loaded from disk via <a title="gensim.corpora.dictionary.Dictionary.save" class="reference internal" href="#gensim.corpora.dictionary.Dictionary.save"><tt class="xref docutils literal"><span class="pre">Dictionary.save()</span></tt></a> and <a title="gensim.corpora.dictionary.Dictionary.load" class="reference internal" href="#gensim.corpora.dictionary.Dictionary.load"><tt class="xref docutils literal"><span class="pre">Dictionary.load()</span></tt></a> methods etc.</p>
 <dl class="class">
 <dt id="gensim.corpora.dictionary.Dictionary">
-<em class="property">class </em><tt class="descclassname">gensim.corpora.dictionary.</tt><tt class="descname">Dictionary</tt><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.corpora.dictionary.</tt><tt class="descname">Dictionary</tt><big>(</big><em>documents=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dictionary encapsulates mappings between normalized words and their integer ids.</p>
 <p>The main function is <cite>doc2bow</cite>, which converts a collection of words to its 
-bag-of-words representation, optionally also updating the dictionary mapping with new 
-words and their ids.</p>
+bag-of-words representation, optionally also updating the dictionary mapping 
+with newly encountered words and their ids.</p>
+<dl class="method">
+<dt id="gensim.corpora.dictionary.Dictionary.addDocuments">
+<tt class="descname">addDocuments</tt><big>(</big><em>documents</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.addDocuments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build dictionary from a collection of documents. Each document is a list 
+of tokens (ie. <strong>tokenized and normalized</strong> utf-8 encoded strings).</p>
+<p>This is only a convenience wrapper for calling <cite>doc2bow</cite> on each document
+with <cite>allowUpdate=True</cite>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">Dictionary</span><span class="o">.</span><span class="n">fromDocuments</span><span class="p">([</span><span class="s">&quot;máma mele maso&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="s">&quot;ema má máma&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">()])</span>
+<span class="go">Dictionary(5 unique tokens)</span>
+</pre></div>
+</div>
+</dd></dl>
+
 <dl class="method">
 <dt id="gensim.corpora.dictionary.Dictionary.doc2bow">
 <tt class="descname">doc2bow</tt><big>(</big><em>document</em>, <em>allowUpdate=False</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.doc2bow" title="Permalink to this definition">¶</a></dt>
@@ -113,36 +126,26 @@ each word appearing in this document, increase its self.docFreq by one.</p>
 
 <dl class="method">
 <dt id="gensim.corpora.dictionary.Dictionary.filterExtremes">
-<tt class="descname">filterExtremes</tt><big>(</big><em>noBelow=5</em>, <em>noAbove=0.5</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.filterExtremes" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">filterExtremes</tt><big>(</big><em>noBelow=5</em>, <em>noAbove=0.5</em>, <em>keepN=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.filterExtremes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Filter out tokens that appear in</p>
 <ol class="arabic simple">
 <li>less than <cite>noBelow</cite> documents (absolute number) or</li>
 <li>more than <cite>noAbove</cite> documents (fraction of total corpus size, <em>not</em> 
 absolute number).</li>
+<li>after (1) and (2), keep only the first <cite>keepN&#8217; most frequent tokens (or
+all if `None</cite>).</li>
 </ol>
 <p>After the pruning, shrink resulting gaps in word ids.</p>
-<p><strong>Note</strong>: The same word may have a different word id before and after
-the call to this function!</p>
+<p><strong>Note</strong>: Due to the gap shrinking, the same word may have a different 
+word id before and after the call to this function!</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="gensim.corpora.dictionary.Dictionary.filterTokens">
-<tt class="descname">filterTokens</tt><big>(</big><em>badIds</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.filterTokens" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove the selected tokens from all dictionary mappings.</p>
-<p><cite>badIds</cite> is a collection of word ids to be removed.</p>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="gensim.corpora.dictionary.Dictionary.fromDocuments">
-<em class="property">static </em><tt class="descname">fromDocuments</tt><big>(</big><em>documents</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.fromDocuments" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build dictionary from a collection of documents. Each document is a list 
-of tokens (ie. <strong>tokenized and normalized</strong> utf-8 encoded strings).</p>
-<p>This is only a convenience wrapper for calling <cite>doc2bow</cite> on each document
-with <cite>allowUpdate=True</cite>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">Dictionary</span><span class="o">.</span><span class="n">fromDocuments</span><span class="p">([</span><span class="s">&quot;máma mele maso&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="s">&quot;ema má máma&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">()])</span>
-<span class="go">Dictionary(5 unique tokens)</span>
-</pre></div>
-</div>
+<tt class="descname">filterTokens</tt><big>(</big><em>badIds=None</em>, <em>goodIds=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.filterTokens" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the selected <cite>badIds</cite> tokens from all dictionary mappings, or, keep
+selected <cite>goodIds</cite> in the mapping and remove the rest.</p>
+<p><cite>badIds</cite> and <cite>goodIds</cite> are collections of word ids to be removed.</p>
 </dd></dl>
 
 <dl class="classmethod">
@@ -197,8 +200,8 @@ Calling this method will remove the gaps.</p>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek.
-      Last updated on Aug 10, 2010.
+      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Aug 24, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

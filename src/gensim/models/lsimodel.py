@@ -24,11 +24,6 @@ try:
 except ImportError:
     from scipy.linalg.special_matrices import triu
 
-try:
-    import sparsesvd
-except ImportError:
-    raise ImportError("sparsesvd module not found; run `easy_install sparsesvd`")
-
 
 from gensim import interfaces, matutils, utils
 
@@ -62,6 +57,7 @@ class Projection(utils.SaveLoad):
         `docs` is either a spare matrix or a corpus which, when converted to a 
         sparse matrix, must fit comfortably into main memory.
         """
+
         self.m, self.k = m, k
         if docs is not None:
             # base case decomposition: given a job `docs`, compute its decomposition 
@@ -69,12 +65,16 @@ class Projection(utils.SaveLoad):
             if utils.isCorpus(docs):
                 docs = matutils.corpus2csc(m, docs)
             if m * k < 10000:
+                # SVDLIBC gives spurious results for small matrices.. run full
+                # LAPACK svd on them instead
                 docs = docs.todense()
                 logger.info("computing dense SVD of %s matrix" % str(docs.shape))
-                # SVDLIBC gives spurious results for small matrices.. run full
-                # LAPACK on them instead!
                 u, s, vt = numpy.linalg.svd(docs, full_matrices = False)
             else:
+                try:
+                    import sparsesvd
+                except ImportError:
+                    raise ImportError("for LSA, the `sparsesvd` module is needed but not found; run `easy_install sparsesvd`")
                 logger.info("computing sparse SVD of %s matrix" % str(docs.shape))
                 ut, s, vt = sparsesvd.sparsesvd(docs, k + 30) # ask for extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
                 u = ut.T
@@ -347,7 +347,11 @@ class LsiModel(interfaces.TransformationABC):
 
     def printTopic(self, topicNo, topN = 10):
         """
-        Return a specified topic (0 <= `topicNo` < `self.numTopics`) as string in human readable format.
+        Return a specified topic (=left singular vector), 0 <= `topicNo` < `self.numTopics`, 
+        as string.
+        
+        Return only the `topN` words which contribute the most to the direction 
+        of the topic (both negative and positive).
         
         >>> lsimodel.printTopic(10, topN = 5)
         '-0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + -0.174 * "functor" + -0.168 * "operator"'
@@ -361,14 +365,52 @@ class LsiModel(interfaces.TransformationABC):
         c = numpy.asarray(self.projection.u.T[topicNo, :]).flatten()
         norm = numpy.sqrt(numpy.sum(c * c))
         most = numpy.abs(c).argsort()[::-1][:topN]
-        return ' + '.join(['%.3f * "%s"' % (1.0 * c[val] / norm, self.id2word[val]) for val in most])
+        return ' + '.join(['%.3f*"%s"' % (1.0 * c[val] / norm, self.id2word[val]) for val in most])
 
 
     def printDebug(self, numTopics = 5, numWords = 10):
-        for i in xrange(min(numTopics, self.numTopics)):
-            if i < len(self.projection.s):
-                logger.info("lsi topic %i (%s): %s" % (i, self.projection.s[i], self.printTopic(i, topN = numWords)))
+        """
+        Print (to log) the most salient words of the first `numTopics` topics.
+        
+        Unlike `printTopic()`, this looks for words that are significant for a 
+        particular topic *and* not for others. This should result in a more
+        human-interpretable description of topics.
+        """
+        # only wrap the module-level fnc
+        printDebug(self.id2word, self.projection.u, range(numTopics), numWords = numWords)
 #endclass LsiModel
+
+
+def printDebug(id2token, u, topics, numWords = 10, numNeg = None):
+    if numNeg is None:
+        # by default, print half as many salient negative words as positive
+        numNeg = numWords / 2
+        
+    logger.info('computing word-topic salience for %i topics' % len(topics))
+    topics, result = set(topics), {}
+    for uvecno, uvec in enumerate(u):
+        uvec = numpy.abs(uvec)
+        # TODO speed up by block svd (process multiple words at once)
+        udiff, sdiff, vdiff = numpy.linalg.svd(uvec.reshape(uvec.size, 1), full_matrices = False)
+        udiff = numpy.abs(udiff.flatten())
+        for topic in topics:
+            result.setdefault(topic, []).append((udiff[topic], uvecno))
+    
+    logger.debug("printing %i+%i salient words" % (numWords, numNeg))
+    for topic in sorted(result.iterkeys()):
+        weights = sorted(result[topic], reverse = True)
+        _, most = weights[0]
+        if u[most, topic] < 0.0: # the most significant word has negative sign => flip sign of u[most]
+            normalize = -1.0
+        else:
+            normalize = 1.0
+        
+        pos = ['%s(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]) 
+                 for weight, uvecno in weights if normalize * u[uvecno, topic] > 0.0001]
+        neg = ['%s(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]) 
+                 for weight, uvecno in weights if normalize * u[uvecno, topic] < -0.0001]
+        logger.info('topic #%s: %s, ..., %s' % 
+                    (topic, ', '.join(pos[:numWords]), ', '.join(neg[:numNeg])))
 
 
 def svdUpdate(U, S, V, a, b):
@@ -386,7 +428,8 @@ def svdUpdate(U, S, V, a, b):
     vectors. In that case, the returned V' will also be None (saves memory).
     
     This is the rank-1 update as described in
-    *Brand, 2006: Fast low-rank modifications of the thin singular value decomposition*
+    *Brand, 2006: Fast low-rank modifications of the thin singular value decomposition*,
+    but without separating the basis from rotations.
     """
     # convert input to matrices (no copies of data made if already numpy.ndarray or numpy.matrix)
     S = numpy.asmatrix(S)

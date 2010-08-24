@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.6.0',
+        VERSION:     '0.7.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -90,16 +90,18 @@
 <p>This module contains math helper functions.</p>
 <dl class="class">
 <dt id="gensim.matutils.MmReader">
-<em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">MmReader</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmReader" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">MmReader</tt><big>(</big><em>input</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmReader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrap a term-document matrix on disk (in matrix-market format), and present it 
 as an object which supports iteration over the rows (~documents).</p>
 <p>Note that the file is read into memory one document at a time, not the whole 
-matrix at once (unlike scipy.io.mmread). This allows for representing corpora 
+matrix at once (unlike scipy.io.mmread). This allows us to process corpora 
 which are larger than the available RAM.</p>
 <p>Initialize the matrix reader.</p>
-<p>The <cite>fname</cite> is a path to a file on local filesystem, which is expected to 
-be in sparse (coordinate) Matrix Market format. Documents are assumed to 
-be rows of the matrix (and document features are columns).</p>
+<p>The <cite>input</cite> refers to a file on local filesystem, which is expected to 
+be in the sparse (coordinate) Matrix Market format. Documents are assumed 
+to be rows of the matrix (and document features are columns).</p>
+<p><cite>input</cite> is either a string (file path) or a file-like object that supports
+<cite>seek(0)</cite> (e.g. gzip.GzipFile, bz2.BZ2File).</p>
 </dd></dl>
 
 <dl class="class">
@@ -108,7 +110,7 @@ be rows of the matrix (and document features are columns).</p>
 <dd><p>Store corpus in Matrix Market format.</p>
 <dl class="staticmethod">
 <dt id="gensim.matutils.MmWriter.writeCorpus">
-<em class="property">static </em><tt class="descname">writeCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.writeCorpus" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><tt class="descname">writeCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>progressCnt=1000</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.writeCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the vector space representation of an entire corpus to disk.</p>
 <p>Note that the documents are processed one at a time, so the whole corpus 
 is allowed to be larger than the available RAM.</p>
@@ -182,8 +184,8 @@ output will be a numpy array.</p>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek.
-      Last updated on Aug 10, 2010.
+      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Aug 24, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

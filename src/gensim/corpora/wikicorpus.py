@@ -264,4 +264,6 @@ if __name__ == '__main__':
     MmCorpus.saveCorpus(output + '_tfidf.mm', tfidf[mm], progressCnt = 10000)
     
     logging.info("finished running %s" % program)
+    
+    # running lsi (chunks=20000, numTopics=400) on wiki_tfidf then takes about 14h.
 

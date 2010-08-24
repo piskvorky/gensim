@@ -27,11 +27,11 @@ In this tutorial, we will show how to transform documents from one vector repres
 into another. This process serves two goals:
 
 1. To bring out hidden structure in the corpus, discover relationships between
-   the original features and use them to describe the documents in a new and 
+   words and use them to describe the documents in a new and 
    (hopefully) more realistic way.
 2. To make the document representation more compact. This both improves efficiency
    (new representation consumes less resources) and efficacy (marginal data 
-   trends are ignored, so that transformations can be thought of as noise-reduction). 
+   trends are ignored, noise-reduction). 
 
 Creating a transformation
 ++++++++++++++++++++++++++
@@ -49,7 +49,7 @@ Allocation, is much more involved and, consequently, takes much more time.
 
 .. note::
 
-  Transformations are initialized to convert between two specific vector 
+  Transformations always convert between two specific vector 
   spaces. The same vector space (= the same set of feature ids) must be used for training 
   as well as for subsequent vector transformations. Failure to use the same input 
   feature space, such as applying a different string preprocessing, using different 

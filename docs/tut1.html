@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.6.0',
+        VERSION:     '0.7.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -162,14 +162,14 @@ a question-answer pair, in the style of:</p>
 &#8220;How many times does the word <cite>system</cite> appear in the document? Once.&#8221;</blockquote>
 <p>It is advantageous to represent the questions only by their (integer) ids. The mapping
 between the questions and ids is called a dictionary:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">fromDocuments</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.dict&#39;</span><span class="p">)</span> <span class="c"># store the dictionary, for future reference</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">dictionary</span>
 <span class="go">Dictionary(12 unique tokens)</span>
 </pre></div>
 </div>
-<p>Here we assigned a unique integer id to all words appearing in the corpus by calling
-<tt class="xref docutils literal"><span class="pre">Dictionary.fromDocuments()</span></tt>. This sweeps across the texts, collecting words
+<p>Here we assigned a unique integer id to all words appearing in the corpus with the
+<a title="gensim.corpora.dictionary.Dictionary" class="reference external" href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary"><tt class="xref docutils literal"><span class="pre">gensim.corpora.dictionary.Dictionary</span></tt></a> class. This sweeps across the texts, collecting word counts
 and relevant statistics. In the end, we see there are twelve distinct words in the
 processed corpus, which means each document will be represented by twelve numbers (ie., by a 12-D vector).
 To see the mapping between words and their ids:</p>
@@ -222,7 +222,7 @@ briefly turn our attention to <em>corpus persistency</em>.</p>
 <cite>Gensim</cite> implements them via the <em>streaming corpus interface</em> mentioned earlier:
 documents are read from disk in a lazy fashion, one document at a time, without the whole
 corpus being read into main memory at once.</p>
-<p>One of the more notable formats is the <a class="reference external" href="http://math.nist.gov/MatrixMarket/formats.html">Market Matrix format</a>.
+<p>One of the more notable file formats is the <a class="reference external" href="http://math.nist.gov/MatrixMarket/formats.html">Market Matrix format</a>.
 To save a corpus in the Matrix Market format:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span>
 <span class="go">&gt;&gt;&gt;</span>
@@ -313,8 +313,8 @@ Or continue to the next tutorial on <a class="reference external" href="tut2.htm
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek.
-      Last updated on Aug 10, 2010.
+      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Aug 24, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

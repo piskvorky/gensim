@@ -16,6 +16,7 @@ The examples are divided into parts on:
    tut1
    tut2
    tut3
+   distributed
 
 Preliminaries
 --------------
@@ -57,7 +58,8 @@ as sparse vectors.
 If you're familiar with the `Vector Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_,
 you'll probably know that the way you parse your documents and convert them to vectors 
 has major impact on the quality of any subsequent applications. If you're not familiar
-with :abbr:`VSM (Vector Space Model)`, we'll bridge the gap between raw strings and sparse vectors in the next tutorial 
+with :abbr:`VSM (Vector Space Model)`, we'll bridge the gap between **raw strings** 
+and **sparse vectors** in the next tutorial 
 on :doc:`tut1`.
 
 .. note::
@@ -95,6 +97,9 @@ and to query the similarity of our query vector ``vec`` against every document i
 >>> sims = index[tfidf[vec]]
 >>> print list(enumerate(sims))
 [(0, 0.4662244), (1, 0.19139354), (2, 0.24600551), (3, 0.82094586), (4, 0.0), (5, 0.0), (6, 0.0), (7, 0.0), (8, 0.0)]
+
+How to read this output? Document number zero (the first document) has a similarity score of 0.466=46.6\%, 
+the second document has a similarity score of 19.1\% etc.
 
 Thus, according to TfIdf document representation and cosine similarity measure, 
 the most similar to our query document `vec` is document no. 3, with a similarity score of 82.1%. 

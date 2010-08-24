@@ -32,8 +32,8 @@ class Dictionary(utils.SaveLoad):
     Dictionary encapsulates mappings between normalized words and their integer ids.
     
     The main function is `doc2bow`, which converts a collection of words to its 
-    bag-of-words representation, optionally also updating the dictionary mapping with new 
-    words and their ids.
+    bag-of-words representation, optionally also updating the dictionary mapping 
+    with newly encountered words and their ids.
     """
     def __init__(self, documents = None):
         self.token2id = {} # token -> tokenId

@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.6.0',
+        VERSION:     '0.7.0',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -114,6 +114,13 @@ and has read the <a class="reference external" href="intro.html"><em>Introductio
 <li class="toctree-l2"><a class="reference external" href="tut3.html#where-next">Where next?</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference external" href="distributed.html">Distributed Computing</a><ul>
+<li class="toctree-l2"><a class="reference external" href="distributed.html#why-distributed-computing">Why distributed computing?</a></li>
+<li class="toctree-l2"><a class="reference external" href="distributed.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference external" href="distributed.html#core-concepts">Core concepts</a></li>
+<li class="toctree-l2"><a class="reference external" href="distributed.html#available-distributed-algorithms">Available distributed algorithms</a></li>
+</ul>
+</li>
 </ul>
 <div class="section" id="preliminaries">
 <h2>Preliminaries<a class="headerlink" href="#preliminaries" title="Permalink to this headline">¶</a></h2>
@@ -149,7 +156,8 @@ as sparse vectors.</p>
 <p>If you&#8217;re familiar with the <a class="reference external" href="http://en.wikipedia.org/wiki/Vector_space_model">Vector Space Model</a>,
 you&#8217;ll probably know that the way you parse your documents and convert them to vectors
 has major impact on the quality of any subsequent applications. If you&#8217;re not familiar
-with <abbr title="Vector Space Model">VSM</abbr>, we&#8217;ll bridge the gap between raw strings and sparse vectors in the next tutorial
+with <abbr title="Vector Space Model">VSM</abbr>, we&#8217;ll bridge the gap between <strong>raw strings</strong>
+and <strong>sparse vectors</strong> in the next tutorial
 on <a class="reference external" href="tut1.html"><em>Corpora and Vector Spaces</em></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -185,6 +193,8 @@ It also scales the resulting vector to unit length (in the <a class="reference e
 <span class="go">[(0, 0.4662244), (1, 0.19139354), (2, 0.24600551), (3, 0.82094586), (4, 0.0), (5, 0.0), (6, 0.0), (7, 0.0), (8, 0.0)]</span>
 </pre></div>
 </div>
+<p>How to read this output? Document number zero (the first document) has a similarity score of 0.466=46.6%,
+the second document has a similarity score of 19.1% etc.</p>
 <p>Thus, according to TfIdf document representation and cosine similarity measure,
 the most similar to our query document <cite>vec</cite> is document no. 3, with a similarity score of 82.1%.
 Note that in the TfIdf representation, all documents which do not share any common features
@@ -228,8 +238,8 @@ with <tt class="docutils literal"><span class="pre">vec</span></tt> at all (docu
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek.
-      Last updated on Aug 10, 2010.
+      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Aug 24, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

@@ -39,13 +39,13 @@ LSI space:
 Now suppose a user typed in the query `"Human computer interaction"`. We would 
 like to sort our nine corpus documents in decreasing order of relevance to this query. 
 Unlike modern search engines, here we only concentrate on a single aspect of possible 
-similarities -- on apparent semantic relatedness of their texts (words). No hyperlinks,
-no random-walk static ranks, just an extension over a boolean keyword match:
+similarities---on apparent semantic relatedness of their texts (words). No hyperlinks,
+no random-walk static ranks, just an semantic extension over the boolean keyword match:
 
 >>> doc = "Human computer interaction"
 >>> vec_bow = dictionary.doc2bow(doc.lower().split())
 >>> vec_lsi = lsi[vec_bow] # convert the query to LSI space
->>> print vec_lsi # result is already scaled by singular values
+>>> print vec_lsi
 [(0, -0.461821), (1, 0.070028)]
 
 In addition, we will be considering `cosine similarity <http://en.wikipedia.org/wiki/Cosine_similarity>`_
@@ -57,7 +57,7 @@ may be more appropriate.
 Initializing query structures
 ++++++++++++++++++++++++++++++++
 
-To prepare for similarity queries, we need to enter all documents which we will want
+To prepare for similarity queries, we need to enter all documents which we want
 to compare against subsequent queries. In our case, they are the same nine documents 
 used for training LSI, converted to 2-D LSA space. But that's only incidental, we
 might also be indexing a different corpus altogether.
@@ -67,8 +67,8 @@ might also be indexing a different corpus altogether.
 .. warning::
   The class :class:`similarities.MatrixSimilarity` is only appropriate when the whole
   set of vectors fits into memory. For example, a corpus of one million documents
-  would require 1GB of RAM in a 256-dimensional LSI space, when used with this class. 
-  Without 1GB of free RAM, you would need to use the :class:`similarities.Similarity` class.
+  would require 2GB of RAM in a 256-dimensional LSI space, when used with this class. 
+  Without 2GB of free RAM, you would need to use the :class:`similarities.Similarity` class.
   This class operates in constant memory, in a streaming (and more gensim-like) 
   fashion, but is also much slower than :class:`similarities.MatrixSimilarity`, which uses
   fast level-2 `BLAS routines <http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms>`_
@@ -125,7 +125,8 @@ Where next?
 ------------
 
 Congratulations, you have finished the tutorials -- now you know how gensim works :-)
-To delve into more details, you can browse through the :doc:`API documentation <apiref>`.
+To delve into more details, you can browse through the :doc:`API documentation <apiref>` or
+perhaps check out :doc:`distributed computing <distributed>` in `gensim`.
 
 Please remember that gensim is an experimental package, aimed at the NLP research community.
 This means that:
