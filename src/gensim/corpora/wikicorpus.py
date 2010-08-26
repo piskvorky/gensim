@@ -267,3 +267,36 @@ if __name__ == '__main__':
     
     # running lsi (chunks=20000, numTopics=400) on wiki_tfidf then takes about 14h.
 
+
+class VocabTransform(interfaces.TransformationABC):
+    """
+    Convert corpus to another, with different feature ids. 
+
+    Given a mapping between old ids and new ids (some old ids may be missing,
+    i.e. the mapping need not be a bijection), this will wrap a
+    corpus so that iterating over VocabTransform[corpus] returns the same vectors but with 
+    the new ids. 
+
+    Old features that have no counterpart in the new ids are discarded. This 
+    can be used to filter vocabulary of a corpus::
+    
+    >>> old2new = dict((oldid, newid) for newid, oldid in enumerate(remaining_ids))
+    >>> id2word = dict((newid, oldid2token[oldid]) for oldid, newid in old2new.iteritems())
+    >>> vt = VocabTransform(old2new, id2token)
+    
+    """
+    def __init__(self, old2new, id2token = None):
+        self.old2new = old2new
+        self.id2token = id2token
+
+
+    def __getitem__(self, bow):
+        """
+        Return representation with the ids transformed.
+        """
+        # if the input vector is in fact a corpus, return a transformed corpus as a result
+        if utils.isCorpus(bow):
+            return self._apply(bow)
+        
+        return [(self.old2new[oldid], weight) for oldid, weight in bow if oldid in self.old2new]
+
