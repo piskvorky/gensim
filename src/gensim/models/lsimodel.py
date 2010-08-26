@@ -65,9 +65,11 @@ class Projection(utils.SaveLoad):
             if utils.isCorpus(docs):
                 docs = matutils.corpus2csc(m, docs)
             if docs.shape[1] <= max(k, 100):
-                # for sufficiently small chunk size, compute svd(now, a) instead of svd(now, svd(a))
+                # for sufficiently small chunk size, compute svd(now, a) instead of svd(now, svd(a)).
                 # this improves accuracy and is also faster for small chunks, because
                 # we need to do one less svd.
+                # on larger chunks this doesn't work because we run out of memory (chunks=1000 
+                # would already raise MemoryException on my machine)
                 self.u = docs
                 self.s = None
             else:
@@ -324,7 +326,7 @@ class LsiModel(interfaces.TransformationABC):
                     self.projection.merge(update, decay = decay)
                     del update
                     logger.info("processed documents up to #%s" % doc_no)
-                    self.printDebug(5)
+                    #self.printDebug(5)
                     self.printTopics(5) # TODO see if printDebug works and remove one of these..
             
             if self.dispatcher:
