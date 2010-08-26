@@ -43,7 +43,7 @@ def clipSpectrum(s, k):
     # ignore the last 0.1% (or 1/k percent, whichever is smaller) of the spectrum
     small = 1 + len(numpy.where(rel_spectrum > min(0.001, 1.0 / k))[0]) 
     k = min(k, small) # clip against k
-    logger.info("keeping %i factors (discarding %.2f%% of the energy spectrum)" %
+    logger.info("keeping %i factors (discarding %.2f%% of energy spectrum)" %
                 (k, 100 * rel_spectrum[k - 1]))
     return k
 
@@ -64,12 +64,12 @@ class Projection(utils.SaveLoad):
             # in core, algorithm 1
             if utils.isCorpus(docs):
                 docs = matutils.corpus2csc(m, docs)
-            if m * k < 10000:
-                # SVDLIBC gives spurious results for small matrices.. run full
-                # LAPACK svd on them instead
-                docs = docs.todense()
-                logger.info("computing dense SVD of %s matrix" % str(docs.shape))
-                u, s, vt = numpy.linalg.svd(docs, full_matrices = False)
+            if docs.shape[1] <= max(k, 100):
+                # for sufficiently small chunk size, compute svd(now, a) instead of svd(now, svd(a))
+                # this improves accuracy and is also faster for small chunks, because
+                # we need to do one less svd.
+                self.u = docs
+                self.s = None
             else:
                 try:
                     import sparsesvd
@@ -78,10 +78,9 @@ class Projection(utils.SaveLoad):
                 logger.info("computing sparse SVD of %s matrix" % str(docs.shape))
                 ut, s, vt = sparsesvd.sparsesvd(docs, k + 30) # ask for extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
                 u = ut.T
-                del ut
-            del vt
-            k = clipSpectrum(s, self.k)
-            self.u, self.s = u[:, :k], s[:k]
+                del ut, vt
+                k = clipSpectrum(s, self.k)
+                self.u, self.s = u[:, :k], s[:k]
         else:
             self.u, self.s = None, None
     
@@ -104,16 +103,40 @@ class Projection(utils.SaveLoad):
             return
         if self.u is None:
             # we are empty => result of merge is the other projection, whatever it is
-            self.u = other.u.copy()
-            self.s = other.s.copy()
+            if other.s is None:
+                # other.u contains a direct document chunk, not svd => perform svd
+                docs = other.u
+                assert scipy.sparse.issparse(docs)
+                if self.m * self.k < 10000:
+                    # SVDLIBC gives spurious results for small matrices.. run full
+                    # LAPACK on them instead
+                    logger.info("computing dense SVD of %s matrix" % str(docs.shape))
+                    u, s, vt = numpy.linalg.svd(docs.todense(), full_matrices = False)
+                else:
+                    try:
+                        import sparsesvd
+                    except ImportError:
+                        raise ImportError("for LSA, the `sparsesvd` module is needed but not found; run `easy_install sparsesvd`")
+                    logger.info("computing sparse SVD of %s matrix" % str(docs.shape))
+                    ut, s, vt = sparsesvd.sparsesvd(docs, self.k + 30) # ask for a few extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
+                    u = ut.T
+                    del ut
+                del vt
+                k = clipSpectrum(s, self.k)
+                self.u = u[:, :k].copy('F')
+                self.s = s[:k]
+            else:
+                self.u = other.u.copy('F')
+                self.s = other.s.copy()
             return
         if self.m != other.m:
             raise ValueError("vector space mismatch: update has %s features, expected %s" %
                              (other.m, self.m))
         logger.info("merging projections: %s + %s" % (str(self.u.shape), str(other.u.shape)))
-#        diff = numpy.dot(self.u.T, self.u) - numpy.eye(self.u.shape[1])
-#        logger.info('orth error after=%f' % numpy.sum(diff * diff))
         m, n1, n2 = self.u.shape[0], self.u.shape[1], other.u.shape[1]
+        if other.s is None:
+            other.u = other.u.todense()
+            other.s = 1.0 # broadcasting will promote this to eye(n2) where needed
         # TODO Maybe keep the bases as elementary reflectors, without 
         # forming explicit matrices with gorgqr.
         # The only operation we ever need is basis^T*basis ond basis*component.
@@ -137,7 +160,7 @@ class Projection(utils.SaveLoad):
         assert info >= 0
         r = triu(qr[:n2, :n2])
         if m < n2: # rare case...
-            qr = qr[:,:m] # retains fortran order
+            qr = qr[:, :m] # retains fortran order
         gorgqr, = get_lapack_funcs(('orgqr',), (qr,))
         q, work, info = gorgqr(qr, tau, lwork = -1, overwrite_a = True)
         q, work, info = gorgqr(qr, tau, lwork = work[0], overwrite_a = True)
@@ -179,7 +202,7 @@ class LsiModel(interfaces.TransformationABC):
     
     """
     def __init__(self, corpus = None, id2word = None, numTopics = 200, 
-                 chunks = 10000, decay = 1.0, serial_only = None):
+                 chunks = None, decay = 1.0, serial_only = None):
         """
         `numTopics` is the number of requested factors (latent dimensions). 
         
@@ -207,7 +230,11 @@ class LsiModel(interfaces.TransformationABC):
         """
         self.id2word = id2word
         self.numTopics = numTopics # number of latent topics
-        self.chunks = chunks
+        if chunks is None:
+            # by default, proceed in chunks as big as number of topics, to improve accuracy
+            self.chunks = max(numTopics, 100)
+        else:
+            self.chunks = chunks
         self.decay = decay
         
         if corpus is None and self.id2word is None:
@@ -298,6 +325,7 @@ class LsiModel(interfaces.TransformationABC):
                     del update
                     logger.info("processed documents up to #%s" % doc_no)
                     self.printDebug(5)
+                    self.printTopics(5) # TODO see if printDebug works and remove one of these..
             
             if self.dispatcher:
                 logger.info("reached the end of input; now waiting for all remaining jobs to finish")
@@ -368,23 +396,31 @@ class LsiModel(interfaces.TransformationABC):
         return ' + '.join(['%.3f*"%s"' % (1.0 * c[val] / norm, self.id2word[val]) for val in most])
 
 
+    def printTopics(self, numTopics = 5, numWords = 10):
+        for i in xrange(min(numTopics, self.numTopics)):
+            if i < len(self.projection.s):
+                logger.info("topic #%i(%.3f): %s" % 
+                            (i, self.projection.s[i], 
+                             self.printTopic(i, topN = numWords)))
+
+
     def printDebug(self, numTopics = 5, numWords = 10):
         """
         Print (to log) the most salient words of the first `numTopics` topics.
         
-        Unlike `printTopic()`, this looks for words that are significant for a 
-        particular topic *and* not for others. This should result in a more
+        Unlike `printTopics()`, this looks for words that are significant for a 
+        particular topic *and* not for others. This *should* result in a more
         human-interpretable description of topics.
         """
         # only wrap the module-level fnc
         printDebug(self.id2word, 
-                   self.projection.u,
+                   self.projection.u, self.projection.s,
                    range(min(numTopics, len(self.projection.u.T))), 
                    numWords = numWords)
 #endclass LsiModel
 
 
-def printDebug(id2token, u, topics, numWords = 10, numNeg = None):
+def printDebug(id2token, u, s, topics, numWords = 10, numNeg = None):
     if numNeg is None:
         # by default, print half as many salient negative words as positive
         numNeg = numWords / 2
@@ -421,7 +457,7 @@ def printDebug(id2token, u, topics, numWords = 10, numNeg = None):
                 if len(neg) >= numNeg:
                     break
 
-        logger.info('topic #%s: %s, ..., %s' % (topic, ', '.join(pos), ', '.join(neg)))
+        logger.info('topic #%s(%.3f): %s, ..., %s' % (topic, s[topic], ', '.join(pos), ', '.join(neg)))
 
 
 def svdUpdate(U, S, V, a, b):

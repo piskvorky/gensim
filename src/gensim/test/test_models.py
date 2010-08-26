@@ -24,6 +24,8 @@ from gensim import matutils
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 
+logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s', level = logging.WARNING)
+
 
 def testfile():
     # temporary data will be stored to this file
