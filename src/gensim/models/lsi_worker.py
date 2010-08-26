@@ -19,6 +19,7 @@ Example: python lsi_worker.py
 from __future__ import with_statement
 import os, sys, logging
 import threading
+import tempfile
 
 import Pyro
 import Pyro.config
@@ -28,6 +29,9 @@ from gensim import utils
 
 logger = logging.getLogger('lsi_worker')
 logger.setLevel(logging.INFO)
+
+
+SAVE_DEBUG = 0 # save intermediate models after every SAVE_DEBUG updates (0 for never)
 
 
 
@@ -63,6 +67,9 @@ class Worker(object):
     def processjob(self, job):
         self.model.addDocuments(job)
         self.jobsdone += 1
+        if SAVE_DEBUG and self.jobsdone % SAVE_DEBUG == 0:
+            fname = os.path.join(tempfile.gettempdir(), 'lsi_worker.pkl')
+            self.model.save(fname)
 
 
     @utils.synchronous('lock_update')

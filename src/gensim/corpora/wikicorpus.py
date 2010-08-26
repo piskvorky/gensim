@@ -226,47 +226,6 @@ class WikiCorpus(interfaces.CorpusABC):
 
 
 
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
-    logging.root.setLevel(level = logging.INFO)
-    logging.info("running %s" % ' '.join(sys.argv))
-
-    program = os.path.basename(sys.argv[0])
-    
-    # check and process input arguments
-    if len(sys.argv) < 3:
-        print globals()['__doc__'] % locals()
-        sys.exit(1)
-    input, output = sys.argv[1:3]
-    
-    # build dictionary. only keep 200k most frequent words (out of total ~7m unique tokens)
-    # takes about 8h on a macbook pro
-    wiki = gensim.corpora.WikiCorpus('/Users/kofola/gensim/results/enwiki-20100622-pages-articles.xml.bz2',
-                                     keep_words = 200000)
-    
-    # save dictionary and bag-of-words
-    # another ~8h
-    wiki.saveAsText(output)
-    del wiki
-    
-    # initialize corpus reader and word->id mapping
-    from gensim.corpora import MmCorpus
-    id2token = WikiCorpus.loadDictionary(output + '_wordids.txt')
-    mm = MmCorpus(output + '_bow.mm')
-    
-    # build tfidf
-    # ~20min
-    from gensim.models import TfidfModel
-    tfidf = TfidfModel(mm, id2word = id2token, normalize = True)
-    
-    # save tfidf vectors in matrix market format
-    # ~1.5h; result file is 14GB! bzip2'ed down to 4.5GB
-    MmCorpus.saveCorpus(output + '_tfidf.mm', tfidf[mm], progressCnt = 10000)
-    
-    logging.info("finished running %s" % program)
-    
-    # running lsi (chunks=20000, numTopics=400) on wiki_tfidf then takes about 14h.
-
 
 class VocabTransform(interfaces.TransformationABC):
     """
@@ -299,4 +258,46 @@ class VocabTransform(interfaces.TransformationABC):
             return self._apply(bow)
         
         return [(self.old2new[oldid], weight) for oldid, weight in bow if oldid in self.old2new]
+#endclass VocabTransform
 
+
+
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
+    logging.root.setLevel(level = logging.INFO)
+    logging.info("running %s" % ' '.join(sys.argv))
+
+    program = os.path.basename(sys.argv[0])
+    
+    # check and process input arguments
+    if len(sys.argv) < 3:
+        print globals()['__doc__'] % locals()
+        sys.exit(1)
+    input, output = sys.argv[1:3]
+    
+    # build dictionary. only keep 200k most frequent words (out of total ~7m unique tokens)
+    # takes about 8h on a macbook pro
+    wiki = WikiCorpus(input, keep_words = 200000)
+    
+    # save dictionary and bag-of-words
+    # another ~8h
+    wiki.saveAsText(output)
+    del wiki
+    
+    # initialize corpus reader and word->id mapping
+    from gensim.corpora import MmCorpus
+    id2token = WikiCorpus.loadDictionary(output + '_wordids.txt')
+    mm = MmCorpus(output + '_bow.mm')
+    
+    # build tfidf
+    # ~20min
+    from gensim.models import TfidfModel
+    tfidf = TfidfModel(mm, id2word = id2token, normalize = True)
+    
+    # save tfidf vectors in matrix market format
+    # ~1.5h; result file is 14GB! bzip2'ed down to 4.5GB
+    MmCorpus.saveCorpus(output + '_tfidf.mm', tfidf[mm], progressCnt = 10000)
+    
+    logging.info("finished running %s" % program)
+    
+    # running lsi (chunks=20000, numTopics=400) on wiki_tfidf then takes about 14h.
