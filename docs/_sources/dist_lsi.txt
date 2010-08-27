@@ -148,7 +148,7 @@ MmCorpus(3146817 documents, 200000 features, 498484783 non-zero entries)
 
 >>> # extract 400 LSI topics
 >>> lsi = gensim.models.lsimodel.LsiModel(corpus=mm, id2word=id2word, numTopics=400, chunks=20000)
->>> # print the ten most contributing words (both positively and negatively) for the first ten topics
+>>> # print the most contributing words (both positively and negatively) for each of the first ten topics
 >>> lsi.printDebug(numTopics = 10)
 2010-08-24 19:11:21,839 : INFO : computing word-topic salience for 10 topics
 2010-08-24 19:11:40,390 : INFO : topic #0: debate(0.274), subsequent(0.194), deletion(0.381), appropriate(0.208), proposed(0.103), modify(0.213), comments(0.223), edits(0.220), delete(0.478), archived(0.109), ..., 

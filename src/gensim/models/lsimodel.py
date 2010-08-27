@@ -344,7 +344,7 @@ class LsiModel(interfaces.TransformationABC):
             update = Projection(self.numTerms, self.numTopics, corpus)
             self.projection.merge(update, decay = decay)
             logger.info("processed sparse job of %i documents" % (corpus.shape[1]))
-            self.printDebug(5)
+            self.printTopics(5)
 
     
     def __str__(self):
