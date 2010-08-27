@@ -60,7 +60,7 @@
         <div class="sphinxsidebarwrapper">
             <h4>Previous topic</h4>
             <p class="topless"><a href="ldamodel.html"
-                                  title="previous chapter"><tt class="docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
+                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="tfidfmodel.html"
                                   title="next chapter"><tt class="docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model</a></p>
@@ -90,7 +90,7 @@
 <p>Module for Latent Semantic Indexing.</p>
 <dl class="class">
 <dt id="gensim.models.lsimodel.LsiModel">
-<em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus=None</em>, <em>id2word=None</em>, <em>numTopics=200</em>, <em>chunks=10000</em>, <em>decay=1.0</em>, <em>serial_only=None</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus=None</em>, <em>id2word=None</em>, <em>numTopics=200</em>, <em>chunks=None</em>, <em>decay=1.0</em>, <em>serial_only=None</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Objects of this class allow building and maintaining a model for Latent 
 Semantic Indexing (also known as Latent Semantic Analysis).</p>
 <p>The main methods are:</p>
@@ -145,8 +145,8 @@ new ones. The decay is applied once after every <cite>chunks</cite> documents.</
 <dt id="gensim.models.lsimodel.LsiModel.printDebug">
 <tt class="descname">printDebug</tt><big>(</big><em>numTopics=5</em>, <em>numWords=10</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.printDebug" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print (to log) the most salient words of the first <cite>numTopics</cite> topics.</p>
-<p>Unlike <cite>printTopic()</cite>, this looks for words that are significant for a 
-particular topic <em>and</em> not for others. This should result in a more
+<p>Unlike <cite>printTopics()</cite>, this looks for words that are significant for a 
+particular topic <em>and</em> not for others. This <em>should</em> result in a more
 human-interpretable description of topics.</p>
 </dd></dl>
 
@@ -240,7 +240,7 @@ but without separating the basis from rotations.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Aug 24, 2010.
+      Last updated on Aug 28, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

@@ -229,7 +229,7 @@ Also, you will need about 14GB of free disk space to store the output vectors.</
 </div>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 400 LSI topics</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">20000</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># print the ten most contributing words (both positively and negatively) for the first ten topics</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print the most contributing words (both positively and negatively) for each of the first ten topics</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">printDebug</span><span class="p">(</span><span class="n">numTopics</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
 <span class="go">2010-08-24 19:11:21,839 : INFO : computing word-topic salience for 10 topics</span>
 <span class="go">2010-08-24 19:11:40,390 : INFO : topic #0: debate(0.274), subsequent(0.194), deletion(0.381), appropriate(0.208), proposed(0.103), modify(0.213), comments(0.223), edits(0.220), delete(0.478), archived(0.109), ...,</span>
@@ -278,7 +278,7 @@ Also, you will need about 14GB of free disk space to store the output vectors.</
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Aug 24, 2010.
+      Last updated on Aug 28, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>
