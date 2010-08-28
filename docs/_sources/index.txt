@@ -3,14 +3,14 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Gensim -- Python Framework for Vector Space Modeling
+Gensim -- Python Framework for Vector Space Modelling
 =====================================================
 
 .. admonition:: What's new?
 
    Version |version| is `out <http://pypi.python.org/pypi/gensim>`_!
    
-   * Latent Semantic Indexing is now about two orders of magnitude faster, consumes less memory, **and** can be run in :doc:`distributed mode <distributed>`!
+   * Latent Semantic Indexing is now faster, consumes less memory, **and** can be run in :doc:`distributed mode <distributed>`!
    * Optimizations to vocabulary generation.
    * Input corpus iterator can come from a compressed file (bzip2, gzip, ...), to save disk space when dealing with
      very large corpora.
@@ -40,7 +40,7 @@ Quick Reference Example
 >>> corpus = corpora.MmCorpus('/path/to/corpus.mm')
 >>>
 >>> # initialize a transformation (Latent Semantic Indexing with 200 latent dimensions)
->>> lsi = models.LsiModel(corpus, numTopics = 200)
+>>> lsi = models.LsiModel(corpus, numTopics=200)
 >>>
 >>> # convert the same corpus to latent space and index it
 >>> index = similarities.MatrixSimilarity(lsi[corpus])

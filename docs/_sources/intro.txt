@@ -108,7 +108,7 @@ The whole gensim package revolves around the concepts of :term:`corpus`, :term:`
         we omit them from the document's representation, and write only ``(2, 2.0), 
         (3, 5.0)`` (note the missing ``(1, 0.0)``).
         Since the set of all questions is known in advance, all the missing features
-        in sparse representation of a document can be unambiguously resolved to zero, ``0.0``.
+        in a sparse representation of a document can be unambiguously resolved to zero, ``0.0``.
     
     Model
         For our purposes, a model is a transformation from one document representation
@@ -117,10 +117,7 @@ The whole gensim package revolves around the concepts of :term:`corpus`, :term:`
         still vectors -- they only differ in what the questions and answers are.
         The transformation is automatically learned from the traning :term:`corpus`, without human
         supervision, and in hopes that the final document representation will be more compact
-        and more useful (with similar documents having similar representations) 
-        than the initial one. The transformation process is also sometimes called 
-        *clustering* in machine learning terminology, or *noise reduction*, from signal
-        processing.
+        and more useful, with similar documents having similar representations.
  
 .. seealso::
 
