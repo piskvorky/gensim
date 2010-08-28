@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.7.1
+
+* fixed a bug in LSA that occurred when the number of features was smaller than the number of topics
+
 0.7.0
 
 * optimized vocabulary generation in gensim.corpora.dictionary (faster and less memory-intense)
