@@ -85,8 +85,10 @@ at a time, otherwise all documents would be processed by a single worker all at 
 
 So let's run LSA on **one million documents** instead::
 
->>> corpus1m = utils.RepeatCorpus(corpus, 1000000) # inflate the corpus to 1M documents, by repeating it over&over
->>> lsi1m = models.LsiModel(corpus1m, id2word, numTopics = 200, serial_only = False) # run distributed LSA on 1 million documents!
+>>> # inflate the corpus to 1M documents, by repeating it over&over
+>>> corpus1m = utils.RepeatCorpus(corpus, 1000000) 
+>>> # run distributed LSA on 1 million documents
+>>> lsi1m = models.LsiModel(corpus1m, id2word, numTopics=200, chunks=10000, serial_only=False)
 
 The `serial_only` parameter instructs `gensim` whether to run in serial or distributed mode.
 Setting `serial_only=True` will result in LSA running inside the active Python shell, without
@@ -162,4 +164,4 @@ MmCorpus(3146817 documents, 200000 features, 498484783 non-zero entries)
 2010-08-24 19:11:47,059 : INFO : topic #8: 분류(0.097), kategória(0.117), kategori(0.471), categoría(0.153), kategoria(0.151), ja(0.093), категория(0.161), kategorie(0.219), categorie(0.139), kategorija(0.234), ..., formerly(-0.003), serving(-0.006), officially(-0.002), station(-0.061), newly(-0.001)
 2010-08-24 19:11:47,892 : INFO : topic #9: film(0.556), directorial(0.007), directed(0.104), remake(0.007), cassavetes(0.001), theatrically(0.003), ebert(0.004), projectionist(0.001), starring(0.046), films(0.427), ..., 분류(-0.036), kategória(-0.044), kategori(-0.175), categoría(-0.057), kategoria(-0.056)
 
-In serial mode, creating the LsiModel takes about 14h on my laptop. In distributed mode FIXME TODO.
+In serial mode, creating the LSI model of Wikipedia takes about 14h on my laptop. In distributed mode FIXME TODO.

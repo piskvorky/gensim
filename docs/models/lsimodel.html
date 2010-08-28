@@ -60,7 +60,7 @@
         <div class="sphinxsidebarwrapper">
             <h4>Previous topic</h4>
             <p class="topless"><a href="ldamodel.html"
-                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
+                                  title="previous chapter"><tt class="docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="tfidfmodel.html"
                                   title="next chapter"><tt class="docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model</a></p>
@@ -128,8 +128,7 @@ corpus of documents.</p>
 <p>Training proceeds in chunks of <cite>chunks</cite> documents at a time. If the 
 distributed mode is on, each chunk is sent to a different worker/computer.
 Size of <cite>chunks</cite> is a tradeoff between increased speed (bigger <cite>chunks</cite>) vs. 
-lower memory footprint (smaller <cite>chunks</cite>). Default is processing 10,000 documents
-at a time.</p>
+lower memory footprint (smaller <cite>chunks</cite>).</p>
 <p>Setting <cite>decay</cite> &lt; 1.0 causes re-orientation towards new data trends in the 
 input document stream, by giving less emphasis to old observations. This allows
 SVD to gradually &#8220;forget&#8221; old observations and give more preference to 

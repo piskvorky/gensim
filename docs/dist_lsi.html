@@ -166,8 +166,10 @@ To check the LSA results, let&#8217;s print the first two latent topics:</p>
 In fact, we had to lower the job size (<cite>chunks</cite> parameter above) to a single document
 at a time, otherwise all documents would be processed by a single worker all at once.</p>
 <p>So let&#8217;s run LSA on <strong>one million documents</strong> instead:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus1m</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">RepeatCorpus</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">)</span> <span class="c"># inflate the corpus to 1M documents, by repeating it over&amp;over</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus1m</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">serial_only</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span> <span class="c"># run distributed LSA on 1 million documents!</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># inflate the corpus to 1M documents, by repeating it over&amp;over</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus1m</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">RepeatCorpus</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># run distributed LSA on 1 million documents</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus1m</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">serial_only</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The <cite>serial_only</cite> parameter instructs <cite>gensim</cite> whether to run in serial or distributed mode.
@@ -244,7 +246,7 @@ Also, you will need about 14GB of free disk space to store the output vectors.</
 <span class="go">2010-08-24 19:11:47,892 : INFO : topic #9: film(0.556), directorial(0.007), directed(0.104), remake(0.007), cassavetes(0.001), theatrically(0.003), ebert(0.004), projectionist(0.001), starring(0.046), films(0.427), ..., 분류(-0.036), kategória(-0.044), kategori(-0.175), categoría(-0.057), kategoria(-0.056)</span>
 </pre></div>
 </div>
-<p>In serial mode, creating the LsiModel takes about 14h on my laptop. In distributed mode FIXME TODO.</p>
+<p>In serial mode, creating the LSI model of Wikipedia takes about 14h on my laptop. In distributed mode FIXME TODO.</p>
 </div>
 </div>
 

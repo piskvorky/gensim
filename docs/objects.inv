@@ -39,9 +39,10 @@ gensim.models.tfidfmodel.TfidfModel.load classmethod models/tfidfmodel.html
 gensim.utils.getMaxId function utils.html
 gensim.models.lsimodel.LsiModel.printTopic method models/lsimodel.html
 gensim.utils.SaveLoad class utils.html
-gensim.models.ldamodel.LdaModel.getTopicsMatrix method models/ldamodel.html
+gensim.utils.FakeDict.keys method utils.html
 gensim.matutils.corpus2csc function matutils.html
-gensim.corpora.bleicorpus.BleiCorpus.saveCorpus staticmethod corpora/bleicorpus.html
+gensim.models.ldamodel.LdaModel.getTopicsMatrix method models/ldamodel.html
+gensim.models.ldamodel.LdaModel.load classmethod models/ldamodel.html
 gensim.models.ldamodel.LdaModel.computeLikelihood method models/ldamodel.html
 gensim.interfaces.TransformationABC.save method interfaces.html
 gensim.corpora.svmlightcorpus.SvmLightCorpus.load classmethod corpora/svmlightcorpus.html
@@ -53,7 +54,7 @@ gensim.utils.RepeatCorpus.save method utils.html
 gensim.corpora.mmcorpus.MmCorpus class corpora/mmcorpus.html
 gensim.interfaces.SimilarityABC.load classmethod interfaces.html
 gensim.models.ldamodel.LdaModel.initialize method models/ldamodel.html
-gensim.models.ldamodel.LdaModel.load classmethod models/ldamodel.html
+gensim.similarities.docsim.Similarity.save method similarities/docsim.html
 gensim.corpora.lowcorpus.LowCorpus.save method corpora/lowcorpus.html
 gensim.corpora.dmlcorpus.DmlCorpus class corpora/dmlcorpus.html
 gensim.utils.tokenize function utils.html
@@ -70,7 +71,6 @@ gensim.interfaces.TransformationABC.load classmethod interfaces.html
 gensim.corpora.svmlightcorpus.SvmLightCorpus.saveCorpus staticmethod corpora/svmlightcorpus.html
 gensim.models.ldamodel.LdaModel.printTopics method models/ldamodel.html
 gensim.interfaces.CorpusABC class interfaces.html
-gensim.similarities.docsim.Similarity.save method similarities/docsim.html
 gensim.interfaces.SimilarityABC.getSimilarities method interfaces.html
 gensim.similarities.docsim.SparseMatrixSimilarity class similarities/docsim.html
 gensim.models.rpmodel.RpModel.load classmethod models/rpmodel.html
@@ -85,7 +85,6 @@ gensim.matutils.pad function matutils.html
 gensim.corpora.dmlcorpus.DmlCorpus.save method corpora/dmlcorpus.html
 gensim.corpora.dictionary.Dictionary class corpora/dictionary.html
 gensim.models.lsimodel.LsiModel.addDocuments method models/lsimodel.html
-gensim.utils.FakeDict.keys method utils.html
 gensim.models.lsimodel.LsiModel class models/lsimodel.html
 gensim.utils.SaveLoad.load classmethod utils.html
 gensim.models.ldamodel.LdaModel class models/ldamodel.html
@@ -117,6 +116,7 @@ gensim.corpora.bleicorpus.BleiCorpus class corpora/bleicorpus.html
 gensim.utils.deaccent function utils.html
 gensim.matutils.MmReader class matutils.html
 gensim.models.tfidfmodel.TfidfModel.save method models/tfidfmodel.html
+gensim.corpora.bleicorpus.BleiCorpus.saveCorpus staticmethod corpora/bleicorpus.html
 gensim.corpora.bleicorpus.BleiCorpus.load classmethod corpora/bleicorpus.html
 gensim.corpora.svmlightcorpus.SvmLightCorpus class corpora/svmlightcorpus.html
 gensim.interfaces.CorpusABC.save method interfaces.html
