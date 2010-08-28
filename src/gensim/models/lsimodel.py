@@ -156,12 +156,12 @@ class Projection(utils.SaveLoad):
         # perform q, r = QR(component); code hacked out of scipy.linalg.qr
         logger.debug("computing QR of %s dense matrix" % str(other.u.shape))
         geqrf, = get_lapack_funcs(('geqrf',), (other.u,))
-        qr, tau, work, info = geqrf(other.u, lwork = -1, overwrite_a = True) # sometimes segfaults with overwrite_a=True...
-        qr, tau, work, info = geqrf(other.u, lwork = work[0], overwrite_a = True) # sometimes segfaults with overwrite_a=True...
+        qr, tau, work, info = geqrf(other.u, lwork = -1, overwrite_a = True) # sometimes segfaults with overwrite_a=True...?
+        qr, tau, work, info = geqrf(other.u, lwork = work[0], overwrite_a = True) # sometimes segfaults with overwrite_a=True...?
         del other.u
         assert info >= 0
         r = triu(qr[:n2, :n2])
-        if m < n2: # rare case...
+        if m < n2: # rare case, #features < #topics
             qr = qr[:, :m] # retains fortran order
         gorgqr, = get_lapack_funcs(('orgqr',), (qr,))
         q, work, info = gorgqr(qr, tau, lwork = -1, overwrite_a = True)
@@ -170,7 +170,7 @@ class Projection(utils.SaveLoad):
         assert q.flags.f_contiguous
         
         # find rotation that diagonalizes r
-        k = numpy.bmat([[numpy.diag(decay * self.s), c * other.s], [matutils.pad(numpy.matrix([]).reshape(0, 0), n2, n1), r * other.s]])
+        k = numpy.bmat([[numpy.diag(decay * self.s), c * other.s], [matutils.pad(numpy.matrix([]).reshape(0, 0), min(m, n2), n1), r * other.s]])
         logger.debug("computing SVD of %s dense matrix" % str(k.shape))
         u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False) # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK wrapper for partial svd/eigendecomp in numpy :(
         
@@ -288,8 +288,7 @@ class LsiModel(interfaces.TransformationABC):
         Training proceeds in chunks of `chunks` documents at a time. If the 
         distributed mode is on, each chunk is sent to a different worker/computer.
         Size of `chunks` is a tradeoff between increased speed (bigger `chunks`) vs. 
-        lower memory footprint (smaller `chunks`). Default is processing 10,000 documents
-        at a time.
+        lower memory footprint (smaller `chunks`).
 
         Setting `decay` < 1.0 causes re-orientation towards new data trends in the 
         input document stream, by giving less emphasis to old observations. This allows
