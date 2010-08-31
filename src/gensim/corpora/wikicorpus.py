@@ -78,16 +78,18 @@ def filterWiki(raw):
         text = re.sub(RE_P9, "", text) # remove outside links
         text = re.sub(RE_P10, "", text) # remove math content
         text = re.sub(RE_P11, "", text) # remove all remaining tags
-        text = re.sub(RE_P3, '', text) # remove templates
-        text = re.sub(RE_P4, '', text) # remove templates (no recursion, only 2-level)
+        # remove templates (no recursion)
+        text = re.sub(RE_P3, '', text)
+        text = re.sub(RE_P4, '', text) 
         text = re.sub(RE_P5, '\\3', text) # remove urls, keep description
         text = re.sub(RE_P7, '\n\\3', text) # simplify images, keep description only
         text = re.sub(RE_P8, '\n\\3', text) # simplify files, keep description only
         text = re.sub(RE_P6, '\\2', text) # simplify links, keep description only
-        # remove table markup; TODO this is ugly...
+        # remove table markup
         text = text.replace('||', '\n|') # each table cell on a separate line
         text = re.sub(RE_P12, '\n', text) # remove formatting lines
         text = re.sub(RE_P13, '\n\\3', text) # leave only cell content
+        # remove empty mark-up
         text = text.replace('[]', '')
         if old == text or iters > 2: # stop if nothing changed between two iterations or after a fixed number of iterations
             break
@@ -118,7 +120,7 @@ class WikiCorpus(interfaces.CorpusABC):
     The documents are extracted on-the-fly, so that the whole (massive) dump
     can stay compressed on disk.
     
-    >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id, takes almost 7h
+    >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id mapping, takes almost 7h
     >>> wiki.saveAsText('wiki_en_vocab200k') # another 7.5h, creates a file in MatrixMarket format plus file with id->word
     
     """
