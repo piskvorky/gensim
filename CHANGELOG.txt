@@ -3,7 +3,7 @@ Changes
 
 0.7.1
 
-* fixed a bug in LSA that occurred when the number of features was smaller than the number of topics
+* fixed a bug in LSA that occurred when the number of features was smaller than the number of topics (thx to Richard Berendsen)
 
 0.7.0
 

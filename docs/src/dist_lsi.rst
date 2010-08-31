@@ -119,13 +119,14 @@ of LSA still takes only 12 seconds. To really stress-test our cluster, let's do
 Latent Semantic Analysis on the English Wikipedia.
 
 First, download the dump of all Wikipedia articles from http://download.wikimedia.org/enwiki/ 
-(you want a file like `enwiki-20100622-pages-articles.xml.bz2`). This file is about 6GB in size
+(you want a file like `enwiki-latest-pages-articles.xml.bz2`). This file is about 6GB in size
 and contains (compressed version) of all articles from the English Wikipedia.
 Before we can run LSA, we need to convert them to plain text (process and filter Wiki 
 mark-up) and store the result as sparse TF-IDF vectors. In Python, this is 
 easy to do and we don't even need to uncompress the archive; the computation can
 be done incrementally, over the compressed file. We will however use a script that 
-stores the resulting TF-IDF vectors to disk, to speed up subsequent corpus iterations::
+stores the resulting TF-IDF vectors to disk, so that we don't have to re-parse
+the dump from scratch every time we want to iterate over the corpus::
 
   $ python -m gensim.corpora.wikicorpus # will print cmdline help
 
