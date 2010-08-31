@@ -179,7 +179,7 @@ class Projection(utils.SaveLoad):
             # see http://www.mail-archive.com/numpy-discussion@scipy.org/msg07224.html and
             # bug ticket http://projects.scipy.org/numpy/ticket/706
             u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False) # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK wrapper for partial svd/eigendecomp in numpy :(
-        except LinAlgError:
+        except numpy.linalg.LinAlgError:
             logging.error("SVD(A) failed; trying SVD(A * A^T)")
             u_k, s_k, _ = numpy.linalg.svd(numpy.dot(k, k.T), full_matrices = False) # if this fails too, give up
             s_k = numpy.sqrt(s_k)
