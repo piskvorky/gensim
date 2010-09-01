@@ -204,7 +204,8 @@ class WikiCorpus(interfaces.CorpusABC):
         Only articles of sufficient length are returned (short articles & redirects
         etc are ignored).
         """
-        articles, intext = 0, False
+        articles, articles_all = 0, 0
+        intext, positions = False, 0
         for lineno, line in enumerate(bz2.BZ2File(self.fname)):
             if line.startswith('      <text'):
                 intext = True
@@ -214,6 +215,7 @@ class WikiCorpus(interfaces.CorpusABC):
                 lines.append(line)
             pos = line.find('</text>') # can be on the same line as <text>
             if pos >= 0:
+                articles_all += 1
                 intext = False
                 if not lines:
                     continue
@@ -221,8 +223,13 @@ class WikiCorpus(interfaces.CorpusABC):
                 text = filterWiki(''.join(lines))
                 if len(text) > ARTICLE_MIN_CHARS: # article redirects are pruned here
                     articles += 1
-                    yield tokenize(text) # split text into tokens
+                    result = tokenize(text) # split text into tokens
+                    positions += len(result)
+                    yield result
         
+        logger.info("finished iterating over Wikipedia corpus of %i documents with %i positions"
+                     "(total %i articles before pruning)" %
+                     (articles, positions, articles_all))
         self.numDocs = articles # cache corpus length
 #endclass WikiCorpus
 
