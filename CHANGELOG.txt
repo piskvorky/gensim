@@ -1,6 +1,12 @@
 Changes
 =======
 
+0.7.2
+
+* added workaround for a numpy bug where SVD sometimes fails to converge for no good reason
+* changed content of gensims's PyPi title page
+* completed HTML tutorial on distributed LSA
+
 0.7.1
 
 * fixed a bug in LSA that occurred when the number of features was smaller than the number of topics (thx to Richard Berendsen)
@@ -9,7 +15,7 @@ Changes
 
 * optimized vocabulary generation in gensim.corpora.dictionary (faster and less memory-intense)
 * MmCorpus accepts compressed input (file-like objects such as GzipFile, BZ2File; to save disk space)
-* changed sparse solver to SVDLIBC (sparsesvd on PyPi)
+* changed sparse solver to SVDLIBC (sparsesvd on PyPi) for large document chunks
 * added distributed LSA, updated tutorials (still experimental though)
 * several minor bug fixes
 

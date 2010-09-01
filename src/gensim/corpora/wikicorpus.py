@@ -120,8 +120,8 @@ class WikiCorpus(interfaces.CorpusABC):
     The documents are extracted on-the-fly, so that the whole (massive) dump
     can stay compressed on disk.
     
-    >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id mapping, takes almost 7h
-    >>> wiki.saveAsText('wiki_en_vocab200k') # another 7.5h, creates a file in MatrixMarket format plus file with id->word
+    >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id mapping, takes almost 8h
+    >>> wiki.saveAsText('wiki_en_vocab200k') # another 8h, creates a file in MatrixMarket format plus file with id->word
     
     """
     def __init__(self, fname, noBelow = 20, keep_words = 200000, dictionary = None):

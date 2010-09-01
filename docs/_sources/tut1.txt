@@ -193,7 +193,7 @@ To save the same corpus in Blei's LDA-C format,
 
 >>> corpora.BleiCorpus.saveCorpus('/tmp/corpus.lda-c', corpus)
 
-In this way, `gensim` can also be used as a simple **I/O format conversion tool**: 
+In this way, `gensim` can also be used as a memory-efficient **I/O format conversion tool**: 
 just load a document stream using one format and immediately save it in another format.
 
 For a complete reference (want to prune the dictionary to a smaller size? convert between

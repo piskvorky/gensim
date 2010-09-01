@@ -2,18 +2,28 @@
 gensim -- Python Framework for Topic Modeling
 ==============================================
 
-**Gensim** is a Python framework designed to help make
-the conversion of natural language texts to their underlying semantic representation as 
-simple and natural as possible.
 
-Gensim contains fast implementations of algorithms for 
-unsupervised learning from raw, unstructured digital texts,
-such as **Latent Semantic Analysis**, **Latent Dirichlet Allocation** or **Random Projections**.
-These algorithms discover hidden (*latent*) corpus structure.
-Once found, documents can be succinctly expressed in terms of this structure, 
-queried for semantic similarity and so on.
 
-If the previous paragraphs left you confused, you can first read more about the `Vector 
+`gensim` is a Python library for *Vector Space Modelling* with very large corpora. 
+Target audience is the *Natural Language Processing* (NLP) community.
+
+
+Features
+---------
+
+* all algorithms are **memory-independent** w.r.t. the corpus size (can process input larger than RAM)
+* **simple, intuitive interfaces** (think `java`... then think again)
+
+  * easy to plug in your own input corpus/datastream (simple streaming API)
+  * easy to extend with other Vector Space algorithms (simple transformation API)
+
+* efficient streaming implementations of popular algorithms, such as online **Latent Semantic Analysis**, 
+  **Latent Dirichlet Allocation** or **Random Projections**
+* can run Latent Semantic Analysis on a cluster of computers (**distributed computing**)
+* extensive `HTML documentation and tutorials <http://nlp.fi.muni.cz/projekty/gensim/>`_.
+
+
+If this feature list left you scratching your head, you can first read more about the `Vector 
 Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised 
 document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
 
@@ -25,8 +35,8 @@ document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on W
 Installation
 ------------
 
-This software depends on NumPy and Scipy, two Python packages for scientific computing.
-You must have them installed prior to installing `gensim`. You can get them from <http://www.scipy.org/Download>.
+This software depends on `NumPy and Scipy <http://www.scipy.org/Download>`_, two Python packages for scientific computing.
+You must have them installed prior to installing `gensim`.
 
 The simple way to install `gensim` is::
 
@@ -40,7 +50,7 @@ you'll need to run::
 
 
 For alternative modes of installation (without root priviledges, development 
-installation), see the `documentation <http://nlp.fi.muni.cz/projekty/gensim/install.html>`_.
+installation, optional install features), see the `documentation <http://nlp.fi.muni.cz/projekty/gensim/install.html>`_.
 
 This version has been tested under Python 2.5 and 2.6, but should run on any 2.5 <= Python < 3.0.
 
@@ -48,7 +58,7 @@ Documentation
 -------------
 
 Manual for the gensim package is available in `HTML <http://nlp.fi.muni.cz/projekty/gensim/>`_. It
-contains a walk-through of all the features and a complete reference section.
+contains a walk-through of all its features and a complete reference section.
 It is also included in the source distribution package.
 
 -------
