@@ -22,7 +22,7 @@ much communication going on), so the network is allowed to be of relatively high
   most of the time consuming stuff is done inside low-level routines for linear algebra, inside
   NumPy, independent of any `gensim` code.
   **Installing a fast** `BLAS (Basic Linear Algebra) <http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms>`_ **library
-  for NumPy can improve performance up to 8 times!** So before you start buying those extra computers, 
+  for NumPy can improve performance up to 15 times!** So before you start buying those extra computers, 
   consider installing a fast, threaded BLAS that is optimized for your particular machine 
   (as opposed to a generic, binary-distributed library).
   Options include your vendor's BLAS library (Intel's MKL, 
