@@ -33,19 +33,24 @@ logger.setLevel(logging.INFO)
 
 
 
-def clipSpectrum(s, k):
+def clipSpectrum(s, k, discard = 0.001):
     """
-    Given singular values `s`, return how many factors should be kept to avoid
-    storing spurious values. The returned value is at most `k`.
+    Given eigenvalues `s`, return how many factors should be kept to avoid
+    storing spurious (tiny, numerically instable) values. 
+    
+    This will ignore the tail of the spectrum with relative combined mass < min(`discard`, 1/k).
+    
+    The returned value is clipped against `k` (= at most `k` factors).
     """
-    # compute relative contribution of each singular value towards the energy spectrum
-    rel_spectrum = numpy.abs(1.0 - numpy.cumsum(s**2 / numpy.sum(s ** 2)))
-    # ignore the last 0.1% (or 1/k percent, whichever is smaller) of the spectrum
-    small = 1 + len(numpy.where(rel_spectrum > min(0.001, 1.0 / k))[0]) 
+    # compute relative contribution of eigenvalues towards the energy spectrum
+    rel_spectrum = numpy.abs(1.0 - numpy.cumsum(s / numpy.sum(s)))
+    # ignore the last `discard` (or 1/k, whichever is smaller) of the spectrum
+    small = 1 + len(numpy.where(rel_spectrum > min(discard, 1.0 / k))[0]) 
     k = min(k, small) # clip against k
-    logger.info("keeping %i factors (discarding %.2f%% of energy spectrum)" %
+    logger.info("keeping %i factors (discarding %.3f%% of energy spectrum)" %
                 (k, 100 * rel_spectrum[k - 1]))
     return k
+
 
 
 class Projection(utils.SaveLoad):
@@ -81,7 +86,7 @@ class Projection(utils.SaveLoad):
                 ut, s, vt = sparsesvd.sparsesvd(docs, k + 30) # ask for extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
                 u = ut.T
                 del ut, vt
-                k = clipSpectrum(s, self.k)
+                k = clipSpectrum(s ** 2, self.k)
                 self.u, self.s = u[:, :k], s[:k]
         else:
             self.u, self.s = None, None
@@ -124,7 +129,7 @@ class Projection(utils.SaveLoad):
                     u = ut.T
                     del ut
                 del vt
-                k = clipSpectrum(s, self.k)
+                k = clipSpectrum(s ** 2, self.k)
                 self.u = u[:, :k].copy('F')
                 self.s = s[:k]
             else:
@@ -184,7 +189,7 @@ class Projection(utils.SaveLoad):
             u_k, s_k, _ = numpy.linalg.svd(numpy.dot(k, k.T), full_matrices = False) # if this fails too, give up
             s_k = numpy.sqrt(s_k)
         
-        k = clipSpectrum(s_k, self.k)
+        k = clipSpectrum(s_k ** 2, self.k)
         u_k, s_k = u_k[:, :k], s_k[:k]
         
         # update & rotate current basis U
@@ -631,25 +636,73 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
     return sterm, svals, sdoc.T
 
 
-#def stochasticSvd(a, numTerms, numFactors, p = None, q = 0):
-#    """
-#    SVD decomposition based on stochastic approximation.
-#    
-#    See **Halko, Martinsson, Tropp. Finding structure with randomness, 2009.**
-#    
-#    This is the randomizing version with oversampling, but without power iteration. 
-#    """
-#    k = numFactors
-#    if p is None:
-#        l = 2 * k # default oversampling
-#    else:
-#        l = k + p
-#    
-#    # stage A: construct the "action" basis matrix Q
-#    y = numpy.empty(dtype = numpy.float64, shape = (numTerms, l)) # in double precision, because we will be computing orthonormal basis on this possibly ill-conditioned projection
-#    for i, row in enumerate(a):
-#        y[i] = column_stack(matutils.sparse2full(doc, numTerms) * numpy.random.normal(0.0, 1.0, numTerms)
-#                           for doc in corpus)
-#    q = numpy.linalg.qr()
-#    
+def stochasticSvd(corpus, rank, chunks = 1000, num_terms = None, extra_dims = None, eps = 1e-6):
+    """
+    Return U, S -- the left singular vectors and the singular values of the streamed 
+    input corpus.
+    
+    This may actually return less than the requested number of `rank` factors, 
+    in case the input is of lower rank. Also note that the decomposition is unique
+    up the the sign of the left singular vectors (columns of U).
+    
+    This is a streamed, two-pass algorithm. In case you can only afford a single
+    pass over the input corpus, use the algorithm in LsiModel.addDocuments() instead.
+
+    The decomposition algorithm is based on stochastic approximation::
+    
+    **Halko, Martinsson, Tropp. Finding structure with randomness, 2009.**
+    
+    """
+    if extra_dims is None:
+        samples = 2 * rank # use more samples than requested factors, to improve accuracy
+    else:
+        samples = rank + int(extra_dims)
+    if num_terms is None:
+        if isinstance(corpus, numpy.ndarray): # also allow numpy arrays as input corpus, for easier debugging
+            num_terms = corpus.shape[1]
+        else:
+            logger.warning("number of terms not provided; will scan the corpus (ONE EXTRA PASS, MAY BE SLOW) to determine it")
+            num_terms = len(utils.dictFromCorpus(corpus))
+            logger.info("found %i terms" % num_terms)
+    else:
+        num_terms = int(num_terms)
+    eps = max(float(eps), 1e-9) # must ignore near-zero eigenvalues (probably numerical error); the associated eigenvalues are most likely garbage
+    
+    # first pass: construct the orthonormal action matrix
+    y = numpy.zeros(dtype = numpy.float64, shape = (num_terms, samples), order = 'F')
+    logger.info("constructing %s orthonormal action matrix" % str(y.shape))
+    ger, = get_blas_funcs(('ger',), (y,))
+    for vecno, vec in enumerate(corpus):
+        if vecno % 100 == 0:
+            logger.info('PROGRESS: at document #%i' % vecno)
+        if not isinstance(vec, numpy.ndarray):
+            vec = matutils.sparse2full(vec, num_terms)
+        gauss = numpy.random.normal(0.0, 1.0, samples)
+        ger(1.0, vec, gauss, a = y, overwrite_a = True)
+    q, r = numpy.linalg.qr(y) # orthonormalize the range
+    del y # not needed anymore, free up mem
+    samples = clipSpectrum(numpy.diag(r), samples, discard = eps)
+    q = q[:, :samples].copy('F') # discard bogus columns, in case Y was rank-deficient
+    
+    # second pass: construct the covariance matrix X = B^T * B, where B = A * Q
+    x = numpy.zeros(shape = (samples, samples), dtype = numpy.float64, order = 'F')
+    logger.info("constructing %s covariance matrix" % str(x.shape))
+    ger, = get_blas_funcs(('ger',), (x,)) # TODO should really be 'syr'.. but no wrapper for DSYR in scipy :(
+    for vecno, vec in enumerate(corpus):
+        if vecno % 100 == 0:
+            logger.info('PROGRESS: at document #%i' % vecno)
+        if not isinstance(vec, numpy.ndarray):
+            vec = matutils.sparse2full(vec, num_terms)
+        b = numpy.dot(vec, q) # construct another row of B
+        ger(1.0, b, b, a = x, overwrite_a = True) # update B^T*B with this row
+        
+    # now we're ready to compute decomposition of the small matrix X
+    logger.info("computing decomposition of the %s covariance matrix" % str(x.shape))
+    u, s, vt = numpy.linalg.svd(x) # could use linalg.eigh, but who cares... and svd returns the factors already sorted :)
+    keep = clipSpectrum(s, rank, discard = eps)
+    
+    logger.info("computing the final decomposition")
+    s = numpy.sqrt(s[:keep]) # sqrt to go back from eigenvalues of B^T*B to singular values of B = singular values of the corpus
+    u = numpy.dot(q, u[:, :keep]) # go back from left singular vectors of B to left singular vectors of the corpus
+    return u, s
     

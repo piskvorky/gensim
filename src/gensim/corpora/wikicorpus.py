@@ -61,7 +61,7 @@ def filterWiki(raw):
     """
     Filter out wiki mark-up from utf8 string `raw`, leaving only text.
     """
-    # the parsing the wiki markup is not perfect, but sufficient for our purposes
+    # parsing of the wiki markup is not perfect, but sufficient for our purposes
     # contributions to improving this code are welcome :)
     text = utils.decode_htmlentities(unicode(raw, 'utf8', 'ignore'))
     text = utils.decode_htmlentities(text) # '&amp;nbsp;' --> '\xa0'
@@ -69,7 +69,7 @@ def filterWiki(raw):
     # the wiki markup is recursive (markup inside markup etc)
     # instead of writing a recursive grammar, here we deal with that by removing 
     # markup in a loop, starting with inner-most expressions and working outwards,
-    # as long as something changes.
+    # for as long as something changes.
     iters = 0
     while True:
         old, iters = text, iters + 1
@@ -105,7 +105,7 @@ def tokenize(content):
     Tokenize a piece of text from wikipedia. The input string `content` is assumed
     to be mark-up free (see `filterWiki()`).
     
-    Return tokens as utf8 bytestrings. 
+    Return list of tokens as utf8 bytestrings. 
     """
     # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic, russian etc.)
     return [token.encode('utf8') for token in utils.tokenize(content, lower = True, errors = 'ignore') 
@@ -177,7 +177,7 @@ class WikiCorpus(interfaces.CorpusABC):
             elif len(cols) == 3:
                 wordId, word, docFreq = cols
             else:
-                continue
+                raise ValueError("invalid line in dictionary file %s: %s" % (fname, line.strip()))
             result[int(wordId)] = word # docFreq not used
         return result
     
@@ -228,7 +228,7 @@ class WikiCorpus(interfaces.CorpusABC):
                     yield result
         
         logger.info("finished iterating over Wikipedia corpus of %i documents with %i positions"
-                     "(total %i articles before pruning)" %
+                     " (total %i articles before pruning)" %
                      (articles, positions, articles_all))
         self.numDocs = articles # cache corpus length
 #endclass WikiCorpus
@@ -309,4 +309,4 @@ if __name__ == '__main__':
     
     logging.info("finished running %s" % program)
     
-    # running lsi (chunks=20000, numTopics=400) on wiki_tfidf then takes about 14h.
+    # running LSA (chunks=20000, numTopics=400) on wiki_tfidf then takes about 14h.
