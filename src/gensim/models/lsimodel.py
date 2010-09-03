@@ -4,8 +4,37 @@
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+
 """
 Module for Latent Semantic Indexing.
+
+It actually contains several algorithms for decomposition of extremely large 
+corpora, a combination of which effectively and transparently allows building LSI
+models for:
+
+  * corpora much larger than RAM (only constant memory needed, independent of 
+    corpus size)
+  * corpora that are streamed (documents can only be accessed sequentially, not 
+    random-accessed)
+  * corpora that cannot even be temporarily stored, each document can only be 
+    seen once and processed immediately (one-pass algorithm)
+  * distributed computing for ultra large corpora, making use of a cluster of 
+    machines
+
+Performance on English Wikipedia (2G corpus positions, 3.2M documents, 200K features, 
+0.5G non-zero entries in the final TF-IDF matrix), requesting top 400 LSI factors:
+
+
+  ------------------------------------------------------------------------
+  |                                           serial      distributed    |
+  | one-pass update algo (chunks=factors)     65h         19h            |
+  | one-pass mege algo (chunks=20K documents) 14h         2h             |
+  | two-pass randomized algo (chunks=20K)     2.5h        N/A            |
+  ------------------------------------------------------------------------
+
+serial = Core 2 Duo MacBook Pro 2.53Ghz, 4GB RAM, libVec
+distributed = cluster of six logical nodes on four physical machines, each with dual core Xeon 2.0GHz, 4GB RAM, ATLAS
+
 """
 
 
@@ -14,9 +43,10 @@ import itertools
 
 import numpy
 import scipy.sparse
+from scipy.sparse import sparsetools
 
-# scipy is still an experimental package and locations change, so try to work
-# around differences (currently only triu in scipy 0.7 vs. 0.8)
+# scipy is not a stable package yet, locations change, so try to work
+# around differences (currently only concerns location of 'triu' in scipy 0.7 vs. 0.8)
 from scipy.linalg.blas import get_blas_funcs
 from scipy.linalg.lapack import get_lapack_funcs, find_best_lapack_type
 try:
@@ -52,42 +82,50 @@ def clipSpectrum(s, k, discard = 0.001):
     return k
 
 
-
 class Projection(utils.SaveLoad):
-    def __init__(self, m, k, docs = None):
+    def __init__(self, m, k, docs = None, algo = 'onepass', chunks = None):
         """
-        Store (U, S) projection itself. This is the class taking care of 'core math';
-        interfacing with corpora, training etc is done through class LsiModel.
+        Construct the (U, S) projection from a corpus `docs`. 
         
-        `docs` is either a spare matrix or a corpus which, when converted to a 
-        sparse matrix, must fit comfortably into main memory.
+        This is the class taking care of 'core math'; interfacing with corpora, 
+        training etc. is done through the LsiModel class.
+        
+        `algo` is one of:
+        
+          * 'onepass'; only a single pass over `docs` is needed
+          * 'twopass'; multiple passes allowed the input allowed => can use a 
+            faster algorithm.
         """
-
         self.m, self.k = m, k
         if docs is not None:
-            # base case decomposition: given a job `docs`, compute its decomposition 
-            # in core, algorithm 1
-            if utils.isCorpus(docs):
-                docs = matutils.corpus2csc(m, docs)
-            if docs.shape[1] <= max(k, 100):
-                # for sufficiently small chunk size, compute svd(now, a) instead of svd(now, svd(a)).
-                # this improves accuracy and is also faster for small chunks, because
-                # we need to do one less svd.
-                # on larger chunks this doesn't work because we run out of memory (chunks=1000 
-                # would already raise MemoryException on my machine)
-                self.u = docs
-                self.s = None
+            # base case decomposition: given a job `docs`, compute its decomposition in core
+            if algo == 'onepass':
+                if utils.isCorpus(docs):
+                    docs = matutils.corpus2csc(m, docs)
+                if docs.shape[1] <= max(k, 100):
+                    # for sufficiently small chunk size, compute svd(now, a) instead of svd(now, svd(a)).
+                    # this improves accuracy and is also faster for small chunks, because
+                    # we need to do one less svd.
+                    # on larger chunks this doesn't work because we run out of memory (chunks=1000 
+                    # would already raise MemoryException on my machine)
+                    self.u = docs
+                    self.s = None
+                else:
+                    try:
+                        import sparsesvd
+                    except ImportError:
+                        raise ImportError("for LSA, the `sparsesvd` module is needed but not found; run `easy_install sparsesvd`")
+                    logger.info("computing sparse SVD of %s matrix" % str(docs.shape))
+                    ut, s, vt = sparsesvd.sparsesvd(docs, k + 30) # ask for extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
+                    u = ut.T
+                    del ut, vt
+                    k = clipSpectrum(s ** 2, self.k)
+                    self.u, self.s = u[:, :k], s[:k]
+            elif algo == 'twopass':
+                assert utils.isCorpus(docs)
+                self.u, self.s = stochasticSvd(docs, k, chunks = chunks, num_terms = m, extra_dims = 0)
             else:
-                try:
-                    import sparsesvd
-                except ImportError:
-                    raise ImportError("for LSA, the `sparsesvd` module is needed but not found; run `easy_install sparsesvd`")
-                logger.info("computing sparse SVD of %s matrix" % str(docs.shape))
-                ut, s, vt = sparsesvd.sparsesvd(docs, k + 30) # ask for extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
-                u = ut.T
-                del ut, vt
-                k = clipSpectrum(s ** 2, self.k)
-                self.u, self.s = u[:, :k], s[:k]
+                raise DomainError("unknown decomposition algorithm: '%s'" % algo)
         else:
             self.u, self.s = None, None
     
@@ -101,9 +139,7 @@ class Projection(utils.SaveLoad):
         Merge this Projection with another. 
         
         Content of `other` is destroyed in the process, so pass this function a 
-        copy if you need it further.
-        
-        This is the optimized merge described in algorithm 5.
+        copy of `other` if you need it further.
         """
         if other.u is None:
             # the other projection is empty => do nothing
@@ -218,8 +254,8 @@ class LsiModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
     
     """
-    def __init__(self, corpus = None, id2word = None, numTopics = 200, 
-                 chunks = None, decay = 1.0, serial_only = None):
+    def __init__(self, corpus = None, numTopics = 200, id2word = None, chunks = 20000, 
+                 decay = 1.0, distributed = False, onepass = True):
         """
         `numTopics` is the number of requested factors (latent dimensions). 
         
@@ -232,10 +268,11 @@ class LsiModel(interfaces.TransformationABC):
         If you specify a `corpus`, it will be used to train the model. See the 
         method `addDocuments` for a description of the `chunks` and `decay` parameters.
         
-        The algorithm will automatically try to find active nodes on other computers
-        and run in a distributed manner; if this fails, it falls back to serial mode
-        (single core). To suppress distributed computing, set the `serial_only`
-        constructor parameter to True.
+        If your document stream is one-pass only (the stream cannot be repeated),
+        turn on `onepass` to force a single pass SVD algorithm (slower).
+
+        Turn on `distributed` to enforce distributed computing (only makes sense 
+        if `onepass` is set at the same time, too).
         
         Example:
         
@@ -246,13 +283,10 @@ class LsiModel(interfaces.TransformationABC):
         
         """
         self.id2word = id2word
-        self.numTopics = numTopics # number of latent topics
-        if chunks is None:
-            # by default, proceed in chunks as big as number of topics, to improve accuracy
-            self.chunks = max(numTopics, 100)
-        else:
-            self.chunks = chunks
-        self.decay = decay
+        self.numTopics = int(numTopics)
+        self.chunks = int(chunks)
+        self.decay = float(decay)
+        self.onepass = onepass
         
         if corpus is None and self.id2word is None:
             raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
@@ -266,49 +300,47 @@ class LsiModel(interfaces.TransformationABC):
         
         self.docs_processed = 0
         self.projection = Projection(self.numTerms, self.numTopics)
-
-        if serial_only:
-            logger.info("using slave LSI version on this node")
+        
+        if not distributed:
+            logger.info("using serial LSI version on this node")
             self.dispatcher = None
         else:
+            if not onepass:
+                raise NotImplementedError("distributed randomized LSA not implemented yet; "
+                                          "run either distributed one-pass, or serial randomized.")
             try:
                 import Pyro
                 ns = Pyro.naming.locateNS()
                 dispatcher = Pyro.core.Proxy('PYRONAME:gensim.dispatcher@%s' % ns._pyroUri.location)
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word = self.id2word, numTopics = numTopics, 
-                                      chunks = chunks, decay = decay, 
-                                      serial_only = True)
+                                      chunks = chunks, decay = decay,
+                                      distributed = False, onepass = onepass)
                 self.dispatcher = dispatcher
                 logger.info("using distributed version with %i workers" % len(dispatcher.getworkers()))
             except Exception, err:
-                if serial_only is not None: 
-                    # distributed version was specifically requested, so this is an error state
-                    logger.error("failed to initialize distributed LSI (%s)" % err)
-                    raise RuntimeError("failed to initialize distributed LSI (%s)" % err)
-                else:
-                    # user didn't request distributed specifically; just let him know we're running in serial
-                    logger.info("distributed LSI not available, running LSI in serial mode (%s)" % err)
-                self.dispatcher = None
+                # distributed version was specifically requested, so this is an error state
+                logger.error("failed to initialize distributed LSI (%s)" % err)
+                raise RuntimeError("failed to initialize distributed LSI (%s)" % err)
 
         if corpus is not None:
-            self.addDocuments(corpus, chunks = chunks)
+            self.addDocuments(corpus)
     
     
     def addDocuments(self, corpus, chunks = None, decay = None):
         """
-        Update singular value decomposition factors to take into account a new 
+        Update singular value decomposition to take into account a new 
         corpus of documents.
         
-        Training proceeds in chunks of `chunks` documents at a time. If the 
-        distributed mode is on, each chunk is sent to a different worker/computer.
-        Size of `chunks` is a tradeoff between increased speed (bigger `chunks`) vs. 
-        lower memory footprint (smaller `chunks`).
+        Training proceeds in chunks of `chunks` documents at a time. The size of 
+        `chunks` is a tradeoff between increased speed (bigger `chunks`) 
+        vs. lower memory footprint (smaller `chunks`). If the distributed mode 
+        is on, each chunk is sent to a different worker/computer.
 
         Setting `decay` < 1.0 causes re-orientation towards new data trends in the 
         input document stream, by giving less emphasis to old observations. This allows
-        SVD to gradually "forget" old observations and give more preference to 
-        new ones. The decay is applied once after every `chunks` documents.
+        SVD to gradually "forget" old observations (documents) and give more 
+        preference to new ones.
         """
         logger.info("updating SVD with new documents")
         
@@ -319,46 +351,52 @@ class LsiModel(interfaces.TransformationABC):
             decay = self.decay
         
         if utils.isCorpus(corpus):
-            # do the actual work -- perform iterative singular value decomposition.
-            chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
-            doc_no = 0
-            for chunk_no, (key, group) in enumerate(chunker):
-                # construct the job as a sparse matrix, to minimize memory overhead
-                # definitely avoid materializing it as a dense matrix!
-                job = matutils.corpus2csc(self.numTerms, (doc for _, doc in group))
-                doc_no += job.shape[1]
+            if not self.onepass:
+                # we are allowed multiple passes over input => use a faster, randomized algo
+                update = Projection(self.numTerms, self.numTopics, corpus, algo = 'twopass', chunks = chunks)
+                self.projection.merge(update, decay = decay)
+            else:
+                # the one-pass algo
+                chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
+                doc_no = 0
+                for chunk_no, (key, group) in enumerate(chunker):
+                    # construct the job as a sparse matrix, to minimize memory overhead
+                    # definitely avoid materializing it as a dense matrix!
+                    job = matutils.corpus2csc(self.numTerms, (doc for _, doc in group))
+                    doc_no += job.shape[1]
+                    if self.dispatcher:
+                        # distributed version: add this job to the job queue, so workers can work on it
+                        logger.debug("creating job #%i" % chunk_no)
+                        self.dispatcher.putjob(job) # put job into queue; this will eventually block, because the queue has a small finite size
+                        del job
+                        logger.info("dispatched documents up to #%s" % doc_no)
+                    else:
+                        # serial version, there is only one "worker" (myself) => process the job directly
+                        update = Projection(self.numTerms, self.numTopics, job)
+                        del job
+                        self.projection.merge(update, decay = decay)
+                        del update
+                        logger.info("processed documents up to #%s" % doc_no)
+                        self.printTopics(5) # TODO see if printDebug works and remove one of these..
+                
                 if self.dispatcher:
-                    # distributed version: add this job to the job queue, so workers can work on it
-                    logger.debug("creating job #%i" % chunk_no)
-                    self.dispatcher.putjob(job) # put job into queue; this will eventually block, because the queue has a small finite size
-                    del job
-                    logger.info("dispatched documents up to #%s" % doc_no)
-                else:
-                    # serial version, there is only one "worker" (myself) => process the job directly
-                    update = Projection(self.numTerms, self.numTopics, job)
-                    del job
-                    self.projection.merge(update, decay = decay)
-                    del update
-                    logger.info("processed documents up to #%s" % doc_no)
-                    #self.printDebug(5)
-                    self.printTopics(5) # TODO see if printDebug works and remove one of these..
-            
-            if self.dispatcher:
-                logger.info("reached the end of input; now waiting for all remaining jobs to finish")
-                import time
-                while self.dispatcher.jobsdone() <= chunk_no:
-                    time.sleep(0.5) # check every half a second
-                logger.info("all jobs finished, downloading final projection")
-                del self.projection
-                self.projection = self.dispatcher.getstate()
-                logger.info("decomposition complete")
+                    logger.info("reached the end of input; now waiting for all remaining jobs to finish")
+                    import time
+                    while self.dispatcher.jobsdone() <= chunk_no:
+                        time.sleep(0.5) # check every half a second
+                    logger.info("all jobs finished, downloading final projection")
+                    del self.projection
+                    self.projection = self.dispatcher.getstate()
+                    logger.info("decomposition complete")
         else:
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             assert isinstance(corpus, scipy.sparse.csc_matrix)
+            assert self.onepass, "distributed two-pass algo not supported yet"
             update = Projection(self.numTerms, self.numTopics, corpus)
             self.projection.merge(update, decay = decay)
             logger.info("processed sparse job of %i documents" % (corpus.shape[1]))
-            self.printTopics(5)
+
+        self.printTopics(5)
 
     
     def __str__(self):
@@ -636,7 +674,7 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
     return sterm, svals, sdoc.T
 
 
-def stochasticSvd(corpus, rank, chunks = 1000, num_terms = None, extra_dims = None, eps = 1e-6):
+def stochasticSvd(corpus, rank, chunks = 10000, num_terms = None, extra_dims = None, eps = 1e-6):
     """
     Return U, S -- the left singular vectors and the singular values of the streamed 
     input corpus.
@@ -646,63 +684,77 @@ def stochasticSvd(corpus, rank, chunks = 1000, num_terms = None, extra_dims = No
     up the the sign of the left singular vectors (columns of U).
     
     This is a streamed, two-pass algorithm. In case you can only afford a single
-    pass over the input corpus, use the algorithm in LsiModel.addDocuments() instead.
+    pass over the input corpus, set onepass=True in LsiModel to avoid using this
+    algorithm.
 
-    The decomposition algorithm is based on stochastic approximation::
+    The decomposition algorithm is based on stochastic approximation from::
     
     **Halko, Martinsson, Tropp. Finding structure with randomness, 2009.**
     
     """
+    rank = int(rank)
     if extra_dims is None:
         samples = 2 * rank # use more samples than requested factors, to improve accuracy
     else:
         samples = rank + int(extra_dims)
+    
     if num_terms is None:
-        if isinstance(corpus, numpy.ndarray): # also allow numpy arrays as input corpus, for easier debugging
-            num_terms = corpus.shape[1]
-        else:
-            logger.warning("number of terms not provided; will scan the corpus (ONE EXTRA PASS, MAY BE SLOW) to determine it")
-            num_terms = len(utils.dictFromCorpus(corpus))
-            logger.info("found %i terms" % num_terms)
+        logger.warning("number of terms not provided; will scan the corpus (ONE EXTRA PASS, MAY BE SLOW) to determine it")
+        num_terms = len(utils.dictFromCorpus(corpus))
+        logger.info("found %i terms" % num_terms)
     else:
         num_terms = int(num_terms)
+    
     eps = max(float(eps), 1e-9) # must ignore near-zero eigenvalues (probably numerical error); the associated eigenvalues are most likely garbage
     
     # first pass: construct the orthonormal action matrix
-    y = numpy.zeros(dtype = numpy.float64, shape = (num_terms, samples), order = 'F')
+    # proceed in blocks of `chunks` documents (much faster than going one-by-one 
+    # and more memory friendly than processing all documents at once)
+    y = numpy.zeros(dtype = numpy.float64, shape = (num_terms, samples))
     logger.info("constructing %s orthonormal action matrix" % str(y.shape))
-    ger, = get_blas_funcs(('ger',), (y,))
-    for vecno, vec in enumerate(corpus):
-        if vecno % 100 == 0:
-            logger.info('PROGRESS: at document #%i' % vecno)
-        if not isinstance(vec, numpy.ndarray):
-            vec = matutils.sparse2full(vec, num_terms)
-        gauss = numpy.random.normal(0.0, 1.0, samples)
-        ger(1.0, vec, gauss, a = y, overwrite_a = True)
+    
+    chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
+    for chunk_no, (key, group) in enumerate(chunker):
+        if chunk_no % 1 == 0:
+            logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
+        # construct the chunk as a sparse matrix, to minimize memory overhead
+        # definitely avoid materializing it as a dense (num_terms x chunks) matrix!
+        chunk = matutils.corpus2csc(num_terms, (doc for _, doc in group)) # documents = columns of sparse CSC
+        m, n = chunk.shape
+        assert m == num_terms
+        assert n <= chunks # the very last chunk may be smaller
+        o = numpy.random.normal(0.0, 1.0, (n, samples)) # draw a random gaussian matrix
+        sparsetools.csc_matvecs(num_terms, n, samples, chunk.indptr, # y = y + chunk * o
+                                chunk.indices, chunk.data, o.ravel(), y.ravel())
+        del chunk, o
+    
     q, r = numpy.linalg.qr(y) # orthonormalize the range
-    del y # not needed anymore, free up mem
+    del y # Y not needed anymore, free up mem
     samples = clipSpectrum(numpy.diag(r), samples, discard = eps)
-    q = q[:, :samples].copy('F') # discard bogus columns, in case Y was rank-deficient
+    q = q[:, :samples].copy() # discard bogus columns, in case Y was rank-deficient
     
     # second pass: construct the covariance matrix X = B^T * B, where B = A * Q
+    # again, construct X incrementally, in chunks of `chunks` documents from the streaming 
+    # input corpus A, to avoid using O(number of documents) memory
     x = numpy.zeros(shape = (samples, samples), dtype = numpy.float64, order = 'F')
     logger.info("constructing %s covariance matrix" % str(x.shape))
-    ger, = get_blas_funcs(('ger',), (x,)) # TODO should really be 'syr'.. but no wrapper for DSYR in scipy :(
-    for vecno, vec in enumerate(corpus):
-        if vecno % 100 == 0:
-            logger.info('PROGRESS: at document #%i' % vecno)
-        if not isinstance(vec, numpy.ndarray):
-            vec = matutils.sparse2full(vec, num_terms)
-        b = numpy.dot(vec, q) # construct another row of B
-        ger(1.0, b, b, a = x, overwrite_a = True) # update B^T*B with this row
-        
+    chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
+    for chunk_no, (key, group) in enumerate(chunker):
+        if chunk_no % 1 == 0:
+            logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
+        chunk = matutils.corpus2csc(num_terms, (doc for _, doc in group)).transpose()
+        b = chunk * q # sparse * dense matrix multiply
+        del chunk
+        x += numpy.dot(b.T, b) # TODO should call the BLAS routine SYRK, but there is no SYRK wrapper in scipy :(
+        del b
+    
     # now we're ready to compute decomposition of the small matrix X
     logger.info("computing decomposition of the %s covariance matrix" % str(x.shape))
     u, s, vt = numpy.linalg.svd(x) # could use linalg.eigh, but who cares... and svd returns the factors already sorted :)
     keep = clipSpectrum(s, rank, discard = eps)
     
     logger.info("computing the final decomposition")
-    s = numpy.sqrt(s[:keep]) # sqrt to go back from eigenvalues of B^T*B to singular values of B = singular values of the corpus
+    s = numpy.sqrt(s[:keep]) # sqrt to go back from singular values of B^T*B to singular values of B = singular values of the corpus
     u = numpy.dot(q, u[:, :keep]) # go back from left singular vectors of B to left singular vectors of the corpus
     return u, s
     

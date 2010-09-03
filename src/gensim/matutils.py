@@ -23,11 +23,12 @@ logger.setLevel(logging.INFO)
 
 def corpus2csc(m, corpus, dtype = numpy.float64):
     """
-    Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format.
+    Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format, 
+    with documents as columns.
     
     The corpus must not be empty (at least one document).
     """
-    logger.info("constructing sparse document matrix")
+    logger.debug("constructing sparse document matrix")
     # construct the sparse matrix as lil_matrix first, convert to csc later
     # lil_matrix can quickly update rows, so initialize it transposed (documents=rows)
     mat = scipy.sparse.lil_matrix((1, 1), dtype = dtype)
@@ -59,13 +60,46 @@ def pad(mat, padRow, padCol):
 
 def sparse2full(doc, length):
     """
-    Convert document in sparse format (sequence of 2-tuples) into a full numpy
+    Convert document in sparse format (sequence of 2-tuples) into a dense NumPy
     array (of size `length`).
     """
     result = numpy.zeros(length, dtype = numpy.float32, order = 'F') # fill with zeroes (default value)
     doc = dict(doc)
     result[doc.keys()] = doc.values() # overwrite some of the zeroes with explicit values
     return result
+
+
+def full2sparse(vec, eps = 1e-9):
+    """
+    Convert a dense NumPy array into sparse format (sequence of 2-tuples). 
+    
+    Values of magnitude < `eps` are treated as zero (ignored).
+    """
+    return [(pos, val) for pos, val in enumerate(vec) if numpy.abs(val) > eps]
+
+
+def corpus2dense(corpus, num_terms):
+    """
+    Convert corpus into a dense numpy array (documents will be columns).
+    """
+    return numpy.column_stack(sparse2full(doc, num_terms) for doc in corpus)
+
+
+
+class DenseCorpus(object):
+    """
+    Treat dense numpy array as a sparse gensim corpus.
+    """
+    def __init__(self, dense, documents_columns = True):
+        if documents_columns:
+            self.dense = dense
+        else:
+            self.dense = dense.T
+    
+    def __iter__(self):
+        for doc in self.dense:
+            yield full2sparse(doc)
+#endclass DenseCorpus            
 
 
 def vecLen(vec):
