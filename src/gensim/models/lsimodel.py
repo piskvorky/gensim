@@ -28,7 +28,7 @@ Performance on English Wikipedia (2G corpus positions, 3.2M documents, 200K feat
   ------------------------------------------------------------------------
   |                                           serial      distributed    |
   | one-pass update algo (chunks=factors)     65h         19h            |
-  | one-pass mege algo (chunks=20K documents) 14h         2h             |
+  | one-pass merge algo (chunks=20K docs)     14h         2h             |
   | two-pass randomized algo (chunks=20K)     2.5h        N/A            |
   ------------------------------------------------------------------------
 
@@ -88,26 +88,30 @@ class Projection(utils.SaveLoad):
         Construct the (U, S) projection from a corpus `docs`. 
         
         This is the class taking care of 'core math'; interfacing with corpora, 
-        training etc. is done through the LsiModel class.
+        chunking, training etc. is done through the LsiModel class.
         
-        `algo` is one of:
+        `algo` is currently one of:
         
           * 'onepass'; only a single pass over `docs` is needed
-          * 'twopass'; multiple passes allowed the input allowed => can use a 
+          * 'twopass'; multiple passes over the input allowed => can use a 
             faster algorithm.
         """
         self.m, self.k = m, k
         if docs is not None:
-            # base case decomposition: given a job `docs`, compute its decomposition in core
-            if algo == 'onepass':
+            # base case decomposition: given a job `docs`, compute its decomposition in-core
+            # results of several base case decompositions can be merged via `self.merge()`
+            if algo == 'twopass':
+                assert utils.isCorpus(docs)
+                self.u, self.s = stochasticSvd(docs, k, chunks = chunks, num_terms = m, extra_dims = 0)
+            elif algo == 'onepass':
                 if utils.isCorpus(docs):
                     docs = matutils.corpus2csc(m, docs)
                 if docs.shape[1] <= max(k, 100):
-                    # for sufficiently small chunk size, compute svd(now, a) instead of svd(now, svd(a)).
-                    # this improves accuracy and is also faster for small chunks, because
-                    # we need to do one less svd.
-                    # on larger chunks this doesn't work because we run out of memory (chunks=1000 
-                    # would already raise MemoryException on my machine)
+                    # For sufficiently small chunk size, update directly like `svd(now, docs)` 
+                    # instead of `svd(now, svd(docs))`.
+                    # This improves accuracy and is also faster for small chunks, because
+                    # we need to perform one less svd.
+                    # On larger chunks this doesn't work because we quickly run out of memory.
                     self.u = docs
                     self.s = None
                 else:
@@ -121,11 +125,8 @@ class Projection(utils.SaveLoad):
                     del ut, vt
                     k = clipSpectrum(s ** 2, self.k)
                     self.u, self.s = u[:, :k], s[:k]
-            elif algo == 'twopass':
-                assert utils.isCorpus(docs)
-                self.u, self.s = stochasticSvd(docs, k, chunks = chunks, num_terms = m, extra_dims = 0)
             else:
-                raise DomainError("unknown decomposition algorithm: '%s'" % algo)
+                raise NotImplementedError("unknown decomposition algorithm: '%s'" % algo)
         else:
             self.u, self.s = None, None
     
@@ -138,7 +139,7 @@ class Projection(utils.SaveLoad):
         """
         Merge this Projection with another. 
         
-        Content of `other` is destroyed in the process, so pass this function a 
+        The content of `other` is destroyed in the process, so pass this function a 
         copy of `other` if you need it further.
         """
         if other.u is None:
@@ -181,9 +182,9 @@ class Projection(utils.SaveLoad):
             other.u = other.u.todense()
             other.s = 1.0 # broadcasting will promote this to eye(n2) where needed
         # TODO Maybe keep the bases as elementary reflectors, without 
-        # forming explicit matrices with gorgqr.
+        # forming explicit matrices with ORGQR.
         # The only operation we ever need is basis^T*basis ond basis*component.
-        # But how to do that in numpy? And is it fast(er)?
+        # But how to do that in scipy? And is it fast(er)?
         
         # find component of u2 orthogonal to u1
         # IMPORTANT: keep matrices in suitable order for matrix products; failing to do so gives 8x lower performance :(
@@ -210,7 +211,7 @@ class Projection(utils.SaveLoad):
         assert info >= 0, "qr failed"
         assert q.flags.f_contiguous
         
-        # find rotation that diagonalizes r
+        # find the rotation that diagonalizes r
         k = numpy.bmat([[numpy.diag(decay * self.s), c * other.s], [matutils.pad(numpy.matrix([]).reshape(0, 0), min(m, n2), n1), r * other.s]])
         logger.debug("computing SVD of %s dense matrix" % str(k.shape))
         try:
@@ -684,7 +685,7 @@ def stochasticSvd(corpus, rank, chunks = 10000, num_terms = None, extra_dims = N
     up the the sign of the left singular vectors (columns of U).
     
     This is a streamed, two-pass algorithm. In case you can only afford a single
-    pass over the input corpus, set onepass=True in LsiModel to avoid using this
+    pass over the input corpus, set onepass=True in LsiModel and avoid using this
     algorithm.
 
     The decomposition algorithm is based on stochastic approximation from::
@@ -705,9 +706,9 @@ def stochasticSvd(corpus, rank, chunks = 10000, num_terms = None, extra_dims = N
     else:
         num_terms = int(num_terms)
     
-    eps = max(float(eps), 1e-9) # must ignore near-zero eigenvalues (probably numerical error); the associated eigenvalues are most likely garbage
+    eps = max(float(eps), 1e-9) # must ignore near-zero eigenvalues (probably numerical error); the associated eigenvectors are most likely garbage
     
-    # first pass: construct the orthonormal action matrix
+    # first pass: construct the orthonormal action matrix Q
     # proceed in blocks of `chunks` documents (much faster than going one-by-one 
     # and more memory friendly than processing all documents at once)
     y = numpy.zeros(dtype = numpy.float64, shape = (num_terms, samples))
