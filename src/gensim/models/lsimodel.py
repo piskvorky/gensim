@@ -27,8 +27,8 @@ Performance on English Wikipedia (2G corpus positions, 3.2M documents, 200K feat
 
   ------------------------------------------------------------------------
   |                                           serial      distributed    |
-  | one-pass update algo (chunks=factors)     65h         19h            |
-  | one-pass merge algo (chunks=20K docs)     14h         2h             |
+  | one-pass update algo (chunks=factors)     215h        38h            |
+  | one-pass merge algo (chunks=20K docs)     14h         4h             |
   | two-pass randomized algo (chunks=20K)     2.5h        N/A            |
   ------------------------------------------------------------------------
 
