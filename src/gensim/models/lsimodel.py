@@ -53,7 +53,6 @@ from scipy.sparse import sparsetools
 
 # scipy is not a stable package yet, locations change, so try to work
 # around differences (currently only concerns location of 'triu' in scipy 0.7 vs. 0.8)
-from scipy.linalg.blas import get_blas_funcs
 from scipy.linalg.lapack import get_lapack_funcs, find_best_lapack_type
 try:
     from scipy.linalg.basic import triu
@@ -110,7 +109,7 @@ class Projection(utils.SaveLoad):
                 self.u, self.s = stochasticSvd(docs, k, chunks = chunks, num_terms = m, extra_dims = 0)
             elif algo == 'onepass':
                 if utils.isCorpus(docs):
-                    docs = matutils.corpus2csc(m, docs)
+                    docs = matutils.corpus2csc(docs, num_terms = m)
                 if docs.shape[1] <= max(k, 100):
                     # For sufficiently small chunk size, update directly like `svd(now, docs)` 
                     # instead of `svd(now, svd(docs))`.
@@ -195,7 +194,7 @@ class Projection(utils.SaveLoad):
         # IMPORTANT: keep matrices in memory suitable order for matrix products; failing to do so gives 8x lower performance :(
         self.u = numpy.asfortranarray(self.u) # does nothing if input already fortran-order array
         other.u = numpy.asfortranarray(other.u)
-        gemm, = get_blas_funcs(('gemm',), (self.u,))
+        gemm = matutils.blas('gemm', self.u)
         logger.debug("constructing orthogonal component")
         c = gemm(1.0, self.u, other.u, trans_a = True)
         gemm(-1.0, self.u, c, beta = 1.0, c = other.u, overwrite_c = True)
@@ -368,7 +367,7 @@ class LsiModel(interfaces.TransformationABC):
                 for chunk_no, (key, group) in enumerate(chunker):
                     # construct the job as a sparse matrix, to minimize memory overhead
                     # definitely avoid materializing it as a dense matrix!
-                    job = matutils.corpus2csc(self.numTerms, (doc for _, doc in group))
+                    job = matutils.corpus2csc((doc for _, doc in group), num_terms = self.numTerms)
                     doc_no += job.shape[1]
                     if self.dispatcher:
                         # distributed version: add this job to the job queue, so workers can work on it
@@ -683,7 +682,7 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
     return sterm, svals, sdoc.T
 
 
-def stochasticSvd(corpus, rank, chunks = 20000, num_terms = None, extra_dims = None, eps = 1e-6):
+def stochasticSvd(corpus, rank, chunks = 20000, num_terms = None, extra_dims = None, dtype = numpy.float64, eps = 1e-6):
     """
     Return U, S -- the left singular vectors and the singular values of the streamed 
     input corpus.
@@ -719,23 +718,25 @@ def stochasticSvd(corpus, rank, chunks = 20000, num_terms = None, extra_dims = N
     # first pass: construct the orthonormal action matrix Q = orth(Y) = orth(A * O)
     # build Y in blocks of `chunks` documents (much faster than going one-by-one 
     # and more memory friendly than processing all documents at once)
-    y = numpy.zeros(dtype = numpy.float64, shape = (num_terms, samples))
-    logger.info("1st pass: constructing %s orthonormal action matrix" % str(y.shape))
+    y = numpy.zeros(dtype = dtype, shape = (num_terms, samples))
+    logger.info("1st pass: constructing %s action matrix" % str(y.shape))
     
     chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
     for chunk_no, (key, group) in enumerate(chunker):
         logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
         # construct the chunk as a sparse matrix, to minimize memory overhead
         # definitely avoid materializing it as a dense (num_terms x chunks) matrix!
-        chunk = matutils.corpus2csc(num_terms, (doc for _, doc in group)) # documents = columns of sparse CSC
+        chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
         m, n = chunk.shape
         assert m == num_terms
         assert n <= chunks # the very last chunk of A may be smaller
+        logger.debug("multiplying chunk * gauss")
         o = numpy.random.normal(0.0, 1.0, (n, samples)) # draw a random gaussian matrix
         sparsetools.csc_matvecs(num_terms, n, samples, chunk.indptr, # y = y + chunk * o
                                 chunk.indices, chunk.data, o.ravel(), y.ravel())
         del chunk, o
     
+    logger.info("orthonormalizing %s action matrix" % str(y.shape))
     q, r = numpy.linalg.qr(y) # orthonormalize the range
     del y # Y not needed anymore, free up mem
     samples = clipSpectrum(numpy.diag(r), samples, discard = eps)
@@ -745,12 +746,12 @@ def stochasticSvd(corpus, rank, chunks = 20000, num_terms = None, extra_dims = N
     # second pass: construct the covariance matrix X = B * B.T, where B = Q.T * A
     # again, construct X incrementally, in chunks of `chunks` documents from the streaming 
     # input corpus A, to avoid using O(number of documents) memory
-    x = numpy.zeros(shape = (samples, samples), dtype = numpy.float64)
+    x = numpy.zeros(shape = (samples, samples), dtype = dtype)
     logger.info("2nd pass: constructing %s covariance matrix" % str(x.shape))
     chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
     for chunk_no, (key, group) in enumerate(chunker):
         logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
-        chunk = matutils.corpus2csc(num_terms, (doc for _, doc in group))
+        chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype)
         b = qt * chunk # dense * sparse matrix multiply
         x += numpy.dot(b, b.T) # TODO should call the BLAS routine SYRK, but there is no SYRK wrapper in scipy :(
         del chunk, b
@@ -761,7 +762,7 @@ def stochasticSvd(corpus, rank, chunks = 20000, num_terms = None, extra_dims = N
     keep = clipSpectrum(s, rank, discard = eps)
     
     logger.info("computing the final decomposition")
-    s = numpy.sqrt(s[:keep]) # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
-    u = numpy.dot(qt.T, u[:, :keep]) # go back from left singular vectors of B to left singular vectors of the corpus
+    s = numpy.sqrt(s[:keep]).astype(dtype) # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
+    u = numpy.dot(qt.T, u[:, :keep]).astype(dtype) # go back from left singular vectors of B to left singular vectors of the corpus
     return u, s
     
