@@ -14,7 +14,7 @@ models for:
 
   * corpora much larger than RAM: only constant memory needed, independent of 
     the corpus size (though still dependent on the feature set size)
-  * corpora that are streamed: documents can only be accessed sequentially, not 
+  * corpora that are streamed: documents are only accessed sequentially, not 
     random-accessed
   * corpora that cannot even be temporarily stored, each document can only be 
     seen once and must be processed immediately (one-pass algorithm)
@@ -34,7 +34,8 @@ requesting top 400 LSI factors:
   ------------------------------------------------------------------------
 
 serial = Core 2 Duo MacBook Pro 2.53Ghz, 4GB RAM, libVec
-distributed = cluster of six logical nodes on four physical machines, each with dual core Xeon 2.0GHz, 4GB RAM, ATLAS
+distributed = cluster of six logical nodes on four physical machines, each with 
+dual core Xeon 2.0GHz, 4GB RAM, ATLAS
 
 * the two-pass algo could be distributed too, but most time is already spent 
 reading/decompressing the input from disk, and the extra network traffic due to 
@@ -687,7 +688,7 @@ def stochasticSvd(corpus, rank, chunks = 20000, num_terms = None, extra_dims = N
     Return U, S -- the left singular vectors and the singular values of the streamed 
     input corpus.
     
-    This may actually return less than the requested number of `rank` factors, 
+    This may actually return less than the requested number of top `rank` factors, 
     in case the input is of lower rank. Also note that the decomposition is unique
     up the the sign of the left singular vectors (columns of U).
     
