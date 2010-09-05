@@ -86,19 +86,22 @@ def corpus2dense(corpus, num_terms):
 
 
 
-class DenseCorpus(object):
+class Dense2Corpus(object):
     """
-    Treat dense numpy array as a sparse gensim corpus.
+    Treat dense numpy array as a sparse gensim corpus. 
+    
+    No data copy is made (changes to the underlying matrix imply changes in the 
+    corpus).
     """
     def __init__(self, dense, documents_columns = True):
         if documents_columns:
-            self.dense = dense
-        else:
             self.dense = dense.T
+        else:
+            self.dense = dense
     
     def __iter__(self):
         for doc in self.dense:
-            yield full2sparse(doc)
+            yield full2sparse(doc.flat)
 #endclass DenseCorpus            
 
 

@@ -238,7 +238,7 @@ class WikiCorpus(interfaces.CorpusABC):
 
 class VocabTransform(interfaces.TransformationABC):
     """
-    Convert corpus to another, with different feature ids. 
+    Convert a corpus to another, with different feature ids. 
 
     Given a mapping between old ids and new ids (some old ids may be missing,
     i.e. the mapping need not be a bijection), this will wrap a
