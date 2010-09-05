@@ -24,7 +24,7 @@ logger.setLevel(logging.INFO)
 
 
 
-def corpus2csc(corpus, num_terms, dtype = numpy.float64):
+def corpus2csc(corpus, num_terms, dtype=numpy.float64):
     """
     Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format, 
     with documents as columns.
@@ -37,7 +37,7 @@ def corpus2csc(corpus, num_terms, dtype = numpy.float64):
         data.extend([feature_weight for _, feature_weight in doc])
         docs += 1
     indptr = numpy.cumsum(indptr)
-    data = numpy.asarray(data)
+    data = numpy.asarray(data, dtype=dtype)
     indices = numpy.asarray(indices)
     return scipy.sparse.csc_matrix((data, indices, indptr), shape = (num_terms, docs), dtype = dtype)
 
