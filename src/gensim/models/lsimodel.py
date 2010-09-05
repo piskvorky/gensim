@@ -362,7 +362,7 @@ class LsiModel(interfaces.TransformationABC):
                 self.projection.merge(update, decay = decay)
             else:
                 # the one-pass algo
-                chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
+                chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
                 doc_no = 0
                 for chunk_no, (key, group) in enumerate(chunker):
                     # construct the job as a sparse matrix, to minimize memory overhead
@@ -682,7 +682,7 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
     return sterm, svals, sdoc.T
 
 
-def stochasticSvd(corpus, rank, chunks = 20000, num_terms = None, extra_dims = None, dtype = numpy.float64, eps = 1e-6):
+def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None, dtype=numpy.float64, eps=1e-6):
     """
     Return U, S -- the left singular vectors and the singular values of the streamed 
     input corpus.
@@ -713,7 +713,7 @@ def stochasticSvd(corpus, rank, chunks = 20000, num_terms = None, extra_dims = N
     else:
         num_terms = int(num_terms)
     
-    eps = max(float(eps), 1e-9) # must ignore near-zero eigenvalues (probably numerical error); the associated eigenvectors are most likely unstable/garbage
+    eps = max(float(eps), 1e-9) # must ignore near-zero eigenvalues (probably numerical error); the associated eigenvectors are typically unstable/garbage
     
     # first pass: construct the orthonormal action matrix Q = orth(Y) = orth(A * O)
     # build Y in blocks of `chunks` documents (much faster than going one-by-one 
@@ -721,7 +721,7 @@ def stochasticSvd(corpus, rank, chunks = 20000, num_terms = None, extra_dims = N
     y = numpy.zeros(dtype = dtype, shape = (num_terms, samples))
     logger.info("1st pass: constructing %s action matrix" % str(y.shape))
     
-    chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
+    chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
     for chunk_no, (key, group) in enumerate(chunker):
         logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
         # construct the chunk as a sparse matrix, to minimize memory overhead
@@ -731,7 +731,7 @@ def stochasticSvd(corpus, rank, chunks = 20000, num_terms = None, extra_dims = N
         assert m == num_terms
         assert n <= chunks # the very last chunk of A may be smaller
         logger.debug("multiplying chunk * gauss")
-        o = numpy.random.normal(0.0, 1.0, (n, samples)) # draw a random gaussian matrix
+        o = numpy.random.normal(0.0, 1.0, (n, samples)).astype(dtype) # draw a random gaussian matrix
         sparsetools.csc_matvecs(num_terms, n, samples, chunk.indptr, # y = y + chunk * o
                                 chunk.indices, chunk.data, o.ravel(), y.ravel())
         del chunk, o
@@ -748,7 +748,7 @@ def stochasticSvd(corpus, rank, chunks = 20000, num_terms = None, extra_dims = N
     # input corpus A, to avoid using O(number of documents) memory
     x = numpy.zeros(shape = (samples, samples), dtype = dtype)
     logger.info("2nd pass: constructing %s covariance matrix" % str(x.shape))
-    chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
+    chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
     for chunk_no, (key, group) in enumerate(chunker):
         logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
         chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype)
