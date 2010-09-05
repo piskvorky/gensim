@@ -12,28 +12,33 @@ It actually contains several algorithms for decomposition of extremely large
 corpora, a combination of which effectively and transparently allows building LSI
 models for:
 
-  * corpora much larger than RAM (only constant memory needed, independent of 
-    corpus size)
-  * corpora that are streamed (documents can only be accessed sequentially, not 
-    random-accessed)
+  * corpora much larger than RAM: only constant memory needed, independent of 
+    the corpus size (though still dependent on the feature set size)
+  * corpora that are streamed: documents can only be accessed sequentially, not 
+    random-accessed
   * corpora that cannot even be temporarily stored, each document can only be 
-    seen once and processed immediately (one-pass algorithm)
+    seen once and must be processed immediately (one-pass algorithm)
   * distributed computing for ultra large corpora, making use of a cluster of 
     machines
 
-Performance on English Wikipedia (2G corpus positions, 3.2M documents, 200K features, 
-0.5G non-zero entries in the final TF-IDF matrix), requesting top 400 LSI factors:
+Wall-clock performance on the English Wikipedia (2G corpus positions, 3.2M 
+documents, 100K features, 0.5G non-zero entries in the final TF-IDF matrix), 
+requesting top 400 LSI factors:
 
 
   ------------------------------------------------------------------------
   |                                           serial      distributed    |
-  | one-pass update algo (chunks=factors)     215h        38h            |
-  | one-pass merge algo (chunks=20K docs)     14h         4h             |
-  | two-pass randomized algo (chunks=20K)     2.5h        N/A            |
+  | one-pass update algo (chunks=factors)     109h        19h            |
+  | one-pass merge algo (chunks=40K docs)     8.5h        2.2h           |
+  | two-pass randomized algo (chunks=40K)     2.3h        N/A*           |
   ------------------------------------------------------------------------
 
 serial = Core 2 Duo MacBook Pro 2.53Ghz, 4GB RAM, libVec
 distributed = cluster of six logical nodes on four physical machines, each with dual core Xeon 2.0GHz, 4GB RAM, ATLAS
+
+* the two-pass algo could be distributed too, but most time is already spent 
+reading/decompressing the input from disk, and the extra network traffic due to 
+data distribution would likely make it actually *slower*.
 
 """
 
@@ -88,7 +93,7 @@ class Projection(utils.SaveLoad):
         Construct the (U, S) projection from a corpus `docs`. 
         
         This is the class taking care of 'core math'; interfacing with corpora, 
-        chunking, training etc. is done through the LsiModel class.
+        chunking large corpora etc. is done through the LsiModel class.
         
         `algo` is currently one of:
         
@@ -101,7 +106,6 @@ class Projection(utils.SaveLoad):
             # base case decomposition: given a job `docs`, compute its decomposition in-core
             # results of several base case decompositions can be merged via `self.merge()`
             if algo == 'twopass':
-                assert utils.isCorpus(docs)
                 self.u, self.s = stochasticSvd(docs, k, chunks = chunks, num_terms = m, extra_dims = 0)
             elif algo == 'onepass':
                 if utils.isCorpus(docs):
@@ -187,7 +191,7 @@ class Projection(utils.SaveLoad):
         # But how to do that in scipy? And is it fast(er)?
         
         # find component of u2 orthogonal to u1
-        # IMPORTANT: keep matrices in suitable order for matrix products; failing to do so gives 8x lower performance :(
+        # IMPORTANT: keep matrices in memory suitable order for matrix products; failing to do so gives 8x lower performance :(
         self.u = numpy.asfortranarray(self.u) # does nothing if input already fortran-order array
         other.u = numpy.asfortranarray(other.u)
         gemm, = get_blas_funcs(('gemm',), (self.u,))
@@ -198,8 +202,8 @@ class Projection(utils.SaveLoad):
         # perform q, r = QR(component); code hacked out of scipy.linalg.qr
         logger.debug("computing QR of %s dense matrix" % str(other.u.shape))
         geqrf, = get_lapack_funcs(('geqrf',), (other.u,))
-        qr, tau, work, info = geqrf(other.u, lwork = -1, overwrite_a = True) # sometimes segfaults with overwrite_a=True...?
-        qr, tau, work, info = geqrf(other.u, lwork = work[0], overwrite_a = True) # sometimes segfaults with overwrite_a=True...?
+        qr, tau, work, info = geqrf(other.u, lwork = -1, overwrite_a = True)
+        qr, tau, work, info = geqrf(other.u, lwork = work[0], overwrite_a = True)
         del other.u
         assert info >= 0
         r = triu(qr[:n2, :n2])
@@ -353,7 +357,7 @@ class LsiModel(interfaces.TransformationABC):
         
         if utils.isCorpus(corpus):
             if not self.onepass:
-                # we are allowed multiple passes over input => use a faster, randomized algo
+                # we are allowed multiple passes over input => use a faster, randomized two-pass algo
                 update = Projection(self.numTerms, self.numTopics, corpus, algo = 'twopass', chunks = chunks)
                 self.projection.merge(update, decay = decay)
             else:
@@ -521,8 +525,8 @@ def svdUpdate(U, S, V, a, b):
     `[X + a * b^T] = U' * S' * V'^T`
     and return `U'`, `S'`, `V'`.
     
-    The original matrix X is not needed at all, so this function implements flexible 
-    *online* updates to an existing decomposition. 
+    The original matrix X is not needed at all, so this function implements one-pass
+    streaming rank-1 updates to an existing decomposition. 
     
     `a` and `b` are (m, 1) and (n, 1) matrices.
     
@@ -532,6 +536,9 @@ def svdUpdate(U, S, V, a, b):
     This is the rank-1 update as described in
     *Brand, 2006: Fast low-rank modifications of the thin singular value decomposition*,
     but without separating the basis from rotations.
+    
+    The blocked merge algorithm in LsiModel.addDocuments() is much faster; I keep this fnc here
+    purely for backup reasons.
     """
     # convert input to matrices (no copies of data made if already numpy.ndarray or numpy.matrix)
     S = numpy.asmatrix(S)
@@ -675,7 +682,7 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
     return sterm, svals, sdoc.T
 
 
-def stochasticSvd(corpus, rank, chunks = 10000, num_terms = None, extra_dims = None, eps = 1e-6):
+def stochasticSvd(corpus, rank, chunks = 20000, num_terms = None, extra_dims = None, eps = 1e-6):
     """
     Return U, S -- the left singular vectors and the singular values of the streamed 
     input corpus.
@@ -688,7 +695,7 @@ def stochasticSvd(corpus, rank, chunks = 10000, num_terms = None, extra_dims = N
     pass over the input corpus, set onepass=True in LsiModel and avoid using this
     algorithm.
 
-    The decomposition algorithm is based on stochastic approximation from::
+    The decomposition algorithm is based on stochastic approximation algo from::
     
     **Halko, Martinsson, Tropp. Finding structure with randomness, 2009.**
     
@@ -706,24 +713,23 @@ def stochasticSvd(corpus, rank, chunks = 10000, num_terms = None, extra_dims = N
     else:
         num_terms = int(num_terms)
     
-    eps = max(float(eps), 1e-9) # must ignore near-zero eigenvalues (probably numerical error); the associated eigenvectors are most likely garbage
+    eps = max(float(eps), 1e-9) # must ignore near-zero eigenvalues (probably numerical error); the associated eigenvectors are most likely unstable/garbage
     
-    # first pass: construct the orthonormal action matrix Q
-    # proceed in blocks of `chunks` documents (much faster than going one-by-one 
+    # first pass: construct the orthonormal action matrix Q = orth(Y) = orth(A * O)
+    # build Y in blocks of `chunks` documents (much faster than going one-by-one 
     # and more memory friendly than processing all documents at once)
     y = numpy.zeros(dtype = numpy.float64, shape = (num_terms, samples))
-    logger.info("constructing %s orthonormal action matrix" % str(y.shape))
+    logger.info("1st pass: constructing %s orthonormal action matrix" % str(y.shape))
     
     chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
     for chunk_no, (key, group) in enumerate(chunker):
-        if chunk_no % 1 == 0:
-            logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
+        logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
         # construct the chunk as a sparse matrix, to minimize memory overhead
         # definitely avoid materializing it as a dense (num_terms x chunks) matrix!
         chunk = matutils.corpus2csc(num_terms, (doc for _, doc in group)) # documents = columns of sparse CSC
         m, n = chunk.shape
         assert m == num_terms
-        assert n <= chunks # the very last chunk may be smaller
+        assert n <= chunks # the very last chunk of A may be smaller
         o = numpy.random.normal(0.0, 1.0, (n, samples)) # draw a random gaussian matrix
         sparsetools.csc_matvecs(num_terms, n, samples, chunk.indptr, # y = y + chunk * o
                                 chunk.indices, chunk.data, o.ravel(), y.ravel())
@@ -732,22 +738,21 @@ def stochasticSvd(corpus, rank, chunks = 10000, num_terms = None, extra_dims = N
     q, r = numpy.linalg.qr(y) # orthonormalize the range
     del y # Y not needed anymore, free up mem
     samples = clipSpectrum(numpy.diag(r), samples, discard = eps)
-    q = q[:, :samples].copy() # discard bogus columns, in case Y was rank-deficient
+    qt = q[:, :samples].T.copy() # discard bogus columns, in case Y was rank-deficient
+    del q
     
-    # second pass: construct the covariance matrix X = B^T * B, where B = A * Q
+    # second pass: construct the covariance matrix X = B * B.T, where B = Q.T * A
     # again, construct X incrementally, in chunks of `chunks` documents from the streaming 
     # input corpus A, to avoid using O(number of documents) memory
-    x = numpy.zeros(shape = (samples, samples), dtype = numpy.float64, order = 'F')
-    logger.info("constructing %s covariance matrix" % str(x.shape))
+    x = numpy.zeros(shape = (samples, samples), dtype = numpy.float64)
+    logger.info("2nd pass: constructing %s covariance matrix" % str(x.shape))
     chunker = itertools.groupby(enumerate(corpus), key = lambda val: val[0] / chunks)
     for chunk_no, (key, group) in enumerate(chunker):
-        if chunk_no % 1 == 0:
-            logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
-        chunk = matutils.corpus2csc(num_terms, (doc for _, doc in group)).transpose()
-        b = chunk * q # sparse * dense matrix multiply
-        del chunk
-        x += numpy.dot(b.T, b) # TODO should call the BLAS routine SYRK, but there is no SYRK wrapper in scipy :(
-        del b
+        logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
+        chunk = matutils.corpus2csc(num_terms, (doc for _, doc in group))
+        b = qt * chunk # dense * sparse matrix multiply
+        x += numpy.dot(b, b.T) # TODO should call the BLAS routine SYRK, but there is no SYRK wrapper in scipy :(
+        del chunk, b
     
     # now we're ready to compute decomposition of the small matrix X
     logger.info("computing decomposition of the %s covariance matrix" % str(x.shape))
@@ -755,7 +760,7 @@ def stochasticSvd(corpus, rank, chunks = 10000, num_terms = None, extra_dims = N
     keep = clipSpectrum(s, rank, discard = eps)
     
     logger.info("computing the final decomposition")
-    s = numpy.sqrt(s[:keep]) # sqrt to go back from singular values of B^T*B to singular values of B = singular values of the corpus
-    u = numpy.dot(q, u[:, :keep]) # go back from left singular vectors of B to left singular vectors of the corpus
+    s = numpy.sqrt(s[:keep]) # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
+    u = numpy.dot(qt.T, u[:, :keep]) # go back from left singular vectors of B to left singular vectors of the corpus
     return u, s
     
