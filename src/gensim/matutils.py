@@ -14,6 +14,9 @@ import os
 
 import numpy
 import scipy.sparse
+import scipy.linalg
+
+blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
 
 
 logger = logging.getLogger("matutils")
@@ -21,27 +24,22 @@ logger.setLevel(logging.INFO)
 
 
 
-def corpus2csc(m, corpus, dtype = numpy.float64):
+def corpus2csc(corpus, num_terms, dtype = numpy.float64):
     """
     Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format, 
     with documents as columns.
-    
-    The corpus must not be empty (at least one document).
     """
     logger.debug("constructing sparse document matrix")
-    # construct the sparse matrix as lil_matrix first, convert to csc later
-    # lil_matrix can quickly update rows, so initialize it transposed (documents=rows)
-    mat = scipy.sparse.lil_matrix((1, 1), dtype = dtype)
-    mat.rows, mat.data = [], []
-    for i, doc in enumerate(corpus):
-        doc = sorted(doc)
-        mat.rows.append([fid for fid, _ in doc])
-        mat.data.append([val for _, val in doc])
-    docs = i + 1
-    mat._shape = (docs, m)
-    mat = mat.tocsr().transpose() # transpose back to documents=columns
-    assert isinstance(mat, scipy.sparse.csc_matrix)
-    return mat
+    docs, data, indices, indptr = 0, [], [], [0]
+    for doc in corpus:
+        indptr.append(len(doc))
+        indices.extend([feature_id for feature_id, _ in doc])
+        data.extend([feature_weight for _, feature_weight in doc])
+        docs += 1
+    indptr = numpy.cumsum(indptr)
+    data = numpy.asarray(data)
+    indices = numpy.asarray(indices)
+    return scipy.sparse.csc_matrix((data, indices, indptr), shape = (num_terms, docs), dtype = dtype)
 
 
 def pad(mat, padRow, padCol):
@@ -60,8 +58,8 @@ def pad(mat, padRow, padCol):
 
 def sparse2full(doc, length):
     """
-    Convert document in sparse format (sequence of 2-tuples) into a dense NumPy
-    array (of size `length`).
+    Convert a document in sparse corpus format (sequence of 2-tuples) into a dense 
+    numpy array (of size `length`).
     """
     result = numpy.zeros(length, dtype = numpy.float32, order = 'F') # fill with zeroes (default value)
     doc = dict(doc)
@@ -71,7 +69,7 @@ def sparse2full(doc, length):
 
 def full2sparse(vec, eps = 1e-9):
     """
-    Convert a dense NumPy array into sparse format (sequence of 2-tuples). 
+    Convert a dense numpy array into the sparse corpus format (sequence of 2-tuples).
     
     Values of magnitude < `eps` are treated as zero (ignored).
     """
@@ -113,6 +111,9 @@ def vecLen(vec):
     return vecLen
 
 
+blas_nrm2 = blas('nrm2', numpy.array([], dtype = float))
+blas_scal = blas('scal', numpy.array([], dtype = float))
+
 def unitVec(vec):
     """
     Scale a vector to unit length. The only exception is the zero vector, which
@@ -133,18 +134,16 @@ def unitVec(vec):
         vecLen = 1.0 * math.sqrt(sum(val * val for _, val in vec))
         assert vecLen > 0.0, "sparse documents must not contain any explicit zero entries"
         if vecLen != 1.0:
-            result = [(termId, val / vecLen) for termId, val in vec]
+            return [(termId, val / vecLen) for termId, val in vec]
         else:
-            result = list(vec)
+            return list(vec)
     else: # dense format
-        vec = numpy.asarray(vec, dtype = float)
-        vecLen = numpy.sqrt(numpy.sum(vec * vec))
-        if vecLen > 0.0:
-            result = vec / vecLen
+        vec = numpy.asarray(vec, dtype=float)
+        veclen = blas_nrm2(vec)
+        if veclen > 0.0:
+            return blas_scal(1.0 / veclen, vec)
         else:
-            result = vec
-            
-    return result
+            return vec
 
 
 def cossim(vec1, vec2):
