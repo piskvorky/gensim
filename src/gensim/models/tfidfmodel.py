@@ -81,7 +81,8 @@ class TfidfModel(interfaces.TransformationABC):
         Return tf-idf representation of the input vector and/or corpus.
         """
         # if the input vector is in fact a corpus, return a transformed corpus as a result
-        if utils.isCorpus(bow):
+        is_corpus, bow = utils.isCorpus(bow)
+        if is_corpus:
             return self._apply(bow)
         
         # unknown (new) terms will be given zero weight (NOT infinity/huge weight,
