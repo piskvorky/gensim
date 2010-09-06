@@ -23,7 +23,7 @@ models for:
 
 Wall-clock performance on the English Wikipedia (2G corpus positions, 3.2M 
 documents, 100K features, 0.5G non-zero entries in the final TF-IDF matrix), 
-requesting top 400 LSI factors:
+requesting the top 400 LSI factors:
 
 
   ------------------------------------------------------------------------
@@ -50,10 +50,10 @@ import itertools
 import numpy
 import scipy.sparse
 from scipy.sparse import sparsetools
+from scipy.linalg.lapack import get_lapack_funcs, find_best_lapack_type
 
 # scipy is not a stable package yet, locations change, so try to work
 # around differences (currently only concerns location of 'triu' in scipy 0.7 vs. 0.8)
-from scipy.linalg.lapack import get_lapack_funcs, find_best_lapack_type
 try:
     from scipy.linalg.basic import triu
 except ImportError:
@@ -106,9 +106,9 @@ class Projection(utils.SaveLoad):
             # base case decomposition: given a job `docs`, compute its decomposition in-core
             # results of several base case decompositions can be merged via `self.merge()`
             if algo == 'twopass':
-                self.u, self.s = stochasticSvd(docs, k, chunks = chunks, num_terms = m, extra_dims = 0)
+                self.u, self.s = stochasticSvd(docs, k, chunks = chunks, num_terms = m)
             elif algo == 'onepass':
-                if utils.isCorpus(docs):
+                if not scipy.sparse.issparse(docs):
                     docs = matutils.corpus2csc(docs, num_terms = m)
                 if docs.shape[1] <= max(k, 100):
                     # For sufficiently small chunk size, update directly like `svd(now, docs)` 
@@ -260,7 +260,7 @@ class LsiModel(interfaces.TransformationABC):
     
     """
     def __init__(self, corpus = None, numTopics = 200, id2word = None, chunks = 20000, 
-                 decay = 1.0, distributed = False, onepass = True):
+                 decay = 1.0, distributed = False, onepass = False):
         """
         `numTopics` is the number of requested factors (latent dimensions). 
         
@@ -355,7 +355,7 @@ class LsiModel(interfaces.TransformationABC):
         if decay is None:
             decay = self.decay
         
-        if utils.isCorpus(corpus):
+        if not scipy.sparse.issparse(corpus):
             if not self.onepass:
                 # we are allowed multiple passes over input => use a faster, randomized two-pass algo
                 update = Projection(self.numTerms, self.numTopics, corpus, algo = 'twopass', chunks = chunks)
@@ -395,9 +395,8 @@ class LsiModel(interfaces.TransformationABC):
                     logger.info("decomposition complete")
         else:
             assert not self.dispatcher, "must be in serial mode to receive jobs"
-            assert isinstance(corpus, scipy.sparse.csc_matrix)
             assert self.onepass, "distributed two-pass algo not supported yet"
-            update = Projection(self.numTerms, self.numTopics, corpus)
+            update = Projection(self.numTerms, self.numTopics, corpus.tocsc())
             self.projection.merge(update, decay = decay)
             logger.info("processed sparse job of %i documents" % (corpus.shape[1]))
 
@@ -419,8 +418,9 @@ class LsiModel(interfaces.TransformationABC):
         singular values**. To return non-scaled embedding, set `scaled` to False.
         """
         # if the input vector is in fact a corpus, return a transformed corpus as result
-        if utils.isCorpus(bow):
-            return self._apply(bow)
+        is_corpus, bow = utils.isCorpus(bow)
+        if is_corpus:
+            self._apply(bow)
         
         assert self.projection.u is not None, "decomposition not initialized yet"
         vec = numpy.asfortranarray(matutils.sparse2full(bow, self.numTerms), dtype = self.projection.u.dtype)
@@ -691,9 +691,9 @@ def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None, d
     in case the input is of lower rank. Also note that the decomposition is unique
     up the the sign of the left singular vectors (columns of U).
     
-    This is a streamed, two-pass algorithm. In case you can only afford a single
-    pass over the input corpus, set onepass=True in LsiModel and avoid using this
-    algorithm.
+    This is a streamed, two-pass algorithm, without power-itrations. In case you can 
+    only afford a single pass over the input corpus, set onepass=True in LsiModel and 
+    avoid using this algorithm.
 
     The decomposition algorithm is based on stochastic approximation algo from::
     
@@ -702,7 +702,7 @@ def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None, d
     """
     rank = int(rank)
     if extra_dims is None:
-        samples = 2 * rank # use more samples than requested factors, to improve accuracy
+        samples = max(10, 2 * rank) # use more samples than requested factors, to improve accuracy
     else:
         samples = rank + int(extra_dims)
     
@@ -762,7 +762,7 @@ def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None, d
     keep = clipSpectrum(s, rank, discard = eps)
     
     logger.info("computing the final decomposition")
-    s = numpy.sqrt(s[:keep]).astype(dtype) # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
-    u = numpy.dot(qt.T, u[:, :keep]).astype(dtype) # go back from left singular vectors of B to left singular vectors of the corpus
-    return u, s
+    s = numpy.sqrt(s[:keep]) # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
+    u = numpy.dot(qt.T, u[:, :keep]) # go back from left singular vectors of B to left singular vectors of the corpus
+    return u.astype(dtype), s.astype(dtype)
     

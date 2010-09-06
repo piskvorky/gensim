@@ -68,18 +68,17 @@ class LdaModel(interfaces.TransformationABC):
         """
         # store user-supplied parameters
         self.id2word = id2word
+
         if self.id2word is None:
             logger.info("no word id mapping provided; initializing from corpus, assuming identity")
-            maxId = -1
-            for document in corpus:
-                maxId = max(maxId, max([-1] + [fieldId for fieldId, _ in document]))
-            self.numTerms = 1 + maxId
-            self.id2word = dict(zip(xrange(self.numTerms), xrange(self.numTerms)))
+            self.id2word = utils.dictFromCorpus(corpus)
+            self.numTerms = len(self.id2word)
         else:
             self.numTerms = 1 + max([-1] + self.id2word.keys())
+
         self.numTopics = numTopics # number of latent topics
         
-        # internal constants; can be manually changed after having called the init
+        # internal constants; can be manually changed after having called this constructor and before calling `initialize()`
         self.ESTIMATE_ALPHA = alpha is None
         if alpha is None: # no alpha supplied by user => get some initial estimate
             alpha = 10.0 / numTopics # initial estimate is 50 / numTopics, as suggested in Steyvers&Griffiths: Probabilistic Topic Models
@@ -298,7 +297,7 @@ class LdaModel(interfaces.TransformationABC):
         # next we precompute the all the random document indices, so that we can 
         # update the counts in a single sweep over the corpus. 
         # all this drama is because the corpus doesn't necessarily support 
-        # random access (indexing) -- it only supports sequential iteration over 
+        # random access -- it only supports sequential iteration over 
         # the documents (streaming).
         initDocs = numpy.random.randint(0, len(corpus), (self.numTopics, numInitDocs)) # get document indices
         
@@ -408,8 +407,9 @@ class LdaModel(interfaces.TransformationABC):
         Ignore topics with very low probability (below 0.001).
         """
         # if the input vector is in fact a corpus, return a transformed corpus as result
-        if utils.isCorpus(bow):
-            return self._apply(bow)
+        is_corpus, corpus = utils.isCorpus(bow)
+        if is_corpus:
+            return self._apply(corpus)
         
         likelihood, phi, gamma = self.inference(bow)
         gamma -= self.alpha # subtract topic prior, to get the expected number of words for each topic

@@ -37,6 +37,8 @@ import logging
 import numpy
 import scipy
 import scipy.sparse
+from scipy.sparse import sparsetools
+from scipy.linalg import get_blas_funcs
 
 from gensim import interfaces, utils, matutils
 
@@ -135,7 +137,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         vec = numpy.asfortranarray(vec, dtype = self.corpus.dtype).reshape(self.numFeatures, 1)
         
         # compute cosine similarity against every other document in the collection
-        gemv, = scipy.linalg.get_blas_funcs(('gemv',), (self.corpus,))
+        gemv = matutils.blas('gemv', self.corpus)
         allSims = gemv(1.0, self.corpus, vec) # N x T * T x 1 = N x 1
         allSims = list(allSims.flat) # convert to plain python list
         assert len(allSims) == self.corpus.shape[0] # make sure no document got lost!

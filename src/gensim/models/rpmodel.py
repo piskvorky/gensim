@@ -78,7 +78,8 @@ class RpModel(interfaces.TransformationABC):
         Return RP representation of the input vector and/or corpus.
         """
         # if the input vector is in fact a corpus, return a transformed corpus as result
-        if utils.isCorpus(bow):
+        is_corpus, bow = utils.isCorpus(bow)
+        if is_corpus:
             return self._apply(bow)
         
         vec = matutils.sparse2full(bow, self.numTerms).reshape(self.numTerms, 1) / numpy.sqrt(self.numTopics)

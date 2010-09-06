@@ -198,21 +198,35 @@ def dictFromCorpus(corpus):
 
 def isCorpus(obj):
     """
-    Check whether `obj` is a corpus. 
+    Check whether `obj` is a corpus. Return (is_corpus, new) 2-tuple, where
+    `new is obj` if `obj` was an iterable, or `new` yields the same sequence as
+    `obj` if it was an iterator.
     
-    **NOTE**: When called on an empty corpus (no documents), will return False.
+    `obj` is a corpus if it supports iteration over documents, where a document
+    is in turn anything that acts as a sequence of 2-tuples (int, float).
+    
+    Note: An "empty" corpus (empty input sequence) is ambiguous, so in this case the 
+    result is forcefully defined as `is_corpus=False`.
     """
     try:
         if hasattr(obj, 'next'):
-            return False # iterators are not allowed to be corpora (need an iterable)
-        doc1 = iter(obj).next() # obj supports iteration and is not empty
-        if len(doc1) == 0: # the first document is empty
-            return True
-        id1, val1 = iter(doc1).next() # or the first document is a 2-tuple
-        id1, val1 = int(id1), float(val1) # id must be an integer, weight a float
-        return True
+            if hasattr(obj, '__iter__'):
+                logger.warning("corpus-testing objects that are both iterators and iterables is ambiguous; assuming iterator (one-pass).")
+            # the input is an iterator (not iterable), meaning once we call next()
+            # that element is gone forever. we must be careful to put whatever we
+            # retrieve back again
+            doc1 = obj.next()
+            obj = itertools.chain([doc1], obj)
+        else:
+            doc1 = iter(obj).next()
+        if not list(doc1):
+            return True, obj # the first document is empty, assume this is a corpus
+        id1, val1 = iter(doc1).next()
+        id1, val1 = int(id1), float(val1) # must be a 2-tuple (integer, float)
     except:
-        return False
+        return False, obj
+    return True, obj
+    
 
 
 def get_my_ip():
@@ -237,7 +251,7 @@ def get_my_ip():
             # see what ifconfig says about our default interface
             import commands
             result = commands.getoutput("ifconfig").split("\n")[1].split()[1][5:]
-            if result.split('.') != 4:
+            if len(result.split('.')) != 4:
                 raise Exception()
         except:
             # give up, leave the resolution to gethostbyname
