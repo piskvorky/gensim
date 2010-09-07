@@ -150,19 +150,18 @@ about 1.92 billion tokens in total.</p>
 <span class="go">topic #9(63.094): film(0.386), films(0.293), directed(0.076), cast(0.048), starring(0.032), movie(0.049), actors(0.070), actor(0.053), drama(0.046), filmography(0.025), ..., z(-0.219), bytes(-0.218), contribs(-0.200), cydebot(-0.041), gif(-0.042)</span>
 </pre></div>
 </div>
-<p>Creating the LSI model of Wikipedia takes about 2.3h on my laptop (OS X,
-dual-core 2.53GHz, 4GB RAM with <cite>libVec</cite>),
+<p>Creating the LSI model of Wikipedia takes about 2.5 hours on my laptop <a class="footnote-reference" href="#id4" id="id1">[1]</a>,
 most of which is spent converting the sparse vectors from disk to a suitable
 representation in memory. The total processing time is therefore dominated by
-the preprocessing step of preparing the corpus, which took 15h. <a class="footnote-reference" href="#id2" id="id1">[1]</a></p>
+the preprocessing step of preparing the corpus, which took 15h. <a class="footnote-reference" href="#id5" id="id2">[2]</a></p>
 </div>
 <div class="section" id="one-pass-latent-semantic-analysis">
 <h3>One-pass Latent Semantic Analysis<a class="headerlink" href="#one-pass-latent-semantic-analysis" title="Permalink to this headline">¶</a></h3>
-<p>In the previous experiment, we had the whole corpus available beforehand, which allowed
-us to make two passes over it and use the fast algorithm. But what if our documents
-come as a non-repeatable stream, or what if the additional cost of iterating over the corpus
-multiple times is too high? This is not a very common scenario, but when it happens,
-we need an algorithm that only makes a single one pass
+<p>In the previous experiment, we had the whole corpus available beforehand and that
+allowed us to make two passes over it and use the fast algorithm. But what if our
+documents come as a non-repeatable stream, or what if the additional cost of
+iterating over the corpus multiple times is too high? This is not a very common
+scenario, but when it happens, we need an algorithm that only makes a single one pass
 over the data, i.e., visits each document at most once.</p>
 <p>We will simulate this scenario by running Latent Semantic Analysis directly
 over the <cite>bzip</cite>&#8216;d Wikipedia dump, converting each article to a sparse vector on
@@ -182,29 +181,60 @@ forgotten:</p>
 the corpus just to collect statistics about word frequencies etc. Here we cheat
 a little and use the dictionary used in the two-pass algo; in reality, the feature
 set would need to be fixed in advance (or some dynamic feature hashing scheme used).</li>
-<li>We cannot use TF-IDF weighting, because that again relies on the knowledge of
-corpus statistics (the number of documents, word document frequencies), which
-are unknown in advance. We therefore run LSA directly on the raw bag-of-words counts.</li>
+<li>We cannot use <a class="reference external" href="http://en.wikipedia.org/wiki/Tf%E2%80%93idf">TF-IDF weighting</a>,
+because that again relies on the knowledge of corpus statistics (the number of
+documents, word document frequencies), which are unknown in advance. We
+therefore run LSA directly on the raw bag-of-words counts (usually a bad idea).</li>
 </ol>
-<p>Running the above takes about 22.5h on my laptop (OS X, dual-core 2.53GHz, 4GB
-RAM with <cite>libVec</cite>). This is comparable to the <cite>15h+2.3h~=17.3h</cite> for the two-phase
+<p>Running the above takes about 15.5h on my laptop <a class="footnote-reference" href="#id4" id="id3">[1]</a>. Compare this to the <cite>15h+2.5h~=17.5h</cite> for the two-phase
 algorithm above, where we first store the sparse vectors to disk (15h) and only then
-proceed with LSA (2.3h). In general, the two-pass algorithm is faster and preferrable
-wherever you can store your input vectors persistently.</p>
-<p>If you need your results faster, the one-pass algorithm can be run over a cluster
-of computers, see the <a class="reference external" href="distributed.html"><em>distributed tutorial</em></a>.</p>
+proceed with LSA (2.5h). However, the two-pass algorithm does a lot of extra
+work, such as building the dictionary and constructing TF-IDF vectors, so it is
+generally faster and preferrable whenever you can store your input vectors persistently.</p>
+<p>To directly compare the speed of the two algorithms, let&#8217;s run the
+one-pass variant over the same input we used in the two-pass experiment
+above:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">wikicorpus</span><span class="o">.</span><span class="n">WikiCorpus</span><span class="o">.</span><span class="n">loadDictionary</span><span class="p">(</span><span class="s">&#39;wiki_en_wordids.txt&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mm</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;wiki_en_tfidf.mm&#39;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 400 LSI topics; force the one-pass algo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">onepass</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">printDebug</span><span class="p">(</span><span class="n">numTopics</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">computing word-topic salience for 10 topics</span>
+<span class="go">topic #0(201.015): subsequent(0.194), deletion(0.383), debate(0.275), appropriate(0.208), proposed(0.103), modify(0.213), edits(0.220), comments(0.223), delete(0.475), archived(0.109), ...,</span>
+<span class="go">topic #1(143.196): diff(0.325), link(0.310), undo(0.149), added(0.098), reports(0.041), reporting(0.044), contribs(0.147), resolves(0.044), intended(0.038), involved(0.063), ..., subsequent(-0.060), debate(-0.086), appropriate(-0.063), deletion(-0.113), modify(-0.066)</span>
+<span class="go">topic #2(135.785): diff(0.433), link(0.397), undo(0.200), added(0.108), resolves(0.059), reporting(0.053), linkwatcher(0.057), reports(0.046), spamming(0.054), contribs(0.175), ..., together(-0.020), every(-0.031), age(-0.091), older(-0.032), spread(-0.017)</span>
+<span class="go">topic #3(124.998): age(0.238), residing(0.054), older(0.084), household(0.101), families(0.132), householder(0.055), capita(0.055), median(0.217), makeup(0.055), households(0.161), ..., licensing(-0.104), image(-0.355), fair(-0.195), resolution(-0.125), copyright(-0.214)</span>
+<span class="go">topic #4(116.905): householder(0.047), residing(0.045), median(0.185), capita(0.047), household(0.084), households(0.136), makeup(0.046), income(0.162), families(0.107), versus(0.041), ..., ever(-0.012), become(-0.014), coming(-0.007), six(-0.017), followed(-0.009)</span>
+<span class="go">topic #5(100.345): players(0.502), goalkeepers(0.009), football(0.318), defender(0.016), goalkeeper(0.015), midfielder(0.019), forwards(0.016), league(0.284), striker(0.012), midfielders(0.015), ..., everything(-0.008), come(-0.014), gone(-0.006), nowhere(-0.002), listen(-0.003)</span>
+<span class="go">topic #6(92.299): tracklisting(0.006), album(0.411), lyrically(0.002), rerecorded(0.001), studio(0.051), daydream(0.001), charting(0.008), catchy(0.002), musically(0.003), anthemic(0.000), ..., consult(-0.001), initiated(-0.003), existing(-0.007), necessary(-0.008), strongly(-0.004)</span>
+<span class="go">topic #7(83.840): why(0.066), regards(0.009), else(0.027), understand(0.026), honestly(0.005), occured(0.001), gotten(0.004), noticed(0.009), reply(0.010), expect(0.010), ..., subsequent(-0.071), debate(-0.097), proposed(-0.037), delete(-0.179), appropriate(-0.066)</span>
+<span class="go">topic #8(78.984): film(0.587), directorial(0.008), directed(0.112), cassavetes(0.001), projectionist(0.001), remake(0.008), starring(0.049), films(0.459), filming(0.014), ebert(0.004), ..., maintained(-0.003), vicinity(-0.003), proximity(-0.002), officially(-0.005), extension(-0.006)</span>
+<span class="go">topic #9(78.766): kategória(0.126), kategori(0.500), kategorija(0.248), categoría(0.165), 분류(0.104), kategoria(0.161), ja(0.099), categorie(0.148), категория(0.172), kategorie(0.234), ..., link(-0.035), directorial(-0.001), gets(-0.006), filming(-0.001), undo(-0.017)</span>
+</pre></div>
+</div>
+<p>This takes 8.5h, compared to 2.5h of the two-pass algorithm. If you need your
+results faster, the one-pass algorithm can also be run over a cluster of computers,
+see the <a class="reference external" href="distributed.html"><em>distributed tutorial</em></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Actually, the two-pass algorithm can be easily parallelized, too. But the processing
 itself is blazing fast and most time is already spent on I/O conversions,
 so the extra effort of sending data around over the network actually <strong>slows
-the algorithm down</strong>. For this reason, there is no distributed variant of the two-pass algo.</p>
+the algorithm down</strong>. For this reason, there is no distributed variant of the
+two-pass algo.</p>
 </div>
 <hr class="docutils" />
-<table class="docutils footnote" frame="void" id="id2" rules="none">
+<table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><p class="first">Here we&#8217;re mostly interested in performance, but it is interesting to look at the
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> My laptop = dual-core 2.53GHz MacBook Pro, 4GB RAM, OS X with <cite>libVec</cite></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td><p class="first">Here we&#8217;re mostly interested in performance, but it is interesting to look at the
 retrieved LSA concepts, too. I am no expert and don&#8217;t see into Wiki&#8217;s bowels,
 but Brian Mingus had this to say about the result:</p>
 <div class="highlight-python"><pre>There appears to be a lot of noise in your dataset. The first three topics
@@ -219,10 +249,10 @@ population, capita, etc.
 
 The sixth shows the influence of sports bots, and the seventh of music bots.</pre>
 </div>
-<p class="last">So the top ten concepts are apparently dominated by Wikipedia robots and templates; this is
-a good reminder that LSA is a powerful tool for data analysis, but not a magic pill.
-As always, it&#8217;s <a class="reference external" href="http://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out">garbage in, garbage out</a>...
-Btw, improvements to the Wiki markup parsing code are welcome :-)</p>
+<p class="last">So the top ten concepts are apparently dominated by Wikipedia robots and expanded
+templates; this is a good reminder that LSA is a powerful tool for data analysis,
+but not a magic pill. As always, it&#8217;s <a class="reference external" href="http://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out">garbage in, garbage out</a>...
+By the way, improvements to the Wiki markup parsing code are welcome :-)</p>
 </td></tr>
 </tbody>
 </table>
