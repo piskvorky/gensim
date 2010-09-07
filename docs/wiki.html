@@ -19,7 +19,10 @@
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="gensim documentation" href="index.html" /> 
+    <link rel="top" title="gensim documentation" href="index.html" />
+    <link rel="up" title="Tutorial" href="tutorial.html" />
+    <link rel="next" title="Distributed Computing" href="distributed.html" />
+    <link rel="prev" title="Similarity Queries" href="tut3.html" /> 
   </head>
   <body>
 
@@ -39,10 +42,17 @@
         <li class="right" >
           <a href="modindex.html" title="Global Module Index"
              accesskey="M">modules</a> |</li>
+        <li class="right" >
+          <a href="distributed.html" title="Distributed Computing"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tut3.html" title="Similarity Queries"
+             accesskey="P">previous</a> |</li>
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
- 
+
+          <li><a href="tutorial.html" accesskey="U">Tutorial</a> &raquo;</li> 
       </ul>
     </div>
 
@@ -51,15 +61,19 @@
             <h3><a href="index.html">Table Of Contents</a></h3>
             <ul>
 <li><a class="reference external" href="#">Experiments on Wikipedia</a><ul>
-<li><a class="reference external" href="#preparing-the-corpus">Preparing the corpus</a><ul>
+<li><a class="reference external" href="#preparing-the-corpus">Preparing the corpus</a></li>
 <li><a class="reference external" href="#latent-sematic-analysis">Latent Sematic Analysis</a></li>
 <li><a class="reference external" href="#one-pass-latent-semantic-analysis">One-pass Latent Semantic Analysis</a></li>
 </ul>
 </li>
 </ul>
-</li>
-</ul>
 
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="tut3.html"
+                                  title="previous chapter">Similarity Queries</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="distributed.html"
+                                  title="next chapter">Distributed Computing</a></p>
           <div id="searchbox" style="display: none">
             <h3>Quick search</h3>
               <form class="search" action="search.html" method="get">
@@ -85,7 +99,7 @@
 <span id="wiki"></span><h1>Experiments on Wikipedia<a class="headerlink" href="#experiments-on-wikipedia" title="Permalink to this headline">¶</a></h1>
 <p>To test <cite>gensim</cite> performance, we run it against the English version of Wikipedia.</p>
 <p>This page describes the process of obtaining and processing Wikipedia, so that
-anyone can reproduce our results.</p>
+anyone can reproduce our results. It is assumed you have <cite>gensim</cite> properly <a class="reference external" href="install.html"><em>installed</em></a>.</p>
 <div class="section" id="preparing-the-corpus">
 <h2>Preparing the corpus<a class="headerlink" href="#preparing-the-corpus" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic">
@@ -112,8 +126,9 @@ the dictionary, one to create and store the sparse vectors) and takes about
 15 hours on my laptop, so you may want to go have a coffee or two.
 Also, you will need about 15GB of free disk space to store the sparse output vectors.</p>
 </div>
+</div>
 <div class="section" id="latent-sematic-analysis">
-<h3>Latent Sematic Analysis<a class="headerlink" href="#latent-sematic-analysis" title="Permalink to this headline">¶</a></h3>
+<h2>Latent Sematic Analysis<a class="headerlink" href="#latent-sematic-analysis" title="Permalink to this headline">¶</a></h2>
 <p>First let&#8217;s load the corpus iterator and dictionary, created in the second step above:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span><span class="o">,</span> <span class="nn">gensim</span><span class="o">,</span> <span class="nn">bz2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
@@ -156,7 +171,7 @@ representation in memory. The total processing time is therefore dominated by
 the preprocessing step of preparing the corpus, which took 15h. <a class="footnote-reference" href="#id5" id="id2">[2]</a></p>
 </div>
 <div class="section" id="one-pass-latent-semantic-analysis">
-<h3>One-pass Latent Semantic Analysis<a class="headerlink" href="#one-pass-latent-semantic-analysis" title="Permalink to this headline">¶</a></h3>
+<h2>One-pass Latent Semantic Analysis<a class="headerlink" href="#one-pass-latent-semantic-analysis" title="Permalink to this headline">¶</a></h2>
 <p>In the previous experiment, we had the whole corpus available beforehand and that
 allowed us to make two passes over it and use the fast algorithm. But what if our
 documents come as a non-repeatable stream, or what if the additional cost of
@@ -228,7 +243,7 @@ two-pass algo.</p>
 <table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> My laptop = dual-core 2.53GHz MacBook Pro, 4GB RAM, OS X with <cite>libVec</cite></td></tr>
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> My laptop = dual-core 2.53GHz MacBook Pro, 4GB RAM, OS X with <cite>libVec</cite>.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id5" rules="none">
@@ -258,7 +273,6 @@ By the way, improvements to the Wiki markup parsing code are welcome :-)</p>
 </table>
 </div>
 </div>
-</div>
 
 
           </div>
@@ -275,10 +289,17 @@ By the way, improvements to the Wiki markup parsing code are welcome :-)</p>
         <li class="right" >
           <a href="modindex.html" title="Global Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="distributed.html" title="Distributed Computing"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tut3.html" title="Similarity Queries"
+             >previous</a> |</li>
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
- 
+
+          <li><a href="tutorial.html" >Tutorial</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
