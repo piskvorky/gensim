@@ -12,34 +12,36 @@ It actually contains several algorithms for decomposition of extremely large
 corpora, a combination of which effectively and transparently allows building LSI
 models for:
 
-  * corpora much larger than RAM: only constant memory needed, independent of 
-    the corpus size (though still dependent on the feature set size)
-  * corpora that are streamed: documents are only accessed sequentially, not 
-    random-accessed
-  * corpora that cannot even be temporarily stored, each document can only be 
-    seen once and must be processed immediately (one-pass algorithm)
-  * distributed computing for ultra large corpora, making use of a cluster of 
-    machines
+* corpora much larger than RAM: only constant memory needed, independent of 
+  the corpus size (though still dependent on the feature set size)
+* corpora that are streamed: documents are only accessed sequentially, not 
+  random-accessed
+* corpora that cannot even be temporarily stored, each document can only be 
+  seen once and must be processed immediately (one-pass algorithm)
+* distributed computing for ultra large corpora, making use of a cluster of
+  machines
 
 Wall-clock performance on the English Wikipedia (2G corpus positions, 3.2M 
 documents, 100K features, 0.5G non-zero entries in the final TF-IDF matrix), 
 requesting the top 400 LSI factors:
 
 
-  ------------------------------------------------------------------------
-  |                                           serial      distributed    |
-  | one-pass update algo (chunks=factors)     109h        19h            |
-  | one-pass merge algo (chunks=40K docs)     8.5h        2.2h           |
-  | two-pass randomized algo (chunks=40K)     2.3h        N/A*           |
-  ------------------------------------------------------------------------
+======================================== ============ ==================
+ algorithm                                 serial      distributed    
+======================================== ============ ==================
+ one-pass update algo (chunks=factors)     109h        19h            
+ one-pass merge algo (chunks=40K docs)     8.5h        2.2h           
+ two-pass randomized algo (chunks=40K)     2.3h        N/A [1]_           
+======================================== ============ ==================
 
-serial = Core 2 Duo MacBook Pro 2.53Ghz, 4GB RAM, libVec
-distributed = cluster of six logical nodes on four physical machines, each with 
+*serial* = Core 2 Duo MacBook Pro 2.53Ghz, 4GB RAM, libVec
+
+*distributed* = cluster of six logical nodes on four physical machines, each with 
 dual core Xeon 2.0GHz, 4GB RAM, ATLAS
 
-* the two-pass algo could be distributed too, but most time is already spent 
-reading/decompressing the input from disk, and the extra network traffic due to 
-data distribution would likely make it actually *slower*.
+.. [1] The two-pass algo could be distributed too, but most time is already spent 
+   reading/decompressing the input from disk, and the extra network traffic due to 
+   data distribution would likely make it actually *slower*.
 
 """
 
@@ -281,8 +283,8 @@ class LsiModel(interfaces.TransformationABC):
         
         Example:
         
-        >>> lsi = LsiModel(corpus, numTopics = 10)
-        >>> print lsi[doc_tfidf]
+        >>> lsi = LsiModel(corpus, numTopics=10)
+        >>> print lsi[doc_tfidf] # project some document into LSI space
         >>> lsi.addDocuments(corpus2) # update LSI on additional documents
         >>> print lsi[doc_tfidf]
         
@@ -291,6 +293,10 @@ class LsiModel(interfaces.TransformationABC):
         self.numTopics = int(numTopics)
         self.chunks = int(chunks)
         self.decay = float(decay)
+        if distributed:
+            if not onepass:
+                logger.warning("forcing the one-pass algorithm for distributed LSA")
+                onepass = True
         self.onepass = onepass
         
         if corpus is None and self.id2word is None:
@@ -311,7 +317,7 @@ class LsiModel(interfaces.TransformationABC):
             self.dispatcher = None
         else:
             if not onepass:
-                raise NotImplementedError("distributed randomized LSA not implemented yet; "
+                raise NotImplementedError("distributed stochastic LSA not implemented yet; "
                                           "run either distributed one-pass, or serial randomized.")
             try:
                 import Pyro
@@ -533,12 +539,12 @@ def svdUpdate(U, S, V, a, b):
     You can set V to None if you're not interested in the right singular
     vectors. In that case, the returned V' will also be None (saves memory).
     
-    This is the rank-1 update as described in
-    *Brand, 2006: Fast low-rank modifications of the thin singular value decomposition*,
-    but without separating the basis from rotations.
-    
     The blocked merge algorithm in LsiModel.addDocuments() is much faster; I keep this fnc here
     purely for backup reasons.
+
+    This is the rank-1 update as described in
+    **Brand, 2006: Fast low-rank modifications of the thin singular value decomposition**,
+    but without separating the basis from rotations.
     """
     # convert input to matrices (no copies of data made if already numpy.ndarray or numpy.matrix)
     S = numpy.asmatrix(S)
@@ -604,14 +610,13 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
     
     The algorithm performs at most `numFactors*numIters` passes over the corpus.
     
-    See **Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 
-    Value Decomposition in Natural Language Processing. EACL 2006.**
-    
     Use of this function is deprecated; although it works, it is several orders of 
     magnitude slower than our own, direct (non-stochastic) version (which
-    operates in a single pass, too, and can be distributed). 
+    operates in a single pass, too, and can be distributed). I keep this function 
+    here purely for backup reasons.
     
-    I keep this function here purely for backup reasons.
+    See **Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 
+    Value Decomposition in Natural Language Processing. EACL 2006.**
     """
     logger.info("performing incremental SVD for %i factors" % numFactors)
 
@@ -695,8 +700,7 @@ def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None, d
     only afford a single pass over the input corpus, set onepass=True in LsiModel and 
     avoid using this algorithm.
 
-    The decomposition algorithm is based on stochastic approximation algo from::
-    
+    The decomposition algorithm is based on 
     **Halko, Martinsson, Tropp. Finding structure with randomness, 2009.**
     
     """

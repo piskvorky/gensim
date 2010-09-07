@@ -45,7 +45,7 @@ class Dictionary(utils.SaveLoad):
             self.addDocuments(documents)
     
     
-    # expensive, only here for historical reasons; maybe deprecate?
+    # TODO expensive, only here for historical reasons; maybe deprecate?
     id2token = property(lambda self: dict((id, token) for token, id in self.token2id.iteritems())) 
     id2word = id2token
     

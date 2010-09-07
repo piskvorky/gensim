@@ -5,7 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""USAGE: %(program)s WIKI_XML_DUMP OUTPUT_PREFIX
+"""USAGE: %(program)s WIKI_XML_DUMP OUTPUT_PREFIX [VOCABULARY_SIZE]
 
 Convert articles from a Wikipedia dump to (sparse) vectors. The input is a bz2-compressed \
 dump of Wikipedia articles, in XML format.
@@ -17,6 +17,9 @@ This actually creates three files:
 
 The output Matrix Market files can then be compressed (e.g., by bzip2) to save \
 disk space; gensim's corpus iterators can work with compressed input, too.
+
+VOCABULARY_SIZE controls how many of the most frequent words to keep (after 
+removing all tokens that appear in more than 10% documents). Defaults to 100,000.
 
 Example: ./wikicorpus.py ~/gensim/results/enwiki-20100622-pages-articles.xml.bz2 ~/gensim/results/wiki_en
 """
@@ -38,6 +41,12 @@ logger = logging.getLogger('wikicorpus')
 logger.setLevel(logging.INFO)
 
 
+# Wiki is first scanned for all distinct word types (~7M). The types that appear 
+# in more than 10% of articles are removed and from the rest, the DEFAULT_DICT_SIZE 
+# most frequent types are kept (default 100K).
+DEFAULT_DICT_SIZE = 100000
+
+# Ignore articles shorter than ARTICLE_MIN_CHARS (after preprocessing).
 ARTICLE_MIN_CHARS = 500
 
 
@@ -124,7 +133,7 @@ class WikiCorpus(interfaces.CorpusABC):
     >>> wiki.saveAsText('wiki_en_vocab200k') # another 8h, creates a file in MatrixMarket format plus file with id->word
     
     """
-    def __init__(self, fname, noBelow = 20, keep_words = 200000, dictionary = None):
+    def __init__(self, fname, noBelow = 20, keep_words = DEFAULT_DICT_SIZE, dictionary = None):
         """
         Initialize the corpus. This scans the corpus once, to determine its 
         vocabulary (only the first `keep_words` most frequent words that 
@@ -163,23 +172,38 @@ class WikiCorpus(interfaces.CorpusABC):
     
     
     @staticmethod
-    def loadDictionary(fname):
+    def loadDictionary(fname, mapping_only = True):
         """
         Load previously stored mapping between words and their ids.
         
         The result can be used as the `id2word` parameter for input to transformations.
         """
-        result = {}
-        for lineNo, line in enumerate(open(fname)):
-            cols = line[:-1].split('\t')
-            if len(cols) == 2:
-                wordId, word = cols
-            elif len(cols) == 3:
-                wordId, word, docFreq = cols
-            else:
-                raise ValueError("invalid line in dictionary file %s: %s" % (fname, line.strip()))
-            result[int(wordId)] = word # docFreq not used
+        if mapping_only:
+            result = {}
+            for lineNo, line in enumerate(open(fname)):
+                cols = line[:-1].split('\t')
+                if len(cols) == 2:
+                    wordId, word = cols
+                elif len(cols) == 3:
+                    wordId, word, docFreq = cols
+                else:
+                    raise ValueError("invalid line in dictionary file %s: %s" % (fname, line.strip()))
+                result[int(wordId)] = word # docFreq not used
+        else:
+            result = Dictionary()
+            for lineNo, line in enumerate(open(fname)):
+                cols = line[:-1].split('\t')
+                if len(cols) == 3:
+                    wordId, word, docFreq = cols
+                else:
+                    raise ValueError("invalid line in dictionary file %s: %s" % (fname, line.strip()))
+                wordId = int(wordId)
+                result.token2id[word] = wordId
+                result.docFreq[wordId] = int(docFreq)
+            
         return result
+        
+        
     
     
     def saveAsText(self, fname):
@@ -283,10 +307,14 @@ if __name__ == '__main__':
         print globals()['__doc__'] % locals()
         sys.exit(1)
     input, output = sys.argv[1:3]
+    if len(sys.argv) > 3:
+        keep_words = int(sys.argv[3])
+    else:
+        keep_words = DEFAULT_DICT_SIZE
     
     # build dictionary. only keep 200k most frequent words (out of total ~7m unique tokens)
     # takes about 8h on a macbook pro
-    wiki = WikiCorpus(input, keep_words = 200000)
+    wiki = WikiCorpus(input, keep_words = keep_words)
     
     # save dictionary and bag-of-words
     # another ~8h
