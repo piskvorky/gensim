@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.7.2',
+        VERSION:     '0.7.3',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -106,8 +106,9 @@
 <dt><a href="models/lsimodel.html#gensim.models.lsimodel.clipSpectrum">clipSpectrum() (in module gensim.models.lsimodel)</a></dt>
 <dt><a href="distributed.html#term-cluster">Cluster</a></dt>
 <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.computeLikelihood">computeLikelihood() (gensim.models.ldamodel.LdaModel method)</a></dt>
-<dt><a href="intro.html#term-corpus">Corpus</a></dt></dl></td><td width="33%" valign="top"><dl>
-<dt><a href="matutils.html#gensim.matutils.corpus2csc">corpus2csc() (in module gensim.matutils)</a></dt>
+<dt><a href="intro.html#term-corpus">Corpus</a></dt>
+<dt><a href="matutils.html#gensim.matutils.corpus2csc">corpus2csc() (in module gensim.matutils)</a></dt></dl></td><td width="33%" valign="top"><dl>
+<dt><a href="matutils.html#gensim.matutils.corpus2dense">corpus2dense() (in module gensim.matutils)</a></dt>
 <dt><a href="interfaces.html#gensim.interfaces.CorpusABC">CorpusABC (class in gensim.interfaces)</a></dt>
 <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.countsFromCorpus">countsFromCorpus() (gensim.models.ldamodel.LdaModel method)</a></dt>
 </dl></td></tr></table>
@@ -118,6 +119,7 @@
 
 <dt><a href="utils.html#gensim.utils.deaccent">deaccent() (in module gensim.utils)</a></dt>
 <dt><a href="utils.html#gensim.utils.decode_htmlentities">decode_htmlentities() (in module gensim.utils)</a></dt>
+<dt><a href="matutils.html#gensim.matutils.Dense2Corpus">Dense2Corpus (class in gensim.matutils)</a></dt>
 <dt><a href="utils.html#gensim.utils.dictFromCorpus">dictFromCorpus() (in module gensim.utils)</a></dt>
 <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary">Dictionary (class in gensim.corpora.dictionary)</a></dt>
 <dt><a href="distributed.html#term-dispatcher">Dispatcher</a></dt></dl></td><td width="33%" valign="top"><dl>
@@ -132,8 +134,9 @@
 <dl>
 
 <dt><a href="utils.html#gensim.utils.FakeDict">FakeDict (class in gensim.utils)</a></dt>
-<dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.filterExtremes">filterExtremes() (gensim.corpora.dictionary.Dictionary method)</a></dt></dl></td><td width="33%" valign="top"><dl>
-<dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.filterTokens">filterTokens() (gensim.corpora.dictionary.Dictionary method)</a></dt>
+<dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.filterExtremes">filterExtremes() (gensim.corpora.dictionary.Dictionary method)</a></dt>
+<dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.filterTokens">filterTokens() (gensim.corpora.dictionary.Dictionary method)</a></dt></dl></td><td width="33%" valign="top"><dl>
+<dt><a href="matutils.html#gensim.matutils.full2sparse">full2sparse() (in module gensim.matutils)</a></dt>
 </dl></td></tr></table>
 
 <h2 id="G">G</h2>
@@ -301,6 +304,7 @@
 <dt><a href="intro.html#term-sparse-vector">Sparse vector</a></dt>
 <dt><a href="matutils.html#gensim.matutils.sparse2full">sparse2full() (in module gensim.matutils)</a></dt>
 <dt><a href="similarities/docsim.html#gensim.similarities.docsim.SparseMatrixSimilarity">SparseMatrixSimilarity (class in gensim.similarities.docsim)</a></dt>
+<dt><a href="models/lsimodel.html#gensim.models.lsimodel.stochasticSvd">stochasticSvd() (in module gensim.models.lsimodel)</a></dt>
 <dt><a href="models/lsimodel.html#gensim.models.lsimodel.svdUpdate">svdUpdate() (in module gensim.models.lsimodel)</a></dt>
 <dt><a href="corpora/svmlightcorpus.html#gensim.corpora.svmlightcorpus.SvmLightCorpus">SvmLightCorpus (class in gensim.corpora.svmlightcorpus)</a></dt>
 <dt><a href="utils.html#gensim.utils.synchronous">synchronous() (in module gensim.utils)</a></dt>
@@ -362,7 +366,7 @@
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 01, 2010.
+      Last updated on Sep 07, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

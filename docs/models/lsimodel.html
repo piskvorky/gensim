@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.7.2',
+        VERSION:     '0.7.3',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -88,9 +88,63 @@
   <div class="section" id="module-gensim.models.lsimodel">
 <h1><tt class="xref docutils literal"><span class="pre">models.lsimodel</span></tt> &#8211; Latent Semantic Indexing<a class="headerlink" href="#module-gensim.models.lsimodel" title="Permalink to this headline">¶</a></h1>
 <p>Module for Latent Semantic Indexing.</p>
+<p>It actually contains several algorithms for decomposition of extremely large 
+corpora, a combination of which effectively and transparently allows building LSI
+models for:</p>
+<ul class="simple">
+<li>corpora much larger than RAM: only constant memory needed, independent of 
+the corpus size (though still dependent on the feature set size)</li>
+<li>corpora that are streamed: documents are only accessed sequentially, not 
+random-accessed</li>
+<li>corpora that cannot even be temporarily stored, each document can only be 
+seen once and must be processed immediately (one-pass algorithm)</li>
+<li>distributed computing for ultra large corpora, making use of a cluster of
+machines</li>
+</ul>
+<p>Wall-clock performance on the English Wikipedia (2G corpus positions, 3.2M 
+documents, 100K features, 0.5G non-zero entries in the final TF-IDF matrix), 
+requesting the top 400 LSI factors:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="57%" />
+<col width="17%" />
+<col width="26%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">algorithm</th>
+<th class="head">serial</th>
+<th class="head">distributed</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>one-pass update algo (chunks=factors)</td>
+<td>109h</td>
+<td>19h</td>
+</tr>
+<tr><td>one-pass merge algo (chunks=40K docs)</td>
+<td>8.5h</td>
+<td>2.2h</td>
+</tr>
+<tr><td>two-pass randomized algo (chunks=40K)</td>
+<td>2.3h</td>
+<td>N/A <a class="footnote-reference" href="#id2" id="id1">[1]</a></td>
+</tr>
+</tbody>
+</table>
+<p><em>serial</em> = Core 2 Duo MacBook Pro 2.53Ghz, 4GB RAM, libVec</p>
+<p><em>distributed</em> = cluster of six logical nodes on four physical machines, each with 
+dual core Xeon 2.0GHz, 4GB RAM, ATLAS</p>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>The two-pass algo could be distributed too, but most time is already spent 
+reading/decompressing the input from disk, and the extra network traffic due to 
+data distribution would likely make it actually <em>slower</em>.</td></tr>
+</tbody>
+</table>
 <dl class="class">
 <dt id="gensim.models.lsimodel.LsiModel">
-<em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus=None</em>, <em>id2word=None</em>, <em>numTopics=200</em>, <em>chunks=None</em>, <em>decay=1.0</em>, <em>serial_only=None</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus=None</em>, <em>numTopics=200</em>, <em>id2word=None</em>, <em>chunks=20000</em>, <em>decay=1.0</em>, <em>distributed=False</em>, <em>onepass=False</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Objects of this class allow building and maintaining a model for Latent 
 Semantic Indexing (also known as Latent Semantic Analysis).</p>
 <p>The main methods are:</p>
@@ -109,13 +163,13 @@ so that training can be stopped and resumed at any time, and the
 LSI transformation is available at any point.</p>
 <p>If you specify a <cite>corpus</cite>, it will be used to train the model. See the 
 method <cite>addDocuments</cite> for a description of the <cite>chunks</cite> and <cite>decay</cite> parameters.</p>
-<p>The algorithm will automatically try to find active nodes on other computers
-and run in a distributed manner; if this fails, it falls back to serial mode
-(single core). To suppress distributed computing, set the <cite>serial_only</cite>
-constructor parameter to True.</p>
+<p>If your document stream is one-pass only (the stream cannot be repeated),
+turn on <cite>onepass</cite> to force a single pass SVD algorithm (slower).</p>
+<p>Turn on <cite>distributed</cite> to enforce distributed computing (only makes sense 
+if <cite>onepass</cite> is set at the same time, too).</p>
 <p>Example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">lsi</span><span class="p">[</span><span class="n">doc_tfidf</span><span class="p">]</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">lsi</span><span class="p">[</span><span class="n">doc_tfidf</span><span class="p">]</span> <span class="c"># project some document into LSI space</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">addDocuments</span><span class="p">(</span><span class="n">corpus2</span><span class="p">)</span> <span class="c"># update LSI on additional documents</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">lsi</span><span class="p">[</span><span class="n">doc_tfidf</span><span class="p">]</span>
 </pre></div>
@@ -123,16 +177,16 @@ constructor parameter to True.</p>
 <dl class="method">
 <dt id="gensim.models.lsimodel.LsiModel.addDocuments">
 <tt class="descname">addDocuments</tt><big>(</big><em>corpus</em>, <em>chunks=None</em>, <em>decay=None</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.addDocuments" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update singular value decomposition factors to take into account a new 
+<dd><p>Update singular value decomposition to take into account a new 
 corpus of documents.</p>
-<p>Training proceeds in chunks of <cite>chunks</cite> documents at a time. If the 
-distributed mode is on, each chunk is sent to a different worker/computer.
-Size of <cite>chunks</cite> is a tradeoff between increased speed (bigger <cite>chunks</cite>) vs. 
-lower memory footprint (smaller <cite>chunks</cite>).</p>
+<p>Training proceeds in chunks of <cite>chunks</cite> documents at a time. The size of 
+<cite>chunks</cite> is a tradeoff between increased speed (bigger <cite>chunks</cite>) 
+vs. lower memory footprint (smaller <cite>chunks</cite>). If the distributed mode 
+is on, each chunk is sent to a different worker/computer.</p>
 <p>Setting <cite>decay</cite> &lt; 1.0 causes re-orientation towards new data trends in the 
 input document stream, by giving less emphasis to old observations. This allows
-SVD to gradually &#8220;forget&#8221; old observations and give more preference to 
-new ones. The decay is applied once after every <cite>chunks</cite> documents.</p>
+SVD to gradually &#8220;forget&#8221; old observations (documents) and give more 
+preference to new ones.</p>
 </dd></dl>
 
 <dl class="classmethod">
@@ -171,9 +225,12 @@ of the topic (both negative and positive).</p>
 
 <dl class="function">
 <dt id="gensim.models.lsimodel.clipSpectrum">
-<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">clipSpectrum</tt><big>(</big><em>s</em>, <em>k</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.clipSpectrum" title="Permalink to this definition">¶</a></dt>
-<dd>Given singular values <cite>s</cite>, return how many factors should be kept to avoid
-storing spurious values. The returned value is at most <cite>k</cite>.</dd></dl>
+<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">clipSpectrum</tt><big>(</big><em>s</em>, <em>k</em>, <em>discard=0.001</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.clipSpectrum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given eigenvalues <cite>s</cite>, return how many factors should be kept to avoid
+storing spurious (tiny, numerically instable) values.</p>
+<p>This will ignore the tail of the spectrum with relative combined mass &lt; min(<cite>discard</cite>, 1/k).</p>
+<p>The returned value is clipped against <cite>k</cite> (= at most <cite>k</cite> factors).</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="gensim.models.lsimodel.iterSvd">
@@ -183,12 +240,27 @@ storing spurious values. The returned value is at most <cite>k</cite>.</dd></dl>
 <p>The parameters <cite>numIter</cite> (maximum number of iterations) and <cite>initRate</cite> (gradient 
 descent step size) guide convergency of the algorithm.</p>
 <p>The algorithm performs at most <cite>numFactors*numIters</cite> passes over the corpus.</p>
-<p>See <strong>Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 
-Value Decomposition in Natural Language Processing. EACL 2006.</strong></p>
 <p>Use of this function is deprecated; although it works, it is several orders of 
 magnitude slower than our own, direct (non-stochastic) version (which
-operates in a single pass, too, and can be distributed).</p>
-<p>I keep this function here purely for backup reasons.</p>
+operates in a single pass, too, and can be distributed). I keep this function 
+here purely for backup reasons.</p>
+<p>See <strong>Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 
+Value Decomposition in Natural Language Processing. EACL 2006.</strong></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.models.lsimodel.stochasticSvd">
+<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">stochasticSvd</tt><big>(</big><em>corpus</em>, <em>rank</em>, <em>num_terms=None</em>, <em>chunks=20000</em>, <em>extra_dims=None</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em>, <em>eps=9.9999999999999995e-07</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.stochasticSvd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return U, S &#8211; the left singular vectors and the singular values of the streamed 
+input corpus.</p>
+<p>This may actually return less than the requested number of top <cite>rank</cite> factors, 
+in case the input is of lower rank. Also note that the decomposition is unique
+up the the sign of the left singular vectors (columns of U).</p>
+<p>This is a streamed, two-pass algorithm, without power-itrations. In case you can 
+only afford a single pass over the input corpus, set onepass=True in LsiModel and 
+avoid using this algorithm.</p>
+<p>The decomposition algorithm is based on 
+<strong>Halko, Martinsson, Tropp. Finding structure with randomness, 2009.</strong></p>
 </dd></dl>
 
 <dl class="function">
@@ -197,13 +269,15 @@ operates in a single pass, too, and can be distributed).</p>
 <dd><p>Update SVD of an (m x n) matrix <cite>X = U * S * V^T</cite> so that
 <cite>[X + a * b^T] = U&#8217; * S&#8217; * V&#8217;^T</cite>
 and return <cite>U&#8217;</cite>, <cite>S&#8217;</cite>, <cite>V&#8217;</cite>.</p>
-<p>The original matrix X is not needed at all, so this function implements flexible 
-<em>online</em> updates to an existing decomposition.</p>
+<p>The original matrix X is not needed at all, so this function implements one-pass
+streaming rank-1 updates to an existing decomposition.</p>
 <p><cite>a</cite> and <cite>b</cite> are (m, 1) and (n, 1) matrices.</p>
 <p>You can set V to None if you&#8217;re not interested in the right singular
 vectors. In that case, the returned V&#8217; will also be None (saves memory).</p>
+<p>The blocked merge algorithm in LsiModel.addDocuments() is much faster; I keep this fnc here
+purely for backup reasons.</p>
 <p>This is the rank-1 update as described in
-<em>Brand, 2006: Fast low-rank modifications of the thin singular value decomposition</em>,
+<strong>Brand, 2006: Fast low-rank modifications of the thin singular value decomposition</strong>,
 but without separating the basis from rotations.</p>
 </dd></dl>
 
@@ -239,7 +313,7 @@ but without separating the basis from rotations.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 01, 2010.
+      Last updated on Sep 07, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

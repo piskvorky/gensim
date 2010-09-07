@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.7.2',
+        VERSION:     '0.7.3',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -115,11 +115,11 @@ memory. We will therefore run <strong>two</strong> worker scripts on four of the
 creating <strong>eight</strong> logical worker nodes:</p>
 <div class="highlight-python"><pre>$ python -m gensim.models.lsi_worker &amp;</pre>
 </div>
-<p>This will execute <cite>gensim</cite>&#8216;s <cite>lsi_worker.py</cite> script, to be run twice on each of the
-four computer.
+<p>This will execute <cite>gensim</cite>&#8216;s <cite>lsi_worker.py</cite> script (to be run twice on each of the
+four computer).
 This lets <cite>gensim</cite> know that it can run two jobs on each of the four computers in
-parallel, so that the computation will be done faster (but also taking up twice
-as much memory on each machine).</p>
+parallel, so that the computation will be done faster, while also taking up twice
+as much memory on each machine.</p>
 <p>Next, pick one computer that will be a job scheduler in charge of worker
 synchronization, and on it, run <cite>LSA dispatcher</cite>. In our example, we will use the
 fifth computer to act as the dispatcher and from there run:</p>
@@ -142,12 +142,12 @@ in the same <a class="reference external" href="http://en.wikipedia.org/wiki/Bro
 our choice is incidental) and try:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">utils</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.mm&#39;</span><span class="p">)</span> <span class="c"># load a corpus of nine documents, from the Tutorials</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.dict&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">id2token</span>
-<span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="c"># run distributed LSA on nine documents</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="c"># run distributed LSA on nine documents</span>
 </pre></div>
 </div>
 <p>This uses the corpus and feature-token mapping created in the <a class="reference external" href="tut1.html"><em>Corpora and Vector Spaces</em></a> tutorial.
@@ -157,7 +157,7 @@ If you look at the log in your Python session, you should see a line similar to:
 <p>which means all went well. You can also check the logs coming from your worker and dispatcher
 processes &#8212; this is especially helpful in case of problems.
 To check the LSA results, let&#8217;s print the first two latent topics:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="n">lsi</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">topN</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="n">numTopics</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">numWords</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="go">0.644 * &quot;survey&quot; + 0.404 * &quot;response&quot; + 0.301 * &quot;user&quot; + 0.265 * &quot;time&quot; + 0.265 * &quot;system&quot;</span>
 <span class="go">0.623 * &quot;graph&quot; + 0.490 * &quot;trees&quot; + 0.451 * &quot;minors&quot; + 0.274 * &quot;eps&quot; + -0.167 * &quot;survey&quot;</span>
 </pre></div>
@@ -169,16 +169,9 @@ at a time, otherwise all documents would be processed by a single worker all at 
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># inflate the corpus to 1M documents, by repeating it over&amp;over</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus1m</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">RepeatCorpus</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># run distributed LSA on 1 million documents</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus1m</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">serial_only</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The <cite>serial_only</cite> parameter instructs <cite>gensim</cite> whether to run in serial or distributed mode.
-Setting <cite>serial_only=True</cite> will result in LSA running inside the active Python shell, without
-any inter-node communication whatsoever, even if there are worker nodes available.
-Setting <cite>serial_only=False</cite> forces distributed mode (raising an exception in
-case of failure). And finally, leaving <cite>serial_only</cite> unspecified tells <cite>gensim</cite>
-to try running in distributed mode, or, failing that, run in serial mode.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span> <span class="n">lsi1m</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">topN</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus1m</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="n">numTopics</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">numWords</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="go">-0.644 * &quot;survey&quot; + -0.404 * &quot;response&quot; + -0.301 * &quot;user&quot; + -0.265 * &quot;time&quot; + -0.265 * &quot;system</span>
 <span class="go">0.623 * &quot;graph&quot; + 0.490 * &quot;trees&quot; + 0.451 * &quot;minors&quot; + 0.274 * &quot;eps&quot; + -0.167 * &quot;survey&quot;</span>
 </pre></div>
@@ -198,40 +191,24 @@ to try running in distributed mode, or, failing that, run in serial mode.</p>
 <p>Due to the small vocabulary size and trivial structure of our &#8220;one-million corpus&#8221;, the computation
 of LSA still takes only 12 seconds. To really stress-test our cluster, let&#8217;s do
 Latent Semantic Analysis on the English Wikipedia.</p>
-<p>First, download the dump of all Wikipedia articles from <a class="reference external" href="http://download.wikimedia.org/enwiki/">http://download.wikimedia.org/enwiki/</a>
-(you want a file like <cite>enwiki-latest-pages-articles.xml.bz2</cite>). This file is about 6GB in size
-and contains (compressed version) of all articles from the English Wikipedia.
-Before we can run LSA, we need to convert them to plain text (process and filter Wiki
-mark-up) and store the result as sparse TF-IDF vectors. In Python, this is
-easy to do and we don&#8217;t even need to uncompress the archive; the computation can
-be done incrementally, over the compressed file. We will however use a script that
-stores the resulting TF-IDF vectors to disk, so that we don&#8217;t have to re-parse
-the dump from scratch every time we want to iterate over the corpus:</p>
-<div class="highlight-python"><pre>$ python -m gensim.corpora.wikicorpus # will print cmdline help</pre>
-</div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">This pre-processing step makes two passes over the 6GB wiki dump (one to extract
-the dictionary, one to covert and store the vectors) and takes about
-15 hours on a Macbook Pro, so you may want to go have a coffee or two.
-Also, you will need about 14GB of free disk space to store the output vectors.</p>
-</div>
-<p>Now we&#8217;re ready to compute LSA:</p>
+<p>First, download and prepare the Wikipedia corpus as per <a class="reference external" href="wiki.html"><em>Experiments on Wikipedia</em></a>, then load
+the corpus iterator with:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span><span class="o">,</span> <span class="nn">gensim</span><span class="o">,</span> <span class="nn">bz2</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># load id-&gt;word mapping (the dictionary)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">wikicorpus</span><span class="o">.</span><span class="n">WikiCorpus</span><span class="o">.</span><span class="n">loadDictionary</span><span class="p">(</span><span class="s">&#39;wiki_en_wordids.txt&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># load corpus iterator</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mm</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;wiki_en_tfidf.mm&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># mm = gensim.corpora.MmCorpus(bz2.BZ2File(&#39;wiki_en_tfidf.mm.bz2&#39;)) # use this if you compressed the TFIDF output</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mm</span>
+<span class="go">MmCorpus(3199665 documents, 100000 features, 495547400 non-zero entries)</span>
 </pre></div>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mm</span>
-<span class="go">MmCorpus(3146817 documents, 200000 features, 498484783 non-zero entries)</span>
-</pre></div>
-</div>
+<p>Now we&#8217;re ready to run distributed LSA on the English Wikipedia:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 400 LSI topics</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">20000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">40000</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># print the most contributing words (both positively and negatively) for each of the first ten topics</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">printDebug</span><span class="p">(</span><span class="n">numTopics</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="go">2010-09-01 10:12:55,058 : INFO : computing word-topic salience for 10 topics</span>
@@ -247,8 +224,10 @@ Also, you will need about 14GB of free disk space to store the output vectors.</
 <span class="go">2010-09-01 10:13:21,246 : INFO : topic #9(78.150): film(0.556), directorial(0.007), directed(0.104), remake(0.007), cassavetes(0.001), theatrically(0.003), ebert(0.004), projectionist(0.001), starring(0.046), films(0.427), ..., 분류(-0.036), kategória(-0.044), kategori(-0.175), categoría(-0.057), kategoria(-0.056)</span>
 </pre></div>
 </div>
-<p>In serial mode, creating the LSI model of Wikipedia takes about 14h on my laptop (OS X, dual-core 2.53GHz, 4GB RAM with <cite>libVec</cite>).
-In distributed mode with eight workers (Linux, dual-core Xeons of 2Ghz, 4GB RAM with <cite>ATLAS</cite>), the wallclock time taken drops to 2 hours and 23 minutes.</p>
+<p>In serial mode, creating the LSI model of Wikipedia with this one-pass algorithm
+takes about 8.5h on my laptop (OS X, dual-core 2.53GHz, 4GB RAM with <cite>libVec</cite>).
+In distributed mode with six workers (Linux, dual-core Xeons of 2Ghz, 4GB RAM
+with <cite>ATLAS</cite>), the wallclock time taken drops to 2 hours and 23 minutes.</p>
 </div>
 </div>
 
@@ -282,7 +261,7 @@ In distributed mode with eight workers (Linux, dual-core Xeons of 2Ghz, 4GB RAM 
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 01, 2010.
+      Last updated on Sep 07, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>
