@@ -1,26 +1,26 @@
 ==============================================
-gensim -- Python Framework for Topic Modeling
+gensim -- Python Framework for Topic Modelling
 ==============================================
 
 
 
-`gensim` is a Python library for *Vector Space Modelling* with very large corpora. 
+Gensim is a Python library for *Vector Space Modelling* with very large corpora. 
 Target audience is the *Natural Language Processing* (NLP) community.
 
 
 Features
 ---------
 
-* all algorithms are **memory-independent** w.r.t. the corpus size (can process input larger than RAM)
-* **simple, intuitive interfaces** (think `java`... then think again)
+* All algorithms are **memory-independent** w.r.t. the corpus size (can process input larger than RAM),
+* **Intuitive interfaces** (think `java`... then think again)
 
   * easy to plug in your own input corpus/datastream (simple streaming API)
   * easy to extend with other Vector Space algorithms (simple transformation API)
 
-* efficient streaming implementations of popular algorithms, such as online **Latent Semantic Analysis**, 
+* Efficient streaming implementations of popular algorithms, such as online **Latent Semantic Analysis**, 
   **Latent Dirichlet Allocation** or **Random Projections**
-* can run Latent Semantic Analysis on a cluster of computers (**distributed computing**)
-* extensive `HTML documentation and tutorials <http://nlp.fi.muni.cz/projekty/gensim/>`_.
+* Can run Latent Semantic Analysis on a cluster of computers (**distributed computing**).
+* Extensive `HTML documentation and tutorials <http://nlp.fi.muni.cz/projekty/gensim/>`_.
 
 
 If this feature list left you scratching your head, you can first read more about the `Vector 

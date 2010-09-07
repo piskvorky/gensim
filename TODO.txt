@@ -1,9 +1,9 @@
 Changes for future releases:
 -----------------------------
 
+* promote `gensim` on some mailing lists/get help from more developers
+* add GUI (web browser-based) to distributed computing -- manage active nodes, status, node load, failures, etc.
+* re-implement LDA after Asuncion: "On Smoothing and Inference for Topic Models"
+* implement distributed LDA (get in touch with Mr. Asuncion?)
 * more extensive unit testing
 * improve documentation
-* re-implement LDA after Asuncion: "On Smoothing and Inference for Topic Models"
-* implement distributed LDA
-* add GUI (web browser-based) to distributed LSI -- manage active nodes, status, node load, failures, etc.
-* promote `gensim` on some mailing lists/get help from more developers
