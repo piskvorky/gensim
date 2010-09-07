@@ -158,12 +158,11 @@ Gensim implements several popular Vector Space Model algorithms:
   2 latent dimensions, but on real corpora, target dimensionality of 200--500 is recommended
   as a "golden standard" [1]_.
   
-  >>> model = lsimodel.LsiModel(tfidf_corpus, id2word = dictionary.id2token, numTopics = 300)
+  >>> model = lsimodel.LsiModel(tfidf_corpus, id2word=dictionary.id2token, numTopics=300)
 
-  LSI training is unique in that it only inspects each input document
-  once. This allows us to continue "training" at any point, simply by providing more
-  training documents. This is done by incremental updates to the underlying model,
-  in a process called `online training`. Because of this feature, the
+  LSI training is unique in that we can continue "training" at any point, simply 
+  by providing more training documents. This is done by incremental updates to 
+  the underlying model, in a process called `online training`. Because of this feature, the
   input document stream may even be infinite -- just keep feeding LSI new documents
   as they arrive, while using the computed transformation model as read-only in the meanwhile!
   
@@ -177,6 +176,9 @@ Gensim implements several popular Vector Space Model algorithms:
   See the :mod:`gensim.models.lsimodel` documentation for details on how to make
   LSI gradually "forget" old observations in infinite streams and how to tweak parameters
   affecting speed vs. memory footprint vs. numerical precision of the algorithm.
+  
+  For a discussion of two-pass vs. one-pass LSA algorithms (both are available 
+  in `gensim`), look at :doc:`wiki`.
 
 * `Random Projections, RP <http://www.cis.hut.fi/ella/publications/randproj_kdd.pdf>`_ aim to
   reduce vector space dimensionality. This is a very efficient (both memory- and

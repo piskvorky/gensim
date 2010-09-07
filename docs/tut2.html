@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.7.2',
+        VERSION:     '0.7.3',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -245,13 +245,12 @@ transforms documents from either bag-of-words or (preferrably) TfIdf-weighted sp
 a latent space of a lower dimensionality. For the toy corpus above we used only
 2 latent dimensions, but on real corpora, target dimensionality of 200&#8211;500 is recommended
 as a &#8220;golden standard&#8221; <a class="footnote-reference" href="#id5" id="id1">[1]</a>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">tfidf_corpus</span><span class="p">,</span> <span class="n">id2word</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">id2token</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">300</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">tfidf_corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="o">.</span><span class="n">id2token</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>LSI training is unique in that it only inspects each input document
-once. This allows us to continue &#8220;training&#8221; at any point, simply by providing more
-training documents. This is done by incremental updates to the underlying model,
-in a process called <cite>online training</cite>. Because of this feature, the
+<p>LSI training is unique in that we can continue &#8220;training&#8221; at any point, simply
+by providing more training documents. This is done by incremental updates to
+the underlying model, in a process called <cite>online training</cite>. Because of this feature, the
 input document stream may even be infinite &#8211; just keep feeding LSI new documents
 as they arrive, while using the computed transformation model as read-only in the meanwhile!</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">addDocuments</span><span class="p">(</span><span class="n">another_tfidf_corpus</span><span class="p">)</span> <span class="c"># now LSI has been trained on tfidf_corpus + another_tfidf_corpus</span>
@@ -265,6 +264,8 @@ as they arrive, while using the computed transformation model as read-only in th
 <p>See the <a title="Latent Semantic Indexing" class="reference external" href="models/lsimodel.html#module-gensim.models.lsimodel"><tt class="xref docutils literal"><span class="pre">gensim.models.lsimodel</span></tt></a> documentation for details on how to make
 LSI gradually &#8220;forget&#8221; old observations in infinite streams and how to tweak parameters
 affecting speed vs. memory footprint vs. numerical precision of the algorithm.</p>
+<p>For a discussion of two-pass vs. one-pass LSA algorithms (both are available
+in <cite>gensim</cite>), look at <a class="reference external" href="wiki.html"><em>Experiments on Wikipedia</em></a>.</p>
 </li>
 <li><p class="first"><a class="reference external" href="http://www.cis.hut.fi/ella/publications/randproj_kdd.pdf">Random Projections, RP</a> aim to
 reduce vector space dimensionality. This is a very efficient (both memory- and
@@ -343,7 +344,7 @@ If you feel you could contribute, please <a class="reference external" href="mai
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 01, 2010.
+      Last updated on Sep 07, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

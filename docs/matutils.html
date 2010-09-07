@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.7.2',
+        VERSION:     '0.7.3',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -89,6 +89,14 @@
 <h1><tt class="xref docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils<a class="headerlink" href="#module-gensim.matutils" title="Permalink to this headline">¶</a></h1>
 <p>This module contains math helper functions.</p>
 <dl class="class">
+<dt id="gensim.matutils.Dense2Corpus">
+<em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">Dense2Corpus</tt><big>(</big><em>dense</em>, <em>documents_columns=True</em><big>)</big><a class="headerlink" href="#gensim.matutils.Dense2Corpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Treat dense numpy array as a sparse gensim corpus.</p>
+<p>No data copy is made (changes to the underlying matrix imply changes in the 
+corpus).</p>
+</dd></dl>
+
+<dl class="class">
 <dt id="gensim.matutils.MmReader">
 <em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">MmReader</tt><big>(</big><em>input</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmReader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrap a term-document matrix on disk (in matrix-market format), and present it 
@@ -127,9 +135,20 @@ is allowed to be larger than the available RAM.</p>
 
 <dl class="function">
 <dt id="gensim.matutils.corpus2csc">
-<tt class="descclassname">gensim.matutils.</tt><tt class="descname">corpus2csc</tt><big>(</big><em>m</em>, <em>corpus</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em><big>)</big><a class="headerlink" href="#gensim.matutils.corpus2csc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format.</p>
-<p>The corpus must not be empty (at least one document).</p>
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">corpus2csc</tt><big>(</big><em>corpus</em>, <em>num_terms</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em><big>)</big><a class="headerlink" href="#gensim.matutils.corpus2csc" title="Permalink to this definition">¶</a></dt>
+<dd>Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format, 
+with documents as columns.</dd></dl>
+
+<dl class="function">
+<dt id="gensim.matutils.corpus2dense">
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">corpus2dense</tt><big>(</big><em>corpus</em>, <em>num_terms</em><big>)</big><a class="headerlink" href="#gensim.matutils.corpus2dense" title="Permalink to this definition">¶</a></dt>
+<dd>Convert corpus into a dense numpy array (documents will be columns).</dd></dl>
+
+<dl class="function">
+<dt id="gensim.matutils.full2sparse">
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">full2sparse</tt><big>(</big><em>vec</em>, <em>eps=1.0000000000000001e-09</em><big>)</big><a class="headerlink" href="#gensim.matutils.full2sparse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a dense numpy array into the sparse corpus format (sequence of 2-tuples).</p>
+<p>Values of magnitude &lt; <cite>eps</cite> are treated as zero (ignored).</p>
 </dd></dl>
 
 <dl class="function">
@@ -141,8 +160,8 @@ will be initialized with zeros.</dd></dl>
 <dl class="function">
 <dt id="gensim.matutils.sparse2full">
 <tt class="descclassname">gensim.matutils.</tt><tt class="descname">sparse2full</tt><big>(</big><em>doc</em>, <em>length</em><big>)</big><a class="headerlink" href="#gensim.matutils.sparse2full" title="Permalink to this definition">¶</a></dt>
-<dd>Convert document in sparse format (sequence of 2-tuples) into a full numpy
-array (of size <cite>length</cite>).</dd></dl>
+<dd>Convert a document in sparse corpus format (sequence of 2-tuples) into a dense 
+numpy array (of size <cite>length</cite>).</dd></dl>
 
 <dl class="function">
 <dt id="gensim.matutils.unitVec">
@@ -185,7 +204,7 @@ output will be a numpy array.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 01, 2010.
+      Last updated on Sep 07, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

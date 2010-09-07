@@ -10,17 +10,21 @@ Gensim -- Python Framework for Vector Space Modelling
 
    Version |version| is `out <http://pypi.python.org/pypi/gensim>`_!
    
-   * Latent Semantic Indexing is now faster, consumes less memory, **and** can be run in :doc:`distributed mode <distributed>`!
+   * Latent Semantic Indexing is now **faster**, consumes **less memory** and can be run in :doc:`distributed mode <distributed>`!
    * Optimizations to vocabulary generation.
    * Input corpus iterator can come from a compressed file (bzip2, gzip, ...), to save disk space when dealing with
      very large corpora.
    
-   If you have a cluster of computers, the time taken to process a given corpus 
-   with our distributed LSA algorithm drops almost
-   linearly with the number of machines. Of course, the option of incrementally adding 
-   new documents to an existing decomposition, without the need to recompute everything 
-   from scratch, remains from the previous version. This means that your document
-   input stream may even be infinite in size, with new documents coming in asynchronously.
+   `gensim` now contains two algorithms for Latent Semantic Indexing:
+   
+   1. streamed **two-pass algorithm**: takes :doc:`2 hours on the English Wikipedia (3.2 mil. documents) <wiki>`.
+   2. streamed **single pass algorithm**: slower (takes 8.5h), but only accesses each document 
+      once; use this if your input comes streaming in and you cannot store it
+      persistently.
+   
+   Of course, the option of incrementally adding new documents to an existing 
+   decomposition, without the need to recompute everything 
+   from scratch, remains from the previous version.
 
 ..
    To read more about the theoretical side of things, check out our new `draft paper <http://todo>`_.
