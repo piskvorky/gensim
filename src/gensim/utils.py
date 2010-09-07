@@ -210,11 +210,9 @@ def isCorpus(obj):
     """
     try:
         if hasattr(obj, 'next'):
-            if hasattr(obj, '__iter__'):
-                logger.warning("corpus-testing objects that are both iterators and iterables is ambiguous; assuming iterator (one-pass).")
-            # the input is an iterator (not iterable), meaning once we call next()
-            # that element is gone forever. we must be careful to put whatever we
-            # retrieve back again
+            # the input is an iterator object, meaning once we call next()
+            # that element could be gone forever. we must be careful to put 
+            # whatever we retrieve back again
             doc1 = obj.next()
             obj = itertools.chain([doc1], obj)
         else:
