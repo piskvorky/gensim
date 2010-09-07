@@ -61,8 +61,8 @@
 <li><a class="reference external" href="#">Installation</a><ul>
 <li><a class="reference external" href="#install-python">Install Python</a></li>
 <li><a class="reference external" href="#install-scipy-numpy">Install SciPy &amp; NumPy</a></li>
-<li><a class="reference external" href="#install-gensim">Install gensim</a></li>
-<li><a class="reference external" href="#testing-gensim">Testing gensim</a></li>
+<li><a class="reference external" href="#install-gensim">Install <cite>gensim</cite></a></li>
+<li><a class="reference external" href="#testing-gensim">Testing <cite>gensim</cite></a></li>
 <li><a class="reference external" href="#contact">Contact</a></li>
 </ul>
 </li>
@@ -127,13 +127,13 @@ sudo easy_install scipy</pre>
 <a class="reference external" href="http://www.scipy.org/Download">http://www.scipy.org/Download</a>.</p>
 </div>
 <div class="section" id="install-gensim">
-<h2>Install gensim<a class="headerlink" href="#install-gensim" title="Permalink to this headline">¶</a></h2>
-<p>You can now install (or upgrade) gensim with:</p>
+<h2>Install <cite>gensim</cite><a class="headerlink" href="#install-gensim" title="Permalink to this headline">¶</a></h2>
+<p>You can now install (or upgrade) <cite>gensim</cite> with:</p>
 <div class="highlight-python"><pre>sudo easy_install --upgrade gensim[lsi]</pre>
 </div>
-<p>That&#8217;s it! Congratulations, you can now proceed to the <a class="reference external" href="tutorial.html"><em>tutorials</em></a>.</p>
-<p>In case you won&#8217;t be using Latent Semantic Analysis, you can omit the optional <cite>[lsi]</cite>
-feature and install with:</p>
+<p>That&#8217;s it! Congratulations, you can proceed to the <a class="reference external" href="tutorial.html"><em>tutorials</em></a>.</p>
+<p>In case you know you won&#8217;t be using the one-pass Latent Semantic Analysis algorithm,
+you can omit the optional <cite>[lsi]</cite> feature and install with:</p>
 <div class="highlight-python"><pre>sudo easy_install gensim</pre>
 </div>
 <p>If you, on the other hand, also want to run the algorithms over a cluster
@@ -142,20 +142,20 @@ of computers, in <a class="reference external" href="distributed.html"><em>Distr
 </div>
 <p>The optional <cite>lsi</cite> feature will install the <a class="reference external" href="http://pypi.python.org/pypi/sparsesvd">sparsesvd</a> package;
 <cite>distributed</cite> feature installs <a class="reference external" href="http://pypi.python.org/pypi/Pyro">Pyro (PYthon Remote Objects)</a>. These
-optional extensions can also be installed separately with:</p>
+optional extensions can also be installed separately later with:</p>
 <div class="highlight-python"><pre>sudo easy_install sparsesvd Pyro</pre>
 </div>
 <hr class="docutils" />
 <p>There are also alternative routes to install:</p>
 <ol class="arabic">
 <li><p class="first">If you have downloaded and unzipped the <a class="reference external" href="http://pypi.python.org/pypi/gensim">tar.gz source</a>
-for gensim (or you&#8217;re installing gensim from <a class="reference external" href="http://my-trac.assembla.com/gensim">svn</a>),
+for <cite>gensim</cite> (or you&#8217;re installing <cite>gensim</cite> from <a class="reference external" href="http://my-trac.assembla.com/gensim">svn</a>),
 you can run:</p>
 <div class="highlight-python"><pre>sudo python setup.py install</pre>
 </div>
-<p>to install gensim into your <tt class="docutils literal"><span class="pre">site-packages</span></tt> folder.</p>
+<p>to install <cite>gensim</cite> into your <tt class="docutils literal"><span class="pre">site-packages</span></tt> folder.</p>
 </li>
-<li><p class="first">If you wish to make local changes to gensim code (gensim is, after all, a
+<li><p class="first">If you wish to make local changes to <cite>gensim</cite> code (<cite>gensim</cite> is, after all, a
 package which targets research prototyping and modifications), a preferred
 way may be installing with:</p>
 <div class="highlight-python"><pre>sudo python setup.py develop</pre>
@@ -166,22 +166,20 @@ files will stay wherever you unpacked them.</p>
 <li><p class="first">If you don&#8217;t have root priviledges (or just don&#8217;t want to put the package into
 your <tt class="docutils literal"><span class="pre">site-packages</span></tt>), simply unpack the source package somewhere and that&#8217;s it! No
 compilation or installation needed. Just don&#8217;t forget to set your PYTHONPATH
-(or modify <tt class="docutils literal"><span class="pre">sys.path</span></tt>), so that Python can find the package when importing.</p>
+(or modify <tt class="docutils literal"><span class="pre">sys.path</span></tt>), so that Python can find the unpacked package when importing.</p>
 </li>
 </ol>
 </div>
 <div class="section" id="testing-gensim">
-<h2>Testing gensim<a class="headerlink" href="#testing-gensim" title="Permalink to this headline">¶</a></h2>
+<h2>Testing <cite>gensim</cite><a class="headerlink" href="#testing-gensim" title="Permalink to this headline">¶</a></h2>
 <p>To test the package, unzip the <a class="reference external" href="http://pypi.python.org/pypi/gensim">tar.gz source</a> and run:</p>
 <div class="highlight-python"><pre>python setup.py test</pre>
 </div>
 </div>
 <div class="section" id="contact">
 <h2>Contact<a class="headerlink" href="#contact" title="Permalink to this headline">¶</a></h2>
-<p>If you encounter problems or have any questions regarding <cite>gensim</cite>, let me know at:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="s">&#39;@&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;radimrehurek&#39;</span><span class="p">,</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;seznam&#39;</span><span class="p">,</span> <span class="s">&#39;cz&#39;</span><span class="p">])])</span>
-</pre></div>
-</div>
+<p>If you encounter problems or have any questions regarding <cite>gensim</cite>, send me an
+email to the address at the bottom of this page.</p>
 </div>
 </div>
 

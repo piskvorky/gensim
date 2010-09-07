@@ -16,6 +16,7 @@ The examples are divided into parts on:
    tut1
    tut2
    tut3
+   wiki
    distributed
 
 Preliminaries

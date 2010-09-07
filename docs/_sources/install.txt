@@ -35,17 +35,17 @@ distributions available for your platform. You can try installing from source us
 If that doesn't work or if you'd rather install using a binary package, consult
 http://www.scipy.org/Download.
 
-Install gensim
----------------
+Install `gensim`
+-----------------
 
-You can now install (or upgrade) gensim with::
+You can now install (or upgrade) `gensim` with::
 
     sudo easy_install --upgrade gensim[lsi]
 
-That's it! Congratulations, you can now proceed to the :doc:`tutorials <tutorial>`.
+That's it! Congratulations, you can proceed to the :doc:`tutorials <tutorial>`.
 
-In case you won't be using Latent Semantic Analysis, you can omit the optional `[lsi]` 
-feature and install with::
+In case you know you won't be using the one-pass Latent Semantic Analysis algorithm, 
+you can omit the optional `[lsi]` feature and install with::
 
     sudo easy_install gensim
     
@@ -56,7 +56,7 @@ of computers, in :doc:`distributed`, you should install with::
 
 The optional `lsi` feature will install the `sparsesvd <http://pypi.python.org/pypi/sparsesvd>`_ package; 
 `distributed` feature installs `Pyro (PYthon Remote Objects) <http://pypi.python.org/pypi/Pyro>`_. These
-optional extensions can also be installed separately with::
+optional extensions can also be installed separately later with::
     
     sudo easy_install sparsesvd Pyro
 
@@ -65,13 +65,13 @@ optional extensions can also be installed separately with::
 There are also alternative routes to install:
   
 1. If you have downloaded and unzipped the `tar.gz source <http://pypi.python.org/pypi/gensim>`_
-   for gensim (or you're installing gensim from `svn <http://my-trac.assembla.com/gensim>`_), 
+   for `gensim` (or you're installing `gensim` from `svn <http://my-trac.assembla.com/gensim>`_), 
    you can run::
    
      sudo python setup.py install 
    
-   to install gensim into your ``site-packages`` folder.
-2. If you wish to make local changes to gensim code (gensim is, after all, a 
+   to install `gensim` into your ``site-packages`` folder.
+2. If you wish to make local changes to `gensim` code (`gensim` is, after all, a 
    package which targets research prototyping and modifications), a preferred 
    way may be installing with::
    
@@ -82,10 +82,10 @@ There are also alternative routes to install:
 3. If you don't have root priviledges (or just don't want to put the package into
    your ``site-packages``), simply unpack the source package somewhere and that's it! No
    compilation or installation needed. Just don't forget to set your PYTHONPATH
-   (or modify ``sys.path``), so that Python can find the package when importing.
+   (or modify ``sys.path``), so that Python can find the unpacked package when importing.
 
 
-Testing gensim
+Testing `gensim`
 ----------------
 
 To test the package, unzip the `tar.gz source <http://pypi.python.org/pypi/gensim>`_ and run::
@@ -96,6 +96,5 @@ To test the package, unzip the `tar.gz source <http://pypi.python.org/pypi/gensi
 Contact
 --------
 
-If you encounter problems or have any questions regarding `gensim`, let me know at:
-
->>> '@'.join(['radimrehurek', '.'.join(['seznam', 'cz'])])
+If you encounter problems or have any questions regarding `gensim`, send me an 
+email to the address at the bottom of this page.

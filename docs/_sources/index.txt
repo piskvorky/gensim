@@ -17,7 +17,7 @@ Gensim -- Python Framework for Vector Space Modelling
    
    `gensim` now contains two algorithms for Latent Semantic Indexing:
    
-   1. streamed **two-pass algorithm**: takes :doc:`2 hours on the English Wikipedia (3.2 mil. documents) <wiki>`!
+   1. streamed **two-pass algorithm**: takes :doc:`2.5 hours on the English Wikipedia (3.2 mil. documents) <wiki>`!
    2. streamed **single pass algorithm**: slower (takes 8.5h), but only accesses each document 
       once; use this if your input comes streaming in and you cannot store it
       persistently.

@@ -30,8 +30,8 @@ requesting the top 400 LSI factors:
  algorithm                                 serial      distributed    
 ======================================== ============ ==================
  one-pass update algo (chunks=factors)     109h        19h            
- one-pass merge algo (chunks=40K docs)     8.5h        2.2h           
- two-pass randomized algo (chunks=40K)     2.3h        N/A [1]_           
+ one-pass merge algo (chunks=40K docs)     8.5h        2.3h           
+ two-pass randomized algo (chunks=40K)     2.5h        N/A [1]_           
 ======================================== ============ ==================
 
 *serial* = Core 2 Duo MacBook Pro 2.53Ghz, 4GB RAM, libVec

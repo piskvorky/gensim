@@ -6,11 +6,12 @@ Experiments on Wikipedia
 To test `gensim` performance, we run it against the English version of Wikipedia.
 
 This page describes the process of obtaining and processing Wikipedia, so that
-anyone can reproduce our results.
+anyone can reproduce our results. It is assumed you have `gensim` properly :doc:`installed <install>`.
+
 
 
 Preparing the corpus
-_______________________
+----------------------
 
 1. First, download the dump of all Wikipedia articles from http://download.wikimedia.org/enwiki/ 
    (you want a file like `enwiki-latest-pages-articles.xml.bz2`). This file is about 6GB in size
@@ -154,7 +155,7 @@ see the :doc:`distributed tutorial <distributed>`.
 
 --------------------
 
-.. [1]  My laptop = dual-core 2.53GHz MacBook Pro, 4GB RAM, OS X with `libVec`
+.. [1]  My laptop = dual-core 2.53GHz MacBook Pro, 4GB RAM, OS X with `libVec`.
 
 .. [2]
   Here we're mostly interested in performance, but it is interesting to look at the
