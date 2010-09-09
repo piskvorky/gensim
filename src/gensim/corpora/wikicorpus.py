@@ -287,7 +287,8 @@ class VocabTransform(interfaces.TransformationABC):
         Return representation with the ids transformed.
         """
         # if the input vector is in fact a corpus, return a transformed corpus as a result
-        if utils.isCorpus(bow):
+        isCorpus, bow = utils.isCorpus(bow)
+        if isCorpus:
             return self._apply(bow)
         
         return [(self.old2new[oldid], weight) for oldid, weight in bow if oldid in self.old2new]
