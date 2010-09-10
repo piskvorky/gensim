@@ -176,7 +176,7 @@ class FakeDict(object):
     def __len__(self):
         return self.numTerms
     
-    def get(self, val, default):
+    def get(self, val, default=None):
         if 0 <= val < self.numTerms:
             return str(val)
         return default
@@ -209,6 +209,11 @@ def isCorpus(obj):
     result is forcefully defined as `is_corpus=False`.
     """
     try:
+        if 'Corpus' in obj.__class__.__name__: # most common case, quick hack
+            return True, obj
+    except:
+        pass
+    try:
         if hasattr(obj, 'next'):
             # the input is an iterator object, meaning once we call next()
             # that element could be gone forever. we must be careful to put 
@@ -216,10 +221,10 @@ def isCorpus(obj):
             doc1 = obj.next()
             obj = itertools.chain([doc1], obj)
         else:
-            doc1 = iter(obj).next()
-        if not list(doc1):
-            return True, obj # the first document is empty, assume this is a corpus
-        id1, val1 = iter(doc1).next()
+            doc1 = iter(obj).next() # empty corpus is resolved to False here 
+        if len(doc1) == 0: # sparse documents must have a __len__ function (list, tuple...)
+            return True, obj # the first document is empty=>assume this is a corpus
+        id1, val1 = iter(doc1).next() # if obj is a vector, it resolves to False here
         id1, val1 = int(id1), float(val1) # must be a 2-tuple (integer, float)
     except:
         return False, obj

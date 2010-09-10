@@ -29,7 +29,7 @@ def corpus2csc(corpus, num_terms, dtype=numpy.float64):
     Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format, 
     with documents as columns.
     """
-    logger.debug("constructing sparse document matrix")
+    logger.info("constructing sparse document matrix")
     docs, data, indices, indptr = 0, [], [], [0]
     for doc in corpus:
         indptr.append(len(doc))
@@ -229,10 +229,11 @@ class MmWriter(object):
         
         # calculate necessary header info (nnz elements, num terms, num docs) while writing out vectors
         numTerms = numNnz = 0
+        docNo = -1
         
         for docNo, bow in enumerate(corpus):
             if docNo % progressCnt == 0:
-                logger.info("PROGRESS: saving document %i" % docNo)
+                logger.info("PROGRESS: saving document #%i" % docNo)
             if len(bow) > 0:
                 numTerms = max(numTerms, 1 + max(wordId for wordId, val in bow))
                 numNnz += len(bow)
