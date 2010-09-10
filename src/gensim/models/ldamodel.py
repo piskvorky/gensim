@@ -135,9 +135,9 @@ class LdaModel(interfaces.TransformationABC):
 
         # EM training constants
         self.EM_MAX_ITER = 50 # maximum number of EM iterations; usually converges earlier
-        self.EM_CONVERGED = 0.0001 # relative difference between two iterations; if lower than this, stop the EM training 
+        self.EM_CONVERGED = 1e-4 # relative difference between two iterations; if lower than this, stop the EM training 
         self.VAR_MAX_ITER = 20 # maximum number of document inference iterations
-        self.VAR_CONVERGED = 0.000001 # relative difference between document inference iterations needed to stop sooner than VAR_MAX_ITER
+        self.VAR_CONVERGED = 1e-6 # relative difference between document inference iterations needed to stop sooner than VAR_MAX_ITER
         
         if not distributed:
             logger.info("using serial LDA version on this node")
@@ -339,7 +339,7 @@ class LdaModel(interfaces.TransformationABC):
                 tmp = digamma(gamma) + self.logProbW[:, wordIndex]
 
                 # convert phi and update gamma
-                newPhi = numpy.exp(tmp - logsumexp(tmp))
+                newPhi = numpy.exp(tmp - numpy.log(numpy.sum(numpy.exp(tmp))))
                 gamma += wordCount * (newPhi - phi[n])
                 phi[n] = newPhi
             
@@ -364,9 +364,10 @@ class LdaModel(interfaces.TransformationABC):
         
         likelihood += numpy.sum((self.alpha - 1) * dig + gammaln(gamma) - (gamma - 1) * dig)
         
+        phi += 1e-14 # avoid NaNs from 0*log(0) in phi below
         for n, (wordIndex, wordCount) in enumerate(doc):
             partial = phi[n] * (dig - numpy.log(phi[n]) + self.logProbW[:, wordIndex])
-            partial = numpy.where(numpy.isfinite(partial), partial, 0.0) # silently replace NaNs (from 0 * log(0) in phi) with 0.0
+            #partial = numpy.where(numpy.isfinite(partial), partial, 0.0) # silently replace NaNs (from 0 * log(0) in phi) with 0.0
             likelihood += wordCount * partial.sum()
         
         return likelihood
@@ -395,7 +396,7 @@ class LdaModel(interfaces.TransformationABC):
             yield numpy.exp(probs) * (probs - idf)
         
     
-    def printTopics(self, numTopics=10, numWords=10):
+    def printTopics(self, numTopics=5, numWords=10):
         """
         Print the top `numTerms` words for `numTopics` topics, along with the 
         log of their probability. 
