@@ -7,12 +7,12 @@
 """
 USAGE: %(program)s
 
-    Worker ("slave") process used in computing distributed LSI. Run this script \
+    Worker ("slave") process used in computing distributed LDA. Run this script \
 on every node in your cluster. If you wish, you may even run it multiple times \
 on a single machine, to make better use of multiple cores (just beware that \
 memory footprint increases accordingly).
 
-Example: python lsi_worker.py
+Example: python lda_worker.py
 """
 
 
@@ -24,10 +24,10 @@ import tempfile
 import Pyro
 import Pyro.config
 
-from gensim.models import lsimodel
+from gensim.models import ldamodel
 from gensim import utils
 
-logger = logging.getLogger('lsi_worker')
+logger = logging.getLogger('lda_worker')
 logger.setLevel(logging.INFO)
 
 
@@ -46,7 +46,7 @@ class Worker(object):
         self.myid = myid # id of this worker in the dispatcher; just a convenience var for easy access/logging TODO remove?
         self.dispatcher = dispatcher
         logger.info("initializing worker #%s" % myid)
-        self.model = lsimodel.LsiModel(**model_params)
+        self.model = ldamodel.LdaModel(**model_params)
         self._exit = False
     
     
@@ -65,10 +65,10 @@ class Worker(object):
 
     @utils.synchronous('lock_update')
     def processjob(self, job):
-        self.model.addDocuments(job)
+        self.model.docEStep(job)
         self.jobsdone += 1
         if SAVE_DEBUG and self.jobsdone % SAVE_DEBUG == 0:
-            fname = os.path.join(tempfile.gettempdir(), 'lsi_worker.pkl')
+            fname = os.path.join(tempfile.gettempdir(), 'lda_worker.pkl')
             self.model.save(fname)
 
 
@@ -76,16 +76,22 @@ class Worker(object):
     def getstate(self):
         logger.info("worker #%i returning its state after %s jobs" % 
                     (self.myid, self.jobsdone))
-        assert isinstance(self.model.projection, lsimodel.Projection)
-        result = self.model.projection
-        self.model.projection = self.model.projection.empty_like()
+        assert isinstance(self.model.state, ldamodel.LdaState)
+        result = self.model.state
+        self.model.state = ldamodel.LdaState()
         return result
+
+    
+    @utils.synchronous('lock_update')
+    def reset(self, logProbW):
+        logger.info("resetting worker #%i" % self.myid)
+        self.model.reset(logProbW)
 #endclass Worker
 
 
 
 def main():
-    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     logger.info("running %s" % " ".join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
@@ -100,7 +106,7 @@ def main():
         with Pyro.core.Daemon() as daemon:
             worker = Worker()
             uri = daemon.register(worker)
-            name = 'gensim.lsi_worker.' + str(uri)
+            name = 'gensim.lda_worker.' + str(uri)
             ns.remove(name)
             ns.register(name, uri)
             logger.info("worker is ready at URI %s" % uri)
