@@ -7,10 +7,10 @@
 """
 USAGE: %(program)s SIZE_OF_JOBS_QUEUE
 
-    Dispatcher process which orchestrates distributed LSI computations. Run this \
+    Dispatcher process which orchestrates distributed LDA computations. Run this \
 script only once, on any node in your cluster.
 
-Example: python lsi_dispatcher.py
+Example: python lda_dispatcher.py
 """
 
 
@@ -30,12 +30,12 @@ logger.setLevel(logging.INFO)
 
 # How many jobs (=chunks of N documents) to keep "pre-fetched" in a queue?
 # A small number is usually enough, unless iteration over the corpus is very very 
-# slow (slower than the actual computation of LSI), in which case you can override 
-# this value from command line. ie. run "python ./lsi_dispatcher.py 100" 
+# slow (slower than the actual computation of LDA), in which case you can override 
+# this value from command line. ie. run "python ./lda_dispatcher.py 100" 
 MAX_JOBS_QUEUE = 10
 
 # timeout for the Queue object put/get blocking methods.
-# it should really be infinity, but then keyboard interrupts don't work.
+# it should theoretically be infinity, but then keyboard interrupts don't work.
 # so this is really just a hack, see http://bugs.python.org/issue1360
 HUGE_TIMEOUT = 365 * 24 * 60 * 60 # one year
 
@@ -48,7 +48,7 @@ class Dispatcher(object):
     There should never be more than one dispatcher running at any one time.
     """
     
-    def __init__(self, maxsize = 100):
+    def __init__(self, maxsize = MAX_JOBS_QUEUE):
         """
         Note that the constructor does not fully initialize the dispatcher;
         use the `initialize()` function to populate it with workers etc.
@@ -67,7 +67,7 @@ class Dispatcher(object):
     def initialize(self, **model_params):
         """
         `model_params` are parameters used to initialize individual workers (gets
-        handed all the way down to worker.initialize()).
+        handed all the way down to `worker.initialize()`).
         """
         self.jobs = Queue(maxsize = self.maxsize)
         self.lock_update = threading.Lock()
@@ -78,7 +78,7 @@ class Dispatcher(object):
         # locate all available workers and store their proxies, for subsequent RMI calls
         self.workers = {}
         with Pyro.naming.locateNS() as ns:
-            for name, uri in ns.list(prefix = 'gensim.lsi_worker').iteritems():
+            for name, uri in ns.list(prefix = 'gensim.lda_worker').iteritems():
                 try:
                     worker = Pyro.core.Proxy(uri)
                     workerid = len(self.workers)
@@ -93,7 +93,7 @@ class Dispatcher(object):
                     ns.remove(name)
         
         if len(self.workers) == 0:
-            raise RuntimeError('no workers found; run some lsi_worker scripts on your machines first!')
+            raise RuntimeError('no workers found; run some lda_worker scripts on your machines first!')
 
 
     def getworkers(self):
@@ -117,22 +117,25 @@ class Dispatcher(object):
     
     def getstate(self):
         """
-        Merge projections from across all workers and return the final projection.
+        Merge states from across all workers and return the result.
         """
-        # TODO: merge in parallel, so that we're done in `log_2(workers)` merges, 
-        # and not `workers - 1` merges!
-        # but merging only takes place once, after all input data has been processed,
-        # so the overall effect would be small... compared to the amount of coding :-)
         logger.info("merging states from %i workers" % len(self.workers))
         workers = self.workers.items()
         result = workers[0][1].getstate()
         for workerid, worker in workers[1:]:
             logger.info("pulling state from worker %s" % workerid)
             result.merge(worker.getstate())
-        logger.info("sending out merged projection")
+        logger.info("sending out merged state")
         return result
-
     
+    
+    def reset(self, logProbW):
+        for workerid, worker in self.workers.iteritems():
+            logger.info("resetting worker %s" % workerid)
+            worker.reset(logProbW)
+        self._jobsdone = 0
+    
+
     @utils.synchronous('lock_update')
     def jobdone(self, workerid):
         """
@@ -150,7 +153,7 @@ class Dispatcher(object):
 
     
     def jobsdone(self):
-        """Wrap self._jobsdone, needed for remote access through proxies"""
+        """Wrap self._jobsdone, needed for remote access through Pyro proxies"""
         return self._jobsdone
 #endclass Dispatcher
 
@@ -180,7 +183,7 @@ def main():
             # prepare callback object for the workers
             dispatcher.callback = Pyro.core.Proxy(uri)
             
-            name = 'gensim.lsi_dispatcher'
+            name = 'gensim.lda_dispatcher'
             ns.remove(name)
             ns.register(name, uri)
             logger.info("dispatcher is ready at URI %s" % uri)

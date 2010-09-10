@@ -261,8 +261,8 @@ class LsiModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
     
     """
-    def __init__(self, corpus = None, numTopics = 200, id2word = None, chunks = 20000, 
-                 decay = 1.0, distributed = False, onepass = False):
+    def __init__(self, corpus=None, numTopics=200, id2word=None, chunks=20000, 
+                 decay=1.0, distributed=False, onepass=False):
         """
         `numTopics` is the number of requested factors (latent dimensions). 
         
@@ -278,8 +278,7 @@ class LsiModel(interfaces.TransformationABC):
         If your document stream is one-pass only (the stream cannot be repeated),
         turn on `onepass` to force a single pass SVD algorithm (slower).
 
-        Turn on `distributed` to enforce distributed computing (only makes sense 
-        if `onepass` is set at the same time, too).
+        Turn on `distributed` to force distributed computing.
         
         Example:
         
@@ -322,7 +321,7 @@ class LsiModel(interfaces.TransformationABC):
             try:
                 import Pyro
                 ns = Pyro.naming.locateNS()
-                dispatcher = Pyro.core.Proxy('PYRONAME:gensim.dispatcher@%s' % ns._pyroUri.location)
+                dispatcher = Pyro.core.Proxy('PYRONAME:gensim.lsi_dispatcher@%s' % ns._pyroUri.location)
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word = self.id2word, numTopics = numTopics, 
                                       chunks = chunks, decay = decay,
@@ -338,7 +337,7 @@ class LsiModel(interfaces.TransformationABC):
             self.addDocuments(corpus)
     
     
-    def addDocuments(self, corpus, chunks = None, decay = None):
+    def addDocuments(self, corpus, chunks=None, decay=None):
         """
         Update singular value decomposition to take into account a new 
         corpus of documents.
