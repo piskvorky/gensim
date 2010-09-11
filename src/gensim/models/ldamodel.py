@@ -354,7 +354,7 @@ class LdaModel(interfaces.TransformationABC):
         """
         Compute the document likelihood, given all model parameters.
         """
-        gammaSum = gamma.sum()
+        gammaSum = numpy.sum(gamma)
         digSum = digamma(gammaSum)
         dig = digamma(gamma) - digSum # precompute the difference
         
@@ -368,7 +368,7 @@ class LdaModel(interfaces.TransformationABC):
         for n, (wordIndex, wordCount) in enumerate(doc):
             partial = phi[n] * (dig - numpy.log(phi[n]) + self.logProbW[:, wordIndex])
             #partial = numpy.where(numpy.isfinite(partial), partial, 0.0) # silently replace NaNs (from 0 * log(0) in phi) with 0.0
-            likelihood += wordCount * partial.sum()
+            likelihood += wordCount * numpy.sum(partial)
         
         return likelihood
     
