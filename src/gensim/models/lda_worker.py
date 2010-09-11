@@ -82,9 +82,10 @@ class Worker(object):
 
     
     @utils.synchronous('lock_update')
-    def reset(self, logProbW):
+    def reset(self, logProbW, alpha):
         logger.info("resetting worker #%i" % self.myid)
         self.model.reset(logProbW)
+        self.model.alpha = alpha
 
     
     def exit(self):
