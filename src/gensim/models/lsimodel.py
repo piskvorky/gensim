@@ -322,6 +322,7 @@ class LsiModel(interfaces.TransformationABC):
                 import Pyro
                 ns = Pyro.naming.locateNS()
                 dispatcher = Pyro.core.Proxy('PYRONAME:gensim.lsi_dispatcher@%s' % ns._pyroUri.location)
+                dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word = self.id2word, numTopics = numTopics, 
                                       chunks = chunks, decay = decay,

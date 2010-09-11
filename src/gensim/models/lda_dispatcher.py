@@ -57,13 +57,6 @@ class Dispatcher(object):
         self.callback = None # a pyro proxy to this object (unknown at init time, but will be set later)
     
     
-    def exit(self):
-        """
-        Stop processing jobs.
-        """
-        self._exit = True
-    
-    
     def initialize(self, **model_params):
         """
         `model_params` are parameters used to initialize individual workers (gets
@@ -72,7 +65,6 @@ class Dispatcher(object):
         self.jobs = Queue(maxsize = self.maxsize)
         self.lock_update = threading.Lock()
         self.callback._pyroOneway.add("jobdone") # make sure workers transfer control back to dispatcher asynchronously        
-        self._exit = False
         self._jobsdone = 0
 
         # locate all available workers and store their proxies, for subsequent RMI calls
@@ -84,6 +76,7 @@ class Dispatcher(object):
                     workerid = len(self.workers)
                     # make time consuming methods work asynchronously
                     worker._pyroOneway.add("requestjob")
+                    worker._pyroOneway.add("exit")
                     logger.info("registering worker #%i at %s" % (workerid, uri))
                     worker.initialize(workerid, dispatcher = self.callback, **model_params)
                     self.workers[workerid] = worker
@@ -109,8 +102,6 @@ class Dispatcher(object):
 
 
     def putjob(self, job):
-        if self._exit:
-            raise ValueError("Dispatcher is not receiving new jobs")
         self.jobs.put(job, block = True, timeout = HUGE_TIMEOUT)
         logger.info("added a new job (len(queue)=%i items)" % self.jobs.qsize())
 
@@ -147,14 +138,23 @@ class Dispatcher(object):
         """
         self._jobsdone += 1
         logger.info("worker #%s finished job #%i" % (workerid, self._jobsdone))
-        if not self._exit:
-            worker = self.workers[workerid]
-            worker.requestjob() # tell the worker to ask for another job, asynchronously (one-way)
+        self.workers[workerid].requestjob() # tell the worker to ask for another job, asynchronously (one-way)
 
     
     def jobsdone(self):
         """Wrap self._jobsdone, needed for remote access through Pyro proxies"""
         return self._jobsdone
+    
+    
+    def exit(self):
+        """
+        Terminate all registered workers and then the dispatcher.
+        """
+        for workerid, worker in self.workers.iteritems():
+            logger.info("terminating worker %s" % workerid)
+            worker.exit()
+        logger.info("terminating dispatcher")
+        os._exit(0)
 #endclass Dispatcher
 
 

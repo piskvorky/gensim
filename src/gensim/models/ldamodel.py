@@ -23,16 +23,16 @@ logger.setLevel(logging.INFO)
 
 
 import numpy # for arrays, array broadcasting etc.
+numpy.seterr(divide='ignore') # ignore 0*log(0) errors
+
 from scipy.special import gammaln, digamma, polygamma # gamma function utils
 from scipy.maxentropy import logsumexp # log of sum
-
 try:
     from scipy import weave
 except ImportError:
     logger.warning("scipy.weave not available; falling back to pure Python, LDA will be *much* slower")
 
 from gensim import interfaces, utils
-
 
 
 
@@ -68,20 +68,21 @@ class LdaModel(interfaces.TransformationABC):
     
     This Python code uses numpy heavily, and is about 4-5x slower than the original 
     C version. The up side is that it is streamed (documents come in sequentially,
-    no random indexing) and runs in constant memory w.r.t. number of documents.
+    no random indexing) and runs in constant memory w.r.t. the number of documents 
+    (input corpus size).
     
     The constructor estimates model parameters based on a training corpus:
     
     >>> lda = LdaModel(corpus, numTopics=10)
     
-    You can then infer topic distributions on new, unseen documents:
+    You can then infer topic distributions on new, unseen documents, with:
     
     >>> doc_lda = lda[doc_bow]
     
     Model persistency is achieved via its load/save methods.
     """
     def __init__(self, corpus=None, numTopics=200, id2word=None, distributed=False, 
-                 chunks=20000, alpha=None, initMode='random', dtype=numpy.float32):
+                 chunks=1000, alpha=None, initMode='random', dtype=numpy.float32):
         """
         `numTopics` is the number of requested latent topics to be extracted from
         the training corpus. 
@@ -98,7 +99,8 @@ class LdaModel(interfaces.TransformationABC):
         `alpha` is either None (to be estimated during training) or a number 
         between (0.0, 1.0).
         
-        Turn on `distributed` to force distributed computing (see the web tutorial).
+        Turn on `distributed` to force distributed computing (see the web tutorial
+        on how to set up a cluster).
         
         Example:
         
@@ -134,8 +136,8 @@ class LdaModel(interfaces.TransformationABC):
         self.state.classWord = self.state.classWord.astype(dtype)
         
         # internal algorithm constants
-        self.ESTIMATE_ALPHA = alpha is None
-        if alpha is None: # no alpha supplied by user => get some initial estimate
+        self.estimate_alpha = alpha is None
+        if self.estimate_alpha: # no alpha supplied by user => get some initial estimate
             alpha = 10.0 / numTopics # n / numTopics, as suggested in Steyvers&Griffiths: Probabilistic Topic Models
         self.alpha = min(0.99999, max(0.00001, alpha)) # dirichlet prior; make sure it's within bounds
 
@@ -153,6 +155,7 @@ class LdaModel(interfaces.TransformationABC):
                 import Pyro
                 ns = Pyro.naming.locateNS()
                 dispatcher = Pyro.core.Proxy('PYRONAME:gensim.lda_dispatcher@%s' % ns._pyroUri.location)
+                dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word=self.id2word, numTopics=numTopics, 
                                       chunks=chunks, alpha=alpha, distributed=False)
@@ -169,7 +172,7 @@ class LdaModel(interfaces.TransformationABC):
 
     def __str__(self):
         return "LdaModel(numTerms=%s, numTopics=%s, alpha=%s (estimated=%s))" % \
-                (self.numTerms, self.numTopics, self.alpha, self.ESTIMATE_ALPHA)
+                (self.numTerms, self.numTopics, self.alpha, self.estimate_alpha)
 
 
     def reset(self, logProbW):
@@ -181,8 +184,8 @@ class LdaModel(interfaces.TransformationABC):
         """
         Run LDA parameter estimation on a training corpus, using the EM algorithm.
         
-        This effectively adds trains the underlying LDA model on new documents (or
-        initializes the model if this is the first call).
+        This effectively updates the underlying LDA model on new documents from 
+        `corpus` (or initializes the model if this is the first call).
         """
         if chunks is None:
             chunks = self.chunks
@@ -195,7 +198,7 @@ class LdaModel(interfaces.TransformationABC):
             logger.info("starting EM iteration #%i, converged=%s, likelihood=%s" % 
                          (i, converged, self.state.likelihood))
 
-            if numpy.isfinite(converged) and (converged <= self.EM_CONVERGED): # solution good enough?
+            if likelihoodOld < 1e-6 or numpy.isfinite(converged) and (converged <= self.EM_CONVERGED): # solution good enough?
                 logger.info("EM converged in %i iterations" % i)
                 break
         
@@ -208,7 +211,7 @@ class LdaModel(interfaces.TransformationABC):
     
             # E step: iterate over the corpus, using old beta and updating new word counts
             # proceed in chunks of `chunks` documents
-            chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
+            chunk_no, chunker = -1, itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
             for chunk_no, (key, group) in enumerate(chunker):
                 if self.dispatcher:
                     # distributed version: add this job to the job queue, so workers can munch on it
@@ -242,10 +245,11 @@ class LdaModel(interfaces.TransformationABC):
             
             # M step -- update alpha and beta
             logger.info("performing M step #%i" % i)
-            self.mle(estimateAlpha = self.ESTIMATE_ALPHA)
+            self.mle(estimateAlpha = self.estimate_alpha)
         
             # log some debug info about topics found so far
             self.printTopics()
+        #endfor iteration
 
 
     def docEStep(self, corpus):
@@ -263,53 +267,6 @@ class LdaModel(interfaces.TransformationABC):
             self.state.alphaSuffStats += numpy.sum(digamma(gamma)) - self.numTopics * digamma(numpy.sum(gamma))
             self.state.likelihood += likelihood
             self.state.numDocs += 1
-
-
-    def mle(self, estimateAlpha):
-        """
-        Maximum likelihood estimate.
-        
-        This maximizes the lower bound on log likelihood wrt. to the alpha and beta
-        parameters.
-        """
-        marginal = numpy.log(self.state.classWord.sum(axis = 1)).reshape(self.numTopics, 1)
-        self.logProbW = numpy.log(self.state.classWord)
-        self.logProbW -= marginal
-        self.logProbW = numpy.where(numpy.isfinite(self.logProbW), self.logProbW, -100.0) # replace log(0) with -100.0 (almost zero probability)
-        
-        if estimateAlpha:
-            self.alpha = self.optAlpha()
-        
-        logger.debug("updated model to %s" % self)
-    
-    
-    def optAlpha(self, MAX_ALPHA_ITER=1000, NEWTON_THRESH=1e-5):
-        """
-        Estimate new Dirichlet priors (actually just one scalar shared across all
-        topics).
-        """
-        initA = 100.0
-        logA = numpy.log(initA) # keep computations in log space
-        logger.debug("optimizing old alpha %s" % self.alpha)
-        
-        for i in xrange(MAX_ALPHA_ITER):
-            a = numpy.exp(logA)
-            if not numpy.isfinite(a):
-                initA = initA * 10.0
-                logger.warning("alpha is NaN; new init alpha=%f" % initA)
-                a = initA
-                logA = numpy.log(a)
-            s = self.state
-            f = s.numDocs * (gammaln(self.numTopics * a) - self.numTopics * gammaln(a)) + (a - 1) * s.alphaSuffStats
-            df = s.alphaSuffStats + s.numDocs * (self.numTopics * digamma(self.numTopics * a) - self.numTopics * digamma(a))
-            d2f = s.numDocs * (self.numTopics * self.numTopics * trigamma(self.numTopics * a) - self.numTopics * trigamma(a))
-            logA -= df / (d2f * a + df)
-#            logger.debug("alpha maximization: f=%f, df=%f" % (f, df))
-            if numpy.abs(df) <= NEWTON_THRESH:
-                break
-        result = numpy.exp(logA) # convert back from log space
-        logger.info("estimated old alpha %s to new alpha %s" % (self.alpha, result))
-        return result
 
 
     def inference(self, doc):
@@ -405,7 +362,54 @@ class LdaModel(interfaces.TransformationABC):
                 likelihood += wordCount * numpy.sum(partial)
         return likelihood
     
+
+    def mle(self, estimateAlpha):
+        """
+        Maximum likelihood estimate.
+        
+        This maximizes the lower bound on log likelihood wrt. to the alpha and beta
+        parameters.
+        """
+        marginal = numpy.log(self.state.classWord.sum(axis = 1)).reshape(self.numTopics, 1)
+        self.logProbW = numpy.log(self.state.classWord)
+        self.logProbW -= marginal
+        self.logProbW = numpy.where(numpy.isfinite(self.logProbW), self.logProbW, -100.0) # replace log(0) with -100.0 (almost zero probability)
+        
+        if estimateAlpha:
+            self.alpha = self.optAlpha()
+        
+        logger.debug("updated model to %s" % self)
     
+    
+    def optAlpha(self, MAX_ALPHA_ITER=1000, NEWTON_THRESH=1e-5):
+        """
+        Estimate new Dirichlet priors (actually just one scalar shared across all
+        topics).
+        """
+        initA = 100.0
+        logA = numpy.log(initA) # keep computations in log space
+        logger.debug("optimizing old alpha %s" % self.alpha)
+        
+        for i in xrange(MAX_ALPHA_ITER):
+            a = numpy.exp(logA)
+            if not numpy.isfinite(a):
+                initA = initA * 10.0
+                logger.warning("alpha is NaN; new init alpha=%f" % initA)
+                a = initA
+                logA = numpy.log(a)
+            s = self.state
+            f = s.numDocs * (gammaln(self.numTopics * a) - self.numTopics * gammaln(a)) + (a - 1) * s.alphaSuffStats
+            df = s.alphaSuffStats + s.numDocs * (self.numTopics * digamma(self.numTopics * a) - self.numTopics * digamma(a))
+            d2f = s.numDocs * (self.numTopics * self.numTopics * trigamma(self.numTopics * a) - self.numTopics * trigamma(a))
+            logA -= df / (d2f * a + df)
+#            logger.debug("alpha maximization: f=%f, df=%f" % (f, df))
+            if numpy.abs(df) <= NEWTON_THRESH:
+                break
+        result = numpy.exp(logA) # convert back from log space
+        logger.info("estimated old alpha %s to new alpha %s" % (self.alpha, result))
+        return result
+
+
     def probs2scores(self, numTopics=10):
         """
         Transform topic-word probability distribution into more human-friendly 
@@ -420,7 +424,7 @@ class LdaModel(interfaces.TransformationABC):
         The `numTopics` transformed scores are yielded iteratively, one topic after
         another.
         """
-        logger.debug("computing the word-topic salience matrix for %i topics" % numTopics)
+        logger.info("computing the word-topic salience matrix for %i topics" % numTopics)
         # compute the geometric mean of words' probability across all topics
         idf = self.logProbW.sum(axis = 0) / self.numTopics # compute the mean in log space
         
@@ -445,7 +449,7 @@ class LdaModel(interfaces.TransformationABC):
             termScores = zip(scores, self.logProbW[i], map(self.id2word.get, xrange(len(scores))))
             
             # sort words -- words with the best scores come first; keep only the best numWords
-            best = sorted(termScores, reverse = True)[:numWords]
+            best = sorted(termScores, reverse=True)[:numWords]
            
             # print best numWords, with a space separating each word:prob entry
             logger.info("topic #%i: %s" % 
