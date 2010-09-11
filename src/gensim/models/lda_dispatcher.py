@@ -82,7 +82,7 @@ class Dispatcher(object):
                     self.workers[workerid] = worker
                     worker.requestjob()
                 except Pyro.errors.PyroError, err:
-                    logger.warning("unresponsive worker at %s, deleting it from name server" % uri)
+                    logger.warning("unresponsive worker at %s, deleting it from the name server" % uri)
                     ns.remove(name)
         
         if len(self.workers) == 0:
@@ -121,6 +121,9 @@ class Dispatcher(object):
     
     
     def reset(self, logProbW):
+        """
+        Initialize all workers for a new EM iterations.
+        """
         for workerid, worker in self.workers.iteritems():
             logger.info("resetting worker %s" % workerid)
             worker.reset(logProbW)
@@ -154,7 +157,7 @@ class Dispatcher(object):
             logger.info("terminating worker %s" % workerid)
             worker.exit()
         logger.info("terminating dispatcher")
-        os._exit(0)
+        os._exit(0) # exit the whole process (not just this thread ala sys.exit())
 #endclass Dispatcher
 
 
