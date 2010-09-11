@@ -82,7 +82,7 @@ class LdaModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
     """
     def __init__(self, corpus=None, numTopics=200, id2word=None, distributed=False, 
-                 chunks=1000, alpha=None, initMode='random', dtype=numpy.float32):
+                 chunks=None, alpha=None, initMode='random', dtype=numpy.float32):
         """
         `numTopics` is the number of requested latent topics to be extracted from
         the training corpus. 
@@ -123,8 +123,8 @@ class LdaModel(interfaces.TransformationABC):
         
         self.distributed = bool(distributed)
         self.numTopics = int(numTopics)
-        self.chunks = int(chunks)
         self.state = LdaState()
+        self.chunks = chunks
         
         # initialize wordtype/topic counts
         if initMode == 'seeded': # init from corpus (slow)
@@ -189,7 +189,16 @@ class LdaModel(interfaces.TransformationABC):
         """
         if chunks is None:
             chunks = self.chunks
-        
+        if chunks is None:
+            if self.dispatcher:
+                # for distributed LDA, set the number of chunks so that the whole
+                # corpus is processed at once (#chunks=#documents/#nodes)
+                chunks = int(numpy.ceil(len(corpus) / len(dispatcher.getworkers())))
+                chunks = min(20000, chunks)
+            else:
+                # in serial version, each chunk is 1000 document by default (makes
+                # no difference, only affects frequency of debug logging)
+                chunks = 1000 
         likelihoodOld = converged = numpy.NAN
         self.mle(estimateAlpha = False)
         
@@ -198,7 +207,7 @@ class LdaModel(interfaces.TransformationABC):
             logger.info("starting EM iteration #%i, converged=%s, likelihood=%s" % 
                          (i, converged, self.state.likelihood))
 
-            if likelihoodOld < 1e-6 or numpy.isfinite(converged) and (converged <= self.EM_CONVERGED): # solution good enough?
+            if likelihoodOld > -1e-6 or numpy.isfinite(converged) and (converged <= self.EM_CONVERGED): # solution good enough?
                 logger.info("EM converged in %i iterations" % i)
                 break
         
