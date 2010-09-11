@@ -18,15 +18,21 @@ inference rather than Gibbs sampling to estimate model parameters.
 import logging
 import itertools
 
+logger = logging.getLogger('ldamodel')
+logger.setLevel(logging.INFO)
+
+
 import numpy # for arrays, array broadcasting etc.
 from scipy.special import gammaln, digamma, polygamma # gamma function utils
 from scipy.maxentropy import logsumexp # log of sum
 
+try:
+    from scipy import weave
+except ImportError:
+    logger.warning("scipy.weave not available; falling back to pure Python, LDA will be *much* slower")
+
 from gensim import interfaces, utils
 
-
-logger = logging.getLogger('ldamodel')
-logger.setLevel(logging.INFO)
 
 
 
@@ -168,7 +174,7 @@ class LdaModel(interfaces.TransformationABC):
 
     def reset(self, logProbW):
         self.state.reset(logProbW)
-        self.logProbW = logProbW
+        self.logProbW = numpy.asfortranarray(logProbW)
 
     
     def addDocuments(self, corpus, chunks=None):
@@ -224,14 +230,13 @@ class LdaModel(interfaces.TransformationABC):
                     time.sleep(0.5) # check every half a second
                 logger.info("all jobs finished, downloading iteration statistics")
                 self.state = self.dispatcher.getstate()
-                logger.info("decomposition complete")
                 
             likelihood = self.state.likelihood # likelihood of the training corpus
             assert numpy.isfinite(likelihood), "bad likelihood %s" % likelihood
 
             # check for convergence
             converged = numpy.divide(likelihoodOld - likelihood, likelihoodOld)
-            logger.info("finished iteration #%i: likelihood %f, likelihoodOld %f, converged %f" % 
+            logger.info("finished E step #%i: likelihood %f, likelihoodOld %f, converged %f" % 
                          (i, likelihood, likelihoodOld, converged))
             likelihoodOld = likelihood
             
@@ -247,6 +252,7 @@ class LdaModel(interfaces.TransformationABC):
         """
         Find optimizing parameters for phi and gamma, and update sufficient statistics.
         """
+        self.logProbW = numpy.asfortranarray(self.logProbW)
         for doc in corpus:
             # posterior inference
             likelihood, phi, gamma = self.inference(doc)
@@ -324,6 +330,7 @@ class LdaModel(interfaces.TransformationABC):
         gamma = numpy.zeros(self.numTopics) + self.alpha + 1.0 * totalWords / self.numTopics
         phi = numpy.zeros(shape = (len(doc), self.numTopics)) + 1.0 / self.numTopics
         likelihood = likelihoodOld = converged = numpy.NAN
+        assert self.logProbW.flags.f_contiguous # assert column-major format; cannot afford conversion at this low level
         
         # variational estimate
         for i in xrange(self.VAR_MAX_ITER):
@@ -336,12 +343,27 @@ class LdaModel(interfaces.TransformationABC):
             
             for n, (wordIndex, wordCount) in enumerate(doc):
                 # compute phi vars, in log space, to prevent numerical nastiness
-                tmp = digamma(gamma) + self.logProbW[:, wordIndex]
-
+                phin, tmp = phi[n], digamma(gamma) + self.logProbW[:, wordIndex]
+                
                 # convert phi and update gamma
-                newPhi = numpy.exp(tmp - numpy.log(numpy.sum(numpy.exp(tmp))))
-                gamma += wordCount * (newPhi - phi[n])
-                phi[n] = newPhi
+                try:
+                    code = """
+                    const int n = Ntmp[0];
+                    double newphi, tmpSum = 0.0;
+                    for (int k = 0; k < n; k++)
+                        tmpSum += exp(tmp[k]);
+                    tmpSum = log(tmpSum);
+                    for (int i = 0; i < n; i++) {
+                        newphi = exp(tmp[i] - tmpSum);
+                        gamma[i] += wordCount * (newphi - phin[i]);
+                        phin[i] = newphi;
+                    } 
+                    """
+                    weave.inline(code, ['phin', 'tmp', 'gamma', 'wordCount'])
+                except:
+                    newPhi = numpy.exp(tmp - numpy.log(numpy.sum(numpy.exp(tmp))))
+                    gamma += wordCount * (newPhi - phi[n])
+                    phi[n] = newPhi
             
             likelihood = self.computeLikelihood(doc, phi, gamma)
             assert numpy.isfinite(likelihood)
@@ -364,12 +386,23 @@ class LdaModel(interfaces.TransformationABC):
         
         likelihood += numpy.sum((self.alpha - 1) * dig + gammaln(gamma) - (gamma - 1) * dig)
         
-        phi += 1e-14 # avoid NaNs from 0*log(0) in phi below
         for n, (wordIndex, wordCount) in enumerate(doc):
-            partial = phi[n] * (dig - numpy.log(phi[n]) + self.logProbW[:, wordIndex])
-            #partial = numpy.where(numpy.isfinite(partial), partial, 0.0) # silently replace NaNs (from 0 * log(0) in phi) with 0.0
-            likelihood += wordCount * numpy.sum(partial)
-        
+            try:
+                phin, lprob = phi[n], self.logProbW[:, wordIndex] # only references; stride must be 1!
+                code = """
+                const int num_terms = Nphin[0];
+                double result = 0.0;
+                for (int i=0; i < num_terms; i++) {
+                    if (phin[i] > 1e-8 || phin[i] < -1e-8)
+                        result += phin[i] * (dig[i] - log(phin[i]) + lprob[i]);
+                }
+                return_val = wordCount * result;
+                """
+                likelihood += weave.inline(code, ['dig', 'phin', 'lprob', 'wordCount'])
+            except:
+                partial = phi[n] * (dig - numpy.log(phi[n]) + self.logProbW[:, wordIndex])
+                partial[numpy.isnan(partial)] = 0.0 # replace NaNs (from 0 * log(0) in phi) with 0.0
+                likelihood += wordCount * numpy.sum(partial)
         return likelihood
     
     
