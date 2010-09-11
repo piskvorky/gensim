@@ -199,6 +199,7 @@ class LdaModel(interfaces.TransformationABC):
                 # in serial version, each chunk is 1000 document by default (makes
                 # no difference, only affects frequency of debug logging)
                 chunks = 100
+        logger.info("using chunks of %i documents" % chunks)
         likelihoodOld = converged = numpy.NAN
         self.mle(estimateAlpha = False)
         
@@ -265,7 +266,6 @@ class LdaModel(interfaces.TransformationABC):
         """
         Find optimizing parameters for phi and gamma, and update sufficient statistics.
         """
-        self.logProbW = numpy.asfortranarray(self.logProbW)
         for doc in corpus:
             # posterior inference
             likelihood, phi, gamma = self.inference(doc)
@@ -407,13 +407,11 @@ class LdaModel(interfaces.TransformationABC):
                 a = initA
                 logA = numpy.log(a)
             s = self.state
-            logger.info('docs: %s' % s.numDocs) # FIXME
-            logger.info('alphasuff: %s' % s.alphaSuffStats)
             f = s.numDocs * (gammaln(self.numTopics * a) - self.numTopics * gammaln(a)) + (a - 1) * s.alphaSuffStats
             df = s.alphaSuffStats + s.numDocs * (self.numTopics * digamma(self.numTopics * a) - self.numTopics * digamma(a))
             d2f = s.numDocs * (self.numTopics * self.numTopics * trigamma(self.numTopics * a) - self.numTopics * trigamma(a))
             logA -= df / (d2f * a + df)
-#            logger.debug("alpha maximization: f=%f, df=%f" % (f, df))
+            logger.debug("alpha maximization: f=%f, df=%f" % (f, df))
             if numpy.abs(df) <= NEWTON_THRESH:
                 break
         result = numpy.exp(logA) # convert back from log space
