@@ -193,12 +193,12 @@ class LdaModel(interfaces.TransformationABC):
             if self.dispatcher:
                 # for distributed LDA, set the number of chunks so that the whole
                 # corpus is processed at once (#chunks=#documents/#nodes)
-                chunks = int(numpy.ceil(len(corpus) / len(dispatcher.getworkers())))
+                chunks = int(numpy.ceil(len(corpus) / len(self.dispatcher.getworkers())))
                 chunks = min(20000, chunks)
             else:
                 # in serial version, each chunk is 1000 document by default (makes
                 # no difference, only affects frequency of debug logging)
-                chunks = 1000 
+                chunks = 100
         likelihoodOld = converged = numpy.NAN
         self.mle(estimateAlpha = False)
         
@@ -214,7 +214,7 @@ class LdaModel(interfaces.TransformationABC):
             # initialize a new iteration
             if self.dispatcher:
                 logger.info('initializing workers for a new EM iteration')
-                self.dispatcher.reset(self.logProbW)
+                self.dispatcher.reset(self.logProbW, self.alpha)
             else:
                 self.state.reset(self.logProbW)
     
@@ -407,6 +407,8 @@ class LdaModel(interfaces.TransformationABC):
                 a = initA
                 logA = numpy.log(a)
             s = self.state
+            logger.info('docs: %s' % s.numDocs) # FIXME
+            logger.info('alphasuff: %s' % s.alphaSuffStats)
             f = s.numDocs * (gammaln(self.numTopics * a) - self.numTopics * gammaln(a)) + (a - 1) * s.alphaSuffStats
             df = s.alphaSuffStats + s.numDocs * (self.numTopics * digamma(self.numTopics * a) - self.numTopics * digamma(a))
             d2f = s.numDocs * (self.numTopics * self.numTopics * trigamma(self.numTopics * a) - self.numTopics * trigamma(a))

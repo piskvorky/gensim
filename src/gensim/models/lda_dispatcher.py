@@ -120,13 +120,13 @@ class Dispatcher(object):
         return result
     
     
-    def reset(self, logProbW):
+    def reset(self, logProbW, alpha):
         """
         Initialize all workers for a new EM iterations.
         """
         for workerid, worker in self.workers.iteritems():
             logger.info("resetting worker %s" % workerid)
-            worker.reset(logProbW)
+            worker.reset(logProbW, alpha)
         self._jobsdone = 0
     
 
