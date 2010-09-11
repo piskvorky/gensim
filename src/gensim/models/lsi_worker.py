@@ -47,7 +47,6 @@ class Worker(object):
         self.dispatcher = dispatcher
         logger.info("initializing worker #%s" % myid)
         self.model = lsimodel.LsiModel(**model_params)
-        self._exit = False
     
     
     def requestjob(self):
@@ -80,6 +79,11 @@ class Worker(object):
         result = self.model.projection
         self.model.projection = self.model.projection.empty_like()
         return result
+
+    
+    def exit(self):
+        logger.info("terminating worker #%i" % self.myid)
+        os._exit(0)
 #endclass Worker
 
 

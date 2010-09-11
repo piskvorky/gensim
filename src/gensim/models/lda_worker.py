@@ -47,7 +47,6 @@ class Worker(object):
         self.dispatcher = dispatcher
         logger.info("initializing worker #%s" % myid)
         self.model = ldamodel.LdaModel(**model_params)
-        self._exit = False
     
     
     def requestjob(self):
@@ -86,6 +85,11 @@ class Worker(object):
     def reset(self, logProbW):
         logger.info("resetting worker #%i" % self.myid)
         self.model.reset(logProbW)
+
+    
+    def exit(self):
+        logger.info("terminating worker #%i" % self.myid)
+        os._exit(0)
 #endclass Worker
 
 
