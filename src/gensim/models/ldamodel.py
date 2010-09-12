@@ -196,7 +196,6 @@ class LdaModel(interfaces.TransformationABC):
 
     def reset(self, logProbW):
         self.state.reset(logProbW)
-        self.logProbW = numpy.asfortranarray(logProbW) # force column-major for more convenient array strides
 
     
     def addDocuments(self, corpus, chunks=None):
@@ -311,7 +310,6 @@ class LdaModel(interfaces.TransformationABC):
         gamma = numpy.zeros(self.numTopics) + self.alpha + 1.0 * totalWords / self.numTopics
         phi = numpy.zeros(shape = (len(doc), self.numTopics)) + 1.0 / self.numTopics
         likelihood = likelihoodOld = converged = numpy.NAN
-        assert self.logProbW.flags.f_contiguous # make sure we got column-major array; cannot afford conversion at this low level
         
         # variational estimate
         for i in xrange(self.VAR_MAX_ITER):
@@ -329,10 +327,10 @@ class LdaModel(interfaces.TransformationABC):
                     const int n = Ntmp[0];
                     double newphi, tmpSum = 0.0;
                     for (int k = 0; k < n; k++)
-                        tmpSum += exp(tmp[k]);
+                        tmpSum += exp(TMP1(k));
                     tmpSum = log(tmpSum);
                     for (int i = 0; i < n; i++) {
-                        newphi = exp(tmp[i] - tmpSum);
+                        newphi = exp(TMP1(i) - tmpSum);
                         gamma[i] += wordCount * (newphi - phin[i]);
                         phin[i] = newphi;
                     } 
@@ -450,7 +448,7 @@ class LdaModel(interfaces.TransformationABC):
         # transform the probabilities to weights, one topic after another
         for probs in self.logProbW[:numTopics]:
             yield numpy.exp(probs) * (probs - idf)
-        
+    
     
     def printTopics(self, numTopics=5, numWords=10, pretty=True):
         """
@@ -463,9 +461,9 @@ class LdaModel(interfaces.TransformationABC):
         # determine the score of all words in the selected topics
         numTopics = min(numTopics, self.numTopics) # cannot print more topics than computed...
         if pretty:
-            scores = self.logProbW
-        else:
             scores = self.probs2scores(numTopics)
+        else:
+            scores = self.logProbW[:numTopics]
         
         # print top words, one topic after another
         for i, scores in enumerate(scores):
