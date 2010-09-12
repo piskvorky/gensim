@@ -207,7 +207,13 @@ class LdaModel(interfaces.TransformationABC):
         `corpus` (or initializes the model if this is the first call).
         """
         if chunks is None:
-            chunks = self.chunks or 100
+            chunks = self.chunks
+            if chunk is None:
+                if self.dispatcher:
+                    # distributed version: make each node process four chunks during one full corpus iteration
+                    chunks = int(numpy.ceil(0.25 * len(corpus) / len(self.dispatcher.getworkers())))
+                else:
+                    chunks = 100 # serial version: chunks only affect frequency of debug printing
         logger.info("using chunks of %i documents" % chunks)
         likelihoodOld = converged = numpy.NAN
         self.mle(estimateAlpha = False)
