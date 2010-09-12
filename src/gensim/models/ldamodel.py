@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# author Radim Rehurek, radimrehurek@seznam.cz
+# Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
 
 """
 This module encapsulates functionality for the Latent Dirichlet Allocation algorithm.
@@ -9,9 +11,16 @@ This module encapsulates functionality for the Latent Dirichlet Allocation algor
 It allows both model estimation from a training corpus and inference on new, 
 unseen documents.
 
-The implementation is based on Blei et al., Latent Dirichlet Allocation, 2003,
-and on Blei's LDA-C software in particular. This means it uses variational EM
-inference rather than Gibbs sampling to estimate model parameters.
+The implementation is based on "Blei et al., Latent Dirichlet Allocation, 2003",
+and on Blei's LDA-C software [1]_ in particular. This means it uses variational EM
+inference rather than Gibbs sampling to estimate model parameters. NumPy is used 
+heavily here, but is still much slower than the original C version. The up side 
+is that it is streamed (documents come in sequentially, no random indexing), runs 
+in constant memory w.r.t. the number of documents (input corpus size) and is 
+distributed (makes use of a cluster of machines, if available).
+
+.. [1] http://www.cs.princeton.edu/~blei/lda-c/
+
 """
 
 
@@ -40,18 +49,33 @@ trigamma = lambda x: polygamma(1, x) # second derivative of the gamma fnc
 
 
 class LdaState(utils.SaveLoad):
+    """
+    Encapsulate information needed for distributed computation during the 
+    E training step. 
+    
+    Objects of this class are sent over the network at the end of each corpus
+    iteration, so try to keep it lean to reduce traffic.
+    """
     def __init__(self):
-        self.alphaSuffStats = 0.0 # reset alpha stats
-        self.numDocs = 0
-        self.likelihood = 0.0
+        self.reset()
 
-    def reset(self, mat):
+    def reset(self, mat=None):
+        """
+        Prepare for a new iteration.
+        """
         self.classWord = numpy.zeros_like(mat) # reset counts
         self.alphaSuffStats = 0.0 # reset alpha stats
         self.numDocs = 0
         self.likelihood = 0.0
     
     def merge(self, other):
+        """
+        Merge the result of E step from one node with that of another node.
+        
+        The merging is trivial and after merging all cluster nodes, we have the 
+        exact same result as if the computation was run on a single node (no 
+        approximation).
+        """
         self.classWord += other.classWord
         self.alphaSuffStats += other.alphaSuffStats
         self.numDocs += other.numDocs
@@ -59,17 +83,11 @@ class LdaState(utils.SaveLoad):
 #endclass LdaState
 
 
+
 class LdaModel(interfaces.TransformationABC):
     """
     Objects of this class allow building and maintaining a model of Latent Dirichlet
     Allocation.
-    
-    The code is based on Blei's C implementation, see http://www.cs.princeton.edu/~blei/lda-c/ .
-    
-    This Python code uses numpy heavily, and is about 4-5x slower than the original 
-    C version. The up side is that it is streamed (documents come in sequentially,
-    no random indexing) and runs in constant memory w.r.t. the number of documents 
-    (input corpus size).
     
     The constructor estimates model parameters based on a training corpus:
     
@@ -151,6 +169,7 @@ class LdaModel(interfaces.TransformationABC):
             logger.info("using serial LDA version on this node")
             self.dispatcher = None
         else:
+            # set up distributed version
             try:
                 import Pyro
                 ns = Pyro.naming.locateNS()
@@ -162,10 +181,10 @@ class LdaModel(interfaces.TransformationABC):
                 self.dispatcher = dispatcher
                 logger.info("using distributed version with %i workers" % len(dispatcher.getworkers()))
             except Exception, err:
-                # distributed version was specifically requested, so this is an error state
                 logger.error("failed to initialize distributed LDA (%s)" % err)
                 raise RuntimeError("failed to initialize distributed LDA (%s)" % err)
 
+        # if a training corpus was provided, estimate right away
         if corpus is not None:
             self.addDocuments(corpus)
     
@@ -177,7 +196,7 @@ class LdaModel(interfaces.TransformationABC):
 
     def reset(self, logProbW):
         self.state.reset(logProbW)
-        self.logProbW = numpy.asfortranarray(logProbW)
+        self.logProbW = numpy.asfortranarray(logProbW) # force column-major for more convenient array strides
 
     
     def addDocuments(self, corpus, chunks=None):
@@ -196,7 +215,7 @@ class LdaModel(interfaces.TransformationABC):
                 chunks = int(numpy.ceil(len(corpus) / len(self.dispatcher.getworkers())))
                 chunks = min(20000, chunks)
             else:
-                # in serial version, each chunk is 1000 document by default (makes
+                # in serial version, each chunk is 100 documents by default (makes
                 # no difference, only affects frequency of debug logging)
                 chunks = 100
         logger.info("using chunks of %i documents" % chunks)
@@ -228,7 +247,7 @@ class LdaModel(interfaces.TransformationABC):
                     logger.info('PROGRESS: iteration %i, dispatched documents up to #%i' % (i, chunk_no * chunks))
                     logger.debug("creating job #%i" % chunk_no)
                     job = [doc for docno, doc in group]
-                    self.dispatcher.putjob(job) # this will eventually block, because the queue has a small finite size
+                    self.dispatcher.putjob(job) # this will eventually block, because the queue has a small finite length
                     del job
                 else:
                     # serial version, there is only one "worker" (myself) => process the job directly
@@ -244,6 +263,10 @@ class LdaModel(interfaces.TransformationABC):
                 logger.info("all jobs finished, downloading iteration statistics")
                 self.state = self.dispatcher.getstate()
                 
+            # M step -- update alpha and beta (logProbW)
+            logger.info("performing M step #%i" % i)
+            self.mle(estimateAlpha = self.estimate_alpha)
+        
             likelihood = self.state.likelihood # likelihood of the training corpus
             assert numpy.isfinite(likelihood), "bad likelihood %s" % likelihood
 
@@ -253,13 +276,9 @@ class LdaModel(interfaces.TransformationABC):
                          (i, likelihood, likelihoodOld, converged))
             likelihoodOld = likelihood
             
-            # M step -- update alpha and beta
-            logger.info("performing M step #%i" % i)
-            self.mle(estimateAlpha = self.estimate_alpha)
-        
             # log some debug info about topics found so far
             self.printTopics()
-        #endfor iteration
+        #endfor EM loop
 
 
     def docEStep(self, corpus):
@@ -296,13 +315,10 @@ class LdaModel(interfaces.TransformationABC):
         gamma = numpy.zeros(self.numTopics) + self.alpha + 1.0 * totalWords / self.numTopics
         phi = numpy.zeros(shape = (len(doc), self.numTopics)) + 1.0 / self.numTopics
         likelihood = likelihoodOld = converged = numpy.NAN
-        assert self.logProbW.flags.f_contiguous # assert column-major format; cannot afford conversion at this low level
+        assert self.logProbW.flags.f_contiguous # make sure we got column-major array; cannot afford conversion at this low level
         
         # variational estimate
         for i in xrange(self.VAR_MAX_ITER):
-#            logger.debug("inference step #%s, converged=%s, likelihood=%s, likelikelihoodOld=%s" % 
-#                          (i, converged, likelihood, likelihoodOld))
-            
             if numpy.isfinite(converged) and converged <= self.VAR_CONVERGED:
                 logger.debug("document converged in %i iterations" % i)
                 break
@@ -386,20 +402,18 @@ class LdaModel(interfaces.TransformationABC):
         
         if estimateAlpha:
             self.alpha = self.optAlpha()
-        
-        logger.debug("updated model to %s" % self)
     
     
-    def optAlpha(self, MAX_ALPHA_ITER=1000, NEWTON_THRESH=1e-5):
+    def optAlpha(self, max_iter=1000, newton_thresh=1e-5):
         """
-        Estimate new Dirichlet priors (actually just one scalar shared across all
+        Estimate new topic priors (actually just one scalar shared across all
         topics).
         """
         initA = 100.0
         logA = numpy.log(initA) # keep computations in log space
         logger.debug("optimizing old alpha %s" % self.alpha)
         
-        for i in xrange(MAX_ALPHA_ITER):
+        for i in xrange(max_iter):
             a = numpy.exp(logA)
             if not numpy.isfinite(a):
                 initA = initA * 10.0
@@ -412,7 +426,7 @@ class LdaModel(interfaces.TransformationABC):
             d2f = s.numDocs * (self.numTopics * self.numTopics * trigamma(self.numTopics * a) - self.numTopics * trigamma(a))
             logA -= df / (d2f * a + df)
             logger.debug("alpha maximization: f=%f, df=%f" % (f, df))
-            if numpy.abs(df) <= NEWTON_THRESH:
+            if numpy.abs(df) <= newton_thresh:
                 break
         result = numpy.exp(logA) # convert back from log space
         logger.info("estimated old alpha %s to new alpha %s" % (self.alpha, result))
@@ -428,7 +442,7 @@ class LdaModel(interfaces.TransformationABC):
         score if it's probable in this topic (the TF part) and lower score if 
         it's probable across all topics (the IDF part).
         
-        The exact formula is taken from Blei&Lafferty: "Topic Models", 2009
+        The exact formula is taken from Blei&Lafferty: "Topic Models", 2009.
         
         The `numTopics` transformed scores are yielded iteratively, one topic after
         another.
@@ -447,7 +461,7 @@ class LdaModel(interfaces.TransformationABC):
         Print the top `numTerms` words for `numTopics` topics, along with the 
         log of their probability. 
         
-        Uses the `probs2scores()` method to determine what the 'top words' are.
+        Uses the `probs2scores()` to determine what the 'top words' are.
         """
         # determine the score of all words in the selected topics
         numTopics = min(numTopics, self.numTopics) # cannot print more topics than computed...
@@ -488,14 +502,14 @@ class LdaModel(interfaces.TransformationABC):
                     for wordIndex, wordCount in doc: # for each word in the document...
                         result[k, wordIndex] += wordCount # ...add its count to the word-topic count
         return result
-        
+    
     
     def __getitem__(self, bow, eps=0.001):
         """
         Return topic distribution for the given document `bow`, as a list of 
         (topic_id, topic_probability) 2-tuples.
         
-        Ignore topics with very low probability (below 0.001).
+        Ignore topics with very low probability (below `eps`).
         """
         # if the input vector is in fact a corpus, return a transformed corpus as result
         is_corpus, corpus = utils.isCorpus(bow)
