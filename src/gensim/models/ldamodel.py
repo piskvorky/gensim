@@ -26,6 +26,7 @@ distributed (makes use of a cluster of machines, if available).
 
 import logging
 import itertools
+import time
 
 logger = logging.getLogger('ldamodel')
 logger.setLevel(logging.INFO)
@@ -210,8 +211,8 @@ class LdaModel(interfaces.TransformationABC):
             chunks = self.chunks
             if chunks is None:
                 if self.dispatcher:
-                    # distributed version: make each node process four chunks during one full corpus iteration
-                    chunks = int(numpy.ceil(0.25 * len(corpus) / len(self.dispatcher.getworkers())))
+                    # distributed version: make each node process eight chunks during one full corpus iteration
+                    chunks = int(numpy.ceil(0.125 * len(corpus) / len(self.dispatcher.getworkers())))
                     chunks = min(10000, chunks) # but not more than 10k docs at a time
                 else:
                     chunks = 100 # serial version: chunks only affect frequency of debug printing, so use whatever
@@ -223,6 +224,7 @@ class LdaModel(interfaces.TransformationABC):
         for i in xrange(self.EM_MAX_ITER):
             logger.info("starting EM iteration #%i, converged=%s, likelihood=%s" % 
                          (i, converged, self.state.likelihood))
+            start = time.time()
 
             if likelihoodOld > -1e-6 or numpy.isfinite(converged) and (converged <= self.EM_CONVERGED): # solution good enough?
                 logger.info("EM converged in %i iterations" % i)
@@ -269,6 +271,7 @@ class LdaModel(interfaces.TransformationABC):
                          (i, likelihood, likelihoodOld, converged))
             likelihoodOld = likelihood
             
+            logger.info("iteration #%i took %.2fs" % (i, time.time() - start))
             # log some debug info about topics found so far
             self.printTopics()
         #endfor EM loop
