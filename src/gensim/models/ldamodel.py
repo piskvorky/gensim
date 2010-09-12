@@ -51,8 +51,7 @@ trigamma = lambda x: polygamma(1, x) # second derivative of the gamma fnc
 
 class LdaState(utils.SaveLoad):
     """
-    Encapsulate information needed for distributed computation during the 
-    E training step. 
+    Encapsulate information returned by distributed computation of the E training step. 
     
     Objects of this class are sent over the network at the end of each corpus
     iteration, so try to keep it lean to reduce traffic.
@@ -185,7 +184,7 @@ class LdaModel(interfaces.TransformationABC):
                 logger.error("failed to initialize distributed LDA (%s)" % err)
                 raise RuntimeError("failed to initialize distributed LDA (%s)" % err)
 
-        # if a training corpus was provided, estimate right away
+        # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
             self.addDocuments(corpus)
     
@@ -213,7 +212,7 @@ class LdaModel(interfaces.TransformationABC):
                 if self.dispatcher:
                     # distributed version: make each node process eight chunks during one full corpus iteration
                     chunks = int(numpy.ceil(0.125 * len(corpus) / len(self.dispatcher.getworkers())))
-                    chunks = min(10000, max(30, chunks)) # but not less than 30 or more than 10k docs at a time (network overhead vs. memory footprint)
+                    chunks = min(10000, max(10, chunks)) # but not less than 10 or more than 10k docs at a time (network overhead vs. memory footprint)
                 else:
                     chunks = 100 # serial version: chunks only affect frequency of debug printing, so use whatever
         logger.info("using chunks of %i documents" % chunks)
@@ -225,17 +224,13 @@ class LdaModel(interfaces.TransformationABC):
             logger.info("starting EM iteration #%i, converged=%s, likelihood=%s" % 
                          (i, converged, self.state.likelihood))
             start = time.time()
-
-            if likelihoodOld > -1e-6 or numpy.isfinite(converged) and (converged <= self.EM_CONVERGED): # solution good enough?
-                logger.info("EM converged in %i iterations" % i)
-                break
-        
+            
             # initialize a new iteration
             if self.dispatcher:
                 logger.info('initializing workers for a new EM iteration')
                 self.dispatcher.reset(self.logProbW, self.alpha)
             else:
-                self.state.reset(self.logProbW)
+                self.reset(self.logProbW)
     
             # E step: iterate over the corpus, using old beta and updating new word counts
             # proceed in chunks of `chunks` documents
@@ -245,9 +240,7 @@ class LdaModel(interfaces.TransformationABC):
                     # distributed version: add this job to the job queue, so workers can munch on it
                     logger.info('PROGRESS: iteration %i, dispatched documents up to #%i' % (i, chunk_no * chunks))
                     logger.debug("creating job #%i" % chunk_no)
-                    job = [doc for docno, doc in group]
-                    self.dispatcher.putjob(job) # this will eventually block, because the queue has a small finite length
-                    del job
+                    self.dispatcher.putjob([doc for docno, doc in group]) # this will eventually block until some jobs finish, because the queue has a small finite length
                 else:
                     # serial version, there is only one "worker" (myself) => process the job directly
                     logger.info('PROGRESS: iteration %i, document #%i' % (i, chunk_no * chunks))
@@ -257,19 +250,26 @@ class LdaModel(interfaces.TransformationABC):
             if self.dispatcher:
                 logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                 self.state = self.dispatcher.getstate()
-                
+            
+            # check for convergence
+            likelihood = self.state.likelihood # likelihood of the training corpus
+            assert numpy.isfinite(likelihood), "bad likelihood %s" % likelihood
+            converged = numpy.divide(likelihoodOld - likelihood, likelihoodOld)
+            logger.info("finished E step #%i: likelihood %f, likelihoodOld %f, converged %f" % 
+                         (i, likelihood, likelihoodOld, converged))
+            if self.state.likelihood < likelihoodOld:
+                # quit before M step, to keep the old logProbW and alpha
+                logger.warning("iteration diverged!")
+                break
+            likelihoodOld = likelihood
+            
             # M step -- update alpha and beta (logProbW)
             logger.info("performing M step #%i" % i)
             self.mle(estimateAlpha = self.estimate_alpha)
         
-            likelihood = self.state.likelihood # likelihood of the training corpus
-            assert numpy.isfinite(likelihood), "bad likelihood %s" % likelihood
-
-            # check for convergence
-            converged = numpy.divide(likelihoodOld - likelihood, likelihoodOld)
-            logger.info("finished E step #%i: likelihood %f, likelihoodOld %f, converged %f" % 
-                         (i, likelihood, likelihoodOld, converged))
-            likelihoodOld = likelihood
+            if likelihoodOld > -1e-6 or numpy.isfinite(converged) and (converged <= self.EM_CONVERGED): # solution good enough?
+                logger.info("EM converged in %i iterations" % (i + 1))
+                break
             
             logger.info("iteration #%i took %.2fs" % (i, time.time() - start))
             # log some debug info about topics found so far
