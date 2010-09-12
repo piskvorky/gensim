@@ -98,7 +98,9 @@ class Dispatcher(object):
 
     def getjob(self, worker_id):
         logger.info("worker #%i requesting a new job" % worker_id)
-        return self.jobs.get(block = True, timeout = HUGE_TIMEOUT)
+        job = self.jobs.get(block = True, timeout = HUGE_TIMEOUT)
+        logger.info("worker #%i got a new job" % worker_id)
+        return job
 
 
     def putjob(self, job):
