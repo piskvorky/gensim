@@ -120,8 +120,8 @@ class Dispatcher(object):
         workers = self.workers.items()
         result = workers[0][1].getstate()
         for workerid, worker in workers[1:]:
-            logger.info("pulling state from worker %s" % workerid)
             result.merge(worker.getstate())
+            logger.info("pulled state from worker %s" % workerid)
         
         logger.info("sending out merged state")
         return result
