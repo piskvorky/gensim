@@ -112,7 +112,7 @@ class Dispatcher(object):
         """
         Merge states from across all workers and return the result.
         """
-        logger.info("waiting for all remaining jobs to finish")
+        logger.info("end of input, waiting for all remaining jobs to finish")
         while not self.jobs.empty():
             time.sleep(0.5) # check every half a second
         

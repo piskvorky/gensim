@@ -100,7 +100,7 @@ class LdaModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
     """
     def __init__(self, corpus=None, numTopics=200, id2word=None, distributed=False, 
-                 chunks=100, alpha=None, initMode='random', dtype=numpy.float32):
+                 chunks=None, alpha=None, initMode='random', dtype=numpy.float32):
         """
         `numTopics` is the number of requested latent topics to be extracted from
         the training corpus. 
@@ -142,7 +142,7 @@ class LdaModel(interfaces.TransformationABC):
         self.distributed = bool(distributed)
         self.numTopics = int(numTopics)
         self.state = LdaState()
-        self.chunks = int(chunks)
+        self.chunks = chunks
         
         # initialize wordtype/topic counts
         if initMode == 'seeded': # init from corpus (slow)
@@ -208,12 +208,13 @@ class LdaModel(interfaces.TransformationABC):
         """
         if chunks is None:
             chunks = self.chunks
-            if chunk is None:
+            if chunks is None:
                 if self.dispatcher:
                     # distributed version: make each node process four chunks during one full corpus iteration
                     chunks = int(numpy.ceil(0.25 * len(corpus) / len(self.dispatcher.getworkers())))
+                    chunks = min(10000, chunks) # but not more than 10k docs at a time
                 else:
-                    chunks = 100 # serial version: chunks only affect frequency of debug printing
+                    chunks = 100 # serial version: chunks only affect frequency of debug printing, so use whatever
         logger.info("using chunks of %i documents" % chunks)
         likelihoodOld = converged = numpy.NAN
         self.mle(estimateAlpha = False)
