@@ -213,7 +213,7 @@ class LdaModel(interfaces.TransformationABC):
                 if self.dispatcher:
                     # distributed version: make each node process eight chunks during one full corpus iteration
                     chunks = int(numpy.ceil(0.125 * len(corpus) / len(self.dispatcher.getworkers())))
-                    chunks = min(10000, chunks) # but not more than 10k docs at a time
+                    chunks = min(10000, max(30, chunks)) # but not less than 30 or more than 10k docs at a time (network overhead vs. memory footprint)
                 else:
                     chunks = 100 # serial version: chunks only affect frequency of debug printing, so use whatever
         logger.info("using chunks of %i documents" % chunks)
@@ -462,7 +462,7 @@ class LdaModel(interfaces.TransformationABC):
         """
         # determine the score of all words in the selected topics
         numTopics = min(numTopics, self.numTopics) # cannot print more topics than computed...
-        if probOnly:
+        if pretty:
             scores = self.logProbW
         else:
             scores = self.probs2scores(numTopics)
