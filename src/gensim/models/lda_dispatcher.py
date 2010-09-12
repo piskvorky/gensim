@@ -15,7 +15,7 @@ Example: python lda_dispatcher.py
 
 
 from __future__ import with_statement
-import os, sys, logging, threading
+import os, sys, logging, threading, time
 from Queue import Queue
 
 import Pyro
@@ -112,12 +112,17 @@ class Dispatcher(object):
         """
         Merge states from across all workers and return the result.
         """
+        logger.info("waiting for all remaining jobs to finish")
+        while not self.jobs.empty():
+            time.sleep(0.5) # check every half a second
+        
         logger.info("merging states from %i workers" % len(self.workers))
         workers = self.workers.items()
         result = workers[0][1].getstate()
         for workerid, worker in workers[1:]:
             logger.info("pulling state from worker %s" % workerid)
             result.merge(worker.getstate())
+        
         logger.info("sending out merged state")
         return result
     
