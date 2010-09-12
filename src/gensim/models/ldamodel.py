@@ -100,7 +100,7 @@ class LdaModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
     """
     def __init__(self, corpus=None, numTopics=200, id2word=None, distributed=False, 
-                 chunks=None, alpha=None, initMode='random', dtype=numpy.float32):
+                 chunks=100, alpha=None, initMode='random', dtype=numpy.float32):
         """
         `numTopics` is the number of requested latent topics to be extracted from
         the training corpus. 
@@ -142,7 +142,7 @@ class LdaModel(interfaces.TransformationABC):
         self.distributed = bool(distributed)
         self.numTopics = int(numTopics)
         self.state = LdaState()
-        self.chunks = chunks
+        self.chunks = int(chunks)
         
         # initialize wordtype/topic counts
         if initMode == 'seeded': # init from corpus (slow)
@@ -207,17 +207,7 @@ class LdaModel(interfaces.TransformationABC):
         `corpus` (or initializes the model if this is the first call).
         """
         if chunks is None:
-            chunks = self.chunks
-        if chunks is None:
-            if self.dispatcher:
-                # for distributed LDA, set the number of chunks so that the whole
-                # corpus is processed at once (#chunks=#documents/#nodes)
-                chunks = int(numpy.ceil(len(corpus) / len(self.dispatcher.getworkers())))
-                chunks = min(20000, chunks)
-            else:
-                # in serial version, each chunk is 100 documents by default (makes
-                # no difference, only affects frequency of debug logging)
-                chunks = 100
+            chunks = self.chunks or 100
         logger.info("using chunks of %i documents" % chunks)
         likelihoodOld = converged = numpy.NAN
         self.mle(estimateAlpha = False)
@@ -257,10 +247,6 @@ class LdaModel(interfaces.TransformationABC):
             # wait for all workers to finish (distributed version only)
             if self.dispatcher:
                 logger.info("reached the end of input; now waiting for all remaining jobs to finish")
-                import time
-                while self.dispatcher.jobsdone() <= chunk_no:
-                    time.sleep(0.5) # check every half a second
-                logger.info("all jobs finished, downloading iteration statistics")
                 self.state = self.dispatcher.getstate()
                 
             # M step -- update alpha and beta (logProbW)
