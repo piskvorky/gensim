@@ -456,18 +456,23 @@ class LdaModel(interfaces.TransformationABC):
             yield numpy.exp(probs) * (probs - idf)
         
     
-    def printTopics(self, numTopics=5, numWords=10):
+    def printTopics(self, numTopics=5, numWords=10, pretty=True):
         """
         Print the top `numTerms` words for `numTopics` topics, along with the 
         log of their probability. 
         
-        Uses the `probs2scores()` to determine what the 'top words' are.
+        If `pretty` is set, use the `probs2scores()` to determine what the 'top 
+        words' are. Otherwise, order the words directly by their word-topic probability.
         """
         # determine the score of all words in the selected topics
         numTopics = min(numTopics, self.numTopics) # cannot print more topics than computed...
+        if probOnly:
+            scores = self.logProbW
+        else:
+            scores = self.probs2scores(numTopics)
         
         # print top words, one topic after another
-        for i, scores in enumerate(self.probs2scores(numTopics)):
+        for i, scores in enumerate(scores):
             # link scores with the actual words (strings)
             termScores = zip(scores, self.logProbW[i], map(self.id2word.get, xrange(len(scores))))
             
