@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.7.3',
+        VERSION:     '0.7.4',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -237,20 +237,20 @@ see the <a class="reference external" href="distributed.html"><em>distributed tu
 itself is blazing fast and most time is already spent on I/O conversions,
 so the extra effort of sending data around over the network actually <strong>slows
 the algorithm down</strong>. For this reason, there is no distributed variant of the
-two-pass algo.</p>
+two-pass algo in <cite>gensim</cite>.</p>
 </div>
 <hr class="docutils" />
 <table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> My laptop = dual-core 2.53GHz MacBook Pro, 4GB RAM, OS X with <cite>libVec</cite>.</td></tr>
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> My laptop = Core2Duo 2.53GHz MacBook Pro, 4GB RAM, OS X with <cite>libVec</cite>.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td><p class="first">Here we&#8217;re mostly interested in performance, but it is interesting to look at the
-retrieved LSA concepts, too. I am no expert and don&#8217;t see into Wiki&#8217;s bowels,
+retrieved LSA concepts, too. I am no Wikipedia expert and don&#8217;t see into Wiki&#8217;s bowels,
 but Brian Mingus had this to say about the result:</p>
 <div class="highlight-python"><pre>There appears to be a lot of noise in your dataset. The first three topics
 in your list appear to be meta topics, concerning the administration and
@@ -266,7 +266,7 @@ The sixth shows the influence of sports bots, and the seventh of music bots.</pr
 </div>
 <p class="last">So the top ten concepts are apparently dominated by Wikipedia robots and expanded
 templates; this is a good reminder that LSA is a powerful tool for data analysis,
-but not a magic pill. As always, it&#8217;s <a class="reference external" href="http://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out">garbage in, garbage out</a>...
+but no magic pill. As always, it&#8217;s <a class="reference external" href="http://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out">garbage in, garbage out</a>...
 By the way, improvements to the Wiki markup parsing code are welcome :-)</p>
 </td></tr>
 </tbody>
@@ -304,7 +304,7 @@ By the way, improvements to the Wiki markup parsing code are welcome :-)</p>
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 07, 2010.
+      Last updated on Sep 13, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

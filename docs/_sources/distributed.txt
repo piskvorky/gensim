@@ -86,10 +86,8 @@ If at least one worker is found, things will run in the distributed mode; if not
 Available distributed algorithms
 ---------------------------------
 
-At this moment there is only distributed *Latent Semantic Analysis (LSA, LSI)* available. 
-Distributed *Latent Dirichlet Allocation (LDA)* is on its way.
-
 .. toctree::
    :maxdepth: 1
    
    dist_lsi
+   dist_lda

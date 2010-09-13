@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.7.3',
+        VERSION:     '0.7.4',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -59,7 +59,7 @@
             <h3><a href="index.html">Table Of Contents</a></h3>
             <ul>
 <li><a class="reference external" href="#">Introduction</a><ul>
-<li><a class="reference external" href="#design-objectives">Design objectives</a></li>
+<li><a class="reference external" href="#design">Design</a></li>
 <li><a class="reference external" href="#availability">Availability</a></li>
 <li><a class="reference external" href="#core-concepts">Core concepts</a></li>
 </ul>
@@ -110,25 +110,25 @@ document analysis</a> at Wikipedia.</p>
 <p class="last">Gensim&#8217;s target audience is the NLP research community and interested general public;
 gensim is not meant to be a production tool for commercial environments.</p>
 </div>
-<div class="section" id="design-objectives">
-<span id="design"></span><h2>Design objectives<a class="headerlink" href="#design-objectives" title="Permalink to this headline">¶</a></h2>
-<p>Gensim includes the following features:</p>
+<div class="section" id="design">
+<span id="id1"></span><h2>Design<a class="headerlink" href="#design" title="Permalink to this headline">¶</a></h2>
+<p><cite>gensim</cite> includes the following features:</p>
 <ul class="simple">
-<li>Memory independence &#8211; there is no need for the whole text corpus (or any
+<li><strong>Memory independence</strong> &#8211; there is no need for the whole text corpus (or any
 intermediate term-document matrices) to reside fully in RAM at any one time.</li>
 <li>Implementations for several popular vector space algorithms,
-including Tf-Idf, Latent Semantic Analysis (LSA/LSI via <a class="reference external" href="http://en.wikipedia.org/wiki/Singular_value_decomposition">incremental SVD</a>),
-incremental Latent Dirichlet Allocation (LDA) or Random Projection; adding new ones is easy (really!).</li>
-<li>I/O wrappers and converters around several popular data formats.</li>
-<li>Similarity queries across documents in their latent, topical representation.</li>
+including <strong>Tf-Idf</strong>, <strong>Latent Semantic Analysis</strong> (LSA/LSI via <a class="reference external" href="http://en.wikipedia.org/wiki/Singular_value_decomposition">incremental SVD</a>),
+incremental <strong>Latent Dirichlet Allocation (LDA)</strong> or <strong>Random Projection</strong>; adding new ones is easy (really!).</li>
+<li>I/O wrappers and converters around <strong>several popular data formats</strong>.</li>
+<li><strong>Similarity queries</strong> across documents in their latent, topical representation.</li>
 </ul>
 <p>Creation of <cite>gensim</cite> was motivated by a perceived lack of available, scalable software
-frameworks that realize topic modeling, and/or their overwhelming internal complexity.
-You can read more about the motivation in our <a class="reference external" href="http://nlp.fi.muni.cz/projekty/gensim/lrec2010_final.pdf">LREC 2010 workshop paper</a>.</p>
+frameworks that realize topic modelling, and/or their overwhelming internal complexity (java!).
+You can read more about the motivation in our <a class="reference external" href="http://nlp.fi.muni.cz/projekty/gensim/lrec2010_final.pdf">LREC 2010 workshop paper</a>.
+If you want to cite <cite>gensim</cite> in your own work, please refer to that article.</p>
 <p>The <strong>principal design objectives</strong> behind <cite>gensim</cite> are:</p>
 <ol class="arabic simple">
-<li>Straightforward interfaces and low API learning curve for developers,
-facilitating modifications and rapid prototyping.</li>
+<li>Straightforward interfaces and extremely low API learning curve for developers. Good for prototyping.</li>
 <li>Memory independence with respect to the size of the input corpus; all intermediate
 steps and algorithms operate in a streaming fashion, processing one document
 at a time.</li>
@@ -230,7 +230,7 @@ and more useful, with similar documents having similar representations.</dd>
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 07, 2010.
+      Last updated on Sep 13, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

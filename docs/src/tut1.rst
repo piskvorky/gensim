@@ -142,15 +142,15 @@ Corpus Formats
 
 There exist several file formats for storing a Vector Space corpus (~sequence of vectors) to disk.
 `Gensim` implements them via the *streaming corpus interface* mentioned earlier:
-documents are read from disk in a lazy fashion, one document at a time, without the whole
-corpus being read into main memory at once.
+documents are read from (resp. stored to) disk in a lazy fashion, one document at 
+a time, without the whole corpus being read into main memory at once.
 
 One of the more notable file formats is the `Market Matrix format <http://math.nist.gov/MatrixMarket/formats.html>`_.
 To save a corpus in the Matrix Market format:
 
 >>> from gensim import corpora
->>>
->>> corpus = [[(1, 0.5)], []] # create a toy corpus of 2 documents (one of them empty, for the heck of it)
+>>> # create a toy corpus of 2 documents, as a plain Python list
+>>> corpus = [[(1, 0.5)], []]  # make one document empty, for the heck of it
 >>>
 >>> corpora.MmCorpus.saveCorpus('/tmp/corpus.mm', corpus)
 
@@ -189,19 +189,21 @@ or
 The second way is obviously more memory-friendly, but for testing and development
 purposes, nothing beats the simplicity of calling ``list(corpus)``.
 
-To save the same corpus in Blei's LDA-C format,
+To save the same Matrix Market document stream in Blei's LDA-C format,
 
 >>> corpora.BleiCorpus.saveCorpus('/tmp/corpus.lda-c', corpus)
 
 In this way, `gensim` can also be used as a memory-efficient **I/O format conversion tool**: 
 just load a document stream using one format and immediately save it in another format.
+Adding new formats is dead easy, check out the `code for the SVMlight corpus 
+<http://my-trac.assembla.com/gensim/browser/trunk/src/gensim/corpora/svmlightcorpus.py>`_ for an example.
 
-For a complete reference (want to prune the dictionary to a smaller size? convert between
-sparse vectors and numpy/scipy arrays?), see the :doc:`API documentation <apiref>`. 
+-------------
+
+For a complete reference (Want to prune the dictionary to a smaller size? 
+Convert between corpora and NumPy arrays?), see the :doc:`API documentation <apiref>`.
 Or continue to the next tutorial on :doc:`tut2`.
 
-
-------
 
 .. [1]  This is the same corpus as used in 
         `Deerwester et al. (1990): Indexing by Latent Semantic Analysis <http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf>`_, Table 2.

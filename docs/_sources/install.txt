@@ -40,23 +40,25 @@ Install `gensim`
 
 You can now install (or upgrade) `gensim` with::
 
-    sudo easy_install --upgrade gensim[lsi]
+    sudo easy_install --upgrade gensim
 
 That's it! Congratulations, you can proceed to the :doc:`tutorials <tutorial>`.
 
-In case you know you won't be using the one-pass Latent Semantic Analysis algorithm, 
-you can omit the optional `[lsi]` feature and install with::
+In case you know you will be using the one-pass Latent Semantic Analysis algorithm,
+you can add the optional `[lsi]` feature and install with::
 
-    sudo easy_install gensim
+    sudo easy_install gensim[lsi]
     
-If you, on the other hand, also want to run the algorithms over a cluster 
+If you also want to run the algorithms over a cluster 
 of computers, in :doc:`distributed`, you should install with::
 
     sudo easy_install gensim[lsi,distributed]
 
 The optional `lsi` feature will install the `sparsesvd <http://pypi.python.org/pypi/sparsesvd>`_ package; 
-`distributed` feature installs `Pyro (PYthon Remote Objects) <http://pypi.python.org/pypi/Pyro>`_. These
-optional extensions can also be installed separately later with::
+`distributed` feature installs `Pyro (PYthon Remote Objects) <http://pypi.python.org/pypi/Pyro>`_. 
+If you don't know what one-pass LSI or distributed LSI means, ignore these optional features:
+`gensim` will work fine for you anyway.
+These optional extensions can also be installed separately later with::
     
     sudo easy_install sparsesvd Pyro
 
@@ -71,7 +73,7 @@ There are also alternative routes to install:
      sudo python setup.py install 
    
    to install `gensim` into your ``site-packages`` folder.
-2. If you wish to make local changes to `gensim` code (`gensim` is, after all, a 
+2. If you wish to make local changes to the `gensim` code (`gensim` is, after all, a 
    package which targets research prototyping and modifications), a preferred 
    way may be installing with::
    

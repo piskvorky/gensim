@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.7.3',
+        VERSION:     '0.7.4',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -220,13 +220,13 @@ briefly turn our attention to <em>corpus persistency</em>.</p>
 <span id="id2"></span><h2>Corpus Formats<a class="headerlink" href="#corpus-formats" title="Permalink to this headline">¶</a></h2>
 <p>There exist several file formats for storing a Vector Space corpus (~sequence of vectors) to disk.
 <cite>Gensim</cite> implements them via the <em>streaming corpus interface</em> mentioned earlier:
-documents are read from disk in a lazy fashion, one document at a time, without the whole
-corpus being read into main memory at once.</p>
+documents are read from (resp. stored to) disk in a lazy fashion, one document at
+a time, without the whole corpus being read into main memory at once.</p>
 <p>One of the more notable file formats is the <a class="reference external" href="http://math.nist.gov/MatrixMarket/formats.html">Market Matrix format</a>.
 To save a corpus in the Matrix Market format:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span>
-<span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span> <span class="p">[]]</span> <span class="c"># create a toy corpus of 2 documents (one of them empty, for the heck of it)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># create a toy corpus of 2 documents, as a plain Python list</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span> <span class="p">[]]</span>  <span class="c"># make one document empty, for the heck of it</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
 </pre></div>
@@ -264,16 +264,17 @@ To save a corpus in the Matrix Market format:</p>
 </div>
 <p>The second way is obviously more memory-friendly, but for testing and development
 purposes, nothing beats the simplicity of calling <tt class="docutils literal"><span class="pre">list(corpus)</span></tt>.</p>
-<p>To save the same corpus in Blei&#8217;s LDA-C format,</p>
+<p>To save the same Matrix Market document stream in Blei&#8217;s LDA-C format,</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">BleiCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.lda-c&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>In this way, <cite>gensim</cite> can also be used as a memory-efficient <strong>I/O format conversion tool</strong>:
-just load a document stream using one format and immediately save it in another format.</p>
-<p>For a complete reference (want to prune the dictionary to a smaller size? convert between
-sparse vectors and numpy/scipy arrays?), see the <a class="reference external" href="apiref.html"><em>API documentation</em></a>.
-Or continue to the next tutorial on <a class="reference external" href="tut2.html"><em>Topics and Transformations</em></a>.</p>
+just load a document stream using one format and immediately save it in another format.
+Adding new formats is dead easy, check out the <a class="reference external" href="http://my-trac.assembla.com/gensim/browser/trunk/src/gensim/corpora/svmlightcorpus.py">code for the SVMlight corpus</a> for an example.</p>
 <hr class="docutils" />
+<p>For a complete reference (Want to prune the dictionary to a smaller size?
+Convert between corpora and NumPy arrays?), see the <a class="reference external" href="apiref.html"><em>API documentation</em></a>.
+Or continue to the next tutorial on <a class="reference external" href="tut2.html"><em>Topics and Transformations</em></a>.</p>
 <table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
@@ -314,7 +315,7 @@ Or continue to the next tutorial on <a class="reference external" href="tut2.htm
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 07, 2010.
+      Last updated on Sep 13, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

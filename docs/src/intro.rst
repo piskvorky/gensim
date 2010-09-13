@@ -24,27 +24,27 @@ document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ at W
 
 .. _design:
 
-Design objectives
+Design
 ------------------
  
-Gensim includes the following features:
+`gensim` includes the following features:
 
-* Memory independence -- there is no need for the whole text corpus (or any 
+* **Memory independence** -- there is no need for the whole text corpus (or any 
   intermediate term-document matrices) to reside fully in RAM at any one time.
 * Implementations for several popular vector space algorithms, 
-  including Tf-Idf, Latent Semantic Analysis (LSA/LSI via `incremental SVD <http://en.wikipedia.org/wiki/Singular_value_decomposition>`_), 
-  incremental Latent Dirichlet Allocation (LDA) or Random Projection; adding new ones is easy (really!).
-* I/O wrappers and converters around several popular data formats.
-* Similarity queries across documents in their latent, topical representation.
+  including **Tf-Idf**, **Latent Semantic Analysis** (LSA/LSI via `incremental SVD <http://en.wikipedia.org/wiki/Singular_value_decomposition>`_), 
+  incremental **Latent Dirichlet Allocation (LDA)** or **Random Projection**; adding new ones is easy (really!).
+* I/O wrappers and converters around **several popular data formats**.
+* **Similarity queries** across documents in their latent, topical representation.
  
 Creation of `gensim` was motivated by a perceived lack of available, scalable software 
-frameworks that realize topic modeling, and/or their overwhelming internal complexity.
+frameworks that realize topic modelling, and/or their overwhelming internal complexity (java!).
 You can read more about the motivation in our `LREC 2010 workshop paper <http://nlp.fi.muni.cz/projekty/gensim/lrec2010_final.pdf>`_.
+If you want to cite `gensim` in your own work, please refer to that article.
 
 The **principal design objectives** behind `gensim` are:
 
-1. Straightforward interfaces and low API learning curve for developers, 
-   facilitating modifications and rapid prototyping.
+1. Straightforward interfaces and extremely low API learning curve for developers. Good for prototyping.
 2. Memory independence with respect to the size of the input corpus; all intermediate 
    steps and algorithms operate in a streaming fashion, processing one document 
    at a time.

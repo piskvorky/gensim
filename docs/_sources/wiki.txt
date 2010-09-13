@@ -151,15 +151,15 @@ see the :doc:`distributed tutorial <distributed>`.
   itself is blazing fast and most time is already spent on I/O conversions, 
   so the extra effort of sending data around over the network actually **slows 
   the algorithm down**. For this reason, there is no distributed variant of the 
-  two-pass algo.
+  two-pass algo in `gensim`.
 
 --------------------
 
-.. [1]  My laptop = dual-core 2.53GHz MacBook Pro, 4GB RAM, OS X with `libVec`.
+.. [1]  My laptop = Core2Duo 2.53GHz MacBook Pro, 4GB RAM, OS X with `libVec`.
 
 .. [2]
   Here we're mostly interested in performance, but it is interesting to look at the
-  retrieved LSA concepts, too. I am no expert and don't see into Wiki's bowels, 
+  retrieved LSA concepts, too. I am no Wikipedia expert and don't see into Wiki's bowels, 
   but Brian Mingus had this to say about the result::
 
     There appears to be a lot of noise in your dataset. The first three topics
@@ -176,6 +176,6 @@ see the :doc:`distributed tutorial <distributed>`.
     
   So the top ten concepts are apparently dominated by Wikipedia robots and expanded 
   templates; this is a good reminder that LSA is a powerful tool for data analysis, 
-  but not a magic pill. As always, it's `garbage in, garbage out 
+  but no magic pill. As always, it's `garbage in, garbage out 
   <http://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out>`_...
   By the way, improvements to the Wiki markup parsing code are welcome :-)
