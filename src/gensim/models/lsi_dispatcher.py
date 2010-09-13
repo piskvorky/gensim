@@ -15,7 +15,7 @@ Example: python lsi_dispatcher.py
 
 
 from __future__ import with_statement
-import os, sys, logging, threading
+import os, sys, logging, threading, time
 from Queue import Queue
 
 import Pyro
@@ -110,6 +110,10 @@ class Dispatcher(object):
         """
         Merge projections from across all workers and return the final projection.
         """
+        logger.info("end of input, assigning all remaining jobs")
+        while not self.jobs.empty():
+            time.sleep(0.5) # check every half a second
+        
         # TODO: merge in parallel, so that we're done in `log_2(workers)` merges, 
         # and not `workers - 1` merges!
         # but merging only takes place once, after all input data has been processed,

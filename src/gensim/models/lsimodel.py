@@ -390,15 +390,10 @@ class LsiModel(interfaces.TransformationABC):
                         logger.info("processed documents up to #%s" % doc_no)
                         self.printTopics(5) # TODO see if printDebug works and remove one of these..
                 
+                # wait for all workers to finish (distributed version only)
                 if self.dispatcher:
                     logger.info("reached the end of input; now waiting for all remaining jobs to finish")
-                    import time
-                    while self.dispatcher.jobsdone() <= chunk_no:
-                        time.sleep(0.5) # check every half a second
-                    logger.info("all jobs finished, downloading final projection")
-                    del self.projection
-                    self.projection = self.dispatcher.getstate()
-                    logger.info("decomposition complete")
+                    self.state = self.dispatcher.getstate()
         else:
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             assert self.onepass, "distributed two-pass algo not supported yet"
