@@ -393,7 +393,7 @@ class LsiModel(interfaces.TransformationABC):
                 # wait for all workers to finish (distributed version only)
                 if self.dispatcher:
                     logger.info("reached the end of input; now waiting for all remaining jobs to finish")
-                    self.state = self.dispatcher.getstate()
+                    self.projection = self.dispatcher.getstate()
         else:
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             assert self.onepass, "distributed two-pass algo not supported yet"
