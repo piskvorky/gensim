@@ -92,19 +92,18 @@ folding-in for LSA, by topic inference for LDA etc.
 
 Transformations can also be serialized, one on top of another, in a sort of chain:
 
->>> lsi = models.LsiModel(corpus_tfidf, id2word = dictionary.id2token, numTopics = 2) # initialize an LSI transformation
+>>> lsi = models.LsiModel(corpus_tfidf, id2word=dictionary.id2word, numTopics=2) # initialize an LSI transformation
 >>> corpus_lsi = lsi[corpus_tfidf] # create a double wrapper over the original corpus: bow->tfidf->fold-in-lsi
 
 Here we transformed our Tf-Idf corpus via `Latent Semantic Indexing <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
 into a latent 2-D space (2-D because we set ``numTopics=2``). Now you're probably wondering: what do these two latent 
 dimensions stand for? Let's inspect with :func:`models.LsiModel.printTopics`:
 
->>> for topicNo in range(lsi.numTopics):
->>>     print 'topic %i: %s' % (topicNo, lsi.printTopic(topicNo))
-topic 0: -0.703 * "trees" + -0.538 * "graph" + -0.402 * "minors" + -0.187 * "survey" + -0.061 * "system" + -0.060 * "time" + -0.060 * "response" + -0.058 * "user" + -0.049 * "computer" + -0.035 * "interface" + -0.035 * "eps" + -0.030 * "human"
-topic 1: 0.460 * "system" + 0.373 * "user" + 0.332 * "eps" + 0.328 * "interface" + 0.320 * "time" + 0.320 * "response" + 0.293 * "computer" + 0.280 * "human" + 0.171 * "survey" + -0.161 * "trees" + -0.076 * "graph" + -0.029 * "minors"
+  >>> lsi.printTopics(2)
+  topic #0(1.594): -0.703*"trees" + -0.538*"graph" + -0.402*"minors" + -0.187*"survey" + -0.061*"system" + -0.060*"response" + -0.060*"time" + -0.058*"user" + -0.049*"computer" + -0.035*"interface"
+  topic #1(1.476): -0.460*"system" + -0.373*"user" + -0.332*"eps" + -0.328*"interface" + -0.320*"response" + -0.320*"time" + -0.293*"computer" + -0.280*"human" + -0.171*"survey" + 0.161*"trees"
 
-It appears that according to LSI, "trees", "graphs" and "minors" are all related 
+It appears that according to LSI, "trees", "graph" and "minors" are all related 
 words (and contribute the most to the direction of the first topic), while the 
 second topic practically concerns itself with all the other words. As expected, 
 the first five documents are more strongly related to the second topic while the 
@@ -150,7 +149,7 @@ Gensim implements several popular Vector Space Model algorithms:
   the number of dimensions intact. It can also optionally normalize the resulting
   vectors to (Euclidean) unit length.
 
-  >>> model = tfidfmodel.TfidfModel(bow_corpus, normalize = True)
+  >>> model = tfidfmodel.TfidfModel(bow_corpus, normalize=True)
 
 * `Latent Semantic Indexing, LSI (or sometimes LSA) <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
   transforms documents from either bag-of-words or (preferrably) TfIdf-weighted space into
@@ -158,7 +157,7 @@ Gensim implements several popular Vector Space Model algorithms:
   2 latent dimensions, but on real corpora, target dimensionality of 200--500 is recommended
   as a "golden standard" [1]_.
   
-  >>> model = lsimodel.LsiModel(tfidf_corpus, id2word=dictionary.id2token, numTopics=300)
+  >>> model = lsimodel.LsiModel(tfidf_corpus, id2word=dictionary.id2word, numTopics=300)
 
   LSI training is unique in that we can continue "training" at any point, simply 
   by providing more training documents. This is done by incremental updates to 
@@ -185,7 +184,7 @@ Gensim implements several popular Vector Space Model algorithms:
   CPU-friendly) approach to approximating TfIdf distances between documents, by throwing in a little randomness. 
   Recommended target dimensionality is again in the hundreds/thousands, depending on your dataset.
 
-  >>> model = rpmodel.RpModel(tfidf_corpus, numTopics = 500)
+  >>> model = rpmodel.RpModel(tfidf_corpus, numTopics=500)
 
 * `Latent Dirichlet Allocation, LDA <http://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
   is yet another transformation from bag-of-words counts into a topic space of lower 
@@ -193,7 +192,7 @@ Gensim implements several popular Vector Space Model algorithms:
   so we are currently looking into ways of making it faster (see eg. [2]_, [3]_). If you 
   could help, `let us know <mailto:radimrehurek@seznam.cz>`_!
 
-  >>> model = ldamodel.LdaModel(bow_corpus, id2word = dictionary.id2token, numTopics = 200)
+  >>> model = ldamodel.LdaModel(bow_corpus, id2word=dictionary.id2word, numTopics=200)
 
 Adding new :abbr:`VSM (Vector Space Model)` transformations (such as different weighting schemes) is rather trivial;
 see the :doc:`API reference <apiref>` or directly the Python code for more info and examples.
