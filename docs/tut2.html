@@ -182,20 +182,19 @@ transformation is costly, <a class="reference external" href="tut1.html#corpus-f
 using that.</p>
 </div>
 <p>Transformations can also be serialized, one on top of another, in a sort of chain:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus_tfidf</span><span class="p">,</span> <span class="n">id2word</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">id2token</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="c"># initialize an LSI transformation</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus_tfidf</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="o">.</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="c"># initialize an LSI transformation</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus_lsi</span> <span class="o">=</span> <span class="n">lsi</span><span class="p">[</span><span class="n">corpus_tfidf</span><span class="p">]</span> <span class="c"># create a double wrapper over the original corpus: bow-&gt;tfidf-&gt;fold-in-lsi</span>
 </pre></div>
 </div>
 <p>Here we transformed our Tf-Idf corpus via <a class="reference external" href="http://en.wikipedia.org/wiki/Latent_semantic_indexing">Latent Semantic Indexing</a>
 into a latent 2-D space (2-D because we set <tt class="docutils literal"><span class="pre">numTopics=2</span></tt>). Now you&#8217;re probably wondering: what do these two latent
 dimensions stand for? Let&#8217;s inspect with <tt class="xref docutils literal"><span class="pre">models.LsiModel.printTopics()</span></tt>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">topicNo</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">lsi</span><span class="o">.</span><span class="n">numTopics</span><span class="p">):</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="k">print</span> <span class="s">&#39;topic </span><span class="si">%i</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">topicNo</span><span class="p">,</span> <span class="n">lsi</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="n">topicNo</span><span class="p">))</span>
-<span class="go">topic 0: -0.703 * &quot;trees&quot; + -0.538 * &quot;graph&quot; + -0.402 * &quot;minors&quot; + -0.187 * &quot;survey&quot; + -0.061 * &quot;system&quot; + -0.060 * &quot;time&quot; + -0.060 * &quot;response&quot; + -0.058 * &quot;user&quot; + -0.049 * &quot;computer&quot; + -0.035 * &quot;interface&quot; + -0.035 * &quot;eps&quot; + -0.030 * &quot;human&quot;</span>
-<span class="go">topic 1: 0.460 * &quot;system&quot; + 0.373 * &quot;user&quot; + 0.332 * &quot;eps&quot; + 0.328 * &quot;interface&quot; + 0.320 * &quot;time&quot; + 0.320 * &quot;response&quot; + 0.293 * &quot;computer&quot; + 0.280 * &quot;human&quot; + 0.171 * &quot;survey&quot; + -0.161 * &quot;trees&quot; + -0.076 * &quot;graph&quot; + -0.029 * &quot;minors&quot;</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">topic #0(1.594): -0.703*&quot;trees&quot; + -0.538*&quot;graph&quot; + -0.402*&quot;minors&quot; + -0.187*&quot;survey&quot; + -0.061*&quot;system&quot; + -0.060*&quot;response&quot; + -0.060*&quot;time&quot; + -0.058*&quot;user&quot; + -0.049*&quot;computer&quot; + -0.035*&quot;interface&quot;</span>
+<span class="go">topic #1(1.476): -0.460*&quot;system&quot; + -0.373*&quot;user&quot; + -0.332*&quot;eps&quot; + -0.328*&quot;interface&quot; + -0.320*&quot;response&quot; + -0.320*&quot;time&quot; + -0.293*&quot;computer&quot; + -0.280*&quot;human&quot; + -0.171*&quot;survey&quot; + 0.161*&quot;trees&quot;</span>
 </pre></div>
 </div>
-<p>It appears that according to LSI, &#8220;trees&#8221;, &#8220;graphs&#8221; and &#8220;minors&#8221; are all related
+<p>It appears that according to LSI, &#8220;trees&#8221;, &#8220;graph&#8221; and &#8220;minors&#8221; are all related
 words (and contribute the most to the direction of the first topic), while the
 second topic practically concerns itself with all the other words. As expected,
 the first five documents are more strongly related to the second topic while the
@@ -236,7 +235,7 @@ will have their value increased.
 It therefore converts integer-valued vectors into real-valued ones, while leaving
 the number of dimensions intact. It can also optionally normalize the resulting
 vectors to (Euclidean) unit length.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">tfidfmodel</span><span class="o">.</span><span class="n">TfidfModel</span><span class="p">(</span><span class="n">bow_corpus</span><span class="p">,</span> <span class="n">normalize</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">tfidfmodel</span><span class="o">.</span><span class="n">TfidfModel</span><span class="p">(</span><span class="n">bow_corpus</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
@@ -245,7 +244,7 @@ transforms documents from either bag-of-words or (preferrably) TfIdf-weighted sp
 a latent space of a lower dimensionality. For the toy corpus above we used only
 2 latent dimensions, but on real corpora, target dimensionality of 200&#8211;500 is recommended
 as a &#8220;golden standard&#8221; <a class="footnote-reference" href="#id5" id="id1">[1]</a>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">tfidf_corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="o">.</span><span class="n">id2token</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">tfidf_corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="o">.</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>LSI training is unique in that we can continue &#8220;training&#8221; at any point, simply
@@ -271,7 +270,7 @@ in <cite>gensim</cite>), look at <a class="reference external" href="wiki.html">
 reduce vector space dimensionality. This is a very efficient (both memory- and
 CPU-friendly) approach to approximating TfIdf distances between documents, by throwing in a little randomness.
 Recommended target dimensionality is again in the hundreds/thousands, depending on your dataset.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">rpmodel</span><span class="o">.</span><span class="n">RpModel</span><span class="p">(</span><span class="n">tfidf_corpus</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">500</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">rpmodel</span><span class="o">.</span><span class="n">RpModel</span><span class="p">(</span><span class="n">tfidf_corpus</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
@@ -280,7 +279,7 @@ is yet another transformation from bag-of-words counts into a topic space of low
 dimensionality. LDA is <strong>much</strong> slower than the other algorithms,
 so we are currently looking into ways of making it faster (see eg. <a class="footnote-reference" href="#id6" id="id2">[2]</a>, <a class="footnote-reference" href="#id7" id="id3">[3]</a>). If you
 could help, <a class="reference external" href="mailto:radimrehurek&#37;&#52;&#48;seznam&#46;cz">let us know</a>!</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">bow_corpus</span><span class="p">,</span> <span class="n">id2word</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">id2token</span><span class="p">,</span> <span class="n">numTopics</span> <span class="o">=</span> <span class="mi">200</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">bow_corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="o">.</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>

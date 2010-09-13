@@ -65,7 +65,7 @@ our choice is incidental) and try::
     >>> corpus = corpora.MmCorpus('/tmp/deerwester.mm') # load a corpus of nine documents, from the Tutorials
     >>> id2word = corpora.Dictionary.load('/tmp/deerwester.dict').id2token
 
-    >>> lsi = models.LsiModel(corpus, id2word, numTopics=200, chunks=1, distributed=True) # run distributed LSA on nine documents
+    >>> lsi = models.LsiModel(corpus, id2word=id2word, numTopics=200, chunks=1, distributed=True) # run distributed LSA on nine documents
 
 This uses the corpus and feature-token mapping created in the :doc:`tut1` tutorial.
 If you look at the log in your Python session, you should see a line similar to::
@@ -77,8 +77,8 @@ processes --- this is especially helpful in case of problems.
 To check the LSA results, let's print the first two latent topics::
 
     >>> lsi.printTopics(numTopics=2, numWords=5)
-    0.644 * "survey" + 0.404 * "response" + 0.301 * "user" + 0.265 * "time" + 0.265 * "system"
-    0.623 * "graph" + 0.490 * "trees" + 0.451 * "minors" + 0.274 * "eps" + -0.167 * "survey"
+    topic #0(3.341): -0.644*"system" + -0.404*"user" + -0.301*"eps" + -0.265*"time" + -0.265*"response"
+    topic #1(2.542): -0.623*"graph" + -0.490*"trees" + -0.451*"minors" + -0.274*"survey" + 0.167*"system"
 
 Success! But a corpus of nine documents is no challenge for our powerful cluster...
 In fact, we had to lower the job size (`chunks` parameter above) to a single document 
@@ -89,11 +89,11 @@ So let's run LSA on **one million documents** instead::
     >>> # inflate the corpus to 1M documents, by repeating it over&over
     >>> corpus1m = utils.RepeatCorpus(corpus, 1000000) 
     >>> # run distributed LSA on 1 million documents
-    >>> lsi1m = models.LsiModel(corpus1m, id2word, numTopics=200, chunks=10000, distributed=True)
+    >>> lsi1m = models.LsiModel(corpus1m, id2word=id2word, numTopics=200, chunks=10000, distributed=True)
 
     >>> lsi1m.printTopics(numTopics=2, numWords=5)
-    -0.644 * "survey" + -0.404 * "response" + -0.301 * "user" + -0.265 * "time" + -0.265 * "system
-    0.623 * "graph" + 0.490 * "trees" + 0.451 * "minors" + 0.274 * "eps" + -0.167 * "survey"
+    topic #0(1113.628): 0.644*"system" + 0.404*"user" + 0.301*"eps" + 0.265*"time" + 0.265*"response"
+    topic #1(847.233): 0.623*"graph" + 0.490*"trees" + 0.451*"minors" + 0.274*"survey" + -0.167*"system"
 
 The log from 1M LSA should look like::
 
@@ -146,7 +146,10 @@ Now we're ready to run distributed LSA on the English Wikipedia::
     2010-09-01 10:13:21,246 : INFO : topic #9(78.150): film(0.556), directorial(0.007), directed(0.104), remake(0.007), cassavetes(0.001), theatrically(0.003), ebert(0.004), projectionist(0.001), starring(0.046), films(0.427), ..., 분류(-0.036), kategória(-0.044), kategori(-0.175), categoría(-0.057), kategoria(-0.056)
 
 
-In serial mode, creating the LSI model of Wikipedia with this one-pass algorithm 
+In serial mode, creating the LSI model of Wikipedia with this **one-pass algorithm** 
 takes about 8.5h on my laptop (OS X, dual-core 2.53GHz, 4GB RAM with `libVec`). 
 In distributed mode with six workers (Linux, dual-core Xeons of 2Ghz, 4GB RAM 
 with `ATLAS`), the wallclock time taken drops to 2 hours and 23 minutes.
+
+Remember that `gensim` also contains a fast **two-pass algorithm**, which runs in 2.5h
+even on a single computer. See :doc:`wiki` for more info.

@@ -34,13 +34,13 @@ MmCorpus(9 documents, 12 features, 28 non-zero entries)
 To follow Deerwester's example, we first use this tiny corpus to define a 2-dimensional 
 LSI space:
 
->>> lsi = models.LsiModel(corpus, id2word = dictionary.id2token, numTopics = 2)
+>>> lsi = models.LsiModel(corpus, id2word=dictionary.id2word, numTopics=2)
   
 Now suppose a user typed in the query `"Human computer interaction"`. We would 
 like to sort our nine corpus documents in decreasing order of relevance to this query. 
 Unlike modern search engines, here we only concentrate on a single aspect of possible 
 similarities---on apparent semantic relatedness of their texts (words). No hyperlinks,
-no random-walk static ranks, just an semantic extension over the boolean keyword match:
+no random-walk static ranks, just a semantic extension over the boolean keyword match:
 
 >>> doc = "Human computer interaction"
 >>> vec_bow = dictionary.doc2bow(doc.lower().split())

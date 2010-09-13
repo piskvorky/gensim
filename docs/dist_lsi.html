@@ -148,7 +148,7 @@ our choice is incidental) and try:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.mm&#39;</span><span class="p">)</span> <span class="c"># load a corpus of nine documents, from the Tutorials</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.dict&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">id2token</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="c"># run distributed LSA on nine documents</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="c"># run distributed LSA on nine documents</span>
 </pre></div>
 </div>
 <p>This uses the corpus and feature-token mapping created in the <a class="reference external" href="tut1.html"><em>Corpora and Vector Spaces</em></a> tutorial.
@@ -159,8 +159,8 @@ If you look at the log in your Python session, you should see a line similar to:
 processes &#8212; this is especially helpful in case of problems.
 To check the LSA results, let&#8217;s print the first two latent topics:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="n">numTopics</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">numWords</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="go">0.644 * &quot;survey&quot; + 0.404 * &quot;response&quot; + 0.301 * &quot;user&quot; + 0.265 * &quot;time&quot; + 0.265 * &quot;system&quot;</span>
-<span class="go">0.623 * &quot;graph&quot; + 0.490 * &quot;trees&quot; + 0.451 * &quot;minors&quot; + 0.274 * &quot;eps&quot; + -0.167 * &quot;survey&quot;</span>
+<span class="go">topic #0(3.341): -0.644*&quot;system&quot; + -0.404*&quot;user&quot; + -0.301*&quot;eps&quot; + -0.265*&quot;time&quot; + -0.265*&quot;response&quot;</span>
+<span class="go">topic #1(2.542): -0.623*&quot;graph&quot; + -0.490*&quot;trees&quot; + -0.451*&quot;minors&quot; + -0.274*&quot;survey&quot; + 0.167*&quot;system&quot;</span>
 </pre></div>
 </div>
 <p>Success! But a corpus of nine documents is no challenge for our powerful cluster...
@@ -170,11 +170,11 @@ at a time, otherwise all documents would be processed by a single worker all at 
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># inflate the corpus to 1M documents, by repeating it over&amp;over</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus1m</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">RepeatCorpus</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># run distributed LSA on 1 million documents</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus1m</span><span class="p">,</span> <span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus1m</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="n">numTopics</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">numWords</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="go">-0.644 * &quot;survey&quot; + -0.404 * &quot;response&quot; + -0.301 * &quot;user&quot; + -0.265 * &quot;time&quot; + -0.265 * &quot;system</span>
-<span class="go">0.623 * &quot;graph&quot; + 0.490 * &quot;trees&quot; + 0.451 * &quot;minors&quot; + 0.274 * &quot;eps&quot; + -0.167 * &quot;survey&quot;</span>
+<span class="go">topic #0(1113.628): 0.644*&quot;system&quot; + 0.404*&quot;user&quot; + 0.301*&quot;eps&quot; + 0.265*&quot;time&quot; + 0.265*&quot;response&quot;</span>
+<span class="go">topic #1(847.233): 0.623*&quot;graph&quot; + 0.490*&quot;trees&quot; + 0.451*&quot;minors&quot; + 0.274*&quot;survey&quot; + -0.167*&quot;system&quot;</span>
 </pre></div>
 </div>
 <p>The log from 1M LSA should look like:</p>
@@ -225,10 +225,12 @@ the corpus iterator with:</p>
 <span class="go">2010-09-01 10:13:21,246 : INFO : topic #9(78.150): film(0.556), directorial(0.007), directed(0.104), remake(0.007), cassavetes(0.001), theatrically(0.003), ebert(0.004), projectionist(0.001), starring(0.046), films(0.427), ..., 분류(-0.036), kategória(-0.044), kategori(-0.175), categoría(-0.057), kategoria(-0.056)</span>
 </pre></div>
 </div>
-<p>In serial mode, creating the LSI model of Wikipedia with this one-pass algorithm
+<p>In serial mode, creating the LSI model of Wikipedia with this <strong>one-pass algorithm</strong>
 takes about 8.5h on my laptop (OS X, dual-core 2.53GHz, 4GB RAM with <cite>libVec</cite>).
 In distributed mode with six workers (Linux, dual-core Xeons of 2Ghz, 4GB RAM
 with <cite>ATLAS</cite>), the wallclock time taken drops to 2 hours and 23 minutes.</p>
+<p>Remember that <cite>gensim</cite> also contains a fast <strong>two-pass algorithm</strong>, which runs in 2.5h
+even on a single computer. See <a class="reference external" href="wiki.html"><em>Experiments on Wikipedia</em></a> for more info.</p>
 </div>
 </div>
 

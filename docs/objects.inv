@@ -7,9 +7,9 @@ gensim.models.ldamodel mod models/ldamodel.html
 gensim.matutils mod matutils.html
 gensim.models.lda_worker mod models/lda_worker.html
 gensim.corpora.svmlightcorpus mod corpora/svmlightcorpus.html
-gensim.corpora.bleicorpus mod corpora/bleicorpus.html
-gensim.corpora mod corpora/corpora.html
 gensim.corpora.mmcorpus mod corpora/mmcorpus.html
+gensim.corpora mod corpora/corpora.html
+gensim.corpora.bleicorpus mod corpora/bleicorpus.html
 gensim.corpora.lowcorpus mod corpora/lowcorpus.html
 gensim.models.lda_dispatcher mod models/lda_dispatcher.html
 gensim.corpora.wikicorpus mod corpora/wikicorpus.html
