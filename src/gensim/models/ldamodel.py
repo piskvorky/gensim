@@ -196,6 +196,7 @@ class LdaModel(interfaces.TransformationABC):
 
     def reset(self, logProbW):
         self.state.reset(logProbW)
+        self.logProbW = logProbW
 
     
     def addDocuments(self, corpus, chunks=None):
