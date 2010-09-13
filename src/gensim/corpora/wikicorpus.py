@@ -5,21 +5,23 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""USAGE: %(program)s WIKI_XML_DUMP OUTPUT_PREFIX [VOCABULARY_SIZE]
+"""
+USAGE: %(program)s WIKI_XML_DUMP OUTPUT_PREFIX [VOCABULARY_SIZE]
 
-Convert articles from a Wikipedia dump to (sparse) vectors. The input is a bz2-compressed \
+    Convert articles from a Wikipedia dump to (sparse) vectors. The input is a bz2-compressed \
 dump of Wikipedia articles, in XML format.
 
 This actually creates three files:
- * OUTPUT_PREFIX_wordids.txt: mapping between words and their integer ids
- * OUTPUT_PREFIX_bow.mm: bag-of-words (word counts) representation, in Matrix Matrix format
- * OUTPUT_PREFIX_tfidf.mm: TF-IDF representation
+
+* `OUTPUT_PREFIX_wordids.txt`: mapping between words and their integer ids
+* `OUTPUT_PREFIX_bow.mm`: bag-of-words (word counts) representation, in Matrix Matrix format
+* `OUTPUT_PREFIX_tfidf.mm`: TF-IDF representation
 
 The output Matrix Market files can then be compressed (e.g., by bzip2) to save \
 disk space; gensim's corpus iterators can work with compressed input, too.
 
-VOCABULARY_SIZE controls how many of the most frequent words to keep (after 
-removing all tokens that appear in more than 10%% documents). Defaults to 100,000.
+`VOCABULARY_SIZE` controls how many of the most frequent words to keep (after 
+removing all tokens that appear in more than 10 percent documents). Defaults to 100,000.
 
 Example: ./wikicorpus.py ~/gensim/results/enwiki-20100622-pages-articles.xml.bz2 ~/gensim/results/wiki_en
 """
@@ -227,6 +229,12 @@ class WikiCorpus(interfaces.CorpusABC):
         
         Only articles of sufficient length are returned (short articles & redirects
         etc are ignored).
+        
+        Note that this iterates over the **texts**; if you want vectors, just use 
+        the standard corpus interface instead of this function::
+        
+        >>> for vec in wiki_corpus:
+        >>>     print doc
         """
         articles, articles_all = 0, 0
         intext, positions = False, 0

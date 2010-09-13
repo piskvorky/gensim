@@ -1,9 +1,16 @@
 Changes
 =======
 
+0.7.4
+
+* sped up Latent Dirichlet ~10x (through scipy.weave, optional)
+* finally, distributed LDA! scales almost linearly, but no tutorial yet. see the tutorial on distributed LSI, everything's completely analogous.
+* several minor fixes and improvements; one nasty bug fixed (lsi[corpus] didn't work; thx to Danilo Spinelli)
+
 0.7.3
 
 * added stochastic SVD decomposition (faster than the current one-pass LSI algo, but needs two passes over the input corpus)
+* published gensim on mloss.org
 
 0.7.2
 
@@ -59,7 +66,7 @@ Changes
 0.4.3
 
 * documentation changes
-* added gensim reference to Wiki articles (SVD, LSI, LDA, TFIDF, ...)
+* added gensim reference to Wikipedia articles (SVD, LSI, LDA, TFIDF, ...)
 
 0.4.2
 
