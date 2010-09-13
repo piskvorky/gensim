@@ -421,10 +421,10 @@ class LsiModel(interfaces.TransformationABC):
         # if the input vector is in fact a corpus, return a transformed corpus as result
         is_corpus, bow = utils.isCorpus(bow)
         if is_corpus:
-            self._apply(bow)
+            return self._apply(bow)
         
         assert self.projection.u is not None, "decomposition not initialized yet"
-        vec = numpy.asfortranarray(matutils.sparse2full(bow, self.numTerms), dtype = self.projection.u.dtype)
+        vec = matutils.sparse2full(bow, self.numTerms).astype(self.projection.u.dtype)
         vec.shape = (self.numTerms, 1)
         topicDist = scipy.linalg.fblas.dgemv(1.0, self.projection.u, vec, trans = True) # u^T * x
         if scaled:
