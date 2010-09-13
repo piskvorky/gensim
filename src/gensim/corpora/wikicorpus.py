@@ -19,7 +19,7 @@ The output Matrix Market files can then be compressed (e.g., by bzip2) to save \
 disk space; gensim's corpus iterators can work with compressed input, too.
 
 VOCABULARY_SIZE controls how many of the most frequent words to keep (after 
-removing all tokens that appear in more than 10% documents). Defaults to 100,000.
+removing all tokens that appear in more than 10%% documents). Defaults to 100,000.
 
 Example: ./wikicorpus.py ~/gensim/results/enwiki-20100622-pages-articles.xml.bz2 ~/gensim/results/wiki_en
 """
@@ -334,6 +334,6 @@ if __name__ == '__main__':
     
     # save tfidf vectors in matrix market format
     # ~1.5h; result file is 14GB! bzip2'ed down to 4.5GB
-    MmCorpus.saveCorpus(output + '_tfidf.mm', tfidf[mm], progressCnt = 10000)
+    MmCorpus.saveCorpus(output + '_tfidf.mm', tfidf[mm], progressCnt=10000)
     
     logging.info("finished running %s" % program)
