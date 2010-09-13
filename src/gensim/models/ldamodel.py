@@ -362,13 +362,13 @@ class LdaModel(interfaces.TransformationABC):
         
         for n, (wordIndex, wordCount) in enumerate(doc):
             try:
-                phin, lprob = phi[n], self.logProbW[:, wordIndex] # only references; stride must be 1!
+                phin, lprob = phi[n], self.logProbW[:, wordIndex]
                 code = """
                 const int num_terms = Nphin[0];
                 double result = 0.0;
                 for (int i=0; i < num_terms; i++) {
                     if (phin[i] > 1e-8 || phin[i] < -1e-8)
-                        result += phin[i] * (dig[i] - log(phin[i]) + lprob[i]);
+                        result += phin[i] * (dig[i] - log(phin[i]) + LPROB1(i));
                 }
                 return_val = wordCount * result;
                 """
