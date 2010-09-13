@@ -100,7 +100,7 @@ class LdaModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
     """
     def __init__(self, corpus=None, numTopics=200, id2word=None, distributed=False, 
-                 chunks=None, alpha=None, initMode='random', dtype=numpy.float32):
+                 chunks=None, alpha=None, initMode='random', dtype=numpy.float64):
         """
         `numTopics` is the number of requested latent topics to be extracted from
         the training corpus. 
@@ -209,9 +209,7 @@ class LdaModel(interfaces.TransformationABC):
             chunks = self.chunks
             if chunks is None:
                 if self.dispatcher:
-                    # distributed version: make each node process eight chunks during one full corpus iteration
-                    chunks = int(numpy.ceil(0.125 * len(corpus) / len(self.dispatcher.getworkers())))
-                    chunks = min(10000, max(10, chunks)) # but not less than 10 or more than 10k docs at a time (network overhead vs. memory footprint)
+                    chunks = 20 # trade-off between network overhead/memory footprint; what is optimal?
                 else:
                     chunks = 100 # serial version: chunks only affect frequency of debug printing, so use whatever
         logger.info("using chunks of %i documents" % chunks)
@@ -258,7 +256,7 @@ class LdaModel(interfaces.TransformationABC):
                          (i, likelihood, likelihoodOld, converged))
             if self.state.likelihood < likelihoodOld:
                 # quit before M step, to keep the old logProbW and alpha
-                logger.warning("iteration diverged!")
+                logger.warning("iteration diverged! returning early")
                 break
             likelihoodOld = likelihood
             
