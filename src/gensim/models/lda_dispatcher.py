@@ -10,7 +10,7 @@ USAGE: %(program)s SIZE_OF_JOBS_QUEUE
     Dispatcher process which orchestrates distributed LDA computations. Run this \
 script only once, on any node in your cluster.
 
-Example: python lda_dispatcher.py
+Example: python -m gensim.models.lda_dispatcher
 """
 
 
@@ -143,8 +143,8 @@ class Dispatcher(object):
         A worker has finished its job. Log this event and then asynchronously 
         transfer control back to the worker.
         
-        In this way, control flow basically oscillates between dispatcher.jobdone()
-        worker.requestjob().
+        In this way, control flow basically oscillates between `dispatcher.jobdone()`
+        and `worker.requestjob()`.
         """
         self._jobsdone += 1
         logger.info("worker #%s finished job #%i" % (workerid, self._jobsdone))

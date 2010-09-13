@@ -691,8 +691,8 @@ def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None, d
     in case the input is of lower rank. Also note that the decomposition is unique
     up the the sign of the left singular vectors (columns of U).
     
-    This is a streamed, two-pass algorithm, without power-itrations. In case you can 
-    only afford a single pass over the input corpus, set onepass=True in LsiModel and 
+    This is a streamed, two-pass algorithm, without power-iterations. In case you can 
+    only afford a single pass over the input corpus, set `onepass=True` in LsiModel and 
     avoid using this algorithm.
 
     The decomposition algorithm is based on 

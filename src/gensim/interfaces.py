@@ -21,8 +21,6 @@ class CorpusABC(utils.SaveLoad):
     iteration step yields one document. A document is a list of (fieldId, fieldValue)
     2-tuples.
     
-    See the `corpora` package for some example corpus implementations.
-    
     Note that although a default :func:`len` method is provided, it is very inefficient
     (performs a linear scan through the corpus to determine its length). Wherever 
     the corpus size is needed and known in advance (or at least doesn't change so 
