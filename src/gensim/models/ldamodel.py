@@ -11,13 +11,13 @@ This module encapsulates functionality for the Latent Dirichlet Allocation algor
 It allows both model estimation from a training corpus and inference on new, 
 unseen documents.
 
-The implementation is based on "Blei et al., Latent Dirichlet Allocation, 2003",
+The implementation is based on **Blei et al., Latent Dirichlet Allocation, 2003**,
 and on Blei's LDA-C software [1]_ in particular. This means it uses variational EM
 inference rather than Gibbs sampling to estimate model parameters. NumPy is used 
 heavily here, but is still much slower than the original C version. The up side 
-is that it is streamed (documents come in sequentially, no random indexing), runs 
-in constant memory w.r.t. the number of documents (input corpus size) and is 
-distributed (makes use of a cluster of machines, if available).
+is that it is **streamed** (documents come in sequentially, no random indexing), runs 
+in **constant memory** w.r.t. the number of documents (input corpus size) and is 
+**distributed** (makes use of a cluster of machines, if available).
 
 .. [1] http://www.cs.princeton.edu/~blei/lda-c/
 
@@ -54,14 +54,14 @@ class LdaState(utils.SaveLoad):
     Encapsulate information returned by distributed computation of the E training step. 
     
     Objects of this class are sent over the network at the end of each corpus
-    iteration, so try to keep it lean to reduce traffic.
+    iteration, so try to keep this class lean to reduce traffic.
     """
     def __init__(self):
         self.reset()
 
     def reset(self, mat=None):
         """
-        Prepare for a new iteration.
+        Prepare the state for a new iteration.
         """
         self.classWord = numpy.zeros_like(mat) # reset counts
         self.alphaSuffStats = 0.0 # reset alpha stats
@@ -70,7 +70,7 @@ class LdaState(utils.SaveLoad):
     
     def merge(self, other):
         """
-        Merge the result of E step from one node with that of another node.
+        Merge the result of an E step from one node with that of another node.
         
         The merging is trivial and after merging all cluster nodes, we have the 
         exact same result as if the computation was run on a single node (no 
@@ -434,7 +434,7 @@ class LdaModel(interfaces.TransformationABC):
         score if it's probable in this topic (the TF part) and lower score if 
         it's probable across all topics (the IDF part).
         
-        The exact formula is taken from Blei&Lafferty: "Topic Models", 2009.
+        The exact formula is taken from **Blei&Lafferty: "Topic Models", 2009**.
         
         The `numTopics` transformed scores are yielded iteratively, one topic after
         another.

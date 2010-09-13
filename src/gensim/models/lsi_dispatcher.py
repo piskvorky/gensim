@@ -10,7 +10,7 @@ USAGE: %(program)s SIZE_OF_JOBS_QUEUE
     Dispatcher process which orchestrates distributed LSI computations. Run this \
 script only once, on any node in your cluster.
 
-Example: python lsi_dispatcher.py
+Example: python -m gensim.models.lsi_dispatcher
 """
 
 

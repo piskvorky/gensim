@@ -12,7 +12,7 @@ on every node in your cluster. If you wish, you may even run it multiple times \
 on a single machine, to make better use of multiple cores (just beware that \
 memory footprint increases accordingly).
 
-Example: python lda_worker.py
+Example: python -m gensim.models.lda_worker
 """
 
 
