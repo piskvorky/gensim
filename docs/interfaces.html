@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.7.3',
+        VERSION:     '0.7.4',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -96,7 +96,6 @@ is provided in the interface itself, so that the interfaces can be subclassed).<
 <dd><p>Interface for corpora. A <em>corpus</em> is simply an iterable, where each 
 iteration step yields one document. A document is a list of (fieldId, fieldValue)
 2-tuples.</p>
-<p>See the <cite>corpora</cite> package for some example corpus implementations.</p>
 <p>Note that although a default <tt class="xref docutils literal"><span class="pre">len()</span></tt> method is provided, it is very inefficient
 (performs a linear scan through the corpus to determine its length). Wherever 
 the corpus size is needed and known in advance (or at least doesn&#8217;t change so 
@@ -196,7 +195,7 @@ document in its stead.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 07, 2010.
+      Last updated on Sep 13, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

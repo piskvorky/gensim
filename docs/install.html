@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.7.3',
+        VERSION:     '0.7.4',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -129,20 +129,22 @@ sudo easy_install scipy</pre>
 <div class="section" id="install-gensim">
 <h2>Install <cite>gensim</cite><a class="headerlink" href="#install-gensim" title="Permalink to this headline">¶</a></h2>
 <p>You can now install (or upgrade) <cite>gensim</cite> with:</p>
-<div class="highlight-python"><pre>sudo easy_install --upgrade gensim[lsi]</pre>
+<div class="highlight-python"><pre>sudo easy_install --upgrade gensim</pre>
 </div>
 <p>That&#8217;s it! Congratulations, you can proceed to the <a class="reference external" href="tutorial.html"><em>tutorials</em></a>.</p>
-<p>In case you know you won&#8217;t be using the one-pass Latent Semantic Analysis algorithm,
-you can omit the optional <cite>[lsi]</cite> feature and install with:</p>
-<div class="highlight-python"><pre>sudo easy_install gensim</pre>
+<p>In case you know you will be using the one-pass Latent Semantic Analysis algorithm,
+you can add the optional <cite>[lsi]</cite> feature and install with:</p>
+<div class="highlight-python"><pre>sudo easy_install gensim[lsi]</pre>
 </div>
-<p>If you, on the other hand, also want to run the algorithms over a cluster
+<p>If you also want to run the algorithms over a cluster
 of computers, in <a class="reference external" href="distributed.html"><em>Distributed Computing</em></a>, you should install with:</p>
 <div class="highlight-python"><pre>sudo easy_install gensim[lsi,distributed]</pre>
 </div>
 <p>The optional <cite>lsi</cite> feature will install the <a class="reference external" href="http://pypi.python.org/pypi/sparsesvd">sparsesvd</a> package;
-<cite>distributed</cite> feature installs <a class="reference external" href="http://pypi.python.org/pypi/Pyro">Pyro (PYthon Remote Objects)</a>. These
-optional extensions can also be installed separately later with:</p>
+<cite>distributed</cite> feature installs <a class="reference external" href="http://pypi.python.org/pypi/Pyro">Pyro (PYthon Remote Objects)</a>.
+If you don&#8217;t know what one-pass LSI or distributed LSI means, ignore these optional features:
+<cite>gensim</cite> will work fine for you anyway.
+These optional extensions can also be installed separately later with:</p>
 <div class="highlight-python"><pre>sudo easy_install sparsesvd Pyro</pre>
 </div>
 <hr class="docutils" />
@@ -155,7 +157,7 @@ you can run:</p>
 </div>
 <p>to install <cite>gensim</cite> into your <tt class="docutils literal"><span class="pre">site-packages</span></tt> folder.</p>
 </li>
-<li><p class="first">If you wish to make local changes to <cite>gensim</cite> code (<cite>gensim</cite> is, after all, a
+<li><p class="first">If you wish to make local changes to the <cite>gensim</cite> code (<cite>gensim</cite> is, after all, a
 package which targets research prototyping and modifications), a preferred
 way may be installing with:</p>
 <div class="highlight-python"><pre>sudo python setup.py develop</pre>
@@ -212,7 +214,7 @@ email to the address at the bottom of this page.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 07, 2010.
+      Last updated on Sep 13, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>
