@@ -24,7 +24,7 @@ in **constant memory** w.r.t. the number of documents (input corpus size) and is
 """
 
 
-import logging
+import sys, logging
 import itertools
 import time
 
@@ -207,12 +207,9 @@ class LdaModel(interfaces.TransformationABC):
         `corpus` (or initializes the model if this is the first call).
         """
         if chunks is None:
-            chunks = self.chunks
-            if chunks is None:
-                if self.dispatcher:
-                    chunks = 20 # trade-off between network overhead/memory footprint; what is optimal?
-                else:
-                    chunks = 100 # serial version: chunks only affect frequency of debug printing, so use whatever
+            # in serial version `chunks` only affect the frequency of debug printing, so use whatever
+            # in distributed version, `chunks` is a trade-off between network overhead/memory footprint; what is optimal?
+            chunks = self.chunks or 100
         logger.info("using chunks of %i documents" % chunks)
         likelihoodOld = converged = numpy.NAN
         self.mle(estimateAlpha = False)
@@ -524,3 +521,262 @@ class LdaModel(interfaces.TransformationABC):
                 if topicValue >= eps] # ignore topics with prob < 0.001
 #endclass LdaModel
 
+#####################
+
+from gensim.corpora import WikiCorpus, MmCorpus
+import numpy as n
+from scipy.special import gammaln, psi
+
+n.random.seed(100000001)
+meanchangethresh = 0.001
+
+
+
+def dirichlet_expectation(alpha):
+    """
+    For a vector theta ~ Dir(alpha), computes E[log(theta)] given alpha.
+    """
+    if (len(alpha.shape) == 1):
+        return(psi(alpha) - psi(n.sum(alpha)))
+    return(psi(alpha) - psi(n.sum(alpha, 1))[:, n.newaxis])
+
+
+class OnlineLDA(interfaces.TransformationABC):
+    """
+    Implements online VB for LDA as described in (Hoffman et al. 2010).
+    """
+
+    def __init__(self, vocab, K, D, alpha, eta, tau0, kappa=0.0):
+        """
+        Arguments:
+        K: Number of topics
+        vocab: A set of words to recognize. When analyzing documents, any word
+           not in this set will be ignored.
+        D: Total number of documents in the population. For a fixed corpus,
+           this is the size of the corpus. In the truly online setting, this
+           can be an estimate of the maximum number of documents that
+           could ever be seen.
+        alpha: Hyperparameter for prior on weight vectors theta
+        eta: Hyperparameter for prior on topics beta
+        tau0: A (positive) learning parameter that downweights early iterations
+        kappa: Learning rate: exponential decay rate---should be between
+             (0.5, 1.0] to guarantee asymptotic convergence.
+
+        Note that if you pass the same set of D documents in every time and
+        set kappa=0 this class can also be used to do batch VB.
+        """
+        self._vocab = dict((word, wordid) for wordid, word in enumerate(vocab))
+        self._K = K
+        self._W = len(self._vocab)
+        self._D = D
+        self._alpha = alpha
+        self._eta = eta
+        self._tau0 = tau0 + 1
+        self._kappa = kappa
+        self._updatect = 0
+
+        # Initialize the variational distribution q(beta|lambda)
+        self._lambda = 1*n.random.gamma(100., 1./100., (self._K, self._W))
+        self._Elogbeta = dirichlet_expectation(self._lambda)
+        self._expElogbeta = n.exp(self._Elogbeta)
+
+    def do_e_step(self, docs):
+        """
+        Given a mini-batch of documents, estimates the parameters
+        gamma controlling the variational distribution over the topic
+        weights for each document in the mini-batch.
+
+        Arguments:
+        docs:  List of D documents. Each document must be represented
+               as a string. (Word order is unimportant.) Any
+               words not in the vocabulary will be ignored.
+
+        Returns a tuple containing the estimated values of gamma,
+        as well as sufficient statistics needed to update lambda.
+        """
+        logger.info("performing E step on %i documents" % len(docs))
+
+        # Initialize the variational distribution q(theta|gamma) for
+        # the mini-batch
+        gamma = 1*n.random.gamma(100., 1./100., (len(docs), self._K))
+        Elogtheta = dirichlet_expectation(gamma)
+        expElogtheta = n.exp(Elogtheta)
+
+        sstats = n.zeros(self._lambda.shape)
+        # Now, for each document d update that document's gamma and phi
+        it = 0
+        meanchange = 0
+        for d, doc in enumerate(docs):
+            if d % 10000 == 0:
+                logger.info("PROGRESS: at document #%i/#%i" % (d, len(docs)))
+            # These are mostly just shorthand
+            ids = [id for id, _ in doc]
+            cts = numpy.array([cnt for _, cnt in doc])
+            gammad = gamma[d, :]
+            Elogthetad = Elogtheta[d, :]
+            expElogthetad = expElogtheta[d, :]
+            expElogbetad = self._expElogbeta[:, ids]
+            # The optimal phi_{dwk} is proportional to 
+            # expElogthetad_k * expElogbetad_w. phinorm is the normalizer.
+            phinorm = n.dot(expElogthetad, expElogbetad) + 1e-100
+            # Iterate between gamma and phi until convergence
+            for it in xrange(100):
+                lastgamma = gammad
+                # We represent phi implicitly to save memory and time.
+                # Substituting the value of the optimal phi back into
+                # the update for gamma gives this update. Cf. Lee&Seung 2001.
+                gammad = self._alpha + expElogthetad * \
+                    n.dot(cts / phinorm, expElogbetad.T)
+                Elogthetad = dirichlet_expectation(gammad)
+                expElogthetad = n.exp(Elogthetad)
+                phinorm = n.dot(expElogthetad, expElogbetad) + 1e-100
+                # If gamma hasn't changed much, we're done.
+                meanchange = n.mean(abs(gammad - lastgamma))
+                if (meanchange < meanchangethresh):
+                    break
+            gamma[d, :] = gammad
+            # Contribution of document d to the expected sufficient
+            # statistics for the M step.
+            sstats[:, ids] += n.outer(expElogthetad.T, cts/phinorm)
+
+        # This step finishes computing the sufficient statistics for the
+        # M step, so that
+        # sstats[k, w] = \sum_d n_{dw} * phi_{dwk} 
+        # = \sum_d n_{dw} * exp{Elogtheta_{dk} + Elogbeta_{kw}} / phinorm_{dw}.
+        sstats = sstats * self._expElogbeta
+
+        return((gamma, sstats))
+
+    def update_lambda(self, docs):
+        """
+        First does an E step on the mini-batch given in wordids and
+        wordcts, then uses the result of that E step to update the
+        variational parameter matrix lambda.
+
+        Arguments:
+        docs:  List of D documents. Each document must be represented
+               as a string. (Word order is unimportant.) Any
+               words not in the vocabulary will be ignored.
+
+        Returns gamma, the parameters to the variational distribution
+        over the topic weights theta for the documents analyzed in this
+        update.
+
+        Also returns an estimate of the variational bound for the
+        entire corpus for the OLD setting of lambda based on the
+        documents passed in. This can be used as a (possibly very
+        noisy) estimate of held-out likelihood.
+        """
+
+        # rhot will be between 0 and 1, and says how much to weight
+        # the information we got from this mini-batch.
+        rhot = pow(self._tau0 + self._updatect, -self._kappa)
+        self._rhot = rhot
+        # Do an E step to update gamma, phi | lambda for this
+        # mini-batch. This also returns the information about phi that
+        # we need to update lambda.
+        (gamma, sstats) = self.do_e_step(docs)
+        # Estimate held-out likelihood for current values of lambda.
+        bound = self.approx_bound(docs, gamma)
+        # Update lambda based on documents.
+        self._lambda = self._lambda * (1-rhot) + \
+            rhot * (self._eta + self._D * sstats / len(docs))
+        self._Elogbeta = dirichlet_expectation(self._lambda)
+        self._expElogbeta = n.exp(self._Elogbeta)
+        self._updatect += 1
+
+        return(gamma, bound)
+
+    def approx_bound(self, docs, gamma):
+        """
+        Estimates the variational bound over *all documents* using only
+        the documents passed in as "docs." gamma is the set of parameters
+        to the variational distribution q(theta) corresponding to the
+        set of documents passed in.
+
+        The output of this function is going to be noisy, but can be
+        useful for assessing convergence.
+        """
+        logger.info("computing likelihood of %i documents" % len(docs))
+
+        score = 0
+        Elogtheta = dirichlet_expectation(gamma)
+        expElogtheta = n.exp(Elogtheta)
+
+        # E[log p(docs | theta, beta)]
+        for d, doc in enumerate(docs):
+            if d % 10000 == 0:
+                logger.info("PROGRESS: at document #%i/#%i" % (d, len(docs)))
+            gammad = gamma[d, :]
+            ids = [id for id, _ in doc]
+            cts = numpy.array([cnt for _, cnt in doc])
+            phinorm = n.zeros(len(ids))
+            for i in xrange(len(ids)):
+                temp = Elogtheta[d, :] + self._Elogbeta[:, ids[i]]
+                tmax = max(temp)
+                phinorm[i] = n.log(sum(n.exp(temp - tmax))) + tmax
+            score += n.sum(cts * phinorm)
+#             oldphinorm = phinorm
+#             phinorm = n.dot(expElogtheta[d, :], self._expElogbeta[:, ids])
+#             print oldphinorm
+#             print n.log(phinorm)
+#             score += n.sum(cts * n.log(phinorm))
+
+        # E[log p(theta | alpha) - log q(theta | gamma)]
+        score += n.sum((self._alpha - gamma)*Elogtheta)
+        score += n.sum(gammaln(gamma) - gammaln(self._alpha))
+        score += sum(gammaln(self._alpha*self._K) - gammaln(n.sum(gamma, 1)))
+
+        # Compensate for the subsampling of the population of documents
+        score = score * self._D / len(docs)
+
+        # E[log p(beta | eta) - log q (beta | lambda)]
+        score = score + n.sum((self._eta-self._lambda)*self._Elogbeta)
+        score = score + n.sum(gammaln(self._lambda) - gammaln(self._eta))
+        score = score + n.sum(gammaln(self._eta*self._W) - 
+                              gammaln(n.sum(self._lambda, 1)))
+
+        return(score)
+
+
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
+    logging.root.setLevel(level = logging.INFO)
+    logging.info("running %s" % ' '.join(sys.argv))
+
+    # The number of documents to analyze each iteration
+    vocab = WikiCorpus.loadDictionary('/Users/kofola/gensim/results/wiki10_en_wordids.txt')
+    corpus = MmCorpus('/Users/kofola/gensim/results/wiki10_en_bow.mm')
+    sumcnts = sum(sum(cnt for _, cnt in doc) for doc in corpus)
+    logger.info("running LDA on %i documents, %i total tokens" % 
+                (len(corpus), sumcnts))
+    
+    batchsize = 100000
+    D = 100000 # total number of docs
+    K = 100 # number of topics
+    iterations = int(sys.argv[1])
+
+    # Initialize the algorithm with alpha=1/K, eta=1/K, tau_0=1024, kappa=0.7
+    olda = OnlineLDA(vocab.values(), K, D, 1./K, 1./K, 1., kappa=0.0)
+    # Run until we've seen D documents. (Feel free to interrupt *much*
+    # sooner than this.)
+    for iteration in range(0, iterations):
+        # maybe select only a subset of corpus here (to simulate their "stochastic" approach)
+        docset = list(itertools.islice(corpus, 10000))
+        # Give them to online LDA
+        (gamma, bound) = olda.update_lambda(docset)
+        # Compute an estimate of held-out perplexity
+        perwordbound = bound * len(docset) / (D * sumcnts)
+        print '%d:  rho_t = %f,  held-out perplexity estimate = %f' % \
+            (iteration, olda._rhot, numpy.exp(-perwordbound))
+
+        # Save lambda, the parameters to the variational distributions
+        # over topics, and gamma, the parameters to the variational
+        # distributions over topic weights for the articles analyzed in
+        # the last iteration.
+        if (iteration % 10 == 0):
+            olda.save('lda-%i.pkl' % iteration)
+            numpy.savetxt('lambda-%d.dat' % iteration, olda._lambda)
+            numpy.savetxt('gamma-%d.dat' % iteration, gamma)
+    
+    logging.info("finished running %s" % program)
