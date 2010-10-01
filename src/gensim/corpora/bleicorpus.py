@@ -87,6 +87,7 @@ class BleiCorpus(interfaces.CorpusABC):
         logging.info("storing corpus in Blei's LDA-C format: %s" % fname)
         fout = open(fname, 'w')
         for doc in corpus:
+            doc = list(doc)
             fout.write("%i %s\n" % (len(doc), ' '.join("%i:%s" % p for p in doc)))
         fout.close()
         
