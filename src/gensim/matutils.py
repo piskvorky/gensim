@@ -100,6 +100,9 @@ class Dense2Corpus(object):
     def __iter__(self):
         for doc in self.dense:
             yield full2sparse(doc.flat)
+    
+    def __len__(self):
+        return len(self.dense)
 #endclass DenseCorpus            
 
 
