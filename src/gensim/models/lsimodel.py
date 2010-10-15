@@ -682,7 +682,8 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
     return sterm, svals, sdoc.T
 
 
-def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None, dtype=numpy.float64, eps=1e-6):
+def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None, 
+                  power_iters=0, dtype=numpy.float64, eps=1e-6):
     """
     Return U, S -- the left singular vectors and the singular values of the streamed 
     input corpus.
@@ -704,6 +705,7 @@ def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None, d
         samples = max(10, 2 * rank) # use more samples than requested factors, to improve accuracy
     else:
         samples = rank + int(extra_dims)
+    logger.info("using %i samples and %i power iterations" % (samples, power_iters))
     
     if num_terms is None:
         logger.warning("number of terms not provided; will scan the corpus (ONE EXTRA PASS, MAY BE SLOW) to determine it")
@@ -714,11 +716,11 @@ def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None, d
     
     eps = max(float(eps), 1e-9) # must ignore near-zero eigenvalues (probably numerical error); the associated eigenvectors are typically unstable/garbage
     
-    # first pass: construct the orthonormal action matrix Q = orth(Y) = orth(A * O)
+    # first pass: construct the orthonormal action matrix Q = orth(Y) = orth((A * A.T)^q * A * O)
     # build Y in blocks of `chunks` documents (much faster than going one-by-one 
     # and more memory friendly than processing all documents at once)
     y = numpy.zeros(dtype = dtype, shape = (num_terms, samples))
-    logger.info("1st pass: constructing %s action matrix" % str(y.shape))
+    logger.info("1st phase: constructing %s action matrix" % str(y.shape))
     
     chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
     for chunk_no, (key, group) in enumerate(chunker):
@@ -728,12 +730,23 @@ def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None, d
         chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
         m, n = chunk.shape
         assert m == num_terms
-        assert n <= chunks # the very last chunk of A may be smaller
+        assert n <= chunks # the very last chunk of A is allowed to be smaller in size
         logger.debug("multiplying chunk * gauss")
         o = numpy.random.normal(0.0, 1.0, (n, samples)).astype(dtype) # draw a random gaussian matrix
         sparsetools.csc_matvecs(num_terms, n, samples, chunk.indptr, # y = y + chunk * o
                                 chunk.indices, chunk.data, o.ravel(), y.ravel())
         del chunk, o
+    
+    for power_iter in xrange(power_iters):
+        logger.info("running power iteration #%i" % power_iter)
+        yold = y.copy()
+        chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
+        for chunk_no, (key, group) in enumerate(chunker):
+            logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
+            chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
+            y += chunk * (chunk.T * yold)
+            del chunk
+        del yold
     
     logger.info("orthonormalizing %s action matrix" % str(y.shape))
     q, r = numpy.linalg.qr(y) # orthonormalize the range
@@ -746,7 +759,7 @@ def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None, d
     # again, construct X incrementally, in chunks of `chunks` documents from the streaming 
     # input corpus A, to avoid using O(number of documents) memory
     x = numpy.zeros(shape = (samples, samples), dtype = dtype)
-    logger.info("2nd pass: constructing %s covariance matrix" % str(x.shape))
+    logger.info("2nd phase: constructing %s covariance matrix" % str(x.shape))
     chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
     for chunk_no, (key, group) in enumerate(chunker):
         logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
