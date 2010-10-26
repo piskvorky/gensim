@@ -48,7 +48,7 @@ logger.setLevel(logging.INFO)
 # most frequent types are kept (default 100K).
 DEFAULT_DICT_SIZE = 100000
 
-# Ignore articles shorter than ARTICLE_MIN_CHARS (after preprocessing).
+# Ignore articles shorter than ARTICLE_MIN_CHARS characters (after preprocessing).
 ARTICLE_MIN_CHARS = 500
 
 

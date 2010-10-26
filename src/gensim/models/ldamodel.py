@@ -743,6 +743,9 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
     logging.root.setLevel(level = logging.INFO)
     logging.info("running %s" % ' '.join(sys.argv))
+    
+    import os.path
+    program = os.path.basename(sys.argv[0])
 
     # The number of documents to analyze each iteration
     vocab = WikiCorpus.loadDictionary('/Users/kofola/gensim/results/wiki10_en_wordids.txt')
