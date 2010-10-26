@@ -716,7 +716,7 @@ def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None,
     
     eps = max(float(eps), 1e-9) # must ignore near-zero eigenvalues (probably numerical error); the associated eigenvectors are typically unstable/garbage
     
-    # first pass: construct the orthonormal action matrix Q = orth(Y) = orth((A * A.T)^q * A * O)
+    # first phase: construct the orthonormal action matrix Q = orth(Y) = orth((A * A.T)^q * A * O)
     # build Y in blocks of `chunks` documents (much faster than going one-by-one 
     # and more memory friendly than processing all documents at once)
     y = numpy.zeros(dtype = dtype, shape = (num_terms, samples))
@@ -740,6 +740,7 @@ def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None,
     for power_iter in xrange(power_iters):
         logger.info("running power iteration #%i" % power_iter)
         yold = y.copy()
+        y[:] = 0.0
         chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
         for chunk_no, (key, group) in enumerate(chunker):
             logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
@@ -755,7 +756,7 @@ def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None,
     qt = q[:, :samples].T.copy() # discard bogus columns, in case Y was rank-deficient
     del q
     
-    # second pass: construct the covariance matrix X = B * B.T, where B = Q.T * A
+    # second phase: construct the covariance matrix X = B * B.T, where B = Q.T * A
     # again, construct X incrementally, in chunks of `chunks` documents from the streaming 
     # input corpus A, to avoid using O(number of documents) memory
     x = numpy.zeros(shape = (samples, samples), dtype = dtype)
