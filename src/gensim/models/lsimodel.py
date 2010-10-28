@@ -650,7 +650,7 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
                   power_iters=0, dtype=numpy.float64, eps=1e-6):
     """
     Return U, S -- the left singular vectors and the singular values of the streamed 
-    input corpus.
+    input corpus `corpus` [1]_.
     
     This may actually return less than the requested number of top `rank` factors, 
     in case the input is of lower rank. Also note that the decomposition is unique
@@ -663,6 +663,8 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
     The decomposition algorithm is based on 
     **Halko, Martinsson, Tropp. Finding structure with randomness, 2009.**
     
+    .. [1] If `corpus` is instead a scipy.sparse matrix, it is assumed the whole 
+       corpus fits into memory and a different (more efficient) code path is chosen.
     """
     rank = int(rank)
     if extra_dims is None:
