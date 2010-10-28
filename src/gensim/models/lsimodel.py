@@ -48,6 +48,7 @@ dual core Xeon 2.0GHz, 4GB RAM, ATLAS
 
 import logging
 import itertools
+import sys
 
 import numpy
 import scipy.sparse
@@ -70,7 +71,7 @@ logger.setLevel(logging.INFO)
 
 
 
-def clipSpectrum(s, k, discard = 0.001):
+def clipSpectrum(s, k, discard=0.001):
     """
     Given eigenvalues `s`, return how many factors should be kept to avoid
     storing spurious (tiny, numerically instable) values. 
@@ -90,49 +91,35 @@ def clipSpectrum(s, k, discard = 0.001):
 
 
 class Projection(utils.SaveLoad):
-    def __init__(self, m, k, docs = None, algo = 'onepass', chunks = None):
+    def __init__(self, m, k, docs=None, use_svdlibc=False):
         """
-        Construct the (U, S) projection from a corpus `docs`. 
+        Construct the (U, S) projection from a corpus `docs`. The projection can 
+        be later updated by merging it with another Projection via `self.merge()`. 
         
-        This is the class taking care of 'core math'; interfacing with corpora, 
-        chunking large corpora etc. is done through the LsiModel class.
-        
-        `algo` is currently one of:
-        
-          * 'onepass'; only a single pass over `docs` is needed
-          * 'twopass'; multiple passes over the input allowed => can use a 
-            faster algorithm.
+        This is the class taking care of the 'core math'; interfacing with corpora, 
+        splitting large corpora into chunks and merging them etc. is done through 
+        the LsiModel class.
         """
         self.m, self.k = m, k
         if docs is not None:
-            # base case decomposition: given a job `docs`, compute its decomposition in-core
-            # results of several base case decompositions can be merged via `self.merge()`
-            if algo == 'twopass':
-                self.u, self.s = stochasticSvd(docs, k, chunks = chunks, num_terms = m)
-            elif algo == 'onepass':
-                if not scipy.sparse.issparse(docs):
-                    docs = matutils.corpus2csc(docs, num_terms = m)
-                if docs.shape[1] <= max(k, 100):
-                    # For sufficiently small chunk size, update directly like `svd(now, docs)` 
-                    # instead of `svd(now, svd(docs))`.
-                    # This improves accuracy and is also faster for small chunks, because
-                    # we need to perform one less svd.
-                    # On larger chunks this doesn't work because we quickly run out of memory.
-                    self.u = docs
-                    self.s = None
-                else:
-                    try:
-                        import sparsesvd
-                    except ImportError:
-                        raise ImportError("for LSA, the `sparsesvd` module is needed but not found; run `easy_install sparsesvd`")
-                    logger.info("computing sparse SVD of %s matrix" % str(docs.shape))
-                    ut, s, vt = sparsesvd.sparsesvd(docs, k + 30) # ask for extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
-                    u = ut.T
-                    del ut, vt
-                    k = clipSpectrum(s ** 2, self.k)
-                    self.u, self.s = u[:, :k], s[:k]
+            # base case decomposition: given a job `docs`, compute its decomposition,
+            # *in-core*.
+            if not use_svdlibc:
+                u, s = stochasticSvd(docs, k, chunks=sys.maxint, num_terms=m, 
+                    power_iters=2, extra_dims=100) # FIXME default accuracy?
             else:
-                raise NotImplementedError("unknown decomposition algorithm: '%s'" % algo)
+                try:
+                    import sparsesvd
+                except ImportError:
+                    raise ImportError("for LSA, the `sparsesvd` module is needed but not found; run `easy_install sparsesvd`")
+                logger.info("computing sparse SVD of %s matrix" % str(docs.shape))
+                if not scipy.sparse.issparse(docs):
+                    docs = matutils.corpus2csc(docs)
+                ut, s, vt = sparsesvd.sparsesvd(docs, k + 30) # ask for extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
+                u = ut.T
+                del ut, vt
+            k = clipSpectrum(s ** 2, self.k)
+            self.u, self.s = u[:, :k], s[:k]
         else:
             self.u, self.s = None, None
     
@@ -141,7 +128,7 @@ class Projection(utils.SaveLoad):
         return Projection(self.m, self.k)
     
 
-    def merge(self, other, decay = 1.0):
+    def merge(self, other, decay=1.0):
         """
         Merge this Projection with another. 
         
@@ -153,40 +140,14 @@ class Projection(utils.SaveLoad):
             return
         if self.u is None:
             # we are empty => result of merge is the other projection, whatever it is
-            if other.s is None:
-                # other.u contains a direct document chunk, not svd => perform svd
-                docs = other.u
-                assert scipy.sparse.issparse(docs)
-                if self.m * self.k < 10000:
-                    # SVDLIBC gives spurious results for small matrices.. run full
-                    # LAPACK on them instead
-                    logger.info("computing dense SVD of %s matrix" % str(docs.shape))
-                    u, s, vt = numpy.linalg.svd(docs.todense(), full_matrices = False)
-                else:
-                    try:
-                        import sparsesvd
-                    except ImportError:
-                        raise ImportError("for LSA, the `sparsesvd` module is needed but not found; run `easy_install sparsesvd`")
-                    logger.info("computing sparse SVD of %s matrix" % str(docs.shape))
-                    ut, s, vt = sparsesvd.sparsesvd(docs, self.k + 30) # ask for a few extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
-                    u = ut.T
-                    del ut
-                del vt
-                k = clipSpectrum(s ** 2, self.k)
-                self.u = u[:, :k].copy('F')
-                self.s = s[:k]
-            else:
-                self.u = other.u.copy('F')
-                self.s = other.s.copy()
+            self.u = other.u.copy('F')
+            self.s = other.s.copy()
             return
         if self.m != other.m:
-            raise ValueError("vector space mismatch: update has %s features, expected %s" %
+            raise ValueError("vector space mismatch: update is using %s features, expected %s" %
                              (other.m, self.m))
         logger.info("merging projections: %s + %s" % (str(self.u.shape), str(other.u.shape)))
         m, n1, n2 = self.u.shape[0], self.u.shape[1], other.u.shape[1]
-        if other.s is None:
-            other.u = other.u.todense()
-            other.s = 1.0 # broadcasting will promote this to eye(n2) where needed
         # TODO Maybe keep the bases as elementary reflectors, without 
         # forming explicit matrices with ORGQR.
         # The only operation we ever need is basis^T*basis ond basis*component.
@@ -363,9 +324,12 @@ class LsiModel(interfaces.TransformationABC):
         
         if not scipy.sparse.issparse(corpus):
             if not self.onepass:
-                # we are allowed multiple passes over input => use a faster, randomized two-pass algo
-                update = Projection(self.numTerms, self.numTopics, corpus, algo = 'twopass', chunks = chunks)
-                self.projection.merge(update, decay = decay)
+                # we are allowed multiple passes over the input => use a faster, randomized two-pass algo
+                update = Projection(self.numTerms, self.numTopics, None)
+                update.u, update.s = stochasticSvd(corpus, self.numTopics, 
+                    num_terms=self.numTerms, chunks=chunks,
+                    extra_dims=100, power_iters=0, dtype=numpy.float64) # FIXME accuracy defaults--is this enough?
+                self.projection.merge(update, decay=decay)
             else:
                 # the one-pass algo
                 chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
@@ -373,7 +337,7 @@ class LsiModel(interfaces.TransformationABC):
                 for chunk_no, (key, group) in enumerate(chunker):
                     # construct the job as a sparse matrix, to minimize memory overhead
                     # definitely avoid materializing it as a dense matrix!
-                    job = matutils.corpus2csc((doc for _, doc in group), num_terms = self.numTerms)
+                    job = matutils.corpus2csc((doc for _, doc in group), num_terms=self.numTerms)
                     doc_no += job.shape[1]
                     if self.dispatcher:
                         # distributed version: add this job to the job queue, so workers can work on it
@@ -398,7 +362,7 @@ class LsiModel(interfaces.TransformationABC):
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             assert self.onepass, "distributed two-pass algo not supported yet"
             update = Projection(self.numTerms, self.numTopics, corpus.tocsc())
-            self.projection.merge(update, decay = decay)
+            self.projection.merge(update, decay=decay)
             logger.info("processed sparse job of %i documents" % (corpus.shape[1]))
 
         self.printTopics(5)
@@ -682,7 +646,7 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
     return sterm, svals, sdoc.T
 
 
-def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None, 
+def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None, 
                   power_iters=0, dtype=numpy.float64, eps=1e-6):
     """
     Return U, S -- the left singular vectors and the singular values of the streamed 
@@ -706,13 +670,8 @@ def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None,
     else:
         samples = rank + int(extra_dims)
     logger.info("using %i samples and %i power iterations" % (samples, power_iters))
-    
-    if num_terms is None:
-        logger.warning("number of terms not provided; will scan the corpus (ONE EXTRA PASS, MAY BE SLOW) to determine it")
-        num_terms = len(utils.dictFromCorpus(corpus))
-        logger.info("found %i terms" % num_terms)
-    else:
-        num_terms = int(num_terms)
+        
+    num_terms = int(num_terms)
     
     eps = max(float(eps), 1e-9) # must ignore near-zero eigenvalues (probably numerical error); the associated eigenvectors are typically unstable/garbage
     
@@ -722,32 +681,40 @@ def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None,
     y = numpy.zeros(dtype = dtype, shape = (num_terms, samples))
     logger.info("1st phase: constructing %s action matrix" % str(y.shape))
     
-    chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
-    for chunk_no, (key, group) in enumerate(chunker):
-        logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
-        # construct the chunk as a sparse matrix, to minimize memory overhead
-        # definitely avoid materializing it as a dense (num_terms x chunks) matrix!
-        chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
-        m, n = chunk.shape
-        assert m == num_terms
-        assert n <= chunks # the very last chunk of A is allowed to be smaller in size
-        logger.debug("multiplying chunk * gauss")
-        o = numpy.random.normal(0.0, 1.0, (n, samples)).astype(dtype) # draw a random gaussian matrix
-        sparsetools.csc_matvecs(num_terms, n, samples, chunk.indptr, # y = y + chunk * o
-                                chunk.indices, chunk.data, o.ravel(), y.ravel())
-        del chunk, o
-    
-    for power_iter in xrange(power_iters):
-        logger.info("running power iteration #%i" % power_iter)
-        yold = y.copy()
-        y[:] = 0.0
+    if scipy.sparse.issparse(corpus):
+        m, n = corpus.shape
+        y = corpus * numpy.random.normal(0.0, 1.0, (n, samples)).astype(dtype) # draw a random gaussian matrix
+        for power_iter in xrange(power_iters):
+            y = corpus * (corpus.T * y)
+    else:
         chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
+        num_docs = 0
         for chunk_no, (key, group) in enumerate(chunker):
             logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
+            # construct the chunk as a sparse matrix, to minimize memory overhead
+            # definitely avoid materializing it as a dense (num_terms x chunks) matrix!
             chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
-            y += chunk * (chunk.T * yold)
-            del chunk
-        del yold
+            m, n = chunk.shape
+            assert m == num_terms
+            assert n <= chunks # the very last chunk of A is allowed to be smaller in size
+            num_docs += n
+            logger.debug("multiplying chunk * gauss")
+            o = numpy.random.normal(0.0, 1.0, (n, samples)).astype(dtype) # draw a random gaussian matrix
+            sparsetools.csc_matvecs(num_terms, n, samples, chunk.indptr, # y = y + chunk * o
+                                    chunk.indices, chunk.data, o.ravel(), y.ravel())
+            del chunk, o
+        
+        for power_iter in xrange(power_iters):
+            logger.info("running power iteration #%i" % power_iter)
+            yold = y.copy()
+            y[:] = 0.0
+            chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
+            for chunk_no, (key, group) in enumerate(chunker):
+                logger.info('PROGRESS: at document #%i/%i' % (chunk_no * chunks, num_docs))
+                chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
+                y += chunk * (chunk.T * yold)
+                del chunk
+            del yold
     
     logger.info("orthonormalizing %s action matrix" % str(y.shape))
     q, r = numpy.linalg.qr(y) # orthonormalize the range
@@ -756,26 +723,32 @@ def stochasticSvd(corpus, rank, num_terms=None, chunks=20000, extra_dims=None,
     qt = q[:, :samples].T.copy() # discard bogus columns, in case Y was rank-deficient
     del q
     
-    # second phase: construct the covariance matrix X = B * B.T, where B = Q.T * A
-    # again, construct X incrementally, in chunks of `chunks` documents from the streaming 
-    # input corpus A, to avoid using O(number of documents) memory
-    x = numpy.zeros(shape = (samples, samples), dtype = dtype)
-    logger.info("2nd phase: constructing %s covariance matrix" % str(x.shape))
-    chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
-    for chunk_no, (key, group) in enumerate(chunker):
-        logger.info('PROGRESS: at document #%i' % (chunk_no * chunks))
-        chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype)
-        b = qt * chunk # dense * sparse matrix multiply
-        x += numpy.dot(b, b.T) # TODO should call the BLAS routine SYRK, but there is no SYRK wrapper in scipy :(
-        del chunk, b
+    if scipy.sparse.issparse(corpus):
+        b = qt * corpus
+        logger.info("2nd phase: running svd on %s matrix" % str(b.shape))
+        u, s, vt = numpy.linalg.svd(b, full_matrices=False)
+        del b, vt
+    else:
+        # second phase: construct the covariance matrix X = B * B.T, where B = Q.T * A
+        # again, construct X incrementally, in chunks of `chunks` documents from the streaming 
+        # input corpus A, to avoid using O(number of documents) memory
+        x = numpy.zeros(shape = (samples, samples), dtype = dtype)
+        logger.info("2nd phase: constructing %s covariance matrix" % str(x.shape))
+        chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
+        for chunk_no, (key, group) in enumerate(chunker):
+            logger.info('PROGRESS: at document #%i/%i' % (chunk_no * chunks, num_docs))
+            chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype)
+            b = qt * chunk # dense * sparse matrix multiply
+            x += numpy.dot(b, b.T) # TODO should call the BLAS routine SYRK, but there is no SYRK wrapper in scipy :(
+            del chunk, b
     
-    # now we're ready to compute decomposition of the small matrix X
-    logger.info("computing decomposition of the %s covariance matrix" % str(x.shape))
-    u, s, vt = numpy.linalg.svd(x) # could use linalg.eigh, but who cares... and svd returns the factors already sorted :)
-    keep = clipSpectrum(s, rank, discard = eps)
-    
+        # now we're ready to compute decomposition of the small matrix X
+        logger.info("computing decomposition of the %s covariance matrix" % str(x.shape))
+        u, s, vt = numpy.linalg.svd(x) # could use linalg.eigh, but who cares... and svd returns the factors already sorted :)
+        s = numpy.sqrt(s) # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
+        
     logger.info("computing the final decomposition")
-    s = numpy.sqrt(s[:keep]) # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
-    u = numpy.dot(qt.T, u[:, :keep]) # go back from left singular vectors of B to left singular vectors of the corpus
+    keep = clipSpectrum(s**2, rank, discard=eps)
+    u, s = numpy.dot(qt.T, u[:, :keep]), s[:keep]
     return u.astype(dtype), s.astype(dtype)
     
