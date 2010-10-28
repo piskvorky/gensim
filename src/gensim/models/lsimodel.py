@@ -686,6 +686,7 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
     if scipy.sparse.issparse(corpus):
         m, n = corpus.shape
         y = corpus * numpy.random.normal(0.0, 1.0, (n, samples)).astype(dtype) # draw a random gaussian matrix
+        logger.debug("running %i power iterations" % power_iters)
         for power_iter in xrange(power_iters):
             y = corpus * (corpus.T * y)
     else:
@@ -719,15 +720,15 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
             del yold
     
     logger.info("orthonormalizing %s action matrix" % str(y.shape))
-    q, r = numpy.linalg.qr(y) # orthonormalize the range
-    del y # Y not needed anymore, free up mem
+    y = [y]
+    q, r = qr_destroy(y) # orthonormalize the range
     samples = clipSpectrum(numpy.diag(r), samples, discard = eps)
     qt = q[:, :samples].T.copy() # discard bogus columns, in case Y was rank-deficient
     del q
     
     if scipy.sparse.issparse(corpus):
         b = qt * corpus
-        logger.info("2nd phase: running svd on %s matrix" % str(b.shape))
+        logger.info("2nd phase: running dense svd on %s matrix" % str(b.shape))
         u, s, vt = numpy.linalg.svd(b, full_matrices=False)
         del b, vt
     else:
@@ -745,12 +746,34 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
             del chunk, b
     
         # now we're ready to compute decomposition of the small matrix X
-        logger.info("computing decomposition of the %s covariance matrix" % str(x.shape))
+        logger.info("running dense decomposition on %s covariance matrix" % str(x.shape))
         u, s, vt = numpy.linalg.svd(x) # could use linalg.eigh, but who cares... and svd returns the factors already sorted :)
         s = numpy.sqrt(s) # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
         
     logger.info("computing the final decomposition")
     keep = clipSpectrum(s**2, rank, discard=eps)
-    u, s = numpy.dot(qt.T, u[:, :keep]), s[:keep]
+    u = u[:, :keep]
+    s = s[:keep]
+    u = numpy.dot(qt.T, u)
     return u.astype(dtype), s.astype(dtype)
-    
+
+
+def qr_destroy(la):
+    a = la[0]
+    del la[0] # now `a` is the only reference to the input matrix
+    m, n = a.shape
+    # perform q, r = QR(component); code hacked out of scipy.linalg.qr
+    logger.debug("computing QR of %s dense matrix" % str(a.shape))
+    geqrf, = get_lapack_funcs(('geqrf',), (a,))
+    qr, tau, work, info = geqrf(a, lwork = -1, overwrite_a = True)
+    qr, tau, work, info = geqrf(a, lwork = work[0], overwrite_a = True)
+    del a # free up mem
+    assert info >= 0
+    r = triu(qr[:n, :n])
+    if m < n: # rare case, #features < #topics
+        qr = qr[:, :m] # retains fortran order
+    gorgqr, = get_lapack_funcs(('orgqr',), (qr,))
+    q, work, info = gorgqr(qr, tau, lwork = -1, overwrite_a = True)
+    q, work, info = gorgqr(qr, tau, lwork = work[0], overwrite_a = True)
+    assert info >= 0, "qr failed"
+    return q, r
