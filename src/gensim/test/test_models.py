@@ -38,7 +38,11 @@ class TestLsiModel(unittest.TestCase):
     
     def testTransform(self):
         # create the transformation model
-        model = lsimodel.LsiModel(self.corpus, numTopics = 2)
+        model = lsimodel.LsiModel(self.corpus, numTopics=2)
+        
+        # make sure the decomposition is enough accurate
+        u, s, vt = numpy.linalg.svd(matutils.corpus2dense(self.corpus, self.corpus.numTerms), full_matrices=False)
+        self.assertTrue(numpy.allclose(s[:2], model.projection.s)) # singular values must match
         
         # transform one document
         doc = list(self.corpus)[0]

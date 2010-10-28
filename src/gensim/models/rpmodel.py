@@ -37,7 +37,7 @@ class RpModel(interfaces.TransformationABC):
     
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, corpus, id2word = None, numTopics = 300):
+    def __init__(self, corpus, id2word=None, numTopics=300):
         """
         `id2word` is a mapping from word ids (integers) to words (strings). It is
         used to determine the vocabulary size, as well as for debugging and topic 
@@ -84,7 +84,7 @@ class RpModel(interfaces.TransformationABC):
         
         vec = matutils.sparse2full(bow, self.numTerms).reshape(self.numTerms, 1) / numpy.sqrt(self.numTopics)
         vec = numpy.asfortranarray(vec, dtype = numpy.float32)
-        topicDist = scipy.linalg.fblas.sgemv(1.0, self.projection, vec)  # (1, d) * (d, k) = (1, k)
+        topicDist = scipy.linalg.fblas.sgemv(1.0, self.projection, vec)  # (k, d) * (d, 1) = (k, 1)
         return [(topicId, float(topicValue)) for topicId, topicValue in enumerate(topicDist.flat)
                 if numpy.isfinite(topicValue) and not numpy.allclose(topicValue, 0.0)]
 #endclass RpModel
