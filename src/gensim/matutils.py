@@ -11,6 +11,7 @@ This module contains math helper functions.
 import logging
 import math
 import os
+import itertools
 
 import numpy
 import scipy.sparse
@@ -91,7 +92,7 @@ class Dense2Corpus(object):
     No data copy is made (changes to the underlying matrix imply changes in the 
     corpus).
     """
-    def __init__(self, dense, documents_columns = True):
+    def __init__(self, dense, documents_columns=True):
         if documents_columns:
             self.dense = dense.T
         else:
@@ -104,6 +105,25 @@ class Dense2Corpus(object):
     def __len__(self):
         return len(self.dense)
 #endclass DenseCorpus            
+
+
+class Sparse2Corpus(object):
+    """
+    Convert a matrix in scipy.sparse format into a streaming gensim corpus.
+    """
+    def __init__(self, sparse, documents_columns=True):
+        if documents_columns:
+            self.sparse = sparse.tocsc()
+        else:
+            self.sparse = sparse.tocsr().T # make sure shape[1]=number of docs (needed in len())
+    
+    def __iter__(self):
+        for indprev, indnow in itertools.izip(self.sparse.indptr, self.sparse.indptr[1:]):
+            yield zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow])
+    
+    def __len__(self):
+        return self.sparse.shape[1]
+#endclass Sparse2Corpus
 
 
 def vecLen(vec):
@@ -283,7 +303,7 @@ class MmReader(object):
     matrix at once (unlike scipy.io.mmread). This allows us to process corpora 
     which are larger than the available RAM.
     """
-    def __init__(self, input):
+    def __init__(self, input, transposed=True):
         """
         Initialize the matrix reader. 
         
@@ -295,7 +315,7 @@ class MmReader(object):
         `seek(0)` (e.g. gzip.GzipFile, bz2.BZ2File).
         """
         logger.info("initializing corpus reader from %s" % input)
-        self.input = input
+        self.input, self.transposed = input, transposed
         if isinstance(input, basestring):
             input = open(input)
         header = input.next().strip()
@@ -306,6 +326,8 @@ class MmReader(object):
         for lineNo, line in enumerate(input):
             if not line.startswith('%'):
                 self.numDocs, self.numTerms, self.numElements = map(int, line.split())
+                if not self.transposed:
+                    self.numDocs, self.numTerms = self.numTerms, self.numDocs
                 break
         logger.info("accepted corpus with %i documents, %i terms, %i non-zero entries" %
                      (self.numDocs, self.numTerms, self.numElements))
@@ -341,7 +363,10 @@ class MmReader(object):
         prevId = -1
         for line in fin:
             docId, termId, val = line.split()
+            if not self.transposed:
+                termId, docId = docId, termId
             docId, termId, val = int(docId) - 1, int(termId) - 1, float(val) # -1 because matrix market indexes are 1-based => convert to 0-based
+            assert prevId <= docId, "matrix columns must come in ascending order"
             if docId != prevId:
                 # change of document: return the document read so far (its id is prevId)
                 if prevId >= 0:
