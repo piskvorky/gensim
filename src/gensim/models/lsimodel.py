@@ -70,6 +70,10 @@ logger = logging.getLogger('lsimodel')
 logger.setLevel(logging.INFO)
 
 
+# accuracy defaults for two-pass algo. FIXME is this enough? maybe do some power iterations by default?
+P2_EXTRA_DIMS = 200 # set to `None` for dynamic P2_EXTRA_DIMS=k
+P2_EXTRA_ITERS = 0
+
 
 def clipSpectrum(s, k, discard=0.001):
     """
@@ -194,12 +198,12 @@ class Projection(utils.SaveLoad):
             s_k = numpy.sqrt(s_k)
         
         k = clipSpectrum(s_k ** 2, self.k)
-        u_k, s_k = u_k[:, :k], s_k[:k]
+        u1_k, u2_k, s_k = u_k[:n1, :k].copy('F'), u_k[n1:, :k].copy('F'), s_k[:k]
         
-        # update & rotate current basis U
+        # update & rotate current basis U = [U, U']*[U1_k, U2_k]
         logger.debug("updating orthonormal basis U")
-        self.u = gemm(1.0, self.u, u_k[:n1]) # TODO temporarily creates an extra (m,k) dense array in memory. find a way to avoid this!
-        gemm(1.0, q, u_k[n1:], beta = 1.0, c = self.u, overwrite_c = True) # u = [u,u']*u_k
+        self.u = gemm(1.0, self.u, u1_k) # TODO temporarily creates an extra (m,k) dense array in memory. find a way to avoid this!
+        gemm(1.0, q, u2_k, beta = 1.0, c = self.u, overwrite_c = True)
         self.s = s_k
 #        diff = numpy.dot(self.u.T, self.u) - numpy.eye(self.u.shape[1])
 #        logger.info('orth error after=%f' % numpy.sum(diff * diff))
@@ -328,7 +332,7 @@ class LsiModel(interfaces.TransformationABC):
                 update = Projection(self.numTerms, self.numTopics, None)
                 update.u, update.s = stochasticSvd(corpus, self.numTopics, 
                     num_terms=self.numTerms, chunks=chunks,
-                    extra_dims=100, power_iters=0, dtype=numpy.float64) # FIXME accuracy defaults--is this enough?
+                    extra_dims=P2_EXTRA_DIMS, power_iters=P2_EXTRA_ITERS)
                 self.projection.merge(update, decay=decay)
             else:
                 # the one-pass algo
@@ -358,14 +362,14 @@ class LsiModel(interfaces.TransformationABC):
                 if self.dispatcher:
                     logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                     self.projection = self.dispatcher.getstate()
+#            logging.info("top topics after adding %i documents" % doc_no)
+#            self.printDebug(10)
         else:
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             assert self.onepass, "distributed two-pass algo not supported yet"
             update = Projection(self.numTerms, self.numTopics, corpus.tocsc())
             self.projection.merge(update, decay=decay)
             logger.info("processed sparse job of %i documents" % (corpus.shape[1]))
-
-        self.printTopics(5)
 
     
     def __str__(self):
@@ -444,7 +448,7 @@ class LsiModel(interfaces.TransformationABC):
 #endclass LsiModel
 
 
-def printDebug(id2token, u, s, topics, numWords = 10, numNeg = None):
+def printDebug(id2token, u, s, topics, numWords=10, numNeg=None, latex=False):
     if numNeg is None:
         # by default, print half as many salient negative words as positive
         numNeg = numWords / 2
@@ -471,13 +475,19 @@ def printDebug(id2token, u, s, topics, numWords = 10, numNeg = None):
         pos, neg = [], []
         for weight, uvecno in weights:
             if normalize * u[uvecno, topic] > 0.0001:
-                pos.append('%s(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]))
+                if latex:
+                    pos.append('\textbf{%s}(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]))
+                else:
+                    pos.append('%s(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]))
                 if len(pos) >= numWords:
                     break
         
         for weight, uvecno in weights:
             if normalize * u[uvecno, topic] < -0.0001:
-                neg.append('%s(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]))
+                if latex:
+                    neg.append('\textbf{%s}(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]))
+                else:
+                    neg.append('%s(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]))
                 if len(neg) >= numNeg:
                     break
 
@@ -715,15 +725,18 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
             for chunk_no, (key, group) in enumerate(chunker):
                 logger.info('PROGRESS: at document #%i/%i' % (chunk_no * chunks, num_docs))
                 chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
-                y += chunk * (chunk.T * yold)
+                tmp = chunk.T * yold
+                tmp = chunk * tmp
                 del chunk
+                y += tmp
             del yold
     
     logger.info("orthonormalizing %s action matrix" % str(y.shape))
     y = [y]
     q, r = qr_destroy(y) # orthonormalize the range
+    del y
     samples = clipSpectrum(numpy.diag(r), samples, discard = eps)
-    qt = q[:, :samples].T.copy() # discard bogus columns, in case Y was rank-deficient
+    qt = numpy.asfortranarray(q[:, :samples].T) # discard bogus columns, in case Y was rank-deficient
     del q
     
     if scipy.sparse.issparse(corpus):
@@ -752,15 +765,16 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
         
     logger.info("computing the final decomposition")
     keep = clipSpectrum(s**2, rank, discard=eps)
-    u = u[:, :keep]
+    u = numpy.asfortranarray(u[:, :keep])
     s = s[:keep]
-    u = numpy.dot(qt.T, u)
+    gemm = matutils.blas('gemm', u)
+    u = gemm(1.0, qt, u, trans_a=True)
     return u.astype(dtype), s.astype(dtype)
 
 
 def qr_destroy(la):
-    a = la[0]
-    del la[0] # now `a` is the only reference to the input matrix
+    a = numpy.asfortranarray(la[0])
+    del la[0], la # now `a` is the only reference to the input matrix
     m, n = a.shape
     # perform q, r = QR(component); code hacked out of scipy.linalg.qr
     logger.debug("computing QR of %s dense matrix" % str(a.shape))
@@ -777,3 +791,5 @@ def qr_destroy(la):
     q, work, info = gorgqr(qr, tau, lwork = work[0], overwrite_a = True)
     assert info >= 0, "qr failed"
     return q, r
+
+
