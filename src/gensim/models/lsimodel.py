@@ -70,9 +70,9 @@ logger = logging.getLogger('lsimodel')
 logger.setLevel(logging.INFO)
 
 
-# accuracy defaults for two-pass algo. FIXME is this enough? maybe do some power iterations by default?
+# accuracy defaults for two-pass algo. 
 P2_EXTRA_DIMS = 200 # set to `None` for dynamic P2_EXTRA_DIMS=k
-P2_EXTRA_ITERS = 0
+P2_EXTRA_ITERS = 0 # TODO is this enough? maybe run some power iterations by default?
 
 
 def clipSpectrum(s, k, discard=0.001):
@@ -110,7 +110,7 @@ class Projection(utils.SaveLoad):
             # *in-core*.
             if not use_svdlibc:
                 u, s = stochasticSvd(docs, k, chunks=sys.maxint, num_terms=m, 
-                    power_iters=2, extra_dims=100) # FIXME default accuracy?
+                    power_iters=2, extra_dims=100) # TODO default accuracy?
             else:
                 try:
                     import sparsesvd
@@ -448,7 +448,7 @@ class LsiModel(interfaces.TransformationABC):
 #endclass LsiModel
 
 
-def printDebug(id2token, u, s, topics, numWords=10, numNeg=None, latex=False):
+def printDebug(id2token, u, s, topics, numWords=10, numNeg=None):
     if numNeg is None:
         # by default, print half as many salient negative words as positive
         numNeg = numWords / 2
@@ -464,9 +464,9 @@ def printDebug(id2token, u, s, topics, numWords=10, numNeg=None, latex=False):
     
     logger.debug("printing %i+%i salient words" % (numWords, numNeg))
     for topic in sorted(result.iterkeys()):
-        weights = sorted(result[topic], reverse = True)
+        weights = sorted(result[topic], key=lambda x: -abs(x[0]))
         _, most = weights[0]
-        if u[most, topic] < 0.0: # the most significant word has negative sign => flip sign of u[most]
+        if u[most, topic] < 0.0: # the most significant word has a negative sign => flip sign of u[most]
             normalize = -1.0
         else:
             normalize = 1.0
@@ -475,19 +475,13 @@ def printDebug(id2token, u, s, topics, numWords=10, numNeg=None, latex=False):
         pos, neg = [], []
         for weight, uvecno in weights:
             if normalize * u[uvecno, topic] > 0.0001:
-                if latex:
-                    pos.append('\textbf{%s}(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]))
-                else:
-                    pos.append('%s(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]))
+                pos.append('%s(%.3f)' % (id2token[uvecno], u[uvecno, topic]))
                 if len(pos) >= numWords:
                     break
         
         for weight, uvecno in weights:
             if normalize * u[uvecno, topic] < -0.0001:
-                if latex:
-                    neg.append('\textbf{%s}(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]))
-                else:
-                    neg.append('%s(%.3f)' % (id2token[uvecno], normalize * u[uvecno, topic]))
+                neg.append('%s(%.3f)' % (id2token[uvecno], u[uvecno, topic]))
                 if len(neg) >= numNeg:
                     break
 
