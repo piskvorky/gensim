@@ -657,18 +657,18 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
     input corpus `corpus` [1]_.
     
     This may actually return less than the requested number of top `rank` factors, 
-    in case the input is of lower rank. Also note that the decomposition is unique
-    up the the sign of the left singular vectors (columns of U).
+    in case the input is of lower rank. The `extra_dims` (oversampling) and 
+    `extra_iters` (power iterations) parameters affect accuracy of the decomposition.
     
-    This is a streamed, two-pass algorithm, without power-iterations. In case you can 
-    only afford a single pass over the input corpus, set `onepass=True` in LsiModel and 
-    avoid using this algorithm.
+    This algorithm uses 2+power_iters passes over the data. In case you can only 
+    afford a single pass over the input corpus, set `onepass=True` in LsiModel 
+    and avoid using this algorithm.
 
     The decomposition algorithm is based on 
     **Halko, Martinsson, Tropp. Finding structure with randomness, 2009.**
     
     .. [1] If `corpus` is instead a scipy.sparse matrix, it is assumed the whole 
-       corpus fits into memory and a different (more efficient) code path is chosen.
+       corpus fits into core memory and a different (more efficient) code path is chosen.
     """
     rank = int(rank)
     if extra_dims is None:
