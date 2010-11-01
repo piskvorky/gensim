@@ -691,7 +691,8 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
         m, n = corpus.shape
         y = numpy.zeros(shape=(m, samples), dtype=y.dtype)
         o = numpy.random.normal(0.0, 1.0, (n, samples)).astype(y.dtype) # draw a random gaussian matrix
-        sparsetools.csc_matvecs(m, n, samples, corpus.indices, corpus.data, o.ravel(), y.ravel()) # y = corpus * o
+        sparsetools.csc_matvecs(m, n, samples, corpus.indptr, corpus.indices, 
+                                corpus.data, o.ravel(), y.ravel()) # y = corpus * o
         del o
         y = y.astype(dtype) # TODO unlike numpy, scipy actually makes a copy even when dtype=y.dtype...marginally inefficient
         logger.debug("running %i power iterations" % power_iters)
