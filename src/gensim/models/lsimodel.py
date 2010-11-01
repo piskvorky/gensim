@@ -110,7 +110,7 @@ class Projection(utils.SaveLoad):
             # *in-core*.
             if not use_svdlibc:
                 u, s = stochasticSvd(docs, k, chunks=sys.maxint, num_terms=m, 
-                    power_iters=2, extra_dims=100) # TODO default accuracy?
+                    power_iters=P2_EXTRA_ITERS, extra_dims=P2_EXTRA_DIMS)
             else:
                 try:
                     import sparsesvd
@@ -769,7 +769,7 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
     s = s[:keep]
     gemm = matutils.blas('gemm', u)
     u = gemm(1.0, qt, u, trans_a=True)
-    return u.astype(dtype), s.astype(dtype)
+    return u, s
 
 
 def qr_destroy(la):
