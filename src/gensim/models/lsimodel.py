@@ -70,9 +70,9 @@ logger = logging.getLogger('lsimodel')
 logger.setLevel(logging.INFO)
 
 
-# accuracy defaults for two-pass algo. 
+# accuracy defaults for the multi-pass stochastic algo
 P2_EXTRA_DIMS = 200 # set to `None` for dynamic P2_EXTRA_DIMS=k
-P2_EXTRA_ITERS = 0 # TODO is this enough? maybe run some power iterations by default?
+P2_EXTRA_ITERS = 1
 
 
 def clipSpectrum(s, k, discard=0.001):
@@ -689,10 +689,15 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
     
     if scipy.sparse.issparse(corpus):
         m, n = corpus.shape
-        y = corpus * numpy.random.normal(0.0, 1.0, (n, samples)).astype(dtype) # draw a random gaussian matrix
+        y = numpy.zeros(shape=(m, samples), dtype=y.dtype)
+        o = numpy.random.normal(0.0, 1.0, (n, samples)).astype(y.dtype) # draw a random gaussian matrix
+        sparsetools.csc_matvecs(m, n, samples, corpus.indices, corpus.data, o.ravel(), y.ravel()) # y = corpus * o
+        del o
+        y = y.astype(dtype) # TODO unlike numpy, scipy actually makes a copy even when dtype=y.dtype...marginally inefficient
         logger.debug("running %i power iterations" % power_iters)
         for power_iter in xrange(power_iters):
-            y = corpus * (corpus.T * y)
+            y = corpus.T * y
+            y = corpus * y
     else:
         chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
         num_docs = 0
