@@ -53,15 +53,6 @@ import sys
 import numpy
 import scipy.sparse
 from scipy.sparse import sparsetools
-from scipy.linalg.lapack import get_lapack_funcs, find_best_lapack_type
-
-# scipy is not a stable package yet, locations change, so try to work
-# around differences (currently only concerns location of 'triu' in scipy 0.7 vs. 0.8)
-try:
-    from scipy.linalg.basic import triu
-except ImportError:
-    from scipy.linalg.special_matrices import triu
-
 
 from gensim import interfaces, matutils, utils
 
@@ -71,8 +62,8 @@ logger.setLevel(logging.INFO)
 
 
 # accuracy defaults for the multi-pass stochastic algo
-P2_EXTRA_DIMS = 200 # set to `None` for dynamic P2_EXTRA_DIMS=k
-P2_EXTRA_ITERS = 1
+P2_EXTRA_DIMS = 100 # set to `None` for dynamic P2_EXTRA_DIMS=k
+P2_EXTRA_ITERS = 2
 
 
 def clipSpectrum(s, k, discard=0.001):
@@ -166,21 +157,9 @@ class Projection(utils.SaveLoad):
         c = gemm(1.0, self.u, other.u, trans_a = True)
         gemm(-1.0, self.u, c, beta = 1.0, c = other.u, overwrite_c = True)
         
-        # perform q, r = QR(component); code hacked out of scipy.linalg.qr
-        logger.debug("computing QR of %s dense matrix" % str(other.u.shape))
-        geqrf, = get_lapack_funcs(('geqrf',), (other.u,))
-        qr, tau, work, info = geqrf(other.u, lwork = -1, overwrite_a = True)
-        qr, tau, work, info = geqrf(other.u, lwork = work[0], overwrite_a = True)
-        del other.u
-        assert info >= 0
-        r = triu(qr[:n2, :n2])
-        if m < n2: # rare case, #features < #topics
-            qr = qr[:, :m] # retains fortran order
-        gorgqr, = get_lapack_funcs(('orgqr',), (qr,))
-        q, work, info = gorgqr(qr, tau, lwork = -1, overwrite_a = True)
-        q, work, info = gorgqr(qr, tau, lwork = work[0], overwrite_a = True)
-        assert info >= 0, "qr failed"
-        assert q.flags.f_contiguous
+        other.u = [other.u] # do some reference magic and call qr_destroy, to save RAM
+        q, r = matutils.qr_destroy(other.u) # q, r = QR(component)
+        assert not other.u
         
         # find the rotation that diagonalizes r
         k = numpy.bmat([[numpy.diag(decay * self.s), c * other.s], [matutils.pad(numpy.matrix([]).reshape(0, 0), min(m, n2), n1), r * other.s]])
@@ -658,7 +637,7 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
     
     This may actually return less than the requested number of top `rank` factors, 
     in case the input is of lower rank. The `extra_dims` (oversampling) and 
-    `extra_iters` (power iterations) parameters affect accuracy of the decomposition.
+    `power_iters` (power iterations) parameters affect accuracy of the decomposition.
     
     This algorithm uses 2+power_iters passes over the data. In case you can only 
     afford a single pass over the input corpus, set `onepass=True` in LsiModel 
@@ -675,8 +654,8 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
         samples = max(10, 2 * rank) # use more samples than requested factors, to improve accuracy
     else:
         samples = rank + int(extra_dims)
-    logger.info("using %i samples and %i power iterations" % (samples, power_iters))
-        
+    logger.info("using %i extra samples and %i power iterations" % (samples - rank, power_iters))
+    
     num_terms = int(num_terms)
     
     eps = max(float(eps), 1e-9) # must ignore near-zero eigenvalues (probably numerical error); the associated eigenvectors are typically unstable/garbage
@@ -689,7 +668,7 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
     
     if scipy.sparse.issparse(corpus):
         m, n = corpus.shape
-        y = numpy.zeros(shape=(m, samples), dtype=y.dtype)
+        assert num_terms == m, "mismatch in number of features: %i in sparse matrix vs. %i parameter" % (m, num_terms)
         o = numpy.random.normal(0.0, 1.0, (n, samples)).astype(y.dtype) # draw a random gaussian matrix
         sparsetools.csc_matvecs(m, n, samples, corpus.indptr, corpus.indices, 
                                 corpus.data, o.ravel(), y.ravel()) # y = corpus * o
@@ -733,7 +712,7 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
     
     logger.info("orthonormalizing %s action matrix" % str(y.shape))
     y = [y]
-    q, r = qr_destroy(y) # orthonormalize the range
+    q, r = matutils.qr_destroy(y) # orthonormalize the range
     del y
     samples = clipSpectrum(numpy.diag(r), samples, discard = eps)
     qt = numpy.asfortranarray(q[:, :samples].T) # discard bogus columns, in case Y was rank-deficient
@@ -770,26 +749,5 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
     gemm = matutils.blas('gemm', u)
     u = gemm(1.0, qt, u, trans_a=True)
     return u, s
-
-
-def qr_destroy(la):
-    a = numpy.asfortranarray(la[0])
-    del la[0], la # now `a` is the only reference to the input matrix
-    m, n = a.shape
-    # perform q, r = QR(component); code hacked out of scipy.linalg.qr
-    logger.debug("computing QR of %s dense matrix" % str(a.shape))
-    geqrf, = get_lapack_funcs(('geqrf',), (a,))
-    qr, tau, work, info = geqrf(a, lwork = -1, overwrite_a = True)
-    qr, tau, work, info = geqrf(a, lwork = work[0], overwrite_a = True)
-    del a # free up mem
-    assert info >= 0
-    r = triu(qr[:n, :n])
-    if m < n: # rare case, #features < #topics
-        qr = qr[:, :m] # retains fortran order
-    gorgqr, = get_lapack_funcs(('orgqr',), (qr,))
-    q, work, info = gorgqr(qr, tau, lwork = -1, overwrite_a = True)
-    q, work, info = gorgqr(qr, tau, lwork = work[0], overwrite_a = True)
-    assert info >= 0, "qr failed"
-    return q, r
 
 
