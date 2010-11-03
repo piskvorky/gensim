@@ -8,14 +8,14 @@
 """
 Module for Latent Semantic Indexing.
 
-It actually contains several algorithms for decomposition of large corpora, a 
+This module actually contains several algorithms for decomposition of large corpora, a 
 combination of which effectively and transparently allows building LSI models for:
 
-* corpora much larger than RAM: only constant memory needed, independent of 
+* corpora much larger than RAM: only constant memory is needed, independent of 
   the corpus size (though still dependent on the feature set size)
-* corpora that are streamed: documents are only accessed sequentially, not 
-  random-accessed
-* corpora that cannot even be temporarily stored, each document can only be 
+* corpora that are streamed: documents are only accessed sequentially, no
+  random-access
+* corpora that cannot be even temporarily stored: each document can only be 
   seen once and must be processed immediately (one-pass algorithm)
 * distributed computing for very large corpora, making use of a cluster of
   machines
@@ -25,13 +25,13 @@ documents, 100K features, 0.5G non-zero entries in the final TF-IDF matrix),
 requesting the top 400 LSI factors:
 
 
-======================================== ============ ==================
- algorithm (chunks=40k)                  serial       distributed    
-======================================== ============ ==================
- one-pass merge algorithm                5h14m        1h41m           
- 2-pass stochastic algo (0 power iters)  2.5h         N/A [1]_
- 3-pass stochastic algo (1 power iter)   h            N/A [1]_
-======================================== ============ ==================
+====================================================== ============ ==================
+ algorithm                                             serial       distributed    
+====================================================== ============ ==================
+ one-pass merge algorithm                              5h14m        1h41m           
+ multi-pass stochastic algo (with 2 power iterations)  h            N/A [1]_
+====================================================== ============ ==================
+
 
 *serial* = Core 2 Duo MacBook Pro 2.53Ghz, 4GB RAM, libVec
 
@@ -205,7 +205,8 @@ class LsiModel(interfaces.TransformationABC):
     
     """
     def __init__(self, corpus=None, numTopics=200, id2word=None, chunks=20000, 
-                 decay=1.0, distributed=False, onepass=False):
+                 decay=1.0, distributed=False, onepass=True, 
+                 power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS):
         """
         `numTopics` is the number of requested factors (latent dimensions). 
         
@@ -218,10 +219,15 @@ class LsiModel(interfaces.TransformationABC):
         If you specify a `corpus`, it will be used to train the model. See the 
         method `addDocuments` for a description of the `chunks` and `decay` parameters.
         
-        If your document stream is one-pass only (the stream cannot be repeated),
-        turn on `onepass` to force a single pass SVD algorithm (slower).
+        Turn `onepass` off to force a multi-pass stochastic algorithm.
+        
+        `power_iters` and `extra_samples` affect the accuracy of the stochastic
+        multi-pass algorithm, which is used either internally (`onepass=True`) or
+        as the fornt-end algorithm (`onepass=False`). Increasing the number of 
+        power iterations improves accuracy, but lowers performance. See [2]_ for 
+        some hard numbers.
 
-        Turn on `distributed` to force distributed computing.
+        Turn on `distributed` to enable distributed computing.
         
         Example:
         
@@ -229,6 +235,8 @@ class LsiModel(interfaces.TransformationABC):
         >>> print lsi[doc_tfidf] # project some document into LSI space
         >>> lsi.addDocuments(corpus2) # update LSI on additional documents
         >>> print lsi[doc_tfidf]
+        
+        .. [2] http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf
         
         """
         self.id2word = id2word
@@ -293,7 +301,7 @@ class LsiModel(interfaces.TransformationABC):
 
         Setting `decay` < 1.0 causes re-orientation towards new data trends in the 
         input document stream, by giving less emphasis to old observations. This allows
-        SVD to gradually "forget" old observations (documents) and give more 
+        LSA to gradually "forget" old observations (documents) and give more 
         preference to new ones.
         """
         logger.info("updating SVD with new documents")
@@ -631,21 +639,21 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
 def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None, 
                   power_iters=0, dtype=numpy.float64, eps=1e-6):
     """
-    Return U, S -- the left singular vectors and the singular values of the streamed 
-    input corpus `corpus` [1]_.
+    Return (U, S): the left singular vectors and the singular values of the streamed 
+    input corpus `corpus` [3]_.
     
     This may actually return less than the requested number of top `rank` factors, 
-    in case the input is of lower rank. The `extra_dims` (oversampling) and 
+    in case the input is of lower rank. The `extra_dims` (oversampling) and especially
     `power_iters` (power iterations) parameters affect accuracy of the decomposition.
     
-    This algorithm uses 2+power_iters passes over the data. In case you can only 
+    This algorithm uses `2+power_iters` passes over the data. In case you can only 
     afford a single pass over the input corpus, set `onepass=True` in LsiModel 
-    and avoid using this algorithm.
+    and avoid using this algorithm directly.
 
     The decomposition algorithm is based on 
     **Halko, Martinsson, Tropp. Finding structure with randomness, 2009.**
     
-    .. [1] If `corpus` is instead a scipy.sparse matrix, it is assumed the whole 
+    .. [3] If `corpus` is a scipy.sparse matrix instead, it is assumed the whole 
        corpus fits into core memory and a different (more efficient) code path is chosen.
     """
     rank = int(rank)
@@ -696,7 +704,7 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
             del chunk, o
         
         for power_iter in xrange(power_iters):
-            logger.info("running power iteration #%i" % power_iter)
+            logger.info("running power iteration #%i" % (power_iter + 1))
             yold = y.copy()
             y[:] = 0.0
             chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)

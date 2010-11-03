@@ -44,23 +44,17 @@ You can now install (or upgrade) `gensim` with::
 
 That's it! Congratulations, you can proceed to the :doc:`tutorials <tutorial>`.
 
-In case you know you will be using the one-pass Latent Semantic Analysis algorithm,
-you can add the optional `[lsi]` feature and install with::
-
-    sudo easy_install gensim[lsi]
-    
 If you also want to run the algorithms over a cluster 
 of computers, in :doc:`distributed`, you should install with::
 
-    sudo easy_install gensim[lsi,distributed]
+    sudo easy_install gensim[distributed]
 
-The optional `lsi` feature will install the `sparsesvd <http://pypi.python.org/pypi/sparsesvd>`_ package; 
-`distributed` feature installs `Pyro (PYthon Remote Objects) <http://pypi.python.org/pypi/Pyro>`_. 
-If you don't know what one-pass LSI or distributed LSI means, ignore these optional features:
+The optional `distributed` feature installs `Pyro (PYthon Remote Objects) <http://pypi.python.org/pypi/Pyro>`_. 
+If you don't know what distributed computing means, you can ignore it:
 `gensim` will work fine for you anyway.
-These optional extensions can also be installed separately later with::
+This optional extension can also be installed separately later with::
     
-    sudo easy_install sparsesvd Pyro
+    sudo easy_install Pyro
 
 -----
 

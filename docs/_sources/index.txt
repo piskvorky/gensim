@@ -15,12 +15,8 @@ Gensim -- Python Framework for Vector Space Modelling
    * Input corpus iterator can come from a compressed file (**bzip2**, **gzip**, ...), to save disk space when dealing with
      very large corpora.
    
-   `gensim` now contains two algorithms for Latent Semantic Indexing:
-   
-   1. streamed **stochastic algorithm**: takes :doc:`2h30m hours on the English Wikipedia <wiki>` (3.2 mil. documents), on a Macbook Pro.
-   2. streamed **single pass algorithm**: slower (takes 5h14m), but only accesses each document 
-      once; use this if your input comes streaming in and you cannot store it
-      persistently.
+   `gensim` now completes :doc:`LSI of the English Wikipedia <wiki>` 
+   (3.2 million documents) in **5 hours 14 minutes**, using the one-pass algorithm, on a Macbook Pro laptop.
 
 ..
    See the `draft paper <http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_ for more info.

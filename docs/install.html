@@ -132,20 +132,15 @@ sudo easy_install scipy</pre>
 <div class="highlight-python"><pre>sudo easy_install --upgrade gensim</pre>
 </div>
 <p>That&#8217;s it! Congratulations, you can proceed to the <a class="reference external" href="tutorial.html"><em>tutorials</em></a>.</p>
-<p>In case you know you will be using the one-pass Latent Semantic Analysis algorithm,
-you can add the optional <cite>[lsi]</cite> feature and install with:</p>
-<div class="highlight-python"><pre>sudo easy_install gensim[lsi]</pre>
-</div>
 <p>If you also want to run the algorithms over a cluster
 of computers, in <a class="reference external" href="distributed.html"><em>Distributed Computing</em></a>, you should install with:</p>
-<div class="highlight-python"><pre>sudo easy_install gensim[lsi,distributed]</pre>
+<div class="highlight-python"><pre>sudo easy_install gensim[distributed]</pre>
 </div>
-<p>The optional <cite>lsi</cite> feature will install the <a class="reference external" href="http://pypi.python.org/pypi/sparsesvd">sparsesvd</a> package;
-<cite>distributed</cite> feature installs <a class="reference external" href="http://pypi.python.org/pypi/Pyro">Pyro (PYthon Remote Objects)</a>.
-If you don&#8217;t know what one-pass LSI or distributed LSI means, ignore these optional features:
+<p>The optional <cite>distributed</cite> feature installs <a class="reference external" href="http://pypi.python.org/pypi/Pyro">Pyro (PYthon Remote Objects)</a>.
+If you don&#8217;t know what distributed computing means, you can ignore it:
 <cite>gensim</cite> will work fine for you anyway.
-These optional extensions can also be installed separately later with:</p>
-<div class="highlight-python"><pre>sudo easy_install sparsesvd Pyro</pre>
+This optional extension can also be installed separately later with:</p>
+<div class="highlight-python"><pre>sudo easy_install Pyro</pre>
 </div>
 <hr class="docutils" />
 <p>There are also alternative routes to install:</p>

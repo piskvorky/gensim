@@ -243,7 +243,7 @@ vectors to (Euclidean) unit length.</p>
 transforms documents from either bag-of-words or (preferrably) TfIdf-weighted space into
 a latent space of a lower dimensionality. For the toy corpus above we used only
 2 latent dimensions, but on real corpora, target dimensionality of 200&#8211;500 is recommended
-as a &#8220;golden standard&#8221; <a class="footnote-reference" href="#id5" id="id1">[1]</a>.</p>
+as a &#8220;golden standard&#8221; <a class="footnote-reference" href="#id6" id="id1">[1]</a>.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">tfidf_corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="o">.</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -263,8 +263,10 @@ as they arrive, while using the computed transformation model as read-only in th
 <p>See the <a title="Latent Semantic Indexing" class="reference external" href="models/lsimodel.html#module-gensim.models.lsimodel"><tt class="xref docutils literal"><span class="pre">gensim.models.lsimodel</span></tt></a> documentation for details on how to make
 LSI gradually &#8220;forget&#8221; old observations in infinite streams and how to tweak parameters
 affecting speed vs. memory footprint vs. numerical precision of the algorithm.</p>
-<p>For a discussion of two-pass vs. one-pass LSA algorithms (both are available
-in <cite>gensim</cite>), look at <a class="reference external" href="wiki.html"><em>Experiments on Wikipedia</em></a>.</p>
+<p><cite>gensim</cite> also contains an implementation of the stochastic multi-pass algorithm from
+Halko et al. <a class="footnote-reference" href="#id9" id="id2">[4]</a>. This algorithm is used internally by <cite>gensim</cite> to accelerate SVD computations.
+See also <a class="reference external" href="wiki.html"><em>Experiments on Wikipedia</em></a> for further speed-ups by distributing the computation across
+a cluster of computers.</p>
 </li>
 <li><p class="first"><a class="reference external" href="http://www.cis.hut.fi/ella/publications/randproj_kdd.pdf">Random Projections, RP</a> aim to
 reduce vector space dimensionality. This is a very efficient (both memory- and
@@ -277,7 +279,7 @@ Recommended target dimensionality is again in the hundreds/thousands, depending 
 <li><p class="first"><a class="reference external" href="http://en.wikipedia.org/wiki/Latent_Dirichlet_allocation">Latent Dirichlet Allocation, LDA</a>
 is yet another transformation from bag-of-words counts into a topic space of lower
 dimensionality. LDA is <strong>much</strong> slower than the other algorithms,
-so we are currently looking into ways of making it faster (see eg. <a class="footnote-reference" href="#id6" id="id2">[2]</a>, <a class="footnote-reference" href="#id7" id="id3">[3]</a>). If you
+so we are currently looking into ways of making it faster (see eg. <a class="footnote-reference" href="#id7" id="id3">[2]</a>, <a class="footnote-reference" href="#id8" id="id4">[3]</a>). If you
 could help, <a class="reference external" href="mailto:radimrehurek&#37;&#52;&#48;seznam&#46;cz">let us know</a>!</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">bow_corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="o">.</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
 </pre></div>
@@ -292,22 +294,28 @@ With memory taken care of, we are now implementing <a class="reference external"
 to improve CPU efficiency, too.
 If you feel you could contribute, please <a class="reference external" href="mailto:radimrehurek&#37;&#52;&#48;seznam&#46;cz">let us know</a>!</p>
 <hr class="docutils" />
-<table class="docutils footnote" frame="void" id="id5" rules="none">
+<table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Bradford, R.B., 2008. An empirical study of required dimensionality for large-scale latent semantic indexing applications.</td></tr>
 </tbody>
 </table>
-<table class="docutils footnote" frame="void" id="id6" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Asuncion, A., 2009. On Smoothing and Inference for Topic Models.</td></tr>
-</tbody>
-</table>
 <table class="docutils footnote" frame="void" id="id7" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td>Yao, Mimno, McCallum, 2009. Efficient Methods for Topic Model Inference on Streaming Document Collections</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3">[2]</a></td><td>Asuncion, A., 2009. On Smoothing and Inference for Topic Models.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[3]</a></td><td>Yao, Mimno, McCallum, 2009. Efficient Methods for Topic Model Inference on Streaming Document Collections.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id9" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[4]</a></td><td>Halko, Martinsson, Tropp. 2009. Finding structure with randomness.</td></tr>
 </tbody>
 </table>
 </div>
