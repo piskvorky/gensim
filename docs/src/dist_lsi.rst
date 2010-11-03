@@ -129,27 +129,26 @@ the corpus iterator with::
 
 Now we're ready to run distributed LSA on the English Wikipedia::
 
-    >>> # extract 400 LSI topics
-    >>> lsi = gensim.models.lsimodel.LsiModel(corpus=mm, id2word=id2word, numTopics=400, chunks=40000, distributed=True)
+    >>> # extract 400 LSI topics, using a cluster of nodes
+    >>> lsi = gensim.models.lsimodel.LsiModel(corpus=mm, id2word=id2word, numTopics=400, chunks=20000, distributed=True)
+    
     >>> # print the most contributing words (both positively and negatively) for each of the first ten topics
-    >>> lsi.printDebug(numTopics=10)
-    2010-09-01 10:12:55,058 : INFO : computing word-topic salience for 10 topics
-    2010-09-01 10:13:13,644 : INFO : topic #0(199.154): debate(0.274), subsequent(0.194), deletion(0.381), appropriate(0.208), proposed(0.103), modify(0.213), comments(0.223), edits(0.220), delete(0.478), archived(0.109), ..., 
-    2010-09-01 10:13:14,482 : INFO : topic #1(141.388): diff(0.238), link(0.226), together(0.023), every(0.034), image(0.234), become(0.015), fair(0.124), ever(0.012), alone(0.019), changing(0.004), ..., debate(-0.089), subsequent(-0.062), deletion(-0.116), appropriate(-0.066), modify(-0.068)
-    2010-09-01 10:13:15,323 : INFO : topic #2(132.771): diff(0.486), link(0.437), undo(0.221), added(0.124), resolves(0.065), blacklist(0.073), linkwatcher(0.062), reporting(0.060), reports(0.052), spamming(0.059), ..., together(-0.017), age(-0.087), alone(-0.017), older(-0.030), every(-0.027)
-    2010-09-01 10:13:16,163 : INFO : topic #3(125.087): age(0.243), residing(0.055), older(0.086), household(0.103), householder(0.056), capita(0.056), median(0.221), families(0.135), versus(0.051), households(0.164), ..., fair(-0.193), image(-0.349), licensing(-0.102), resolution(-0.123), copyright(-0.210)
-    2010-09-01 10:13:17,007 : INFO : topic #4(116.531): householder(0.045), residing(0.043), median(0.177), capita(0.045), household(0.080), households(0.130), makeup(0.044), versus(0.039), families(0.102), income(0.155), ..., ever(-0.012), six(-0.017), become(-0.014), coming(-0.007), twice(-0.007)
-    2010-09-01 10:13:17,842 : INFO : topic #5(99.225): players(0.500), goalkeepers(0.009), goalkeeper(0.015), football(0.323), defender(0.017), forwards(0.016), league(0.286), midfielder(0.019), striker(0.012), fullbacks(0.003), ..., everything(-0.008), come(-0.014), gone(-0.006), nowhere(-0.002), listen(-0.003)
-    2010-09-01 10:13:18,695 : INFO : topic #6(91.274): lyrically(0.002), album(0.414), rerecorded(0.001), daydream(0.001), tracklisting(0.006), catchy(0.002), anthemic(0.000), charting(0.008), studio(0.051), musically(0.003), ..., initiated(-0.003), consult(-0.001), necessary(-0.008), existing(-0.007), strongly(-0.004)
-    2010-09-01 10:13:19,559 : INFO : topic #7(83.057): why(0.066), regards(0.009), else(0.027), understand(0.026), occured(0.001), gotten(0.004), honestly(0.005), noticed(0.009), reply(0.010), need(0.065), ..., subsequent(-0.071), debate(-0.096), proposed(-0.037), delete(-0.181), appropriate(-0.066)
-    2010-09-01 10:13:20,412 : INFO : topic #8(78.190): 분류(0.097), kategória(0.117), kategori(0.471), categoría(0.153), kategoria(0.151), ja(0.093), категория(0.161), kategorie(0.219), categorie(0.139), kategorija(0.234), ..., formerly(-0.003), serving(-0.006), officially(-0.002), station(-0.061), newly(-0.001)
-    2010-09-01 10:13:21,246 : INFO : topic #9(78.150): film(0.556), directorial(0.007), directed(0.104), remake(0.007), cassavetes(0.001), theatrically(0.003), ebert(0.004), projectionist(0.001), starring(0.046), films(0.427), ..., 분류(-0.036), kategória(-0.044), kategori(-0.175), categoría(-0.057), kategoria(-0.056)
-
+    >>> lsi.printTopics(10)
+    2010-11-03 16:08:27,602 : INFO : topic #0(200.990): -0.475*"delete" + -0.383*"deletion" + -0.275*"debate" + -0.223*"comments" + -0.220*"edits" + -0.213*"modify" + -0.208*"appropriate" + -0.194*"subsequent" + -0.155*"wp" + -0.117*"notability"
+    2010-11-03 16:08:27,626 : INFO : topic #1(143.129): -0.320*"diff" + -0.305*"link" + -0.199*"image" + -0.171*"www" + -0.162*"user" + 0.149*"delete" + -0.147*"undo" + -0.144*"contribs" + -0.122*"album" + 0.113*"deletion"
+    2010-11-03 16:08:27,651 : INFO : topic #2(135.665): -0.437*"diff" + -0.400*"link" + -0.202*"undo" + -0.192*"user" + -0.182*"www" + -0.176*"contribs" + 0.168*"image" + -0.109*"added" + 0.106*"album" + 0.097*"copyright"
+    2010-11-03 16:08:27,677 : INFO : topic #3(125.027): -0.354*"image" + 0.239*"age" + 0.218*"median" + -0.213*"copyright" + 0.204*"population" + -0.195*"fair" + 0.195*"income" + 0.167*"census" + 0.165*"km" + 0.162*"households"
+    2010-11-03 16:08:27,701 : INFO : topic #4(116.927): -0.307*"image" + 0.195*"players" + -0.184*"median" + -0.184*"copyright" + -0.181*"age" + -0.167*"fair" + -0.162*"income" + -0.151*"population" + -0.136*"households" + -0.134*"census"
+    2010-11-03 16:08:27,728 : INFO : topic #5(100.326): 0.501*"players" + 0.318*"football" + 0.284*"league" + 0.193*"footballers" + 0.142*"image" + 0.133*"season" + 0.119*"cup" + 0.113*"club" + 0.110*"baseball" + 0.103*"f"
+    2010-11-03 16:08:27,754 : INFO : topic #6(92.298): -0.411*"album" + -0.275*"albums" + -0.217*"band" + -0.214*"song" + -0.184*"chart" + -0.163*"songs" + -0.160*"singles" + -0.149*"vocals" + -0.139*"guitar" + -0.129*"track"
+    2010-11-03 16:08:27,780 : INFO : topic #7(83.811): -0.248*"wikipedia" + -0.182*"keep" + 0.180*"delete" + -0.167*"articles" + -0.152*"your" + -0.150*"my" + 0.144*"film" + -0.130*"we" + -0.123*"think" + -0.120*"user"
+    2010-11-03 16:08:27,807 : INFO : topic #8(78.981): 0.588*"film" + 0.460*"films" + -0.130*"album" + -0.127*"station" + 0.121*"television" + 0.115*"poster" + 0.112*"directed" + 0.110*"actors" + -0.096*"railway" + 0.086*"movie"
+    2010-11-03 16:08:27,834 : INFO : topic #9(78.620): 0.502*"kategori" + 0.282*"categoria" + 0.248*"kategorija" + 0.234*"kategorie" + 0.172*"категория" + 0.165*"categoría" + 0.161*"kategoria" + 0.148*"categorie" + 0.126*"kategória" + 0.121*"catégorie"
 
 In serial mode, creating the LSI model of Wikipedia with this **one-pass algorithm** 
-takes about 8.5h on my laptop (OS X, dual-core 2.53GHz, 4GB RAM with `libVec`). 
-In distributed mode with six workers (Linux, dual-core Xeons of 2Ghz, 4GB RAM 
-with `ATLAS`), the wallclock time taken drops to 2 hours and 23 minutes.
+takes about 5.25h on my laptop (OS X, dual-core 2.53GHz, 4GB RAM with `libVec`). 
+In distributed mode with four workers (Linux, dual-core Xeons of 2Ghz, 4GB RAM 
+with `ATLAS`), the wallclock time taken drops to 1 hour and 41 minutes. You can 
+read more about various internal settings and experiments in my `research 
+paper <http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_.
 
-Remember that `gensim` also contains a fast **two-pass algorithm**, which runs in 2.5h
-even on a single computer. See :doc:`wiki` for more info.

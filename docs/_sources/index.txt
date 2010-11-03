@@ -10,13 +10,15 @@ Gensim -- Python Framework for Vector Space Modelling
 
    Version |version| is `out <http://pypi.python.org/pypi/gensim>`_!
    
-   * *Latent Semantic Indexing (LSI)* and *Latent Dirichlet Allocation (LDA)* are now **faster**, consume **less memory** and can be run in :doc:`distributed mode <distributed>`.
+   * *Latent Semantic Indexing (LSI)* and *Latent Dirichlet Allocation (LDA)* are now **faster**, consume **less memory**.
    * Optimizations to vocabulary generation.
    * Input corpus iterator can come from a compressed file (**bzip2**, **gzip**, ...), to save disk space when dealing with
      very large corpora.
    
    `gensim` now completes :doc:`LSI of the English Wikipedia <wiki>` 
-   (3.2 million documents) in **5 hours 14 minutes**, using the one-pass algorithm, on a Macbook Pro laptop.
+   (3.2 million documents) in **5 hours 14 minutes**, using a one-pass SVD algorithm, 
+   on a single Macbook Pro laptop. Be sure to check out the 
+   :doc:`distributed mode <distributed>`, too.
 
 ..
    See the `draft paper <http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_ for more info.
@@ -54,4 +56,5 @@ Contents
    intro
    install
    tutorial
-   apiref    
+   distributed
+   apiref
