@@ -154,8 +154,8 @@ To save a corpus in the Matrix Market format:
 >>>
 >>> corpora.MmCorpus.saveCorpus('/tmp/corpus.mm', corpus)
 
-Other formats include `Joachim's SVMlight format <svmlight.joachims.org/>`_, 
-`Blei's LDA-C format <www.cs.princeton.edu/~blei/lda-c/>`_ and 
+Other formats include `Joachim's SVMlight format <http://svmlight.joachims.org/>`_, 
+`Blei's LDA-C format <http://www.cs.princeton.edu/~blei/lda-c/>`_ and 
 `GibbsLDA++ format <http://gibbslda.sourceforge.net/>`_. 
 
 >>> corpora.SvmLightCorpus.saveCorpus('/tmp/corpus.svmlight', corpus)

@@ -1,6 +1,12 @@
 Changes
 =======
 
+0.7.5
+
+* further optimization to LSA; this is the version used in our NIPS workshop paper
+* got rid of SVDLIBC (one-pass LSA now uses stochastic algo for base-base decompositions)
+
+
 0.7.4
 
 * sped up Latent Dirichlet ~10x (through scipy.weave, optional)

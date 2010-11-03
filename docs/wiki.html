@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.7.4',
+        VERSION:     '0.7.5',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -108,7 +108,7 @@ anyone can reproduce our results. It is assumed you have <cite>gensim</cite> pro
 and contains (compressed version of) all articles from the English Wikipedia.</p>
 </li>
 <li><p class="first">Convert the articles to plain text (process Wiki markup) and store the result as
-sparse TF-IDF vectors. In Python, this is easy to do on-the-fly and we don&#8217;t
+sparse TF-IDF vectors. In Python, this is easy to do on-the-fly (the code is included in <cite>gensim</cite>), and we don&#8217;t
 even need to uncompress the whole archive to disk. We will use the fact that
 the computation can be run incrementally, over the compressed file, when testing
 the single pass LSA algorithm.
@@ -203,11 +203,14 @@ therefore run LSA directly on the raw bag-of-words counts (usually a bad idea).<
 </ol>
 <p>Running the above takes about 15.5h on my laptop <a class="footnote-reference" href="#id4" id="id3">[1]</a>. Compare this to the <cite>15h+2.5h~=17.5h</cite> for the two-phase
 algorithm above, where we first store the sparse vectors to disk (15h) and only then
-proceed with LSA (2.5h). However, the two-pass algorithm does a lot of extra
-work, such as building the dictionary and constructing TF-IDF vectors, so it is
-generally faster and preferrable whenever you can store your input vectors persistently.</p>
-<p>To directly compare the speed of the two algorithms, let&#8217;s run the
-one-pass variant over the same input we used in the two-pass experiment
+proceed with LSA (2.5h). As 15.5h &lt; 17.5h, it seems like the single pass algorithm is actually
+faster. However, the two-phase algorithm does a lot of extra
+work, such as building the dictionary and constructing TF-IDF vectors, which actually take
+up most of the 17.5 hours and which the single-pass algorithm skips altogether.
+The two-phase algorithm is generally faster and preferrable whenever you can store
+your input vectors persistently.</p>
+<p>To settle the matter and directly compare the speed of the two algorithms, let&#8217;s run the
+one-pass variant over the exact same input we used in the two-pass experiment
 above:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">wikicorpus</span><span class="o">.</span><span class="n">WikiCorpus</span><span class="o">.</span><span class="n">loadDictionary</span><span class="p">(</span><span class="s">&#39;wiki_en_wordids.txt&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mm</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;wiki_en_tfidf.mm&#39;</span><span class="p">)</span>
@@ -229,8 +232,8 @@ above:</p>
 </pre></div>
 </div>
 <p>This takes 8.5h, compared to 2.5h of the two-pass algorithm. If you need your
-results faster, the one-pass algorithm can also be run over a cluster of computers,
-see the <a class="reference external" href="distributed.html"><em>distributed tutorial</em></a>.</p>
+results even faster, the one-pass algorithm can also be run over a cluster of computers,
+see the tutorial on <a class="reference external" href="distributed.html"><em>Distributed Computing</em></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Actually, the two-pass algorithm can be easily parallelized, too. But the processing
@@ -304,7 +307,7 @@ By the way, improvements to the Wiki markup parsing code are welcome :-)</p>
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 13, 2010.
+      Last updated on Nov 03, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>
