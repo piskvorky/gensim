@@ -10,24 +10,20 @@ Gensim -- Python Framework for Vector Space Modelling
 
    Version |version| is `out <http://pypi.python.org/pypi/gensim>`_!
    
-   * *Latent Semantic Indexing (LSI)* and *Latent Dirichlet Allocation (LDA)* are now **faster**, consume **less memory** and can be run in :doc:`distributed mode <distributed>`!
+   * *Latent Semantic Indexing (LSI)* and *Latent Dirichlet Allocation (LDA)* are now **faster**, consume **less memory** and can be run in :doc:`distributed mode <distributed>`.
    * Optimizations to vocabulary generation.
-   * Input corpus iterator can come from a compressed file (bzip2, gzip, ...), to save disk space when dealing with
+   * Input corpus iterator can come from a compressed file (**bzip2**, **gzip**, ...), to save disk space when dealing with
      very large corpora.
    
    `gensim` now contains two algorithms for Latent Semantic Indexing:
    
-   1. streamed **two-pass algorithm**: takes :doc:`2.5 hours on the English Wikipedia (3.2 mil. documents) <wiki>`.
-   2. streamed **single pass algorithm**: slower (takes 8.5h), but only accesses each document 
+   1. streamed **stochastic algorithm**: takes :doc:`2h30m hours on the English Wikipedia <wiki>` (3.2 mil. documents), on a Macbook Pro.
+   2. streamed **single pass algorithm**: slower (takes 5h14m), but only accesses each document 
       once; use this if your input comes streaming in and you cannot store it
       persistently.
-   
-   Of course, the option of incrementally adding new documents to an existing 
-   decomposition, without the need to recompute everything 
-   from scratch, remains from the previous version.
 
 ..
-   To read more about the theoretical side of things, check out our new `draft paper <http://todo>`_.
+   See the `draft paper <http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_ for more info.
 
 For an overview on what gensim does (or does not do), go to the :doc:`introduction <intro>`.
 

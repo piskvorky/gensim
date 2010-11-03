@@ -8,9 +8,8 @@
 """
 Module for Latent Semantic Indexing.
 
-It actually contains several algorithms for decomposition of extremely large 
-corpora, a combination of which effectively and transparently allows building LSI
-models for:
+It actually contains several algorithms for decomposition of large corpora, a 
+combination of which effectively and transparently allows building LSI models for:
 
 * corpora much larger than RAM: only constant memory needed, independent of 
   the corpus size (though still dependent on the feature set size)
@@ -18,7 +17,7 @@ models for:
   random-accessed
 * corpora that cannot even be temporarily stored, each document can only be 
   seen once and must be processed immediately (one-pass algorithm)
-* distributed computing for ultra large corpora, making use of a cluster of
+* distributed computing for very large corpora, making use of a cluster of
   machines
 
 Wall-clock performance on the English Wikipedia (2G corpus positions, 3.2M 
@@ -27,19 +26,19 @@ requesting the top 400 LSI factors:
 
 
 ======================================== ============ ==================
- algorithm                                 serial      distributed    
+ algorithm (chunks=40k)                  serial       distributed    
 ======================================== ============ ==================
- one-pass update algo (chunks=factors)     109h        19h            
- one-pass merge algo (chunks=40K docs)     8.5h        2.3h           
- two-pass randomized algo (chunks=40K)     2.5h        N/A [1]_           
+ one-pass merge algorithm                5h14m        1h41m           
+ 2-pass stochastic algo (0 power iters)  2.5h         N/A [1]_
+ 3-pass stochastic algo (1 power iter)   h            N/A [1]_
 ======================================== ============ ==================
 
 *serial* = Core 2 Duo MacBook Pro 2.53Ghz, 4GB RAM, libVec
 
-*distributed* = cluster of six logical nodes on four physical machines, each with 
-dual core Xeon 2.0GHz, 4GB RAM, ATLAS
+*distributed* = cluster of four logical nodes on three physical machines, each 
+with dual core Xeon 2.0GHz, 4GB RAM, ATLAS
 
-.. [1] The two-pass algo could be distributed too, but most time is already spent 
+.. [1] The stochastic algo could be distributed too, but most time is already spent 
    reading/decompressing the input from disk, and the extra network traffic due to 
    data distribution would likely make it actually *slower*.
 
@@ -113,7 +112,7 @@ class Projection(utils.SaveLoad):
                 ut, s, vt = sparsesvd.sparsesvd(docs, k + 30) # ask for extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
                 u = ut.T
                 del ut, vt
-            k = clipSpectrum(s ** 2, self.k)
+                k = clipSpectrum(s ** 2, self.k)
             self.u, self.s = u[:, :k], s[:k]
         else:
             self.u, self.s = None, None

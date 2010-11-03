@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '#',
-        VERSION:     '0.7.4',
+        VERSION:     '0.7.5',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -98,7 +98,7 @@ corpus).</p>
 
 <dl class="class">
 <dt id="gensim.matutils.MmReader">
-<em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">MmReader</tt><big>(</big><em>input</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmReader" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">MmReader</tt><big>(</big><em>input</em>, <em>transposed=True</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmReader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrap a term-document matrix on disk (in matrix-market format), and present it 
 as an object which supports iteration over the rows (~documents).</p>
 <p>Note that the file is read into memory one document at a time, not the whole 
@@ -132,6 +132,11 @@ is allowed to be larger than the available RAM.</p>
 </dd></dl>
 
 </dd></dl>
+
+<dl class="class">
+<dt id="gensim.matutils.Sparse2Corpus">
+<em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">Sparse2Corpus</tt><big>(</big><em>sparse</em>, <em>documents_columns=True</em><big>)</big><a class="headerlink" href="#gensim.matutils.Sparse2Corpus" title="Permalink to this definition">¶</a></dt>
+<dd>Convert a matrix in scipy.sparse format into a streaming gensim corpus.</dd></dl>
 
 <dl class="function">
 <dt id="gensim.matutils.corpus2csc">
@@ -204,7 +209,7 @@ output will be a numpy array.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 13, 2010.
+      Last updated on Nov 03, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

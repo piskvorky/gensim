@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.7.4',
+        VERSION:     '0.7.5',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -60,7 +60,7 @@
         <div class="sphinxsidebarwrapper">
             <h4>Previous topic</h4>
             <p class="topless"><a href="ldamodel.html"
-                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
+                                  title="previous chapter"><tt class="docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="tfidfmodel.html"
                                   title="next chapter"><tt class="docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model</a></p>
@@ -88,9 +88,8 @@
   <div class="section" id="module-gensim.models.lsimodel">
 <h1><tt class="xref docutils literal"><span class="pre">models.lsimodel</span></tt> &#8211; Latent Semantic Indexing<a class="headerlink" href="#module-gensim.models.lsimodel" title="Permalink to this headline">¶</a></h1>
 <p>Module for Latent Semantic Indexing.</p>
-<p>It actually contains several algorithms for decomposition of extremely large 
-corpora, a combination of which effectively and transparently allows building LSI
-models for:</p>
+<p>It actually contains several algorithms for decomposition of large corpora, a 
+combination of which effectively and transparently allows building LSI models for:</p>
 <ul class="simple">
 <li>corpora much larger than RAM: only constant memory needed, independent of 
 the corpus size (though still dependent on the feature set size)</li>
@@ -98,7 +97,7 @@ the corpus size (though still dependent on the feature set size)</li>
 random-accessed</li>
 <li>corpora that cannot even be temporarily stored, each document can only be 
 seen once and must be processed immediately (one-pass algorithm)</li>
-<li>distributed computing for ultra large corpora, making use of a cluster of
+<li>distributed computing for very large corpora, making use of a cluster of
 machines</li>
 </ul>
 <p>Wall-clock performance on the English Wikipedia (2G corpus positions, 3.2M 
@@ -111,33 +110,33 @@ requesting the top 400 LSI factors:</p>
 <col width="26%" />
 </colgroup>
 <thead valign="bottom">
-<tr><th class="head">algorithm</th>
+<tr><th class="head">algorithm (chunks=40k)</th>
 <th class="head">serial</th>
 <th class="head">distributed</th>
 </tr>
 </thead>
 <tbody valign="top">
-<tr><td>one-pass update algo (chunks=factors)</td>
-<td>109h</td>
-<td>19h</td>
+<tr><td>one-pass merge algorithm</td>
+<td>5h14m</td>
+<td>1h41m</td>
 </tr>
-<tr><td>one-pass merge algo (chunks=40K docs)</td>
-<td>8.5h</td>
-<td>2.3h</td>
-</tr>
-<tr><td>two-pass randomized algo (chunks=40K)</td>
+<tr><td>2-pass stochastic algo (0 power iters)</td>
 <td>2.5h</td>
-<td>N/A <a class="footnote-reference" href="#id2" id="id1">[1]</a></td>
+<td>N/A <a href="#id6"><span class="problematic" id="id7"><span id="id1"></span>[1]_</span></a></td>
+</tr>
+<tr><td>3-pass stochastic algo (1 power iter)</td>
+<td>h</td>
+<td>N/A <a href="#id8"><span class="problematic" id="id9"><span id="id2"></span>[1]_</span></a></td>
 </tr>
 </tbody>
 </table>
 <p><em>serial</em> = Core 2 Duo MacBook Pro 2.53Ghz, 4GB RAM, libVec</p>
-<p><em>distributed</em> = cluster of six logical nodes on four physical machines, each with 
-dual core Xeon 2.0GHz, 4GB RAM, ATLAS</p>
-<table class="docutils footnote" frame="void" id="id2" rules="none">
+<p><em>distributed</em> = cluster of four logical nodes on three physical machines, each 
+with dual core Xeon 2.0GHz, 4GB RAM, ATLAS</p>
+<table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>The two-pass algo could be distributed too, but most time is already spent 
+<tr><td class="label">[1]</td><td>The stochastic algo could be distributed too, but most time is already spent 
 reading/decompressing the input from disk, and the extra network traffic due to 
 data distribution would likely make it actually <em>slower</em>.</td></tr>
 </tbody>
@@ -249,17 +248,24 @@ Value Decomposition in Natural Language Processing. EACL 2006.</strong></p>
 
 <dl class="function">
 <dt id="gensim.models.lsimodel.stochasticSvd">
-<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">stochasticSvd</tt><big>(</big><em>corpus</em>, <em>rank</em>, <em>num_terms=None</em>, <em>chunks=20000</em>, <em>extra_dims=None</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em>, <em>eps=9.9999999999999995e-07</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.stochasticSvd" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">stochasticSvd</tt><big>(</big><em>corpus</em>, <em>rank</em>, <em>num_terms</em>, <em>chunks=20000</em>, <em>extra_dims=None</em>, <em>power_iters=0</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em>, <em>eps=9.9999999999999995e-07</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.stochasticSvd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return U, S &#8211; the left singular vectors and the singular values of the streamed 
-input corpus.</p>
+input corpus <cite>corpus</cite> <a href="#id10"><span class="problematic" id="id11"><span id="id4"></span>[1]_</span></a>.</p>
 <p>This may actually return less than the requested number of top <cite>rank</cite> factors, 
-in case the input is of lower rank. Also note that the decomposition is unique
-up the the sign of the left singular vectors (columns of U).</p>
-<p>This is a streamed, two-pass algorithm, without power-iterations. In case you can 
-only afford a single pass over the input corpus, set <cite>onepass=True</cite> in LsiModel and 
-avoid using this algorithm.</p>
+in case the input is of lower rank. The <cite>extra_dims</cite> (oversampling) and 
+<cite>power_iters</cite> (power iterations) parameters affect accuracy of the decomposition.</p>
+<p>This algorithm uses 2+power_iters passes over the data. In case you can only 
+afford a single pass over the input corpus, set <cite>onepass=True</cite> in LsiModel 
+and avoid using this algorithm.</p>
 <p>The decomposition algorithm is based on 
 <strong>Halko, Martinsson, Tropp. Finding structure with randomness, 2009.</strong></p>
+<table class="docutils footnote" frame="void" id="id5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>If <cite>corpus</cite> is instead a scipy.sparse matrix, it is assumed the whole 
+corpus fits into core memory and a different (more efficient) code path is chosen.</td></tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -312,7 +318,7 @@ but without separating the basis from rotations.</p>
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 13, 2010.
+      Last updated on Nov 03, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

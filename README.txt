@@ -12,25 +12,20 @@ Features
 ---------
 
 * All algorithms are **memory-independent** w.r.t. the corpus size (can process input larger than RAM),
-* **Intuitive interfaces** (think `java`... then think again)
+* **Intuitive interfaces**
 
-  * easy to plug in your own input corpus/datastream (simple streaming API)
-  * easy to extend with other Vector Space algorithms (simple transformation API)
+  * easy to plug in your own input corpus/datastream (trivial streaming API)
+  * easy to extend with other Vector Space algorithms (trivial transformation API)
 
-* Efficient streaming implementations of popular algorithms, such as online **Latent Semantic Analysis**, 
+* Efficient implementations of popular algorithms, such as online **Latent Semantic Analysis**, 
   **Latent Dirichlet Allocation** or **Random Projections**
-* Can run Latent Semantic Analysis on a cluster of computers (**distributed computing**).
+* **Distributed computing**: can run *Latent Semantic Analysis* and *Latent Dirichlet Allocation* on a cluster of computers.
 * Extensive `HTML documentation and tutorials <http://nlp.fi.muni.cz/projekty/gensim/>`_.
 
 
 If this feature list left you scratching your head, you can first read more about the `Vector 
 Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised 
 document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
-
-.. note::
-
-  `gensim`'s target audience is the NLP research community and interested general public; 
-  `gensim` is not meant to be a production tool for commercial environments.
 
 Installation
 ------------

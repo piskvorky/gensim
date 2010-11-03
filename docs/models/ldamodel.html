@@ -11,7 +11,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.7.4',
+        VERSION:     '0.7.5',
         COLLAPSE_MODINDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -254,6 +254,92 @@ approximation).</p>
 
 </dd></dl>
 
+<dl class="class">
+<dt id="gensim.models.ldamodel.OnlineLDA">
+<em class="property">class </em><tt class="descclassname">gensim.models.ldamodel.</tt><tt class="descname">OnlineLDA</tt><big>(</big><em>vocab</em>, <em>K</em>, <em>D</em>, <em>alpha</em>, <em>eta</em>, <em>tau0</em>, <em>kappa=0.0</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.OnlineLDA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements online VB for LDA as described in (Hoffman et al. 2010).</p>
+<p>Arguments:
+K: Number of topics
+vocab: A set of words to recognize. When analyzing documents, any word</p>
+<blockquote>
+not in this set will be ignored.</blockquote>
+<dl class="docutils">
+<dt>D: Total number of documents in the population. For a fixed corpus,</dt>
+<dd>this is the size of the corpus. In the truly online setting, this
+can be an estimate of the maximum number of documents that
+could ever be seen.</dd>
+</dl>
+<p>alpha: Hyperparameter for prior on weight vectors theta
+eta: Hyperparameter for prior on topics beta
+tau0: A (positive) learning parameter that downweights early iterations
+kappa: Learning rate: exponential decay rate&#8212;should be between</p>
+<blockquote>
+(0.5, 1.0] to guarantee asymptotic convergence.</blockquote>
+<p>Note that if you pass the same set of D documents in every time and
+set kappa=0 this class can also be used to do batch VB.</p>
+<dl class="method">
+<dt id="gensim.models.ldamodel.OnlineLDA.approx_bound">
+<tt class="descname">approx_bound</tt><big>(</big><em>docs</em>, <em>gamma</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.OnlineLDA.approx_bound" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates the variational bound over <em>all documents</em> using only
+the documents passed in as &#8220;docs.&#8221; gamma is the set of parameters
+to the variational distribution q(theta) corresponding to the
+set of documents passed in.</p>
+<p>The output of this function is going to be noisy, but can be
+useful for assessing convergence.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.ldamodel.OnlineLDA.do_e_step">
+<tt class="descname">do_e_step</tt><big>(</big><em>docs</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.OnlineLDA.do_e_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a mini-batch of documents, estimates the parameters
+gamma controlling the variational distribution over the topic
+weights for each document in the mini-batch.</p>
+<p>Arguments:
+docs:  List of D documents. Each document must be represented</p>
+<blockquote>
+as a string. (Word order is unimportant.) Any
+words not in the vocabulary will be ignored.</blockquote>
+<p>Returns a tuple containing the estimated values of gamma,
+as well as sufficient statistics needed to update lambda.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="gensim.models.ldamodel.OnlineLDA.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.OnlineLDA.load" title="Permalink to this definition">¶</a></dt>
+<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.ldamodel.OnlineLDA.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.OnlineLDA.save" title="Permalink to this definition">¶</a></dt>
+<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.ldamodel.OnlineLDA.update_lambda">
+<tt class="descname">update_lambda</tt><big>(</big><em>docs</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.OnlineLDA.update_lambda" title="Permalink to this definition">¶</a></dt>
+<dd><p>First does an E step on the mini-batch given in wordids and
+wordcts, then uses the result of that E step to update the
+variational parameter matrix lambda.</p>
+<p>Arguments:
+docs:  List of D documents. Each document must be represented</p>
+<blockquote>
+as a string. (Word order is unimportant.) Any
+words not in the vocabulary will be ignored.</blockquote>
+<p>Returns gamma, the parameters to the variational distribution
+over the topic weights theta for the documents analyzed in this
+update.</p>
+<p>Also returns an estimate of the variational bound for the
+entire corpus for the OLD setting of lambda based on the
+documents passed in. This can be used as a (possibly very
+noisy) estimate of held-out likelihood.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.models.ldamodel.dirichlet_expectation">
+<tt class="descclassname">gensim.models.ldamodel.</tt><tt class="descname">dirichlet_expectation</tt><big>(</big><em>alpha</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.dirichlet_expectation" title="Permalink to this definition">¶</a></dt>
+<dd>For a vector theta ~ Dir(alpha), computes E[log(theta)] given alpha.</dd></dl>
+
 </div>
 
 
@@ -286,7 +372,7 @@ approximation).</p>
     </div>
     <div class="footer">
       &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 13, 2010.
+      Last updated on Nov 03, 2010.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
     </div>
   </body>

@@ -18,7 +18,7 @@ Preparing the corpus
    and contains (compressed version of) all articles from the English Wikipedia.
 
 2. Convert the articles to plain text (process Wiki markup) and store the result as 
-   sparse TF-IDF vectors. In Python, this is easy to do on-the-fly and we don't 
+   sparse TF-IDF vectors. In Python, this is easy to do on-the-fly (the code is included in `gensim`), and we don't 
    even need to uncompress the whole archive to disk. We will use the fact that 
    the computation can be run incrementally, over the compressed file, when testing 
    the single pass LSA algorithm. 
@@ -115,12 +115,15 @@ There are two differences to how we ran LSA in the previous experiment:
 
 Running the above takes about 15.5h on my laptop [1]_. Compare this to the `15h+2.5h~=17.5h` for the two-phase 
 algorithm above, where we first store the sparse vectors to disk (15h) and only then 
-proceed with LSA (2.5h). However, the two-pass algorithm does a lot of extra 
-work, such as building the dictionary and constructing TF-IDF vectors, so it is 
-generally faster and preferrable whenever you can store your input vectors persistently.
+proceed with LSA (2.5h). As 15.5h < 17.5h, it seems like the single pass algorithm is actually
+faster. However, the two-phase algorithm does a lot of extra 
+work, such as building the dictionary and constructing TF-IDF vectors, which actually take
+up most of the 17.5 hours and which the single-pass algorithm skips altogether. 
+The two-phase algorithm is generally faster and preferrable whenever you can store 
+your input vectors persistently.
 
-To directly compare the speed of the two algorithms, let's run the
-one-pass variant over the same input we used in the two-pass experiment 
+To settle the matter and directly compare the speed of the two algorithms, let's run the
+one-pass variant over the exact same input we used in the two-pass experiment 
 above::
 
     >>> id2word = gensim.corpora.wikicorpus.WikiCorpus.loadDictionary('wiki_en_wordids.txt')
@@ -142,8 +145,8 @@ above::
     topic #9(78.766): kategória(0.126), kategori(0.500), kategorija(0.248), categoría(0.165), 분류(0.104), kategoria(0.161), ja(0.099), categorie(0.148), категория(0.172), kategorie(0.234), ..., link(-0.035), directorial(-0.001), gets(-0.006), filming(-0.001), undo(-0.017)
 
 This takes 8.5h, compared to 2.5h of the two-pass algorithm. If you need your 
-results faster, the one-pass algorithm can also be run over a cluster of computers, 
-see the :doc:`distributed tutorial <distributed>`.
+results even faster, the one-pass algorithm can also be run over a cluster of computers, 
+see the tutorial on :doc:`distributed`.
 
 .. note::
 
