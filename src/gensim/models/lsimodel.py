@@ -29,7 +29,7 @@ requesting the top 400 LSI factors:
  algorithm                                             serial       distributed    
 ====================================================== ============ ==================
  one-pass merge algorithm                              5h14m        1h41m           
- multi-pass stochastic algo (with 2 power iterations)  h            N/A [1]_
+ multi-pass stochastic algo (with 2 power iterations)  5h39m        N/A [1]_
 ====================================================== ============ ==================
 
 
@@ -39,8 +39,9 @@ requesting the top 400 LSI factors:
 with dual core Xeon 2.0GHz, 4GB RAM, ATLAS
 
 .. [1] The stochastic algo could be distributed too, but most time is already spent 
-   reading/decompressing the input from disk, and the extra network traffic due to 
-   data distribution would likely make it actually *slower*.
+   reading/decompressing the input from disk in its 4 passes. The extra network 
+   traffic due to data distribution across cluster nodes would likely make it 
+   actually *slower*.
 
 """
 
@@ -223,7 +224,7 @@ class LsiModel(interfaces.TransformationABC):
         
         `power_iters` and `extra_samples` affect the accuracy of the stochastic
         multi-pass algorithm, which is used either internally (`onepass=True`) or
-        as the fornt-end algorithm (`onepass=False`). Increasing the number of 
+        as the front-end algorithm (`onepass=False`). Increasing the number of 
         power iterations improves accuracy, but lowers performance. See [2]_ for 
         some hard numbers.
 

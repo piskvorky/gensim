@@ -60,7 +60,7 @@
         <div class="sphinxsidebarwrapper">
             <h4>Previous topic</h4>
             <p class="topless"><a href="ldamodel.html"
-                                  title="previous chapter"><tt class="docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
+                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
             <h4>Next topic</h4>
             <p class="topless"><a href="tfidfmodel.html"
                                   title="next chapter"><tt class="docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model</a></p>
@@ -121,7 +121,7 @@ requesting the top 400 LSI factors:</p>
 <td>1h41m</td>
 </tr>
 <tr><td>multi-pass stochastic algo (with 2 power iterations)</td>
-<td>h</td>
+<td>5h39m</td>
 <td>N/A <a class="footnote-reference" href="#id2" id="id1">[1]</a></td>
 </tr>
 </tbody>
@@ -133,8 +133,9 @@ with dual core Xeon 2.0GHz, 4GB RAM, ATLAS</p>
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>The stochastic algo could be distributed too, but most time is already spent 
-reading/decompressing the input from disk, and the extra network traffic due to 
-data distribution would likely make it actually <em>slower</em>.</td></tr>
+reading/decompressing the input from disk in its 4 passes. The extra network 
+traffic due to data distribution across cluster nodes would likely make it 
+actually <em>slower</em>.</td></tr>
 </tbody>
 </table>
 <dl class="class">
@@ -161,7 +162,7 @@ method <cite>addDocuments</cite> for a description of the <cite>chunks</cite> an
 <p>Turn <cite>onepass</cite> off to force a multi-pass stochastic algorithm.</p>
 <p><cite>power_iters</cite> and <cite>extra_samples</cite> affect the accuracy of the stochastic
 multi-pass algorithm, which is used either internally (<cite>onepass=True</cite>) or
-as the fornt-end algorithm (<cite>onepass=False</cite>). Increasing the number of 
+as the front-end algorithm (<cite>onepass=False</cite>). Increasing the number of 
 power iterations improves accuracy, but lowers performance. See <a class="footnote-reference" href="#id4" id="id3">[2]</a> for 
 some hard numbers.</p>
 <p>Turn on <cite>distributed</cite> to enable distributed computing.</p>

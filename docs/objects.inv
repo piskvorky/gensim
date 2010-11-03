@@ -28,7 +28,6 @@ gensim.corpora.dmlcorpus.DmlCorpus.buildDictionary method corpora/dmlcorpus.html
 gensim.corpora.svmlightcorpus.SvmLightCorpus.save method corpora/svmlightcorpus.html
 gensim.interfaces.SimilarityABC class interfaces.html
 gensim.matutils.MmWriter class matutils.html
-gensim.models.ldamodel.OnlineLDA.update_lambda method models/ldamodel.html
 gensim.corpora.wikicorpus.filterWiki function corpora/wikicorpus.html
 gensim.matutils.full2sparse function matutils.html
 gensim.corpora.dmlcorpus.DmlCorpus.articleDir method corpora/dmlcorpus.html
@@ -59,7 +58,6 @@ gensim.models.ldamodel.LdaModel.probs2scores method models/ldamodel.html
 gensim.models.ldamodel.LdaModel.load classmethod models/ldamodel.html
 gensim.models.ldamodel.LdaModel.computeLikelihood method models/ldamodel.html
 gensim.matutils.Dense2Corpus class matutils.html
-gensim.models.ldamodel.OnlineLDA.load classmethod models/ldamodel.html
 gensim.interfaces.TransformationABC.save method interfaces.html
 gensim.models.ldamodel.LdaState.reset method models/ldamodel.html
 gensim.corpora.wikicorpus.WikiCorpus.save method corpora/wikicorpus.html
@@ -90,7 +88,6 @@ gensim.models.tfidfmodel.TfidfModel class models/tfidfmodel.html
 gensim.similarities.docsim.Similarity class similarities/docsim.html
 gensim.corpora.dictionary.Dictionary.rebuildDictionary method corpora/dictionary.html
 gensim.utils.get_my_ip function utils.html
-gensim.models.ldamodel.OnlineLDA class models/ldamodel.html
 gensim.corpora.wikicorpus.VocabTransform.save method corpora/wikicorpus.html
 gensim.corpora.wikicorpus.WikiCorpus.saveDictionary method corpora/wikicorpus.html
 gensim.interfaces.TransformationABC.load classmethod interfaces.html
@@ -135,8 +132,6 @@ gensim.matutils.Sparse2Corpus class matutils.html
 gensim.similarities.docsim.Similarity.save method similarities/docsim.html
 gensim.models.lsimodel.svdUpdate function models/lsimodel.html
 gensim.models.lsimodel.LsiModel.printDebug method models/lsimodel.html
-gensim.models.ldamodel.OnlineLDA.do_e_step method models/ldamodel.html
-gensim.models.ldamodel.OnlineLDA.approx_bound method models/ldamodel.html
 gensim.interfaces.TransformationABC class interfaces.html
 gensim.corpora.mmcorpus.MmCorpus.load classmethod corpora/mmcorpus.html
 gensim.corpora.mmcorpus.MmCorpus.save method corpora/mmcorpus.html
@@ -170,6 +165,5 @@ gensim.similarities.docsim.MatrixSimilarity.load classmethod similarities/docsim
 gensim.corpora.dictionary.Dictionary.save method corpora/dictionary.html
 gensim.models.lda_dispatcher.Dispatcher.exit method models/lda_dispatcher.html
 gensim.models.ldamodel.LdaModel.save method models/ldamodel.html
-gensim.models.ldamodel.OnlineLDA.save method models/ldamodel.html
 gensim.utils.RepeatCorpus class utils.html
 gensim.models.lsi_dispatcher.Dispatcher.jobsdone method models/lsi_dispatcher.html
