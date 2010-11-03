@@ -98,13 +98,8 @@
 <li>Input corpus iterator can come from a compressed file (<strong>bzip2</strong>, <strong>gzip</strong>, ...), to save disk space when dealing with
 very large corpora.</li>
 </ul>
-<p><cite>gensim</cite> now contains two algorithms for Latent Semantic Indexing:</p>
-<ol class="last arabic simple">
-<li>streamed <strong>stochastic algorithm</strong>: takes <a class="reference external" href="wiki.html"><em>2h30m hours on the English Wikipedia</em></a> (3.2 mil. documents), on a Macbook Pro.</li>
-<li>streamed <strong>single pass algorithm</strong>: slower (takes 5h14m), but only accesses each document
-once; use this if your input comes streaming in and you cannot store it
-persistently.</li>
-</ol>
+<p class="last"><cite>gensim</cite> now completes <a class="reference external" href="wiki.html"><em>LSI of the English Wikipedia</em></a>
+(3.2 million documents) in <strong>5 hours 14 minutes</strong>, using the one-pass algorithm, on a Macbook Pro laptop.</p>
 </div>
 <p>For an overview on what gensim does (or does not do), go to the <a class="reference external" href="intro.html"><em>introduction</em></a>.</p>
 <p>To download and install <cite>gensim</cite>, consult the <a class="reference external" href="install.html"><em>install</em></a> page.</p>

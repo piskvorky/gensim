@@ -88,14 +88,14 @@
   <div class="section" id="module-gensim.models.lsimodel">
 <h1><tt class="xref docutils literal"><span class="pre">models.lsimodel</span></tt> &#8211; Latent Semantic Indexing<a class="headerlink" href="#module-gensim.models.lsimodel" title="Permalink to this headline">¶</a></h1>
 <p>Module for Latent Semantic Indexing.</p>
-<p>It actually contains several algorithms for decomposition of large corpora, a 
+<p>This module actually contains several algorithms for decomposition of large corpora, a 
 combination of which effectively and transparently allows building LSI models for:</p>
 <ul class="simple">
-<li>corpora much larger than RAM: only constant memory needed, independent of 
+<li>corpora much larger than RAM: only constant memory is needed, independent of 
 the corpus size (though still dependent on the feature set size)</li>
-<li>corpora that are streamed: documents are only accessed sequentially, not 
-random-accessed</li>
-<li>corpora that cannot even be temporarily stored, each document can only be 
+<li>corpora that are streamed: documents are only accessed sequentially, no
+random-access</li>
+<li>corpora that cannot be even temporarily stored: each document can only be 
 seen once and must be processed immediately (one-pass algorithm)</li>
 <li>distributed computing for very large corpora, making use of a cluster of
 machines</li>
@@ -105,12 +105,12 @@ documents, 100K features, 0.5G non-zero entries in the final TF-IDF matrix),
 requesting the top 400 LSI factors:</p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="57%" />
-<col width="17%" />
-<col width="26%" />
+<col width="64%" />
+<col width="14%" />
+<col width="21%" />
 </colgroup>
 <thead valign="bottom">
-<tr><th class="head">algorithm (chunks=40k)</th>
+<tr><th class="head">algorithm</th>
 <th class="head">serial</th>
 <th class="head">distributed</th>
 </tr>
@@ -120,30 +120,26 @@ requesting the top 400 LSI factors:</p>
 <td>5h14m</td>
 <td>1h41m</td>
 </tr>
-<tr><td>2-pass stochastic algo (0 power iters)</td>
-<td>2.5h</td>
-<td>N/A <a href="#id6"><span class="problematic" id="id7"><span id="id1"></span>[1]_</span></a></td>
-</tr>
-<tr><td>3-pass stochastic algo (1 power iter)</td>
+<tr><td>multi-pass stochastic algo (with 2 power iterations)</td>
 <td>h</td>
-<td>N/A <a href="#id8"><span class="problematic" id="id9"><span id="id2"></span>[1]_</span></a></td>
+<td>N/A <a class="footnote-reference" href="#id2" id="id1">[1]</a></td>
 </tr>
 </tbody>
 </table>
 <p><em>serial</em> = Core 2 Duo MacBook Pro 2.53Ghz, 4GB RAM, libVec</p>
 <p><em>distributed</em> = cluster of four logical nodes on three physical machines, each 
 with dual core Xeon 2.0GHz, 4GB RAM, ATLAS</p>
-<table class="docutils footnote" frame="void" id="id3" rules="none">
+<table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[1]</td><td>The stochastic algo could be distributed too, but most time is already spent 
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>The stochastic algo could be distributed too, but most time is already spent 
 reading/decompressing the input from disk, and the extra network traffic due to 
 data distribution would likely make it actually <em>slower</em>.</td></tr>
 </tbody>
 </table>
 <dl class="class">
 <dt id="gensim.models.lsimodel.LsiModel">
-<em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus=None</em>, <em>numTopics=200</em>, <em>id2word=None</em>, <em>chunks=20000</em>, <em>decay=1.0</em>, <em>distributed=False</em>, <em>onepass=False</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus=None</em>, <em>numTopics=200</em>, <em>id2word=None</em>, <em>chunks=20000</em>, <em>decay=1.0</em>, <em>distributed=False</em>, <em>onepass=True</em>, <em>power_iters=2</em>, <em>extra_samples=100</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Objects of this class allow building and maintaining a model for Latent 
 Semantic Indexing (also known as Latent Semantic Analysis).</p>
 <p>The main methods are:</p>
@@ -162,9 +158,13 @@ so that training can be stopped and resumed at any time, and the
 LSI transformation is available at any point.</p>
 <p>If you specify a <cite>corpus</cite>, it will be used to train the model. See the 
 method <cite>addDocuments</cite> for a description of the <cite>chunks</cite> and <cite>decay</cite> parameters.</p>
-<p>If your document stream is one-pass only (the stream cannot be repeated),
-turn on <cite>onepass</cite> to force a single pass SVD algorithm (slower).</p>
-<p>Turn on <cite>distributed</cite> to force distributed computing.</p>
+<p>Turn <cite>onepass</cite> off to force a multi-pass stochastic algorithm.</p>
+<p><cite>power_iters</cite> and <cite>extra_samples</cite> affect the accuracy of the stochastic
+multi-pass algorithm, which is used either internally (<cite>onepass=True</cite>) or
+as the fornt-end algorithm (<cite>onepass=False</cite>). Increasing the number of 
+power iterations improves accuracy, but lowers performance. See <a class="footnote-reference" href="#id4" id="id3">[2]</a> for 
+some hard numbers.</p>
+<p>Turn on <cite>distributed</cite> to enable distributed computing.</p>
 <p>Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">lsi</span><span class="p">[</span><span class="n">doc_tfidf</span><span class="p">]</span> <span class="c"># project some document into LSI space</span>
@@ -172,6 +172,12 @@ turn on <cite>onepass</cite> to force a single pass SVD algorithm (slower).</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">lsi</span><span class="p">[</span><span class="n">doc_tfidf</span><span class="p">]</span>
 </pre></div>
 </div>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[2]</a></td><td><a class="reference external" href="http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf">http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf</a></td></tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="gensim.models.lsimodel.LsiModel.addDocuments">
 <tt class="descname">addDocuments</tt><big>(</big><em>corpus</em>, <em>chunks=None</em>, <em>decay=None</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.addDocuments" title="Permalink to this definition">¶</a></dt>
@@ -183,7 +189,7 @@ vs. lower memory footprint (smaller <cite>chunks</cite>). If the distributed mod
 is on, each chunk is sent to a different worker/computer.</p>
 <p>Setting <cite>decay</cite> &lt; 1.0 causes re-orientation towards new data trends in the 
 input document stream, by giving less emphasis to old observations. This allows
-SVD to gradually &#8220;forget&#8221; old observations (documents) and give more 
+LSA to gradually &#8220;forget&#8221; old observations (documents) and give more 
 preference to new ones.</p>
 </dd></dl>
 
@@ -249,20 +255,20 @@ Value Decomposition in Natural Language Processing. EACL 2006.</strong></p>
 <dl class="function">
 <dt id="gensim.models.lsimodel.stochasticSvd">
 <tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">stochasticSvd</tt><big>(</big><em>corpus</em>, <em>rank</em>, <em>num_terms</em>, <em>chunks=20000</em>, <em>extra_dims=None</em>, <em>power_iters=0</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em>, <em>eps=9.9999999999999995e-07</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.stochasticSvd" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return U, S &#8211; the left singular vectors and the singular values of the streamed 
-input corpus <cite>corpus</cite> <a href="#id10"><span class="problematic" id="id11"><span id="id4"></span>[1]_</span></a>.</p>
+<dd><p>Return (U, S): the left singular vectors and the singular values of the streamed 
+input corpus <cite>corpus</cite> <a class="footnote-reference" href="#id6" id="id5">[3]</a>.</p>
 <p>This may actually return less than the requested number of top <cite>rank</cite> factors, 
-in case the input is of lower rank. The <cite>extra_dims</cite> (oversampling) and 
+in case the input is of lower rank. The <cite>extra_dims</cite> (oversampling) and especially
 <cite>power_iters</cite> (power iterations) parameters affect accuracy of the decomposition.</p>
-<p>This algorithm uses 2+power_iters passes over the data. In case you can only 
+<p>This algorithm uses <cite>2+power_iters</cite> passes over the data. In case you can only 
 afford a single pass over the input corpus, set <cite>onepass=True</cite> in LsiModel 
-and avoid using this algorithm.</p>
+and avoid using this algorithm directly.</p>
 <p>The decomposition algorithm is based on 
 <strong>Halko, Martinsson, Tropp. Finding structure with randomness, 2009.</strong></p>
-<table class="docutils footnote" frame="void" id="id5" rules="none">
+<table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[1]</td><td>If <cite>corpus</cite> is instead a scipy.sparse matrix, it is assumed the whole 
+<tr><td class="label"><a class="fn-backref" href="#id5">[3]</a></td><td>If <cite>corpus</cite> is a scipy.sparse matrix instead, it is assumed the whole 
 corpus fits into core memory and a different (more efficient) code path is chosen.</td></tr>
 </tbody>
 </table>

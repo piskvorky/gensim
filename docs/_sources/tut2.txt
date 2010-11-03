@@ -176,8 +176,10 @@ Gensim implements several popular Vector Space Model algorithms:
   LSI gradually "forget" old observations in infinite streams and how to tweak parameters
   affecting speed vs. memory footprint vs. numerical precision of the algorithm.
   
-  For a discussion of two-pass vs. one-pass LSA algorithms (both are available 
-  in `gensim`), look at :doc:`wiki`.
+  `gensim` also contains an implementation of the stochastic multi-pass algorithm from 
+  Halko et al. [4]_. This algorithm is used internally by `gensim` to accelerate SVD computations.
+  See also :doc:`wiki` for further speed-ups by distributing the computation across 
+  a cluster of computers.
 
 * `Random Projections, RP <http://www.cis.hut.fi/ella/publications/randproj_kdd.pdf>`_ aim to
   reduce vector space dimensionality. This is a very efficient (both memory- and
@@ -210,4 +212,6 @@ If you feel you could contribute, please `let us know <mailto:radimrehurek@sezna
 
 .. [2] Asuncion, A., 2009. On Smoothing and Inference for Topic Models.
 
-.. [3] Yao, Mimno, McCallum, 2009. Efficient Methods for Topic Model Inference on Streaming Document Collections
+.. [3] Yao, Mimno, McCallum, 2009. Efficient Methods for Topic Model Inference on Streaming Document Collections.
+
+.. [4] Halko, Martinsson, Tropp. 2009. Finding structure with randomness.
