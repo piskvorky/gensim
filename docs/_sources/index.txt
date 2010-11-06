@@ -10,24 +10,22 @@ Gensim -- Python Framework for Vector Space Modelling
 
    Version |version| is `out <http://pypi.python.org/pypi/gensim>`_!
    
-   * *Latent Semantic Indexing (LSI)* and *Latent Dirichlet Allocation (LDA)* are now **faster**, consume **less memory**.
+   * incremental algorithms for *Latent Semantic Indexing (LSI)* and *Latent Dirichlet Allocation (LDA)* are now **faster** and consume **less memory**.
    * Optimizations to vocabulary generation.
    * Input corpus iterator can come from a compressed file (**bzip2**, **gzip**, ...), to save disk space when dealing with
      very large corpora.
    
    `gensim` now completes :doc:`LSI of the English Wikipedia <wiki>` 
-   (3.2 million documents) in **5 hours 14 minutes**, using a one-pass SVD algorithm, 
-   on a single Macbook Pro laptop. Be sure to check out the 
+   (3.2 million documents) in **5 hours 14 minutes**, using a one-pass incremental 
+   SVD algorithm, on a single Macbook Pro laptop. Be sure to check out the 
    :doc:`distributed mode <distributed>`, too.
 
 ..
-   See the `draft paper <http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_ for more info.
+   See the `research draft paper <http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_ for more numbers.
 
-For an overview on what gensim does (or does not do), go to the :doc:`introduction <intro>`.
+For an **overview** of what you can (or cannot) do with `gensim`, go to the :doc:`introduction <intro>`.
 
-To download and install `gensim`, consult the :doc:`install <install>` page.
-
-For examples on how to use it, try the :doc:`tutorials <tutorial>`.
+For **examples** on how to use it, try the :doc:`tutorials <tutorial>`.
 
 Quick Reference Example
 ------------------------
@@ -47,10 +45,9 @@ Quick Reference Example
 >>> sims = index[query]
 
 
-Contents
----------
 
 .. toctree::
+   :hidden:
    :maxdepth: 1
    
    intro

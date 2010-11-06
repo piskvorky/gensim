@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -10,14 +12,15 @@
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '#',
+        URL_ROOT:    '',
         VERSION:     '0.7.5',
-        COLLAPSE_MODINDEX: false,
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="index.html" />
     <link rel="next" title="Distributed Latent Semantic Analysis" href="dist_lsi.html" />
@@ -27,7 +30,7 @@
 
 <!--
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="index.html"><img src="_static/logo.png" border="0" alt="py4sci"/></a>
+<a href="index.html"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
 </div>
 --!>
 
@@ -39,8 +42,8 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
-             accesskey="M">modules</a> |</li>
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="dist_lsi.html" title="Distributed Latent Semantic Analysis"
              accesskey="N">next</a> |</li>
@@ -56,38 +59,38 @@
 
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h3><a href="index.html">Table Of Contents</a></h3>
-            <ul>
-<li><a class="reference external" href="#">Distributed Computing</a><ul>
-<li><a class="reference external" href="#why-distributed-computing">Why distributed computing?</a></li>
-<li><a class="reference external" href="#prerequisites">Prerequisites</a></li>
-<li><a class="reference external" href="#core-concepts">Core concepts</a></li>
-<li><a class="reference external" href="#available-distributed-algorithms">Available distributed algorithms</a><ul>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Distributed Computing</a><ul>
+<li><a class="reference internal" href="#why-distributed-computing">Why distributed computing?</a></li>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#core-concepts">Core concepts</a></li>
+<li><a class="reference internal" href="#available-distributed-algorithms">Available distributed algorithms</a><ul>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="dist_lda.html"
-                                  title="previous chapter">Distributed Latent Dirichlet Allocation</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="dist_lsi.html"
-                                  title="next chapter">Distributed Latent Semantic Analysis</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dist_lda.html"
+                        title="previous chapter">Distributed Latent Dirichlet Allocation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dist_lsi.html"
+                        title="next chapter">Distributed Latent Semantic Analysis</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -138,10 +141,10 @@ the examples on this page don&#8217;t apply).</p>
 </div>
 <div class="section" id="core-concepts">
 <h2>Core concepts<a class="headerlink" href="#core-concepts" title="Permalink to this headline">¶</a></h2>
-<p>As always, <cite>gensim</cite> strives for a clear and straightforward API (see <a class="reference external" href="intro.html#design"><em>Design</em></a>).
+<p>As always, <cite>gensim</cite> strives for a clear and straightforward API (see <a class="reference internal" href="intro.html#design"><em>Design</em></a>).
 To this end, <em>you do not need to make any changes in your code at all</em> in order to
 run it over a cluster of computers!</p>
-<p>What you need to do is run a <a class="reference internal" href="#term-worker"><em class="xref">worker</em></a> script (see below) on each of your cluster nodes prior
+<p>What you need to do is run a <a class="reference internal" href="#term-worker"><em class="xref std std-term">worker</em></a> script (see below) on each of your cluster nodes prior
 to starting your computation. Running this script tells <cite>gensim</cite> that it may use the node
 as a slave to delegate some work to it. During initialization, the algorithms
 inside <cite>gensim</cite> will automatically try to look for and enslave all available worker nodes.
@@ -167,10 +170,12 @@ there can only be one active dispatcher at a time in the cluster.</dd>
 </div>
 <div class="section" id="available-distributed-algorithms">
 <h2>Available distributed algorithms<a class="headerlink" href="#available-distributed-algorithms" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference external" href="dist_lsi.html">Distributed Latent Semantic Analysis</a></li>
-<li class="toctree-l1"><a class="reference external" href="dist_lda.html">Distributed Latent Dirichlet Allocation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist_lsi.html">Distributed Latent Semantic Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dist_lda.html">Distributed Latent Dirichlet Allocation</a></li>
 </ul>
+</div>
 </div>
 </div>
 
@@ -187,7 +192,7 @@ there can only be one active dispatcher at a time in the cluster.</dd>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
+          <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
           <a href="dist_lsi.html" title="Distributed Latent Semantic Analysis"
@@ -202,9 +207,9 @@ there can only be one active dispatcher at a time in the cluster.</dd>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Nov 03, 2010.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Nov 06, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>
 </html>

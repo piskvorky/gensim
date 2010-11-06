@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -10,14 +12,15 @@
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '#',
+        URL_ROOT:    '',
         VERSION:     '0.7.5',
-        COLLAPSE_MODINDEX: false,
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="index.html" />
     <link rel="up" title="Tutorial" href="tutorial.html" />
@@ -28,7 +31,7 @@
 
 <!--
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="index.html"><img src="_static/logo.png" border="0" alt="py4sci"/></a>
+<a href="index.html"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
 </div>
 --!>
 
@@ -40,8 +43,8 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
-             accesskey="M">modules</a> |</li>
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="distributed.html" title="Distributed Computing"
              accesskey="N">next</a> |</li>
@@ -58,35 +61,35 @@
 
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h3><a href="index.html">Table Of Contents</a></h3>
-            <ul>
-<li><a class="reference external" href="#">Experiments on Wikipedia</a><ul>
-<li><a class="reference external" href="#preparing-the-corpus">Preparing the corpus</a></li>
-<li><a class="reference external" href="#latent-sematic-analysis">Latent Sematic Analysis</a></li>
-<li><a class="reference external" href="#latent-dirichlet-allocation">Latent Dirichlet Allocation</a></li>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Experiments on Wikipedia</a><ul>
+<li><a class="reference internal" href="#preparing-the-corpus">Preparing the corpus</a></li>
+<li><a class="reference internal" href="#latent-sematic-analysis">Latent Sematic Analysis</a></li>
+<li><a class="reference internal" href="#latent-dirichlet-allocation">Latent Dirichlet Allocation</a></li>
 </ul>
 </li>
 </ul>
 
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="tut3.html"
-                                  title="previous chapter">Similarity Queries</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="distributed.html"
-                                  title="next chapter">Distributed Computing</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tut3.html"
+                        title="previous chapter">Similarity Queries</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="distributed.html"
+                        title="next chapter">Distributed Computing</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -99,7 +102,7 @@
 <span id="wiki"></span><h1>Experiments on Wikipedia<a class="headerlink" href="#experiments-on-wikipedia" title="Permalink to this headline">¶</a></h1>
 <p>To test <cite>gensim</cite> performance, we run it against the English version of Wikipedia.</p>
 <p>This page describes the process of obtaining and processing Wikipedia, so that
-anyone can reproduce our results. It is assumed you have <cite>gensim</cite> properly <a class="reference external" href="install.html"><em>installed</em></a>.</p>
+anyone can reproduce our results. It is assumed you have <cite>gensim</cite> properly <a class="reference internal" href="install.html"><em>installed</em></a>.</p>
 <div class="section" id="preparing-the-corpus">
 <h2>Preparing the corpus<a class="headerlink" href="#preparing-the-corpus" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic">
@@ -165,12 +168,14 @@ about 1.92 billion tokens in total.</p>
 </pre></div>
 </div>
 <p>Creating the LSI model of Wikipedia takes about 5 hours and 14 minutes on my laptop <a class="footnote-reference" href="#id3" id="id1">[1]</a>.
-If you need your results even faster, see the tutorial on <a class="reference external" href="distributed.html"><em>Distributed Computing</em></a>.</p>
+If you need your results even faster, see the tutorial on <a class="reference internal" href="distributed.html"><em>Distributed Computing</em></a>.</p>
 <p>We see that the total processing time is dominated by the preprocessing step of
 preparing the TF-IDF corpus, which took 15h. <a class="footnote-reference" href="#id4" id="id2">[2]</a></p>
 <p>The algorithm used in <cite>gensim</cite> only needs to see each input document once, so it
 is suitable for environments where the documents come as a non-repeatable stream,
-or where the cost of storing/iterating over the corpus multiple times is too high.</p>
+or where the cost of storing/iterating over the corpus multiple times is too high.
+Under the hood, it uses a multi-pass <a class="reference internal" href="models/lsimodel.html#gensim.models.lsimodel.stochasticSvd" title="gensim.models.lsimodel.stochasticSvd"><tt class="xref py py-func docutils literal"><span class="pre">gensim.models.lsimodel.stochasticSvd()</span></tt></a>
+algorithm to improve performance.</p>
 </div>
 <div class="section" id="latent-dirichlet-allocation">
 <h2>Latent Dirichlet Allocation<a class="headerlink" href="#latent-dirichlet-allocation" title="Permalink to this headline">¶</a></h2>
@@ -223,7 +228,7 @@ By the way, improvements to the Wiki markup parsing code are welcome :-)</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
+          <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
           <a href="distributed.html" title="Distributed Computing"
@@ -239,9 +244,9 @@ By the way, improvements to the Wiki markup parsing code are welcome :-)</p>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Nov 03, 2010.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Nov 06, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>
 </html>

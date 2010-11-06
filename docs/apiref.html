@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -10,14 +12,15 @@
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '#',
+        URL_ROOT:    '',
         VERSION:     '0.7.5',
-        COLLAPSE_MODINDEX: false,
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="index.html" />
     <link rel="next" title="interfaces – Core gensim interfaces" href="interfaces.html" />
@@ -27,7 +30,7 @@
 
 <!--
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="index.html"><img src="_static/logo.png" border="0" alt="py4sci"/></a>
+<a href="index.html"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
 </div>
 --!>
 
@@ -39,8 +42,8 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
-             accesskey="M">modules</a> |</li>
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="interfaces.html" title="interfaces – Core gensim interfaces"
              accesskey="N">next</a> |</li>
@@ -56,25 +59,25 @@
 
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="dist_lda.html"
-                                  title="previous chapter">Distributed Latent Dirichlet Allocation</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="interfaces.html"
-                                  title="next chapter"><tt class="docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dist_lda.html"
+                        title="previous chapter">Distributed Latent Dirichlet Allocation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="interfaces.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -86,27 +89,29 @@
   <div class="section" id="api-reference">
 <span id="apiref"></span><h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
 <p>Modules:</p>
+<div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference external" href="interfaces.html"><tt class="docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces</a></li>
-<li class="toctree-l1"><a class="reference external" href="utils.html"><tt class="docutils literal"><span class="pre">utils</span></tt> &#8211; Various utility functions</a></li>
-<li class="toctree-l1"><a class="reference external" href="matutils.html"><tt class="docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils</a></li>
-<li class="toctree-l1"><a class="reference external" href="corpora/bleicorpus.html"><tt class="docutils literal"><span class="pre">corpora.bleicorpus</span></tt> &#8211; Corpus in Blei&#8217;s LDA-C format</a></li>
-<li class="toctree-l1"><a class="reference external" href="corpora/dictionary.html"><tt class="docutils literal"><span class="pre">corpora.dictionary</span></tt> &#8211; Construct word&lt;-&gt;id mappings</a></li>
-<li class="toctree-l1"><a class="reference external" href="corpora/dmlcorpus.html"><tt class="docutils literal"><span class="pre">corpora.dmlcorpus</span></tt> &#8211; Corpus in DML-CZ format</a></li>
-<li class="toctree-l1"><a class="reference external" href="corpora/lowcorpus.html"><tt class="docutils literal"><span class="pre">corpora.lowcorpus</span></tt> &#8211; Corpus in List-of-Words format</a></li>
-<li class="toctree-l1"><a class="reference external" href="corpora/mmcorpus.html"><tt class="docutils literal"><span class="pre">corpora.mmcorpus</span></tt> &#8211; Corpus in Matrix Market format</a></li>
-<li class="toctree-l1"><a class="reference external" href="corpora/svmlightcorpus.html"><tt class="docutils literal"><span class="pre">corpora.svmlightcorpus</span></tt> &#8211; Corpus in SVMlight format</a></li>
-<li class="toctree-l1"><a class="reference external" href="corpora/wikicorpus.html"><tt class="docutils literal"><span class="pre">corpora.wikicorpus</span></tt> &#8211; Corpus from a Wikipedia dump</a></li>
-<li class="toctree-l1"><a class="reference external" href="models/ldamodel.html"><tt class="docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></li>
-<li class="toctree-l1"><a class="reference external" href="models/lsimodel.html"><tt class="docutils literal"><span class="pre">models.lsimodel</span></tt> &#8211; Latent Semantic Indexing</a></li>
-<li class="toctree-l1"><a class="reference external" href="models/tfidfmodel.html"><tt class="docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model</a></li>
-<li class="toctree-l1"><a class="reference external" href="models/rpmodel.html"><tt class="docutils literal"><span class="pre">models.rpmodel</span></tt> &#8211; Random Projections</a></li>
-<li class="toctree-l1"><a class="reference external" href="models/lsi_dispatcher.html"><tt class="docutils literal"><span class="pre">models.lsi_dispatcher</span></tt> &#8211; Dispatcher for distributed LSI</a></li>
-<li class="toctree-l1"><a class="reference external" href="models/lsi_worker.html"><tt class="docutils literal"><span class="pre">models.lsi_worker</span></tt> &#8211; Worker for distributed LSI</a></li>
-<li class="toctree-l1"><a class="reference external" href="models/lda_dispatcher.html"><tt class="docutils literal"><span class="pre">models.lda_dispatcher</span></tt> &#8211; Dispatcher for distributed LDA</a></li>
-<li class="toctree-l1"><a class="reference external" href="models/lda_worker.html"><tt class="docutils literal"><span class="pre">models.lda_worker</span></tt> &#8211; Worker for distributed LDA</a></li>
-<li class="toctree-l1"><a class="reference external" href="similarities/docsim.html"><tt class="docutils literal"><span class="pre">similarities.docsim</span></tt> &#8211; Document similarity queries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html"><tt class="docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html"><tt class="docutils literal"><span class="pre">utils</span></tt> &#8211; Various utility functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matutils.html"><tt class="docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/bleicorpus.html"><tt class="docutils literal"><span class="pre">corpora.bleicorpus</span></tt> &#8211; Corpus in Blei&#8217;s LDA-C format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/dictionary.html"><tt class="docutils literal"><span class="pre">corpora.dictionary</span></tt> &#8211; Construct word&lt;-&gt;id mappings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/dmlcorpus.html"><tt class="docutils literal"><span class="pre">corpora.dmlcorpus</span></tt> &#8211; Corpus in DML-CZ format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/lowcorpus.html"><tt class="docutils literal"><span class="pre">corpora.lowcorpus</span></tt> &#8211; Corpus in List-of-Words format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/mmcorpus.html"><tt class="docutils literal"><span class="pre">corpora.mmcorpus</span></tt> &#8211; Corpus in Matrix Market format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/svmlightcorpus.html"><tt class="docutils literal"><span class="pre">corpora.svmlightcorpus</span></tt> &#8211; Corpus in SVMlight format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="corpora/wikicorpus.html"><tt class="docutils literal"><span class="pre">corpora.wikicorpus</span></tt> &#8211; Corpus from a Wikipedia dump</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/ldamodel.html"><tt class="docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/lsimodel.html"><tt class="docutils literal"><span class="pre">models.lsimodel</span></tt> &#8211; Latent Semantic Indexing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/tfidfmodel.html"><tt class="docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/rpmodel.html"><tt class="docutils literal"><span class="pre">models.rpmodel</span></tt> &#8211; Random Projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/lsi_dispatcher.html"><tt class="docutils literal"><span class="pre">models.lsi_dispatcher</span></tt> &#8211; Dispatcher for distributed LSI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/lsi_worker.html"><tt class="docutils literal"><span class="pre">models.lsi_worker</span></tt> &#8211; Worker for distributed LSI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/lda_dispatcher.html"><tt class="docutils literal"><span class="pre">models.lda_dispatcher</span></tt> &#8211; Dispatcher for distributed LDA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/lda_worker.html"><tt class="docutils literal"><span class="pre">models.lda_worker</span></tt> &#8211; Worker for distributed LDA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="similarities/docsim.html"><tt class="docutils literal"><span class="pre">similarities.docsim</span></tt> &#8211; Document similarity queries</a></li>
 </ul>
+</div>
 </div>
 
 
@@ -122,7 +127,7 @@
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
+          <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
           <a href="interfaces.html" title="interfaces – Core gensim interfaces"
@@ -137,9 +142,9 @@
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Nov 03, 2010.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Nov 06, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>
 </html>

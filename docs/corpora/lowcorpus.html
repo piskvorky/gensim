@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -12,12 +14,13 @@
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
         VERSION:     '0.7.5',
-        COLLAPSE_MODINDEX: false,
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
@@ -28,7 +31,7 @@
 
 <!--
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="../index.html"><img src="../_static/logo.png" border="0" alt="py4sci"/></a>
+<a href="../index.html"><img src="../_static/logo.png" border="0" alt="gensim logo"/></a>
 </div>
 --!>
 
@@ -40,8 +43,8 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../modindex.html" title="Global Module Index"
-             accesskey="M">modules</a> |</li>
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="mmcorpus.html" title="corpora.mmcorpus – Corpus in Matrix Market format"
              accesskey="N">next</a> |</li>
@@ -58,25 +61,25 @@
 
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="dmlcorpus.html"
-                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">corpora.dmlcorpus</span></tt> &#8211; Corpus in DML-CZ format</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="mmcorpus.html"
-                                  title="next chapter"><tt class="docutils literal"><span class="pre">corpora.mmcorpus</span></tt> &#8211; Corpus in Matrix Market format</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="../search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dmlcorpus.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">corpora.dmlcorpus</span></tt> &#8211; Corpus in DML-CZ format</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="mmcorpus.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">corpora.mmcorpus</span></tt> &#8211; Corpus in Matrix Market format</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -86,11 +89,11 @@
           <div class="body">
             
   <div class="section" id="module-gensim.corpora.lowcorpus">
-<h1><tt class="xref docutils literal"><span class="pre">corpora.lowcorpus</span></tt> &#8211; Corpus in List-of-Words format<a class="headerlink" href="#module-gensim.corpora.lowcorpus" title="Permalink to this headline">¶</a></h1>
+<span id="corpora-lowcorpus-corpus-in-list-of-words-format"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">corpora.lowcorpus</span></tt> &#8211; Corpus in List-of-Words format<a class="headerlink" href="#module-gensim.corpora.lowcorpus" title="Permalink to this headline">¶</a></h1>
 <p>Corpus in GibbsLda++ format of List-Of-Words.</p>
 <dl class="class">
 <dt id="gensim.corpora.lowcorpus.LowCorpus">
-<em class="property">class </em><tt class="descclassname">gensim.corpora.lowcorpus.</tt><tt class="descname">LowCorpus</tt><big>(</big><em>fname</em>, <em>id2word=None</em>, <em>line2words=&lt;function splitOnSpace at 0x1b827b0&gt;</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.corpora.lowcorpus.</tt><tt class="descname">LowCorpus</tt><big>(</big><em>fname</em>, <em>id2word=None</em>, <em>line2words=&lt;function splitOnSpace at 0x1cdcc70&gt;</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>List_Of_Words corpus handles input in GibbsLda++ format.</p>
 <p>Quoting <a class="reference external" href="http://gibbslda.sourceforge.net/#3.2_Input_Data_Format">http://gibbslda.sourceforge.net/#3.2_Input_Data_Format</a>:</p>
 <div class="highlight-python"><pre>Both data for training/estimating the model and new data (i.e., previously 
@@ -121,17 +124,20 @@ simple splitting on spaces.</p>
 <dl class="classmethod">
 <dt id="gensim.corpora.lowcorpus.LowCorpus.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus.load" title="Permalink to this definition">¶</a></dt>
-<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+<dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="gensim.corpora.lowcorpus.LowCorpus.save">
 <tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus.save" title="Permalink to this definition">¶</a></dt>
-<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+</dd></dl>
 
 <dl class="staticmethod">
 <dt id="gensim.corpora.lowcorpus.LowCorpus.saveCorpus">
 <em class="property">static </em><tt class="descname">saveCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus.saveCorpus" title="Permalink to this definition">¶</a></dt>
-<dd>Save a corpus in the List-of-words format.</dd></dl>
+<dd><p>Save a corpus in the List-of-words format.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -150,7 +156,7 @@ simple splitting on spaces.</p>
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="../modindex.html" title="Global Module Index"
+          <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
           <a href="mmcorpus.html" title="corpora.mmcorpus – Corpus in Matrix Market format"
@@ -166,9 +172,9 @@ simple splitting on spaces.</p>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Nov 03, 2010.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Nov 06, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>
 </html>

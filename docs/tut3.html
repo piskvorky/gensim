@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -10,14 +12,15 @@
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '#',
+        URL_ROOT:    '',
         VERSION:     '0.7.5',
-        COLLAPSE_MODINDEX: false,
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="index.html" />
     <link rel="up" title="Tutorial" href="tutorial.html" />
@@ -28,7 +31,7 @@
 
 <!--
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="index.html"><img src="_static/logo.png" border="0" alt="py4sci"/></a>
+<a href="index.html"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
 </div>
 --!>
 
@@ -40,8 +43,8 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
-             accesskey="M">modules</a> |</li>
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="wiki.html" title="Experiments on Wikipedia"
              accesskey="N">next</a> |</li>
@@ -58,38 +61,38 @@
 
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h3><a href="index.html">Table Of Contents</a></h3>
-            <ul>
-<li><a class="reference external" href="#">Similarity Queries</a><ul>
-<li><a class="reference external" href="#similarity-interface">Similarity interface</a><ul>
-<li><a class="reference external" href="#initializing-query-structures">Initializing query structures</a></li>
-<li><a class="reference external" href="#performing-queries">Performing queries</a></li>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Similarity Queries</a><ul>
+<li><a class="reference internal" href="#similarity-interface">Similarity interface</a><ul>
+<li><a class="reference internal" href="#initializing-query-structures">Initializing query structures</a></li>
+<li><a class="reference internal" href="#performing-queries">Performing queries</a></li>
 </ul>
 </li>
-<li><a class="reference external" href="#where-next">Where next?</a></li>
+<li><a class="reference internal" href="#where-next">Where next?</a></li>
 </ul>
 </li>
 </ul>
 
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="tut2.html"
-                                  title="previous chapter">Topics and Transformations</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="wiki.html"
-                                  title="next chapter">Experiments on Wikipedia</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tut2.html"
+                        title="previous chapter">Topics and Transformations</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="wiki.html"
+                        title="next chapter">Experiments on Wikipedia</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -108,7 +111,7 @@
 <p>if you want to see logging events.</p>
 <div class="section" id="similarity-interface">
 <h2>Similarity interface<a class="headerlink" href="#similarity-interface" title="Permalink to this headline">¶</a></h2>
-<p>In the previous tutorials on <a class="reference external" href="tut1.html"><em>Corpora and Vector Spaces</em></a> and <a class="reference external" href="tut2.html"><em>Topics and Transformations</em></a>, we covered what it means
+<p>In the previous tutorials on <a class="reference internal" href="tut1.html"><em>Corpora and Vector Spaces</em></a> and <a class="reference internal" href="tut2.html"><em>Topics and Transformations</em></a>, we covered what it means
 to create a corpus in the Vector Space Model and how to transform it between different
 vector spaces. A common reason for such a charade is that we want to determine
 <strong>similarity between pairs of documents</strong>, or the <strong>similarity between a specific document
@@ -157,16 +160,16 @@ might also be indexing a different corpus altogether.</p>
 </div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">The class <tt class="xref docutils literal"><span class="pre">similarities.MatrixSimilarity</span></tt> is only appropriate when the whole
+<p class="last">The class <tt class="xref py py-class docutils literal"><span class="pre">similarities.MatrixSimilarity</span></tt> is only appropriate when the whole
 set of vectors fits into memory. For example, a corpus of one million documents
 would require 2GB of RAM in a 256-dimensional LSI space, when used with this class.
-Without 2GB of free RAM, you would need to use the <tt class="xref docutils literal"><span class="pre">similarities.Similarity</span></tt> class.
+Without 2GB of free RAM, you would need to use the <tt class="xref py py-class docutils literal"><span class="pre">similarities.Similarity</span></tt> class.
 This class operates in constant memory, in a streaming (and more gensim-like)
-fashion, but is also much slower than <tt class="xref docutils literal"><span class="pre">similarities.MatrixSimilarity</span></tt>, which uses
+fashion, but is also much slower than <tt class="xref py py-class docutils literal"><span class="pre">similarities.MatrixSimilarity</span></tt>, which uses
 fast level-2 <a class="reference external" href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms">BLAS routines</a>
 to determine similarities.</p>
 </div>
-<p>Index persistency is handled via the standard <tt class="xref docutils literal"><span class="pre">save()</span></tt> and <tt class="xref docutils literal"><span class="pre">load()</span></tt> functions:</p>
+<p>Index persistency is handled via the standard <tt class="xref py py-func docutils literal"><span class="pre">save()</span></tt> and <tt class="xref py py-func docutils literal"><span class="pre">load()</span></tt> functions:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.index&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">MatrixSimilarity</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.index&#39;</span><span class="p">)</span>
 </pre></div>
@@ -213,8 +216,8 @@ in the first place.</p>
 <div class="section" id="where-next">
 <h2>Where next?<a class="headerlink" href="#where-next" title="Permalink to this headline">¶</a></h2>
 <p>Congratulations, you have finished the tutorials &#8211; now you know how gensim works :-)
-To delve into more details, you can browse through the <a class="reference external" href="apiref.html"><em>API documentation</em></a> or
-perhaps check out <a class="reference external" href="distributed.html"><em>distributed computing</em></a> in <cite>gensim</cite>.</p>
+To delve into more details, you can browse through the <a class="reference internal" href="apiref.html"><em>API documentation</em></a> or
+perhaps check out <a class="reference internal" href="distributed.html"><em>distributed computing</em></a> in <cite>gensim</cite>.</p>
 <p>Please remember that gensim is an experimental package, aimed at the NLP research community.
 This means that:</p>
 <ul class="simple">
@@ -240,7 +243,7 @@ and to facilitate prototyping of new algorithms for NLP researchers.</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
+          <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
           <a href="wiki.html" title="Experiments on Wikipedia"
@@ -256,9 +259,9 @@ and to facilitate prototyping of new algorithms for NLP researchers.</p>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Nov 03, 2010.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Nov 06, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>
 </html>

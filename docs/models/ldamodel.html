@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -12,12 +14,13 @@
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
         VERSION:     '0.7.5',
-        COLLAPSE_MODINDEX: false,
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
@@ -28,7 +31,7 @@
 
 <!--
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="../index.html"><img src="../_static/logo.png" border="0" alt="py4sci"/></a>
+<a href="../index.html"><img src="../_static/logo.png" border="0" alt="gensim logo"/></a>
 </div>
 --!>
 
@@ -40,8 +43,8 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../modindex.html" title="Global Module Index"
-             accesskey="M">modules</a> |</li>
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="lsimodel.html" title="models.lsimodel – Latent Semantic Indexing"
              accesskey="N">next</a> |</li>
@@ -58,25 +61,25 @@
 
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="../corpora/wikicorpus.html"
-                                  title="previous chapter"><tt class="docutils literal"><span class="pre">corpora.wikicorpus</span></tt> &#8211; Corpus from a Wikipedia dump</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="lsimodel.html"
-                                  title="next chapter"><tt class="docutils literal"><span class="pre">models.lsimodel</span></tt> &#8211; Latent Semantic Indexing</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="../search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../corpora/wikicorpus.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">corpora.wikicorpus</span></tt> &#8211; Corpus from a Wikipedia dump</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="lsimodel.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">models.lsimodel</span></tt> &#8211; Latent Semantic Indexing</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -86,7 +89,7 @@
           <div class="body">
             
   <div class="section" id="module-gensim.models.ldamodel">
-<h1><tt class="xref docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation<a class="headerlink" href="#module-gensim.models.ldamodel" title="Permalink to this headline">¶</a></h1>
+<span id="models-ldamodel-latent-dirichlet-allocation"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation<a class="headerlink" href="#module-gensim.models.ldamodel" title="Permalink to this headline">¶</a></h1>
 <p>This module encapsulates functionality for the Latent Dirichlet Allocation algorithm.</p>
 <p>It allows both model estimation from a training corpus and inference on new, 
 unseen documents.</p>
@@ -148,19 +151,22 @@ on how to set up a cluster).</p>
 <dl class="method">
 <dt id="gensim.models.ldamodel.LdaModel.computeLikelihood">
 <tt class="descname">computeLikelihood</tt><big>(</big><em>doc</em>, <em>phi</em>, <em>gamma</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.computeLikelihood" title="Permalink to this definition">¶</a></dt>
-<dd>Compute the document likelihood, given all model parameters.</dd></dl>
+<dd><p>Compute the document likelihood, given all model parameters.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="gensim.models.ldamodel.LdaModel.countsFromCorpus">
 <tt class="descname">countsFromCorpus</tt><big>(</big><em>corpus</em>, <em>numInitDocs=1</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.countsFromCorpus" title="Permalink to this definition">¶</a></dt>
-<dd>Initialize the model word counts from the corpus. Each topic will be 
+<dd><p>Initialize the model word counts from the corpus. Each topic will be 
 initialized from <cite>numInitDocs</cite> randomly selected documents. The corpus 
-is only iterated over once.</dd></dl>
+is only iterated over once.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="gensim.models.ldamodel.LdaModel.docEStep">
 <tt class="descname">docEStep</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.docEStep" title="Permalink to this definition">¶</a></dt>
-<dd>Find optimizing parameters for phi and gamma, and update sufficient statistics.</dd></dl>
+<dd><p>Find optimizing parameters for phi and gamma, and update sufficient statistics.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="gensim.models.ldamodel.LdaModel.inference">
@@ -177,7 +183,8 @@ aka const).</p>
 <dl class="classmethod">
 <dt id="gensim.models.ldamodel.LdaModel.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.load" title="Permalink to this definition">¶</a></dt>
-<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+<dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="gensim.models.ldamodel.LdaModel.mle">
@@ -190,8 +197,9 @@ parameters.</p>
 <dl class="method">
 <dt id="gensim.models.ldamodel.LdaModel.optAlpha">
 <tt class="descname">optAlpha</tt><big>(</big><em>max_iter=1000</em>, <em>newton_thresh=1.0000000000000001e-05</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.optAlpha" title="Permalink to this definition">¶</a></dt>
-<dd>Estimate new topic priors (actually just one scalar shared across all
-topics).</dd></dl>
+<dd><p>Estimate new topic priors (actually just one scalar shared across all
+topics).</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="gensim.models.ldamodel.LdaModel.printTopics">
@@ -218,7 +226,8 @@ another.</p>
 <dl class="method">
 <dt id="gensim.models.ldamodel.LdaModel.save">
 <tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.save" title="Permalink to this definition">¶</a></dt>
-<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -231,7 +240,8 @@ iteration, so try to keep this class lean to reduce traffic.</p>
 <dl class="classmethod">
 <dt id="gensim.models.ldamodel.LdaState.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaState.load" title="Permalink to this definition">¶</a></dt>
-<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+<dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="gensim.models.ldamodel.LdaState.merge">
@@ -245,19 +255,22 @@ approximation).</p>
 <dl class="method">
 <dt id="gensim.models.ldamodel.LdaState.reset">
 <tt class="descname">reset</tt><big>(</big><em>mat=None</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaState.reset" title="Permalink to this definition">¶</a></dt>
-<dd>Prepare the state for a new iteration.</dd></dl>
+<dd><p>Prepare the state for a new iteration.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="gensim.models.ldamodel.LdaState.save">
 <tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaState.save" title="Permalink to this definition">¶</a></dt>
-<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="function">
 <dt id="gensim.models.ldamodel.dirichlet_expectation">
 <tt class="descclassname">gensim.models.ldamodel.</tt><tt class="descname">dirichlet_expectation</tt><big>(</big><em>alpha</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.dirichlet_expectation" title="Permalink to this definition">¶</a></dt>
-<dd>For a vector theta ~ Dir(alpha), computes E[log(theta)] given alpha.</dd></dl>
+<dd><p>For a vector theta ~ Dir(alpha), computes E[log(theta)] given alpha.</p>
+</dd></dl>
 
 </div>
 
@@ -274,7 +287,7 @@ approximation).</p>
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="../modindex.html" title="Global Module Index"
+          <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
           <a href="lsimodel.html" title="models.lsimodel – Latent Semantic Indexing"
@@ -290,9 +303,9 @@ approximation).</p>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Nov 03, 2010.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Nov 06, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>
 </html>
