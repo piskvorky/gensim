@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -10,14 +12,15 @@
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '#',
+        URL_ROOT:    '',
         VERSION:     '0.7.5',
-        COLLAPSE_MODINDEX: false,
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="index.html" />
     <link rel="up" title="API Reference" href="apiref.html" />
@@ -28,7 +31,7 @@
 
 <!--
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="index.html"><img src="_static/logo.png" border="0" alt="py4sci"/></a>
+<a href="index.html"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
 </div>
 --!>
 
@@ -40,8 +43,8 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
-             accesskey="M">modules</a> |</li>
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="utils.html" title="utils – Various utility functions"
              accesskey="N">next</a> |</li>
@@ -58,25 +61,25 @@
 
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="apiref.html"
-                                  title="previous chapter">API Reference</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="utils.html"
-                                  title="next chapter"><tt class="docutils literal"><span class="pre">utils</span></tt> &#8211; Various utility functions</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="apiref.html"
+                        title="previous chapter">API Reference</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="utils.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">utils</span></tt> &#8211; Various utility functions</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -86,7 +89,7 @@
           <div class="body">
             
   <div class="section" id="module-gensim.interfaces">
-<h1><tt class="xref docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces<a class="headerlink" href="#module-gensim.interfaces" title="Permalink to this headline">¶</a></h1>
+<span id="interfaces-core-gensim-interfaces"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces<a class="headerlink" href="#module-gensim.interfaces" title="Permalink to this headline">¶</a></h1>
 <p>This module contains basic interfaces used throughout the whole gensim package.</p>
 <p>The interfaces are realized as abstract base classes (ie., some optional functionality 
 is provided in the interface itself, so that the interfaces can be subclassed).</p>
@@ -96,20 +99,22 @@ is provided in the interface itself, so that the interfaces can be subclassed).<
 <dd><p>Interface for corpora. A <em>corpus</em> is simply an iterable, where each 
 iteration step yields one document. A document is a list of (fieldId, fieldValue)
 2-tuples.</p>
-<p>Note that although a default <tt class="xref docutils literal"><span class="pre">len()</span></tt> method is provided, it is very inefficient
+<p>Note that although a default <tt class="xref py py-func docutils literal"><span class="pre">len()</span></tt> method is provided, it is very inefficient
 (performs a linear scan through the corpus to determine its length). Wherever 
 the corpus size is needed and known in advance (or at least doesn&#8217;t change so 
-that it can be cached), the <tt class="xref docutils literal"><span class="pre">len()</span></tt> method should be overridden.</p>
-<p>See the <a title="Corpus in Matrix Market format" class="reference external" href="corpora/mmcorpus.html#module-gensim.corpora.mmcorpus"><tt class="xref docutils literal"><span class="pre">gensim.corpora.mmcorpus</span></tt></a> module for an example of a corpus.</p>
+that it can be cached), the <tt class="xref py py-func docutils literal"><span class="pre">len()</span></tt> method should be overridden.</p>
+<p>See the <a class="reference internal" href="corpora/mmcorpus.html#module-gensim.corpora.mmcorpus" title="gensim.corpora.mmcorpus: Corpus in Matrix Market format"><tt class="xref py py-mod docutils literal"><span class="pre">gensim.corpora.mmcorpus</span></tt></a> module for an example of a corpus.</p>
 <dl class="classmethod">
 <dt id="gensim.interfaces.CorpusABC.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.interfaces.CorpusABC.load" title="Permalink to this definition">¶</a></dt>
-<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+<dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="gensim.interfaces.CorpusABC.save">
 <tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.interfaces.CorpusABC.save" title="Permalink to this definition">¶</a></dt>
-<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -135,12 +140,14 @@ the query is each corpus document in turn).</p>
 <dl class="classmethod">
 <dt id="gensim.interfaces.SimilarityABC.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.interfaces.SimilarityABC.load" title="Permalink to this definition">¶</a></dt>
-<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+<dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="gensim.interfaces.SimilarityABC.save">
 <tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.interfaces.SimilarityABC.save" title="Permalink to this definition">¶</a></dt>
-<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -150,16 +157,18 @@ the query is each corpus document in turn).</p>
 <dd><p>Interface for transformations. A &#8216;transformation&#8217; is any object which accepts
 a sparse document via the dictionary notation <cite>[]</cite> and returns another sparse
 document in its stead.</p>
-<p>See the <a title="TF-IDF model" class="reference external" href="models/tfidfmodel.html#module-gensim.models.tfidfmodel"><tt class="xref docutils literal"><span class="pre">gensim.models.tfidfmodel</span></tt></a> module for an example of a transformation.</p>
+<p>See the <a class="reference internal" href="models/tfidfmodel.html#module-gensim.models.tfidfmodel" title="gensim.models.tfidfmodel: TF-IDF model"><tt class="xref py py-mod docutils literal"><span class="pre">gensim.models.tfidfmodel</span></tt></a> module for an example of a transformation.</p>
 <dl class="classmethod">
 <dt id="gensim.interfaces.TransformationABC.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.interfaces.TransformationABC.load" title="Permalink to this definition">¶</a></dt>
-<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+<dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="gensim.interfaces.TransformationABC.save">
 <tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.interfaces.TransformationABC.save" title="Permalink to this definition">¶</a></dt>
-<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -178,7 +187,7 @@ document in its stead.</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
+          <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
           <a href="utils.html" title="utils – Various utility functions"
@@ -194,9 +203,9 @@ document in its stead.</p>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Nov 03, 2010.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Nov 06, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>
 </html>

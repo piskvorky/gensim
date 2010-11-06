@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -12,12 +14,13 @@
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
         VERSION:     '0.7.5',
-        COLLAPSE_MODINDEX: false,
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
@@ -28,7 +31,7 @@
 
 <!--
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="../index.html"><img src="../_static/logo.png" border="0" alt="py4sci"/></a>
+<a href="../index.html"><img src="../_static/logo.png" border="0" alt="gensim logo"/></a>
 </div>
 --!>
 
@@ -40,8 +43,8 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../modindex.html" title="Global Module Index"
-             accesskey="M">modules</a> |</li>
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="rpmodel.html" title="models.rpmodel – Random Projections"
              accesskey="N">next</a> |</li>
@@ -58,25 +61,25 @@
 
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="lsimodel.html"
-                                  title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.lsimodel</span></tt> &#8211; Latent Semantic Indexing</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="rpmodel.html"
-                                  title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.rpmodel</span></tt> &#8211; Random Projections</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="../search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="lsimodel.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.lsimodel</span></tt> &#8211; Latent Semantic Indexing</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="rpmodel.html"
+                        title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.rpmodel</span></tt> &#8211; Random Projections</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -86,7 +89,7 @@
           <div class="body">
             
   <div class="section" id="module-gensim.models.tfidfmodel">
-<h1><tt class="xref docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model<a class="headerlink" href="#module-gensim.models.tfidfmodel" title="Permalink to this headline">¶</a></h1>
+<span id="models-tfidfmodel-tf-idf-model"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model<a class="headerlink" href="#module-gensim.models.tfidfmodel" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="gensim.models.tfidfmodel.TfidfModel">
 <em class="property">class </em><tt class="descclassname">gensim.models.tfidfmodel.</tt><tt class="descname">TfidfModel</tt><big>(</big><em>corpus</em>, <em>id2word=None</em>, <em>normalize=True</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel" title="Permalink to this definition">¶</a></dt>
@@ -111,18 +114,21 @@ space.</li>
 <dl class="method">
 <dt id="gensim.models.tfidfmodel.TfidfModel.initialize">
 <tt class="descname">initialize</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel.initialize" title="Permalink to this definition">¶</a></dt>
-<dd>Compute inverse document weights, which will be used to modify term 
-frequencies for documents.</dd></dl>
+<dd><p>Compute inverse document weights, which will be used to modify term 
+frequencies for documents.</p>
+</dd></dl>
 
 <dl class="classmethod">
 <dt id="gensim.models.tfidfmodel.TfidfModel.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel.load" title="Permalink to this definition">¶</a></dt>
-<dd>Load a previously saved object from file (also see <cite>save</cite>).</dd></dl>
+<dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="gensim.models.tfidfmodel.TfidfModel.save">
 <tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel.save" title="Permalink to this definition">¶</a></dt>
-<dd>Save the object to file via pickling (also see <cite>load</cite>).</dd></dl>
+<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -141,7 +147,7 @@ frequencies for documents.</dd></dl>
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="../modindex.html" title="Global Module Index"
+          <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
           <a href="rpmodel.html" title="models.rpmodel – Random Projections"
@@ -157,9 +163,9 @@ frequencies for documents.</dd></dl>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Nov 03, 2010.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Nov 06, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>
 </html>

@@ -112,6 +112,9 @@ Due to the small vocabulary size and trivial structure of our "one-million corpu
 of LSA still takes only 12 seconds. To really stress-test our cluster, let's do
 Latent Semantic Analysis on the English Wikipedia.
 
+Distributed LSA on Wikipedia
+++++++++++++++++++++++++++++++
+
 First, download and prepare the Wikipedia corpus as per :doc:`wiki`, then load 
 the corpus iterator with::
  

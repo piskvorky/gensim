@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -10,14 +12,15 @@
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '#',
+        URL_ROOT:    '',
         VERSION:     '0.7.5',
-        COLLAPSE_MODINDEX: false,
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="index.html" />
     <link rel="next" title="Installation" href="install.html" />
@@ -27,7 +30,7 @@
 
 <!--
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="index.html"><img src="_static/logo.png" border="0" alt="py4sci"/></a>
+<a href="index.html"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
 </div>
 --!>
 
@@ -39,8 +42,8 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
-             accesskey="M">modules</a> |</li>
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="install.html" title="Installation"
              accesskey="N">next</a> |</li>
@@ -56,35 +59,35 @@
 
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h3><a href="index.html">Table Of Contents</a></h3>
-            <ul>
-<li><a class="reference external" href="#">Introduction</a><ul>
-<li><a class="reference external" href="#design">Design</a></li>
-<li><a class="reference external" href="#availability">Availability</a></li>
-<li><a class="reference external" href="#core-concepts">Core concepts</a></li>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#design">Design</a></li>
+<li><a class="reference internal" href="#availability">Availability</a></li>
+<li><a class="reference internal" href="#core-concepts">Core concepts</a></li>
 </ul>
 </li>
 </ul>
 
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="index.html"
-                                  title="previous chapter">Gensim &#8211; Python Framework for Vector Space Modelling</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="install.html"
-                                  title="next chapter">Installation</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Gensim &#8211; Python Framework for Vector Space Modelling</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="install.html"
+                        title="next chapter">Installation</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -141,13 +144,13 @@ and can be downloaded either from its <a class="reference external" href="http:/
 or from the <a class="reference external" href="http://pypi.python.org/pypi/gensim">Python Package Index</a>.</p>
 <div class="admonition-see-also admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last">See the <a class="reference external" href="install.html"><em>install</em></a> page for more info on package deployment.</p>
+<p class="last">See the <a class="reference internal" href="install.html"><em>install</em></a> page for more info on package deployment.</p>
 </div>
 </div>
 <div class="section" id="core-concepts">
 <h2>Core concepts<a class="headerlink" href="#core-concepts" title="Permalink to this headline">¶</a></h2>
-<p>The whole gensim package revolves around the concepts of <a class="reference internal" href="#term-corpus"><em class="xref">corpus</em></a>, <a class="reference internal" href="#term-vector"><em class="xref">vector</em></a> and
-<a class="reference internal" href="#term-model"><em class="xref">model</em></a>.</p>
+<p>The whole gensim package revolves around the concepts of <a class="reference internal" href="#term-corpus"><em class="xref std std-term">corpus</em></a>, <a class="reference internal" href="#term-vector"><em class="xref std std-term">vector</em></a> and
+<a class="reference internal" href="#term-model"><em class="xref std std-term">model</em></a>.</p>
 <dl class="glossary docutils">
 <dt id="term-corpus">Corpus</dt>
 <dd>A collection of digital documents. This collection is used to automatically
@@ -190,13 +193,13 @@ in a sparse representation of a document can be unambiguously resolved to zero, 
 to another (or, in other words, from one vector space to another).
 Both the initial and target representations are
 still vectors &#8211; they only differ in what the questions and answers are.
-The transformation is automatically learned from the traning <a class="reference internal" href="#term-corpus"><em class="xref">corpus</em></a>, without human
+The transformation is automatically learned from the traning <a class="reference internal" href="#term-corpus"><em class="xref std std-term">corpus</em></a>, without human
 supervision, and in hopes that the final document representation will be more compact
 and more useful, with similar documents having similar representations.</dd>
 </dl>
 <div class="admonition-see-also admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last">For some examples on how this works out in code, go to <a class="reference external" href="tutorial.html"><em>tutorials</em></a>.</p>
+<p class="last">For some examples on how this works out in code, go to <a class="reference internal" href="tutorial.html"><em>tutorials</em></a>.</p>
 </div>
 </div>
 </div>
@@ -214,7 +217,7 @@ and more useful, with similar documents having similar representations.</dd>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
+          <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
           <a href="install.html" title="Installation"
@@ -229,9 +232,9 @@ and more useful, with similar documents having similar representations.</dd>
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Nov 03, 2010.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Nov 06, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>
 </html>

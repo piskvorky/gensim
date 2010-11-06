@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -10,14 +12,15 @@
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '#',
+        URL_ROOT:    '',
         VERSION:     '0.7.5',
-        COLLAPSE_MODINDEX: false,
+        COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="index.html" />
     <link rel="up" title="Tutorial" href="tutorial.html" />
@@ -28,7 +31,7 @@
 
 <!--
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="index.html"><img src="_static/logo.png" border="0" alt="py4sci"/></a>
+<a href="index.html"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
 </div>
 --!>
 
@@ -40,8 +43,8 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
-             accesskey="M">modules</a> |</li>
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="tut3.html" title="Similarity Queries"
              accesskey="N">next</a> |</li>
@@ -58,38 +61,38 @@
 
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-            <h3><a href="index.html">Table Of Contents</a></h3>
-            <ul>
-<li><a class="reference external" href="#">Topics and Transformations</a><ul>
-<li><a class="reference external" href="#transformation-interface">Transformation interface</a><ul>
-<li><a class="reference external" href="#creating-a-transformation">Creating a transformation</a></li>
-<li><a class="reference external" href="#transforming-vectors">Transforming vectors</a></li>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Topics and Transformations</a><ul>
+<li><a class="reference internal" href="#transformation-interface">Transformation interface</a><ul>
+<li><a class="reference internal" href="#creating-a-transformation">Creating a transformation</a></li>
+<li><a class="reference internal" href="#transforming-vectors">Transforming vectors</a></li>
 </ul>
 </li>
-<li><a class="reference external" href="#available-transformations">Available transformations</a></li>
+<li><a class="reference internal" href="#available-transformations">Available transformations</a></li>
 </ul>
 </li>
 </ul>
 
-            <h4>Previous topic</h4>
-            <p class="topless"><a href="tut1.html"
-                                  title="previous chapter">Corpora and Vector Spaces</a></p>
-            <h4>Next topic</h4>
-            <p class="topless"><a href="tut3.html"
-                                  title="next chapter">Similarity Queries</a></p>
-          <div id="searchbox" style="display: none">
-            <h3>Quick search</h3>
-              <form class="search" action="search.html" method="get">
-                <input type="text" name="q" size="18" />
-                <input type="submit" value="Go" />
-                <input type="hidden" name="check_keywords" value="yes" />
-                <input type="hidden" name="area" value="default" />
-              </form>
-              <p class="searchtip" style="font-size: 90%">
-              Enter search terms or a module, class or function name.
-              </p>
-          </div>
-          <script type="text/javascript">$('#searchbox').show(0);</script>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tut1.html"
+                        title="previous chapter">Corpora and Vector Spaces</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tut3.html"
+                        title="next chapter">Similarity Queries</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
 
@@ -108,7 +111,7 @@
 <p>if you want to see logging events.</p>
 <div class="section" id="transformation-interface">
 <h2>Transformation interface<a class="headerlink" href="#transformation-interface" title="Permalink to this headline">¶</a></h2>
-<p>In the previous tutorial on <a class="reference external" href="tut1.html"><em>Corpora and Vector Spaces</em></a>, we created a corpus of documents represented
+<p>In the previous tutorial on <a class="reference internal" href="tut1.html"><em>Corpora and Vector Spaces</em></a>, we created a corpus of documents represented
 as a stream of vectors. To continue, let&#8217;s fire up gensim and use that corpus:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">similarities</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.dict&#39;</span><span class="p">)</span>
@@ -130,7 +133,7 @@ trends are ignored, noise-reduction).</li>
 <div class="section" id="creating-a-transformation">
 <h3>Creating a transformation<a class="headerlink" href="#creating-a-transformation" title="Permalink to this headline">¶</a></h3>
 <p>The transformations are standard Python objects, typically initialized by means of
-a <em>training corpus</em>:</p>
+a <em class="dfn">training corpus</em>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">tfidf</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TfidfModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span> <span class="c"># step 1 -- initialize a model</span>
 </pre></div>
 </div>
@@ -178,7 +181,7 @@ document stream &#8211; actual conversions are done on-the-fly, during document 
 This is because conversion at the time of calling <tt class="docutils literal"><span class="pre">corpus2</span> <span class="pre">=</span> <span class="pre">model[corpus]</span></tt> would mean
 storing the result in main memory, which contradicts gensim&#8217;s objective of memory-indepedence.
 If you will be iterating over the transformed <tt class="docutils literal"><span class="pre">corpus2</span></tt> multiple times, and the
-transformation is costly, <a class="reference external" href="tut1.html#corpus-formats"><em>serialize the resulting corpus to disk first</em></a> and continue
+transformation is costly, <a class="reference internal" href="tut1.html#corpus-formats"><em>serialize the resulting corpus to disk first</em></a> and continue
 using that.</p>
 </div>
 <p>Transformations can also be serialized, one on top of another, in a sort of chain:</p>
@@ -188,7 +191,7 @@ using that.</p>
 </div>
 <p>Here we transformed our Tf-Idf corpus via <a class="reference external" href="http://en.wikipedia.org/wiki/Latent_semantic_indexing">Latent Semantic Indexing</a>
 into a latent 2-D space (2-D because we set <tt class="docutils literal"><span class="pre">numTopics=2</span></tt>). Now you&#8217;re probably wondering: what do these two latent
-dimensions stand for? Let&#8217;s inspect with <tt class="xref docutils literal"><span class="pre">models.LsiModel.printTopics()</span></tt>:</p>
+dimensions stand for? Let&#8217;s inspect with <tt class="xref py py-func docutils literal"><span class="pre">models.LsiModel.printTopics()</span></tt>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="go">topic #0(1.594): -0.703*&quot;trees&quot; + -0.538*&quot;graph&quot; + -0.402*&quot;minors&quot; + -0.187*&quot;survey&quot; + -0.061*&quot;system&quot; + -0.060*&quot;response&quot; + -0.060*&quot;time&quot; + -0.058*&quot;user&quot; + -0.049*&quot;computer&quot; + -0.035*&quot;interface&quot;</span>
 <span class="go">topic #1(1.476): -0.460*&quot;system&quot; + -0.373*&quot;user&quot; + -0.332*&quot;eps&quot; + -0.328*&quot;interface&quot; + -0.320*&quot;response&quot; + -0.320*&quot;time&quot; + -0.293*&quot;computer&quot; + -0.280*&quot;human&quot; + -0.171*&quot;survey&quot; + 0.161*&quot;trees&quot;</span>
@@ -212,7 +215,7 @@ remaining four documents to the first topic:</p>
 <span class="go">[(0, -0.617), (1, 0.054)] # &quot;Graph minors A survey&quot;</span>
 </pre></div>
 </div>
-<p>Model persistency is achieved with the <tt class="xref docutils literal"><span class="pre">save()</span></tt> and <tt class="xref docutils literal"><span class="pre">load()</span></tt> functions:</p>
+<p>Model persistency is achieved with the <tt class="xref py py-func docutils literal"><span class="pre">save()</span></tt> and <tt class="xref py py-func docutils literal"><span class="pre">load()</span></tt> functions:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&#39;/tmp/model.lsi&#39;</span><span class="p">)</span> <span class="c"># same for tfidf, lda, ...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;/tmp/model.lsi&#39;</span><span class="p">)</span>
 </pre></div>
@@ -220,7 +223,7 @@ remaining four documents to the first topic:</p>
 <p>The next question might be: just how exactly similar are those documents to each other?
 Is there a way to formalize the similarity, so that for a given input document, we can
 order some other set of documents according to their similarity? Similarity queries
-are covered in the <a class="reference external" href="tut3.html"><em>next tutorial</em></a>.</p>
+are covered in the <a class="reference internal" href="tut3.html"><em>next tutorial</em></a>.</p>
 </div>
 </div>
 <div class="section" id="available-transformations">
@@ -260,12 +263,12 @@ as they arrive, while using the computed transformation model as read-only in th
 <span class="gp">&gt;&gt;&gt; </span><span class="o">...</span>
 </pre></div>
 </div>
-<p>See the <a title="Latent Semantic Indexing" class="reference external" href="models/lsimodel.html#module-gensim.models.lsimodel"><tt class="xref docutils literal"><span class="pre">gensim.models.lsimodel</span></tt></a> documentation for details on how to make
+<p>See the <a class="reference internal" href="models/lsimodel.html#module-gensim.models.lsimodel" title="gensim.models.lsimodel: Latent Semantic Indexing"><tt class="xref py py-mod docutils literal"><span class="pre">gensim.models.lsimodel</span></tt></a> documentation for details on how to make
 LSI gradually &#8220;forget&#8221; old observations in infinite streams and how to tweak parameters
 affecting speed vs. memory footprint vs. numerical precision of the algorithm.</p>
 <p><cite>gensim</cite> also contains an implementation of the stochastic multi-pass algorithm from
 Halko et al. <a class="footnote-reference" href="#id9" id="id2">[4]</a>. This algorithm is used internally by <cite>gensim</cite> to accelerate SVD computations.
-See also <a class="reference external" href="wiki.html"><em>Experiments on Wikipedia</em></a> for further speed-ups by distributing the computation across
+See also <a class="reference internal" href="wiki.html"><em>Experiments on Wikipedia</em></a> for further speed-ups by distributing the computation across
 a cluster of computers.</p>
 </li>
 <li><p class="first"><a class="reference external" href="http://www.cis.hut.fi/ella/publications/randproj_kdd.pdf">Random Projections, RP</a> aim to
@@ -287,10 +290,10 @@ could help, <a class="reference external" href="mailto:radimrehurek&#37;&#52;&#4
 </li>
 </ul>
 <p>Adding new <abbr title="Vector Space Model">VSM</abbr> transformations (such as different weighting schemes) is rather trivial;
-see the <a class="reference external" href="apiref.html"><em>API reference</em></a> or directly the Python code for more info and examples.</p>
+see the <a class="reference internal" href="apiref.html"><em>API reference</em></a> or directly the Python code for more info and examples.</p>
 <p>It is worth repeating that these are all unique, <strong>incremental</strong> implementations,
 which do not require the whole training corpus to be present in main memory all at once.
-With memory taken care of, we are now implementing <a class="reference external" href="distributed.html"><em>Distributed Computing</em></a>,
+With memory taken care of, we are now implementing <a class="reference internal" href="distributed.html"><em>Distributed Computing</em></a>,
 to improve CPU efficiency, too.
 If you feel you could contribute, please <a class="reference external" href="mailto:radimrehurek&#37;&#52;&#48;seznam&#46;cz">let us know</a>!</p>
 <hr class="docutils" />
@@ -334,7 +337,7 @@ If you feel you could contribute, please <a class="reference external" href="mai
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="modindex.html" title="Global Module Index"
+          <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
           <a href="tut3.html" title="Similarity Queries"
@@ -350,9 +353,9 @@ If you feel you could contribute, please <a class="reference external" href="mai
       </ul>
     </div>
     <div class="footer">
-      &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Nov 03, 2010.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.5.
+        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Nov 06, 2010.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>
 </html>
