@@ -42,13 +42,16 @@ class TestDictionary(unittest.TestCase):
         expected = {0: 1, 1: 1, 2: 1}
         self.assertEqual(d.docFreq, expected)
 
-    def testDocFreqSeveralDocsOneWord(self):
+    def testDocFreqAndToken2IdForSeveralDocsWithOneWord(self):
         # two docs
         texts = [['human'],
                 ['human']]
         d = dictionary.Dictionary(texts)
         expected = {0: 2}
         self.assertEqual(d.docFreq, expected)
+        # only one token (human) should exist 
+        expected = {'human': 0}
+        self.assertEqual(d.token2id, expected)
 
         # three docs
         texts = [['human'],
@@ -57,6 +60,9 @@ class TestDictionary(unittest.TestCase):
         d = dictionary.Dictionary(texts)
         expected = {0: 3}
         self.assertEqual(d.docFreq, expected)
+        # only one token (human) should exist 
+        expected = {'human': 0}
+        self.assertEqual(d.token2id, expected)
 
         # four docs
         texts = [['human'],
@@ -66,6 +72,9 @@ class TestDictionary(unittest.TestCase):
         d = dictionary.Dictionary(texts)
         expected = {0: 4}
         self.assertEqual(d.docFreq, expected)
+        # only one token (human) should exist 
+        expected = {'human': 0}
+        self.assertEqual(d.token2id, expected)
 
     def testBuild(self):
         d = dictionary.Dictionary(self.texts)
