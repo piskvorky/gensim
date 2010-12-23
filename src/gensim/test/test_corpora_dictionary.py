@@ -12,9 +12,6 @@ import logging
 import unittest
 import os
 import os.path
-import tempfile
-
-import numpy
 
 from gensim.corpora import dictionary
 
