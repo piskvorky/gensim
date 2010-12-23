@@ -22,6 +22,7 @@ module_path = os.path.dirname(__file__)
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
         level=logging.WARNING)
 
+
 class TestDictionary(unittest.TestCase):
     def setUp(self):
         self.texts = [
@@ -35,15 +36,48 @@ class TestDictionary(unittest.TestCase):
                 ['graph', 'minors', 'trees'],
                 ['graph', 'minors', 'survey']]
 
+    def testDocFreqOneDoc(self):
+        texts = [['human', 'interface', 'computer']]
+        d = dictionary.Dictionary(texts)
+        expected = {0: 1, 1: 1, 2: 1}
+        self.assertEqual(d.docFreq, expected)
+
+    def testDocFreqSeveralDocsOneWord(self):
+        # two docs
+        texts = [['human'],
+                ['human']]
+        d = dictionary.Dictionary(texts)
+        expected = {0: 2}
+        self.assertEqual(d.docFreq, expected)
+
+        # three docs
+        texts = [['human'],
+                ['human'],
+                ['human']]
+        d = dictionary.Dictionary(texts)
+        expected = {0: 3}
+        self.assertEqual(d.docFreq, expected)
+
+        # four docs
+        texts = [['human'],
+                ['human'],
+                ['human'],
+                ['human']]
+        d = dictionary.Dictionary(texts)
+        expected = {0: 4}
+        self.assertEqual(d.docFreq, expected)
+
     def testBuild(self):
         d = dictionary.Dictionary(self.texts)
         expected = {0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 5: 3, 6: 2, 7: 3, 8: 2,
                 9: 3, 10: 3, 11: 2}
         self.assertEqual(d.docFreq, expected)
+
         expected = {'computer': 0, 'eps': 8, 'graph': 10, 'human': 1,
                 'interface': 2, 'minors': 11, 'response': 3, 'survey': 4,
                 'system': 5, 'time': 6, 'trees': 9, 'user': 7}
         self.assertEqual(d.token2id, expected)
+
         expected = dict((v, k) for k, v in expected.iteritems())
         self.assertEqual(d.id2token, expected)
 
