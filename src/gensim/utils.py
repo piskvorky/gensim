@@ -201,35 +201,41 @@ def isCorpus(obj):
     Check whether `obj` is a corpus. Return (is_corpus, new) 2-tuple, where
     `new is obj` if `obj` was an iterable, or `new` yields the same sequence as
     `obj` if it was an iterator.
-    
+
     `obj` is a corpus if it supports iteration over documents, where a document
     is in turn anything that acts as a sequence of 2-tuples (int, float).
-    
-    Note: An "empty" corpus (empty input sequence) is ambiguous, so in this case the 
-    result is forcefully defined as `is_corpus=False`.
+
+    Note: An "empty" corpus (empty input sequence) is ambiguous, so in this
+    case the result is forcefully defined as `is_corpus=False`.
     """
+
     try:
-        if 'Corpus' in obj.__class__.__name__: # most common case, quick hack
+        # most common case, quick hack
+        if 'Corpus' in obj.__class__.__name__:
             return True, obj
     except:
         pass
     try:
         if hasattr(obj, 'next'):
             # the input is an iterator object, meaning once we call next()
-            # that element could be gone forever. we must be careful to put 
+            # that element could be gone forever. we must be careful to put
             # whatever we retrieve back again
             doc1 = obj.next()
             obj = itertools.chain([doc1], obj)
         else:
-            doc1 = iter(obj).next() # empty corpus is resolved to False here 
-        if len(doc1) == 0: # sparse documents must have a __len__ function (list, tuple...)
-            return True, obj # the first document is empty=>assume this is a corpus
-        id1, val1 = iter(doc1).next() # if obj is a vector, it resolves to False here
-        id1, val1 = int(id1), float(val1) # must be a 2-tuple (integer, float)
+            doc1 = iter(obj).next()  # empty corpus is resolved to False here
+
+        # sparse documents must have a __len__ function (list, tuple...)
+        if len(doc1) == 0:
+            # the first document is empty=>assume this is a corpus
+            return True, obj
+        # if obj is a vector, it resolves to False here
+        id1, val1 = iter(doc1).next()
+        # must be a 2-tuple (integer, float)
+        id1, val1 = int(id1), float(val1)
     except:
         return False, obj
     return True, obj
-    
 
 
 def get_my_ip():
