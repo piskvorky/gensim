@@ -276,7 +276,7 @@ class RepeatCorpus(SaveLoad):
         
         >>> corpus = [[(1, 0.5)], []] # 2 documents
         >>> list(RepeatCorpus(corpus, 5)) # repeat 2.5 times to get 5 documents
-        >>> [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)]]
+        [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)]]
 
         """
         self.corpus = corpus
