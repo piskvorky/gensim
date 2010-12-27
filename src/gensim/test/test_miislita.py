@@ -28,30 +28,14 @@ class TestMiislita(unittest.TestCase):
         with open(corpusName) as corpusfile:
             texts = corpusfile.readlines()
 
-        #corpus_txt_filename = (corpusName)
-        #try:
-        #    f = open(corpus_txt_filename, "r")
-        #    try:
-        #        texts = f.readlines()
-        #    finally:
-        #        f.close()
-        #except IOError:
-        #    print 'File not found.'
-        #    sys.exit(-1)
-
-        # get a dictionary and a corpus (LoL) objects. Save them
+        # filter texts with a stopwordlist
         stoplist = set('for a of the and to in on'.split())
         texts = [[word for word in doc.lower().split() if word not in stoplist]
                  for doc in texts]
 
+        # store the dictionary, for future reference; not really needed.
         dictionary = corpora.Dictionary.fromDocuments(texts)
-        # store the dictionary, for future reference
         dictionary.save(corpusName + '.dict')
-
-        # problem: not in the same order as the matrix in the miislita example
-        # TODO: do we need this?
-        print dictionary
-        print dictionary.token2id
 
         corpusMiislita = [dictionary.doc2bow(text) for text in texts]
 
@@ -74,23 +58,18 @@ class TestMiislita(unittest.TestCase):
         # compare to query
         query = 'latent semantic indexing'
         vec_bow = dictionary.doc2bow(query.lower().split())
-        # convert the query to LSI space
-        # TODO: unused
-        vec_tfidf = tfidf[vec_bow]
 
         # similarities, ordered
         # perform a similarity query against the corpus
         sims_tfidf = index_tfidf[vec_bow]
+
         # NOTE: it does not matter if we use the raw counts (vec_bow) or the
         # tfidf counts for the query here (vec_tfidf). The resulting cosines
         # are the same.
-        #sims_tfidf = sorted(list(enumerate(sims_tfidf)), key=lambda item:
+        # sims_tfidf = sorted(list(enumerate(sims_tfidf)), key=lambda item:
         #       -item[1])
 
-        print sims_tfidf  # success
-
-        # TODO: what exactly do we expect here?
-        #self.assertTrue(False)
+        # for the expected results see the acticle
         expected = [0, 0.2560, 0.7022, 0.1524, 0.3334]
         for i, value in enumerate(expected):
             self.assertAlmostEqual(sims_tfidf[i], value, 2)
