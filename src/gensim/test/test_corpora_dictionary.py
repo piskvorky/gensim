@@ -70,6 +70,19 @@ class TestDictionary(unittest.TestCase):
         expected = {'human': 0}
         self.assertEqual(d.token2id, expected)
 
+    def testDocFreqForOneDocWithSeveralWord(self):
+        # two words
+        texts = [['human', 'cat']]
+        d = dictionary.Dictionary(texts)
+        expected = {0: 1, 1: 1}
+        self.assertEqual(d.docFreq, expected)
+
+        # three words
+        texts = [['human', 'cat', 'minors']]
+        d = dictionary.Dictionary(texts)
+        expected = {0: 1, 1: 1, 2: 1}
+        self.assertEqual(d.docFreq, expected)
+
     def testBuild(self):
         d = dictionary.Dictionary(self.texts)
         expected = {0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 5: 3, 6: 2, 7: 3, 8: 2,
