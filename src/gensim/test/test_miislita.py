@@ -24,7 +24,7 @@ class TestMiislita(unittest.TestCase):
 
     def test_miislita_high_level(self):
         # load plain text from file
-        corpusName = 'miIslita.cor'
+        corpusName = os.path.join(module_path, 'miIslita.cor')
         with open(corpusName) as corpusfile:
             texts = corpusfile.readlines()
 
@@ -40,9 +40,7 @@ class TestMiislita(unittest.TestCase):
         #    sys.exit(-1)
 
         # get a dictionary and a corpus (LoL) objects. Save them
-        # TODO: what it LoL?
         stoplist = set('for a of the and to in on'.split())
-        # TODO: exhaustive stoplist, remove punctuation, etc
         texts = [[word for word in doc.lower().split() if word not in stoplist]
                  for doc in texts]
 
