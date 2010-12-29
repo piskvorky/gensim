@@ -1,0 +1,3 @@
+*.pyc
+gensim.egg-info
+*,cover
