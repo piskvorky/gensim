@@ -223,7 +223,7 @@ class WikiCorpus(interfaces.CorpusABC):
         matutils.MmWriter.writeCorpus(fname + '_bow.mm', self, progressCnt = 10000)
         
     
-    def getArticles(self):
+    def getArticles(self, return_raw=False):
         """
         Iterate over the dump, returning text version of each article.
         
@@ -255,8 +255,11 @@ class WikiCorpus(interfaces.CorpusABC):
                 text = filterWiki(''.join(lines))
                 if len(text) > ARTICLE_MIN_CHARS: # article redirects are pruned here
                     articles += 1
-                    result = tokenize(text) # split text into tokens
-                    positions += len(result)
+                    if return_raw:
+                        result = text
+                    else:
+                        result = tokenize(text) # split text into tokens
+                        positions += len(result)
                     yield result
         
         logger.info("finished iterating over Wikipedia corpus of %i documents with %i positions"

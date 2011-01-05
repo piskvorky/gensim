@@ -41,7 +41,7 @@ with dual core Xeon 2.0GHz, 4GB RAM, ATLAS
 .. [1] The stochastic algo could be distributed too, but most time is already spent 
    reading/decompressing the input from disk in its 4 passes. The extra network 
    traffic due to data distribution across cluster nodes would likely make it 
-   actually *slower*.
+   *slower*.
 
 """
 
@@ -73,11 +73,11 @@ def clipSpectrum(s, k, discard=0.001):
     
     This will ignore the tail of the spectrum with relative combined mass < min(`discard`, 1/k).
     
-    The returned value is clipped against `k` (= at most `k` factors).
+    The returned value is clipped against `k` (= never return more than `k`).
     """
     # compute relative contribution of eigenvalues towards the energy spectrum
     rel_spectrum = numpy.abs(1.0 - numpy.cumsum(s / numpy.sum(s)))
-    # ignore the last `discard` (or 1/k, whichever is smaller) of the spectrum
+    # ignore the last `discard` mass (or 1/k, whichever is smaller) of the spectrum
     small = 1 + len(numpy.where(rel_spectrum > min(discard, 1.0 / k))[0]) 
     k = min(k, small) # clip against k
     logger.info("keeping %i factors (discarding %.3f%% of energy spectrum)" %
@@ -173,8 +173,8 @@ class Projection(utils.SaveLoad):
             u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False) # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK wrapper for partial svd/eigendecomp in numpy :(
         except numpy.linalg.LinAlgError:
             logging.error("SVD(A) failed; trying SVD(A * A^T)")
-            u_k, s_k, _ = numpy.linalg.svd(numpy.dot(k, k.T), full_matrices = False) # if this fails too, give up
-            s_k = numpy.sqrt(s_k)
+            u_k, s_k, _ = numpy.linalg.svd(numpy.dot(k, k.T), full_matrices = False) # if this fails too, give up with an exception
+            s_k = numpy.sqrt(s_k) # go back from eigen values to singular values
         
         k = clipSpectrum(s_k ** 2, self.k)
         u1_k, u2_k, s_k = u_k[:n1, :k].copy('F'), u_k[n1:, :k].copy('F'), s_k[:k]
@@ -249,6 +249,7 @@ class LsiModel(interfaces.TransformationABC):
                 logger.warning("forcing the one-pass algorithm for distributed LSA")
                 onepass = True
         self.onepass = onepass
+        self.extra_samples, self.power_iters = extra_samples, power_iters
         
         if corpus is None and self.id2word is None:
             raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
@@ -319,7 +320,7 @@ class LsiModel(interfaces.TransformationABC):
                 update = Projection(self.numTerms, self.numTopics, None)
                 update.u, update.s = stochasticSvd(corpus, self.numTopics, 
                     num_terms=self.numTerms, chunks=chunks,
-                    extra_dims=P2_EXTRA_DIMS, power_iters=P2_EXTRA_ITERS)
+                    extra_dims=self.extra_samples, power_iters=self.power_iters)
                 self.projection.merge(update, decay=decay)
             else:
                 # the one-pass algo
@@ -364,7 +365,7 @@ class LsiModel(interfaces.TransformationABC):
                 (self.numTerms, self.numTopics, self.decay, self.chunks)
 
 
-    def __getitem__(self, bow, scaled = False):
+    def __getitem__(self, bow, scaled=False):
         """
         Return latent representation, as a list of (topic_id, topic_value) 2-tuples.
         
@@ -373,7 +374,7 @@ class LsiModel(interfaces.TransformationABC):
         Note that this function returns the latent space representation **scaled by the
         singular values**. To return non-scaled embedding, set `scaled` to False.
         """
-        # if the input vector is in fact a corpus, return a transformed corpus as result
+        # if the input vector is in fact a corpus, return a transformed corpus as a result
         is_corpus, bow = utils.isCorpus(bow)
         if is_corpus:
             return self._apply(bow)
@@ -381,14 +382,17 @@ class LsiModel(interfaces.TransformationABC):
         assert self.projection.u is not None, "decomposition not initialized yet"
         vec = matutils.sparse2full(bow, self.numTerms).astype(self.projection.u.dtype)
         vec.shape = (self.numTerms, 1)
-        topicDist = scipy.linalg.fblas.dgemv(1.0, self.projection.u, vec, trans = True) # u^T * x
+        assert self.projection.u.flags.f_contiguous
+        dgemv = matutils.blas('gemv', self.projection.u)
+        topicDist = dgemv(1.0, self.projection.u, vec, trans=True) # u^T * x
         if scaled:
             topicDist = (1.0 / self.projection.s) * topicDist # s^-1 * u^T * x
-        return [(topicId, float(topicValue)) for topicId, topicValue in enumerate(topicDist)
-                if numpy.isfinite(topicValue) and not numpy.allclose(topicValue, 0.0)]
+        
+        nnz = topicDist.nonzero()[0]
+        return zip(list(nnz), list(topicDist[nnz]))
     
 
-    def printTopic(self, topicNo, topN = 10):
+    def printTopic(self, topicNo, topN=10):
         """
         Return a specified topic (=left singular vector), 0 <= `topicNo` < `self.numTopics`, 
         as string.
@@ -419,7 +423,7 @@ class LsiModel(interfaces.TransformationABC):
                              self.printTopic(i, topN = numWords)))
 
 
-    def printDebug(self, numTopics = 5, numWords = 10):
+    def printDebug(self, numTopics=5, numWords=10):
         """
         Print (to log) the most salient words of the first `numTopics` topics.
         
@@ -432,6 +436,15 @@ class LsiModel(interfaces.TransformationABC):
                    self.projection.u, self.projection.s,
                    range(min(numTopics, len(self.projection.u.T))), 
                    numWords = numWords)
+
+    
+    @classmethod
+    def load(cls, fname):
+        result = super(cls, LsiModel).load(fname)
+        if result.projection.u is not None:
+            logging.debug("forcing FORTRAN order of projection from %s" % fname)
+            result.projection.u = result.projection.u.copy('F')
+        return result
 #endclass LsiModel
 
 
@@ -648,7 +661,7 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
     `power_iters` (power iterations) parameters affect accuracy of the decomposition.
     
     This algorithm uses `2+power_iters` passes over the data. In case you can only 
-    afford a single pass over the input corpus, set `onepass=True` in LsiModel 
+    afford a single pass over the input corpus, set `onepass=True` in :class:`LsiModel` 
     and avoid using this algorithm directly.
 
     The decomposition algorithm is based on 

@@ -33,28 +33,6 @@ logger = logging.getLogger("matutils")
 logger.setLevel(logging.INFO)
 
 
-def qr_destroy(la):
-    a = numpy.asfortranarray(la[0])
-    del la[0], la # now `a` is the only reference to the input matrix
-    m, n = a.shape
-    # perform q, r = QR(component); code hacked out of scipy.linalg.qr
-    logger.debug("computing QR of %s dense matrix" % str(a.shape))
-    geqrf, = get_lapack_funcs(('geqrf',), (a,))
-    qr, tau, work, info = geqrf(a, lwork = -1, overwrite_a = True)
-    qr, tau, work, info = geqrf(a, lwork = work[0], overwrite_a = True)
-    del a # free up mem
-    assert info >= 0
-    r = triu(qr[:n, :n])
-    if m < n: # rare case, #features < #topics
-        qr = qr[:, :m] # retains fortran order
-    gorgqr, = get_lapack_funcs(('orgqr',), (qr,))
-    q, work, info = gorgqr(qr, tau, lwork = -1, overwrite_a = True)
-    q, work, info = gorgqr(qr, tau, lwork = work[0], overwrite_a = True)
-    assert info >= 0, "qr failed"
-    assert q.flags.f_contiguous
-    return q, r
-
-
 def corpus2csc(corpus, num_terms, dtype=numpy.float64):
     """
     Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format, 
@@ -63,14 +41,14 @@ def corpus2csc(corpus, num_terms, dtype=numpy.float64):
     logger.info("constructing sparse document matrix")
     docs, data, indices, indptr = 0, [], [], [0]
     for doc in corpus:
-        indptr.append(len(doc))
         indices.extend([feature_id for feature_id, _ in doc])
         data.extend([feature_weight for _, feature_weight in doc])
+        indptr.append(len(doc))
         docs += 1
     indptr = numpy.cumsum(indptr)
     data = numpy.asarray(data, dtype=dtype)
     indices = numpy.asarray(indices)
-    return scipy.sparse.csc_matrix((data, indices, indptr), shape = (num_terms, docs), dtype = dtype)
+    return scipy.sparse.csc_matrix((data, indices, indptr), shape=(num_terms, docs), dtype=dtype)
 
 
 def pad(mat, padRow, padCol):
@@ -106,6 +84,7 @@ def full2sparse(vec, eps = 1e-9):
     """
     return [(pos, val) for pos, val in enumerate(vec) if numpy.abs(val) > eps]
 
+dense2vec = full2sparse
 
 def corpus2dense(corpus, num_terms):
     """
@@ -211,6 +190,35 @@ def cossim(vec1, vec2):
     result = sum(value * vec2.get(index, 0.0) for index, value in vec1.iteritems())
     result /= vec1Len * vec2Len # rescale by vector lengths
     return result
+
+
+def qr_destroy(la):
+    """
+    Return QR decomposition of la[0]. Content of `la` gets destroyed in the process.
+    
+    Using this function should be less memory intense than calling qr(la[0]) directly,
+    because the memory used in la[0] is reclaimed earlier.
+    """
+    a = numpy.asfortranarray(la[0])
+    del la[0], la # now `a` is the only reference to the input matrix
+    m, n = a.shape
+    # perform q, r = QR(component); code hacked out of scipy.linalg.qr
+    logger.debug("computing QR of %s dense matrix" % str(a.shape))
+    geqrf, = get_lapack_funcs(('geqrf',), (a,))
+    qr, tau, work, info = geqrf(a, lwork = -1, overwrite_a = True)
+    qr, tau, work, info = geqrf(a, lwork = work[0], overwrite_a = True)
+    del a # free up mem
+    assert info >= 0
+    r = triu(qr[:n, :n])
+    if m < n: # rare case, #features < #topics
+        qr = qr[:, :m] # retains fortran order
+    gorgqr, = get_lapack_funcs(('orgqr',), (qr,))
+    q, work, info = gorgqr(qr, tau, lwork = -1, overwrite_a = True)
+    q, work, info = gorgqr(qr, tau, lwork = work[0], overwrite_a = True)
+    assert info >= 0, "qr failed"
+    assert q.flags.f_contiguous
+    return q, r
+
 
 
 class MmWriter(object):

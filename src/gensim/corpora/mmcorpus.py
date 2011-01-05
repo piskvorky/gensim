@@ -31,12 +31,12 @@ class MmCorpus(matutils.MmReader, interfaces.CorpusABC):
             yield doc # get rid of docId, return the sparse vector only
     
     @staticmethod
-    def saveCorpus(fname, corpus, id2word = None, progressCnt = 1000):
+    def saveCorpus(fname, corpus, id2word=None, progressCnt=1000):
         """
         Save a corpus in the Matrix Market format to disk.
         """
         logging.info("storing corpus in Matrix Market format to %s" % fname)
-        matutils.MmWriter.writeCorpus(fname, corpus, progressCnt = progressCnt)
+        matutils.MmWriter.writeCorpus(fname, corpus, progressCnt=progressCnt)
 #endclass MmCorpus
 
 

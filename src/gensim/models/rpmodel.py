@@ -70,7 +70,7 @@ class RpModel(interfaces.TransformationABC):
         # Here i use a particular form, derived in "Achlioptas: Database-friendly random projection",
         # and his (1) scenario of Theorem 1.1 in particular (all entries are +1/-1).
         randmat = 1 - 2 * numpy.random.binomial(1, 0.5, shape) # convert from 0/1 to +1/-1
-        self.projection = numpy.asfortranarray(randmat, dtype = numpy.float32) # convert from int32 to floats, for faster multiplications
+        self.projection = numpy.asfortranarray(randmat, dtype=numpy.float32) # convert from int32 to floats, for faster multiplications
     
 
     def __getitem__(self, bow):
@@ -83,7 +83,7 @@ class RpModel(interfaces.TransformationABC):
             return self._apply(bow)
         
         vec = matutils.sparse2full(bow, self.numTerms).reshape(self.numTerms, 1) / numpy.sqrt(self.numTopics)
-        vec = numpy.asfortranarray(vec, dtype = numpy.float32)
+        vec = numpy.asfortranarray(vec, dtype=numpy.float32)
         topicDist = scipy.linalg.fblas.sgemv(1.0, self.projection, vec)  # (k, d) * (d, 1) = (k, 1)
         return [(topicId, float(topicValue)) for topicId, topicValue in enumerate(topicDist.flat)
                 if numpy.isfinite(topicValue) and not numpy.allclose(topicValue, 0.0)]
