@@ -103,7 +103,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
             logging.info("scanning corpus of %i documents to determine the number of features" %
                          len(corpus))
             numFeatures = 1 + utils.getMaxId(corpus)
-            
+        
         logging.info("creating matrix for %i documents and %i features" % 
                      (len(corpus), numFeatures))
         self.numFeatures = numFeatures
@@ -111,12 +111,13 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         self.corpus = numpy.empty(shape = (len(corpus), numFeatures), dtype = dtype, order = 'F')
         self.normalize = True
         
-        # iterate over corpus, populating the numpy matrix
-        for docNo, vector in enumerate(corpus):
-            if docNo % 1000 == 0:
-                logging.info("PROGRESS: at document #%i/%i" % (docNo, len(corpus)))
-            vector = matutils.unitVec(matutils.sparse2full(vector, numFeatures))
-            self.corpus[docNo] = vector
+        if corpus is not None:
+            # iterate over corpus, populating the numpy matrix
+            for docNo, vector in enumerate(corpus):
+                if docNo % 1000 == 0:
+                    logging.info("PROGRESS: at document #%i/%i" % (docNo, len(corpus)))
+                vector = matutils.unitVec(matutils.sparse2full(vector, numFeatures))
+                self.corpus[docNo] = vector
         
         self.corpus = numpy.asmatrix(self.corpus)
     

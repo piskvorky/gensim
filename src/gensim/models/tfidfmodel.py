@@ -35,7 +35,7 @@ class TfidfModel(interfaces.TransformationABC):
     
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, corpus, id2word = None, normalize = True):
+    def __init__(self, corpus, id2word=None, normalize=True):
         """
         `normalize` dictates whether the resulting vectors will be set to unit length.
         """

@@ -116,7 +116,7 @@ class SaveLoad(object):
         """
         logger.info("saving %s object to %s" % (self.__class__.__name__, fname))
         f = open(fname, 'wb')
-        cPickle.dump(self, f, protocol = -1) # -1 to use the highest available protocol, for efficiency
+        cPickle.dump(self, f, protocol=-1) # -1 to use the highest available protocol, for efficiency
         f.close()
 #endclass SaveLoad
 
