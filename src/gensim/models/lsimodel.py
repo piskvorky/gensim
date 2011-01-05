@@ -389,7 +389,7 @@ class LsiModel(interfaces.TransformationABC):
             topicDist = (1.0 / self.projection.s) * topicDist # s^-1 * u^T * x
         
         nnz = topicDist.nonzero()[0]
-        return zip(list(nnz), list(topicDist[nnz]))
+        return zip(nnz, topicDist[nnz])
     
 
     def printTopic(self, topicNo, topN=10):
