@@ -79,7 +79,7 @@ The whole gensim package revolves around the concepts of :term:`corpus`, :term:`
         not appear in the training corpus.
         No human intervention (such as tagging the documents by hand, or creating 
         other metadata) is required.
-
+    
     Vector
         In the Vector Space Model (VSM), each document is represented by an 
         array of features. For example, a single feature may be thought of as a 
@@ -109,6 +109,13 @@ The whole gensim package revolves around the concepts of :term:`corpus`, :term:`
         (3, 5.0)`` (note the missing ``(1, 0.0)``).
         Since the set of all questions is known in advance, all the missing features
         in a sparse representation of a document can be unambiguously resolved to zero, ``0.0``.
+        
+        Gensim is specific in that it doesn't prescribe any specific corpus format;
+        a corpus is anything that, when iterated over, successively yields these sparse vectors.
+        For example, `set([(2, 2.0), (3, 5.0)], ((0, -1.0), (3, -1.0)))` is a trivial 
+        corpus of two documents, each with two non-zero features.
+         
+        
     
     Model
         For our purposes, a model is a transformation from one document representation

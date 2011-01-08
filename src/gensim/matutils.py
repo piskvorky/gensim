@@ -70,13 +70,13 @@ def sparse2full(doc, length):
     Convert a document in sparse corpus format (sequence of 2-tuples) into a dense 
     numpy array (of size `length`).
     """
-    result = numpy.zeros(length, dtype = numpy.float32, order = 'F') # fill with zeroes (default value)
+    result = numpy.zeros(length, dtype=numpy.float32) # fill with zeroes (default value)
     doc = dict(doc)
     result[doc.keys()] = doc.values() # overwrite some of the zeroes with explicit values
     return result
 
 
-def full2sparse(vec, eps = 1e-9):
+def full2sparse(vec, eps=1e-9):
     """
     Convert a dense numpy array into the sparse corpus format (sequence of 2-tuples).
     
