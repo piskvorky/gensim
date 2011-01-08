@@ -1,11 +1,15 @@
 Changes
 =======
 
+0.7.6
+
+* added workaround for a bug in numpy: pickling a fortran-order array (e.g. LSA model) and then loading it back and using it results in segfault (thx to Brian Merrel)
+* bundled a new version of ez_setup.py: old failed with Python2.6 when setuptools were missing (thx to Alan Salmoni).
+
 0.7.5
 
-* further optimization to LSA; this is the version used in our NIPS workshop paper
-* got rid of SVDLIBC (one-pass LSA now uses stochastic algo for base-base decompositions)
-
+* further optimization to LSA; this is the version used in my NIPS workshop paper
+* got rid of SVDLIBC dependency (one-pass LSA now uses stochastic algo for base-base decompositions)
 
 0.7.4
 

@@ -183,11 +183,16 @@ therefore the original documents must be similar, too&#8221;. Of course, whether
 such conclusions correspond to reality depends on how well we picked our questions.</p>
 </dd>
 <dt id="term-sparse-vector">Sparse vector</dt>
-<dd>Typically, the answer to most questions will be <tt class="docutils literal"><span class="pre">0.0</span></tt>. To save space,
+<dd><p class="first">Typically, the answer to most questions will be <tt class="docutils literal"><span class="pre">0.0</span></tt>. To save space,
 we omit them from the document&#8217;s representation, and write only <tt class="docutils literal"><span class="pre">(2,</span> <span class="pre">2.0),</span>
 <span class="pre">(3,</span> <span class="pre">5.0)</span></tt> (note the missing <tt class="docutils literal"><span class="pre">(1,</span> <span class="pre">0.0)</span></tt>).
 Since the set of all questions is known in advance, all the missing features
-in a sparse representation of a document can be unambiguously resolved to zero, <tt class="docutils literal"><span class="pre">0.0</span></tt>.</dd>
+in a sparse representation of a document can be unambiguously resolved to zero, <tt class="docutils literal"><span class="pre">0.0</span></tt>.</p>
+<p class="last">Gensim is specific in that it doesn&#8217;t prescribe any specific corpus format;
+a corpus is anything that, when iterated over, successively yields these sparse vectors.
+For example, <cite>set([(2, 2.0), (3, 5.0)], ((0, -1.0), (3, -1.0)))</cite> is a trivial
+corpus of two documents, each with two non-zero features.</p>
+</dd>
 <dt id="term-model">Model</dt>
 <dd>For our purposes, a model is a transformation from one document representation
 to another (or, in other words, from one vector space to another).
