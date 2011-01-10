@@ -17,11 +17,8 @@ Gensim -- Python Framework for Vector Space Modelling
    
    `gensim` now completes :doc:`LSI of the English Wikipedia <wiki>` 
    (3.2 million documents) in **5 hours 14 minutes**, using a one-pass incremental 
-   SVD algorithm, on a single Macbook Pro laptop. Be sure to check out the 
-   :doc:`distributed mode <distributed>`, too.
-
-..
-   See the `research draft paper <http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_ for more numbers.
+   SVD algorithm, on a Macbook Pro laptop (`NIPS workshop paper <http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_). 
+   Be sure to check out the :doc:`distributed mode <distributed>`, too.
 
 For an **overview** of what you can (or cannot) do with `gensim`, go to the :doc:`introduction <intro>`.
 

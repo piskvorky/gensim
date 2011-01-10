@@ -186,6 +186,16 @@ class Projection(utils.SaveLoad):
         self.s = s_k
 #        diff = numpy.dot(self.u.T, self.u) - numpy.eye(self.u.shape[1])
 #        logger.info('orth error after=%f' % numpy.sum(diff * diff))
+
+
+    def __setstate__(self, state):
+        """
+        This is a hack to work around a bug in numpy, where a FORTRAN-order array 
+        unpickled from disk segfaults on using it.
+        """
+        self.__dict__ = state
+        if self.u is not None:
+            self.u = self.u.copy('F') # simply making a fresh copy fixes the broken array 
 #endclass Projection
 
 
@@ -436,15 +446,6 @@ class LsiModel(interfaces.TransformationABC):
                    self.projection.u, self.projection.s,
                    range(min(numTopics, len(self.projection.u.T))), 
                    numWords = numWords)
-
-    
-    @classmethod
-    def load(cls, fname):
-        result = super(cls, LsiModel).load(fname)
-        if result.projection.u is not None:
-            logging.debug("forcing FORTRAN order of projection from %s" % fname)
-            result.projection.u = result.projection.u.copy('F')
-        return result
 #endclass LsiModel
 
 

@@ -28,7 +28,7 @@ def read(fname):
 
 setup(
     name = 'gensim',
-    version = '0.7.5',
+    version = '0.7.6',
     description = 'Python framework for fast Vector Space Modelling',
     long_description = read('README.txt'),
     

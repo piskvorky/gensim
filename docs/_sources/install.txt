@@ -44,6 +44,8 @@ You can now install (or upgrade) `gensim` with::
 
 That's it! Congratulations, you can proceed to the :doc:`tutorials <tutorial>`.
 
+-----
+
 If you also want to run the algorithms over a cluster 
 of computers, in :doc:`distributed`, you should install with::
 

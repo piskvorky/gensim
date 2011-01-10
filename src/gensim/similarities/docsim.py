@@ -108,7 +108,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
                      (len(corpus), numFeatures))
         self.numFeatures = numFeatures
         self.numBest = numBest
-        self.corpus = numpy.empty(shape = (len(corpus), numFeatures), dtype = dtype, order = 'F')
+        self.corpus = numpy.empty(shape=(len(corpus), numFeatures), dtype=dtype)
         self.normalize = True
         
         if corpus is not None:

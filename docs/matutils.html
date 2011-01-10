@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.5',
+        VERSION:     '0.7.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -156,6 +156,13 @@ with documents as columns.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.matutils.dense2vec">
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">dense2vec</tt><big>(</big><em>vec</em>, <em>eps=1.0000000000000001e-09</em><big>)</big><a class="headerlink" href="#gensim.matutils.dense2vec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a dense numpy array into the sparse corpus format (sequence of 2-tuples).</p>
+<p>Values of magnitude &lt; <cite>eps</cite> are treated as zero (ignored).</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.matutils.full2sparse">
 <tt class="descclassname">gensim.matutils.</tt><tt class="descname">full2sparse</tt><big>(</big><em>vec</em>, <em>eps=1.0000000000000001e-09</em><big>)</big><a class="headerlink" href="#gensim.matutils.full2sparse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a dense numpy array into the sparse corpus format (sequence of 2-tuples).</p>
@@ -167,6 +174,14 @@ with documents as columns.</p>
 <tt class="descclassname">gensim.matutils.</tt><tt class="descname">pad</tt><big>(</big><em>mat</em>, <em>padRow</em>, <em>padCol</em><big>)</big><a class="headerlink" href="#gensim.matutils.pad" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add additional rows/columns to a numpy.matrix <cite>mat</cite>. The new rows/columns 
 will be initialized with zeros.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.matutils.qr_destroy">
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">qr_destroy</tt><big>(</big><em>la</em><big>)</big><a class="headerlink" href="#gensim.matutils.qr_destroy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return QR decomposition of la[0]. Content of <cite>la</cite> gets destroyed in the process.</p>
+<p>Using this function should be less memory intense than calling qr(la[0]) directly,
+because the memory used in la[0] is reclaimed earlier.</p>
 </dd></dl>
 
 <dl class="function">
@@ -217,7 +232,7 @@ output will be a numpy array.</p>
     </div>
     <div class="footer">
         &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Nov 06, 2010.
+      Last updated on Jan 10, 2011.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>
