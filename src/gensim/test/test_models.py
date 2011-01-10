@@ -100,6 +100,8 @@ class TestLsiModel(unittest.TestCase):
         self.assertEqual(model.numTopics, model2.numTopics)
         self.assertTrue(numpy.allclose(model.projection.u, model2.projection.u))
         self.assertTrue(numpy.allclose(model.projection.s, model2.projection.s))
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 #endclass TestLsiModel
 
 
@@ -127,6 +129,8 @@ class TestRpModel(unittest.TestCase):
         model2 = rpmodel.RpModel.load(testfile())
         self.assertEqual(model.numTopics, model2.numTopics)
         self.assertTrue(numpy.allclose(model.projection, model2.projection))
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 #endclass TestRpModel
 
 
@@ -159,6 +163,8 @@ class TestLdaModel(unittest.TestCase):
         model2 = ldamodel.LdaModel.load(testfile())
         self.assertEqual(model.numTopics, model2.numTopics)
         self.assertTrue(numpy.allclose(model.logProbW, model2.logProbW))
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 #endclass TestLdaModel
 
 
@@ -183,6 +189,8 @@ class TestTfidfModel(unittest.TestCase):
         model.save(testfile())
         model2 = tfidfmodel.TfidfModel.load(testfile())
         self.assertTrue(model.idfs == model2.idfs)
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 #endclass TestTfidfModel
 
 

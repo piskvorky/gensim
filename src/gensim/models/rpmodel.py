@@ -87,5 +87,15 @@ class RpModel(interfaces.TransformationABC):
         topicDist = scipy.linalg.fblas.sgemv(1.0, self.projection, vec)  # (k, d) * (d, 1) = (k, 1)
         return [(topicId, float(topicValue)) for topicId, topicValue in enumerate(topicDist.flat)
                 if numpy.isfinite(topicValue) and not numpy.allclose(topicValue, 0.0)]
+
+
+    def __setstate__(self, state):
+        """
+        This is a hack to work around a bug in numpy, where a FORTRAN-order array 
+        unpickled from disk segfaults on using it.
+        """
+        self.__dict__ = state
+        if self.projection is not None:
+            self.projection = self.projection.copy('F') # simply making a fresh copy fixes the broken array 
 #endclass RpModel
 

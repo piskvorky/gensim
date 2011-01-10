@@ -19,12 +19,7 @@ Preparing the corpus
 
 2. Convert the articles to plain text (process Wiki markup) and store the result as 
    sparse TF-IDF vectors. In Python, this is easy to do on-the-fly (the code is included in `gensim`), and we don't 
-   even need to uncompress the whole archive to disk. We will use the fact that 
-   the computation can be run incrementally, over the compressed file, when testing 
-   the single pass LSA algorithm. 
-   We will however also store the resulting TF-IDF vectors to disk, 
-   because this reduces time for multi-pass algorithms and is the most common 
-   scenario in practise::
+   even need to uncompress the whole archive to disk::
 
    $ python -m gensim.corpora.wikicorpus
 
@@ -115,7 +110,7 @@ Latent Dirichlet Allocation
     
   So the top ten concepts are apparently dominated by Wikipedia robots and expanded 
   templates; this is a good reminder that LSA is a powerful tool for data analysis, 
-  but no magic pill. As always, it's `garbage in, garbage out 
+  but no silver bullet. As always, it's `garbage in, garbage out 
   <http://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out>`_...
   By the way, improvements to the Wiki markup parsing code are welcome :-)
 
