@@ -2,7 +2,6 @@ import re
 import string
 import glob
 
-basepath       = "/home/quesada/coding/gensim/trunk/"
 from gensim.parsing.porter import PorterStemmer
 
 def strip_punctuation(s):
