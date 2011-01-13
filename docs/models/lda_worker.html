@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>corpora – Package for corpora I/O &mdash; gensim documentation</title>
+    <title>models.lda_worker – Worker for distributed LDA &mdash; gensim documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -22,7 +22,10 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="gensim documentation" href="../index.html" /> 
+    <link rel="top" title="gensim documentation" href="../index.html" />
+    <link rel="up" title="API Reference" href="../apiref.html" />
+    <link rel="next" title="similarities.docsim – Document similarity queries" href="../similarities/docsim.html" />
+    <link rel="prev" title="models.lda_dispatcher – Dispatcher for distributed LDA" href="lda_dispatcher.html" /> 
   </head>
   <body>
 
@@ -42,15 +45,28 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../similarities/docsim.html" title="similarities.docsim – Document similarity queries"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="lda_dispatcher.html" title="models.lda_dispatcher – Dispatcher for distributed LDA"
+             accesskey="P">previous</a> |</li>
         <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
- 
+
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
       </ul>
     </div>
 
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="lda_dispatcher.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">models.lda_dispatcher</span></tt> &#8211; Dispatcher for distributed LDA</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../similarities/docsim.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">similarities.docsim</span></tt> &#8211; Document similarity queries</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
@@ -72,9 +88,12 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="module-gensim.corpora">
-<span id="corpora-package-for-corpora-i-o"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">corpora</span></tt> &#8211; Package for corpora I/O<a class="headerlink" href="#module-gensim.corpora" title="Permalink to this headline">¶</a></h1>
-<p>This package contains implementations of various streaming corpus I/O format.</p>
+  <div class="section" id="module-gensim.models.lda_worker">
+<span id="models-lda-worker-worker-for-distributed-lda"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">models.lda_worker</span></tt> &#8211; Worker for distributed LDA<a class="headerlink" href="#module-gensim.models.lda_worker" title="Permalink to this headline">¶</a></h1>
+<p>USAGE: %(program)s</p>
+<blockquote>
+Worker (&#8220;slave&#8221;) process used in computing distributed LDA. Run this script on every node in your cluster. If you wish, you may even run it multiple times on a single machine, to make better use of multiple cores (just beware that memory footprint increases accordingly).</blockquote>
+<p>Example: python -m gensim.models.lda_worker</p>
 </div>
 
 
@@ -92,10 +111,17 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="../similarities/docsim.html" title="similarities.docsim – Document similarity queries"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="lda_dispatcher.html" title="models.lda_dispatcher – Dispatcher for distributed LDA"
+             >previous</a> |</li>
         <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
- 
+
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

@@ -1,0 +1,182 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>models.lsi_dispatcher – Dispatcher for distributed LSI &mdash; gensim documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="gensim documentation" href="../index.html" />
+    <link rel="up" title="API Reference" href="../apiref.html" />
+    <link rel="next" title="models.lsi_worker – Worker for distributed LSI" href="lsi_worker.html" />
+    <link rel="prev" title="models.rpmodel – Random Projections" href="rpmodel.html" /> 
+  </head>
+  <body>
+
+<!--
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../index.html"><img src="../_static/logo.png" border="0" alt="gensim logo"/></a>
+</div>
+--!>
+
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lsi_worker.html" title="models.lsi_worker – Worker for distributed LSI"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="rpmodel.html" title="models.rpmodel – Random Projections"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
+       <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
+
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="rpmodel.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">models.rpmodel</span></tt> &#8211; Random Projections</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="lsi_worker.html"
+                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">models.lsi_worker</span></tt> &#8211; Worker for distributed LSI</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-gensim.models.lsi_dispatcher">
+<span id="models-lsi-dispatcher-dispatcher-for-distributed-lsi"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">models.lsi_dispatcher</span></tt> &#8211; Dispatcher for distributed LSI<a class="headerlink" href="#module-gensim.models.lsi_dispatcher" title="Permalink to this headline">¶</a></h1>
+<p>USAGE: %(program)s SIZE_OF_JOBS_QUEUE</p>
+<blockquote>
+Dispatcher process which orchestrates distributed LSI computations. Run this script only once, on any node in your cluster.</blockquote>
+<p>Example: python -m gensim.models.lsi_dispatcher</p>
+<dl class="class">
+<dt id="gensim.models.lsi_dispatcher.Dispatcher">
+<em class="property">class </em><tt class="descclassname">gensim.models.lsi_dispatcher.</tt><tt class="descname">Dispatcher</tt><big>(</big><em>maxsize=100</em><big>)</big><a class="headerlink" href="#gensim.models.lsi_dispatcher.Dispatcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dispatcher object that communicates and coordinates individual workers.</p>
+<p>There should never be more than one dispatcher running at any one time.</p>
+<p>Note that the constructor does not fully initialize the dispatcher;
+use the <cite>initialize()</cite> function to populate it with workers etc.</p>
+<dl class="method">
+<dt id="gensim.models.lsi_dispatcher.Dispatcher.exit">
+<tt class="descname">exit</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.models.lsi_dispatcher.Dispatcher.exit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Terminate all registered workers and then the dispatcher.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.lsi_dispatcher.Dispatcher.getstate">
+<tt class="descname">getstate</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.models.lsi_dispatcher.Dispatcher.getstate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge projections from across all workers and return the final projection.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.lsi_dispatcher.Dispatcher.getworkers">
+<tt class="descname">getworkers</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.models.lsi_dispatcher.Dispatcher.getworkers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return pyro URIs of all registered workers.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.lsi_dispatcher.Dispatcher.initialize">
+<tt class="descname">initialize</tt><big>(</big><em>**model_params</em><big>)</big><a class="headerlink" href="#gensim.models.lsi_dispatcher.Dispatcher.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p><cite>model_params</cite> are parameters used to initialize individual workers (gets
+handed all the way down to worker.initialize()).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.lsi_dispatcher.Dispatcher.jobdone">
+<tt class="descname">jobdone</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.models.lsi_dispatcher.Dispatcher.jobdone" title="Permalink to this definition">¶</a></dt>
+<dd><p>A worker has finished its job. Log this event and then asynchronously 
+transfer control back to the worker.</p>
+<p>In this way, control flow basically oscillates between dispatcher.jobdone()
+worker.requestjob().</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.lsi_dispatcher.Dispatcher.jobsdone">
+<tt class="descname">jobsdone</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.models.lsi_dispatcher.Dispatcher.jobsdone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap self._jobsdone, needed for remote access through proxies</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lsi_worker.html" title="models.lsi_worker – Worker for distributed LSI"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="rpmodel.html" title="models.rpmodel – Random Projections"
+             >previous</a> |</li>
+        <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
+       <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
+
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Jan 13, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
+    </div>
+  </body>
+</html>

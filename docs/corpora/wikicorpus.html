@@ -1,0 +1,251 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>corpora.wikicorpus – Corpus from a Wikipedia dump &mdash; gensim documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="gensim documentation" href="../index.html" />
+    <link rel="up" title="API Reference" href="../apiref.html" />
+    <link rel="next" title="models.ldamodel – Latent Dirichlet Allocation" href="../models/ldamodel.html" />
+    <link rel="prev" title="corpora.svmlightcorpus – Corpus in SVMlight format" href="svmlightcorpus.html" /> 
+  </head>
+  <body>
+
+<!--
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../index.html"><img src="../_static/logo.png" border="0" alt="gensim logo"/></a>
+</div>
+--!>
+
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../models/ldamodel.html" title="models.ldamodel – Latent Dirichlet Allocation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="svmlightcorpus.html" title="corpora.svmlightcorpus – Corpus in SVMlight format"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
+       <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
+
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="svmlightcorpus.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">corpora.svmlightcorpus</span></tt> &#8211; Corpus in SVMlight format</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../models/ldamodel.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-gensim.corpora.wikicorpus">
+<span id="corpora-wikicorpus-corpus-from-a-wikipedia-dump"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">corpora.wikicorpus</span></tt> &#8211; Corpus from a Wikipedia dump<a class="headerlink" href="#module-gensim.corpora.wikicorpus" title="Permalink to this headline">¶</a></h1>
+<p>USAGE: %(program)s WIKI_XML_DUMP OUTPUT_PREFIX [VOCABULARY_SIZE]</p>
+<blockquote>
+Convert articles from a Wikipedia dump to (sparse) vectors. The input is a bz2-compressed dump of Wikipedia articles, in XML format.</blockquote>
+<p>This actually creates three files:</p>
+<ul class="simple">
+<li><cite>OUTPUT_PREFIX_wordids.txt</cite>: mapping between words and their integer ids</li>
+<li><cite>OUTPUT_PREFIX_bow.mm</cite>: bag-of-words (word counts) representation, in Matrix Matrix format</li>
+<li><cite>OUTPUT_PREFIX_tfidf.mm</cite>: TF-IDF representation</li>
+</ul>
+<p>The output Matrix Market files can then be compressed (e.g., by bzip2) to save disk space; gensim&#8217;s corpus iterators can work with compressed input, too.</p>
+<p><cite>VOCABULARY_SIZE</cite> controls how many of the most frequent words to keep (after 
+removing all tokens that appear in more than 10 percent documents). Defaults to 100,000.</p>
+<p>Example: ./wikicorpus.py ~/gensim/results/enwiki-20100622-pages-articles.xml.bz2 ~/gensim/results/wiki_en</p>
+<dl class="class">
+<dt id="gensim.corpora.wikicorpus.VocabTransform">
+<em class="property">class </em><tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">VocabTransform</tt><big>(</big><em>old2new</em>, <em>id2token=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.VocabTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a corpus to another, with different feature ids.</p>
+<p>Given a mapping between old ids and new ids (some old ids may be missing,
+i.e. the mapping need not be a bijection), this will wrap a
+corpus so that iterating over VocabTransform[corpus] returns the same vectors but with 
+the new ids.</p>
+<p>Old features that have no counterpart in the new ids are discarded. This 
+can be used to filter vocabulary of a corpus:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">old2new</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">oldid</span><span class="p">,</span> <span class="n">newid</span><span class="p">)</span> <span class="k">for</span> <span class="n">newid</span><span class="p">,</span> <span class="n">oldid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">remaining_ids</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">newid</span><span class="p">,</span> <span class="n">oldid2token</span><span class="p">[</span><span class="n">oldid</span><span class="p">])</span> <span class="k">for</span> <span class="n">oldid</span><span class="p">,</span> <span class="n">newid</span> <span class="ow">in</span> <span class="n">old2new</span><span class="o">.</span><span class="n">iteritems</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vt</span> <span class="o">=</span> <span class="n">VocabTransform</span><span class="p">(</span><span class="n">old2new</span><span class="p">,</span> <span class="n">id2token</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="classmethod">
+<dt id="gensim.corpora.wikicorpus.VocabTransform.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.VocabTransform.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.wikicorpus.VocabTransform.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.VocabTransform.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="gensim.corpora.wikicorpus.WikiCorpus">
+<em class="property">class </em><tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">WikiCorpus</tt><big>(</big><em>fname</em>, <em>noBelow=20</em>, <em>keep_words=100000</em>, <em>dictionary=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Treat a wikipedia articles dump (<a href="#id1"><span class="problematic" id="id2">*</span></a>articles.xml.bz2) as a (read-only) corpus.</p>
+<p>The documents are extracted on-the-fly, so that the whole (massive) dump
+can stay compressed on disk.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">wiki</span> <span class="o">=</span> <span class="n">WikiCorpus</span><span class="p">(</span><span class="s">&#39;enwiki-20100622-pages-articles.xml.bz2&#39;</span><span class="p">)</span> <span class="c"># create word-&gt;word_id mapping, takes almost 8h</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wiki</span><span class="o">.</span><span class="n">saveAsText</span><span class="p">(</span><span class="s">&#39;wiki_en_vocab200k&#39;</span><span class="p">)</span> <span class="c"># another 8h, creates a file in MatrixMarket format plus file with id-&gt;word</span>
+</pre></div>
+</div>
+<p>Initialize the corpus. This scans the corpus once, to determine its 
+vocabulary (only the first <cite>keep_words</cite> most frequent words that 
+appear in at least <cite>noBelow</cite> documents are kept).</p>
+<dl class="method">
+<dt id="gensim.corpora.wikicorpus.WikiCorpus.getArticles">
+<tt class="descname">getArticles</tt><big>(</big><em>return_raw=False</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.getArticles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over the dump, returning text version of each article.</p>
+<p>Only articles of sufficient length are returned (short articles &amp; redirects
+etc are ignored).</p>
+<p>Note that this iterates over the <strong>texts</strong>; if you want vectors, just use 
+the standard corpus interface instead of this function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">wiki_corpus</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">print</span> <span class="n">doc</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="gensim.corpora.wikicorpus.WikiCorpus.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="gensim.corpora.wikicorpus.WikiCorpus.loadDictionary">
+<em class="property">static </em><tt class="descname">loadDictionary</tt><big>(</big><em>fname</em>, <em>mapping_only=True</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.loadDictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load previously stored mapping between words and their ids.</p>
+<p>The result can be used as the <cite>id2word</cite> parameter for input to transformations.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.wikicorpus.WikiCorpus.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.wikicorpus.WikiCorpus.saveAsText">
+<tt class="descname">saveAsText</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.saveAsText" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store the corpus to disk, in a human-readable text format.</p>
+<p>This actually saves two files:</p>
+<ol class="arabic simple">
+<li>Document-term co-occurence frequency counts (bag-of-words), as 
+a Matrix Market file <cite>fname_bow.mm</cite>.</li>
+<li>Token to integer mapping, as a text file <cite>fname_wordids.txt</cite>.</li>
+</ol>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.wikicorpus.WikiCorpus.saveDictionary">
+<tt class="descname">saveDictionary</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.saveDictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store id-&gt;word mapping to a file, in format <cite>id[TAB]word_utf8[TAB]document frequency[NEWLINE]</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.corpora.wikicorpus.filterWiki">
+<tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">filterWiki</tt><big>(</big><em>raw</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.filterWiki" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter out wiki mark-up from utf8 string <cite>raw</cite>, leaving only text.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.corpora.wikicorpus.tokenize">
+<tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">tokenize</tt><big>(</big><em>content</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.tokenize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tokenize a piece of text from wikipedia. The input string <cite>content</cite> is assumed
+to be mark-up free (see <cite>filterWiki()</cite>).</p>
+<p>Return list of tokens as utf8 bytestrings.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../models/ldamodel.html" title="models.ldamodel – Latent Dirichlet Allocation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="svmlightcorpus.html" title="corpora.svmlightcorpus – Corpus in SVMlight format"
+             >previous</a> |</li>
+        <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
+       <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
+
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Jan 13, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
+    </div>
+  </body>
+</html>
