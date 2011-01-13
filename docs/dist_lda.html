@@ -1,0 +1,154 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Distributed Latent Dirichlet Allocation &mdash; gensim documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.7.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="gensim documentation" href="index.html" />
+    <link rel="up" title="Distributed Computing" href="distributed.html" />
+    <link rel="next" title="API Reference" href="apiref.html" />
+    <link rel="prev" title="Distributed Latent Semantic Analysis" href="dist_lsi.html" /> 
+  </head>
+  <body>
+
+<!--
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="index.html"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
+</div>
+--!>
+
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="apiref.html" title="API Reference"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dist_lsi.html" title="Distributed Latent Semantic Analysis"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
+       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
+
+          <li><a href="distributed.html" accesskey="U">Distributed Computing</a> &raquo;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Distributed Latent Dirichlet Allocation</a><ul>
+<li><a class="reference internal" href="#setting-up-the-cluster">Setting up the cluster</a></li>
+<li><a class="reference internal" href="#running-lda">Running LDA</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dist_lsi.html"
+                        title="previous chapter">Distributed Latent Semantic Analysis</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="apiref.html"
+                        title="next chapter">API Reference</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="distributed-latent-dirichlet-allocation">
+<span id="dist-lda"></span><h1>Distributed Latent Dirichlet Allocation<a class="headerlink" href="#distributed-latent-dirichlet-allocation" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See <a class="reference internal" href="distributed.html"><em>Distributed Computing</em></a> for an introduction to distributed computing in <cite>gensim</cite>.</p>
+</div>
+<div class="section" id="setting-up-the-cluster">
+<h2>Setting up the cluster<a class="headerlink" href="#setting-up-the-cluster" title="Permalink to this headline">¶</a></h2>
+<p>See the tutorial on <a class="reference internal" href="dist_lsi.html"><em>Distributed Latent Semantic Analysis</em></a>; setting up a cluster for LDA is completely
+analogous, except you want to run <cite>lda_worker</cite> and <cite>lda_dispatcher</cite> scripts instead
+of <cite>lsi_worker</cite> and <cite>lsi_dispatcher</cite>.</p>
+</div>
+<div class="section" id="running-lda">
+<h2>Running LDA<a class="headerlink" href="#running-lda" title="Permalink to this headline">¶</a></h2>
+<p>Run LDA like you normally would, but turn on the <cite>distributed=True</cite> constructor
+parameter.</p>
+<p>FIXME add some experiments here.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="apiref.html" title="API Reference"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dist_lsi.html" title="Distributed Latent Semantic Analysis"
+             >previous</a> |</li>
+        <li><a href="index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
+       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
+
+          <li><a href="distributed.html" >Distributed Computing</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Jan 13, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
+    </div>
+  </body>
+</html>
