@@ -2,3 +2,4 @@
 gensim.egg-info
 *,cover
 .idea
+.coverage
