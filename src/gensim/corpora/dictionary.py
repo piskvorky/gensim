@@ -100,7 +100,7 @@ class Dictionary(utils.SaveLoad):
         logger.info("built %s from %i documents (total %i corpus positions)" %
                      (self, self.numDocs, self.numPos))
 
-    def doc2bow(self, document, allowUpdate = False):
+    def doc2bow(self, document, allowUpdate = False, returnMissingWords=True):
         """
         Convert `document` (a list of words) into the bag-of-words format = list of
         `(tokenId, tokenCount)` 2-tuples. Each word is assumed to be a
@@ -113,6 +113,7 @@ class Dictionary(utils.SaveLoad):
         If `allowUpdate` is **not** set, this function is `const`, ie. read-only.
         """
         result = {}
+        missingWords = {}
         document = sorted(document)
         # construct (word, frequency) mapping. in python3 this is done simply
         # using Counter(), but here i use itertools.groupby() for the job
@@ -122,6 +123,9 @@ class Dictionary(utils.SaveLoad):
             tokenId = self.token2id.get(wordNorm, None)
             if tokenId is None:
                 # first time we see this token (~normalized form)
+                if returnMissingWords:
+                    missingWords[wordNorm] = frequency
+
                 if not allowUpdate: # if we aren't allowed to create new tokens, continue with the next unique token
                     continue
                 tokenId = len(self.token2id)
@@ -137,7 +141,13 @@ class Dictionary(utils.SaveLoad):
             for tokenId in result.iterkeys():
                 self.docFreq[tokenId] = self.docFreq.get(tokenId, 0) + 1
 
-        return sorted(result.iteritems()) # return tokenIds, in ascending id order
+        if returnMissingWords:
+            logger.debug("doc2bow: for query " + str(document)+ " he missing words are:")
+            logger.debug(missingWords)
+            return sorted(result.iteritems()), missingWords # return tokenIds, in ascending id order
+        else:
+            return sorted(result.iteritems()) # return tokenIds, in ascending id order
+
 
     def filterExtremes(self, noBelow = 5, noAbove = 0.5, keepN = None):
         """
