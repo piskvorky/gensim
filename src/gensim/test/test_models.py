@@ -194,6 +194,31 @@ class TestTfidfModel(unittest.TestCase):
 #endclass TestTfidfModel
 
 
+class TestTfModel(unittest.TestCase):
+    def setUp(self):
+        self.corpus = mmcorpus.MmCorpus(os.path.join(module_path, 'testcorpus.mm'))
+    
+    def testTransform(self):
+        # create the transformation model
+        model = tfidfmodel.TfidfModel(self.corpus, normalize = True)
+        
+        # transform one document
+        doc = list(self.corpus)[0]
+        transformed = model[doc]
+        
+        expected =  [(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
+        self.assertTrue(numpy.allclose(transformed, expected))
+        
+    
+    def testPersistence(self):
+        model = tfidfmodel.TfidfModel(self.corpus, normalize = True)
+        model.save(testfile())
+        model2 = tfidfmodel.TfidfModel.load(testfile())
+        self.assertTrue(model.idfs == model2.idfs)
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+#endclass TestTfidfModel
+
 if __name__ == '__main__':
     logging.root.setLevel(logging.WARNING)
     unittest.main()
