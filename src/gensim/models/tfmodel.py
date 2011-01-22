@@ -5,27 +5,28 @@
 
 
 import logging
-import itertools
 
 
 from gensim import interfaces, matutils, utils
 
 
-
 class TfModel(interfaces.TransformationABC):
     """
-    TODO: add docu
+    The TfModel is like the TfidfModel without the idf.
+
+    It can be described as a plain frequency model.
 
     >>> tf = TfModel(corpus)
     >>> print = tf[some_doc]
     >>> tf.save('/tmp/foo.tfidf_model')
-    
+
     Model persistency is achieved via its load/save methods.
     """
 
     def __init__(self, corpus, id2word=None, normalize=True):
         """
-        `normalize` dictates whether the resulting vectors will be set to unit length.
+        `normalize` dictates whether the resulting vectors will be set to
+        unit length.
         """
         self.normalize = normalize
         self.numDocs = 0
@@ -38,13 +39,12 @@ class TfModel(interfaces.TransformationABC):
         """
         Return tf-idf representation of the input vector and/or corpus.
         """
-        # if the input vector is in fact a corpus, return a transformed corpus as a result
+        # if the input vector is in fact a corpus, return a transformed
+        # corpus as a result
         is_corpus, bow = utils.isCorpus(bow)
         if is_corpus:
             return self._apply(bow)
 
-        # unknown (new) terms will be given zero weight (NOT infinity/huge weight,
-        # as strict application of the IDF formula would dictate
         vector = bow
         if self.normalize:
             vector = matutils.unitVec(vector)
