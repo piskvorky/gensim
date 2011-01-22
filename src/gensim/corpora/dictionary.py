@@ -10,8 +10,9 @@ This module implements the concept of Dictionary -- a mapping between words and
 their integer ids.
 
 Dictionaries can be created from a corpus and can later be pruned according to
-document frequency (removing (un)common words via the :func:`Dictionary.filterExtremes` method),
-save/loaded from disk via :func:`Dictionary.save` and :func:`Dictionary.load` methods etc.
+document frequency (removing (un)common words via the
+:func:`Dictionary.filterExtremes` method), save/loaded from disk via
+:func:`Dictionary.save` and :func:`Dictionary.load` methods etc.
 """
 
 
@@ -28,23 +29,30 @@ logger.setLevel(logging.INFO)
 
 class Dictionary(utils.SaveLoad):
     """
-    Dictionary encapsulates mappings between normalized words and their integer ids.
+    Dictionary encapsulates mappings between normalized words and their integer
+    ids.
 
     The main function is `doc2bow`, which converts a collection of words to its
-    bag-of-words representation, optionally also updating the dictionary mapping
-    with newly encountered words and their ids.
+    bag-of-words representation, optionally also updating the dictionary
+    mapping with newly encountered words and their ids.
 
     It can be created in two ways:
 
      * pass in documents
      * pass in already existing word2id and id2word
     """
+
     def __init__(self, documents=None, word2id=None, id2word=None):
-        self.token2id = {}  # token -> tokenId
-        self.id2token = {}  # token -> tokenId
-        self.docFreq = {}  # tokenId -> in how many documents this token appeared
-        self.numDocs = 0  # number of documents processed
-        self.numPos = 0  # total number of corpus positions
+        # token -> tokenId
+        self.token2id = {}
+        # token -> tokenId
+        self.id2token = {}
+        # tokenId -> in how many documents this token appeared
+        self.docFreq = {}
+        # number of documents processed
+        self.numDocs = 0
+        # total number of corpus positions
+        self.numPos = 0
 
         if word2id and id2word:
             self.token2id = word2id
@@ -57,9 +65,9 @@ class Dictionary(utils.SaveLoad):
             sys.exit()
 
     # TODO expensive, only here for historical reasons; maybe deprecate?
-    #id2token = property(lambda self: dict((id, token) for token, id in self.token2id.iteritems()))
+    #id2token = property(lambda self: dict((id, token) for token, id in
+    #               self.token2id.iteritems()))
     #id2word = id2token
-
 
     def __len__(self):
         """
@@ -67,15 +75,12 @@ class Dictionary(utils.SaveLoad):
         """
         return len(self.token2id)
 
-
     def __str__(self):
         return ("Dictionary(%i unique tokens)" % len(self))
-
 
     @staticmethod
     def fromDocuments(documents):
         return Dictionary(documents = documents)
-
 
     def addDocuments(self, documents):
         """
@@ -94,7 +99,6 @@ class Dictionary(utils.SaveLoad):
             _ = self.doc2bow(document, allowUpdate = True) # ignore the result, here we only care about updating token ids
         logger.info("built %s from %i documents (total %i corpus positions)" %
                      (self, self.numDocs, self.numPos))
-
 
     def doc2bow(self, document, allowUpdate = False):
         """
@@ -135,7 +139,6 @@ class Dictionary(utils.SaveLoad):
 
         return sorted(result.iteritems()) # return tokenIds, in ascending id order
 
-
     def filterExtremes(self, noBelow = 5, noAbove = 0.5, keepN = None):
         """
         Filter out tokens that appear in
@@ -166,7 +169,6 @@ class Dictionary(utils.SaveLoad):
         self.rebuildDictionary()
         logger.info("resulting dictionary: %s" % self)
 
-
     def filterTokens(self, badIds = None, goodIds = None):
         """
         Remove the selected `badIds` tokens from all dictionary mappings, or, keep
@@ -182,7 +184,6 @@ class Dictionary(utils.SaveLoad):
             goodIds = set(goodIds)
             self.token2id = dict((token, tokenId) for token, tokenId in self.token2id.iteritems() if tokenId in goodIds)
             self.docFreq = dict((tokenId, freq) for tokenId, freq in self.docFreq.iteritems() if tokenId in goodIds)
-
 
     def rebuildDictionary(self):
         """
