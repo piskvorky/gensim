@@ -13,6 +13,7 @@ TODO: Update this
 clone of wikicorpus.py
 """
 
+import os
 import logging
 import sys
 import bz2
@@ -25,7 +26,7 @@ logger = logging.getLogger('wikiExternParsingCorpus')
 logger.setLevel(logging.DEBUG)
 
 
-class WikiExternParsingCorpus(interfaces.CorpusABC):
+class WikiExternalParsingCorpus(interfaces.CorpusABC):
     """
     Treat a wikipedia articles dump (*articles.xml.bz2) as a (read-only)
     corpus.
@@ -143,7 +144,7 @@ if __name__ == '__main__':
 
     # build dictionary.
     logging.info("source: " + source)
-    wiki = WikiExternParsingCorpus(source, keep_words=200000)
+    wiki = WikiExternalParsingCorpus(source, keep_words=200000)
 
     # save dictionary and bag-of-words
     wiki.saveAsText(output)
@@ -151,7 +152,7 @@ if __name__ == '__main__':
 
     # initialize corpus reader and word->id mapping
     from gensim.corpora import MmCorpus
-    id2token = WikiExternParsingCorpus.loadDictionary(output + '_wordids.txt')
+    id2token = WikiExternalParsingCorpus.loadDictionary(output + '_wordids.txt')
     mm = MmCorpus(output + '_bow.mm')
 
     # build tfidf
