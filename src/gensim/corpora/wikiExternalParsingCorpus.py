@@ -134,8 +134,12 @@ if __name__ == '__main__':
     logging.root.setLevel(level=logging.INFO)
     logging.info("running %s" % ' '.join(sys.argv))
 
-    # harcoded for testing
-    corpusname = 'head500.noblanks.cor'  # for testing
+    import os
+    print os.getcwd()
+
+    # the demo file is in the corpora folder
+    module_path = os.path.dirname(__file__)
+    corpusname = os.path.join(module_path, 'head500.noblanks.cor')
 
     source = corpusname + '.bz2'
     output = corpusname
