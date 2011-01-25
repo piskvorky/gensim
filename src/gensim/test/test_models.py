@@ -18,7 +18,7 @@ import tempfile
 import numpy
 
 from gensim.corpora import mmcorpus
-from gensim.models import lsimodel, ldamodel, tfidfmodel, rpmodel
+from gensim.models import lsimodel, ldamodel, tfidfmodel, rpmodel, tfmodel
 from gensim import matutils
 
 
@@ -35,64 +35,64 @@ def testfile():
 class TestLsiModel(unittest.TestCase):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(os.path.join(module_path, 'testcorpus.mm'))
-    
+
     def testTransform(self):
         # create the transformation model
         model = lsimodel.LsiModel(self.corpus, numTopics=2)
-        
+
         # make sure the decomposition is enough accurate
         u, s, vt = numpy.linalg.svd(matutils.corpus2dense(self.corpus, self.corpus.numTerms), full_matrices=False)
         self.assertTrue(numpy.allclose(s[:2], model.projection.s)) # singular values must match
-        
+
         # transform one document
         doc = list(self.corpus)[0]
         transformed = model[doc]
         vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
-        
+
         expected = numpy.array([-0.6594664, 0.142115444]) # scaled LSI version
         # expected = numpy.array([-0.1973928, 0.05591352]) # non-scaled LSI version
         self.assertTrue(numpy.allclose(abs(vec), abs(expected))) # transformed entries must be equal up to sign
-    
-    
+
+
     def testOnlineTransform(self):
         corpus = list(self.corpus)
         doc = corpus[0] # use the corpus' first document for testing
-        
+
         # create the transformation model
         model2 = lsimodel.LsiModel(corpus = corpus, numTopics = 5) # compute everything at once
         model = lsimodel.LsiModel(corpus = None, id2word = model2.id2word, numTopics = 5) # start with no documents, we will add then later
-        
+
         # train model on a single document
         model.addDocuments([corpus[0]])
         model.printDebug()
-        
+
         # transform the testing document with this partial transformation
         transformed = model[doc]
         vec = matutils.sparse2full(transformed, model.numTopics) # convert to dense vector, for easier equality tests
         expected = numpy.array([-1.73205078, 0.0, 0.0, 0.0, 0.0]) # scaled LSI version
         self.assertTrue(numpy.allclose(abs(vec), abs(expected), atol = 1e-6)) # transformed entries must be equal up to sign
-        
+
         # train on another 4 documents
         model.addDocuments(corpus[1:5], chunks = 2) # train in chunks of 2 documents, for the lols
         model.printDebug()
-        
+
         # transform a document with this partial transformation
         transformed = model[doc]
         vec = matutils.sparse2full(transformed, model.numTopics) # convert to dense vector, for easier equality tests
         expected = numpy.array([-0.66493785, -0.28314203, -1.56376302,  0.05488682,  0.17123269]) # scaled LSI version
         m2 = lsimodel.LsiModel(corpus = list(corpus)[:5], numTopics = 5)
         self.assertTrue(numpy.allclose(abs(vec), abs(expected), atol = 1e-6)) # transformed entries must be equal up to sign
-        
+
         # train on the rest of documents
         model.addDocuments(corpus[5:])
         model.printDebug()
-        
+
         # make sure the final transformation is the same as if we had decomposed the whole corpus at once
         vec1 = matutils.sparse2full(model[doc], model.numTopics)
         vec2 = matutils.sparse2full(model2[doc], model2.numTopics)
         self.assertTrue(numpy.allclose(abs(vec1), abs(vec2), atol = 1e-6)) # the two LSI representations must equal up to sign
 
-    
+
     def testPersistence(self):
         model = lsimodel.LsiModel(self.corpus, numTopics = 2)
         model.save(testfile())
@@ -108,21 +108,21 @@ class TestLsiModel(unittest.TestCase):
 class TestRpModel(unittest.TestCase):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(os.path.join(module_path, 'testcorpus.mm'))
-    
+
     def testTransform(self):
         # create the transformation model
         numpy.random.seed(13) # HACK; set fixed seed so that we always get the same random matrix (and can compare against expected results)
         model = rpmodel.RpModel(self.corpus, numTopics = 2)
-        
+
         # transform one document
         doc = list(self.corpus)[0]
         transformed = model[doc]
         vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
-        
+
         expected = numpy.array([-0.70710677, 0.70710677])
         self.assertTrue(numpy.allclose(vec, expected)) # transformed entries must be equal up to sign
-        
-    
+
+
     def testPersistence(self):
         model = rpmodel.RpModel(self.corpus, numTopics = 2)
         model.save(testfile())
@@ -137,26 +137,26 @@ class TestRpModel(unittest.TestCase):
 class TestLdaModel(unittest.TestCase):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(os.path.join(module_path, 'testcorpus.mm'))
-    
+
     def testTransform(self):
         # create the transformation model
         passed = False
         numpy.random.seed(13)
         for i in xrange(10): # lda is randomized, so allow 10 iterations to test for equality
             model = ldamodel.LdaModel(self.corpus, numTopics = 2)
-            
+
             # transform one document
             doc = list(self.corpus)[0]
             transformed = model[doc]
-            
+
             vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
             expected = [0.0, 1.0]
             passed = passed or numpy.allclose(sorted(vec), sorted(expected))  # must contain the same values, up to re-ordering
             if passed:
                 break
         self.assertTrue(passed, "Error in randomized LDA test")
-        
-    
+
+
     def testPersistence(self):
         model = ldamodel.LdaModel(self.corpus, numTopics = 2)
         model.save(testfile())
@@ -171,19 +171,18 @@ class TestLdaModel(unittest.TestCase):
 class TestTfidfModel(unittest.TestCase):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(os.path.join(module_path, 'testcorpus.mm'))
-    
+
     def testTransform(self):
         # create the transformation model
         model = tfidfmodel.TfidfModel(self.corpus, normalize = True)
-        
+
         # transform one document
         doc = list(self.corpus)[0]
         transformed = model[doc]
-        
+
         expected =  [(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
         self.assertTrue(numpy.allclose(transformed, expected))
-        
-    
+
     def testPersistence(self):
         model = tfidfmodel.TfidfModel(self.corpus, normalize = True)
         model.save(testfile())
@@ -193,6 +192,32 @@ class TestTfidfModel(unittest.TestCase):
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 #endclass TestTfidfModel
 
+
+class TestTfModel(unittest.TestCase):
+    def setUp(self):
+        self.corpus = mmcorpus.MmCorpus(os.path.join(module_path,
+                'testcorpus.mm'))
+
+    def testTransform(self):
+        # create the transformation model
+        model = tfmodel.TfModel(self.corpus, normalize = True)
+
+        # transform one document
+        doc = list(self.corpus)[0]
+        transformed = model[doc]
+
+        expected =  [(0, 0.57735026918962573), (1, 0.57735026918962573),
+                (2, 0.57735026918962573)]
+        self.assertTrue(numpy.allclose(transformed, expected))
+
+    def testPersistence(self):
+        model = tfmodel.TfModel(self.corpus, normalize = True)
+        model.save(testfile())
+        model2 = tfmodel.TfModel.load(testfile())
+        # try projecting an empty vector
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec]))
+#endclass TestTfModel
 
 if __name__ == '__main__':
     logging.root.setLevel(logging.WARNING)

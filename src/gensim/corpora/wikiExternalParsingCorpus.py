@@ -135,12 +135,15 @@ if __name__ == '__main__':
     logging.root.setLevel(level=logging.INFO)
     logging.info("running %s" % ' '.join(sys.argv))
 
-    # the demo file is in the corpora folder
-    module_path = os.path.dirname(__file__)
-    corpusname = os.path.join(module_path, 'head500.noblanks.cor')
+    import os
+    import tempfile
 
-    source = corpusname + '.bz2'
-    output = corpusname
+    module_path = os.path.dirname(__file__)
+    corpusname = 'head500.noblanks.cor'
+    # the demo file is in the corpora folder
+    source = os.path.join(module_path, corpusname + '.bz2')
+    # save the results to tmp
+    output = os.path.join(tempfile.gettempdir(), corpusname)
 
     # build dictionary.
     logging.info("source: " + source)
