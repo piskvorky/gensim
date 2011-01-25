@@ -135,6 +135,7 @@ if __name__ == '__main__':
     logging.info("running %s" % ' '.join(sys.argv))
 
     # the demo file is in the corpora folder
+    import os
     module_path = os.path.dirname(__file__)
     corpusname = os.path.join(module_path, 'head500.noblanks.cor')
 
