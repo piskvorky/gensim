@@ -12,12 +12,15 @@ import sys
 
 import gensim
 from gensim.corpora.dictionaryExistingCounts import DictionaryExistingCounts
-import gensim.corpora.wikiExternParsingCorpus
+from gensim.corpora.wikiExternalParsingCorpus import WikiExternalParsingCorpus
+
+from gensim.models.tfmodel import TfModel
 from gensim.models.tfidfmodel import TfidfModel
 from gensim.parsing.preprocessing import *
 
 import scipy
 import scipy.io as sio
+import scipy.stats as stats
 print scipy.__version__
 
 import logging
@@ -92,7 +95,7 @@ if (createCorpus==True):
     # build dictionary takes about 45 min
     logging.debug("-------calling .WikiExternParsingCorpus-------")
     logging.debug("input: " + input)
-    wiki = gensim.corpora.WikiExternParsingCorpus(input,keep_words = 200000)
+    wiki = WikiExternalParsingCorpus(input,keep_words = 200000)
     # save dictionary and bag-of-words, another ~45min
     wiki.saveAsText(output)
     del wiki
@@ -189,7 +192,7 @@ bow_queries_tfidf = [dictionary.doc2bow(text, allowUpdate=False, returnMissingWo
 
 secondCorpusName = 'lee'
 tfidf_lee   = models.TfidfModel(bow_queries_tfidf, dictionary.id2token, normalize=False )
-tf_lee      = models.PlainfreqModel(bow_queries_tfidf, dictionary.id2token, normalize=False)
+tf_lee      = TfModel(bow_queries_tfidf, dictionary.id2token, normalize=False)
 
 
 # note that the actual cell values we get only when using []
