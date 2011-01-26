@@ -18,7 +18,7 @@ def tc(dataset, tokenizer=tokenize):
     input: a dataset (array of texts)
 
     If we wanted compatibility with gensim, this function
-    could easily output the bow..
+    could easyly output the bow..
     """
     vocab = {}
     docs = []
@@ -123,8 +123,8 @@ def vocab_array(vocab):
     """
     Converts vocab dictionary to vocab array
     """
-    return np.char.array(sorted(vocab.keys(),
-                                lambda a,b: cmp(vocab[a],vocab[b])))
+    return np.char.array(sorted(vocab.keys(), lambda a,b:
+        cmp(vocab[a],vocab[b])))
 
 def vocab_dict(vocab):
     """
