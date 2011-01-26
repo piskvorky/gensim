@@ -2,5 +2,7 @@
 gensim.egg-info
 *,cover
 .idea
+*.dict
+*.index
 .coverage
 data
