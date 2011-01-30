@@ -28,6 +28,11 @@ def get_tmpfile(suffix=None):
     """docstring for get_tmpfile"""
     return os.path.join(tempfile.gettempdir(), suffix)
 
+def rm_tmpfiles():
+    """rm all tmpfiles to make sure we only use the new files."""
+    os.remove(get_tmpfile('tc_test.cpickle'))
+    os.remove(get_tmpfile('tc_test_wordids.txt'))
+    os.remove(get_tmpfile('tc_test_bow.mm'))
 
 class TestTextCorpus(unittest.TestCase):
     def setUp(self):
@@ -44,22 +49,26 @@ class TestTextCorpus(unittest.TestCase):
 
         # delete some files to make sure we don't use old files
         try:
-            os.remove(get_tmpfile('tc_test.cpickle'))
-            os.remove(get_tmpfile('tc_test_wordids.txt'))
+            rm_tmpfiles()
         except OSError:
             pass
+
+        self.headfile = os.path.join(module_path, 'head500.noblanks.cor.bz2')
+
+        self.tc = TextCorpus(
+                self.headfile,
+                self.texts
+                )
 
     def tearDown(self):
         # delete some files to make sure we don't use old files
         try:
-            os.remove(get_tmpfile('tc_test.cpickle'))
-            os.remove(get_tmpfile('tc_test_wordids.txt'))
+            rm_tmpfiles()
         except OSError:
             pass
 
     def test_init(self):
-        """ __init__ should create a TextCorpus. """
-        self.tc = TextCorpus()
+        """ __init__ should create a something (read not None). """
         self.assertNotEqual(self.tc, None)
 
     def test_build_tc(self):
@@ -68,51 +77,47 @@ class TestTextCorpus(unittest.TestCase):
         This test is copied from test_corpora_dictionary.
         """
 
-        tc = TextCorpus(self.texts)
         expected = {0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 5: 3, 6: 2, 7: 3, 8: 2,
                 9: 3, 10: 3, 11: 2}
-        self.assertEqual(tc.docFreq, expected)
+        self.assertEqual(self.tc.docFreq, expected)
 
         expected = {'computer': 0, 'eps': 8, 'graph': 10, 'human': 1,
                 'interface': 2, 'minors': 11, 'response': 3, 'survey': 4,
                 'system': 5, 'time': 6, 'trees': 9, 'user': 7}
-        self.assertEqual(tc.token2id, expected)
+        self.assertEqual(self.tc.token2id, expected)
 
         expected = dict((v, k) for k, v in expected.iteritems())
-        self.assertEqual(tc.id2token, expected)
+        self.assertEqual(self.tc.id2token, expected)
 
     def test_save_load_ability(self):
         """ Make sure we can save and load (un/pickle) the object. """
-        tc = TextCorpus(self.texts)
         tmpf = get_tmpfile('tc_test.cpickle')
-        tc.save(tmpf)
+        self.tc.save(tmpf)
 
         tc2 = SaveLoad.load(tmpf)
         tc2.load(tmpf)
 
-        self.assertEqual(len(tc), len(tc2))
-        self.assertEqual(tc.id2word, tc2.id2word)
-        self.assertEqual(tc.token2id, tc2.token2id)
+        self.assertEqual(len(self.tc), len(tc2))
+        self.assertEqual(self.tc.id2word, tc2.id2word)
+        self.assertEqual(self.tc.token2id, tc2.token2id)
 
     def test_saveAsText_and_loadFromText(self):
-        """ TC can be saved as textfile and loaded again from textfile.
-        """
-        tc = TextCorpus(self.texts)
+        """ TC can be saved as textfile and loaded again from textfile. """
         tmpf = get_tmpfile('tc_test')
-        tc.saveAsText(tmpf)
+        self.tc.saveAsText(tmpf)
         # does the file exists
         self.assertTrue(os.path.exists(tmpf + "_wordids.txt"))
 
         tc_loaded = TextCorpus.loadFromText(get_tmpfile('tc_test_wordids.txt'))
         self.assertNotEqual(tc_loaded, None)
-        self.assertEqual(tc_loaded.token2id, tc.token2id)
-        self.assertEqual(tc_loaded.id2token, tc.id2token)
+        self.assertEqual(tc_loaded.token2id, self.tc.token2id)
+        self.assertEqual(tc_loaded.id2token, self.tc.id2token)
 
-    #def test_saveAsMatrixMarket(self):
-        #tc = TextCorpus(self.texts)
-        #tmpf = get_tmpfile('tc_test')
-        #tc.saveAsMatrixMarket(tmpf)
-        #self.assertTrue(os.path.exists(tmpf + '_bow.mm'))
+    def test_saveAsMatrixMarket(self):
+        tmpf = get_tmpfile('tc_test')
+        self.tc.saveAsMatrixMarket(tmpf)
+        self.assertTrue(os.path.exists(tmpf + '_bow.mm'))
+
 
 
 
