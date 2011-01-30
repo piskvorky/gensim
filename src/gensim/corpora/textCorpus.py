@@ -83,11 +83,11 @@ class TextCorpus(Dictionary):
         result = TextCorpus()
         with open(fname) as f:
             for lineNo, line in enumerate(f):
-                cols = line[:-1].split('\t')
-                if len(cols) == 3:
-                    wordId, word, docFreq = cols
-                else:
-                    raise ValueError("invalid line in dictionary file %s: %s" % (fname, line.strip()))
+                try:
+                    wordId, word, docFreq = line[:-1].split('\t')
+                except Exception:
+                    raise ValueError("invalid line in dictionary file %s: %s"
+                            % (fname, line.strip()))
                 wordId = int(wordId)
                 result.token2id[word] = wordId
                 result.docFreq[wordId] = int(docFreq)
