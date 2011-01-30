@@ -28,11 +28,13 @@ def get_tmpfile(suffix=None):
     """docstring for get_tmpfile"""
     return os.path.join(tempfile.gettempdir(), suffix)
 
+
 def rm_tmpfiles():
     """rm all tmpfiles to make sure we only use the new files."""
     os.remove(get_tmpfile('tc_test.cpickle'))
     os.remove(get_tmpfile('tc_test_wordids.txt'))
     os.remove(get_tmpfile('tc_test_bow.mm'))
+
 
 class TestTextCorpus(unittest.TestCase):
     def setUp(self):
@@ -57,8 +59,7 @@ class TestTextCorpus(unittest.TestCase):
 
         self.tc = TextCorpus(
                 self.headfile,
-                self.texts
-                )
+                self.texts)
 
     def tearDown(self):
         # delete some files to make sure we don't use old files
@@ -117,7 +118,3 @@ class TestTextCorpus(unittest.TestCase):
         tmpf = get_tmpfile('tc_test')
         self.tc.saveAsMatrixMarket(tmpf)
         self.assertTrue(os.path.exists(tmpf + '_bow.mm'))
-
-
-
-

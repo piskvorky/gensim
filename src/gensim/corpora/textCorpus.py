@@ -29,7 +29,9 @@ class TextCorpus(Dictionary):
 
     def __init__(self,  fname=None, documents=None):
         """
-        TODO
+        TODO: docu
+        TODO: extend __init__
+        TODO: make sure that __init__ works in all cases!
         """
         super(TextCorpus, self).__init__(documents)
 
@@ -39,6 +41,7 @@ class TextCorpus(Dictionary):
             self.fname = fname
         else:
             raise Exception('The file should be a *.bz2 file.')
+
         self.filters = None
         self.documentfolder = None
 
@@ -49,7 +52,7 @@ class TextCorpus(Dictionary):
         Iterating over the corpus yields vectors, one for each document.
         """
         for docNo, text in enumerate(self.getArticles()):
-            yield self.doc2bow(text, allowUpdate = False)
+            yield self.doc2bow(text, allowUpdate=False)
 
     def getArticles(self, return_raw=False):
         """
