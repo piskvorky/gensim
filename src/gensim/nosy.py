@@ -7,6 +7,9 @@ Watch for changes in all file types specified in 'EXTENSIONS'.
 If changes, run test executable in 'EXECUTABLE', with default
 arguments 'DEFAULTARGS'.
 
+The --with-color option needs the "rudolf" nose plugin. See:
+http://pypi.python.org/pypi/rudolf/
+
 Originally by Jeff Winkler, http://jeffwinkler.net
 Forked from wkral http://github.com/wkral/Nosy
 """
