@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import with_statement
+
 import logging
 
 from gensim.corpora.dictionary import Dictionary
@@ -63,11 +65,10 @@ class TextCorpus(Dictionary):
         """
 
         logger.info("saving dictionary mapping to %s" % fname)
-        fout = open(fname, 'w')
-        for token, tokenId in sorted(self.token2id.iteritems()):
-            fout.write("%i\t%s\t%i\n" % (tokenId, token,
-                self.docFreq[tokenId]))
-        fout.close()
+        with open(fname, 'w') as fout:
+            for token, tokenId in sorted(self.token2id.iteritems()):
+                fout.write("%i\t%s\t%i\n" % (tokenId, token,
+                    self.docFreq[tokenId]))
 
     @staticmethod
     def loadFromText(fname):
@@ -80,13 +81,15 @@ class TextCorpus(Dictionary):
         TODO: perhaps use csv module from the python std for this.
         """
         result = TextCorpus()
-        for lineNo, line in enumerate(open(fname)):
-            cols = line[:-1].split('\t')
-            if len(cols) == 3:
-                wordId, word, docFreq = cols
-            else:
-                raise ValueError("invalid line in dictionary file %s: %s" % (fname, line.strip()))
-            wordId = int(wordId)
-            result.token2id[word] = wordId
-            result.docFreq[wordId] = int(docFreq)
+        with open(fname) as f:
+            for lineNo, line in enumerate(f):
+                cols = line[:-1].split('\t')
+                if len(cols) == 3:
+                    wordId, word, docFreq = cols
+                else:
+                    raise ValueError("invalid line in dictionary file %s: %s" % (fname, line.strip()))
+                wordId = int(wordId)
+                result.token2id[word] = wordId
+                result.docFreq[wordId] = int(docFreq)
         return result
+
