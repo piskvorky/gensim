@@ -24,6 +24,11 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
         level=logging.WARNING)
 
 
+def get_tmpfile(suffix=None):
+    """docstring for get_tmpfile"""
+    return os.path.join(tempfile.gettempdir(), suffix)
+
+
 class TestTextCorpus(unittest.TestCase):
     def setUp(self):
         self.texts = [
@@ -37,20 +42,18 @@ class TestTextCorpus(unittest.TestCase):
                 ['graph', 'minors', 'trees'],
                 ['graph', 'minors', 'survey']]
 
-        self.tmpdir = tempfile.gettempdir()
-
         # delete some files to make sure we don't use old files
         try:
-            os.remove(os.path.join(self.tmpdir, 'tc_test.cpickle'))
-            os.remove(os.path.join(self.tmpdir, 'tc_test_wordids.txt'))
+            os.remove(get_tmpfile('tc_test.cpickle'))
+            os.remove(get_tmpfile('tc_test_wordids.txt'))
         except OSError:
             pass
 
     def tearDown(self):
         # delete some files to make sure we don't use old files
         try:
-            os.remove(os.path.join(self.tmpdir, 'tc_test.cpickle'))
-            os.remove(os.path.join(self.tmpdir, 'tc_test_wordids.txt'))
+            os.remove(get_tmpfile('tc_test.cpickle'))
+            os.remove(get_tmpfile('tc_test_wordids.txt'))
         except OSError:
             pass
 
@@ -81,11 +84,11 @@ class TestTextCorpus(unittest.TestCase):
     def test_save_load_ability(self):
         """ Make sure we can save and load (un/pickle) the object. """
         tc = TextCorpus(self.texts)
-        tmpfile = os.path.join(tempfile.gettempdir(), 'tc_test.cpickle')
-        tc.save(tmpfile)
+        tmpf = get_tmpfile('tc_test.cpickle')
+        tc.save(tmpf)
 
-        tc2 = SaveLoad.load(tmpfile)
-        tc2.load(tmpfile)
+        tc2 = SaveLoad.load(tmpf)
+        tc2.load(tmpf)
 
         self.assertEqual(len(tc), len(tc2))
         self.assertEqual(tc.id2word, tc2.id2word)
@@ -95,21 +98,21 @@ class TestTextCorpus(unittest.TestCase):
         """ TC can be saved as textfile and loaded again from textfile.
         """
         tc = TextCorpus(self.texts)
-        tmpfile = os.path.join(tempfile.gettempdir(), 'tc_test')
-        tc.saveAsText(tmpfile)
+        tmpf = get_tmpfile('tc_test')
+        tc.saveAsText(tmpf)
         # does the file exists
-        self.assertTrue(os.path.exists(tmpfile + "_wordids.txt"))
+        self.assertTrue(os.path.exists(tmpf + "_wordids.txt"))
 
-        tc_loaded = TextCorpus.loadFromText(os.path.join(self.tmpdir,
-                'tc_test_wordids.txt'))
-        print tc_loaded
+        tc_loaded = TextCorpus.loadFromText(get_tmpfile('tc_test_wordids.txt'))
         self.assertNotEqual(tc_loaded, None)
         self.assertEqual(tc_loaded.token2id, tc.token2id)
         self.assertEqual(tc_loaded.id2token, tc.id2token)
 
-    def test_saveAsMM(self):
-        """docstring for test_saveAsMM"""
-        #self.assertTrue(False)
+    #def test_saveAsMatrixMarket(self):
+        #tc = TextCorpus(self.texts)
+        #tmpf = get_tmpfile('tc_test')
+        #tc.saveAsMatrixMarket(tmpf)
+        #self.assertTrue(os.path.exists(tmpf + '_bow.mm'))
 
 
 

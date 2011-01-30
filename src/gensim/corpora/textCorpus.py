@@ -20,13 +20,10 @@ class TextCorpus(Dictionary):
 
 
     We can save the TextCorpus in the following formats:
-        * entire TextCorpus as .cpickle [DONE]
-        * TextCorpus as human readable text format
+        * entire TextCorpus as .cpickle: save()/load() [DONE]
+        * TextCorpus as human readable text format:
+          saveAsText()/loadFromText() [DONE]
         * TODO
-        * mm
-        * bow
-        * wordids
-        * idword
     """
 
     def __init__(self, documents=None):
@@ -42,33 +39,35 @@ class TextCorpus(Dictionary):
         """
         Store the corpus to disk, in a human-readable text format.
 
-        This actually saves two files:
+        Token to integer mapping, as a text file `fname_wordids.txt`.
 
-        1. Token to integer mapping, as a text file `fname_wordids.txt`.
-        """
-        self._saveTC(fname + '_wordids.txt')
-
-    def saveAsMatrixMarket(self, fname):
-        """
-        Document-term co-occurence frequency counts (bag-of-words), as
-        a Matrix Market file `fname_bow.mm`.
-        """
-        matutils.MmWriter.writeCorpus(fname + '_bow.mm', self,
-               progressCnt=10000)
-
-    def _saveTC(self, fname):
-        """
         Store id->word mapping to a file, in format:
         `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`.
 
         TODO: perhaps use csv module from the python std for this.
         """
-
         logger.info("saving dictionary mapping to %s" % fname)
+        fname += '_wordids.txt'
         with open(fname, 'w') as fout:
             for token, tokenId in sorted(self.token2id.iteritems()):
                 fout.write("%i\t%s\t%i\n" % (tokenId, token,
                     self.docFreq[tokenId]))
+
+    #def saveAsMatrixMarket(self, fname):
+        #"""
+        #Document-term co-occurence frequency counts (bag-of-words), as
+        #a Matrix Market file `fname_bow.mm`.
+        #"""
+        ##tmp = self._asdict()
+        #print type(self)
+        #matutils.MmWriter.writeCorpus(fname + '_bow.mm', self,
+               #progressCnt=10000)
+
+    #def _asdict(self):
+        #result = {}
+        #for key, word in self.id2word.items():
+            #result[int(key)] = word # docFreq not used
+        #return result
 
     @staticmethod
     def loadFromText(fname):
@@ -92,4 +91,3 @@ class TextCorpus(Dictionary):
                 result.token2id[word] = wordId
                 result.docFreq[wordId] = int(docFreq)
         return result
-
