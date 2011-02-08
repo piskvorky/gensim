@@ -63,7 +63,7 @@
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="bleicorpus.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">corpora.bleicorpus</span></tt> &#8211; Corpus in Blei&#8217;s LDA-C format</a></p>
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">corpora.bleicorpus</span></tt> &#8211; Corpus in Blei&#8217;s LDA-C format</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="dmlcorpus.html"
                         title="next chapter"><tt class="docutils literal"><span class="pre">corpora.dmlcorpus</span></tt> &#8211; Corpus in DML-CZ format</a></p>
@@ -106,7 +106,7 @@ with newly encountered words and their ids.</p>
 <dt id="gensim.corpora.dictionary.Dictionary.addDocuments">
 <tt class="descname">addDocuments</tt><big>(</big><em>documents</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.addDocuments" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build dictionary from a collection of documents. Each document is a list 
-of tokens (ie. <strong>tokenized and normalized</strong> utf-8 encoded strings).</p>
+of tokens (<strong>tokenized and normalized</strong> utf-8 encoded strings).</p>
 <p>This is only a convenience wrapper for calling <cite>doc2bow</cite> on each document
 with <cite>allowUpdate=True</cite>.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">Dictionary</span><span class="o">.</span><span class="n">fromDocuments</span><span class="p">([</span><span class="s">&quot;máma mele maso&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="s">&quot;ema má máma&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">()])</span>
@@ -124,7 +124,7 @@ with <cite>allowUpdate=True</cite>.</p>
 <p>If <cite>allowUpdate</cite> is set, then also update of dictionary in the process: create ids 
 for new words. At the same time, update document frequencies &#8211; for 
 each word appearing in this document, increase its self.docFreq by one.</p>
-<p>If <cite>allowUpdate</cite> is <strong>not</strong> set, this function is <cite>const</cite>, ie. read-only.</p>
+<p>If <cite>allowUpdate</cite> is <strong>not</strong> set, this function is <cite>const</cite>, i.e. read-only.</p>
 </dd></dl>
 
 <dl class="method">
@@ -161,7 +161,7 @@ selected <cite>goodIds</cite> in the mapping and remove the rest.</p>
 <dt id="gensim.corpora.dictionary.Dictionary.rebuildDictionary">
 <tt class="descname">rebuildDictionary</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.rebuildDictionary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign new word ids to all words.</p>
-<p>This is done to make the ids more compact, ie. after some tokens have 
+<p>This is done to make the ids more compact, e.g. after some tokens have 
 been removed via <a class="reference internal" href="#gensim.corpora.dictionary.Dictionary.filterTokens" title="gensim.corpora.dictionary.Dictionary.filterTokens"><tt class="xref py py-func docutils literal"><span class="pre">filterTokens()</span></tt></a> and there are gaps in the id series.
 Calling this method will remove the gaps.</p>
 </dd></dl>
@@ -206,7 +206,7 @@ Calling this method will remove the gaps.</p>
     </div>
     <div class="footer">
         &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jan 13, 2011.
+      Last updated on Feb 04, 2011.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>

@@ -168,9 +168,7 @@ If you need your results even faster, see the tutorial on <a class="reference in
 preparing the TF-IDF corpus, which took 15h. <a class="footnote-reference" href="#id4" id="id2">[2]</a></p>
 <p>The algorithm used in <cite>gensim</cite> only needs to see each input document once, so it
 is suitable for environments where the documents come as a non-repeatable stream,
-or where the cost of storing/iterating over the corpus multiple times is too high.
-Under the hood, it uses a multi-pass <a class="reference internal" href="models/lsimodel.html#gensim.models.lsimodel.stochasticSvd" title="gensim.models.lsimodel.stochasticSvd"><tt class="xref py py-func docutils literal"><span class="pre">gensim.models.lsimodel.stochasticSvd()</span></tt></a>
-algorithm to improve performance.</p>
+or where the cost of storing/iterating over the corpus multiple times is too high.</p>
 </div>
 <div class="section" id="latent-dirichlet-allocation">
 <h2>Latent Dirichlet Allocation<a class="headerlink" href="#latent-dirichlet-allocation" title="Permalink to this headline">¶</a></h2>
@@ -240,7 +238,7 @@ By the way, improvements to the Wiki markup parsing code are welcome :-)</p>
     </div>
     <div class="footer">
         &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jan 13, 2011.
+      Last updated on Feb 04, 2011.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>

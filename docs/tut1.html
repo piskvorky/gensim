@@ -147,17 +147,17 @@ as well as words that only appear once in the corpus:</p>
 <span class="go"> [&#39;graph&#39;, &#39;minors&#39;, &#39;survey&#39;]]</span>
 </pre></div>
 </div>
-<p>Your way of processing the documents will likely vary; here, we only split on whitespace
-to tokenize, followed by lowercasing each word. In fact, we use this particular
+<p>Your way of processing the documents will likely vary; here, I only split on whitespace
+to tokenize, followed by lowercasing each word. In fact, I use this particular
 (simplistic and inefficient) setup to mimick the experiment done in Deerwester et al.&#8217;s
 original LSA article <a class="footnote-reference" href="#id3" id="id1">[1]</a>.</p>
-<p>The ways to process documents are so varied and application- and language-dependent that we
+<p>The ways to process documents are so varied and application- and language-dependent that I
 decided to <em>not</em> constrain them by any interface. Instead, a document is represented
 by the features extracted from it, not by its &#8220;surface&#8221; string form: how you get to
-the features is up to you. Below we describe one common, general-purpose approach (called
+the features is up to you. Below I describe one common, general-purpose approach (called
 <em class="dfn">bag-of-words</em>), but keep in mind that different application domains call for
 different features, and, as always, it&#8217;s <a class="reference external" href="http://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out">garbage in, garbage out</a>...</p>
-<p>To convert documents to vectors, we will use a document representation called
+<p>To convert documents to vectors, we&#8217;ll use a document representation called
 <a class="reference external" href="http://en.wikipedia.org/wiki/Bag_of_words">bag-of-words</a>. In this representation,
 each document is represented by one vector where each vector element represents
 a question-answer pair, in the style of:</p>
@@ -276,7 +276,7 @@ just load a document stream using one format and immediately save it in another 
 Adding new formats is dead easy, check out the <a class="reference external" href="http://my-trac.assembla.com/gensim/browser/trunk/src/gensim/corpora/svmlightcorpus.py">code for the SVMlight corpus</a> for an example.</p>
 <hr class="docutils" />
 <p>For a complete reference (Want to prune the dictionary to a smaller size?
-Convert between corpora and NumPy arrays?), see the <a class="reference internal" href="apiref.html"><em>API documentation</em></a>.
+Convert between corpora and NumPy/SciPy arrays?), see the <a class="reference internal" href="apiref.html"><em>API documentation</em></a>.
 Or continue to the next tutorial on <a class="reference internal" href="tut2.html"><em>Topics and Transformations</em></a>.</p>
 <table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -318,7 +318,7 @@ Or continue to the next tutorial on <a class="reference internal" href="tut2.htm
     </div>
     <div class="footer">
         &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jan 13, 2011.
+      Last updated on Feb 04, 2011.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>

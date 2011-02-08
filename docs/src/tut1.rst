@@ -58,19 +58,19 @@ as well as words that only appear once in the corpus:
  ['graph', 'minors', 'trees'], 
  ['graph', 'minors', 'survey']]
 
-Your way of processing the documents will likely vary; here, we only split on whitespace
-to tokenize, followed by lowercasing each word. In fact, we use this particular 
+Your way of processing the documents will likely vary; here, I only split on whitespace
+to tokenize, followed by lowercasing each word. In fact, I use this particular 
 (simplistic and inefficient) setup to mimick the experiment done in Deerwester et al.'s 
 original LSA article [1]_.
 
-The ways to process documents are so varied and application- and language-dependent that we
+The ways to process documents are so varied and application- and language-dependent that I
 decided to *not* constrain them by any interface. Instead, a document is represented
 by the features extracted from it, not by its "surface" string form: how you get to
-the features is up to you. Below we describe one common, general-purpose approach (called 
+the features is up to you. Below I describe one common, general-purpose approach (called 
 :dfn:`bag-of-words`), but keep in mind that different application domains call for 
 different features, and, as always, it's `garbage in, garbage out <http://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out>`_...
 
-To convert documents to vectors, we will use a document representation called 
+To convert documents to vectors, we'll use a document representation called 
 `bag-of-words <http://en.wikipedia.org/wiki/Bag_of_words>`_. In this representation, 
 each document is represented by one vector where each vector element represents
 a question-answer pair, in the style of:
@@ -201,7 +201,7 @@ Adding new formats is dead easy, check out the `code for the SVMlight corpus
 -------------
 
 For a complete reference (Want to prune the dictionary to a smaller size? 
-Convert between corpora and NumPy arrays?), see the :doc:`API documentation <apiref>`.
+Convert between corpora and NumPy/SciPy arrays?), see the :doc:`API documentation <apiref>`.
 Or continue to the next tutorial on :doc:`tut2`.
 
 

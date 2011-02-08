@@ -4,22 +4,21 @@
 Introduction 
 ============
 
-Gensim is a Python framework designed to help make
-the conversion of natural language texts to the Vector Space Model as simple and 
-natural as possible.
+Gensim is a Python framework designed to automatically extract semantic
+topics from documents, as naturally and painlessly as possible.
 
 Gensim contains algorithms for unsupervised learning from raw, unstructured digital texts,
 such as **Latent Semantic Analysis**, **Latent Dirichlet Allocation** or **Random Projections**.
-These algorithms discover hidden (*latent*) corpus structure.
-Once found, documents can be succinctly expressed in terms of this structure, queried for topical similarity and so on.
+These algorithms discover hidden (*latent*) semantic structure, based on word 
+co-occurrence patterns within a corpus of training documents.
+
+Once these statistical patterns are found, any documents (not just those from the training corpus) 
+can be succinctly expressed in the new, semantic representation, queried for topical similarity 
+against other documents and so on.
 
 If the previous paragraphs left you confused, you can read more about the `Vector 
 Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised 
-document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ at Wikipedia.
-
-.. note::
-  Gensim's target audience is the NLP research community and interested general public; 
-  gensim is not meant to be a production tool for commercial environments.
+document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
 
 
 .. _design:
@@ -27,24 +26,24 @@ document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ at W
 Design
 ------------------
  
-`gensim` includes the following features:
+`gensim` offers the following features:
 
-* **Memory independence** -- there is no need for the whole text corpus (or any 
-  intermediate term-document matrices) to reside fully in RAM at any one time.
-* Implementations for several popular vector space algorithms, 
-  including **Tf-Idf**, **Latent Semantic Analysis** (LSA/LSI via `incremental SVD <http://en.wikipedia.org/wiki/Singular_value_decomposition>`_), 
-  incremental **Latent Dirichlet Allocation (LDA)** or **Random Projection**; adding new ones is easy (really!).
+* **Memory independence** -- there is no need for the whole training corpus to 
+  reside fully in RAM at any one time (can process large, web-scale corpora).
+* Efficient implementations for several popular vector space algorithms, 
+  including **Tf-Idf**, distributed incremental **Latent Semantic Analysis**, 
+  distributed incremental **Latent Dirichlet Allocation (LDA)** or **Random Projection**; adding new ones is easy (really!).
 * I/O wrappers and converters around **several popular data formats**.
-* **Similarity queries** across documents in their latent, topical representation.
+* **Similarity queries** for documents in their latent, topical representation.
  
 Creation of `gensim` was motivated by a perceived lack of available, scalable software 
 frameworks that realize topic modelling, and/or their overwhelming internal complexity (hail java!).
 You can read more about the motivation in our `LREC 2010 workshop paper <http://nlp.fi.muni.cz/projekty/gensim/lrec2010_final.pdf>`_.
-If you want to cite `gensim` in your own work, please refer to that article.
+If you want to cite `gensim` in your own work, please refer to that article (`BibTeX <http://nlp.fi.muni.cz/projekty/gensim/bibtex_gensim.bib>`_).
 
 The **principal design objectives** behind `gensim` are:
 
-1. Straightforward interfaces and extremely low API learning curve for developers. Good for prototyping.
+1. Straightforward interfaces and low API learning curve for developers. Good for prototyping.
 2. Memory independence with respect to the size of the input corpus; all intermediate 
    steps and algorithms operate in a streaming fashion, accessing one document 
    at a time.
@@ -93,7 +92,7 @@ The whole gensim package revolves around the concepts of :term:`corpus`, :term:`
         representation of a document becomes a series of pairs like ``(1, 0.0), (2, 2.0), (3, 5.0)``.
         If we know all the questions in advance, we may leave them implicit 
         and simply write ``(0.0, 2.0, 5.0)``.
-        This sequence of answers can be thought of as a high-dimensional (in our case 3-dimensional)
+        This sequence of answers can be thought of as a high-dimensional (in this case 3-dimensional)
         *vector*. For practical purposes, only questions to which the answer is (or
         can be converted to) a single real number are allowed. 
         
@@ -112,8 +111,8 @@ The whole gensim package revolves around the concepts of :term:`corpus`, :term:`
         
         Gensim is specific in that it doesn't prescribe any specific corpus format;
         a corpus is anything that, when iterated over, successively yields these sparse vectors.
-        For example, `set([(2, 2.0), (3, 5.0)], ((0, -1.0), (3, -1.0)))` is a trivial 
-        corpus of two documents, each with two non-zero features.
+        For example, `set([(2, 2.0), (3, 5.0)], ([0, -1.0], [3, -1.0]))` is a trivial 
+        corpus of two documents, each with two non-zero `feature-answer` pairs.
          
         
     
@@ -124,7 +123,7 @@ The whole gensim package revolves around the concepts of :term:`corpus`, :term:`
         still vectors -- they only differ in what the questions and answers are.
         The transformation is automatically learned from the traning :term:`corpus`, without human
         supervision, and in hopes that the final document representation will be more compact
-        and more useful, with similar documents having similar representations.
+        and more useful: with similar documents having similar representations.
  
 .. seealso::
 

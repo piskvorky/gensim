@@ -76,9 +76,7 @@ preparing the TF-IDF corpus, which took 15h. [2]_
 
 The algorithm used in `gensim` only needs to see each input document once, so it 
 is suitable for environments where the documents come as a non-repeatable stream, 
-or where the cost of storing/iterating over the corpus multiple times is too high. 
-Under the hood, it uses a multi-pass :func:`gensim.models.lsimodel.stochasticSvd` 
-algorithm to improve performance.
+or where the cost of storing/iterating over the corpus multiple times is too high.
 
 
 Latent Dirichlet Allocation

@@ -63,10 +63,10 @@
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="interfaces.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces</a></p>
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="matutils.html"
-                        title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -103,8 +103,8 @@ is a waste of memory.</p>
 <tt class="descname">keys</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.utils.FakeDict.keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override the dict.keys() function, which is used to determine the maximum 
 internal id of a corpus = the vocabulary dimensionality.</p>
-<p>HACK: To avoid materializing the whole range(0, self.numTerms), we 
-return [self.numTerms - 1] only.</p>
+<p>HACK: To avoid materializing the whole <cite>range(0, self.numTerms)</cite>, this returns 
+<cite>[self.numTerms - 1]</cite> only.</p>
 </dd></dl>
 
 </dd></dl>
@@ -114,12 +114,12 @@ return [self.numTerms - 1] only.</p>
 <em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">RepeatCorpus</tt><big>(</big><em>corpus</em>, <em>reps</em><big>)</big><a class="headerlink" href="#gensim.utils.RepeatCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used in the tutorial on distributed computing and likely not useful anywhere else.</p>
 <p>Wrap a <cite>corpus</cite> as another corpus of length <cite>reps</cite>. This is achieved by
-repeating documents from <cite>corpus</cite> over and over again, until requested
-length is reached. Repetition is done on-the-fly=efficiently, via 
-itertools.</p>
+repeating documents from <cite>corpus</cite> over and over again, until the requested
+length <cite>len(result)==reps</cite> is reached. Repetition is done 
+on-the-fly=efficiently, via <cite>itertools</cite>.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span> <span class="p">[]]</span> <span class="c"># 2 documents</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">RepeatCorpus</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span> <span class="c"># repeat 2.5 times to get 5 documents</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="p">[[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span> <span class="p">[],</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span> <span class="p">[],</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)]]</span>
+<span class="go">[[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)]]</span>
 </pre></div>
 </div>
 <dl class="classmethod">
@@ -158,11 +158,26 @@ attributes, such as lambda functions etc.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.utils.chunkize">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">chunkize</tt><big>(</big><em>corpus</em>, <em>chunks</em><big>)</big><a class="headerlink" href="#gensim.utils.chunkize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split a stream of values into smaller chunks.
+Each chunk is of length <cite>chunks</cite>, except the last one which may be smaller. 
+A once-only input stream (<cite>corpus</cite> from a generator) is ok.</p>
+<p>Chunking is done efficiently with itertools, so that only one chunk at a time
+is realized in memory (the whole <cite>corpus</cite> may be larger than RAM).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunkize</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="mi">4</span><span class="p">):</span> <span class="k">print</span> <span class="n">chunk</span>
+<span class="go">[0, 1, 2, 3]</span>
+<span class="go">[4, 5, 6, 7]</span>
+<span class="go">[8, 9]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.utils.deaccent">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">deaccent</tt><big>(</big><em>text</em><big>)</big><a class="headerlink" href="#gensim.utils.deaccent" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove accentuation from the given string.</p>
-<p>Input text is either a unicode string or utf8 encoded bytestring. Return
-input string with accents removed, as unicode.</p>
+<dd><p>Remove accentuation from the given string. Input text is either a unicode string or utf8 encoded bytestring.</p>
+<p>Return input string with accents removed, as unicode.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">deaccent</span><span class="p">(</span><span class="s">&quot;Šéf chomutovských komunistů dostal poštou bílý prášek&quot;</span><span class="p">)</span>
 <span class="go">u&#39;Sef chomutovskych komunistu dostal postou bily prasek&#39;</span>
 </pre></div>
@@ -226,7 +241,7 @@ result is forcefully defined as <cite>is_corpus=False</cite>.</p>
 <dl class="function">
 <dt id="gensim.utils.synchronous">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">synchronous</tt><big>(</big><em>tlockname</em><big>)</big><a class="headerlink" href="#gensim.utils.synchronous" title="Permalink to this definition">¶</a></dt>
-<dd><p>A decorator to place an instance based lock around a method.</p>
+<dd><p>A decorator to place an instance-based lock around a method.</p>
 <p>Adapted from <a class="reference external" href="http://code.activestate.com/recipes/577105-synchronization-decorator-for-class-methods/">http://code.activestate.com/recipes/577105-synchronization-decorator-for-class-methods/</a></p>
 </dd></dl>
 
@@ -276,7 +291,7 @@ characters (no digits!).</p>
     </div>
     <div class="footer">
         &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jan 13, 2011.
+      Last updated on Feb 04, 2011.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>

@@ -108,16 +108,17 @@ order, and obtain the final answer to the query `"Human computer interaction"`:
 (6, -0.1063926), # The intersection graph of paths in trees
 (5, -0.12416792)] # The generation of random binary unordered trees
 
-(We added the original documents in their "string form" to the output comments, to 
+(I added the original documents in their "string form" to the output comments, to 
 improve clarity.)
 
 The thing to note here is that documents no. 2 (``"The EPS user interface management system"``)
 and 4 (``"Relation of user perceived response time to error measurement"``) would never be returned by
 a standard boolean fulltext search, because they do not share any common words with ``"Human 
 computer interaction"``. However, after applying LSI, we can observe that both of 
-them received quite high similarity scores, which corresponds better to our intuition of
+them received quite high similarity scores (no. 2 is actually the most similar!), 
+which corresponds better to our intuition of
 them sharing a "computer-human" related topic with the query. In fact, this semantic
-generalization is the reason why we apply transformations and do topic modeling 
+generalization is the reason why we apply transformations and do topic modelling 
 in the first place.
 
 

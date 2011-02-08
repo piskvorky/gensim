@@ -201,15 +201,16 @@ order, and obtain the final answer to the query <cite>&#8220;Human computer inte
 <span class="go">(5, -0.12416792)] # The generation of random binary unordered trees</span>
 </pre></div>
 </div>
-<p>(We added the original documents in their &#8220;string form&#8221; to the output comments, to
+<p>(I added the original documents in their &#8220;string form&#8221; to the output comments, to
 improve clarity.)</p>
 <p>The thing to note here is that documents no. 2 (<tt class="docutils literal"><span class="pre">&quot;The</span> <span class="pre">EPS</span> <span class="pre">user</span> <span class="pre">interface</span> <span class="pre">management</span> <span class="pre">system&quot;</span></tt>)
 and 4 (<tt class="docutils literal"><span class="pre">&quot;Relation</span> <span class="pre">of</span> <span class="pre">user</span> <span class="pre">perceived</span> <span class="pre">response</span> <span class="pre">time</span> <span class="pre">to</span> <span class="pre">error</span> <span class="pre">measurement&quot;</span></tt>) would never be returned by
 a standard boolean fulltext search, because they do not share any common words with <tt class="docutils literal"><span class="pre">&quot;Human</span>
 <span class="pre">computer</span> <span class="pre">interaction&quot;</span></tt>. However, after applying LSI, we can observe that both of
-them received quite high similarity scores, which corresponds better to our intuition of
+them received quite high similarity scores (no. 2 is actually the most similar!),
+which corresponds better to our intuition of
 them sharing a &#8220;computer-human&#8221; related topic with the query. In fact, this semantic
-generalization is the reason why we apply transformations and do topic modeling
+generalization is the reason why we apply transformations and do topic modelling
 in the first place.</p>
 </div>
 </div>
@@ -260,7 +261,7 @@ and to facilitate prototyping of new algorithms for NLP researchers.</p>
     </div>
     <div class="footer">
         &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jan 13, 2011.
+      Last updated on Feb 04, 2011.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>

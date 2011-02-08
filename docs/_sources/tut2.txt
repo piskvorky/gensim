@@ -23,7 +23,7 @@ as a stream of vectors. To continue, let's fire up gensim and use that corpus:
 >>> print corpus
 MmCorpus(9 documents, 12 features, 28 non-zero entries)
 
-In this tutorial, we will show how to transform documents from one vector representation
+In this tutorial, I will show how to transform documents from one vector representation
 into another. This process serves two goals:
 
 1. To bring out hidden structure in the corpus, discover relationships between
@@ -77,16 +77,16 @@ Or to apply a transformation to a whole corpus:
 
 In this particular case, we are transforming the same corpus that we used 
 for training, but this is only incidental. Once the transformation model has been initialized,
-it can be used on any vectors (provided they come from the correct vector space, of course),
+it can be used on any vectors (provided they come from the same vector space, of course),
 even if they were not used in the training corpus at all. This is achieved by a process called
 folding-in for LSA, by topic inference for LDA etc.
 
 .. note::
   Calling ``model[corpus]`` only creates a wrapper around the old ``corpus``
   document stream -- actual conversions are done on-the-fly, during document iteration. 
-  This is because conversion at the time of calling ``corpus2 = model[corpus]`` would mean
-  storing the result in main memory, which contradicts gensim's objective of memory-indepedence.
-  If you will be iterating over the transformed ``corpus2`` multiple times, and the 
+  We cannot convert the entire corpus at the time of calling ``corpus_transformed = model[corpus]``, 
+  because that would mean storing the result in main memory, and that contradicts gensim's objective of memory-indepedence.
+  If you will be iterating over the transformed ``corpus_transformed`` multiple times, and the 
   transformation is costly, :ref:`serialize the resulting corpus to disk first <corpus-formats>` and continue
   using that.
 
@@ -166,7 +166,7 @@ Gensim implements several popular Vector Space Model algorithms:
   as they arrive, while using the computed transformation model as read-only in the meanwhile!
   
   >>> model.addDocuments(another_tfidf_corpus) # now LSI has been trained on tfidf_corpus + another_tfidf_corpus
-  >>> lsi_vec = model[tfidf_vec] # convert a new document into the LSI space, without affecting the model 
+  >>> lsi_vec = model[tfidf_vec] # convert some new document into the LSI space, without affecting the model 
   >>> ...
   >>> model.addDocuments(more_documents) # tfidf_corpus + another_tfidf_corpus + more_documents
   >>> lsi_vec = model[tfidf_vec]
@@ -176,8 +176,10 @@ Gensim implements several popular Vector Space Model algorithms:
   LSI gradually "forget" old observations in infinite streams and how to tweak parameters
   affecting speed vs. memory footprint vs. numerical precision of the algorithm.
   
-  `gensim` also contains an implementation of the stochastic multi-pass algorithm from 
-  Halko et al. [4]_. This algorithm is used internally by `gensim` to accelerate SVD computations.
+  `gensim` uses a novel online incremental streamed distributed training algorithm (quite a mouthful!), 
+  which I published in [5]_. `gensim` also executes a stochastic multi-pass algorithm 
+  from Halko et al. [4]_ internally, to accelerate in-core part 
+  of the computations.
   See also :doc:`wiki` for further speed-ups by distributing the computation across 
   a cluster of computers.
 
@@ -190,28 +192,33 @@ Gensim implements several popular Vector Space Model algorithms:
 
 * `Latent Dirichlet Allocation, LDA <http://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
   is yet another transformation from bag-of-words counts into a topic space of lower 
-  dimensionality. LDA is **much** slower than the other algorithms,
-  so we are currently looking into ways of making it faster (see eg. [2]_, [3]_). If you 
-  could help, `let us know <mailto:radimrehurek@seznam.cz>`_!
-
-  >>> model = ldamodel.LdaModel(bow_corpus, id2word=dictionary.id2word, numTopics=200)
+  dimensionality. LDA is a probabilistic extension of LSA (also called multinomial PCA), 
+  so LDA's topics can be interpreted as probability distributions over words. These distributions are,
+  just like with LSA, inferred automatically from a training corpus. Documents
+  are in turn interpreted as a (soft) mixture of these topics (again, just like with LSA).
+   
+  >>> model = ldamodel.LdaModel(bow_corpus, id2word=dictionary.id2word, numTopics=100)
+  
+  `gensim` uses a fast implementation of online LDA parameter estimation based on [2]_, 
+  modified to run in :doc:`distributed mode <distributed>` on a cluster of computers.
 
 Adding new :abbr:`VSM (Vector Space Model)` transformations (such as different weighting schemes) is rather trivial;
 see the :doc:`API reference <apiref>` or directly the Python code for more info and examples.
 
 It is worth repeating that these are all unique, **incremental** implementations, 
 which do not require the whole training corpus to be present in main memory all at once.
-With memory taken care of, we are now implementing :doc:`distributed`, 
+With memory taken care of, I am now improving :doc:`distributed`, 
 to improve CPU efficiency, too. 
-If you feel you could contribute, please `let us know <mailto:radimrehurek@seznam.cz>`_! 
+If you feel you could contribute (by testing, providing use-cases or even, gasp!, code), 
+please `let me know <mailto:radimrehurek@seznam.cz>`_. 
 
 
 ------
 
-.. [1] Bradford, R.B., 2008. An empirical study of required dimensionality for large-scale latent semantic indexing applications.
+.. [1] Bradford. 2008. An empirical study of required dimensionality for large-scale latent semantic indexing applications.
 
-.. [2] Asuncion, A., 2009. On Smoothing and Inference for Topic Models.
-
-.. [3] Yao, Mimno, McCallum, 2009. Efficient Methods for Topic Model Inference on Streaming Document Collections.
+.. [2] Hoffman, Blei, Bach. 2010. Online learning for Latent Dirichlet Allocation.
 
 .. [4] Halko, Martinsson, Tropp. 2009. Finding structure with randomness.
+
+.. [5] Řehůřek. 2011. Subspace tracking for Latent Semantic Analysis.

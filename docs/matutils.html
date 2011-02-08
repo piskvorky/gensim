@@ -63,10 +63,10 @@
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="utils.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">utils</span></tt> &#8211; Various utility functions</a></p>
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">utils</span></tt> &#8211; Various utility functions</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="corpora/bleicorpus.html"
-                        title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">corpora.bleicorpus</span></tt> &#8211; Corpus in Blei&#8217;s LDA-C format</a></p>
+                        title="next chapter"><tt class="docutils literal"><span class="pre">corpora.bleicorpus</span></tt> &#8211; Corpus in Blei&#8217;s LDA-C format</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -179,9 +179,9 @@ will be initialized with zeros.</p>
 <dl class="function">
 <dt id="gensim.matutils.qr_destroy">
 <tt class="descclassname">gensim.matutils.</tt><tt class="descname">qr_destroy</tt><big>(</big><em>la</em><big>)</big><a class="headerlink" href="#gensim.matutils.qr_destroy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return QR decomposition of la[0]. Content of <cite>la</cite> gets destroyed in the process.</p>
-<p>Using this function should be less memory intense than calling qr(la[0]) directly,
-because the memory used in la[0] is reclaimed earlier.</p>
+<dd><p>Return QR decomposition of <cite>la[0]</cite>. Content of <cite>la</cite> gets destroyed in the process.</p>
+<p>Using this function should be less memory intense than calling <cite>scipy.linalg.qr(la[0])</cite>,
+because the memory used in <cite>la[0]</cite> is reclaimed earlier.</p>
 </dd></dl>
 
 <dl class="function">
@@ -232,7 +232,7 @@ output will be a numpy array.</p>
     </div>
     <div class="footer">
         &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jan 13, 2011.
+      Last updated on Feb 04, 2011.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>

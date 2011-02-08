@@ -98,40 +98,37 @@
             
   <div class="section" id="introduction">
 <span id="intro"></span><h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<p>Gensim is a Python framework designed to help make
-the conversion of natural language texts to the Vector Space Model as simple and
-natural as possible.</p>
+<p>Gensim is a Python framework designed to automatically extract semantic
+topics from documents, as naturally and painlessly as possible.</p>
 <p>Gensim contains algorithms for unsupervised learning from raw, unstructured digital texts,
 such as <strong>Latent Semantic Analysis</strong>, <strong>Latent Dirichlet Allocation</strong> or <strong>Random Projections</strong>.
-These algorithms discover hidden (<em>latent</em>) corpus structure.
-Once found, documents can be succinctly expressed in terms of this structure, queried for topical similarity and so on.</p>
+These algorithms discover hidden (<em>latent</em>) semantic structure, based on word
+co-occurrence patterns within a corpus of training documents.</p>
+<p>Once these statistical patterns are found, any documents (not just those from the training corpus)
+can be succinctly expressed in the new, semantic representation, queried for topical similarity
+against other documents and so on.</p>
 <p>If the previous paragraphs left you confused, you can read more about the <a class="reference external" href="http://en.wikipedia.org/wiki/Vector_space_model">Vector
 Space Model</a> and <a class="reference external" href="http://en.wikipedia.org/wiki/Latent_semantic_indexing">unsupervised
-document analysis</a> at Wikipedia.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Gensim&#8217;s target audience is the NLP research community and interested general public;
-gensim is not meant to be a production tool for commercial environments.</p>
-</div>
+document analysis</a> on Wikipedia.</p>
 <div class="section" id="design">
 <span id="id1"></span><h2>Design<a class="headerlink" href="#design" title="Permalink to this headline">¶</a></h2>
-<p><cite>gensim</cite> includes the following features:</p>
+<p><cite>gensim</cite> offers the following features:</p>
 <ul class="simple">
-<li><strong>Memory independence</strong> &#8211; there is no need for the whole text corpus (or any
-intermediate term-document matrices) to reside fully in RAM at any one time.</li>
-<li>Implementations for several popular vector space algorithms,
-including <strong>Tf-Idf</strong>, <strong>Latent Semantic Analysis</strong> (LSA/LSI via <a class="reference external" href="http://en.wikipedia.org/wiki/Singular_value_decomposition">incremental SVD</a>),
-incremental <strong>Latent Dirichlet Allocation (LDA)</strong> or <strong>Random Projection</strong>; adding new ones is easy (really!).</li>
+<li><strong>Memory independence</strong> &#8211; there is no need for the whole training corpus to
+reside fully in RAM at any one time (can process large, web-scale corpora).</li>
+<li>Efficient implementations for several popular vector space algorithms,
+including <strong>Tf-Idf</strong>, distributed incremental <strong>Latent Semantic Analysis</strong>,
+distributed incremental <strong>Latent Dirichlet Allocation (LDA)</strong> or <strong>Random Projection</strong>; adding new ones is easy (really!).</li>
 <li>I/O wrappers and converters around <strong>several popular data formats</strong>.</li>
-<li><strong>Similarity queries</strong> across documents in their latent, topical representation.</li>
+<li><strong>Similarity queries</strong> for documents in their latent, topical representation.</li>
 </ul>
 <p>Creation of <cite>gensim</cite> was motivated by a perceived lack of available, scalable software
 frameworks that realize topic modelling, and/or their overwhelming internal complexity (hail java!).
 You can read more about the motivation in our <a class="reference external" href="http://nlp.fi.muni.cz/projekty/gensim/lrec2010_final.pdf">LREC 2010 workshop paper</a>.
-If you want to cite <cite>gensim</cite> in your own work, please refer to that article.</p>
+If you want to cite <cite>gensim</cite> in your own work, please refer to that article (<a class="reference external" href="http://nlp.fi.muni.cz/projekty/gensim/bibtex_gensim.bib">BibTeX</a>).</p>
 <p>The <strong>principal design objectives</strong> behind <cite>gensim</cite> are:</p>
 <ol class="arabic simple">
-<li>Straightforward interfaces and extremely low API learning curve for developers. Good for prototyping.</li>
+<li>Straightforward interfaces and low API learning curve for developers. Good for prototyping.</li>
 <li>Memory independence with respect to the size of the input corpus; all intermediate
 steps and algorithms operate in a streaming fashion, accessing one document
 at a time.</li>
@@ -173,7 +170,7 @@ question-answer pair:</p>
 representation of a document becomes a series of pairs like <tt class="docutils literal"><span class="pre">(1,</span> <span class="pre">0.0),</span> <span class="pre">(2,</span> <span class="pre">2.0),</span> <span class="pre">(3,</span> <span class="pre">5.0)</span></tt>.
 If we know all the questions in advance, we may leave them implicit
 and simply write <tt class="docutils literal"><span class="pre">(0.0,</span> <span class="pre">2.0,</span> <span class="pre">5.0)</span></tt>.
-This sequence of answers can be thought of as a high-dimensional (in our case 3-dimensional)
+This sequence of answers can be thought of as a high-dimensional (in this case 3-dimensional)
 <em>vector</em>. For practical purposes, only questions to which the answer is (or
 can be converted to) a single real number are allowed.</p>
 <p class="last">The questions are the same for each document, so that looking at two
@@ -190,8 +187,8 @@ Since the set of all questions is known in advance, all the missing features
 in a sparse representation of a document can be unambiguously resolved to zero, <tt class="docutils literal"><span class="pre">0.0</span></tt>.</p>
 <p class="last">Gensim is specific in that it doesn&#8217;t prescribe any specific corpus format;
 a corpus is anything that, when iterated over, successively yields these sparse vectors.
-For example, <cite>set([(2, 2.0), (3, 5.0)], ((0, -1.0), (3, -1.0)))</cite> is a trivial
-corpus of two documents, each with two non-zero features.</p>
+For example, <cite>set([(2, 2.0), (3, 5.0)], ([0, -1.0], [3, -1.0]))</cite> is a trivial
+corpus of two documents, each with two non-zero <cite>feature-answer</cite> pairs.</p>
 </dd>
 <dt id="term-model">Model</dt>
 <dd>For our purposes, a model is a transformation from one document representation
@@ -200,7 +197,7 @@ Both the initial and target representations are
 still vectors &#8211; they only differ in what the questions and answers are.
 The transformation is automatically learned from the traning <a class="reference internal" href="#term-corpus"><em class="xref std std-term">corpus</em></a>, without human
 supervision, and in hopes that the final document representation will be more compact
-and more useful, with similar documents having similar representations.</dd>
+and more useful: with similar documents having similar representations.</dd>
 </dl>
 <div class="admonition-see-also admonition seealso">
 <p class="first admonition-title">See also</p>
@@ -238,7 +235,7 @@ and more useful, with similar documents having similar representations.</dd>
     </div>
     <div class="footer">
         &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jan 13, 2011.
+      Last updated on Feb 04, 2011.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>

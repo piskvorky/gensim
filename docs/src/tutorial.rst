@@ -104,7 +104,7 @@ the second document has a similarity score of 19.1\% etc.
 
 Thus, according to TfIdf document representation and cosine similarity measure, 
 the most similar to our query document `vec` is document no. 3, with a similarity score of 82.1%. 
-Note that in the TfIdf representation, all documents which do not share any common features
+Note that in the TfIdf representation, any documents which do not share any common features
 with ``vec`` at all (documents no. 4--8) get a similarity score of 0.0. See the :doc:`tut3` tutorial for more detail.
 
 ------

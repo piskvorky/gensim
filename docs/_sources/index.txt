@@ -16,7 +16,7 @@ Gensim -- Python Framework for Vector Space Modelling
      very large corpora.
    
    `gensim` now completes :doc:`LSI of the English Wikipedia <wiki>` 
-   (3.2 million documents) in **5 hours 14 minutes**, using a one-pass incremental 
+   (3.2 million documents, 2 billion words) in **5 hours 14 minutes**, using a one-pass incremental 
    SVD algorithm, on a Macbook Pro laptop (`NIPS workshop paper <http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_). 
    Be sure to check out the :doc:`distributed mode <distributed>`, too.
 
