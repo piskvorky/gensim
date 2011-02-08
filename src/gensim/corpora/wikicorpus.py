@@ -119,8 +119,8 @@ def tokenize(content):
     Return list of tokens as utf8 bytestrings. 
     """
     # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic, russian etc.)
-    return [token.encode('utf8') for token in utils.tokenize(content, lower = True, errors = 'ignore') 
-            if len(token) <= 15 and not token.startswith('_')]
+    return [token.encode('utf8') for token in utils.tokenize(content, lower=True, errors='ignore') 
+            if 2 <= len(token) <= 15 and not token.startswith('_')]
 
 
 
@@ -206,8 +206,6 @@ class WikiCorpus(interfaces.CorpusABC):
         return result
         
         
-    
-    
     def saveAsText(self, fname):
         """
         Store the corpus to disk, in a human-readable text format.
@@ -328,7 +326,7 @@ if __name__ == '__main__':
     # takes about 8h on a macbook pro
     wiki = WikiCorpus(input, keep_words = keep_words)
     
-    # save dictionary and bag-of-words
+    # save dictionary and bag-of-words (term-document frequency matrix)
     # another ~8h
     wiki.saveAsText(output)
     del wiki

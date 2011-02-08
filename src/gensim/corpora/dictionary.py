@@ -69,7 +69,7 @@ class Dictionary(utils.SaveLoad):
     def addDocuments(self, documents):
         """
         Build dictionary from a collection of documents. Each document is a list 
-        of tokens (ie. **tokenized and normalized** utf-8 encoded strings).
+        of tokens (**tokenized and normalized** utf-8 encoded strings).
         
         This is only a convenience wrapper for calling `doc2bow` on each document
         with `allowUpdate=True`.
@@ -95,7 +95,7 @@ class Dictionary(utils.SaveLoad):
         for new words. At the same time, update document frequencies -- for 
         each word appearing in this document, increase its self.docFreq by one.
         
-        If `allowUpdate` is **not** set, this function is `const`, ie. read-only.
+        If `allowUpdate` is **not** set, this function is `const`, i.e. read-only.
         """
         result = {}
         document = sorted(document)
@@ -177,7 +177,7 @@ class Dictionary(utils.SaveLoad):
         """
         Assign new word ids to all words. 
         
-        This is done to make the ids more compact, ie. after some tokens have 
+        This is done to make the ids more compact, e.g. after some tokens have 
         been removed via :func:`filterTokens` and there are gaps in the id series.
         Calling this method will remove the gaps.
         """

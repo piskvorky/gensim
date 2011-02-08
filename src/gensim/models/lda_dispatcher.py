@@ -25,7 +25,7 @@ from gensim import utils
 
 
 logger = logging.getLogger("dispatcher")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG) # FIXME
 
 
 # How many jobs (=chunks of N documents) to keep "pre-fetched" in a queue?
@@ -66,6 +66,7 @@ class Dispatcher(object):
         self.lock_update = threading.Lock()
         self.callback._pyroOneway.add("jobdone") # make sure workers transfer control back to dispatcher asynchronously        
         self._jobsdone = 0
+        self._jobsreceived = 0
 
         # locate all available workers and store their proxies, for subsequent RMI calls
         self.workers = {}
@@ -76,6 +77,7 @@ class Dispatcher(object):
                     workerid = len(self.workers)
                     # make time consuming methods work asynchronously
                     worker._pyroOneway.add("requestjob")
+                    worker._pyroOneway.add("reset")
                     worker._pyroOneway.add("exit")
                     logger.info("registering worker #%i at %s" % (workerid, uri))
                     worker.initialize(workerid, dispatcher = self.callback, **model_params)
@@ -99,11 +101,12 @@ class Dispatcher(object):
     def getjob(self, worker_id):
         logger.info("worker #%i requesting a new job" % worker_id)
         job = self.jobs.get(block = True, timeout = HUGE_TIMEOUT)
-        logger.info("worker #%i got a new job" % worker_id)
+        logger.info("worker #%i got a new job (%i left)" % (worker_id, self.jobs.qsize()))
         return job
 
 
     def putjob(self, job):
+        self._jobsreceived += 1
         self.jobs.put(job, block = True, timeout = HUGE_TIMEOUT)
         logger.info("added a new job (len(queue)=%i items)" % self.jobs.qsize())
 
@@ -113,7 +116,7 @@ class Dispatcher(object):
         Merge states from across all workers and return the result.
         """
         logger.info("end of input, assigning all remaining jobs")
-        while not self.jobs.empty():
+        while self._jobsdone < self._jobsreceived:
             time.sleep(0.5) # check every half a second
         
         logger.info("merging states from %i workers" % len(self.workers))
@@ -127,14 +130,15 @@ class Dispatcher(object):
         return result
     
     
-    def reset(self, logProbW, alpha):
+    def reset(self, state):
         """
         Initialize all workers for a new EM iterations.
         """
         for workerid, worker in self.workers.iteritems():
             logger.info("resetting worker %s" % workerid)
-            worker.reset(logProbW, alpha)
+            worker.reset(state)
         self._jobsdone = 0
+        self._jobsreceived = 0
     
 
     @utils.synchronous('lock_update')

@@ -194,10 +194,10 @@ def cossim(vec1, vec2):
 
 def qr_destroy(la):
     """
-    Return QR decomposition of la[0]. Content of `la` gets destroyed in the process.
+    Return QR decomposition of `la[0]`. Content of `la` gets destroyed in the process.
     
-    Using this function should be less memory intense than calling qr(la[0]) directly,
-    because the memory used in la[0] is reclaimed earlier.
+    Using this function should be less memory intense than calling `scipy.linalg.qr(la[0])`,
+    because the memory used in `la[0]` is reclaimed earlier.
     """
     a = numpy.asfortranarray(la[0])
     del la[0], la # now `a` is the only reference to the input matrix
@@ -424,6 +424,9 @@ class MmReader(object):
         # handle the last document, as a special case
         if prevId >= 0:
             yield prevId, document
+        
+        # return empty documents between the last explicit document and the number 
+        # of documents as specified in the header
         for prevId in xrange(prevId + 1, self.numDocs):
             yield prevId, []
 #endclass MmReader

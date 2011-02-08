@@ -31,7 +31,7 @@ RE_HTML_ENTITY = re.compile(r'&(#?)(x?)(\w+);', re.UNICODE)
 
 def synchronous(tlockname):
     """
-    A decorator to place an instance based lock around a method.
+    A decorator to place an instance-based lock around a method.
     
     Adapted from http://code.activestate.com/recipes/577105-synchronization-decorator-for-class-methods/
     """
@@ -48,10 +48,9 @@ def synchronous(tlockname):
 
 def deaccent(text):
     """
-    Remove accentuation from the given string.
+    Remove accentuation from the given string. Input text is either a unicode string or utf8 encoded bytestring.
     
-    Input text is either a unicode string or utf8 encoded bytestring. Return
-    input string with accents removed, as unicode.
+    Return input string with accents removed, as unicode.
     
     >>> deaccent("Šéf chomutovských komunistů dostal poštou bílý prášek")
     u'Sef chomutovskych komunistu dostal postou bily prasek'
@@ -63,7 +62,7 @@ def deaccent(text):
     return unicodedata.normalize("NFC", result)
 
 
-def tokenize(text, lowercase = False, deacc = False, errors = "strict", toLower = False, lower = False):
+def tokenize(text, lowercase=False, deacc=False, errors="strict", toLower=False, lower=False):
     """
     Iteratively yield tokens as unicode strings, optionally also lowercasing them 
     and removing accent marks.
@@ -78,7 +77,7 @@ def tokenize(text, lowercase = False, deacc = False, errors = "strict", toLower 
     """
     lowercase = lowercase or toLower or lower
     if not isinstance(text, unicode):
-        text = unicode(text, encoding = 'utf8', errors = errors)
+        text = unicode(text, encoding='utf8', errors=errors)
     if lowercase:
         text = text.lower()
     if deacc:
@@ -168,8 +167,8 @@ class FakeDict(object):
         Override the dict.keys() function, which is used to determine the maximum 
         internal id of a corpus = the vocabulary dimensionality.
         
-        HACK: To avoid materializing the whole range(0, self.numTerms), we 
-        return [self.numTerms - 1] only.
+        HACK: To avoid materializing the whole `range(0, self.numTerms)`, this returns 
+        `[self.numTerms - 1]` only.
         """
         return [self.numTerms - 1]
     
@@ -270,13 +269,13 @@ class RepeatCorpus(SaveLoad):
     def __init__(self, corpus, reps):
         """
         Wrap a `corpus` as another corpus of length `reps`. This is achieved by
-        repeating documents from `corpus` over and over again, until requested
-        length is reached. Repetition is done on-the-fly=efficiently, via 
-        itertools. 
+        repeating documents from `corpus` over and over again, until the requested
+        length `len(result)==reps` is reached. Repetition is done 
+        on-the-fly=efficiently, via `itertools`. 
         
         >>> corpus = [[(1, 0.5)], []] # 2 documents
         >>> list(RepeatCorpus(corpus, 5)) # repeat 2.5 times to get 5 documents
-        >>> [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)]]
+        [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)]]
 
         """
         self.corpus = corpus
@@ -326,3 +325,22 @@ def decode_htmlentities(text):
         # e.g., ValueError: unichr() arg not in range(0x10000) (narrow Python build)
         return text
 
+
+def chunkize(corpus, chunks):
+    """
+    Split a stream of values into smaller chunks.
+    Each chunk is of length `chunks`, except the last one which may be smaller. 
+    A once-only input stream (`corpus` from a generator) is ok.
+    
+    Chunking is done efficiently with itertools, so that only one chunk at a time
+    is realized in memory (the whole `corpus` may be larger than RAM).
+    
+    >>> for chunk in chunkize(xrange(10), 4): print chunk
+    [0, 1, 2, 3]
+    [4, 5, 6, 7]
+    [8, 9]
+      
+    """
+    chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
+    for chunk_no, (key, group) in enumerate(chunker):
+        yield [doc for _, doc in group]

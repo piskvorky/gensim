@@ -28,7 +28,7 @@ from gensim.models import ldamodel
 from gensim import utils
 
 logger = logging.getLogger('lda_worker')
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG) # FIXME
 
 
 SAVE_DEBUG = 0 # save intermediate models after every SAVE_DEBUG updates (0 for never)
@@ -65,7 +65,7 @@ class Worker(object):
     @utils.synchronous('lock_update')
     def processjob(self, job):
         logger.debug("starting to process job #%i" % self.jobsdone)
-        self.model.docEStep(job)
+        self.model.docEstep(job)
         self.jobsdone += 1
         if SAVE_DEBUG and self.jobsdone % SAVE_DEBUG == 0:
             fname = os.path.join(tempfile.gettempdir(), 'lda_worker.pkl')
@@ -84,10 +84,10 @@ class Worker(object):
 
     
     @utils.synchronous('lock_update')
-    def reset(self, logProbW, alpha):
+    def reset(self, state):
         logger.info("resetting worker #%i" % self.myid)
-        self.model.reset(logProbW)
-        self.model.alpha = alpha
+        self.model.setstate(state.sstats)
+        self.model.state.reset(state.sstats)
 
     
     def exit(self):

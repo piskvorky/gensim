@@ -66,6 +66,7 @@ class Dispatcher(object):
         self.lock_update = threading.Lock()
         self.callback._pyroOneway.add("jobdone") # make sure workers transfer control back to dispatcher asynchronously        
         self._jobsdone = 0
+        self._jobsreceived = 0
 
         # locate all available workers and store their proxies, for subsequent RMI calls
         self.workers = {}
@@ -98,10 +99,13 @@ class Dispatcher(object):
 
     def getjob(self, worker_id):
         logger.info("worker #%i requesting a new job" % worker_id)
-        return self.jobs.get(block = True, timeout = HUGE_TIMEOUT)
+        job = self.jobs.get(block = True, timeout = HUGE_TIMEOUT)
+        logger.info("worker #%i got a new job (%i left)" % (worker_id, self.jobs.qsize()))
+        return job
 
 
     def putjob(self, job):
+        self._jobsreceived += 1
         self.jobs.put(job, block = True, timeout = HUGE_TIMEOUT)
         logger.info("added a new job (len(queue)=%i items)" % self.jobs.qsize())
 
@@ -111,7 +115,7 @@ class Dispatcher(object):
         Merge projections from across all workers and return the final projection.
         """
         logger.info("end of input, assigning all remaining jobs")
-        while not self.jobs.empty():
+        while self._jobsdone < self._jobsreceived:
             time.sleep(0.5) # check every half a second
         
         # TODO: merge in parallel, so that we're done in `log_2(workers)` merges, 
