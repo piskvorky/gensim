@@ -195,7 +195,7 @@ bow_queries_tfidf = [dictionary.doc2bow(text, allowUpdate=False, returnMissingWo
 
 secondCorpusName = 'lee'
 tfidf_lee   = models.TfidfModel(bow_queries_tfidf, dictionary.id2token, normalize=False )
-tf_lee      = TfModel(bow_queries_tfidf, dictionary.id2token, normalize=False)
+tf_lee      = TfModel(dictionary.id2token, normalize=False)
 
 
 # note that the actual cell values we get only when using []
