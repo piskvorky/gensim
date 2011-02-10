@@ -32,7 +32,7 @@ RE_HTML_ENTITY = re.compile(r'&(#?)(x?)(\w+);', re.UNICODE)
 def synchronous(tlockname):
     """
     A decorator to place an instance based lock around a method.
-    
+
     Adapted from http://code.activestate.com/recipes/577105-synchronization-decorator-for-class-methods/
     """
     def _synched(func):
@@ -49,15 +49,15 @@ def synchronous(tlockname):
 def deaccent(text):
     """
     Remove accentuation from the given string.
-    
+
     Input text is either a unicode string or utf8 encoded bytestring. Return
     input string with accents removed, as unicode.
-    
+
     >>> deaccent("Šéf chomutovských komunistů dostal poštou bílý prášek")
     u'Sef chomutovskych komunistu dostal postou bily prasek'
     """
     if not isinstance(text, unicode):
-        text = unicode(text, 'utf8') # assume utf8 for byte strings, use default (strict) error handling 
+        text = unicode(text, 'utf8') # assume utf8 for byte strings, use default (strict) error handling
     norm = unicodedata.normalize("NFD", text)
     result = u''.join(ch for ch in norm if unicodedata.category(ch) != 'Mn')
     return unicodedata.normalize("NFC", result)
@@ -65,14 +65,14 @@ def deaccent(text):
 
 def tokenize(text, lowercase = False, deacc = False, errors = "strict", toLower = False, lower = False):
     """
-    Iteratively yield tokens as unicode strings, optionally also lowercasing them 
+    Iteratively yield tokens as unicode strings, optionally also lowercasing them
     and removing accent marks.
-    
+
     Input text may be either unicode or utf8-encoded byte string.
 
-    The tokens on output are maximal contiguous sequences of alphabetic 
+    The tokens on output are maximal contiguous sequences of alphabetic
     characters (no digits!).
-    
+
     >>> list(tokenize('Nic nemůže letět rychlostí vyšší, než 300 tisíc kilometrů za sekundu!', deacc = True))
     [u'Nic', u'nemuze', u'letet', u'rychlosti', u'vyssi', u'nez', u'tisic', u'kilometru', u'za', u'sekundu']
     """
@@ -95,10 +95,10 @@ def toUtf8(text):
 
 class SaveLoad(object):
     """
-    Objects which inherit from this class have save/load functions, which un/pickle 
+    Objects which inherit from this class have save/load functions, which un/pickle
     them to disk.
-    
-    This uses cPickle for de/serializing, so objects must not contains unpicklable 
+
+    This uses cPickle for de/serializing, so objects must not contains unpicklable
     attributes, such as lambda functions etc.
     """
     @classmethod
@@ -128,54 +128,54 @@ def identity(p):
 def getMaxId(corpus):
     """
     Return highest feature id that appears in the corpus.
-    
+
     For empty corpora (no features at all), return -1.
     """
     maxId = -1
     for document in corpus:
-        maxId = max(maxId, max([-1] + [fieldId for fieldId, _ in document])) # [-1] to avoid exceptions from max(empty) 
+        maxId = max(maxId, max([-1] + [fieldId for fieldId, _ in document])) # [-1] to avoid exceptions from max(empty)
     return maxId
 
 
 class FakeDict(object):
     """
-    Objects of this class act as dictionaries that map integer->str(integer), for 
+    Objects of this class act as dictionaries that map integer->str(integer), for
     a specified range of integers <0, numTerms).
-    
+
     This is meant to avoid allocating real dictionaries when numTerms is huge, which
     is a waste of memory.
     """
     def __init__(self, numTerms):
         self.numTerms = numTerms
-    
+
 
     def __str__(self):
         return "FakeDict(numTerms=%s)" % self.numTerms
-    
-    
+
+
     def __getitem__(self, val):
         if 0 <= val < self.numTerms:
             return str(val)
-        raise ValueError("internal id out of bounds (%s, expected <0..%s))" % 
+        raise ValueError("internal id out of bounds (%s, expected <0..%s))" %
                          (val, self.numTerms))
-    
+
     def iteritems(self):
         for i in xrange(self.numTerms):
             yield i, str(i)
-    
+
     def keys(self):
         """
-        Override the dict.keys() function, which is used to determine the maximum 
+        Override the dict.keys() function, which is used to determine the maximum
         internal id of a corpus = the vocabulary dimensionality.
-        
-        HACK: To avoid materializing the whole range(0, self.numTerms), we 
+
+        HACK: To avoid materializing the whole range(0, self.numTerms), we
         return [self.numTerms - 1] only.
         """
         return [self.numTerms - 1]
-    
+
     def __len__(self):
         return self.numTerms
-    
+
     def get(self, val, default=None):
         if 0 <= val < self.numTerms:
             return str(val)
@@ -186,9 +186,9 @@ def dictFromCorpus(corpus):
     """
     Scan corpus for all word ids that appear in it, then construct and return a mapping
     which maps each ``wordId -> str(wordId)``.
-    
-    This function is used whenever *words* need to be displayed (as opposed to just 
-    their ids) but no wordId->word mapping was provided. The resulting mapping 
+
+    This function is used whenever *words* need to be displayed (as opposed to just
+    their ids) but no wordId->word mapping was provided. The resulting mapping
     only covers words actually used in the corpus, up to the highest wordId found.
     """
     numTerms = 1 + getMaxId(corpus)
@@ -241,10 +241,10 @@ def isCorpus(obj):
 def get_my_ip():
     """
     Try to obtain our external ip (from the pyro nameserver's point of view)
-    
-    This tries to sidestep the issue of bogus `/etc/hosts` entries and other 
+
+    This tries to sidestep the issue of bogus `/etc/hosts` entries and other
     local misconfigurations, which often mess up hostname resolution.
-    
+
     If all else fails, fall back to simple `socket.gethostbyname()` lookup.
     """
     import socket
@@ -271,15 +271,15 @@ def get_my_ip():
 class RepeatCorpus(SaveLoad):
     """
     Used in the tutorial on distributed computing and likely not useful anywhere else.
-    
+
     """
     def __init__(self, corpus, reps):
         """
         Wrap a `corpus` as another corpus of length `reps`. This is achieved by
         repeating documents from `corpus` over and over again, until requested
-        length is reached. Repetition is done on-the-fly=efficiently, via 
-        itertools. 
-        
+        length is reached. Repetition is done on-the-fly=efficiently, via
+        itertools.
+
         >>> corpus = [[(1, 0.5)], []] # 2 documents
         >>> list(RepeatCorpus(corpus, 5)) # repeat 2.5 times to get 5 documents
         [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)]]
@@ -287,7 +287,7 @@ class RepeatCorpus(SaveLoad):
         """
         self.corpus = corpus
         self.reps = reps
-    
+
     def __iter__(self):
         return itertools.islice(itertools.cycle(self.corpus), self.reps)
 
@@ -295,9 +295,9 @@ class RepeatCorpus(SaveLoad):
 def decode_htmlentities(text):
     """
     Decode HTML entities in text, coded as hex, decimal or named.
-    
+
     Adapted from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
-    
+
     >>> u = u'E tu vivrai nel terrore - L&#x27;aldil&#xE0; (1981)'
     >>> print decode_htmlentities(u).encode('UTF-8')
     E tu vivrai nel terrore - L'aldilà (1981)
@@ -305,7 +305,7 @@ def decode_htmlentities(text):
     l'eau
     >>> print decode_htmlentities("foo &lt; bar")
     foo < bar
-    
+
     """
     def substitute_entity(match):
         ent = match.group(3)
@@ -320,11 +320,11 @@ def decode_htmlentities(text):
         else:
             # they were using a name
             cp = n2cp.get(ent)
-            if cp: 
+            if cp:
                 return unichr(cp)
             else:
                 return match.group()
-    
+
     try:
         return RE_HTML_ENTITY.sub(substitute_entity, text)
     except:
@@ -332,3 +332,69 @@ def decode_htmlentities(text):
         # e.g., ValueError: unichr() arg not in range(0x10000) (narrow Python build)
         return text
 
+
+def get_txt(filename):
+    """
+     Loads a txt file (eg a stoplist) into a list.
+     One line per dictionary value
+     The above assumes texts is small enough to fit into memory.
+     Do not use to load a corpus if it's big (e.g. Gbs)
+    """
+    texts = []
+    try:
+        f = open(filename, "r")
+        try:
+            texts = f.readlines()
+        finally:
+            f.close()
+    except IOError:
+        #pass
+        raise
+    texts = [line.strip() for line in texts] # remove ending \n
+    texts = [line for line in texts if line != ""]
+    return (texts)
+
+
+def array2utrilst(array):
+    """
+    Transforms an np array into an upper triangle list
+
+    >>> mat = np.array(
+        [[ 0,  1,  2,  3],
+        [10, 11, 12, 13],
+        [20, 21, 22, 23],
+        [30, 31, 32, 33]])
+    >>> array2utrilst(mat)
+    [1,2,3,12,13,23]
+    """
+
+    n = array.shape[0]
+    result = []
+    for row in range(0, n-1):
+        for col in range(row+1, n):
+            result.append(array[row, col])
+    return result
+
+def top_NN(bow_query, rawCorpus, index, n=10, idf=False):
+    """
+    List the top n docs, to see if they are actually related to the query
+
+    The index and the bow query must use the same dictionary
+
+    bow_query   a query in bow format (bag of words)
+    index       Produced by eg similarities.SparseMatrixSimilarity(tfidf[corpusName])
+    n           the number of nearest neighbors
+    returns a list of tuples (cosine, docid, text)
+    """
+    # todo check: the bow query must use the same dictionary
+    sims_tfidf = index[bow_query] # perform a similarity query against the corpus
+    sims_tfidf = sorted(list(enumerate(sims_tfidf)), key = lambda item: -item[1])
+    topNNtuples = sims_tfidf[0:n]
+    topNNids, topNNcosines   = zip(*topNNtuples)
+
+    topNNtexts = []
+    for id in topNNids:
+        topNNtexts.append(rawCorpus[id])
+
+    return(zip(topNNids, topNNcosines, topNNtexts))
+    # end
