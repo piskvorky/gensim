@@ -38,6 +38,8 @@ import cPickle
 tfidfCpickleExtension   ='_tfidf.mm.Cpickle'
 tfidfExtension          ='_tfidf.mm'
 wordIdsExtension        ='_wordids.txt'
+modelExtension          ='_tfidf.model'
+
 
 # flags
 createCorpus =  True #False
@@ -108,6 +110,7 @@ if (createCorpus==True):
     # build tfidf ~20min
     logging.debug("-------calling TfidfModel-------")
     tfidf = TfidfModel(mm, id2word = id2word, normalize = True)
+    tfidf.save(output + modelExtension)
 
     # TODO serialize the entire tfidf model. We'll need it later  to create a sparseMatrixSimilarity object
 
