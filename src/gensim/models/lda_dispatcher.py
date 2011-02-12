@@ -25,7 +25,7 @@ from gensim import utils
 
 
 logger = logging.getLogger("dispatcher")
-logger.setLevel(logging.DEBUG) # FIXME
+logger.setLevel(logging.INFO)
 
 
 # How many jobs (=chunks of N documents) to keep "pre-fetched" in a queue?

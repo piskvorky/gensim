@@ -66,6 +66,7 @@ class LdaState(utils.SaveLoad):
         self.sstats = numpy.zeros_like(mat) # reset counts
         self.numdocs = 0
     
+    
     def merge(self, other):
         """
         Merge the result of an E step from one node with that of another node 
@@ -472,7 +473,6 @@ class LdaModel(interfaces.TransformationABC):
                     # distributed mode: wait for all workers to finish
                     logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                     other = self.dispatcher.getstate()
-                rho = pow(1.0 + num_updates, -decay)
                 self.doMstep(rho(), other)
                 dirty = False
         #endfor corpus update
