@@ -31,7 +31,7 @@ Preparing the corpus
 
 Latent Sematic Analysis
 --------------------------
- 
+
 First let's load the corpus iterator and dictionary, created in the second step above::
 
     >>> import logging, gensim, bz2
@@ -82,8 +82,41 @@ or where the cost of storing/iterating over the corpus multiple times is too hig
 Latent Dirichlet Allocation
 ----------------------------
 
-*Coming soon.*
- 
+As with Latent Semantic Analysis above, first load the corpus iterator and dictionary::
+
+    >>> import logging, gensim, bz2
+    >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+    >>> # load id->word mapping (the dictionary), one of the results of step 2 above
+    >>> id2word = gensim.corpora.wikicorpus.WikiCorpus.loadDictionary('wiki_en_wordids.txt')
+    >>> # load corpus iterator
+    >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
+    >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output
+
+    >>> print mm
+    MmCorpus(3199665 documents, 100000 features, 495547400 non-zero entries)
+
+We will run online LDA (see Hoffman et al. [3]_), which is an algorithm that takes a chunk of documents, 
+updates the LDA model, takes another chunk, updates... Online LDA can be contrasted
+with batch LDA, which processes the whole corpus (one full pass), then updates 
+the model, then another pass, another update... The difference is that given a 
+reasonably stationary document stream (not much topic drift), the online updates 
+over the smaller chunks (subcorpora) are pretty good in themselves, so that the 
+whole model converges faster. As a result, we will perhaps only need a single full
+pass over the corpus: if the corpus has 3 million articles, and we update once after 
+every 10,000 articles, this means we will have done 300 updates in one pass, quite likely 
+enough to have a very accurate topics estimate::
+
+    >>> # extract 100 LDA topics, using 1 pass and updating every 1 chunk (10,000 documents)
+    >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, numTopics=100, update_every=1, chunks=10000, passes=1)
+    
+    >>> # print the most contributing words (both positively and negatively) for the topics
+    >>> lda.printTopics(-1) # -1 to print 'em all
+FIXME
+
+Creating this LDA model of Wikipedia takes about FIXME on my laptop [1]_.
+If you need your results faster, consider running :doc:`dist_lda`.
+
 
 --------------------
 
@@ -111,4 +144,7 @@ Latent Dirichlet Allocation
   but no silver bullet. As always, it's `garbage in, garbage out 
   <http://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out>`_...
   By the way, improvements to the Wiki markup parsing code are welcome :-)
+
+.. [3] Hoffman, Blei, Bach. 2010. Online learning for Latent Dirichlet Allocation 
+   [`pdf <http://www.cs.princeton.edu/~blei/papers/HoffmanBleiBach2010b.pdf>`_] [`code <http://www.cs.princeton.edu/~mdhoffma/>`_]
 

@@ -11,6 +11,7 @@ The interfaces are realized as abstract base classes (ie., some optional functio
 is provided in the interface itself, so that the interfaces can be subclassed).
 """
 
+from __future__ import with_statement
 
 import utils, matutils
 
@@ -26,7 +27,12 @@ class CorpusABC(utils.SaveLoad):
     the corpus size is needed and known in advance (or at least doesn't change so 
     that it can be cached), the :func:`len` method should be overridden.
     
-    See the :mod:`gensim.corpora.mmcorpus` module for an example of a corpus.
+    See the :mod:`gensim.corpora.svmlightcorpus` module for an example of a corpus.
+    
+    Saving the corpus with the `save` method (inherited from `utils.SaveLoad`) will
+    only store the *in-memory* (binary, pickled) object representation=the stream 
+    state, and **not** the documents themselves. See the `saveCorpus` static method 
+    for serializing the actual stream content.
     """
     def __iter__(self):
         """
@@ -44,6 +50,20 @@ class CorpusABC(utils.SaveLoad):
         """
         logging.warning("performing full corpus scan to determine its length; was this intended?")
         return sum(1 for doc in self) # sum(empty generator) == 0, so this works even for an empty corpus
+
+    @staticmethod
+    def saveCorpus(fname, corpus, id2word=None):
+        """
+        Save an existing `corpus` in the particular format of this class.
+        """
+        raise NotImplementedError('cannot instantiate abstract base class')
+    
+        # example code:
+        logging.info("converting corpus to ??? format: %s" % fname)
+        with open(fname, 'w') as fout:
+            for doc in corpus: # iterate over the document stream
+                fmt = str(doc) # format the document appropriately...
+                fout.write("%s\n" % fmt) # serialize the formatted document to disk
 #endclass CorpusABC
 
 

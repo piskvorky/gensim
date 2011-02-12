@@ -28,7 +28,7 @@ def read(fname):
 
 setup(
     name = 'gensim',
-    version = '0.7.6',
+    version = '0.7.7',
     description = 'Python framework for fast Vector Space Modelling',
     long_description = read('README.txt'),
     
@@ -76,8 +76,8 @@ setup(
     include_package_data = True,
 
     # lines below are commented out to avoid installing system-wide scripts
-    # scripts can be run by running `python -m module_name` instead. this is
-    # less flexible but more explicit and imo cleaner
+    # scripts can be run by running `python -m module_name` instead: less 
+    # flexible but more explicit and imo cleaner.
 #    entry_points = {
 #        'console_scripts': [
 #            'lsi_worker = gensim.models.lsi_worker:main',

@@ -116,7 +116,8 @@ def tokenize(content):
     Tokenize a piece of text from wikipedia. The input string `content` is assumed
     to be mark-up free (see `filterWiki()`).
     
-    Return list of tokens as utf8 bytestrings. 
+    Return list of tokens as utf8 bytestrings. Ignore words shorted than 2 or longer
+    that 15 characters (not bytes!).
     """
     # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic, russian etc.)
     return [token.encode('utf8') for token in utils.tokenize(content, lower=True, errors='ignore') 
@@ -256,7 +257,7 @@ class WikiCorpus(interfaces.CorpusABC):
                     if return_raw:
                         result = text
                     else:
-                        result = tokenize(text) # split text into tokens
+                        result = tokenize(text) # text into tokens here
                         positions += len(result)
                     yield result
         
@@ -322,7 +323,7 @@ if __name__ == '__main__':
     else:
         keep_words = DEFAULT_DICT_SIZE
     
-    # build dictionary. only keep 200k most frequent words (out of total ~7m unique tokens)
+    # build dictionary. only keep 100k most frequent words (out of total ~7m unique tokens)
     # takes about 8h on a macbook pro
     wiki = WikiCorpus(input, keep_words = keep_words)
     

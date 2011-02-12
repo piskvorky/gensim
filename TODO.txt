@@ -1,9 +1,6 @@
 Changes for future releases:
 -----------------------------
 
-* promote `gensim` on some mailing lists/get help from more developers
+* add word-word similarities (in addition to the document-document already in gensim)
 * add GUI (web browser-based) to distributed computing -- manage active nodes, status, node load, failures, etc.
-* re-implement LDA after Asuncion: "On Smoothing and Inference for Topic Models"
-* implement distributed LDA (get in touch with Mr. Asuncion?)
 * more extensive unit testing
-* improve documentation

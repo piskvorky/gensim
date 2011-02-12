@@ -65,7 +65,7 @@ class Worker(object):
     @utils.synchronous('lock_update')
     def processjob(self, job):
         logger.debug("starting to process job #%i" % self.jobsdone)
-        self.model.docEstep(job)
+        self.model.doEstep(job)
         self.jobsdone += 1
         if SAVE_DEBUG and self.jobsdone % SAVE_DEBUG == 0:
             fname = os.path.join(tempfile.gettempdir(), 'lda_worker.pkl')

@@ -17,6 +17,8 @@ import cPickle
 import itertools
 from functools import wraps # for `synchronous` function lock
 from htmlentitydefs import name2codepoint as n2cp # for `decode_htmlentities`
+import threading, time
+from Queue import Queue
 
 
 
@@ -326,7 +328,7 @@ def decode_htmlentities(text):
         return text
 
 
-def chunkize(corpus, chunks):
+def chunkize_serial(corpus, chunks):
     """
     Split a stream of values into smaller chunks.
     Each chunk is of length `chunks`, except the last one which may be smaller. 
@@ -343,4 +345,66 @@ def chunkize(corpus, chunks):
     """
     chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
     for chunk_no, (key, group) in enumerate(chunker):
+        # return documents as numpy arrays, to save memory with large chunks
         yield [doc for _, doc in group]
+
+
+
+class InputQueue(threading.Thread):
+    """
+    Help class for threaded `chunkize()`.
+    """
+    def __init__(self, q, corpus, chunks, maxsize):
+        super(InputQueue, self).__init__()
+        self.q = q
+        self.maxsize = maxsize
+        self.corpus = corpus
+        self.chunks = chunks
+    
+    def run(self):
+        import numpy # don't clutter the global namespace with a dependency on numpy
+        for chunk in chunkize_serial(self.corpus, self.chunks):
+            # HACK XXX convert documents to numpy arrays, to save memory.
+            # makes no difference if docs are plain standard list of 2-tuples etc, 
+            # but what if they are more complex, user-defined objects?
+            chunk = [numpy.asarray(doc) for doc in chunk]
+            self.q.put(chunk, block=True)
+#endclass InputQueue
+
+
+def chunkize(corpus, chunks, maxsize=0):
+    """
+    Split a stream of values into smaller chunks.
+    Each chunk is of length `chunks`, except the last one which may be smaller. 
+    A once-only input stream (`corpus` from a generator) is ok, chunking is done
+    efficiently via itertools.
+    
+    If `maxsize > 1`, don't wait idly in between successive chunk `yields`, but 
+    rather keep filling a short queue (of size at most `maxsize`) with forthcoming 
+    chunks in advance. This is realized by starting a separate thread, and is 
+    meant to reduce I/O delays, which can be significant when `corpus` comes 
+    from a slow medium (like harddisk).
+    
+    If `maxsize==0`, don't fool around with threads and simply yield the chunks 
+    via `chunkize_serial()` (no I/O optimizations).
+    
+    >>> for chunk in chunkize(xrange(10), 4): print chunk
+    [0, 1, 2, 3]
+    [4, 5, 6, 7]
+    [8, 9]
+      
+    """
+    assert chunks > 0
+    
+    if maxsize > 0:
+        q = Queue(maxsize=maxsize)
+        thread = InputQueue(q, corpus, chunks, maxsize=maxsize)
+        thread.start()
+        
+        while thread.isAlive() or not q.empty():
+            yield q.get(block=True)
+    else:
+        for chunk in chunkize_serial(corpus, chunks):
+            yield chunk
+
+

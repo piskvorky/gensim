@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.6',
+        VERSION:     '0.7.7',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -113,7 +113,14 @@ of <cite>lsi_worker</cite> and <cite>lsi_dispatcher</cite>.</p>
 <h2>Running LDA<a class="headerlink" href="#running-lda" title="Permalink to this headline">¶</a></h2>
 <p>Run LDA like you normally would, but turn on the <cite>distributed=True</cite> constructor
 parameter.</p>
-<p>FIXME add some experiments here.</p>
+<p>FIXME add some experiments here, ala LSA: one trivial, one wiki:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 100 LDA topics, using 1 pass and updating every 1 chunk (10,000 documents)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">wiki</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print the most contributing words (both positively and negatively) for the topics</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c"># -1 to print &#39;em all</span>
+</pre></div>
+</div>
 </div>
 </div>
 
@@ -146,8 +153,8 @@ parameter.</p>
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 04, 2011.
+        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Feb 12, 2011.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>

@@ -226,7 +226,7 @@ class MmWriter(object):
     Store corpus in Matrix Market format.
     """
     
-    HEADER_LINE = '%%matrixmarket matrix coordinate real general\n'
+    HEADER_LINE = '%%MatrixMarket matrix coordinate real general\n'
     
     def __init__(self, fname):
         self.fname = fname

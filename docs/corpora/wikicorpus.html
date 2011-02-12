@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.7.6',
+        VERSION:     '0.7.7',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -190,6 +190,12 @@ a Matrix Market file <cite>fname_bow.mm</cite>.</li>
 </ol>
 </dd></dl>
 
+<dl class="staticmethod">
+<dt id="gensim.corpora.wikicorpus.WikiCorpus.saveCorpus">
+<em class="property">static </em><tt class="descname">saveCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.saveCorpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save an existing <cite>corpus</cite> in the particular format of this class.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="gensim.corpora.wikicorpus.WikiCorpus.saveDictionary">
 <tt class="descname">saveDictionary</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.saveDictionary" title="Permalink to this definition">¶</a></dt>
@@ -209,7 +215,8 @@ a Matrix Market file <cite>fname_bow.mm</cite>.</li>
 <tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">tokenize</tt><big>(</big><em>content</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.tokenize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tokenize a piece of text from wikipedia. The input string <cite>content</cite> is assumed
 to be mark-up free (see <cite>filterWiki()</cite>).</p>
-<p>Return list of tokens as utf8 bytestrings.</p>
+<p>Return list of tokens as utf8 bytestrings. Ignore words shorted than 2 or longer
+that 15 characters (not bytes!).</p>
 </dd></dl>
 
 </div>
@@ -243,8 +250,8 @@ to be mark-up free (see <cite>filterWiki()</cite>).</p>
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 04, 2011.
+        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Feb 12, 2011.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>

@@ -21,4 +21,10 @@ ____________
 Run LDA like you normally would, but turn on the `distributed=True` constructor 
 parameter. 
 
-FIXME add some experiments here.
+FIXME add some experiments here, ala LSA: one trivial, one wiki::
+
+    >>> # extract 100 LDA topics, using 1 pass and updating every 1 chunk (10,000 documents)
+    >>> lda = gensim.models.ldamodel.LdaModel(corpus=wiki, id2word=id2word, numTopics=100, distributed=True)
+    
+    >>> # print the most contributing words (both positively and negatively) for the topics
+    >>> lda.printTopics(-1) # -1 to print 'em all

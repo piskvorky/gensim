@@ -15,7 +15,7 @@ It allows both model estimation from a training corpus and inference of topic
 distribution on new, unseen documents.
     
 The core estimation code is directly adapted from the `onlineldavb.py` script 
-by D. Hoffman [1]_, see
+by M. Hoffman [1]_, see
 **Hoffman, Blei, Bach: Online Learning for Latent Dirichlet Allocation, NIPS 2010.**
 
 The algorithm:
@@ -94,9 +94,6 @@ class LdaState(utils.SaveLoad):
         if targetsize is None:
             targetsize = self.numdocs
         
-        logger.info("merging changes from %i documents into a model from %i documents" %
-                    (other.numdocs, targetsize))
-        
         # stretch the current model's expected n*phi counts to target size
         if self.numdocs == 0 or targetsize == self.numdocs:
             mysstats = self.sstats
@@ -108,11 +105,25 @@ class LdaState(utils.SaveLoad):
         if other.numdocs == 0 or targetsize == other.numdocs:
             othersstats = other.sstats
         else:
+            logger.info("merging changes from %i documents into a model of %i documents" %
+                        (other.numdocs, targetsize))
             scale = 1.0 * targetsize / other.numdocs
             othersstats = other.sstats * scale
         
         # merge the two matrices by weighted average
         self.sstats = (1.0 - rhot) * mysstats + rhot * othersstats
+        self.numdocs = targetsize
+
+
+    def blend2(self, rhot, other, targetsize=None):
+        """
+        Alternative, more simple blend.
+        """
+        if targetsize is None:
+            targetsize = self.numdocs
+        
+        # merge the two matrices by summing
+        self.sstats += other.sstats
         self.numdocs = targetsize
 #endclass LdaState
 
@@ -148,7 +159,7 @@ class LdaModel(interfaces.TransformationABC):
     Model persistency is achieved through its `load`/`save` methods.
     """
     def __init__(self, corpus=None, numTopics=100, id2word=None, distributed=False, 
-                 chunks=10000, alpha=None, eta=None, decay=0.5):
+                 chunks=10000, passes=1, update_every=1, alpha=None, eta=None, decay=0.5):
         """
         `numTopics` is the number of requested latent topics to be extracted from
         the training corpus. 
@@ -191,6 +202,11 @@ class LdaModel(interfaces.TransformationABC):
         self.numTopics = int(numTopics)
         self.chunks = chunks
         self.decay = decay
+        self.num_updates = 0
+        
+        self.passes = passes
+        self.update_every = update_every
+        
         if alpha is None:
             self.alpha = 1.0 / numTopics
         else:
@@ -203,13 +219,12 @@ class LdaModel(interfaces.TransformationABC):
         # VB constants
         self.VAR_MAXITER = 50
         self.VAR_THRESH = 0.001
-        self.MAXITER = 50 # to simulate Hoffman's original 'online' code, set this to 1
-        self.THRESH = 0.001
 
         # set up distributed environment if necessary
         if not distributed:
             logger.info("using serial LDA version on this node")
             self.dispatcher = None
+            self.numworkers = 1
         else:
             # set up distributed version
             try:
@@ -221,7 +236,8 @@ class LdaModel(interfaces.TransformationABC):
                 dispatcher.initialize(id2word=id2word, numTopics=numTopics,
                                       chunks=chunks, alpha=alpha, eta=eta, distributed=False)
                 self.dispatcher = dispatcher
-                logger.info("using distributed version with %i workers" % len(dispatcher.getworkers()))
+                self.numworkers = len(dispatcher.getworkers())
+                logger.info("using distributed version with %i workers" % self.numworkers)
             except Exception, err:
                 logger.error("failed to initialize distributed LDA (%s)" % err)
                 raise RuntimeError("failed to initialize distributed LDA (%s)" % err)
@@ -234,25 +250,26 @@ class LdaModel(interfaces.TransformationABC):
         if corpus is not None:
             self.update(corpus)
     
-        
+    
     def setstate(self, sstats):
         """
         Reset word-topic mixtures lambda (and beta) using collected counts of
         sufficient statistics (a `numTopics x numTerms` matrix).
+        
+        Return the aggregate amount of change in topics, log(old_lambda-new_lambda).
         """
         self.state.sstats = sstats
-        # TODO do we need to keep all these in memory all the time? compute on
-        # the fly? don't store redundant information in memory 4x...
+        # do we need to keep all {sstats+lambda+expEbeta} in memory all the 
+        # time? TODO compute them on the fly instead?
+        # don't store redundant information in memory 3x...
         self._lambda = self.eta + self.state.sstats
+        Elogbeta = dirichlet_expectation(self._lambda)
         if self.state.numdocs > 0:
-            old_logbeta = self._Elogbeta
-            self._Elogbeta = dirichlet_expectation(self._lambda)
-            result = numpy.mean(numpy.abs(oldbeta - self._Elogbeta))
+            diff = numpy.mean(numpy.abs(Elogbeta - numpy.log(self._expElogbeta)))
         else:
-            self._Elogbeta = dirichlet_expectation(self._lambda)
-            result = 0.0
-        self._expElogbeta = numpy.exp(self._Elogbeta)
-        return result
+            diff = 0.0
+        self._expElogbeta = numpy.exp(Elogbeta)
+        return diff
 
         
     def inference(self, chunk, collect_sstats=False):
@@ -331,7 +348,7 @@ class LdaModel(interfaces.TransformationABC):
         return gamma, sstats
     
     
-    def docEstep(self, chunk, state=None):
+    def doEstep(self, chunk, state=None):
         """
         Perform inference on a chunk of documents, and store (increment) the collected 
         sufficient statistics in `state` (or `self.state` if None).
@@ -343,7 +360,7 @@ class LdaModel(interfaces.TransformationABC):
         state.numdocs += gamma.shape[0] # avoid calling len(chunk), might be a generator
 
     
-    def update(self, corpus, chunks=None, decay=None, online=False):
+    def update(self, corpus, chunks=None, decay=None, passes=None, update_every=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations 
@@ -364,10 +381,18 @@ class LdaModel(interfaces.TransformationABC):
             chunks = self.chunks
         if decay is None:
             decay = self.decay
-        if online:
-            iterations = 1
-        else:
-            iterations = self.MAXITER
+        if passes is None:
+            passes = self.passes
+        if update_every is None:
+            update_every = self.update_every
+        if not passes:
+            # if the number of whole-corpus iterations was not specified explicitly,
+            # assume iterating over the corpus until convergence (or until self.MAXITER 
+            # iterations, whichever happens first)
+            passes = self.MAXITER
+        
+        # rho is the "speed" of updating; TODO try other fncs
+        rho = lambda: pow(1.0 + self.num_updates, -decay)
         
         try:
             lencorpus = len(corpus)
@@ -377,54 +402,94 @@ class LdaModel(interfaces.TransformationABC):
         if lencorpus == 0:
             logger.warning("LdaModel.update() called with an empty corpus")
             return
+        self.state.numdocs += lencorpus
         
-        # stretch old expected topic counts to the new corpus size
-        self.state.blend(0.0, LdaState(self.state.sstats), targetsize=self.state.numdocs + lencorpus)
-        diff = self.setstate(self.state.sstats)
-        logger.debug("topic logdiff after initial stretching=%f" % diff)
+        if update_every > 0:
+            updatetype = "online"
+            updateafter = min(lencorpus, update_every * self.numworkers * chunks)
+        else:
+            updatetype = "batch"
+            updateafter = lencorpus
         
-        logger.info("updating LdaModel with %i new documents (%i total)" % 
-                    (lencorpus, self.state.numdocs))
+        updates_per_pass = max(1, lencorpus / updateafter)
+        logger.info("running %s LDA training, %s topics, %i passes over "
+                    "the supplied corpus of %i documets, updating model once "
+                    "every %i documents" %
+                    (updatetype, self.numTopics, passes, lencorpus, updateafter))
+        if updates_per_pass * passes < 10:
+            logger.warning("too few updates, training might not converge; consider "
+                           "increasing the number of passes or decreasing chunk "
+                           "size to improve accuracy")
 
-        for iteration in xrange(iterations):
-            # run E step over the corpus
+        for iteration in xrange(passes):
             if self.dispatcher:
-                # distributed version
-                logger.info('initializing workers for corpus iteration #%i' % iteration)
+                logger.info('initializing workers')
                 self.dispatcher.reset(self.state)
-                for chunk_no, chunk in enumerate(utils.chunkize(corpus, chunks)):
-                    # add the chunk to the job queue, so workers can munch on it
+            else:
+                other = LdaState(self.state.sstats)
+            dirty = False
+            
+            # the corpus will be processed in chunks of `chunks` of documents. 
+            # keep preparing new chunks in a separate thread, so that we don't 
+            # waste time waiting for chunks to be read from disk. instead, fill 
+            # a (relatively short) chunk queue asynchronously in utils.chunkize, 
+            # and pop already-ready chunks from it as needed.
+            for chunk_no, chunk in enumerate(utils.chunkize(corpus, chunks, self.numworkers)):
+                if self.dispatcher:
+                    # add the chunk to dispatcher's job queue, so workers can munch on it
                     logger.info('PROGRESS: iteration %i, dispatching documents up to #%i/%i' % 
                                 (iteration, chunk_no * chunks + len(chunk), lencorpus))
                     # this will eventually block until some jobs finish, because the queue has a small finite length
                     # convert each document to a 2d numpy array (~6x faster when transmitting 
-                    # data over the wire in Pyro)
-                    self.dispatcher.putjob([numpy.asarray(doc) for doc in chunk])
-                # wait for all workers to finish
-                logger.info("reached the end of input; now waiting for all remaining jobs to finish")
-                other = self.dispatcher.getstate()
-            else:
-                # serial version: there is only one "worker" (myself) => process jobs directly
-                other = LdaState(self.state.sstats)
-                for chunk_no, chunk in enumerate(utils.chunkize(corpus, chunks)):
+                    # list data over the wire, in Pyro)
+                    self.dispatcher.putjob(chunk)
+                else:
                     logger.info('PROGRESS: iteration %i, at document #%i/%i' %
                                 (iteration, chunk_no * chunks + len(chunk), lencorpus))
-                    self.docEstep(chunk, other)
+                    self.doEstep(chunk, other)
+                dirty = True
+                
+                if update_every and (chunk_no + 1) % (update_every * self.numworkers) == 0:
+                    if self.dispatcher:
+                        # distributed mode: wait for all workers to finish
+                        logger.info("reached the end of input; now waiting for all remaining jobs to finish")
+                        other = self.dispatcher.getstate()
+                    
+                    diff = self.doMstep(rho(), other)
+                    del other # free up some mem
+                    
+                    if self.dispatcher:
+                        logger.info('initializing workers')
+                        self.dispatcher.reset(self.state)
+                    else:
+                        other = LdaState(self.state.sstats)
+                    dirty = False
+            #endfor corpus iteration
+            
+            if dirty:
+                # finish any remaining updates
+                if self.dispatcher:
+                    # distributed mode: wait for all workers to finish
+                    logger.info("reached the end of input; now waiting for all remaining jobs to finish")
+                    other = self.dispatcher.getstate()
+                rho = pow(1.0 + num_updates, -decay)
+                self.doMstep(rho(), other)
+                dirty = False
+        #endfor corpus update
+
     
-            # M step: use linear interpolation between the existing topics and 
-            # collected sufficient statistics to get new topics
-            logger.info("updating topics")
-            # rho is the "speed" of updating; TODO try other fncs
-            rho = pow(1.0 * self.state.numdocs / lencorpus + iteration, -decay) # add `+ iteration` to ensure convergence (fake convergence, really! won't work on non-stationary input streams)
-            # update self with the new blend; also keep track of how much did 
-            # the topics change through this update, to assess convergence
-            self.state.blend(rho, other)
-            diff = self.setstate(self.state.sstats)
-            logger.info("iteration %i: topic logdiff=%f, rho=%f" % 
-                        (iteration, diff, rho))
-            self.printTopics(10) # print out some debug info at the end of each iteration
-            if diff < self.THRESH:
-                break
+    def doMstep(self, rho, other):
+        """M step: use linear interpolation between the existing topics and 
+        collected sufficient statistics in `other` to update new topics"""
+        logger.debug("updating topics")
+        # update self with the new blend; also keep track of how much did 
+        # the topics change through this update, to assess convergence
+        self.state.blend(rho, other)
+        diff = self.setstate(self.state.sstats)
+        self.printTopics(15) # print out some debug info at the end of each EM iteration
+        logger.info("topic logdiff=%f, rho=%f" % (diff, rho))
+        self.num_updates += 1
+        return diff
             
 
     def bound(self, corpus, gamma=None):
@@ -436,6 +501,7 @@ class LdaModel(interfaces.TransformationABC):
         from the model.
         """
         score = 0.0
+        Elogbeta = numpy.log(self._expElogbeta)
 
         for d, doc in enumerate(corpus):
             if d % self.chunks == 0:
@@ -450,7 +516,7 @@ class LdaModel(interfaces.TransformationABC):
             cts = numpy.array([cnt for _, cnt in doc])
             phinorm = numpy.zeros(len(ids))
             for i in xrange(len(ids)):
-                phinorm[i] = logsumexp(Elogthetad + self._Elogbeta[:, ids[i]])
+                phinorm[i] = logsumexp(Elogthetad + Elogbeta[:, ids[i]])
             
             # E[log p(docs | theta, beta)]
             score += numpy.sum(cts * phinorm)
@@ -461,7 +527,7 @@ class LdaModel(interfaces.TransformationABC):
             score += gammaln(self.alpha * self.numTopics) - gammaln(numpy.sum(gammad))
 
         # E[log p(beta | eta) - log q (beta | lambda)]
-        score += numpy.sum((self.eta - self._lambda) * self._Elogbeta)
+        score += numpy.sum((self.eta - self._lambda) * Elogbeta)
         score += numpy.sum(gammaln(self._lambda) - gammaln(self.eta))
         score += numpy.sum(gammaln(self.eta * self.numTerms) - 
                               gammaln(numpy.sum(self._lambda, 1)))
@@ -474,12 +540,12 @@ class LdaModel(interfaces.TransformationABC):
         Print the `topN` most probable words for (randomly selected) `topics` 
         number of topics. Set `topics=-1` to print all topics.
         
-        The printed `topics <= self.numTopics` subset of all topics is arbitrary:
-        unlike LSA, there is no ordering between the topics in LDA. Which topics
-        get printed can therefore change between two runs.
+        Unlike LSA, there is no ordering between the topics in LDA. 
+        The printed `topics <= self.numTopics` subset of all topics is therefore 
+        arbitrary and may change between two runs.
         """
         if topics < 0: 
-            # print all topics if negative
+            # print all topics if `topics` is negative
             topics = self.numTopics
         topics = min(topics, self.numTopics)
         for i in xrange(topics):
@@ -536,9 +602,8 @@ if __name__ == '__main__':
 #    K = 2
 
     olda = LdaModel(numTopics=K, id2word=vocab, alpha=1./K, eta=1./K, decay=0.5)
-    for chunk in gensim.utils.chunkize(corpus, 10000):
-        olda.update(chunk, online=True)
-    olda.save('olda.pkl')
+    olda.update(corpus)
+    olda.save('olda2.pkl')
     
     logging.info("finished running %s" % program)
 

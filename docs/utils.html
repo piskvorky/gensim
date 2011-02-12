@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.6',
+        VERSION:     '0.7.7',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -63,10 +63,10 @@
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="interfaces.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces</a></p>
+                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="matutils.html"
-                        title="next chapter"><tt class="docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils</a></p>
+                        title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -107,6 +107,12 @@ internal id of a corpus = the vocabulary dimensionality.</p>
 <cite>[self.numTerms - 1]</cite> only.</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="class">
+<dt id="gensim.utils.InputQueue">
+<em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">InputQueue</tt><big>(</big><em>q</em>, <em>corpus</em>, <em>chunks</em>, <em>maxsize</em><big>)</big><a class="headerlink" href="#gensim.utils.InputQueue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Help class for threaded <cite>chunkize()</cite>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -159,7 +165,29 @@ attributes, such as lambda functions etc.</p>
 
 <dl class="function">
 <dt id="gensim.utils.chunkize">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">chunkize</tt><big>(</big><em>corpus</em>, <em>chunks</em><big>)</big><a class="headerlink" href="#gensim.utils.chunkize" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">chunkize</tt><big>(</big><em>corpus</em>, <em>chunks</em>, <em>maxsize=0</em><big>)</big><a class="headerlink" href="#gensim.utils.chunkize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split a stream of values into smaller chunks.
+Each chunk is of length <cite>chunks</cite>, except the last one which may be smaller. 
+A once-only input stream (<cite>corpus</cite> from a generator) is ok, chunking is done
+efficiently via itertools.</p>
+<p>If <cite>maxsize &gt; 1</cite>, don&#8217;t wait idly in between successive chunk <cite>yields</cite>, but 
+rather keep filling a short queue (of size at most <cite>maxsize</cite>) with forthcoming 
+chunks in advance. This is realized by starting a separate thread, and is 
+meant to reduce I/O delays, which can be significant when <cite>corpus</cite> comes 
+from a slow medium (like harddisk).</p>
+<p>If <cite>maxsize==0</cite>, don&#8217;t fool around with threads and simply yield the chunks 
+via <cite>chunkize_serial()</cite> (no I/O optimizations).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunkize</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="mi">4</span><span class="p">):</span> <span class="k">print</span> <span class="n">chunk</span>
+<span class="go">[0, 1, 2, 3]</span>
+<span class="go">[4, 5, 6, 7]</span>
+<span class="go">[8, 9]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.utils.chunkize_serial">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">chunkize_serial</tt><big>(</big><em>corpus</em>, <em>chunks</em><big>)</big><a class="headerlink" href="#gensim.utils.chunkize_serial" title="Permalink to this definition">¶</a></dt>
 <dd><p>Split a stream of values into smaller chunks.
 Each chunk is of length <cite>chunks</cite>, except the last one which may be smaller. 
 A once-only input stream (<cite>corpus</cite> from a generator) is ok.</p>
@@ -290,8 +318,8 @@ characters (no digits!).</p>
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2010, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 04, 2011.
+        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Feb 12, 2011.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
     </div>
   </body>
