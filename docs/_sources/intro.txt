@@ -7,23 +7,6 @@ Introduction
 Gensim is a Python framework designed to automatically extract semantic
 topics from documents, as naturally and painlessly as possible.
 
-Quick Reference Example
-------------------------
-
->>> from gensim import corpora, models, similarities
->>>
->>> # load corpus iterator from a Matrix Market file on disk
->>> corpus = corpora.MmCorpus('/path/to/corpus.mm')
->>>
->>> # initialize a transformation (Latent Semantic Indexing with 200 latent dimensions)
->>> lsi = models.LsiModel(corpus, numTopics=200)
->>>
->>> # convert another corpus to the latent space and index it
->>> index = similarities.MatrixSimilarity(lsi[another_corpus])
->>> 
->>> # perform similarity query of a query in LSI space against the whole corpus
->>> sims = index[query]
-
 
 Gensim aims at processing raw, unstructured digital texts ("*plain text*").
 The unsupervised algorithms in `gensim`, such as **Latent Semantic Analysis**, **Latent Dirichlet Allocation** or **Random Projections**,

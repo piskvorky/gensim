@@ -57,12 +57,13 @@
       </ul>
     </div>
 
+
+    
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Introduction</a><ul>
-<li><a class="reference internal" href="#quick-reference-example">Quick Reference Example</a></li>
 <li><a class="reference internal" href="#design-objectives">Design objectives</a></li>
 <li><a class="reference internal" href="#availability">Availability</a></li>
 <li><a class="reference internal" href="#core-concepts">Core concepts</a></li>
@@ -91,34 +92,19 @@
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
+    
+    
+
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
             
-    
   <div class="section" id="introduction">
 <span id="intro"></span><h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
 <p>Gensim is a Python framework designed to automatically extract semantic
 topics from documents, as naturally and painlessly as possible.</p>
-<div class="section" id="quick-reference-example">
-<h2>Quick Reference Example<a class="headerlink" href="#quick-reference-example" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">similarities</span>
-<span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># load corpus iterator from a Matrix Market file on disk</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/path/to/corpus.mm&#39;</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># initialize a transformation (Latent Semantic Indexing with 200 latent dimensions)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># convert another corpus to the latent space and index it</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">MatrixSimilarity</span><span class="p">(</span><span class="n">lsi</span><span class="p">[</span><span class="n">another_corpus</span><span class="p">])</span>
-<span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># perform similarity query of a query in LSI space against the whole corpus</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">sims</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">query</span><span class="p">]</span>
-</pre></div>
-</div>
 <p>Gensim aims at processing raw, unstructured digital texts (&#8220;<em>plain text</em>&#8221;).
 The unsupervised algorithms in <cite>gensim</cite>, such as <strong>Latent Semantic Analysis</strong>, <strong>Latent Dirichlet Allocation</strong> or <strong>Random Projections</strong>,
 discover hidden (<em>latent</em>) semantic structure, based on word co-occurrence patterns within a corpus of training documents.
@@ -128,7 +114,6 @@ against other documents and so on.</p>
 <p>If the previous paragraphs left you confused, you can read more about the <a class="reference external" href="http://en.wikipedia.org/wiki/Vector_space_model">Vector
 Space Model</a> and <a class="reference external" href="http://en.wikipedia.org/wiki/Latent_semantic_indexing">unsupervised
 document analysis</a> on Wikipedia.</p>
-</div>
 <div class="section" id="design-objectives">
 <span id="design"></span><h2>Design objectives<a class="headerlink" href="#design-objectives" title="Permalink to this headline">¶</a></h2>
 <p><cite>gensim</cite> offers the following features:</p>
@@ -225,10 +210,6 @@ and more useful: with similar documents having similar representations.</dd>
 </div>
 </div>
 
-
-
-    
-    
 
           </div>
         </div>

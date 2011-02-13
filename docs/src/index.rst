@@ -19,9 +19,30 @@ Gensim -- Python Framework for Vector Space Modelling
 
 For an **overview** of what you can (or cannot) do with `gensim`, go to the :doc:`introduction <intro>`.
 
+For **installation** and **troubleshooting**, see the :doc:`installation <install>` page and the `gensim discussion group <http://groups.google.com/group/gensim/>`_.
+
 For **examples** on how to use it, try the :doc:`tutorials <tutorial>`.
 
-For **troubleshooting** and further questions, see the :doc:`installation <install>` page and the `gensim discussion group <http://groups.google.com/group/gensim/>`_.
+When **citing** `gensim` in academic papers, please use 
+`this BibTeX entry <http://nlp.fi.muni.cz/projekty/gensim/bibtex_gensim.bib>`_.
+
+
+Quick Reference Example
+------------------------
+
+>>> from gensim import corpora, models, similarities
+>>>
+>>> # load corpus iterator from a Matrix Market file on disk
+>>> corpus = corpora.MmCorpus('/path/to/corpus.mm')
+>>>
+>>> # initialize a transformation (Latent Semantic Indexing with 200 latent dimensions)
+>>> lsi = models.LsiModel(corpus, numTopics=200)
+>>>
+>>> # convert another corpus to the latent space and index it
+>>> index = similarities.MatrixSimilarity(lsi[another_corpus])
+>>> 
+>>> # perform similarity query of a query in LSI space against the whole corpus
+>>> sims = index[query]
 
 
 

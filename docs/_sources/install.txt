@@ -63,7 +63,7 @@ This optional extension can also be installed separately later with::
 There are also alternative routes to install:
   
 1. If you have downloaded and unzipped the `tar.gz source <http://pypi.python.org/pypi/gensim>`_
-   for `gensim` (or you're installing `gensim` from `svn <http://my-trac.assembla.com/gensim>`_), 
+   for `gensim` (or you're installing `gensim` from `github <https://github.com/piskvorky/gensim/>`_), 
    you can run::
    
      sudo python setup.py install 

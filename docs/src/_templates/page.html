@@ -5,11 +5,20 @@
 {% endblock %}
 
 
-{% block body %}
-    {{ super() }}
+{% block sidebar1 %}
 
-    {% if current_page_name == 'index' %}
-	    <div id="twtr-search-widget" style="margin:20px 0px"></div>
+    {{ super() }}
+    {% if current_page_name == '_index' %}
+      <div class="sphinxsidebarl">
+        <div class="sphinxsidebarwrapper">
+        
+		<h3>Download</h3>
+		<p>Get <cite>gensim</cite> from the <a href="http://pypi.python.org/pypi/gensim">Python Package
+		Index</a> or install directly with:</p>
+		<pre>easy_install -U gensim</pre>
+		
+	    <div id="twtr-search-widget" style="margin:20px 0px">
+	    </div>
 	    
 	    <script>
 	    new TWTR.Widget({
@@ -21,7 +30,7 @@
 	      subject: '#gensim on twitter',
 	      title: '',
 	      width: 'auto',
-	      height: 150,
+	      height: 250,
 	      theme: {
 	        shell: {
 	          background: '#6ea1ba',
@@ -45,6 +54,8 @@
 	      }
 	    }).render().start();
 	    </script>
+        </div>
+        </div>
     {% endif %}
     
 {% endblock %}
