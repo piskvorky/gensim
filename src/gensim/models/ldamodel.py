@@ -36,7 +36,7 @@ import itertools
 import time
 
 logger = logging.getLogger('ldamodel')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 import numpy # for arrays, array broadcasting etc.
@@ -56,8 +56,9 @@ class LdaState(utils.SaveLoad):
     Objects of this class are sent over the network, so try to keep them lean to 
     reduce traffic.
     """
-    def __init__(self, mat=None):
-        self.reset(mat)
+    def __init__(self, shapemat):
+        self.reset(shapemat)
+
 
     def reset(self, mat=None):
         """
@@ -244,33 +245,44 @@ class LdaModel(interfaces.TransformationABC):
                 raise RuntimeError("failed to initialize distributed LDA (%s)" % err)
 
         # Initialize the variational distribution q(beta|lambda)
-        self.state = LdaState()
-        self.setstate(numpy.random.gamma(100., 1./100., (self.numTopics, self.numTerms)))
+        state = LdaState(None)
+        state.sstats = numpy.random.gamma(100., 1./100., (self.numTopics, self.numTerms))
+        self.setstate(state)
  
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
             self.update(corpus)
     
     
-    def setstate(self, sstats):
+    def setstate(self, state, compute_diff=False):
         """
         Reset word-topic mixtures lambda (and beta) using collected counts of
         sufficient statistics (a `numTopics x numTerms` matrix).
         
         Return the aggregate amount of change in topics, log(old_lambda-new_lambda).
         """
-        self.state.sstats = sstats
+        self.state = state
         # do we need to keep all {sstats+lambda+expEbeta} in memory all the 
         # time? TODO compute them on the fly instead?
         # don't store redundant information in memory 3x...
         self._lambda = self.eta + self.state.sstats
         Elogbeta = dirichlet_expectation(self._lambda)
-        if self.state.numdocs > 0:
-            diff = numpy.mean(numpy.abs(Elogbeta - numpy.log(self._expElogbeta)))
+        if compute_diff:
+            if self.state.numdocs > 0:
+                diff = numpy.mean(numpy.abs(Elogbeta - numpy.log(self.expElogbeta)))
+            else:
+                diff = 0.0
         else:
-            diff = 0.0
-        self._expElogbeta = numpy.exp(Elogbeta)
+            diff = None
+        self.expElogbeta = numpy.exp(Elogbeta)
         return diff
+    
+
+    def clear(self):
+        """Clear model state (free up some memory)."""
+        self.state = None
+        self._lambda = None
+        self.expElogbeta = None
 
         
     def inference(self, chunk, collect_sstats=False):
@@ -295,7 +307,7 @@ class LdaModel(interfaces.TransformationABC):
         Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = numpy.exp(Elogtheta)
         if collect_sstats:
-            sstats = numpy.zeros_like(self._expElogbeta)
+            sstats = numpy.zeros_like(self.expElogbeta)
         else:
             sstats = None
         converged = 0
@@ -310,7 +322,7 @@ class LdaModel(interfaces.TransformationABC):
             gammad = gamma[d, :]
             Elogthetad = Elogtheta[d, :]
             expElogthetad = expElogtheta[d, :]
-            expElogbetad = self._expElogbeta[:, ids]
+            expElogbetad = self.expElogbeta[:, ids]
             
             # The optimal phi_{dwk} is proportional to expElogthetad_k * expElogbetad_w. 
             # phinorm is the normalizer.
@@ -345,7 +357,7 @@ class LdaModel(interfaces.TransformationABC):
             # M step, so that
             # sstats[k, w] = \sum_d n_{dw} * phi_{dwk} 
             # = \sum_d n_{dw} * exp{Elogtheta_{dk} + Elogbeta_{kw}} / phinorm_{dw}.
-            sstats = sstats * self._expElogbeta
+            sstats = sstats * self.expElogbeta
         return gamma, sstats
     
     
@@ -484,7 +496,7 @@ class LdaModel(interfaces.TransformationABC):
         # update self with the new blend; also keep track of how much did 
         # the topics change through this update, to assess convergence
         self.state.blend(rho, other)
-        diff = self.setstate(self.state.sstats)
+        diff = self.setstate(self.state, compute_diff=True)
         self.printTopics(15) # print out some debug info at the end of each EM iteration
         logger.info("topic logdiff=%f, rho=%f" % (diff, rho))
         self.num_updates += 1
@@ -500,7 +512,7 @@ class LdaModel(interfaces.TransformationABC):
         from the model.
         """
         score = 0.0
-        Elogbeta = numpy.log(self._expElogbeta)
+        Elogbeta = numpy.log(self.expElogbeta)
 
         for d, doc in enumerate(corpus):
             if d % self.chunks == 0:
@@ -552,7 +564,7 @@ class LdaModel(interfaces.TransformationABC):
 
     
     def printTopic(self, topicid, topN=10):
-        topic = self._expElogbeta[topicid]
+        topic = self.expElogbeta[topicid]
         topic = topic / topic.sum() # normalize to probability dist
         bestn = numpy.argsort(topic)[::-1][:topN]
         beststr = ['%.3f*%s' % (topic[id], self.id2word[id]) for id in bestn]
