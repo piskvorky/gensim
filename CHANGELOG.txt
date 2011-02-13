@@ -1,6 +1,15 @@
 Changes
 =======
 
+0.7.7
+
+* new LDA implementation after Hoffman et al.: Online Learning for Latent Dirichlet Allocation
+* distributed LDA
+* updated LDA docs (wiki experiments, distributed tutorial)
+* matrixmarket header now uses capital 'M's: MatrixMarket. (André Lynum reported than Matlab has trouble processing the lowercase version)
+* moved code to github
+* started gensim Google group
+
 0.7.6
 
 * added workaround for a bug in numpy: pickling a fortran-order array (e.g. LSA model) and then loading it back and using it results in segfault (thx to Brian Merrel)
