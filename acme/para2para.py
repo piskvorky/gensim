@@ -90,17 +90,17 @@ pre_text2       = [[word for word in text if word not in tokensOnce]
 
 
 # create bag of word representation and count words missin in the dictionary
-corpus1     = []
-corpus2     = []
+doc1     = []
+doc2     = []
 all_missing = {}
 for text in pre_text1:
     bow, missing = dictionary.doc2bow(text);
-    corpus1.append(bow)
+    doc1.append(bow)
     for key, val in missing.iteritems():
         all_missing[key] = all_missing.get(key,0) + val
 for text in pre_text2:
     bow, missing = dictionary.doc2bow(text);
-    corpus2.append(bow)
+    doc2.append(bow)
     for key, val in missing.iteritems():
         all_missing[key] = all_missing.get(key,0) + val
 
@@ -109,8 +109,8 @@ logging.info("all missing words")
 logging.info(all_missing)
 
 # transform bow to tfidf space
-t1      = tfidf[corpus1]
-t2      = tfidf[corpus2]
+t1      = tfidf[doc1]
+t2      = tfidf[doc2]
 
 # compute similarities
 res = np.zeros((len(t1), len(t2)))
