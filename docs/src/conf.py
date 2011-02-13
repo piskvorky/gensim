@@ -149,11 +149,12 @@ html_last_updated_fmt = '%b %d, %Y'
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-html_sidebars = {'index': ['indexsidebar.html', 'globaltoc.html', 'searchbox.html']}
+html_sidebars = {'index': ['globaltoc.html', 'searchbox.html', 'indexsidebar.html']}
+#html_sidebars = {'index': ['globaltoc.html', 'searchbox.html']}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-#html_additional_pages = {}
+#html_additional_pages = {'index': 'index.html'}
 
 # If false, no module index is generated.
 #html_use_modindex = True

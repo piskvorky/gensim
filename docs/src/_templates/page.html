@@ -1,0 +1,67 @@
+{% extends "!page.html" %}
+
+{% block extrahead %}
+    <script type="text/javascript" src="_static/widget.js"></script>
+{% endblock %}
+
+
+{% block sidebar1 %}
+
+    {{ super() }}
+    {% if current_page_name == '_index' %}
+      <div class="sphinxsidebarl">
+        <div class="sphinxsidebarwrapper">
+        
+		<h3>Download</h3>
+		<p>Get <cite>gensim</cite> from the <a href="http://pypi.python.org/pypi/gensim">Python Package
+		Index</a> or install directly with:</p>
+		<pre>easy_install -U gensim</pre>
+		
+	    <div id="twtr-search-widget" style="margin:20px 0px">
+	    </div>
+	    
+	    <script>
+	    new TWTR.Widget({
+	      id: 'twtr-search-widget',
+	      version: 2,
+	      type: 'search',
+	      search: '#gensim',
+	      interval: 6000,
+	      subject: '#gensim on twitter',
+	      title: '',
+	      width: 'auto',
+	      height: 250,
+	      theme: {
+	        shell: {
+	          background: '#6ea1ba',
+	          color: '#ffffff'
+	        },
+	        tweets: {
+	          background: '#ffffff',
+	          color: '#444444',
+	          links: '#1985b5'
+	        }
+	      },
+	      features: {
+	        scrollbar: true,
+	        loop: false,
+	        live: true,
+	        hashtags: true,
+	        timestamp: true,
+	        avatars: true,
+	        toptweets: true,
+	        behavior: 'all'
+	      }
+	    }).render().start();
+	    </script>
+        </div>
+        </div>
+    {% endif %}
+    
+{% endblock %}
+
+{% block relbar2 %}
+        {{ super() }}
+    {% if current_page_name != 'index' %}
+    {% endif %}
+{% endblock %}

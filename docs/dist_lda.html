@@ -25,16 +25,16 @@
     <link rel="top" title="gensim documentation" href="index.html" />
     <link rel="up" title="Distributed Computing" href="distributed.html" />
     <link rel="next" title="API Reference" href="apiref.html" />
-    <link rel="prev" title="Distributed Latent Semantic Analysis" href="dist_lsi.html" /> 
+    <link rel="prev" title="Distributed Latent Semantic Analysis" href="dist_lsi.html" />
+    <script type="text/javascript" src="_static/widget.js"></script>
+
   </head>
   <body>
-
 <!--
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
 <a href="index.html"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
 </div>
 --!>
-
 
     <div class="related">
       <h3>Navigation</h3>
@@ -59,6 +59,8 @@
       </ul>
     </div>
 
+
+    
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
@@ -91,6 +93,9 @@
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
+    
+    
+
 
     <div class="document">
       <div class="documentwrapper">
@@ -112,15 +117,21 @@ of <cite>lsi_worker</cite> and <cite>lsi_dispatcher</cite>.</p>
 <div class="section" id="running-lda">
 <h2>Running LDA<a class="headerlink" href="#running-lda" title="Permalink to this headline">¶</a></h2>
 <p>Run LDA like you normally would, but turn on the <cite>distributed=True</cite> constructor
-parameter.</p>
-<p>FIXME add some experiments here, ala LSA: one trivial, one wiki:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 100 LDA topics, using 1 pass and updating every 1 chunk (10,000 documents)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">wiki</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># print the most contributing words (both positively and negatively) for the topics</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c"># -1 to print &#39;em all</span>
+parameter:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 100 LDA topics, using default parameters</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">using distributed version with 4 workers</span>
+<span class="go">running online LDA training, 100 topics, 1 passes over the supplied corpus of 3199665 documets, updating model once every 40000 documents</span>
+<span class="go">..</span>
 </pre></div>
 </div>
+<p>In serial mode (no distribution), creating this LDA <a class="reference internal" href="wiki.html"><em>model of Wikipedia</em></a>
+takes 10h56m on my laptop (OS X, C2D 2.53GHz, 4GB RAM with <cite>libVec</cite>).
+In distributed mode with four workers (Linux, Xeons of 2Ghz, 4GB RAM
+with <cite>ATLAS</cite>), the wallclock time taken drops to 3h20m.</p>
+<p>If you used this distributed LDA implementation <cite>gensim</cite>, please let me know (my
+email is at the bottom of this page). I would like to hear about your application and
+the possible (inevitable?) issues that you encountered, to make <cite>gensim</cite> better.</p>
 </div>
 </div>
 
@@ -130,6 +141,7 @@ parameter.</p>
       </div>
       <div class="clearer"></div>
     </div>
+        
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -152,6 +164,9 @@ parameter.</p>
           <li><a href="distributed.html" >Distributed Computing</a> &raquo;</li> 
       </ul>
     </div>
+    
+    
+
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
       Last updated on Feb 13, 2011.

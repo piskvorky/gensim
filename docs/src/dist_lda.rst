@@ -19,12 +19,21 @@ Running LDA
 ____________
 
 Run LDA like you normally would, but turn on the `distributed=True` constructor 
-parameter. 
+parameter::
 
-FIXME add some experiments here, ala LSA: one trivial, one wiki::
-
-    >>> # extract 100 LDA topics, using 1 pass and updating every 1 chunk (10,000 documents)
-    >>> lda = gensim.models.ldamodel.LdaModel(corpus=wiki, id2word=id2word, numTopics=100, distributed=True)
+    >>> # extract 100 LDA topics, using default parameters
+    >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, numTopics=100, distributed=True)
+    using distributed version with 4 workers
+    running online LDA training, 100 topics, 1 passes over the supplied corpus of 3199665 documets, updating model once every 40000 documents
+    ..
     
-    >>> # print the most contributing words (both positively and negatively) for the topics
-    >>> lda.printTopics(-1) # -1 to print 'em all
+    
+
+In serial mode (no distribution), creating this LDA :doc:`model of Wikipedia <wiki>`
+takes 10h56m on my laptop (OS X, C2D 2.53GHz, 4GB RAM with `libVec`). 
+In distributed mode with four workers (Linux, Xeons of 2Ghz, 4GB RAM 
+with `ATLAS`), the wallclock time taken drops to 3h20m.
+
+If you used this distributed LDA implementation `gensim`, please let me know (my
+email is at the bottom of this page). I would like to hear about your application and
+the possible (inevitable?) issues that you encountered, to make `gensim` better.

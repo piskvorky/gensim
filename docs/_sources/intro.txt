@@ -7,13 +7,12 @@ Introduction
 Gensim is a Python framework designed to automatically extract semantic
 topics from documents, as naturally and painlessly as possible.
 
-Gensim contains algorithms for unsupervised learning from raw, unstructured digital texts,
-such as **Latent Semantic Analysis**, **Latent Dirichlet Allocation** or **Random Projections**.
-These algorithms discover hidden (*latent*) semantic structure, based on word 
-co-occurrence patterns within a corpus of training documents.
 
-Once these statistical patterns are found, any documents (not just those from the training corpus) 
-can be succinctly expressed in the new, semantic representation, queried for topical similarity 
+Gensim aims at processing raw, unstructured digital texts ("*plain text*").
+The unsupervised algorithms in `gensim`, such as **Latent Semantic Analysis**, **Latent Dirichlet Allocation** or **Random Projections**,
+discover hidden (*latent*) semantic structure, based on word co-occurrence patterns within a corpus of training documents.
+Once these statistical patterns are found, any plain text documents can be succinctly 
+expressed in the new, semantic representation, and queried for topical similarity 
 against other documents and so on.
 
 If the previous paragraphs left you confused, you can read more about the `Vector 
@@ -23,7 +22,7 @@ document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on W
 
 .. _design:
 
-Design
+Design objectives
 ------------------
  
 `gensim` offers the following features:
@@ -51,15 +50,14 @@ The **principal design objectives** behind `gensim` are:
 
 Availability
 ------------
-Gensim is licensed under the OSI-approved `GNU LPGL license <http://www.gnu.org/licenses/lgpl.html>`_ 
-and can be downloaded either from its `SVN repository <http://my-trac.assembla.com/gensim>`_
-or from the `Python Package Index <http://pypi.python.org/pypi/gensim>`_. 
-
-.. http://my-trac.assembla.com/gensim/browser/trunk/COPYING.LESSER
 
 .. seealso::
 
-    See the :doc:`install <install>` page for more info on package deployment. 
+    See the :doc:`install <install>` page for more info on `gensim` deployment. 
+
+Gensim is licensed under the OSI-approved `GNU LPGL license <http://www.gnu.org/licenses/lgpl.html>`_ 
+and can be downloaded either from its `github repository <https://github.com/piskvorky/gensim/>`_
+or from the `Python Package Index <http://pypi.python.org/pypi/gensim>`_. 
 
 
 Core concepts   

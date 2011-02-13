@@ -25,16 +25,16 @@
     <link rel="top" title="gensim documentation" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
     <link rel="next" title="models.lsimodel – Latent Semantic Indexing" href="lsimodel.html" />
-    <link rel="prev" title="corpora.wikicorpus – Corpus from a Wikipedia dump" href="../corpora/wikicorpus.html" /> 
+    <link rel="prev" title="corpora.wikicorpus – Corpus from a Wikipedia dump" href="../corpora/wikicorpus.html" />
+    <script type="text/javascript" src="_static/widget.js"></script>
+
   </head>
   <body>
-
 <!--
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
 <a href="../index.html"><img src="../_static/logo.png" border="0" alt="gensim logo"/></a>
 </div>
 --!>
-
 
     <div class="related">
       <h3>Navigation</h3>
@@ -59,6 +59,8 @@
       </ul>
     </div>
 
+
+    
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
@@ -82,6 +84,9 @@
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
+    
+    
+
 
     <div class="document">
       <div class="documentwrapper">
@@ -156,6 +161,12 @@ from the model.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="gensim.models.ldamodel.LdaModel.clear">
+<tt class="descname">clear</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear model state (free up some memory).</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="gensim.models.ldamodel.LdaModel.doEstep">
 <tt class="descname">doEstep</tt><big>(</big><em>chunk</em>, <em>state=None</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.doEstep" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform inference on a chunk of documents, and store (increment) the collected 
@@ -207,7 +218,7 @@ arbitrary and may change between two runs.</p>
 
 <dl class="method">
 <dt id="gensim.models.ldamodel.LdaModel.setstate">
-<tt class="descname">setstate</tt><big>(</big><em>sstats</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.setstate" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setstate</tt><big>(</big><em>state</em>, <em>compute_diff=False</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.setstate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset word-topic mixtures lambda (and beta) using collected counts of
 sufficient statistics (a <cite>numTopics x numTerms</cite> matrix).</p>
 <p>Return the aggregate amount of change in topics, log(old_lambda-new_lambda).</p>
@@ -233,7 +244,7 @@ converge for any <cite>decay</cite> in (0.5, 1.0&gt;.</p>
 
 <dl class="class">
 <dt id="gensim.models.ldamodel.LdaState">
-<em class="property">class </em><tt class="descclassname">gensim.models.ldamodel.</tt><tt class="descname">LdaState</tt><big>(</big><em>mat=None</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaState" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.models.ldamodel.</tt><tt class="descname">LdaState</tt><big>(</big><em>shapemat</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Encapsulate information for distributed computation of LdaModel objects.</p>
 <p>Objects of this class are sent over the network, so try to keep them lean to 
 reduce traffic.</p>
@@ -299,6 +310,7 @@ approximation).</p>
       </div>
       <div class="clearer"></div>
     </div>
+        
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -321,6 +333,9 @@ approximation).</p>
           <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
       </ul>
     </div>
+    
+    
+
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
       Last updated on Feb 13, 2011.

@@ -1,26 +1,36 @@
-<h3>Download</h3>
-<p>Get <cite>gensim</cite> from the <a href="http://pypi.python.org/pypi/gensim">Python Package
-Index</a> or install directly with:</p>
-<pre>easy_install -U gensim</pre>
+<div id="twtr-search-widget" style="margin:20px 0px"></div>
 
-<h3>Citing</h3>
-<p>When citing <cite>gensim</cite> in academic papers, please use 
-<a href="http://nlp.fi.muni.cz/projekty/gensim/bibtex_gensim.bib">this BibTeX entry</a>.
-</p>
-
-<!-- 
-<p>See <a href="{{ pathto("install") }}">install help page</a> for more details and options.
-</p>
-
-<h3>Questions? Suggestions?</h3>
-
-<p>Join the <a href="http://groups.google.com/group/sphinx-dev">Google group</a>:</p>
-<form action="http://groups.google.com/group/sphinx-dev/boxsubscribe"
-      style="padding-left: 1em">
-  <input type="text" name="email" value="your@email"/>
-  <input type="submit" name="sub" value="Subscribe" />
-</form>
-<p>or come to the <tt>#pocoo</tt> channel on FreeNode.</p>
-<p>You can also open an issue at the
-  <a href="http://www.bitbucket.org/birkenfeld/sphinx/issues/">tracker</a>.</p>
--->
+<script>
+new TWTR.Widget({
+  id: 'twtr-search-widget',
+  version: 2,
+  type: 'search',
+  search: '#gensim',
+  interval: 6000,
+  subject: '#gensim on twitter',
+  title: '',
+  width: 'auto',
+  height: 290,
+  theme: {
+    shell: {
+      background: '#6ea1ba',
+      color: '#ffffff'
+    },
+    tweets: {
+      background: '#ffffff',
+      color: '#444444',
+      links: '#1985b5'
+    }
+  },
+  features: {
+    scrollbar: true,
+    loop: false,
+    live: true,
+    hashtags: true,
+    timestamp: true,
+    avatars: true,
+    toptweets: true,
+    behavior: 'all'
+  }
+}).render().start();
+</script>

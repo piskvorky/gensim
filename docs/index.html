@@ -23,16 +23,16 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="gensim documentation" href="#" />
-    <link rel="next" title="Introduction" href="intro.html" /> 
+    <link rel="next" title="Introduction" href="intro.html" />
+    <script type="text/javascript" src="_static/widget.js"></script>
+
   </head>
   <body>
-
 <!--
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
 <a href="#"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
 </div>
 --!>
-
 
     <div class="related">
       <h3>Navigation</h3>
@@ -53,33 +53,10 @@
       </ul>
     </div>
 
+
+    
       <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper"><h3>Download</h3>
-<p>Get <cite>gensim</cite> from the <a href="http://pypi.python.org/pypi/gensim">Python Package
-Index</a> or install directly with:</p>
-<pre>easy_install -U gensim</pre>
-
-<h3>Citing</h3>
-<p>When citing <cite>gensim</cite> in academic papers, please use 
-<a href="http://nlp.fi.muni.cz/projekty/gensim/bibtex_gensim.bib">this BibTeX entry</a>.
-</p>
-
-<!-- 
-<p>See <a href="install.html">install help page</a> for more details and options.
-</p>
-
-<h3>Questions? Suggestions?</h3>
-
-<p>Join the <a href="http://groups.google.com/group/sphinx-dev">Google group</a>:</p>
-<form action="http://groups.google.com/group/sphinx-dev/boxsubscribe"
-      style="padding-left: 1em">
-  <input type="text" name="email" value="your@email"/>
-  <input type="submit" name="sub" value="Subscribe" />
-</form>
-<p>or come to the <tt>#pocoo</tt> channel on FreeNode.</p>
-<p>You can also open an issue at the
-  <a href="http://www.bitbucket.org/birkenfeld/sphinx/issues/">tracker</a>.</p>
--->
+        <div class="sphinxsidebarwrapper">
 <h3><a href="#">Table Of Contents</a></h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
@@ -101,9 +78,47 @@ Index</a> or install directly with:</p>
     Enter search terms or a module, class or function name.
     </p>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script type="text/javascript">$('#searchbox').show(0);</script><div id="twtr-search-widget" style="margin:20px 0px"></div>
+
+<script>
+new TWTR.Widget({
+  id: 'twtr-search-widget',
+  version: 2,
+  type: 'search',
+  search: '#gensim',
+  interval: 6000,
+  subject: '#gensim on twitter',
+  title: '',
+  width: 'auto',
+  height: 290,
+  theme: {
+    shell: {
+      background: '#6ea1ba',
+      color: '#ffffff'
+    },
+    tweets: {
+      background: '#ffffff',
+      color: '#444444',
+      links: '#1985b5'
+    }
+  },
+  features: {
+    scrollbar: true,
+    loop: false,
+    live: true,
+    hashtags: true,
+    timestamp: true,
+    avatars: true,
+    toptweets: true,
+    behavior: 'all'
+  }
+}).render().start();
+</script>
         </div>
       </div>
+    
+    
+
 
     <div class="document">
       <div class="documentwrapper">
@@ -116,7 +131,7 @@ Index</a> or install directly with:</p>
 <p class="first admonition-title">What&#8217;s new in version 0.7?</p>
 <ul class="last simple">
 <li>faster and leaner <strong>Latent Semantic Indexing (LSI)</strong> and <strong>Latent Dirichlet Allocation (LDA)</strong>:<ul>
-<li><a class="reference internal" href="wiki.html"><em>Processing the English Wikipedia</em></a> (<a class="reference external" href="http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf">NIPS workshop paper</a>)</li>
+<li><a class="reference internal" href="wiki.html"><em>Processing the English Wikipedia</em></a>, 3.2 million documents (<a class="reference external" href="http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf">NIPS workshop paper</a>)</li>
 <li><a class="reference internal" href="dist_lsi.html"><em>Distributed Latent Semantic Analysis</em></a> &amp; <a class="reference internal" href="dist_lda.html"><em>Distributed Latent Dirichlet Allocation</em></a></li>
 </ul>
 </li>
@@ -126,8 +141,10 @@ very large corpora.</li>
 </ul>
 </div>
 <p>For an <strong>overview</strong> of what you can (or cannot) do with <cite>gensim</cite>, go to the <a class="reference internal" href="intro.html"><em>introduction</em></a>.</p>
+<p>For <strong>installation</strong> and <strong>troubleshooting</strong>, see the <a class="reference internal" href="install.html"><em>installation</em></a> page and the <a class="reference external" href="http://groups.google.com/group/gensim/">gensim discussion group</a>.</p>
 <p>For <strong>examples</strong> on how to use it, try the <a class="reference internal" href="tutorial.html"><em>tutorials</em></a>.</p>
-<p>For <strong>troubleshooting</strong> and further questions, see the <a class="reference internal" href="install.html"><em>installation</em></a> page and the <a class="reference external" href="http://groups.google.com/group/gensim/">gensim discussion group</a>.</p>
+<p>When <strong>citing</strong> <cite>gensim</cite> in academic papers, please use
+<a class="reference external" href="http://nlp.fi.muni.cz/projekty/gensim/bibtex_gensim.bib">this BibTeX entry</a>.</p>
 <div class="section" id="quick-reference-example">
 <h2>Quick Reference Example<a class="headerlink" href="#quick-reference-example" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">similarities</span>
@@ -138,10 +155,10 @@ very large corpora.</li>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># initialize a transformation (Latent Semantic Indexing with 200 latent dimensions)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
 <span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># convert the same corpus to latent space and index it</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">MatrixSimilarity</span><span class="p">(</span><span class="n">lsi</span><span class="p">[</span><span class="n">corpus</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># convert another corpus to the latent space and index it</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">MatrixSimilarity</span><span class="p">(</span><span class="n">lsi</span><span class="p">[</span><span class="n">another_corpus</span><span class="p">])</span>
 <span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># perform similarity query of another vector in LSI space against the whole corpus</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># perform similarity query of a query in LSI space against the whole corpus</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sims</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">query</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -156,6 +173,7 @@ very large corpora.</li>
       </div>
       <div class="clearer"></div>
     </div>
+        
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -174,6 +192,8 @@ very large corpora.</li>
  
       </ul>
     </div>
+    
+
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
       Last updated on Feb 13, 2011.
