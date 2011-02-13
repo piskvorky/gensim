@@ -505,3 +505,7 @@ ul.search li div.context {
 ul.keywordmatches li.goodmatch a {
     font-weight: bold;
 }
+
+.twtr-ft {
+    display: none;
+}

@@ -110,29 +110,51 @@ enough to have a very accurate topics estimate::
 
     >>> # extract 100 LDA topics, using 1 pass and updating once every 1 chunk (10,000 documents)
     >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, numTopics=100, update_every=1, chunks=10000, passes=1)
-    
-    >>> # print the most contributing words (both positively and negatively) for 20 randomly selected topics
-    >>> lda.printTopics(20) # or -1 to print 'em all
-    FIXME
+    using serial LDA version on this node
+    running online LDA training, 100 topics, 1 passes over the supplied corpus of 3146817 documets, updating model once every 10000 documents
+    ..
 
-Creating this LDA model of Wikipedia takes about FIXME on my laptop [1]_.
+Unlike LSA, the topics coming from LDA are easier to interpret::
+
+    >>> # print the most contributing words (both positively and negatively) for 20 randomly selected topics
+    >>> lda.printTopics(20)
+    topic #0: 0.065*india + 0.043*indian + 0.019*sri + 0.012*tamil + 0.011*singh + 0.011*lanka + 0.010*temple + 0.009*delhi + 0.007*pradesh + 0.007*bangladesh
+    topic #1: 0.083*game + 0.053*games + 0.051*video + 0.018*player + 0.010*players + 0.007*playstation + 0.006*pc + 0.006*entertainment + 0.005*nintendo + 0.005*online
+    topic #2: 0.096*church + 0.032*catholic + 0.022*bishop + 0.018*christian + 0.015*roman + 0.014*saint + 0.013*churches + 0.011*cathedral + 0.011*parish + 0.010*christ
+    topic #3: 0.037*island + 0.019*islands + 0.019*sea + 0.015*coast + 0.013*storm + 0.012*tropical + 0.012*bay + 0.010*ocean + 0.008*hurricane + 0.007*pacific
+    topic #4: 0.189*class + 0.055*assessed + 0.048*rev + 0.046*stub + 0.032*quality + 0.032*low + 0.026*start + 0.025*added + 0.022*importance + 0.013*rating
+    topic #5: 0.061*italian + 0.039*italy + 0.031*di + 0.015*milan + 0.013*serie + 0.012*il + 0.009*rome + 0.008*la + 0.008*roma + 0.008*del
+    topic #6: 0.017*project + 0.014*development + 0.012*organization + 0.011*services + 0.010*community + 0.010*organizations + 0.009*management + 0.008*program + 0.008*association + 0.007*service
+    topic #7: 0.051*language + 0.025*culture + 0.024*admins + 0.017*categories + 0.016*languages + 0.016*native + 0.015*groups + 0.014*cultural + 0.011*ethnic + 0.010*african
+    topic #8: 0.043*women + 0.035*children + 0.018*child + 0.018*age + 0.018*mother + 0.016*young + 0.014*woman + 0.014*female + 0.013*sex + 0.012*wife
+    topic #9: 0.032*business + 0.024*companies + 0.012*bank + 0.012*management + 0.011*industry + 0.010*inc + 0.010*products + 0.009*services + 0.008*co + 0.008*founded
+    topic #10: 0.035*season + 0.028*football + 0.024*basketball + 0.015*game + 0.014*coach + 0.011*player + 0.010*conference + 0.010*players + 0.009*college + 0.009*hockey
+    topic #11: 0.270*user + 0.167*link + 0.082*added + 0.077*username + 0.070*www + 0.023*accounts + 0.023*records + 0.021*involved + 0.016*reporting + 0.012*report
+    topic #12: 0.202*diff + 0.010*david + 0.008*michael + 0.006*paul + 0.006*james + 0.005*smith + 0.005*robert + 0.005*mark + 0.004*peter + 0.004*chris
+    topic #13: 0.017*episode + 0.012*character + 0.011*characters + 0.010*man + 0.009*comics + 0.008*episodes + 0.008*fictional + 0.007*comic + 0.005*season + 0.005*show
+    topic #14: 0.043*college + 0.035*students + 0.032*education + 0.029*schools + 0.016*student + 0.010*campus + 0.009*educational + 0.009*program + 0.008*elementary + 0.008*training
+    topic #15: 0.085*ireland + 0.065*irish + 0.025*dublin + 0.022*northern + 0.013*mac + 0.012*cork + 0.011*galway + 0.011*patrick + 0.009*kelly + 0.008*belfast
+    topic #16: 0.019*pennsylvania + 0.018*ohio + 0.018*virginia + 0.016*florida + 0.015*illinois + 0.015*chicago + 0.013*jersey + 0.013*michigan + 0.011*washington + 0.010*georgia
+    topic #17: 0.061*air + 0.031*aircraft + 0.026*force + 0.024*airport + 0.017*squadron + 0.015*flight + 0.013*flying + 0.011*aviation + 0.010*wing + 0.008*pilot
+    topic #18: 0.064*california + 0.038*texas + 0.036*san + 0.022*los + 0.020*angeles + 0.016*oregon + 0.015*washington + 0.015*wisconsin + 0.014*colorado + 0.013*francisco
+    topic #19: 0.021*anime + 0.020*manga + 0.017*dragon + 0.012*theme + 0.011*dvd + 0.011*super + 0.011*hunter + 0.009*ash + 0.009*dream + 0.009*angel
+
+Creating this LDA model of Wikipedia takes about 11 hours on my laptop [1]_.
 If you need your results faster, consider running :doc:`dist_lda` on a cluster of
 computers.
 
-Note two differences between this and the Latent Semantic Analysis above: we asked LSA 
+Note two differences between the LDA and LSA runs: we asked LSA 
 to extract 400 topics, LDA only 100 topics (so the difference in speed is in fact 
 even greater). Secondly, the LSA implementation in `gensim` is truly online: if the nature of the input
-stream changes, LSA will re-orient its model to reflect these changes, in a reasonably
+stream changes in time, LSA will re-orient itself to reflect these changes, in a reasonably
 small amount of updates. In contrast, LDA is not truly online (the name of the [3]_
-article notwithstanding), as the impact of later updates gradually diminishes. If
-there is topic drift in the input document stream, LDA will get confused and be 
-increasingly slow at adjusting itself to the new state of affairs.
+article notwithstanding), as the impact of later updates on the model gradually 
+diminishes. If there is topic drift in the input document stream, LDA will get 
+confused and be increasingly slower at adjusting itself to the new state of affairs.
 
-In short, be careful if using LDA to incrementally add new documents to the model. 
-**Batch usage of LDA** (where the entire training corpus is either supplied at once or does
-not exihibit topic drift) **is not affected**. 
-
-If you know of a better online LDA algorithm, let me know, I'll gladly add it to `gensim`.
+In short, be careful if using LDA to incrementally add new documents to the model 
+over time. **Batch usage of LDA**, where the entire training corpus is either known beforehand or does
+not exihibit topic drift, **is ok and not affected**. 
 
 
 --------------------

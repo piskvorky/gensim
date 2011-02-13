@@ -25,16 +25,16 @@
     <link rel="top" title="gensim documentation" href="index.html" />
     <link rel="up" title="Distributed Computing" href="distributed.html" />
     <link rel="next" title="Distributed Latent Dirichlet Allocation" href="dist_lda.html" />
-    <link rel="prev" title="Distributed Computing" href="distributed.html" /> 
+    <link rel="prev" title="Distributed Computing" href="distributed.html" />
+    <script type="text/javascript" src="_static/widget.js"></script>
+
   </head>
   <body>
-
 <!--
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
 <a href="index.html"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
 </div>
 --!>
-
 
     <div class="related">
       <h3>Navigation</h3>
@@ -100,6 +100,7 @@
         <div class="bodywrapper">
           <div class="body">
             
+    
   <div class="section" id="distributed-latent-semantic-analysis">
 <span id="dist-lsi"></span><h1>Distributed Latent Semantic Analysis<a class="headerlink" href="#distributed-latent-semantic-analysis" title="Permalink to this headline">¶</a></h1>
 <div class="admonition note">
@@ -233,7 +234,7 @@ the corpus iterator with:</p>
 </pre></div>
 </div>
 <p>In serial mode, creating the LSI model of Wikipedia with this <strong>one-pass algorithm</strong>
-takes about 5.25h on my laptop (OS X, dual-core 2.53GHz, 4GB RAM with <cite>libVec</cite>).
+takes about 5.25h on my laptop (OS X, C2D 2.53GHz, 4GB RAM with <cite>libVec</cite>).
 In distributed mode with four workers (Linux, dual-core Xeons of 2Ghz, 4GB RAM
 with <cite>ATLAS</cite>), the wallclock time taken drops to 1 hour and 41 minutes. You can
 read more about various internal settings and experiments in my <a class="reference external" href="http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf">research
@@ -243,11 +244,16 @@ paper</a>.</p>
 </div>
 
 
+
+    
+    
+
           </div>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
+        
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -270,6 +276,9 @@ paper</a>.</p>
           <li><a href="distributed.html" >Distributed Computing</a> &raquo;</li> 
       </ul>
     </div>
+    
+    
+
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
       Last updated on Feb 13, 2011.

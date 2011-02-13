@@ -149,7 +149,7 @@ Now we're ready to run distributed LSA on the English Wikipedia::
     2010-11-03 16:08:27,834 : INFO : topic #9(78.620): 0.502*"kategori" + 0.282*"categoria" + 0.248*"kategorija" + 0.234*"kategorie" + 0.172*"категория" + 0.165*"categoría" + 0.161*"kategoria" + 0.148*"categorie" + 0.126*"kategória" + 0.121*"catégorie"
 
 In serial mode, creating the LSI model of Wikipedia with this **one-pass algorithm** 
-takes about 5.25h on my laptop (OS X, dual-core 2.53GHz, 4GB RAM with `libVec`). 
+takes about 5.25h on my laptop (OS X, C2D 2.53GHz, 4GB RAM with `libVec`). 
 In distributed mode with four workers (Linux, dual-core Xeons of 2Ghz, 4GB RAM 
 with `ATLAS`), the wallclock time taken drops to 1 hour and 41 minutes. You can 
 read more about various internal settings and experiments in my `research 
