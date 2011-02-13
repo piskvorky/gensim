@@ -4,3 +4,4 @@ gensim.egg-info
 .idea
 .coverage
 data
+src/gensim/test/miIslita.cor.dict
