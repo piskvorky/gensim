@@ -93,7 +93,7 @@ class Dictionary(utils.SaveLoad):
         
         If `allowUpdate` is set, then also update of dictionary in the process: create ids 
         for new words. At the same time, update document frequencies -- for 
-        each word appearing in this document, increase its self.docFreq by one.
+        each word appearing in this document, increase its `self.docFreq` by one.
         
         If `allowUpdate` is **not** set, this function is `const`, i.e. read-only.
         """

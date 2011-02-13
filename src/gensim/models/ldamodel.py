@@ -419,8 +419,7 @@ class LdaModel(interfaces.TransformationABC):
                     (updatetype, self.numTopics, passes, lencorpus, updateafter))
         if updates_per_pass * passes < 10:
             logger.warning("too few updates, training might not converge; consider "
-                           "increasing the number of passes or decreasing chunk "
-                           "size to improve accuracy")
+                           "increasing the number of passes to improve accuracy")
 
         for iteration in xrange(passes):
             if self.dispatcher:
