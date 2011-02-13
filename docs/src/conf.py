@@ -100,7 +100,7 @@ html_theme = 'default'
 #main_colour = "#ffbbbb"
 
 #html_theme_options = {
-#"rightsidebar": "true",
+#"rightsidebar": "false",
 #"stickysidebar": "true",
 ##"bodyfont": "'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif'",
 #"headfont": "'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif'",
@@ -178,7 +178,7 @@ html_show_sourcelink = False
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'gensimdoc'
 
-html_show_sphinx = True
+html_show_sphinx = False
 
 # -- Options for LaTeX output --------------------------------------------------
 

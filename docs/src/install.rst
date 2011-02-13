@@ -94,5 +94,6 @@ To test the package, unzip the `tar.gz source <http://pypi.python.org/pypi/gensi
 Contact
 --------
 
-If you encounter problems or have any questions regarding `gensim`, send me an 
-email to the address at the bottom of this page.
+Use the `gensim discussion group <http://groups.google.com/group/gensim/>`_ for
+any questions and troubleshooting. For private enquiries, you can also send 
+me an email to the address at the bottom of this page.

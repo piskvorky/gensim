@@ -1,12 +1,12 @@
 .. _wiki:
 
-Experiments on Wikipedia 
+Experiments on the English Wikipedia 
 ============================================
 
 To test `gensim` performance, we run it against the English version of Wikipedia.
 
 This page describes the process of obtaining and processing Wikipedia, so that
-anyone can reproduce our results. It is assumed you have `gensim` properly :doc:`installed <install>`.
+anyone can reproduce the results. It is assumed you have `gensim` properly :doc:`installed <install>`.
 
 
 
@@ -15,11 +15,12 @@ Preparing the corpus
 
 1. First, download the dump of all Wikipedia articles from http://download.wikimedia.org/enwiki/ 
    (you want a file like `enwiki-latest-pages-articles.xml.bz2`). This file is about 6GB in size
-   and contains (compressed version of) all articles from the English Wikipedia.
+   and contains (a compressed version of) all articles from the English Wikipedia.
 
 2. Convert the articles to plain text (process Wiki markup) and store the result as 
-   sparse TF-IDF vectors. In Python, this is easy to do on-the-fly (the code is included in `gensim`), and we don't 
-   even need to uncompress the whole archive to disk::
+   sparse TF-IDF vectors. In Python, this is easy to do on-the-fly and we don't 
+   even need to uncompress the whole archive to disk. There is a script included in
+   `gensim` that does just that, run::
 
    $ python -m gensim.corpora.wikicorpus
 
@@ -97,25 +98,41 @@ As with Latent Semantic Analysis above, first load the corpus iterator and dicti
     MmCorpus(3199665 documents, 100000 features, 495547400 non-zero entries)
 
 We will run online LDA (see Hoffman et al. [3]_), which is an algorithm that takes a chunk of documents, 
-updates the LDA model, takes another chunk, updates... Online LDA can be contrasted
+updates the LDA model, takes another chunk, updates the model etc. Online LDA can be contrasted
 with batch LDA, which processes the whole corpus (one full pass), then updates 
 the model, then another pass, another update... The difference is that given a 
 reasonably stationary document stream (not much topic drift), the online updates 
 over the smaller chunks (subcorpora) are pretty good in themselves, so that the 
-whole model converges faster. As a result, we will perhaps only need a single full
+model estimation converges faster. As a result, we will perhaps only need a single full
 pass over the corpus: if the corpus has 3 million articles, and we update once after 
 every 10,000 articles, this means we will have done 300 updates in one pass, quite likely 
 enough to have a very accurate topics estimate::
 
-    >>> # extract 100 LDA topics, using 1 pass and updating every 1 chunk (10,000 documents)
+    >>> # extract 100 LDA topics, using 1 pass and updating once every 1 chunk (10,000 documents)
     >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, numTopics=100, update_every=1, chunks=10000, passes=1)
     
-    >>> # print the most contributing words (both positively and negatively) for the topics
-    >>> lda.printTopics(-1) # -1 to print 'em all
-FIXME
+    >>> # print the most contributing words (both positively and negatively) for 20 randomly selected topics
+    >>> lda.printTopics(20) # or -1 to print 'em all
+    FIXME
 
 Creating this LDA model of Wikipedia takes about FIXME on my laptop [1]_.
-If you need your results faster, consider running :doc:`dist_lda`.
+If you need your results faster, consider running :doc:`dist_lda` on a cluster of
+computers.
+
+Note two differences between this and the Latent Semantic Analysis above: we asked LSA 
+to extract 400 topics, LDA only 100 topics (so the difference in speed is in fact 
+even greater). Secondly, the LSA implementation in `gensim` is truly online: if the nature of the input
+stream changes, LSA will re-orient its model to reflect these changes, in a reasonably
+small amount of updates. In contrast, LDA is not truly online (the name of the [3]_
+article notwithstanding), as the impact of later updates gradually diminishes. If
+there is topic drift in the input document stream, LDA will get confused and be 
+increasingly slow at adjusting itself to the new state of affairs.
+
+In short, be careful if using LDA to incrementally add new documents to the model. 
+**Batch usage of LDA** (where the entire training corpus is either supplied at once or does
+not exihibit topic drift) **is not affected**. 
+
+If you know of a better online LDA algorithm, let me know, I'll gladly add it to `gensim`.
 
 
 --------------------

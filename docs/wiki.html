@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Experiments on Wikipedia &mdash; gensim documentation</title>
+    <title>Experiments on the English Wikipedia &mdash; gensim documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -63,7 +63,7 @@
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Experiments on Wikipedia</a><ul>
+<li><a class="reference internal" href="#">Experiments on the English Wikipedia</a><ul>
 <li><a class="reference internal" href="#preparing-the-corpus">Preparing the corpus</a></li>
 <li><a class="reference internal" href="#latent-sematic-analysis">Latent Sematic Analysis</a></li>
 <li><a class="reference internal" href="#latent-dirichlet-allocation">Latent Dirichlet Allocation</a></li>
@@ -98,21 +98,22 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="experiments-on-wikipedia">
-<span id="wiki"></span><h1>Experiments on Wikipedia<a class="headerlink" href="#experiments-on-wikipedia" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="experiments-on-the-english-wikipedia">
+<span id="wiki"></span><h1>Experiments on the English Wikipedia<a class="headerlink" href="#experiments-on-the-english-wikipedia" title="Permalink to this headline">¶</a></h1>
 <p>To test <cite>gensim</cite> performance, we run it against the English version of Wikipedia.</p>
 <p>This page describes the process of obtaining and processing Wikipedia, so that
-anyone can reproduce our results. It is assumed you have <cite>gensim</cite> properly <a class="reference internal" href="install.html"><em>installed</em></a>.</p>
+anyone can reproduce the results. It is assumed you have <cite>gensim</cite> properly <a class="reference internal" href="install.html"><em>installed</em></a>.</p>
 <div class="section" id="preparing-the-corpus">
 <h2>Preparing the corpus<a class="headerlink" href="#preparing-the-corpus" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic">
 <li><p class="first">First, download the dump of all Wikipedia articles from <a class="reference external" href="http://download.wikimedia.org/enwiki/">http://download.wikimedia.org/enwiki/</a>
 (you want a file like <cite>enwiki-latest-pages-articles.xml.bz2</cite>). This file is about 6GB in size
-and contains (compressed version of) all articles from the English Wikipedia.</p>
+and contains (a compressed version of) all articles from the English Wikipedia.</p>
 </li>
 <li><p class="first">Convert the articles to plain text (process Wiki markup) and store the result as
-sparse TF-IDF vectors. In Python, this is easy to do on-the-fly (the code is included in <cite>gensim</cite>), and we don&#8217;t
-even need to uncompress the whole archive to disk:</p>
+sparse TF-IDF vectors. In Python, this is easy to do on-the-fly and we don&#8217;t
+even need to uncompress the whole archive to disk. There is a script included in
+<cite>gensim</cite> that does just that, run:</p>
 <div class="highlight-python"><pre>$ python -m gensim.corpora.wikicorpus</pre>
 </div>
 </li>
@@ -162,10 +163,10 @@ about 1.92 billion tokens in total.</p>
 <span class="go">topic #9(78.701): -0.570*&quot;film&quot; + -0.444*&quot;films&quot; + 0.128*&quot;kategori&quot; + 0.126*&quot;album&quot; + 0.120*&quot;station&quot; + -0.118*&quot;television&quot; + -0.113*&quot;poster&quot; + -0.108*&quot;directed&quot; + -0.107*&quot;actors&quot; + 0.091*&quot;railway&quot;</span>
 </pre></div>
 </div>
-<p>Creating the LSI model of Wikipedia takes about 5 hours and 14 minutes on my laptop <a class="footnote-reference" href="#id5" id="id1">[1]</a>.
+<p>Creating the LSI model of Wikipedia takes about 5 hours and 14 minutes on my laptop <a class="footnote-reference" href="#id6" id="id1">[1]</a>.
 If you need your results even faster, see the tutorial on <a class="reference internal" href="distributed.html"><em>Distributed Computing</em></a>.</p>
 <p>We see that the total processing time is dominated by the preprocessing step of
-preparing the TF-IDF corpus, which took 15h. <a class="footnote-reference" href="#id6" id="id2">[2]</a></p>
+preparing the TF-IDF corpus, which took 15h. <a class="footnote-reference" href="#id7" id="id2">[2]</a></p>
 <p>The algorithm used in <cite>gensim</cite> only needs to see each input document once, so it
 is suitable for environments where the documents come as a non-repeatable stream,
 or where the cost of storing/iterating over the corpus multiple times is too high.</p>
@@ -186,34 +187,47 @@ or where the cost of storing/iterating over the corpus multiple times is too hig
 <span class="go">MmCorpus(3199665 documents, 100000 features, 495547400 non-zero entries)</span>
 </pre></div>
 </div>
-<p>We will run online LDA (see Hoffman et al. <a class="footnote-reference" href="#id7" id="id3">[3]</a>), which is an algorithm that takes a chunk of documents,
-updates the LDA model, takes another chunk, updates... Online LDA can be contrasted
+<p>We will run online LDA (see Hoffman et al. <a class="footnote-reference" href="#id8" id="id3">[3]</a>), which is an algorithm that takes a chunk of documents,
+updates the LDA model, takes another chunk, updates the model etc. Online LDA can be contrasted
 with batch LDA, which processes the whole corpus (one full pass), then updates
 the model, then another pass, another update... The difference is that given a
 reasonably stationary document stream (not much topic drift), the online updates
 over the smaller chunks (subcorpora) are pretty good in themselves, so that the
-whole model converges faster. As a result, we will perhaps only need a single full
+model estimation converges faster. As a result, we will perhaps only need a single full
 pass over the corpus: if the corpus has 3 million articles, and we update once after
 every 10,000 articles, this means we will have done 300 updates in one pass, quite likely
 enough to have a very accurate topics estimate:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 100 LDA topics, using 1 pass and updating every 1 chunk (10,000 documents)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 100 LDA topics, using 1 pass and updating once every 1 chunk (10,000 documents)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">update_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">passes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># print the most contributing words (both positively and negatively) for the topics</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="c"># -1 to print &#39;em all</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># print the most contributing words (both positively and negatively) for 20 randomly selected topics</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span> <span class="c"># or -1 to print &#39;em all</span>
+<span class="go">FIXME</span>
 </pre></div>
 </div>
-<p>FIXME</p>
-<p>Creating this LDA model of Wikipedia takes about FIXME on my laptop <a class="footnote-reference" href="#id5" id="id4">[1]</a>.
-If you need your results faster, consider running <a class="reference internal" href="dist_lda.html"><em>Distributed Latent Dirichlet Allocation</em></a>.</p>
+<p>Creating this LDA model of Wikipedia takes about FIXME on my laptop <a class="footnote-reference" href="#id6" id="id4">[1]</a>.
+If you need your results faster, consider running <a class="reference internal" href="dist_lda.html"><em>Distributed Latent Dirichlet Allocation</em></a> on a cluster of
+computers.</p>
+<p>Note two differences between this and the Latent Semantic Analysis above: we asked LSA
+to extract 400 topics, LDA only 100 topics (so the difference in speed is in fact
+even greater). Secondly, the LSA implementation in <cite>gensim</cite> is truly online: if the nature of the input
+stream changes, LSA will re-orient its model to reflect these changes, in a reasonably
+small amount of updates. In contrast, LDA is not truly online (the name of the <a class="footnote-reference" href="#id8" id="id5">[3]</a>
+article notwithstanding), as the impact of later updates gradually diminishes. If
+there is topic drift in the input document stream, LDA will get confused and be
+increasingly slow at adjusting itself to the new state of affairs.</p>
+<p>In short, be careful if using LDA to incrementally add new documents to the model.
+<strong>Batch usage of LDA</strong> (where the entire training corpus is either supplied at once or does
+not exihibit topic drift) <strong>is not affected</strong>.</p>
+<p>If you know of a better online LDA algorithm, let me know, I&#8217;ll gladly add it to <cite>gensim</cite>.</p>
 <hr class="docutils" />
-<table class="docutils footnote" frame="void" id="id5" rules="none">
+<table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> My laptop = Core2Duo 2.53GHz MacBook Pro, 4GB RAM, OS X with <cite>libVec</cite>.</td></tr>
 </tbody>
 </table>
-<table class="docutils footnote" frame="void" id="id6" rules="none">
+<table class="docutils footnote" frame="void" id="id7" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td><p class="first">Here we&#8217;re mostly interested in performance, but it is interesting to look at the
@@ -238,10 +252,10 @@ By the way, improvements to the Wiki markup parsing code are welcome :-)</p>
 </td></tr>
 </tbody>
 </table>
-<table class="docutils footnote" frame="void" id="id7" rules="none">
+<table class="docutils footnote" frame="void" id="id8" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td>Hoffman, Blei, Bach. 2010. Online learning for Latent Dirichlet Allocation
+<tr><td class="label">[3]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> Hoffman, Blei, Bach. 2010. Online learning for Latent Dirichlet Allocation
 [<a class="reference external" href="http://www.cs.princeton.edu/~blei/papers/HoffmanBleiBach2010b.pdf">pdf</a>] [<a class="reference external" href="http://www.cs.princeton.edu/~mdhoffma/">code</a>]</td></tr>
 </tbody>
 </table>
@@ -278,8 +292,7 @@ By the way, improvements to the Wiki markup parsing code are welcome :-)</p>
     </div>
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 12, 2011.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.4.
+      Last updated on Feb 13, 2011.
     </div>
   </body>
 </html>

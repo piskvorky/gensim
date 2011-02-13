@@ -6,15 +6,19 @@
 Gensim -- Python Framework for Vector Space Modelling
 =====================================================
 
-.. admonition:: What's new?
+.. admonition:: What's new in version |version|?
 
-   Version |version| is `out <http://pypi.python.org/pypi/gensim>`_!
+   * faster and leaner **Latent Semantic Indexing (LSI)** and **Latent Dirichlet Allocation (LDA)**:
    
-   * incremental algorithms for *Latent Semantic Indexing (LSI)* and *Latent Dirichlet Allocation (LDA)* are now **faster** and consume **less memory**.
-   * Optimizations to vocabulary generation.
-   * Input corpus iterator can come from a compressed file (**bzip2**, **gzip**, ...), to save disk space when dealing with
+     * :doc:`Processing the English Wikipedia <wiki>` (`NIPS workshop paper <http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_)
+     * :doc:`dist_lsi` & :doc:`dist_lda`
+     
+   * Input corpus iterators can come from a compressed file (**bzip2**, **gzip**, ...), to save disk space when dealing with
      very large corpora.
-   
+   * `gensim` code now resides on `github <https://github.com/piskvorky/gensim/>`_.
+
+.. ::
+ 
    `gensim` now completes :doc:`LSI of the English Wikipedia <wiki>` 
    (3.2 million documents, 2 billion words) in **5 hours 14 minutes**, using a one-pass incremental 
    SVD algorithm, on a Macbook Pro laptop (`NIPS workshop paper <http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_). 
@@ -23,6 +27,9 @@ Gensim -- Python Framework for Vector Space Modelling
 For an **overview** of what you can (or cannot) do with `gensim`, go to the :doc:`introduction <intro>`.
 
 For **examples** on how to use it, try the :doc:`tutorials <tutorial>`.
+
+For **troubleshooting** and further questions, see the :doc:`installation <install>` page and the `gensim discussion group <http://groups.google.com/group/gensim/>`_.
+
 
 Quick Reference Example
 ------------------------

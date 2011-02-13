@@ -46,8 +46,8 @@ won't be  doing much with CPU most of the time, but pick a computer with ample m
 And that's it! The cluster is set up and running, ready to accept jobs. To remove
 a worker later on, simply terminate its `lsi_worker` process. To add another worker, run another
 `lsi_worker` (this will not affect a computation that is already running). If you terminate
-`lsi_dispatcher`, you won't be able to run computations until you run it again on 
-some node (surviving workers can be re-used though).
+`lsi_dispatcher`, you won't be able to run computations until you run it again 
+(surviving workers can be re-used though).
 
 
 Running LSA
@@ -86,7 +86,7 @@ at a time, otherwise all documents would be processed by a single worker all at 
 
 So let's run LSA on **one million documents** instead::
 
-    >>> # inflate the corpus to 1M documents, by repeating it over&over
+    >>> # inflate the corpus to 1M documents, by repeating its documents over&over
     >>> corpus1m = utils.RepeatCorpus(corpus, 1000000) 
     >>> # run distributed LSA on 1 million documents
     >>> lsi1m = models.LsiModel(corpus1m, id2word=id2word, numTopics=200, chunks=10000, distributed=True)
