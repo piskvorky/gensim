@@ -24,7 +24,7 @@ from gensim import matutils
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 
-logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s', level = logging.WARNING)
+logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s', level=logging.WARNING)
 
 
 def testfile():
@@ -140,21 +140,15 @@ class TestLdaModel(unittest.TestCase):
     
     def testTransform(self):
         # create the transformation model
-        passed = False
-        numpy.random.seed(13)
-        for i in xrange(10): # lda is randomized, so allow 10 iterations to test for equality
-            model = ldamodel.LdaModel(self.corpus, numTopics = 2)
-            
-            # transform one document
-            doc = list(self.corpus)[0]
-            transformed = model[doc]
-            
-            vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
-            expected = [0.0, 1.0]
-            passed = passed or numpy.allclose(sorted(vec), sorted(expected))  # must contain the same values, up to re-ordering
-            if passed:
-                break
-        self.assertTrue(passed, "Error in randomized LDA test")
+        model = ldamodel.LdaModel(self.corpus, numTopics=2, passes=100) # 100 passes ought to be enough to converge
+        
+        # transform one document
+        doc = list(self.corpus)[0]
+        transformed = model[doc]
+        
+        vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
+        expected = [0.87, 0.13]
+        assert numpy.allclose(sorted(vec), sorted(expected), atol=0.01)  # must contain the same values, up to re-ordering
         
     
     def testPersistence(self):
@@ -162,7 +156,7 @@ class TestLdaModel(unittest.TestCase):
         model.save(testfile())
         model2 = ldamodel.LdaModel.load(testfile())
         self.assertEqual(model.numTopics, model2.numTopics)
-        self.assertTrue(numpy.allclose(model.logProbW, model2.logProbW))
+        self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 #endclass TestLdaModel
