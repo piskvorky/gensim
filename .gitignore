@@ -35,3 +35,9 @@ ehthumbs.db
 Icon?
 Thumbs.db
 
+# Other #
+#########
+.project
+.pydevproject
+.settings/
+docs/src/_build/
