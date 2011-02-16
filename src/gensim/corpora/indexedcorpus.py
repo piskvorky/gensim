@@ -12,7 +12,7 @@ While the standard corpus interface in gensim allows iterating over corpus with
 `for doc in corpus: pass`, indexed corpus allows accessing the documents with 
 `corpus[docno]`. 
 
-**This is type of access is much slower than the iteration!** It does a disk seek
+**This type of access is much slower than the iteration!** It does a disk seek
 for every document access.
 """
 
@@ -30,7 +30,7 @@ class IndexedCorpus(interfaces.CorpusABC):
         that it also supports `corpus[docno]` (random access to document no. `docno`).
         
         Don't use this for corpus iteration ala `for i in xrange(len(corpus)): doc = corpus[i]`;
-        standard `for doc in corpus:` is **much** more efficient.
+        standard `for doc in corpus:` is much more efficient.
         
         >>> corpus = [[(1, 0.5)], [(0,1.0), (1,2.0)]]
         
@@ -48,7 +48,6 @@ class IndexedCorpus(interfaces.CorpusABC):
         
         self.index = shelve.open(index_fname, flag='r')
         serializer = self.index['type']
-        self.fname = fname
         self.corpus = serializer(fname)
     
 
