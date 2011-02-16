@@ -10,6 +10,8 @@ Corpus in SVMlight format.
 """
 
 
+from __future__ import with_statement
+
 import logging
 
 from gensim import interfaces
@@ -59,19 +61,28 @@ class SvmLightCorpus(interfaces.CorpusABC):
         """
         Iterate over the corpus, returning one sparse vector at a time.
         """
-        for lineNo, line in enumerate(open(self.fname)):
-            line = line[: line.find('#')].strip()
-            if not line:
-                continue # ignore comments and empty lines
-            parts = line.split()
-            if not parts:
-                raise ValueError('invalid format at line no. %i in %s' %
-                                 (lineNo, self.fname))
-            target, fields = parts[0], [part.rsplit(':', 1) for part in parts[1:]]
-            doc = [(int(p1) - 1, float(p2)) for p1, p2 in fields if p1 != 'qid'] # ignore 'qid' features, convert 1-based feature ids to 0-based
-            yield doc
+        self.streamposition = 0
+        with open(self.fname) as fin:
+            for lineNo, line in enumerate(fin):
+                doc = self.line2doc(line)
+                if doc is not None:
+                    yield doc
+                self.streamposition += len(line)
     
+    
+    def line2doc(self, line):
+        line = line[: line.find('#')].strip()
+        if not line:
+            return None # ignore comments and empty lines
+        parts = line.split()
+        if not parts:
+            raise ValueError('invalid format at line no. %i in %s' %
+                             (lineNo, self.fname))
+        target, fields = parts[0], [part.rsplit(':', 1) for part in parts[1:]]
+        doc = [(int(p1) - 1, float(p2)) for p1, p2 in fields if p1 != 'qid'] # ignore 'qid' features, convert 1-based feature ids to 0-based
+        return doc
 
+    
     @staticmethod
     def saveCorpus(fname, corpus, id2word = None):
         """
@@ -80,10 +91,19 @@ class SvmLightCorpus(interfaces.CorpusABC):
         The SVMlight `<target>` class tag is set to 0 for all documents.
         """
         logging.info("converting corpus to SVMlight format: %s" % fname)
-        fout = open(fname, 'w')
-        for doc in corpus:
-            pairs = ' '.join("%i:%s" % (termId + 1, termVal) for termId, termVal  in doc) # +1 to convert 0-base to 1-base
-            fout.write("0 %s\n" % pairs) # target class is always 0
-        fout.close()
+        
+        with open(fname, 'wb') as fout:
+            for doc in corpus:
+                pairs = ' '.join("%i:%s" % (termId + 1, termVal) for termId, termVal  in doc) # +1 to convert 0-base to 1-base
+                fout.write("0 %s\n" % pairs) # target class is always 0
+    
+
+    def docbyoffset(self, offset):
+        """
+        Return the document stored at file position `offset`.
+        """
+        with open(self.fname, 'rb') as f:
+            f.seek(offset)
+            return self.line2doc(f.readline())
 #endclass SvmLightCorpus
 
