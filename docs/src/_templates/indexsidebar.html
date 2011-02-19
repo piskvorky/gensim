@@ -5,7 +5,7 @@ new TWTR.Widget({
   id: 'twtr-search-widget',
   version: 2,
   type: 'search',
-  search: '#gensim',
+  search: 'gensim',
   interval: 6000,
   subject: '#gensim on twitter',
   title: '',
@@ -23,8 +23,8 @@ new TWTR.Widget({
     }
   },
   features: {
-    scrollbar: true,
-    loop: false,
+    scrollbar: false,
+    loop: true,
     live: true,
     hashtags: true,
     timestamp: true,

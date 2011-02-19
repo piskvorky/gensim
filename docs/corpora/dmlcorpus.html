@@ -178,7 +178,12 @@ config etc.).</p>
 <dl class="staticmethod">
 <dt id="gensim.corpora.dmlcorpus.DmlCorpus.saveCorpus">
 <em class="property">static </em><tt class="descname">saveCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.dmlcorpus.DmlCorpus.saveCorpus" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save an existing <cite>corpus</cite> in the particular format of this class.</p>
+<dd><p>Save an existing <cite>corpus</cite> to disk.</p>
+<p>Some formats also support saving the dictionary (<cite>feature_id-&gt;word</cite> mapping),
+which can in this case be provided by the optional <cite>id2word</cite> parameter.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;file.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -219,7 +224,7 @@ config etc.).</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 13, 2011.
+      Last updated on Feb 19, 2011.
     </div>
   </body>
 </html>

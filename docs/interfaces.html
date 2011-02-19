@@ -101,9 +101,17 @@ is provided in the interface itself, so that the interfaces can be subclassed).<
 <dl class="class">
 <dt id="gensim.interfaces.CorpusABC">
 <em class="property">class </em><tt class="descclassname">gensim.interfaces.</tt><tt class="descname">CorpusABC</tt><a class="headerlink" href="#gensim.interfaces.CorpusABC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Interface for corpora. A <em>corpus</em> is simply an iterable, where each 
-iteration step yields one document. A document is a list of (fieldId, fieldValue)
-2-tuples.</p>
+<dd><p>Interface (abstract base class) for corpora. A <em>corpus</em> is simply an iterable, 
+where each iteration step yields one document:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">corpus</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="c"># do something with the doc...</span>
+</pre></div>
+</div>
+<p>A document is a sequence of <cite>(fieldId, fieldValue)</cite> 2-tuples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">attr_id</span><span class="p">,</span> <span class="n">attr_value</span> <span class="ow">in</span> <span class="n">doc</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="c"># do something with the attribute</span>
+</pre></div>
+</div>
 <p>Note that although a default <tt class="xref py py-func docutils literal"><span class="pre">len()</span></tt> method is provided, it is very inefficient
 (performs a linear scan through the corpus to determine its length). Wherever 
 the corpus size is needed and known in advance (or at least doesn&#8217;t change so 
@@ -128,7 +136,12 @@ for serializing the actual stream content.</p>
 <dl class="staticmethod">
 <dt id="gensim.interfaces.CorpusABC.saveCorpus">
 <em class="property">static </em><tt class="descname">saveCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.interfaces.CorpusABC.saveCorpus" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save an existing <cite>corpus</cite> in the particular format of this class.</p>
+<dd><p>Save an existing <cite>corpus</cite> to disk.</p>
+<p>Some formats also support saving the dictionary (<cite>feature_id-&gt;word</cite> mapping),
+which can in this case be provided by the optional <cite>id2word</cite> parameter.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;file.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -223,7 +236,7 @@ document in its stead.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 13, 2011.
+      Last updated on Feb 19, 2011.
     </div>
   </body>
 </html>
