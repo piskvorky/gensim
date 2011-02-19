@@ -116,7 +116,7 @@ enough to have a very accurate topics estimate::
 
 Unlike LSA, the topics coming from LDA are easier to interpret::
 
-    >>> # print the most contributing words (both positively and negatively) for 20 randomly selected topics
+    >>> # print the most contributing words for 20 randomly selected topics
     >>> lda.printTopics(20)
     topic #0: 0.065*india + 0.043*indian + 0.019*sri + 0.012*tamil + 0.011*singh + 0.011*lanka + 0.010*temple + 0.009*delhi + 0.007*pradesh + 0.007*bangladesh
     topic #1: 0.083*game + 0.053*games + 0.051*video + 0.018*player + 0.010*players + 0.007*playstation + 0.006*pc + 0.006*entertainment + 0.005*nintendo + 0.005*online
@@ -155,6 +155,11 @@ confused and be increasingly slower at adjusting itself to the new state of affa
 In short, be careful if using LDA to incrementally add new documents to the model 
 over time. **Batch usage of LDA**, where the entire training corpus is either known beforehand or does
 not exihibit topic drift, **is ok and not affected**. 
+
+To run batch LDA (not online), train `LdaModel` with::
+
+    >>> # extract 100 LDA topics, using 20 full passes, no online updates
+    >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, numTopics=100, update_every=0, passes=20)
 
 
 --------------------

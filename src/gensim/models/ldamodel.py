@@ -426,7 +426,7 @@ class LdaModel(interfaces.TransformationABC):
         
         updates_per_pass = max(1, lencorpus / updateafter)
         logger.info("running %s LDA training, %s topics, %i passes over "
-                    "the supplied corpus of %i documets, updating model once "
+                    "the supplied corpus of %i documents, updating model once "
                     "every %i documents" %
                     (updatetype, self.numTopics, passes, lencorpus, updateafter))
         if updates_per_pass * passes < 10:
@@ -435,7 +435,7 @@ class LdaModel(interfaces.TransformationABC):
 
         for iteration in xrange(passes):
             if self.dispatcher:
-                logger.info('initializing workers')
+                logger.info('initializing %s workers' % self.numworkers)
                 self.dispatcher.reset(self.state)
             else:
                 other = LdaState(self.state.sstats)

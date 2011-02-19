@@ -211,7 +211,7 @@ div.body {
 }
 
 div.bodywrapper {
-    margin: 0 240px 0 0;
+    margin: 0 280px 0 0;
     border-right: 1px solid #ccc;
 }
 
@@ -222,7 +222,7 @@ div.body a {
 div.sphinxsidebar {
     margin: 0;
     padding: 0.5em 15px 15px 0;
-    width: 210px;
+    width: 250px;
     float: right;
     text-align: left;
 /*    margin-left: -100%; */

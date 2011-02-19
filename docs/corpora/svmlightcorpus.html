@@ -116,6 +116,12 @@ feature ids to be 1-based (counting starts at 1). We convert features to 0-base
 internally by decrementing all ids when loading a SVMlight input file, and 
 increment them again when saving as SVMlight.</p>
 <p>Initialize the corpus from a file.</p>
+<dl class="method">
+<dt id="gensim.corpora.svmlightcorpus.SvmLightCorpus.docbyoffset">
+<tt class="descname">docbyoffset</tt><big>(</big><em>offset</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus.docbyoffset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the document stored at file position <cite>offset</cite>.</p>
+</dd></dl>
+
 <dl class="classmethod">
 <dt id="gensim.corpora.svmlightcorpus.SvmLightCorpus.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus.load" title="Permalink to this definition">¶</a></dt>
@@ -173,7 +179,7 @@ increment them again when saving as SVMlight.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 13, 2011.
+      Last updated on Feb 19, 2011.
     </div>
   </body>
 </html>

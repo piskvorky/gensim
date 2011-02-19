@@ -46,7 +46,8 @@ if __name__ == '__main__':
     method = sys.argv[2].strip().lower()
     
     logging.info("loading corpus mappings")
-    config = dmlcorpus.DmlConfig('gensim_%s' % language, resultDir = gensim_build.RESULT_DIR, acceptLangs = [language])
+    config = dmlcorpus.DmlConfig('%s_%s' % (gensim_build.PREFIX, language),
+                                 resultDir=gensim_build.RESULT_DIR, acceptLangs=[language])
 
     logging.info("loading word id mapping from %s" % config.resultFile('wordids.txt'))
     id2word = dmlcorpus.DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
@@ -75,7 +76,7 @@ if __name__ == '__main__':
     else:
         raise ValueError('unknown topic extraction method: %s' % repr(method))
     
-    MmCorpus.saveCorpus(config.resultFile('corpus_%s.mm' % method), model[corpus])
+    MmCorpus.saveCorpus(config.resultFile('%s.mm' % method), model[corpus])
             
     logging.info("finished running %s" % program)
 

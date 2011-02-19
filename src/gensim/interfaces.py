@@ -13,14 +13,23 @@ is provided in the interface itself, so that the interfaces can be subclassed).
 
 from __future__ import with_statement
 
+import logging
+
 import utils, matutils
 
 
 class CorpusABC(utils.SaveLoad):
     """
-    Interface for corpora. A *corpus* is simply an iterable, where each 
-    iteration step yields one document. A document is a list of (fieldId, fieldValue)
-    2-tuples.
+    Interface (abstract base class) for corpora. A *corpus* is simply an iterable, 
+    where each iteration step yields one document:
+    
+    >>> for doc in corpus:
+    >>>     # do something with the doc...
+    
+    A document is a sequence of `(fieldId, fieldValue)` 2-tuples:
+    
+    >>> for attr_id, attr_value in doc:
+    >>>     # do something with the attribute
     
     Note that although a default :func:`len` method is provided, it is very inefficient
     (performs a linear scan through the corpus to determine its length). Wherever 
@@ -48,13 +57,19 @@ class CorpusABC(utils.SaveLoad):
         This method is just the least common denominator and should really be 
         overridden when possible.
         """
-        logging.warning("performing full corpus scan to determine its length; was this intended?")
-        return sum(1 for doc in self) # sum(empty generator) == 0, so this works even for an empty corpus
+        raise NotImplementedError("must override __len__() before calling len(corpus)")
+#        logging.warning("performing full corpus scan to determine its length; was this intended?")
+#        return sum(1 for doc in self) # sum(empty generator) == 0, so this works even for an empty corpus
 
     @staticmethod
     def saveCorpus(fname, corpus, id2word=None):
         """
-        Save an existing `corpus` in the particular format of this class.
+        Save an existing `corpus` to disk. 
+        
+        Some formats also support saving the dictionary (`feature_id->word` mapping),
+        which can in this case be provided by the optional `id2word` parameter.
+        
+        >>> MmCorpus.saveCorpus('file.mm', corpus)
         """
         raise NotImplementedError('cannot instantiate abstract base class')
     

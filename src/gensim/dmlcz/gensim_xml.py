@@ -101,21 +101,23 @@ if __name__ == '__main__':
     method = sys.argv[2].strip().lower()
     
     logging.info("loading corpus mappings")
-    config = dmlcorpus.DmlConfig('gensim_%s' % language, resultDir = gensim_build.RESULT_DIR, acceptLangs = [language])
+    config = dmlcorpus.DmlConfig('%s_%s' % (gensim_build.PREFIX, language), 
+                                 resultDir=gensim_build.RESULT_DIR, acceptLangs=[language])
+
 
     logging.info("loading word id mapping from %s" % config.resultFile('wordids.txt'))
     id2word = dmlcorpus.DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
     logging.info("loaded %i word ids" % len(id2word))
     
     corpus = dmlcorpus.DmlCorpus.load(config.resultFile('.pkl'))
-    input = MmCorpus(config.resultFile('corpus_%s.mm' % method))
-    assert len(input) == len(corpus), "corpus size mismatch (%i vs %i): run ./gensim_genmodel again" % (len(input), len(corpus))
+    input = MmCorpus(config.resultFile('_%s.mm' % method))
+    assert len(input) == len(corpus), "corpus size mismatch (%i vs %i): run ./gensim_genmodel.py again" % (len(input), len(corpus))
 
      # initialize structure for similarity queries
     if method == 'lsi' or method == 'rp': # for these methods, use dense vectors
-        index = MatrixSimilarity(input, numBest = MAX_SIMILAR + 1, numFeatures = input.numTerms)
+        index = MatrixSimilarity(input, numBest=MAX_SIMILAR + 1, numFeatures=input.numTerms)
     else:
-        index = SparseMatrixSimilarity(input, numBest = MAX_SIMILAR + 1)
+        index = SparseMatrixSimilarity(input, numBest=MAX_SIMILAR + 1)
     
     index.normalize = False # do not normalize query vectors during similarity queries (the index is already built normalized, so it would be a no-op)
     generateSimilar(corpus, index, method) # for each document, print MAX_SIMILAR nearest documents to a xml file, in dml-cz specific format

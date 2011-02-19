@@ -215,7 +215,7 @@ class LsiModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
     
     """
-    def __init__(self, corpus=None, numTopics=200, id2word=None, chunks=20000, 
+    def __init__(self, corpus=None, numTopics=200, id2word=None, chunks=10000, 
                  decay=1.0, distributed=False, onepass=True, 
                  power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS):
         """
@@ -274,6 +274,7 @@ class LsiModel(interfaces.TransformationABC):
         self.docs_processed = 0
         self.projection = Projection(self.numTerms, self.numTopics)
         
+        self.numworkers = 1
         if not distributed:
             logger.info("using serial LSI version on this node")
             self.dispatcher = None
@@ -291,7 +292,8 @@ class LsiModel(interfaces.TransformationABC):
                                       chunks = chunks, decay = decay,
                                       distributed = False, onepass = onepass)
                 self.dispatcher = dispatcher
-                logger.info("using distributed version with %i workers" % len(dispatcher.getworkers()))
+                self.numworkers = len(dispatcher.getworkers())
+                logger.info("using distributed version with %i workers" % self.numworkers)
             except Exception, err:
                 # distributed version was specifically requested, so this is an error state
                 logger.error("failed to initialize distributed LSI (%s)" % err)
@@ -334,12 +336,18 @@ class LsiModel(interfaces.TransformationABC):
                 self.projection.merge(update, decay=decay)
             else:
                 # the one-pass algo
-                chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
+                
                 doc_no = 0
-                for chunk_no, (key, group) in enumerate(chunker):
+                # the corpus will be processed in chunks of `chunks` of documents. 
+                # keep preparing new chunks in a separate thread, so that we don't 
+                # waste time waiting for chunks to be read from disk. instead, fill 
+                # a (relatively short) chunk queue asynchronously in utils.chunkize, 
+                # and pop already-ready chunks from it as needed.
+                for chunk_no, chunk in enumerate(utils.chunkize(corpus, chunks, self.numworkers)):
                     # construct the job as a sparse matrix, to minimize memory overhead
                     # definitely avoid materializing it as a dense matrix!
-                    job = matutils.corpus2csc((doc for _, doc in group), num_terms=self.numTerms)
+                    job = matutils.corpus2csc(chunk, num_terms=self.numTerms)
+                    del chunk
                     doc_no += job.shape[1]
                     if self.dispatcher:
                         # distributed version: add this job to the job queue, so workers can work on it
@@ -410,7 +418,7 @@ class LsiModel(interfaces.TransformationABC):
         Return only the `topN` words which contribute the most to the direction 
         of the topic (both negative and positive).
         
-        >>> lsimodel.printTopic(10, topN = 5)
+        >>> lsimodel.printTopic(10, topN=5)
         '-0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + -0.174 * "functor" + -0.168 * "operator"'
         
         """
@@ -685,7 +693,7 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
     # first phase: construct the orthonormal action matrix Q = orth(Y) = orth((A * A.T)^q * A * O)
     # build Y in blocks of `chunks` documents (much faster than going one-by-one 
     # and more memory friendly than processing all documents at once)
-    y = numpy.zeros(dtype = dtype, shape = (num_terms, samples))
+    y = numpy.zeros(dtype=dtype, shape=(num_terms, samples))
     logger.info("1st phase: constructing %s action matrix" % str(y.shape))
     
     if scipy.sparse.issparse(corpus):
@@ -695,7 +703,8 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
         sparsetools.csc_matvecs(m, n, samples, corpus.indptr, corpus.indices, 
                                 corpus.data, o.ravel(), y.ravel()) # y = corpus * o
         del o
-        y = y.astype(dtype) # TODO unlike numpy, scipy actually makes a copy even when dtype=y.dtype...marginally inefficient
+        if y.dtype != dtype:
+            y = y.astype(dtype)
         logger.debug("running %i power iterations" % power_iters)
         for power_iter in xrange(power_iters):
             y = corpus.T * y
