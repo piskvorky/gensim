@@ -52,7 +52,7 @@ class IndexedCorpus(interfaces.CorpusABC):
     
 
     @classmethod
-    def saveIndexedCorpus(serializer, fname, corpus, index_fname=None):
+    def saveIndexedCorpus(serializer, fname, corpus, id2word=None, index_fname=None):
         """
         Iterate through the document stream `corpus`, saving the documents to `fname`
         and recording byte offset of each document. Save the resulting index 
@@ -69,7 +69,7 @@ class IndexedCorpus(interfaces.CorpusABC):
         if index_fname is None:
             index_fname = fname + '.index'
         
-        offsets = serializer.saveCorpus(fname, corpus)
+        offsets = serializer.saveCorpus(fname, corpus, id2word)
         if offsets is None:
             raise NotImplementedError("called saveIndexedCorpus on class %s which \
             doesn't support indexing!" % serializer.__name__)

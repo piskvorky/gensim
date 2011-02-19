@@ -46,7 +46,7 @@ class BleiCorpus(IndexedCorpus):
             fnameVocab = fname + '.vocab'
         
         self.fname = fname
-        words = open(fnameVocab).read().split('\n')
+        words = [word.rstrip() for word in open(fnameVocab)]
         self.id2word = dict(enumerate(words))
         self.length = None
 
