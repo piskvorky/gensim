@@ -56,14 +56,14 @@ class TfidfModel(interfaces.TransformationABC):
         frequencies for documents.
         """
         logging.info("calculating counts")
-        idfs = {}
+        dfs = {}
         numNnz = 0
         for docNo, bow in enumerate(corpus):
             if docNo % 10000 == 0:
                 logging.info("PROGRESS: processing document #%i" % docNo)
             numNnz += len(bow)
             for termId, termCount in bow:
-                idfs[termId] = idfs.get(termId, 0) + 1
+                dfs[termId] = dfs.get(termId, 0) + 1
 
         # keep some stats about the training corpus
         self.numDocs = docNo + 1 # HACK using leftover from enumerate(corpus) above
@@ -71,9 +71,9 @@ class TfidfModel(interfaces.TransformationABC):
         
         # and finally compute the idf weights
         logging.info("calculating IDF weights for %i documents and %i features (%i matrix non-zeros)" %
-                     (self.numDocs, 1 + max([-1] + idfs.keys()), self.numNnz))
+                     (self.numDocs, 1 + max([-1] + dfs.keys()), self.numNnz))
         self.idfs = dict((termId, math.log(1.0 * self.numDocs / docFreq, 2)) # the IDF weight formula
-                         for termId, docFreq in idfs.iteritems())
+                         for termId, docFreq in dfs.iteritems())
 
 
     def __getitem__(self, bow):

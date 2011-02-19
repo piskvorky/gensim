@@ -367,7 +367,10 @@ class InputQueue(threading.Thread):
             # HACK XXX convert documents to numpy arrays, to save memory.
             # makes no difference if docs are plain standard list of 2-tuples etc, 
             # but what if they are more complex, user-defined objects?
+            # this also gives a scipy warning at runtime:
+            # "UserWarning: indices array has non-integer dtype (float64)"
             chunk = [numpy.asarray(doc) for doc in chunk]
+            logger.debug("pre-prepared another chunk (qsize=%s)" % self.q.qsize())
             self.q.put(chunk, block=True)
 #endclass InputQueue
 
