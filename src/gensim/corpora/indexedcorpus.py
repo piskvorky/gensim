@@ -25,75 +25,63 @@ from gensim import interfaces, utils
 class IndexedCorpus(interfaces.CorpusABC):
     def __init__(self, fname, index_fname=None):
         """
-        Read previously saved index from `index_fname` and return corpus that behaves 
-        just like the original corpus that was passed to `saveCorpus(fname)`, except
-        that it also supports `corpus[docno]` (random access to document no. `docno`).
+        Initialize this base class, by loading a previously saved index from 
+        `index_fname` (or `fname.index`). This index will allow inheriting classes 
+        to support the `corpus[docno]` syntax (random access to document no. `docno`).
         
-        Don't use this for corpus iteration ala `for i in xrange(len(corpus)): doc = corpus[i]`;
+        Don't use the index for corpus iteration ala `for i in xrange(len(corpus)): doc = corpus[i]`;
         standard `for doc in corpus:` is much more efficient.
         
-        >>> corpus = [[(1, 0.5)], [(0,1.0), (1,2.0)]]
-        
         >>> # save corpus in SvmLightCorpus format with an index
-        >>> IndexedCorpus.saveCorpus('testfile.svmlight', corpus, gensim.corpora.SvmLightCorpus)
+        >>> corpus = [[(1, 0.5)], [(0, 1.0), (1, 2.0)]]
+        >>> gensim.corpora.SvmLightCorpus.saveIndexedCorpus('testfile.svmlight', corpus)
         
         >>> # load back
-        >>> corpus_with_random_access = IndexedCorpus('tstfile.svmlight')
+        >>> corpus_with_random_access = gensim.corpora.SvmLightCorpus('tstfile.svmlight')
         >>> print corpus_with_random_access[1]
         [(0, 1.0), (1, 2.0)]
         
         """
         if index_fname is None:
             index_fname = fname + '.index'
-        
-        self.index = shelve.open(index_fname, flag='r')
-        serializer = self.index['type']
-        self.corpus = serializer(fname)
+        try:
+            self.index = utils.unpickle(index_fname)
+            logging.info("loaded corpus index from %s" % index_fname)
+        except:
+            self.index = None
     
 
-    @staticmethod
-    def saveCorpus(fname, corpus, serializer, index_fname=None):
+    @classmethod
+    def saveIndexedCorpus(serializer, fname, corpus, index_fname=None):
         """
         Iterate through the document stream `corpus`, saving the documents to `fname`
         and recording byte offset of each document. Save the resulting index 
         structure to file `index_fname`.
         
-        This relies on the underlying corpus class `serializer` supporting (in 
+        This relies on the underlying corpus class `serializer` providing (in 
         addition to standard iteration):
-          *  the `serializer.streamposition` attribute, which holds the byte offset
-             of the last yielded document during iteration.
-          * the `serializer.docbyoffset(offset)` method, which returns a document
-            positioned at `offset` bytes within a file.
+          * `saveCorpus` method that returns a sequence of byte offsets, one for
+             each saved document,
+          * the `docbyoffset(offset)` method, which returns a document
+            positioned at `offset` bytes within the persistent storage (file).
         
         """
         if index_fname is None:
             index_fname = fname + '.index'
         
-        serializer.saveCorpus(fname, corpus)
-        corpus = serializer(fname)
+        offsets = serializer.saveCorpus(fname, corpus)
+        if offsets is None:
+            raise NotImplementedError("called saveIndexedCorpus on class %s which \
+            doesn't support indexing!" % serializer.__name__)
         
-        logging.info("saving corpus index to %s" % index_fname)
-        index = shelve.open(index_fname, flag='n', protocol=-1) # overwrite existing index file, if any
-        index['type'] = serializer
-        docno = -1
-        for docno, doc in enumerate(corpus):
-            index[str(docno)] = corpus.streamposition
-        docno += 1
-        # we've already iterated over the entire corpus, so we might as well remember its length
-        index['len'] = docno
-        index.close()
+        # store offsets persistently, using pickle
+        logging.info("saving %s index to %s" % (serializer.__name__, index_fname))
+        utils.pickle(offsets, index_fname)
 
-    
-    def __iter__(self):
-        for doc in self.corpus:
-            yield doc
-
-    
-    def __len__(self):
-        return self.index['len']
-    
     
     def __getitem__(self, docno):
-        return self.corpus.docbyoffset(self.index[str(docno)])
+        if self.index is None:
+            raise RuntimeError("cannot call corpus[docid] without an index")
+        return self.docbyoffset(self.index[docno])
 #endclass IndexedCorpus
 

@@ -9,18 +9,20 @@
 Corpus in GibbsLda++ format of List-Of-Words.
 """
 
+from __future__ import with_statement
 
 import logging
 
 from gensim import interfaces, utils
+from gensim.corpora import IndexedCorpus
 
 
 
 def splitOnSpace(s):
-    return s.strip().split(' ')
+    return [word for word in s.strip().split(' ') if word]
 
 
-class LowCorpus(interfaces.CorpusABC):
+class LowCorpus(IndexedCorpus):
     """
     List_Of_Words corpus handles input in GibbsLda++ format.
     
@@ -44,7 +46,7 @@ class LowCorpus(interfaces.CorpusABC):
         in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated 
         by the blank character.
     """
-    def __init__(self, fname, id2word = None, line2words = splitOnSpace):
+    def __init__(self, fname, id2word=None, line2words=splitOnSpace):
         """
         Initialize the corpus from a file.
         
@@ -57,6 +59,7 @@ class LowCorpus(interfaces.CorpusABC):
         `line2words` is a function which converts lines into tokens. Defaults to 
         simple splitting on spaces.
         """
+        IndexedCorpus.__init__(self, fname)
         logging.info("loading corpus from %s" % fname)
         
         self.fname = fname # input file, see class doc for format
@@ -87,43 +90,46 @@ class LowCorpus(interfaces.CorpusABC):
         return self.numDocs
 
     
+    def line2doc(self, line):
+        words = self.line2words(line)
+
+        if self.useWordIds:
+            # get all distinct terms in this document, ignore unknown words
+            uniqWords = set(words).intersection(self.word2id.iterkeys())
+            
+            # the following creates a unique list of words *in the same order*
+            # as they were in the input. when iterating over the documents,
+            # the (word, count) pairs will appear in the same order as they
+            # were in the input (bar duplicates), which looks better. 
+            # if this was not needed, we might as well have used useWords = set(words)
+            useWords, marker = [], set()
+            for word in words:
+                if (word in uniqWords) and (word not in marker):
+                    useWords.append(word)
+                    marker.add(word)
+            # construct a list of (wordIndex, wordFrequency) 2-tuples
+            doc = zip(map(self.word2id.get, useWords), map(words.count, useWords)) # using list.count is suboptimal but speed of this whole function is irrelevant
+        else:
+            uniqWords = set(words)
+            # construct a list of (word, wordFrequency) 2-tuples
+            doc = zip(uniqWords, map(words.count, uniqWords)) # using list.count is suboptimal but that's irrelevant at this point
+        
+        # return the document, then forget it and move on to the next one
+        # note that this way, only one doc is stored in memory at a time, not the whole corpus
+        return doc
+    
+    
     def __iter__(self):
         """
         Iterate over the corpus, returning one bag-of-words vector at a time.
         """
         for lineNo, line in enumerate(open(self.fname)):
             if lineNo > 0: # ignore the first line = number of documents
-                # convert document line to words, using the function supplied in constructor
-                words = self.line2words(line)
-                
-                if self.useWordIds:
-                    # get all distinct terms in this document, ignore unknown words
-                    uniqWords = set(words).intersection(self.word2id.iterkeys())
-                    
-                    # the following creates a unique list of words *in the same order*
-                    # as they were in the input. when iterating over the documents,
-                    # the (word, count) pairs will appear in the same order as they
-                    # were in the input (bar duplicates), which looks better. 
-                    # if this was not needed, we might as well have used useWords = set(words)
-                    useWords, marker = [], set()
-                    for word in words:
-                        if (word in uniqWords) and (word not in marker):
-                            useWords.append(word)
-                            marker.add(word)
-                    # construct a list of (wordIndex, wordFrequency) 2-tuples
-                    doc = zip(map(self.word2id.get, useWords), map(words.count, useWords)) # using list.count is suboptimal but speed of this whole function is irrelevant
-                else:
-                    uniqWords = set(words)
-                    # construct a list of (word, wordFrequency) 2-tuples
-                    doc = zip(uniqWords, map(words.count, uniqWords)) # using list.count is suboptimal but that's irrelevant at this point
-                
-                # return the document, then forget it and move on to the next one
-                # note that this way, only one doc is stored in memory at a time, not the whole corpus
-                yield doc
+                yield self.line2doc(line)
     
     
     @staticmethod
-    def saveCorpus(fname, corpus, id2word = None):
+    def saveCorpus(fname, corpus, id2word=None):
         """
         Save a corpus in the List-of-words format.
         """
@@ -133,20 +139,31 @@ class LowCorpus(interfaces.CorpusABC):
         
         logging.info("storing corpus in List-Of-Words format: %s" % fname)
         truncated = 0
-        fout = open(fname, 'w')
-        fout.write('%i\n' % len(corpus))
-        for doc in corpus:
-            words = []
-            for wordId, value in doc:
-                if abs(int(value) - value) > 1e-6:
-                    truncated += 1
-                words.extend([str(id2word[wordId])] * int(value))
-            fout.write('%s\n' % ' '.join(words))
-        fout.close()
+        offsets = []
+        with open(fname, 'w') as fout:
+            fout.write('%i\n' % len(corpus))
+            for doc in corpus:
+                words = []
+                for wordId, value in doc:
+                    if abs(int(value) - value) > 1e-6:
+                        truncated += 1
+                    words.extend([str(id2word[wordId])] * int(value))
+                offsets.append(fout.tell())
+                fout.write('%s\n' % ' '.join(words))
         
         if truncated:
             logging.warning("List-of-words format can only save vectors with "
                             "integer elements; %i float entries were truncated to integer value" %
                             truncated)
+        return offsets
+    
+    
+    def docbyoffset(self, offset):
+        """
+        Return the document stored at file position `offset`.
+        """
+        with open(self.fname) as f:
+            f.seek(offset)
+            return self.line2doc(f.readline())
 #endclass LowCorpus
 

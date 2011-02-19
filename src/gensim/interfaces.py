@@ -57,8 +57,9 @@ class CorpusABC(utils.SaveLoad):
         This method is just the least common denominator and should really be 
         overridden when possible.
         """
-        logging.warning("performing full corpus scan to determine its length; was this intended?")
-        return sum(1 for doc in self) # sum(empty generator) == 0, so this works even for an empty corpus
+        raise NotImplementedError("must override __len__() before calling len(corpus)")
+#        logging.warning("performing full corpus scan to determine its length; was this intended?")
+#        return sum(1 for doc in self) # sum(empty generator) == 0, so this works even for an empty corpus
 
     @staticmethod
     def saveCorpus(fname, corpus, id2word=None):

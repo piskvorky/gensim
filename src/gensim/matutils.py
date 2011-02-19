@@ -8,6 +8,9 @@
 This module contains math helper functions.
 """
 
+from __future__ import with_statement
+
+
 import logging
 import math
 import os
@@ -276,7 +279,7 @@ class MmWriter(object):
 
 
     @staticmethod
-    def writeCorpus(fname, corpus, progressCnt = 1000):
+    def writeCorpus(fname, corpus, progressCnt=1000, index=False):
         """
         Save the vector space representation of an entire corpus to disk.
         
@@ -289,15 +292,21 @@ class MmWriter(object):
         mw.writeHeaders(-1, -1, -1) # will print 50 spaces followed by newline on the stats line
         
         # calculate necessary header info (nnz elements, num terms, num docs) while writing out vectors
-        numTerms = numNnz = 0
-        docNo = -1
-        
+        numTerms, numNnz = 0, 0
+        docNo, poslast = -1, -1
+        offsets = []
         for docNo, bow in enumerate(corpus):
             if docNo % progressCnt == 0:
                 logger.info("PROGRESS: saving document #%i" % docNo)
             if len(bow) > 0:
                 numTerms = max(numTerms, 1 + max(wordId for wordId, val in bow))
                 numNnz += len(bow)
+            if index:
+                posnow = mw.fout.tell()
+                if posnow == poslast:
+                    offsets[-1] = -1
+                offsets.append(posnow)
+                poslast = posnow
             mw.writeVector(docNo, bow)
         numDocs = docNo + 1
             
@@ -312,6 +321,7 @@ class MmWriter(object):
         mw.fakeHeaders(numDocs, numTerms, numNnz)
         
         mw.close()
+        return offsets
 
 
     def __del__(self):
@@ -350,7 +360,7 @@ class MmReader(object):
         to be rows of the matrix (and document features are columns). 
         
         `input` is either a string (file path) or a file-like object that supports
-        `seek(0)` (e.g. gzip.GzipFile, bz2.BZ2File).
+        `seek()` (e.g. gzip.GzipFile, bz2.BZ2File).
         """
         logger.info("initializing corpus reader from %s" % input)
         self.input, self.transposed = input, transposed
@@ -429,5 +439,33 @@ class MmReader(object):
         # of documents as specified in the header
         for prevId in xrange(prevId + 1, self.numDocs):
             yield prevId, []
+    
+    
+    def docbyoffset(self, offset):
+        """Return document at file offset `offset` (in bytes)"""
+        # empty documents are not stored explicitly in MM format, so the index marks 
+        # them with a special offset, -1.
+        if offset == -1:
+            return []
+        if isinstance(self.input, basestring):
+            fin = open(self.input)
+        else:
+            fin = self.input
+        
+        fin.seek(offset) # works for gzip/bz2 input, too
+        prevId, document = -1, []
+        for line in fin:
+            docId, termId, val = line.split()
+            if not self.transposed:
+                termId, docId = docId, termId
+            docId, termId, val = int(docId) - 1, int(termId) - 1, float(val) # -1 because matrix market indexes are 1-based => convert to 0-based
+            assert prevId <= docId, "matrix columns must come in ascending order"
+            if docId != prevId:
+                if prevId >= 0:
+                    return document
+                prevId = docId
+            
+            document.append((termId, val,)) # add another field to the current document
+        return document
 #endclass MmReader
 

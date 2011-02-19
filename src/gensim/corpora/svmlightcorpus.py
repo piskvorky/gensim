@@ -14,10 +14,11 @@ from __future__ import with_statement
 
 import logging
 
-from gensim import interfaces
+from gensim import interfaces, utils
+from gensim.corpora import IndexedCorpus
 
 
-class SvmLightCorpus(interfaces.CorpusABC):
+class SvmLightCorpus(IndexedCorpus):
     """
     Corpus in SVMlight format.
     
@@ -44,6 +45,7 @@ class SvmLightCorpus(interfaces.CorpusABC):
         """
         Initialize the corpus from a file.
         """
+        IndexedCorpus.__init__(self, fname)
         logging.info("loading corpus from %s" % fname)
         
         self.fname = fname # input file, see class doc for format
@@ -61,14 +63,38 @@ class SvmLightCorpus(interfaces.CorpusABC):
         """
         Iterate over the corpus, returning one sparse vector at a time.
         """
-        self.streamposition = 0
         with open(self.fname) as fin:
             for lineNo, line in enumerate(fin):
                 doc = self.line2doc(line)
                 if doc is not None:
                     yield doc
-                self.streamposition += len(line)
     
+    
+    @staticmethod
+    def saveCorpus(fname, corpus, id2word=None):
+        """
+        Save a corpus in the SVMlight format. 
+        
+        The SVMlight `<target>` class tag is set to 0 for all documents.
+        """
+        logging.info("converting corpus to SVMlight format: %s" % fname)
+        
+        offsets = []
+        with open(fname, 'w') as fout:
+            for docno, doc in enumerate(corpus):
+                offsets.append(fout.tell())
+                fout.write(SvmLightCorpus.doc2line(doc)) # target class is always 0
+        return offsets
+    
+
+    def docbyoffset(self, offset):
+        """
+        Return the document stored at file position `offset`.
+        """
+        with open(self.fname) as f:
+            f.seek(offset)
+            return self.line2doc(f.readline())
+
     
     def line2doc(self, line):
         line = line[: line.find('#')].strip()
@@ -84,26 +110,8 @@ class SvmLightCorpus(interfaces.CorpusABC):
 
     
     @staticmethod
-    def saveCorpus(fname, corpus, id2word = None):
-        """
-        Save a corpus in the SVMlight format. 
-        
-        The SVMlight `<target>` class tag is set to 0 for all documents.
-        """
-        logging.info("converting corpus to SVMlight format: %s" % fname)
-        
-        with open(fname, 'wb') as fout:
-            for doc in corpus:
-                pairs = ' '.join("%i:%s" % (termId + 1, termVal) for termId, termVal  in doc) # +1 to convert 0-base to 1-base
-                fout.write("0 %s\n" % pairs) # target class is always 0
-    
-
-    def docbyoffset(self, offset):
-        """
-        Return the document stored at file position `offset`.
-        """
-        with open(self.fname, 'rb') as f:
-            f.seek(offset)
-            return self.line2doc(f.readline())
+    def doc2line(doc):
+        pairs = ' '.join("%i:%s" % (termId + 1, termVal) for termId, termVal  in doc) # +1 to convert 0-base to 1-base
+        return "0 %s\n" % pairs
 #endclass SvmLightCorpus
 

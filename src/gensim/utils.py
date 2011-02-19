@@ -108,17 +108,14 @@ class SaveLoad(object):
         Load a previously saved object from file (also see `save`).
         """
         logger.info("loading %s object from %s" % (cls.__name__, fname))
-        return cPickle.load(open(fname, 'rb')) # 'b' for binary, needed on Windows
-
+        return unpickle(fname)
 
     def save(self, fname):
         """
         Save the object to file via pickling (also see `load`).
         """
         logger.info("saving %s object to %s" % (self.__class__.__name__, fname))
-        f = open(fname, 'wb')
-        cPickle.dump(self, f, protocol=-1) # -1 to use the highest available protocol, for efficiency
-        f.close()
+        pickle(self, fname)
 #endclass SaveLoad
 
 
@@ -410,4 +407,14 @@ def chunkize(corpus, chunks, maxsize=0):
         for chunk in chunkize_serial(corpus, chunks):
             yield chunk
 
+
+def pickle(obj, fname, protocol=-1):
+    """Pickle object `obj` to file `fname`."""
+    with open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
+        cPickle.dump(obj, fout, protocol=protocol)
+
+
+def unpickle(fname):
+    """Load pickled object from `fname`"""
+    return cPickle.load(open(fname, 'rb'))
 
