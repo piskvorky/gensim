@@ -63,11 +63,14 @@ class SvmLightCorpus(IndexedCorpus):
         """
         Iterate over the corpus, returning one sparse vector at a time.
         """
+        length = 0
         with open(self.fname) as fin:
             for lineNo, line in enumerate(fin):
                 doc = self.line2doc(line)
                 if doc is not None:
+                    length += 1
                     yield doc
+        self.length = length
     
     
     @staticmethod
