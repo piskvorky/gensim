@@ -51,13 +51,6 @@ class SvmLightCorpus(IndexedCorpus):
         self.fname = fname # input file, see class doc for format
         self.length = None
 
-    
-    def __len__(self):
-        if self.length is None:
-            logging.info("caching corpus length")
-            self.length = sum(1 for doc in self)
-        return self.length
-
 
     def __iter__(self):
         """

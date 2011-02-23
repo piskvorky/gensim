@@ -10,10 +10,7 @@ Indexed corpus is a mechanism for random-accessing corpora.
 
 While the standard corpus interface in gensim allows iterating over corpus with
 `for doc in corpus: pass`, indexed corpus allows accessing the documents with 
-`corpus[docno]`. 
-
-**This type of access is much slower than the iteration!** It does a disk seek
-for every document access.
+`corpus[docno]` (in O(1) look-up time).
 """
 
 import logging
@@ -25,12 +22,9 @@ from gensim import interfaces, utils
 class IndexedCorpus(interfaces.CorpusABC):
     def __init__(self, fname, index_fname=None):
         """
-        Initialize this base class, by loading a previously saved index from 
-        `index_fname` (or `fname.index`). This index will allow inheriting classes 
+        Initialize this abstract base class, by loading a previously saved index 
+        from `index_fname` (or `fname.index`). This index will allow subclasses 
         to support the `corpus[docno]` syntax (random access to document no. `docno`).
-        
-        Don't use the index for corpus iteration ala `for i in xrange(len(corpus)): doc = corpus[i]`;
-        standard `for doc in corpus:` is much more efficient.
         
         >>> # save corpus in SvmLightCorpus format with an index
         >>> corpus = [[(1, 0.5)], [(0, 1.0), (1, 2.0)]]
@@ -49,6 +43,7 @@ class IndexedCorpus(interfaces.CorpusABC):
             logging.info("loaded corpus index from %s" % index_fname)
         except:
             self.index = None
+        self.length = None
     
 
     @classmethod
@@ -78,6 +73,19 @@ class IndexedCorpus(interfaces.CorpusABC):
         logging.info("saving %s index to %s" % (serializer.__name__, index_fname))
         utils.pickle(offsets, index_fname)
 
+
+    def __len__(self):
+        """
+        Return cached corpus length if the corpus is indexed. Otherwise delegate 
+        `len()` call to base class.
+        """
+        if self.index is not None:
+            return len(self.index)
+        if self.length is None:
+            logging.info("caching corpus length")
+            self.length = sum(1 for doc in self)
+        return self.length
+    
     
     def __getitem__(self, docno):
         if self.index is None:

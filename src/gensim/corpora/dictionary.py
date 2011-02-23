@@ -63,7 +63,7 @@ class Dictionary(utils.SaveLoad):
 
     @staticmethod
     def fromDocuments(documents):
-        return Dictionary(documents = documents)
+        return Dictionary(documents=documents)
 
 
     def addDocuments(self, documents):
@@ -80,10 +80,10 @@ class Dictionary(utils.SaveLoad):
         for docno, document in enumerate(documents):
             if docno % 10000 == 0:
                 logging.info("adding document #%i to %s" % (docno, self))
-            _ = self.doc2bow(document, allowUpdate = True) # ignore the result, here we only care about updating token ids
+            _ = self.doc2bow(document, allowUpdate=True) # ignore the result, here we only care about updating token ids
         logger.info("built %s from %i documents (total %i corpus positions)" % 
                      (self, self.numDocs, self.numPos))
-        
+    
     
     def doc2bow(self, document, allowUpdate = False):
         """

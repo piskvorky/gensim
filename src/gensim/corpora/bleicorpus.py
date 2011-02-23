@@ -50,13 +50,6 @@ class BleiCorpus(IndexedCorpus):
         self.id2word = dict(enumerate(words))
         self.length = None
 
-    
-    def __len__(self):
-        if self.length is None:
-            logging.info("caching corpus length")
-            self.length = sum(1 for doc in self)
-        return self.length
-
 
     def __iter__(self):
         """
