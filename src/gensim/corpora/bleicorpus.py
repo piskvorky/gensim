@@ -55,8 +55,11 @@ class BleiCorpus(IndexedCorpus):
         """
         Iterate over the corpus, returning one sparse vector at a time.
         """
+        length = 0
         for lineNo, line in enumerate(open(self.fname)):
+            length += 1
             yield self.line2doc(line)
+        self.length = length
     
     
     def line2doc(self, line):
