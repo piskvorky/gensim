@@ -10,6 +10,7 @@ This module contains various general utility functions.
 
 from __future__ import with_statement
 
+import numpy as np
 import logging
 import re
 import unicodedata
@@ -397,4 +398,97 @@ def top_NN(bow_query, rawCorpus, index, n=10, idf=False):
         topNNtexts.append(rawCorpus[id])
 
     return(zip(topNNids, topNNcosines, topNNtexts))
+
+def loadDictionary(fname):
+    """
+    Loads previously stored mapping between words and their ids, in a file
+    with extension wordIdsExtension='_wordids.txt'.
+
+    Note that this is not a dictionary object and cannot do doc2bow. we create a DictionaryExistingCounts
+    to wrap that functionality. the flow is
+
+    id2word, word2id = loadDictionary('corpus.cor_wordids.txt')
+    dictObject = DictionaryExistingCounts(id2word, word2id)
+    The resulting object can be used as the `id2word` parameter for input to transformations.
+    """
+    id2word = {}
+    word2id = {} # it's cheaper to create the two in this loop than to zip them later
+    for lineNo, line in enumerate(open(fname)):
+        cols = line[:-1].split('\t')
+        if len(cols) == 2:
+            wordId, word = cols
+        elif len(cols) == 3:
+            wordId, word, docFreq = cols
+        else:
+            continue
+        id2word[int(wordId)] = word # docFreq not used
+        word2id[word]        = int(wordId)
+    return id2word, word2id
+
+def para2para(workingcorpus, text1_path, text2_path):
+
+    """
+    a function to pairwise compare paragraphs of two texts
+
+    every paragraph in a text should be represented by a line in the input textfile
+    """
+    from corpora import dictionaryExistingCounts
+    import models
+    from gensim.parsing.preprocessing import preprocess_documents
+    import matutils
+
+    wordIdsExtension ='_wordids.txt'
+    modelExtension ='_tfidf.model'
+
+    # load the word-id mapping from last run
+    logging.debug("loading dictionary %s" % workingcorpus + wordIdsExtension)
+    id2word, word2id = loadDictionary( workingcorpus + wordIdsExtension)
+    dictionary = dictionaryExistingCounts.DictionaryExistingCounts( word2id, id2word )
+
+    # load the model
+    logging.debug("loading model from %s" % workingcorpus + modelExtension)
+    tfidf = models.TfidfModel.load(workingcorpus + modelExtension)
+
+
+    # read in the texts and preprocess them
+    text1 = preprocess_documents(get_txt(text1_path))
+    text2 = preprocess_documents(get_txt(text2_path))
+
+    # remove words that appear only once
+    all_tokens = sum(text1, [])
+    all_tokens = sum(text2, all_tokens)
+    text1 = [[word for word in text if not all_tokens.count(word) == 1]
+            for text in text1]
+    text2 = [[word for word in text if not all_tokens.count(word) == 1]
+            for text in text2]
+
+    # create bag of word representation and count words missing in the dictionary
+    bow1 = []
+    bow2 = []
+    all_missing = {}
+    for text in text1:
+        bow, missing = dictionary.doc2bow(text);
+        bow1.append(bow)
+        for key, val in missing.iteritems():
+            all_missing[key] = all_missing.get(key,0) + val
+    for text in text2:
+        bow, missing = dictionary.doc2bow(text);
+        bow2.append(bow)
+        for key, val in missing.iteritems():
+            all_missing[key] = all_missing.get(key,0) + val
+
+
+    logging.debug("--- all missing words ---")
+    logging.debug(all_missing)
+
+    # transform bow to tfidf space (using the previously loaded model)
+    t1 = tfidf[bow1]
+    t2 = tfidf[bow2]
+
+    # compute pairwise similarity matrix
+    res = np.zeros((len(t1), len(t2)))
+    for i, par1 in enumerate(t1):
+        for j, par2 in enumerate(t2):
+            res[i,j] = matutils.cossim(par1, par2)
+    return res
     # end
