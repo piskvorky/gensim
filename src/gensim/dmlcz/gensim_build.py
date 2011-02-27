@@ -61,8 +61,8 @@ def buildDmlCorpus(config):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
-    logging.root.setLevel(level = logging.INFO) 
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
+    logging.root.setLevel(level=logging.INFO) 
     logging.info("running %s" % ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])

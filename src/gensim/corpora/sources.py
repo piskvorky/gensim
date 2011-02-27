@@ -69,7 +69,7 @@ class ArticleSource(object):
 
 class DmlSource(ArticleSource):
     """
-    Article source for articles in DML format: 
+    Article source for articles in DML format (DML-CZ, Numdam):
     1) articles = directories starting with '#'
     2) content is stored in fulltext.txt
     3) metadata are stored in meta.xml 

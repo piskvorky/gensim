@@ -52,7 +52,7 @@ class Similarity(interfaces.SimilarityABC):
     If your corpus is reasonably small (fits in RAM), consider using `MatrixSimilarity`
     or `SparseMatrixSimilarity` instead, for (much) faster similarity searches.
     """
-    def __init__(self, corpus, numBest = None):
+    def __init__(self, corpus, numBest=None):
         """
         If `numBest` is left unspecified, similarity queries return a full list (one 
         float for every document in the corpus, including the query document):
@@ -135,7 +135,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
             vec = doc
         else:
             vec = matutils.sparse2full(doc, self.numFeatures)
-        vec = numpy.asfortranarray(vec, dtype = self.corpus.dtype).reshape(self.numFeatures, 1)
+        vec = numpy.asfortranarray(vec, dtype=self.corpus.dtype).reshape(self.numFeatures, 1)
         
         # compute cosine similarity against every other document in the collection
         gemv = matutils.blas('gemv', self.corpus)
@@ -158,7 +158,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
     The matrix is internally stored as a `scipy.sparse.csr` matrix.
     """
-    def __init__(self, corpus, numBest = None, dtype = numpy.float32):
+    def __init__(self, corpus, numBest=None, dtype=numpy.float32):
         """
         If `numBest` is left unspecified, similarity queries return a full list (one 
         float for every document in the corpus, including the query document):
@@ -173,7 +173,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         """
         logging.info("creating sparse matrix for %i documents" % len(corpus))
         self.numBest = numBest
-        self.corpus = scipy.sparse.lil_matrix((len(corpus), 1), dtype = dtype) # set no of columns to 1 for now, as the number of terms is unknown yet
+        self.corpus = scipy.sparse.lil_matrix((len(corpus), 1), dtype=dtype) # set no of columns to 1 for now, as the number of terms is unknown yet
         self.normalize = True
         
         # iterate over corpus, populating the sparse matrix
@@ -205,7 +205,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         elif isinstance(doc, numpy.ndarray):
             vec = scipy.sparse.csr_matrix(doc).T # Tx1 array
         else:
-            vec = scipy.sparse.dok_matrix((self.corpus.shape[1], 1), dtype = self.corpus.dtype)
+            vec = scipy.sparse.dok_matrix((self.corpus.shape[1], 1), dtype=self.corpus.dtype)
             for fieldId, fieldValue in doc:
                 vec[fieldId, 0] = fieldValue
         if vec.shape != (self.corpus.shape[1], 1):

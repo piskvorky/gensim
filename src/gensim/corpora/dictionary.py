@@ -35,7 +35,7 @@ class Dictionary(utils.SaveLoad):
     bag-of-words representation, optionally also updating the dictionary mapping 
     with newly encountered words and their ids.
     """
-    def __init__(self, documents = None):
+    def __init__(self, documents=None):
         self.token2id = {} # token -> tokenId
         self.docFreq = {} # tokenId -> in how many documents this token appeared
         self.numDocs = 0 # number of documents processed
@@ -85,7 +85,7 @@ class Dictionary(utils.SaveLoad):
                      (self, self.numDocs, self.numPos))
     
     
-    def doc2bow(self, document, allowUpdate = False):
+    def doc2bow(self, document, allowUpdate=False):
         """
         Convert `document` (a list of words) into the bag-of-words format = list of 
         `(tokenId, tokenCount)` 2-tuples. Each word is assumed to be a 
@@ -101,9 +101,8 @@ class Dictionary(utils.SaveLoad):
         document = sorted(document)
         # construct (word, frequency) mapping. in python3 this is done simply 
         # using Counter(), but here i use itertools.groupby() for the job
-        for wordNorm, group in itertools.groupby(sorted(document)):
+        for wordNorm, group in itertools.groupby(document):
             frequency = len(list(group)) # how many times does this word appear in the input document
-
             tokenId = self.token2id.get(wordNorm, None)
             if tokenId is None: 
                 # first time we see this token (~normalized form)
@@ -125,7 +124,7 @@ class Dictionary(utils.SaveLoad):
         return sorted(result.iteritems()) # return tokenIds, in ascending id order
 
 
-    def filterExtremes(self, noBelow = 5, noAbove = 0.5, keepN = None):
+    def filterExtremes(self, noBelow=5, noAbove=0.5, keepN=None):
         """
         Filter out tokens that appear in
         
@@ -133,7 +132,7 @@ class Dictionary(utils.SaveLoad):
         2. more than `noAbove` documents (fraction of total corpus size, *not* 
            absolute number).
         3. after (1) and (2), keep only the first `keepN' most frequent tokens (or
-           all if `None`).
+           keep all if `None`).
         
         After the pruning, shrink resulting gaps in word ids. 
         
@@ -144,7 +143,7 @@ class Dictionary(utils.SaveLoad):
         
         # determine which tokens to keep
         goodIds = (v for v in self.token2id.itervalues() if noBelow <= self.docFreq[v] <= noAboveAbs)
-        goodIds = sorted(goodIds, key = self.docFreq.get, reverse = True)
+        goodIds = sorted(goodIds, key=self.docFreq.get, reverse=True)
         if keepN is not None:
             goodIds = goodIds[:keepN]
         logger.info("keeping %i tokens which were in more than %i and less than %i (=%.1f%%) documents" %
@@ -156,7 +155,7 @@ class Dictionary(utils.SaveLoad):
         logger.info("resulting dictionary: %s" % self)
 
     
-    def filterTokens(self, badIds = None, goodIds = None):
+    def filterTokens(self, badIds=None, goodIds=None):
         """
         Remove the selected `badIds` tokens from all dictionary mappings, or, keep
         selected `goodIds` in the mapping and remove the rest.

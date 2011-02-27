@@ -608,10 +608,6 @@ if __name__ == '__main__':
     corpus = MmCorpus('/Users/kofola/gensim/results/wiki10_en_bow.mm')
     K = 50
     
-#    corpus = LowCorpus('/Users/kofola/svn/gensim/trunk/src/gensim/test/testcorpus.low')
-#    vocab = corpus.id2word
-#    K = 2
-
     olda = LdaModel(numTopics=K, id2word=vocab, alpha=1./K, eta=1./K, decay=0.5)
     olda.update(corpus)
     olda.save('olda2.pkl')
