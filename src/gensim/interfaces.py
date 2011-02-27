@@ -161,9 +161,7 @@ class SimilarityABC(utils.SaveLoad):
         if self.numBest is None:
             return allSims
         else:
-            tops = [(docNo, sim) for docNo, sim in enumerate(allSims) if sim > 0]
-            tops = sorted(tops, key = lambda item: -item[1]) # sort by -sim => highest cossim first
-            return tops[ : self.numBest] # return at most numBest top 2-tuples (docId, docSim)
+            return matutils.full2sparse_clipped(allSims, self.numBest)
 
 
     def __iter__(self):

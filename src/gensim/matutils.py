@@ -89,6 +89,22 @@ def full2sparse(vec, eps=1e-9):
 
 dense2vec = full2sparse
 
+
+def full2sparse_clipped(vec, topn, eps=1e-9):
+    """
+    Like `full2sparse`, but only return the `topn` greatest elements (not all).
+    """
+    # use numpy.argsort and only form tuples that are actually returned.
+    # this is about 40x faster than explicitly forming all 2-tuples to run sort() or heapq.nlargest() on.
+    result = []
+    for i in numpy.argsort(vec)[::-1]:
+        if abs(vec[i]) > eps: # ignore features with near-zero weight
+            result.append((i, vec[i]))
+            if len(result) == topn:
+                break
+    return result
+
+
 def corpus2dense(corpus, num_terms):
     """
     Convert corpus into a dense numpy array (documents will be columns).
@@ -146,8 +162,8 @@ def vecLen(vec):
     return vecLen
 
 
-blas_nrm2 = blas('nrm2', numpy.array([], dtype = float))
-blas_scal = blas('scal', numpy.array([], dtype = float))
+blas_nrm2 = blas('nrm2', numpy.array([], dtype=float))
+blas_scal = blas('scal', numpy.array([], dtype=float))
 
 def unitVec(vec):
     """
