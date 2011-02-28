@@ -6,7 +6,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
+
     <title>models.lsimodel – Latent Semantic Indexing &mdash; gensim documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -55,12 +55,12 @@
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li>
       </ul>
     </div>
 
 
-    
+
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
@@ -84,32 +84,32 @@
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
-    
-    
+
+
 
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
-            
+
   <div class="section" id="module-gensim.models.lsimodel">
 <span id="models-lsimodel-latent-semantic-indexing"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">models.lsimodel</span></tt> &#8211; Latent Semantic Indexing<a class="headerlink" href="#module-gensim.models.lsimodel" title="Permalink to this headline">¶</a></h1>
 <p>Module for Latent Semantic Indexing.</p>
-<p>This module actually contains several algorithms for decomposition of large corpora, a 
+<p>This module actually contains several algorithms for decomposition of large corpora, a
 combination of which effectively and transparently allows building LSI models for:</p>
 <ul class="simple">
-<li>corpora much larger than RAM: only constant memory is needed, independent of 
+<li>corpora much larger than RAM: only constant memory is needed, independent of
 the corpus size (though still dependent on the feature set size)</li>
 <li>corpora that are streamed: documents are only accessed sequentially, no
 random-access</li>
-<li>corpora that cannot be even temporarily stored: each document can only be 
+<li>corpora that cannot be even temporarily stored: each document can only be
 seen once and must be processed immediately (one-pass algorithm)</li>
 <li>distributed computing for very large corpora, making use of a cluster of
 machines</li>
 </ul>
-<p>Wall-clock performance on the English Wikipedia (2G corpus positions, 3.2M 
-documents, 100K features, 0.5G non-zero entries in the final TF-IDF matrix), 
+<p>Wall-clock performance on the English Wikipedia (2G corpus positions, 3.2M
+documents, 100K features, 0.5G non-zero entries in the final TF-IDF matrix),
 requesting the top 400 LSI factors:</p>
 <table border="1" class="docutils">
 <colgroup>
@@ -135,43 +135,43 @@ requesting the top 400 LSI factors:</p>
 </tbody>
 </table>
 <p><em>serial</em> = Core 2 Duo MacBook Pro 2.53Ghz, 4GB RAM, libVec</p>
-<p><em>distributed</em> = cluster of four logical nodes on three physical machines, each 
+<p><em>distributed</em> = cluster of four logical nodes on three physical machines, each
 with dual core Xeon 2.0GHz, 4GB RAM, ATLAS</p>
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>The stochastic algo could be distributed too, but most time is already spent 
-reading/decompressing the input from disk in its 4 passes. The extra network 
-traffic due to data distribution across cluster nodes would likely make it 
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>The stochastic algo could be distributed too, but most time is already spent
+reading/decompressing the input from disk in its 4 passes. The extra network
+traffic due to data distribution across cluster nodes would likely make it
 <em>slower</em>.</td></tr>
 </tbody>
 </table>
 <dl class="class">
 <dt id="gensim.models.lsimodel.LsiModel">
 <em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus=None</em>, <em>numTopics=200</em>, <em>id2word=None</em>, <em>chunks=20000</em>, <em>decay=1.0</em>, <em>distributed=False</em>, <em>onepass=True</em>, <em>power_iters=2</em>, <em>extra_samples=100</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Objects of this class allow building and maintaining a model for Latent 
+<dd><p>Objects of this class allow building and maintaining a model for Latent
 Semantic Indexing (also known as Latent Semantic Analysis).</p>
 <p>The main methods are:</p>
 <ol class="arabic simple">
 <li>constructor, which initializes the projection into latent topics space,</li>
-<li>the <tt class="docutils literal"><span class="pre">[]</span></tt> method, which returns representation of any input document in the 
+<li>the <tt class="docutils literal"><span class="pre">[]</span></tt> method, which returns representation of any input document in the
 latent space,</li>
 <li>the <cite>addDocuments()</cite> method, which allows for incrementally updating the model with new documents.</li>
 </ol>
 <p>Model persistency is achieved via its load/save methods.</p>
 <p><cite>numTopics</cite> is the number of requested factors (latent dimensions).</p>
 <p>After the model has been trained, you can estimate topics for an
-arbitrary, unseen document, using the <tt class="docutils literal"><span class="pre">topics</span> <span class="pre">=</span> <span class="pre">self[document]</span></tt> dictionary 
+arbitrary, unseen document, using the <tt class="docutils literal"><span class="pre">topics</span> <span class="pre">=</span> <span class="pre">self[document]</span></tt> dictionary
 notation. You can also add new training documents, with <tt class="docutils literal"><span class="pre">self.addDocuments</span></tt>,
 so that training can be stopped and resumed at any time, and the
 LSI transformation is available at any point.</p>
-<p>If you specify a <cite>corpus</cite>, it will be used to train the model. See the 
+<p>If you specify a <cite>corpus</cite>, it will be used to train the model. See the
 method <cite>addDocuments</cite> for a description of the <cite>chunks</cite> and <cite>decay</cite> parameters.</p>
 <p>Turn <cite>onepass</cite> off to force a multi-pass stochastic algorithm.</p>
 <p><cite>power_iters</cite> and <cite>extra_samples</cite> affect the accuracy of the stochastic
 multi-pass algorithm, which is used either internally (<cite>onepass=True</cite>) or
-as the front-end algorithm (<cite>onepass=False</cite>). Increasing the number of 
-power iterations improves accuracy, but lowers performance. See <a class="footnote-reference" href="#id4" id="id3">[2]</a> for 
+as the front-end algorithm (<cite>onepass=False</cite>). Increasing the number of
+power iterations improves accuracy, but lowers performance. See <a class="footnote-reference" href="#id4" id="id3">[2]</a> for
 some hard numbers.</p>
 <p>Turn on <cite>distributed</cite> to enable distributed computing.</p>
 <p>Example:</p>
@@ -190,15 +190,15 @@ some hard numbers.</p>
 <dl class="method">
 <dt id="gensim.models.lsimodel.LsiModel.addDocuments">
 <tt class="descname">addDocuments</tt><big>(</big><em>corpus</em>, <em>chunks=None</em>, <em>decay=None</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.addDocuments" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update singular value decomposition to take into account a new 
+<dd><p>Update singular value decomposition to take into account a new
 corpus of documents.</p>
-<p>Training proceeds in chunks of <cite>chunks</cite> documents at a time. The size of 
-<cite>chunks</cite> is a tradeoff between increased speed (bigger <cite>chunks</cite>) 
-vs. lower memory footprint (smaller <cite>chunks</cite>). If the distributed mode 
+<p>Training proceeds in chunks of <cite>chunks</cite> documents at a time. The size of
+<cite>chunks</cite> is a tradeoff between increased speed (bigger <cite>chunks</cite>)
+vs. lower memory footprint (smaller <cite>chunks</cite>). If the distributed mode
 is on, each chunk is sent to a different worker/computer.</p>
-<p>Setting <cite>decay</cite> &lt; 1.0 causes re-orientation towards new data trends in the 
+<p>Setting <cite>decay</cite> &lt; 1.0 causes re-orientation towards new data trends in the
 input document stream, by giving less emphasis to old observations. This allows
-LSA to gradually &#8220;forget&#8221; old observations (documents) and give more 
+LSA to gradually &#8220;forget&#8221; old observations (documents) and give more
 preference to new ones.</p>
 </dd></dl>
 
@@ -212,7 +212,7 @@ preference to new ones.</p>
 <dt id="gensim.models.lsimodel.LsiModel.printDebug">
 <tt class="descname">printDebug</tt><big>(</big><em>numTopics=5</em>, <em>numWords=10</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.printDebug" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print (to log) the most salient words of the first <cite>numTopics</cite> topics.</p>
-<p>Unlike <cite>printTopics()</cite>, this looks for words that are significant for a 
+<p>Unlike <cite>printTopics()</cite>, this looks for words that are significant for a
 particular topic <em>and</em> not for others. This <em>should</em> result in a more
 human-interpretable description of topics.</p>
 </dd></dl>
@@ -220,9 +220,9 @@ human-interpretable description of topics.</p>
 <dl class="method">
 <dt id="gensim.models.lsimodel.LsiModel.printTopic">
 <tt class="descname">printTopic</tt><big>(</big><em>topicNo</em>, <em>topN=10</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.printTopic" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a specified topic (=left singular vector), 0 &lt;= <cite>topicNo</cite> &lt; <cite>self.numTopics</cite>, 
+<dd><p>Return a specified topic (=left singular vector), 0 &lt;= <cite>topicNo</cite> &lt; <cite>self.numTopics</cite>,
 as string.</p>
-<p>Return only the <cite>topN</cite> words which contribute the most to the direction 
+<p>Return only the <cite>topN</cite> words which contribute the most to the direction
 of the topic (both negative and positive).</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsimodel</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">topN</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="go">&#39;-0.340 * &quot;category&quot; + 0.298 * &quot;$M$&quot; + 0.183 * &quot;algebra&quot; + -0.174 * &quot;functor&quot; + -0.168 * &quot;operator&quot;&#39;</span>
@@ -250,36 +250,36 @@ storing spurious (tiny, numerically instable) values.</p>
 <dl class="function">
 <dt id="gensim.models.lsimodel.iterSvd">
 <tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">iterSvd</tt><big>(</big><em>corpus</em>, <em>numTerms</em>, <em>numFactors</em>, <em>numIter=200</em>, <em>initRate=None</em>, <em>convergence=0.0001</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.iterSvd" title="Permalink to this definition">¶</a></dt>
-<dd><p>Perform iterative Singular Value Decomposition on a streaming corpus, returning 
+<dd><p>Perform iterative Singular Value Decomposition on a streaming corpus, returning
 <cite>numFactors</cite> greatest factors U,S,V^T (ie., not necessarily the full spectrum).</p>
-<p>The parameters <cite>numIter</cite> (maximum number of iterations) and <cite>initRate</cite> (gradient 
+<p>The parameters <cite>numIter</cite> (maximum number of iterations) and <cite>initRate</cite> (gradient
 descent step size) guide convergency of the algorithm.</p>
 <p>The algorithm performs at most <cite>numFactors*numIters</cite> passes over the corpus.</p>
-<p>Use of this function is deprecated; although it works, it is several orders of 
+<p>Use of this function is deprecated; although it works, it is several orders of
 magnitude slower than our own, direct (non-stochastic) version (which
-operates in a single pass, too, and can be distributed). I keep this function 
+operates in a single pass, too, and can be distributed). I keep this function
 here purely for backup reasons.</p>
-<p>See <strong>Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular 
+<p>See <strong>Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular
 Value Decomposition in Natural Language Processing. EACL 2006.</strong></p>
 </dd></dl>
 
 <dl class="function">
 <dt id="gensim.models.lsimodel.stochasticSvd">
 <tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">stochasticSvd</tt><big>(</big><em>corpus</em>, <em>rank</em>, <em>num_terms</em>, <em>chunks=20000</em>, <em>extra_dims=None</em>, <em>power_iters=0</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em>, <em>eps=9.9999999999999995e-07</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.stochasticSvd" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return (U, S): the left singular vectors and the singular values of the streamed 
+<dd><p>Return (U, S): the left singular vectors and the singular values of the streamed
 input corpus <cite>corpus</cite> <a class="footnote-reference" href="#id6" id="id5">[3]</a>.</p>
-<p>This may actually return less than the requested number of top <cite>rank</cite> factors, 
+<p>This may actually return less than the requested number of top <cite>rank</cite> factors,
 in case the input is of lower rank. The <cite>extra_dims</cite> (oversampling) and especially
 <cite>power_iters</cite> (power iterations) parameters affect accuracy of the decomposition.</p>
-<p>This algorithm uses <cite>2+power_iters</cite> passes over the data. In case you can only 
-afford a single pass over the input corpus, set <cite>onepass=True</cite> in <a class="reference internal" href="#gensim.models.lsimodel.LsiModel" title="gensim.models.lsimodel.LsiModel"><tt class="xref py py-class docutils literal"><span class="pre">LsiModel</span></tt></a> 
+<p>This algorithm uses <cite>2+power_iters</cite> passes over the data. In case you can only
+afford a single pass over the input corpus, set <cite>onepass=True</cite> in <a class="reference internal" href="#gensim.models.lsimodel.LsiModel" title="gensim.models.lsimodel.LsiModel"><tt class="xref py py-class docutils literal"><span class="pre">LsiModel</span></tt></a>
 and avoid using this algorithm directly.</p>
-<p>The decomposition algorithm is based on 
+<p>The decomposition algorithm is based on
 <strong>Halko, Martinsson, Tropp. Finding structure with randomness, 2009.</strong></p>
 <table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id5">[3]</a></td><td>If <cite>corpus</cite> is a scipy.sparse matrix instead, it is assumed the whole 
+<tr><td class="label"><a class="fn-backref" href="#id5">[3]</a></td><td>If <cite>corpus</cite> is a scipy.sparse matrix instead, it is assumed the whole
 corpus fits into core memory and a different (more efficient) code path is chosen.</td></tr>
 </tbody>
 </table>
@@ -311,7 +311,7 @@ but without separating the basis from rotations.</p>
       </div>
       <div class="clearer"></div>
     </div>
-        
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -331,11 +331,11 @@ but without separating the basis from rotations.</p>
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li>
       </ul>
     </div>
-    
-    
+
+
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.

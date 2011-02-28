@@ -32,25 +32,25 @@ class CorpusTesterABC(object):
         raise NotImplementedError("cannot instantiate Abstract Base Class")
         self.corpusClass = None # to be overridden with a particular class
         self.fileExtension = None # file 'testcorpus.fileExtension' must exist and be in the format of corpusClass
-    
-    
+
+
     def testLoad(self):
         fname = os.path.join(module_path, 'testcorpus.' + self.fileExtension.lstrip('.'))
         corpus = self.corpusClass(fname)
         docs = list(corpus)
         self.assertEqual(len(docs), 9) # the deerwester corpus always has nine documents, no matter what format
 
-    
+
     def testSave(self):
         corpus = [[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]
-        
+
         # make sure the corpus can be saved
         self.corpusClass.saveCorpus(testfile(), corpus)
-        
+
         # and loaded back, resulting in exactly the same corpus
         corpus2 = list(self.corpusClass(testfile()))
         self.assertEqual(corpus, corpus2)
-        
+
         # delete the temporary file
         os.remove(testfile())
 #endclass CorpusTesterABC
@@ -100,7 +100,7 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(d.token2id, expected)
         expected = dict((v, k) for k, v in expected.iteritems())
         self.assertEqual(d.id2token, expected)
-    
+
     def testFilter(self):
         d = dictionary.Dictionary(self.texts)
         d.filterExtremes(noBelow = 2, noAbove = 1.0, keepN = 4)

@@ -6,7 +6,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
+
     <title>utils – Various utility functions &mdash; gensim documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -55,12 +55,12 @@
         <li><a href="apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
+          <li><a href="apiref.html" accesskey="U">API Reference</a> &raquo;</li>
       </ul>
     </div>
 
 
-    
+
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
@@ -84,31 +84,31 @@
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
-    
-    
+
+
 
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
-            
+
   <div class="section" id="module-gensim.utils">
 <span id="utils-various-utility-functions"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">utils</span></tt> &#8211; Various utility functions<a class="headerlink" href="#module-gensim.utils" title="Permalink to this headline">¶</a></h1>
 <p>This module contains various general utility functions.</p>
 <dl class="class">
 <dt id="gensim.utils.FakeDict">
 <em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">FakeDict</tt><big>(</big><em>numTerms</em><big>)</big><a class="headerlink" href="#gensim.utils.FakeDict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Objects of this class act as dictionaries that map integer-&gt;str(integer), for 
+<dd><p>Objects of this class act as dictionaries that map integer-&gt;str(integer), for
 a specified range of integers &lt;0, numTerms).</p>
 <p>This is meant to avoid allocating real dictionaries when numTerms is huge, which
 is a waste of memory.</p>
 <dl class="method">
 <dt id="gensim.utils.FakeDict.keys">
 <tt class="descname">keys</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.utils.FakeDict.keys" title="Permalink to this definition">¶</a></dt>
-<dd><p>Override the dict.keys() function, which is used to determine the maximum 
+<dd><p>Override the dict.keys() function, which is used to determine the maximum
 internal id of a corpus = the vocabulary dimensionality.</p>
-<p>HACK: To avoid materializing the whole <cite>range(0, self.numTerms)</cite>, this returns 
+<p>HACK: To avoid materializing the whole <cite>range(0, self.numTerms)</cite>, this returns
 <cite>[self.numTerms - 1]</cite> only.</p>
 </dd></dl>
 
@@ -126,7 +126,7 @@ internal id of a corpus = the vocabulary dimensionality.</p>
 <dd><p>Used in the tutorial on distributed computing and likely not useful anywhere else.</p>
 <p>Wrap a <cite>corpus</cite> as another corpus of length <cite>reps</cite>. This is achieved by
 repeating documents from <cite>corpus</cite> over and over again, until the requested
-length <cite>len(result)==reps</cite> is reached. Repetition is done 
+length <cite>len(result)==reps</cite> is reached. Repetition is done
 on-the-fly=efficiently, via <cite>itertools</cite>.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span> <span class="p">[]]</span> <span class="c"># 2 documents</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">RepeatCorpus</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span> <span class="c"># repeat 2.5 times to get 5 documents</span>
@@ -150,9 +150,9 @@ on-the-fly=efficiently, via <cite>itertools</cite>.</p>
 <dl class="class">
 <dt id="gensim.utils.SaveLoad">
 <em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">SaveLoad</tt><a class="headerlink" href="#gensim.utils.SaveLoad" title="Permalink to this definition">¶</a></dt>
-<dd><p>Objects which inherit from this class have save/load functions, which un/pickle 
+<dd><p>Objects which inherit from this class have save/load functions, which un/pickle
 them to disk.</p>
-<p>This uses cPickle for de/serializing, so objects must not contains unpicklable 
+<p>This uses cPickle for de/serializing, so objects must not contains unpicklable
 attributes, such as lambda functions etc.</p>
 <dl class="classmethod">
 <dt id="gensim.utils.SaveLoad.load">
@@ -172,15 +172,15 @@ attributes, such as lambda functions etc.</p>
 <dt id="gensim.utils.chunkize">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">chunkize</tt><big>(</big><em>corpus</em>, <em>chunks</em>, <em>maxsize=0</em><big>)</big><a class="headerlink" href="#gensim.utils.chunkize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Split a stream of values into smaller chunks.
-Each chunk is of length <cite>chunks</cite>, except the last one which may be smaller. 
+Each chunk is of length <cite>chunks</cite>, except the last one which may be smaller.
 A once-only input stream (<cite>corpus</cite> from a generator) is ok, chunking is done
 efficiently via itertools.</p>
-<p>If <cite>maxsize &gt; 1</cite>, don&#8217;t wait idly in between successive chunk <cite>yields</cite>, but 
-rather keep filling a short queue (of size at most <cite>maxsize</cite>) with forthcoming 
-chunks in advance. This is realized by starting a separate thread, and is 
-meant to reduce I/O delays, which can be significant when <cite>corpus</cite> comes 
+<p>If <cite>maxsize &gt; 1</cite>, don&#8217;t wait idly in between successive chunk <cite>yields</cite>, but
+rather keep filling a short queue (of size at most <cite>maxsize</cite>) with forthcoming
+chunks in advance. This is realized by starting a separate thread, and is
+meant to reduce I/O delays, which can be significant when <cite>corpus</cite> comes
 from a slow medium (like harddisk).</p>
-<p>If <cite>maxsize==0</cite>, don&#8217;t fool around with threads and simply yield the chunks 
+<p>If <cite>maxsize==0</cite>, don&#8217;t fool around with threads and simply yield the chunks
 via <cite>chunkize_serial()</cite> (no I/O optimizations).</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunkize</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="mi">4</span><span class="p">):</span> <span class="k">print</span> <span class="n">chunk</span>
 <span class="go">[0, 1, 2, 3]</span>
@@ -194,7 +194,7 @@ via <cite>chunkize_serial()</cite> (no I/O optimizations).</p>
 <dt id="gensim.utils.chunkize_serial">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">chunkize_serial</tt><big>(</big><em>corpus</em>, <em>chunks</em><big>)</big><a class="headerlink" href="#gensim.utils.chunkize_serial" title="Permalink to this definition">¶</a></dt>
 <dd><p>Split a stream of values into smaller chunks.
-Each chunk is of length <cite>chunks</cite>, except the last one which may be smaller. 
+Each chunk is of length <cite>chunks</cite>, except the last one which may be smaller.
 A once-only input stream (<cite>corpus</cite> from a generator) is ok.</p>
 <p>Chunking is done efficiently with itertools, so that only one chunk at a time
 is realized in memory (the whole <cite>corpus</cite> may be larger than RAM).</p>
@@ -238,8 +238,8 @@ is realized in memory (the whole <cite>corpus</cite> may be larger than RAM).</p
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">dictFromCorpus</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.utils.dictFromCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scan corpus for all word ids that appear in it, then construct and return a mapping
 which maps each <tt class="docutils literal"><span class="pre">wordId</span> <span class="pre">-&gt;</span> <span class="pre">str(wordId)</span></tt>.</p>
-<p>This function is used whenever <em>words</em> need to be displayed (as opposed to just 
-their ids) but no wordId-&gt;word mapping was provided. The resulting mapping 
+<p>This function is used whenever <em>words</em> need to be displayed (as opposed to just
+their ids) but no wordId-&gt;word mapping was provided. The resulting mapping
 only covers words actually used in the corpus, up to the highest wordId found.</p>
 </dd></dl>
 
@@ -254,7 +254,7 @@ only covers words actually used in the corpus, up to the highest wordId found.</
 <dt id="gensim.utils.get_my_ip">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">get_my_ip</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.utils.get_my_ip" title="Permalink to this definition">¶</a></dt>
 <dd><p>Try to obtain our external ip (from the pyro nameserver&#8217;s point of view)</p>
-<p>This tries to sidestep the issue of bogus <cite>/etc/hosts</cite> entries and other 
+<p>This tries to sidestep the issue of bogus <cite>/etc/hosts</cite> entries and other
 local misconfigurations, which often mess up hostname resolution.</p>
 <p>If all else fails, fall back to simple <cite>socket.gethostbyname()</cite> lookup.</p>
 </dd></dl>
@@ -267,7 +267,7 @@ local misconfigurations, which often mess up hostname resolution.</p>
 <cite>obj</cite> if it was an iterator.</p>
 <p><cite>obj</cite> is a corpus if it supports iteration over documents, where a document
 is in turn anything that acts as a sequence of 2-tuples (int, float).</p>
-<p>Note: An &#8220;empty&#8221; corpus (empty input sequence) is ambiguous, so in this case the 
+<p>Note: An &#8220;empty&#8221; corpus (empty input sequence) is ambiguous, so in this case the
 result is forcefully defined as <cite>is_corpus=False</cite>.</p>
 </dd></dl>
 
@@ -281,10 +281,10 @@ result is forcefully defined as <cite>is_corpus=False</cite>.</p>
 <dl class="function">
 <dt id="gensim.utils.tokenize">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">tokenize</tt><big>(</big><em>text</em>, <em>lowercase=False</em>, <em>deacc=False</em>, <em>errors='strict'</em>, <em>toLower=False</em>, <em>lower=False</em><big>)</big><a class="headerlink" href="#gensim.utils.tokenize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Iteratively yield tokens as unicode strings, optionally also lowercasing them 
+<dd><p>Iteratively yield tokens as unicode strings, optionally also lowercasing them
 and removing accent marks.</p>
 <p>Input text may be either unicode or utf8-encoded byte string.</p>
-<p>The tokens on output are maximal contiguous sequences of alphabetic 
+<p>The tokens on output are maximal contiguous sequences of alphabetic
 characters (no digits!).</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">tokenize</span><span class="p">(</span><span class="s">&#39;Nic nemůže letět rychlostí vyšší, než 300 tisíc kilometrů za sekundu!&#39;</span><span class="p">,</span> <span class="n">deacc</span> <span class="o">=</span> <span class="bp">True</span><span class="p">))</span>
 <span class="go">[u&#39;Nic&#39;, u&#39;nemuze&#39;, u&#39;letet&#39;, u&#39;rychlosti&#39;, u&#39;vyssi&#39;, u&#39;nez&#39;, u&#39;tisic&#39;, u&#39;kilometru&#39;, u&#39;za&#39;, u&#39;sekundu&#39;]</span>
@@ -300,7 +300,7 @@ characters (no digits!).</p>
       </div>
       <div class="clearer"></div>
     </div>
-        
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -320,11 +320,11 @@ characters (no digits!).</p>
         <li><a href="apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="apiref.html" >API Reference</a> &raquo;</li> 
+          <li><a href="apiref.html" >API Reference</a> &raquo;</li>
       </ul>
     </div>
-    
-    
+
+
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.

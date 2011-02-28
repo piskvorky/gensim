@@ -25,15 +25,15 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         # avoid calling super(), too confusing
         IndexedCorpus.__init__(self, fname)
         matutils.MmReader.__init__(self, fname)
-        
+
     def __iter__(self):
         """
-        Interpret a matrix in Matrix Market format as a streamed gensim corpus 
+        Interpret a matrix in Matrix Market format as a streamed gensim corpus
         (yielding one document at a time).
         """
         for docId, doc in super(MmCorpus, self).__iter__():
             yield doc # get rid of docId, return the sparse vector only
-    
+
     @staticmethod
     def saveCorpus(fname, corpus, id2word=None, progressCnt=1000):
         """

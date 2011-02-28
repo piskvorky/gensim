@@ -40,7 +40,7 @@ class Worker(object):
     def __init__(self):
         self.model = None
 
-    
+
     def initialize(self, myid, dispatcher, **model_params):
         self.lock_update = threading.Lock()
         self.jobsdone = 0 # how many jobs has this worker completed?
@@ -48,12 +48,12 @@ class Worker(object):
         self.dispatcher = dispatcher
         logger.info("initializing worker #%s" % myid)
         self.model = ldamodel.LdaModel(**model_params)
-    
-    
+
+
     def requestjob(self):
         """
-        Request jobs from the dispatcher in an infinite loop. The requests are 
-        blocking, so if there are no jobs available, the thread will wait.  
+        Request jobs from the dispatcher in an infinite loop. The requests are
+        blocking, so if there are no jobs available, the thread will wait.
         """
         if self.model is None:
             raise RuntimeError("worker must be initialized before receiving jobs")
@@ -76,21 +76,21 @@ class Worker(object):
 
     @utils.synchronous('lock_update')
     def getstate(self):
-        logger.info("worker #%i returning its state after %s jobs" % 
+        logger.info("worker #%i returning its state after %s jobs" %
                     (self.myid, self.jobsdone))
         assert isinstance(self.model.state, ldamodel.LdaState)
         result = self.model.state
         self.model.clear() # free up mem in-between two EM cycles
         return result
 
-    
+
     @utils.synchronous('lock_update')
     def reset(self, state):
         logger.info("resetting worker #%i" % self.myid)
         self.model.setstate(state)
         self.model.state.reset(state.sstats)
 
-    
+
     def exit(self):
         logger.info("terminating worker #%i" % self.myid)
         os._exit(0)
@@ -107,9 +107,9 @@ def main():
     if len(sys.argv) < 1:
         print globals()["__doc__"] % locals()
         sys.exit(1)
-    
+
     Pyro.config.HOST = utils.get_my_ip()
-    
+
     with Pyro.naming.locateNS() as ns:
         with Pyro.core.Daemon() as daemon:
             worker = Worker()
@@ -121,7 +121,7 @@ def main():
             daemon.requestLoop()
 
     logger.info("finished running %s" % program)
-    
+
 
 
 if __name__ == '__main__':

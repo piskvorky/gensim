@@ -7,8 +7,8 @@ Why distributed computing?
 ---------------------------
 
 Need to build semantic representation of a corpus that is millions of documents large and it's
-taking forever? Have several idle machines at your disposal that you could use? 
-`Distributed computing <http://en.wikipedia.org/wiki/Distributed_computing>`_ tries 
+taking forever? Have several idle machines at your disposal that you could use?
+`Distributed computing <http://en.wikipedia.org/wiki/Distributed_computing>`_ tries
 to accelerate computations by splitting a given task into several smaller subtasks,
 passing them on to several computing nodes in parallel.
 
@@ -22,15 +22,15 @@ much communication going on), so the network is allowed to be of relatively high
   most of the time consuming stuff is done inside low-level routines for linear algebra, inside
   NumPy, independent of any `gensim` code.
   **Installing a fast** `BLAS (Basic Linear Algebra) <http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms>`_ **library
-  for NumPy can improve performance up to 15 times!** So before you start buying those extra computers, 
-  consider installing a fast, threaded BLAS that is optimized for your particular machine 
+  for NumPy can improve performance up to 15 times!** So before you start buying those extra computers,
+  consider installing a fast, threaded BLAS that is optimized for your particular machine
   (as opposed to a generic, binary-distributed library).
-  Options include your vendor's BLAS library (Intel's MKL, 
+  Options include your vendor's BLAS library (Intel's MKL,
   AMD's ACML, OS X's vecLib, Sun's Sunperf, ...) or some open-source alternative (GotoBLAS, ALTAS).
 
   To see what BLAS and LAPACK you are using, type into your shell::
-  
-    python -c 'import scipy; scipy.show_config()' 
+
+    python -c 'import scipy; scipy.show_config()'
 
 Prerequisites
 -----------------
@@ -61,33 +61,33 @@ inside `gensim` will automatically try to look for and enslave all available wor
 If at least one worker is found, things will run in the distributed mode; if not, in serial node.
 
 .. glossary::
-    
+
   Node
-    A logical working unit. Can correspond to a single physical machine, but you 
+    A logical working unit. Can correspond to a single physical machine, but you
     can also run multiple workers on one machine, resulting in multiple
     logical nodes.
-    
+
   Cluster
-    Several nodes which communicate over TCP/IP. Currently, network broadcasting 
-    is used to discover and connect all communicating nodes, so the nodes must lie 
+    Several nodes which communicate over TCP/IP. Currently, network broadcasting
+    is used to discover and connect all communicating nodes, so the nodes must lie
     within the same `broadcast domain <http://en.wikipedia.org/wiki/Broadcast_domain>`_.
-    
+
   Worker
-    A process which is created on each node. To remove a node from your cluster, 
-    simply kill its worker process. 
-    
+    A process which is created on each node. To remove a node from your cluster,
+    simply kill its worker process.
+
   Dispatcher
-    The dispatcher will be in charge of negotiating all computations, queueing and 
+    The dispatcher will be in charge of negotiating all computations, queueing and
     distributing ("dispatching") individual jobs to the workers. Computations never
     "talk" to worker nodes directly, only through this dispatcher. Unlike workers,
     there can only be one active dispatcher at a time in the cluster.
-    
+
 
 Available distributed algorithms
 ---------------------------------
 
 .. toctree::
    :maxdepth: 1
-   
+
    dist_lsi
    dist_lda

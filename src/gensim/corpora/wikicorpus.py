@@ -20,7 +20,7 @@ This actually creates three files:
 The output Matrix Market files can then be compressed (e.g., by bzip2) to save \
 disk space; gensim's corpus iterators can work with compressed input, too.
 
-`VOCABULARY_SIZE` controls how many of the most frequent words to keep (after 
+`VOCABULARY_SIZE` controls how many of the most frequent words to keep (after
 removing all tokens that appear in more than 10 percent documents). Defaults to 100,000.
 
 Example: ./wikicorpus.py ~/gensim/results/enwiki-20100622-pages-articles.xml.bz2 ~/gensim/results/wiki_en
@@ -43,8 +43,8 @@ logger = logging.getLogger('wikicorpus')
 logger.setLevel(logging.INFO)
 
 
-# Wiki is first scanned for all distinct word types (~7M). The types that appear 
-# in more than 10% of articles are removed and from the rest, the DEFAULT_DICT_SIZE 
+# Wiki is first scanned for all distinct word types (~7M). The types that appear
+# in more than 10% of articles are removed and from the rest, the DEFAULT_DICT_SIZE
 # most frequent types are kept (default 100K).
 DEFAULT_DICT_SIZE = 100000
 
@@ -78,7 +78,7 @@ def filterWiki(raw):
     text = utils.decode_htmlentities(text) # '&amp;nbsp;' --> '\xa0'
     text = re.sub(RE_P2, "", text) # remove the last list (=languages)
     # the wiki markup is recursive (markup inside markup etc)
-    # instead of writing a recursive grammar, here we deal with that by removing 
+    # instead of writing a recursive grammar, here we deal with that by removing
     # markup in a loop, starting with inner-most expressions and working outwards,
     # for as long as something changes.
     iters = 0
@@ -91,7 +91,7 @@ def filterWiki(raw):
         text = re.sub(RE_P11, "", text) # remove all remaining tags
         # remove templates (no recursion)
         text = re.sub(RE_P3, '', text)
-        text = re.sub(RE_P4, '', text) 
+        text = re.sub(RE_P4, '', text)
         text = re.sub(RE_P5, '\\3', text) # remove urls, keep description
         text = re.sub(RE_P7, '\n\\3', text) # simplify images, keep description only
         text = re.sub(RE_P8, '\n\\3', text) # simplify files, keep description only
@@ -115,12 +115,12 @@ def tokenize(content):
     """
     Tokenize a piece of text from wikipedia. The input string `content` is assumed
     to be mark-up free (see `filterWiki()`).
-    
+
     Return list of tokens as utf8 bytestrings. Ignore words shorted than 2 or longer
     that 15 characters (not bytes!).
     """
     # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic, russian etc.)
-    return [token.encode('utf8') for token in utils.tokenize(content, lower=True, errors='ignore') 
+    return [token.encode('utf8') for token in utils.tokenize(content, lower=True, errors='ignore')
             if 2 <= len(token) <= 15 and not token.startswith('_')]
 
 
@@ -128,18 +128,18 @@ def tokenize(content):
 class WikiCorpus(interfaces.CorpusABC):
     """
     Treat a wikipedia articles dump (*articles.xml.bz2) as a (read-only) corpus.
-    
+
     The documents are extracted on-the-fly, so that the whole (massive) dump
     can stay compressed on disk.
-    
+
     >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id mapping, takes almost 8h
     >>> wiki.saveAsText('wiki_en_vocab200k') # another 8h, creates a file in MatrixMarket format plus file with id->word
-    
+
     """
     def __init__(self, fname, noBelow = 20, keep_words = DEFAULT_DICT_SIZE, dictionary = None):
         """
-        Initialize the corpus. This scans the corpus once, to determine its 
-        vocabulary (only the first `keep_words` most frequent words that 
+        Initialize the corpus. This scans the corpus once, to determine its
+        vocabulary (only the first `keep_words` most frequent words that
         appear in at least `noBelow` documents are kept).
         """
         self.fname = fname
@@ -149,20 +149,20 @@ class WikiCorpus(interfaces.CorpusABC):
         else:
             self.dictionary = dictionary
 
-    
+
     def __len__(self):
         return self.numDocs
 
 
     def __iter__(self):
         """
-        The function that defines a corpus -- iterating over the corpus yields 
+        The function that defines a corpus -- iterating over the corpus yields
         vectors, one for each document.
         """
         for docNo, text in enumerate(self.getArticles()):
             yield self.dictionary.doc2bow(text, allowUpdate = False)
 
-        
+
     def saveDictionary(self, fname):
         """
         Store id->word mapping to a file, in format `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`.
@@ -172,13 +172,13 @@ class WikiCorpus(interfaces.CorpusABC):
         for token, tokenId in sorted(self.dictionary.token2id.iteritems()):
             fout.write("%i\t%s\t%i\n" % (tokenId, token, self.dictionary.docFreq[tokenId]))
         fout.close()
-    
-    
+
+
     @staticmethod
     def loadDictionary(fname, mapping_only = True):
         """
         Load previously stored mapping between words and their ids.
-        
+
         The result can be used as the `id2word` parameter for input to transformations.
         """
         if mapping_only:
@@ -203,35 +203,35 @@ class WikiCorpus(interfaces.CorpusABC):
                 wordId = int(wordId)
                 result.token2id[word] = wordId
                 result.docFreq[wordId] = int(docFreq)
-            
+
         return result
-        
-        
+
+
     def saveAsText(self, fname):
         """
         Store the corpus to disk, in a human-readable text format.
-        
+
         This actually saves two files:
-        
-        1. Document-term co-occurence frequency counts (bag-of-words), as 
+
+        1. Document-term co-occurence frequency counts (bag-of-words), as
            a Matrix Market file `fname_bow.mm`.
         2. Token to integer mapping, as a text file `fname_wordids.txt`.
-        
+
         """
         self.saveDictionary(fname + '_wordids.txt')
         matutils.MmWriter.writeCorpus(fname + '_bow.mm', self, progressCnt = 10000)
-        
-    
+
+
     def getArticles(self, return_raw=False):
         """
         Iterate over the dump, returning text version of each article.
-        
+
         Only articles of sufficient length are returned (short articles & redirects
         etc are ignored).
-        
-        Note that this iterates over the **texts**; if you want vectors, just use 
+
+        Note that this iterates over the **texts**; if you want vectors, just use
         the standard corpus interface instead of this function::
-        
+
         >>> for vec in wiki_corpus:
         >>>     print doc
         """
@@ -260,7 +260,7 @@ class WikiCorpus(interfaces.CorpusABC):
                         result = tokenize(text) # text into tokens here
                         positions += len(result)
                     yield result
-        
+
         logger.info("finished iterating over Wikipedia corpus of %i documents with %i positions"
                      " (total %i articles before pruning)" %
                      (articles, positions, articles_all))
@@ -272,20 +272,20 @@ class WikiCorpus(interfaces.CorpusABC):
 
 class VocabTransform(interfaces.TransformationABC):
     """
-    Convert a corpus to another, with different feature ids. 
+    Convert a corpus to another, with different feature ids.
 
     Given a mapping between old ids and new ids (some old ids may be missing,
     i.e. the mapping need not be a bijection), this will wrap a
-    corpus so that iterating over VocabTransform[corpus] returns the same vectors but with 
-    the new ids. 
+    corpus so that iterating over VocabTransform[corpus] returns the same vectors but with
+    the new ids.
 
-    Old features that have no counterpart in the new ids are discarded. This 
+    Old features that have no counterpart in the new ids are discarded. This
     can be used to filter vocabulary of a corpus::
-    
+
     >>> old2new = dict((oldid, newid) for newid, oldid in enumerate(remaining_ids))
     >>> id2word = dict((newid, oldid2token[oldid]) for oldid, newid in old2new.iteritems())
     >>> vt = VocabTransform(old2new, id2token)
-    
+
     """
     def __init__(self, old2new, id2token = None):
         self.old2new = old2new
@@ -300,7 +300,7 @@ class VocabTransform(interfaces.TransformationABC):
         isCorpus, bow = utils.isCorpus(bow)
         if isCorpus:
             return self._apply(bow)
-        
+
         return [(self.old2new[oldid], weight) for oldid, weight in bow if oldid in self.old2new]
 #endclass VocabTransform
 
@@ -312,7 +312,7 @@ if __name__ == '__main__':
     logging.info("running %s" % ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
-    
+
     # check and process input arguments
     if len(sys.argv) < 3:
         print globals()['__doc__'] % locals()
@@ -322,28 +322,28 @@ if __name__ == '__main__':
         keep_words = int(sys.argv[3])
     else:
         keep_words = DEFAULT_DICT_SIZE
-    
+
     # build dictionary. only keep 100k most frequent words (out of total ~7m unique tokens)
     # takes about 8h on a macbook pro
     wiki = WikiCorpus(input, keep_words = keep_words)
-    
+
     # save dictionary and bag-of-words (term-document frequency matrix)
     # another ~8h
     wiki.saveAsText(output)
     del wiki
-    
+
     # initialize corpus reader and word->id mapping
     from gensim.corpora import MmCorpus
     id2token = WikiCorpus.loadDictionary(output + '_wordids.txt')
     mm = MmCorpus(output + '_bow.mm')
-    
+
     # build tfidf
     # ~20min
     from gensim.models import TfidfModel
     tfidf = TfidfModel(mm, id2word = id2token, normalize = True)
-    
+
     # save tfidf vectors in matrix market format
     # ~1.5h; result file is 14GB! bzip2'ed down to 4.5GB
     MmCorpus.saveCorpus(output + '_tfidf.mm', tfidf[mm], progressCnt=10000)
-    
+
     logging.info("finished running %s" % program)

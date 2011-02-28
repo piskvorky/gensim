@@ -6,7 +6,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
+
     <title>corpora.svmlightcorpus – Corpus in SVMlight format &mdash; gensim documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -55,12 +55,12 @@
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li>
       </ul>
     </div>
 
 
-    
+
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
@@ -84,15 +84,15 @@
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
-    
-    
+
+
 
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
-            
+
   <div class="section" id="module-gensim.corpora.svmlightcorpus">
 <span id="corpora-svmlightcorpus-corpus-in-svmlight-format"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">corpora.svmlightcorpus</span></tt> &#8211; Corpus in SVMlight format<a class="headerlink" href="#module-gensim.corpora.svmlightcorpus" title="Permalink to this headline">¶</a></h1>
 <p>Corpus in SVMlight format.</p>
@@ -101,19 +101,19 @@
 <em class="property">class </em><tt class="descclassname">gensim.corpora.svmlightcorpus.</tt><tt class="descname">SvmLightCorpus</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Corpus in SVMlight format.</p>
 <p>Quoting <a class="reference external" href="http://svmlight.joachims.org/">http://svmlight.joachims.org/</a>:
-The input file example_file contains the training examples. The first lines 
-may contain comments and are ignored if they start with #. Each of the following 
+The input file example_file contains the training examples. The first lines
+may contain comments and are ignored if they start with #. Each of the following
 lines represents one training example and is of the following format:</p>
 <div class="highlight-python"><pre>&lt;line&gt; .=. &lt;target&gt; &lt;feature&gt;:&lt;value&gt; &lt;feature&gt;:&lt;value&gt; ... &lt;feature&gt;:&lt;value&gt; # &lt;info&gt;
-&lt;target&gt; .=. +1 | -1 | 0 | &lt;float&gt; 
+&lt;target&gt; .=. +1 | -1 | 0 | &lt;float&gt;
 &lt;feature&gt; .=. &lt;integer&gt; | "qid"
 &lt;value&gt; .=. &lt;float&gt;
 &lt;info&gt; .=. &lt;string&gt;</pre>
 </div>
 <p>The &#8220;qid&#8221; feature (used for SVMlight ranking), if present, is ignored.</p>
-<p>Although not mentioned in the specification above, SVMlight also expect its 
+<p>Although not mentioned in the specification above, SVMlight also expect its
 feature ids to be 1-based (counting starts at 1). We convert features to 0-base
-internally by decrementing all ids when loading a SVMlight input file, and 
+internally by decrementing all ids when loading a SVMlight input file, and
 increment them again when saving as SVMlight.</p>
 <p>Initialize the corpus from a file.</p>
 <dl class="method">
@@ -151,7 +151,7 @@ increment them again when saving as SVMlight.</p>
       </div>
       <div class="clearer"></div>
     </div>
-        
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -171,11 +171,11 @@ increment them again when saving as SVMlight.</p>
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li>
       </ul>
     </div>
-    
-    
+
+
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.

@@ -60,7 +60,7 @@ def generateSimilar(corpus, index, method):
     for docNo, topSims in enumerate(index): # for each document
         # store similarities to the following file
         outfile = os.path.join(corpus.articleDir(docNo), 'similar_%s.xml' % method)
-        
+
         articles = [] # collect similars in this list
         for docNo2, score in topSims: # for each most similar article
             if score > MIN_SCORE and docNo != docNo2: # if similarity is above MIN_SCORE and not identity (=always maximum similarity, boring)
@@ -70,8 +70,8 @@ def generateSimilar(corpus, index, method):
                 articles.append(ARTICLE % locals()) # add the similar article to output
                 if len(articles) >= MAX_SIMILAR:
                     break
-        
-        # now `articles` holds multiple strings in similar_*.xml format 
+
+        # now `articles` holds multiple strings in similar_*.xml format
         if SAVE_EMPTY or articles:
             output = ''.join(articles) # concat all similars to one string
             if not DRY_RUN: # only open output files for writing if DRY_RUN is false
@@ -92,23 +92,23 @@ if __name__ == '__main__':
     logging.info("running %s" % ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
-    
+
     # check and process input arguments
     if len(sys.argv) < 3:
         print globals()['__doc__'] % locals()
         sys.exit(1)
     language = sys.argv[1]
     method = sys.argv[2].strip().lower()
-    
+
     logging.info("loading corpus mappings")
-    config = dmlcorpus.DmlConfig('%s_%s' % (gensim_build.PREFIX, language), 
+    config = dmlcorpus.DmlConfig('%s_%s' % (gensim_build.PREFIX, language),
                                  resultDir=gensim_build.RESULT_DIR, acceptLangs=[language])
 
 
     logging.info("loading word id mapping from %s" % config.resultFile('wordids.txt'))
     id2word = dmlcorpus.DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
     logging.info("loaded %i word ids" % len(id2word))
-    
+
     corpus = dmlcorpus.DmlCorpus.load(config.resultFile('.pkl'))
     input = MmCorpus(config.resultFile('_%s.mm' % method))
     assert len(input) == len(corpus), "corpus size mismatch (%i vs %i): run ./gensim_genmodel.py again" % (len(input), len(corpus))
@@ -118,9 +118,9 @@ if __name__ == '__main__':
         index = MatrixSimilarity(input, numBest=MAX_SIMILAR + 1, numFeatures=input.numTerms)
     else:
         index = SparseMatrixSimilarity(input, numBest=MAX_SIMILAR + 1)
-    
+
     index.normalize = False # do not normalize query vectors during similarity queries (the index is already built normalized, so it would be a no-op)
     generateSimilar(corpus, index, method) # for each document, print MAX_SIMILAR nearest documents to a xml file, in dml-cz specific format
-    
+
     logging.info("finished running %s" % program)
 

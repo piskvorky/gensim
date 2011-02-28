@@ -44,7 +44,7 @@ if __name__ == '__main__':
         sys.exit(1)
     language = sys.argv[1]
     method = sys.argv[2].strip().lower()
-    
+
     logging.info("loading corpus mappings")
     config = dmlcorpus.DmlConfig('%s_%s' % (gensim_build.PREFIX, language),
                                  resultDir=gensim_build.RESULT_DIR, acceptLangs=[language])
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     logging.info("loading word id mapping from %s" % config.resultFile('wordids.txt'))
     id2word = dmlcorpus.DmlCorpus.loadDictionary(config.resultFile('wordids.txt'))
     logging.info("loaded %i word ids" % len(id2word))
-    
+
     corpus = MmCorpus(config.resultFile('bow.mm'))
 
     if method == 'tfidf':
@@ -75,8 +75,8 @@ if __name__ == '__main__':
         model.save(config.resultFile('model_rp.pkl'))
     else:
         raise ValueError('unknown topic extraction method: %s' % repr(method))
-    
+
     MmCorpus.saveCorpus(config.resultFile('%s.mm' % method), model[corpus])
-            
+
     logging.info("finished running %s" % program)
 

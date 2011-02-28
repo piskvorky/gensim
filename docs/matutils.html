@@ -6,7 +6,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
+
     <title>matutils – Math utils &mdash; gensim documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -55,12 +55,12 @@
         <li><a href="apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
+          <li><a href="apiref.html" accesskey="U">API Reference</a> &raquo;</li>
       </ul>
     </div>
 
 
-    
+
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
@@ -84,15 +84,15 @@
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
-    
-    
+
+
 
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
-            
+
   <div class="section" id="module-gensim.matutils">
 <span id="matutils-math-utils"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils<a class="headerlink" href="#module-gensim.matutils" title="Permalink to this headline">¶</a></h1>
 <p>This module contains math helper functions.</p>
@@ -100,21 +100,21 @@
 <dt id="gensim.matutils.Dense2Corpus">
 <em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">Dense2Corpus</tt><big>(</big><em>dense</em>, <em>documents_columns=True</em><big>)</big><a class="headerlink" href="#gensim.matutils.Dense2Corpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Treat dense numpy array as a sparse gensim corpus.</p>
-<p>No data copy is made (changes to the underlying matrix imply changes in the 
+<p>No data copy is made (changes to the underlying matrix imply changes in the
 corpus).</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="gensim.matutils.MmReader">
 <em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">MmReader</tt><big>(</big><em>input</em>, <em>transposed=True</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmReader" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrap a term-document matrix on disk (in matrix-market format), and present it 
+<dd><p>Wrap a term-document matrix on disk (in matrix-market format), and present it
 as an object which supports iteration over the rows (~documents).</p>
-<p>Note that the file is read into memory one document at a time, not the whole 
-matrix at once (unlike scipy.io.mmread). This allows us to process corpora 
+<p>Note that the file is read into memory one document at a time, not the whole
+matrix at once (unlike scipy.io.mmread). This allows us to process corpora
 which are larger than the available RAM.</p>
 <p>Initialize the matrix reader.</p>
-<p>The <cite>input</cite> refers to a file on local filesystem, which is expected to 
-be in the sparse (coordinate) Matrix Market format. Documents are assumed 
+<p>The <cite>input</cite> refers to a file on local filesystem, which is expected to
+be in the sparse (coordinate) Matrix Market format. Documents are assumed
 to be rows of the matrix (and document features are columns).</p>
 <p><cite>input</cite> is either a string (file path) or a file-like object that supports
 <cite>seek(0)</cite> (e.g. gzip.GzipFile, bz2.BZ2File).</p>
@@ -128,7 +128,7 @@ to be rows of the matrix (and document features are columns).</p>
 <dt id="gensim.matutils.MmWriter.writeCorpus">
 <em class="property">static </em><tt class="descname">writeCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>progressCnt=1000</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.writeCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the vector space representation of an entire corpus to disk.</p>
-<p>Note that the documents are processed one at a time, so the whole corpus 
+<p>Note that the documents are processed one at a time, so the whole corpus
 is allowed to be larger than the available RAM.</p>
 </dd></dl>
 
@@ -150,7 +150,7 @@ is allowed to be larger than the available RAM.</p>
 <dl class="function">
 <dt id="gensim.matutils.corpus2csc">
 <tt class="descclassname">gensim.matutils.</tt><tt class="descname">corpus2csc</tt><big>(</big><em>corpus</em>, <em>num_terms</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em><big>)</big><a class="headerlink" href="#gensim.matutils.corpus2csc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format, 
+<dd><p>Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format,
 with documents as columns.</p>
 </dd></dl>
 
@@ -177,7 +177,7 @@ with documents as columns.</p>
 <dl class="function">
 <dt id="gensim.matutils.pad">
 <tt class="descclassname">gensim.matutils.</tt><tt class="descname">pad</tt><big>(</big><em>mat</em>, <em>padRow</em>, <em>padCol</em><big>)</big><a class="headerlink" href="#gensim.matutils.pad" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add additional rows/columns to a numpy.matrix <cite>mat</cite>. The new rows/columns 
+<dd><p>Add additional rows/columns to a numpy.matrix <cite>mat</cite>. The new rows/columns
 will be initialized with zeros.</p>
 </dd></dl>
 
@@ -192,7 +192,7 @@ because the memory used in <cite>la[0]</cite> is reclaimed earlier.</p>
 <dl class="function">
 <dt id="gensim.matutils.sparse2full">
 <tt class="descclassname">gensim.matutils.</tt><tt class="descname">sparse2full</tt><big>(</big><em>doc</em>, <em>length</em><big>)</big><a class="headerlink" href="#gensim.matutils.sparse2full" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert a document in sparse corpus format (sequence of 2-tuples) into a dense 
+<dd><p>Convert a document in sparse corpus format (sequence of 2-tuples) into a dense
 numpy array (of size <cite>length</cite>).</p>
 </dd></dl>
 
@@ -213,7 +213,7 @@ output will be a numpy array.</p>
       </div>
       <div class="clearer"></div>
     </div>
-        
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -233,11 +233,11 @@ output will be a numpy array.</p>
         <li><a href="apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="apiref.html" >API Reference</a> &raquo;</li> 
+          <li><a href="apiref.html" >API Reference</a> &raquo;</li>
       </ul>
     </div>
-    
-    
+
+
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.

@@ -1,6 +1,6 @@
 .. _wiki:
 
-Experiments on the English Wikipedia 
+Experiments on the English Wikipedia
 ============================================
 
 To test `gensim` performance, we run it against the English version of Wikipedia.
@@ -13,21 +13,21 @@ anyone can reproduce the results. It is assumed you have `gensim` properly :doc:
 Preparing the corpus
 ----------------------
 
-1. First, download the dump of all Wikipedia articles from http://download.wikimedia.org/enwiki/ 
+1. First, download the dump of all Wikipedia articles from http://download.wikimedia.org/enwiki/
    (you want a file like `enwiki-latest-pages-articles.xml.bz2`). This file is about 6GB in size
    and contains (a compressed version of) all articles from the English Wikipedia.
 
-2. Convert the articles to plain text (process Wiki markup) and store the result as 
-   sparse TF-IDF vectors. In Python, this is easy to do on-the-fly and we don't 
+2. Convert the articles to plain text (process Wiki markup) and store the result as
+   sparse TF-IDF vectors. In Python, this is easy to do on-the-fly and we don't
    even need to uncompress the whole archive to disk. There is a script included in
    `gensim` that does just that, run::
 
    $ python -m gensim.corpora.wikicorpus
 
 .. note::
-  This pre-processing step makes two passes over the 6GB wiki dump (one to extract 
-  the dictionary, one to create and store the sparse vectors) and takes about 
-  15 hours on my laptop, so you may want to go have a coffee or two. 
+  This pre-processing step makes two passes over the 6GB wiki dump (one to extract
+  the dictionary, one to create and store the sparse vectors) and takes about
+  15 hours on my laptop, so you may want to go have a coffee or two.
   Also, you will need about 15GB of free disk space to store the sparse output vectors.
 
 Latent Sematic Analysis
@@ -47,7 +47,7 @@ First let's load the corpus iterator and dictionary, created in the second step 
     >>> print mm
     MmCorpus(3199665 documents, 100000 features, 495547400 non-zero entries)
 
-We see that our corpus contains 3.2M documents, 100K features (distinct 
+We see that our corpus contains 3.2M documents, 100K features (distinct
 tokens) and 0.5G non-zero entries in the sparse TF-IDF matrix. The corpus contains
 about 1.92 billion tokens in total.
 
@@ -55,7 +55,7 @@ Now we're ready to compute LSA of the English Wikipedia::
 
     >>> # extract 400 LSI topics; use the default one-pass algorithm
     >>> lsi = gensim.models.lsimodel.LsiModel(corpus=mm, id2word=id2word, numTopics=400)
-    
+
     >>> # print the most contributing words (both positively and negatively) for each of the first ten topics
     >>> lsi.printTopics(10)
     topic #0(200.540): 0.475*"delete" + 0.383*"deletion" + 0.275*"debate" + 0.223*"comments" + 0.221*"edits" + 0.213*"modify" + 0.208*"appropriate" + 0.195*"subsequent" + 0.155*"wp" + 0.116*"notability"
@@ -72,11 +72,11 @@ Now we're ready to compute LSA of the English Wikipedia::
 Creating the LSI model of Wikipedia takes about 5 hours and 14 minutes on my laptop [1]_.
 If you need your results even faster, see the tutorial on :doc:`distributed`.
 
-We see that the total processing time is dominated by the preprocessing step of 
+We see that the total processing time is dominated by the preprocessing step of
 preparing the TF-IDF corpus, which took 15h. [2]_
 
-The algorithm used in `gensim` only needs to see each input document once, so it 
-is suitable for environments where the documents come as a non-repeatable stream, 
+The algorithm used in `gensim` only needs to see each input document once, so it
+is suitable for environments where the documents come as a non-repeatable stream,
 or where the cost of storing/iterating over the corpus multiple times is too high.
 
 
@@ -97,15 +97,15 @@ As with Latent Semantic Analysis above, first load the corpus iterator and dicti
     >>> print mm
     MmCorpus(3199665 documents, 100000 features, 495547400 non-zero entries)
 
-We will run online LDA (see Hoffman et al. [3]_), which is an algorithm that takes a chunk of documents, 
+We will run online LDA (see Hoffman et al. [3]_), which is an algorithm that takes a chunk of documents,
 updates the LDA model, takes another chunk, updates the model etc. Online LDA can be contrasted
-with batch LDA, which processes the whole corpus (one full pass), then updates 
-the model, then another pass, another update... The difference is that given a 
-reasonably stationary document stream (not much topic drift), the online updates 
-over the smaller chunks (subcorpora) are pretty good in themselves, so that the 
+with batch LDA, which processes the whole corpus (one full pass), then updates
+the model, then another pass, another update... The difference is that given a
+reasonably stationary document stream (not much topic drift), the online updates
+over the smaller chunks (subcorpora) are pretty good in themselves, so that the
 model estimation converges faster. As a result, we will perhaps only need a single full
-pass over the corpus: if the corpus has 3 million articles, and we update once after 
-every 10,000 articles, this means we will have done 300 updates in one pass, quite likely 
+pass over the corpus: if the corpus has 3 million articles, and we update once after
+every 10,000 articles, this means we will have done 300 updates in one pass, quite likely
 enough to have a very accurate topics estimate::
 
     >>> # extract 100 LDA topics, using 1 pass and updating once every 1 chunk (10,000 documents)
@@ -143,18 +143,18 @@ Creating this LDA model of Wikipedia takes about 11 hours on my laptop [1]_.
 If you need your results faster, consider running :doc:`dist_lda` on a cluster of
 computers.
 
-Note two differences between the LDA and LSA runs: we asked LSA 
-to extract 400 topics, LDA only 100 topics (so the difference in speed is in fact 
+Note two differences between the LDA and LSA runs: we asked LSA
+to extract 400 topics, LDA only 100 topics (so the difference in speed is in fact
 even greater). Secondly, the LSA implementation in `gensim` is truly online: if the nature of the input
 stream changes in time, LSA will re-orient itself to reflect these changes, in a reasonably
 small amount of updates. In contrast, LDA is not truly online (the name of the [3]_
-article notwithstanding), as the impact of later updates on the model gradually 
-diminishes. If there is topic drift in the input document stream, LDA will get 
+article notwithstanding), as the impact of later updates on the model gradually
+diminishes. If there is topic drift in the input document stream, LDA will get
 confused and be increasingly slower at adjusting itself to the new state of affairs.
 
-In short, be careful if using LDA to incrementally add new documents to the model 
+In short, be careful if using LDA to incrementally add new documents to the model
 over time. **Batch usage of LDA**, where the entire training corpus is either known beforehand or does
-not exihibit topic drift, **is ok and not affected**. 
+not exihibit topic drift, **is ok and not affected**.
 
 To run batch LDA (not online), train `LdaModel` with::
 
@@ -168,7 +168,7 @@ To run batch LDA (not online), train `LdaModel` with::
 
 .. [2]
   Here we're mostly interested in performance, but it is interesting to look at the
-  retrieved LSA concepts, too. I am no Wikipedia expert and don't see into Wiki's bowels, 
+  retrieved LSA concepts, too. I am no Wikipedia expert and don't see into Wiki's bowels,
   but Brian Mingus had this to say about the result::
 
     There appears to be a lot of noise in your dataset. The first three topics
@@ -176,19 +176,19 @@ To run batch LDA (not online), train `LdaModel` with::
     cleanup of Wikipedia. These show up because you didn't exclude templates
     such as these, some of which are included in most articles for quality
     control: http://en.wikipedia.org/wiki/Wikipedia:Template_messages/Cleanup
-    
+
     The fourth and fifth topics clearly shows the influence of bots that import
     massive databases of cities, countries, etc. and their statistics such as
     population, capita, etc.
-    
+
     The sixth shows the influence of sports bots, and the seventh of music bots.
-    
-  So the top ten concepts are apparently dominated by Wikipedia robots and expanded 
-  templates; this is a good reminder that LSA is a powerful tool for data analysis, 
-  but no silver bullet. As always, it's `garbage in, garbage out 
+
+  So the top ten concepts are apparently dominated by Wikipedia robots and expanded
+  templates; this is a good reminder that LSA is a powerful tool for data analysis,
+  but no silver bullet. As always, it's `garbage in, garbage out
   <http://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out>`_...
   By the way, improvements to the Wiki markup parsing code are welcome :-)
 
-.. [3] Hoffman, Blei, Bach. 2010. Online learning for Latent Dirichlet Allocation 
+.. [3] Hoffman, Blei, Bach. 2010. Online learning for Latent Dirichlet Allocation
    [`pdf <http://www.cs.princeton.edu/~blei/papers/HoffmanBleiBach2010b.pdf>`_] [`code <http://www.cs.princeton.edu/~mdhoffma/>`_]
 

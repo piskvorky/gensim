@@ -18,21 +18,21 @@ class TfidfModel(interfaces.TransformationABC):
     """
     Objects of this class realize the transformation between word-document co-occurence
     matrix (integers) into a locally/globally weighted matrix (positive floats).
-    
+
     This is done by combining the term frequency counts (the TF part) with inverse
     document frequency counts (the IDF part), optionally normalizing the resulting
     documents to unit length.
-    
+
     The main methods are:
-    
+
     1. constructor, which calculates IDF weights for all terms in the training corpus.
-    2. the [] method, which transforms a simple count representation into the TfIdf 
+    2. the [] method, which transforms a simple count representation into the TfIdf
        space.
-    
+
     >>> tfidf = TfidfModel(corpus)
     >>> print = tfidf[some_doc]
     >>> tfidf.save('/tmp/foo.tfidf_model')
-    
+
     Model persistency is achieved via its load/save methods.
     """
     def __init__(self, corpus, id2word=None, normalize=True):
@@ -45,14 +45,14 @@ class TfidfModel(interfaces.TransformationABC):
         if corpus is not None:
             self.initialize(corpus)
 
-    
+
     def __str__(self):
         return "TfidfModel(numDocs=%s, numNnz=%s)" % (self.numDocs, self.numNnz)
 
 
     def initialize(self, corpus):
         """
-        Compute inverse document weights, which will be used to modify term 
+        Compute inverse document weights, which will be used to modify term
         frequencies for documents.
         """
         logging.info("calculating counts")
@@ -68,7 +68,7 @@ class TfidfModel(interfaces.TransformationABC):
         # keep some stats about the training corpus
         self.numDocs = docNo + 1 # HACK using leftover from enumerate(corpus) above
         self.numNnz = numNnz
-        
+
         # and finally compute the idf weights
         logging.info("calculating IDF weights for %i documents and %i features (%i matrix non-zeros)" %
                      (self.numDocs, 1 + max([-1] + dfs.keys()), self.numNnz))
@@ -84,7 +84,7 @@ class TfidfModel(interfaces.TransformationABC):
         is_corpus, bow = utils.isCorpus(bow)
         if is_corpus:
             return self._apply(bow)
-        
+
         # unknown (new) terms will be given zero weight (NOT infinity/huge weight,
         # as strict application of the IDF formula would dictate
         vector = [(termId, tf * self.idfs.get(termId, 0.0))

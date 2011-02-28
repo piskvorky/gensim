@@ -52,7 +52,7 @@ Changes
 0.6.0
 
 * added option for online LSI training (yay!). the transformation can now be
-  used after any amount of training, and training can be continued at any time 
+  used after any amount of training, and training can be continued at any time
   with more data.
 * optimized the tf-idf transformation, so that it is a strictly one-pass algorithm in all cases  (thx to Brian Merrell).
 * fixed Windows-specific bug in handling binary files (thx to Sutee Sudprasert)

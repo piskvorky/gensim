@@ -12,13 +12,13 @@ Setting up the cluster
 _______________________
 
 See the tutorial on :doc:`dist_lsi`; setting up a cluster for LDA is completely
-analogous, except you want to run `lda_worker` and `lda_dispatcher` scripts instead 
+analogous, except you want to run `lda_worker` and `lda_dispatcher` scripts instead
 of `lsi_worker` and `lsi_dispatcher`.
 
 Running LDA
 ____________
 
-Run LDA like you normally would, but turn on the `distributed=True` constructor 
+Run LDA like you normally would, but turn on the `distributed=True` constructor
 parameter::
 
     >>> # extract 100 LDA topics, using default parameters
@@ -26,11 +26,11 @@ parameter::
     using distributed version with 4 workers
     running online LDA training, 100 topics, 1 passes over the supplied corpus of 3199665 documets, updating model once every 40000 documents
     ..
-    
+
 
 In serial mode (no distribution), creating this online LDA :doc:`model of Wikipedia <wiki>`
-takes 10h56m on my laptop (OS X, C2D 2.53GHz, 4GB RAM with `libVec`). 
-In distributed mode with four workers (Linux, Xeons of 2Ghz, 4GB RAM 
+takes 10h56m on my laptop (OS X, C2D 2.53GHz, 4GB RAM with `libVec`).
+In distributed mode with four workers (Linux, Xeons of 2Ghz, 4GB RAM
 with `ATLAS <http://math-atlas.sourceforge.net/>`_), the wallclock time taken drops to 3h20m.
 
 To run standard batch LDA (no online updates of mini-batches) instead, you would similarly
@@ -73,7 +73,7 @@ and then, some two days later::
     topic #17: 0.027*book + 0.021*published + 0.020*books + 0.014*isbn + 0.010*author + 0.010*magazine + 0.009*press + 0.009*novel + 0.009*writers + 0.008*story
     topic #18: 0.027*football + 0.024*players + 0.023*cup + 0.019*club + 0.017*fc + 0.017*footballers + 0.017*league + 0.011*season + 0.007*teams + 0.007*goals
     topic #19: 0.032*band + 0.024*album + 0.014*albums + 0.013*guitar + 0.013*rock + 0.011*records + 0.011*vocals + 0.009*live + 0.008*bass + 0.008*track
-    
+
 
 
 If you used the distributed LDA implementation in `gensim`, please let me know (my

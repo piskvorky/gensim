@@ -21,33 +21,33 @@ from gensim.corpora import IndexedCorpus
 class SvmLightCorpus(IndexedCorpus):
     """
     Corpus in SVMlight format.
-    
+
     Quoting http://svmlight.joachims.org/:
-    The input file example_file contains the training examples. The first lines 
-    may contain comments and are ignored if they start with #. Each of the following 
+    The input file example_file contains the training examples. The first lines
+    may contain comments and are ignored if they start with #. Each of the following
     lines represents one training example and is of the following format::
-    
+
         <line> .=. <target> <feature>:<value> <feature>:<value> ... <feature>:<value> # <info>
-        <target> .=. +1 | -1 | 0 | <float> 
+        <target> .=. +1 | -1 | 0 | <float>
         <feature> .=. <integer> | "qid"
         <value> .=. <float>
         <info> .=. <string>
-    
+
     The "qid" feature (used for SVMlight ranking), if present, is ignored.
-    
-    Although not mentioned in the specification above, SVMlight also expect its 
+
+    Although not mentioned in the specification above, SVMlight also expect its
     feature ids to be 1-based (counting starts at 1). We convert features to 0-base
-    internally by decrementing all ids when loading a SVMlight input file, and 
+    internally by decrementing all ids when loading a SVMlight input file, and
     increment them again when saving as SVMlight.
     """
-    
+
     def __init__(self, fname):
         """
         Initialize the corpus from a file.
         """
         IndexedCorpus.__init__(self, fname)
         logging.info("loading corpus from %s" % fname)
-        
+
         self.fname = fname # input file, see class doc for format
         self.length = None
 
@@ -64,24 +64,24 @@ class SvmLightCorpus(IndexedCorpus):
                     length += 1
                     yield doc
         self.length = length
-    
-    
+
+
     @staticmethod
     def saveCorpus(fname, corpus, id2word=None):
         """
-        Save a corpus in the SVMlight format. 
-        
+        Save a corpus in the SVMlight format.
+
         The SVMlight `<target>` class tag is set to 0 for all documents.
         """
         logging.info("converting corpus to SVMlight format: %s" % fname)
-        
+
         offsets = []
         with open(fname, 'w') as fout:
             for docno, doc in enumerate(corpus):
                 offsets.append(fout.tell())
                 fout.write(SvmLightCorpus.doc2line(doc)) # target class is always 0
         return offsets
-    
+
 
     def docbyoffset(self, offset):
         """
@@ -91,7 +91,7 @@ class SvmLightCorpus(IndexedCorpus):
             f.seek(offset)
             return self.line2doc(f.readline())
 
-    
+
     def line2doc(self, line):
         line = line[: line.find('#')].strip()
         if not line:
@@ -104,7 +104,7 @@ class SvmLightCorpus(IndexedCorpus):
         doc = [(int(p1) - 1, float(p2)) for p1, p2 in fields if p1 != 'qid'] # ignore 'qid' features, convert 1-based feature ids to 0-based
         return doc
 
-    
+
     @staticmethod
     def doc2line(doc):
         pairs = ' '.join("%i:%s" % (termId + 1, termVal) for termId, termVal  in doc) # +1 to convert 0-base to 1-base

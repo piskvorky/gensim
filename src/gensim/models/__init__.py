@@ -1,5 +1,5 @@
 """
-This package contains algorithms for extracting document representations from their raw 
+This package contains algorithms for extracting document representations from their raw
 bag-of-word counts.
 """
 

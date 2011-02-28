@@ -6,7 +6,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
+
     <title>corpora.wikicorpus – Corpus from a Wikipedia dump &mdash; gensim documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -55,12 +55,12 @@
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li>
       </ul>
     </div>
 
 
-    
+
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
@@ -84,15 +84,15 @@
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
-    
-    
+
+
 
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
-            
+
   <div class="section" id="module-gensim.corpora.wikicorpus">
 <span id="corpora-wikicorpus-corpus-from-a-wikipedia-dump"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">corpora.wikicorpus</span></tt> &#8211; Corpus from a Wikipedia dump<a class="headerlink" href="#module-gensim.corpora.wikicorpus" title="Permalink to this headline">¶</a></h1>
 <p>USAGE: %(program)s WIKI_XML_DUMP OUTPUT_PREFIX [VOCABULARY_SIZE]</p>
@@ -105,7 +105,7 @@ Convert articles from a Wikipedia dump to (sparse) vectors. The input is a bz2-c
 <li><cite>OUTPUT_PREFIX_tfidf.mm</cite>: TF-IDF representation</li>
 </ul>
 <p>The output Matrix Market files can then be compressed (e.g., by bzip2) to save disk space; gensim&#8217;s corpus iterators can work with compressed input, too.</p>
-<p><cite>VOCABULARY_SIZE</cite> controls how many of the most frequent words to keep (after 
+<p><cite>VOCABULARY_SIZE</cite> controls how many of the most frequent words to keep (after
 removing all tokens that appear in more than 10 percent documents). Defaults to 100,000.</p>
 <p>Example: ./wikicorpus.py ~/gensim/results/enwiki-20100622-pages-articles.xml.bz2 ~/gensim/results/wiki_en</p>
 <dl class="class">
@@ -114,9 +114,9 @@ removing all tokens that appear in more than 10 percent documents). Defaults to 
 <dd><p>Convert a corpus to another, with different feature ids.</p>
 <p>Given a mapping between old ids and new ids (some old ids may be missing,
 i.e. the mapping need not be a bijection), this will wrap a
-corpus so that iterating over VocabTransform[corpus] returns the same vectors but with 
+corpus so that iterating over VocabTransform[corpus] returns the same vectors but with
 the new ids.</p>
-<p>Old features that have no counterpart in the new ids are discarded. This 
+<p>Old features that have no counterpart in the new ids are discarded. This
 can be used to filter vocabulary of a corpus:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">old2new</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">oldid</span><span class="p">,</span> <span class="n">newid</span><span class="p">)</span> <span class="k">for</span> <span class="n">newid</span><span class="p">,</span> <span class="n">oldid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">remaining_ids</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">newid</span><span class="p">,</span> <span class="n">oldid2token</span><span class="p">[</span><span class="n">oldid</span><span class="p">])</span> <span class="k">for</span> <span class="n">oldid</span><span class="p">,</span> <span class="n">newid</span> <span class="ow">in</span> <span class="n">old2new</span><span class="o">.</span><span class="n">iteritems</span><span class="p">())</span>
@@ -147,8 +147,8 @@ can stay compressed on disk.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">wiki</span><span class="o">.</span><span class="n">saveAsText</span><span class="p">(</span><span class="s">&#39;wiki_en_vocab200k&#39;</span><span class="p">)</span> <span class="c"># another 8h, creates a file in MatrixMarket format plus file with id-&gt;word</span>
 </pre></div>
 </div>
-<p>Initialize the corpus. This scans the corpus once, to determine its 
-vocabulary (only the first <cite>keep_words</cite> most frequent words that 
+<p>Initialize the corpus. This scans the corpus once, to determine its
+vocabulary (only the first <cite>keep_words</cite> most frequent words that
 appear in at least <cite>noBelow</cite> documents are kept).</p>
 <dl class="method">
 <dt id="gensim.corpora.wikicorpus.WikiCorpus.getArticles">
@@ -156,7 +156,7 @@ appear in at least <cite>noBelow</cite> documents are kept).</p>
 <dd><p>Iterate over the dump, returning text version of each article.</p>
 <p>Only articles of sufficient length are returned (short articles &amp; redirects
 etc are ignored).</p>
-<p>Note that this iterates over the <strong>texts</strong>; if you want vectors, just use 
+<p>Note that this iterates over the <strong>texts</strong>; if you want vectors, just use
 the standard corpus interface instead of this function:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">wiki_corpus</span><span class="p">:</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="k">print</span> <span class="n">doc</span>
@@ -189,7 +189,7 @@ the standard corpus interface instead of this function:</p>
 <dd><p>Store the corpus to disk, in a human-readable text format.</p>
 <p>This actually saves two files:</p>
 <ol class="arabic simple">
-<li>Document-term co-occurence frequency counts (bag-of-words), as 
+<li>Document-term co-occurence frequency counts (bag-of-words), as
 a Matrix Market file <cite>fname_bow.mm</cite>.</li>
 <li>Token to integer mapping, as a text file <cite>fname_wordids.txt</cite>.</li>
 </ol>
@@ -237,7 +237,7 @@ that 15 characters (not bytes!).</p>
       </div>
       <div class="clearer"></div>
     </div>
-        
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -257,11 +257,11 @@ that 15 characters (not bytes!).</p>
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li>
       </ul>
     </div>
-    
-    
+
+
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.

@@ -38,7 +38,7 @@ logger.setLevel(logging.INFO)
 
 def corpus2csc(corpus, num_terms, dtype=numpy.float64):
     """
-    Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format, 
+    Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format,
     with documents as columns.
     """
     logger.info("constructing sparse document matrix")
@@ -56,7 +56,7 @@ def corpus2csc(corpus, num_terms, dtype=numpy.float64):
 
 def pad(mat, padRow, padCol):
     """
-    Add additional rows/columns to a numpy.matrix `mat`. The new rows/columns 
+    Add additional rows/columns to a numpy.matrix `mat`. The new rows/columns
     will be initialized with zeros.
     """
     if padRow < 0:
@@ -70,7 +70,7 @@ def pad(mat, padRow, padCol):
 
 def sparse2full(doc, length):
     """
-    Convert a document in sparse corpus format (sequence of 2-tuples) into a dense 
+    Convert a document in sparse corpus format (sequence of 2-tuples) into a dense
     numpy array (of size `length`).
     """
     result = numpy.zeros(length, dtype=numpy.float32) # fill with zeroes (default value)
@@ -82,7 +82,7 @@ def sparse2full(doc, length):
 def full2sparse(vec, eps=1e-9):
     """
     Convert a dense numpy array into the sparse corpus format (sequence of 2-tuples).
-    
+
     Values of magnitude < `eps` are treated as zero (ignored).
     """
     return [(pos, val) for pos, val in enumerate(vec) if numpy.abs(val) > eps]
@@ -115,9 +115,9 @@ def corpus2dense(corpus, num_terms):
 
 class Dense2Corpus(object):
     """
-    Treat dense numpy array as a sparse gensim corpus. 
-    
-    No data copy is made (changes to the underlying matrix imply changes in the 
+    Treat dense numpy array as a sparse gensim corpus.
+
+    No data copy is made (changes to the underlying matrix imply changes in the
     corpus).
     """
     def __init__(self, dense, documents_columns=True):
@@ -125,14 +125,14 @@ class Dense2Corpus(object):
             self.dense = dense.T
         else:
             self.dense = dense
-    
+
     def __iter__(self):
         for doc in self.dense:
             yield full2sparse(doc.flat)
-    
+
     def __len__(self):
         return len(self.dense)
-#endclass DenseCorpus            
+#endclass DenseCorpus
 
 
 class Sparse2Corpus(object):
@@ -144,11 +144,11 @@ class Sparse2Corpus(object):
             self.sparse = sparse.tocsc()
         else:
             self.sparse = sparse.tocsr().T # make sure shape[1]=number of docs (needed in len())
-    
+
     def __iter__(self):
         for indprev, indnow in itertools.izip(self.sparse.indptr, self.sparse.indptr[1:]):
             yield zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow])
-    
+
     def __len__(self):
         return self.sparse.shape[1]
 #endclass Sparse2Corpus
@@ -169,18 +169,18 @@ def unitVec(vec):
     """
     Scale a vector to unit length. The only exception is the zero vector, which
     is returned back unchanged.
-    
+
     If the input is sparse (list of 2-tuples), output will also be sparse. Otherwise,
     output will be a numpy array.
     """
     if scipy.sparse.issparse(vec): # convert scipy.sparse to standard numpy array
         vec = vec.toarray().flatten()
-    
+
     try:
         first = iter(vec).next() # is there at least one element?
     except:
         return vec
-    
+
     if isinstance(first, tuple): # sparse format?
         vecLen = 1.0 * math.sqrt(sum(val * val for _, val in vec))
         assert vecLen > 0.0, "sparse documents must not contain any explicit zero entries"
@@ -214,7 +214,7 @@ def cossim(vec1, vec2):
 def qr_destroy(la):
     """
     Return QR decomposition of `la[0]`. Content of `la` gets destroyed in the process.
-    
+
     Using this function should be less memory intense than calling `scipy.linalg.qr(la[0])`,
     because the memory used in `la[0]` is reclaimed earlier.
     """
@@ -244,20 +244,20 @@ class MmWriter(object):
     """
     Store corpus in Matrix Market format.
     """
-    
+
     HEADER_LINE = '%%MatrixMarket matrix coordinate real general\n'
-    
+
     def __init__(self, fname):
         self.fname = fname
         tmp = open(self.fname, 'w') # reset/create the target file
         tmp.close()
         self.fout = open(self.fname, 'rb+') # open for both reading and writing
         self.headersWritten = False
-    
+
 
     def writeHeaders(self, numDocs, numTerms, numNnz):
         self.fout.write(MmWriter.HEADER_LINE)
-        
+
         if numNnz < 0:
             # we don't know the matrix shape/density yet, so only log a general line
             logger.info("saving sparse matrix to %s" % self.fname)
@@ -268,20 +268,20 @@ class MmWriter(object):
             self.fout.write('%s %s %s\n' % (numDocs, numTerms, numNnz))
         self.lastDocNo = -1
         self.headersWritten = True
-    
-    
+
+
     def fakeHeaders(self, numDocs, numTerms, numNnz):
         stats = '%i %i %i' % (numDocs, numTerms, numNnz)
         if len(stats) > 50:
             raise ValueError('Invalid stats: matrix too large!')
         self.fout.seek(len(MmWriter.HEADER_LINE))
         self.fout.write(stats)
-    
-    
+
+
     def writeVector(self, docNo, vector):
         """
         Write a single sparse vector to the file.
-        
+
         Sparse vector is any iterable yielding (field id, field value) pairs.
         """
         assert self.headersWritten, "must write Matrix Market file headers before writing data!"
@@ -298,15 +298,15 @@ class MmWriter(object):
     def writeCorpus(fname, corpus, progressCnt=1000, index=False):
         """
         Save the vector space representation of an entire corpus to disk.
-        
-        Note that the documents are processed one at a time, so the whole corpus 
+
+        Note that the documents are processed one at a time, so the whole corpus
         is allowed to be larger than the available RAM.
         """
         mw = MmWriter(fname)
-        
+
         # write empty headers to the file (with enough space to be overwritten later)
         mw.writeHeaders(-1, -1, -1) # will print 50 spaces followed by newline on the stats line
-        
+
         # calculate necessary header info (nnz elements, num terms, num docs) while writing out vectors
         numTerms, numNnz = 0, 0
         docNo, poslast = -1, -1
@@ -325,32 +325,32 @@ class MmWriter(object):
                 poslast = posnow
             mw.writeVector(docNo, bow)
         numDocs = docNo + 1
-            
+
         if numDocs * numTerms != 0:
-            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" % 
+            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" %
                          (numDocs, numTerms,
                           100.0 * numNnz / (numDocs * numTerms),
                           numNnz,
                           numDocs * numTerms))
-            
+
         # now write proper headers, by seeking and overwriting a part of the file
         mw.fakeHeaders(numDocs, numTerms, numNnz)
-        
+
         mw.close()
         return offsets
 
 
     def __del__(self):
         """
-        Automatic destructor which closes the underlying file. 
-        
+        Automatic destructor which closes the underlying file.
+
         There must be no circular references contained in the object for __del__
         to work! Closing the file explicitly via the close() method is preferred
         and safer.
         """
         self.close() # does nothing if called twice (on an already closed file), so no worries
-    
-    
+
+
     def close(self):
         logging.debug("closing %s" % self.fname)
         self.fout.close()
@@ -360,21 +360,21 @@ class MmWriter(object):
 
 class MmReader(object):
     """
-    Wrap a term-document matrix on disk (in matrix-market format), and present it 
+    Wrap a term-document matrix on disk (in matrix-market format), and present it
     as an object which supports iteration over the rows (~documents).
-    
-    Note that the file is read into memory one document at a time, not the whole 
-    matrix at once (unlike scipy.io.mmread). This allows us to process corpora 
+
+    Note that the file is read into memory one document at a time, not the whole
+    matrix at once (unlike scipy.io.mmread). This allows us to process corpora
     which are larger than the available RAM.
     """
     def __init__(self, input, transposed=True):
         """
-        Initialize the matrix reader. 
-        
-        The `input` refers to a file on local filesystem, which is expected to 
-        be in the sparse (coordinate) Matrix Market format. Documents are assumed 
-        to be rows of the matrix (and document features are columns). 
-        
+        Initialize the matrix reader.
+
+        The `input` refers to a file on local filesystem, which is expected to
+        be in the sparse (coordinate) Matrix Market format. Documents are assumed
+        to be rows of the matrix (and document features are columns).
+
         `input` is either a string (file path) or a file-like object that supports
         `seek()` (e.g. gzip.GzipFile, bz2.BZ2File).
         """
@@ -384,7 +384,7 @@ class MmReader(object):
             input = open(input)
         header = input.next().strip()
         if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
-            raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found: \n%s" % 
+            raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
                              (self.input, header))
         self.numDocs = self.numTerms = self.numElements = 0
         for lineNo, line in enumerate(input):
@@ -395,22 +395,22 @@ class MmReader(object):
                 break
         logger.info("accepted corpus with %i documents, %i terms, %i non-zero entries" %
                      (self.numDocs, self.numTerms, self.numElements))
-    
+
     def __len__(self):
         return self.numDocs
-    
+
     def __str__(self):
-        return ("MmCorpus(%i documents, %i features, %i non-zero entries)" % 
+        return ("MmCorpus(%i documents, %i features, %i non-zero entries)" %
                 (self.numDocs, self.numTerms, self.numElements))
-        
+
     def __iter__(self):
         """
         Iteratively yield vectors from the underlying file, in the format (rowNo, vector),
         where vector is a list of (colId, value) 2-tuples.
-        
-        Note that the total number of vectors returned is always equal to the 
+
+        Note that the total number of vectors returned is always equal to the
         number of rows specified in the header; empty documents are inserted and
-        yielded where appropriate, even if they are not explicitly stored in the 
+        yielded where appropriate, even if they are not explicitly stored in the
         Matrix Market file.
         """
         if isinstance(self.input, basestring):
@@ -423,7 +423,7 @@ class MmReader(object):
             if line.startswith('%'):
                 continue
             break
-        
+
         prevId = -1
         for line in fin:
             docId, termId, val = line.split()
@@ -435,31 +435,31 @@ class MmReader(object):
                 # change of document: return the document read so far (its id is prevId)
                 if prevId >= 0:
                     yield prevId, document
-                
-                # return implicit (empty) documents between previous id and new id 
+
+                # return implicit (empty) documents between previous id and new id
                 # too, to keep consistent document numbering and corpus length
                 for prevId in xrange(prevId + 1, docId):
                     yield prevId, []
-                
+
                 # from now on start adding fields to a new document, with a new id
                 prevId = docId
                 document = []
-            
+
             document.append((termId, val,)) # add another field to the current document
-        
+
         # handle the last document, as a special case
         if prevId >= 0:
             yield prevId, document
-        
-        # return empty documents between the last explicit document and the number 
+
+        # return empty documents between the last explicit document and the number
         # of documents as specified in the header
         for prevId in xrange(prevId + 1, self.numDocs):
             yield prevId, []
-    
-    
+
+
     def docbyoffset(self, offset):
         """Return document at file offset `offset` (in bytes)"""
-        # empty documents are not stored explicitly in MM format, so the index marks 
+        # empty documents are not stored explicitly in MM format, so the index marks
         # them with a special offset, -1.
         if offset == -1:
             return []
@@ -467,7 +467,7 @@ class MmReader(object):
             fin = open(self.input)
         else:
             fin = self.input
-        
+
         fin.seek(offset) # works for gzip/bz2 input, too
         prevId, document = -1, []
         for line in fin:
@@ -480,7 +480,7 @@ class MmReader(object):
                 if prevId >= 0:
                     return document
                 prevId = docId
-            
+
             document.append((termId, val,)) # add another field to the current document
         return document
 #endclass MmReader

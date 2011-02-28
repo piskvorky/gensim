@@ -6,7 +6,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
+
     <title>corpora.lowcorpus – Corpus in List-of-Words format &mdash; gensim documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -55,12 +55,12 @@
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li>
       </ul>
     </div>
 
 
-    
+
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
@@ -84,15 +84,15 @@
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
-    
-    
+
+
 
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
-            
+
   <div class="section" id="module-gensim.corpora.lowcorpus">
 <span id="corpora-lowcorpus-corpus-in-list-of-words-format"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">corpora.lowcorpus</span></tt> &#8211; Corpus in List-of-Words format<a class="headerlink" href="#module-gensim.corpora.lowcorpus" title="Permalink to this headline">¶</a></h1>
 <p>Corpus in GibbsLda++ format of List-Of-Words.</p>
@@ -101,7 +101,7 @@
 <em class="property">class </em><tt class="descclassname">gensim.corpora.lowcorpus.</tt><tt class="descname">LowCorpus</tt><big>(</big><em>fname</em>, <em>id2word=None</em>, <em>line2words=&lt;function splitOnSpace at 0x1cb5130&gt;</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>List_Of_Words corpus handles input in GibbsLda++ format.</p>
 <p>Quoting <a class="reference external" href="http://gibbslda.sourceforge.net/#3.2_Input_Data_Format">http://gibbslda.sourceforge.net/#3.2_Input_Data_Format</a>:</p>
-<div class="highlight-python"><pre>Both data for training/estimating the model and new data (i.e., previously 
+<div class="highlight-python"><pre>Both data for training/estimating the model and new data (i.e., previously
 unseen data) have the same format as follows:
 
 [M]
@@ -110,21 +110,21 @@ unseen data) have the same format as follows:
 ...
 [documentM]
 
-in which the first line is the total number for documents [M]. Each line 
-after that is one document. [documenti] is the ith document of the dataset 
+in which the first line is the total number for documents [M]. Each line
+after that is one document. [documenti] is the ith document of the dataset
 that consists of a list of Ni words/terms.
 
 [documenti] = [wordi1] [wordi2] ... [wordiNi]
 
-in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated 
+in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated
 by the blank character.</pre>
 </div>
 <p>Initialize the corpus from a file.</p>
 <p><cite>id2word</cite> and <cite>line2words</cite> are optional parameters.</p>
-<p>If provided, <cite>id2word</cite> is a dictionary mapping between wordIds (integers) 
-and words (strings). If not provided, the mapping is constructed from 
+<p>If provided, <cite>id2word</cite> is a dictionary mapping between wordIds (integers)
+and words (strings). If not provided, the mapping is constructed from
 the documents.</p>
-<p><cite>line2words</cite> is a function which converts lines into tokens. Defaults to 
+<p><cite>line2words</cite> is a function which converts lines into tokens. Defaults to
 simple splitting on spaces.</p>
 <dl class="classmethod">
 <dt id="gensim.corpora.lowcorpus.LowCorpus.load">
@@ -154,7 +154,7 @@ simple splitting on spaces.</p>
       </div>
       <div class="clearer"></div>
     </div>
-        
+
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -174,11 +174,11 @@ simple splitting on spaces.</p>
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li>
       </ul>
     </div>
-    
-    
+
+
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
