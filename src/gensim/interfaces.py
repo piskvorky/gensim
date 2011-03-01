@@ -82,6 +82,19 @@ class CorpusABC(utils.SaveLoad):
 #endclass CorpusABC
 
 
+class TransformedCorpus(CorpusABC):
+    def __init__(self, obj, corpus):
+        self.obj, self.corpus = obj, corpus
+
+    def __len__(self):
+        return len(self.corpus)
+
+    def __iter__(self):
+        for doc in self.corpus:
+            yield self.obj[doc]
+#endclass TransformedCorpus
+
+
 class TransformationABC(utils.SaveLoad):
     """
     Interface for transformations. A 'transformation' is any object which accepts
@@ -90,17 +103,6 @@ class TransformationABC(utils.SaveLoad):
 
     See the :mod:`gensim.models.tfidfmodel` module for an example of a transformation.
     """
-    class TransformedCorpus(CorpusABC):
-        def __init__(self, fnc, corpus):
-            self.fnc, self.corpus = fnc, corpus
-
-        def __len__(self):
-            return len(self.corpus)
-
-        def __iter__(self):
-            for doc in self.corpus:
-                yield self.fnc(doc)
-    #endclass TransformedCorpus
 
     def __getitem__(self, vec):
         """
@@ -118,7 +120,7 @@ class TransformationABC(utils.SaveLoad):
         Apply the transformation to a whole corpus (as opposed to a single document)
         and return the result as another corpus.
         """
-        return TransformationABC.TransformedCorpus(self.__getitem__, corpus)
+        return TransformedCorpus(self, corpus)
 #endclass TransformationABC
 
 
