@@ -195,15 +195,16 @@ class TestTfidfModel(unittest.TestCase):
     def testInit(self):
         # create the transformation model by analyzing a corpus 
         # uses the global `corpus`!
-        model1 = tfidfmodel.TfidfModel(corpus, normalize=True)
+        model1 = tfidfmodel.TfidfModel(corpus)
         
         # make sure the dfs<->idfs transformation works
         dfs = tfidfmodel.idfs2dfs(model1.idfs, len(self.corpus))
         self.assertEqual(dfs, dictionary.docFreq)
         self.assertEqual(model1.idfs, tfidfmodel.dfs2idfs(dfs, len(self.corpus)))
         
-        # create the transformation model by directly supplying a term->docfreq mapping
-        model2 = tfidfmodel.TfidfModel(dictionary=dictionary, normalize=True)
+        # create the transformation model by directly supplying a term->docfreq 
+        # mapping from the global var `dictionary`.
+        model2 = tfidfmodel.TfidfModel(dictionary=dictionary)
         self.assertEqual(model1.idfs, model2.idfs)
     
     
