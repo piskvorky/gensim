@@ -91,7 +91,7 @@ class Dictionary(utils.SaveLoad):
         `(tokenId, tokenCount)` 2-tuples. Each word is assumed to be a
         **tokenized and normalized** utf-8 encoded string.
 
-        If `allowUpdate` is set, then also update of dictionary in the process: create ids
+        If `allowUpdate` is set, then also update dictionary in the process: create ids
         for new words. At the same time, update document frequencies -- for
         each word appearing in this document, increase its `self.docFreq` by one.
 

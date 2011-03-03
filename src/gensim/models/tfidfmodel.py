@@ -14,6 +14,27 @@ from gensim import interfaces, matutils, utils
 
 
 
+logger = logging.getLogger('tfidfmodel')
+logger.setLevel(logging.INFO)
+
+
+def dfs2idfs(dfs, totaldocs):
+    """
+    Given a mapping of `term->document frequency`, construct a mapping of
+    `term->inverse document frequency`.
+    """
+    return dict((termid, math.log(1.0 * totaldocs / docfreq, 2))
+                for termid, docfreq in dfs.iteritems())
+
+
+def idfs2dfs(idfs, totaldocs):
+    """
+    Inverse mapping for `dfs2idfs`.
+    """
+    return dict((termid, int(round(totaldocs / 2**weight)))
+                for termid, weight in idfs.iteritems())
+
+
 class TfidfModel(interfaces.TransformationABC):
     """
     Objects of this class realize the transformation between word-document co-occurence
@@ -35,19 +56,34 @@ class TfidfModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, corpus, id2word=None, normalize=True):
+    def __init__(self, corpus=None, id2word=None, dictionary=None, normalize=True):
         """
-        `normalize` dictates whether the resulting vectors will be set to unit length.
+        `normalize` dictates whether the transformed vectors will be set to unit 
+        length.
+        
+        If `dictionary` is specified, it must be a `corpora.Dictionary` object
+        and it will be used to directly construct the inverse document frequency
+        mapping (`corpus`, if specified, is ignored).
         """
         self.normalize = normalize
-        self.numDocs = 0
-        self.numNnz = 0
-        if corpus is not None:
+        self.id2word = id2word
+        self.numdocs, self.numnnz, self.idfs = None, None, None
+        if dictionary is not None:
+            if corpus is not None:
+                logger.warning("constructor received both corpus and explicit "
+                               "inverse document frequencies; ignoring the corpus")
+            self.numdocs, self.numnnz = dictionary.numDocs, dictionary.numPos
+            self.idfs = dfs2idfs(dictionary.docFreq, dictionary.numDocs)
+        elif corpus is not None:
             self.initialize(corpus)
+        else:
+            # NOTE: everything is left uninitialized; presumably the model will
+            # be initialized in some other way
+            pass
 
 
     def __str__(self):
-        return "TfidfModel(numDocs=%s, numNnz=%s)" % (self.numDocs, self.numNnz)
+        return "TfidfModel(numDocs=%s, numNnz=%s)" % (self.numdocs, self.numnnz)
 
 
     def initialize(self, corpus):
@@ -55,25 +91,24 @@ class TfidfModel(interfaces.TransformationABC):
         Compute inverse document weights, which will be used to modify term
         frequencies for documents.
         """
-        logging.info("calculating counts")
+        logger.info("collecting document frequencies")
         dfs = {}
-        numNnz = 0
-        for docNo, bow in enumerate(corpus):
-            if docNo % 10000 == 0:
-                logging.info("PROGRESS: processing document #%i" % docNo)
-            numNnz += len(bow)
-            for termId, termCount in bow:
-                dfs[termId] = dfs.get(termId, 0) + 1
+        numnnz, docno = 0, -1
+        for docno, bow in enumerate(corpus):
+            if docno % 10000 == 0:
+                logger.info("PROGRESS: processing document #%i" % docno)
+            numnnz += len(bow)
+            for termid, termcount in bow:
+                dfs[termid] = dfs.get(termid, 0) + 1
 
         # keep some stats about the training corpus
-        self.numDocs = docNo + 1 # HACK using leftover from enumerate(corpus) above
-        self.numNnz = numNnz
+        self.numdocs = docno + 1 # HACK using leftover from enumerate(corpus) above
+        self.numnnz = numnnz
 
         # and finally compute the idf weights
-        logging.info("calculating IDF weights for %i documents and %i features (%i matrix non-zeros)" %
-                     (self.numDocs, 1 + max([-1] + dfs.keys()), self.numNnz))
-        self.idfs = dict((termId, math.log(1.0 * self.numDocs / docFreq, 2)) # the IDF weight formula
-                         for termId, docFreq in dfs.iteritems())
+        logger.info("calculating IDF weights for %i documents and %i features (%i matrix non-zeros)" %
+                     (self.numdocs, 1 + max([-1] + dfs.keys()), self.numnnz))
+        self.idfs = dfs2idfs(dfs, self.numdocs)
 
 
     def __getitem__(self, bow):
@@ -86,9 +121,9 @@ class TfidfModel(interfaces.TransformationABC):
             return self._apply(bow)
 
         # unknown (new) terms will be given zero weight (NOT infinity/huge weight,
-        # as strict application of the IDF formula would dictate
-        vector = [(termId, tf * self.idfs.get(termId, 0.0))
-                  for termId, tf in bow if self.idfs.get(termId, 0.0) != 0.0]
+        # as strict application of the IDF formula would dictate)
+        vector = [(termid, tf * self.idfs.get(termid, 0.0))
+                  for termid, tf in bow if self.idfs.get(termid, 0.0) != 0.0]
         if self.normalize:
             vector = matutils.unitVec(vector)
         return vector
