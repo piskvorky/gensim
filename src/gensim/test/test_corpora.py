@@ -93,7 +93,7 @@ class TestDictionary(unittest.TestCase):
     def testBuild(self):
         d = dictionary.Dictionary(self.texts)
         expected = {0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 5: 3, 6: 2, 7: 3, 8: 2, 9: 3, 10: 3, 11: 2}
-        self.assertEqual(d.docFreq, expected)
+        self.assertEqual(d.dfs, expected)
         expected = {'computer': 0, 'eps': 8, 'graph': 10, 'human': 1, 'interface': 2,
                     'minors': 11, 'response': 3, 'survey': 4, 'system': 5,
                     'time': 6, 'trees': 9, 'user': 7}
@@ -105,7 +105,7 @@ class TestDictionary(unittest.TestCase):
         d = dictionary.Dictionary(self.texts)
         d.filterExtremes(noBelow = 2, noAbove = 1.0, keepN = 4)
         expected = {0: 3, 1: 3, 2: 3, 3: 3}
-        self.assertEqual(d.docFreq, expected)
+        self.assertEqual(d.dfs, expected)
 #endclass TestDictionary
 
 

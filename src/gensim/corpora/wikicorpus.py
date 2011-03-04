@@ -170,7 +170,7 @@ class WikiCorpus(interfaces.CorpusABC):
         logger.info("saving dictionary mapping to %s" % fname)
         fout = open(fname, 'w')
         for token, tokenId in sorted(self.dictionary.token2id.iteritems()):
-            fout.write("%i\t%s\t%i\n" % (tokenId, token, self.dictionary.docFreq[tokenId]))
+            fout.write("%i\t%s\t%i\n" % (tokenId, token, self.dictionary.dfs[tokenId]))
         fout.close()
 
 
@@ -188,21 +188,21 @@ class WikiCorpus(interfaces.CorpusABC):
                 if len(cols) == 2:
                     wordId, word = cols
                 elif len(cols) == 3:
-                    wordId, word, docFreq = cols
+                    wordId, word, dfs = cols
                 else:
                     raise ValueError("invalid line in dictionary file %s: %s" % (fname, line.strip()))
-                result[int(wordId)] = word # docFreq not used
+                result[int(wordId)] = word # dfs not used
         else:
             result = Dictionary()
             for lineNo, line in enumerate(open(fname)):
                 cols = line[:-1].split('\t')
                 if len(cols) == 3:
-                    wordId, word, docFreq = cols
+                    wordId, word, dfs = cols
                 else:
                     raise ValueError("invalid line in dictionary file %s: %s" % (fname, line.strip()))
                 wordId = int(wordId)
                 result.token2id[word] = wordId
-                result.docFreq[wordId] = int(docFreq)
+                result.dfs[wordId] = int(dfs)
 
         return result
 
