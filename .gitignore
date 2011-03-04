@@ -2,6 +2,8 @@
 gensim.egg-info
 *,cover
 .idea
+*.dict
+*.index
 .coverage
 data
 src/gensim/test/miIslita.cor.dict

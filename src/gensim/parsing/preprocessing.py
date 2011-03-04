@@ -2,36 +2,44 @@ import re
 import string
 import glob
 
-basepath       = "/home/quesada/coding/gensim/trunk/"
 from gensim.parsing.porter import PorterStemmer
+
 
 def strip_punctuation(s):
     return re.sub("([%s]+)" % string.punctuation, " ", s)
 
+
 def strip_punctuation2(s):
-    return s.translate(string.maketrans("",""), string.punctuation)
+    return s.translate(string.maketrans("", ""), string.punctuation)
+
 
 def strip_tags(s):
     # assumes s is already lowercase
     return re.sub(r"<([^>]+)>", "", s)
 
+
 def strip_short(s, minsize=3):
     return " ".join([e for e in s.split() if len(e) >= minsize])
 
+
 def strip_numeric(s):
     return re.sub(r"[0-9]+", "", s)
+
 
 def strip_non_alphanum(s):
     # assumes s is already lowercase
     return re.sub(r"[^a-z0-9\ ]", " ", s)
 
+
 def strip_multiple_whitespaces(s):
     return re.sub(r"(\s|\\n|\\r|\\t)+", " ", s)
     #return s
 
+
 def split_alphanum(s):
     s = re.sub(r"([a-z]+)([0-9]+)", r"\1 \2", s)
     return re.sub(r"([0-9]+)([a-z]+)", r"\1 \2", s)
+
 
 def stem_text(s):
     """
@@ -41,8 +49,9 @@ def stem_text(s):
     output = ''
     p = PorterStemmer()
     for word in s.split():
-        output += p.stem(word, 0, len(word)-1) +" "
+        output += p.stem(word, 0, len(word) - 1) + " "
     return(output)
+
 
 # improved list from Stone, Denis, Kwantes (2010)
 STOPWORDS = """
@@ -70,27 +79,32 @@ was we well were what whatever when whence whenever where whereafter whereas whe
 your yours yourself yourselves
 """
 
-STOPWORDS = dict((w,1) for w in STOPWORDS.strip().replace("\n", " ").split())
+STOPWORDS = dict((w, 1) for w in STOPWORDS.strip().replace("\n", " ").split())
+
 
 def remove_stopwords(s):
     return " ".join([w for w in s.split() if w not in STOPWORDS])
 
+
 DEFAULT_FILTERS = [str.lower, strip_tags, strip_punctuation,
 strip_multiple_whitespaces, strip_numeric, remove_stopwords, strip_short, stem_text]
+
 
 def preprocess_string(s, filters=DEFAULT_FILTERS):
     for f in filters:
         s = f(s)
     return s.split()
 
+
 def preprocess_documents(docs):
     return map(preprocess_string, docs)
+
 
 def read_file(path):
     f = open(path)
     ret = f.read()
     return ret
 
+
 def read_files(pattern):
     return map(read_file, glob.glob(pattern))
-
