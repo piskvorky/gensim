@@ -198,9 +198,9 @@ class TestTfidfModel(unittest.TestCase):
         model1 = tfidfmodel.TfidfModel(corpus, normalize=True)
         
         # make sure the dfs<->idfs transformation works
-        dfs = tfidfmodel.idfs2dfs(model1.idfs, len(self.corpus))
+        dfs = tfidfmodel.idfs2dfs(model1.idfs, len(corpus))
         self.assertEqual(dfs, dictionary.dfs)
-        self.assertEqual(model1.idfs, tfidfmodel.dfs2idfs(dfs, len(self.corpus)))
+        self.assertEqual(model1.idfs, tfidfmodel.dfs2idfs(dfs, len(corpus)))
         
         # create the transformation model by directly supplying a term->docfreq mapping
         model2 = tfidfmodel.TfidfModel(dictionary=dictionary, normalize=True)
