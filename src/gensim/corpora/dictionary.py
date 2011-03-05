@@ -40,6 +40,7 @@ class Dictionary(utils.SaveLoad):
         self.dfs = {} # document frequencies: tokenId -> in how many documents this token appeared
         self.numDocs = 0 # number of documents processed
         self.numPos = 0 # total number of corpus positions
+        self.numNnz = 0 # total number of non-zeroes in the BOW matrix
 
         if documents:
             self.addDocuments(documents)
@@ -117,6 +118,7 @@ class Dictionary(utils.SaveLoad):
         if allowUpdate:
             self.numDocs += 1
             self.numPos += len(document)
+            self.numNnz += len(result)
             # increase document count for each unique token that appeared in the document
             for tokenId in result.iterkeys():
                 self.dfs[tokenId] = self.dfs.get(tokenId, 0) + 1

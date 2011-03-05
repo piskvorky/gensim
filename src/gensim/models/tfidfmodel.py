@@ -72,7 +72,7 @@ class TfidfModel(interfaces.TransformationABC):
             if corpus is not None:
                 logger.warning("constructor received both corpus and explicit "
                                "inverse document frequencies; ignoring the corpus")
-            self.numdocs, self.numnnz = dictionary.numDocs, dictionary.numPos
+            self.numdocs, self.numnnz = dictionary.numDocs, dictionary.numNnz
             self.idfs = dfs2idfs(dictionary.dfs, dictionary.numDocs)
         elif corpus is not None:
             self.initialize(corpus)
