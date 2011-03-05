@@ -6,7 +6,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
+    
     <title>corpora.lowcorpus – Corpus in List-of-Words format &mdash; gensim documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -55,12 +55,12 @@
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li>
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
       </ul>
     </div>
 
 
-
+    
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
@@ -84,7 +84,7 @@
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
-
+    
 
 
 
@@ -92,13 +92,13 @@
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
-
+            
   <div class="section" id="module-gensim.corpora.lowcorpus">
 <span id="corpora-lowcorpus-corpus-in-list-of-words-format"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">corpora.lowcorpus</span></tt> &#8211; Corpus in List-of-Words format<a class="headerlink" href="#module-gensim.corpora.lowcorpus" title="Permalink to this headline">¶</a></h1>
 <p>Corpus in GibbsLda++ format of List-Of-Words.</p>
 <dl class="class">
 <dt id="gensim.corpora.lowcorpus.LowCorpus">
-<em class="property">class </em><tt class="descclassname">gensim.corpora.lowcorpus.</tt><tt class="descname">LowCorpus</tt><big>(</big><em>fname</em>, <em>id2word=None</em>, <em>line2words=&lt;function splitOnSpace at 0x1cb5130&gt;</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.corpora.lowcorpus.</tt><tt class="descname">LowCorpus</tt><big>(</big><em>fname</em>, <em>id2word=None</em>, <em>line2words=&lt;function splitOnSpace at 0x1cb79b0&gt;</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>List_Of_Words corpus handles input in GibbsLda++ format.</p>
 <p>Quoting <a class="reference external" href="http://gibbslda.sourceforge.net/#3.2_Input_Data_Format">http://gibbslda.sourceforge.net/#3.2_Input_Data_Format</a>:</p>
 <div class="highlight-python"><pre>Both data for training/estimating the model and new data (i.e., previously
@@ -126,6 +126,12 @@ and words (strings). If not provided, the mapping is constructed from
 the documents.</p>
 <p><cite>line2words</cite> is a function which converts lines into tokens. Defaults to
 simple splitting on spaces.</p>
+<dl class="method">
+<dt id="gensim.corpora.lowcorpus.LowCorpus.docbyoffset">
+<tt class="descname">docbyoffset</tt><big>(</big><em>offset</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus.docbyoffset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the document stored at file position <cite>offset</cite>.</p>
+</dd></dl>
+
 <dl class="classmethod">
 <dt id="gensim.corpora.lowcorpus.LowCorpus.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus.load" title="Permalink to this definition">¶</a></dt>
@@ -144,6 +150,29 @@ simple splitting on spaces.</p>
 <dd><p>Save a corpus in the List-of-words format.</p>
 </dd></dl>
 
+<dl class="classmethod">
+<dt id="gensim.corpora.lowcorpus.LowCorpus.saveIndexedCorpus">
+<em class="property">classmethod </em><tt class="descname">saveIndexedCorpus</tt><big>(</big><em>serializer</em>, <em>fname</em>, <em>corpus</em>, <em>id2word=None</em>, <em>index_fname=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus.saveIndexedCorpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate through the document stream <cite>corpus</cite>, saving the documents to <cite>fname</cite>
+and recording byte offset of each document. Save the resulting index
+structure to file <cite>index_fname</cite>.</p>
+<p>This relies on the underlying corpus class <cite>serializer</cite> providing (in
+addition to standard iteration):</p>
+<blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt><cite>saveCorpus</cite> method that returns a sequence of byte offsets, one for</dt>
+<dd><p class="first last">each saved document,</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">the <cite>docbyoffset(offset)</cite> method, which returns a document
+positioned at <cite>offset</cite> bytes within the persistent storage (file).</p>
+</li>
+</ul>
+</blockquote>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -154,7 +183,7 @@ simple splitting on spaces.</p>
       </div>
       <div class="clearer"></div>
     </div>
-
+        
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -174,15 +203,15 @@ simple splitting on spaces.</p>
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="../apiref.html" >API Reference</a> &raquo;</li>
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
       </ul>
     </div>
-
-
+    
+    
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 19, 2011.
+      Last updated on Mar 05, 2011.
     </div>
   </body>
 </html>

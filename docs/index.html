@@ -6,7 +6,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
+    
     <title>Gensim – Python Framework for Vector Space Modelling &mdash; gensim documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -49,36 +49,65 @@
         <li><a href="#">Gensim home</a>|&nbsp;</li>
         <li><a href="apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
-
+ 
       </ul>
     </div>
 
 
-
+    
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
 <h3><a href="#">Table Of Contents</a></h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="distributed.html">Distributed Computing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="apiref.html">API Reference</a></li>
 </ul>
+<h3>Download</h3>
+<p>Get <cite>gensim</cite> from the <a href="http://pypi.python.org/pypi/gensim">Python Package
+Index</a> or install directly with:</p>
+<pre>easy_install -U gensim</pre>
 
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" size="18" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script><div id="twtr-search-widget" style="margin:20px 0px"></div>
+<!--
+<p>See <a href="install.html">install help page</a> for more details and options.
+</p>
+-->
+
+<h3>Questions? Suggestions?</h3>
+
+<!--
+<p>Join the <a href="http://groups.google.com/group/gensim">Google group</a>:</p>
+-->
+
+<table border=0 style="background-color: #fff; padding: 5px;" cellspacing=0>
+<!--   <tr><td>
+  <img src="http://groups.google.com/intl/en/images/logos/groups_logo_sm.gif"
+         height=30 width=140 alt="Google Groups">
+  </td></tr>
+   -->
+  <tr><td style="padding-left: 5px">
+  <b>Subscribe to Google group</b>
+  </td></tr>
+  <form action="http://groups.google.com/group/gensim/boxsubscribe">
+  <tr><td style="padding-left: 5px;">
+  Email: <input type=text name=email>
+  <input type=submit name="sub" value="Subscribe">
+  </td></tr>
+</form>
+<tr><td align=right>
+  <a href="http://groups.google.com/group/gensim">Visit this group</a>
+</td></tr>
+</table>
+
+
+<p>You can also open an issue at the
+<a href="https://github.com/piskvorky/gensim/issues">github issue tracker</a>.</p>
+
+
+<!--
+<div id="twtr-search-widget" style="margin:20px 0px"></div>
 
 <script>
 new TWTR.Widget({
@@ -114,9 +143,24 @@ new TWTR.Widget({
   }
 }).render().start();
 </script>
+ -->
+ 
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
-
+    
 
 
 
@@ -124,14 +168,14 @@ new TWTR.Widget({
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
-
+            
   <div class="section" id="gensim-python-framework-for-vector-space-modelling">
 <h1>Gensim &#8211; Python Framework for Vector Space Modelling<a class="headerlink" href="#gensim-python-framework-for-vector-space-modelling" title="Permalink to this headline">¶</a></h1>
 <div class="admonition-what-s-new-in-version-version admonition ">
 <p class="first admonition-title">What&#8217;s new in version 0.7?</p>
 <ul class="last simple">
 <li>faster and leaner <strong>Latent Semantic Indexing (LSI)</strong> and <strong>Latent Dirichlet Allocation (LDA)</strong>:<ul>
-<li><a class="reference internal" href="wiki.html"><em>Processing the English Wikipedia</em></a>, 3.2 million documents (<a class="reference external" href="http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf">NIPS workshop paper</a>)</li>
+<li><a class="reference internal" href="wiki.html"><em>Processing the English Wikipedia</em></a>, 3.2 million documents (<a class="reference external" href="http://arxiv.org/abs/1102.5597">NIPS workshop paper</a>)</li>
 <li><a class="reference internal" href="dist_lsi.html"><em>Distributed Latent Semantic Analysis</em></a> &amp; <a class="reference internal" href="dist_lda.html"><em>Distributed Latent Dirichlet Allocation</em></a></li>
 </ul>
 </li>
@@ -173,7 +217,7 @@ very large corpora.</li>
       </div>
       <div class="clearer"></div>
     </div>
-
+        
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -189,14 +233,14 @@ very large corpora.</li>
         <li><a href="#">Gensim home</a>|&nbsp;</li>
         <li><a href="apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
-
+ 
       </ul>
     </div>
-
+    
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 19, 2011.
+      Last updated on Mar 05, 2011.
     </div>
   </body>
 </html>

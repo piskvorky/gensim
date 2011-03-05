@@ -6,8 +6,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
-    <title>Tutorial &mdash; gensim documentation</title>
+    
+    <title>Tutorials &mdash; gensim documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -53,17 +53,17 @@
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="#">Tutorials</a> &raquo;</li>
-
+ 
       </ul>
     </div>
 
 
-
+    
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Tutorial</a><ul>
+<li><a class="reference internal" href="#">Tutorials</a><ul>
 <li><a class="reference internal" href="#preliminaries">Preliminaries</a></li>
 <li><a class="reference internal" href="#quick-example">Quick Example</a></li>
 </ul>
@@ -91,7 +91,7 @@
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
-
+    
 
 
 
@@ -99,10 +99,10 @@
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
-
-  <div class="section" id="tutorial">
-<span id="id1"></span><h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
-<p>This tutorial is organized as a series of examples that highlight various features
+            
+  <div class="section" id="tutorials">
+<span id="tutorial"></span><h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
+<p>The tutorials are organized as a series of examples that highlight various features
 of <cite>gensim</cite>. It is assumed that the reader is familiar with the Python language
 and has read the <a class="reference internal" href="intro.html"><em>Introduction</em></a>.</p>
 <p>The examples are divided into parts on:</p>
@@ -153,7 +153,7 @@ priority levels; to activate logging (this is optional), run</p>
 </div>
 <div class="section" id="quick-example">
 <span id="first-example"></span><h2>Quick Example<a class="headerlink" href="#quick-example" title="Permalink to this headline">¶</a></h2>
-<p>First, let&#8217;s import gensim and create a small corpus of nine documents <a class="footnote-reference" href="#id3" id="id2">[1]</a>:</p>
+<p>First, let&#8217;s import gensim and create a small corpus of nine documents <a class="footnote-reference" href="#id2" id="id1">[1]</a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">similarities</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[[(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
@@ -216,10 +216,10 @@ the most similar to our query document <cite>vec</cite> is document no. 3, with 
 Note that in the TfIdf representation, any documents which do not share any common features
 with <tt class="docutils literal"><span class="pre">vec</span></tt> at all (documents no. 4&#8211;8) get a similarity score of 0.0. See the <a class="reference internal" href="tut3.html"><em>Similarity Queries</em></a> tutorial for more detail.</p>
 <hr class="docutils" />
-<table class="docutils footnote" frame="void" id="id3" rules="none">
+<table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[1]</a></td><td>This is the same corpus as used in
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>This is the same corpus as used in
 <a class="reference external" href="http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf">Deerwester et al. (1990): Indexing by Latent Semantic Analysis</a>, Table 2.</td></tr>
 </tbody>
 </table>
@@ -232,7 +232,7 @@ with <tt class="docutils literal"><span class="pre">vec</span></tt> at all (docu
       </div>
       <div class="clearer"></div>
     </div>
-
+        
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -251,15 +251,15 @@ with <tt class="docutils literal"><span class="pre">vec</span></tt> at all (docu
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="#">Tutorials</a> &raquo;</li>
-
+ 
       </ul>
     </div>
-
-
+    
+    
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 19, 2011.
+      Last updated on Mar 05, 2011.
     </div>
   </body>
 </html>

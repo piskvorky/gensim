@@ -212,6 +212,7 @@ to improve CPU efficiency, too.
 If you feel you could contribute (by testing, providing use-cases or even, gasp!, code),
 please `let me know <mailto:radimrehurek@seznam.cz>`_.
 
+Continue on to the next tutorial on :doc:`tut2`.
 
 ------
 

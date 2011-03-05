@@ -6,7 +6,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
+    
     <title>matutils – Math utils &mdash; gensim documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -55,12 +55,12 @@
         <li><a href="apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="apiref.html" accesskey="U">API Reference</a> &raquo;</li>
+          <li><a href="apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
       </ul>
     </div>
 
 
-
+    
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
@@ -84,7 +84,7 @@
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
-
+    
 
 
 
@@ -92,7 +92,7 @@
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
-
+            
   <div class="section" id="module-gensim.matutils">
 <span id="matutils-math-utils"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils<a class="headerlink" href="#module-gensim.matutils" title="Permalink to this headline">¶</a></h1>
 <p>This module contains math helper functions.</p>
@@ -117,7 +117,13 @@ which are larger than the available RAM.</p>
 be in the sparse (coordinate) Matrix Market format. Documents are assumed
 to be rows of the matrix (and document features are columns).</p>
 <p><cite>input</cite> is either a string (file path) or a file-like object that supports
-<cite>seek(0)</cite> (e.g. gzip.GzipFile, bz2.BZ2File).</p>
+<cite>seek()</cite> (e.g. gzip.GzipFile, bz2.BZ2File).</p>
+<dl class="method">
+<dt id="gensim.matutils.MmReader.docbyoffset">
+<tt class="descname">docbyoffset</tt><big>(</big><em>offset</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmReader.docbyoffset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return document at file offset <cite>offset</cite> (in bytes)</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -126,7 +132,7 @@ to be rows of the matrix (and document features are columns).</p>
 <dd><p>Store corpus in Matrix Market format.</p>
 <dl class="staticmethod">
 <dt id="gensim.matutils.MmWriter.writeCorpus">
-<em class="property">static </em><tt class="descname">writeCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>progressCnt=1000</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.writeCorpus" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><tt class="descname">writeCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>progressCnt=1000</em>, <em>index=False</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.writeCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the vector space representation of an entire corpus to disk.</p>
 <p>Note that the documents are processed one at a time, so the whole corpus
 is allowed to be larger than the available RAM.</p>
@@ -175,6 +181,12 @@ with documents as columns.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.matutils.full2sparse_clipped">
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">full2sparse_clipped</tt><big>(</big><em>vec</em>, <em>topn</em>, <em>eps=1.0000000000000001e-09</em><big>)</big><a class="headerlink" href="#gensim.matutils.full2sparse_clipped" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <cite>full2sparse</cite>, but only return the <cite>topn</cite> greatest elements (not all).</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.matutils.pad">
 <tt class="descclassname">gensim.matutils.</tt><tt class="descname">pad</tt><big>(</big><em>mat</em>, <em>padRow</em>, <em>padCol</em><big>)</big><a class="headerlink" href="#gensim.matutils.pad" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add additional rows/columns to a numpy.matrix <cite>mat</cite>. The new rows/columns
@@ -213,7 +225,7 @@ output will be a numpy array.</p>
       </div>
       <div class="clearer"></div>
     </div>
-
+        
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -233,15 +245,15 @@ output will be a numpy array.</p>
         <li><a href="apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="apiref.html" >API Reference</a> &raquo;</li>
+          <li><a href="apiref.html" >API Reference</a> &raquo;</li> 
       </ul>
     </div>
-
-
+    
+    
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 19, 2011.
+      Last updated on Mar 05, 2011.
     </div>
   </body>
 </html>

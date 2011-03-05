@@ -6,7 +6,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
+    
     <title>corpora.dictionary – Construct word&lt;-&gt;id mappings &mdash; gensim documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -55,12 +55,12 @@
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li>
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
       </ul>
     </div>
 
 
-
+    
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
@@ -84,7 +84,7 @@
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
-
+    
 
 
 
@@ -92,7 +92,7 @@
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
-
+            
   <div class="section" id="module-gensim.corpora.dictionary">
 <span id="corpora-dictionary-construct-word-id-mappings"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">corpora.dictionary</span></tt> &#8211; Construct word&lt;-&gt;id mappings<a class="headerlink" href="#module-gensim.corpora.dictionary" title="Permalink to this headline">¶</a></h1>
 <p>This module implements the concept of Dictionary &#8211; a mapping between words and
@@ -126,7 +126,7 @@ with <cite>allowUpdate=True</cite>.</p>
 <dd><p>Convert <cite>document</cite> (a list of words) into the bag-of-words format = list of
 <cite>(tokenId, tokenCount)</cite> 2-tuples. Each word is assumed to be a
 <strong>tokenized and normalized</strong> utf-8 encoded string.</p>
-<p>If <cite>allowUpdate</cite> is set, then also update of dictionary in the process: create ids
+<p>If <cite>allowUpdate</cite> is set, then also update dictionary in the process: create ids
 for new words. At the same time, update document frequencies &#8211; for
 each word appearing in this document, increase its <cite>self.dfs</cite> by one.</p>
 <p>If <cite>allowUpdate</cite> is <strong>not</strong> set, this function is <cite>const</cite>, i.e. read-only.</p>
@@ -141,7 +141,7 @@ each word appearing in this document, increase its <cite>self.dfs</cite> by one.
 <li>more than <cite>noAbove</cite> documents (fraction of total corpus size, <em>not</em>
 absolute number).</li>
 <li>after (1) and (2), keep only the first <cite>keepN&#8217; most frequent tokens (or
-all if `None</cite>).</li>
+keep all if `None</cite>).</li>
 </ol>
 <p>After the pruning, shrink resulting gaps in word ids.</p>
 <p><strong>Note</strong>: Due to the gap shrinking, the same word may have a different
@@ -187,7 +187,7 @@ Calling this method will remove the gaps.</p>
       </div>
       <div class="clearer"></div>
     </div>
-
+        
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -207,15 +207,15 @@ Calling this method will remove the gaps.</p>
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="../apiref.html" >API Reference</a> &raquo;</li>
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
       </ul>
     </div>
-
-
+    
+    
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 19, 2011.
+      Last updated on Mar 05, 2011.
     </div>
   </body>
 </html>

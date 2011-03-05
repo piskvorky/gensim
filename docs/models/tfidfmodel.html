@@ -6,7 +6,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
+    
     <title>models.tfidfmodel – TF-IDF model &mdash; gensim documentation</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -55,12 +55,12 @@
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li>
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
       </ul>
     </div>
 
 
-
+    
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
@@ -84,7 +84,7 @@
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
-
+    
 
 
 
@@ -92,12 +92,12 @@
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
-
+            
   <div class="section" id="module-gensim.models.tfidfmodel">
 <span id="models-tfidfmodel-tf-idf-model"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model<a class="headerlink" href="#module-gensim.models.tfidfmodel" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="gensim.models.tfidfmodel.TfidfModel">
-<em class="property">class </em><tt class="descclassname">gensim.models.tfidfmodel.</tt><tt class="descname">TfidfModel</tt><big>(</big><em>corpus</em>, <em>id2word=None</em>, <em>normalize=True</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.models.tfidfmodel.</tt><tt class="descname">TfidfModel</tt><big>(</big><em>corpus=None</em>, <em>id2word=None</em>, <em>dictionary=None</em>, <em>normalize=True</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Objects of this class realize the transformation between word-document co-occurence
 matrix (integers) into a locally/globally weighted matrix (positive floats).</p>
 <p>This is done by combining the term frequency counts (the TF part) with inverse
@@ -115,7 +115,11 @@ space.</li>
 </pre></div>
 </div>
 <p>Model persistency is achieved via its load/save methods.</p>
-<p><cite>normalize</cite> dictates whether the resulting vectors will be set to unit length.</p>
+<p><cite>normalize</cite> dictates whether the transformed vectors will be set to unit 
+length.</p>
+<p>If <cite>dictionary</cite> is specified, it must be a <cite>corpora.Dictionary</cite> object
+and it will be used to directly construct the inverse document frequency
+mapping (<cite>corpus</cite>, if specified, is ignored).</p>
 <dl class="method">
 <dt id="gensim.models.tfidfmodel.TfidfModel.initialize">
 <tt class="descname">initialize</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel.initialize" title="Permalink to this definition">¶</a></dt>
@@ -137,6 +141,19 @@ frequencies for documents.</p>
 
 </dd></dl>
 
+<dl class="function">
+<dt id="gensim.models.tfidfmodel.dfs2idfs">
+<tt class="descclassname">gensim.models.tfidfmodel.</tt><tt class="descname">dfs2idfs</tt><big>(</big><em>dfs</em>, <em>totaldocs</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.dfs2idfs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a mapping of <cite>term-&gt;document frequency</cite>, construct a mapping of
+<cite>term-&gt;inverse document frequency</cite>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.models.tfidfmodel.idfs2dfs">
+<tt class="descclassname">gensim.models.tfidfmodel.</tt><tt class="descname">idfs2dfs</tt><big>(</big><em>idfs</em>, <em>totaldocs</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.idfs2dfs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverse mapping for <cite>dfs2idfs</cite>.</p>
+</dd></dl>
+
 </div>
 
 
@@ -145,7 +162,7 @@ frequencies for documents.</p>
       </div>
       <div class="clearer"></div>
     </div>
-
+        
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -165,15 +182,15 @@ frequencies for documents.</p>
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="../apiref.html" >API Reference</a> &raquo;</li>
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
       </ul>
     </div>
-
-
+    
+    
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 19, 2011.
+      Last updated on Mar 05, 2011.
     </div>
   </body>
 </html>
