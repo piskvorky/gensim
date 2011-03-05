@@ -136,7 +136,7 @@ class WikiCorpus(interfaces.CorpusABC):
     >>> wiki.saveAsText('wiki_en_vocab200k') # another 8h, creates a file in MatrixMarket format plus file with id->word
 
     """
-    def __init__(self, fname, noBelow = 20, keep_words = DEFAULT_DICT_SIZE, dictionary = None):
+    def __init__(self, fname, noBelow=20, keep_words=DEFAULT_DICT_SIZE, dictionary=None):
         """
         Initialize the corpus. This scans the corpus once, to determine its
         vocabulary (only the first `keep_words` most frequent words that
@@ -145,7 +145,7 @@ class WikiCorpus(interfaces.CorpusABC):
         self.fname = fname
         if dictionary is None:
             self.dictionary = Dictionary(self.getArticles())
-            self.dictionary.filterExtremes(noBelow = noBelow, noAbove = 0.1, keepN = keep_words)
+            self.dictionary.filterExtremes(noBelow=noBelow, noAbove=0.1, keepN=keep_words)
         else:
             self.dictionary = dictionary
 
@@ -160,7 +160,7 @@ class WikiCorpus(interfaces.CorpusABC):
         vectors, one for each document.
         """
         for docNo, text in enumerate(self.getArticles()):
-            yield self.dictionary.doc2bow(text, allowUpdate = False)
+            yield self.dictionary.doc2bow(text, allowUpdate=False)
 
 
     def saveDictionary(self, fname):
@@ -175,7 +175,7 @@ class WikiCorpus(interfaces.CorpusABC):
 
 
     @staticmethod
-    def loadDictionary(fname, mapping_only = True):
+    def loadDictionary(fname, mapping_only=True):
         """
         Load previously stored mapping between words and their ids.
 
@@ -219,7 +219,7 @@ class WikiCorpus(interfaces.CorpusABC):
 
         """
         self.saveDictionary(fname + '_wordids.txt')
-        matutils.MmWriter.writeCorpus(fname + '_bow.mm', self, progressCnt = 10000)
+        matutils.MmWriter.writeCorpus(fname + '_bow.mm', self, progressCnt=10000)
 
 
     def getArticles(self, return_raw=False):
@@ -287,7 +287,7 @@ class VocabTransform(interfaces.TransformationABC):
     >>> vt = VocabTransform(old2new, id2token)
 
     """
-    def __init__(self, old2new, id2token = None):
+    def __init__(self, old2new, id2token=None):
         self.old2new = old2new
         self.id2token = id2token
 
@@ -308,7 +308,7 @@ class VocabTransform(interfaces.TransformationABC):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
-    logging.root.setLevel(level = logging.INFO)
+    logging.root.setLevel(level=logging.INFO)
     logging.info("running %s" % ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
@@ -325,7 +325,7 @@ if __name__ == '__main__':
 
     # build dictionary. only keep 100k most frequent words (out of total ~7m unique tokens)
     # takes about 8h on a macbook pro
-    wiki = WikiCorpus(input, keep_words = keep_words)
+    wiki = WikiCorpus(input, keep_words=keep_words)
 
     # save dictionary and bag-of-words (term-document frequency matrix)
     # another ~8h
@@ -340,7 +340,7 @@ if __name__ == '__main__':
     # build tfidf
     # ~20min
     from gensim.models import TfidfModel
-    tfidf = TfidfModel(mm, id2word = id2token, normalize = True)
+    tfidf = TfidfModel(mm, id2word=id2token, normalize=True)
 
     # save tfidf vectors in matrix market format
     # ~1.5h; result file is 14GB! bzip2'ed down to 4.5GB
