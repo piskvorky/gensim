@@ -16,9 +16,10 @@ import os.path
 import tempfile
 
 import numpy
+from nose.tools import raises
 
 from gensim.corpora import mmcorpus, Dictionary
-from gensim.models import lsimodel, ldamodel, tfidfmodel, rpmodel
+from gensim.models import lsimodel, ldamodel, tfidfmodel, rpmodel, logentropy_model
 from gensim import matutils
 
 
@@ -227,6 +228,50 @@ class TestTfidfModel(unittest.TestCase):
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 #endclass TestTfidfModel
+
+
+class TestLogEntropyModel(unittest.TestCase):
+    def setUp(self):
+        self.corpus_small = mmcorpus.MmCorpus(os.path.join(module_path,
+                                        'test_data', 'test_corpus_small.mm'))
+        self.corpus_ok = mmcorpus.MmCorpus(os.path.join(module_path,
+                                        'test_data', 'test_corpus_ok.mm'))
+
+    @raises(ValueError)
+    def test_corpus_validity(self):
+        """
+        check whether the corpus is valid
+
+        words that appear in only one context cause trouble in the log entropy
+        normalization and should therefore be filtered out.
+        --> context diversity should be > 1
+        """
+        logentropy_model.LogEntropyModel(self.corpus_small)
+
+
+    def testTransform(self):
+        # create the transformation model
+        model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=False)
+
+        # transform one document
+        doc = list(self.corpus_ok)[0]
+        transformed = model[doc]
+        expected =  [(0, 0.056633012265132537),
+                     (1, 0.024757785476437949),
+                     (3, 0.62707564002906502)]
+        self.assertTrue(numpy.allclose(transformed, expected))
+
+
+
+    def testPersistence(self):
+        model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=True)
+        model.save(testfile())
+        model2 = logentropy_model.LogEntropyModel.load(testfile())
+        self.assertTrue(model.entr == model2.entr)
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec]))
+#endclass TestLogEntropyModel
+
 
 
 if __name__ == '__main__':
