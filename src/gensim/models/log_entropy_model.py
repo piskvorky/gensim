@@ -88,15 +88,14 @@ class LogEntropyModel(interfaces.TransformationABC):
                      % (self.n_docs,
                         1 + max([-1] + n_context.keys()),
                         self.n_words))
-
-        for key, freq_glob in glob_freq.iteritems():
-            sm = 0
-            for bow in corpus:
-                dict_bow = dict(bow)
-                if dict_bow.get(key):
-                    sm += ((dict_bow.get(key) / freq_glob)
-                         * math.log(dict_bow.get(key) / freq_glob))
-            self.entr[key] = 1 + sm / math.log(n_context[key])
+        logging.info('iterate over corpus')
+        for bow in corpus:
+            for key, freq in bow:
+                p = (float(freq) / glob_freq[key]) * math.log(float(freq) / glob_freq[key])
+                self.entr[key] = self.entr.get(key, 0.0) + p
+        logging.info('iterate over keys')
+        for key in self.entr.keys():
+            self.entr[key] = 1 + self.entr[key] / math.log(n_context[key])
 
     def __getitem__(self, bow):
         """
