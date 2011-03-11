@@ -313,7 +313,7 @@ class LdaModel(interfaces.TransformationABC):
         converged = 0
 
         # Now, for each document d update that document's gamma and phi
-        # ---inference code copied from Hoffman's `onlineldavb.py` (esp. the
+        # Inference code copied from Hoffman's `onlineldavb.py` (esp. the
         # Lee&Seung trick which speeds things up by an order of magnitude, compared
         # to Blei's original LDA-C code, cool!).
         for d, doc in enumerate(chunk):
@@ -347,7 +347,7 @@ class LdaModel(interfaces.TransformationABC):
             if collect_sstats:
                 # Contribution of document d to the expected sufficient
                 # statistics for the M step.
-                sstats[:, ids] += numpy.outer(expElogthetad.T, cts/phinorm)
+                sstats[:, ids] += numpy.outer(expElogthetad.T, cts / phinorm)
 
         logger.info("%i/%i documents converged within %i iterations" %
                      (converged, len(chunk), self.VAR_MAXITER))
@@ -584,10 +584,8 @@ class LdaModel(interfaces.TransformationABC):
             return self._apply(corpus)
 
         gamma, _ = self.inference([bow])
-        gamma = gamma[0] # inference was over a chunk of size 1
-        if numpy.allclose(gamma, self.alpha): # if there were no topics found, return nothing (eg for empty documents)
-            return []
-        topicDist = gamma / gamma.sum() # convert to proper distribution
+        theta = numpy.exp(dirichlet_expectation(gamma[0]))
+        topicDist = theta / theta.sum() # normalize to proper distribution
         return [(topicId, topicValue) for topicId, topicValue in enumerate(topicDist)
                 if topicValue >= eps] # ignore document's topics that have prob < eps
 #endclass LdaModel

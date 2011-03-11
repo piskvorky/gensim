@@ -154,16 +154,20 @@ class TestLdaModel(unittest.TestCase):
 
     def testTransform(self):
         passed = False
-        for i in xrange(5): # try at most 5 times
+        # sometimes, LDA training gets stuck at a local minimum
+        # in that case try re-training the model from scratch, hoping for a 
+        # better random initialization
+        for i in xrange(5): # restart at most 5 times
             # create the transformation model
-            model = ldamodel.LdaModel(self.corpus, numTopics=2, passes=100)
+            model = ldamodel.LdaModel(id2word=dictionary.id2word, numTopics=2, passes=100)
+            model.update(corpus)
             
             # transform one document
-            doc = list(self.corpus)[0]
+            doc = list(corpus)[0]
             transformed = model[doc]
-    
+            
             vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
-            expected = [0.87, 0.13]
+            expected = [0.049, 0.951]
             passed = numpy.allclose(sorted(vec), sorted(expected), atol=1e-2) # must contain the same values, up to re-ordering
             if passed:
                 break
