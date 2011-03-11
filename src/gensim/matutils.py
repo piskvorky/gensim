@@ -96,6 +96,8 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
     """
     # use numpy.argsort and only form tuples that are actually returned.
     # this is about 40x faster than explicitly forming all 2-tuples to run sort() or heapq.nlargest() on.
+    if topn <= 0:
+        return []
     result = []
     for i in numpy.argsort(vec)[::-1]:
         if abs(vec[i]) > eps: # ignore features with near-zero weight
