@@ -1,9 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-# this file replicates the miislita vector spaces f
+"""
+This module replicates the miislita vector spaces from
+"A Linear Algebra Approach to the Vector Space Model -- A Fast Track Tutorial" 
+by Dr. E. Garcia, admin@miislita.com
+See http://www.miislita.com for further details.
+"""
 
 from __future__ import division  # always use floats
+from __future__ import with_statement
 
 import logging
 import unittest
@@ -69,7 +77,7 @@ class TestMiislita(unittest.TestCase):
         # sims_tfidf = sorted(list(enumerate(sims_tfidf)), key=lambda item:
         #       -item[1])
 
-        # for the expected results see the acticle
+        # for the expected results see the article
         expected = [0, 0.2560, 0.7022, 0.1524, 0.3334]
         for i, value in enumerate(expected):
             self.assertAlmostEqual(sims_tfidf[i], value, 2)
