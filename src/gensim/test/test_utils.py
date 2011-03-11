@@ -1,0 +1,103 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
+"""
+Automated tests for checking various utils functions
+"""
+
+
+import logging
+import unittest
+import os
+import numpy as np
+
+from gensim import utils
+
+
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
+        level=logging.WARNING)
+
+
+class TestIsCorpus(unittest.TestCase):
+
+    def test_None(self):
+        # test None
+        print utils.isCorpus(None)
+        result = utils.isCorpus(None)
+        expected = (False, None)
+        self.assertEqual(expected, result)
+
+    def test_simple_lists_of_tuples(self):
+        # test list words
+
+        # one document, one word
+        potentialCorpus = [[(0, 4.)]]
+        result = utils.isCorpus(potentialCorpus)
+        expected = (True, potentialCorpus)
+        self.assertEqual(expected, result)
+
+        # one document, several words
+        potentialCorpus = [[(0, 4.), (1, 2.)]]
+        result = utils.isCorpus(potentialCorpus)
+        expected = (True, potentialCorpus)
+        self.assertEqual(expected, result)
+
+        potentialCorpus = [[(0, 4.), (1, 2.), (2, 5.), (3, 8.)]]
+        result = utils.isCorpus(potentialCorpus)
+        expected = (True, potentialCorpus)
+        self.assertEqual(expected, result)
+
+        # several documents, one word
+        potentialCorpus = [[(0, 4.)], [(1, 2.)]]
+        result = utils.isCorpus(potentialCorpus)
+        expected = (True, potentialCorpus)
+        self.assertEqual(expected, result)
+
+        potentialCorpus = [[(0, 4.)], [(1, 2.)], [(2, 5.)], [(3, 8.)]]
+        result = utils.isCorpus(potentialCorpus)
+        expected = (True, potentialCorpus)
+        self.assertEqual(expected, result)
+
+    def test_int_tuples(self):
+        potentialCorpus = [[(0, 4)]]
+        result = utils.isCorpus(potentialCorpus)
+        expected = (True, potentialCorpus)
+        self.assertEqual(expected, result)
+
+    def test_invalid_formats(self):
+        # test invalid formats
+        # these are no corpus, because they do not consists of 2-tuples with
+        # the form(int, float).
+        potentials = list()
+        potentials.append(["human"])
+        potentials.append("human")
+        potentials.append(["human", "star"])
+        potentials.append([1, 2, 3, 4, 5, 5])
+        potentials.append([[(0, 'string')]])
+        for noCorpus in potentials:
+            result = utils.isCorpus(noCorpus)
+            expected = (False, noCorpus)
+            self.assertEqual(expected, result)
+
+    def test_para2para(self):
+        """
+        test the para2para function in utils whether it finds the most
+        similar paragraphs in a toy example with test data (test_data folder)
+        """
+
+        pre_path = os.path.dirname(__file__) + os.sep + 'test_data' + os.sep
+        workingcorpus =  pre_path + 'head500.noblanks.cor'
+        sim_matrix = utils.para2para(workingcorpus
+                                    ,pre_path + 'para2para_text1.txt'
+                                    ,pre_path + 'para2para_text2.txt')
+        # check for correct dimensionality
+        self.assertEqual(np.shape(sim_matrix), (6,7))
+        # check whether the two climate paragraphs are the most similar
+        self.assertEqual(sim_matrix[4,6], sim_matrix.max())
+
+
+if __name__ == '__main__':
+    logging.root.setLevel(logging.WARNING)
+    unittest.main()

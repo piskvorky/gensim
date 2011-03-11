@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 recursive-include docs *
 recursive-include src/gensim/test testcorpus*
 recursive-include src *.sh
@@ -5,3 +6,12 @@ prune docs/src*
 include COPYING
 include COPYING.LESSER
 include ez_setup.py
+=======
+recursive-include docs *
+recursive-include src/gensim/test testcorpus*
+recursive-include src *.sh
+prune docs/src*
+include COPYING
+include COPYING.LESSER
+include ez_setup.py
+>>>>>>> quesada/master

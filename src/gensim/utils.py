@@ -418,3 +418,31 @@ def unpickle(fname):
     """Load pickled object from `fname`"""
     return cPickle.load(open(fname, 'rb'))
 
+
+def revdict(d):
+    """
+    Reverse a dictionary mapping. 
+    
+    When two keys map to the same value, only one of them will be kept in the 
+    result (which one is kept is arbitrary)."""
+    return dict((v, k) for (k, v) in d.iteritems())
+
+
+def toptexts(query, texts, index, n=10):
+    """
+    Debug fnc to help inspect the top `n` most similar documents (according to a 
+    similarity index `index`), to see if they are actually related to the query.
+    
+    `texts` is any object that can return something insightful for each document 
+    via `texts[docid]`, such as its fulltext or snippet.
+    
+    Return a list of 3-tuples (docid, doc's similarity to the query, texts[docid]).
+    """
+    sims = index[query] # perform a similarity query against the corpus
+    sims = sorted(list(enumerate(sims)), key=lambda item: -item[1])
+    
+    result = []
+    for topid, topcosine in sims[:n]: # only consider top-n most similar docs
+        result.append((topid, topcosine, texts[topid]))
+    return result
+

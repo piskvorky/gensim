@@ -11,14 +11,12 @@ their integer ids.
 
 Dictionaries can be created from a corpus and can later be pruned according to
 document frequency (removing (un)common words via the :func:`Dictionary.filterExtremes` method),
-save/loaded from disk via :func:`Dictionary.save` and :func:`Dictionary.load` methods etc.
+save/loaded from disk (via :func:`Dictionary.save` and :func:`Dictionary.load` methods) etc.
 """
-
 
 
 import logging
 import itertools
-import random
 
 from gensim import utils
 
@@ -46,11 +44,6 @@ class Dictionary(utils.SaveLoad):
             self.addDocuments(documents)
 
 
-    # TODO expensive, only here for historical reasons; maybe deprecate?
-    id2token = property(lambda self: dict((id, token) for token, id in self.token2id.iteritems()))
-    id2word = id2token
-
-
     def __len__(self):
         """
         Return the number of token->id mappings in the dictionary.
@@ -70,7 +63,7 @@ class Dictionary(utils.SaveLoad):
     def addDocuments(self, documents):
         """
         Build dictionary from a collection of documents. Each document is a list
-        of tokens (**tokenized and normalized** utf-8 encoded strings).
+        of tokens = **tokenized and normalized** utf-8 encoded strings.
 
         This is only a convenience wrapper for calling `doc2bow` on each document
         with `allowUpdate=True`.
@@ -86,19 +79,20 @@ class Dictionary(utils.SaveLoad):
                      (self, self.numDocs, self.numPos))
 
 
-    def doc2bow(self, document, allowUpdate=False):
+    def doc2bow(self, document, allowUpdate=False, return_missing=False):
         """
-        Convert `document` (a list of words) into the bag-of-words format = list of
-        `(tokenId, tokenCount)` 2-tuples. Each word is assumed to be a
+        Convert `document` (a list of words) into the bag-of-words format = list 
+        of `(tokenId, tokenCount)` 2-tuples. Each word is assumed to be a
         **tokenized and normalized** utf-8 encoded string.
 
-        If `allowUpdate` is set, then also update dictionary in the process: create ids
-        for new words. At the same time, update document frequencies -- for
+        If `allowUpdate` is set, then also update dictionary in the process: create 
+        ids for new words. At the same time, update document frequencies -- for 
         each word appearing in this document, increase its `self.dfs` by one.
 
         If `allowUpdate` is **not** set, this function is `const`, i.e. read-only.
         """
         result = {}
+        missing = {}
         document = sorted(document)
         # construct (word, frequency) mapping. in python3 this is done simply
         # using Counter(), but here i use itertools.groupby() for the job
@@ -107,6 +101,8 @@ class Dictionary(utils.SaveLoad):
             tokenId = self.token2id.get(wordNorm, None)
             if tokenId is None:
                 # first time we see this token (~normalized form)
+                if return_missing:
+                    missing[wordNorm] = frequency
                 if not allowUpdate: # if we aren't allowed to create new tokens, continue with the next unique token
                     continue
                 tokenId = len(self.token2id)
@@ -123,7 +119,12 @@ class Dictionary(utils.SaveLoad):
             for tokenId in result.iterkeys():
                 self.dfs[tokenId] = self.dfs.get(tokenId, 0) + 1
 
-        return sorted(result.iteritems()) # return tokenIds, in ascending id order
+        # return tokenIds, in ascending id order
+        result = sorted(result.iteritems())
+        if return_missing:
+            return result, missing
+        else:
+            return result
 
 
     def filterExtremes(self, noBelow=5, noAbove=0.5, keepN=None):
@@ -155,7 +156,6 @@ class Dictionary(utils.SaveLoad):
         self.filterTokens(goodIds = goodIds)
         self.rebuildDictionary()
         logger.info("resulting dictionary: %s" % self)
-
 
     def filterTokens(self, badIds=None, goodIds=None):
         """

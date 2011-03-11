@@ -41,3 +41,10 @@ Thumbs.db
 .pydevproject
 .settings/
 docs/src/_build/
+gensim.egg-info
+*,cover
+.idea
+*.dict
+*.index
+.coverage
+data
