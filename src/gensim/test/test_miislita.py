@@ -56,7 +56,7 @@ class TestMiislita(unittest.TestCase):
         """ Make sure TextCorpus can be serialized to disk. """
         # construct corpus from file
         fname = os.path.join(module_path, 'head500.noblanks.cor.bz2')
-        miislita = CorpusMiislita(fname)
+        miislita = CorpusMiislita(bz2.BZ2File(fname))
         
         # make sure serializing works
         ftmp = get_tmpfile('test_textcorpus.mm')
@@ -72,7 +72,7 @@ class TestMiislita(unittest.TestCase):
         """ Make sure we can save and load (un/pickle) TextCorpus objects. """
         # construct corpus from file
         fname = os.path.join(module_path, 'head500.noblanks.cor.bz2')
-        miislita = CorpusMiislita(fname)
+        miislita = CorpusMiislita(bz2.BZ2File(fname))
         
         # pickle to disk
         tmpf = get_tmpfile('tc_test.cpickle')

@@ -4,8 +4,8 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Text corpora usually reside on disk, as text files in one format or another.
-In a common scenario, we need to build a dictionary (a word->integer id 
+Text corpora usually reside on disk, as text files in one format or another
+In a common scenario, we need to build a dictionary (a word->integer id
 mapping), which is then used to construct sparse bag-of-word vectors
 (= sequences of (word_id, word_weight) 2-tuples).
 
@@ -16,9 +16,9 @@ process it (lowercase, tokenize, whatever) and yield it as a sequence of words.
 
 Overriding `get_texts` is enough; you can then initialize the corpus with e.g.
 `MyTextCorpus(bz2.BZ2File('myfile.bz2'))` and it will behave correctly like a
-corpus of sparse vectors. The result can be used as input to all gensim models 
-(TFIDF, LSI, ...), serialized with any format (Matrix Market, SvmLight, Blei's 
-LDA-C format etc).
+corpus of sparse vectors. The resulting object can be used as input to all gensim
+models (TFIDF, LSI, ...), serialized with any format (Matrix Market, SvmLight,
+Blei's LDA-C format etc).
 
 See the `gensim.test.test_miislita.CorpusMiislita` class for a simple example.
 """
@@ -62,6 +62,7 @@ class TextCorpus(interfaces.CorpusABC):
     Given a filename (or a file-like object) in constructor, the corpus object 
     will be automatically initialized with a dictionary, it will have the `iter`
     corpus method etc. You must only provide a correct `get_texts` implementation.
+    (and perhaps the __len__ function to determine corpus length).
     
     """
     def __init__(self, input=None):
@@ -98,8 +99,8 @@ class TextCorpus(interfaces.CorpusABC):
         text preprocessing, lowercasing, tokenizing etc.). There will be no further 
         preprocessing of the words coming out of this function.
         """
-        # Provide a sample implementation: assume documents are lines (one document 
-        # per line). Yield each document as a list of lowercase tokens, 
-        # via `utils.tokenize`.
+        # Instead of raising NotImplementedError, let's provide a sample implementation: 
+        # assume documents are lines (one document per line). Yield each document 
+        # as a list of lowercase tokens, via `utils.tokenize`.
         for lineno, line in enumerate(getstream(self.input)):
             yield utils.tokenize(line, lowercase=True)
