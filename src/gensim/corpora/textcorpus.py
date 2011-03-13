@@ -45,8 +45,7 @@ def getstream(input):
         # input was a filename: open as text file
         result = open(input)
     else:
-        # input was a file-like object (BZ2, Gzip etc.); reset the stream to its
-        # beginning
+        # input was a file-like object (BZ2, Gzip etc.); reset the stream to its beginning
         result = input
         result.seek(0)
     return result
