@@ -46,8 +46,8 @@ class CorpusMiislita(corpora.TextCorpus):
     def __len__(self):
         """Define this so we can use `len(corpus)`"""
         if 'length' not in self.__dict__:
-            # cache corpus size (number of documents)
-             self.length = sum(1 for doc in self.get_texts())
+            logging.info("caching corpus size (calculating number of documents)")
+            self.length = sum(1 for doc in self.get_texts())
         return self.length
 
 
@@ -69,10 +69,13 @@ class TestMiislita(unittest.TestCase):
 
 
     def test_save_load_ability(self):
-        """ Make sure we can save and load (un/pickle) TextCorpus objects. """
+        """
+        Make sure we can save and load (un/pickle) TextCorpus objects (as long
+        as the underlying input isn't a file-like object; we cannot pickle those).
+        """
         # construct corpus from file
-        fname = os.path.join(module_path, 'head500.noblanks.cor.bz2')
-        miislita = CorpusMiislita(bz2.BZ2File(fname))
+        corpusname = os.path.join(module_path, 'miIslita.cor')
+        miislita = CorpusMiislita(corpusname)
         
         # pickle to disk
         tmpf = get_tmpfile('tc_test.cpickle')
