@@ -79,5 +79,5 @@ class TestBleiCorpus(unittest.TestCase, CorpusTesterABC):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level = logging.WARNING)
+    logging.basicConfig(level=logging.WARNING)
     unittest.main()

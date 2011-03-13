@@ -14,6 +14,7 @@ document frequency (removing (un)common words via the :func:`Dictionary.filterEx
 save/loaded from disk (via :func:`Dictionary.save` and :func:`Dictionary.load` methods) etc.
 """
 
+from __future__ import with_statement
 
 import logging
 import itertools
@@ -39,9 +40,16 @@ class Dictionary(utils.SaveLoad):
         self.numDocs = 0 # number of documents processed
         self.numPos = 0 # total number of corpus positions
         self.numNnz = 0 # total number of non-zeroes in the BOW matrix
-
+        self.id2token = None # reverse mapping for token2id; not explicitly formed to save memory
+        
         if documents:
             self.addDocuments(documents)
+
+
+    def __getitem__(self, tokenid):
+        if self.id2token is None:
+            self.id2token = dict((v, k) for k, v in self.token2id)
+        return self.id2token[tokenid] # will throw for non-existent ids
 
 
     def __len__(self):
@@ -190,5 +198,37 @@ class Dictionary(utils.SaveLoad):
         # reassign mappings to new ids
         self.token2id = dict((token, idmap[tokenId]) for token, tokenId in self.token2id.iteritems())
         self.dfs = dict((idmap[tokenId], freq) for tokenId, freq in self.dfs.iteritems())
+
+
+    def saveAsText(self, fname):
+        """
+        Save this Dictionary to a text file, in format:
+        `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`.
+        
+        Note: use `save`/`load` to store in binary format instead (pickle).
+        """
+        logger.info("saving dictionary mapping to %s" % fname)
+        with open(fname, 'wb') as fout:
+            for token, tokenId in sorted(self.token2id.iteritems()):
+                fout.write("%i\t%s\t%i\n" % (tokenId, token, self.dfs[tokenId]))
+
+
+    @staticmethod
+    def loadFromText(fname):
+        """
+        Load a previously stored Dictionary. Mirror function to `saveAsText`.
+        """
+        result = Dictionary()
+        with open(fname) as f:
+            for lineNo, line in enumerate(f):
+                try:
+                    wordId, word, docFreq = line[:-1].split('\t')
+                except Exception:
+                    raise ValueError("invalid line in dictionary file %s: %s"
+                            % (fname, line.strip()))
+                wordId = int(wordId)
+                result.token2id[word] = wordId
+                result.dfs[wordId] = int(docFreq)
+        return result
 #endclass Dictionary
 
