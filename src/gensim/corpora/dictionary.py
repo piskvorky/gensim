@@ -48,9 +48,13 @@ class Dictionary(utils.SaveLoad):
 
     def __getitem__(self, tokenid):
         if self.id2token is None:
-            self.id2token = dict((v, k) for k, v in self.token2id)
+            self.id2token = dict((v, k) for k, v in self.token2id.iteritems())
         return self.id2token[tokenid] # will throw for non-existent ids
 
+
+    def keys(self):
+        """Return a list of all ids"""
+        return self.token2id.values()
 
     def __len__(self):
         """
@@ -216,7 +220,8 @@ class Dictionary(utils.SaveLoad):
     @staticmethod
     def loadFromText(fname):
         """
-        Load a previously stored Dictionary. Mirror function to `saveAsText`.
+        Load a previously stored Dictionary from a text file.
+        Mirror function to `saveAsText`.
         """
         result = Dictionary()
         with open(fname) as f:

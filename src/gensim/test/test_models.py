@@ -159,7 +159,7 @@ class TestLdaModel(unittest.TestCase):
         # better random initialization
         for i in xrange(5): # restart at most 5 times
             # create the transformation model
-            model = ldamodel.LdaModel(id2word=dictionary.id2word, numTopics=2, passes=100)
+            model = ldamodel.LdaModel(id2word=dictionary, numTopics=2, passes=100)
             model.update(corpus)
             
             # transform one document

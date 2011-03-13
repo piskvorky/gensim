@@ -9,11 +9,12 @@ Unit tests for the `corpora.Dictionary` class.
 
 
 import logging
+import tempfile
 import unittest
 import os
 import os.path
 
-from gensim.corpora import dictionary
+from gensim.corpora import Dictionary
 
 
 # sample data files are located in the same folder
@@ -21,6 +22,10 @@ module_path = os.path.dirname(__file__)
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
         level=logging.WARNING)
+
+
+def get_tmpfile(suffix):
+    return os.path.join(tempfile.gettempdir(), suffix)
 
 
 class TestDictionary(unittest.TestCase):
@@ -38,14 +43,14 @@ class TestDictionary(unittest.TestCase):
 
     def testDocFreqOneDoc(self):
         texts = [['human', 'interface', 'computer']]
-        d = dictionary.Dictionary(texts)
+        d = Dictionary(texts)
         expected = {0: 1, 1: 1, 2: 1}
         self.assertEqual(d.dfs, expected)
 
     def testDocFreqAndToken2IdForSeveralDocsWithOneWord(self):
         # two docs
         texts = [['human'], ['human']]
-        d = dictionary.Dictionary(texts)
+        d = Dictionary(texts)
         expected = {0: 2}
         self.assertEqual(d.dfs, expected)
         # only one token (human) should exist
@@ -54,7 +59,7 @@ class TestDictionary(unittest.TestCase):
 
         # three docs
         texts = [['human'], ['human'], ['human']]
-        d = dictionary.Dictionary(texts)
+        d = Dictionary(texts)
         expected = {0: 3}
         self.assertEqual(d.dfs, expected)
         # only one token (human) should exist
@@ -63,7 +68,7 @@ class TestDictionary(unittest.TestCase):
 
         # four docs
         texts = [['human'], ['human'], ['human'], ['human']]
-        d = dictionary.Dictionary(texts)
+        d = Dictionary(texts)
         expected = {0: 4}
         self.assertEqual(d.dfs, expected)
         # only one token (human) should exist
@@ -73,18 +78,18 @@ class TestDictionary(unittest.TestCase):
     def testDocFreqForOneDocWithSeveralWord(self):
         # two words
         texts = [['human', 'cat']]
-        d = dictionary.Dictionary(texts)
+        d = Dictionary(texts)
         expected = {0: 1, 1: 1}
         self.assertEqual(d.dfs, expected)
 
         # three words
         texts = [['human', 'cat', 'minors']]
-        d = dictionary.Dictionary(texts)
+        d = Dictionary(texts)
         expected = {0: 1, 1: 1, 2: 1}
         self.assertEqual(d.dfs, expected)
 
     def testBuild(self):
-        d = dictionary.Dictionary(self.texts)
+        d = Dictionary(self.texts)
         expected = {0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 5: 3, 6: 2, 7: 3, 8: 2,
                 9: 3, 10: 3, 11: 2}
         self.assertEqual(d.dfs, expected)
@@ -95,10 +100,22 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(d.token2id, expected)
 
     def testFilter(self):
-        d = dictionary.Dictionary(self.texts)
+        d = Dictionary(self.texts)
         d.filterExtremes(noBelow=2, noAbove=1.0, keepN=4)
         expected = {0: 3, 1: 3, 2: 3, 3: 3}
         self.assertEqual(d.dfs, expected)
+
+    def test_saveAsText_and_loadFromText(self):
+        """ `Dictionary` can be saved as textfile and loaded again from textfile. """
+        tmpf = get_tmpfile('dict_test.txt')
+        d = Dictionary(self.texts)
+        d.saveAsText(tmpf)
+        # does the file exists
+        self.assertTrue(os.path.exists(tmpf))
+
+        d_loaded = Dictionary.loadFromText(get_tmpfile('dict_test.txt'))
+        self.assertNotEqual(d_loaded, None)
+        self.assertEqual(d_loaded.token2id, d.token2id)
 #endclass TestDictionary
 
 

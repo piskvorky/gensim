@@ -5,54 +5,6 @@ import glob
 from gensim.parsing.porter import PorterStemmer
 
 
-def strip_punctuation(s):
-    return re.sub("([%s]+)" % string.punctuation, " ", s)
-
-
-def strip_punctuation2(s):
-    return s.translate(string.maketrans("", ""), string.punctuation)
-
-
-def strip_tags(s):
-    # assumes s is already lowercase
-    return re.sub(r"<([^>]+)>", "", s)
-
-
-def strip_short(s, minsize=3):
-    return " ".join([e for e in s.split() if len(e) >= minsize])
-
-
-def strip_numeric(s):
-    return re.sub(r"[0-9]+", "", s)
-
-
-def strip_non_alphanum(s):
-    # assumes s is already lowercase
-    return re.sub(r"[^a-z0-9\ ]", " ", s)
-
-
-def strip_multiple_whitespaces(s):
-    return re.sub(r"(\s|\\n|\\r|\\t)+", " ", s)
-    #return s
-
-
-def split_alphanum(s):
-    s = re.sub(r"([a-z]+)([0-9]+)", r"\1 \2", s)
-    return re.sub(r"([0-9]+)([a-z]+)", r"\1 \2", s)
-
-
-def stem_text(s):
-    """
-    given a text, returns the same text after running the porter stemmer
-    assumes all text is lowercase
-    """
-    output = ''
-    p = PorterStemmer()
-    for word in s.split():
-        output += p.stem(word, 0, len(word) - 1) + " "
-    return(output)
-
-
 # improved list from Stone, Denis, Kwantes (2010)
 STOPWORDS = """
 a about above across after afterwards again against all almost alone along already also although always am among amongst amoungst amount an and another any anyhow anyone anything anyway anywhere are around as at back be
@@ -78,16 +30,60 @@ various very very via
 was we well were what whatever when whence whenever where whereafter whereas whereby wherein whereupon wherever whether which while whither who whoever whole whom whose why will with within without would yet you
 your yours yourself yourselves
 """
-
-STOPWORDS = dict((w, 1) for w in STOPWORDS.strip().replace("\n", " ").split())
+STOPWORDS = frozenset(w for w in STOPWORDS.split() if w)
 
 
 def remove_stopwords(s):
-    return " ".join([w for w in s.split() if w not in STOPWORDS])
+    return " ".join(w for w in s.split() if w not in STOPWORDS)
 
 
-DEFAULT_FILTERS = [str.lower, strip_tags, strip_punctuation,
-strip_multiple_whitespaces, strip_numeric, remove_stopwords, strip_short, stem_text]
+def strip_punctuation(s):
+    return re.sub("([%s]+)" % string.punctuation, " ", s)
+
+
+def strip_punctuation2(s):
+    return s.translate(string.maketrans("", ""), string.punctuation)
+
+
+def strip_tags(s):
+    # assumes s is already lowercase
+    return re.sub(r"<([^>]+)>", "", s)
+
+
+def strip_short(s, minsize=3):
+    return " ".join(e for e in s.split() if len(e) >= minsize)
+
+
+def strip_numeric(s):
+    return re.sub(r"[0-9]+", "", s)
+
+
+def strip_non_alphanum(s):
+    # assumes s is already lowercase
+    # FIXME replace with unicode compatible regexp, without the assumption
+    return re.sub(r"[^a-z0-9\ ]", " ", s)
+
+
+def strip_multiple_whitespaces(s):
+    return re.sub(r"(\s|\\n|\\r|\\t)+", " ", s)
+    #return s
+
+
+def split_alphanum(s):
+    s = re.sub(r"([a-z]+)([0-9]+)", r"\1 \2", s)
+    return re.sub(r"([0-9]+)([a-z]+)", r"\1 \2", s)
+
+
+def stem_text(text):
+    """
+    Return lowercase and (porter-)stemmed version of string `text`. 
+    """
+    p = PorterStemmer()
+    return ' '.join(p.stem(word) for word in text.lower().split()) # lowercasing required by the stemmer
+
+
+DEFAULT_FILTERS = [str.lower, strip_tags, strip_punctuation, strip_multiple_whitespaces, 
+                   strip_numeric, remove_stopwords, strip_short, stem_text]
 
 
 def preprocess_string(s, filters=DEFAULT_FILTERS):
@@ -101,9 +97,7 @@ def preprocess_documents(docs):
 
 
 def read_file(path):
-    f = open(path)
-    ret = f.read()
-    return ret
+    return open(path).read()
 
 
 def read_files(pattern):

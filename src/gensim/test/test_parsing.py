@@ -141,10 +141,10 @@ class TestPreprocessing(unittest.TestCase):
                           "world square")
 
     def testStemText(self):
-        target = "While it is quit us to be abl to search a larg " + \
+        target = "while it is quit us to be abl to search a larg " + \
                 "collect of document almost instantli for a joint occurr " + \
                 "of a collect of exact words, for mani search purposes, " + \
-                "a littl fuzzi would help. "
+                "a littl fuzzi would help."
         self.assertEquals(stem_text(doc5), target)
 
 

@@ -14,16 +14,19 @@ from __future__ import division  # always use floats
 from __future__ import with_statement
 
 import logging
+import tempfile
 import unittest
-
+import bz2
 import os
+
 from gensim import corpora, models, similarities
 
 # sample data files are located in the same folder
 module_path = os.path.dirname(__file__)
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', 
-                    level=logging.WARNING)
+
+def get_tmpfile(suffix):
+    return os.path.join(tempfile.gettempdir(), suffix)
 
 
 class CorpusMiislita(corpora.TextCorpus):
@@ -49,6 +52,38 @@ class CorpusMiislita(corpora.TextCorpus):
 
 
 class TestMiislita(unittest.TestCase):
+    def test_textcorpus(self):
+        """ Make sure TextCorpus can be serialized to disk. """
+        # construct corpus from file
+        fname = os.path.join(module_path, 'head500.noblanks.cor.bz2')
+        miislita = CorpusMiislita(fname)
+        
+        # make sure serializing works
+        ftmp = get_tmpfile('test_textcorpus.mm')
+        corpora.MmCorpus.saveCorpus(ftmp, miislita)
+        self.assertTrue(os.path.exists(ftmp))
+        
+        # make sure deserializing gives the same result
+        miislita2 = corpora.MmCorpus(ftmp)
+        self.assertEqual(list(miislita), list(miislita2))
+
+
+    def test_save_load_ability(self):
+        """ Make sure we can save and load (un/pickle) TextCorpus objects. """
+        # construct corpus from file
+        fname = os.path.join(module_path, 'head500.noblanks.cor.bz2')
+        miislita = CorpusMiislita(fname)
+        
+        # pickle to disk
+        tmpf = get_tmpfile('tc_test.cpickle')
+        miislita.save(tmpf)
+
+        miislita2 = CorpusMiislita.load(tmpf)
+
+        self.assertEqual(len(miislita), len(miislita2))
+        self.assertEqual(miislita.dictionary.token2id, miislita2.dictionary.token2id)
+
+
     def test_miislita_high_level(self):
         # construct corpus from file
         corpusname = os.path.join(module_path, 'miIslita.cor')
@@ -57,7 +92,6 @@ class TestMiislita(unittest.TestCase):
         # initialize tfidf transformation and similarity index
         tfidf = models.TfidfModel(miislita, miislita.dictionary, normalize=False)
         index = similarities.SparseMatrixSimilarity(tfidf[miislita])
-#        index.save(corpusname + '.simindex')
 
         # compare to query
         query = 'latent semantic indexing'
