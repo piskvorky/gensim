@@ -72,7 +72,7 @@ class TextCorpus(interfaces.CorpusABC):
         if input is not None:
             self.dictionary.addDocuments(self.get_texts())
         else:
-            logger.warning("No input document streamed provided; assuming "
+            logger.warning("No input document stream provided; assuming "
                            "dictionary will be initialized some other way.")
     
     
@@ -100,7 +100,7 @@ class TextCorpus(interfaces.CorpusABC):
         preprocessing of the words coming out of this function.
         """
         # Instead of raising NotImplementedError, let's provide a sample implementation: 
-        # assume documents are lines (one document per line). Yield each document 
-        # as a list of lowercase tokens, via `utils.tokenize`.
+        # assume documents are lines in a single file (one document per line).
+        # Yield each document as a list of lowercase tokens, via `utils.tokenize`.
         for lineno, line in enumerate(getstream(self.input)):
             yield utils.tokenize(line, lowercase=True)

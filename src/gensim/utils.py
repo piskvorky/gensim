@@ -439,7 +439,7 @@ def toptexts(query, texts, index, n=10):
     Return a list of 3-tuples (docid, doc's similarity to the query, texts[docid]).
     """
     sims = index[query] # perform a similarity query against the corpus
-    sims = sorted(list(enumerate(sims)), key=lambda item: -item[1])
+    sims = sorted(enumerate(sims), key=lambda item: -item[1])
     
     result = []
     for topid, topcosine in sims[:n]: # only consider top-n most similar docs
