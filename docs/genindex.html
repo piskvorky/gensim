@@ -196,6 +196,7 @@
     <dt><a href="models/lda_dispatcher.html#module-gensim.models.lda_dispatcher">gensim.models.lda_dispatcher (module)</a></dt>
     <dt><a href="models/lda_worker.html#module-gensim.models.lda_worker">gensim.models.lda_worker (module)</a></dt>
     <dt><a href="models/ldamodel.html#module-gensim.models.ldamodel">gensim.models.ldamodel (module)</a></dt>
+    <dt><a href="models/logentropy_model.html#module-gensim.models.logentropy_model">gensim.models.logentropy_model (module)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
     <dt><a href="models/lsi_dispatcher.html#module-gensim.models.lsi_dispatcher">gensim.models.lsi_dispatcher (module)</a></dt>
@@ -232,6 +233,7 @@
     <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.inference">inference() (gensim.models.ldamodel.LdaModel method)</a></dt>
     <dt><a href="models/lda_dispatcher.html#gensim.models.lda_dispatcher.Dispatcher.initialize">initialize() (gensim.models.lda_dispatcher.Dispatcher method)</a></dt>
     <dd><dl>
+      <dt><a href="models/logentropy_model.html#gensim.models.logentropy_model.LogEntropyModel.initialize">(gensim.models.logentropy_model.LogEntropyModel method)</a></dt>
       <dt><a href="models/lsi_dispatcher.html#gensim.models.lsi_dispatcher.Dispatcher.initialize">(gensim.models.lsi_dispatcher.Dispatcher method)</a></dt>
       <dt><a href="models/rpmodel.html#gensim.models.rpmodel.RpModel.initialize">(gensim.models.rpmodel.RpModel method)</a></dt>
       <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.TfidfModel.initialize">(gensim.models.tfidfmodel.TfidfModel method)</a></dt>
@@ -286,6 +288,7 @@
       <dt><a href="interfaces.html#gensim.interfaces.TransformationABC.load">(gensim.interfaces.TransformationABC class method)</a></dt>
       <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.load">(gensim.models.ldamodel.LdaModel class method)</a></dt>
       <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaState.load">(gensim.models.ldamodel.LdaState class method)</a></dt>
+      <dt><a href="models/logentropy_model.html#gensim.models.logentropy_model.LogEntropyModel.load">(gensim.models.logentropy_model.LogEntropyModel class method)</a></dt>
       <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel.load">(gensim.models.lsimodel.LsiModel class method)</a></dt>
       <dt><a href="models/rpmodel.html#gensim.models.rpmodel.RpModel.load">(gensim.models.rpmodel.RpModel class method)</a></dt>
       <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.TfidfModel.load">(gensim.models.tfidfmodel.TfidfModel class method)</a></dt>
@@ -295,9 +298,10 @@
       <dt><a href="utils.html#gensim.utils.RepeatCorpus.load">(gensim.utils.RepeatCorpus class method)</a></dt>
       <dt><a href="utils.html#gensim.utils.SaveLoad.load">(gensim.utils.SaveLoad class method)</a></dt>
   </dl></dd>
+    <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.WikiCorpus.loadDictionary">loadDictionary() (gensim.corpora.wikicorpus.WikiCorpus static method)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
-    <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.WikiCorpus.loadDictionary">loadDictionary() (gensim.corpora.wikicorpus.WikiCorpus static method)</a></dt>
+    <dt><a href="models/logentropy_model.html#gensim.models.logentropy_model.LogEntropyModel">LogEntropyModel (class in gensim.models.logentropy_model)</a></dt>
     <dt><a href="corpora/lowcorpus.html#gensim.corpora.lowcorpus.LowCorpus">LowCorpus (class in gensim.corpora.lowcorpus)</a></dt>
     <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel">LsiModel (class in gensim.models.lsimodel)</a></dt>
 </dl></td>
@@ -377,6 +381,7 @@
       <dt><a href="interfaces.html#gensim.interfaces.TransformationABC.save">(gensim.interfaces.TransformationABC method)</a></dt>
       <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.save">(gensim.models.ldamodel.LdaModel method)</a></dt>
       <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaState.save">(gensim.models.ldamodel.LdaState method)</a></dt>
+      <dt><a href="models/logentropy_model.html#gensim.models.logentropy_model.LogEntropyModel.save">(gensim.models.logentropy_model.LogEntropyModel method)</a></dt>
       <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel.save">(gensim.models.lsimodel.LsiModel method)</a></dt>
       <dt><a href="models/rpmodel.html#gensim.models.rpmodel.RpModel.save">(gensim.models.rpmodel.RpModel method)</a></dt>
       <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.TfidfModel.save">(gensim.models.tfidfmodel.TfidfModel method)</a></dt>
@@ -494,7 +499,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 08, 2011.
+      Last updated on Mar 15, 2011.
     </div>
   </body>
 </html>

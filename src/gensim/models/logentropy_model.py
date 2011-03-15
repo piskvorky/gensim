@@ -16,15 +16,17 @@ class LogEntropyModel(interfaces.TransformationABC):
 
     This is done by a log entropy normalization, optionally normalizing the
     resulting documents to unit length. The following formulas explain how
-    to compute the log entropy normalization for a term i
-    local_weight_i = log(doc_frequency_of_i + 1)
-    P_i = doc_frequency_of_i / global_frequency_of_i
+    to compute the log entropy weight for term `i` in document `j`::
+    
+      local_weight_{i,j} = log(frequency_{i,j} + 1)
 
-                          sum_over_docs_{j} P_i,j * log(P_i,j)
-    global_weight_i = 1 + ------------------------------------
-                                  log(n_contexts_i)
+      P_{i,j} = frequency_{i,j} / sum_j frequency_{i,j}
 
-    the normalized value for a term i is: local_weight_i * global_weight_i
+                            sum_j P_{i,j} * log(P_{i,j})
+      global_weight_i = 1 + ----------------------------
+                            log(document_frequency_of_i)
+
+      final_weight_{i,j} = local_weight_{i,j} * global_weight_i
 
     The main methods are:
 
@@ -53,17 +55,17 @@ class LogEntropyModel(interfaces.TransformationABC):
             self.initialize(corpus)
 
     def __str__(self):
-        return "LogEntropyModel(n_docs=%s, n_words=%s)" % (self.n_docs,
-                self.n_words)
+        return "LogEntropyModel(n_docs=%s, n_words=%s)" % (self.n_docs, self.n_words)
 
     def initialize(self, corpus):
         """
-        initialization of context_count, global frequency, etc.
+        Initialize internal statistics based on a training corpus. Called 
+        automatically from the constructor.
         """
         logging.info("calculating counts")
         glob_freq = {}
         n_context = {}
-        glob_num_words = 0
+        glob_num_words, doc_no = 0, -1
         for doc_no, bow in enumerate(corpus):
             if doc_no % 10000 == 0:
                 logging.info("PROGRESS: processing document #%i" % doc_no)
@@ -71,11 +73,10 @@ class LogEntropyModel(interfaces.TransformationABC):
             for term_id, term_count in bow:
                 n_context[term_id] = n_context.get(term_id, 0) + 1
                 glob_freq[term_id] = glob_freq.get(term_id, 0) + term_count
-        once = [key for key, val in n_context.items() if val < 2]
+        once = [key for key, val in n_context.iteritems() if val < 2]
         if len(once) > 0:
-            logging.error("There are words that appear only in one document")
-            logging.error("this words or documents should be filtered out")
-            logging.error("this cause problems in the entropy normalization")
+            logging.error("There are words that appear only in one document."
+                          "LogEntropy cannot deal with these; filter them out first")
             raise ValueError("invalid context diversity of corpus")
 
         # keep some stats about the training corpus
@@ -83,18 +84,17 @@ class LogEntropyModel(interfaces.TransformationABC):
         self.n_words = glob_num_words
 
         # and finally compute the global weights
-        logging.info(("calculating global log entropy weights for %i "
-                     + "documents and %i features (%i matrix non-zeros)")
-                     % (self.n_docs,
-                        1 + max([-1] + n_context.keys()),
-                        self.n_words))
-        logging.info('iterate over corpus')
+        num_terms = 1 + max([-1] + n_context.keys())
+        logging.info("calculating global log entropy weights for %i "
+                     "documents and %i features (%i matrix non-zeros)"
+                     % (self.n_docs, num_terms, self.n_words))
+        logging.debug('iterating over corpus')
         for bow in corpus:
             for key, freq in bow:
                 p = (float(freq) / glob_freq[key]) * math.log(float(freq) / glob_freq[key])
                 self.entr[key] = self.entr.get(key, 0.0) + p
-        logging.info('iterate over keys')
-        for key in self.entr.keys():
+        logging.debug('iterating over keys')
+        for key in self.entr:
             self.entr[key] = 1 + self.entr[key] / math.log(n_context[key])
 
     def __getitem__(self, bow):

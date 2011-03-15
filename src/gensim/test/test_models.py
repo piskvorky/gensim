@@ -19,8 +19,7 @@ import numpy
 from nose.tools import raises
 
 from gensim.corpora import mmcorpus, Dictionary
-from gensim.models import lsimodel, ldamodel, tfidfmodel, rpmodel
-from gensim.models import log_entropy_model
+from gensim.models import lsimodel, ldamodel, tfidfmodel, rpmodel, logentropy_model
 from gensim import matutils
 
 
@@ -247,13 +246,12 @@ class TestLogEntropyModel(unittest.TestCase):
         normalization and should therefore be filtered out.
         --> context diversity should be > 1
         """
-        log_entropy_model.LogEntropyModel(self.corpus_small)
+        logentropy_model.LogEntropyModel(self.corpus_small)
 
 
     def testTransform(self):
         # create the transformation model
-        model = log_entropy_model.LogEntropyModel(self.corpus_ok,
-                                                  normalize=False)
+        model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=False)
 
         # transform one document
         doc = list(self.corpus_ok)[0]
@@ -266,10 +264,9 @@ class TestLogEntropyModel(unittest.TestCase):
 
 
     def testPersistence(self):
-        model = log_entropy_model.LogEntropyModel(self.corpus_ok,
-                                                    normalize = True)
+        model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize = True)
         model.save(testfile())
-        model2 = log_entropy_model.LogEntropyModel.load(testfile())
+        model2 = logentropy_model.LogEntropyModel.load(testfile())
         self.assertTrue(model.entr == model2.entr)
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec]))
