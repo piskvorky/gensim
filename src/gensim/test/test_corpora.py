@@ -20,6 +20,7 @@ logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s', level 
 
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
 def testfile():
@@ -35,7 +36,7 @@ class CorpusTesterABC(object):
 
 
     def testLoad(self):
-        fname = os.path.join(module_path, 'testcorpus.' + self.fileExtension.lstrip('.'))
+        fname = datapath('testcorpus.' + self.fileExtension.lstrip('.'))
         corpus = self.corpusClass(fname)
         docs = list(corpus)
         self.assertEqual(len(docs), 9) # the deerwester corpus always has nine documents, no matter what format
