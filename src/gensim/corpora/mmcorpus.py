@@ -40,7 +40,7 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         Save a corpus in the Matrix Market format to disk.
         """
         logging.info("storing corpus in Matrix Market format to %s" % fname)
-        return matutils.MmWriter.writeCorpus(fname, corpus, progressCnt=progressCnt, index=True)
+        return matutils.MmWriter.writeCorpus(fname, corpus, progressCnt=progressCnt)
 #endclass MmCorpus
 
 

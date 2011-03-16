@@ -42,3 +42,10 @@ Thumbs.db
 .settings/
 docs/src/_build/
 dedan_gensim.tmproj
+gensim.egg-info
+*,cover
+.idea
+*.dict
+*.index
+.coverage
+data
