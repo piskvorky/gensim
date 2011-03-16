@@ -24,6 +24,7 @@ from gensim import matutils
 
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARNING)
 
@@ -49,7 +50,7 @@ def testfile():
 
 class TestLsiModel(unittest.TestCase):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus(os.path.join(module_path, 'testcorpus.mm'))
+        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
 
     def testTransform(self):
         # create the transformation model
@@ -122,7 +123,7 @@ class TestLsiModel(unittest.TestCase):
 
 class TestRpModel(unittest.TestCase):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus(os.path.join(module_path, 'testcorpus.mm'))
+        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
 
     def testTransform(self):
         # create the transformation model
@@ -151,7 +152,7 @@ class TestRpModel(unittest.TestCase):
 
 class TestLdaModel(unittest.TestCase):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus(os.path.join(module_path, 'testcorpus.mm'))
+        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
 
     def testTransform(self):
         passed = False
@@ -190,7 +191,7 @@ class TestLdaModel(unittest.TestCase):
 
 class TestTfidfModel(unittest.TestCase):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus(os.path.join(module_path, 'testcorpus.mm'))
+        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
 
     def testTransform(self):
         # create the transformation model
@@ -232,10 +233,8 @@ class TestTfidfModel(unittest.TestCase):
 
 class TestLogEntropyModel(unittest.TestCase):
     def setUp(self):
-        self.corpus_small = mmcorpus.MmCorpus(os.path.join(module_path,
-                                        'test_data', 'test_corpus_small.mm'))
-        self.corpus_ok = mmcorpus.MmCorpus(os.path.join(module_path,
-                                        'test_data', 'test_corpus_ok.mm'))
+        self.corpus_small = mmcorpus.MmCorpus(datapath('test_corpus_small.mm'))
+        self.corpus_ok = mmcorpus.MmCorpus(datapath('test_corpus_ok.mm'))
 
     @raises(ValueError)
     def test_corpus_validity(self):

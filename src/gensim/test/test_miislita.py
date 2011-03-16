@@ -23,6 +23,7 @@ from gensim import corpora, models, similarities
 
 # sample data files are located in the same folder
 module_path = os.path.dirname(__file__)
+datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
 def get_tmpfile(suffix):
@@ -55,7 +56,7 @@ class TestMiislita(unittest.TestCase):
     def test_textcorpus(self):
         """ Make sure TextCorpus can be serialized to disk. """
         # construct corpus from file
-        fname = os.path.join(module_path, 'head500.noblanks.cor.bz2')
+        fname = datapath('head500.noblanks.cor.bz2')
         miislita = CorpusMiislita(bz2.BZ2File(fname))
         
         # make sure serializing works
@@ -74,7 +75,7 @@ class TestMiislita(unittest.TestCase):
         as the underlying input isn't a file-like object; we cannot pickle those).
         """
         # construct corpus from file
-        corpusname = os.path.join(module_path, 'miIslita.cor')
+        corpusname = datapath('miIslita.cor')
         miislita = CorpusMiislita(corpusname)
         
         # pickle to disk
@@ -89,7 +90,7 @@ class TestMiislita(unittest.TestCase):
 
     def test_miislita_high_level(self):
         # construct corpus from file
-        corpusname = os.path.join(module_path, 'miIslita.cor')
+        corpusname = datapath('miIslita.cor')
         miislita = CorpusMiislita(corpusname)
 
         # initialize tfidf transformation and similarity index
