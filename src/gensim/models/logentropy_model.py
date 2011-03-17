@@ -111,7 +111,7 @@ class LogEntropyModel(interfaces.TransformationABC):
 
         # unknown (new) terms will be given zero weight (NOT infinity/huge)
         vector = [(term_id, math.log(tf + 1) * self.entr.get(term_id))
-                  for term_id, tf in bow if self.entr.get(term_id)]
+                  for term_id, tf in bow if term_id in self.entr]
         if self.normalize:
             vector = matutils.unitVec(vector)
         return vector
