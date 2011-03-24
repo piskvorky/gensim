@@ -276,8 +276,8 @@ class VocabTransform(interfaces.TransformationABC):
 
     Given a mapping between old ids and new ids (some old ids may be missing,
     i.e. the mapping need not be a bijection), this will wrap a
-    corpus so that iterating over VocabTransform[corpus] returns the same vectors but with
-    the new ids.
+    corpus so that iterating over VocabTransform[corpus] returns the same vectors 
+    but with the new ids.
 
     Old features that have no counterpart in the new ids are discarded. This
     can be used to filter vocabulary of a corpus::
