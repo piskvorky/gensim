@@ -5,21 +5,23 @@
 
 """
 Text corpora usually reside on disk, as text files in one format or another
-In a common scenario, we need to build a dictionary (a word->integer id
+In a common scenario, we need to build a dictionary (a `word->integer id`
 mapping), which is then used to construct sparse bag-of-word vectors
-(= sequences of (word_id, word_weight) 2-tuples).
+(= sequences of `(word_id, word_weight)` 2-tuples).
 
 This module provides some code scaffolding to simplify this pipeline. For
 example, given a corpus where each document is a separate line in file on disk, 
-you would override the `TextCorpus.get_texts` method to read one line=dociument 
+you would override the `TextCorpus.get_texts` method to read one line=document 
 at a time, process it (lowercase, tokenize, whatever) and yield it as a sequence 
 of words.
 
 Overriding `get_texts` is enough; you can then initialize the corpus with e.g.
 `MyTextCorpus(bz2.BZ2File('mycorpus.txt.bz2'))` and it will behave correctly like a
-corpus of sparse vectors. The resulting object can be used as input to all gensim
-models (TFIDF, LSI, ...), serialized with any format (Matrix Market, SvmLight,
-Blei's LDA-C format etc).
+corpus of sparse vectors. The `__iter__` methods is automatically set up, and 
+dictionary is automatically populated with all `word->id` mappings.
+
+The resulting object can be used as input to all gensim models (TFIDF, LSI, ...),
+serialized with any format (Matrix Market, SvmLight, Blei's LDA-C format etc).
 
 See the `gensim.test.test_miislita.CorpusMiislita` class for a simple example.
 """
@@ -38,8 +40,8 @@ logger.setLevel(logging.INFO)
 
 def getstream(input):
     """
-    Reset the input stream (a file-like object) to beginning.
     If input is a filename (string), return `open(input)`.
+    If input is a file-like object, reset it to the beginning with `input.seek(0)`.
     """
     assert input is not None
     if isinstance(input, basestring):
@@ -61,9 +63,9 @@ class TextCorpus(interfaces.CorpusABC):
     your particular input.
     
     Given a filename (or a file-like object) in constructor, the corpus object
-    will be automatically initialized with a dictionary, it will have the `iter`
-    corpus method etc. You must only provide a correct `get_texts` implementation
-    (and perhaps the `__len__` method to determine corpus length).
+    will be automatically initialized with a dictionary in `self.dictionary` and 
+    will support the `iter` corpus method. You must only provide a correct `get_texts`
+    implementation (and perhaps the `__len__` method to determine corpus length).
     
     """
     def __init__(self, input=None):
