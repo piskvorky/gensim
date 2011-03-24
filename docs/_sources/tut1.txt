@@ -126,6 +126,63 @@ times does the word `graph` appear in the document?" and that the answer is "zer
 the first six documents and "one" for the remaining three. As a matter of fact,
 we have arrived at exactly the same corpus of vectors as in the :ref:`first-example`.
 
+Corpus Streaming -- One Document at a Time
+-------------------------------------------
+
+Note that `corpus` above resides fully in memory, as a plain Python list.
+In this simple example, it doesn't matter much, but just to make things clear,
+let's assume there are millions of documents in the corpus. Storing all of them in RAM won't do.
+Instead, the documents are stored in a file on disk, one document per line. Gensim
+only requires that a corpus must be able to return one document vector at a time::
+
+>>> class MyCorpus(object):
+>>>     def __iter__(self):
+>>>         for line in open('mycorpus.txt'):
+>>>             # assume there's one document per line, tokens separated by whitespace
+>>>             yield dictionary.doc2bow(line.lower().split())
+
+Download the sample `mycorpus.txt file here <./mycorpus.txt>`_. The assumption that
+each document occupies one line in a single file is not important; you can mold
+the `__iter__` function to fit your input format, whatever it is. Walking directories, accessing network...
+Just parse your input to retrieve a clean list of tokens in each document,
+then convert the tokens via a dictionary to their ids and yield the resulting sparse vector inside `__iter__`.
+
+>>> corpus_memory_friendly = MyCorpus()
+>>> print corpus_memory_friendly
+<__main__.MyCorpus object at 0x10d5690>
+
+Corpus is now an object. We didn't define any way to print it, so print just outputs address
+of the object in memory. Not very useful. To see the constituent vectors, let's 
+iterate over the corpus and print each document vector (one at a time)::
+
+    >>> for vector in corpus_memory_friendly: print vector
+    [(0, 1), (1, 1), (2, 1)]
+    [(0, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]
+    [(2, 1), (5, 1), (7, 1), (8, 1)]
+    [(1, 1), (5, 2), (8, 1)]
+    [(3, 1), (6, 1), (7, 1)]
+    [(9, 1)]
+    [(9, 1), (10, 1)]
+    [(9, 1), (10, 1), (11, 1)]
+    [(4, 1), (10, 1), (11, 1)]
+
+Although the output is the same as for the plain Python list, the corpus is now much
+more memory friendly, because at most one vector resides in RAM at a time. Your
+corpus can now be as large as you want.
+
+Similarly, to construct the dictionary without loading all texts into memory::
+
+    >>> # collect statistics about all tokens
+    >>> dictionary = corpora.Dictionary(line.lower().split() for line in open('mycorpus.txt'))
+    >>> # remove stop words and words that appear only once
+    >>> stop_ids = [dictionary.token2id[stopword] for stopword in stoplist
+    >>>             if stopword in dictionary.token2id]
+    >>> once_ids = [tokenid for tokenid, docfreq in dictionary.dfs.iteritems() if docfreq == 1]
+    >>> dictionary.filterTokens(stop_ids + once_ids) # remove stop words and words that appear only once
+    >>> dictionary.compactify() # remove gaps in id sequence after words that were removed
+    >>> print dictionary
+    Dictionary(12 unique tokens)
+
 And that is all there is to it! At least as far as bag-of-words representation is concerned.
 Of course, what we do with such corpus is another question; it is not at all clear
 how counting the frequency of distinct words could be useful. As it turns out, it isn't, and
@@ -140,7 +197,7 @@ briefly turn our attention to *corpus persistency*.
 Corpus Formats
 ---------------
 
-There exist several file formats for storing a Vector Space corpus (~sequence of vectors) to disk.
+There exist several file formats for serializing a Vector Space corpus (~sequence of vectors) to disk.
 `Gensim` implements them via the *streaming corpus interface* mentioned earlier:
 documents are read from (resp. stored to) disk in a lazy fashion, one document at
 a time, without the whole corpus being read into main memory at once.
@@ -196,7 +253,7 @@ To save the same Matrix Market document stream in Blei's LDA-C format,
 In this way, `gensim` can also be used as a memory-efficient **I/O format conversion tool**:
 just load a document stream using one format and immediately save it in another format.
 Adding new formats is dead easy, check out the `code for the SVMlight corpus
-<http://my-trac.assembla.com/gensim/browser/trunk/src/gensim/corpora/svmlightcorpus.py>`_ for an example.
+<https://github.com/piskvorky/gensim/blob/master/src/gensim/corpora/svmlightcorpus.py>`_ for an example.
 
 -------------
 

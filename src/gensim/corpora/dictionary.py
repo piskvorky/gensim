@@ -53,7 +53,7 @@ class Dictionary(utils.SaveLoad):
 
 
     def keys(self):
-        """Return a list of all ids"""
+        """Return a list of all token ids."""
         return self.token2id.values()
 
     def __len__(self):

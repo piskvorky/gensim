@@ -282,6 +282,14 @@ result is forcefully defined as <cite>is_corpus=False</cite>.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.utils.revdict">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">revdict</tt><big>(</big><em>d</em><big>)</big><a class="headerlink" href="#gensim.utils.revdict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reverse a dictionary mapping.</p>
+<p>When two keys map to the same value, only one of them will be kept in the 
+result (which one is kept is arbitrary).</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.utils.synchronous">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">synchronous</tt><big>(</big><em>tlockname</em><big>)</big><a class="headerlink" href="#gensim.utils.synchronous" title="Permalink to this definition">¶</a></dt>
 <dd><p>A decorator to place an instance-based lock around a method.</p>
@@ -300,6 +308,16 @@ characters (no digits!).</p>
 <span class="go">[u&#39;Nic&#39;, u&#39;nemuze&#39;, u&#39;letet&#39;, u&#39;rychlosti&#39;, u&#39;vyssi&#39;, u&#39;nez&#39;, u&#39;tisic&#39;, u&#39;kilometru&#39;, u&#39;za&#39;, u&#39;sekundu&#39;]</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.utils.toptexts">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">toptexts</tt><big>(</big><em>query</em>, <em>texts</em>, <em>index</em>, <em>n=10</em><big>)</big><a class="headerlink" href="#gensim.utils.toptexts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Debug fnc to help inspect the top <cite>n</cite> most similar documents (according to a 
+similarity index <cite>index</cite>), to see if they are actually related to the query.</p>
+<p><cite>texts</cite> is any object that can return something insightful for each document 
+via <cite>texts[docid]</cite>, such as its fulltext or snippet.</p>
+<p>Return a list of 3-tuples (docid, doc&#8217;s similarity to the query, texts[docid]).</p>
 </dd></dl>
 
 <dl class="function">
@@ -344,7 +362,7 @@ characters (no digits!).</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 15, 2011.
+      Last updated on Mar 24, 2011.
     </div>
   </body>
 </html>
