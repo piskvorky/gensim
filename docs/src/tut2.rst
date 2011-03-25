@@ -92,7 +92,7 @@ folding-in for LSA, by topic inference for LDA etc.
 
 Transformations can also be serialized, one on top of another, in a sort of chain:
 
->>> lsi = models.LsiModel(corpus_tfidf, id2word=dictionary.id2word, numTopics=2) # initialize an LSI transformation
+>>> lsi = models.LsiModel(corpus_tfidf, id2word=dictionary, numTopics=2) # initialize an LSI transformation
 >>> corpus_lsi = lsi[corpus_tfidf] # create a double wrapper over the original corpus: bow->tfidf->fold-in-lsi
 
 Here we transformed our Tf-Idf corpus via `Latent Semantic Indexing <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
@@ -157,7 +157,7 @@ Gensim implements several popular Vector Space Model algorithms:
   2 latent dimensions, but on real corpora, target dimensionality of 200--500 is recommended
   as a "golden standard" [1]_.
 
-  >>> model = lsimodel.LsiModel(tfidf_corpus, id2word=dictionary.id2word, numTopics=300)
+  >>> model = lsimodel.LsiModel(tfidf_corpus, id2word=dictionary, numTopics=300)
 
   LSI training is unique in that we can continue "training" at any point, simply
   by providing more training documents. This is done by incremental updates to
@@ -197,7 +197,7 @@ Gensim implements several popular Vector Space Model algorithms:
   just like with LSA, inferred automatically from a training corpus. Documents
   are in turn interpreted as a (soft) mixture of these topics (again, just like with LSA).
 
-  >>> model = ldamodel.LdaModel(bow_corpus, id2word=dictionary.id2word, numTopics=100)
+  >>> model = ldamodel.LdaModel(bow_corpus, id2word=dictionary, numTopics=100)
 
   `gensim` uses a fast implementation of online LDA parameter estimation based on [2]_,
   modified to run in :doc:`distributed mode <distributed>` on a cluster of computers.
@@ -209,7 +209,7 @@ It is worth repeating that these are all unique, **incremental** implementations
 which do not require the whole training corpus to be present in main memory all at once.
 With memory taken care of, I am now improving :doc:`distributed`,
 to improve CPU efficiency, too.
-If you feel you could contribute (by testing, providing use-cases or even, gasp!, code),
+If you feel you could contribute (by testing, providing use-cases or code),
 please `let me know <mailto:radimrehurek@seznam.cz>`_.
 
 Continue on to the next tutorial on :doc:`tut2`.

@@ -161,6 +161,10 @@ To run batch LDA (not online), train `LdaModel` with::
     >>> # extract 100 LDA topics, using 20 full passes, no online updates
     >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, numTopics=100, update_every=0, passes=20)
 
+As usual, a trained model can used be to transform new, unseen documents (plain bag-of-words count vectors)
+into LDA topic distributions:
+
+    >>> doc_lda = lda[doc_bow]
 
 --------------------
 

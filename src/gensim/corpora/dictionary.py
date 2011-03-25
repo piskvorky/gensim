@@ -53,7 +53,7 @@ class Dictionary(utils.SaveLoad):
 
 
     def keys(self):
-        """Return a list of all ids"""
+        """Return a list of all token ids."""
         return self.token2id.values()
 
     def __len__(self):
@@ -166,7 +166,7 @@ class Dictionary(utils.SaveLoad):
 
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
         self.filterTokens(goodIds = goodIds)
-        self.rebuildDictionary()
+        self.compactify()
         logger.info("resulting dictionary: %s" % self)
 
     def filterTokens(self, badIds=None, goodIds=None):
@@ -186,7 +186,7 @@ class Dictionary(utils.SaveLoad):
             self.dfs = dict((tokenId, freq) for tokenId, freq in self.dfs.iteritems() if tokenId in goodIds)
 
 
-    def rebuildDictionary(self):
+    def compactify(self):
         """
         Assign new word ids to all words.
 
@@ -224,13 +224,13 @@ class Dictionary(utils.SaveLoad):
         Mirror function to `saveAsText`.
         """
         result = Dictionary()
-        with open(fname) as f:
+        with open(fname, 'rb') as f:
             for lineNo, line in enumerate(f):
                 try:
                     wordId, word, docFreq = line[:-1].split('\t')
                 except Exception:
                     raise ValueError("invalid line in dictionary file %s: %s"
-                            % (fname, line.strip()))
+                                     % (fname, line.strip()))
                 wordId = int(wordId)
                 result.token2id[word] = wordId
                 result.dfs[wordId] = int(docFreq)

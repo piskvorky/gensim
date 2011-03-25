@@ -257,6 +257,11 @@ not exihibit topic drift, <strong>is ok and not affected</strong>.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">update_every</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">passes</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>As usual, a trained model can used be to transform new, unseen documents (plain bag-of-words count vectors)
+into LDA topic distributions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc_lda</span> <span class="o">=</span> <span class="n">lda</span><span class="p">[</span><span class="n">doc_bow</span><span class="p">]</span>
+</pre></div>
+</div>
 <hr class="docutils" />
 <table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -333,7 +338,7 @@ By the way, improvements to the Wiki markup parsing code are welcome :-)</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 15, 2011.
+      Last updated on Mar 26, 2011.
     </div>
   </body>
 </html>
