@@ -194,7 +194,7 @@ transformation is costly, <a class="reference internal" href="tut1.html#corpus-f
 using that.</p>
 </div>
 <p>Transformations can also be serialized, one on top of another, in a sort of chain:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus_tfidf</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="o">.</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="c"># initialize an LSI transformation</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus_tfidf</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="c"># initialize an LSI transformation</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus_lsi</span> <span class="o">=</span> <span class="n">lsi</span><span class="p">[</span><span class="n">corpus_tfidf</span><span class="p">]</span> <span class="c"># create a double wrapper over the original corpus: bow-&gt;tfidf-&gt;fold-in-lsi</span>
 </pre></div>
 </div>
@@ -256,7 +256,7 @@ transforms documents from either bag-of-words or (preferrably) TfIdf-weighted sp
 a latent space of a lower dimensionality. For the toy corpus above we used only
 2 latent dimensions, but on real corpora, target dimensionality of 200&#8211;500 is recommended
 as a &#8220;golden standard&#8221; <a class="footnote-reference" href="#id5" id="id1">[1]</a>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">tfidf_corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="o">.</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">tfidf_corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>LSI training is unique in that we can continue &#8220;training&#8221; at any point, simply
@@ -296,7 +296,7 @@ dimensionality. LDA is a probabilistic extension of LSA (also called multinomial
 so LDA&#8217;s topics can be interpreted as probability distributions over words. These distributions are,
 just like with LSA, inferred automatically from a training corpus. Documents
 are in turn interpreted as a (soft) mixture of these topics (again, just like with LSA).</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">bow_corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="o">.</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">bow_corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><cite>gensim</cite> uses a fast implementation of online LDA parameter estimation based on <a class="footnote-reference" href="#id6" id="id4">[2]</a>,
@@ -309,7 +309,7 @@ see the <a class="reference internal" href="apiref.html"><em>API reference</em><
 which do not require the whole training corpus to be present in main memory all at once.
 With memory taken care of, I am now improving <a class="reference internal" href="distributed.html"><em>Distributed Computing</em></a>,
 to improve CPU efficiency, too.
-If you feel you could contribute (by testing, providing use-cases or even, gasp!, code),
+If you feel you could contribute (by testing, providing use-cases or code),
 please <a class="reference external" href="mailto:radimrehurek&#37;&#52;&#48;seznam&#46;cz">let me know</a>.</p>
 <p>Continue on to the next tutorial on <a class="reference internal" href=""><em>Topics and Transformations</em></a>.</p>
 <hr class="docutils" />
@@ -374,7 +374,7 @@ please <a class="reference external" href="mailto:radimrehurek&#37;&#52;&#48;sez
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 24, 2011.
+      Last updated on Mar 26, 2011.
     </div>
   </body>
 </html>

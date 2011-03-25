@@ -143,7 +143,8 @@ only requires that a corpus must be able to return one document vector at a time
 
 Download the sample `mycorpus.txt file here <./mycorpus.txt>`_. The assumption that
 each document occupies one line in a single file is not important; you can mold
-the `__iter__` function to fit your input format, whatever it is. Walking directories, accessing network...
+the `__iter__` function to fit your input format, whatever it is.
+Walking directories, parsing XML, accessing network...
 Just parse your input to retrieve a clean list of tokens in each document,
 then convert the tokens via a dictionary to their ids and yield the resulting sparse vector inside `__iter__`.
 

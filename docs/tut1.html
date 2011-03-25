@@ -238,7 +238,8 @@ only requires that a corpus must be able to return one document vector at a time
 </div>
 <p>Download the sample <a class="reference external" href="./mycorpus.txt">mycorpus.txt file here</a>. The assumption that
 each document occupies one line in a single file is not important; you can mold
-the <cite>__iter__</cite> function to fit your input format, whatever it is. Walking directories, accessing network...
+the <cite>__iter__</cite> function to fit your input format, whatever it is.
+Walking directories, parsing XML, accessing network...
 Just parse your input to retrieve a clean list of tokens in each document,
 then convert the tokens via a dictionary to their ids and yield the resulting sparse vector inside <cite>__iter__</cite>.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus_memory_friendly</span> <span class="o">=</span> <span class="n">MyCorpus</span><span class="p">()</span>
@@ -388,7 +389,7 @@ Or continue to the next tutorial on <a class="reference internal" href="tut2.htm
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 24, 2011.
+      Last updated on Mar 26, 2011.
     </div>
   </body>
 </html>
