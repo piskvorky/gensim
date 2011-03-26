@@ -26,6 +26,8 @@ from gensim import utils
 
 
 PAT_TAG = re.compile('<(.*?)>(.*)</.*?>')
+logger = logging.getLogger('gensim.corpora.sources')
+logger.setLevel(logging.INFO)
 
 
 class ArticleSource(object):
@@ -105,7 +107,7 @@ class DmlSource(ArticleSource):
                 name, cont = name.strip(), cont.strip()
                 if name == 'msc':
                     if len(cont) != 5:
-                        logging.warning('invalid MSC=%s in %s' % (cont, xmlfile))
+                        logger.warning('invalid MSC=%s in %s' % (cont, xmlfile))
                     result.setdefault('msc', []).append(cont)
                     continue
                 if name == 'idMR':
@@ -129,18 +131,18 @@ class DmlSource(ArticleSource):
             return False
         # and contain the fulltext.txt file
         if not os.path.exists(os.path.join(path, 'fulltext.txt')):
-            logging.info('missing fulltext in %s' % path)
+            logger.info('missing fulltext in %s' % path)
             return False
         # and also the meta.xml file
         if not os.path.exists(os.path.join(path, 'meta.xml')):
-            logging.info('missing meta.xml in %s' % path)
+            logger.info('missing meta.xml in %s' % path)
             return False
         return True
     
     
     def findArticles(self):
         dirTotal = artAccepted = 0
-        logging.info("looking for '%s' articles inside %s" % (self.sourceId, self.baseDir))
+        logger.info("looking for '%s' articles inside %s" % (self.sourceId, self.baseDir))
         for root, dirs, files in os.walk(self.baseDir):
             dirTotal += 1
             root = os.path.normpath(root)
@@ -148,7 +150,7 @@ class DmlSource(ArticleSource):
                 artAccepted += 1
                 yield self.idFromDir(root)
     
-        logging.info('%i directories processed, found %i articles' % 
+        logger.info('%i directories processed, found %i articles' % 
                      (dirTotal, artAccepted))
     
     
@@ -203,15 +205,15 @@ class DmlCzSource(DmlSource):
             return False
         # and contain a dspace_id file
         if not (os.path.exists(os.path.join(path, 'dspace_id'))):
-            logging.info('missing dspace_id in %s' % path)
+            logger.info('missing dspace_id in %s' % path)
             return False
         # and contain either fulltext.txt or fulltext_dspace.txt file
         if not (os.path.exists(os.path.join(path, 'fulltext.txt')) or os.path.exists(os.path.join(path, 'fulltext-dspace.txt'))):
-            logging.info('missing fulltext in %s' % path)
+            logger.info('missing fulltext in %s' % path)
             return False
         # and contain the meta.xml file
         if not os.path.exists(os.path.join(path, 'meta.xml')):
-            logging.info('missing meta.xml in %s' % path)
+            logger.info('missing meta.xml in %s' % path)
             return False
         return True
     
@@ -284,7 +286,7 @@ class ArxmlivSource(ArticleSource):
         # these errors silently.
         def error(self, exception):
             pass
-#            logging.debug("SAX error parsing xml: %s" % exception)
+#            logger.debug("SAX error parsing xml: %s" % exception)
         
         warning = fatalError = error
     #endclass ArxmlivErrorHandler
@@ -312,14 +314,14 @@ class ArxmlivSource(ArticleSource):
             return False
         # and contain the tex.xml file
         if not os.path.exists(os.path.join(path, 'tex.xml')):
-            logging.warning('missing tex.xml in %s' % path)
+            logger.warning('missing tex.xml in %s' % path)
             return False
         return True
     
     
     def findArticles(self):
         dirTotal = artAccepted = 0
-        logging.info("looking for '%s' articles inside %s" % (self.sourceId, self.baseDir))
+        logger.info("looking for '%s' articles inside %s" % (self.sourceId, self.baseDir))
         for root, dirs, files in os.walk(self.baseDir):
             dirTotal += 1
             root = os.path.normpath(root)
@@ -327,7 +329,7 @@ class ArxmlivSource(ArticleSource):
                 artAccepted += 1
                 yield self.idFromDir(root)
     
-        logging.info('%i directories processed, found %i articles' % 
+        logger.info('%i directories processed, found %i articles' % 
                      (dirTotal, artAccepted))
     
     

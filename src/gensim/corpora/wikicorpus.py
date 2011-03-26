@@ -38,8 +38,7 @@ from gensim import interfaces, matutils, utils
 from gensim.corpora.dictionary import Dictionary # for constructing word->id mappings
 
 
-
-logger = logging.getLogger('wikicorpus')
+logger = logging.getLogger('gensim.corpora.wikicorpus')
 logger.setLevel(logging.INFO)
 
 

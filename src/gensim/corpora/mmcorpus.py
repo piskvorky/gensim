@@ -15,6 +15,9 @@ import logging
 from gensim import interfaces, matutils
 
 
+logger = logging.getLogger('gensim.corpora.mmcorpus')
+logger.setLevel(logging.INFO)
+
 
 class MmCorpus(matutils.MmReader, interfaces.CorpusABC):
     """
@@ -35,7 +38,7 @@ class MmCorpus(matutils.MmReader, interfaces.CorpusABC):
         """
         Save a corpus in the Matrix Market format to disk.
         """
-        logging.info("storing corpus in Matrix Market format to %s" % fname)
+        logger.info("storing corpus in Matrix Market format to %s" % fname)
         matutils.MmWriter.writeCorpus(fname, corpus, progressCnt=progressCnt)
 #endclass MmCorpus
 

@@ -18,6 +18,10 @@ from gensim import interfaces, matutils
 import dictionary # for constructing word->id mappings
 
 
+logger = logging.getLogger('gensim.corpora.dmlcorpus')
+logger.setLevel(logging.INFO)
+
+
 class DmlConfig(object):
     """
     DmlConfig contains parameters necessary for the abstraction of a 'corpus of 
@@ -40,7 +44,7 @@ class DmlConfig(object):
             acceptLangs = set(['any']) # if not specified, accept all languages (including unknown/unspecified)
         self.acceptLangs = set(acceptLangs)
         
-        logging.info('initialized %s' % self)
+        logger.info('initialized %s' % self)
         
     
     def resultFile(self, fname):
@@ -110,12 +114,12 @@ class DmlCorpus(interfaces.CorpusABC):
         them into tokens and converting tokens to their ids (creating new ids as 
         necessary).
         """
-        logging.info("creating dictionary from %i articles" % len(self.documents))
+        logger.info("creating dictionary from %i articles" % len(self.documents))
         self.dictionary = dictionary.Dictionary()
         numPositions = 0
         for docNo, (sourceId, docUri) in enumerate(self.documents):
             if docNo % 1000 == 0:
-                logging.info("PROGRESS: at document #%i/%i (%s, %s)" % 
+                logger.info("PROGRESS: at document #%i/%i (%s, %s)" % 
                              (docNo, len(self.documents), sourceId, docUri))
             source = self.config.sources[sourceId]
             contents = source.getContent(docUri)
@@ -124,7 +128,7 @@ class DmlCorpus(interfaces.CorpusABC):
 
             # convert to bag-of-words, but ignore the result -- here we only care about updating token ids
             _ = self.dictionary.doc2bow(words, allowUpdate = True)
-        logging.info("built %s from %i documents (total %i corpus positions)" % 
+        logger.info("built %s from %i documents (total %i corpus positions)" % 
                      (self.dictionary, len(self.documents), numPositions))
 
     
@@ -141,32 +145,32 @@ class DmlCorpus(interfaces.CorpusABC):
         """
         self.config = config
         self.documents = []
-        logging.info("processing config %s" % config)
+        logger.info("processing config %s" % config)
         for sourceId, source in config.sources.iteritems():
-            logging.info("processing source '%s'" % sourceId)
+            logger.info("processing source '%s'" % sourceId)
             accepted = []
             for articleUri in source.findArticles():
                 meta = source.getMeta(articleUri) # retrieve metadata (= dictionary of key->value)
                 if config.acceptArticle(meta): # do additional filtering on articles, based on the article's metadata
                     accepted.append((sourceId, articleUri))
-            logging.info("accepted %i articles for source '%s'" % 
+            logger.info("accepted %i articles for source '%s'" % 
                          (len(accepted), sourceId))
             self.documents.extend(accepted)
 
         if not self.documents:
-            logging.warning('no articles at all found from the config; something went wrong!')
+            logger.warning('no articles at all found from the config; something went wrong!')
         
         if shuffle:
-            logging.info("shuffling %i documents for random order" % len(self.documents))
+            logger.info("shuffling %i documents for random order" % len(self.documents))
             import random
             random.shuffle(self.documents)
         
-        logging.info("accepted total of %i articles for %s" % 
+        logger.info("accepted total of %i articles for %s" % 
                      (len(self.documents), str(config)))
 
     
     def saveDictionary(self, fname):
-        logging.info("saving dictionary mapping to %s" % fname)
+        logger.info("saving dictionary mapping to %s" % fname)
         fout = open(fname, 'w')
         for tokenId, token in self.dictionary.id2token.iteritems():
             fout.write("%i\t%s\n" % (tokenId, token))
@@ -184,7 +188,7 @@ class DmlCorpus(interfaces.CorpusABC):
         return result
     
     def saveDocuments(self, fname):
-        logging.info("saving documents mapping to %s" % fname)
+        logger.info("saving documents mapping to %s" % fname)
         fout = open(fname, 'w')
         for docNo, docId in enumerate(self.documents):
             sourceId, docUri = docId

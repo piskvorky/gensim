@@ -15,6 +15,10 @@ import logging
 from gensim import interfaces
 
 
+logger = logging.getLogger('gensim.corpora.svmlightcorpus')
+logger.setLevel(logging.INFO)
+
+
 class SvmLightCorpus(interfaces.CorpusABC):
     """
     Corpus in SVMlight format.
@@ -42,7 +46,7 @@ class SvmLightCorpus(interfaces.CorpusABC):
         """
         Initialize the corpus from a file.
         """
-        logging.info("loading corpus from %s" % fname)
+        logger.info("loading corpus from %s" % fname)
         
         self.fname = fname # input file, see class doc for format
         self.length = None
@@ -50,7 +54,7 @@ class SvmLightCorpus(interfaces.CorpusABC):
     
     def __len__(self):
         if self.length is None:
-            logging.info("caching corpus length")
+            logger.info("caching corpus length")
             self.length = sum(1 for doc in self)
         return self.length
 
@@ -79,7 +83,7 @@ class SvmLightCorpus(interfaces.CorpusABC):
         
         The SVMlight `<target>` class tag is set to 0 for all documents.
         """
-        logging.info("converting corpus to SVMlight format: %s" % fname)
+        logger.info("converting corpus to SVMlight format: %s" % fname)
         fout = open(fname, 'w')
         for doc in corpus:
             pairs = ' '.join("%i:%s" % (termId + 1, termVal) for termId, termVal  in doc) # +1 to convert 0-base to 1-base

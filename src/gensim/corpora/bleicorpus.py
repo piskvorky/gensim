@@ -15,6 +15,10 @@ import logging
 from gensim import interfaces, utils
 
 
+logger = logging.getLogger('gensim.corpora.bleicorpus')
+logger.setLevel(logging.INFO)
+
+
 class BleiCorpus(interfaces.CorpusABC):
     """
     Corpus in Blei's LDA-C format.
@@ -37,7 +41,7 @@ class BleiCorpus(interfaces.CorpusABC):
         `fnameVocab` is the file with vocabulary; if not specified, it defaults to
         `fname.vocab`.
         """
-        logging.info("loading corpus from %s" % fname)
+        logger.info("loading corpus from %s" % fname)
         
         if fnameVocab is None:
             fnameVocab = fname + '.vocab'
@@ -50,7 +54,7 @@ class BleiCorpus(interfaces.CorpusABC):
     
     def __len__(self):
         if self.length is None:
-            logging.info("caching corpus length")
+            logger.info("caching corpus length")
             self.length = sum(1 for doc in self)
         return self.length
 
@@ -78,13 +82,13 @@ class BleiCorpus(interfaces.CorpusABC):
         `fname.vocab` is the vocabulary file.
         """
         if id2word is None:
-            logging.info("no word id mapping provided; initializing from corpus")
+            logger.info("no word id mapping provided; initializing from corpus")
             id2word = utils.dictFromCorpus(corpus)
             numTerms = len(id2word)
         else:
             numTerms = 1 + max([-1] + id2word.keys())
         
-        logging.info("storing corpus in Blei's LDA-C format: %s" % fname)
+        logger.info("storing corpus in Blei's LDA-C format: %s" % fname)
         fout = open(fname, 'w')
         for doc in corpus:
             doc = list(doc)
@@ -93,7 +97,7 @@ class BleiCorpus(interfaces.CorpusABC):
         
         # write out vocabulary, in a format compatible with Blei's topics.py script
         fnameVocab = fname + '.vocab'
-        logging.info("saving vocabulary of %i words to %s" % (numTerms, fnameVocab))
+        logger.info("saving vocabulary of %i words to %s" % (numTerms, fnameVocab))
         fout = open(fnameVocab, 'w')
         for featureId in xrange(numTerms):
             fout.write("%s\n" % utils.toUtf8(id2word.get(featureId, '---')))

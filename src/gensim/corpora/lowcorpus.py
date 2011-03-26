@@ -15,6 +15,9 @@ import logging
 from gensim import interfaces, utils
 
 
+logger = logging.getLogger('gensim.corpora.lowcorpus')
+logger.setLevel(logging.INFO)
+
 
 def splitOnSpace(s):
     return s.strip().split(' ')
@@ -57,7 +60,7 @@ class LowCorpus(interfaces.CorpusABC):
         `line2words` is a function which converts lines into tokens. Defaults to 
         simple splitting on spaces.
         """
-        logging.info("loading corpus from %s" % fname)
+        logger.info("loading corpus from %s" % fname)
         
         self.fname = fname # input file, see class doc for format
         self.line2words = line2words # how to translate lines into words (simply split on space by default)
@@ -65,7 +68,7 @@ class LowCorpus(interfaces.CorpusABC):
         
         if not id2word:
             # build a list of all word types in the corpus (distinct words)
-            logging.info("extracting vocabulary from the corpus")
+            logger.info("extracting vocabulary from the corpus")
             allTerms = set()
             self.useWordIds = False # return documents as (word, wordCount) 2-tuples
             for doc in self:
@@ -73,13 +76,13 @@ class LowCorpus(interfaces.CorpusABC):
             allTerms = sorted(allTerms) # sort the list of all words; rank in that list = word's integer id
             self.id2word = dict(zip(xrange(len(allTerms)), allTerms)) # build a mapping of word id(int) -> word (string)
         else:
-            logging.info("using provided word mapping (%i ids)" % len(id2word))
+            logger.info("using provided word mapping (%i ids)" % len(id2word))
             self.id2word = id2word
         self.word2id = dict((v, k) for k, v in self.id2word.iteritems())
         self.numTerms = len(self.word2id)
         self.useWordIds = True # return documents as (wordIndex, wordCount) 2-tuples
         
-        logging.info("loaded corpus with %i documents and %i terms from %s" % 
+        logger.info("loaded corpus with %i documents and %i terms from %s" % 
                      (self.numDocs, self.numTerms, fname))
 
     
@@ -128,10 +131,10 @@ class LowCorpus(interfaces.CorpusABC):
         Save a corpus in the List-of-words format.
         """
         if id2word is None:
-            logging.info("no word id mapping provided; initializing from corpus")
+            logger.info("no word id mapping provided; initializing from corpus")
             id2word = utils.dictFromCorpus(corpus)
         
-        logging.info("storing corpus in List-Of-Words format: %s" % fname)
+        logger.info("storing corpus in List-Of-Words format: %s" % fname)
         truncated = 0
         fout = open(fname, 'w')
         fout.write('%i\n' % len(corpus))
@@ -145,7 +148,7 @@ class LowCorpus(interfaces.CorpusABC):
         fout.close()
         
         if truncated:
-            logging.warning("List-of-words format can only save vectors with "
+            logger.warning("List-of-words format can only save vectors with "
                             "integer elements; %i float entries were truncated to integer value" %
                             truncated)
 #endclass LowCorpus

@@ -14,6 +14,11 @@ is provided in the interface itself, so that the interfaces can be subclassed).
 from __future__ import with_statement
 
 import utils, matutils
+import logging
+
+
+logger = logging.getLogger('gensim.interfaces')
+logger.setLevel(logging.INFO)
 
 
 class CorpusABC(utils.SaveLoad):
@@ -48,7 +53,7 @@ class CorpusABC(utils.SaveLoad):
         This method is just the least common denominator and should really be 
         overridden when possible.
         """
-        logging.warning("performing full corpus scan to determine its length; was this intended?")
+        logger.warning("performing full corpus scan to determine its length; was this intended?")
         return sum(1 for doc in self) # sum(empty generator) == 0, so this works even for an empty corpus
 
     @staticmethod
@@ -59,7 +64,7 @@ class CorpusABC(utils.SaveLoad):
         raise NotImplementedError('cannot instantiate abstract base class')
     
         # example code:
-        logging.info("converting corpus to ??? format: %s" % fname)
+        logger.info("converting corpus to ??? format: %s" % fname)
         with open(fname, 'w') as fout:
             for doc in corpus: # iterate over the document stream
                 fmt = str(doc) # format the document appropriately...
