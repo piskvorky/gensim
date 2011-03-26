@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>corpora.dmlcorpus – Corpus in DML-CZ format &mdash; gensim documentation</title>
+    <title>corpora.dmlcorpus – Corpus in DML-CZ format &mdash; gensim</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.7.7',
+        VERSION:     '0.7.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,11 +22,15 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="gensim documentation" href="../index.html" />
+    <link rel="top" title="gensim" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
     <link rel="next" title="corpora.lowcorpus – Corpus in List-of-Words format" href="lowcorpus.html" />
     <link rel="prev" title="corpora.dictionary – Construct word&lt;-&gt;id mappings" href="dictionary.html" />
+<!-- twitter search widget
     <script type="text/javascript" src="_static/widget.js"></script>
+-->
+<meta property="og:title" content="#gensim" />
+<meta property="og:description" content="Efficient topic modelling in Python" />
 
   </head>
   <body>
@@ -85,7 +89,7 @@
         </div>
       </div>
     
-    
+
 
 
     <div class="document">
@@ -99,13 +103,13 @@
 <dl class="class">
 <dt id="gensim.corpora.dmlcorpus.DmlConfig">
 <em class="property">class </em><tt class="descclassname">gensim.corpora.dmlcorpus.</tt><tt class="descname">DmlConfig</tt><big>(</big><em>configId</em>, <em>resultDir</em>, <em>acceptLangs=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.dmlcorpus.DmlConfig" title="Permalink to this definition">¶</a></dt>
-<dd><p>DmlConfig contains parameters necessary for the abstraction of a &#8216;corpus of 
+<dd><p>DmlConfig contains parameters necessary for the abstraction of a &#8216;corpus of
 articles&#8217; (see the <cite>DmlCorpus</cite> class).</p>
 <p>Articles may come from different sources (=different locations on disk/netword,
 different file formats etc.), so the main purpose of DmlConfig is to keep all
 sources in one place.</p>
 <p>Apart from glueing sources together, DmlConfig also decides where to store
-output files and which articles to accept for the corpus (= an additional filter 
+output files and which articles to accept for the corpus (= an additional filter
 over the sources).</p>
 </dd></dl>
 
@@ -113,10 +117,10 @@ over the sources).</p>
 <dt id="gensim.corpora.dmlcorpus.DmlCorpus">
 <em class="property">class </em><tt class="descclassname">gensim.corpora.dmlcorpus.</tt><tt class="descname">DmlCorpus</tt><a class="headerlink" href="#gensim.corpora.dmlcorpus.DmlCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>DmlCorpus implements a collection of articles. It is initialized via a DmlConfig
-object, which holds information about where to look for the articles and how 
+object, which holds information about where to look for the articles and how
 to process them.</p>
 <p>Apart from being a regular corpus (bag-of-words iterable with a <cite>len()</cite> method),
-DmlCorpus has methods for building a dictionary (mapping between words and 
+DmlCorpus has methods for building a dictionary (mapping between words and
 their ids).</p>
 <dl class="method">
 <dt id="gensim.corpora.dmlcorpus.DmlCorpus.articleDir">
@@ -129,7 +133,7 @@ their ids).</p>
 <tt class="descname">buildDictionary</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.corpora.dmlcorpus.DmlCorpus.buildDictionary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Populate dictionary mapping and statistics.</p>
 <p>This is done by sequentially retrieving the article fulltexts, splitting
-them into tokens and converting tokens to their ids (creating new ids as 
+them into tokens and converting tokens to their ids (creating new ids as
 necessary).</p>
 </dd></dl>
 
@@ -149,10 +153,10 @@ necessary).</p>
 <dt id="gensim.corpora.dmlcorpus.DmlCorpus.processConfig">
 <tt class="descname">processConfig</tt><big>(</big><em>config</em>, <em>shuffle=False</em><big>)</big><a class="headerlink" href="#gensim.corpora.dmlcorpus.DmlCorpus.processConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse the directories specified in the config, looking for suitable articles.</p>
-<p>This updates the self.documents var, which keeps a list of (source id, 
+<p>This updates the self.documents var, which keeps a list of (source id,
 article uri) 2-tuples. Each tuple is a unique identifier of one article.</p>
-<p>Note that some articles are ignored based on config settings (for example 
-if the article&#8217;s language doesn&#8217;t match any language specified in the 
+<p>Note that some articles are ignored based on config settings (for example
+if the article&#8217;s language doesn&#8217;t match any language specified in the
 config etc.).</p>
 </dd></dl>
 
@@ -178,7 +182,20 @@ config etc.).</p>
 <dl class="staticmethod">
 <dt id="gensim.corpora.dmlcorpus.DmlCorpus.saveCorpus">
 <em class="property">static </em><tt class="descname">saveCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.dmlcorpus.DmlCorpus.saveCorpus" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save an existing <cite>corpus</cite> in the particular format of this class.</p>
+<dd><p>Save an existing <cite>corpus</cite> to disk.</p>
+<p>Some formats also support saving the dictionary (<cite>feature_id-&gt;word</cite> mapping),
+which can in this case be provided by the optional <cite>id2word</cite> parameter.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;file.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Some corpora also support an index of where each document begins, so
+that the documents on disk can be accessed in O(1) time (see the 
+<cite>corpora.IndexedCorpus</cite> base class). In this case, <cite>saveCorpus</cite> is automatically
+called internally by <cite>serialize</cite>, which does <cite>saveCorpus</cite> plus saves the index
+at the same time, so you want to store the corpus with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;file.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span> <span class="c"># stores index as well, allowing random access to individual documents</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -219,7 +236,7 @@ config etc.).</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 13, 2011.
+      Last updated on Mar 26, 2011.
     </div>
   </body>
 </html>

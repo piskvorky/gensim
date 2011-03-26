@@ -3,4 +3,5 @@ Changes for future releases:
 
 * add word-word similarities (in addition to the document-document already in gensim)
 * add GUI (web browser-based) to distributed computing -- manage active nodes, status, node load, failures, etc.
+  * or better yet, integrate some **sane** higher-level framework for distrib. comp., don't re-invent the wheel
 * more extensive unit testing

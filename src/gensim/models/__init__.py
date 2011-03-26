@@ -1,5 +1,5 @@
 """
-This package contains algorithms for extracting document representations from their raw 
+This package contains algorithms for extracting document representations from their raw
 bag-of-word counts.
 """
 
@@ -8,3 +8,4 @@ from ldamodel import LdaModel
 from lsimodel import LsiModel
 from tfidfmodel import TfidfModel
 from rpmodel import RpModel
+from logentropy_model import LogEntropyModel

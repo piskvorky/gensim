@@ -11,7 +11,7 @@ Distributed Latent Semantic Analysis
 Setting up the cluster
 _______________________
 
-We will show how to run distributed Latent Semantic Analysis by means of an example. 
+We will show how to run distributed Latent Semantic Analysis by means of an example.
 Let's say we have 5 computers at our disposal, all in the same broadcast domain.
 To start with, install `gensim` and `Pyro` on each one of them with::
 
@@ -21,41 +21,41 @@ and run Pyro's name server on exactly *one* of the machines (doesn't matter whic
 
   $ python -m Pyro.naming &
 
-Let's say our example cluster consists of dual-core computers with loads of 
-memory. We will therefore run **two** worker scripts on four of the physical machines, 
+Let's say our example cluster consists of dual-core computers with loads of
+memory. We will therefore run **two** worker scripts on four of the physical machines,
 creating **eight** logical worker nodes::
 
   $ python -m gensim.models.lsi_worker &
 
 This will execute `gensim`'s `lsi_worker.py` script (to be run twice on each of the
 four computer).
-This lets `gensim` know that it can run two jobs on each of the four computers in 
-parallel, so that the computation will be done faster, while also taking up twice 
+This lets `gensim` know that it can run two jobs on each of the four computers in
+parallel, so that the computation will be done faster, while also taking up twice
 as much memory on each machine.
 
-Next, pick one computer that will be a job scheduler in charge of worker 
-synchronization, and on it, run `LSA dispatcher`. In our example, we will use the 
+Next, pick one computer that will be a job scheduler in charge of worker
+synchronization, and on it, run `LSA dispatcher`. In our example, we will use the
 fifth computer to act as the dispatcher and from there run::
 
   $ python -m gensim.models.lsi_dispatcher &
 
-In general, the dispatcher can be run on the same machine as one of the worker nodes, or it 
+In general, the dispatcher can be run on the same machine as one of the worker nodes, or it
 can be another, distinct computer within the same broadcast domain. The dispatcher
 won't be  doing much with CPU most of the time, but pick a computer with ample memory.
 
 And that's it! The cluster is set up and running, ready to accept jobs. To remove
 a worker later on, simply terminate its `lsi_worker` process. To add another worker, run another
 `lsi_worker` (this will not affect a computation that is already running). If you terminate
-`lsi_dispatcher`, you won't be able to run computations until you run it again 
+`lsi_dispatcher`, you won't be able to run computations until you run it again
 (surviving workers can be re-used though).
 
 
 Running LSA
 ____________
 
-So let's test our setup and run one computation of distributed LSA. Open a Python 
+So let's test our setup and run one computation of distributed LSA. Open a Python
 shell on one of the five machines (again, this can be done on any computer
-in the same `broadcast domain <http://en.wikipedia.org/wiki/Broadcast_domain>`_, 
+in the same `broadcast domain <http://en.wikipedia.org/wiki/Broadcast_domain>`_,
 our choice is incidental) and try::
 
     >>> from gensim import corpora, models, utils
@@ -63,7 +63,7 @@ our choice is incidental) and try::
     >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
     >>> corpus = corpora.MmCorpus('/tmp/deerwester.mm') # load a corpus of nine documents, from the Tutorials
-    >>> id2word = corpora.Dictionary.load('/tmp/deerwester.dict').id2token
+    >>> id2word = corpora.Dictionary.load('/tmp/deerwester.dict')
 
     >>> lsi = models.LsiModel(corpus, id2word=id2word, numTopics=200, chunks=1, distributed=True) # run distributed LSA on nine documents
 
@@ -81,13 +81,13 @@ To check the LSA results, let's print the first two latent topics::
     topic #1(2.542): -0.623*"graph" + -0.490*"trees" + -0.451*"minors" + -0.274*"survey" + 0.167*"system"
 
 Success! But a corpus of nine documents is no challenge for our powerful cluster...
-In fact, we had to lower the job size (`chunks` parameter above) to a single document 
+In fact, we had to lower the job size (`chunks` parameter above) to a single document
 at a time, otherwise all documents would be processed by a single worker all at once.
 
 So let's run LSA on **one million documents** instead::
 
     >>> # inflate the corpus to 1M documents, by repeating its documents over&over
-    >>> corpus1m = utils.RepeatCorpus(corpus, 1000000) 
+    >>> corpus1m = utils.RepeatCorpus(corpus, 1000000)
     >>> # run distributed LSA on 1 million documents
     >>> lsi1m = models.LsiModel(corpus1m, id2word=id2word, numTopics=200, chunks=10000, distributed=True)
 
@@ -115,14 +115,14 @@ Latent Semantic Analysis on the English Wikipedia.
 Distributed LSA on Wikipedia
 ++++++++++++++++++++++++++++++
 
-First, download and prepare the Wikipedia corpus as per :doc:`wiki`, then load 
+First, download and prepare the Wikipedia corpus as per :doc:`wiki`, then load
 the corpus iterator with::
- 
+
     >>> import logging, gensim, bz2
     >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level logging.INFO)
-    
+
     >>> # load id->word mapping (the dictionary)
-    >>> id2word = gensim.corpora.wikicorpus.WikiCorpus.loadDictionary('wiki_en_wordids.txt')
+    >>> id2word = gensim.corpora.Dictionary.loadFromText('wiki_en_wordids.txt')
     >>> # load corpus iterator
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
     >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output
@@ -134,7 +134,7 @@ Now we're ready to run distributed LSA on the English Wikipedia::
 
     >>> # extract 400 LSI topics, using a cluster of nodes
     >>> lsi = gensim.models.lsimodel.LsiModel(corpus=mm, id2word=id2word, numTopics=400, chunks=20000, distributed=True)
-    
+
     >>> # print the most contributing words (both positively and negatively) for each of the first ten topics
     >>> lsi.printTopics(10)
     2010-11-03 16:08:27,602 : INFO : topic #0(200.990): -0.475*"delete" + -0.383*"deletion" + -0.275*"debate" + -0.223*"comments" + -0.220*"edits" + -0.213*"modify" + -0.208*"appropriate" + -0.194*"subsequent" + -0.155*"wp" + -0.117*"notability"
@@ -148,10 +148,10 @@ Now we're ready to run distributed LSA on the English Wikipedia::
     2010-11-03 16:08:27,807 : INFO : topic #8(78.981): 0.588*"film" + 0.460*"films" + -0.130*"album" + -0.127*"station" + 0.121*"television" + 0.115*"poster" + 0.112*"directed" + 0.110*"actors" + -0.096*"railway" + 0.086*"movie"
     2010-11-03 16:08:27,834 : INFO : topic #9(78.620): 0.502*"kategori" + 0.282*"categoria" + 0.248*"kategorija" + 0.234*"kategorie" + 0.172*"категория" + 0.165*"categoría" + 0.161*"kategoria" + 0.148*"categorie" + 0.126*"kategória" + 0.121*"catégorie"
 
-In serial mode, creating the LSI model of Wikipedia with this **one-pass algorithm** 
-takes about 5.25h on my laptop (OS X, C2D 2.53GHz, 4GB RAM with `libVec`). 
-In distributed mode with four workers (Linux, dual-core Xeons of 2Ghz, 4GB RAM 
-with `ATLAS`), the wallclock time taken drops to 1 hour and 41 minutes. You can 
-read more about various internal settings and experiments in my `research 
+In serial mode, creating the LSI model of Wikipedia with this **one-pass algorithm**
+takes about 5.25h on my laptop (OS X, C2D 2.53GHz, 4GB RAM with `libVec`).
+In distributed mode with four workers (Linux, dual-core Xeons of 2Ghz, 4GB RAM
+with `ATLAS`), the wallclock time taken drops to 1 hour and 41 minutes. You can
+read more about various internal settings and experiments in my `research
 paper <http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_.
 

@@ -1,0 +1,218 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>corpora.textcorpus – Building corpora with dictionaries &mdash; gensim</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="gensim" href="../index.html" />
+    <link rel="up" title="API Reference" href="../apiref.html" />
+    <link rel="next" title="corpora.indexedcorpus – Random access to corpus documents" href="indexedcorpus.html" />
+    <link rel="prev" title="corpora.wikicorpus – Corpus from a Wikipedia dump" href="wikicorpus.html" />
+<!-- twitter search widget
+    <script type="text/javascript" src="_static/widget.js"></script>
+-->
+<meta property="og:title" content="#gensim" />
+<meta property="og:description" content="Efficient topic modelling in Python" />
+
+  </head>
+  <body>
+<!--
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../index.html"><img src="../_static/logo.png" border="0" alt="gensim logo"/></a>
+</div>
+--!>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="indexedcorpus.html" title="corpora.indexedcorpus – Random access to corpus documents"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="wikicorpus.html" title="corpora.wikicorpus – Corpus from a Wikipedia dump"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
+       <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
+
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+    
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="wikicorpus.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">corpora.wikicorpus</span></tt> &#8211; Corpus from a Wikipedia dump</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="indexedcorpus.html"
+                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">corpora.indexedcorpus</span></tt> &#8211; Random access to corpus documents</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+    
+
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-gensim.corpora.textcorpus">
+<span id="corpora-textcorpus-building-corpora-with-dictionaries"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">corpora.textcorpus</span></tt> &#8211; Building corpora with dictionaries<a class="headerlink" href="#module-gensim.corpora.textcorpus" title="Permalink to this headline">¶</a></h1>
+<p>Text corpora usually reside on disk, as text files in one format or another
+In a common scenario, we need to build a dictionary (a <cite>word-&gt;integer id</cite>
+mapping), which is then used to construct sparse bag-of-word vectors
+(= sequences of <cite>(word_id, word_weight)</cite> 2-tuples).</p>
+<p>This module provides some code scaffolding to simplify this pipeline. For
+example, given a corpus where each document is a separate line in file on disk, 
+you would override the <cite>TextCorpus.get_texts</cite> method to read one line=document 
+at a time, process it (lowercase, tokenize, whatever) and yield it as a sequence 
+of words.</p>
+<p>Overriding <cite>get_texts</cite> is enough; you can then initialize the corpus with e.g.
+<cite>MyTextCorpus(bz2.BZ2File(&#8216;mycorpus.txt.bz2&#8217;))</cite> and it will behave correctly like a
+corpus of sparse vectors. The <cite>__iter__</cite> methods is automatically set up, and 
+dictionary is automatically populated with all <cite>word-&gt;id</cite> mappings.</p>
+<p>The resulting object can be used as input to all gensim models (TFIDF, LSI, ...),
+serialized with any format (Matrix Market, SvmLight, Blei&#8217;s LDA-C format etc).</p>
+<p>See the <cite>gensim.test.test_miislita.CorpusMiislita</cite> class for a simple example.</p>
+<dl class="class">
+<dt id="gensim.corpora.textcorpus.TextCorpus">
+<em class="property">class </em><tt class="descclassname">gensim.corpora.textcorpus.</tt><tt class="descname">TextCorpus</tt><big>(</big><em>input=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.textcorpus.TextCorpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper class to simplify the pipeline of getting bag-of-words vectors (= a
+gensim corpus) from plain text.</p>
+<p>This is an abstract base class: override the <cite>get_texts()</cite> method to match
+your particular input.</p>
+<p>Given a filename (or a file-like object) in constructor, the corpus object
+will be automatically initialized with a dictionary in <cite>self.dictionary</cite> and 
+will support the <cite>iter</cite> corpus method. You must only provide a correct <cite>get_texts</cite>
+implementation (and perhaps the <cite>__len__</cite> method to determine corpus length).</p>
+<dl class="method">
+<dt id="gensim.corpora.textcorpus.TextCorpus.get_texts">
+<tt class="descname">get_texts</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.corpora.textcorpus.TextCorpus.get_texts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over the collection, yielding one document at a time. A document
+is a sequence of words (strings) that can be fed into <cite>Dictionary.doc2bow</cite>.</p>
+<p>Override this function to match your input (parse input files, do any
+text preprocessing, lowercasing, tokenizing etc.). There will be no further
+preprocessing of the words coming out of this function.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="gensim.corpora.textcorpus.TextCorpus.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.textcorpus.TextCorpus.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.textcorpus.TextCorpus.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.textcorpus.TextCorpus.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="gensim.corpora.textcorpus.TextCorpus.saveCorpus">
+<em class="property">static </em><tt class="descname">saveCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.textcorpus.TextCorpus.saveCorpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save an existing <cite>corpus</cite> to disk.</p>
+<p>Some formats also support saving the dictionary (<cite>feature_id-&gt;word</cite> mapping),
+which can in this case be provided by the optional <cite>id2word</cite> parameter.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;file.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Some corpora also support an index of where each document begins, so
+that the documents on disk can be accessed in O(1) time (see the 
+<cite>corpora.IndexedCorpus</cite> base class). In this case, <cite>saveCorpus</cite> is automatically
+called internally by <cite>serialize</cite>, which does <cite>saveCorpus</cite> plus saves the index
+at the same time, so you want to store the corpus with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;file.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span> <span class="c"># stores index as well, allowing random access to individual documents</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.corpora.textcorpus.getstream">
+<tt class="descclassname">gensim.corpora.textcorpus.</tt><tt class="descname">getstream</tt><big>(</big><em>input</em><big>)</big><a class="headerlink" href="#gensim.corpora.textcorpus.getstream" title="Permalink to this definition">¶</a></dt>
+<dd><p>If input is a filename (string), return <cite>open(input)</cite>.
+If input is a file-like object, reset it to the beginning with <cite>input.seek(0)</cite>.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="indexedcorpus.html" title="corpora.indexedcorpus – Random access to corpus documents"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="wikicorpus.html" title="corpora.wikicorpus – Corpus from a Wikipedia dump"
+             >previous</a> |</li>
+        <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
+       <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
+
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    
+    
+
+    <div class="footer">
+        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Mar 26, 2011.
+    </div>
+  </body>
+</html>

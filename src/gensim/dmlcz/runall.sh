@@ -9,9 +9,9 @@ RESULT_PATH=~/xrehurek/results
 # set python path, so that python can find and import gensim modules
 export PYTHONPATH=~/xrehurek:$PYTHONPATH
 
-# Language is set to 'any', meaning all articles are processed for similarity in 
+# Language is set to 'any', meaning all articles are processed for similarity in
 # one go, regardless of their language.
-# Set language to 'eng', 'fre', 'rus' etc. to only process a specific subset of 
+# Set language to 'eng', 'fre', 'rus' etc. to only process a specific subset of
 # articles (an article's language is determined from its metadata).
 language=any
 
@@ -32,7 +32,7 @@ ${BIN_PATH}/gensim_genmodel.py $language $method 2>&1 | tee ${RESULT_PATH}/gensi
 
 
 # =========== generate output xml files ========================================
-# generate xml files for all methods at once, in parallel, to save time. 
+# generate xml files for all methods at once, in parallel, to save time.
 # NOTE if out of memory, move tfidf out of the loop (tfidf uses a lot of memory here)
 for method in tfidf lsi rp;
 do

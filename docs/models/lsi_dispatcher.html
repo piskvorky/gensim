@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>models.lsi_dispatcher – Dispatcher for distributed LSI &mdash; gensim documentation</title>
+    <title>models.lsi_dispatcher – Dispatcher for distributed LSI &mdash; gensim</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.7.7',
+        VERSION:     '0.7.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,11 +22,15 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="gensim documentation" href="../index.html" />
+    <link rel="top" title="gensim" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
     <link rel="next" title="models.lsi_worker – Worker for distributed LSI" href="lsi_worker.html" />
-    <link rel="prev" title="models.rpmodel – Random Projections" href="rpmodel.html" />
+    <link rel="prev" title="models.logentropy_model – LogEntropy model" href="logentropy_model.html" />
+<!-- twitter search widget
     <script type="text/javascript" src="_static/widget.js"></script>
+-->
+<meta property="og:title" content="#gensim" />
+<meta property="og:description" content="Efficient topic modelling in Python" />
 
   </head>
   <body>
@@ -49,7 +53,7 @@
           <a href="lsi_worker.html" title="models.lsi_worker – Worker for distributed LSI"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="rpmodel.html" title="models.rpmodel – Random Projections"
+          <a href="logentropy_model.html" title="models.logentropy_model – LogEntropy model"
              accesskey="P">previous</a> |</li>
         <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
@@ -64,8 +68,8 @@
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="rpmodel.html"
-                        title="previous chapter"><tt class="docutils literal"><span class="pre">models.rpmodel</span></tt> &#8211; Random Projections</a></p>
+  <p class="topless"><a href="logentropy_model.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">models.logentropy_model</span></tt> &#8211; LogEntropy model</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="lsi_worker.html"
                         title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">models.lsi_worker</span></tt> &#8211; Worker for distributed LSI</a></p>
@@ -85,7 +89,7 @@
         </div>
       </div>
     
-    
+
 
 
     <div class="document">
@@ -134,7 +138,7 @@ handed all the way down to worker.initialize()).</p>
 <dl class="method">
 <dt id="gensim.models.lsi_dispatcher.Dispatcher.jobdone">
 <tt class="descname">jobdone</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.models.lsi_dispatcher.Dispatcher.jobdone" title="Permalink to this definition">¶</a></dt>
-<dd><p>A worker has finished its job. Log this event and then asynchronously 
+<dd><p>A worker has finished its job. Log this event and then asynchronously
 transfer control back to the worker.</p>
 <p>In this way, control flow basically oscillates between dispatcher.jobdone()
 worker.requestjob().</p>
@@ -170,7 +174,7 @@ worker.requestjob().</p>
           <a href="lsi_worker.html" title="models.lsi_worker – Worker for distributed LSI"
              >next</a> |</li>
         <li class="right" >
-          <a href="rpmodel.html" title="models.rpmodel – Random Projections"
+          <a href="logentropy_model.html" title="models.logentropy_model – LogEntropy model"
              >previous</a> |</li>
         <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
@@ -184,7 +188,7 @@ worker.requestjob().</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 13, 2011.
+      Last updated on Mar 26, 2011.
     </div>
   </body>
 </html>

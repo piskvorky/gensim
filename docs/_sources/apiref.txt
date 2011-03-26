@@ -18,14 +18,16 @@ Modules:
     corpora/mmcorpus
     corpora/svmlightcorpus
     corpora/wikicorpus
+    corpora/textcorpus
+    corpora/indexedcorpus
     models/ldamodel
     models/lsimodel
     models/tfidfmodel
     models/rpmodel
+    models/logentropy_model
     models/lsi_dispatcher
     models/lsi_worker
     models/lda_dispatcher
     models/lda_worker
     similarities/docsim
 
- 

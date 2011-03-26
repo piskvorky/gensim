@@ -1,4 +1,4 @@
-:mod:`utils` -- Various utility functions 
+:mod:`utils` -- Various utility functions
 ==========================================
 
 .. automodule:: gensim.utils

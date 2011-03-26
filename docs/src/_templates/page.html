@@ -1,7 +1,11 @@
 {% extends "!page.html" %}
 
 {% block extrahead %}
+<!-- twitter search widget
     <script type="text/javascript" src="_static/widget.js"></script>
+-->
+<meta property="og:title" content="#gensim" />
+<meta property="og:description" content="Efficient topic modelling in Python" />
 {% endblock %}
 
 
@@ -11,15 +15,15 @@
     {% if current_page_name == '_index' %}
       <div class="sphinxsidebarl">
         <div class="sphinxsidebarwrapper">
-        
+
 		<h3>Download</h3>
 		<p>Get <cite>gensim</cite> from the <a href="http://pypi.python.org/pypi/gensim">Python Package
 		Index</a> or install directly with:</p>
 		<pre>easy_install -U gensim</pre>
-		
+
 	    <div id="twtr-search-widget" style="margin:20px 0px">
 	    </div>
-	    
+
 	    <script>
 	    new TWTR.Widget({
 	      id: 'twtr-search-widget',
@@ -57,7 +61,7 @@
         </div>
         </div>
     {% endif %}
-    
+
 {% endblock %}
 
 {% block relbar2 %}

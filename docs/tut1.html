@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Corpora and Vector Spaces &mdash; gensim documentation</title>
+    <title>Corpora and Vector Spaces &mdash; gensim</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.7',
+        VERSION:     '0.7.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,11 +22,15 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="gensim documentation" href="index.html" />
-    <link rel="up" title="Tutorial" href="tutorial.html" />
+    <link rel="top" title="gensim" href="index.html" />
+    <link rel="up" title="Tutorials" href="tutorial.html" />
     <link rel="next" title="Topics and Transformations" href="tut2.html" />
-    <link rel="prev" title="Tutorial" href="tutorial.html" />
+    <link rel="prev" title="Tutorials" href="tutorial.html" />
+<!-- twitter search widget
     <script type="text/javascript" src="_static/widget.js"></script>
+-->
+<meta property="og:title" content="#gensim" />
+<meta property="og:description" content="Efficient topic modelling in Python" />
 
   </head>
   <body>
@@ -49,13 +53,13 @@
           <a href="tut2.html" title="Topics and Transformations"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="tutorial.html" title="Tutorial"
+          <a href="tutorial.html" title="Tutorials"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="tutorial.html" accesskey="U">Tutorial</a> &raquo;</li> 
+          <li><a href="tutorial.html" accesskey="U">Tutorials</a> &raquo;</li> 
       </ul>
     </div>
 
@@ -67,6 +71,7 @@
   <ul>
 <li><a class="reference internal" href="#">Corpora and Vector Spaces</a><ul>
 <li><a class="reference internal" href="#from-strings-to-vectors">From Strings to Vectors</a></li>
+<li><a class="reference internal" href="#corpus-streaming-one-document-at-a-time">Corpus Streaming &#8211; One Document at a Time</a></li>
 <li><a class="reference internal" href="#corpus-formats">Corpus Formats</a></li>
 </ul>
 </li>
@@ -74,7 +79,7 @@
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="tutorial.html"
-                        title="previous chapter">Tutorial</a></p>
+                        title="previous chapter">Tutorials</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="tut2.html"
                         title="next chapter">Topics and Transformations</a></p>
@@ -94,7 +99,7 @@
         </div>
       </div>
     
-    
+
 
 
     <div class="document">
@@ -199,7 +204,7 @@ and returns the result as a sparse vector. The sparse vector <tt class="docutils
 therefore reads: in the document <cite>&#8220;Human computer interaction&#8221;</cite>, the words <cite>computer</cite>
 (id 0) and <cite>human</cite> (id 1) appear once; the other ten dictionary words appear (implicitly) zero times.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[</span><span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">texts</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span> <span class="c"># store to disk, for later use</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span> <span class="c"># store to disk, for later use</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">corpus</span>
 <span class="go">[[(0, 1.0), (1, 1.0), (2, 1.0)],</span>
 <span class="go"> [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],</span>
@@ -216,6 +221,64 @@ therefore reads: in the document <cite>&#8220;Human computer interaction&#8221;<
 times does the word <cite>graph</cite> appear in the document?&#8221; and that the answer is &#8220;zero&#8221; for
 the first six documents and &#8220;one&#8221; for the remaining three. As a matter of fact,
 we have arrived at exactly the same corpus of vectors as in the <a class="reference internal" href="tutorial.html#first-example"><em>Quick Example</em></a>.</p>
+</div>
+<div class="section" id="corpus-streaming-one-document-at-a-time">
+<h2>Corpus Streaming &#8211; One Document at a Time<a class="headerlink" href="#corpus-streaming-one-document-at-a-time" title="Permalink to this headline">¶</a></h2>
+<p>Note that <cite>corpus</cite> above resides fully in memory, as a plain Python list.
+In this simple example, it doesn&#8217;t matter much, but just to make things clear,
+let&#8217;s assume there are millions of documents in the corpus. Storing all of them in RAM won&#8217;t do.
+Instead, the documents are stored in a file on disk, one document per line. Gensim
+only requires that a corpus must be able to return one document vector at a time:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyCorpus</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;mycorpus.txt&#39;</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="c"># assume there&#39;s one document per line, tokens separated by whitespace</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="k">yield</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Download the sample <a class="reference external" href="./mycorpus.txt">mycorpus.txt file here</a>. The assumption that
+each document occupies one line in a single file is not important; you can mold
+the <cite>__iter__</cite> function to fit your input format, whatever it is.
+Walking directories, parsing XML, accessing network...
+Just parse your input to retrieve a clean list of tokens in each document,
+then convert the tokens via a dictionary to their ids and yield the resulting sparse vector inside <cite>__iter__</cite>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus_memory_friendly</span> <span class="o">=</span> <span class="n">MyCorpus</span><span class="p">()</span> <span class="c"># doesn&#39;t load the corpus into memory!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">corpus_memory_friendly</span>
+<span class="go">&lt;__main__.MyCorpus object at 0x10d5690&gt;</span>
+</pre></div>
+</div>
+<p>Corpus is now an object. We didn&#8217;t define any way to print it, so print just outputs address
+of the object in memory. Not very useful. To see the constituent vectors, let&#8217;s
+iterate over the corpus and print each document vector (one at a time):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">corpus_memory_friendly</span><span class="p">:</span> <span class="c"># load one vector into memory at a time</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">print</span> <span class="n">vector</span>
+<span class="go">[(0, 1), (1, 1), (2, 1)]</span>
+<span class="go">[(0, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]</span>
+<span class="go">[(2, 1), (5, 1), (7, 1), (8, 1)]</span>
+<span class="go">[(1, 1), (5, 2), (8, 1)]</span>
+<span class="go">[(3, 1), (6, 1), (7, 1)]</span>
+<span class="go">[(9, 1)]</span>
+<span class="go">[(9, 1), (10, 1)]</span>
+<span class="go">[(9, 1), (10, 1), (11, 1)]</span>
+<span class="go">[(4, 1), (10, 1), (11, 1)]</span>
+</pre></div>
+</div>
+<p>Although the output is the same as for the plain Python list, the corpus is now much
+more memory friendly, because at most one vector resides in RAM at a time. Your
+corpus can now be as large as you want.</p>
+<p>Similarly, to construct the dictionary without loading all texts into memory:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># collect statistics about all tokens</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;mycorpus.txt&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># remove stop words and words that appear only once</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stop_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">dictionary</span><span class="o">.</span><span class="n">token2id</span><span class="p">[</span><span class="n">stopword</span><span class="p">]</span> <span class="k">for</span> <span class="n">stopword</span> <span class="ow">in</span> <span class="n">stoplist</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="k">if</span> <span class="n">stopword</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">token2id</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">once_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">tokenid</span> <span class="k">for</span> <span class="n">tokenid</span><span class="p">,</span> <span class="n">docfreq</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">dfs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">docfreq</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span><span class="o">.</span><span class="n">filterTokens</span><span class="p">(</span><span class="n">stop_ids</span> <span class="o">+</span> <span class="n">once_ids</span><span class="p">)</span> <span class="c"># remove stop words and words that appear only once</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span><span class="o">.</span><span class="n">compactify</span><span class="p">()</span> <span class="c"># remove gaps in id sequence after words that were removed</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">dictionary</span>
+<span class="go">Dictionary(12 unique tokens)</span>
+</pre></div>
+</div>
 <p>And that is all there is to it! At least as far as bag-of-words representation is concerned.
 Of course, what we do with such corpus is another question; it is not at all clear
 how counting the frequency of distinct words could be useful. As it turns out, it isn&#8217;t, and
@@ -226,7 +289,7 @@ briefly turn our attention to <em>corpus persistency</em>.</p>
 </div>
 <div class="section" id="corpus-formats">
 <span id="id2"></span><h2>Corpus Formats<a class="headerlink" href="#corpus-formats" title="Permalink to this headline">¶</a></h2>
-<p>There exist several file formats for storing a Vector Space corpus (~sequence of vectors) to disk.
+<p>There exist several file formats for serializing a Vector Space corpus (~sequence of vectors) to disk.
 <cite>Gensim</cite> implements them via the <em>streaming corpus interface</em> mentioned earlier:
 documents are read from (resp. stored to) disk in a lazy fashion, one document at
 a time, without the whole corpus being read into main memory at once.</p>
@@ -236,15 +299,15 @@ To save a corpus in the Matrix Market format:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># create a toy corpus of 2 documents, as a plain Python list</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span> <span class="p">[]]</span>  <span class="c"># make one document empty, for the heck of it</span>
 <span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Other formats include <a class="reference external" href="http://svmlight.joachims.org/">Joachim&#8217;s SVMlight format</a>,
 <a class="reference external" href="http://www.cs.princeton.edu/~blei/lda-c/">Blei&#8217;s LDA-C format</a> and
 <a class="reference external" href="http://gibbslda.sourceforge.net/">GibbsLDA++ format</a>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">SvmLightCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.svmlight&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">BleiCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.lda-c&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">LowCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.low&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">SvmLightCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.svmlight&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">BleiCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.lda-c&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">LowCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.low&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Conversely, to load a corpus iterator from a Matrix Market file:</p>
@@ -273,12 +336,12 @@ To save a corpus in the Matrix Market format:</p>
 <p>The second way is obviously more memory-friendly, but for testing and development
 purposes, nothing beats the simplicity of calling <tt class="docutils literal"><span class="pre">list(corpus)</span></tt>.</p>
 <p>To save the same Matrix Market document stream in Blei&#8217;s LDA-C format,</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">BleiCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.lda-c&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">BleiCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.lda-c&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>In this way, <cite>gensim</cite> can also be used as a memory-efficient <strong>I/O format conversion tool</strong>:
 just load a document stream using one format and immediately save it in another format.
-Adding new formats is dead easy, check out the <a class="reference external" href="http://my-trac.assembla.com/gensim/browser/trunk/src/gensim/corpora/svmlightcorpus.py">code for the SVMlight corpus</a> for an example.</p>
+Adding new formats is dead easy, check out the <a class="reference external" href="https://github.com/piskvorky/gensim/blob/master/src/gensim/corpora/svmlightcorpus.py">code for the SVMlight corpus</a> for an example.</p>
 <hr class="docutils" />
 <p>For a complete reference (Want to prune the dictionary to a smaller size?
 Convert between corpora and NumPy/SciPy arrays?), see the <a class="reference internal" href="apiref.html"><em>API documentation</em></a>.
@@ -313,13 +376,13 @@ Or continue to the next tutorial on <a class="reference internal" href="tut2.htm
           <a href="tut2.html" title="Topics and Transformations"
              >next</a> |</li>
         <li class="right" >
-          <a href="tutorial.html" title="Tutorial"
+          <a href="tutorial.html" title="Tutorials"
              >previous</a> |</li>
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="apiref.html">API reference</a>|&nbsp;</li>
        <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
 
-          <li><a href="tutorial.html" >Tutorial</a> &raquo;</li> 
+          <li><a href="tutorial.html" >Tutorials</a> &raquo;</li> 
       </ul>
     </div>
     
@@ -327,7 +390,7 @@ Or continue to the next tutorial on <a class="reference internal" href="tut2.htm
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 13, 2011.
+      Last updated on Mar 26, 2011.
     </div>
   </body>
 </html>

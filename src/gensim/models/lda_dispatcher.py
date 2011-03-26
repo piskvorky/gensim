@@ -29,9 +29,9 @@ logger.setLevel(logging.INFO)
 
 
 # How many jobs (=chunks of N documents) to keep "pre-fetched" in a queue?
-# A small number is usually enough, unless iteration over the corpus is very very 
-# slow (slower than the actual computation of LDA), in which case you can override 
-# this value from command line. ie. run "python ./lda_dispatcher.py 100" 
+# A small number is usually enough, unless iteration over the corpus is very very
+# slow (slower than the actual computation of LDA), in which case you can override
+# this value from command line. ie. run "python ./lda_dispatcher.py 100"
 MAX_JOBS_QUEUE = 10
 
 # timeout for the Queue object put/get blocking methods.
@@ -44,10 +44,10 @@ HUGE_TIMEOUT = 365 * 24 * 60 * 60 # one year
 class Dispatcher(object):
     """
     Dispatcher object that communicates and coordinates individual workers.
-    
+
     There should never be more than one dispatcher running at any one time.
     """
-    
+
     def __init__(self, maxsize = MAX_JOBS_QUEUE):
         """
         Note that the constructor does not fully initialize the dispatcher;
@@ -55,8 +55,8 @@ class Dispatcher(object):
         """
         self.maxsize = maxsize
         self.callback = None # a pyro proxy to this object (unknown at init time, but will be set later)
-    
-    
+
+
     def initialize(self, **model_params):
         """
         `model_params` are parameters used to initialize individual workers (gets
@@ -64,7 +64,7 @@ class Dispatcher(object):
         """
         self.jobs = Queue(maxsize = self.maxsize)
         self.lock_update = threading.Lock()
-        self.callback._pyroOneway.add("jobdone") # make sure workers transfer control back to dispatcher asynchronously        
+        self.callback._pyroOneway.add("jobdone") # make sure workers transfer control back to dispatcher asynchronously
         self._jobsdone = 0
         self._jobsreceived = 0
 
@@ -86,7 +86,7 @@ class Dispatcher(object):
                 except Pyro.errors.PyroError, err:
                     logger.warning("unresponsive worker at %s, deleting it from the name server" % uri)
                     ns.remove(name)
-        
+
         if len(self.workers) == 0:
             raise RuntimeError('no workers found; run some lda_worker scripts on your machines first!')
 
@@ -110,7 +110,7 @@ class Dispatcher(object):
         self.jobs.put(job, block = True, timeout = HUGE_TIMEOUT)
         logger.info("added a new job (len(queue)=%i items)" % self.jobs.qsize())
 
-    
+
     def getstate(self):
         """
         Merge states from across all workers and return the result.
@@ -118,18 +118,18 @@ class Dispatcher(object):
         logger.info("end of input, assigning all remaining jobs")
         while self._jobsdone < self._jobsreceived:
             time.sleep(0.5) # check every half a second
-        
+
         logger.info("merging states from %i workers" % len(self.workers))
         workers = self.workers.items()
         result = workers[0][1].getstate()
         for workerid, worker in workers[1:]:
             result.merge(worker.getstate())
             logger.info("pulled state from worker %s" % workerid)
-        
+
         logger.info("sending out merged state")
         return result
-    
-    
+
+
     def reset(self, state):
         """
         Initialize all workers for a new EM iterations.
@@ -139,14 +139,14 @@ class Dispatcher(object):
             worker.reset(state)
         self._jobsdone = 0
         self._jobsreceived = 0
-    
+
 
     @utils.synchronous('lock_update')
     def jobdone(self, workerid):
         """
-        A worker has finished its job. Log this event and then asynchronously 
+        A worker has finished its job. Log this event and then asynchronously
         transfer control back to the worker.
-        
+
         In this way, control flow basically oscillates between `dispatcher.jobdone()`
         and `worker.requestjob()`.
         """
@@ -154,12 +154,12 @@ class Dispatcher(object):
         logger.info("worker #%s finished job #%i" % (workerid, self._jobsdone))
         self.workers[workerid].requestjob() # tell the worker to ask for another job, asynchronously (one-way)
 
-    
+
     def jobsdone(self):
         """Wrap self._jobsdone, needed for remote access through Pyro proxies"""
         return self._jobsdone
-    
-    
+
+
     def exit(self):
         """
         Terminate all registered workers and then the dispatcher.
@@ -182,21 +182,21 @@ def main():
     if len(sys.argv) < 1:
         print globals()["__doc__"] % locals()
         sys.exit(1)
-    
+
     if len(sys.argv) < 2:
         maxsize = MAX_JOBS_QUEUE
     else:
         maxsize = int(sys.argv[1])
-    
+
     Pyro.config.HOST = utils.get_my_ip()
-    
+
     with Pyro.naming.locateNS() as ns:
         with Pyro.core.Daemon() as daemon:
             dispatcher = Dispatcher(maxsize = maxsize)
             uri = daemon.register(dispatcher)
             # prepare callback object for the workers
             dispatcher.callback = Pyro.core.Proxy(uri)
-            
+
             name = 'gensim.lda_dispatcher'
             ns.remove(name)
             ns.register(name, uri)
@@ -204,7 +204,7 @@ def main():
             daemon.requestLoop()
 
     logger.info("finished running %s" % program)
-    
+
 
 
 if __name__ == '__main__':

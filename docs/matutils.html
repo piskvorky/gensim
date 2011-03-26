@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>matutils – Math utils &mdash; gensim documentation</title>
+    <title>matutils – Math utils &mdash; gensim</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.7',
+        VERSION:     '0.7.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,11 +22,15 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="gensim documentation" href="index.html" />
+    <link rel="top" title="gensim" href="index.html" />
     <link rel="up" title="API Reference" href="apiref.html" />
     <link rel="next" title="corpora.bleicorpus – Corpus in Blei’s LDA-C format" href="corpora/bleicorpus.html" />
     <link rel="prev" title="utils – Various utility functions" href="utils.html" />
+<!-- twitter search widget
     <script type="text/javascript" src="_static/widget.js"></script>
+-->
+<meta property="og:title" content="#gensim" />
+<meta property="og:description" content="Efficient topic modelling in Python" />
 
   </head>
   <body>
@@ -85,7 +89,7 @@
         </div>
       </div>
     
-    
+
 
 
     <div class="document">
@@ -100,24 +104,30 @@
 <dt id="gensim.matutils.Dense2Corpus">
 <em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">Dense2Corpus</tt><big>(</big><em>dense</em>, <em>documents_columns=True</em><big>)</big><a class="headerlink" href="#gensim.matutils.Dense2Corpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Treat dense numpy array as a sparse gensim corpus.</p>
-<p>No data copy is made (changes to the underlying matrix imply changes in the 
+<p>No data copy is made (changes to the underlying matrix imply changes in the
 corpus).</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="gensim.matutils.MmReader">
 <em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">MmReader</tt><big>(</big><em>input</em>, <em>transposed=True</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmReader" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrap a term-document matrix on disk (in matrix-market format), and present it 
+<dd><p>Wrap a term-document matrix on disk (in matrix-market format), and present it
 as an object which supports iteration over the rows (~documents).</p>
-<p>Note that the file is read into memory one document at a time, not the whole 
-matrix at once (unlike scipy.io.mmread). This allows us to process corpora 
+<p>Note that the file is read into memory one document at a time, not the whole
+matrix at once (unlike scipy.io.mmread). This allows us to process corpora
 which are larger than the available RAM.</p>
 <p>Initialize the matrix reader.</p>
-<p>The <cite>input</cite> refers to a file on local filesystem, which is expected to 
-be in the sparse (coordinate) Matrix Market format. Documents are assumed 
+<p>The <cite>input</cite> refers to a file on local filesystem, which is expected to
+be in the sparse (coordinate) Matrix Market format. Documents are assumed
 to be rows of the matrix (and document features are columns).</p>
 <p><cite>input</cite> is either a string (file path) or a file-like object that supports
-<cite>seek(0)</cite> (e.g. gzip.GzipFile, bz2.BZ2File).</p>
+<cite>seek()</cite> (e.g. gzip.GzipFile, bz2.BZ2File).</p>
+<dl class="method">
+<dt id="gensim.matutils.MmReader.docbyoffset">
+<tt class="descname">docbyoffset</tt><big>(</big><em>offset</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmReader.docbyoffset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return document at file offset <cite>offset</cite> (in bytes)</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -126,9 +136,9 @@ to be rows of the matrix (and document features are columns).</p>
 <dd><p>Store corpus in Matrix Market format.</p>
 <dl class="staticmethod">
 <dt id="gensim.matutils.MmWriter.writeCorpus">
-<em class="property">static </em><tt class="descname">writeCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>progressCnt=1000</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.writeCorpus" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><tt class="descname">writeCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>progressCnt=1000</em>, <em>index=False</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.writeCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the vector space representation of an entire corpus to disk.</p>
-<p>Note that the documents are processed one at a time, so the whole corpus 
+<p>Note that the documents are processed one at a time, so the whole corpus
 is allowed to be larger than the available RAM.</p>
 </dd></dl>
 
@@ -150,7 +160,7 @@ is allowed to be larger than the available RAM.</p>
 <dl class="function">
 <dt id="gensim.matutils.corpus2csc">
 <tt class="descclassname">gensim.matutils.</tt><tt class="descname">corpus2csc</tt><big>(</big><em>corpus</em>, <em>num_terms</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em><big>)</big><a class="headerlink" href="#gensim.matutils.corpus2csc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format, 
+<dd><p>Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format,
 with documents as columns.</p>
 </dd></dl>
 
@@ -175,9 +185,15 @@ with documents as columns.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.matutils.full2sparse_clipped">
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">full2sparse_clipped</tt><big>(</big><em>vec</em>, <em>topn</em>, <em>eps=1.0000000000000001e-09</em><big>)</big><a class="headerlink" href="#gensim.matutils.full2sparse_clipped" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <cite>full2sparse</cite>, but only return the <cite>topn</cite> greatest elements (not all).</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.matutils.pad">
 <tt class="descclassname">gensim.matutils.</tt><tt class="descname">pad</tt><big>(</big><em>mat</em>, <em>padRow</em>, <em>padCol</em><big>)</big><a class="headerlink" href="#gensim.matutils.pad" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add additional rows/columns to a numpy.matrix <cite>mat</cite>. The new rows/columns 
+<dd><p>Add additional rows/columns to a numpy.matrix <cite>mat</cite>. The new rows/columns
 will be initialized with zeros.</p>
 </dd></dl>
 
@@ -192,7 +208,7 @@ because the memory used in <cite>la[0]</cite> is reclaimed earlier.</p>
 <dl class="function">
 <dt id="gensim.matutils.sparse2full">
 <tt class="descclassname">gensim.matutils.</tt><tt class="descname">sparse2full</tt><big>(</big><em>doc</em>, <em>length</em><big>)</big><a class="headerlink" href="#gensim.matutils.sparse2full" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert a document in sparse corpus format (sequence of 2-tuples) into a dense 
+<dd><p>Convert a document in sparse corpus format (sequence of 2-tuples) into a dense
 numpy array (of size <cite>length</cite>).</p>
 </dd></dl>
 
@@ -241,7 +257,7 @@ output will be a numpy array.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 13, 2011.
+      Last updated on Mar 26, 2011.
     </div>
   </body>
 </html>

@@ -6,16 +6,16 @@
 Gensim -- Python Framework for Vector Space Modelling
 =====================================================
 
-.. admonition:: What's new in version |version|?
+.. admonition:: What's new?
 
-   * faster and leaner **Latent Semantic Indexing (LSI)** and **Latent Dirichlet Allocation (LDA)**:
+   * 26/4/2011: version 0.7.8 is out! `CHANGELOG <https://github.com/piskvorky/gensim/blob/master/CHANGELOG.txt>`_
+   * 12/2/2011: faster and leaner **Latent Semantic Indexing (LSI)** and **Latent Dirichlet Allocation (LDA)**:
    
-     * :doc:`Processing the English Wikipedia <wiki>`, 3.2 million documents (`NIPS workshop paper <http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_)
+     * :doc:`Processing the English Wikipedia <wiki>`, 3.2 million documents (`NIPS workshop paper <http://arxiv.org/abs/1102.5597>`_)
      * :doc:`dist_lsi` & :doc:`dist_lda`
      
-   * Input corpus iterators can come from a compressed file (**bzip2**, **gzip**, ...), to save disk space when dealing with
+   * 12/2/2011: Input corpus iterators can come from a compressed file (**bzip2**, **gzip**, ...), to save disk space when dealing with
      very large corpora.
-   * `gensim` code now resides on `github <https://github.com/piskvorky/gensim/>`_.
 
 For an **overview** of what you can (or cannot) do with `gensim`, go to the :doc:`introduction <intro>`.
 

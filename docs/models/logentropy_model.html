@@ -1,0 +1,204 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>models.logentropy_model – LogEntropy model &mdash; gensim</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="gensim" href="../index.html" />
+    <link rel="up" title="API Reference" href="../apiref.html" />
+    <link rel="next" title="models.lsi_dispatcher – Dispatcher for distributed LSI" href="lsi_dispatcher.html" />
+    <link rel="prev" title="models.rpmodel – Random Projections" href="rpmodel.html" />
+<!-- twitter search widget
+    <script type="text/javascript" src="_static/widget.js"></script>
+-->
+<meta property="og:title" content="#gensim" />
+<meta property="og:description" content="Efficient topic modelling in Python" />
+
+  </head>
+  <body>
+<!--
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../index.html"><img src="../_static/logo.png" border="0" alt="gensim logo"/></a>
+</div>
+--!>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lsi_dispatcher.html" title="models.lsi_dispatcher – Dispatcher for distributed LSI"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="rpmodel.html" title="models.rpmodel – Random Projections"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
+       <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
+
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+
+
+    
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="rpmodel.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">models.rpmodel</span></tt> &#8211; Random Projections</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="lsi_dispatcher.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">models.lsi_dispatcher</span></tt> &#8211; Dispatcher for distributed LSI</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+    
+
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-gensim.models.logentropy_model">
+<span id="models-logentropy-model-logentropy-model"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">models.logentropy_model</span></tt> &#8211; LogEntropy model<a class="headerlink" href="#module-gensim.models.logentropy_model" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="gensim.models.logentropy_model.LogEntropyModel">
+<em class="property">class </em><tt class="descclassname">gensim.models.logentropy_model.</tt><tt class="descname">LogEntropyModel</tt><big>(</big><em>corpus</em>, <em>id2word=None</em>, <em>normalize=True</em><big>)</big><a class="headerlink" href="#gensim.models.logentropy_model.LogEntropyModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Objects of this class realize the transformation between word-document
+co-occurence matrix (integers) into a locally/globally weighted matrix
+(positive floats).</p>
+<p>This is done by a log entropy normalization, optionally normalizing the
+resulting documents to unit length. The following formulas explain how
+to compute the log entropy weight for term <cite>i</cite> in document <cite>j</cite>:</p>
+<div class="highlight-python"><pre>local_weight_{i,j} = log(frequency_{i,j} + 1)
+
+P_{i,j} = frequency_{i,j} / sum_j frequency_{i,j}
+
+                      sum_j P_{i,j} * log(P_{i,j})
+global_weight_i = 1 + ----------------------------
+                      log(document_frequency_of_i)
+
+final_weight_{i,j} = local_weight_{i,j} * global_weight_i</pre>
+</div>
+<p>The main methods are:</p>
+<ol class="arabic">
+<li><dl class="first docutils">
+<dt>constructor, which calculates the global weighting for all terms in</dt>
+<dd><p class="first last">a corpus.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>the [] method, which transforms a simple count representation into the</dt>
+<dd><p class="first last">log entropy normalized space.</p>
+</dd>
+</dl>
+</li>
+</ol>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">log_ent</span> <span class="o">=</span> <span class="n">LogEntropyModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="o">=</span> <span class="n">log_ent</span><span class="p">[</span><span class="n">some_doc</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log_ent</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&#39;/tmp/foo.log_ent_model&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Model persistency is achieved via its load/save methods.</p>
+<p><cite>normalize</cite> dictates whether the resulting vectors will be
+set to unit length.</p>
+<dl class="method">
+<dt id="gensim.models.logentropy_model.LogEntropyModel.initialize">
+<tt class="descname">initialize</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.models.logentropy_model.LogEntropyModel.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize internal statistics based on a training corpus. Called 
+automatically from the constructor.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="gensim.models.logentropy_model.LogEntropyModel.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.logentropy_model.LogEntropyModel.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.logentropy_model.LogEntropyModel.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.logentropy_model.LogEntropyModel.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lsi_dispatcher.html" title="models.lsi_dispatcher – Dispatcher for distributed LSI"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="rpmodel.html" title="models.rpmodel – Random Projections"
+             >previous</a> |</li>
+        <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
+       <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
+
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    
+    
+
+    <div class="footer">
+        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Mar 26, 2011.
+    </div>
+  </body>
+</html>

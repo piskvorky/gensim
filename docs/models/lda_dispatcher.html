@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>models.lda_dispatcher – Dispatcher for distributed LDA &mdash; gensim documentation</title>
+    <title>models.lda_dispatcher – Dispatcher for distributed LDA &mdash; gensim</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.7.7',
+        VERSION:     '0.7.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,11 +22,15 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="gensim documentation" href="../index.html" />
+    <link rel="top" title="gensim" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
     <link rel="next" title="models.lda_worker – Worker for distributed LDA" href="lda_worker.html" />
     <link rel="prev" title="models.lsi_worker – Worker for distributed LSI" href="lsi_worker.html" />
+<!-- twitter search widget
     <script type="text/javascript" src="_static/widget.js"></script>
+-->
+<meta property="og:title" content="#gensim" />
+<meta property="og:description" content="Efficient topic modelling in Python" />
 
   </head>
   <body>
@@ -85,7 +89,7 @@
         </div>
       </div>
     
-    
+
 
 
     <div class="document">
@@ -134,7 +138,7 @@ handed all the way down to <cite>worker.initialize()</cite>).</p>
 <dl class="method">
 <dt id="gensim.models.lda_dispatcher.Dispatcher.jobdone">
 <tt class="descname">jobdone</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.models.lda_dispatcher.Dispatcher.jobdone" title="Permalink to this definition">¶</a></dt>
-<dd><p>A worker has finished its job. Log this event and then asynchronously 
+<dd><p>A worker has finished its job. Log this event and then asynchronously
 transfer control back to the worker.</p>
 <p>In this way, control flow basically oscillates between <cite>dispatcher.jobdone()</cite>
 and <cite>worker.requestjob()</cite>.</p>
@@ -190,7 +194,7 @@ and <cite>worker.requestjob()</cite>.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 13, 2011.
+      Last updated on Mar 26, 2011.
     </div>
   </body>
 </html>

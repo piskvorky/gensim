@@ -1,10 +1,10 @@
-.. _install: 
+.. _install:
 
 =============
 Installation
 =============
 
-Gensim is known to run on Linux, Windows and Mac OS X and should run on any other 
+Gensim is known to run on Linux, Windows and Mac OS X and should run on any other
 platform that supports Python 2.5 and NumPy. Gensim depends on the following software:
 
 * 3.0 > `Python <http://www.python.org>`_ >= 2.5. Tested with versions 2.5 and 2.6.
@@ -26,7 +26,7 @@ You can download Python 2.5 from http://python.org/download.
 Install SciPy & NumPy
 ----------------------
 
-These are quite popular Python packages, so chances are there are pre-built binary 
+These are quite popular Python packages, so chances are there are pre-built binary
 distributions available for your platform. You can try installing from source using easy_install::
 
     sudo easy_install numpy
@@ -46,35 +46,35 @@ That's it! Congratulations, you can proceed to the :doc:`tutorials <tutorial>`.
 
 -----
 
-If you also want to run the algorithms over a cluster 
+If you also want to run the algorithms over a cluster
 of computers, in :doc:`distributed`, you should install with::
 
     sudo easy_install gensim[distributed]
 
-The optional `distributed` feature installs `Pyro (PYthon Remote Objects) <http://pypi.python.org/pypi/Pyro>`_. 
+The optional `distributed` feature installs `Pyro (PYthon Remote Objects) <http://pypi.python.org/pypi/Pyro>`_.
 If you don't know what distributed computing means, you can ignore it:
 `gensim` will work fine for you anyway.
 This optional extension can also be installed separately later with::
-    
+
     sudo easy_install Pyro
 
 -----
 
 There are also alternative routes to install:
-  
+
 1. If you have downloaded and unzipped the `tar.gz source <http://pypi.python.org/pypi/gensim>`_
-   for `gensim` (or you're installing `gensim` from `github <https://github.com/piskvorky/gensim/>`_), 
+   for `gensim` (or you're installing `gensim` from `github <https://github.com/piskvorky/gensim/>`_),
    you can run::
-   
-     sudo python setup.py install 
-   
+
+     sudo python setup.py install
+
    to install `gensim` into your ``site-packages`` folder.
-2. If you wish to make local changes to the `gensim` code (`gensim` is, after all, a 
-   package which targets research prototyping and modifications), a preferred 
+2. If you wish to make local changes to the `gensim` code (`gensim` is, after all, a
+   package which targets research prototyping and modifications), a preferred
    way may be installing with::
-   
+
      sudo python setup.py develop
-   
+
    This will only place a symlink into your ``site-packages`` directory. The actual
    files will stay wherever you unpacked them.
 3. If you don't have root priviledges (or just don't want to put the package into
@@ -95,5 +95,5 @@ Contact
 --------
 
 Use the `gensim discussion group <http://groups.google.com/group/gensim/>`_ for
-any questions and troubleshooting. For private enquiries, you can also send 
+any questions and troubleshooting. For private enquiries, you can also send
 me an email to the address at the bottom of this page.

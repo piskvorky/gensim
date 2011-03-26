@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>corpora.wikicorpus – Corpus from a Wikipedia dump &mdash; gensim documentation</title>
+    <title>corpora.wikicorpus – Corpus from a Wikipedia dump &mdash; gensim</title>
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.7.7',
+        VERSION:     '0.7.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,11 +22,15 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="gensim documentation" href="../index.html" />
+    <link rel="top" title="gensim" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
-    <link rel="next" title="models.ldamodel – Latent Dirichlet Allocation" href="../models/ldamodel.html" />
+    <link rel="next" title="corpora.textcorpus – Building corpora with dictionaries" href="textcorpus.html" />
     <link rel="prev" title="corpora.svmlightcorpus – Corpus in SVMlight format" href="svmlightcorpus.html" />
+<!-- twitter search widget
     <script type="text/javascript" src="_static/widget.js"></script>
+-->
+<meta property="og:title" content="#gensim" />
+<meta property="og:description" content="Efficient topic modelling in Python" />
 
   </head>
   <body>
@@ -46,7 +50,7 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="../models/ldamodel.html" title="models.ldamodel – Latent Dirichlet Allocation"
+          <a href="textcorpus.html" title="corpora.textcorpus – Building corpora with dictionaries"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="svmlightcorpus.html" title="corpora.svmlightcorpus – Corpus in SVMlight format"
@@ -67,8 +71,8 @@
   <p class="topless"><a href="svmlightcorpus.html"
                         title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">corpora.svmlightcorpus</span></tt> &#8211; Corpus in SVMlight format</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="../models/ldamodel.html"
-                        title="next chapter"><tt class="docutils literal"><span class="pre">models.ldamodel</span></tt> &#8211; Latent Dirichlet Allocation</a></p>
+  <p class="topless"><a href="textcorpus.html"
+                        title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">corpora.textcorpus</span></tt> &#8211; Building corpora with dictionaries</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
@@ -85,7 +89,7 @@
         </div>
       </div>
     
-    
+
 
 
     <div class="document">
@@ -105,7 +109,7 @@ Convert articles from a Wikipedia dump to (sparse) vectors. The input is a bz2-c
 <li><cite>OUTPUT_PREFIX_tfidf.mm</cite>: TF-IDF representation</li>
 </ul>
 <p>The output Matrix Market files can then be compressed (e.g., by bzip2) to save disk space; gensim&#8217;s corpus iterators can work with compressed input, too.</p>
-<p><cite>VOCABULARY_SIZE</cite> controls how many of the most frequent words to keep (after 
+<p><cite>VOCABULARY_SIZE</cite> controls how many of the most frequent words to keep (after
 removing all tokens that appear in more than 10 percent documents). Defaults to 100,000.</p>
 <p>Example: ./wikicorpus.py ~/gensim/results/enwiki-20100622-pages-articles.xml.bz2 ~/gensim/results/wiki_en</p>
 <dl class="class">
@@ -114,9 +118,9 @@ removing all tokens that appear in more than 10 percent documents). Defaults to 
 <dd><p>Convert a corpus to another, with different feature ids.</p>
 <p>Given a mapping between old ids and new ids (some old ids may be missing,
 i.e. the mapping need not be a bijection), this will wrap a
-corpus so that iterating over VocabTransform[corpus] returns the same vectors but with 
-the new ids.</p>
-<p>Old features that have no counterpart in the new ids are discarded. This 
+corpus so that iterating over VocabTransform[corpus] returns the same vectors 
+but with the new ids.</p>
+<p>Old features that have no counterpart in the new ids are discarded. This
 can be used to filter vocabulary of a corpus:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">old2new</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">oldid</span><span class="p">,</span> <span class="n">newid</span><span class="p">)</span> <span class="k">for</span> <span class="n">newid</span><span class="p">,</span> <span class="n">oldid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">remaining_ids</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">newid</span><span class="p">,</span> <span class="n">oldid2token</span><span class="p">[</span><span class="n">oldid</span><span class="p">])</span> <span class="k">for</span> <span class="n">oldid</span><span class="p">,</span> <span class="n">newid</span> <span class="ow">in</span> <span class="n">old2new</span><span class="o">.</span><span class="n">iteritems</span><span class="p">())</span>
@@ -147,8 +151,8 @@ can stay compressed on disk.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">wiki</span><span class="o">.</span><span class="n">saveAsText</span><span class="p">(</span><span class="s">&#39;wiki_en_vocab200k&#39;</span><span class="p">)</span> <span class="c"># another 8h, creates a file in MatrixMarket format plus file with id-&gt;word</span>
 </pre></div>
 </div>
-<p>Initialize the corpus. This scans the corpus once, to determine its 
-vocabulary (only the first <cite>keep_words</cite> most frequent words that 
+<p>Initialize the corpus. This scans the corpus once, to determine its
+vocabulary (only the first <cite>keep_words</cite> most frequent words that
 appear in at least <cite>noBelow</cite> documents are kept).</p>
 <dl class="method">
 <dt id="gensim.corpora.wikicorpus.WikiCorpus.getArticles">
@@ -156,7 +160,7 @@ appear in at least <cite>noBelow</cite> documents are kept).</p>
 <dd><p>Iterate over the dump, returning text version of each article.</p>
 <p>Only articles of sufficient length are returned (short articles &amp; redirects
 etc are ignored).</p>
-<p>Note that this iterates over the <strong>texts</strong>; if you want vectors, just use 
+<p>Note that this iterates over the <strong>texts</strong>; if you want vectors, just use
 the standard corpus interface instead of this function:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">wiki_corpus</span><span class="p">:</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="k">print</span> <span class="n">doc</span>
@@ -189,7 +193,7 @@ the standard corpus interface instead of this function:</p>
 <dd><p>Store the corpus to disk, in a human-readable text format.</p>
 <p>This actually saves two files:</p>
 <ol class="arabic simple">
-<li>Document-term co-occurence frequency counts (bag-of-words), as 
+<li>Document-term co-occurence frequency counts (bag-of-words), as
 a Matrix Market file <cite>fname_bow.mm</cite>.</li>
 <li>Token to integer mapping, as a text file <cite>fname_wordids.txt</cite>.</li>
 </ol>
@@ -198,7 +202,20 @@ a Matrix Market file <cite>fname_bow.mm</cite>.</li>
 <dl class="staticmethod">
 <dt id="gensim.corpora.wikicorpus.WikiCorpus.saveCorpus">
 <em class="property">static </em><tt class="descname">saveCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.saveCorpus" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save an existing <cite>corpus</cite> in the particular format of this class.</p>
+<dd><p>Save an existing <cite>corpus</cite> to disk.</p>
+<p>Some formats also support saving the dictionary (<cite>feature_id-&gt;word</cite> mapping),
+which can in this case be provided by the optional <cite>id2word</cite> parameter.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;file.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Some corpora also support an index of where each document begins, so
+that the documents on disk can be accessed in O(1) time (see the 
+<cite>corpora.IndexedCorpus</cite> base class). In this case, <cite>saveCorpus</cite> is automatically
+called internally by <cite>serialize</cite>, which does <cite>saveCorpus</cite> plus saves the index
+at the same time, so you want to store the corpus with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;file.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span> <span class="c"># stores index as well, allowing random access to individual documents</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -243,7 +260,7 @@ that 15 characters (not bytes!).</p>
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="../models/ldamodel.html" title="models.ldamodel – Latent Dirichlet Allocation"
+          <a href="textcorpus.html" title="corpora.textcorpus – Building corpora with dictionaries"
              >next</a> |</li>
         <li class="right" >
           <a href="svmlightcorpus.html" title="corpora.svmlightcorpus – Corpus in SVMlight format"
@@ -260,7 +277,7 @@ that 15 characters (not bytes!).</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 13, 2011.
+      Last updated on Mar 26, 2011.
     </div>
   </body>
 </html>

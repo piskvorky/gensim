@@ -7,13 +7,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>interfaces – Core gensim interfaces &mdash; gensim documentation</title>
+    <title>interfaces – Core gensim interfaces &mdash; gensim</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.7',
+        VERSION:     '0.7.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,11 +22,15 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="gensim documentation" href="index.html" />
+    <link rel="top" title="gensim" href="index.html" />
     <link rel="up" title="API Reference" href="apiref.html" />
     <link rel="next" title="utils – Various utility functions" href="utils.html" />
     <link rel="prev" title="API Reference" href="apiref.html" />
+<!-- twitter search widget
     <script type="text/javascript" src="_static/widget.js"></script>
+-->
+<meta property="og:title" content="#gensim" />
+<meta property="og:description" content="Efficient topic modelling in Python" />
 
   </head>
   <body>
@@ -85,7 +89,7 @@
         </div>
       </div>
     
-    
+
 
 
     <div class="document">
@@ -96,22 +100,30 @@
   <div class="section" id="module-gensim.interfaces">
 <span id="interfaces-core-gensim-interfaces"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces<a class="headerlink" href="#module-gensim.interfaces" title="Permalink to this headline">¶</a></h1>
 <p>This module contains basic interfaces used throughout the whole gensim package.</p>
-<p>The interfaces are realized as abstract base classes (ie., some optional functionality 
+<p>The interfaces are realized as abstract base classes (ie., some optional functionality
 is provided in the interface itself, so that the interfaces can be subclassed).</p>
 <dl class="class">
 <dt id="gensim.interfaces.CorpusABC">
 <em class="property">class </em><tt class="descclassname">gensim.interfaces.</tt><tt class="descname">CorpusABC</tt><a class="headerlink" href="#gensim.interfaces.CorpusABC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Interface for corpora. A <em>corpus</em> is simply an iterable, where each 
-iteration step yields one document. A document is a list of (fieldId, fieldValue)
-2-tuples.</p>
+<dd><p>Interface (abstract base class) for corpora. A <em>corpus</em> is simply an iterable,
+where each iteration step yields one document:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">corpus</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="c"># do something with the doc...</span>
+</pre></div>
+</div>
+<p>A document is a sequence of <cite>(fieldId, fieldValue)</cite> 2-tuples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">attr_id</span><span class="p">,</span> <span class="n">attr_value</span> <span class="ow">in</span> <span class="n">doc</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="c"># do something with the attribute</span>
+</pre></div>
+</div>
 <p>Note that although a default <tt class="xref py py-func docutils literal"><span class="pre">len()</span></tt> method is provided, it is very inefficient
-(performs a linear scan through the corpus to determine its length). Wherever 
-the corpus size is needed and known in advance (or at least doesn&#8217;t change so 
+(performs a linear scan through the corpus to determine its length). Wherever
+the corpus size is needed and known in advance (or at least doesn&#8217;t change so
 that it can be cached), the <tt class="xref py py-func docutils literal"><span class="pre">len()</span></tt> method should be overridden.</p>
 <p>See the <a class="reference internal" href="corpora/svmlightcorpus.html#module-gensim.corpora.svmlightcorpus" title="gensim.corpora.svmlightcorpus: Corpus in SVMlight format"><tt class="xref py py-mod docutils literal"><span class="pre">gensim.corpora.svmlightcorpus</span></tt></a> module for an example of a corpus.</p>
 <p>Saving the corpus with the <cite>save</cite> method (inherited from <cite>utils.SaveLoad</cite>) will
-only store the <em>in-memory</em> (binary, pickled) object representation=the stream 
-state, and <strong>not</strong> the documents themselves. See the <cite>saveCorpus</cite> static method 
+only store the <em>in-memory</em> (binary, pickled) object representation=the stream
+state, and <strong>not</strong> the documents themselves. See the <cite>saveCorpus</cite> static method
 for serializing the actual stream content.</p>
 <dl class="classmethod">
 <dt id="gensim.interfaces.CorpusABC.load">
@@ -128,7 +140,20 @@ for serializing the actual stream content.</p>
 <dl class="staticmethod">
 <dt id="gensim.interfaces.CorpusABC.saveCorpus">
 <em class="property">static </em><tt class="descname">saveCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.interfaces.CorpusABC.saveCorpus" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save an existing <cite>corpus</cite> in the particular format of this class.</p>
+<dd><p>Save an existing <cite>corpus</cite> to disk.</p>
+<p>Some formats also support saving the dictionary (<cite>feature_id-&gt;word</cite> mapping),
+which can in this case be provided by the optional <cite>id2word</cite> parameter.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;file.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Some corpora also support an index of where each document begins, so
+that the documents on disk can be accessed in O(1) time (see the 
+<cite>corpora.IndexedCorpus</cite> base class). In this case, <cite>saveCorpus</cite> is automatically
+called internally by <cite>serialize</cite>, which does <cite>saveCorpus</cite> plus saves the index
+at the same time, so you want to store the corpus with:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;file.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span> <span class="c"># stores index as well, allowing random access to individual documents</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -137,12 +162,12 @@ for serializing the actual stream content.</p>
 <dt id="gensim.interfaces.SimilarityABC">
 <em class="property">class </em><tt class="descclassname">gensim.interfaces.</tt><tt class="descname">SimilarityABC</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.interfaces.SimilarityABC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract interface for similarity searches over a corpus.</p>
-<p>In all instances, there is a corpus against which we want to perform the 
+<p>In all instances, there is a corpus against which we want to perform the
 similarity search.</p>
-<p>For each similarity search, the input is a document and the output are its 
+<p>For each similarity search, the input is a document and the output are its
 similarities to individual corpus documents.</p>
 <p>Similarity queries are realized by calling <tt class="docutils literal"><span class="pre">self[query_document]</span></tt>.</p>
-<p>There is also a convenience wrapper, where iterating over <cite>self</cite> yields 
+<p>There is also a convenience wrapper, where iterating over <cite>self</cite> yields
 similarities of each document in the corpus against the whole corpus (ie.,
 the query is each corpus document in turn).</p>
 <dl class="method">
@@ -223,7 +248,7 @@ document in its stead.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 13, 2011.
+      Last updated on Mar 26, 2011.
     </div>
   </body>
 </html>

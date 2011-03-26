@@ -1,18 +1,18 @@
 .. _tutorial:
 
-Tutorial
-========
+Tutorials
+=========
 
 
-This tutorial is organized as a series of examples that highlight various features 
-of `gensim`. It is assumed that the reader is familiar with the Python language 
+The tutorials are organized as a series of examples that highlight various features
+of `gensim`. It is assumed that the reader is familiar with the Python language
 and has read the :doc:`intro`.
 
 The examples are divided into parts on:
 
 .. toctree::
    :maxdepth: 2
-   
+
    tut1
    tut2
    tut3
@@ -22,12 +22,12 @@ The examples are divided into parts on:
 Preliminaries
 --------------
 
-All the examples can be directly copied to your Python interpreter shell (assuming 
-you have :doc:`gensim installed <install>`, of course). 
-`IPython <http://ipython.scipy.org>`_'s ``cpaste`` command is especially handy for copypasting code fragments which include superfluous 
+All the examples can be directly copied to your Python interpreter shell (assuming
+you have :doc:`gensim installed <install>`, of course).
+`IPython <http://ipython.scipy.org>`_'s ``cpaste`` command is especially handy for copypasting code fragments which include superfluous
 characters, such as the leading ``>>>``.
 
-Gensim uses Python's standard :mod:`logging` module to log various stuff at various 
+Gensim uses Python's standard :mod:`logging` module to log various stuff at various
 priority levels; to activate logging (this is optional), run
 
 >>> import logging
@@ -42,7 +42,7 @@ Quick Example
 First, let's import gensim and create a small corpus of nine documents [1]_:
 
 >>> from gensim import corpora, models, similarities
->>> 
+>>>
 >>> corpus = [[(0, 1.0), (1, 1.0), (2, 1.0)],
 >>>           [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],
 >>>           [(1, 1.0), (3, 1.0), (4, 1.0), (7, 1.0)],
@@ -54,21 +54,21 @@ First, let's import gensim and create a small corpus of nine documents [1]_:
 >>>           [(8, 1.0), (10, 1.0), (11, 1.0)]]
 
 :dfn:`Corpus` is simply an object which, when iterated over, returns its documents represented
-as sparse vectors. 
+as sparse vectors.
 
 If you're familiar with the `Vector Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_,
-you'll probably know that the way you parse your documents and convert them to vectors 
+you'll probably know that the way you parse your documents and convert them to vectors
 has major impact on the quality of any subsequent applications. If you're not familiar
-with :abbr:`VSM (Vector Space Model)`, we'll bridge the gap between **raw strings** 
-and **sparse vectors** in the next tutorial 
+with :abbr:`VSM (Vector Space Model)`, we'll bridge the gap between **raw strings**
+and **sparse vectors** in the next tutorial
 on :doc:`tut1`.
 
 .. note::
-    In this example, the whole corpus is stored in memory, as a Python list. However, 
-    the corpus interface only dictates that a corpus must support iteration over its 
-    constituent documents. For very large corpora, it is advantageous to keep the 
-    corpus on disk, and access its documents sequentially, one at a time. All the 
-    operations and transformations are implemented in such a way that makes 
+    In this example, the whole corpus is stored in memory, as a Python list. However,
+    the corpus interface only dictates that a corpus must support iteration over its
+    constituent documents. For very large corpora, it is advantageous to keep the
+    corpus on disk, and access its documents sequentially, one at a time. All the
+    operations and transformations are implemented in such a way that makes
     them independent of the size of the corpus, memory-wise.
 
 
@@ -76,14 +76,14 @@ Next, let's initialize a :dfn:`transformation`:
 
 >>> tfidf = models.TfidfModel(corpus)
 
-A transformation is used to convert documents from one vector representation into another: 
+A transformation is used to convert documents from one vector representation into another:
 
 >>> vec = [(0, 1), (4, 1)]
 >>> print tfidf[vec]
 [(0, 0.8075244), (4, 0.5898342)]
 
-Here, we used `Tf-Idf <http://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_, a simple 
-transformation which takes documents represented as bag-of-words counts and applies 
+Here, we used `Tf-Idf <http://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_, a simple
+transformation which takes documents represented as bag-of-words counts and applies
 a weighting which discounts common terms (or, equivalently, promotes rare terms).
 It also scales the resulting vector to unit length (in the `Euclidean norm <http://en.wikipedia.org/wiki/Norm_%28mathematics%29#Euclidean_norm>`_).
 
@@ -99,17 +99,17 @@ and to query the similarity of our query vector ``vec`` against every document i
 >>> print list(enumerate(sims))
 [(0, 0.4662244), (1, 0.19139354), (2, 0.24600551), (3, 0.82094586), (4, 0.0), (5, 0.0), (6, 0.0), (7, 0.0), (8, 0.0)]
 
-How to read this output? Document number zero (the first document) has a similarity score of 0.466=46.6\%, 
+How to read this output? Document number zero (the first document) has a similarity score of 0.466=46.6\%,
 the second document has a similarity score of 19.1\% etc.
 
-Thus, according to TfIdf document representation and cosine similarity measure, 
-the most similar to our query document `vec` is document no. 3, with a similarity score of 82.1%. 
+Thus, according to TfIdf document representation and cosine similarity measure,
+the most similar to our query document `vec` is document no. 3, with a similarity score of 82.1%.
 Note that in the TfIdf representation, any documents which do not share any common features
 with ``vec`` at all (documents no. 4--8) get a similarity score of 0.0. See the :doc:`tut3` tutorial for more detail.
 
 ------
 
-.. [1]  This is the same corpus as used in 
+.. [1]  This is the same corpus as used in
         `Deerwester et al. (1990): Indexing by Latent Semantic Analysis <http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf>`_, Table 2.
 
 
