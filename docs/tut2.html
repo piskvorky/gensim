@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.7',
+        VERSION:     '0.7.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -176,6 +176,15 @@ any vector from the old representation (bag-of-words integer counts) to the new 
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus_tfidf</span> <span class="o">=</span> <span class="n">tfidf</span><span class="p">[</span><span class="n">corpus</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">corpus_tfidf</span><span class="p">:</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="k">print</span> <span class="n">doc</span>
+<span class="go">[(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]</span>
+<span class="go">[(0, 0.44424552527467476), (3, 0.44424552527467476), (4, 0.44424552527467476), (5, 0.32448702061385548), (6, 0.44424552527467476), (7, 0.32448702061385548)]</span>
+<span class="go">[(2, 0.5710059809418182), (5, 0.41707573620227772), (7, 0.41707573620227772), (8, 0.5710059809418182)]</span>
+<span class="go">[(1, 0.49182558987264147), (5, 0.71848116070837686), (8, 0.49182558987264147)]</span>
+<span class="go">[(3, 0.62825804686700459), (6, 0.62825804686700459), (7, 0.45889394536615247)]</span>
+<span class="go">[(9, 1.0)]</span>
+<span class="go">[(9, 0.70710678118654746), (10, 0.70710678118654746)]</span>
+<span class="go">[(9, 0.50804290089167492), (10, 0.50804290089167492), (11, 0.69554641952003704)]</span>
+<span class="go">[(4, 0.62825804686700459), (10, 0.45889394536615247), (11, 0.62825804686700459)]</span>
 </pre></div>
 </div>
 <p>In this particular case, we are transforming the same corpus that we used
@@ -311,7 +320,7 @@ With memory taken care of, I am now improving <a class="reference internal" href
 to improve CPU efficiency, too.
 If you feel you could contribute (by testing, providing use-cases or code),
 please <a class="reference external" href="mailto:radimrehurek&#37;&#52;&#48;seznam&#46;cz">let me know</a>.</p>
-<p>Continue on to the next tutorial on <a class="reference internal" href=""><em>Topics and Transformations</em></a>.</p>
+<p>Continue on to the next tutorial on <a class="reference internal" href="tut3.html"><em>Similarity Queries</em></a>.</p>
 <hr class="docutils" />
 <table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>

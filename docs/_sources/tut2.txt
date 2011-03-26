@@ -74,6 +74,15 @@ Or to apply a transformation to a whole corpus:
 >>> corpus_tfidf = tfidf[corpus]
 >>> for doc in corpus_tfidf:
 >>>     print doc
+[(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
+[(0, 0.44424552527467476), (3, 0.44424552527467476), (4, 0.44424552527467476), (5, 0.32448702061385548), (6, 0.44424552527467476), (7, 0.32448702061385548)]
+[(2, 0.5710059809418182), (5, 0.41707573620227772), (7, 0.41707573620227772), (8, 0.5710059809418182)]
+[(1, 0.49182558987264147), (5, 0.71848116070837686), (8, 0.49182558987264147)]
+[(3, 0.62825804686700459), (6, 0.62825804686700459), (7, 0.45889394536615247)]
+[(9, 1.0)]
+[(9, 0.70710678118654746), (10, 0.70710678118654746)]
+[(9, 0.50804290089167492), (10, 0.50804290089167492), (11, 0.69554641952003704)]
+[(4, 0.62825804686700459), (10, 0.45889394536615247), (11, 0.62825804686700459)]
 
 In this particular case, we are transforming the same corpus that we used
 for training, but this is only incidental. Once the transformation model has been initialized,
@@ -212,7 +221,7 @@ to improve CPU efficiency, too.
 If you feel you could contribute (by testing, providing use-cases or code),
 please `let me know <mailto:radimrehurek@seznam.cz>`_.
 
-Continue on to the next tutorial on :doc:`tut2`.
+Continue on to the next tutorial on :doc:`tut3`.
 
 ------
 

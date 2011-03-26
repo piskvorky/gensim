@@ -132,6 +132,9 @@ class LowCorpus(IndexedCorpus):
     def saveCorpus(fname, corpus, id2word=None):
         """
         Save a corpus in the List-of-words format.
+        
+        This function is automatically called by `LowCorpus.serialize`; don't
+        call it directly, call `serialize` instead.
         """
         if id2word is None:
             logging.info("no word id mapping provided; initializing from corpus")

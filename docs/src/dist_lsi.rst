@@ -63,7 +63,7 @@ our choice is incidental) and try::
     >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
     >>> corpus = corpora.MmCorpus('/tmp/deerwester.mm') # load a corpus of nine documents, from the Tutorials
-    >>> id2word = corpora.Dictionary.load('/tmp/deerwester.dict').id2token
+    >>> id2word = corpora.Dictionary.load('/tmp/deerwester.dict')
 
     >>> lsi = models.LsiModel(corpus, id2word=id2word, numTopics=200, chunks=1, distributed=True) # run distributed LSA on nine documents
 
@@ -122,7 +122,7 @@ the corpus iterator with::
     >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level logging.INFO)
 
     >>> # load id->word mapping (the dictionary)
-    >>> id2word = gensim.corpora.wikicorpus.WikiCorpus.loadDictionary('wiki_en_wordids.txt')
+    >>> id2word = gensim.corpora.Dictionary.loadFromText('wiki_en_wordids.txt')
     >>> # load corpus iterator
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
     >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output

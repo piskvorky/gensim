@@ -19,6 +19,7 @@ Modules:
     corpora/svmlightcorpus
     corpora/wikicorpus
     corpora/textcorpus
+    corpora/indexedcorpus
     models/ldamodel
     models/lsimodel
     models/tfidfmodel

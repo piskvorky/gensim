@@ -75,10 +75,13 @@ class BleiCorpus(IndexedCorpus):
     @staticmethod
     def saveCorpus(fname, corpus, id2word=None):
         """
-        Save a corpus in the Matrix Market format.
+        Save a corpus in the LDA-C format.
 
         There are actually two files saved: `fname` and `fname.vocab`, where
         `fname.vocab` is the vocabulary file.
+        
+        This function is automatically called by `BleiCorpus.serialize`; don't
+        call it directly, call `serialize` instead.
         """
         if id2word is None:
             logging.info("no word id mapping provided; initializing from corpus")
