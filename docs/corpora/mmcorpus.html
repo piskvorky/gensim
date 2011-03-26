@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.7.7',
+        VERSION:     '0.7.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -126,14 +126,16 @@
 <dt id="gensim.corpora.mmcorpus.MmCorpus.saveCorpus">
 <em class="property">static </em><tt class="descname">saveCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em>, <em>progressCnt=1000</em><big>)</big><a class="headerlink" href="#gensim.corpora.mmcorpus.MmCorpus.saveCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save a corpus in the Matrix Market format to disk.</p>
+<p>This function is automatically called by <cite>MmCorpus.serialize</cite>; don&#8217;t
+call it directly, call <cite>serialize</cite> instead.</p>
 </dd></dl>
 
 <dl class="classmethod">
-<dt id="gensim.corpora.mmcorpus.MmCorpus.saveIndexedCorpus">
-<em class="property">classmethod </em><tt class="descname">saveIndexedCorpus</tt><big>(</big><em>serializer</em>, <em>fname</em>, <em>corpus</em>, <em>id2word=None</em>, <em>index_fname=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.mmcorpus.MmCorpus.saveIndexedCorpus" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.corpora.mmcorpus.MmCorpus.serialize">
+<em class="property">classmethod </em><tt class="descname">serialize</tt><big>(</big><em>serializer</em>, <em>fname</em>, <em>corpus</em>, <em>id2word=None</em>, <em>index_fname=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.mmcorpus.MmCorpus.serialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate through the document stream <cite>corpus</cite>, saving the documents to <cite>fname</cite>
 and recording byte offset of each document. Save the resulting index
-structure to file <cite>index_fname</cite>.</p>
+structure to file <cite>index_fname</cite> (or <cite>fname</cite>.index is not set).</p>
 <p>This relies on the underlying corpus class <cite>serializer</cite> providing (in
 addition to standard iteration):</p>
 <blockquote>
@@ -149,6 +151,11 @@ positioned at <cite>offset</cite> bytes within the persistent storage (file).</p
 </li>
 </ul>
 </blockquote>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;test.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mm</span> <span class="o">=</span> <span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;test.mm&#39;</span><span class="p">)</span> <span class="c"># `mm` document stream now has random access, `mm[42]` etc.</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>

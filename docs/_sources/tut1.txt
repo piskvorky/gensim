@@ -109,7 +109,7 @@ therefore reads: in the document `"Human computer interaction"`, the words `comp
 (id 0) and `human` (id 1) appear once; the other ten dictionary words appear (implicitly) zero times.
 
 >>> corpus = [dictionary.doc2bow(text) for text in texts]
->>> corpora.MmCorpus.saveCorpus('/tmp/deerwester.mm', corpus) # store to disk, for later use
+>>> corpora.MmCorpus.serialize('/tmp/deerwester.mm', corpus) # store to disk, for later use
 >>> print corpus
 [[(0, 1.0), (1, 1.0), (2, 1.0)],
  [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],
@@ -148,7 +148,7 @@ Walking directories, parsing XML, accessing network...
 Just parse your input to retrieve a clean list of tokens in each document,
 then convert the tokens via a dictionary to their ids and yield the resulting sparse vector inside `__iter__`.
 
->>> corpus_memory_friendly = MyCorpus()
+>>> corpus_memory_friendly = MyCorpus() # doesn't load the corpus into memory!
 >>> print corpus_memory_friendly
 <__main__.MyCorpus object at 0x10d5690>
 
@@ -156,7 +156,8 @@ Corpus is now an object. We didn't define any way to print it, so print just out
 of the object in memory. Not very useful. To see the constituent vectors, let's 
 iterate over the corpus and print each document vector (one at a time)::
 
-    >>> for vector in corpus_memory_friendly: print vector
+    >>> for vector in corpus_memory_friendly: # load one vector into memory at a time
+    >>>     print vector
     [(0, 1), (1, 1), (2, 1)]
     [(0, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]
     [(2, 1), (5, 1), (7, 1), (8, 1)]
@@ -210,15 +211,15 @@ To save a corpus in the Matrix Market format:
 >>> # create a toy corpus of 2 documents, as a plain Python list
 >>> corpus = [[(1, 0.5)], []]  # make one document empty, for the heck of it
 >>>
->>> corpora.MmCorpus.saveCorpus('/tmp/corpus.mm', corpus)
+>>> corpora.MmCorpus.serialize('/tmp/corpus.mm', corpus)
 
 Other formats include `Joachim's SVMlight format <http://svmlight.joachims.org/>`_,
 `Blei's LDA-C format <http://www.cs.princeton.edu/~blei/lda-c/>`_ and
 `GibbsLDA++ format <http://gibbslda.sourceforge.net/>`_.
 
->>> corpora.SvmLightCorpus.saveCorpus('/tmp/corpus.svmlight', corpus)
->>> corpora.BleiCorpus.saveCorpus('/tmp/corpus.lda-c', corpus)
->>> corpora.LowCorpus.saveCorpus('/tmp/corpus.low', corpus)
+>>> corpora.SvmLightCorpus.serialize('/tmp/corpus.svmlight', corpus)
+>>> corpora.BleiCorpus.serialize('/tmp/corpus.lda-c', corpus)
+>>> corpora.LowCorpus.serialize('/tmp/corpus.low', corpus)
 
 
 Conversely, to load a corpus iterator from a Matrix Market file:
@@ -249,7 +250,7 @@ purposes, nothing beats the simplicity of calling ``list(corpus)``.
 
 To save the same Matrix Market document stream in Blei's LDA-C format,
 
->>> corpora.BleiCorpus.saveCorpus('/tmp/corpus.lda-c', corpus)
+>>> corpora.BleiCorpus.serialize('/tmp/corpus.lda-c', corpus)
 
 In this way, `gensim` can also be used as a memory-efficient **I/O format conversion tool**:
 just load a document stream using one format and immediately save it in another format.

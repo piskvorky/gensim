@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.7',
+        VERSION:     '0.7.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -138,7 +138,7 @@ seminal 1990 article):</p>
 </div>
 <p>To follow Deerwester&#8217;s example, we first use this tiny corpus to define a 2-dimensional
 LSI space:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="o">.</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Now suppose a user typed in the query <cite>&#8220;Human computer interaction&#8221;</cite>. We would
@@ -197,7 +197,7 @@ to determine similarities.</p>
 so that the first document has a score of 0.99809301 etc.</p>
 <p>With some standard Python magic we sort these similarities into descending
 order, and obtain the final answer to the query <cite>&#8220;Human computer interaction&#8221;</cite>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sims</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">sims</span><span class="p">),</span> <span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="o">-</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sims</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">sims</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="o">-</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">sims</span> <span class="c"># print sorted (document number, similarity score) 2-tuples</span>
 <span class="go">[(2, 0.99844527), # The EPS user interface management system</span>
 <span class="go">(0, 0.99809301), # Human machine interface for lab abc computer applications</span>
@@ -232,9 +232,12 @@ perhaps check out <a class="reference internal" href="distributed.html"><em>dist
 This means that:</p>
 <ul class="simple">
 <li>there certainly are parts that could be implemented more efficiently (in C, for example), and there may also be bugs in the code</li>
-<li>your <strong>feedback is most welcome</strong> and appreciated, be it in code and idea contributions, bug reports or just user stories.</li>
+<li>your <strong>feedback is most welcome</strong> and appreciated, be it in code and
+<a class="reference external" href="https://github.com/piskvorky/gensim/wiki/Ideas-&amp;-Features-proposals">idea contributions</a>,
+<a class="reference external" href="https://github.com/piskvorky/gensim/issues">bug reports</a> or just
+<a class="reference external" href="http://groups.google.com/group/gensim/topics">user stories and general questions</a>.</li>
 </ul>
-<p>Gensim has no ambition to become a production-level tool, with robust failure handling
+<p>Gensim has no ambition to become an all-encompassing production level tool, with robust failure handling
 and error recoveries. Its main goal is to help NLP newcomers try out popular algorithms
 and to facilitate prototyping of new algorithms for NLP researchers.</p>
 </div>

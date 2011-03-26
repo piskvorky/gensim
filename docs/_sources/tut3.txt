@@ -34,7 +34,7 @@ MmCorpus(9 documents, 12 features, 28 non-zero entries)
 To follow Deerwester's example, we first use this tiny corpus to define a 2-dimensional
 LSI space:
 
->>> lsi = models.LsiModel(corpus, id2word=dictionary.id2word, numTopics=2)
+>>> lsi = models.LsiModel(corpus, id2word=dictionary, numTopics=2)
 
 Now suppose a user typed in the query `"Human computer interaction"`. We would
 like to sort our nine corpus documents in decreasing order of relevance to this query.
@@ -96,7 +96,7 @@ so that the first document has a score of 0.99809301 etc.
 With some standard Python magic we sort these similarities into descending
 order, and obtain the final answer to the query `"Human computer interaction"`:
 
->>> sims = sorted(enumerate(sims), key = lambda item: -item[1])
+>>> sims = sorted(enumerate(sims), key=lambda item: -item[1])
 >>> print sims # print sorted (document number, similarity score) 2-tuples
 [(2, 0.99844527), # The EPS user interface management system
 (0, 0.99809301), # Human machine interface for lab abc computer applications
@@ -133,8 +133,11 @@ Please remember that gensim is an experimental package, aimed at the NLP researc
 This means that:
 
 * there certainly are parts that could be implemented more efficiently (in C, for example), and there may also be bugs in the code
-* your **feedback is most welcome** and appreciated, be it in code and idea contributions, bug reports or just user stories.
+* your **feedback is most welcome** and appreciated, be it in code and
+  `idea contributions <https://github.com/piskvorky/gensim/wiki/Ideas-&-Features-proposals>`_,
+  `bug reports <https://github.com/piskvorky/gensim/issues>`_ or just
+  `user stories and general questions <http://groups.google.com/group/gensim/topics>`_.
 
-Gensim has no ambition to become a production-level tool, with robust failure handling
+Gensim has no ambition to become an all-encompassing production level tool, with robust failure handling
 and error recoveries. Its main goal is to help NLP newcomers try out popular algorithms
 and to facilitate prototyping of new algorithms for NLP researchers.

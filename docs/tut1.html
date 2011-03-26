@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.7',
+        VERSION:     '0.7.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -204,7 +204,7 @@ and returns the result as a sparse vector. The sparse vector <tt class="docutils
 therefore reads: in the document <cite>&#8220;Human computer interaction&#8221;</cite>, the words <cite>computer</cite>
 (id 0) and <cite>human</cite> (id 1) appear once; the other ten dictionary words appear (implicitly) zero times.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[</span><span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">texts</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span> <span class="c"># store to disk, for later use</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span> <span class="c"># store to disk, for later use</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">corpus</span>
 <span class="go">[[(0, 1.0), (1, 1.0), (2, 1.0)],</span>
 <span class="go"> [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],</span>
@@ -242,7 +242,7 @@ the <cite>__iter__</cite> function to fit your input format, whatever it is.
 Walking directories, parsing XML, accessing network...
 Just parse your input to retrieve a clean list of tokens in each document,
 then convert the tokens via a dictionary to their ids and yield the resulting sparse vector inside <cite>__iter__</cite>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus_memory_friendly</span> <span class="o">=</span> <span class="n">MyCorpus</span><span class="p">()</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus_memory_friendly</span> <span class="o">=</span> <span class="n">MyCorpus</span><span class="p">()</span> <span class="c"># doesn&#39;t load the corpus into memory!</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">corpus_memory_friendly</span>
 <span class="go">&lt;__main__.MyCorpus object at 0x10d5690&gt;</span>
 </pre></div>
@@ -250,7 +250,8 @@ then convert the tokens via a dictionary to their ids and yield the resulting sp
 <p>Corpus is now an object. We didn&#8217;t define any way to print it, so print just outputs address
 of the object in memory. Not very useful. To see the constituent vectors, let&#8217;s
 iterate over the corpus and print each document vector (one at a time):</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">corpus_memory_friendly</span><span class="p">:</span> <span class="k">print</span> <span class="n">vector</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">corpus_memory_friendly</span><span class="p">:</span> <span class="c"># load one vector into memory at a time</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">print</span> <span class="n">vector</span>
 <span class="go">[(0, 1), (1, 1), (2, 1)]</span>
 <span class="go">[(0, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]</span>
 <span class="go">[(2, 1), (5, 1), (7, 1), (8, 1)]</span>
@@ -298,15 +299,15 @@ To save a corpus in the Matrix Market format:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># create a toy corpus of 2 documents, as a plain Python list</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[[(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)],</span> <span class="p">[]]</span>  <span class="c"># make one document empty, for the heck of it</span>
 <span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Other formats include <a class="reference external" href="http://svmlight.joachims.org/">Joachim&#8217;s SVMlight format</a>,
 <a class="reference external" href="http://www.cs.princeton.edu/~blei/lda-c/">Blei&#8217;s LDA-C format</a> and
 <a class="reference external" href="http://gibbslda.sourceforge.net/">GibbsLDA++ format</a>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">SvmLightCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.svmlight&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">BleiCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.lda-c&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">LowCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.low&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">SvmLightCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.svmlight&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">BleiCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.lda-c&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">LowCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.low&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Conversely, to load a corpus iterator from a Matrix Market file:</p>
@@ -335,7 +336,7 @@ To save a corpus in the Matrix Market format:</p>
 <p>The second way is obviously more memory-friendly, but for testing and development
 purposes, nothing beats the simplicity of calling <tt class="docutils literal"><span class="pre">list(corpus)</span></tt>.</p>
 <p>To save the same Matrix Market document stream in Blei&#8217;s LDA-C format,</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">BleiCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.lda-c&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">BleiCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;/tmp/corpus.lda-c&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>In this way, <cite>gensim</cite> can also be used as a memory-efficient <strong>I/O format conversion tool</strong>:
