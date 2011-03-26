@@ -27,7 +27,7 @@ import Pyro.config
 from gensim.models import lsimodel
 from gensim import utils
 
-logger = logging.getLogger('lsi_worker')
+logger = logging.getLogger('gensim.models.lsi_worker')
 logger.setLevel(logging.INFO)
 
 

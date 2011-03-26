@@ -22,7 +22,7 @@ from Queue import Queue
 
 
 
-logger = logging.getLogger('utils')
+logger = logging.getLogger('gensim.utils')
 logger.setLevel(logging.INFO)
 
 

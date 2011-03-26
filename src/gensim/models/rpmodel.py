@@ -14,7 +14,7 @@ import scipy
 from gensim import interfaces, matutils, utils
 
 
-logger = logging.getLogger('rpmodel')
+logger = logging.getLogger('gensim.models.rpmodel')
 logger.setLevel(logging.INFO)
 
 
@@ -58,7 +58,7 @@ class RpModel(interfaces.TransformationABC):
         Initialize the random projection matrix.
         """
         if self.id2word is None:
-            logging.info("no word id mapping provided; initializing from corpus, assuming identity")
+            logger.info("no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dictFromCorpus(corpus)
             self.numTerms = len(self.id2word)
         else:
@@ -98,4 +98,3 @@ class RpModel(interfaces.TransformationABC):
         if self.projection is not None:
             self.projection = self.projection.copy('F') # simply making a fresh copy fixes the broken array
 #endclass RpModel
-

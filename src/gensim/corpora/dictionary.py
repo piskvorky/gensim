@@ -22,7 +22,7 @@ import itertools
 from gensim import utils
 
 
-logger = logging.getLogger('dictionary')
+logger = logging.getLogger('gensim.corpora.dictionary')
 logger.setLevel(logging.INFO)
 
 
@@ -85,7 +85,7 @@ class Dictionary(utils.SaveLoad):
         """
         for docno, document in enumerate(documents):
             if docno % 10000 == 0:
-                logging.info("adding document #%i to %s" % (docno, self))
+                logger.info("adding document #%i to %s" % (docno, self))
             _ = self.doc2bow(document, allowUpdate=True) # ignore the result, here we only care about updating token ids
         logger.info("built %s from %i documents (total %i corpus positions)" %
                      (self, self.numDocs, self.numPos))

@@ -22,6 +22,9 @@ import shelve
 
 from gensim import interfaces, utils
 
+logger = logging.getLogger('gensim.corpora.indexedcorpus')
+logger.setLevel(logging.INFO)
+
 
 class IndexedCorpus(interfaces.CorpusABC):
     def __init__(self, fname, index_fname=None):
@@ -44,7 +47,7 @@ class IndexedCorpus(interfaces.CorpusABC):
             index_fname = fname + '.index'
         try:
             self.index = utils.unpickle(index_fname)
-            logging.info("loaded corpus index from %s" % index_fname)
+            logger.info("loaded corpus index from %s" % index_fname)
         except:
             self.index = None
         self.length = None
@@ -78,7 +81,7 @@ class IndexedCorpus(interfaces.CorpusABC):
             doesn't support indexing!" % serializer.__name__)
 
         # store offsets persistently, using pickle
-        logging.info("saving %s index to %s" % (serializer.__name__, index_fname))
+        logger.info("saving %s index to %s" % (serializer.__name__, index_fname))
         utils.pickle(offsets, index_fname)
 
 
@@ -90,7 +93,7 @@ class IndexedCorpus(interfaces.CorpusABC):
         if self.index is not None:
             return len(self.index)
         if self.length is None:
-            logging.info("caching corpus length")
+            logger.info("caching corpus length")
             self.length = sum(1 for doc in self)
         return self.length
 

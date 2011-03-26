@@ -16,6 +16,9 @@ from gensim import interfaces, matutils
 from gensim.corpora import IndexedCorpus
 
 
+logger = logging.getLogger('gensim.corpora.mmcorpus')
+logger.setLevel(logging.INFO)
+
 
 class MmCorpus(matutils.MmReader, IndexedCorpus):
     """
@@ -42,7 +45,7 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         This function is automatically called by `MmCorpus.serialize`; don't
         call it directly, call `serialize` instead.
         """
-        logging.info("storing corpus in Matrix Market format to %s" % fname)
+        logger.info("storing corpus in Matrix Market format to %s" % fname)
         return matutils.MmWriter.writeCorpus(fname, corpus, index=True, progressCnt=progressCnt)
 #endclass MmCorpus
 

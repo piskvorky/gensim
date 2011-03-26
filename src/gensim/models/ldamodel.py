@@ -35,7 +35,7 @@ import sys, logging
 import itertools
 import time
 
-logger = logging.getLogger('ldamodel')
+logger = logging.getLogger('gensim.models.ldamodel')
 logger.setLevel(logging.INFO)
 
 
@@ -594,7 +594,7 @@ class LdaModel(interfaces.TransformationABC):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
-    logger.setLevel(level = logging.DEBUG)
+    logger.setLevel(level=logging.DEBUG)
     logger.info("running %s" % ' '.join(sys.argv))
 
     import os.path
@@ -609,6 +609,6 @@ if __name__ == '__main__':
     olda = LdaModel(numTopics=K, id2word=vocab, alpha=1./K, eta=1./K, decay=0.5)
     olda.update(corpus)
     olda.save('olda2.pkl')
-
-    logging.info("finished running %s" % program)
+    
+    logger.info("finished running %s" % program)
 

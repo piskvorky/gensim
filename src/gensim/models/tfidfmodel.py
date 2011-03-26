@@ -13,8 +13,7 @@ import math
 from gensim import interfaces, matutils, utils
 
 
-
-logger = logging.getLogger('tfidfmodel')
+logger = logging.getLogger('gensim.models.tfidfmodel')
 logger.setLevel(logging.INFO)
 
 
@@ -128,4 +127,3 @@ class TfidfModel(interfaces.TransformationABC):
             vector = matutils.unitVec(vector)
         return vector
 #endclass TfidfModel
-

@@ -17,6 +17,9 @@ from gensim import interfaces, utils
 from gensim.corpora import IndexedCorpus
 
 
+logger = logging.getLogger('gensim.corpora.lowcorpus')
+logger.setLevel(logging.INFO)
+
 
 def splitOnSpace(s):
     return [word for word in s.strip().split(' ') if word]
@@ -60,15 +63,15 @@ class LowCorpus(IndexedCorpus):
         simple splitting on spaces.
         """
         IndexedCorpus.__init__(self, fname)
-        logging.info("loading corpus from %s" % fname)
-
+        logger.info("loading corpus from %s" % fname)
+        
         self.fname = fname # input file, see class doc for format
         self.line2words = line2words # how to translate lines into words (simply split on space by default)
         self.numDocs = int(open(fname).readline()) # the first line in input data is the number of documents (integer). throws exception on bad input.
 
         if not id2word:
             # build a list of all word types in the corpus (distinct words)
-            logging.info("extracting vocabulary from the corpus")
+            logger.info("extracting vocabulary from the corpus")
             allTerms = set()
             self.useWordIds = False # return documents as (word, wordCount) 2-tuples
             for doc in self:
@@ -76,13 +79,13 @@ class LowCorpus(IndexedCorpus):
             allTerms = sorted(allTerms) # sort the list of all words; rank in that list = word's integer id
             self.id2word = dict(zip(xrange(len(allTerms)), allTerms)) # build a mapping of word id(int) -> word (string)
         else:
-            logging.info("using provided word mapping (%i ids)" % len(id2word))
+            logger.info("using provided word mapping (%i ids)" % len(id2word))
             self.id2word = id2word
         self.word2id = dict((v, k) for k, v in self.id2word.iteritems())
         self.numTerms = len(self.word2id)
         self.useWordIds = True # return documents as (wordIndex, wordCount) 2-tuples
-
-        logging.info("loaded corpus with %i documents and %i terms from %s" %
+        
+        logger.info("loaded corpus with %i documents and %i terms from %s" % 
                      (self.numDocs, self.numTerms, fname))
 
 
@@ -137,10 +140,10 @@ class LowCorpus(IndexedCorpus):
         call it directly, call `serialize` instead.
         """
         if id2word is None:
-            logging.info("no word id mapping provided; initializing from corpus")
+            logger.info("no word id mapping provided; initializing from corpus")
             id2word = utils.dictFromCorpus(corpus)
-
-        logging.info("storing corpus in List-Of-Words format: %s" % fname)
+        
+        logger.info("storing corpus in List-Of-Words format: %s" % fname)
         truncated = 0
         offsets = []
         with open(fname, 'w') as fout:
@@ -155,7 +158,7 @@ class LowCorpus(IndexedCorpus):
                 fout.write('%s\n' % ' '.join(words))
 
         if truncated:
-            logging.warning("List-of-words format can only save vectors with "
+            logger.warning("List-of-words format can only save vectors with "
                             "integer elements; %i float entries were truncated to integer value" %
                             truncated)
         return offsets

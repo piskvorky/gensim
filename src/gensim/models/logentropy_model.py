@@ -8,7 +8,7 @@ import math
 from gensim import interfaces, matutils, utils
 
 
-logger = logging.getLogger('logentropy_model')
+logger = logging.getLogger('gensim.models.logentropy_model')
 logger.setLevel(logging.INFO)
 
 class LogEntropyModel(interfaces.TransformationABC):

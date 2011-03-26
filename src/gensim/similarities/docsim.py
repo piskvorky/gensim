@@ -43,6 +43,9 @@ from scipy.linalg import get_blas_funcs
 from gensim import interfaces, utils, matutils
 
 
+logger = logging.getLogger('gensim.similarity.docsim')
+logger.setLevel(logging.INFO)
+
 
 class Similarity(interfaces.SimilarityABC):
     """
@@ -100,11 +103,11 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
         """
         if numFeatures is None:
-            logging.info("scanning corpus of %i documents to determine the number of features" %
+            logger.info("scanning corpus of %i documents to determine the number of features" %
                          len(corpus))
             numFeatures = 1 + utils.getMaxId(corpus)
-
-        logging.info("creating matrix for %i documents and %i features" %
+        
+        logger.info("creating matrix for %i documents and %i features" % 
                      (len(corpus), numFeatures))
         self.numFeatures = numFeatures
         self.numBest = numBest
@@ -115,7 +118,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
             # iterate over corpus, populating the numpy matrix
             for docNo, vector in enumerate(corpus):
                 if docNo % 1000 == 0:
-                    logging.info("PROGRESS: at document #%i/%i" % (docNo, len(corpus)))
+                    logger.info("PROGRESS: at document #%i/%i" % (docNo, len(corpus)))
                 vector = matutils.unitVec(matutils.sparse2full(vector, numFeatures))
                 self.corpus[docNo] = vector
 
@@ -171,7 +174,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         [(12, 1.0), (30, 0.95), (5, 0.45)]
 
         """
-        logging.info("creating sparse matrix for %i documents" % len(corpus))
+        logger.info("creating sparse matrix for %i documents" % len(corpus))
         self.numBest = numBest
         self.corpus = scipy.sparse.lil_matrix((len(corpus), 1), dtype=dtype) # set no of columns to 1 for now, as the number of terms is unknown yet
         self.normalize = True
@@ -179,7 +182,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         # iterate over corpus, populating the sparse matrix
         for docNo, vector in enumerate(corpus):
             if docNo % 10000 == 0:
-                logging.info("PROGRESS: at document #%i/%i" % (docNo, len(corpus)))
+                logger.info("PROGRESS: at document #%i/%i" % (docNo, len(corpus)))
             vector = matutils.unitVec(vector) # make all vectors unit length, so that cosine similarity = simple dot product
             self.corpus.rows[docNo] = [termId for termId, _ in vector]
             self.corpus.data[docNo] = [dtype(val) for _, val in vector]
@@ -190,9 +193,9 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
         # convert to Compressed Sparse Row for efficient row slicing and multiplications
         self.corpus = self.corpus.tocsr()
-        logging.info("created %s" % repr(self.corpus))
-
-
+        logger.info("created %s" % repr(self.corpus))
+    
+    
     def getSimilarities(self, doc):
         """
         Return similarity of sparse vector `doc` to all documents in the corpus.
