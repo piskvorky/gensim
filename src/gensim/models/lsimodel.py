@@ -57,7 +57,7 @@ from scipy.sparse import sparsetools
 from gensim import interfaces, matutils, utils
 
 
-logger = logging.getLogger('lsimodel')
+logger = logging.getLogger('gensim.models.lsimodel')
 logger.setLevel(logging.INFO)
 
 
@@ -172,7 +172,7 @@ class Projection(utils.SaveLoad):
             # bug ticket http://projects.scipy.org/numpy/ticket/706
             u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False) # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK wrapper for partial svd/eigendecomp in numpy :(
         except numpy.linalg.LinAlgError:
-            logging.error("SVD(A) failed; trying SVD(A * A^T)")
+            logger.error("SVD(A) failed; trying SVD(A * A^T)")
             u_k, s_k, _ = numpy.linalg.svd(numpy.dot(k, k.T), full_matrices = False) # if this fails too, give up with an exception
             s_k = numpy.sqrt(s_k) # go back from eigen values to singular values
         
@@ -360,7 +360,7 @@ class LsiModel(interfaces.TransformationABC):
                 if self.dispatcher:
                     logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                     self.projection = self.dispatcher.getstate()
-#            logging.info("top topics after adding %i documents" % doc_no)
+#            logger.info("top topics after adding %i documents" % doc_no)
 #            self.printDebug(10)
         else:
             assert not self.dispatcher, "must be in serial mode to receive jobs"

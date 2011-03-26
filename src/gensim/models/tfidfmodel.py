@@ -13,6 +13,9 @@ import math
 from gensim import interfaces, matutils, utils
 
 
+logger = logging.getLogger('gensim.models.tfidfmodel')
+logger.setLevel(logging.INFO)
+
 
 class TfidfModel(interfaces.TransformationABC):
     """
@@ -55,12 +58,12 @@ class TfidfModel(interfaces.TransformationABC):
         Compute inverse document weights, which will be used to modify term 
         frequencies for documents.
         """
-        logging.info("calculating counts")
+        logger.info("calculating counts")
         idfs = {}
         numNnz = 0
         for docNo, bow in enumerate(corpus):
             if docNo % 10000 == 0:
-                logging.info("PROGRESS: processing document #%i" % docNo)
+                logger.info("PROGRESS: processing document #%i" % docNo)
             numNnz += len(bow)
             for termId, termCount in bow:
                 idfs[termId] = idfs.get(termId, 0) + 1
@@ -70,7 +73,7 @@ class TfidfModel(interfaces.TransformationABC):
         self.numNnz = numNnz
         
         # and finally compute the idf weights
-        logging.info("calculating IDF weights for %i documents and %i features (%i matrix non-zeros)" %
+        logger.info("calculating IDF weights for %i documents and %i features (%i matrix non-zeros)" %
                      (self.numDocs, 1 + max([-1] + idfs.keys()), self.numNnz))
         self.idfs = dict((termId, math.log(1.0 * self.numDocs / docFreq, 2)) # the IDF weight formula
                          for termId, docFreq in idfs.iteritems())

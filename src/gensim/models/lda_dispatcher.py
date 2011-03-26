@@ -24,7 +24,7 @@ import Pyro.config
 from gensim import utils
 
 
-logger = logging.getLogger("dispatcher")
+logger = logging.getLogger("gensim.models.lda_dispatcher")
 logger.setLevel(logging.INFO)
 
 

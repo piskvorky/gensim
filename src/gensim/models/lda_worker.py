@@ -27,7 +27,7 @@ import Pyro.config
 from gensim.models import ldamodel
 from gensim import utils
 
-logger = logging.getLogger('lda_worker')
+logger = logging.getLogger('gensim.models.lda_worker')
 logger.setLevel(logging.INFO)
 
 

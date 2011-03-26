@@ -616,5 +616,5 @@ if __name__ == '__main__':
     olda.update(corpus)
     olda.save('olda2.pkl')
     
-    logging.info("finished running %s" % program)
+    logger.info("finished running %s" % program)
 
