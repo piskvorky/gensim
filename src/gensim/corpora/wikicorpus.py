@@ -308,7 +308,7 @@ class VocabTransform(interfaces.TransformationABC):
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
     logging.root.setLevel(level = logging.INFO)
-    logging.info("running %s" % ' '.join(sys.argv))
+    logger.info("running %s" % ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
     
@@ -345,4 +345,4 @@ if __name__ == '__main__':
     # ~1.5h; result file is 14GB! bzip2'ed down to 4.5GB
     MmCorpus.saveCorpus(output + '_tfidf.mm', tfidf[mm], progressCnt=10000)
     
-    logging.info("finished running %s" % program)
+    logger.info("finished running %s" % program)
