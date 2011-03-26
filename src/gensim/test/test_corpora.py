@@ -54,6 +54,23 @@ class CorpusTesterABC(object):
 
         # delete the temporary file
         os.remove(testfile())
+
+    def testSerialize(self):
+        corpus = [[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]
+
+        # make sure the corpus can be saved
+        self.corpusClass.serialize(testfile(), corpus)
+
+        # and loaded back, resulting in exactly the same corpus
+        corpus2 = self.corpusClass(testfile())
+        self.assertEqual(corpus, list(corpus2))
+        
+        # make sure the indexing corpus[i] works
+        for i in xrange(len(corpus)):
+            self.assertEqual(corpus[i], corpus2[i])
+
+        # delete the temporary file
+        os.remove(testfile())
 #endclass CorpusTesterABC
 
 

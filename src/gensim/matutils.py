@@ -339,7 +339,8 @@ class MmWriter(object):
         mw.fakeHeaders(numDocs, numTerms, numNnz)
 
         mw.close()
-        return offsets
+        if index:
+            return offsets
 
 
     def __del__(self):
