@@ -17,6 +17,10 @@ from gensim import interfaces, utils
 from gensim.corpora import IndexedCorpus
 
 
+logger = logging.getLogger('gensim.corpora.bleicorpus')
+logger.setLevel(logging.INFO)
+
+
 class BleiCorpus(IndexedCorpus):
     """
     Corpus in Blei's LDA-C format.
@@ -40,8 +44,8 @@ class BleiCorpus(IndexedCorpus):
         `fname.vocab`.
         """
         IndexedCorpus.__init__(self, fname)
-        logging.info("loading corpus from %s" % fname)
-
+        logger.info("loading corpus from %s" % fname)
+        
         if fnameVocab is None:
             fnameVocab = fname + '.vocab'
 
@@ -84,13 +88,13 @@ class BleiCorpus(IndexedCorpus):
         call it directly, call `serialize` instead.
         """
         if id2word is None:
-            logging.info("no word id mapping provided; initializing from corpus")
+            logger.info("no word id mapping provided; initializing from corpus")
             id2word = utils.dictFromCorpus(corpus)
             numTerms = len(id2word)
         else:
             numTerms = 1 + max([-1] + id2word.keys())
 
-        logging.info("storing corpus in Blei's LDA-C format: %s" % fname)
+        logger.info("storing corpus in Blei's LDA-C format: %s" % fname)
         with open(fname, 'w') as fout:
             offsets = []
             for doc in corpus:
@@ -101,7 +105,7 @@ class BleiCorpus(IndexedCorpus):
 
             # write out vocabulary, in a format compatible with Blei's topics.py script
             fnameVocab = fname + '.vocab'
-            logging.info("saving vocabulary of %i words to %s" % (numTerms, fnameVocab))
+            logger.info("saving vocabulary of %i words to %s" % (numTerms, fnameVocab))
             fout = open(fnameVocab, 'w')
             for featureId in xrange(numTerms):
                 fout.write("%s\n" % utils.toUtf8(id2word.get(featureId, '---')))

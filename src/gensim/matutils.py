@@ -32,7 +32,7 @@ blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
 
 
 
-logger = logging.getLogger("matutils")
+logger = logging.getLogger("gensim.matutils")
 logger.setLevel(logging.INFO)
 
 
@@ -355,7 +355,7 @@ class MmWriter(object):
 
 
     def close(self):
-        logging.debug("closing %s" % self.fname)
+        logger.debug("closing %s" % self.fname)
         self.fout.close()
 #endclass MmWriter
 
@@ -487,4 +487,3 @@ class MmReader(object):
             document.append((termId, val,)) # add another field to the current document
         return document
 #endclass MmReader
-

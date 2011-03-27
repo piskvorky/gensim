@@ -18,6 +18,10 @@ from gensim import interfaces, utils
 from gensim.corpora import IndexedCorpus
 
 
+logger = logging.getLogger('gensim.corpora.svmlightcorpus')
+logger.setLevel(logging.INFO)
+
+
 class SvmLightCorpus(IndexedCorpus):
     """
     Corpus in SVMlight format.
@@ -46,7 +50,7 @@ class SvmLightCorpus(IndexedCorpus):
         Initialize the corpus from a file.
         """
         IndexedCorpus.__init__(self, fname)
-        logging.info("loading corpus from %s" % fname)
+        logger.info("loading corpus from %s" % fname)
 
         self.fname = fname # input file, see class doc for format
         self.length = None
@@ -76,7 +80,7 @@ class SvmLightCorpus(IndexedCorpus):
         This function is automatically called by `SvmLightCorpus.serialize`; don't
         call it directly, call `serialize` instead.
         """
-        logging.info("converting corpus to SVMlight format: %s" % fname)
+        logger.info("converting corpus to SVMlight format: %s" % fname)
 
         offsets = []
         with open(fname, 'w') as fout:
