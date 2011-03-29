@@ -101,12 +101,11 @@ class BleiCorpus(IndexedCorpus):
                 doc = list(doc)
                 offsets.append(fout.tell())
                 fout.write("%i %s\n" % (len(doc), ' '.join("%i:%s" % p for p in doc)))
-            fout.close()
 
-            # write out vocabulary, in a format compatible with Blei's topics.py script
-            fnameVocab = fname + '.vocab'
-            logger.info("saving vocabulary of %i words to %s" % (numTerms, fnameVocab))
-            fout = open(fnameVocab, 'w')
+        # write out vocabulary, in a format compatible with Blei's topics.py script
+        fnameVocab = fname + '.vocab'
+        logger.info("saving vocabulary of %i words to %s" % (numTerms, fnameVocab))
+        with open(fnameVocab, 'w') as fout:
             for featureId in xrange(numTerms):
                 fout.write("%s\n" % utils.toUtf8(id2word.get(featureId, '---')))
 
