@@ -33,7 +33,7 @@ class IndexedCorpus(interfaces.CorpusABC):
         from `index_fname` (or `fname.index` if `index_fname` is not set).
         This index will allow subclasses to support the `corpus[docno]` syntax
         (random access to document #`docno` in O(1)).
-        
+
         >>> # save corpus in SvmLightCorpus format with an index
         >>> corpus = [[(1, 0.5)], [(0, 1.0), (1, 2.0)]]
         >>> gensim.corpora.SvmLightCorpus.serialize('testfile.svmlight', corpus)
@@ -59,16 +59,16 @@ class IndexedCorpus(interfaces.CorpusABC):
         Iterate through the document stream `corpus`, saving the documents to `fname`
         and recording byte offset of each document. Save the resulting index
         structure to file `index_fname` (or `fname`.index is not set).
-        
+
         This relies on the underlying corpus class `serializer` providing (in
         addition to standard iteration):
           * `saveCorpus` method that returns a sequence of byte offsets, one for
              each saved document,
           * the `docbyoffset(offset)` method, which returns a document
             positioned at `offset` bytes within the persistent storage (file).
-        
+
         Example:
-        
+
         >>> MmCorpus.serialize('test.mm', corpus)
         >>> mm = MmCorpus('test.mm') # `mm` document stream now has random access, `mm[42]` etc.
         """

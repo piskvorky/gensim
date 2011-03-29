@@ -45,7 +45,7 @@ class BleiCorpus(IndexedCorpus):
         """
         IndexedCorpus.__init__(self, fname)
         logger.info("loading corpus from %s" % fname)
-        
+
         if fnameVocab is None:
             fnameVocab = fname + '.vocab'
 
@@ -83,7 +83,7 @@ class BleiCorpus(IndexedCorpus):
 
         There are actually two files saved: `fname` and `fname.vocab`, where
         `fname.vocab` is the vocabulary file.
-        
+
         This function is automatically called by `BleiCorpus.serialize`; don't
         call it directly, call `serialize` instead.
         """

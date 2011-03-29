@@ -76,13 +76,13 @@ def split_alphanum(s):
 
 def stem_text(text):
     """
-    Return lowercase and (porter-)stemmed version of string `text`. 
+    Return lowercase and (porter-)stemmed version of string `text`.
     """
     p = PorterStemmer()
     return ' '.join(p.stem(word) for word in text.lower().split()) # lowercasing required by the stemmer
 
 
-DEFAULT_FILTERS = [str.lower, strip_tags, strip_punctuation, strip_multiple_whitespaces, 
+DEFAULT_FILTERS = [str.lower, strip_tags, strip_punctuation, strip_multiple_whitespaces,
                    strip_numeric, remove_stopwords, strip_short, stem_text]
 
 

@@ -149,7 +149,7 @@ class DmlSource(ArticleSource):
             if self.isArticle(root):
                 artAccepted += 1
                 yield self.idFromDir(root)
-        logger.info('%i directories processed, found %i articles' % 
+        logger.info('%i directories processed, found %i articles' %
                      (dirTotal, artAccepted))
 
 
@@ -286,7 +286,7 @@ class ArxmlivSource(ArticleSource):
         def error(self, exception):
             pass
 #            logger.debug("SAX error parsing xml: %s" % exception)
-        
+
         warning = fatalError = error
     #endclass ArxmlivErrorHandler
 
@@ -327,7 +327,7 @@ class ArxmlivSource(ArticleSource):
             if self.isArticle(root):
                 artAccepted += 1
                 yield self.idFromDir(root)
-        logger.info('%i directories processed, found %i articles' % 
+        logger.info('%i directories processed, found %i articles' %
                      (dirTotal, artAccepted))
 
 

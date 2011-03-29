@@ -106,8 +106,8 @@ class MatrixSimilarity(interfaces.SimilarityABC):
             logger.info("scanning corpus of %i documents to determine the number of features" %
                          len(corpus))
             numFeatures = 1 + utils.getMaxId(corpus)
-        
-        logger.info("creating matrix for %i documents and %i features" % 
+
+        logger.info("creating matrix for %i documents and %i features" %
                      (len(corpus), numFeatures))
         self.numFeatures = numFeatures
         self.numBest = numBest
@@ -194,8 +194,8 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         # convert to Compressed Sparse Row for efficient row slicing and multiplications
         self.corpus = self.corpus.tocsr()
         logger.info("created %s" % repr(self.corpus))
-    
-    
+
+
     def getSimilarities(self, doc):
         """
         Return similarity of sparse vector `doc` to all documents in the corpus.

@@ -75,15 +75,15 @@ class CorpusABC(utils.SaveLoad):
         which can in this case be provided by the optional `id2word` parameter.
 
         >>> MmCorpus.saveCorpus('file.mm', corpus)
-        
+
         Some corpora also support an index of where each document begins, so
-        that the documents on disk can be accessed in O(1) time (see the 
+        that the documents on disk can be accessed in O(1) time (see the
         `corpora.IndexedCorpus` base class). In this case, `saveCorpus` is automatically
         called internally by `serialize`, which does `saveCorpus` plus saves the index
         at the same time, so you want to store the corpus with::
-        
+
         >>> MmCorpus.serialize('file.mm', corpus) # stores index as well, allowing random access to individual documents
-        
+
         """
         raise NotImplementedError('cannot instantiate abstract base class')
 

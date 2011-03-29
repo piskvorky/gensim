@@ -41,7 +41,7 @@ class Dictionary(utils.SaveLoad):
         self.numPos = 0 # total number of corpus positions
         self.numNnz = 0 # total number of non-zeroes in the BOW matrix
         self.id2token = None # reverse mapping for token2id; not explicitly formed to save memory
-        
+
         if documents:
             self.addDocuments(documents)
 
@@ -93,12 +93,12 @@ class Dictionary(utils.SaveLoad):
 
     def doc2bow(self, document, allowUpdate=False, return_missing=False):
         """
-        Convert `document` (a list of words) into the bag-of-words format = list 
+        Convert `document` (a list of words) into the bag-of-words format = list
         of `(tokenId, tokenCount)` 2-tuples. Each word is assumed to be a
         **tokenized and normalized** utf-8 encoded string.
 
-        If `allowUpdate` is set, then also update dictionary in the process: create 
-        ids for new words. At the same time, update document frequencies -- for 
+        If `allowUpdate` is set, then also update dictionary in the process: create
+        ids for new words. At the same time, update document frequencies -- for
         each word appearing in this document, increase its `self.dfs` by one.
 
         If `allowUpdate` is **not** set, this function is `const`, i.e. read-only.
@@ -208,7 +208,7 @@ class Dictionary(utils.SaveLoad):
         """
         Save this Dictionary to a text file, in format:
         `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`.
-        
+
         Note: use `save`/`load` to store in binary format instead (pickle).
         """
         logger.info("saving dictionary mapping to %s" % fname)

@@ -10,14 +10,14 @@ mapping), which is then used to construct sparse bag-of-word vectors
 (= sequences of `(word_id, word_weight)` 2-tuples).
 
 This module provides some code scaffolding to simplify this pipeline. For
-example, given a corpus where each document is a separate line in file on disk, 
-you would override the `TextCorpus.get_texts` method to read one line=document 
-at a time, process it (lowercase, tokenize, whatever) and yield it as a sequence 
+example, given a corpus where each document is a separate line in file on disk,
+you would override the `TextCorpus.get_texts` method to read one line=document
+at a time, process it (lowercase, tokenize, whatever) and yield it as a sequence
 of words.
 
 Overriding `get_texts` is enough; you can then initialize the corpus with e.g.
 `MyTextCorpus(bz2.BZ2File('mycorpus.txt.bz2'))` and it will behave correctly like a
-corpus of sparse vectors. The `__iter__` methods is automatically set up, and 
+corpus of sparse vectors. The `__iter__` methods is automatically set up, and
 dictionary is automatically populated with all `word->id` mappings.
 
 The resulting object can be used as input to all gensim models (TFIDF, LSI, ...),
@@ -58,15 +58,15 @@ class TextCorpus(interfaces.CorpusABC):
     """
     Helper class to simplify the pipeline of getting bag-of-words vectors (= a
     gensim corpus) from plain text.
-    
+
     This is an abstract base class: override the `get_texts()` method to match
     your particular input.
-    
+
     Given a filename (or a file-like object) in constructor, the corpus object
-    will be automatically initialized with a dictionary in `self.dictionary` and 
+    will be automatically initialized with a dictionary in `self.dictionary` and
     will support the `iter` corpus method. You must only provide a correct `get_texts`
     implementation (and perhaps the `__len__` method to determine corpus length).
-    
+
     """
     def __init__(self, input=None):
         super(TextCorpus, self).__init__()
@@ -77,27 +77,27 @@ class TextCorpus(interfaces.CorpusABC):
         else:
             logger.warning("No input document stream provided; assuming "
                            "dictionary will be initialized some other way.")
-    
-    
+
+
     def __iter__(self):
         """
         The function that defines a corpus.
-        
+
         Iterating over the corpus must yield sparse vectors, one for each document.
         """
         for text in self.get_texts():
             yield self.dictionary.doc2bow(text, allowUpdate=False)
-    
-    
+
+
     def getstream(self):
         return getstream(self.input)
-    
-    
+
+
     def get_texts(self):
         """
         Iterate over the collection, yielding one document at a time. A document
         is a sequence of words (strings) that can be fed into `Dictionary.doc2bow`.
-        
+
         Override this function to match your input (parse input files, do any
         text preprocessing, lowercasing, tokenizing etc.). There will be no further
         preprocessing of the words coming out of this function.

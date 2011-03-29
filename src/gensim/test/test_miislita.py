@@ -5,7 +5,7 @@
 
 """
 This module replicates the miislita vector spaces from
-"A Linear Algebra Approach to the Vector Space Model -- A Fast Track Tutorial" 
+"A Linear Algebra Approach to the Vector Space Model -- A Fast Track Tutorial"
 by Dr. E. Garcia, admin@miislita.com
 See http://www.miislita.com for further details.
 """
@@ -37,7 +37,7 @@ class CorpusMiislita(corpora.TextCorpus):
         """
         Parse documents from the .cor file provided in the constructor. Lowercase
         each document and ignore some stopwords.
-        
+
         .cor format: one document per line, words separated by whitespace.
         """
         for doc in self.getstream():
@@ -58,12 +58,12 @@ class TestMiislita(unittest.TestCase):
         # construct corpus from file
         fname = datapath('head500.noblanks.cor.bz2')
         miislita = CorpusMiislita(bz2.BZ2File(fname))
-        
+
         # make sure serializing works
         ftmp = get_tmpfile('test_textcorpus.mm')
         corpora.MmCorpus.saveCorpus(ftmp, miislita)
         self.assertTrue(os.path.exists(ftmp))
-        
+
         # make sure deserializing gives the same result
         miislita2 = corpora.MmCorpus(ftmp)
         self.assertEqual(list(miislita), list(miislita2))
@@ -77,7 +77,7 @@ class TestMiislita(unittest.TestCase):
         # construct corpus from file
         corpusname = datapath('miIslita.cor')
         miislita = CorpusMiislita(corpusname)
-        
+
         # pickle to disk
         tmpf = get_tmpfile('tc_test.cpickle')
         miislita.save(tmpf)

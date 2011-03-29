@@ -20,7 +20,7 @@ class LogEntropyModel(interfaces.TransformationABC):
     This is done by a log entropy normalization, optionally normalizing the
     resulting documents to unit length. The following formulas explain how
     to compute the log entropy weight for term `i` in document `j`::
-    
+
       local_weight_{i,j} = log(frequency_{i,j} + 1)
 
       P_{i,j} = frequency_{i,j} / sum_j frequency_{i,j}
@@ -62,7 +62,7 @@ class LogEntropyModel(interfaces.TransformationABC):
 
     def initialize(self, corpus):
         """
-        Initialize internal statistics based on a training corpus. Called 
+        Initialize internal statistics based on a training corpus. Called
         automatically from the constructor.
         """
         logger.info("calculating counts")

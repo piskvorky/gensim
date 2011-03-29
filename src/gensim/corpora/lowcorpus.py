@@ -64,7 +64,7 @@ class LowCorpus(IndexedCorpus):
         """
         IndexedCorpus.__init__(self, fname)
         logger.info("loading corpus from %s" % fname)
-        
+
         self.fname = fname # input file, see class doc for format
         self.line2words = line2words # how to translate lines into words (simply split on space by default)
         self.numDocs = int(open(fname).readline()) # the first line in input data is the number of documents (integer). throws exception on bad input.
@@ -84,8 +84,8 @@ class LowCorpus(IndexedCorpus):
         self.word2id = dict((v, k) for k, v in self.id2word.iteritems())
         self.numTerms = len(self.word2id)
         self.useWordIds = True # return documents as (wordIndex, wordCount) 2-tuples
-        
-        logger.info("loaded corpus with %i documents and %i terms from %s" % 
+
+        logger.info("loaded corpus with %i documents and %i terms from %s" %
                      (self.numDocs, self.numTerms, fname))
 
 
@@ -135,14 +135,14 @@ class LowCorpus(IndexedCorpus):
     def saveCorpus(fname, corpus, id2word=None):
         """
         Save a corpus in the List-of-words format.
-        
+
         This function is automatically called by `LowCorpus.serialize`; don't
         call it directly, call `serialize` instead.
         """
         if id2word is None:
             logger.info("no word id mapping provided; initializing from corpus")
             id2word = utils.dictFromCorpus(corpus)
-        
+
         logger.info("storing corpus in List-Of-Words format: %s" % fname)
         truncated = 0
         offsets = []

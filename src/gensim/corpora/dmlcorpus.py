@@ -44,8 +44,8 @@ class DmlConfig(object):
             acceptLangs = set(['any']) # if not specified, accept all languages (including unknown/unspecified)
         self.acceptLangs = set(acceptLangs)
         logger.info('initialized %s' % self)
-        
-    
+
+
     def resultFile(self, fname):
         return os.path.join(self.resultDir, self.configId + '_' + fname)
 
@@ -118,7 +118,7 @@ class DmlCorpus(interfaces.CorpusABC):
         numPositions = 0
         for docNo, (sourceId, docUri) in enumerate(self.documents):
             if docNo % 1000 == 0:
-                logger.info("PROGRESS: at document #%i/%i (%s, %s)" % 
+                logger.info("PROGRESS: at document #%i/%i (%s, %s)" %
                              (docNo, len(self.documents), sourceId, docUri))
             source = self.config.sources[sourceId]
             contents = source.getContent(docUri)
@@ -127,7 +127,7 @@ class DmlCorpus(interfaces.CorpusABC):
 
             # convert to bag-of-words, but ignore the result -- here we only care about updating token ids
             _ = self.dictionary.doc2bow(words, allowUpdate = True)
-        logger.info("built %s from %i documents (total %i corpus positions)" % 
+        logger.info("built %s from %i documents (total %i corpus positions)" %
                      (self.dictionary, len(self.documents), numPositions))
 
 
@@ -152,19 +152,19 @@ class DmlCorpus(interfaces.CorpusABC):
                 meta = source.getMeta(articleUri) # retrieve metadata (= dictionary of key->value)
                 if config.acceptArticle(meta): # do additional filtering on articles, based on the article's metadata
                     accepted.append((sourceId, articleUri))
-            logger.info("accepted %i articles for source '%s'" % 
+            logger.info("accepted %i articles for source '%s'" %
                          (len(accepted), sourceId))
             self.documents.extend(accepted)
 
         if not self.documents:
             logger.warning('no articles at all found from the config; something went wrong!')
-        
+
         if shuffle:
             logger.info("shuffling %i documents for random order" % len(self.documents))
             import random
             random.shuffle(self.documents)
-        
-        logger.info("accepted total of %i articles for %s" % 
+
+        logger.info("accepted total of %i articles for %s" %
                      (len(self.documents), str(config)))
 
 

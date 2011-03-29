@@ -609,6 +609,6 @@ if __name__ == '__main__':
     olda = LdaModel(numTopics=K, id2word=vocab, alpha=1./K, eta=1./K, decay=0.5)
     olda.update(corpus)
     olda.save('olda2.pkl')
-    
+
     logger.info("finished running %s" % program)
 

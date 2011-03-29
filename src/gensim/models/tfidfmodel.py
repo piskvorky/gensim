@@ -57,9 +57,9 @@ class TfidfModel(interfaces.TransformationABC):
     """
     def __init__(self, corpus=None, id2word=None, dictionary=None, normalize=True):
         """
-        `normalize` dictates whether the transformed vectors will be set to unit 
+        `normalize` dictates whether the transformed vectors will be set to unit
         length.
-        
+
         If `dictionary` is specified, it must be a `corpora.Dictionary` object
         and it will be used to directly construct the inverse document frequency
         mapping (`corpus`, if specified, is ignored).

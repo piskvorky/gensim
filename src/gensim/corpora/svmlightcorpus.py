@@ -76,7 +76,7 @@ class SvmLightCorpus(IndexedCorpus):
         Save a corpus in the SVMlight format.
 
         The SVMlight `<target>` class tag is set to 0 for all documents.
-        
+
         This function is automatically called by `SvmLightCorpus.serialize`; don't
         call it directly, call `serialize` instead.
         """

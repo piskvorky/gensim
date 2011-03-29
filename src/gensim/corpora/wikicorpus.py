@@ -275,7 +275,7 @@ class VocabTransform(interfaces.TransformationABC):
 
     Given a mapping between old ids and new ids (some old ids may be missing,
     i.e. the mapping need not be a bijection), this will wrap a
-    corpus so that iterating over VocabTransform[corpus] returns the same vectors 
+    corpus so that iterating over VocabTransform[corpus] returns the same vectors
     but with the new ids.
 
     Old features that have no counterpart in the new ids are discarded. This
@@ -344,5 +344,5 @@ if __name__ == '__main__':
     # save tfidf vectors in matrix market format
     # ~1.5h; result file is 14GB! bzip2'ed down to 4.5GB
     MmCorpus.saveCorpus(output + '_tfidf.mm', tfidf[mm], progressCnt=10000)
-    
+
     logger.info("finished running %s" % program)

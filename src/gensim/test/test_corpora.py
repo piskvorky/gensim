@@ -64,7 +64,7 @@ class CorpusTesterABC(object):
         # and loaded back, resulting in exactly the same corpus
         corpus2 = self.corpusClass(testfile())
         self.assertEqual(corpus, list(corpus2))
-        
+
         # make sure the indexing corpus[i] works
         for i in xrange(len(corpus)):
             self.assertEqual(corpus[i], corpus2[i])

@@ -157,23 +157,23 @@ class TestLdaModel(unittest.TestCase):
     def testTransform(self):
         passed = False
         # sometimes, LDA training gets stuck at a local minimum
-        # in that case try re-training the model from scratch, hoping for a 
+        # in that case try re-training the model from scratch, hoping for a
         # better random initialization
         for i in xrange(5): # restart at most 5 times
             # create the transformation model
             model = ldamodel.LdaModel(id2word=dictionary, numTopics=2, passes=100)
             model.update(corpus)
-            
+
             # transform one document
             doc = list(corpus)[0]
             transformed = model[doc]
-            
+
             vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
             expected = [0.049, 0.951]
             passed = numpy.allclose(sorted(vec), sorted(expected), atol=1e-2) # must contain the same values, up to re-ordering
             if passed:
                 break
-            logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)" % 
+            logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)" %
                             (i, sorted(vec), sorted(expected)))
         self.assertTrue(passed)
 
@@ -206,21 +206,21 @@ class TestTfidfModel(unittest.TestCase):
 
 
     def testInit(self):
-        # create the transformation model by analyzing a corpus 
+        # create the transformation model by analyzing a corpus
         # uses the global `corpus`!
         model1 = tfidfmodel.TfidfModel(corpus)
-        
+
         # make sure the dfs<->idfs transformation works
         dfs = tfidfmodel.idfs2dfs(model1.idfs, len(corpus))
         self.assertEqual(dfs, dictionary.dfs)
         self.assertEqual(model1.idfs, tfidfmodel.dfs2idfs(dfs, len(corpus)))
-        
-        # create the transformation model by directly supplying a term->docfreq 
+
+        # create the transformation model by directly supplying a term->docfreq
         # mapping from the global var `dictionary`.
         model2 = tfidfmodel.TfidfModel(dictionary=dictionary)
         self.assertEqual(model1.idfs, model2.idfs)
-    
-    
+
+
     def testPersistence(self):
         model = tfidfmodel.TfidfModel(self.corpus, normalize=True)
         model.save(testfile())
