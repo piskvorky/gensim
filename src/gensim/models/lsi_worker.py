@@ -28,7 +28,6 @@ from gensim.models import lsimodel
 from gensim import utils
 
 logger = logging.getLogger('gensim.models.lsi_worker')
-logger.setLevel(logging.INFO)
 
 
 SAVE_DEBUG = 0 # save intermediate models after every SAVE_DEBUG updates (0 for never)

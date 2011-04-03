@@ -15,7 +15,6 @@ from gensim import interfaces, matutils, utils
 
 
 logger = logging.getLogger('gensim.models.rpmodel')
-logger.setLevel(logging.INFO)
 
 
 class RpModel(interfaces.TransformationABC):

@@ -33,7 +33,6 @@ blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
 
 
 logger = logging.getLogger("gensim.matutils")
-logger.setLevel(logging.INFO)
 
 
 def corpus2csc(corpus, num_terms, dtype=numpy.float64):

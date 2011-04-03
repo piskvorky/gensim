@@ -19,7 +19,6 @@ from gensim.corpora import IndexedCorpus
 
 
 logger = logging.getLogger('gensim.corpora.svmlightcorpus')
-logger.setLevel(logging.INFO)
 
 
 class SvmLightCorpus(IndexedCorpus):

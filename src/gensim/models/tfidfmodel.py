@@ -14,7 +14,6 @@ from gensim import interfaces, matutils, utils
 
 
 logger = logging.getLogger('gensim.models.tfidfmodel')
-logger.setLevel(logging.INFO)
 
 
 def dfs2idfs(dfs, totaldocs):

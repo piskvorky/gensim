@@ -44,7 +44,6 @@ from gensim import interfaces, utils, matutils
 
 
 logger = logging.getLogger('gensim.similarity.docsim')
-logger.setLevel(logging.INFO)
 
 
 class Similarity(interfaces.SimilarityABC):
@@ -63,7 +62,7 @@ class Similarity(interfaces.SimilarityABC):
         If `numBest` is set, queries return `numBest` most similar documents, as a
         sorted list:
 
-        >>> sms = MatrixSimilarity(corpus, numBest = 3)
+        >>> sms = Similarity(corpus, numBest=3)
         >>> sms[vec12]
         [(12, 1.0), (30, 0.95), (5, 0.45)]
 
@@ -97,7 +96,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         If `numBest` is set, queries return `numBest` most similar documents, as a
         sorted list:
 
-        >>> sms = MatrixSimilarity(corpus, numBest = 3)
+        >>> sms = MatrixSimilarity(corpus, numBest=3)
         >>> sms[vec12]
         [(12, 1.0), (30, 0.95), (5, 0.45)]
 
@@ -169,7 +168,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         If `numBest` is set, queries return `numBest` most similar documents, as a
         sorted list:
 
-        >>> sms = SparseMatrixSimilarity(corpus, numBest = 3)
+        >>> sms = SparseMatrixSimilarity(corpus, numBest=3)
         >>> sms[vec12]
         [(12, 1.0), (30, 0.95), (5, 0.45)]
 

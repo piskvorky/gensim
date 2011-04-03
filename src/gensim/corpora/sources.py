@@ -27,7 +27,6 @@ from gensim import utils
 
 PAT_TAG = re.compile('<(.*?)>(.*)</.*?>')
 logger = logging.getLogger('gensim.corpora.sources')
-logger.setLevel(logging.INFO)
 
 
 class ArticleSource(object):

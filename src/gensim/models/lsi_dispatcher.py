@@ -25,7 +25,6 @@ from gensim import utils
 
 
 logger = logging.getLogger("gensim.models.lsi_dispatcher")
-logger.setLevel(logging.INFO)
 
 
 # How many jobs (=chunks of N documents) to keep "pre-fetched" in a queue?

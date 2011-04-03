@@ -20,6 +20,5 @@ class NullHandler(logging.Handler):
         pass
 
 logger = logging.getLogger('gensim')
-logger.setLevel(logging.INFO)
 if len(logger.handlers) == 0:	# To ensure reload() doesn't add another one
     logger.addHandler(NullHandler())

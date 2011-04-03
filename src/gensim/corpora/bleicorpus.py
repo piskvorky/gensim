@@ -18,7 +18,6 @@ from gensim.corpora import IndexedCorpus
 
 
 logger = logging.getLogger('gensim.corpora.bleicorpus')
-logger.setLevel(logging.INFO)
 
 
 class BleiCorpus(IndexedCorpus):

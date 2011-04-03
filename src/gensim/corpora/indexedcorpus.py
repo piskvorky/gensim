@@ -23,7 +23,6 @@ import shelve
 from gensim import interfaces, utils
 
 logger = logging.getLogger('gensim.corpora.indexedcorpus')
-logger.setLevel(logging.INFO)
 
 
 class IndexedCorpus(interfaces.CorpusABC):

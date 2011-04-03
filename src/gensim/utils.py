@@ -23,7 +23,6 @@ from Queue import Queue
 
 
 logger = logging.getLogger('gensim.utils')
-logger.setLevel(logging.INFO)
 
 
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)

@@ -23,7 +23,6 @@ from gensim import utils
 
 
 logger = logging.getLogger('gensim.corpora.dictionary')
-logger.setLevel(logging.INFO)
 
 
 class Dictionary(utils.SaveLoad):

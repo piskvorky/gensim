@@ -19,7 +19,6 @@ import dictionary # for constructing word->id mappings
 
 
 logger = logging.getLogger('gensim.corpora.dmlcorpus')
-logger.setLevel(logging.INFO)
 
 
 class DmlConfig(object):

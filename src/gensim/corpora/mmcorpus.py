@@ -17,7 +17,6 @@ from gensim.corpora import IndexedCorpus
 
 
 logger = logging.getLogger('gensim.corpora.mmcorpus')
-logger.setLevel(logging.INFO)
 
 
 class MmCorpus(matutils.MmReader, IndexedCorpus):

@@ -58,7 +58,6 @@ from gensim import interfaces, matutils, utils
 
 
 logger = logging.getLogger('gensim.models.lsimodel')
-logger.setLevel(logging.INFO)
 
 
 # accuracy defaults for the multi-pass stochastic algo

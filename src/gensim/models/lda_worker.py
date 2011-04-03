@@ -28,7 +28,6 @@ from gensim.models import ldamodel
 from gensim import utils
 
 logger = logging.getLogger('gensim.models.lda_worker')
-logger.setLevel(logging.INFO)
 
 
 # periodically save intermediate models after every SAVE_DEBUG updates (0 for never)

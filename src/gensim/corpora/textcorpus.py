@@ -35,7 +35,6 @@ from gensim import interfaces, utils
 from dictionary import Dictionary
 
 logger = logging.getLogger('textcorpus')
-logger.setLevel(logging.INFO)
 
 
 def getstream(input):

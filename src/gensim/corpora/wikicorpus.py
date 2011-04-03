@@ -39,7 +39,6 @@ from gensim.corpora.dictionary import Dictionary # for constructing word->id map
 
 
 logger = logging.getLogger('gensim.corpora.wikicorpus')
-logger.setLevel(logging.INFO)
 
 
 # Wiki is first scanned for all distinct word types (~7M). The types that appear

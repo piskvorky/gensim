@@ -18,7 +18,6 @@ from gensim.corpora import IndexedCorpus
 
 
 logger = logging.getLogger('gensim.corpora.lowcorpus')
-logger.setLevel(logging.INFO)
 
 
 def splitOnSpace(s):

@@ -20,7 +20,6 @@ import logging
 
 
 logger = logging.getLogger('gensim.interfaces')
-logger.setLevel(logging.INFO)
 
 
 class CorpusABC(utils.SaveLoad):

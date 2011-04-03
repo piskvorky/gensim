@@ -36,7 +36,6 @@ import itertools
 import time
 
 logger = logging.getLogger('gensim.models.ldamodel')
-logger.setLevel(logging.INFO)
 
 
 import numpy # for arrays, array broadcasting etc.
@@ -593,8 +592,8 @@ class LdaModel(interfaces.TransformationABC):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
-    logger.setLevel(level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
+                        level=logging.DEBUG)
     logger.info("running %s" % ' '.join(sys.argv))
 
     import os.path
