@@ -11,6 +11,7 @@ from gensim import interfaces, matutils, utils
 logger = logging.getLogger('gensim.models.logentropy_model')
 logger.setLevel(logging.INFO)
 
+
 class LogEntropyModel(interfaces.TransformationABC):
     """
     Objects of this class realize the transformation between word-document
@@ -27,7 +28,7 @@ class LogEntropyModel(interfaces.TransformationABC):
 
                             sum_j P_{i,j} * log(P_{i,j})
       global_weight_i = 1 + ----------------------------
-                            log(document_frequency_of_i)
+                            log(number_of_documents)
 
       final_weight_{i,j} = local_weight_{i,j} * global_weight_i
 
@@ -58,7 +59,8 @@ class LogEntropyModel(interfaces.TransformationABC):
             self.initialize(corpus)
 
     def __str__(self):
-        return "LogEntropyModel(n_docs=%s, n_words=%s)" % (self.n_docs, self.n_words)
+        return "LogEntropyModel(n_docs=%s, n_words=%s)" % (self.n_docs,
+                                                           self.n_words)
 
     def initialize(self, corpus):
         """
@@ -67,38 +69,31 @@ class LogEntropyModel(interfaces.TransformationABC):
         """
         logger.info("calculating counts")
         glob_freq = {}
-        n_context = {}
         glob_num_words, doc_no = 0, -1
         for doc_no, bow in enumerate(corpus):
             if doc_no % 10000 == 0:
                 logger.info("PROGRESS: processing document #%i" % doc_no)
             glob_num_words += len(bow)
             for term_id, term_count in bow:
-                n_context[term_id] = n_context.get(term_id, 0) + 1
                 glob_freq[term_id] = glob_freq.get(term_id, 0) + term_count
-        once = [key for key, val in n_context.iteritems() if val < 2]
-        if len(once) > 0:
-            logger.error("There are words that appear only in one document."
-                          "LogEntropy cannot deal with these; filter them out first")
-            raise ValueError("invalid context diversity of corpus")
 
         # keep some stats about the training corpus
         self.n_docs = doc_no + 1
         self.n_words = glob_num_words
 
         # and finally compute the global weights
-        num_terms = 1 + max([-1] + n_context.keys())
         logger.info("calculating global log entropy weights for %i "
                      "documents and %i features (%i matrix non-zeros)"
-                     % (self.n_docs, num_terms, self.n_words))
+                     % (self.n_docs, len(glob_freq), self.n_words))
         logger.debug('iterating over corpus')
         for bow in corpus:
             for key, freq in bow:
-                p = (float(freq) / glob_freq[key]) * math.log(float(freq) / glob_freq[key])
+                p = (float(freq) / glob_freq[key]) * math.log(float(freq) /
+                                                              glob_freq[key])
                 self.entr[key] = self.entr.get(key, 0.0) + p
         logger.debug('iterating over keys')
         for key in self.entr:
-            self.entr[key] = 1 + self.entr[key] / math.log(n_context[key])
+            self.entr[key] = 1 + self.entr[key] / math.log(self.n_docs)
 
     def __getitem__(self, bow):
         """

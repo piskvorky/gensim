@@ -236,17 +236,6 @@ class TestLogEntropyModel(unittest.TestCase):
         self.corpus_small = mmcorpus.MmCorpus(datapath('test_corpus_small.mm'))
         self.corpus_ok = mmcorpus.MmCorpus(datapath('test_corpus_ok.mm'))
 
-    @raises(ValueError)
-    def test_corpus_validity(self):
-        """
-        check whether the corpus is valid
-
-        words that appear in only one context cause trouble in the log entropy
-        normalization and should therefore be filtered out.
-        --> context diversity should be > 1
-        """
-        logentropy_model.LogEntropyModel(self.corpus_small)
-
 
     def testTransform(self):
         # create the transformation model
@@ -255,11 +244,11 @@ class TestLogEntropyModel(unittest.TestCase):
         # transform one document
         doc = list(self.corpus_ok)[0]
         transformed = model[doc]
-        expected =  [(0, 0.056633012265132537),
+        print transformed
+        expected =  [(0, 0.29155145321295795),
                      (1, 0.024757785476437949),
-                     (3, 0.62707564002906502)]
+                     (3, 1.0569257878828748)]
         self.assertTrue(numpy.allclose(transformed, expected))
-
 
 
     def testPersistence(self):
