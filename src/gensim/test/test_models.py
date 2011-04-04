@@ -244,7 +244,6 @@ class TestLogEntropyModel(unittest.TestCase):
         # transform one document
         doc = list(self.corpus_ok)[0]
         transformed = model[doc]
-        print transformed
         expected =  [(0, 0.29155145321295795),
                      (1, 0.024757785476437949),
                      (3, 1.0569257878828748)]

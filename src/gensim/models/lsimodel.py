@@ -616,7 +616,7 @@ def iterSvd(corpus, numTerms, numFactors, numIter = 200, initRate = None, conver
                 # we do not pre-cache the dot products because that takes insane amounts of memory (=doesn't scale with corpus size)
                 recon = numpy.dot(sdoc[docNo, :factor], sterm[:, :factor].T) # numpy.dot is very fast anyway, this is not the bottleneck
 
-                for termId in xrange(numTerms): # this loop is.
+                for termId in xrange(numTerms):
                     # error of one matrix element = real value - reconstructed value
                     error = vec.get(termId, 0.0) - (recon[termId] + vdoc * vterm[termId])
                     errors += error * error
