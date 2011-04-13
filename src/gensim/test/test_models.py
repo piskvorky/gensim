@@ -16,7 +16,6 @@ import os.path
 import tempfile
 
 import numpy
-from nose.tools import raises
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import lsimodel, ldamodel, tfidfmodel, rpmodel, logentropy_model

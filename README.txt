@@ -56,21 +56,6 @@ Manual for the gensim package is available in `HTML <http://nlp.fi.muni.cz/proje
 contains a walk-through of all its features and a complete reference section.
 It is also included in the source distribution package.
 
-Citations
----------
-
-There is one automated test which uses data from Lee et al. (2005) which
-compares different models for semantic similarity and verifies the results
-with similarity judgements from humans. Many thanks to
-Michael D. Lee (michael.lee@adelaide.edu.au) who provideded us
-with his corpus and similarity data.
-
-If you need to reference this dataset, please cite:
-
-Lee, M., Pincombe, B., & Welsh, M. (2005).
-An empirical evaluation of models of text document similarity.
-Proceedings of the 27th Annual Conference of the Cognitive Science Society
-
 ----------------
 
 Gensim is open source software, and has been released under the

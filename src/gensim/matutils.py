@@ -28,6 +28,15 @@ try:
 except ImportError:
     from scipy.linalg.special_matrices import triu
 
+try:
+    from numpy import triu_indices
+except ImportError:
+    # numpy < 1.4
+    def triu_indices(n, k=0):
+        m = numpy.ones((n,n), int)
+        a = triu(m, k)
+        return numpy.where(a != 0)
+
 blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
 
 
