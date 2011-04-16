@@ -42,9 +42,9 @@ class IndexedCorpus(interfaces.CorpusABC):
         [(0, 1.0), (1, 2.0)]
 
         """
-        if index_fname is None:
-            index_fname = fname + '.index'
         try:
+            if index_fname is None:
+                index_fname = fname + '.index'
             self.index = utils.unpickle(index_fname)
             logger.info("loaded corpus index from %s" % index_fname)
         except:
