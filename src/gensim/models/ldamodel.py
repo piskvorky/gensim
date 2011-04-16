@@ -97,22 +97,20 @@ class LdaState(utils.SaveLoad):
 
         # stretch the current model's expected n*phi counts to target size
         if self.numdocs == 0 or targetsize == self.numdocs:
-            mysstats = self.sstats
+            scale = 1.0
         else:
             scale = 1.0 * targetsize / self.numdocs
-            mysstats = self.sstats * scale
+        self.sstats *= (1.0 - rhot) * scale
 
         # stretch the incoming n*phi counts to target size
         if other.numdocs == 0 or targetsize == other.numdocs:
-            othersstats = other.sstats
+            scale = 1.0
         else:
             logger.info("merging changes from %i documents into a model of %i documents" %
                         (other.numdocs, targetsize))
             scale = 1.0 * targetsize / other.numdocs
-            othersstats = other.sstats * scale
+        self.sstats += rhot * scale * other.sstats
 
-        # merge the two matrices by weighted average
-        self.sstats = (1.0 - rhot) * mysstats + rhot * othersstats
         self.numdocs = targetsize
 
 
