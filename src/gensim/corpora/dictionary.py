@@ -18,6 +18,7 @@ from __future__ import with_statement
 
 import logging
 import itertools
+import UserDict
 
 from gensim import utils
 
@@ -25,9 +26,9 @@ from gensim import utils
 logger = logging.getLogger('gensim.corpora.dictionary')
 
 
-class Dictionary(utils.SaveLoad):
+class Dictionary(utils.SaveLoad, UserDict.DictMixin):
     """
-    Dictionary encapsulates mappings between normalized words and their integer ids.
+    Dictionary encapsulates the mapping between normalized words and their integer ids.
 
     The main function is `doc2bow`, which converts a collection of words to its
     bag-of-words representation, optionally also updating the dictionary mapping
@@ -35,18 +36,21 @@ class Dictionary(utils.SaveLoad):
     """
     def __init__(self, documents=None):
         self.token2id = {} # token -> tokenId
+        self.id2token = {} # reverse mapping for token2id; only formed on request, to save memory
         self.dfs = {} # document frequencies: tokenId -> in how many documents this token appeared
+
         self.numDocs = 0 # number of documents processed
         self.numPos = 0 # total number of corpus positions
         self.numNnz = 0 # total number of non-zeroes in the BOW matrix
-        self.id2token = None # reverse mapping for token2id; not explicitly formed to save memory
 
         if documents:
             self.addDocuments(documents)
 
 
     def __getitem__(self, tokenid):
-        if self.id2token is None:
+        if len(self.id2token) != len(self.token2id):
+            # the word->id mapping has changed (presumably via addDocuments);
+            # recompute id->word accordingly
             self.id2token = dict((v, k) for k, v in self.token2id.iteritems())
         return self.id2token[tokenid] # will throw for non-existent ids
 
@@ -54,6 +58,7 @@ class Dictionary(utils.SaveLoad):
     def keys(self):
         """Return a list of all token ids."""
         return self.token2id.values()
+
 
     def __len__(self):
         """
@@ -167,6 +172,7 @@ class Dictionary(utils.SaveLoad):
         self.filterTokens(goodIds = goodIds)
         self.compactify()
         logger.info("resulting dictionary: %s" % self)
+
 
     def filterTokens(self, badIds=None, goodIds=None):
         """
