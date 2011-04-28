@@ -400,10 +400,10 @@ class LsiModel(interfaces.TransformationABC):
         vec = matutils.sparse2full(bow, self.numTerms).astype(self.projection.u.dtype)
         vec.shape = (self.numTerms, 1)
         assert self.projection.u.flags.f_contiguous
-        dgemv = matutils.blas('gemv', self.projection.u)
-        topicDist = dgemv(1.0, self.projection.u, vec, trans=True) # u^T * x
+        dgemv = matutils.blas('gemv', self.projection.u[:,:self.numTopics])
+        topicDist = dgemv(1.0, self.projection.u[:,:self.numTopics], vec, trans=True) # u^T * x
         if scaled:
-            topicDist = (1.0 / self.projection.s) * topicDist # s^-1 * u^T * x
+            topicDist = (1.0 / self.projection.s[:self.numTopics]) * topicDist # s^-1 * u^T * x
 
         nnz = topicDist.nonzero()[0]
         return zip(nnz, topicDist[nnz])
