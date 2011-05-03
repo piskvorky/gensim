@@ -34,7 +34,7 @@ import logging
 from gensim import interfaces, utils
 from dictionary import Dictionary
 
-logger = logging.getLogger('textcorpus')
+logger = logging.getLogger('gensim.corpora.textcorpus')
 
 
 def getstream(input):

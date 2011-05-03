@@ -346,8 +346,9 @@ class LdaModel(interfaces.TransformationABC):
                 # statistics for the M step.
                 sstats[:, ids] += numpy.outer(expElogthetad.T, cts / phinorm)
 
-        logger.info("%i/%i documents converged within %i iterations" %
-                     (converged, len(chunk), self.VAR_MAXITER))
+        if len(chunk) > 1:
+            logger.info("%i/%i documents converged within %i iterations" %
+                         (converged, len(chunk), self.VAR_MAXITER))
 
         if collect_sstats:
             # This step finishes computing the sufficient statistics for the

@@ -404,7 +404,7 @@ class MmReader(object):
                 if not self.transposed:
                     self.numDocs, self.numTerms = self.numTerms, self.numDocs
                 break
-        logger.info("accepted corpus with %i documents, %i terms, %i non-zero entries" %
+        logger.info("accepted corpus with %i documents, %i features, %i non-zero entries" %
                      (self.numDocs, self.numTerms, self.numElements))
 
     def __len__(self):
