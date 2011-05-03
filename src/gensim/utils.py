@@ -330,45 +330,18 @@ def chunkize_serial(corpus, chunks):
     Each chunk is of length `chunks`, except the last one which may be smaller.
     A once-only input stream (`corpus` from a generator) is ok.
 
-    Chunking is done efficiently with itertools, so that only one chunk at a time
-    is realized in memory (the whole `corpus` may be larger than RAM).
-
-    >>> for chunk in chunkize(xrange(10), 4): print chunk
+    >>> for chunk in chunkize_serial(xrange(10), 4): print list(chunk)
     [0, 1, 2, 3]
     [4, 5, 6, 7]
     [8, 9]
 
     """
-    chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
-    for chunk_no, (key, group) in enumerate(chunker):
-        # return documents as numpy arrays, to save memory with large chunks
-        yield [doc for _, doc in group]
-
-
-
-class InputQueue(threading.Thread):
-    """
-    Help class for threaded `chunkize()`.
-    """
-    def __init__(self, q, corpus, chunks, maxsize):
-        super(InputQueue, self).__init__()
-        self.q = q
-        self.maxsize = maxsize
-        self.corpus = corpus
-        self.chunks = chunks
-
-    def run(self):
-        import numpy # don't clutter the global namespace with a dependency on numpy
-        for chunk in chunkize_serial(self.corpus, self.chunks):
-            # HACK XXX convert documents to numpy arrays, to save memory.
-            # makes no difference if docs are plain standard list of 2-tuples etc,
-            # but what if they are more complex, user-defined objects?
-            # this also gives a scipy warning at runtime:
-            # "UserWarning: indices array has non-integer dtype (float64)"
-            chunk = [numpy.asarray(doc) for doc in chunk]
-            logger.debug("pre-prepared another chunk (qsize=%s)" % self.q.qsize())
-            self.q.put(chunk, block=True)
-#endclass InputQueue
+    i = (val for val in corpus) # create generator
+    while True:
+        chunk = list(itertools.islice(i, chunks)) # consume `chunks` items from the generator
+        if not chunk: # generator empty?
+            break
+        yield chunk
 
 
 def chunkize(corpus, chunks, maxsize=0):
@@ -393,13 +366,38 @@ def chunkize(corpus, chunks, maxsize=0):
     [8, 9]
 
     """
+    class InputQueue(threading.Thread):
+        """
+        Help class for threaded `chunkize()`.
+        """
+        def __init__(self, q, corpus, chunks, maxsize):
+            super(InputQueue, self).__init__()
+            self.q = q
+            self.maxsize = maxsize
+            self.corpus = corpus
+            self.chunks = chunks
+
+        def run(self):
+            import numpy # don't clutter the global namespace with a dependency on numpy
+            i = (val for val in self.corpus) # create generator
+            while True:
+                # HACK XXX convert documents to numpy arrays, to save memory.
+                # This also gives a scipy warning at runtime:
+                # "UserWarning: indices array has non-integer dtype (float64)"
+                chunk = [numpy.asarray(doc) for doc in itertools.islice(i, self.chunks)] # consume `chunks` items from the generator
+                if not chunk: # generator empty?
+                    break
+                logger.info("prepared another chunk of %i documents (qsize=%i)" %
+                            (len(chunk), self.q.qsize()))
+                self.q.put(chunk, block=True)
+    #endclass InputQueue
+
     assert chunks > 0
 
     if maxsize > 0:
         q = Queue(maxsize=maxsize)
         thread = InputQueue(q, corpus, chunks, maxsize=maxsize)
         thread.start()
-
         while thread.isAlive() or not q.empty():
             yield q.get(block=True)
     else:
