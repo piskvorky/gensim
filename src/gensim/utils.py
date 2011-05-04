@@ -18,7 +18,7 @@ import itertools
 from functools import wraps # for `synchronous` function lock
 from htmlentitydefs import name2codepoint as n2cp # for `decode_htmlentities`
 import threading, time
-from Queue import Queue
+from Queue import Queue, Empty
 
 
 
@@ -399,7 +399,10 @@ def chunkize(corpus, chunks, maxsize=0):
         thread = InputQueue(q, corpus, chunks, maxsize=maxsize)
         thread.start()
         while thread.isAlive() or not q.empty():
-            yield q.get(block=True)
+            try:
+                yield q.get(block=True, timeout=1)
+            except Empty:
+                pass
     else:
         for chunk in chunkize_serial(corpus, chunks):
             yield chunk
