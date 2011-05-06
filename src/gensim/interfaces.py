@@ -186,5 +186,9 @@ class SimilarityABC(utils.SaveLoad):
         """
         for docNo, doc in enumerate(self.corpus):
             yield self[doc]
+
+
+    def __len__(self):
+        return len(self.corpus)
 #endclass SimilarityABC
 

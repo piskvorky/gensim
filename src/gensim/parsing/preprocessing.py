@@ -80,7 +80,7 @@ def stem_text(text):
     """
     p = PorterStemmer()
     return ' '.join(p.stem(word) for word in text.lower().split()) # lowercasing required by the stemmer
-
+stem = stem_text
 
 DEFAULT_FILTERS = [str.lower, strip_tags, strip_punctuation, strip_multiple_whitespaces,
                    strip_numeric, remove_stopwords, strip_short, stem_text]
