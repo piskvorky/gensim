@@ -558,7 +558,7 @@ class LdaModel(interfaces.TransformationABC):
             topics = self.numTopics
         topics = min(topics, self.numTopics)
         for i in xrange(topics):
-            self.printTopic(i, topN=topN)
+            logger.info("topic #%i: %s" % (i, self.printTopic(i, topN=topN)))
 
 
     def printTopic(self, topicid, topN=10):
@@ -566,7 +566,7 @@ class LdaModel(interfaces.TransformationABC):
         topic = topic / topic.sum() # normalize to probability dist
         bestn = numpy.argsort(topic)[::-1][:topN]
         beststr = ['%.3f*%s' % (topic[id], self.id2word[id]) for id in bestn]
-        logger.info("topic #%i: %s" % (topicid, ' + '.join(beststr)))
+        return ' + '.join(beststr)
 
 
     def __getitem__(self, bow, eps=0.01):
