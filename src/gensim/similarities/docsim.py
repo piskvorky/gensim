@@ -88,63 +88,71 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
     The matrix is internally stored as a numpy array.
     """
-    def __init__(self, corpus, numBest=None, dtype=numpy.float32, numFeatures=None):
+    def __init__(self, corpus, numBest=None, dtype=numpy.float32, numFeatures=None, chunks=100):
         """
         If `numBest` is left unspecified, similarity queries return a full list (one
-        float for every document in the corpus, including the query document):
+        float for every document in the corpus):
+
+        >>> sms = MatrixSimilarity(corpus)
+        >>> sms[vec12]
+        [0.0, 0.0, 0.2, 0.13, 0.8, 0.0, 0.0]
 
         If `numBest` is set, queries return `numBest` most similar documents, as a
         sorted list:
 
         >>> sms = MatrixSimilarity(corpus, numBest=3)
         >>> sms[vec12]
-        [(12, 1.0), (30, 0.95), (5, 0.45)]
+        [(2, 0.2), (3, 0.13), (4, 0.8)]
 
         """
         if numFeatures is None:
-            logger.info("scanning corpus of %i documents to determine the number of features" %
-                         len(corpus))
+            logger.info("scanning corpus to determine the number of features")
             numFeatures = 1 + utils.getMaxId(corpus)
 
-        logger.info("creating matrix for %i documents and %i features" %
-                     (len(corpus), numFeatures))
         self.numFeatures = numFeatures
         self.numBest = numBest
-        self.corpus = numpy.empty(shape=(len(corpus), numFeatures), dtype=dtype)
         self.normalize = True
+        self.chunks = chunks
 
         if corpus is not None:
-            # iterate over corpus, populating the numpy matrix
+            logger.info("creating matrix for %s documents and %i features" %
+                         (len(corpus), numFeatures))
+            self.corpus = numpy.empty(shape=(len(corpus), numFeatures), dtype=dtype)
+            # iterate over corpus, populating the numpy index matrix with (normalized)
+            # document vectors
             for docNo, vector in enumerate(corpus):
                 if docNo % 1000 == 0:
                     logger.info("PROGRESS: at document #%i/%i" % (docNo, len(corpus)))
                 vector = matutils.unitVec(matutils.sparse2full(vector, numFeatures))
                 self.corpus[docNo] = vector
 
-        self.corpus = numpy.asmatrix(self.corpus)
 
-
-    def getSimilarities(self, doc):
+    def getSimilarities(self, query):
         """
-        Return similarity of sparse vector `doc` to all documents in the corpus.
+        Return similarity of sparse vector `query` to all documents in the corpus,
+        as a numpy array.
 
-        `doc` may be either a bag-of-words iterable (standard corpus document),
-        or a numpy array, or a `scipy.sparse` matrix.
+        If `query` is a collection of documents, return a 2D array of similarities
+        of each document in `query` to all documents in the corpus (=batch query,
+        faster than processing each document in turn).
         """
-        if scipy.sparse.issparse(doc):
-            vec = doc.toarray().flatten()
-        elif isinstance(doc, numpy.ndarray):
-            vec = doc
+        is_corpus, query = utils.isCorpus(query)
+        if is_corpus:
+            query = numpy.asarray([matutils.sparse2full(vec, self.numFeatures) for vec in query],
+                                  dtype=self.corpus.dtype)
         else:
-            vec = matutils.sparse2full(doc, self.numFeatures)
-        vec = numpy.asfortranarray(vec, dtype=self.corpus.dtype).reshape(self.numFeatures, 1)
+            if scipy.sparse.issparse(query):
+                query = query.toarray() # convert sparse to dense
+            elif isinstance(query, numpy.ndarray):
+                pass
+            else:
+                # default case: query is a single vector in sparse gensim format
+                query = matutils.sparse2full(query, self.numFeatures)
+        query = numpy.asarray(query, dtype=self.corpus.dtype)
 
-        # compute cosine similarity against every other document in the collection
-        gemv = matutils.blas('gemv', self.corpus)
-        allSims = gemv(1.0, self.corpus, vec) # N x T * T x 1 = N x 1
-        allSims = list(allSims.flat) # convert to plain python list
-        assert len(allSims) == self.corpus.shape[0] # make sure no document got lost!
-        return allSims
+        # do a little transposition dance to stop numpy from making a copy of
+        # self.corpus internally in dot (very slow).
+        return numpy.dot(self.corpus, query.T).T # XXX: removed casting the result to list; does anyone care?
 #endclass MatrixSimilarity
 
 

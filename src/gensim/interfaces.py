@@ -15,6 +15,8 @@ from __future__ import with_statement
 
 import logging
 
+import numpy
+
 import utils, matutils
 import logging
 
@@ -159,24 +161,47 @@ class SimilarityABC(utils.SaveLoad):
 
     def getSimilarities(self, doc):
         """
-        Return similarity of a sparse vector `doc` to all documents in the corpus.
-
-        The document is assumed to be either of unit length or empty.
+        Return similarity of a sparse vector `doc` to all documents in the corpus,
+        or similarities of all documents in `doc` to all documents in corpus (if
+        `doc` is a corpus itself).
         """
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 
 
-    def __getitem__(self, doc):
-        # get similarities of doc to all documents in the corpus
-        if self.normalize:
-            doc = matutils.unitVec(doc)
-        allSims = self.getSimilarities(doc)
+    def __getitem__(self, query):
+        """Get similarities of document `query` to all documents in the corpus.
 
-        # return either all similarities as a list, or only self.numBest most similar, depending on settings from the constructor
-        if self.numBest is None:
-            return allSims
+        **or**
+
+        If `query` is a corpus (collection of documents), return a matrix of similarities
+        of all query documents vs. all corpus document. Using this type of batch
+        query is more efficient than constructing the matrix one document after
+        another.
+        """
+        is_corpus, query = utils.isCorpus(query)
+        if is_corpus or matutils.ismatrix(query):
+            if self.normalize:
+                if is_corpus:
+                    query = [matutils.unitVec(v) for v in query]
+                else:
+#                    query = numpy.asarray([matutils.unitVec(v) for v in query])
+                    query = query.T / numpy.sqrt(numpy.sum(query * query, axis=1))
+                    query = numpy.nan_to_num(query.T) # convert NaNs to 0.0
+            result = self.getSimilarities(query)
+
+            if self.numBest is None:
+                return result
+            else:
+                return [matutils.full2sparse_clipped(v, self.numBest) for v in result]
         else:
-            return matutils.full2sparse_clipped(allSims, self.numBest)
+            if self.normalize:
+                query = matutils.unitVec(query)
+            result = self.getSimilarities(query)
+
+            if self.numBest is None:
+                return result
+            else:
+                return matutils.full2sparse_clipped(result, self.numBest)
 
 
     def __iter__(self):
@@ -184,8 +209,37 @@ class SimilarityABC(utils.SaveLoad):
         For each corpus document, compute cosine similarity against all other
         documents and yield the result.
         """
-        for docNo, doc in enumerate(self.corpus):
-            yield self[doc]
+        # turn off query normalization (vectors in index are assumed to be already normalized)
+        norm = self.normalize
+        self.normalize = False
+
+        # Try to compute similarities in bigger chunks of documents (not
+        # one query = a single document after another). The point is, a
+        # bigger query of N documents is faster than N small queries of one
+        # document.
+        #
+        # After computing similarities of the bigger query in `self[chunk]`,
+        # yield the resulting similarities one after another, so that it looks
+        # exactly the same as if they had been computed with many small queries.
+        try:
+            chunking = self.chunks > 0
+        except AttributeError:
+            # chunking not supported; fall back to the (slower) mode of 1 query=1 document
+            chunking = False
+        if chunking:
+            # assumes `self.corpus` holds the index as a 2-d numpy array.
+            # this is true for MatrixSimilarity and SparseMatrixSimilarity, but
+            # may not be true for other (future) classes..?
+            for chunk_start in xrange(0, len(self.corpus), self.chunks):
+                chunk = self.corpus[chunk_start : chunk_start + self.chunks]
+                for sim in self[chunk]:
+                    yield sim
+        else:
+            for doc in self.corpus:
+                yield self[doc]
+
+        # restore old normalization value
+        self.normalize = norm
 
 
     def __len__(self):

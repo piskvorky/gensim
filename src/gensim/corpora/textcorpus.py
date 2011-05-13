@@ -64,7 +64,7 @@ class TextCorpus(interfaces.CorpusABC):
     Given a filename (or a file-like object) in constructor, the corpus object
     will be automatically initialized with a dictionary in `self.dictionary` and
     will support the `iter` corpus method. You must only provide a correct `get_texts`
-    implementation (and perhaps the `__len__` method to determine corpus length).
+    implementation.
 
     """
     def __init__(self, input=None):
@@ -104,5 +104,12 @@ class TextCorpus(interfaces.CorpusABC):
         # Instead of raising NotImplementedError, let's provide a sample implementation:
         # assume documents are lines in a single file (one document per line).
         # Yield each document as a list of lowercase tokens, via `utils.tokenize`.
+        length = 0
         for lineno, line in enumerate(getstream(self.input)):
+            length += 1
             yield utils.tokenize(line, lowercase=True)
+        self.length = length
+
+
+    def __len__(self):
+        return self.length # will throw if corpus not initialized

@@ -76,6 +76,10 @@ def pad(mat, padRow, padCol):
                       [numpy.matrix(numpy.zeros((padRow, cols + padCol)))]])
 
 
+def ismatrix(m):
+    return isinstance(m, numpy.ndarray) and m.ndim == 2
+
+
 def sparse2full(doc, length):
     """
     Convert a document in sparse corpus format (sequence of 2-tuples) into a dense
