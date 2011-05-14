@@ -184,9 +184,9 @@ class SimilarityABC(utils.SaveLoad):
                 if is_corpus:
                     query = [matutils.unitVec(v) for v in query]
                 else:
-#                    query = numpy.asarray([matutils.unitVec(v) for v in query])
-                    query = query.T / numpy.sqrt(numpy.sum(query * query, axis=1))
-                    query = numpy.nan_to_num(query.T) # convert NaNs to 0.0
+                    query = numpy.asarray([matutils.unitVec(v) for v in query])
+#                    query = query.T / numpy.sqrt(numpy.sum(query * query, axis=1))
+#                    query = numpy.nan_to_num(query.T) # convert NaNs to 0.0
             result = self.getSimilarities(query)
 
             if self.numBest is None:
@@ -222,7 +222,7 @@ class SimilarityABC(utils.SaveLoad):
         # yield the resulting similarities one after another, so that it looks
         # exactly the same as if they had been computed with many small queries.
         try:
-            chunking = self.chunks > 0
+            chunking = self.chunks > 1
         except AttributeError:
             # chunking not supported; fall back to the (slower) mode of 1 query=1 document
             chunking = False
@@ -230,7 +230,7 @@ class SimilarityABC(utils.SaveLoad):
             # assumes `self.corpus` holds the index as a 2-d numpy array.
             # this is true for MatrixSimilarity and SparseMatrixSimilarity, but
             # may not be true for other (future) classes..?
-            for chunk_start in xrange(0, len(self.corpus), self.chunks):
+            for chunk_start in xrange(0, self.corpus.shape[0], self.chunks):
                 chunk = self.corpus[chunk_start : chunk_start + self.chunks]
                 for sim in self[chunk]:
                     yield sim
@@ -243,6 +243,6 @@ class SimilarityABC(utils.SaveLoad):
 
 
     def __len__(self):
-        return len(self.corpus)
+        return self.corpus.shape[0]
 #endclass SimilarityABC
 

@@ -151,8 +151,9 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         query = numpy.asarray(query, dtype=self.corpus.dtype)
 
         # do a little transposition dance to stop numpy from making a copy of
-        # self.corpus internally in dot (very slow).
-        return numpy.dot(self.corpus, query.T).T # XXX: removed casting the result to list; does anyone care?
+        # self.corpus internally in numpy.dot (very slow).
+        result = numpy.dot(self.corpus, query.T).T # return #queries x #index
+        return result # XXX: removed casting the result to list; does anyone care?
 #endclass MatrixSimilarity
 
 
@@ -168,7 +169,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
     The matrix is internally stored as a `scipy.sparse.csr` matrix.
     """
-    def __init__(self, corpus, numBest=None, dtype=numpy.float32):
+    def __init__(self, corpus, numBest=None, chunks=500, dtype=numpy.float32):
         """
         If `numBest` is left unspecified, similarity queries return a full list (one
         float for every document in the corpus, including the query document):
@@ -181,51 +182,62 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         [(12, 1.0), (30, 0.95), (5, 0.45)]
 
         """
-        logger.info("creating sparse matrix for %i documents" % len(corpus))
         self.numBest = numBest
-        self.corpus = scipy.sparse.lil_matrix((len(corpus), 1), dtype=dtype) # set no of columns to 1 for now, as the number of terms is unknown yet
         self.normalize = True
+        self.chunks = chunks
 
-        # iterate over corpus, populating the sparse matrix
-        for docNo, vector in enumerate(corpus):
-            if docNo % 10000 == 0:
-                logger.info("PROGRESS: at document #%i/%i" % (docNo, len(corpus)))
-            vector = matutils.unitVec(vector) # make all vectors unit length, so that cosine similarity = simple dot product
-            self.corpus.rows[docNo] = [termId for termId, _ in vector]
-            self.corpus.data[docNo] = [dtype(val) for _, val in vector]
+        if corpus is not None:
+            logger.info("creating sparse matrix for %i documents" % len(corpus))
+            self.corpus = scipy.sparse.lil_matrix((len(corpus), 1), dtype=dtype) # set no of columns to 1 for now, as the number of terms is unknown yet
 
-        # now set the shape properly, using no. columns = highest term index in the corpus + 1
-        numTerms = 1 + max(max(row + [-1]) for row in self.corpus.rows) # + [-1] to avoid exceptions from max(empty)
-        self.corpus._shape = (len(corpus), numTerms)
+            # iterate over corpus, populating the sparse matrix
+            for docNo, vector in enumerate(corpus):
+                if docNo % 10000 == 0:
+                    logger.info("PROGRESS: at document #%i/%i" % (docNo, len(corpus)))
+                vector = matutils.unitVec(vector) # make all vectors unit length, so that cosine similarity = simple dot product
+                self.corpus.rows[docNo] = [termId for termId, _ in vector]
+                self.corpus.data[docNo] = [dtype(val) for _, val in vector]
 
-        # convert to Compressed Sparse Row for efficient row slicing and multiplications
-        self.corpus = self.corpus.tocsr()
-        logger.info("created %s" % repr(self.corpus))
+            # now set the shape properly, using no. columns = highest term index in the corpus + 1
+            numTerms = 1 + max(max(row + [-1]) for row in self.corpus.rows) # + [-1] to avoid exceptions from max(empty)
+            self.corpus._shape = (len(corpus), numTerms)
+
+            # convert to Compressed Sparse Row for efficient row slicing and multiplications
+            self.corpus = self.corpus.tocsr()
+            logger.info("created %s" % repr(self.corpus))
 
 
-    def getSimilarities(self, doc):
+    def getSimilarities(self, query):
         """
-        Return similarity of sparse vector `doc` to all documents in the corpus.
+        Return similarity of sparse vector `query` to all documents in the corpus,
+        as a numpy array.
 
-        `doc` may be either a bag-of-words iterable (standard corpus document),
-        or a numpy array, or a `scipy.sparse` matrix.
+        If `query` is a collection of documents, return a 2D array of similarities
+        of each document in `query` to all documents in the corpus (=batch query,
+        faster than processing each document in turn).
         """
-        if scipy.sparse.issparse(doc):
-            vec = doc.T
-        elif isinstance(doc, numpy.ndarray):
-            vec = scipy.sparse.csr_matrix(doc).T # Tx1 array
+        is_corpus, query = utils.isCorpus(query)
+        if is_corpus:
+            query = matutils.corpus2csc(query)
         else:
-            vec = scipy.sparse.dok_matrix((self.corpus.shape[1], 1), dtype=self.corpus.dtype)
-            for fieldId, fieldValue in doc:
-                vec[fieldId, 0] = fieldValue
-        if vec.shape != (self.corpus.shape[1], 1):
-            raise ValueError("vector shape mismatch; expected %s, got %s" %
-                             ((self.corpus.shape[1], 1,), vec.shape))
+            if scipy.sparse.issparse(query):
+                query = query.T # convert documents=rows to documents=columns
+            elif isinstance(query, numpy.ndarray):
+                if query.ndim == 1:
+                    query.shape = (len(query), 1)
+                query = scipy.sparse.csc_matrix(query)
+            else:
+                # default case: query is a single vector, in sparse gensim format
+                query = matutils.corpus2csc([query], self.corpus.shape[1])
 
         # compute cosine similarity against every other document in the collection
-        allSims = self.corpus * vec.tocsc() # N x T * T x 1 = N x 1
-        allSims = list(allSims.toarray().flat) # convert to plain python list
-        assert len(allSims) == self.corpus.shape[0] # make sure no document got lost!
-        return allSims
+        result = self.corpus * query.tocsc() # N x T * T x C = N x C
+        if result.shape[1] == 1:
+            # for queries of one document, return a 1d array
+            result = result.toarray().flatten()
+        else:
+            # otherwise, return a 2d matrix (#queries x #index)
+            result = result.toarray().T
+        return result
 #endclass SparseMatrixSimilarity
 
