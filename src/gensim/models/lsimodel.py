@@ -134,7 +134,7 @@ class Projection(utils.SaveLoad):
             return
         if self.u is None:
             # we are empty => result of merge is the other projection, whatever it is
-            self.u = other.u.copy('F')
+            self.u = other.u.copy()
             self.s = other.s.copy()
             return
         if self.m != other.m:
@@ -149,12 +149,12 @@ class Projection(utils.SaveLoad):
 
         # find component of u2 orthogonal to u1
         # IMPORTANT: keep matrices in memory suitable order for matrix products; failing to do so gives 8x lower performance :(
-        self.u = numpy.asfortranarray(self.u) # does nothing if input already fortran-order array
-        other.u = numpy.asfortranarray(other.u)
+        #self.u = numpy.asfortranarray(self.u) # does nothing if input already fortran-order array
+        #other.u = numpy.asfortranarray(other.u)
         gemm = matutils.blas('gemm', self.u)
         logger.debug("constructing orthogonal component")
-        c = gemm(1.0, self.u, other.u, trans_a = True)
-        gemm(-1.0, self.u, c, beta = 1.0, c = other.u, overwrite_c = True)
+        c = gemm(1.0, self.u, other.u, trans_a=True)
+        gemm(-1.0, self.u, c, beta = 1.0, c=other.u, overwrite_c=True)
 
         other.u = [other.u] # do some reference magic and call qr_destroy, to save RAM
         q, r = matutils.qr_destroy(other.u) # q, r = QR(component)
@@ -176,7 +176,7 @@ class Projection(utils.SaveLoad):
             s_k = numpy.sqrt(s_k) # go back from eigen values to singular values
 
         k = clipSpectrum(s_k ** 2, self.k)
-        u1_k, u2_k, s_k = u_k[:n1, :k].copy('F'), u_k[n1:, :k].copy('F'), s_k[:k]
+        u1_k, u2_k, s_k = u_k[:n1, :k], u_k[n1:, :k], s_k[:k]
 
         # update & rotate current basis U = [U, U']*[U1_k, U2_k]
         logger.debug("updating orthonormal basis U")
@@ -185,16 +185,6 @@ class Projection(utils.SaveLoad):
         self.s = s_k
 #        diff = numpy.dot(self.u.T, self.u) - numpy.eye(self.u.shape[1])
 #        logger.info('orth error after=%f' % numpy.sum(diff * diff))
-
-
-    def __setstate__(self, state):
-        """
-        This is a hack to work around a bug in numpy, where a FORTRAN-order array
-        unpickled from disk segfaults on using it.
-        """
-        self.__dict__ = state
-        if self.u is not None:
-            self.u = self.u.copy('F') # simply making a fresh copy fixes the broken array
 #endclass Projection
 
 
@@ -398,10 +388,7 @@ class LsiModel(interfaces.TransformationABC):
 
         assert self.projection.u is not None, "decomposition not initialized yet"
         vec = matutils.sparse2full(bow, self.numTerms).astype(self.projection.u.dtype)
-        vec.shape = (self.numTerms, 1)
-        assert self.projection.u.flags.f_contiguous
-        dgemv = matutils.blas('gemv', self.projection.u[:,:self.numTopics])
-        topicDist = dgemv(1.0, self.projection.u[:,:self.numTopics], vec, trans=True) # u^T * x
+        topicDist = numpy.dot(self.projection.u[:, :self.numTopics].T, vec)
         if scaled:
             topicDist = (1.0 / self.projection.s[:self.numTopics]) * topicDist # s^-1 * u^T * x
 
@@ -744,8 +731,8 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
     y = [y]
     q, r = matutils.qr_destroy(y) # orthonormalize the range
     del y
-    samples = clipSpectrum(numpy.diag(r), samples, discard = eps)
-    qt = numpy.asfortranarray(q[:, :samples].T) # discard bogus columns, in case Y was rank-deficient
+    samples = clipSpectrum(numpy.diag(r), samples, discard=eps)
+    qt = q[:, :samples].T
     del q
 
     if scipy.sparse.issparse(corpus):
@@ -774,7 +761,7 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
 
     logger.info("computing the final decomposition")
     keep = clipSpectrum(s**2, rank, discard=eps)
-    u = numpy.asfortranarray(u[:, :keep])
+    u = u[:, :keep]
     s = s[:keep]
     gemm = matutils.blas('gemm', u)
     u = gemm(1.0, qt, u, trans_a=True)
