@@ -218,7 +218,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         """
         is_corpus, query = utils.isCorpus(query)
         if is_corpus:
-            query = matutils.corpus2csc(query)
+            query = matutils.corpus2csc(query, self.corpus.shape[1])
         else:
             if scipy.sparse.issparse(query):
                 query = query.T # convert documents=rows to documents=columns

@@ -112,8 +112,9 @@ class Projection(utils.SaveLoad):
                 ut, s, vt = sparsesvd.sparsesvd(docs, k + 30) # ask for extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
                 u = ut.T
                 del ut, vt
-                k = clipSpectrum(s ** 2, self.k)
-            self.u, self.s = u[:, :k], s[:k]
+                k = clipSpectrum(s**2, self.k)
+            self.u = u[:, :k].copy()
+            self.s = s[:k].copy()
         else:
             self.u, self.s = None, None
 
@@ -148,20 +149,17 @@ class Projection(utils.SaveLoad):
         # But how to do that in scipy? And is it fast(er)?
 
         # find component of u2 orthogonal to u1
-        # IMPORTANT: keep matrices in memory suitable order for matrix products; failing to do so gives 8x lower performance :(
-        #self.u = numpy.asfortranarray(self.u) # does nothing if input already fortran-order array
-        #other.u = numpy.asfortranarray(other.u)
-        gemm = matutils.blas('gemm', self.u)
         logger.debug("constructing orthogonal component")
-        c = gemm(1.0, self.u, other.u, trans_a=True)
-        gemm(-1.0, self.u, c, beta = 1.0, c=other.u, overwrite_c=True)
+        c = numpy.dot(self.u.T, other.u)
+        other.u -= numpy.dot(self.u, c)
 
         other.u = [other.u] # do some reference magic and call qr_destroy, to save RAM
         q, r = matutils.qr_destroy(other.u) # q, r = QR(component)
         assert not other.u
 
         # find the rotation that diagonalizes r
-        k = numpy.bmat([[numpy.diag(decay * self.s), c * other.s], [matutils.pad(numpy.matrix([]).reshape(0, 0), min(m, n2), n1), r * other.s]])
+        k = numpy.bmat([[numpy.diag(decay * self.s), numpy.multiply(c, other.s)],
+                        [matutils.pad(numpy.array([]).reshape(0, 0), min(m, n2), n1), numpy.multiply(r, other.s)]])
         logger.debug("computing SVD of %s dense matrix" % str(k.shape))
         try:
             # in numpy < 1.1.0, running SVD sometimes results in "LinAlgError: SVD did not converge'.
@@ -169,20 +167,21 @@ class Projection(utils.SaveLoad):
             # SVD again, but over k*k^T.
             # see http://www.mail-archive.com/numpy-discussion@scipy.org/msg07224.html and
             # bug ticket http://projects.scipy.org/numpy/ticket/706
-            u_k, s_k, _ = numpy.linalg.svd(k, full_matrices = False) # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK wrapper for partial svd/eigendecomp in numpy :(
+            u_k, s_k, _ = numpy.linalg.svd(k, full_matrices=False) # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK wrapper for partial svd/eigendecomp in numpy :(
         except numpy.linalg.LinAlgError:
             logger.error("SVD(A) failed; trying SVD(A * A^T)")
-            u_k, s_k, _ = numpy.linalg.svd(numpy.dot(k, k.T), full_matrices = False) # if this fails too, give up with an exception
+            u_k, s_k, _ = numpy.linalg.svd(numpy.dot(k, k.T), full_matrices=False) # if this fails too, give up with an exception
             s_k = numpy.sqrt(s_k) # go back from eigen values to singular values
 
-        k = clipSpectrum(s_k ** 2, self.k)
-        u1_k, u2_k, s_k = u_k[:n1, :k], u_k[n1:, :k], s_k[:k]
+        k = clipSpectrum(s_k**2, self.k)
+        u1_k, u2_k, s_k = numpy.array(u_k[:n1, :k]), numpy.array(u_k[n1:, :k]), s_k[:k]
 
         # update & rotate current basis U = [U, U']*[U1_k, U2_k]
         logger.debug("updating orthonormal basis U")
-        self.u = gemm(1.0, self.u, u1_k) # TODO temporarily creates an extra (m,k) dense array in memory. find a way to avoid this!
-        gemm(1.0, q, u2_k, beta = 1.0, c = self.u, overwrite_c = True)
         self.s = s_k
+        self.u = numpy.dot(self.u, u1_k)
+        q = numpy.dot(q, u2_k)
+        self.u += q
 #        diff = numpy.dot(self.u.T, self.u) - numpy.eye(self.u.shape[1])
 #        logger.info('orth error after=%f' % numpy.sum(diff * diff))
 #endclass Projection
@@ -348,7 +347,7 @@ class LsiModel(interfaces.TransformationABC):
                         # serial version, there is only one "worker" (myself) => process the job directly
                         update = Projection(self.numTerms, self.numTopics, job)
                         del job
-                        self.projection.merge(update, decay = decay)
+                        self.projection.merge(update, decay=decay)
                         del update
                         logger.info("processed documents up to #%s" % doc_no)
                         self.printTopics(5) # TODO see if printDebug works and remove one of these..
@@ -388,9 +387,11 @@ class LsiModel(interfaces.TransformationABC):
 
         assert self.projection.u is not None, "decomposition not initialized yet"
         vec = matutils.sparse2full(bow, self.numTerms).astype(self.projection.u.dtype)
-        topicDist = numpy.dot(self.projection.u[:, :self.numTopics].T, vec)
+        vec.shape = (self.numTerms, 1)
+        topicDist = numpy.dot(self.projection.u[:, :self.numTopics].T, vec) # K x T * T x 1 = K x 1
         if scaled:
             topicDist = (1.0 / self.projection.s[:self.numTopics]) * topicDist # s^-1 * u^T * x
+        topicDist = topicDist.flatten()
 
         nnz = topicDist.nonzero()[0]
         return zip(nnz, topicDist[nnz])
@@ -414,12 +415,12 @@ class LsiModel(interfaces.TransformationABC):
         if topicNo >= len(self.projection.u.T):
             return ''
         c = numpy.asarray(self.projection.u.T[topicNo, :]).flatten()
-        norm = numpy.sqrt(numpy.sum(c * c))
+        norm = numpy.sqrt(numpy.sum(numpy.dot(c, c)))
         most = numpy.abs(c).argsort()[::-1][:topN]
         return ' + '.join(['%.3f*"%s"' % (1.0 * c[val] / norm, self.id2word[val]) for val in most])
 
 
-    def printTopics(self, numTopics = 5, numWords = 10):
+    def printTopics(self, numTopics=5, numWords=10):
         for i in xrange(min(numTopics, self.numTopics)):
             if i < len(self.projection.s):
                 logger.info("topic #%i(%.3f): %s" %
@@ -439,7 +440,7 @@ class LsiModel(interfaces.TransformationABC):
         printDebug(self.id2word,
                    self.projection.u, self.projection.s,
                    range(min(numTopics, len(self.projection.u.T))),
-                   numWords = numWords)
+                   numWords=numWords)
 #endclass LsiModel
 
 
@@ -453,7 +454,7 @@ def printDebug(id2token, u, s, topics, numWords=10, numNeg=None):
     # TODO speed up by block computation
     for uvecno, uvec in enumerate(u):
         uvec = numpy.abs(numpy.asarray(uvec).flatten())
-        udiff = uvec / numpy.sqrt(numpy.sum(uvec * uvec))
+        udiff = uvec / numpy.sqrt(numpy.sum(numpy.dot(uvec, uvec)))
         for topic in topics:
             result.setdefault(topic, []).append((udiff[topic], uvecno))
 
@@ -732,7 +733,7 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
     q, r = matutils.qr_destroy(y) # orthonormalize the range
     del y
     samples = clipSpectrum(numpy.diag(r), samples, discard=eps)
-    qt = q[:, :samples].T
+    qt = q[:, :samples].T.copy()
     del q
 
     if scipy.sparse.issparse(corpus):
@@ -744,7 +745,7 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
         # second phase: construct the covariance matrix X = B * B.T, where B = Q.T * A
         # again, construct X incrementally, in chunks of `chunks` documents from the streaming
         # input corpus A, to avoid using O(number of documents) memory
-        x = numpy.zeros(shape = (samples, samples), dtype = dtype)
+        x = numpy.zeros(shape = (samples, samples), dtype=dtype)
         logger.info("2nd phase: constructing %s covariance matrix" % str(x.shape))
         chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunks)
         for chunk_no, (key, group) in enumerate(chunker):
@@ -761,10 +762,8 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
 
     logger.info("computing the final decomposition")
     keep = clipSpectrum(s**2, rank, discard=eps)
-    u = u[:, :keep]
+    u = u[:, :keep].copy()
     s = s[:keep]
-    gemm = matutils.blas('gemm', u)
-    u = gemm(1.0, qt, u, trans_a=True)
+    u = numpy.dot(qt.T, u)
     return u, s
-
 

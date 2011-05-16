@@ -88,14 +88,13 @@ class TestLsiModel(unittest.TestCase):
         self.assertTrue(numpy.allclose(abs(vec), abs(expected), atol=1e-6)) # transformed entries must be equal up to sign
 
         # train on another 4 documents
-        model.addDocuments(corpus[1:5], chunks=2) # train in chunks of 2 documents, for the lols
+        model.addDocuments(corpus[1:5], chunks=2) # train on 4 extra docs, in chunks of 2 documents, for the lols
         model.printDebug()
 
         # transform a document with this partial transformation
         transformed = model[doc]
         vec = matutils.sparse2full(transformed, model.numTopics) # convert to dense vector, for easier equality tests
         expected = numpy.array([-0.66493785, -0.28314203, -1.56376302, 0.05488682, 0.17123269]) # scaled LSI version
-        m2 = lsimodel.LsiModel(corpus=list(corpus)[:5], numTopics=5)
         self.assertTrue(numpy.allclose(abs(vec), abs(expected), atol=1e-6)) # transformed entries must be equal up to sign
 
         # train on the rest of documents
