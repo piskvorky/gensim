@@ -336,9 +336,11 @@ def chunkize_serial(corpus, chunks):
     [8, 9]
 
     """
+    if chunks <= 0:
+        raise ValueError("chunk size must be greater than zero")
     i = (val for val in corpus) # create generator
     while True:
-        chunk = list(itertools.islice(i, chunks)) # consume `chunks` items from the generator
+        chunk = list(itertools.islice(i, int(chunks))) # consume `chunks` items from the generator
         if not chunk: # generator empty?
             break
         yield chunk

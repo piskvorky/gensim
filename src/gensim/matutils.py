@@ -49,7 +49,7 @@ def corpus2csc(corpus, num_terms, dtype=numpy.float64):
     Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format,
     with documents as columns.
     """
-    logger.info("constructing sparse document matrix")
+    logger.debug("constructing sparse document matrix")
     docs, data, indices, indptr = 0, [], [], [0]
     for doc in corpus:
         indices.extend([feature_id for feature_id, _ in doc])

@@ -148,7 +148,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
             else:
                 # default case: query is a single vector in sparse gensim format
                 query = matutils.sparse2full(query, self.numFeatures)
-        query = numpy.asarray(query, dtype=self.corpus.dtype)
+            query = numpy.asarray(query, dtype=self.corpus.dtype)
 
         # do a little transposition dance to stop numpy from making a copy of
         # self.corpus internally in numpy.dot (very slow).
