@@ -24,11 +24,14 @@ Proceedings of the 27th Annual Conference of the Cognitive Science Society
 
 from __future__ import with_statement
 
+import logging
 import os.path
+import unittest
+
+import numpy as np
+
 from gensim import corpora, models, matutils
 from gensim.parsing.preprocessing import preprocess_documents
-import numpy as np
-import unittest
 
 
 bg_corpus = None
@@ -98,3 +101,9 @@ class TestLeeTest(unittest.TestCase):
 
         cor = np.corrcoef(flat, human_sim_vector)
         self.assertTrue(cor[0, 1] > 0.6)
+
+
+
+if __name__ == '__main__':
+    logging.root.setLevel(logging.WARNING)
+    unittest.main()
