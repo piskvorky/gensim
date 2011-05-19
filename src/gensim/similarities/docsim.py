@@ -88,7 +88,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
     The matrix is internally stored as a numpy array.
     """
-    def __init__(self, corpus, numBest=None, dtype=numpy.float32, numFeatures=None, chunks=100):
+    def __init__(self, corpus, numBest=None, dtype=numpy.float32, numFeatures=None, chunks=256):
         """
         If `numBest` is left unspecified, similarity queries return a full list (one
         float for every document in the corpus):

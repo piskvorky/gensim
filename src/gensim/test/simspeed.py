@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
     logging.info("test 1: similarity of all vs. all (%i documents, %i features)" %
                  (len(corpus_dense), index_dense.numFeatures))
-    for chunks in [0, 1, 5, 10, 100, 200, 500, 1000]:
+    for chunks in [0, 1, 4, 8, 16, 64, 128, 256, 512, 1024]:
         index_dense.chunks = chunks
         start = time()
         # `sims` stores the entire N x N sim matrix in memory!
@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     index_dense.numBest = 10
     logging.info("test 2: as above, but only ask for top-10 most similar for each document")
-    for chunks in [0, 1, 5, 10, 100, 200, 500, 1000]:
+    for chunks in [0, 1, 4, 8, 16, 64, 128, 256, 512, 1024]:
         index_dense.chunks = chunks
         start = time()
         sims = [sim for sim in index_dense]
