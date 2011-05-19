@@ -143,7 +143,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
             return result
 
 
-    def filterExtremes(self, noBelow=5, noAbove=0.5, keepN=None):
+    def filterExtremes(self, noBelow=5, noAbove=0.5, keepN=100000):
         """
         Filter out tokens that appear in
 
