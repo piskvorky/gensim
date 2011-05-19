@@ -231,9 +231,16 @@ class SimilarityABC(utils.SaveLoad):
             # this is true for MatrixSimilarity and SparseMatrixSimilarity, but
             # may not be true for other (future) classes..?
             for chunk_start in xrange(0, self.corpus.shape[0], self.chunks):
-                chunk = self.corpus[chunk_start : chunk_start + self.chunks]
-                for sim in self[chunk]:
-                    yield sim
+                # scipy.sparse doesn't allow slicing beyond real size of the matrix
+                # (unlike numpy). so, clip the end of the chunk explicitly to make
+                # scipy.sparse happy
+                chunk_end = min(self.corpus.shape[0], chunk_start + self.chunks)
+                chunk = self.corpus[chunk_start : chunk_end]
+                if chunk.shape[0] > 1:
+                    for sim in self[chunk]:
+                        yield sim
+                else:
+                    yield self[chunk]
         else:
             for doc in self.corpus:
                 yield self[doc]
