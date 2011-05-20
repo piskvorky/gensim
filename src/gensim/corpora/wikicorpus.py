@@ -68,11 +68,12 @@ RE_P13 = re.compile('\n(\||\!)(.*?\|)*([^|]*?)', re.UNICODE)
 
 def filterWiki(raw):
     """
-    Filter out wiki mark-up from utf8 string `raw`, leaving only text.
+    Filter out wiki mark-up from `raw`, leaving only text. `raw` is either unicode
+    or utf-8 encoded string.
     """
     # parsing of the wiki markup is not perfect, but sufficient for our purposes
     # contributions to improving this code are welcome :)
-    text = utils.decode_htmlentities(unicode(raw, 'utf8', 'ignore'))
+    text = utils.decode_htmlentities(utils.toUnicode(raw, 'utf8', errors='ignore'))
     text = utils.decode_htmlentities(text) # '&amp;nbsp;' --> '\xa0'
     text = re.sub(RE_P2, "", text) # remove the last list (=languages)
     # the wiki markup is recursive (markup inside markup etc)

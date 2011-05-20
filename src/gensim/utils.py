@@ -87,10 +87,17 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", toLower=False,
         yield match.group()
 
 
-def toUtf8(text):
+def toUtf8(text, errors='strict'):
     if isinstance(text, unicode):
         return text.encode('utf8')
-    return unicode(text, 'utf8').encode('utf8') # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
+    # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
+    return unicode(text, 'utf8', errors=errors).encode('utf8')
+
+
+def toUnicode(text, encoding='utf8', errors='strict'):
+    if isinstance(text, unicode):
+        return text
+    return unicode(text, 'utf8', errors=errors)
 
 
 class SaveLoad(object):
