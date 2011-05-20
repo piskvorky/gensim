@@ -88,6 +88,10 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", toLower=False,
 
 
 def toUtf8(text, errors='strict'):
+    """
+    Like built-in `unicode.encode('utf8')`, but allow input to be bytestring,
+    too (so this is a no-op if input already is a bytestring in utf8).
+    """
     if isinstance(text, unicode):
         return text.encode('utf8')
     # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
@@ -95,9 +99,10 @@ def toUtf8(text, errors='strict'):
 
 
 def toUnicode(text, encoding='utf8', errors='strict'):
+    """Like built-in unicode, but simply return input if `text` already is unicode."""
     if isinstance(text, unicode):
         return text
-    return unicode(text, 'utf8', errors=errors)
+    return unicode(text, encoding, errors=errors)
 
 
 class SaveLoad(object):
