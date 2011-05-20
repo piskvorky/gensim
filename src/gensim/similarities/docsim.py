@@ -187,23 +187,22 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         self.chunks = chunks
 
         if corpus is not None:
-            logger.info("creating sparse matrix for %i documents" % len(corpus))
-            self.corpus = scipy.sparse.lil_matrix((len(corpus), 1), dtype=dtype) # set no of columns to 1 for now, as the number of terms is unknown yet
+            logger.info("creating sparse index")
 
-            # iterate over corpus, populating the sparse matrix
-            for docNo, vector in enumerate(corpus):
-                if docNo % 10000 == 0:
-                    logger.info("PROGRESS: at document #%i/%i" % (docNo, len(corpus)))
-                vector = matutils.unitVec(vector) # make all vectors unit length, so that cosine similarity = simple dot product
-                self.corpus.rows[docNo] = [termId for termId, _ in vector]
-                self.corpus.data[docNo] = [dtype(val) for _, val in vector]
-
-            # now set the shape properly, using no. columns = highest term index in the corpus + 1
-            numTerms = 1 + max(max(row + [-1]) for row in self.corpus.rows) # + [-1] to avoid exceptions from max(empty)
-            self.corpus._shape = (len(corpus), numTerms)
+            # iterate over input corpus, populating the sparse index matrix
+            try:
+                # use the more efficient corpus generation version, if the input
+                # `corpus` is MmCorpus-like.
+                num_terms, num_docs, num_nnz = corpus.numTerms, corpus.numDocs, corpus.numElements
+            except AttributeError:
+                # no MmCorpus, use the slower version :(
+                num_terms, num_docs, num_nnz = None, None, None
+            self.corpus = matutils.corpus2csc((matutils.unitVec(vector) for vector in corpus),
+                                              num_terms=num_terms, num_docs=num_docs, num_nnz=num_nnz,
+                                              dtype=numpy.float32).T
 
             # convert to Compressed Sparse Row for efficient row slicing and multiplications
-            self.corpus = self.corpus.tocsr()
+            self.corpus = self.corpus.tocsr() # currently does nothing, CSC.T is already CSR
             logger.info("created %s" % repr(self.corpus))
 
 

@@ -44,22 +44,57 @@ blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
 logger = logging.getLogger("gensim.matutils")
 
 
-def corpus2csc(corpus, num_terms, dtype=numpy.float64):
+def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_nnz=None, printprogress=0):
     """
     Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format,
     with documents as columns.
     """
-    logger.debug("constructing sparse document matrix")
-    docs, data, indices, indptr = 0, [], [], [0]
-    for doc in corpus:
-        indices.extend([feature_id for feature_id, _ in doc])
-        data.extend([feature_weight for _, feature_weight in doc])
-        indptr.append(len(doc))
-        docs += 1
-    indptr = numpy.cumsum(indptr)
-    data = numpy.asarray(data, dtype=dtype)
-    indices = numpy.asarray(indices)
-    return scipy.sparse.csc_matrix((data, indices, indptr), shape=(num_terms, docs), dtype=dtype)
+    try:
+        # if the input corpus has the `numElements`, `numDocs` and `numTerms` attributes
+        # (as is the case with MmCorpus for example), we can use a more efficient code path
+        if num_terms is None:
+            num_terms = corpus.numTerms
+        if num_docs is None:
+            num_docs = corpus.numDocs
+        if num_nnz is None:
+            num_nnz = corpus.numElements
+    except AttributeError, e:
+        pass # not a MmCorpus...
+    if printprogress:
+        logger.info("creating sparse matrix from corpus")
+    if num_terms is not None and num_docs is not None and num_nnz is not None:
+        # faster and much more memory-friendly version of creating the sparse csc
+        posnow, indptr = 0, [0]
+        indices = numpy.empty((num_nnz,), dtype=numpy.int32) # HACK assume feature ids fit in 32bit integer
+        data = numpy.empty((num_nnz,), dtype=dtype)
+        for docno, doc in enumerate(corpus):
+            if printprogress and docno % printprogress == 0:
+                logger.info("PROGRESS: at document #%i/%i" % (docno, num_docs))
+            posnext = posnow + len(doc)
+            indices[posnow : posnext] = [feature_id for feature_id, _ in doc]
+            data[posnow : posnext] = [feature_weight for _, feature_weight in doc]
+            indptr.append(posnext)
+            posnow = posnext
+        assert posnow == num_nnz
+        result = scipy.sparse.csc_matrix((data, indices, indptr), shape=(num_terms, num_docs), dtype=dtype)
+    else:
+        # slower version; determine the sparse matrix parameters during iteration
+        num_nnz, data, indices, indptr = 0, [], [], [0]
+        for docno, doc in enumerate(corpus):
+            if printprogress and docno % printprogress == 0:
+                logger.info("PROGRESS: at document #%i" % (docno))
+            indices.extend([feature_id for feature_id, _ in doc])
+            data.extend([feature_weight for _, feature_weight in doc])
+            num_nnz += len(doc)
+            indptr.append(num_nnz)
+        if num_terms is None:
+            num_terms = max(indices) + 1 if indices else 0
+        num_docs = len(indptr) - 1
+        # now num_docs, num_terms and num_nnz contain the correct values
+        data = numpy.asarray(data, dtype=dtype)
+        indices = numpy.asarray(indices)
+        result = scipy.sparse.csc_matrix((data, indices, indptr), shape=(num_terms, num_docs), dtype=dtype)
+    return result
 
 
 def pad(mat, padRow, padCol):
