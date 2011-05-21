@@ -691,6 +691,8 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
                                 corpus.data, o.ravel(), y.ravel()) # y = corpus * o
         del o
         if y.dtype != dtype:
+            # unlike numpy, scipy.sparse copies everything, even if there is no change to dtype!
+            # so check for equal dtype explicitly, to avoid the extra memory footprint if possible
             y = y.astype(dtype)
         logger.debug("running %i power iterations" % power_iters)
         for power_iter in xrange(power_iters):

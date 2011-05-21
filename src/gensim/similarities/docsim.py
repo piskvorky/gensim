@@ -194,12 +194,13 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
                 # use the more efficient corpus generation version, if the input
                 # `corpus` is MmCorpus-like.
                 num_terms, num_docs, num_nnz = corpus.numTerms, corpus.numDocs, corpus.numElements
+                logger.debug("using efficient sparse index creation")
             except AttributeError:
                 # no MmCorpus, use the slower version :(
                 num_terms, num_docs, num_nnz = None, None, None
             self.corpus = matutils.corpus2csc((matutils.unitVec(vector) for vector in corpus),
                                               num_terms=num_terms, num_docs=num_docs, num_nnz=num_nnz,
-                                              dtype=numpy.float32).T
+                                              dtype=numpy.float32, printprogress=10000).T
 
             # convert to Compressed Sparse Row for efficient row slicing and multiplications
             self.corpus = self.corpus.tocsr() # currently does nothing, CSC.T is already CSR
@@ -217,17 +218,17 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         """
         is_corpus, query = utils.isCorpus(query)
         if is_corpus:
-            query = matutils.corpus2csc(query, self.corpus.shape[1])
+            query = matutils.corpus2csc(query, self.corpus.shape[1], dtype=self.corpus.dtype)
         else:
             if scipy.sparse.issparse(query):
                 query = query.T # convert documents=rows to documents=columns
             elif isinstance(query, numpy.ndarray):
                 if query.ndim == 1:
                     query.shape = (len(query), 1)
-                query = scipy.sparse.csc_matrix(query)
+                query = scipy.sparse.csc_matrix(query, dtype=self.corpus.dtype)
             else:
                 # default case: query is a single vector, in sparse gensim format
-                query = matutils.corpus2csc([query], self.corpus.shape[1])
+                query = matutils.corpus2csc([query], self.corpus.shape[1], dtype=self.corpus.dtype)
 
         # compute cosine similarity against every other document in the collection
         result = self.corpus * query.tocsc() # N x T * T x C = N x C
