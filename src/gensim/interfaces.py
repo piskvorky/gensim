@@ -173,35 +173,36 @@ class SimilarityABC(utils.SaveLoad):
 
         **or**
 
-        If `query` is a corpus (collection of documents), return a matrix of similarities
+        If `query` is a corpus (iterable of documents), return a matrix of similarities
         of all query documents vs. all corpus document. Using this type of batch
-        query is more efficient than constructing the matrix one document after
+        query is more efficient than computing the similarities one document after
         another.
         """
         is_corpus, query = utils.isCorpus(query)
-        if is_corpus or matutils.ismatrix(query):
-            if self.normalize:
+        if self.normalize:
+            # self.normalize only works if the input is a plain gensim vector/corpus (as
+            # advertised in the doc). in fact, input can be a numpy or scipy.sparse matrix
+            # as well, but in that case assume tricks are happening and don't normalize
+            # anything (self.normalize has no effect).
+            if matutils.ismatrix(query):
+                logger.warning("non-gensim input must already come normalized")
+            else:
                 if is_corpus:
                     query = [matutils.unitVec(v) for v in query]
                 else:
-                    query = numpy.asarray([matutils.unitVec(v) for v in query])
-#                    query = query.T / numpy.sqrt(numpy.sum(query * query, axis=1))
-#                    query = numpy.nan_to_num(query.T) # convert NaNs to 0.0
-            result = self.getSimilarities(query)
+                    query = matutils.unitVec(query)
+        result = self.getSimilarities(query)
 
-            if self.numBest is None:
-                return result
-            else:
-                return [matutils.full2sparse_clipped(v, self.numBest) for v in result]
+        if self.numBest is None:
+            return result
+
+        # if the input query was a corpus (=more documents), compute the top-n
+        # most similar for each document in turn
+        if matutils.ismatrix(result):
+            return [matutils.full2sparse_clipped(v, self.numBest) for v in result]
         else:
-            if self.normalize:
-                query = matutils.unitVec(query)
-            result = self.getSimilarities(query)
-
-            if self.numBest is None:
-                return result
-            else:
-                return matutils.full2sparse_clipped(result, self.numBest)
+            # otherwise, return top-n of the single input document
+            return matutils.full2sparse_clipped(result, self.numBest)
 
 
     def __iter__(self):
@@ -209,7 +210,7 @@ class SimilarityABC(utils.SaveLoad):
         For each corpus document, compute cosine similarity against all other
         documents and yield the result.
         """
-        # turn off query normalization (vectors in index are assumed to be already normalized)
+        # turn off query normalization (vectors in the index are assumed to be already normalized)
         norm = self.normalize
         self.normalize = False
 
