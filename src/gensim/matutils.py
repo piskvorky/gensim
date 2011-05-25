@@ -48,6 +48,9 @@ def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_n
     """
     Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format,
     with documents as columns.
+
+    If the number of terms, documents and non-zero elements is known, you can pass
+    them here as parameters and a more memory efficient code path will be taken.
     """
     try:
         # if the input corpus has the `numElements`, `numDocs` and `numTerms` attributes
@@ -75,7 +78,7 @@ def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_n
             data[posnow : posnext] = [feature_weight for _, feature_weight in doc]
             indptr.append(posnext)
             posnow = posnext
-        assert posnow == num_nnz
+        assert posnow == num_nnz, "mismatch between supplied and computed number of non-zeros"
         result = scipy.sparse.csc_matrix((data, indices, indptr), shape=(num_terms, num_docs), dtype=dtype)
     else:
         # slower version; determine the sparse matrix parameters during iteration
@@ -112,7 +115,7 @@ def pad(mat, padRow, padCol):
 
 
 def ismatrix(m):
-    return isinstance(m, numpy.ndarray) and m.ndim == 2
+    return isinstance(m, numpy.ndarray) and m.ndim == 2 or scipy.sparse.issparse(m)
 
 
 def sparse2full(doc, length):
@@ -206,7 +209,7 @@ class Sparse2Corpus(object):
 def vecLen(vec):
     if len(vec) == 0:
         return 0.0
-    vecLen = 1.0 * math.sqrt(sum(val * val for _, val in vec))
+    vecLen = 1.0 * math.sqrt(sum(val**2 for _, val in vec))
     assert vecLen > 0.0, "sparse documents must not contain any explicit zero entries"
     return vecLen
 
@@ -219,31 +222,39 @@ def unitVec(vec):
     Scale a vector to unit length. The only exception is the zero vector, which
     is returned back unchanged.
 
-    If the input is sparse (list of 2-tuples), output will also be sparse. Otherwise,
-    output will be a numpy array.
+    Output will be in the same format as input (i.e., gensim vector=>gensim vector,
+    or numpy array=>numpy array, scipy.sparse=>scipy.sparse).
     """
     if scipy.sparse.issparse(vec): # convert scipy.sparse to standard numpy array
-        vec = vec.toarray().flatten()
-
-    try:
-        first = iter(vec).next() # is there at least one element?
-    except:
-        return vec
-
-    if isinstance(first, tuple): # sparse format?
-        vecLen = 1.0 * math.sqrt(sum(val * val for _, val in vec))
-        assert vecLen > 0.0, "sparse documents must not contain any explicit zero entries"
-        if vecLen != 1.0:
-            return [(termId, val / vecLen) for termId, val in vec]
+        vec = vec.tocsr()
+        veclen = numpy.sqrt(numpy.sum(vec.data**2))
+        if veclen > 0.0:
+            return vec / veclen
         else:
-            return list(vec)
-    else: # dense format
+            return vec
+
+    if isinstance(vec, numpy.ndarray):
         vec = numpy.asarray(vec, dtype=float)
         veclen = blas_nrm2(vec)
         if veclen > 0.0:
             return blas_scal(1.0 / veclen, vec)
         else:
             return vec
+
+    try:
+        first = iter(vec).next() # is there at least one element?
+    except:
+        return vec
+
+    if isinstance(first, tuple): # gensim sparse format?
+        vecLen = 1.0 * math.sqrt(sum(val**2 for _, val in vec))
+        assert vecLen > 0.0, "sparse documents must not contain any explicit zero entries"
+        if vecLen != 1.0:
+            return [(termId, val / vecLen) for termId, val in vec]
+        else:
+            return list(vec)
+    else:
+        raise ValueError("unknown input type")
 
 
 def cossim(vec1, vec2):
