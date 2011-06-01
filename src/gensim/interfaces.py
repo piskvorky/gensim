@@ -251,6 +251,6 @@ class SimilarityABC(utils.SaveLoad):
 
 
     def __len__(self):
-        return self.corpus.shape[0]
+        return len(self.corpus)
 #endclass SimilarityABC
 
