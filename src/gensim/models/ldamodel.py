@@ -444,7 +444,7 @@ class LdaModel(interfaces.TransformationABC):
             # waste time waiting for chunks to be read from disk. instead, fill
             # a (relatively short) chunk queue asynchronously in utils.chunkize,
             # and pop already-ready chunks from it as needed.
-            for chunk_no, chunk in enumerate(utils.chunkize(corpus, chunks, self.numworkers)):
+            for chunk_no, chunk in enumerate(utils.chunkize(corpus, chunks, 0)): # FIXME self.numworkers
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
                     logger.info('PROGRESS: iteration %i, dispatching documents up to #%i/%i' %

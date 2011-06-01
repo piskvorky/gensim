@@ -92,7 +92,7 @@ class Projection(utils.SaveLoad):
 
         This is the class taking care of the 'core math'; interfacing with corpora,
         splitting large corpora into chunks and merging them etc. is done through
-        the LsiModel class.
+        the higher-level `LsiModel` class.
         """
         self.m, self.k = m, k
         if docs is not None:
@@ -331,7 +331,7 @@ class LsiModel(interfaces.TransformationABC):
                 # waste time waiting for chunks to be read from disk. instead, fill
                 # a (relatively short) chunk queue asynchronously in utils.chunkize,
                 # and pop already-ready chunks from it as needed.
-                for chunk_no, chunk in enumerate(utils.chunkize(corpus, chunks, self.numworkers)):
+                for chunk_no, chunk in enumerate(utils.chunkize(corpus, chunks, 0)): # FIXME self.numworkers
                     # construct the job as a sparse matrix, to minimize memory overhead
                     # definitely avoid materializing it as a dense matrix!
                     job = matutils.corpus2csc(chunk, num_terms=self.numTerms)
