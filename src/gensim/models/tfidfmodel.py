@@ -61,17 +61,17 @@ class TfidfModel(interfaces.TransformationABC):
 
         If `dictionary` is specified, it must be a `corpora.Dictionary` object
         and it will be used to directly construct the inverse document frequency
-        mapping (`corpus`, if specified, is ignored).
+        mapping (then `corpus`, if specified, is ignored).
         """
         self.normalize = normalize
         self.id2word = id2word
-        self.numdocs, self.numnnz, self.idfs = None, None, None
+        self.num_docs, self.num_nnz, self.idfs = None, None, None
         if dictionary is not None:
             if corpus is not None:
                 logger.warning("constructor received both corpus and explicit "
                                "inverse document frequencies; ignoring the corpus")
-            self.numdocs, self.numnnz = dictionary.numDocs, dictionary.numNnz
-            self.idfs = dfs2idfs(dictionary.dfs, dictionary.numDocs)
+            self.num_docs, self.num_nnz = dictionary.num_docs, dictionary.num_nnz
+            self.idfs = dfs2idfs(dictionary.dfs, dictionary.num_docs)
         elif corpus is not None:
             self.initialize(corpus)
         else:
@@ -81,7 +81,7 @@ class TfidfModel(interfaces.TransformationABC):
 
 
     def __str__(self):
-        return "TfidfModel(numDocs=%s, numNnz=%s)" % (self.numdocs, self.numnnz)
+        return "TfidfModel(num_docs=%s, num_nnz=%s)" % (self.num_docs, self.num_nnz)
 
 
     def initialize(self, corpus):
@@ -100,13 +100,13 @@ class TfidfModel(interfaces.TransformationABC):
                 dfs[termid] = dfs.get(termid, 0) + 1
 
         # keep some stats about the training corpus
-        self.numdocs = docno + 1 # HACK using leftover from enumerate(corpus) above
-        self.numnnz = numnnz
+        self.num_docs = docno + 1 # HACK using leftover from enumerate(corpus) above
+        self.num_nnz = numnnz
 
         # and finally compute the idf weights
         logger.info("calculating IDF weights for %i documents and %i features (%i matrix non-zeros)" %
-                     (self.numdocs, 1 + max([-1] + dfs.keys()), self.numnnz))
-        self.idfs = dfs2idfs(dfs, self.numdocs)
+                     (self.num_docs, 1 + max([-1] + dfs.keys()), self.num_nnz))
+        self.idfs = dfs2idfs(dfs, self.num_docs)
 
 
     def __getitem__(self, bow):
@@ -114,7 +114,7 @@ class TfidfModel(interfaces.TransformationABC):
         Return tf-idf representation of the input vector and/or corpus.
         """
         # if the input vector is in fact a corpus, return a transformed corpus as a result
-        is_corpus, bow = utils.isCorpus(bow)
+        is_corpus, bow = utils.is_corpus(bow)
         if is_corpus:
             return self._apply(bow)
 
@@ -123,6 +123,6 @@ class TfidfModel(interfaces.TransformationABC):
         vector = [(termid, tf * self.idfs.get(termid, 0.0))
                   for termid, tf in bow if self.idfs.get(termid, 0.0) != 0.0]
         if self.normalize:
-            vector = matutils.unitVec(vector)
+            vector = matutils.unitvec(vector)
         return vector
 #endclass TfidfModel

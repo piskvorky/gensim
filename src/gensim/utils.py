@@ -63,7 +63,7 @@ def deaccent(text):
     return unicodedata.normalize("NFC", result)
 
 
-def tokenize(text, lowercase=False, deacc=False, errors="strict", toLower=False, lower=False):
+def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False, lower=False):
     """
     Iteratively yield tokens as unicode strings, optionally also lowercasing them
     and removing accent marks.
@@ -76,7 +76,7 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", toLower=False,
     >>> list(tokenize('Nic nemůže letět rychlostí vyšší, než 300 tisíc kilometrů za sekundu!', deacc = True))
     [u'Nic', u'nemuze', u'letet', u'rychlosti', u'vyssi', u'nez', u'tisic', u'kilometru', u'za', u'sekundu']
     """
-    lowercase = lowercase or toLower or lower
+    lowercase = lowercase or to_lower or lower
     if not isinstance(text, unicode):
         text = unicode(text, encoding='utf8', errors=errors)
     if lowercase:
@@ -87,7 +87,7 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", toLower=False,
         yield match.group()
 
 
-def toUtf8(text, errors='strict'):
+def to_utf8(text, errors='strict'):
     """
     Like built-in `unicode.encode('utf8')`, but allow input to be bytestring,
     too (so this is a no-op if input already is a bytestring in utf8).
@@ -98,8 +98,8 @@ def toUtf8(text, errors='strict'):
     return unicode(text, 'utf8', errors=errors).encode('utf8')
 
 
-def toUnicode(text, encoding='utf8', errors='strict'):
-    """Like built-in unicode, but simply return input if `text` already is unicode."""
+def to_unicode(text, encoding='utf8', errors='strict'):
+    """Like built-in `unicode`, but simply return input if `text` already is unicode."""
     if isinstance(text, unicode):
         return text
     return unicode(text, encoding, errors=errors)
@@ -134,16 +134,16 @@ def identity(p):
     return p
 
 
-def getMaxId(corpus):
+def get_max_id(corpus):
     """
     Return highest feature id that appears in the corpus.
 
     For empty corpora (no features at all), return -1.
     """
-    maxId = -1
+    maxid = -1
     for document in corpus:
-        maxId = max(maxId, max([-1] + [fieldId for fieldId, _ in document])) # [-1] to avoid exceptions from max(empty)
-    return maxId
+        maxid = max(maxid, max([-1] + [fieldid for fieldid, _ in document])) # [-1] to avoid exceptions from max(empty)
+    return maxid
 
 
 class FakeDict(object):
@@ -154,22 +154,22 @@ class FakeDict(object):
     This is meant to avoid allocating real dictionaries when numTerms is huge, which
     is a waste of memory.
     """
-    def __init__(self, numTerms):
-        self.numTerms = numTerms
+    def __init__(self, num_terms):
+        self.num_terms = num_terms
 
 
     def __str__(self):
-        return "FakeDict(numTerms=%s)" % self.numTerms
+        return "FakeDict(num_terms=%s)" % self.num_terms
 
 
     def __getitem__(self, val):
-        if 0 <= val < self.numTerms:
+        if 0 <= val < self.num_terms:
             return str(val)
         raise ValueError("internal id out of bounds (%s, expected <0..%s))" %
-                         (val, self.numTerms))
+                         (val, self.num_terms))
 
     def iteritems(self):
-        for i in xrange(self.numTerms):
+        for i in xrange(self.num_terms):
             yield i, str(i)
 
     def keys(self):
@@ -180,18 +180,18 @@ class FakeDict(object):
         HACK: To avoid materializing the whole `range(0, self.numTerms)`, this returns
         `[self.numTerms - 1]` only.
         """
-        return [self.numTerms - 1]
+        return [self.num_terms - 1]
 
     def __len__(self):
-        return self.numTerms
+        return self.num_terms
 
     def get(self, val, default=None):
-        if 0 <= val < self.numTerms:
+        if 0 <= val < self.num_terms:
             return str(val)
         return default
 
 
-def dictFromCorpus(corpus):
+def dict_from_corpus(corpus):
     """
     Scan corpus for all word ids that appear in it, then construct and return a mapping
     which maps each ``wordId -> str(wordId)``.
@@ -200,12 +200,12 @@ def dictFromCorpus(corpus):
     their ids) but no wordId->word mapping was provided. The resulting mapping
     only covers words actually used in the corpus, up to the highest wordId found.
     """
-    numTerms = 1 + getMaxId(corpus)
-    id2word = FakeDict(numTerms)
+    num_terms = 1 + get_max_id(corpus)
+    id2word = FakeDict(num_terms)
     return id2word
 
 
-def isCorpus(obj):
+def is_corpus(obj):
     """
     Check whether `obj` is a corpus. Return (is_corpus, new) 2-tuple, where
     `new is obj` if `obj` was an iterable, or `new` yields the same sequence as
@@ -218,7 +218,7 @@ def isCorpus(obj):
     result is forcefully defined as `is_corpus=False`.
     """
     try:
-        if 'Corpus' in obj.__class__.__name__: # most common case, quick hack
+        if 'Corpus' in obj.__class__.__name__: # the most common case, quick hack
             return True, obj
     except:
         pass
@@ -233,7 +233,7 @@ def isCorpus(obj):
             doc1 = iter(obj).next() # empty corpus is resolved to False here
         if len(doc1) == 0: # sparse documents must have a __len__ function (list, tuple...)
             return True, obj # the first document is empty=>assume this is a corpus
-        id1, val1 = iter(doc1).next() # if obj is a vector, it resolves to False here
+        id1, val1 = iter(doc1).next() # if obj is a numpy array, it resolves to False here
         id1, val1 = int(id1), float(val1) # must be a 2-tuple (integer, float)
     except:
         return False, obj

@@ -56,11 +56,11 @@ def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_n
         # if the input corpus has the `numElements`, `numDocs` and `numTerms` attributes
         # (as is the case with MmCorpus for example), we can use a more efficient code path
         if num_terms is None:
-            num_terms = corpus.numTerms
+            num_terms = corpus.num_terms
         if num_docs is None:
-            num_docs = corpus.numDocs
+            num_docs = corpus.num_docs
         if num_nnz is None:
-            num_nnz = corpus.numElements
+            num_nnz = corpus.num_nnz
     except AttributeError, e:
         pass # not a MmCorpus...
     if printprogress:
@@ -206,18 +206,18 @@ class Sparse2Corpus(object):
 #endclass Sparse2Corpus
 
 
-def vecLen(vec):
+def veclen(vec):
     if len(vec) == 0:
         return 0.0
-    vecLen = 1.0 * math.sqrt(sum(val**2 for _, val in vec))
-    assert vecLen > 0.0, "sparse documents must not contain any explicit zero entries"
-    return vecLen
+    length = 1.0 * math.sqrt(sum(val**2 for _, val in vec))
+    assert length > 0.0, "sparse documents must not contain any explicit zero entries"
+    return length
 
 
 blas_nrm2 = blas('nrm2', numpy.array([], dtype=float))
 blas_scal = blas('scal', numpy.array([], dtype=float))
 
-def unitVec(vec):
+def unitvec(vec):
     """
     Scale a vector to unit length. The only exception is the zero vector, which
     is returned back unchanged.
@@ -247,10 +247,10 @@ def unitVec(vec):
         return vec
 
     if isinstance(first, tuple): # gensim sparse format?
-        vecLen = 1.0 * math.sqrt(sum(val**2 for _, val in vec))
-        assert vecLen > 0.0, "sparse documents must not contain any explicit zero entries"
-        if vecLen != 1.0:
-            return [(termId, val / vecLen) for termId, val in vec]
+        length = 1.0 * math.sqrt(sum(val**2 for _, val in vec))
+        assert length > 0.0, "sparse documents must not contain any explicit zero entries"
+        if length != 1.0:
+            return [(termid, val / length) for termid, val in vec]
         else:
             return list(vec)
     else:
@@ -261,13 +261,13 @@ def cossim(vec1, vec2):
     vec1, vec2 = dict(vec1), dict(vec2)
     if not vec1 or not vec2:
         return 0.0
-    vec1Len = 1.0 * math.sqrt(sum(val * val for val in vec1.itervalues()))
-    vec2Len = 1.0 * math.sqrt(sum(val * val for val in vec2.itervalues()))
-    assert vec1Len > 0.0 and vec2Len > 0.0, "sparse documents must not contain any explicit zero entries"
+    vec1len = 1.0 * math.sqrt(sum(val * val for val in vec1.itervalues()))
+    vec2len = 1.0 * math.sqrt(sum(val * val for val in vec2.itervalues()))
+    assert vec1len > 0.0 and vec2len > 0.0, "sparse documents must not contain any explicit zero entries"
     if len(vec2) < len(vec1):
         vec1, vec2 = vec2, vec1 # swap references so that we iterate over the shorter vector
     result = sum(value * vec2.get(index, 0.0) for index, value in vec1.iteritems())
-    result /= vec1Len * vec2Len # rescale by vector lengths
+    result /= vec1len * vec2len # rescale by vector lengths
     return result
 
 
@@ -303,6 +303,10 @@ def qr_destroy(la):
 class MmWriter(object):
     """
     Store corpus in Matrix Market format.
+
+    Note that the file is written one document at a time, not the whole
+    matrix at once (unlike scipy.io.mmread). This allows us to process corpora
+    which are larger than the available RAM.
     """
 
     HEADER_LINE = '%%MatrixMarket matrix coordinate real general\n'
@@ -312,50 +316,50 @@ class MmWriter(object):
         tmp = open(self.fname, 'w') # reset/create the target file
         tmp.close()
         self.fout = open(self.fname, 'rb+') # open for both reading and writing
-        self.headersWritten = False
+        self.headers_written = False
 
 
-    def writeHeaders(self, numDocs, numTerms, numNnz):
+    def write_headers(self, num_docs, num_terms, num_nnz):
         self.fout.write(MmWriter.HEADER_LINE)
 
-        if numNnz < 0:
+        if num_nnz < 0:
             # we don't know the matrix shape/density yet, so only log a general line
             logger.info("saving sparse matrix to %s" % self.fname)
             self.fout.write(' ' * 50 + '\n') # 48 digits must be enough for everybody
         else:
             logger.info("saving sparse %sx%s matrix with %i non-zero entries to %s" %
-                         (numDocs, numTerms, numNnz, self.fname))
-            self.fout.write('%s %s %s\n' % (numDocs, numTerms, numNnz))
-        self.lastDocNo = -1
-        self.headersWritten = True
+                         (num_docs, num_terms, num_nnz, self.fname))
+            self.fout.write('%s %s %s\n' % (num_docs, num_terms, num_nnz))
+        self.last_docno = -1
+        self.headers_written = True
 
 
-    def fakeHeaders(self, numDocs, numTerms, numNnz):
-        stats = '%i %i %i' % (numDocs, numTerms, numNnz)
+    def fake_headers(self, num_docs, num_terms, num_nnz):
+        stats = '%i %i %i' % (num_docs, num_terms, num_nnz)
         if len(stats) > 50:
             raise ValueError('Invalid stats: matrix too large!')
         self.fout.seek(len(MmWriter.HEADER_LINE))
         self.fout.write(stats)
 
 
-    def writeVector(self, docNo, vector):
+    def write_vector(self, docno, vector):
         """
         Write a single sparse vector to the file.
 
         Sparse vector is any iterable yielding (field id, field value) pairs.
         """
-        assert self.headersWritten, "must write Matrix Market file headers before writing data!"
-        assert self.lastDocNo < docNo, "documents %i and %i not in sequential order!" % (self.lastDocNo, docNo)
-        for termId, weight in sorted(vector): # write term ids in sorted order
+        assert self.headers_written, "must write Matrix Market file headers before writing data!"
+        assert self.last_docno < docno, "documents %i and %i not in sequential order!" % (self.last_docno, docno)
+        for termid, weight in sorted(vector): # write term ids in sorted order
             if weight == 0:
                 # to ensure len(doc) does what is expected, there must not be any zero elements in the sparse document
                 raise ValueError("zero weights not allowed in sparse documents; check your document generator")
-            self.fout.write("%i %i %s\n" % (docNo + 1, termId + 1, weight)) # +1 because MM format starts counting from 1
-        self.lastDocNo = docNo
+            self.fout.write("%i %i %s\n" % (docno + 1, termid + 1, weight)) # +1 because MM format starts counting from 1
+        self.last_docno = docno
 
 
     @staticmethod
-    def writeCorpus(fname, corpus, progressCnt=1000, index=False):
+    def write_corpus(fname, corpus, progress_cnt=1000, index=False):
         """
         Save the vector space representation of an entire corpus to disk.
 
@@ -365,36 +369,36 @@ class MmWriter(object):
         mw = MmWriter(fname)
 
         # write empty headers to the file (with enough space to be overwritten later)
-        mw.writeHeaders(-1, -1, -1) # will print 50 spaces followed by newline on the stats line
+        mw.write_headers(-1, -1, -1) # will print 50 spaces followed by newline on the stats line
 
         # calculate necessary header info (nnz elements, num terms, num docs) while writing out vectors
-        numTerms, numNnz = 0, 0
-        docNo, poslast = -1, -1
+        num_terms, num_nnz = 0, 0
+        docno, poslast = -1, -1
         offsets = []
-        for docNo, bow in enumerate(corpus):
-            if docNo % progressCnt == 0:
-                logger.info("PROGRESS: saving document #%i" % docNo)
+        for docno, bow in enumerate(corpus):
+            if docno % progress_cnt == 0:
+                logger.info("PROGRESS: saving document #%i" % docno)
             if len(bow) > 0:
-                numTerms = max(numTerms, 1 + max(wordId for wordId, val in bow))
-                numNnz += len(bow)
+                num_terms = max(num_terms, 1 + max(wordid for wordid, val in bow))
+                num_nnz += len(bow)
             if index:
                 posnow = mw.fout.tell()
                 if posnow == poslast:
                     offsets[-1] = -1
                 offsets.append(posnow)
                 poslast = posnow
-            mw.writeVector(docNo, bow)
-        numDocs = docNo + 1
+            mw.write_vector(docno, bow)
+        num_docs = docno + 1
 
-        if numDocs * numTerms != 0:
+        if num_docs * num_terms != 0:
             logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" %
-                         (numDocs, numTerms,
-                          100.0 * numNnz / (numDocs * numTerms),
-                          numNnz,
-                          numDocs * numTerms))
+                         (num_docs, num_terms,
+                          100.0 * num_nnz / (num_docs * num_terms),
+                          num_nnz,
+                          num_docs * num_terms))
 
-        # now write proper headers, by seeking and overwriting a part of the file
-        mw.fakeHeaders(numDocs, numTerms, numNnz)
+        # now write proper headers, by seeking and overwriting the spaces written earlier
+        mw.fake_headers(num_docs, num_terms, num_nnz)
 
         mw.close()
         if index:
@@ -447,27 +451,27 @@ class MmReader(object):
         if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
             raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
                              (self.input, header))
-        self.numDocs = self.numTerms = self.numElements = 0
-        for lineNo, line in enumerate(input):
+        self.num_docs = self.num_terms = self.num_nnz = 0
+        for lineno, line in enumerate(input):
             if not line.startswith('%'):
-                self.numDocs, self.numTerms, self.numElements = map(int, line.split())
+                self.num_docs, self.num_terms, self.num_nnz = map(int, line.split())
                 if not self.transposed:
-                    self.numDocs, self.numTerms = self.numTerms, self.numDocs
+                    self.num_docs, self.num_terms = self.num_terms, self.num_docs
                 break
         logger.info("accepted corpus with %i documents, %i features, %i non-zero entries" %
-                     (self.numDocs, self.numTerms, self.numElements))
+                     (self.num_docs, self.num_terms, self.num_nnz))
 
     def __len__(self):
         return self.numDocs
 
     def __str__(self):
         return ("MmCorpus(%i documents, %i features, %i non-zero entries)" %
-                (self.numDocs, self.numTerms, self.numElements))
+                (self.num_docs, self.num_terms, self.num_nnz))
 
     def __iter__(self):
         """
-        Iteratively yield vectors from the underlying file, in the format (rowNo, vector),
-        where vector is a list of (colId, value) 2-tuples.
+        Iteratively yield vectors from the underlying file, in the format (row_no, vector),
+        where vector is a list of (col_no, value) 2-tuples.
 
         Note that the total number of vectors returned is always equal to the
         number of rows specified in the header; empty documents are inserted and
@@ -485,37 +489,37 @@ class MmReader(object):
                 continue
             break
 
-        prevId = -1
+        previd = -1
         for line in fin:
-            docId, termId, val = line.split()
+            docid, termid, val = line.split()
             if not self.transposed:
-                termId, docId = docId, termId
-            docId, termId, val = int(docId) - 1, int(termId) - 1, float(val) # -1 because matrix market indexes are 1-based => convert to 0-based
-            assert prevId <= docId, "matrix columns must come in ascending order"
-            if docId != prevId:
+                termid, docid = docid, termid
+            docid, termid, val = int(docid) - 1, int(termid) - 1, float(val) # -1 because matrix market indexes are 1-based => convert to 0-based
+            assert previd <= docid, "matrix columns must come in ascending order"
+            if docid != previd:
                 # change of document: return the document read so far (its id is prevId)
-                if prevId >= 0:
-                    yield prevId, document
+                if previd >= 0:
+                    yield previd, document
 
                 # return implicit (empty) documents between previous id and new id
                 # too, to keep consistent document numbering and corpus length
-                for prevId in xrange(prevId + 1, docId):
-                    yield prevId, []
+                for previd in xrange(previd + 1, docid):
+                    yield previd, []
 
                 # from now on start adding fields to a new document, with a new id
-                prevId = docId
+                previd = docid
                 document = []
 
-            document.append((termId, val,)) # add another field to the current document
+            document.append((termid, val,)) # add another field to the current document
 
         # handle the last document, as a special case
-        if prevId >= 0:
-            yield prevId, document
+        if previd >= 0:
+            yield previd, document
 
         # return empty documents between the last explicit document and the number
         # of documents as specified in the header
-        for prevId in xrange(prevId + 1, self.numDocs):
-            yield prevId, []
+        for previd in xrange(previd + 1, self.num_docs):
+            yield previd, []
 
 
     def docbyoffset(self, offset):
@@ -530,18 +534,18 @@ class MmReader(object):
             fin = self.input
 
         fin.seek(offset) # works for gzip/bz2 input, too
-        prevId, document = -1, []
+        previd, document = -1, []
         for line in fin:
-            docId, termId, val = line.split()
+            docid, termid, val = line.split()
             if not self.transposed:
-                termId, docId = docId, termId
-            docId, termId, val = int(docId) - 1, int(termId) - 1, float(val) # -1 because matrix market indexes are 1-based => convert to 0-based
-            assert prevId <= docId, "matrix columns must come in ascending order"
-            if docId != prevId:
-                if prevId >= 0:
+                termid, docid = docid, termid
+            docid, termid, val = int(docid) - 1, int(termid) - 1, float(val) # -1 because matrix market indexes are 1-based => convert to 0-based
+            assert previd <= docid, "matrix columns must come in ascending order"
+            if docid != previd:
+                if previd >= 0:
                     return document
-                prevId = docId
+                previd = docid
 
-            document.append((termId, val,)) # add another field to the current document
+            document.append((termid, val,)) # add another field to the current document
         return document
 #endclass MmReader

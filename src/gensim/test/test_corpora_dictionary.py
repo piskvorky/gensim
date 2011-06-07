@@ -21,7 +21,7 @@ from gensim.corpora import Dictionary
 module_path = os.path.dirname(__file__)
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
-        level=logging.WARNING)
+                    level=logging.WARNING)
 
 
 def get_tmpfile(suffix):
@@ -101,7 +101,7 @@ class TestDictionary(unittest.TestCase):
 
     def testFilter(self):
         d = Dictionary(self.texts)
-        d.filterExtremes(noBelow=2, noAbove=1.0, keepN=4)
+        d.filter_extremes(no_below=2, no_above=1.0, keep_n=4)
         expected = {0: 3, 1: 3, 2: 3, 3: 3}
         self.assertEqual(d.dfs, expected)
 
@@ -109,11 +109,11 @@ class TestDictionary(unittest.TestCase):
         """ `Dictionary` can be saved as textfile and loaded again from textfile. """
         tmpf = get_tmpfile('dict_test.txt')
         d = Dictionary(self.texts)
-        d.saveAsText(tmpf)
+        d.save_as_text(tmpf)
         # does the file exists
         self.assertTrue(os.path.exists(tmpf))
 
-        d_loaded = Dictionary.loadFromText(get_tmpfile('dict_test.txt'))
+        d_loaded = Dictionary.load_from_text(get_tmpfile('dict_test.txt'))
         self.assertNotEqual(d_loaded, None)
         self.assertEqual(d_loaded.token2id, d.token2id)
 #endclass TestDictionary

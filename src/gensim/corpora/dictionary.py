@@ -10,7 +10,7 @@ This module implements the concept of Dictionary -- a mapping between words and
 their integer ids.
 
 Dictionaries can be created from a corpus and can later be pruned according to
-document frequency (removing (un)common words via the :func:`Dictionary.filterExtremes` method),
+document frequency (removing (un)common words via the :func:`Dictionary.filter_extremes` method),
 save/loaded from disk (via :func:`Dictionary.save` and :func:`Dictionary.load` methods) etc.
 """
 
@@ -39,12 +39,12 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         self.id2token = {} # reverse mapping for token2id; only formed on request, to save memory
         self.dfs = {} # document frequencies: tokenId -> in how many documents this token appeared
 
-        self.numDocs = 0 # number of documents processed
-        self.numPos = 0 # total number of corpus positions
-        self.numNnz = 0 # total number of non-zeroes in the BOW matrix
+        self.num_docs = 0 # number of documents processed
+        self.num_pos = 0 # total number of corpus positions
+        self.num_nnz = 0 # total number of non-zeroes in the BOW matrix
 
         if documents:
-            self.addDocuments(documents)
+            self.add_documents(documents)
 
 
     def __getitem__(self, tokenid):
@@ -72,17 +72,17 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
 
 
     @staticmethod
-    def fromDocuments(documents):
+    def from_documents(documents):
         return Dictionary(documents=documents)
 
 
-    def addDocuments(self, documents):
+    def add_documents(self, documents):
         """
         Build dictionary from a collection of documents. Each document is a list
         of tokens = **tokenized and normalized** utf-8 encoded strings.
 
         This is only a convenience wrapper for calling `doc2bow` on each document
-        with `allowUpdate=True`.
+        with `allow_update=True`.
 
         >>> print Dictionary.fromDocuments(["máma mele maso".split(), "ema má máma".split()])
         Dictionary(5 unique tokens)
@@ -90,50 +90,50 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         for docno, document in enumerate(documents):
             if docno % 10000 == 0:
                 logger.info("adding document #%i to %s" % (docno, self))
-            _ = self.doc2bow(document, allowUpdate=True) # ignore the result, here we only care about updating token ids
+            _ = self.doc2bow(document, allow_update=True) # ignore the result, here we only care about updating token ids
         logger.info("built %s from %i documents (total %i corpus positions)" %
-                     (self, self.numDocs, self.numPos))
+                     (self, self.num_docs, self.num_pos))
 
 
-    def doc2bow(self, document, allowUpdate=False, return_missing=False):
+    def doc2bow(self, document, allow_update=False, return_missing=False):
         """
         Convert `document` (a list of words) into the bag-of-words format = list
         of `(tokenId, tokenCount)` 2-tuples. Each word is assumed to be a
         **tokenized and normalized** utf-8 encoded string.
 
-        If `allowUpdate` is set, then also update dictionary in the process: create
+        If `allow_update` is set, then also update dictionary in the process: create
         ids for new words. At the same time, update document frequencies -- for
         each word appearing in this document, increase its `self.dfs` by one.
 
-        If `allowUpdate` is **not** set, this function is `const`, i.e. read-only.
+        If `allow_update` is **not** set, this function is `const`, i.e. read-only.
         """
         result = {}
         missing = {}
         document = sorted(document)
         # construct (word, frequency) mapping. in python3 this is done simply
         # using Counter(), but here i use itertools.groupby() for the job
-        for wordNorm, group in itertools.groupby(document):
+        for word_norm, group in itertools.groupby(document):
             frequency = len(list(group)) # how many times does this word appear in the input document
-            tokenId = self.token2id.get(wordNorm, None)
-            if tokenId is None:
+            tokenid = self.token2id.get(word_norm, None)
+            if tokenid is None:
                 # first time we see this token (~normalized form)
                 if return_missing:
-                    missing[wordNorm] = frequency
-                if not allowUpdate: # if we aren't allowed to create new tokens, continue with the next unique token
+                    missing[word_norm] = frequency
+                if not allow_update: # if we aren't allowed to create new tokens, continue with the next unique token
                     continue
-                tokenId = len(self.token2id)
-                self.token2id[wordNorm] = tokenId # new id = number of ids made so far; NOTE this assumes there are no gaps in the id sequence!
+                tokenid = len(self.token2id)
+                self.token2id[word_norm] = tokenid # new id = number of ids made so far; NOTE this assumes there are no gaps in the id sequence!
 
             # update how many times a token appeared in the document
-            result[tokenId] = frequency
+            result[tokenid] = frequency
 
-        if allowUpdate:
-            self.numDocs += 1
-            self.numPos += len(document)
-            self.numNnz += len(result)
+        if allow_update:
+            self.num_docs += 1
+            self.num_pos += len(document)
+            self.num_nnz += len(result)
             # increase document count for each unique token that appeared in the document
-            for tokenId in result.iterkeys():
-                self.dfs[tokenId] = self.dfs.get(tokenId, 0) + 1
+            for tokenid in result.iterkeys():
+                self.dfs[tokenid] = self.dfs.get(tokenid, 0) + 1
 
         # return tokenIds, in ascending id order
         result = sorted(result.iteritems())
@@ -143,14 +143,14 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
             return result
 
 
-    def filterExtremes(self, noBelow=5, noAbove=0.5, keepN=100000):
+    def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000):
         """
         Filter out tokens that appear in
 
-        1. less than `noBelow` documents (absolute number) or
-        2. more than `noAbove` documents (fraction of total corpus size, *not*
+        1. less than `no_below` documents (absolute number) or
+        2. more than `no_above` documents (fraction of total corpus size, *not*
            absolute number).
-        3. after (1) and (2), keep only the first `keepN' most frequent tokens (or
+        3. after (1) and (2), keep only the first `keep_n' most frequent tokens (or
            keep all if `None`).
 
         After the pruning, shrink resulting gaps in word ids.
@@ -158,37 +158,37 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         **Note**: Due to the gap shrinking, the same word may have a different
         word id before and after the call to this function!
         """
-        noAboveAbs = int(noAbove * self.numDocs) # convert fractional threshold to absolute threshold
+        no_above_abs = int(no_above * self.num_docs) # convert fractional threshold to absolute threshold
 
         # determine which tokens to keep
-        goodIds = (v for v in self.token2id.itervalues() if noBelow <= self.dfs[v] <= noAboveAbs)
-        goodIds = sorted(goodIds, key=self.dfs.get, reverse=True)
-        if keepN is not None:
-            goodIds = goodIds[:keepN]
-        logger.info("keeping %i tokens which were in more than %i and less than %i (=%.1f%%) documents" %
-                     (len(goodIds), noBelow, noAboveAbs, 100.0 * noAbove))
+        good_ids = (v for v in self.token2id.itervalues() if no_below <= self.dfs[v] <= no_above_abs)
+        good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
+        if keep_n is not None:
+            good_ids = good_ids[:keep_n]
+        logger.info("keeping %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents" %
+                     (len(good_ids), no_below, no_above_abs, 100.0 * no_above))
 
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
-        self.filterTokens(goodIds = goodIds)
+        self.filter_tokens(good_ids=good_ids)
         self.compactify()
         logger.info("resulting dictionary: %s" % self)
 
 
-    def filterTokens(self, badIds=None, goodIds=None):
+    def filter_tokens(self, bad_ids=None, good_ids=None):
         """
-        Remove the selected `badIds` tokens from all dictionary mappings, or, keep
-        selected `goodIds` in the mapping and remove the rest.
+        Remove the selected `bad_ids` tokens from all dictionary mappings, or, keep
+        selected `good_ids` in the mapping and remove the rest.
 
-        `badIds` and `goodIds` are collections of word ids to be removed.
+        `bad_ids` and `good_ids` are collections of word ids to be removed.
         """
-        if badIds is not None:
-            badIds = set(badIds)
-            self.token2id = dict((token, tokenId) for token, tokenId in self.token2id.iteritems() if tokenId not in badIds)
-            self.dfs = dict((tokenId, freq) for tokenId, freq in self.dfs.iteritems() if tokenId not in badIds)
-        if goodIds is not None:
-            goodIds = set(goodIds)
-            self.token2id = dict((token, tokenId) for token, tokenId in self.token2id.iteritems() if tokenId in goodIds)
-            self.dfs = dict((tokenId, freq) for tokenId, freq in self.dfs.iteritems() if tokenId in goodIds)
+        if bad_ids is not None:
+            bad_ids = set(bad_ids)
+            self.token2id = dict((token, tokenid) for token, tokenid in self.token2id.iteritems() if tokenid not in bad_ids)
+            self.dfs = dict((tokenid, freq) for tokenid, freq in self.dfs.iteritems() if tokenid not in bad_ids)
+        if good_ids is not None:
+            good_ids = set(good_ids)
+            self.token2id = dict((token, tokenid) for token, tokenid in self.token2id.iteritems() if tokenid in good_ids)
+            self.dfs = dict((tokenid, freq) for tokenid, freq in self.dfs.iteritems() if tokenid in good_ids)
 
 
     def compactify(self):
@@ -196,7 +196,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         Assign new word ids to all words.
 
         This is done to make the ids more compact, e.g. after some tokens have
-        been removed via :func:`filterTokens` and there are gaps in the id series.
+        been removed via :func:`filter_tokens` and there are gaps in the id series.
         Calling this method will remove the gaps.
         """
         logger.debug("rebuilding dictionary, shrinking gaps")
@@ -205,11 +205,11 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         idmap = dict(itertools.izip(self.token2id.itervalues(), xrange(len(self.token2id))))
 
         # reassign mappings to new ids
-        self.token2id = dict((token, idmap[tokenId]) for token, tokenId in self.token2id.iteritems())
-        self.dfs = dict((idmap[tokenId], freq) for tokenId, freq in self.dfs.iteritems())
+        self.token2id = dict((token, idmap[tokenid]) for token, tokenid in self.token2id.iteritems())
+        self.dfs = dict((idmap[tokenid], freq) for tokenid, freq in self.dfs.iteritems())
 
 
-    def saveAsText(self, fname):
+    def save_as_text(self, fname):
         """
         Save this Dictionary to a text file, in format:
         `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`.
@@ -218,27 +218,27 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         """
         logger.info("saving dictionary mapping to %s" % fname)
         with open(fname, 'wb') as fout:
-            for token, tokenId in sorted(self.token2id.iteritems()):
-                fout.write("%i\t%s\t%i\n" % (tokenId, token, self.dfs[tokenId]))
+            for token, tokenid in sorted(self.token2id.iteritems()):
+                fout.write("%i\t%s\t%i\n" % (tokenid, token, self.dfs[tokenid]))
 
 
     @staticmethod
-    def loadFromText(fname):
+    def load_from_text(fname):
         """
         Load a previously stored Dictionary from a text file.
-        Mirror function to `saveAsText`.
+        Mirror function to `save_as_text`.
         """
         result = Dictionary()
         with open(fname, 'rb') as f:
-            for lineNo, line in enumerate(f):
+            for lineno, line in enumerate(f):
                 try:
-                    wordId, word, docFreq = line[:-1].split('\t')
+                    wordid, word, docfreq = line[:-1].split('\t')
                 except Exception:
                     raise ValueError("invalid line in dictionary file %s: %s"
                                      % (fname, line.strip()))
-                wordId = int(wordId)
-                result.token2id[word] = wordId
-                result.dfs[wordId] = int(docFreq)
+                wordid = int(wordid)
+                result.token2id[word] = wordid
+                result.dfs[wordid] = int(docfreq)
         return result
 #endclass Dictionary
 

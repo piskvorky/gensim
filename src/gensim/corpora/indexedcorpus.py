@@ -13,8 +13,8 @@ While the standard corpus interface in gensim allows iterating over corpus with
 `corpus[docno]` (in O(1) look-up time).
 
 This functionality is achieved by storing an extra file (by default named the same
-as the corpus file plus '.index' suffix) that stores byte offset of the beginning of
-each document.
+as the corpus file plus '.index' suffix) that stores the byte offset of the beginning
+of each document.
 """
 
 import logging
@@ -53,7 +53,7 @@ class IndexedCorpus(interfaces.CorpusABC):
 
 
     @classmethod
-    def serialize(serializer, fname, corpus, id2word=None, index_fname=None):
+    def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None):
         """
         Iterate through the document stream `corpus`, saving the documents to `fname`
         and recording byte offset of each document. Save the resulting index
@@ -74,7 +74,10 @@ class IndexedCorpus(interfaces.CorpusABC):
         if index_fname is None:
             index_fname = fname + '.index'
 
-        offsets = serializer.saveCorpus(fname, corpus, id2word)
+        if progress_cnt is not None:
+            offsets = serializer.save_corpus(fname, corpus, id2word, progress_cnt=progress_cnt)
+        else:
+            offsets = serializer.save_corpus(fname, corpus, id2word)
         if offsets is None:
             raise NotImplementedError("called serialize on class %s which \
             doesn't support indexing!" % serializer.__name__)

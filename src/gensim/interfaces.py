@@ -68,7 +68,7 @@ class CorpusABC(utils.SaveLoad):
 #        return sum(1 for doc in self) # sum(empty generator) == 0, so this works even for an empty corpus
 
     @staticmethod
-    def saveCorpus(fname, corpus, id2word=None):
+    def save_corpus(fname, corpus, id2word=None):
         """
         Save an existing `corpus` to disk.
 
@@ -159,7 +159,7 @@ class SimilarityABC(utils.SaveLoad):
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 
 
-    def getSimilarities(self, doc):
+    def get_similarities(self, doc):
         """
         Return similarity of a sparse vector `doc` to all documents in the corpus,
         or similarities of all documents in `doc` to all documents in corpus (if
@@ -178,7 +178,7 @@ class SimilarityABC(utils.SaveLoad):
         query is more efficient than computing the similarities one document after
         another.
         """
-        is_corpus, query = utils.isCorpus(query)
+        is_corpus, query = utils.is_corpus(query)
         if self.normalize:
             # self.normalize only works if the input is a plain gensim vector/corpus (as
             # advertised in the doc). in fact, input can be a numpy or scipy.sparse matrix
@@ -188,21 +188,21 @@ class SimilarityABC(utils.SaveLoad):
                 logger.warning("non-gensim input must already come normalized")
             else:
                 if is_corpus:
-                    query = [matutils.unitVec(v) for v in query]
+                    query = [matutils.unitvec(v) for v in query]
                 else:
-                    query = matutils.unitVec(query)
-        result = self.getSimilarities(query)
+                    query = matutils.unitvec(query)
+        result = self.get_similarities(query)
 
-        if self.numBest is None:
+        if self.num_best is None:
             return result
 
         # if the input query was a corpus (=more documents), compute the top-n
         # most similar for each document in turn
         if matutils.ismatrix(result):
-            return [matutils.full2sparse_clipped(v, self.numBest) for v in result]
+            return [matutils.full2sparse_clipped(v, self.num_best) for v in result]
         else:
             # otherwise, return top-n of the single input document
-            return matutils.full2sparse_clipped(result, self.numBest)
+            return matutils.full2sparse_clipped(result, self.num_best)
 
 
     def __iter__(self):

@@ -15,14 +15,14 @@ from gensim import utils
 
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
-        level=logging.WARNING)
+                    level=logging.WARNING)
 
 
 class TestIsCorpus(unittest.TestCase):
 
     def test_None(self):
         # test None
-        result = utils.isCorpus(None)
+        result = utils.is_corpus(None)
         expected = (False, None)
         self.assertEqual(expected, result)
 
@@ -31,35 +31,35 @@ class TestIsCorpus(unittest.TestCase):
 
         # one document, one word
         potentialCorpus = [[(0, 4.)]]
-        result = utils.isCorpus(potentialCorpus)
+        result = utils.is_corpus(potentialCorpus)
         expected = (True, potentialCorpus)
         self.assertEqual(expected, result)
 
         # one document, several words
         potentialCorpus = [[(0, 4.), (1, 2.)]]
-        result = utils.isCorpus(potentialCorpus)
+        result = utils.is_corpus(potentialCorpus)
         expected = (True, potentialCorpus)
         self.assertEqual(expected, result)
 
         potentialCorpus = [[(0, 4.), (1, 2.), (2, 5.), (3, 8.)]]
-        result = utils.isCorpus(potentialCorpus)
+        result = utils.is_corpus(potentialCorpus)
         expected = (True, potentialCorpus)
         self.assertEqual(expected, result)
 
         # several documents, one word
         potentialCorpus = [[(0, 4.)], [(1, 2.)]]
-        result = utils.isCorpus(potentialCorpus)
+        result = utils.is_corpus(potentialCorpus)
         expected = (True, potentialCorpus)
         self.assertEqual(expected, result)
 
         potentialCorpus = [[(0, 4.)], [(1, 2.)], [(2, 5.)], [(3, 8.)]]
-        result = utils.isCorpus(potentialCorpus)
+        result = utils.is_corpus(potentialCorpus)
         expected = (True, potentialCorpus)
         self.assertEqual(expected, result)
 
     def test_int_tuples(self):
         potentialCorpus = [[(0, 4)]]
-        result = utils.isCorpus(potentialCorpus)
+        result = utils.is_corpus(potentialCorpus)
         expected = (True, potentialCorpus)
         self.assertEqual(expected, result)
 
@@ -74,7 +74,7 @@ class TestIsCorpus(unittest.TestCase):
         potentials.append([1, 2, 3, 4, 5, 5])
         potentials.append([[(0, 'string')]])
         for noCorpus in potentials:
-            result = utils.isCorpus(noCorpus)
+            result = utils.is_corpus(noCorpus)
             expected = (False, noCorpus)
             self.assertEqual(expected, result)
 

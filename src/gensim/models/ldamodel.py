@@ -157,10 +157,10 @@ class LdaModel(interfaces.TransformationABC):
 
     Model persistency is achieved through its `load`/`save` methods.
     """
-    def __init__(self, corpus=None, numTopics=100, id2word=None, distributed=False,
+    def __init__(self, corpus=None, num_topics=100, id2word=None, distributed=False,
                  chunks=1000, passes=1, update_every=1, alpha=None, eta=None, decay=0.5):
         """
-        `numTopics` is the number of requested latent topics to be extracted from
+        `num_topics` is the number of requested latent topics to be extracted from
         the training corpus.
 
         `id2word` is a mapping from word ids (integers) to words (strings). It is
@@ -176,7 +176,7 @@ class LdaModel(interfaces.TransformationABC):
 
         Example:
 
-        >>> lda = LdaModel(corpus, numTopics=100)
+        >>> lda = LdaModel(corpus, num_topics=100)
         >>> print lda[doc_bow] # get topic probability distribution for a document
         >>> lda.update(corpus2) # update the LDA model with additional documents
         >>> print lda[doc_bow]
@@ -189,16 +189,16 @@ class LdaModel(interfaces.TransformationABC):
 
         if self.id2word is None:
             logger.info("no word id mapping provided; initializing from corpus, assuming identity")
-            self.id2word = utils.dictFromCorpus(corpus)
-            self.numTerms = len(self.id2word)
+            self.id2word = utils.dict_from_corpus(corpus)
+            self.num_terms = len(self.id2word)
         else:
-            self.numTerms = 1 + max([-1] + self.id2word.keys())
+            self.num_terms = 1 + max([-1] + self.id2word.keys())
 
-        if self.numTerms == 0:
+        if self.num_terms == 0:
             raise ValueError("cannot compute LDA over an empty collection (no terms)")
 
         self.distributed = bool(distributed)
-        self.numTopics = int(numTopics)
+        self.num_topics = int(num_topics)
         self.chunks = chunks
         self.decay = decay
         self.num_updates = 0
@@ -207,11 +207,11 @@ class LdaModel(interfaces.TransformationABC):
         self.update_every = update_every
 
         if alpha is None:
-            self.alpha = 1.0 / numTopics
+            self.alpha = 1.0 / num_topics
         else:
             self.alpha = alpha
         if eta is None:
-            self.eta = 1.0 / numTopics
+            self.eta = 1.0 / num_topics
         else:
             self.eta = eta
 
@@ -232,7 +232,7 @@ class LdaModel(interfaces.TransformationABC):
                 dispatcher = Pyro.core.Proxy('PYRONAME:gensim.lda_dispatcher@%s' % ns._pyroUri.location)
                 dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
-                dispatcher.initialize(id2word=id2word, numTopics=numTopics,
+                dispatcher.initialize(id2word=id2word, num_topics=num_topics,
                                       chunks=chunks, alpha=alpha, eta=eta, distributed=False)
                 self.dispatcher = dispatcher
                 self.numworkers = len(dispatcher.getworkers())
@@ -243,7 +243,7 @@ class LdaModel(interfaces.TransformationABC):
 
         # Initialize the variational distribution q(beta|lambda)
         state = LdaState(None)
-        state.sstats = numpy.random.gamma(100., 1./100., (self.numTopics, self.numTerms))
+        state.sstats = numpy.random.gamma(100., 1./100., (self.num_topics, self.num_terms))
         self.setstate(state)
 
         # if a training corpus was provided, start estimating the model right away
@@ -300,7 +300,7 @@ class LdaModel(interfaces.TransformationABC):
         logger.debug("performing inference on a chunk of %i documents" % len(chunk))
 
         # Initialize the variational distribution q(theta|gamma) for the chunk
-        gamma = numpy.random.gamma(100., 1./100., (len(chunk), self.numTopics))
+        gamma = numpy.random.gamma(100., 1./100., (len(chunk), self.num_topics))
         Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = numpy.exp(Elogtheta)
         if collect_sstats:
@@ -359,7 +359,7 @@ class LdaModel(interfaces.TransformationABC):
         return gamma, sstats
 
 
-    def doEstep(self, chunk, state=None):
+    def do_estep(self, chunk, state=None):
         """
         Perform inference on a chunk of documents, and store (increment) the collected
         sufficient statistics in `state` (or `self.state` if None).
@@ -426,7 +426,7 @@ class LdaModel(interfaces.TransformationABC):
         logger.info("running %s LDA training, %s topics, %i passes over "
                     "the supplied corpus of %i documents, updating model once "
                     "every %i documents" %
-                    (updatetype, self.numTopics, passes, lencorpus, updateafter))
+                    (updatetype, self.num_topics, passes, lencorpus, updateafter))
         if updates_per_pass * passes < 10:
             logger.warning("too few updates, training might not converge; consider "
                            "increasing the number of passes to improve accuracy")
@@ -456,7 +456,7 @@ class LdaModel(interfaces.TransformationABC):
                 else:
                     logger.info('PROGRESS: iteration %i, at document #%i/%i' %
                                 (iteration, chunk_no * chunks + len(chunk), lencorpus))
-                    self.doEstep(chunk, other)
+                    self.do_estep(chunk, other)
                 dirty = True
 
                 if update_every and (chunk_no + 1) % (update_every * self.numworkers) == 0:
@@ -465,7 +465,7 @@ class LdaModel(interfaces.TransformationABC):
                         logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                         other = self.dispatcher.getstate()
 
-                    diff = self.doMstep(rho(), other)
+                    diff = self.do_mstep(rho(), other)
                     del other # free up some mem
 
                     if self.dispatcher:
@@ -487,7 +487,7 @@ class LdaModel(interfaces.TransformationABC):
         #endfor corpus update
 
 
-    def doMstep(self, rho, other):
+    def do_mstep(self, rho, other):
         """M step: use linear interpolation between the existing topics and
         collected sufficient statistics in `other` to update new topics"""
         logger.debug("updating topics")
@@ -495,7 +495,7 @@ class LdaModel(interfaces.TransformationABC):
         # the topics change through this update, to assess convergence
         self.state.blend(rho, other)
         diff = self.setstate(self.state, compute_diff=True)
-        self.printTopics(15) # print out some debug info at the end of each EM iteration
+        self.print_topics(15) # print out some debug info at the end of each EM iteration
         logger.info("topic logdiff=%f, rho=%f" % (diff, rho))
         self.num_updates += 1
         return diff
@@ -533,38 +533,38 @@ class LdaModel(interfaces.TransformationABC):
             # E[log p(theta | alpha) - log q(theta | gamma)]
             score += numpy.sum((self.alpha - gammad) * Elogthetad)
             score += numpy.sum(gammaln(gammad) - gammaln(self.alpha))
-            score += gammaln(self.alpha * self.numTopics) - gammaln(numpy.sum(gammad))
+            score += gammaln(self.alpha * self.num_topics) - gammaln(numpy.sum(gammad))
 
         # E[log p(beta | eta) - log q (beta | lambda)]
         score += numpy.sum((self.eta - self._lambda) * Elogbeta)
         score += numpy.sum(gammaln(self._lambda) - gammaln(self.eta))
-        score += numpy.sum(gammaln(self.eta * self.numTerms) -
+        score += numpy.sum(gammaln(self.eta * self.num_terms) -
                               gammaln(numpy.sum(self._lambda, 1)))
 
         return score
 
 
-    def printTopics(self, topics=10, topN=10):
+    def print_topics(self, topics=10, topn=10):
         """
         Print the `topN` most probable words for (randomly selected) `topics`
         number of topics. Set `topics=-1` to print all topics.
 
         Unlike LSA, there is no ordering between the topics in LDA.
-        The printed `topics <= self.numTopics` subset of all topics is therefore
+        The printed `topics <= self.num_topics` subset of all topics is therefore
         arbitrary and may change between two runs.
         """
         if topics < 0:
             # print all topics if `topics` is negative
-            topics = self.numTopics
-        topics = min(topics, self.numTopics)
+            topics = self.num_topics
+        topics = min(topics, self.num_topics)
         for i in xrange(topics):
-            logger.info("topic #%i: %s" % (i, self.printTopic(i, topN=topN)))
+            logger.info("topic #%i: %s" % (i, self.print_topic(i, topn=topn)))
 
 
-    def printTopic(self, topicid, topN=10):
+    def print_topic(self, topicid, topn=10):
         topic = self.expElogbeta[topicid]
         topic = topic / topic.sum() # normalize to probability dist
-        bestn = numpy.argsort(topic)[::-1][:topN]
+        bestn = numpy.argsort(topic)[::-1][:topn]
         beststr = ['%.3f*%s' % (topic[id], self.id2word[id]) for id in bestn]
         return ' + '.join(beststr)
 
@@ -577,15 +577,15 @@ class LdaModel(interfaces.TransformationABC):
         Ignore topics with very low probability (below `eps`).
         """
         # if the input vector is in fact a corpus, return a transformed corpus as result
-        is_corpus, corpus = utils.isCorpus(bow)
+        is_corpus, corpus = utils.is_corpus(bow)
         if is_corpus:
             return self._apply(corpus)
 
         gamma, _ = self.inference([bow])
         theta = numpy.exp(dirichlet_expectation(gamma[0]))
-        topicDist = theta / theta.sum() # normalize to proper distribution
-        return [(topicId, topicValue) for topicId, topicValue in enumerate(topicDist)
-                if topicValue >= eps] # ignore document's topics that have prob < eps
+        topic_dist = theta / theta.sum() # normalize to proper distribution
+        return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
+                if topicvalue >= eps] # ignore document's topics that have prob < eps
 #endclass LdaModel
 
 
@@ -604,7 +604,7 @@ if __name__ == '__main__':
     corpus = MmCorpus('/Users/kofola/gensim/results/wiki10_en_bow.mm')
     K = 50
 
-    olda = LdaModel(numTopics=K, id2word=vocab, alpha=1./K, eta=1./K, decay=0.5)
+    olda = LdaModel(num_topics=K, id2word=vocab, alpha=1./K, eta=1./K, decay=0.5)
     olda.update(corpus)
     olda.save('olda2.pkl')
 

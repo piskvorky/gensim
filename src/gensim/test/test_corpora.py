@@ -16,7 +16,7 @@ import tempfile
 
 from gensim.corpora import dmlcorpus, bleicorpus, mmcorpus, lowcorpus, svmlightcorpus, dictionary
 
-logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s', level = logging.WARNING)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARNING)
 
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
@@ -31,38 +31,38 @@ def testfile():
 class CorpusTesterABC(object):
     def __init__(self):
         raise NotImplementedError("cannot instantiate Abstract Base Class")
-        self.corpusClass = None # to be overridden with a particular class
-        self.fileExtension = None # file 'testcorpus.fileExtension' must exist and be in the format of corpusClass
+        self.corpus_class = None # to be overridden with a particular class
+        self.file_extension = None # file 'testcorpus.fileExtension' must exist and be in the format of corpusClass
 
 
-    def testLoad(self):
-        fname = datapath('testcorpus.' + self.fileExtension.lstrip('.'))
-        corpus = self.corpusClass(fname)
+    def test_load(self):
+        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        corpus = self.corpus_class(fname)
         docs = list(corpus)
         self.assertEqual(len(docs), 9) # the deerwester corpus always has nine documents, no matter what format
 
 
-    def testSave(self):
+    def test_save(self):
         corpus = [[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]
 
         # make sure the corpus can be saved
-        self.corpusClass.saveCorpus(testfile(), corpus)
+        self.corpus_class.save_corpus(testfile(), corpus)
 
         # and loaded back, resulting in exactly the same corpus
-        corpus2 = list(self.corpusClass(testfile()))
+        corpus2 = list(self.corpus_class(testfile()))
         self.assertEqual(corpus, corpus2)
 
         # delete the temporary file
         os.remove(testfile())
 
-    def testSerialize(self):
+    def test_serialize(self):
         corpus = [[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]
 
         # make sure the corpus can be saved
-        self.corpusClass.serialize(testfile(), corpus)
+        self.corpus_class.serialize(testfile(), corpus)
 
         # and loaded back, resulting in exactly the same corpus
-        corpus2 = self.corpusClass(testfile())
+        corpus2 = self.corpus_class(testfile())
         self.assertEqual(corpus, list(corpus2))
 
         # make sure the indexing corpus[i] works
@@ -76,22 +76,22 @@ class CorpusTesterABC(object):
 
 class TestMmCorpus(unittest.TestCase, CorpusTesterABC):
     def setUp(self):
-        self.corpusClass = mmcorpus.MmCorpus
-        self.fileExtension = '.mm'
+        self.corpus_class = mmcorpus.MmCorpus
+        self.file_extension = '.mm'
 #endclass TestMmCorpus
 
 
 class TestSvmLightCorpus(unittest.TestCase, CorpusTesterABC):
     def setUp(self):
-        self.corpusClass = svmlightcorpus.SvmLightCorpus
-        self.fileExtension = '.svmlight'
+        self.corpus_class = svmlightcorpus.SvmLightCorpus
+        self.file_extension = '.svmlight'
 #endclass TestSvmLightCorpus
 
 
 class TestBleiCorpus(unittest.TestCase, CorpusTesterABC):
     def setUp(self):
-        self.corpusClass = bleicorpus.BleiCorpus
-        self.fileExtension = '.blei'
+        self.corpus_class = bleicorpus.BleiCorpus
+        self.file_extension = '.blei'
 #endclass TestBleiCorpus
 
 
