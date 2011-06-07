@@ -35,21 +35,21 @@ class BleiCorpus(IndexedCorpus):
     implicit ``id=K``.
     """
 
-    def __init__(self, fname, fnameVocab=None):
+    def __init__(self, fname, fname_vocab=None):
         """
         Initialize the corpus from a file.
 
-        `fnameVocab` is the file with vocabulary; if not specified, it defaults to
+        `fname_vocab` is the file with vocabulary; if not specified, it defaults to
         `fname.vocab`.
         """
         IndexedCorpus.__init__(self, fname)
         logger.info("loading corpus from %s" % fname)
 
-        if fnameVocab is None:
-            fnameVocab = fname + '.vocab'
+        if fname_vocab is None:
+            fname_vocab = fname + '.vocab'
 
         self.fname = fname
-        words = [word.rstrip() for word in open(fnameVocab)]
+        words = [word.rstrip() for word in open(fname_vocab)]
         self.id2word = dict(enumerate(words))
         self.length = None
 
@@ -76,7 +76,7 @@ class BleiCorpus(IndexedCorpus):
 
 
     @staticmethod
-    def saveCorpus(fname, corpus, id2word=None):
+    def save_corpus(fname, corpus, id2word=None):
         """
         Save a corpus in the LDA-C format.
 
@@ -88,10 +88,10 @@ class BleiCorpus(IndexedCorpus):
         """
         if id2word is None:
             logger.info("no word id mapping provided; initializing from corpus")
-            id2word = utils.dictFromCorpus(corpus)
-            numTerms = len(id2word)
+            id2word = utils.dict_from_corpus(corpus)
+            num_terms = len(id2word)
         else:
-            numTerms = 1 + max([-1] + id2word.keys())
+            num_terms = 1 + max([-1] + id2word.keys())
 
         logger.info("storing corpus in Blei's LDA-C format: %s" % fname)
         with open(fname, 'w') as fout:
@@ -102,11 +102,11 @@ class BleiCorpus(IndexedCorpus):
                 fout.write("%i %s\n" % (len(doc), ' '.join("%i:%s" % p for p in doc)))
 
         # write out vocabulary, in a format compatible with Blei's topics.py script
-        fnameVocab = fname + '.vocab'
-        logger.info("saving vocabulary of %i words to %s" % (numTerms, fnameVocab))
-        with open(fnameVocab, 'w') as fout:
-            for featureId in xrange(numTerms):
-                fout.write("%s\n" % utils.toUtf8(id2word.get(featureId, '---')))
+        fname_vocab = fname + '.vocab'
+        logger.info("saving vocabulary of %i words to %s" % (num_terms, fname_vocab))
+        with open(fname_vocab, 'w') as fout:
+            for featureid in xrange(num_terms):
+                fout.write("%s\n" % utils.to_utf8(id2word.get(featureid, '---')))
 
         return offsets
 

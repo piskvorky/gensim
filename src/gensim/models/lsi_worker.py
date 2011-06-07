@@ -63,7 +63,7 @@ class Worker(object):
 
     @utils.synchronous('lock_update')
     def processjob(self, job):
-        self.model.addDocuments(job)
+        self.model.add_documents(job)
         self.jobsdone += 1
         if SAVE_DEBUG and self.jobsdone % SAVE_DEBUG == 0:
             fname = os.path.join(tempfile.gettempdir(), 'lsi_worker.pkl')

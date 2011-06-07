@@ -99,7 +99,7 @@ class LogEntropyModel(interfaces.TransformationABC):
         Return log entropy representation of the input vector and/or corpus.
         """
         # if the input vector is in fact a corpus, return a transformed corpus
-        is_corpus, bow = utils.isCorpus(bow)
+        is_corpus, bow = utils.is_corpus(bow)
         if is_corpus:
             return self._apply(bow)
 
@@ -107,5 +107,5 @@ class LogEntropyModel(interfaces.TransformationABC):
         vector = [(term_id, math.log(tf + 1) * self.entr.get(term_id))
                   for term_id, tf in bow if term_id in self.entr]
         if self.normalize:
-            vector = matutils.unitVec(vector)
+            vector = matutils.unitvec(vector)
         return vector

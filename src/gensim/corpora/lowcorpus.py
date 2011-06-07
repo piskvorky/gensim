@@ -12,6 +12,7 @@ Corpus in GibbsLda++ format of List-Of-Words.
 from __future__ import with_statement
 
 import logging
+import itertools
 
 from gensim import interfaces, utils
 from gensim.corpora import IndexedCorpus
@@ -20,7 +21,7 @@ from gensim.corpora import IndexedCorpus
 logger = logging.getLogger('gensim.corpora.lowcorpus')
 
 
-def splitOnSpace(s):
+def split_on_space(s):
     return [word for word in s.strip().split(' ') if word]
 
 
@@ -48,13 +49,12 @@ class LowCorpus(IndexedCorpus):
         in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated
         by the blank character.
     """
-    def __init__(self, fname, id2word=None, line2words=splitOnSpace):
+    def __init__(self, fname, id2word=None, line2words=split_on_space):
         """
         Initialize the corpus from a file.
 
         `id2word` and `line2words` are optional parameters.
-
-        If provided, `id2word` is a dictionary mapping between wordIds (integers)
+        If provided, `id2word` is a dictionary mapping between word_ids (integers)
         and words (strings). If not provided, the mapping is constructed from
         the documents.
 
@@ -71,18 +71,18 @@ class LowCorpus(IndexedCorpus):
         if not id2word:
             # build a list of all word types in the corpus (distinct words)
             logger.info("extracting vocabulary from the corpus")
-            allTerms = set()
-            self.useWordIds = False # return documents as (word, wordCount) 2-tuples
+            all_terms = set()
+            self.use_wordids = False # return documents as (word, wordCount) 2-tuples
             for doc in self:
-                allTerms.update(word for word, wordCnt in doc)
-            allTerms = sorted(allTerms) # sort the list of all words; rank in that list = word's integer id
-            self.id2word = dict(zip(xrange(len(allTerms)), allTerms)) # build a mapping of word id(int) -> word (string)
+                all_terms.update(word for word, wordCnt in doc)
+            all_terms = sorted(all_terms) # sort the list of all words; rank in that list = word's integer id
+            self.id2word = dict(itertools.izip(xrange(len(all_terms)), all_terms)) # build a mapping of word id(int) -> word (string)
         else:
             logger.info("using provided word mapping (%i ids)" % len(id2word))
             self.id2word = id2word
         self.word2id = dict((v, k) for k, v in self.id2word.iteritems())
-        self.numTerms = len(self.word2id)
-        self.useWordIds = True # return documents as (wordIndex, wordCount) 2-tuples
+        self.num_terms = len(self.word2id)
+        self.use_wordids = True # return documents as (wordIndex, wordCount) 2-tuples
 
         logger.info("loaded corpus with %i documents and %i terms from %s" %
                      (self.numDocs, self.numTerms, fname))
@@ -95,26 +95,26 @@ class LowCorpus(IndexedCorpus):
     def line2doc(self, line):
         words = self.line2words(line)
 
-        if self.useWordIds:
+        if self.use_wordids:
             # get all distinct terms in this document, ignore unknown words
-            uniqWords = set(words).intersection(self.word2id.iterkeys())
+            uniq_words = set(words).intersection(self.word2id.iterkeys())
 
             # the following creates a unique list of words *in the same order*
             # as they were in the input. when iterating over the documents,
             # the (word, count) pairs will appear in the same order as they
             # were in the input (bar duplicates), which looks better.
             # if this was not needed, we might as well have used useWords = set(words)
-            useWords, marker = [], set()
+            use_words, marker = [], set()
             for word in words:
-                if (word in uniqWords) and (word not in marker):
-                    useWords.append(word)
+                if (word in uniq_words) and (word not in marker):
+                    use_words.append(word)
                     marker.add(word)
             # construct a list of (wordIndex, wordFrequency) 2-tuples
-            doc = zip(map(self.word2id.get, useWords), map(words.count, useWords)) # using list.count is suboptimal but speed of this whole function is irrelevant
+            doc = zip(map(self.word2id.get, use_words), map(words.count, use_words)) # using list.count is suboptimal but speed of this whole function is irrelevant
         else:
-            uniqWords = set(words)
+            uniq_words = set(words)
             # construct a list of (word, wordFrequency) 2-tuples
-            doc = zip(uniqWords, map(words.count, uniqWords)) # using list.count is suboptimal but that's irrelevant at this point
+            doc = zip(uniq_words, map(words.count, uniq_words)) # using list.count is suboptimal but that's irrelevant at this point
 
         # return the document, then forget it and move on to the next one
         # note that this way, only one doc is stored in memory at a time, not the whole corpus
@@ -125,13 +125,13 @@ class LowCorpus(IndexedCorpus):
         """
         Iterate over the corpus, returning one bag-of-words vector at a time.
         """
-        for lineNo, line in enumerate(open(self.fname)):
-            if lineNo > 0: # ignore the first line = number of documents
+        for lineno, line in enumerate(open(self.fname)):
+            if lineno > 0: # ignore the first line = number of documents
                 yield self.line2doc(line)
 
 
     @staticmethod
-    def saveCorpus(fname, corpus, id2word=None):
+    def save_corpus(fname, corpus, id2word=None):
         """
         Save a corpus in the List-of-words format.
 
@@ -140,7 +140,7 @@ class LowCorpus(IndexedCorpus):
         """
         if id2word is None:
             logger.info("no word id mapping provided; initializing from corpus")
-            id2word = utils.dictFromCorpus(corpus)
+            id2word = utils.dict_from_corpus(corpus)
 
         logger.info("storing corpus in List-Of-Words format: %s" % fname)
         truncated = 0
@@ -149,10 +149,10 @@ class LowCorpus(IndexedCorpus):
             fout.write('%i\n' % len(corpus))
             for doc in corpus:
                 words = []
-                for wordId, value in doc:
+                for wordid, value in doc:
                     if abs(int(value) - value) > 1e-6:
                         truncated += 1
-                    words.extend([str(id2word[wordId])] * int(value))
+                    words.extend([str(id2word[wordid])] * int(value))
                 offsets.append(fout.tell())
                 fout.write('%s\n' % ' '.join(words))
 

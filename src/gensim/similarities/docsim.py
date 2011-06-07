@@ -54,25 +54,25 @@ class Similarity(interfaces.SimilarityABC):
     If your corpus is reasonably small (fits in RAM), consider using `MatrixSimilarity`
     or `SparseMatrixSimilarity` instead, for (much) faster similarity searches.
     """
-    def __init__(self, corpus, numBest=None):
+    def __init__(self, corpus, num_best=None):
         """
-        If `numBest` is left unspecified, similarity queries return a full list (one
+        If `num_best` is left unspecified, similarity queries return a full list (one
         float for every document in the corpus, including the query document):
 
-        If `numBest` is set, queries return `numBest` most similar documents, as a
+        If `num_best` is set, queries return `num_best` most similar documents, as a
         sorted list:
 
-        >>> sms = Similarity(corpus, numBest=3)
+        >>> sms = Similarity(corpus, num_best=3)
         >>> sms[vec12]
         [(12, 1.0), (30, 0.95), (5, 0.45)]
 
         """
         self.corpus = corpus
-        self.numBest = numBest
+        self.num_best = num_best
         self.normalize = True
 
 
-    def getSimilarities(self, doc):
+    def get_similarities(self, doc):
         return [matutils.cossim(doc, other) for other in self.corpus]
 #endclass Similarity
 
@@ -88,46 +88,46 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
     The matrix is internally stored as a numpy array.
     """
-    def __init__(self, corpus, numBest=None, dtype=numpy.float32, numFeatures=None, chunks=256):
+    def __init__(self, corpus, num_best=None, dtype=numpy.float32, num_features=None, chunks=256):
         """
-        If `numBest` is left unspecified, similarity queries return a full list (one
+        If `num_best` is left unspecified, similarity queries return a full list (one
         float for every document in the corpus):
 
         >>> sms = MatrixSimilarity(corpus)
         >>> sms[vec12]
         [0.0, 0.0, 0.2, 0.13, 0.8, 0.0, 0.0]
 
-        If `numBest` is set, queries return `numBest` most similar documents, as a
+        If `num_best` is set, queries return `num_best` most similar documents, as a
         sorted list:
 
-        >>> sms = MatrixSimilarity(corpus, numBest=3)
+        >>> sms = MatrixSimilarity(corpus, num_best=3)
         >>> sms[vec12]
         [(2, 0.2), (3, 0.13), (4, 0.8)]
 
         """
-        if numFeatures is None:
+        if num_features is None:
             logger.info("scanning corpus to determine the number of features")
-            numFeatures = 1 + utils.getMaxId(corpus)
+            num_features = 1 + utils.get_max_id(corpus)
 
-        self.numFeatures = numFeatures
-        self.numBest = numBest
+        self.num_features = num_features
+        self.num_best = num_best
         self.normalize = True
         self.chunks = chunks
 
         if corpus is not None:
             logger.info("creating matrix for %s documents and %i features" %
-                         (len(corpus), numFeatures))
-            self.corpus = numpy.empty(shape=(len(corpus), numFeatures), dtype=dtype)
+                         (len(corpus), num_features))
+            self.corpus = numpy.empty(shape=(len(corpus), num_features), dtype=dtype)
             # iterate over corpus, populating the numpy index matrix with (normalized)
             # document vectors
-            for docNo, vector in enumerate(corpus):
-                if docNo % 1000 == 0:
-                    logger.info("PROGRESS: at document #%i/%i" % (docNo, len(corpus)))
-                vector = matutils.unitVec(matutils.sparse2full(vector, numFeatures))
-                self.corpus[docNo] = vector
+            for docno, vector in enumerate(corpus):
+                if docno % 1000 == 0:
+                    logger.info("PROGRESS: at document #%i/%i" % (docno, len(corpus)))
+                vector = matutils.unitvec(matutils.sparse2full(vector, num_features))
+                self.corpus[docno] = vector
 
 
-    def getSimilarities(self, query):
+    def get_similarities(self, query):
         """
         Return similarity of sparse vector `query` to all documents in the corpus,
         as a numpy array.
@@ -136,9 +136,9 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         of each document in `query` to all documents in the corpus (=batch query,
         faster than processing each document in turn).
         """
-        is_corpus, query = utils.isCorpus(query)
+        is_corpus, query = utils.is_corpus(query)
         if is_corpus:
-            query = numpy.asarray([matutils.sparse2full(vec, self.numFeatures) for vec in query],
+            query = numpy.asarray([matutils.sparse2full(vec, self.num_features) for vec in query],
                                   dtype=self.corpus.dtype)
         else:
             if scipy.sparse.issparse(query):
@@ -147,7 +147,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
                 pass
             else:
                 # default case: query is a single vector in sparse gensim format
-                query = matutils.sparse2full(query, self.numFeatures)
+                query = matutils.sparse2full(query, self.num_features)
             query = numpy.asarray(query, dtype=self.corpus.dtype)
 
         # do a little transposition dance to stop numpy from making a copy of
@@ -169,20 +169,20 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
     The matrix is internally stored as a `scipy.sparse.csr` matrix.
     """
-    def __init__(self, corpus, numBest=None, chunks=500, dtype=numpy.float32):
+    def __init__(self, corpus, num_best=None, chunks=500, dtype=numpy.float32):
         """
-        If `numBest` is left unspecified, similarity queries return a full list (one
+        If `num_best` is left unspecified, similarity queries return a full list (one
         float for every document in the corpus, including the query document):
 
-        If `numBest` is set, queries return `numBest` most similar documents, as a
+        If `num_best` is set, queries return `num_best` most similar documents, as a
         sorted list:
 
-        >>> sms = SparseMatrixSimilarity(corpus, numBest=3)
+        >>> sms = SparseMatrixSimilarity(corpus, num_best=3)
         >>> sms[vec12]
         [(12, 1.0), (30, 0.95), (5, 0.45)]
 
         """
-        self.numBest = numBest
+        self.num_best = num_best
         self.normalize = True
         self.chunks = chunks
 
@@ -192,22 +192,22 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
             # iterate over input corpus, populating the sparse index matrix
             try:
                 # use the more efficient corpus generation version, if the input
-                # `corpus` is MmCorpus-like.
-                num_terms, num_docs, num_nnz = corpus.numTerms, corpus.numDocs, corpus.numElements
+                # `corpus` is MmCorpus-like (knows its shape and number of non-zeroes).
+                num_terms, num_docs, num_nnz = corpus.num_terms, corpus.num_docs, corpus.num_nnz
                 logger.debug("using efficient sparse index creation")
             except AttributeError:
                 # no MmCorpus, use the slower version :(
                 num_terms, num_docs, num_nnz = None, None, None
-            self.corpus = matutils.corpus2csc((matutils.unitVec(vector) for vector in corpus),
+            self.corpus = matutils.corpus2csc((matutils.unitvec(vector) for vector in corpus),
                                               num_terms=num_terms, num_docs=num_docs, num_nnz=num_nnz,
                                               dtype=numpy.float32, printprogress=10000).T
 
             # convert to Compressed Sparse Row for efficient row slicing and multiplications
-            self.corpus = self.corpus.tocsr() # currently does nothing, CSC.T is already CSR
+            self.corpus = self.corpus.tocsr() # currently no-op, CSC.T is already CSR
             logger.info("created %s" % repr(self.corpus))
 
 
-    def getSimilarities(self, query):
+    def get_similarities(self, query):
         """
         Return similarity of sparse vector `query` to all documents in the corpus,
         as a numpy array.
@@ -216,7 +216,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         of each document in `query` to all documents in the corpus (=batch query,
         faster than processing each document in turn).
         """
-        is_corpus, query = utils.isCorpus(query)
+        is_corpus, query = utils.is_corpus(query)
         if is_corpus:
             query = matutils.corpus2csc(query, self.corpus.shape[1], dtype=self.corpus.dtype)
         else:

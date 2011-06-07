@@ -72,7 +72,7 @@ class TextCorpus(interfaces.CorpusABC):
         self.input = input
         self.dictionary = Dictionary()
         if input is not None:
-            self.dictionary.addDocuments(self.get_texts())
+            self.dictionary.add_documents(self.get_texts())
         else:
             logger.warning("No input document stream provided; assuming "
                            "dictionary will be initialized some other way.")
@@ -85,7 +85,7 @@ class TextCorpus(interfaces.CorpusABC):
         Iterating over the corpus must yield sparse vectors, one for each document.
         """
         for text in self.get_texts():
-            yield self.dictionary.doc2bow(text, allowUpdate=False)
+            yield self.dictionary.doc2bow(text, allow_update=False)
 
 
     def getstream(self):

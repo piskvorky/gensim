@@ -26,7 +26,7 @@ class DmlConfig(object):
     DmlConfig contains parameters necessary for the abstraction of a 'corpus of
     articles' (see the `DmlCorpus` class).
 
-    Articles may come from different sources (=different locations on disk/netword,
+    Articles may come from different sources (=different locations on disk/network,
     different file formats etc.), so the main purpose of DmlConfig is to keep all
     sources in one place.
 

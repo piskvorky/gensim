@@ -26,7 +26,7 @@ class SvmLightCorpus(IndexedCorpus):
     Corpus in SVMlight format.
 
     Quoting http://svmlight.joachims.org/:
-    The input file example_file contains the training examples. The first lines
+    The input file contains the training examples. The first lines
     may contain comments and are ignored if they start with #. Each of the following
     lines represents one training example and is of the following format::
 
@@ -70,7 +70,7 @@ class SvmLightCorpus(IndexedCorpus):
 
 
     @staticmethod
-    def saveCorpus(fname, corpus, id2word=None):
+    def save_corpus(fname, corpus, id2word=None):
         """
         Save a corpus in the SVMlight format.
 
@@ -113,7 +113,7 @@ class SvmLightCorpus(IndexedCorpus):
 
     @staticmethod
     def doc2line(doc):
-        pairs = ' '.join("%i:%s" % (termId + 1, termVal) for termId, termVal  in doc) # +1 to convert 0-base to 1-base
+        pairs = ' '.join("%i:%s" % (termid + 1, termval) for termid, termval in doc) # +1 to convert 0-base to 1-base
         return "0 %s\n" % pairs
 #endclass SvmLightCorpus
 

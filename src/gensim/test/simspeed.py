@@ -50,7 +50,7 @@ if __name__ == '__main__':
     density = 100.0 * index_sparse.corpus.nnz / (index_sparse.corpus.shape[0] * index_sparse.corpus.shape[1])
 
     logging.info("test 1 (dense): similarity of all vs. all (%i documents, %i dense features)" %
-                 (len(corpus_dense), index_dense.numFeatures))
+                 (len(corpus_dense), index_dense.num_features))
     for chunks in [0, 1, 4, 8, 16, 64, 128, 256, 512, 1024]:
         index_dense.chunks = chunks
         start = time()
@@ -70,7 +70,7 @@ if __name__ == '__main__':
                          (chunks, taken, len(corpus_dense) / taken, queries / taken, diff))
         del sims
 
-    index_dense.numBest = 10
+    index_dense.num_best = 10
     logging.info("test 2 (dense): as above, but only ask for the top-10 most similar for each document")
     for chunks in [0, 1, 4, 8, 16, 64, 128, 256, 512, 1024]:
         index_dense.chunks = chunks
@@ -83,7 +83,7 @@ if __name__ == '__main__':
             queries = math.ceil(1.0 * len(corpus_dense) / chunks)
         logging.info("chunks=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
                      (chunks, taken, len(corpus_dense) / taken, queries / taken))
-    index_dense.numBest = None
+    index_dense.num_best = None
 
     logging.info("test 3 (sparse): similarity of all vs. all (%i documents, %i features, %.2f%% density)" %
                  (len(corpus_sparse), index_sparse.corpus.shape[1], density))
@@ -103,7 +103,7 @@ if __name__ == '__main__':
                          (chunks, taken, len(corpus_sparse) / taken, queries / taken, diff))
         del sims
 
-    index_sparse.numBest = 10
+    index_sparse.num_best = 10
     logging.info("test 4 (sparse): as above, but only ask for the top-10 most similar for each document")
     for chunks in [0, 5, 10, 100, 500, 1000, 5000]:
         index_sparse.chunks = chunks
@@ -116,7 +116,7 @@ if __name__ == '__main__':
             queries = math.ceil(1.0 * len(corpus_sparse) / chunks)
         logging.info("chunks=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
                      (chunks, taken, len(corpus_sparse) / taken, queries / taken))
-    index_sparse.numBest = None
+    index_sparse.num_best = None
 
     # Difference between test #5 and test #1 is that the query in #5 is a gensim iterable
     # corpus, while in #1, the index is used directly (numpy arrays). So #5 is slower,
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     # unit length=extra work, which #1 avoids.
     query = corpus_dense[:1000]
     logging.info("test 5 (dense): dense corpus of %i docs vs. index (%i documents, %i dense features)" %
-                 (len(query), len(index_dense), index_dense.numFeatures))
+                 (len(query), len(index_dense), index_dense.num_features))
     for chunks in [1, 4, 8, 16, 64, 128, 256, 512, 1024]:
         start = time()
         if chunks > 1:

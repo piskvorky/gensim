@@ -61,7 +61,7 @@ class Dispatcher(object):
         `model_params` are parameters used to initialize individual workers (gets
         handed all the way down to worker.initialize()).
         """
-        self.jobs = Queue(maxsize = self.maxsize)
+        self.jobs = Queue(maxsize=self.maxsize)
         self.lock_update = threading.Lock()
         self.callback._pyroOneway.add("jobdone") # make sure workers transfer control back to dispatcher asynchronously
         self._jobsdone = 0
@@ -70,7 +70,7 @@ class Dispatcher(object):
         # locate all available workers and store their proxies, for subsequent RMI calls
         self.workers = {}
         with Pyro.naming.locateNS() as ns:
-            for name, uri in ns.list(prefix = 'gensim.lsi_worker').iteritems():
+            for name, uri in ns.list(prefix='gensim.lsi_worker').iteritems():
                 try:
                     worker = Pyro.core.Proxy(uri)
                     workerid = len(self.workers)
@@ -78,7 +78,7 @@ class Dispatcher(object):
                     worker._pyroOneway.add("requestjob")
                     worker._pyroOneway.add("exit")
                     logger.info("registering worker #%i at %s" % (workerid, uri))
-                    worker.initialize(workerid, dispatcher = self.callback, **model_params)
+                    worker.initialize(workerid, dispatcher=self.callback, **model_params)
                     self.workers[workerid] = worker
                     worker.requestjob()
                 except Pyro.errors.PyroError, err:
@@ -98,14 +98,14 @@ class Dispatcher(object):
 
     def getjob(self, worker_id):
         logger.info("worker #%i requesting a new job" % worker_id)
-        job = self.jobs.get(block = True, timeout = HUGE_TIMEOUT)
+        job = self.jobs.get(block = True, timeout=HUGE_TIMEOUT)
         logger.info("worker #%i got a new job (%i left)" % (worker_id, self.jobs.qsize()))
         return job
 
 
     def putjob(self, job):
         self._jobsreceived += 1
-        self.jobs.put(job, block = True, timeout = HUGE_TIMEOUT)
+        self.jobs.put(job, block = True, timeout=HUGE_TIMEOUT)
         logger.info("added a new job (len(queue)=%i items)" % self.jobs.qsize())
 
 

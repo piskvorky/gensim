@@ -65,7 +65,7 @@ P2_EXTRA_DIMS = 100 # set to `None` for dynamic P2_EXTRA_DIMS=k
 P2_EXTRA_ITERS = 2
 
 
-def clipSpectrum(s, k, discard=0.001):
+def clip_spectrum(s, k, discard=0.001):
     """
     Given eigenvalues `s`, return how many factors should be kept to avoid
     storing spurious (tiny, numerically instable) values.
@@ -112,7 +112,7 @@ class Projection(utils.SaveLoad):
                 ut, s, vt = sparsesvd.sparsesvd(docs, k + 30) # ask for extra factors, because for some reason SVDLIBC sometimes returns fewer factors than requested
                 u = ut.T
                 del ut, vt
-                k = clipSpectrum(s**2, self.k)
+                k = clip_spectrum(s**2, self.k)
             self.u = u[:, :k].copy()
             self.s = s[:k].copy()
         else:
@@ -173,7 +173,7 @@ class Projection(utils.SaveLoad):
             u_k, s_k, _ = numpy.linalg.svd(numpy.dot(k, k.T), full_matrices=False) # if this fails too, give up with an exception
             s_k = numpy.sqrt(s_k) # go back from eigen values to singular values
 
-        k = clipSpectrum(s_k**2, self.k)
+        k = clip_spectrum(s_k**2, self.k)
         u1_k, u2_k, s_k = numpy.array(u_k[:n1, :k]), numpy.array(u_k[n1:, :k]), s_k[:k]
 
         # update & rotate current basis U = [U, U']*[U1_k, U2_k]
@@ -203,15 +203,15 @@ class LsiModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
 
     """
-    def __init__(self, corpus=None, numTopics=200, id2word=None, chunks=10000,
+    def __init__(self, corpus=None, num_topics=200, id2word=None, chunks=10000,
                  decay=1.0, distributed=False, onepass=True,
                  power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS):
         """
-        `numTopics` is the number of requested factors (latent dimensions).
+        `num_topics` is the number of requested factors (latent dimensions).
 
         After the model has been trained, you can estimate topics for an
         arbitrary, unseen document, using the ``topics = self[document]`` dictionary
-        notation. You can also add new training documents, with ``self.addDocuments``,
+        notation. You can also add new training documents, with ``self.add_documents``,
         so that training can be stopped and resumed at any time, and the
         LSI transformation is available at any point.
 
@@ -230,16 +230,16 @@ class LsiModel(interfaces.TransformationABC):
 
         Example:
 
-        >>> lsi = LsiModel(corpus, numTopics=10)
+        >>> lsi = LsiModel(corpus, num_topics=10)
         >>> print lsi[doc_tfidf] # project some document into LSI space
-        >>> lsi.addDocuments(corpus2) # update LSI on additional documents
+        >>> lsi.add_documents(corpus2) # update LSI on additional documents
         >>> print lsi[doc_tfidf]
 
         .. [2] http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf
 
         """
         self.id2word = id2word
-        self.numTopics = int(numTopics)
+        self.num_topics = int(num_topics)
         self.chunks = int(chunks)
         self.decay = float(decay)
         if distributed:
@@ -254,13 +254,13 @@ class LsiModel(interfaces.TransformationABC):
 
         if self.id2word is None:
             logger.info("no word id mapping provided; initializing from corpus, assuming identity")
-            self.id2word = utils.dictFromCorpus(corpus)
-            self.numTerms = len(self.id2word)
+            self.id2word = utils.dict_from_corpus(corpus)
+            self.num_terms = len(self.id2word)
         else:
-            self.numTerms = 1 + max([-1] + self.id2word.keys())
+            self.num_terms = 1 + max([-1] + self.id2word.keys())
 
         self.docs_processed = 0
-        self.projection = Projection(self.numTerms, self.numTopics)
+        self.projection = Projection(self.num_terms, self.num_topics)
 
         self.numworkers = 1
         if not distributed:
@@ -276,9 +276,9 @@ class LsiModel(interfaces.TransformationABC):
                 dispatcher = Pyro.core.Proxy('PYRONAME:gensim.lsi_dispatcher@%s' % ns._pyroUri.location)
                 dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
-                dispatcher.initialize(id2word = self.id2word, numTopics = numTopics,
-                                      chunks = chunks, decay = decay,
-                                      distributed = False, onepass = onepass)
+                dispatcher.initialize(id2word=self.id2word, num_topics = num_topics,
+                                      chunks=chunks, decay=decay,
+                                      distributed=False, onepass=onepass)
                 self.dispatcher = dispatcher
                 self.numworkers = len(dispatcher.getworkers())
                 logger.info("using distributed version with %i workers" % self.numworkers)
@@ -288,10 +288,10 @@ class LsiModel(interfaces.TransformationABC):
                 raise RuntimeError("failed to initialize distributed LSI (%s)" % err)
 
         if corpus is not None:
-            self.addDocuments(corpus)
+            self.add_documents(corpus)
 
 
-    def addDocuments(self, corpus, chunks=None, decay=None):
+    def add_documents(self, corpus, chunks=None, decay=None):
         """
         Update singular value decomposition to take into account a new
         corpus of documents.
@@ -317,9 +317,9 @@ class LsiModel(interfaces.TransformationABC):
         if not scipy.sparse.issparse(corpus):
             if not self.onepass:
                 # we are allowed multiple passes over the input => use a faster, randomized two-pass algo
-                update = Projection(self.numTerms, self.numTopics, None)
-                update.u, update.s = stochasticSvd(corpus, self.numTopics,
-                    num_terms=self.numTerms, chunks=chunks,
+                update = Projection(self.num_terms, self.num_topics, None)
+                update.u, update.s = stochasticSvd(corpus, self.num_topics,
+                    num_terms=self.num_terms, chunks=chunks,
                     extra_dims=self.extra_samples, power_iters=self.power_iters)
                 self.projection.merge(update, decay=decay)
             else:
@@ -334,7 +334,7 @@ class LsiModel(interfaces.TransformationABC):
                 for chunk_no, chunk in enumerate(utils.chunkize(corpus, chunks, 0)): # FIXME self.numworkers
                     # construct the job as a sparse matrix, to minimize memory overhead
                     # definitely avoid materializing it as a dense matrix!
-                    job = matutils.corpus2csc(chunk, num_terms=self.numTerms)
+                    job = matutils.corpus2csc(chunk, num_terms=self.num_terms)
                     del chunk
                     doc_no += job.shape[1]
                     if self.dispatcher:
@@ -345,12 +345,12 @@ class LsiModel(interfaces.TransformationABC):
                         logger.info("dispatched documents up to #%s" % doc_no)
                     else:
                         # serial version, there is only one "worker" (myself) => process the job directly
-                        update = Projection(self.numTerms, self.numTopics, job)
+                        update = Projection(self.num_terms, self.num_topics, job)
                         del job
                         self.projection.merge(update, decay=decay)
                         del update
                         logger.info("processed documents up to #%s" % doc_no)
-                        self.printTopics(5) # TODO see if printDebug works and remove one of these..
+                        self.print_topics(5) # TODO see if printDebug works and remove one of these..
 
                 # wait for all workers to finish (distributed version only)
                 if self.dispatcher:
@@ -361,14 +361,14 @@ class LsiModel(interfaces.TransformationABC):
         else:
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             assert self.onepass, "distributed two-pass algo not supported yet"
-            update = Projection(self.numTerms, self.numTopics, corpus.tocsc())
+            update = Projection(self.num_terms, self.num_topics, corpus.tocsc())
             self.projection.merge(update, decay=decay)
             logger.info("processed sparse job of %i documents" % (corpus.shape[1]))
 
 
     def __str__(self):
-        return "LsiModel(numTerms=%s, numTopics=%s, decay=%s, chunks=%s)" % \
-                (self.numTerms, self.numTopics, self.decay, self.chunks)
+        return "LsiModel(num_terms=%s, num_topics=%s, decay=%s, chunks=%s)" % \
+                (self.num_terms, self.num_topics, self.decay, self.chunks)
 
 
     def __getitem__(self, bow, scaled=False):
@@ -376,78 +376,74 @@ class LsiModel(interfaces.TransformationABC):
         Return latent representation, as a list of (topic_id, topic_value) 2-tuples.
 
         This is done by folding input document into the latent topic space.
-
-        Note that this function returns the latent space representation **scaled by the
-        singular values**. To return non-scaled embedding, set `scaled` to False.
         """
         # if the input vector is in fact a corpus, return a transformed corpus as a result
-        is_corpus, bow = utils.isCorpus(bow)
+        is_corpus, bow = utils.is_corpus(bow)
         if is_corpus:
             return self._apply(bow)
 
         assert self.projection.u is not None, "decomposition not initialized yet"
-        vec = matutils.sparse2full(bow, self.numTerms).astype(self.projection.u.dtype)
-        vec.shape = (self.numTerms, 1)
-        topicDist = numpy.dot(self.projection.u[:, :self.numTopics].T, vec) # K x T * T x 1 = K x 1
+        vec = matutils.sparse2full(bow, self.num_terms).astype(self.projection.u.dtype)
+        vec.shape = (self.num_terms, 1)
+        topic_dist = numpy.dot(self.projection.u[:, :self.num_topics].T, vec) # K x T * T x 1 = K x 1
         if scaled:
-            topicDist = (1.0 / self.projection.s[:self.numTopics]) * topicDist # s^-1 * u^T * x
-        topicDist = topicDist.flatten()
+            topic_dist = (1.0 / self.projection.s[:self.num_topics]) * topic_dist # s^-1 * u^T * x
+        topic_dist = topic_dist.flatten()
 
-        nnz = topicDist.nonzero()[0]
-        return zip(nnz, topicDist[nnz])
+        nnz = topic_dist.nonzero()[0]
+        return zip(nnz, topic_dist[nnz])
 
 
-    def printTopic(self, topicNo, topN=10):
+    def print_topic(self, topicno, topn=10):
         """
-        Return a specified topic (=left singular vector), 0 <= `topicNo` < `self.numTopics`,
+        Return a specified topic (=left singular vector), 0 <= `topicno` < `self.num_topics`,
         as string.
 
-        Return only the `topN` words which contribute the most to the direction
+        Return only the `topn` words which contribute the most to the direction
         of the topic (both negative and positive).
 
-        >>> lsimodel.printTopic(10, topN=5)
+        >>> lsimodel.print_topic(10, topn=5)
         '-0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + -0.174 * "functor" + -0.168 * "operator"'
 
         """
-        # size of the projection matrix can actually be smaller than `self.numTopics`,
+        # size of the projection matrix can actually be smaller than `self.num_topics`,
         # if there were not enough factors (real rank of input matrix smaller than
-        # `self.numTopics`). in that case, return empty string
-        if topicNo >= len(self.projection.u.T):
+        # `self.num_topics`). in that case, return empty string
+        if topicno >= len(self.projection.u.T):
             return ''
-        c = numpy.asarray(self.projection.u.T[topicNo, :]).flatten()
+        c = numpy.asarray(self.projection.u.T[topicno, :]).flatten()
         norm = numpy.sqrt(numpy.sum(numpy.dot(c, c)))
-        most = numpy.abs(c).argsort()[::-1][:topN]
+        most = numpy.abs(c).argsort()[::-1][:topn]
         return ' + '.join(['%.3f*"%s"' % (1.0 * c[val] / norm, self.id2word[val]) for val in most])
 
 
-    def printTopics(self, numTopics=5, numWords=10):
-        for i in xrange(min(numTopics, self.numTopics)):
+    def print_topics(self, num_topics=5, num_words=10):
+        for i in xrange(min(num_topics, self.num_topics)):
             if i < len(self.projection.s):
                 logger.info("topic #%i(%.3f): %s" %
                             (i, self.projection.s[i],
-                             self.printTopic(i, topN = numWords)))
+                             self.print_topic(i, topn=num_words)))
 
 
-    def printDebug(self, numTopics=5, numWords=10):
+    def print_debug(self, num_topics=5, num_words=10):
         """
-        Print (to log) the most salient words of the first `numTopics` topics.
+        Print (to log) the most salient words of the first `num_topics` topics.
 
-        Unlike `printTopics()`, this looks for words that are significant for a
+        Unlike `print_topics()`, this looks for words that are significant for a
         particular topic *and* not for others. This *should* result in a more
         human-interpretable description of topics.
         """
         # only wrap the module-level fnc
-        printDebug(self.id2word,
-                   self.projection.u, self.projection.s,
-                   range(min(numTopics, len(self.projection.u.T))),
-                   numWords=numWords)
+        print_debug(self.id2word, self.projection.u, self.projection.s,
+                   range(min(num_topics, len(self.projection.u.T))),
+                   num_words=num_words)
 #endclass LsiModel
 
 
-def printDebug(id2token, u, s, topics, numWords=10, numNeg=None):
-    if numNeg is None:
+def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
+    if num_neg is None:
         # by default, print half as many salient negative words as positive
-        numNeg = numWords / 2
+        num_neg = num_words / 2
 
     logger.info('computing word-topic salience for %i topics' % len(topics))
     topics, result = set(topics), {}
@@ -458,7 +454,7 @@ def printDebug(id2token, u, s, topics, numWords=10, numNeg=None):
         for topic in topics:
             result.setdefault(topic, []).append((udiff[topic], uvecno))
 
-    logger.debug("printing %i+%i salient words" % (numWords, numNeg))
+    logger.debug("printing %i+%i salient words" % (num_words, num_neg))
     for topic in sorted(result.iterkeys()):
         weights = sorted(result[topic], key=lambda x: -abs(x[0]))
         _, most = weights[0]
@@ -472,13 +468,13 @@ def printDebug(id2token, u, s, topics, numWords=10, numNeg=None):
         for weight, uvecno in weights:
             if normalize * u[uvecno, topic] > 0.0001:
                 pos.append('%s(%.3f)' % (id2token[uvecno], u[uvecno, topic]))
-                if len(pos) >= numWords:
+                if len(pos) >= num_words:
                     break
 
         for weight, uvecno in weights:
             if normalize * u[uvecno, topic] < -0.0001:
                 neg.append('%s(%.3f)' % (id2token[uvecno], u[uvecno, topic]))
-                if len(neg) >= numNeg:
+                if len(neg) >= num_neg:
                     break
 
         logger.info('topic #%s(%.3f): %s, ..., %s' % (topic, s[topic], ', '.join(pos), ', '.join(neg)))
@@ -573,7 +569,7 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
     y = [y]
     q, r = matutils.qr_destroy(y) # orthonormalize the range
     del y
-    samples = clipSpectrum(numpy.diag(r), samples, discard=eps)
+    samples = clip_spectrum(numpy.diag(r), samples, discard=eps)
     qt = q[:, :samples].T.copy()
     del q
 
@@ -602,7 +598,7 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
         s = numpy.sqrt(s) # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
 
     logger.info("computing the final decomposition")
-    keep = clipSpectrum(s**2, rank, discard=eps)
+    keep = clip_spectrum(s**2, rank, discard=eps)
     u = u[:, :keep].copy()
     s = s[:keep]
     u = numpy.dot(qt.T, u)

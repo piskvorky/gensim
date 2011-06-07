@@ -88,7 +88,7 @@ class TestLeeTest(unittest.TestCase):
         bg_corpus_ent = log_ent[bg_corpus]
 
         # initialize an LSI transformation from background corpus
-        lsi = models.LsiModel(bg_corpus_ent, id2word=dictionary, numTopics=200)
+        lsi = models.LsiModel(bg_corpus_ent, id2word=dictionary, num_topics=200)
         # transform small corpus to lsi bow->log_ent->fold-in-lsi
         corpus_lsi = lsi[log_ent[corpus]]
 

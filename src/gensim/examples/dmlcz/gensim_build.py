@@ -80,4 +80,3 @@ if __name__ == '__main__':
     buildDmlCorpus(config)
 
     logging.info("finished running %s" % program)
-

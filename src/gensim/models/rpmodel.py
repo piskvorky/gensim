@@ -36,20 +36,20 @@ class RpModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, corpus, id2word=None, numTopics=300):
+    def __init__(self, corpus, id2word=None, num_topics=300):
         """
         `id2word` is a mapping from word ids (integers) to words (strings). It is
         used to determine the vocabulary size, as well as for debugging and topic
         printing. If not set, it will be determined from the corpus.
         """
         self.id2word = id2word
-        self.numTopics = numTopics
+        self.num_topics = num_topics
         if corpus is not None:
             self.initialize(corpus)
 
 
     def __str__(self):
-        return "RpModel(numTerms=%s, numTopics=%s)" % (self.numTerms, self.numTopics)
+        return "RpModel(numTerms=%s, numTopics=%s)" % (self.num_terms, self.num_topics)
 
 
     def initialize(self, corpus):
@@ -58,12 +58,12 @@ class RpModel(interfaces.TransformationABC):
         """
         if self.id2word is None:
             logger.info("no word id mapping provided; initializing from corpus, assuming identity")
-            self.id2word = utils.dictFromCorpus(corpus)
-            self.numTerms = len(self.id2word)
+            self.id2word = utils.dict_from_corpus(corpus)
+            self.num_terms = len(self.id2word)
         else:
-            self.numTerms = 1 + max([-1] + self.id2word.keys())
+            self.num_terms = 1 + max([-1] + self.id2word.keys())
 
-        shape = self.numTopics, self.numTerms
+        shape = self.num_topics, self.num_terms
         logger.info("constructing %s random matrix" % str(shape))
         # Now construct the projection matrix itself.
         # Here i use a particular form, derived in "Achlioptas: Database-friendly random projection",
@@ -77,15 +77,15 @@ class RpModel(interfaces.TransformationABC):
         Return RP representation of the input vector and/or corpus.
         """
         # if the input vector is in fact a corpus, return a transformed corpus as result
-        is_corpus, bow = utils.isCorpus(bow)
+        is_corpus, bow = utils.is_corpus(bow)
         if is_corpus:
             return self._apply(bow)
 
-        vec = matutils.sparse2full(bow, self.numTerms).reshape(self.numTerms, 1) / numpy.sqrt(self.numTopics)
+        vec = matutils.sparse2full(bow, self.num_terms).reshape(self.num_terms, 1) / numpy.sqrt(self.num_topics)
         vec = numpy.asfortranarray(vec, dtype=numpy.float32)
-        topicDist = scipy.linalg.fblas.sgemv(1.0, self.projection, vec)  # (k, d) * (d, 1) = (k, 1)
-        return [(topicId, float(topicValue)) for topicId, topicValue in enumerate(topicDist.flat)
-                if numpy.isfinite(topicValue) and not numpy.allclose(topicValue, 0.0)]
+        topic_dist = scipy.linalg.fblas.sgemv(1.0, self.projection, vec)  # (k, d) * (d, 1) = (k, 1)
+        return [(topicid, float(topicvalue)) for topicid, topicvalue in enumerate(topic_dist.flat)
+                if numpy.isfinite(topicvalue) and not numpy.allclose(topicvalue, 0.0)]
 
 
     def __setstate__(self, state):
