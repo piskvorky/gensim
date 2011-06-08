@@ -47,7 +47,7 @@ if __name__ == '__main__':
     index_dense = gensim.similarities.MatrixSimilarity(corpus_dense)
     index_sparse = gensim.similarities.SparseMatrixSimilarity(corpus_sparse)
 
-    density = 100.0 * index_sparse.corpus.nnz / (index_sparse.corpus.shape[0] * index_sparse.corpus.shape[1])
+    density = 100.0 * index_sparse.index.nnz / (index_sparse.index.shape[0] * index_sparse.index.shape[1])
 
     logging.info("test 1 (dense): similarity of all vs. all (%i documents, %i dense features)" %
                  (len(corpus_dense), index_dense.num_features))
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     index_dense.num_best = None
 
     logging.info("test 3 (sparse): similarity of all vs. all (%i documents, %i features, %.2f%% density)" %
-                 (len(corpus_sparse), index_sparse.corpus.shape[1], density))
+                 (len(corpus_sparse), index_sparse.index.shape[1], density))
     for chunks in [0, 5, 10, 100, 500, 1000, 5000]:
         index_sparse.chunks = chunks
         start = time()
@@ -143,7 +143,7 @@ if __name__ == '__main__':
     # Same comment as for test #5.
     query = corpus_sparse[:1000]
     logging.info("test 6 (sparse): sparse corpus of %i docs vs. sparse index (%i documents, %i features, %.2f%% density)" %
-                 (len(query), len(corpus_sparse), index_sparse.corpus.shape[1], density))
+                 (len(query), len(corpus_sparse), index_sparse.index.shape[1], density))
     for chunks in [1, 5, 10, 100, 500, 1000]:
         start = time()
         if chunks > 1:

@@ -52,16 +52,20 @@ class Shard(utils.SaveLoad):
         self.cls = index.__class__
         logger.info("saving index shard to %s" % fname)
         index.save(fname)
-        # TODO: load back with mmap immediately?
-        # TODO: support for remote shards
+        # TODO: support for remote shards (Pyro? multiprocessing?)
+
 
     def __len__(self):
         return self.length
 
 
+    def __str__(self):
+        return ("Shard(%i documents in %s)" % (len(self), self.fname))
+
+
     def get_index(self):
         logger.debug("loading index from %s" % self.fname)
-        index = self.cls.load(self.fname) # FIXME yuck, optimize
+        return self.cls.load(self.fname)
 
 
     def __getitem__(self, query):
@@ -83,11 +87,13 @@ class Similarity(interfaces.SimilarityABC):
     The shard themselves are simply stored as files to disk
 
     """
-    def __init__(self, output_prefix, corpus, num_features, num_best=None, shardsize=20000):
+    def __init__(self, output_prefix, corpus, num_features, num_best=None, shardsize=5000):
         """
         Construct the index from `corpus`. The index can be later extended by calling
         the `add_documents` method. Documents are split into shards of `shardsize`
         each, converted to a matrix and stored to disk under `output_prefix.shard_number`.
+        `shardsize` should be chosen so that a shardsize x shardsize matrix fits
+        comfortably into main memory.
 
         `num_features` is the number of features in the `corpus` (e.g. size of the
         dictionary, or the number of latent topics).
@@ -106,7 +112,6 @@ class Similarity(interfaces.SimilarityABC):
         [(12, 1.0), (30, 0.95), (5, 0.45)]
 
         """
-#       TODO: make the index more robust against disk/power failures; use some db/pytables?
         self.output_prefix = output_prefix
         self.num_features = num_features
         self.num_best = num_best
@@ -117,6 +122,16 @@ class Similarity(interfaces.SimilarityABC):
 
         if corpus is not None:
             self.add_documents(corpus)
+#       TODO: make the index more robust against disk/power failures; use some db/pytables?
+
+
+    def __len__(self):
+        return len(self.fresh_docs) + sum([len(shard) for shard in self.shards])
+
+
+    def __str__(self):
+        return ("Similarity index with %i documents in %i shards (stored under %s)" %
+                (len(self), len(self.shards), self.output_prefix))
 
 
     def add_documents(self, corpus):
@@ -149,7 +164,7 @@ class Similarity(interfaces.SimilarityABC):
     def close_shard(self):
         """
         This forces the latest shard to close (be converted to matrix and stored
-        to disk).
+        to disk). Does nothing if no new documents added since last call.
 
         NOTE: the shard is closed even if it is not full yet (its size is smaller
         than `self.shardsize`). If documents are added later, this incomplete
@@ -179,10 +194,10 @@ class Similarity(interfaces.SimilarityABC):
             raise ValueError("cannot reopen shard with fresh documents in index")
         last_shard = self.shards[-1]
         last_index = last_shard.get_index()
-        if scipy.issparse(last_index.corpus):
-            self.fresh_docs = [doc for doc in matutils.Sparse2Corpus(last_index.corpus)]
+        if scipy.sparse.issparse(last_index.index):
+            self.fresh_docs = list(matutils.Sparse2Corpus(last_index.index))
         else:
-            self.fresh_docs = [doc for doc in matutils.Dense2Corpus(last_index.corpus)]
+            self.fresh_docs = list(matutils.Dense2Corpus(last_index.index))
         self.fresh_nnz = last_shard.num_nnz
         del self.shards[-1] # remove the shard from index NOTE: but its file is not deleted
 
@@ -200,6 +215,24 @@ class Similarity(interfaces.SimilarityABC):
         else:
             result = numpy.hstack(results)
         return result
+
+
+    def __iter__(self):
+        """
+        For each index document, compute cosine similarity against all other
+        documents in the index and yield the result.
+        """
+        # turn off query normalization (vectors in the index are assumed to be already normalized)
+        norm = self.normalize
+        self.normalize = False
+
+        for shard in self.shards:
+            shard_index = shard.get_index()
+            # use the entire shard index as a gigantic query!
+            # FIXME or maybe chunk it into smaller pieces?
+            for sims in self[shard_index.index]:
+                yield sims
+        self.normalize = norm
 #endclass Similarity
 
 
@@ -240,12 +273,11 @@ class MatrixSimilarity(interfaces.SimilarityABC):
             for docno, vector in enumerate(corpus):
                 if docno % 1000 == 0:
                     logger.info("PROGRESS: at document #%i/%i" % (docno, len(corpus)))
-                vector = matutils.unitvec(matutils.sparse2full(vector, num_features))
-                self.index[docno] = vector
+                self.index[docno] = matutils.unitvec(matutils.sparse2full(vector, num_features))
 
 
     def __len__(self):
-        return self.corpus.shape[1]
+        return self.index.shape[1]
 
 
     def get_similarities(self, query):
@@ -261,7 +293,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         is_corpus, query = utils.is_corpus(query)
         if is_corpus:
             query = numpy.asarray([matutils.sparse2full(vec, self.num_features) for vec in query],
-                                  dtype=self.corpus.dtype)
+                                  dtype=self.index.dtype)
         else:
             if scipy.sparse.issparse(query):
                 query = query.toarray() # convert sparse to dense
@@ -270,12 +302,40 @@ class MatrixSimilarity(interfaces.SimilarityABC):
             else:
                 # default case: query is a single vector in sparse gensim format
                 query = matutils.sparse2full(query, self.num_features)
-            query = numpy.asarray(query, dtype=self.corpus.dtype)
+            query = numpy.asarray(query, dtype=self.index.dtype)
 
         # do a little transposition dance to stop numpy from making a copy of
         # self.corpus internally in numpy.dot (very slow).
-        result = numpy.dot(self.corpus, query.T).T # return #queries x #index
-        return result # XXX: removed casting the result to list; does anyone care?
+        result = numpy.dot(self.index, query.T).T # return #queries x #index
+        return result # XXX: removed casting the result from array to list; does anyone care?
+
+
+    def save(self, fname):
+        """
+        Override the default `save` (which uses cPickle), because that's
+        too inefficient. Instead, single out the large index matrix and store that
+        separately in binary format (that can be directly mmap'ed), under `fname.npy`.
+        """
+        logger.info("storing %s object to %s and %s" % (self.__class__.__name__, fname, fname + '.npy'))
+        # first, remove the index from self.__dict__, so it doesn't get pickled
+        index = self.index
+        del self.index
+        try:
+            utils.pickle(self, fname) # store index-less object
+            numpy.save(fname + '.npy', index) # store index
+        finally:
+            self.index = index
+
+
+    @classmethod
+    def load(cls, fname):
+        """
+        Load a previously saved object from file (also see `save`).
+        """
+        logger.info("loading %s object from %s and %s" % (cls.__name__, fname, fname + '.npy'))
+        result = utils.unpickle(fname)
+        result.index = numpy.load(fname + '.npy', mmap_mode='r') # load back as read-only
+        return result
 #endclass MatrixSimilarity
 
 
@@ -311,17 +371,17 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
                 # no MmCorpus, use the slower version (or maybe user supplied the
                 # num_* params in constructor)
                 pass
-            self.corpus = matutils.corpus2csc((matutils.unitvec(vector) for vector in corpus),
+            self.index = matutils.corpus2csc((matutils.unitvec(vector) for vector in corpus),
                                               num_terms=num_terms, num_docs=num_docs, num_nnz=num_nnz,
                                               dtype=numpy.float32, printprogress=10000).T
 
             # convert to Compressed Sparse Row for efficient row slicing and multiplications
-            self.corpus = self.corpus.tocsr() # currently no-op, CSC.T is already CSR
-            logger.info("created %s" % repr(self.corpus))
+            self.index = self.index.tocsr() # currently no-op, CSC.T is already CSR
+            logger.info("created %r" % self.index)
 
 
     def __len__(self):
-        return self.corpus.shape[1]
+        return self.index.shape[1]
 
 
     def get_similarities(self, query):
@@ -335,26 +395,62 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         """
         is_corpus, query = utils.is_corpus(query)
         if is_corpus:
-            query = matutils.corpus2csc(query, self.corpus.shape[1], dtype=self.corpus.dtype)
+            query = matutils.corpus2csc(query, self.index.shape[1], dtype=self.index.dtype)
         else:
             if scipy.sparse.issparse(query):
                 query = query.T # convert documents=rows to documents=columns
             elif isinstance(query, numpy.ndarray):
                 if query.ndim == 1:
                     query.shape = (len(query), 1)
-                query = scipy.sparse.csc_matrix(query, dtype=self.corpus.dtype)
+                query = scipy.sparse.csc_matrix(query, dtype=self.index.dtype)
             else:
                 # default case: query is a single vector, in sparse gensim format
-                query = matutils.corpus2csc([query], self.corpus.shape[1], dtype=self.corpus.dtype)
+                query = matutils.corpus2csc([query], self.index.shape[1], dtype=self.index.dtype)
 
         # compute cosine similarity against every other document in the collection
-        result = self.corpus * query.tocsc() # N x T * T x C = N x C
+        result = self.index * query.tocsc() # N x T * T x C = N x C
         if result.shape[1] == 1:
             # for queries of one document, return a 1d array
             result = result.toarray().flatten()
         else:
             # otherwise, return a 2d matrix (#queries x #index)
             result = result.toarray().T
+        return result
+
+
+    def save(self, fname):
+        """
+        Override the default `save` (which uses cPickle), because that's
+        too inefficient. Instead, single out the large internal arrays and store
+        them separately in binary format (that can be directly mmap'ed), under
+        `fname.array_name.npy`.
+        """
+        logger.info("storing %s object to %s and %s.npy" % (self.__class__.__name__, fname, fname))
+        assert isinstance(self.index, scipy.sparse.csr_matrix)
+        # first, remove the arrays from self.__dict__, so they don't get pickled
+        data, indptr, indices = self.index.data, self.index.indptr, self.index.indices
+        del self.index.data, self.index.indptr, self.index.indices
+        try:
+            utils.pickle(self, fname) # store array-less object
+            # store arrays (.npy suffix is appended by numpy automatically)
+            numpy.save(fname + '.data.npy', data)
+            numpy.save(fname + '.indptr.npy', indptr)
+            numpy.save(fname + '.indices.npy', indices)
+        finally:
+            self.index.data, self.index.indptr, self.index.indices = data, indptr, indices
+
+
+    @classmethod
+    def load(cls, fname):
+        """
+        Load a previously saved object from file (also see `save`).
+        """
+        logger.info("loading %s object from %s and %s.*.npy" % (cls.__name__, fname, fname))
+        result = utils.unpickle(fname)
+        data = numpy.load(fname + '.data.npy', mmap_mode='r') # load back as read-only
+        indptr = numpy.load(fname + '.indptr.npy', mmap_mode='r')
+        indices = numpy.load(fname + '.indices.npy', mmap_mode='r')
+        result.index.data, result.index.indptr, result.index.indices = data, indptr, indices
         return result
 #endclass SparseMatrixSimilarity
 

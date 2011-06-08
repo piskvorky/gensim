@@ -254,11 +254,11 @@ if __name__ == '__main__':
     else:
         keep_words = DEFAULT_DICT_SIZE
 
-    # build dictionary. only keep 100k most frequent words (out of total ~7m unique tokens)
-    # takes about 8h on a macbook pro
+    # build dictionary. only keep 100k most frequent words (out of total ~8.2m unique tokens)
+    # takes about 9h on a macbook pro, for 3.5m articles (june 2011 wiki dump)
     wiki = WikiCorpus(input, keep_words=keep_words)
     # save dictionary and bag-of-words (term-document frequency matrix)
-    # another ~8h
+    # another ~9h
     wiki.dictionary.save_as_text(output + '_wordids.txt')
     MmCorpus.serialize(output + '_bow.mm', wiki, progress_cnt=10000)
     del wiki
@@ -268,12 +268,12 @@ if __name__ == '__main__':
     mm = MmCorpus(output + '_bow.mm')
 
     # build tfidf,
-    # ~20min
+    # ~30min
     from gensim.models import TfidfModel
     tfidf = TfidfModel(mm, id2word=id2token, normalize=True)
 
     # save tfidf vectors in matrix market format
-    # ~1.5h; result file is 14GB! bzip2'ed down to 4.5GB
+    # ~2h; result file is 15GB! bzip2'ed down to 4.5GB
     MmCorpus.serialize(output + '_tfidf.mm', tfidf[mm], progress_cnt=10000)
 
     logger.info("finished running %s" % program)
