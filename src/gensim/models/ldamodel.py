@@ -439,12 +439,9 @@ class LdaModel(interfaces.TransformationABC):
                 other = LdaState(self.state.sstats)
             dirty = False
 
-            # the corpus will be processed in chunks of `chunks` of documents.
-            # keep preparing new chunks in a separate thread, so that we don't
-            # waste time waiting for chunks to be read from disk. instead, fill
-            # a (relatively short) chunk queue asynchronously in utils.chunkize,
-            # and pop already-ready chunks from it as needed.
-            for chunk_no, chunk in enumerate(utils.chunkize(corpus, chunks, 0)): # FIXME self.numworkers
+            chunker = itertools.groupby(enumerate(corpus), key=lambda (docno, doc): docno / chunks)
+            for chunk_no, (key, group) in enumerate(chunker):
+                chunk = list(doc for _, doc in group)
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
                     logger.info('PROGRESS: iteration %i, dispatching documents up to #%i/%i' %

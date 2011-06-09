@@ -306,7 +306,7 @@ class LsiModel(interfaces.TransformationABC):
         LSA to gradually "forget" old observations (documents) and give more
         preference to new ones.
         """
-        logger.info("updating SVD with new documents")
+        logger.info("updating model with new documents")
 
         # get computation parameters; if not specified, use the ones from constructor
         if chunks is None:
@@ -324,18 +324,17 @@ class LsiModel(interfaces.TransformationABC):
                 self.projection.merge(update, decay=decay)
             else:
                 # the one-pass algo
-
                 doc_no = 0
-                # the corpus will be processed in chunks of `chunks` of documents.
-                # keep preparing new chunks in a separate thread, so that we don't
-                # waste time waiting for chunks to be read from disk. instead, fill
-                # a (relatively short) chunk queue asynchronously in utils.chunkize,
-                # and pop already-ready chunks from it as needed.
-                for chunk_no, chunk in enumerate(utils.chunkize(corpus, chunks, 0)): # FIXME self.numworkers
+                chunker = itertools.groupby(enumerate(corpus), key=lambda (docno, doc): docno / chunks)
+                for chunk_no, (key, group) in enumerate(chunker):
+                    logger.info("preparing a new chunk of documents")
+                    corpus = list(doc for _, doc in group)
+                    nnz = sum(len(doc) for doc in corpus)
                     # construct the job as a sparse matrix, to minimize memory overhead
                     # definitely avoid materializing it as a dense matrix!
-                    job = matutils.corpus2csc(chunk, num_terms=self.num_terms)
-                    del chunk
+                    logger.debug("converting corpus to csc format")
+                    job = matutils.corpus2csc(corpus, num_docs=len(corpus), num_terms=self.num_terms, num_nnz=nnz)
+                    del corpus
                     doc_no += job.shape[1]
                     if self.dispatcher:
                         # distributed version: add this job to the job queue, so workers can work on it
@@ -350,14 +349,14 @@ class LsiModel(interfaces.TransformationABC):
                         self.projection.merge(update, decay=decay)
                         del update
                         logger.info("processed documents up to #%s" % doc_no)
-                        self.print_topics(5) # TODO see if printDebug works and remove one of these..
+                        self.print_topics(5)
 
                 # wait for all workers to finish (distributed version only)
                 if self.dispatcher:
                     logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                     self.projection = self.dispatcher.getstate()
 #            logger.info("top topics after adding %i documents" % doc_no)
-#            self.printDebug(10)
+#            self.print_debug(10)
         else:
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             assert self.onepass, "distributed two-pass algo not supported yet"
@@ -597,10 +596,12 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
         u, s, vt = numpy.linalg.svd(x) # could use linalg.eigh, but who cares... and svd returns the factors already sorted :)
         s = numpy.sqrt(s) # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
 
+    q = qt.T.copy()
+    del qt
     logger.info("computing the final decomposition")
     keep = clip_spectrum(s**2, rank, discard=eps)
     u = u[:, :keep].copy()
     s = s[:keep]
-    u = numpy.dot(qt.T, u)
+    u = numpy.dot(q, u)
     return u, s
 
