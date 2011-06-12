@@ -203,7 +203,7 @@ class LsiModel(interfaces.TransformationABC):
     Model persistency is achieved via its load/save methods.
 
     """
-    def __init__(self, corpus=None, num_topics=200, id2word=None, chunks=10000,
+    def __init__(self, corpus=None, num_topics=200, id2word=None, chunks=20000,
                  decay=1.0, distributed=False, onepass=True,
                  power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS):
         """
@@ -383,11 +383,11 @@ class LsiModel(interfaces.TransformationABC):
 
         assert self.projection.u is not None, "decomposition not initialized yet"
         vec = matutils.sparse2full(bow, self.num_terms).astype(self.projection.u.dtype)
-        vec.shape = (self.num_terms, 1)
-        topic_dist = numpy.dot(self.projection.u[:, :self.num_topics].T, vec) # K x T * T x 1 = K x 1
+        topic_dist = numpy.dot(vec.T, self.projection.u[:, :self.num_topics]).T # u^t * x = (x^t * u)^t
+        # XXX the above `dot` is very inefficient if num_topics not full and `u` not in fortran order!!
+        # Cache prefetching fails, 10x worse performance.
         if scaled:
             topic_dist = (1.0 / self.projection.s[:self.num_topics]) * topic_dist # s^-1 * u^T * x
-        topic_dist = topic_dist.flatten()
 
         nnz = topic_dist.nonzero()[0]
         return zip(nnz, topic_dist[nnz])
@@ -524,9 +524,10 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
         sparsetools.csc_matvecs(m, n, samples, corpus.indptr, corpus.indices,
                                 corpus.data, o.ravel(), y.ravel()) # y = corpus * o
         del o
+
+        # unlike numpy, scipy.sparse `astype()` copies everything, even if there is no change to dtype!
+        # so check for equal dtype explicitly, to avoid the extra memory footprint if possible
         if y.dtype != dtype:
-            # unlike numpy, scipy.sparse copies everything, even if there is no change to dtype!
-            # so check for equal dtype explicitly, to avoid the extra memory footprint if possible
             y = y.astype(dtype)
         logger.debug("running %i power iterations" % power_iters)
         for power_iter in xrange(power_iters):
@@ -595,9 +596,9 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
         logger.info("running dense decomposition on %s covariance matrix" % str(x.shape))
         u, s, vt = numpy.linalg.svd(x) # could use linalg.eigh, but who cares... and svd returns the factors already sorted :)
         s = numpy.sqrt(s) # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
-
     q = qt.T.copy()
     del qt
+
     logger.info("computing the final decomposition")
     keep = clip_spectrum(s**2, rank, discard=eps)
     u = u[:, :keep].copy()
