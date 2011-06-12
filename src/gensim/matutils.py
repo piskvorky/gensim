@@ -53,7 +53,7 @@ def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_n
     them here as parameters and a more memory efficient code path will be taken.
     """
     try:
-        # if the input corpus has the `numElements`, `numDocs` and `numTerms` attributes
+        # if the input corpus has the `num_nnz`, `num_docs` and `num_terms` attributes
         # (as is the case with MmCorpus for example), we can use a more efficient code path
         if num_terms is None:
             num_terms = corpus.num_terms
@@ -462,7 +462,7 @@ class MmReader(object):
                      (self.num_docs, self.num_terms, self.num_nnz))
 
     def __len__(self):
-        return self.numDocs
+        return self.num_docs
 
     def __str__(self):
         return ("MmCorpus(%i documents, %i features, %i non-zero entries)" %
