@@ -149,9 +149,9 @@ def get_max_id(corpus):
 class FakeDict(object):
     """
     Objects of this class act as dictionaries that map integer->str(integer), for
-    a specified range of integers <0, numTerms).
+    a specified range of integers <0, num_terms).
 
-    This is meant to avoid allocating real dictionaries when numTerms is huge, which
+    This is meant to avoid allocating real dictionaries when `num_terms` is huge, which
     is a waste of memory.
     """
     def __init__(self, num_terms):
@@ -177,8 +177,8 @@ class FakeDict(object):
         Override the dict.keys() function, which is used to determine the maximum
         internal id of a corpus = the vocabulary dimensionality.
 
-        HACK: To avoid materializing the whole `range(0, self.numTerms)`, this returns
-        `[self.numTerms - 1]` only.
+        HACK: To avoid materializing the whole `range(0, self.num_terms)`, this returns
+        `[self.num_terms - 1]` only.
         """
         return [self.num_terms - 1]
 

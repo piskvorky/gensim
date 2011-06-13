@@ -61,7 +61,7 @@ class IndexedCorpus(interfaces.CorpusABC):
 
         This relies on the underlying corpus class `serializer` providing (in
         addition to standard iteration):
-          * `saveCorpus` method that returns a sequence of byte offsets, one for
+          * `save_corpus` method that returns a sequence of byte offsets, one for
              each saved document,
           * the `docbyoffset(offset)` method, which returns a document
             positioned at `offset` bytes within the persistent storage (file).
@@ -69,7 +69,8 @@ class IndexedCorpus(interfaces.CorpusABC):
         Example:
 
         >>> MmCorpus.serialize('test.mm', corpus)
-        >>> mm = MmCorpus('test.mm') # `mm` document stream now has random access, `mm[42]` etc.
+        >>> mm = MmCorpus('test.mm') # `mm` document stream now has random access
+        >>> print mm[42] # retrieve document no. 42, etc.
         """
         if index_fname is None:
             index_fname = fname + '.index'

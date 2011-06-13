@@ -45,9 +45,9 @@ won't be  doing much with CPU most of the time, but pick a computer with ample m
 
 And that's it! The cluster is set up and running, ready to accept jobs. To remove
 a worker later on, simply terminate its `lsi_worker` process. To add another worker, run another
-`lsi_worker` (this will not affect a computation that is already running). If you terminate
-`lsi_dispatcher`, you won't be able to run computations until you run it again
-(surviving workers can be re-used though).
+`lsi_worker` (this will not affect a computation that is already running, the additions/deletions are not dynamic).
+If you terminate `lsi_dispatcher`, you won't be able to run computations until you run it again
+(surviving worker processes can be re-used though).
 
 
 Running LSA
@@ -65,7 +65,7 @@ our choice is incidental) and try::
     >>> corpus = corpora.MmCorpus('/tmp/deerwester.mm') # load a corpus of nine documents, from the Tutorials
     >>> id2word = corpora.Dictionary.load('/tmp/deerwester.dict')
 
-    >>> lsi = models.LsiModel(corpus, id2word=id2word, numTopics=200, chunks=1, distributed=True) # run distributed LSA on nine documents
+    >>> lsi = models.LsiModel(corpus, id2word=id2word, num_topics=200, chunks=1, distributed=True) # run distributed LSA on nine documents
 
 This uses the corpus and feature-token mapping created in the :doc:`tut1` tutorial.
 If you look at the log in your Python session, you should see a line similar to::
@@ -76,7 +76,7 @@ which means all went well. You can also check the logs coming from your worker a
 processes --- this is especially helpful in case of problems.
 To check the LSA results, let's print the first two latent topics::
 
-    >>> lsi.printTopics(numTopics=2, numWords=5)
+    >>> lsi.print_topics(num_topics=2, num_words=5)
     topic #0(3.341): -0.644*"system" + -0.404*"user" + -0.301*"eps" + -0.265*"time" + -0.265*"response"
     topic #1(2.542): -0.623*"graph" + -0.490*"trees" + -0.451*"minors" + -0.274*"survey" + 0.167*"system"
 
@@ -89,9 +89,9 @@ So let's run LSA on **one million documents** instead::
     >>> # inflate the corpus to 1M documents, by repeating its documents over&over
     >>> corpus1m = utils.RepeatCorpus(corpus, 1000000)
     >>> # run distributed LSA on 1 million documents
-    >>> lsi1m = models.LsiModel(corpus1m, id2word=id2word, numTopics=200, chunks=10000, distributed=True)
+    >>> lsi1m = models.LsiModel(corpus1m, id2word=id2word, num_topics=200, chunks=10000, distributed=True)
 
-    >>> lsi1m.printTopics(numTopics=2, numWords=5)
+    >>> lsi1m.printTopics(num_topics=2, num_words=5)
     topic #0(1113.628): 0.644*"system" + 0.404*"user" + 0.301*"eps" + 0.265*"time" + 0.265*"response"
     topic #1(847.233): 0.623*"graph" + 0.490*"trees" + 0.451*"minors" + 0.274*"survey" + -0.167*"system"
 
@@ -122,7 +122,7 @@ the corpus iterator with::
     >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level logging.INFO)
 
     >>> # load id->word mapping (the dictionary)
-    >>> id2word = gensim.corpora.Dictionary.loadFromText('wiki_en_wordids.txt')
+    >>> id2word = gensim.corpora.Dictionary.load_from_text('wiki_en_wordids.txt')
     >>> # load corpus iterator
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
     >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output
@@ -133,10 +133,10 @@ the corpus iterator with::
 Now we're ready to run distributed LSA on the English Wikipedia::
 
     >>> # extract 400 LSI topics, using a cluster of nodes
-    >>> lsi = gensim.models.lsimodel.LsiModel(corpus=mm, id2word=id2word, numTopics=400, chunks=20000, distributed=True)
+    >>> lsi = gensim.models.lsimodel.LsiModel(corpus=mm, id2word=id2word, num_topics=400, chunks=20000, distributed=True)
 
     >>> # print the most contributing words (both positively and negatively) for each of the first ten topics
-    >>> lsi.printTopics(10)
+    >>> lsi.print_topics(10)
     2010-11-03 16:08:27,602 : INFO : topic #0(200.990): -0.475*"delete" + -0.383*"deletion" + -0.275*"debate" + -0.223*"comments" + -0.220*"edits" + -0.213*"modify" + -0.208*"appropriate" + -0.194*"subsequent" + -0.155*"wp" + -0.117*"notability"
     2010-11-03 16:08:27,626 : INFO : topic #1(143.129): -0.320*"diff" + -0.305*"link" + -0.199*"image" + -0.171*"www" + -0.162*"user" + 0.149*"delete" + -0.147*"undo" + -0.144*"contribs" + -0.122*"album" + 0.113*"deletion"
     2010-11-03 16:08:27,651 : INFO : topic #2(135.665): -0.437*"diff" + -0.400*"link" + -0.202*"undo" + -0.192*"user" + -0.182*"www" + -0.176*"contribs" + 0.168*"image" + -0.109*"added" + 0.106*"album" + 0.097*"copyright"

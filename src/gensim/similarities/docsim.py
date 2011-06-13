@@ -14,14 +14,14 @@ is this query document to each document in the index" (a vector of numbers).
 You can also add new documents to the index via `Similarity.add_documents()`.
 
 The `Similarity` class splits the index into several smaller sub-indexes ("shards"),
-which are disk-based. If your entire index fits in memory (hundreds of thousands
+which are disk-based. If your entire index fits in memory (~hundreds of thousands
 documents for 1GB of RAM), you can also use the `MatrixSimilarity` or `SparseMatrixSimilarity`
-classes directly. These are more simple but do not scale well (entire index is
+classes directly. These are more simple but do not scale well (the entire index is
 kept in RAM).
 
 Once the index has been initialized, you can query for document similarity simply by
 
->>> index = Similarity('/tmp/tst', corpus, num_features=12) # build index
+>>> index = Similarity('/tmp/tst', corpus, num_features=12) # build the index
 >>> similarities = index[query] # get similarities between the query and all index documents
 
 There is also a special (and more efficient) syntax when you need similarity
@@ -47,7 +47,7 @@ logger = logging.getLogger('gensim.similarity.docsim')
 
 
 class Shard(utils.SaveLoad):
-    """A proxy class that represents a single shard instancewithin a Similarity
+    """A proxy class that represents a single shard instance within a Similarity
     index.
 
     Basically just wraps (Sparse)MatrixSimilarity so that it mmaps from disk on
@@ -103,7 +103,7 @@ class Similarity(interfaces.SimilarityABC):
         each, converted to a matrix (for fast BLAS calls) and stored to disk
         under `output_prefix.shard_number` (=you need write access to that location).
 
-        `shardsize` should be chosen so that a shardsize x shardsize matrix of floats
+        `shardsize` should be chosen so that a shardsize x chunks matrix of floats
         fits comfortably into main memory.
 
         `num_features` is the number of features in the `corpus` (e.g. size of the
@@ -113,13 +113,13 @@ class Similarity(interfaces.SimilarityABC):
         vector with one float for every document in the index:
 
         >>> index = Similarity('/tmp/index', corpus, num_features=400)
-        >>> index[vec]
+        >>> index[query]
         [0.0, 0.0, 0.2, 0.13, 0.8, 0.0, 0.1]
 
         If `num_best` is set, queries return only the `num_best` most similar documents:
 
         >>> index.num_best = 3
-        >>> index[vec]
+        >>> index[query]
         [(4, 0.8), (2, 0.13), (3, 0.13)]
 
         """
@@ -155,8 +155,6 @@ class Similarity(interfaces.SimilarityABC):
         """
         if self.shards and len(self.shards[-1]) < self.shardsize:
             # The last shard was incomplete; load it back and add the documents there, don't start a new shard.
-            # TODO Mention in docs that the pattern of "add 1 doc/query/add 1 doc/query/.." is very inefficient!
-            # Add many docs (ideally, all of them), only then query.
             self.reopen_shard()
         for doc in corpus:
             self.fresh_docs.append(doc)
@@ -174,12 +172,15 @@ class Similarity(interfaces.SimilarityABC):
 
     def close_shard(self):
         """
-        This forces the latest shard to close (be converted to a matrix and stored
-        to disk). Does nothing if no new documents added since last call.
+        Force the latest shard to close (be converted to a matrix and stored
+        to disk). Do nothing if no new documents added since last call.
 
         NOTE: the shard is closed even if it is not full yet (its size is smaller
         than `self.shardsize`). If documents are added later via `add_documents()`,
-        this incomplete shard will be loaded again and completed.
+        this incomplete shard will be loaded again and completed. For this reason,
+        avoid the pattern of calling `add_documents` followed by a query, with only a few
+        documents added. The re-opening makes this pattern inefficient. Instead,
+        try to add as many documents as possible (ideally, all of them), only then query.
         """
         if not self.fresh_docs:
             return

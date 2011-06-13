@@ -46,7 +46,7 @@ class CorpusABC(utils.SaveLoad):
 
     Saving the corpus with the `save` method (inherited from `utils.SaveLoad`) will
     only store the *in-memory* (binary, pickled) object representation=the stream
-    state, and **not** the documents themselves. See the `saveCorpus` static method
+    state, and **not** the documents themselves. See the `save_corpus` static method
     for serializing the actual stream content.
     """
     def __iter__(self):
@@ -75,15 +75,17 @@ class CorpusABC(utils.SaveLoad):
         Some formats also support saving the dictionary (`feature_id->word` mapping),
         which can in this case be provided by the optional `id2word` parameter.
 
-        >>> MmCorpus.saveCorpus('file.mm', corpus)
+        >>> MmCorpus.save_corpus('file.mm', corpus)
 
         Some corpora also support an index of where each document begins, so
         that the documents on disk can be accessed in O(1) time (see the
-        `corpora.IndexedCorpus` base class). In this case, `saveCorpus` is automatically
-        called internally by `serialize`, which does `saveCorpus` plus saves the index
+        `corpora.IndexedCorpus` base class). In this case, `save_corpus` is automatically
+        called internally by `serialize`, which does `save_corpus` plus saves the index
         at the same time, so you want to store the corpus with::
 
         >>> MmCorpus.serialize('file.mm', corpus) # stores index as well, allowing random access to individual documents
+
+        Calling `serialize()` is preferred to calling `save_corpus()`.
 
         """
         raise NotImplementedError('cannot instantiate abstract base class')

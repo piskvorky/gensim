@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.8',
+        VERSION:     '0.8.0rc1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -134,17 +134,20 @@ to be rows of the matrix (and document features are columns).</p>
 <dt id="gensim.matutils.MmWriter">
 <em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">MmWriter</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store corpus in Matrix Market format.</p>
+<p>Note that the file is written one document at a time, not the whole
+matrix at once (unlike scipy.io.mmread). This allows us to process corpora
+which are larger than the available RAM.</p>
 <dl class="staticmethod">
-<dt id="gensim.matutils.MmWriter.writeCorpus">
-<em class="property">static </em><tt class="descname">writeCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>progressCnt=1000</em>, <em>index=False</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.writeCorpus" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.matutils.MmWriter.write_corpus">
+<em class="property">static </em><tt class="descname">write_corpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>progress_cnt=1000</em>, <em>index=False</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.write_corpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the vector space representation of an entire corpus to disk.</p>
 <p>Note that the documents are processed one at a time, so the whole corpus
 is allowed to be larger than the available RAM.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.matutils.MmWriter.writeVector">
-<tt class="descname">writeVector</tt><big>(</big><em>docNo</em>, <em>vector</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.writeVector" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.matutils.MmWriter.write_vector">
+<tt class="descname">write_vector</tt><big>(</big><em>docno</em>, <em>vector</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.write_vector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write a single sparse vector to the file.</p>
 <p>Sparse vector is any iterable yielding (field id, field value) pairs.</p>
 </dd></dl>
@@ -159,9 +162,11 @@ is allowed to be larger than the available RAM.</p>
 
 <dl class="function">
 <dt id="gensim.matutils.corpus2csc">
-<tt class="descclassname">gensim.matutils.</tt><tt class="descname">corpus2csc</tt><big>(</big><em>corpus</em>, <em>num_terms</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em><big>)</big><a class="headerlink" href="#gensim.matutils.corpus2csc" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">corpus2csc</tt><big>(</big><em>corpus</em>, <em>num_terms=None</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em>, <em>num_docs=None</em>, <em>num_nnz=None</em>, <em>printprogress=0</em><big>)</big><a class="headerlink" href="#gensim.matutils.corpus2csc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format,
 with documents as columns.</p>
+<p>If the number of terms, documents and non-zero elements is known, you can pass
+them here as parameters and a more memory efficient code path will be taken.</p>
 </dd></dl>
 
 <dl class="function">
@@ -192,7 +197,7 @@ with documents as columns.</p>
 
 <dl class="function">
 <dt id="gensim.matutils.pad">
-<tt class="descclassname">gensim.matutils.</tt><tt class="descname">pad</tt><big>(</big><em>mat</em>, <em>padRow</em>, <em>padCol</em><big>)</big><a class="headerlink" href="#gensim.matutils.pad" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">pad</tt><big>(</big><em>mat</em>, <em>padrow</em>, <em>padcol</em><big>)</big><a class="headerlink" href="#gensim.matutils.pad" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add additional rows/columns to a numpy.matrix <cite>mat</cite>. The new rows/columns
 will be initialized with zeros.</p>
 </dd></dl>
@@ -213,12 +218,12 @@ numpy array (of size <cite>length</cite>).</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="gensim.matutils.unitVec">
-<tt class="descclassname">gensim.matutils.</tt><tt class="descname">unitVec</tt><big>(</big><em>vec</em><big>)</big><a class="headerlink" href="#gensim.matutils.unitVec" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.matutils.unitvec">
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">unitvec</tt><big>(</big><em>vec</em><big>)</big><a class="headerlink" href="#gensim.matutils.unitvec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scale a vector to unit length. The only exception is the zero vector, which
 is returned back unchanged.</p>
-<p>If the input is sparse (list of 2-tuples), output will also be sparse. Otherwise,
-output will be a numpy array.</p>
+<p>Output will be in the same format as input (i.e., gensim vector=&gt;gensim vector,
+or numpy array=&gt;numpy array, scipy.sparse=&gt;scipy.sparse).</p>
 </dd></dl>
 
 </div>
@@ -257,7 +262,7 @@ output will be a numpy array.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 26, 2011.
+      Last updated on Jun 13, 2011.
     </div>
   </body>
 </html>

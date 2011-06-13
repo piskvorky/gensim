@@ -99,7 +99,7 @@ class Projection(utils.SaveLoad):
             # base case decomposition: given a job `docs`, compute its decomposition,
             # *in-core*.
             if not use_svdlibc:
-                u, s = stochasticSvd(docs, k, chunks=sys.maxint, num_terms=m,
+                u, s = stochastic_svd(docs, k, chunks=sys.maxint, num_terms=m,
                     power_iters=P2_EXTRA_ITERS, extra_dims=P2_EXTRA_DIMS)
             else:
                 try:
@@ -318,7 +318,7 @@ class LsiModel(interfaces.TransformationABC):
             if not self.onepass:
                 # we are allowed multiple passes over the input => use a faster, randomized two-pass algo
                 update = Projection(self.num_terms, self.num_topics, None)
-                update.u, update.s = stochasticSvd(corpus, self.num_topics,
+                update.u, update.s = stochastic_svd(corpus, self.num_topics,
                     num_terms=self.num_terms, chunks=chunks,
                     extra_dims=self.extra_samples, power_iters=self.power_iters)
                 self.projection.merge(update, decay=decay)
@@ -480,7 +480,7 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
 
 
 
-def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
+def stochastic_svd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
                   power_iters=0, dtype=numpy.float64, eps=1e-6):
     """
     Return (U, S): the left singular vectors and the singular values of the streamed

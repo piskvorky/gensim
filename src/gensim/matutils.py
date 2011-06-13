@@ -100,18 +100,18 @@ def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_n
     return result
 
 
-def pad(mat, padRow, padCol):
+def pad(mat, padrow, padcol):
     """
     Add additional rows/columns to a numpy.matrix `mat`. The new rows/columns
     will be initialized with zeros.
     """
-    if padRow < 0:
-        padRow = 0
-    if padCol < 0:
-        padCol = 0
+    if padrow < 0:
+        padrow = 0
+    if padcol < 0:
+        padcol = 0
     rows, cols = mat.shape
-    return numpy.bmat([[mat, numpy.matrix(numpy.zeros((rows, padCol)))],
-                      [numpy.matrix(numpy.zeros((padRow, cols + padCol)))]])
+    return numpy.bmat([[mat, numpy.matrix(numpy.zeros((rows, padcol)))],
+                      [numpy.matrix(numpy.zeros((padrow, cols + padcol)))]])
 
 
 def ismatrix(m):

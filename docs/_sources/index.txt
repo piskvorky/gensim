@@ -10,10 +10,10 @@ Gensim -- Python Framework for Vector Space Modelling
 
    * 26/4/2011: version 0.7.8 is out! `CHANGELOG <https://github.com/piskvorky/gensim/blob/master/CHANGELOG.txt>`_
    * 12/2/2011: faster and leaner **Latent Semantic Indexing (LSI)** and **Latent Dirichlet Allocation (LDA)**:
-   
+
      * :doc:`Processing the English Wikipedia <wiki>`, 3.2 million documents (`NIPS workshop paper <http://arxiv.org/abs/1102.5597>`_)
      * :doc:`dist_lsi` & :doc:`dist_lda`
-     
+
    * 12/2/2011: Input corpus iterators can come from a compressed file (**bzip2**, **gzip**, ...), to save disk space when dealing with
      very large corpora.
 
@@ -23,7 +23,7 @@ For **installation** and **troubleshooting**, see the :doc:`installation <instal
 
 For **examples** on how to use it, try the :doc:`tutorials <tutorial>`.
 
-When **citing** `gensim` in academic papers, please use 
+When **citing** `gensim` in academic papers, please use
 `this BibTeX entry <http://nlp.fi.muni.cz/projekty/gensim/bibtex_gensim.bib>`_.
 
 
@@ -36,12 +36,12 @@ Quick Reference Example
 >>> corpus = corpora.MmCorpus('/path/to/corpus.mm')
 >>>
 >>> # initialize a transformation (Latent Semantic Indexing with 200 latent dimensions)
->>> lsi = models.LsiModel(corpus, numTopics=200)
+>>> lsi = models.LsiModel(corpus, num_topics=200)
 >>>
 >>> # convert another corpus to the latent space and index it
 >>> index = similarities.MatrixSimilarity(lsi[another_corpus])
->>> 
->>> # perform similarity query of a query in LSI space against the whole corpus
+>>>
+>>> # determine similarity of a query document against each document in the index
 >>> sims = index[query]
 
 
@@ -49,7 +49,7 @@ Quick Reference Example
 .. toctree::
    :hidden:
    :maxdepth: 1
-   
+
    intro
    install
    tutorial
