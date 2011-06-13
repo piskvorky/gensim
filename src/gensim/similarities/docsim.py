@@ -96,7 +96,7 @@ class Similarity(interfaces.SimilarityABC):
     The shards themselves are simply stored as files to disk and mmap'ed back as needed.
 
     """
-    def __init__(self, output_prefix, corpus, num_features, num_best=None, shardsize=5000):
+    def __init__(self, output_prefix, corpus, num_features, num_best=None, chunks=512, shardsize=5000):
         """
         Construct the index from `corpus`. The index can be later extended by calling
         the `add_documents` method. Documents are split into shards of `shardsize`
@@ -127,6 +127,7 @@ class Similarity(interfaces.SimilarityABC):
         self.num_features = num_features
         self.num_best = num_best
         self.normalize = True
+        self.chunks = int(chunks)
         self.shardsize = shardsize
         self.shards = []
         self.fresh_docs, self.fresh_nnz = [], 0
@@ -255,12 +256,20 @@ class Similarity(interfaces.SimilarityABC):
         self.normalize = False
 
         for shard in self.shards:
-            # use the entire shard index as a gigantic query!
+            # split each shard index into smaller chunks (of size self.chunks) and
+            # use each chunk as a query
             query = shard.get_index().index
-            # TODO: or maybe chunk it into smaller pieces? better for memory with
-            # very large indexes (memory = |query| * |index| * 4)
-            for sims in self[query]:
-                yield sims
+            for chunk_start in xrange(0, query.shape[0], self.chunks):
+                # scipy.sparse doesn't allow slicing beyond real size of the matrix
+                # (unlike numpy). so, clip the end of the chunk explicitly to make
+                # scipy.sparse happy
+                chunk_end = min(query.shape[0], chunk_start + self.chunks)
+                chunk = query[chunk_start : chunk_end] # create a view
+                if chunk.shape[0] > 1:
+                    for sim in self[chunk]:
+                        yield sim
+                else:
+                    yield self[chunk]
         self.normalize = norm
 #endclass Similarity
 

@@ -49,7 +49,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
 
     def __getitem__(self, tokenid):
         if len(self.id2token) != len(self.token2id):
-            # the word->id mapping has changed (presumably via addDocuments);
+            # the word->id mapping has changed (presumably via add_documents);
             # recompute id->word accordingly
             self.id2token = dict((v, k) for k, v in self.token2id.iteritems())
         return self.id2token[tokenid] # will throw for non-existent ids
@@ -84,7 +84,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         This is only a convenience wrapper for calling `doc2bow` on each document
         with `allow_update=True`.
 
-        >>> print Dictionary.fromDocuments(["máma mele maso".split(), "ema má máma".split()])
+        >>> print Dictionary(["máma mele maso".split(), "ema má máma".split()])
         Dictionary(5 unique tokens)
         """
         for docno, document in enumerate(documents):

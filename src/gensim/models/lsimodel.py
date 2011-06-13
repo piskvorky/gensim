@@ -198,7 +198,7 @@ class LsiModel(interfaces.TransformationABC):
     1. constructor, which initializes the projection into latent topics space,
     2. the ``[]`` method, which returns representation of any input document in the
        latent space,
-    3. the `addDocuments()` method, which allows for incrementally updating the model with new documents.
+    3. `add_documents()` for incrementally updating the model with new documents.
 
     Model persistency is achieved via its load/save methods.
 
@@ -216,7 +216,7 @@ class LsiModel(interfaces.TransformationABC):
         LSI transformation is available at any point.
 
         If you specify a `corpus`, it will be used to train the model. See the
-        method `addDocuments` for a description of the `chunks` and `decay` parameters.
+        method `add_documents` for a description of the `chunks` and `decay` parameters.
 
         Turn `onepass` off to force a multi-pass stochastic algorithm.
 
