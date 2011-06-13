@@ -219,7 +219,7 @@ to disk). Do nothing if no new documents added since last call.</p>
 <p>NOTE: the shard is closed even if it is not full yet (its size is smaller
 than <cite>self.shardsize</cite>). If documents are added later via <cite>add_documents()</cite>,
 this incomplete shard will be loaded again and completed. For this reason,
-avoid the pattern of calling <cite>add_documents</cite> followed by query, with only a few
+avoid the pattern of calling <cite>add_documents</cite> followed by a query, with only a few
 documents added. The re-opening makes this pattern inefficient. Instead,
 try to add as many documents as possible (ideally, all of them), only then query.</p>
 </dd></dl>
