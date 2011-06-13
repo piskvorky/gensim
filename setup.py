@@ -65,12 +65,11 @@ setup(
     test_suite = "gensim.test",
 
     install_requires = [
-        'scipy >= 0.6.0',
+        'scipy >= 0.7.0',
     ],
 
     extras_require = {
         'distributed': ['Pyro >= 4.1'],
-        'lsi': ['sparsesvd >= 0.1'],
     },
 
     include_package_data = True,
