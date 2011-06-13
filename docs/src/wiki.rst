@@ -39,7 +39,7 @@ First let's load the corpus iterator and dictionary, created in the second step 
     >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
     >>> # load id->word mapping (the dictionary), one of the results of step 2 above
-    >>> id2word = gensim.corpora.wikicorpus.WikiCorpus.loadDictionary('wiki_en_wordids.txt')
+    >>> id2word = gensim.corpora.Dictionary.load_from_text('wiki_en_wordids.txt')
     >>> # load corpus iterator
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
     >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output
@@ -54,10 +54,10 @@ about 1.92 billion tokens in total.
 Now we're ready to compute LSA of the English Wikipedia::
 
     >>> # extract 400 LSI topics; use the default one-pass algorithm
-    >>> lsi = gensim.models.lsimodel.LsiModel(corpus=mm, id2word=id2word, numTopics=400)
+    >>> lsi = gensim.models.lsimodel.LsiModel(corpus=mm, id2word=id2word, num_topics=400)
 
     >>> # print the most contributing words (both positively and negatively) for each of the first ten topics
-    >>> lsi.printTopics(10)
+    >>> lsi.print_topics(10)
     topic #0(200.540): 0.475*"delete" + 0.383*"deletion" + 0.275*"debate" + 0.223*"comments" + 0.221*"edits" + 0.213*"modify" + 0.208*"appropriate" + 0.195*"subsequent" + 0.155*"wp" + 0.116*"notability"
     topic #1(142.463): -0.292*"diff" + -0.277*"link" + -0.210*"image" + -0.160*"www" + 0.151*"delete" + -0.149*"user" + -0.134*"contribs" + -0.133*"undo" + -0.128*"album" + -0.115*"copyright"
     topic #2(134.758): -0.458*"diff" + -0.415*"link" + -0.210*"undo" + -0.201*"user" + -0.195*"www" + -0.186*"contribs" + 0.154*"image" + -0.115*"added" + 0.098*"album" + -0.096*"accounts"
@@ -89,7 +89,7 @@ As with Latent Semantic Analysis above, first load the corpus iterator and dicti
     >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
     >>> # load id->word mapping (the dictionary), one of the results of step 2 above
-    >>> id2word = gensim.corpora.wikicorpus.WikiCorpus.loadDictionary('wiki_en_wordids.txt')
+    >>> id2word = gensim.corpora.Dictionary.load_from_text('wiki_en_wordids.txt')
     >>> # load corpus iterator
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
     >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output
@@ -109,7 +109,7 @@ every 10,000 articles, this means we will have done 300 updates in one pass, qui
 enough to have a very accurate topics estimate::
 
     >>> # extract 100 LDA topics, using 1 pass and updating once every 1 chunk (10,000 documents)
-    >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, numTopics=100, update_every=1, chunks=10000, passes=1)
+    >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, num_topics=100, update_every=1, chunks=10000, passes=1)
     using serial LDA version on this node
     running online LDA training, 100 topics, 1 passes over the supplied corpus of 3146817 documets, updating model once every 10000 documents
     ..
@@ -117,7 +117,7 @@ enough to have a very accurate topics estimate::
 Unlike LSA, the topics coming from LDA are easier to interpret::
 
     >>> # print the most contributing words for 20 randomly selected topics
-    >>> lda.printTopics(20)
+    >>> lda.print_topics(20)
     topic #0: 0.065*india + 0.043*indian + 0.019*sri + 0.012*tamil + 0.011*singh + 0.011*lanka + 0.010*temple + 0.009*delhi + 0.007*pradesh + 0.007*bangladesh
     topic #1: 0.083*game + 0.053*games + 0.051*video + 0.018*player + 0.010*players + 0.007*playstation + 0.006*pc + 0.006*entertainment + 0.005*nintendo + 0.005*online
     topic #2: 0.096*church + 0.032*catholic + 0.022*bishop + 0.018*christian + 0.015*roman + 0.014*saint + 0.013*churches + 0.011*cathedral + 0.011*parish + 0.010*christ
@@ -159,7 +159,7 @@ not exihibit topic drift, **is ok and not affected**.
 To run batch LDA (not online), train `LdaModel` with::
 
     >>> # extract 100 LDA topics, using 20 full passes, no online updates
-    >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, numTopics=100, update_every=0, passes=20)
+    >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, num_topics=100, update_every=0, passes=20)
 
 As usual, a trained model can used be to transform new, unseen documents (plain bag-of-words count vectors)
 into LDA topic distributions:

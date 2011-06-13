@@ -46,7 +46,7 @@ class CorpusABC(utils.SaveLoad):
 
     Saving the corpus with the `save` method (inherited from `utils.SaveLoad`) will
     only store the *in-memory* (binary, pickled) object representation=the stream
-    state, and **not** the documents themselves. See the `saveCorpus` static method
+    state, and **not** the documents themselves. See the `save_corpus` static method
     for serializing the actual stream content.
     """
     def __iter__(self):
@@ -75,15 +75,17 @@ class CorpusABC(utils.SaveLoad):
         Some formats also support saving the dictionary (`feature_id->word` mapping),
         which can in this case be provided by the optional `id2word` parameter.
 
-        >>> MmCorpus.saveCorpus('file.mm', corpus)
+        >>> MmCorpus.save_corpus('file.mm', corpus)
 
         Some corpora also support an index of where each document begins, so
         that the documents on disk can be accessed in O(1) time (see the
-        `corpora.IndexedCorpus` base class). In this case, `saveCorpus` is automatically
-        called internally by `serialize`, which does `saveCorpus` plus saves the index
+        `corpora.IndexedCorpus` base class). In this case, `save_corpus` is automatically
+        called internally by `serialize`, which does `save_corpus` plus saves the index
         at the same time, so you want to store the corpus with::
 
         >>> MmCorpus.serialize('file.mm', corpus) # stores index as well, allowing random access to individual documents
+
+        Calling `serialize()` is preferred to calling `save_corpus()`.
 
         """
         raise NotImplementedError('cannot instantiate abstract base class')
@@ -207,8 +209,8 @@ class SimilarityABC(utils.SaveLoad):
 
     def __iter__(self):
         """
-        For each corpus document, compute cosine similarity against all other
-        documents and yield the result.
+        For each index document, compute cosine similarity against all other
+        documents in the index and yield the result.
         """
         # turn off query normalization (vectors in the index are assumed to be already normalized)
         norm = self.normalize
@@ -231,26 +233,22 @@ class SimilarityABC(utils.SaveLoad):
             # assumes `self.corpus` holds the index as a 2-d numpy array.
             # this is true for MatrixSimilarity and SparseMatrixSimilarity, but
             # may not be true for other (future) classes..?
-            for chunk_start in xrange(0, self.corpus.shape[0], self.chunks):
+            for chunk_start in xrange(0, self.index.shape[0], self.chunks):
                 # scipy.sparse doesn't allow slicing beyond real size of the matrix
                 # (unlike numpy). so, clip the end of the chunk explicitly to make
                 # scipy.sparse happy
-                chunk_end = min(self.corpus.shape[0], chunk_start + self.chunks)
-                chunk = self.corpus[chunk_start : chunk_end]
+                chunk_end = min(self.index.shape[0], chunk_start + self.chunks)
+                chunk = self.index[chunk_start : chunk_end]
                 if chunk.shape[0] > 1:
                     for sim in self[chunk]:
                         yield sim
                 else:
                     yield self[chunk]
         else:
-            for doc in self.corpus:
+            for doc in self.index:
                 yield self[doc]
 
         # restore old normalization value
         self.normalize = norm
-
-
-    def __len__(self):
-        return self.corpus.shape[0]
 #endclass SimilarityABC
 

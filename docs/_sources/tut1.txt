@@ -6,7 +6,7 @@ Corpora and Vector Spaces
 Don't forget to set
 
 >>> import logging
->>> logging.root.setLevel(logging.INFO) # will suppress DEBUG level events
+>>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 if you want to see logging events.
 
@@ -42,9 +42,9 @@ as well as words that only appear once in the corpus:
 >>>          for document in documents]
 >>>
 >>> # remove words that appear only once
->>> allTokens = sum(texts, [])
->>> tokensOnce = set(word for word in set(allTokens) if allTokens.count(word) == 1)
->>> texts = [[word for word in text if word not in tokensOnce]
+>>> all_tokens = sum(texts, [])
+>>> tokens_once = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
+>>> texts = [[word for word in text if word not in tokens_once]
 >>>          for text in texts]
 >>>
 >>> print texts
@@ -97,8 +97,8 @@ To see the mapping between words and their ids:
 
 To actually convert tokenized documents to vectors:
 
->>> newDoc = "Human computer interaction"
->>> newVec = dictionary.doc2bow(newDoc.lower().split())
+>>> new_doc = "Human computer interaction"
+>>> new_vec = dictionary.doc2bow(new_doc.lower().split())
 >>> print newVec # the word "interaction" does not appear in the dictionary and is ignored
 [(0, 1), (1, 1)]
 
@@ -132,7 +132,7 @@ Corpus Streaming -- One Document at a Time
 Note that `corpus` above resides fully in memory, as a plain Python list.
 In this simple example, it doesn't matter much, but just to make things clear,
 let's assume there are millions of documents in the corpus. Storing all of them in RAM won't do.
-Instead, the documents are stored in a file on disk, one document per line. Gensim
+Instead, let's assume the documents are stored in a file on disk, one document per line. Gensim
 only requires that a corpus must be able to return one document vector at a time::
 
 >>> class MyCorpus(object):
@@ -152,8 +152,8 @@ then convert the tokens via a dictionary to their ids and yield the resulting sp
 >>> print corpus_memory_friendly
 <__main__.MyCorpus object at 0x10d5690>
 
-Corpus is now an object. We didn't define any way to print it, so print just outputs address
-of the object in memory. Not very useful. To see the constituent vectors, let's 
+Corpus is now an object. We didn't define any way to print it, so `print` just outputs address
+of the object in memory. Not very useful. To see the constituent vectors, let's
 iterate over the corpus and print each document vector (one at a time)::
 
     >>> for vector in corpus_memory_friendly: # load one vector into memory at a time
@@ -180,7 +180,7 @@ Similarly, to construct the dictionary without loading all texts into memory::
     >>> stop_ids = [dictionary.token2id[stopword] for stopword in stoplist
     >>>             if stopword in dictionary.token2id]
     >>> once_ids = [tokenid for tokenid, docfreq in dictionary.dfs.iteritems() if docfreq == 1]
-    >>> dictionary.filterTokens(stop_ids + once_ids) # remove stop words and words that appear only once
+    >>> dictionary.filter_tokens(stop_ids + once_ids) # remove stop words and words that appear only once
     >>> dictionary.compactify() # remove gaps in id sequence after words that were removed
     >>> print dictionary
     Dictionary(12 unique tokens)

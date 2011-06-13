@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.8',
+        VERSION:     '0.8.0rc1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -114,7 +114,7 @@
 <span id="tut3"></span><h1>Similarity Queries<a class="headerlink" href="#similarity-queries" title="Permalink to this headline">¶</a></h1>
 <p>Don&#8217;t forget to set</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span> <span class="c"># will suppress DEBUG level events</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>if you want to see logging events.</p>
@@ -138,7 +138,7 @@ seminal 1990 article):</p>
 </div>
 <p>To follow Deerwester&#8217;s example, we first use this tiny corpus to define a 2-dimensional
 LSI space:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Now suppose a user typed in the query <cite>&#8220;Human computer interaction&#8221;</cite>. We would
@@ -173,16 +173,20 @@ might also be indexing a different corpus altogether.</p>
 set of vectors fits into memory. For example, a corpus of one million documents
 would require 2GB of RAM in a 256-dimensional LSI space, when used with this class.
 Without 2GB of free RAM, you would need to use the <tt class="xref py py-class docutils literal"><span class="pre">similarities.Similarity</span></tt> class.
-This class operates in constant memory, in a streaming (and more gensim-like)
-fashion, but is also much slower than <tt class="xref py py-class docutils literal"><span class="pre">similarities.MatrixSimilarity</span></tt>, which uses
-fast level-2 <a class="reference external" href="http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms">BLAS routines</a>
-to determine similarities.</p>
+This class operates in fixed memory, by splitting the index across multiple files on disk.
+It uses <tt class="xref py py-class docutils literal"><span class="pre">similarities.MatrixSimilarity</span></tt> and <tt class="xref py py-class docutils literal"><span class="pre">similarities.SparseMatrixSimilarity</span></tt> internally,
+so it is still fast, although slightly more complex.</p>
 </div>
 <p>Index persistency is handled via the standard <tt class="xref py py-func docutils literal"><span class="pre">save()</span></tt> and <tt class="xref py py-func docutils literal"><span class="pre">load()</span></tt> functions:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.index&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">MatrixSimilarity</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.index&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>This is true for all similarity indexing classes (<tt class="xref py py-class docutils literal"><span class="pre">similarities.Similarity</span></tt>,
+<tt class="xref py py-class docutils literal"><span class="pre">similarities.MatrixSimilarity</span></tt> and <tt class="xref py py-class docutils literal"><span class="pre">similarities.SparseMatrixSimilarity</span></tt>).
+Also in the following, <cite>index</cite> can be an object of any of these. When in doubt,
+use <tt class="xref py py-class docutils literal"><span class="pre">similarities.Similarity</span></tt>, as it is the most scalable version, and it also
+supports adding more documents to the index later.</p>
 </div>
 <div class="section" id="performing-queries">
 <h3>Performing queries<a class="headerlink" href="#performing-queries" title="Permalink to this headline">¶</a></h3>
@@ -277,7 +281,7 @@ and to facilitate prototyping of new algorithms for NLP researchers.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 26, 2011.
+      Last updated on Jun 13, 2011.
     </div>
   </body>
 </html>

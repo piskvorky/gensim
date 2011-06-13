@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.8',
+        VERSION:     '0.8.0rc1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -82,13 +82,11 @@
 <h2 id="A">A</h2>
 <table width="100%" class="indextable genindextable"><tr>
   <td width="33%" valign="top"><dl>
-    <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.addDocuments">addDocuments() (gensim.corpora.dictionary.Dictionary method)</a></dt>
+    <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.add_documents">add_documents() (gensim.corpora.dictionary.Dictionary method)</a></dt>
     <dd><dl>
-      <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel.addDocuments">(gensim.models.lsimodel.LsiModel method)</a></dt>
+      <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel.add_documents">(gensim.models.lsimodel.LsiModel method)</a></dt>
+      <dt><a href="similarities/docsim.html#gensim.similarities.docsim.Similarity.add_documents">(gensim.similarities.docsim.Similarity method)</a></dt>
   </dl></dd>
-</dl></td>
-  <td width="33%" valign="top"><dl>
-    <dt><a href="corpora/dmlcorpus.html#gensim.corpora.dmlcorpus.DmlCorpus.articleDir">articleDir() (gensim.corpora.dmlcorpus.DmlCorpus method)</a></dt>
 </dl></td>
 </tr></table>
 
@@ -97,11 +95,10 @@
   <td width="33%" valign="top"><dl>
     <dt><a href="corpora/bleicorpus.html#gensim.corpora.bleicorpus.BleiCorpus">BleiCorpus (class in gensim.corpora.bleicorpus)</a></dt>
     <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaState.blend">blend() (gensim.models.ldamodel.LdaState method)</a></dt>
-    <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaState.blend2">blend2() (gensim.models.ldamodel.LdaState method)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
+    <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaState.blend2">blend2() (gensim.models.ldamodel.LdaState method)</a></dt>
     <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.bound">bound() (gensim.models.ldamodel.LdaModel method)</a></dt>
-    <dt><a href="corpora/dmlcorpus.html#gensim.corpora.dmlcorpus.DmlCorpus.buildDictionary">buildDictionary() (gensim.corpora.dmlcorpus.DmlCorpus method)</a></dt>
 </dl></td>
 </tr></table>
 
@@ -111,7 +108,8 @@
     <dt><a href="utils.html#gensim.utils.chunkize">chunkize() (in module gensim.utils)</a></dt>
     <dt><a href="utils.html#gensim.utils.chunkize_serial">chunkize_serial() (in module gensim.utils)</a></dt>
     <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.clear">clear() (gensim.models.ldamodel.LdaModel method)</a></dt>
-    <dt><a href="models/lsimodel.html#gensim.models.lsimodel.clipSpectrum">clipSpectrum() (in module gensim.models.lsimodel)</a></dt>
+    <dt><a href="models/lsimodel.html#gensim.models.lsimodel.clip_spectrum">clip_spectrum() (in module gensim.models.lsimodel)</a></dt>
+    <dt><a href="similarities/docsim.html#gensim.similarities.docsim.Similarity.close_shard">close_shard() (gensim.similarities.docsim.Similarity method)</a></dt>
     <dt><a href="distributed.html#term-cluster">Cluster</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
@@ -131,18 +129,18 @@
     <dt><a href="matutils.html#gensim.matutils.Dense2Corpus">Dense2Corpus (class in gensim.matutils)</a></dt>
     <dt><a href="matutils.html#gensim.matutils.dense2vec">dense2vec() (in module gensim.matutils)</a></dt>
     <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.dfs2idfs">dfs2idfs() (in module gensim.models.tfidfmodel)</a></dt>
-    <dt><a href="utils.html#gensim.utils.dictFromCorpus">dictFromCorpus() (in module gensim.utils)</a></dt>
+    <dt><a href="utils.html#gensim.utils.dict_from_corpus">dict_from_corpus() (in module gensim.utils)</a></dt>
     <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary">Dictionary (class in gensim.corpora.dictionary)</a></dt>
-    <dt><a href="models/ldamodel.html#gensim.models.ldamodel.dirichlet_expectation">dirichlet_expectation() (in module gensim.models.ldamodel)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
+    <dt><a href="models/ldamodel.html#gensim.models.ldamodel.dirichlet_expectation">dirichlet_expectation() (in module gensim.models.ldamodel)</a></dt>
     <dt><a href="distributed.html#term-dispatcher">Dispatcher</a></dt>
     <dd><dl>
       <dt><a href="models/lda_dispatcher.html#gensim.models.lda_dispatcher.Dispatcher">(class in gensim.models.lda_dispatcher)</a></dt>
       <dt><a href="models/lsi_dispatcher.html#gensim.models.lsi_dispatcher.Dispatcher">(class in gensim.models.lsi_dispatcher)</a></dt>
   </dl></dd>
-    <dt><a href="corpora/dmlcorpus.html#gensim.corpora.dmlcorpus.DmlConfig">DmlConfig (class in gensim.corpora.dmlcorpus)</a></dt>
-    <dt><a href="corpora/dmlcorpus.html#gensim.corpora.dmlcorpus.DmlCorpus">DmlCorpus (class in gensim.corpora.dmlcorpus)</a></dt>
+    <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.do_estep">do_estep() (gensim.models.ldamodel.LdaModel method)</a></dt>
+    <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.do_mstep">do_mstep() (gensim.models.ldamodel.LdaModel method)</a></dt>
     <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.doc2bow">doc2bow() (gensim.corpora.dictionary.Dictionary method)</a></dt>
     <dt><a href="corpora/bleicorpus.html#gensim.corpora.bleicorpus.BleiCorpus.docbyoffset">docbyoffset() (gensim.corpora.bleicorpus.BleiCorpus method)</a></dt>
     <dd><dl>
@@ -151,8 +149,6 @@
       <dt><a href="corpora/svmlightcorpus.html#gensim.corpora.svmlightcorpus.SvmLightCorpus.docbyoffset">(gensim.corpora.svmlightcorpus.SvmLightCorpus method)</a></dt>
       <dt><a href="matutils.html#gensim.matutils.MmReader.docbyoffset">(gensim.matutils.MmReader method)</a></dt>
   </dl></dd>
-    <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.doEstep">doEstep() (gensim.models.ldamodel.LdaModel method)</a></dt>
-    <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.doMstep">doMstep() (gensim.models.ldamodel.LdaModel method)</a></dt>
 </dl></td>
 </tr></table>
 
@@ -170,11 +166,11 @@
 <table width="100%" class="indextable genindextable"><tr>
   <td width="33%" valign="top"><dl>
     <dt><a href="utils.html#gensim.utils.FakeDict">FakeDict (class in gensim.utils)</a></dt>
-    <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.filterExtremes">filterExtremes() (gensim.corpora.dictionary.Dictionary method)</a></dt>
-    <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.filterTokens">filterTokens() (gensim.corpora.dictionary.Dictionary method)</a></dt>
+    <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.filter_extremes">filter_extremes() (gensim.corpora.dictionary.Dictionary method)</a></dt>
+    <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.filter_tokens">filter_tokens() (gensim.corpora.dictionary.Dictionary method)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
-    <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.filterWiki">filterWiki() (in module gensim.corpora.wikicorpus)</a></dt>
+    <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.filter_wiki">filter_wiki() (in module gensim.corpora.wikicorpus)</a></dt>
     <dt><a href="matutils.html#gensim.matutils.full2sparse">full2sparse() (in module gensim.matutils)</a></dt>
     <dt><a href="matutils.html#gensim.matutils.full2sparse_clipped">full2sparse_clipped() (in module gensim.matutils)</a></dt>
 </dl></td>
@@ -186,7 +182,6 @@
     <dt><a href="corpora/corpora.html#module-gensim.corpora">gensim.corpora (module)</a></dt>
     <dt><a href="corpora/bleicorpus.html#module-gensim.corpora.bleicorpus">gensim.corpora.bleicorpus (module)</a></dt>
     <dt><a href="corpora/dictionary.html#module-gensim.corpora.dictionary">gensim.corpora.dictionary (module)</a></dt>
-    <dt><a href="corpora/dmlcorpus.html#module-gensim.corpora.dmlcorpus">gensim.corpora.dmlcorpus (module)</a></dt>
     <dt><a href="corpora/indexedcorpus.html#module-gensim.corpora.indexedcorpus">gensim.corpora.indexedcorpus (module)</a></dt>
     <dt><a href="corpora/lowcorpus.html#module-gensim.corpora.lowcorpus">gensim.corpora.lowcorpus (module)</a></dt>
     <dt><a href="corpora/mmcorpus.html#module-gensim.corpora.mmcorpus">gensim.corpora.mmcorpus (module)</a></dt>
@@ -199,9 +194,9 @@
     <dt><a href="models/lda_dispatcher.html#module-gensim.models.lda_dispatcher">gensim.models.lda_dispatcher (module)</a></dt>
     <dt><a href="models/lda_worker.html#module-gensim.models.lda_worker">gensim.models.lda_worker (module)</a></dt>
     <dt><a href="models/ldamodel.html#module-gensim.models.ldamodel">gensim.models.ldamodel (module)</a></dt>
-    <dt><a href="models/logentropy_model.html#module-gensim.models.logentropy_model">gensim.models.logentropy_model (module)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
+    <dt><a href="models/logentropy_model.html#module-gensim.models.logentropy_model">gensim.models.logentropy_model (module)</a></dt>
     <dt><a href="models/lsi_dispatcher.html#module-gensim.models.lsi_dispatcher">gensim.models.lsi_dispatcher (module)</a></dt>
     <dt><a href="models/lsi_worker.html#module-gensim.models.lsi_worker">gensim.models.lsi_worker (module)</a></dt>
     <dt><a href="models/lsimodel.html#module-gensim.models.lsimodel">gensim.models.lsimodel (module)</a></dt>
@@ -209,15 +204,17 @@
     <dt><a href="models/tfidfmodel.html#module-gensim.models.tfidfmodel">gensim.models.tfidfmodel (module)</a></dt>
     <dt><a href="similarities/docsim.html#module-gensim.similarities.docsim">gensim.similarities.docsim (module)</a></dt>
     <dt><a href="utils.html#module-gensim.utils">gensim.utils (module)</a></dt>
+    <dt><a href="utils.html#gensim.utils.get_max_id">get_max_id() (in module gensim.utils)</a></dt>
     <dt><a href="utils.html#gensim.utils.get_my_ip">get_my_ip() (in module gensim.utils)</a></dt>
-    <dt><a href="corpora/textcorpus.html#gensim.corpora.textcorpus.TextCorpus.get_texts">get_texts() (gensim.corpora.textcorpus.TextCorpus method)</a></dt>
-    <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.WikiCorpus.getArticles">getArticles() (gensim.corpora.wikicorpus.WikiCorpus method)</a></dt>
-    <dt><a href="utils.html#gensim.utils.getMaxId">getMaxId() (in module gensim.utils)</a></dt>
-    <dt><a href="corpora/dmlcorpus.html#gensim.corpora.dmlcorpus.DmlCorpus.getMeta">getMeta() (gensim.corpora.dmlcorpus.DmlCorpus method)</a></dt>
-    <dt><a href="interfaces.html#gensim.interfaces.SimilarityABC.getSimilarities">getSimilarities() (gensim.interfaces.SimilarityABC method)</a></dt>
+    <dt><a href="interfaces.html#gensim.interfaces.SimilarityABC.get_similarities">get_similarities() (gensim.interfaces.SimilarityABC method)</a></dt>
     <dd><dl>
-      <dt><a href="similarities/docsim.html#gensim.similarities.docsim.MatrixSimilarity.getSimilarities">(gensim.similarities.docsim.MatrixSimilarity method)</a></dt>
-      <dt><a href="similarities/docsim.html#gensim.similarities.docsim.SparseMatrixSimilarity.getSimilarities">(gensim.similarities.docsim.SparseMatrixSimilarity method)</a></dt>
+      <dt><a href="similarities/docsim.html#gensim.similarities.docsim.MatrixSimilarity.get_similarities">(gensim.similarities.docsim.MatrixSimilarity method)</a></dt>
+      <dt><a href="similarities/docsim.html#gensim.similarities.docsim.Similarity.get_similarities">(gensim.similarities.docsim.Similarity method)</a></dt>
+      <dt><a href="similarities/docsim.html#gensim.similarities.docsim.SparseMatrixSimilarity.get_similarities">(gensim.similarities.docsim.SparseMatrixSimilarity method)</a></dt>
+  </dl></dd>
+    <dt><a href="corpora/textcorpus.html#gensim.corpora.textcorpus.TextCorpus.get_texts">get_texts() (gensim.corpora.textcorpus.TextCorpus method)</a></dt>
+    <dd><dl>
+      <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.WikiCorpus.get_texts">(gensim.corpora.wikicorpus.WikiCorpus method)</a></dt>
   </dl></dd>
     <dt><a href="models/lda_dispatcher.html#gensim.models.lda_dispatcher.Dispatcher.getstate">getstate() (gensim.models.lda_dispatcher.Dispatcher method)</a></dt>
     <dd><dl>
@@ -237,6 +234,8 @@
     <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.idfs2dfs">idfs2dfs() (in module gensim.models.tfidfmodel)</a></dt>
     <dt><a href="corpora/indexedcorpus.html#gensim.corpora.indexedcorpus.IndexedCorpus">IndexedCorpus (class in gensim.corpora.indexedcorpus)</a></dt>
     <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.inference">inference() (gensim.models.ldamodel.LdaModel method)</a></dt>
+</dl></td>
+  <td width="33%" valign="top"><dl>
     <dt><a href="models/lda_dispatcher.html#gensim.models.lda_dispatcher.Dispatcher.initialize">initialize() (gensim.models.lda_dispatcher.Dispatcher method)</a></dt>
     <dd><dl>
       <dt><a href="models/logentropy_model.html#gensim.models.logentropy_model.LogEntropyModel.initialize">(gensim.models.logentropy_model.LogEntropyModel method)</a></dt>
@@ -244,11 +243,7 @@
       <dt><a href="models/rpmodel.html#gensim.models.rpmodel.RpModel.initialize">(gensim.models.rpmodel.RpModel method)</a></dt>
       <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.TfidfModel.initialize">(gensim.models.tfidfmodel.TfidfModel method)</a></dt>
   </dl></dd>
-</dl></td>
-  <td width="33%" valign="top"><dl>
-    <dt><a href="utils.html#gensim.utils.InputQueue">InputQueue (class in gensim.utils)</a></dt>
-    <dt><a href="utils.html#gensim.utils.isCorpus">isCorpus() (in module gensim.utils)</a></dt>
-    <dt><a href="models/lsimodel.html#gensim.models.lsimodel.iterSvd">iterSvd() (in module gensim.models.lsimodel)</a></dt>
+    <dt><a href="utils.html#gensim.utils.is_corpus">is_corpus() (in module gensim.utils)</a></dt>
 </dl></td>
 </tr></table>
 
@@ -286,7 +281,6 @@
     <dt><a href="corpora/bleicorpus.html#gensim.corpora.bleicorpus.BleiCorpus.load">load() (gensim.corpora.bleicorpus.BleiCorpus class method)</a></dt>
     <dd><dl>
       <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.load">(gensim.corpora.dictionary.Dictionary class method)</a></dt>
-      <dt><a href="corpora/dmlcorpus.html#gensim.corpora.dmlcorpus.DmlCorpus.load">(gensim.corpora.dmlcorpus.DmlCorpus class method)</a></dt>
       <dt><a href="corpora/indexedcorpus.html#gensim.corpora.indexedcorpus.IndexedCorpus.load">(gensim.corpora.indexedcorpus.IndexedCorpus class method)</a></dt>
       <dt><a href="corpora/lowcorpus.html#gensim.corpora.lowcorpus.LowCorpus.load">(gensim.corpora.lowcorpus.LowCorpus class method)</a></dt>
       <dt><a href="corpora/mmcorpus.html#gensim.corpora.mmcorpus.MmCorpus.load">(gensim.corpora.mmcorpus.MmCorpus class method)</a></dt>
@@ -304,15 +298,15 @@
       <dt><a href="models/rpmodel.html#gensim.models.rpmodel.RpModel.load">(gensim.models.rpmodel.RpModel class method)</a></dt>
       <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.TfidfModel.load">(gensim.models.tfidfmodel.TfidfModel class method)</a></dt>
       <dt><a href="similarities/docsim.html#gensim.similarities.docsim.MatrixSimilarity.load">(gensim.similarities.docsim.MatrixSimilarity class method)</a></dt>
+      <dt><a href="similarities/docsim.html#gensim.similarities.docsim.Shard.load">(gensim.similarities.docsim.Shard class method)</a></dt>
       <dt><a href="similarities/docsim.html#gensim.similarities.docsim.Similarity.load">(gensim.similarities.docsim.Similarity class method)</a></dt>
       <dt><a href="similarities/docsim.html#gensim.similarities.docsim.SparseMatrixSimilarity.load">(gensim.similarities.docsim.SparseMatrixSimilarity class method)</a></dt>
       <dt><a href="utils.html#gensim.utils.RepeatCorpus.load">(gensim.utils.RepeatCorpus class method)</a></dt>
       <dt><a href="utils.html#gensim.utils.SaveLoad.load">(gensim.utils.SaveLoad class method)</a></dt>
   </dl></dd>
-    <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.WikiCorpus.loadDictionary">loadDictionary() (gensim.corpora.wikicorpus.WikiCorpus static method)</a></dt>
+    <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.load_from_text">load_from_text() (gensim.corpora.dictionary.Dictionary static method)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
-    <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.loadFromText">loadFromText() (gensim.corpora.dictionary.Dictionary static method)</a></dt>
     <dt><a href="models/logentropy_model.html#gensim.models.logentropy_model.LogEntropyModel">LogEntropyModel (class in gensim.models.logentropy_model)</a></dt>
     <dt><a href="corpora/lowcorpus.html#gensim.corpora.lowcorpus.LowCorpus">LowCorpus (class in gensim.corpora.lowcorpus)</a></dt>
     <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel">LsiModel (class in gensim.models.lsimodel)</a></dt>
@@ -345,12 +339,11 @@
   <td width="33%" valign="top"><dl>
     <dt><a href="matutils.html#gensim.matutils.pad">pad() (in module gensim.matutils)</a></dt>
     <dt><a href="utils.html#gensim.utils.pickle">pickle() (in module gensim.utils)</a></dt>
-    <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel.printDebug">printDebug() (gensim.models.lsimodel.LsiModel method)</a></dt>
+    <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel.print_debug">print_debug() (gensim.models.lsimodel.LsiModel method)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
-    <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel.printTopic">printTopic() (gensim.models.lsimodel.LsiModel method)</a></dt>
-    <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.printTopics">printTopics() (gensim.models.ldamodel.LdaModel method)</a></dt>
-    <dt><a href="corpora/dmlcorpus.html#gensim.corpora.dmlcorpus.DmlCorpus.processConfig">processConfig() (gensim.corpora.dmlcorpus.DmlCorpus method)</a></dt>
+    <dt><a href="models/lsimodel.html#gensim.models.lsimodel.LsiModel.print_topic">print_topic() (gensim.models.lsimodel.LsiModel method)</a></dt>
+    <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.print_topics">print_topics() (gensim.models.ldamodel.LdaModel method)</a></dt>
 </dl></td>
 </tr></table>
 
@@ -382,7 +375,6 @@
     <dt><a href="corpora/bleicorpus.html#gensim.corpora.bleicorpus.BleiCorpus.save">save() (gensim.corpora.bleicorpus.BleiCorpus method)</a></dt>
     <dd><dl>
       <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.save">(gensim.corpora.dictionary.Dictionary method)</a></dt>
-      <dt><a href="corpora/dmlcorpus.html#gensim.corpora.dmlcorpus.DmlCorpus.save">(gensim.corpora.dmlcorpus.DmlCorpus method)</a></dt>
       <dt><a href="corpora/indexedcorpus.html#gensim.corpora.indexedcorpus.IndexedCorpus.save">(gensim.corpora.indexedcorpus.IndexedCorpus method)</a></dt>
       <dt><a href="corpora/lowcorpus.html#gensim.corpora.lowcorpus.LowCorpus.save">(gensim.corpora.lowcorpus.LowCorpus method)</a></dt>
       <dt><a href="corpora/mmcorpus.html#gensim.corpora.mmcorpus.MmCorpus.save">(gensim.corpora.mmcorpus.MmCorpus method)</a></dt>
@@ -400,28 +392,23 @@
       <dt><a href="models/rpmodel.html#gensim.models.rpmodel.RpModel.save">(gensim.models.rpmodel.RpModel method)</a></dt>
       <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.TfidfModel.save">(gensim.models.tfidfmodel.TfidfModel method)</a></dt>
       <dt><a href="similarities/docsim.html#gensim.similarities.docsim.MatrixSimilarity.save">(gensim.similarities.docsim.MatrixSimilarity method)</a></dt>
+      <dt><a href="similarities/docsim.html#gensim.similarities.docsim.Shard.save">(gensim.similarities.docsim.Shard method)</a></dt>
       <dt><a href="similarities/docsim.html#gensim.similarities.docsim.Similarity.save">(gensim.similarities.docsim.Similarity method)</a></dt>
       <dt><a href="similarities/docsim.html#gensim.similarities.docsim.SparseMatrixSimilarity.save">(gensim.similarities.docsim.SparseMatrixSimilarity method)</a></dt>
       <dt><a href="utils.html#gensim.utils.RepeatCorpus.save">(gensim.utils.RepeatCorpus method)</a></dt>
       <dt><a href="utils.html#gensim.utils.SaveLoad.save">(gensim.utils.SaveLoad method)</a></dt>
   </dl></dd>
-    <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.saveAsText">saveAsText() (gensim.corpora.dictionary.Dictionary method)</a></dt>
+    <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.save_as_text">save_as_text() (gensim.corpora.dictionary.Dictionary method)</a></dt>
+    <dt><a href="corpora/bleicorpus.html#gensim.corpora.bleicorpus.BleiCorpus.save_corpus">save_corpus() (gensim.corpora.bleicorpus.BleiCorpus static method)</a></dt>
     <dd><dl>
-      <dt><a href="corpora/dmlcorpus.html#gensim.corpora.dmlcorpus.DmlCorpus.saveAsText">(gensim.corpora.dmlcorpus.DmlCorpus method)</a></dt>
-      <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.WikiCorpus.saveAsText">(gensim.corpora.wikicorpus.WikiCorpus method)</a></dt>
+      <dt><a href="corpora/indexedcorpus.html#gensim.corpora.indexedcorpus.IndexedCorpus.save_corpus">(gensim.corpora.indexedcorpus.IndexedCorpus static method)</a></dt>
+      <dt><a href="corpora/lowcorpus.html#gensim.corpora.lowcorpus.LowCorpus.save_corpus">(gensim.corpora.lowcorpus.LowCorpus static method)</a></dt>
+      <dt><a href="corpora/mmcorpus.html#gensim.corpora.mmcorpus.MmCorpus.save_corpus">(gensim.corpora.mmcorpus.MmCorpus static method)</a></dt>
+      <dt><a href="corpora/svmlightcorpus.html#gensim.corpora.svmlightcorpus.SvmLightCorpus.save_corpus">(gensim.corpora.svmlightcorpus.SvmLightCorpus static method)</a></dt>
+      <dt><a href="corpora/textcorpus.html#gensim.corpora.textcorpus.TextCorpus.save_corpus">(gensim.corpora.textcorpus.TextCorpus static method)</a></dt>
+      <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.WikiCorpus.save_corpus">(gensim.corpora.wikicorpus.WikiCorpus static method)</a></dt>
+      <dt><a href="interfaces.html#gensim.interfaces.CorpusABC.save_corpus">(gensim.interfaces.CorpusABC static method)</a></dt>
   </dl></dd>
-    <dt><a href="corpora/bleicorpus.html#gensim.corpora.bleicorpus.BleiCorpus.saveCorpus">saveCorpus() (gensim.corpora.bleicorpus.BleiCorpus static method)</a></dt>
-    <dd><dl>
-      <dt><a href="corpora/dmlcorpus.html#gensim.corpora.dmlcorpus.DmlCorpus.saveCorpus">(gensim.corpora.dmlcorpus.DmlCorpus static method)</a></dt>
-      <dt><a href="corpora/indexedcorpus.html#gensim.corpora.indexedcorpus.IndexedCorpus.saveCorpus">(gensim.corpora.indexedcorpus.IndexedCorpus static method)</a></dt>
-      <dt><a href="corpora/lowcorpus.html#gensim.corpora.lowcorpus.LowCorpus.saveCorpus">(gensim.corpora.lowcorpus.LowCorpus static method)</a></dt>
-      <dt><a href="corpora/mmcorpus.html#gensim.corpora.mmcorpus.MmCorpus.saveCorpus">(gensim.corpora.mmcorpus.MmCorpus static method)</a></dt>
-      <dt><a href="corpora/svmlightcorpus.html#gensim.corpora.svmlightcorpus.SvmLightCorpus.saveCorpus">(gensim.corpora.svmlightcorpus.SvmLightCorpus static method)</a></dt>
-      <dt><a href="corpora/textcorpus.html#gensim.corpora.textcorpus.TextCorpus.saveCorpus">(gensim.corpora.textcorpus.TextCorpus static method)</a></dt>
-      <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.WikiCorpus.saveCorpus">(gensim.corpora.wikicorpus.WikiCorpus static method)</a></dt>
-      <dt><a href="interfaces.html#gensim.interfaces.CorpusABC.saveCorpus">(gensim.interfaces.CorpusABC static method)</a></dt>
-  </dl></dd>
-    <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.WikiCorpus.saveDictionary">saveDictionary() (gensim.corpora.wikicorpus.WikiCorpus method)</a></dt>
     <dt><a href="utils.html#gensim.utils.SaveLoad">SaveLoad (class in gensim.utils)</a></dt>
     <dt><a href="corpora/bleicorpus.html#gensim.corpora.bleicorpus.BleiCorpus.serialize">serialize() (gensim.corpora.bleicorpus.BleiCorpus class method)</a></dt>
     <dd><dl>
@@ -431,16 +418,16 @@
       <dt><a href="corpora/svmlightcorpus.html#gensim.corpora.svmlightcorpus.SvmLightCorpus.serialize">(gensim.corpora.svmlightcorpus.SvmLightCorpus class method)</a></dt>
   </dl></dd>
     <dt><a href="models/ldamodel.html#gensim.models.ldamodel.LdaModel.setstate">setstate() (gensim.models.ldamodel.LdaModel method)</a></dt>
+    <dt><a href="similarities/docsim.html#gensim.similarities.docsim.Shard">Shard (class in gensim.similarities.docsim)</a></dt>
     <dt><a href="similarities/docsim.html#gensim.similarities.docsim.Similarity">Similarity (class in gensim.similarities.docsim)</a></dt>
-    <dt><a href="interfaces.html#gensim.interfaces.SimilarityABC">SimilarityABC (class in gensim.interfaces)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
+    <dt><a href="interfaces.html#gensim.interfaces.SimilarityABC">SimilarityABC (class in gensim.interfaces)</a></dt>
     <dt><a href="intro.html#term-sparse-vector">Sparse vector</a></dt>
     <dt><a href="matutils.html#gensim.matutils.Sparse2Corpus">Sparse2Corpus (class in gensim.matutils)</a></dt>
     <dt><a href="matutils.html#gensim.matutils.sparse2full">sparse2full() (in module gensim.matutils)</a></dt>
     <dt><a href="similarities/docsim.html#gensim.similarities.docsim.SparseMatrixSimilarity">SparseMatrixSimilarity (class in gensim.similarities.docsim)</a></dt>
     <dt><a href="models/lsimodel.html#gensim.models.lsimodel.stochasticSvd">stochasticSvd() (in module gensim.models.lsimodel)</a></dt>
-    <dt><a href="models/lsimodel.html#gensim.models.lsimodel.svdUpdate">svdUpdate() (in module gensim.models.lsimodel)</a></dt>
     <dt><a href="corpora/svmlightcorpus.html#gensim.corpora.svmlightcorpus.SvmLightCorpus">SvmLightCorpus (class in gensim.corpora.svmlightcorpus)</a></dt>
     <dt><a href="utils.html#gensim.utils.synchronous">synchronous() (in module gensim.utils)</a></dt>
 </dl></td>
@@ -451,12 +438,14 @@
   <td width="33%" valign="top"><dl>
     <dt><a href="corpora/textcorpus.html#gensim.corpora.textcorpus.TextCorpus">TextCorpus (class in gensim.corpora.textcorpus)</a></dt>
     <dt><a href="models/tfidfmodel.html#gensim.models.tfidfmodel.TfidfModel">TfidfModel (class in gensim.models.tfidfmodel)</a></dt>
+    <dt><a href="utils.html#gensim.utils.to_unicode">to_unicode() (in module gensim.utils)</a></dt>
+    <dt><a href="utils.html#gensim.utils.to_utf8">to_utf8() (in module gensim.utils)</a></dt>
+</dl></td>
+  <td width="33%" valign="top"><dl>
     <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.tokenize">tokenize() (in module gensim.corpora.wikicorpus)</a></dt>
     <dd><dl>
       <dt><a href="utils.html#gensim.utils.tokenize">(in module gensim.utils)</a></dt>
   </dl></dd>
-</dl></td>
-  <td width="33%" valign="top"><dl>
     <dt><a href="utils.html#gensim.utils.toptexts">toptexts() (in module gensim.utils)</a></dt>
     <dt><a href="interfaces.html#gensim.interfaces.TransformationABC">TransformationABC (class in gensim.interfaces)</a></dt>
 </dl></td>
@@ -465,7 +454,7 @@
 <h2 id="U">U</h2>
 <table width="100%" class="indextable genindextable"><tr>
   <td width="33%" valign="top"><dl>
-    <dt><a href="matutils.html#gensim.matutils.unitVec">unitVec() (in module gensim.matutils)</a></dt>
+    <dt><a href="matutils.html#gensim.matutils.unitvec">unitvec() (in module gensim.matutils)</a></dt>
     <dt><a href="utils.html#gensim.utils.unpickle">unpickle() (in module gensim.utils)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
@@ -490,8 +479,8 @@
     <dt><a href="distributed.html#term-worker">Worker</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
-    <dt><a href="matutils.html#gensim.matutils.MmWriter.writeCorpus">writeCorpus() (gensim.matutils.MmWriter static method)</a></dt>
-    <dt><a href="matutils.html#gensim.matutils.MmWriter.writeVector">writeVector() (gensim.matutils.MmWriter method)</a></dt>
+    <dt><a href="matutils.html#gensim.matutils.MmWriter.write_corpus">write_corpus() (gensim.matutils.MmWriter static method)</a></dt>
+    <dt><a href="matutils.html#gensim.matutils.MmWriter.write_vector">write_vector() (gensim.matutils.MmWriter method)</a></dt>
 </dl></td>
 </tr></table>
 
@@ -519,7 +508,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 26, 2011.
+      Last updated on Jun 13, 2011.
     </div>
   </body>
 </html>

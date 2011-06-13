@@ -49,7 +49,7 @@ class RpModel(interfaces.TransformationABC):
 
 
     def __str__(self):
-        return "RpModel(numTerms=%s, numTopics=%s)" % (self.num_terms, self.num_topics)
+        return "RpModel(num_terms=%s, num_topics=%s)" % (self.num_terms, self.num_topics)
 
 
     def initialize(self, corpus):

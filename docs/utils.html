@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.8',
+        VERSION:     '0.8.0rc1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -102,26 +102,20 @@
 <p>This module contains various general utility functions.</p>
 <dl class="class">
 <dt id="gensim.utils.FakeDict">
-<em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">FakeDict</tt><big>(</big><em>numTerms</em><big>)</big><a class="headerlink" href="#gensim.utils.FakeDict" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">FakeDict</tt><big>(</big><em>num_terms</em><big>)</big><a class="headerlink" href="#gensim.utils.FakeDict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Objects of this class act as dictionaries that map integer-&gt;str(integer), for
-a specified range of integers &lt;0, numTerms).</p>
-<p>This is meant to avoid allocating real dictionaries when numTerms is huge, which
+a specified range of integers &lt;0, num_terms).</p>
+<p>This is meant to avoid allocating real dictionaries when <cite>num_terms</cite> is huge, which
 is a waste of memory.</p>
 <dl class="method">
 <dt id="gensim.utils.FakeDict.keys">
 <tt class="descname">keys</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.utils.FakeDict.keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override the dict.keys() function, which is used to determine the maximum
 internal id of a corpus = the vocabulary dimensionality.</p>
-<p>HACK: To avoid materializing the whole <cite>range(0, self.numTerms)</cite>, this returns
-<cite>[self.numTerms - 1]</cite> only.</p>
+<p>HACK: To avoid materializing the whole <cite>range(0, self.num_terms)</cite>, this returns
+<cite>[self.num_terms - 1]</cite> only.</p>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="class">
-<dt id="gensim.utils.InputQueue">
-<em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">InputQueue</tt><big>(</big><em>q</em>, <em>corpus</em>, <em>chunks</em>, <em>maxsize</em><big>)</big><a class="headerlink" href="#gensim.utils.InputQueue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Help class for threaded <cite>chunkize()</cite>.</p>
 </dd></dl>
 
 <dl class="class">
@@ -200,9 +194,7 @@ via <cite>chunkize_serial()</cite> (no I/O optimizations).</p>
 <dd><p>Split a stream of values into smaller chunks.
 Each chunk is of length <cite>chunks</cite>, except the last one which may be smaller.
 A once-only input stream (<cite>corpus</cite> from a generator) is ok.</p>
-<p>Chunking is done efficiently with itertools, so that only one chunk at a time
-is realized in memory (the whole <cite>corpus</cite> may be larger than RAM).</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunkize</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="mi">4</span><span class="p">):</span> <span class="k">print</span> <span class="n">chunk</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunkize_serial</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="mi">4</span><span class="p">):</span> <span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
 <span class="go">[0, 1, 2, 3]</span>
 <span class="go">[4, 5, 6, 7]</span>
 <span class="go">[8, 9]</span>
@@ -238,8 +230,8 @@ is realized in memory (the whole <cite>corpus</cite> may be larger than RAM).</p
 </dd></dl>
 
 <dl class="function">
-<dt id="gensim.utils.dictFromCorpus">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">dictFromCorpus</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.utils.dictFromCorpus" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.utils.dict_from_corpus">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">dict_from_corpus</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.utils.dict_from_corpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scan corpus for all word ids that appear in it, then construct and return a mapping
 which maps each <tt class="docutils literal"><span class="pre">wordId</span> <span class="pre">-&gt;</span> <span class="pre">str(wordId)</span></tt>.</p>
 <p>This function is used whenever <em>words</em> need to be displayed (as opposed to just
@@ -248,8 +240,8 @@ only covers words actually used in the corpus, up to the highest wordId found.</
 </dd></dl>
 
 <dl class="function">
-<dt id="gensim.utils.getMaxId">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">getMaxId</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.utils.getMaxId" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.utils.get_max_id">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">get_max_id</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.utils.get_max_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return highest feature id that appears in the corpus.</p>
 <p>For empty corpora (no features at all), return -1.</p>
 </dd></dl>
@@ -264,8 +256,8 @@ local misconfigurations, which often mess up hostname resolution.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="gensim.utils.isCorpus">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">isCorpus</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#gensim.utils.isCorpus" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.utils.is_corpus">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">is_corpus</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#gensim.utils.is_corpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check whether <cite>obj</cite> is a corpus. Return (is_corpus, new) 2-tuple, where
 <cite>new is obj</cite> if <cite>obj</cite> was an iterable, or <cite>new</cite> yields the same sequence as
 <cite>obj</cite> if it was an iterator.</p>
@@ -285,7 +277,7 @@ result is forcefully defined as <cite>is_corpus=False</cite>.</p>
 <dt id="gensim.utils.revdict">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">revdict</tt><big>(</big><em>d</em><big>)</big><a class="headerlink" href="#gensim.utils.revdict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reverse a dictionary mapping.</p>
-<p>When two keys map to the same value, only one of them will be kept in the 
+<p>When two keys map to the same value, only one of them will be kept in the
 result (which one is kept is arbitrary).</p>
 </dd></dl>
 
@@ -297,8 +289,21 @@ result (which one is kept is arbitrary).</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.utils.to_unicode">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">to_unicode</tt><big>(</big><em>text</em>, <em>encoding='utf8'</em>, <em>errors='strict'</em><big>)</big><a class="headerlink" href="#gensim.utils.to_unicode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like built-in <cite>unicode</cite>, but simply return input if <cite>text</cite> already is unicode.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.utils.to_utf8">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">to_utf8</tt><big>(</big><em>text</em>, <em>errors='strict'</em><big>)</big><a class="headerlink" href="#gensim.utils.to_utf8" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like built-in <cite>unicode.encode(&#8216;utf8&#8217;)</cite>, but allow input to be bytestring,
+too (so this is a no-op if input already is a bytestring in utf8).</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.utils.tokenize">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">tokenize</tt><big>(</big><em>text</em>, <em>lowercase=False</em>, <em>deacc=False</em>, <em>errors='strict'</em>, <em>toLower=False</em>, <em>lower=False</em><big>)</big><a class="headerlink" href="#gensim.utils.tokenize" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">tokenize</tt><big>(</big><em>text</em>, <em>lowercase=False</em>, <em>deacc=False</em>, <em>errors='strict'</em>, <em>to_lower=False</em>, <em>lower=False</em><big>)</big><a class="headerlink" href="#gensim.utils.tokenize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iteratively yield tokens as unicode strings, optionally also lowercasing them
 and removing accent marks.</p>
 <p>Input text may be either unicode or utf8-encoded byte string.</p>
@@ -313,9 +318,9 @@ characters (no digits!).</p>
 <dl class="function">
 <dt id="gensim.utils.toptexts">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">toptexts</tt><big>(</big><em>query</em>, <em>texts</em>, <em>index</em>, <em>n=10</em><big>)</big><a class="headerlink" href="#gensim.utils.toptexts" title="Permalink to this definition">¶</a></dt>
-<dd><p>Debug fnc to help inspect the top <cite>n</cite> most similar documents (according to a 
+<dd><p>Debug fnc to help inspect the top <cite>n</cite> most similar documents (according to a
 similarity index <cite>index</cite>), to see if they are actually related to the query.</p>
-<p><cite>texts</cite> is any object that can return something insightful for each document 
+<p><cite>texts</cite> is any object that can return something insightful for each document
 via <cite>texts[docid]</cite>, such as its fulltext or snippet.</p>
 <p>Return a list of 3-tuples (docid, doc&#8217;s similarity to the query, texts[docid]).</p>
 </dd></dl>
@@ -362,7 +367,7 @@ via <cite>texts[docid]</cite>, such as its fulltext or snippet.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 26, 2011.
+      Last updated on Jun 13, 2011.
     </div>
   </body>
 </html>

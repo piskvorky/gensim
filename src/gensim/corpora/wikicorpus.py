@@ -23,7 +23,7 @@ disk space; gensim's corpus iterators can work with compressed input, too.
 `VOCABULARY_SIZE` controls how many of the most frequent words to keep (after
 removing all tokens that appear in more than 10 percent documents). Defaults to 100,000.
 
-Example: ./wikicorpus.py ~/gensim/results/enwiki-20100622-pages-articles.xml.bz2 ~/gensim/results/wiki_en
+Example: ./wikicorpus.py ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki_en
 """
 
 
@@ -36,8 +36,10 @@ import bz2
 
 from gensim import interfaces, matutils, utils
 
+# cannot import whole gensim.corpora, because that imports wikicorpus...
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.textcorpus import TextCorpus
+from gensim.corpora.mmcorpus import MmCorpus
 
 logger = logging.getLogger('gensim.corpora.wikicorpus')
 
@@ -161,7 +163,7 @@ class WikiCorpus(TextCorpus):
         the standard corpus interface instead of this function::
 
         >>> for vec in wiki_corpus:
-        >>>     print doc
+        >>>     print vec
         """
         articles, articles_all = 0, 0
         intext, positions = False, 0
@@ -200,22 +202,23 @@ class WikiCorpus(TextCorpus):
 
 class VocabTransform(interfaces.TransformationABC):
     """
-    Convert a corpus to another, with different feature ids.
+    Remap feature ids to new values.
 
-    Given a mapping between old ids and new ids (some old ids may be missing,
-    i.e. the mapping need not be bijective), this will wrap a
-    corpus so that iterating over VocabTransform[corpus] returns the same vectors
-    but with the new ids.
+    Given a mapping between old ids and new ids (some old ids may be missing = these
+    features are to be discarded), this will wrap a corpus so that iterating over
+    `VocabTransform[corpus]` returns the same vectors but with the new ids.
 
     Old features that have no counterpart in the new ids are discarded. This
-    can be used to filter vocabulary of a corpus::
+    can be used to filter vocabulary of a corpus "online"::
 
-    >>> old2new = dict((oldid, newid) for newid, oldid in enumerate(remaining_ids))
-    >>> id2word = dict((newid, oldid2token[oldid]) for oldid, newid in old2new.iteritems())
-    >>> vt = VocabTransform(old2new, id2token)
+    >>> old2new = dict((oldid, newid) for newid, oldid in enumerate(ids_you_want_to_keep))
+    >>> vt = VocabTransform(old2new)
+    >>> for vec_with_new_ids in vt[corpus_with_old_ids]:
+    >>>     ...
 
     """
     def __init__(self, old2new, id2token=None):
+        # id2word = dict((newid, oldid2word[oldid]) for oldid, newid in old2new.iteritems())
         self.old2new = old2new
         self.id2token = id2token
 
@@ -251,26 +254,26 @@ if __name__ == '__main__':
     else:
         keep_words = DEFAULT_DICT_SIZE
 
-    # build dictionary. only keep 100k most frequent words (out of total ~7m unique tokens)
-    # takes about 8h on a macbook pro
+    # build dictionary. only keep 100k most frequent words (out of total ~8.2m unique tokens)
+    # takes about 9h on a macbook pro, for 3.5m articles (june 2011 wiki dump)
     wiki = WikiCorpus(input, keep_words=keep_words)
     # save dictionary and bag-of-words (term-document frequency matrix)
-    # another ~8h
+    # another ~9h
     wiki.dictionary.save_as_text(output + '_wordids.txt')
-    corpora.MmCorpus.serialize(fname + '_bow.mm', wiki, progressCnt=10000)
+    MmCorpus.serialize(output + '_bow.mm', wiki, progress_cnt=10000)
     del wiki
 
     # initialize corpus reader and word->id mapping
     id2token = Dictionary.load_from_text(output + '_wordids.txt')
     mm = MmCorpus(output + '_bow.mm')
 
-    # build tfidf
-    # ~20min
+    # build tfidf,
+    # ~30min
     from gensim.models import TfidfModel
     tfidf = TfidfModel(mm, id2word=id2token, normalize=True)
 
     # save tfidf vectors in matrix market format
-    # ~1.5h; result file is 14GB! bzip2'ed down to 4.5GB
-    corpora.MmCorpus.serialize(output + '_tfidf.mm', tfidf[mm], progressCnt=10000)
+    # ~2h; result file is 15GB! bzip2'ed down to 4.5GB
+    MmCorpus.serialize(output + '_tfidf.mm', tfidf[mm], progress_cnt=10000)
 
     logger.info("finished running %s" % program)

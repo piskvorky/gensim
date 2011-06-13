@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.7.8',
+        VERSION:     '0.8.0rc1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -111,20 +111,20 @@ Convert articles from a Wikipedia dump to (sparse) vectors. The input is a bz2-c
 <p>The output Matrix Market files can then be compressed (e.g., by bzip2) to save disk space; gensim&#8217;s corpus iterators can work with compressed input, too.</p>
 <p><cite>VOCABULARY_SIZE</cite> controls how many of the most frequent words to keep (after
 removing all tokens that appear in more than 10 percent documents). Defaults to 100,000.</p>
-<p>Example: ./wikicorpus.py ~/gensim/results/enwiki-20100622-pages-articles.xml.bz2 ~/gensim/results/wiki_en</p>
+<p>Example: ./wikicorpus.py ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki_en</p>
 <dl class="class">
 <dt id="gensim.corpora.wikicorpus.VocabTransform">
 <em class="property">class </em><tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">VocabTransform</tt><big>(</big><em>old2new</em>, <em>id2token=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.VocabTransform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert a corpus to another, with different feature ids.</p>
-<p>Given a mapping between old ids and new ids (some old ids may be missing,
-i.e. the mapping need not be a bijection), this will wrap a
-corpus so that iterating over VocabTransform[corpus] returns the same vectors 
-but with the new ids.</p>
+<dd><p>Remap feature ids to new values.</p>
+<p>Given a mapping between old ids and new ids (some old ids may be missing = these
+features are to be discarded), this will wrap a corpus so that iterating over
+<cite>VocabTransform[corpus]</cite> returns the same vectors but with the new ids.</p>
 <p>Old features that have no counterpart in the new ids are discarded. This
-can be used to filter vocabulary of a corpus:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">old2new</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">oldid</span><span class="p">,</span> <span class="n">newid</span><span class="p">)</span> <span class="k">for</span> <span class="n">newid</span><span class="p">,</span> <span class="n">oldid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">remaining_ids</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">newid</span><span class="p">,</span> <span class="n">oldid2token</span><span class="p">[</span><span class="n">oldid</span><span class="p">])</span> <span class="k">for</span> <span class="n">oldid</span><span class="p">,</span> <span class="n">newid</span> <span class="ow">in</span> <span class="n">old2new</span><span class="o">.</span><span class="n">iteritems</span><span class="p">())</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">vt</span> <span class="o">=</span> <span class="n">VocabTransform</span><span class="p">(</span><span class="n">old2new</span><span class="p">,</span> <span class="n">id2token</span><span class="p">)</span>
+can be used to filter vocabulary of a corpus &#8220;online&#8221;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">old2new</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">oldid</span><span class="p">,</span> <span class="n">newid</span><span class="p">)</span> <span class="k">for</span> <span class="n">newid</span><span class="p">,</span> <span class="n">oldid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ids_you_want_to_keep</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vt</span> <span class="o">=</span> <span class="n">VocabTransform</span><span class="p">(</span><span class="n">old2new</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">vec_with_new_ids</span> <span class="ow">in</span> <span class="n">vt</span><span class="p">[</span><span class="n">corpus_with_old_ids</span><span class="p">]:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="o">...</span>
 </pre></div>
 </div>
 <dl class="classmethod">
@@ -143,7 +143,7 @@ can be used to filter vocabulary of a corpus:</p>
 
 <dl class="class">
 <dt id="gensim.corpora.wikicorpus.WikiCorpus">
-<em class="property">class </em><tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">WikiCorpus</tt><big>(</big><em>fname</em>, <em>noBelow=20</em>, <em>keep_words=100000</em>, <em>dictionary=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">WikiCorpus</tt><big>(</big><em>fname</em>, <em>no_below=20</em>, <em>keep_words=100000</em>, <em>dictionary=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Treat a wikipedia articles dump (<a href="#id1"><span class="problematic" id="id2">*</span></a>articles.xml.bz2) as a (read-only) corpus.</p>
 <p>The documents are extracted on-the-fly, so that the whole (massive) dump
 can stay compressed on disk.</p>
@@ -155,15 +155,15 @@ can stay compressed on disk.</p>
 vocabulary (only the first <cite>keep_words</cite> most frequent words that
 appear in at least <cite>noBelow</cite> documents are kept).</p>
 <dl class="method">
-<dt id="gensim.corpora.wikicorpus.WikiCorpus.getArticles">
-<tt class="descname">getArticles</tt><big>(</big><em>return_raw=False</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.getArticles" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.corpora.wikicorpus.WikiCorpus.get_texts">
+<tt class="descname">get_texts</tt><big>(</big><em>return_raw=False</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.get_texts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate over the dump, returning text version of each article.</p>
 <p>Only articles of sufficient length are returned (short articles &amp; redirects
 etc are ignored).</p>
 <p>Note that this iterates over the <strong>texts</strong>; if you want vectors, just use
 the standard corpus interface instead of this function:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">wiki_corpus</span><span class="p">:</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="k">print</span> <span class="n">doc</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">print</span> <span class="n">vec</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -174,69 +174,46 @@ the standard corpus interface instead of this function:</p>
 <dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
 </dd></dl>
 
-<dl class="staticmethod">
-<dt id="gensim.corpora.wikicorpus.WikiCorpus.loadDictionary">
-<em class="property">static </em><tt class="descname">loadDictionary</tt><big>(</big><em>fname</em>, <em>mapping_only=True</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.loadDictionary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load previously stored mapping between words and their ids.</p>
-<p>The result can be used as the <cite>id2word</cite> parameter for input to transformations.</p>
-</dd></dl>
-
 <dl class="method">
 <dt id="gensim.corpora.wikicorpus.WikiCorpus.save">
 <tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="gensim.corpora.wikicorpus.WikiCorpus.saveAsText">
-<tt class="descname">saveAsText</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.saveAsText" title="Permalink to this definition">¶</a></dt>
-<dd><p>Store the corpus to disk, in a human-readable text format.</p>
-<p>This actually saves two files:</p>
-<ol class="arabic simple">
-<li>Document-term co-occurence frequency counts (bag-of-words), as
-a Matrix Market file <cite>fname_bow.mm</cite>.</li>
-<li>Token to integer mapping, as a text file <cite>fname_wordids.txt</cite>.</li>
-</ol>
-</dd></dl>
-
 <dl class="staticmethod">
-<dt id="gensim.corpora.wikicorpus.WikiCorpus.saveCorpus">
-<em class="property">static </em><tt class="descname">saveCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.saveCorpus" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.corpora.wikicorpus.WikiCorpus.save_corpus">
+<em class="property">static </em><tt class="descname">save_corpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.save_corpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save an existing <cite>corpus</cite> to disk.</p>
 <p>Some formats also support saving the dictionary (<cite>feature_id-&gt;word</cite> mapping),
 which can in this case be provided by the optional <cite>id2word</cite> parameter.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">saveCorpus</span><span class="p">(</span><span class="s">&#39;file.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">save_corpus</span><span class="p">(</span><span class="s">&#39;file.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Some corpora also support an index of where each document begins, so
-that the documents on disk can be accessed in O(1) time (see the 
-<cite>corpora.IndexedCorpus</cite> base class). In this case, <cite>saveCorpus</cite> is automatically
-called internally by <cite>serialize</cite>, which does <cite>saveCorpus</cite> plus saves the index
+that the documents on disk can be accessed in O(1) time (see the
+<cite>corpora.IndexedCorpus</cite> base class). In this case, <cite>save_corpus</cite> is automatically
+called internally by <cite>serialize</cite>, which does <cite>save_corpus</cite> plus saves the index
 at the same time, so you want to store the corpus with:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;file.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span> <span class="c"># stores index as well, allowing random access to individual documents</span>
 </pre></div>
 </div>
-</dd></dl>
-
-<dl class="method">
-<dt id="gensim.corpora.wikicorpus.WikiCorpus.saveDictionary">
-<tt class="descname">saveDictionary</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.saveDictionary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Store id-&gt;word mapping to a file, in format <cite>id[TAB]word_utf8[TAB]document frequency[NEWLINE]</cite>.</p>
+<p>Calling <cite>serialize()</cite> is preferred to calling <cite>save_corpus()</cite>.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="function">
-<dt id="gensim.corpora.wikicorpus.filterWiki">
-<tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">filterWiki</tt><big>(</big><em>raw</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.filterWiki" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filter out wiki mark-up from utf8 string <cite>raw</cite>, leaving only text.</p>
+<dt id="gensim.corpora.wikicorpus.filter_wiki">
+<tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">filter_wiki</tt><big>(</big><em>raw</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.filter_wiki" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter out wiki mark-up from <cite>raw</cite>, leaving only text. <cite>raw</cite> is either unicode
+or utf-8 encoded string.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="gensim.corpora.wikicorpus.tokenize">
 <tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">tokenize</tt><big>(</big><em>content</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.tokenize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tokenize a piece of text from wikipedia. The input string <cite>content</cite> is assumed
-to be mark-up free (see <cite>filterWiki()</cite>).</p>
+to be mark-up free (see <cite>filter_wiki()</cite>).</p>
 <p>Return list of tokens as utf8 bytestrings. Ignore words shorted than 2 or longer
 that 15 characters (not bytes!).</p>
 </dd></dl>
@@ -277,7 +254,7 @@ that 15 characters (not bytes!).</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 26, 2011.
+      Last updated on Jun 13, 2011.
     </div>
   </body>
 </html>

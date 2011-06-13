@@ -99,7 +99,7 @@ class Projection(utils.SaveLoad):
             # base case decomposition: given a job `docs`, compute its decomposition,
             # *in-core*.
             if not use_svdlibc:
-                u, s = stochasticSvd(docs, k, chunks=sys.maxint, num_terms=m,
+                u, s = stochastic_svd(docs, k, chunks=sys.maxint, num_terms=m,
                     power_iters=P2_EXTRA_ITERS, extra_dims=P2_EXTRA_DIMS)
             else:
                 try:
@@ -198,12 +198,12 @@ class LsiModel(interfaces.TransformationABC):
     1. constructor, which initializes the projection into latent topics space,
     2. the ``[]`` method, which returns representation of any input document in the
        latent space,
-    3. the `addDocuments()` method, which allows for incrementally updating the model with new documents.
+    3. `add_documents()` for incrementally updating the model with new documents.
 
     Model persistency is achieved via its load/save methods.
 
     """
-    def __init__(self, corpus=None, num_topics=200, id2word=None, chunks=10000,
+    def __init__(self, corpus=None, num_topics=200, id2word=None, chunks=20000,
                  decay=1.0, distributed=False, onepass=True,
                  power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS):
         """
@@ -216,7 +216,7 @@ class LsiModel(interfaces.TransformationABC):
         LSI transformation is available at any point.
 
         If you specify a `corpus`, it will be used to train the model. See the
-        method `addDocuments` for a description of the `chunks` and `decay` parameters.
+        method `add_documents` for a description of the `chunks` and `decay` parameters.
 
         Turn `onepass` off to force a multi-pass stochastic algorithm.
 
@@ -306,7 +306,7 @@ class LsiModel(interfaces.TransformationABC):
         LSA to gradually "forget" old observations (documents) and give more
         preference to new ones.
         """
-        logger.info("updating SVD with new documents")
+        logger.info("updating model with new documents")
 
         # get computation parameters; if not specified, use the ones from constructor
         if chunks is None:
@@ -318,24 +318,23 @@ class LsiModel(interfaces.TransformationABC):
             if not self.onepass:
                 # we are allowed multiple passes over the input => use a faster, randomized two-pass algo
                 update = Projection(self.num_terms, self.num_topics, None)
-                update.u, update.s = stochasticSvd(corpus, self.num_topics,
+                update.u, update.s = stochastic_svd(corpus, self.num_topics,
                     num_terms=self.num_terms, chunks=chunks,
                     extra_dims=self.extra_samples, power_iters=self.power_iters)
                 self.projection.merge(update, decay=decay)
             else:
                 # the one-pass algo
-
                 doc_no = 0
-                # the corpus will be processed in chunks of `chunks` of documents.
-                # keep preparing new chunks in a separate thread, so that we don't
-                # waste time waiting for chunks to be read from disk. instead, fill
-                # a (relatively short) chunk queue asynchronously in utils.chunkize,
-                # and pop already-ready chunks from it as needed.
-                for chunk_no, chunk in enumerate(utils.chunkize(corpus, chunks, 0)): # FIXME self.numworkers
+                chunker = itertools.groupby(enumerate(corpus), key=lambda (docno, doc): docno / chunks)
+                for chunk_no, (key, group) in enumerate(chunker):
+                    logger.info("preparing a new chunk of documents")
+                    corpus = list(doc for _, doc in group)
+                    nnz = sum(len(doc) for doc in corpus)
                     # construct the job as a sparse matrix, to minimize memory overhead
                     # definitely avoid materializing it as a dense matrix!
-                    job = matutils.corpus2csc(chunk, num_terms=self.num_terms)
-                    del chunk
+                    logger.debug("converting corpus to csc format")
+                    job = matutils.corpus2csc(corpus, num_docs=len(corpus), num_terms=self.num_terms, num_nnz=nnz)
+                    del corpus
                     doc_no += job.shape[1]
                     if self.dispatcher:
                         # distributed version: add this job to the job queue, so workers can work on it
@@ -350,14 +349,14 @@ class LsiModel(interfaces.TransformationABC):
                         self.projection.merge(update, decay=decay)
                         del update
                         logger.info("processed documents up to #%s" % doc_no)
-                        self.print_topics(5) # TODO see if printDebug works and remove one of these..
+                        self.print_topics(5)
 
                 # wait for all workers to finish (distributed version only)
                 if self.dispatcher:
                     logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                     self.projection = self.dispatcher.getstate()
 #            logger.info("top topics after adding %i documents" % doc_no)
-#            self.printDebug(10)
+#            self.print_debug(10)
         else:
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             assert self.onepass, "distributed two-pass algo not supported yet"
@@ -384,11 +383,11 @@ class LsiModel(interfaces.TransformationABC):
 
         assert self.projection.u is not None, "decomposition not initialized yet"
         vec = matutils.sparse2full(bow, self.num_terms).astype(self.projection.u.dtype)
-        vec.shape = (self.num_terms, 1)
-        topic_dist = numpy.dot(self.projection.u[:, :self.num_topics].T, vec) # K x T * T x 1 = K x 1
+        topic_dist = numpy.dot(vec.T, self.projection.u[:, :self.num_topics]).T # u^t * x = (x^t * u)^t
+        # XXX the above `dot` is very inefficient if num_topics not full and `u` not in fortran order!!
+        # Cache prefetching fails, 10x worse performance.
         if scaled:
             topic_dist = (1.0 / self.projection.s[:self.num_topics]) * topic_dist # s^-1 * u^T * x
-        topic_dist = topic_dist.flatten()
 
         nnz = topic_dist.nonzero()[0]
         return zip(nnz, topic_dist[nnz])
@@ -481,7 +480,7 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
 
 
 
-def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
+def stochastic_svd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
                   power_iters=0, dtype=numpy.float64, eps=1e-6):
     """
     Return (U, S): the left singular vectors and the singular values of the streamed
@@ -525,9 +524,10 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
         sparsetools.csc_matvecs(m, n, samples, corpus.indptr, corpus.indices,
                                 corpus.data, o.ravel(), y.ravel()) # y = corpus * o
         del o
+
+        # unlike numpy, scipy.sparse `astype()` copies everything, even if there is no change to dtype!
+        # so check for equal dtype explicitly, to avoid the extra memory footprint if possible
         if y.dtype != dtype:
-            # unlike numpy, scipy.sparse copies everything, even if there is no change to dtype!
-            # so check for equal dtype explicitly, to avoid the extra memory footprint if possible
             y = y.astype(dtype)
         logger.debug("running %i power iterations" % power_iters)
         for power_iter in xrange(power_iters):
@@ -596,11 +596,13 @@ def stochasticSvd(corpus, rank, num_terms, chunks=20000, extra_dims=None,
         logger.info("running dense decomposition on %s covariance matrix" % str(x.shape))
         u, s, vt = numpy.linalg.svd(x) # could use linalg.eigh, but who cares... and svd returns the factors already sorted :)
         s = numpy.sqrt(s) # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
+    q = qt.T.copy()
+    del qt
 
     logger.info("computing the final decomposition")
     keep = clip_spectrum(s**2, rank, discard=eps)
     u = u[:, :keep].copy()
     s = s[:keep]
-    u = numpy.dot(qt.T, u)
+    u = numpy.dot(q, u)
     return u, s
 

@@ -22,7 +22,7 @@ Run LDA like you normally would, but turn on the `distributed=True` constructor
 parameter::
 
     >>> # extract 100 LDA topics, using default parameters
-    >>> lda = LdaModel(corpus=mm, id2word=id2word, numTopics=100, distributed=True)
+    >>> lda = LdaModel(corpus=mm, id2word=id2word, num_topics=100, distributed=True)
     using distributed version with 4 workers
     running online LDA training, 100 topics, 1 passes over the supplied corpus of 3199665 documets, updating model once every 40000 documents
     ..
@@ -36,7 +36,7 @@ with `ATLAS <http://math-atlas.sourceforge.net/>`_), the wallclock time taken dr
 To run standard batch LDA (no online updates of mini-batches) instead, you would similarly
 call::
 
-    >>> lda = LdaModel(corpus=mm, id2word=id2token, numTopics=100, update_every=0, passes=20, distributed=True)
+    >>> lda = LdaModel(corpus=mm, id2word=id2token, num_topics=100, update_every=0, passes=20, distributed=True)
     using distributed version with 4 workers
     running batch LDA training, 100 topics, 20 passes over the supplied corpus of 3199665 documets, updating model once every 3199665 documents
     initializing workers
@@ -52,7 +52,7 @@ and then, some two days later::
 
 ::
 
-    >>> lda.printTopics(20)
+    >>> lda.print_topics(20)
     topic #0: 0.007*disease + 0.006*medical + 0.005*treatment + 0.005*cells + 0.005*cell + 0.005*cancer + 0.005*health + 0.005*blood + 0.004*patients + 0.004*drug
     topic #1: 0.024*king + 0.013*ii + 0.013*prince + 0.013*emperor + 0.008*duke + 0.008*empire + 0.007*son + 0.007*china + 0.007*dynasty + 0.007*iii
     topic #2: 0.031*film + 0.017*films + 0.005*movie + 0.005*directed + 0.004*man + 0.004*episode + 0.003*character + 0.003*cast + 0.003*father + 0.003*mother

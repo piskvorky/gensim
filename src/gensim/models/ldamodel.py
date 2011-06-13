@@ -145,7 +145,7 @@ class LdaModel(interfaces.TransformationABC):
     The constructor estimates Latent Dirichlet Allocation model parameters based
     on a training corpus:
 
-    >>> lda = LdaModel(corpus, numTopics=10)
+    >>> lda = LdaModel(corpus, num_topics=10)
 
     You can then infer topic distributions on new, unseen documents, with
 
@@ -168,7 +168,7 @@ class LdaModel(interfaces.TransformationABC):
         printing.
 
         `alpha` and `eta` are hyperparameters on document-topic (theta) and
-        topic-word (lambda) distributions. Both default to a symmetric 1.0/numTopics
+        topic-word (lambda) distributions. Both default to a symmetric 1.0/num_topics
         (but can be set to a vector, for assymetric priors).
 
         Turn on `distributed` to force distributed computing (see the web tutorial
@@ -254,7 +254,7 @@ class LdaModel(interfaces.TransformationABC):
     def setstate(self, state, compute_diff=False):
         """
         Reset word-topic mixtures lambda (and beta) using collected counts of
-        sufficient statistics (a `numTopics x numTerms` matrix).
+        sufficient statistics (a `num_topics x num_terms` matrix).
 
         Return the aggregate amount of change in topics, log(old_lambda-new_lambda).
         """
@@ -439,12 +439,9 @@ class LdaModel(interfaces.TransformationABC):
                 other = LdaState(self.state.sstats)
             dirty = False
 
-            # the corpus will be processed in chunks of `chunks` of documents.
-            # keep preparing new chunks in a separate thread, so that we don't
-            # waste time waiting for chunks to be read from disk. instead, fill
-            # a (relatively short) chunk queue asynchronously in utils.chunkize,
-            # and pop already-ready chunks from it as needed.
-            for chunk_no, chunk in enumerate(utils.chunkize(corpus, chunks, 0)): # FIXME self.numworkers
+            chunker = itertools.groupby(enumerate(corpus), key=lambda (docno, doc): docno / chunks)
+            for chunk_no, (key, group) in enumerate(chunker):
+                chunk = list(doc for _, doc in group)
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
                     logger.info('PROGRESS: iteration %i, dispatching documents up to #%i/%i' %

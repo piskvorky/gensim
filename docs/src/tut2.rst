@@ -7,7 +7,7 @@ Topics and Transformations
 Don't forget to set
 
 >>> import logging
->>> logging.root.setLevel(logging.INFO) # will suppress DEBUG level events
+>>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 if you want to see logging events.
 
@@ -28,7 +28,7 @@ into another. This process serves two goals:
 
 1. To bring out hidden structure in the corpus, discover relationships between
    words and use them to describe the documents in a new and
-   (hopefully) more realistic way.
+   (hopefully) more semantic way.
 2. To make the document representation more compact. This both improves efficiency
    (new representation consumes less resources) and efficacy (marginal data
    trends are ignored, noise-reduction).
@@ -41,7 +41,7 @@ a :dfn:`training corpus`:
 
 >>> tfidf = models.TfidfModel(corpus) # step 1 -- initialize a model
 
-We used our old corpus to initialize (train) the transformation model. Different
+We used our old corpus from tutorial 1 to initialize (train) the transformation model. Different
 transformations may require different initialization parameters; in case of TfIdf, the
 "training" consists simply of going through the supplied corpus once and computing document frequencies
 of all its features. Training other models, such as Latent Semantic Analysis or Latent Dirichlet
@@ -101,14 +101,14 @@ folding-in for LSA, by topic inference for LDA etc.
 
 Transformations can also be serialized, one on top of another, in a sort of chain:
 
->>> lsi = models.LsiModel(corpus_tfidf, id2word=dictionary, numTopics=2) # initialize an LSI transformation
+>>> lsi = models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=2) # initialize an LSI transformation
 >>> corpus_lsi = lsi[corpus_tfidf] # create a double wrapper over the original corpus: bow->tfidf->fold-in-lsi
 
 Here we transformed our Tf-Idf corpus via `Latent Semantic Indexing <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
-into a latent 2-D space (2-D because we set ``numTopics=2``). Now you're probably wondering: what do these two latent
-dimensions stand for? Let's inspect with :func:`models.LsiModel.printTopics`:
+into a latent 2-D space (2-D because we set ``num_topics=2``). Now you're probably wondering: what do these two latent
+dimensions stand for? Let's inspect with :func:`models.LsiModel.print_topics`:
 
-  >>> lsi.printTopics(2)
+  >>> lsi.print_topics(2)
   topic #0(1.594): -0.703*"trees" + -0.538*"graph" + -0.402*"minors" + -0.187*"survey" + -0.061*"system" + -0.060*"response" + -0.060*"time" + -0.058*"user" + -0.049*"computer" + -0.035*"interface"
   topic #1(1.476): -0.460*"system" + -0.373*"user" + -0.332*"eps" + -0.328*"interface" + -0.320*"response" + -0.320*"time" + -0.293*"computer" + -0.280*"human" + -0.171*"survey" + 0.161*"trees"
 
@@ -166,7 +166,7 @@ Gensim implements several popular Vector Space Model algorithms:
   2 latent dimensions, but on real corpora, target dimensionality of 200--500 is recommended
   as a "golden standard" [1]_.
 
-  >>> model = lsimodel.LsiModel(tfidf_corpus, id2word=dictionary, numTopics=300)
+  >>> model = lsimodel.LsiModel(tfidf_corpus, id2word=dictionary, num_topics=300)
 
   LSI training is unique in that we can continue "training" at any point, simply
   by providing more training documents. This is done by incremental updates to
@@ -174,16 +174,17 @@ Gensim implements several popular Vector Space Model algorithms:
   input document stream may even be infinite -- just keep feeding LSI new documents
   as they arrive, while using the computed transformation model as read-only in the meanwhile!
 
-  >>> model.addDocuments(another_tfidf_corpus) # now LSI has been trained on tfidf_corpus + another_tfidf_corpus
+  >>> model.add_documents(another_tfidf_corpus) # now LSI has been trained on tfidf_corpus + another_tfidf_corpus
   >>> lsi_vec = model[tfidf_vec] # convert some new document into the LSI space, without affecting the model
   >>> ...
-  >>> model.addDocuments(more_documents) # tfidf_corpus + another_tfidf_corpus + more_documents
+  >>> model.add_documents(more_documents) # tfidf_corpus + another_tfidf_corpus + more_documents
   >>> lsi_vec = model[tfidf_vec]
   >>> ...
 
   See the :mod:`gensim.models.lsimodel` documentation for details on how to make
-  LSI gradually "forget" old observations in infinite streams and how to tweak parameters
-  affecting speed vs. memory footprint vs. numerical precision of the algorithm.
+  LSI gradually "forget" old observations in infinite streams. If you want to get dirty,
+  there are also parameters you can tweak that affect speed vs. memory footprint vs. numerical
+  precision of the LSI algorithm.
 
   `gensim` uses a novel online incremental streamed distributed training algorithm (quite a mouthful!),
   which I published in [5]_. `gensim` also executes a stochastic multi-pass algorithm
@@ -197,7 +198,7 @@ Gensim implements several popular Vector Space Model algorithms:
   CPU-friendly) approach to approximating TfIdf distances between documents, by throwing in a little randomness.
   Recommended target dimensionality is again in the hundreds/thousands, depending on your dataset.
 
-  >>> model = rpmodel.RpModel(tfidf_corpus, numTopics=500)
+  >>> model = rpmodel.RpModel(tfidf_corpus, num_topics=500)
 
 * `Latent Dirichlet Allocation, LDA <http://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
   is yet another transformation from bag-of-words counts into a topic space of lower
@@ -206,7 +207,7 @@ Gensim implements several popular Vector Space Model algorithms:
   just like with LSA, inferred automatically from a training corpus. Documents
   are in turn interpreted as a (soft) mixture of these topics (again, just like with LSA).
 
-  >>> model = ldamodel.LdaModel(bow_corpus, id2word=dictionary, numTopics=100)
+  >>> model = ldamodel.LdaModel(bow_corpus, id2word=dictionary, num_topics=100)
 
   `gensim` uses a fast implementation of online LDA parameter estimation based on [2]_,
   modified to run in :doc:`distributed mode <distributed>` on a cluster of computers.
