@@ -14,7 +14,7 @@ import os.path
 import unittest
 import tempfile
 
-from gensim.corpora import dmlcorpus, bleicorpus, mmcorpus, lowcorpus, svmlightcorpus, dictionary
+from gensim.corpora import bleicorpus, mmcorpus, lowcorpus, svmlightcorpus, dictionary
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARNING)
 

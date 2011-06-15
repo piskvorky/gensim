@@ -10,6 +10,5 @@ from bleicorpus import BleiCorpus
 from svmlightcorpus import SvmLightCorpus
 from lowcorpus import LowCorpus
 from dictionary import Dictionary
-from dmlcorpus import DmlCorpus
 from wikicorpus import WikiCorpus
 from textcorpus import TextCorpus

@@ -32,8 +32,7 @@ setup(
     description = 'Python framework for fast Vector Space Modelling',
     long_description = read('README.txt'),
 
-    package_dir = {'': 'src'},
-    packages = find_packages('src'),
+    packages = find_packages(),
 
     # there is a bug in python2.5, preventing distutils from using any non-ascii characters :( http://bugs.python.org/issue2562
     author = 'Radim Rehurek', # u'Radim Řehůřek', # <- should really be this...
