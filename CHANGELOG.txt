@@ -1,6 +1,14 @@
 Changes
 =======
 
+0.8.0 (Armageddon)
+
+* changed all variable and function names to comply with PEP8 (numTopics->num_topics): BREAKS BACKWARD COMPATIBILITY!
+* added support for similarity querying more documents at once (index[query_documents] in addition to index[query_document]; much faster)
+* rewrote Similarity so that it is more efficient and scalable (using disk-based mmap'ed shards)
+* simplified directory structure (src/gensim/ is now only gensim/)
+* several small fixes and optimizations
+
 0.7.8
 
 * added `corpora.IndexedCorpus`, a base class for corpus serializers (thx to Dieter Plaetinck). This allows corpus formats that inherit from it (MmCorpus, SvmLightCorpus, BleiCorpus etc.) to retrieve individual documents by their id in O(1), e.g. `corpus[14]` returns document #14.
