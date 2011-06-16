@@ -14,6 +14,7 @@ is provided in the interface itself, so that the interfaces can be subclassed).
 from __future__ import with_statement
 
 import logging
+import itertools
 
 import numpy
 
@@ -100,15 +101,22 @@ class CorpusABC(utils.SaveLoad):
 
 
 class TransformedCorpus(CorpusABC):
-    def __init__(self, obj, corpus):
-        self.obj, self.corpus = obj, corpus
+    def __init__(self, obj, corpus, chunks=None):
+        self.obj, self.corpus, self.chunks = obj, corpus, chunks
 
     def __len__(self):
         return len(self.corpus)
 
     def __iter__(self):
-        for doc in self.corpus:
-            yield self.obj[doc]
+        if self.chunks:
+            chunker = itertools.groupby(enumerate(self.corpus), key=lambda (docno, doc): docno / self.chunks)
+            for chunk_no, (key, group) in enumerate(chunker):
+                chunk = list(doc for _, doc in group)
+                for transformed in self.obj.__getitem__(chunk, chunks=None):
+                    yield transformed
+        else:
+            for doc in self.corpus:
+                yield self.obj[doc]
 #endclass TransformedCorpus
 
 
@@ -132,12 +140,12 @@ class TransformationABC(utils.SaveLoad):
         raise NotImplementedError('cannot instantiate abstract base class')
 
 
-    def _apply(self, corpus):
+    def _apply(self, corpus, chunks=None):
         """
         Apply the transformation to a whole corpus (as opposed to a single document)
         and return the result as another corpus.
         """
-        return TransformedCorpus(self, corpus)
+        return TransformedCorpus(self, corpus, chunks)
 #endclass TransformationABC
 
 

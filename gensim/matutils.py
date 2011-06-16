@@ -136,6 +136,9 @@ def full2sparse(vec, eps=1e-9):
     Values of magnitude < `eps` are treated as zero (ignored).
     """
     return [(pos, val) for pos, val in enumerate(vec) if numpy.abs(val) > eps]
+#    # slightly faster but less flexible:
+#    nnz = vec.nonzero()[0]
+#    return zip(nnz, vec[nnz])
 
 dense2vec = full2sparse
 
@@ -281,7 +284,7 @@ def qr_destroy(la):
     a = numpy.asfortranarray(la[0])
     del la[0], la # now `a` is the only reference to the input matrix
     m, n = a.shape
-    # perform q, r = QR(component); code hacked out of scipy.linalg.qr
+    # perform q, r = QR(a); code hacked out of scipy.linalg.qr
     logger.debug("computing QR of %s dense matrix" % str(a.shape))
     geqrf, = get_lapack_funcs(('geqrf',), (a,))
     qr, tau, work, info = geqrf(a, lwork=-1, overwrite_a=True)

@@ -84,6 +84,20 @@ def clip_spectrum(s, k, discard=0.001):
     return k
 
 
+def asfarray(a, name=''):
+    if not a.flags.f_contiguous:
+        logger.debug("converting %s array %s to FORTRAN order" % (a.shape, name))
+        a = numpy.asfortranarray(a)
+    return a
+
+
+def ascarray(a, name=''):
+    if not a.flags.contiguous:
+        logger.debug("converting %s array %s to C order" % (a.shape, name))
+        a = numpy.ascontiguousarray(a)
+    return a
+
+
 class Projection(utils.SaveLoad):
     def __init__(self, m, k, docs=None, use_svdlibc=False):
         """
@@ -105,7 +119,7 @@ class Projection(utils.SaveLoad):
                 try:
                     import sparsesvd
                 except ImportError:
-                    raise ImportError("for LSA, the `sparsesvd` module is needed but not found; run `easy_install sparsesvd`")
+                    raise ImportError("`sparsesvd` module requested but not found; run `easy_install sparsesvd`")
                 logger.info("computing sparse SVD of %s matrix" % str(docs.shape))
                 if not scipy.sparse.issparse(docs):
                     docs = matutils.corpus2csc(docs)
@@ -150,7 +164,9 @@ class Projection(utils.SaveLoad):
 
         # find component of u2 orthogonal to u1
         logger.debug("constructing orthogonal component")
+        self.u = asfarray(self.u, 'self.u')
         c = numpy.dot(self.u.T, other.u)
+        self.u = ascarray(self.u, 'self.u')
         other.u -= numpy.dot(self.u, c)
 
         other.u = [other.u] # do some reference magic and call qr_destroy, to save RAM
@@ -179,7 +195,10 @@ class Projection(utils.SaveLoad):
         # update & rotate current basis U = [U, U']*[U1_k, U2_k]
         logger.debug("updating orthonormal basis U")
         self.s = s_k
+        self.u = ascarray(self.u, 'self.u')
         self.u = numpy.dot(self.u, u1_k)
+
+        q = ascarray(q, 'q')
         q = numpy.dot(q, u2_k)
         self.u += q
 #        diff = numpy.dot(self.u.T, self.u) - numpy.eye(self.u.shape[1])
@@ -370,7 +389,7 @@ class LsiModel(interfaces.TransformationABC):
                 (self.num_terms, self.num_topics, self.decay, self.chunks)
 
 
-    def __getitem__(self, bow, scaled=False):
+    def __getitem__(self, bow, scaled=False, chunks=256):
         """
         Return latent representation, as a list of (topic_id, topic_value) 2-tuples.
 
@@ -378,19 +397,35 @@ class LsiModel(interfaces.TransformationABC):
         """
         # if the input vector is in fact a corpus, return a transformed corpus as a result
         is_corpus, bow = utils.is_corpus(bow)
+        if is_corpus and chunks:
+            # by default, transform 256 documents at once, when called as `lsi[corpus]`.
+            # this chunking is completely transparent to the user, but it speeds
+            # up internal computations (one mat * mat multiplication, instead of
+            # 256 smaller mat * vec multiplications, better use of cache).
+            return self._apply(bow, chunks=chunks)
+
         if is_corpus:
-            return self._apply(bow)
+            vec = numpy.vstack(matutils.sparse2full(doc, self.num_terms).astype(self.projection.u.dtype) for doc in bow).T
+        else:
+            vec = matutils.sparse2full(bow, self.num_terms).astype(self.projection.u.dtype)
 
         assert self.projection.u is not None, "decomposition not initialized yet"
-        vec = matutils.sparse2full(bow, self.num_terms).astype(self.projection.u.dtype)
-        topic_dist = numpy.dot(vec.T, self.projection.u[:, :self.num_topics]).T # u^t * x = (x^t * u)^t
-        # XXX the above `dot` is very inefficient if num_topics not full and `u` not in fortran order!!
-        # Cache prefetching fails, 10x worse performance.
+        # automatically convert U to memory order suitable for column slicing
+        # this will ideally be done only once, at the very first lsi[query] transformation
+        self.projection.u = asfarray(self.projection.u)
+        topic_dist = numpy.dot(self.projection.u[:, :self.num_topics].T, vec) # u^-1 * x
         if scaled:
-            topic_dist = (1.0 / self.projection.s[:self.num_topics]) * topic_dist # s^-1 * u^T * x
+            topic_dist = (1.0 / self.projection.s[:self.num_topics]) * topic_dist # s^-1 * u^-1 * x
 
-        nnz = topic_dist.nonzero()[0]
-        return zip(nnz, topic_dist[nnz])
+        # convert a numpy array to gensim sparse vector = tuples of (feature_id, feature_weight),
+        # with no zero weights.
+        if not is_corpus:
+            # lsi[single_document]
+            result = matutils.full2sparse(topic_dist)
+        else:
+            # lsi[chunk of documents]
+            result = matutils.Dense2Corpus(topic_dist)
+        return result
 
 
     def print_topic(self, topicno, topn=10):

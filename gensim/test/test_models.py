@@ -52,6 +52,7 @@ class TestLsiModel(unittest.TestCase):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
 
     def testTransform(self):
+        """Test lsi[vector] transformation."""
         # create the transformation model
         model = lsimodel.LsiModel(self.corpus, num_topics=2)
 
@@ -63,10 +64,26 @@ class TestLsiModel(unittest.TestCase):
         doc = list(self.corpus)[0]
         transformed = model[doc]
         vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
-
         expected = numpy.array([-0.6594664, 0.142115444]) # scaled LSI version
         # expected = numpy.array([-0.1973928, 0.05591352]) # non-scaled LSI version
         self.assertTrue(numpy.allclose(abs(vec), abs(expected))) # transformed entries must be equal up to sign
+
+
+    def testCorpusTransform(self):
+        """Test lsi[corpus] transformation."""
+        model = lsimodel.LsiModel(self.corpus, num_topics=2)
+        got = numpy.vstack(matutils.sparse2full(doc, 2) for doc in model[corpus])
+        expected = numpy.array([
+            [ 0.65946639,  0.14211544],
+            [ 2.02454305, -0.42088759],
+            [ 1.54655361,  0.32358921],
+            [ 1.81114125,  0.5890525 ],
+            [ 0.9336738 , -0.27138939],
+            [ 0.01274618, -0.49016181],
+            [ 0.04888203, -1.11294699],
+            [ 0.08063836, -1.56345594],
+            [ 0.27381003, -1.34694159]])
+        self.assertTrue(numpy.allclose(abs(got), abs(expected))) # must equal up to sign
 
 
     def testOnlineTransform(self):
