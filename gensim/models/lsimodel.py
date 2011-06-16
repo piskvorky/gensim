@@ -471,6 +471,43 @@ class LsiModel(interfaces.TransformationABC):
         print_debug(self.id2word, self.projection.u, self.projection.s,
                    range(min(num_topics, len(self.projection.u.T))),
                    num_words=num_words)
+
+
+    def save(self, fname):
+        """
+        Override the default `save` (which uses cPickle), because that's
+        too inefficient and cPickle has bugs. Instead, single out the large transformation
+        matrix and store that separately in binary format (that can be directly
+        mmap'ed back in `load()`), under `fname.npy`.
+        """
+        logger.info("storing %s object to %s and %s" % (self.__class__.__name__, fname, fname + '.npy'))
+        if self.projection.u is None:
+            # model not initialized: there is no projection
+            utils.pickle(self, fname)
+
+        # first, remove the projection from self.__dict__, so it doesn't get pickled
+        u = self.projection.u
+        del self.projection.u
+        try:
+            utils.pickle(self, fname) # store projection-less object
+            numpy.save(fname + '.npy', u) # store projection
+        finally:
+            self.projection.u = u
+
+
+    @classmethod
+    def load(cls, fname):
+        """
+        Load a previously saved object from file (also see `save`).
+        """
+        logger.debug("loading %s object from %s" % (cls.__name__, fname))
+        result = utils.unpickle(fname)
+        ufname = fname + '.npy'
+        try:
+            result.projection.u = numpy.load(ufname, mmap_mode='r') # load back as read-only
+        except:
+            logger.debug("failed to load mmap'ed projection from %s" % ufname)
+        return result
 #endclass LsiModel
 
 
