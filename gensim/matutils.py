@@ -305,14 +305,21 @@ def qr_destroy(la):
 
 class MmWriter(object):
     """
-    Store corpus in Matrix Market format.
+    Store a corpus in Matrix Market format.
 
-    Note that the file is written one document at a time, not the whole
+    Note that the output is written one document at a time, not the whole
     matrix at once (unlike scipy.io.mmread). This allows us to process corpora
     which are larger than the available RAM.
+
+    NOTE: the output file is created in a single pass through the input corpus, so
+    that the input can be a once-only stream (iterator).
+    To achieve this, a fake MM header is written first, statistics are collected
+    during the pass (shape of the matrix, number of non-zeroes), followed by a seek
+    back to the beginning of the file, rewriting the fake header with proper values.
+
     """
 
-    HEADER_LINE = '%%MatrixMarket matrix coordinate real general\n'
+    HEADER_LINE = '%%MatrixMarket matrix coordinate real general\n' # the only supported MM format
 
     def __init__(self, fname):
         self.fname = fname

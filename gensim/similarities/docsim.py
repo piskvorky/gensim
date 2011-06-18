@@ -311,7 +311,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
             # document vectors
             for docno, vector in enumerate(corpus):
                 if docno % 1000 == 0:
-                    logger.info("PROGRESS: at document #%i/%i" % (docno, len(corpus)))
+                    logger.debug("PROGRESS: at document #%i/%i" % (docno, len(corpus)))
                 self.index[docno] = matutils.unitvec(matutils.sparse2full(vector, num_features))
 
 
