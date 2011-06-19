@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.7.8',
+        VERSION:     '0.8.0rc1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -105,7 +105,7 @@
 <em class="property">class </em><tt class="descclassname">gensim.corpora.svmlightcorpus.</tt><tt class="descname">SvmLightCorpus</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Corpus in SVMlight format.</p>
 <p>Quoting <a class="reference external" href="http://svmlight.joachims.org/">http://svmlight.joachims.org/</a>:
-The input file example_file contains the training examples. The first lines
+The input file contains the training examples. The first lines
 may contain comments and are ignored if they start with #. Each of the following
 lines represents one training example and is of the following format:</p>
 <div class="highlight-python"><pre>&lt;line&gt; .=. &lt;target&gt; &lt;feature&gt;:&lt;value&gt; &lt;feature&gt;:&lt;value&gt; ... &lt;feature&gt;:&lt;value&gt; # &lt;info&gt;
@@ -139,8 +139,8 @@ increment them again when saving as SVMlight.</p>
 </dd></dl>
 
 <dl class="staticmethod">
-<dt id="gensim.corpora.svmlightcorpus.SvmLightCorpus.saveCorpus">
-<em class="property">static </em><tt class="descname">saveCorpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus.saveCorpus" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.corpora.svmlightcorpus.SvmLightCorpus.save_corpus">
+<em class="property">static </em><tt class="descname">save_corpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus.save_corpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save a corpus in the SVMlight format.</p>
 <p>The SVMlight <cite>&lt;target&gt;</cite> class tag is set to 0 for all documents.</p>
 <p>This function is automatically called by <cite>SvmLightCorpus.serialize</cite>; don&#8217;t
@@ -149,7 +149,7 @@ call it directly, call <cite>serialize</cite> instead.</p>
 
 <dl class="classmethod">
 <dt id="gensim.corpora.svmlightcorpus.SvmLightCorpus.serialize">
-<em class="property">classmethod </em><tt class="descname">serialize</tt><big>(</big><em>serializer</em>, <em>fname</em>, <em>corpus</em>, <em>id2word=None</em>, <em>index_fname=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus.serialize" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><tt class="descname">serialize</tt><big>(</big><em>serializer</em>, <em>fname</em>, <em>corpus</em>, <em>id2word=None</em>, <em>index_fname=None</em>, <em>progress_cnt=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus.serialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate through the document stream <cite>corpus</cite>, saving the documents to <cite>fname</cite>
 and recording byte offset of each document. Save the resulting index
 structure to file <cite>index_fname</cite> (or <cite>fname</cite>.index is not set).</p>
@@ -158,7 +158,7 @@ addition to standard iteration):</p>
 <blockquote>
 <ul>
 <li><dl class="first docutils">
-<dt><cite>saveCorpus</cite> method that returns a sequence of byte offsets, one for</dt>
+<dt><cite>save_corpus</cite> method that returns a sequence of byte offsets, one for</dt>
 <dd><p class="first last">each saved document,</p>
 </dd>
 </dl>
@@ -170,7 +170,8 @@ positioned at <cite>offset</cite> bytes within the persistent storage (file).</p
 </blockquote>
 <p>Example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;test.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mm</span> <span class="o">=</span> <span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;test.mm&#39;</span><span class="p">)</span> <span class="c"># `mm` document stream now has random access, `mm[42]` etc.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mm</span> <span class="o">=</span> <span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;test.mm&#39;</span><span class="p">)</span> <span class="c"># `mm` document stream now has random access</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mm</span><span class="p">[</span><span class="mi">42</span><span class="p">]</span> <span class="c"># retrieve document no. 42, etc.</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -213,7 +214,7 @@ positioned at <cite>offset</cite> bytes within the persistent storage (file).</p
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 26, 2011.
+      Last updated on Jun 20, 2011.
     </div>
   </body>
 </html>

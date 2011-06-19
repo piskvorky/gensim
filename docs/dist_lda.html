@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.8',
+        VERSION:     '0.8.0rc1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -123,7 +123,7 @@ of <cite>lsi_worker</cite> and <cite>lsi_dispatcher</cite>.</p>
 <p>Run LDA like you normally would, but turn on the <cite>distributed=True</cite> constructor
 parameter:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 100 LDA topics, using default parameters</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="go">using distributed version with 4 workers</span>
 <span class="go">running online LDA training, 100 topics, 1 passes over the supplied corpus of 3199665 documets, updating model once every 40000 documents</span>
 <span class="go">..</span>
@@ -135,7 +135,7 @@ In distributed mode with four workers (Linux, Xeons of 2Ghz, 4GB RAM
 with <a class="reference external" href="http://math-atlas.sourceforge.net/">ATLAS</a>), the wallclock time taken drops to 3h20m.</p>
 <p>To run standard batch LDA (no online updates of mini-batches) instead, you would similarly
 call:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2token</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">update_every</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">passes</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2token</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">update_every</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">passes</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="go">using distributed version with 4 workers</span>
 <span class="go">running batch LDA training, 100 topics, 20 passes over the supplied corpus of 3199665 documets, updating model once every 3199665 documents</span>
 <span class="go">initializing workers</span>
@@ -149,7 +149,7 @@ call:</p>
 iteration 19, dispatching documents up to #3199665/3199665
 reached the end of input; now waiting for all remaining jobs to finish</pre>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span><span class="o">.</span><span class="n">print_topics</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
 <span class="go">topic #0: 0.007*disease + 0.006*medical + 0.005*treatment + 0.005*cells + 0.005*cell + 0.005*cancer + 0.005*health + 0.005*blood + 0.004*patients + 0.004*drug</span>
 <span class="go">topic #1: 0.024*king + 0.013*ii + 0.013*prince + 0.013*emperor + 0.008*duke + 0.008*empire + 0.007*son + 0.007*china + 0.007*dynasty + 0.007*iii</span>
 <span class="go">topic #2: 0.031*film + 0.017*films + 0.005*movie + 0.005*directed + 0.004*man + 0.004*episode + 0.003*character + 0.003*cast + 0.003*father + 0.003*mother</span>
@@ -212,7 +212,7 @@ the possible (inevitable?) issues that you encountered, to improve <cite>gensim<
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 26, 2011.
+      Last updated on Jun 20, 2011.
     </div>
   </body>
 </html>

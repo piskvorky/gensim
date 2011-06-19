@@ -9,7 +9,7 @@ platform that supports Python 2.5 and NumPy. Gensim depends on the following sof
 
 * 3.0 > `Python <http://www.python.org>`_ >= 2.5. Tested with versions 2.5 and 2.6.
 * `NumPy <http://www.numpy.org>`_ >= 1.0.4. Tested with version 1.5.0rc1, 1.4.0, 1.3.0rc2 and 1.0.4.
-* `SciPy <http://www.scipy.org>`_ >= 0.6. Tested with version 0.8.0, 0.8.0b1, 0.7.1 and 0.6.0.
+* `SciPy <http://www.scipy.org>`_ >= 0.7. Tested with version 0.8.0, 0.8.0b1, 0.7.1
 
 
 Install Python

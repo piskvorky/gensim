@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.7.8',
+        VERSION:     '0.8.0rc1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -152,7 +152,7 @@ traffic due to data distribution across cluster nodes would likely make it
 </table>
 <dl class="class">
 <dt id="gensim.models.lsimodel.LsiModel">
-<em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus=None</em>, <em>numTopics=200</em>, <em>id2word=None</em>, <em>chunks=10000</em>, <em>decay=1.0</em>, <em>distributed=False</em>, <em>onepass=True</em>, <em>power_iters=2</em>, <em>extra_samples=100</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus=None</em>, <em>num_topics=200</em>, <em>id2word=None</em>, <em>chunks=20000</em>, <em>decay=1.0</em>, <em>distributed=False</em>, <em>onepass=True</em>, <em>power_iters=2</em>, <em>extra_samples=100</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Objects of this class allow building and maintaining a model for Latent
 Semantic Indexing (also known as Latent Semantic Analysis).</p>
 <p>The main methods are:</p>
@@ -160,17 +160,17 @@ Semantic Indexing (also known as Latent Semantic Analysis).</p>
 <li>constructor, which initializes the projection into latent topics space,</li>
 <li>the <tt class="docutils literal"><span class="pre">[]</span></tt> method, which returns representation of any input document in the
 latent space,</li>
-<li>the <cite>addDocuments()</cite> method, which allows for incrementally updating the model with new documents.</li>
+<li><cite>add_documents()</cite> for incrementally updating the model with new documents.</li>
 </ol>
 <p>Model persistency is achieved via its load/save methods.</p>
-<p><cite>numTopics</cite> is the number of requested factors (latent dimensions).</p>
+<p><cite>num_topics</cite> is the number of requested factors (latent dimensions).</p>
 <p>After the model has been trained, you can estimate topics for an
 arbitrary, unseen document, using the <tt class="docutils literal"><span class="pre">topics</span> <span class="pre">=</span> <span class="pre">self[document]</span></tt> dictionary
-notation. You can also add new training documents, with <tt class="docutils literal"><span class="pre">self.addDocuments</span></tt>,
+notation. You can also add new training documents, with <tt class="docutils literal"><span class="pre">self.add_documents</span></tt>,
 so that training can be stopped and resumed at any time, and the
 LSI transformation is available at any point.</p>
 <p>If you specify a <cite>corpus</cite>, it will be used to train the model. See the
-method <cite>addDocuments</cite> for a description of the <cite>chunks</cite> and <cite>decay</cite> parameters.</p>
+method <cite>add_documents</cite> for a description of the <cite>chunks</cite> and <cite>decay</cite> parameters.</p>
 <p>Turn <cite>onepass</cite> off to force a multi-pass stochastic algorithm.</p>
 <p><cite>power_iters</cite> and <cite>extra_samples</cite> affect the accuracy of the stochastic
 multi-pass algorithm, which is used either internally (<cite>onepass=True</cite>) or
@@ -179,9 +179,9 @@ power iterations improves accuracy, but lowers performance. See <a class="footno
 some hard numbers.</p>
 <p>Turn on <cite>distributed</cite> to enable distributed computing.</p>
 <p>Example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">lsi</span><span class="p">[</span><span class="n">doc_tfidf</span><span class="p">]</span> <span class="c"># project some document into LSI space</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">addDocuments</span><span class="p">(</span><span class="n">corpus2</span><span class="p">)</span> <span class="c"># update LSI on additional documents</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">add_documents</span><span class="p">(</span><span class="n">corpus2</span><span class="p">)</span> <span class="c"># update LSI on additional documents</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">lsi</span><span class="p">[</span><span class="n">doc_tfidf</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -192,8 +192,8 @@ some hard numbers.</p>
 </tbody>
 </table>
 <dl class="method">
-<dt id="gensim.models.lsimodel.LsiModel.addDocuments">
-<tt class="descname">addDocuments</tt><big>(</big><em>corpus</em>, <em>chunks=None</em>, <em>decay=None</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.addDocuments" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.models.lsimodel.LsiModel.add_documents">
+<tt class="descname">add_documents</tt><big>(</big><em>corpus</em>, <em>chunks=None</em>, <em>decay=None</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.add_documents" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update singular value decomposition to take into account a new
 corpus of documents.</p>
 <p>Training proceeds in chunks of <cite>chunks</cite> documents at a time. The size of
@@ -213,22 +213,22 @@ preference to new ones.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.models.lsimodel.LsiModel.printDebug">
-<tt class="descname">printDebug</tt><big>(</big><em>numTopics=5</em>, <em>numWords=10</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.printDebug" title="Permalink to this definition">¶</a></dt>
-<dd><p>Print (to log) the most salient words of the first <cite>numTopics</cite> topics.</p>
-<p>Unlike <cite>printTopics()</cite>, this looks for words that are significant for a
+<dt id="gensim.models.lsimodel.LsiModel.print_debug">
+<tt class="descname">print_debug</tt><big>(</big><em>num_topics=5</em>, <em>num_words=10</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.print_debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print (to log) the most salient words of the first <cite>num_topics</cite> topics.</p>
+<p>Unlike <cite>print_topics()</cite>, this looks for words that are significant for a
 particular topic <em>and</em> not for others. This <em>should</em> result in a more
 human-interpretable description of topics.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.models.lsimodel.LsiModel.printTopic">
-<tt class="descname">printTopic</tt><big>(</big><em>topicNo</em>, <em>topN=10</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.printTopic" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a specified topic (=left singular vector), 0 &lt;= <cite>topicNo</cite> &lt; <cite>self.numTopics</cite>,
+<dt id="gensim.models.lsimodel.LsiModel.print_topic">
+<tt class="descname">print_topic</tt><big>(</big><em>topicno</em>, <em>topn=10</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.print_topic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a specified topic (=left singular vector), 0 &lt;= <cite>topicno</cite> &lt; <cite>self.num_topics</cite>,
 as string.</p>
-<p>Return only the <cite>topN</cite> words which contribute the most to the direction
+<p>Return only the <cite>topn</cite> words which contribute the most to the direction
 of the topic (both negative and positive).</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsimodel</span><span class="o">.</span><span class="n">printTopic</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">topN</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsimodel</span><span class="o">.</span><span class="n">print_topic</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">topn</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="go">&#39;-0.340 * &quot;category&quot; + 0.298 * &quot;$M$&quot; + 0.183 * &quot;algebra&quot; + -0.174 * &quot;functor&quot; + -0.168 * &quot;operator&quot;&#39;</span>
 </pre></div>
 </div>
@@ -237,14 +237,17 @@ of the topic (both negative and positive).</p>
 <dl class="method">
 <dt id="gensim.models.lsimodel.LsiModel.save">
 <tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.save" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+<dd><p>Override the default <cite>save</cite> (which uses cPickle), because that&#8217;s
+too inefficient and cPickle has bugs. Instead, single out the large transformation
+matrix and store that separately in binary format (that can be directly
+mmap&#8217;ed back in <cite>load()</cite>), under <cite>fname.npy</cite>.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="function">
-<dt id="gensim.models.lsimodel.clipSpectrum">
-<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">clipSpectrum</tt><big>(</big><em>s</em>, <em>k</em>, <em>discard=0.001</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.clipSpectrum" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.models.lsimodel.clip_spectrum">
+<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">clip_spectrum</tt><big>(</big><em>s</em>, <em>k</em>, <em>discard=0.001</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.clip_spectrum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given eigenvalues <cite>s</cite>, return how many factors should be kept to avoid
 storing spurious (tiny, numerically instable) values.</p>
 <p>This will ignore the tail of the spectrum with relative combined mass &lt; min(<cite>discard</cite>, 1/k).</p>
@@ -252,24 +255,8 @@ storing spurious (tiny, numerically instable) values.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="gensim.models.lsimodel.iterSvd">
-<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">iterSvd</tt><big>(</big><em>corpus</em>, <em>numTerms</em>, <em>numFactors</em>, <em>numIter=200</em>, <em>initRate=None</em>, <em>convergence=0.0001</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.iterSvd" title="Permalink to this definition">¶</a></dt>
-<dd><p>Perform iterative Singular Value Decomposition on a streaming corpus, returning
-<cite>numFactors</cite> greatest factors U,S,V^T (ie., not necessarily the full spectrum).</p>
-<p>The parameters <cite>numIter</cite> (maximum number of iterations) and <cite>initRate</cite> (gradient
-descent step size) guide convergency of the algorithm.</p>
-<p>The algorithm performs at most <cite>numFactors*numIters</cite> passes over the corpus.</p>
-<p>Use of this function is deprecated; although it works, it is several orders of
-magnitude slower than our own, direct (non-stochastic) version (which
-operates in a single pass, too, and can be distributed). I keep this function
-here purely for backup reasons.</p>
-<p>See <strong>Genevieve Gorrell: Generalized Hebbian Algorithm for Incremental Singular
-Value Decomposition in Natural Language Processing. EACL 2006.</strong></p>
-</dd></dl>
-
-<dl class="function">
-<dt id="gensim.models.lsimodel.stochasticSvd">
-<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">stochasticSvd</tt><big>(</big><em>corpus</em>, <em>rank</em>, <em>num_terms</em>, <em>chunks=20000</em>, <em>extra_dims=None</em>, <em>power_iters=0</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em>, <em>eps=9.9999999999999995e-07</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.stochasticSvd" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.models.lsimodel.stochastic_svd">
+<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">stochastic_svd</tt><big>(</big><em>corpus</em>, <em>rank</em>, <em>num_terms</em>, <em>chunks=20000</em>, <em>extra_dims=None</em>, <em>power_iters=0</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em>, <em>eps=9.9999999999999995e-07</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.stochastic_svd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return (U, S): the left singular vectors and the singular values of the streamed
 input corpus <cite>corpus</cite> <a class="footnote-reference" href="#id6" id="id5">[3]</a>.</p>
 <p>This may actually return less than the requested number of top <cite>rank</cite> factors,
@@ -287,24 +274,6 @@ and avoid using this algorithm directly.</p>
 corpus fits into core memory and a different (more efficient) code path is chosen.</td></tr>
 </tbody>
 </table>
-</dd></dl>
-
-<dl class="function">
-<dt id="gensim.models.lsimodel.svdUpdate">
-<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">svdUpdate</tt><big>(</big><em>U</em>, <em>S</em>, <em>V</em>, <em>a</em>, <em>b</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.svdUpdate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update SVD of an (m x n) matrix <cite>X = U * S * V^T</cite> so that
-<cite>[X + a * b^T] = U&#8217; * S&#8217; * V&#8217;^T</cite>
-and return <cite>U&#8217;</cite>, <cite>S&#8217;</cite>, <cite>V&#8217;</cite>.</p>
-<p>The original matrix X is not needed at all, so this function implements one-pass
-streaming rank-1 updates to an existing decomposition.</p>
-<p><cite>a</cite> and <cite>b</cite> are (m, 1) and (n, 1) matrices.</p>
-<p>You can set V to None if you&#8217;re not interested in the right singular
-vectors. In that case, the returned V&#8217; will also be None (saves memory).</p>
-<p>The blocked merge algorithm in LsiModel.addDocuments() is much faster; I keep this fnc here
-purely for backup reasons.</p>
-<p>This is the rank-1 update as described in
-<strong>Brand, 2006: Fast low-rank modifications of the thin singular value decomposition</strong>,
-but without separating the basis from rotations.</p>
 </dd></dl>
 
 </div>
@@ -343,7 +312,7 @@ but without separating the basis from rotations.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 26, 2011.
+      Last updated on Jun 20, 2011.
     </div>
   </body>
 </html>

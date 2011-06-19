@@ -7,7 +7,7 @@ Similarity Queries
 Don't forget to set
 
 >>> import logging
->>> logging.root.setLevel(logging.INFO) # will suppress DEBUG level events
+>>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 if you want to see logging events.
 
@@ -34,7 +34,7 @@ MmCorpus(9 documents, 12 features, 28 non-zero entries)
 To follow Deerwester's example, we first use this tiny corpus to define a 2-dimensional
 LSI space:
 
->>> lsi = models.LsiModel(corpus, id2word=dictionary, numTopics=2)
+>>> lsi = models.LsiModel(corpus, id2word=dictionary, num_topics=2)
 
 Now suppose a user typed in the query `"Human computer interaction"`. We would
 like to sort our nine corpus documents in decreasing order of relevance to this query.
@@ -69,16 +69,20 @@ might also be indexing a different corpus altogether.
   set of vectors fits into memory. For example, a corpus of one million documents
   would require 2GB of RAM in a 256-dimensional LSI space, when used with this class.
   Without 2GB of free RAM, you would need to use the :class:`similarities.Similarity` class.
-  This class operates in constant memory, in a streaming (and more gensim-like)
-  fashion, but is also much slower than :class:`similarities.MatrixSimilarity`, which uses
-  fast level-2 `BLAS routines <http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms>`_
-  to determine similarities.
+  This class operates in fixed memory, by splitting the index across multiple files on disk.
+  It uses :class:`similarities.MatrixSimilarity` and :class:`similarities.SparseMatrixSimilarity` internally,
+  so it is still fast, although slightly more complex.
 
 Index persistency is handled via the standard :func:`save` and :func:`load` functions:
 
 >>> index.save('/tmp/deerwester.index')
 >>> index = similarities.MatrixSimilarity.load('/tmp/deerwester.index')
 
+This is true for all similarity indexing classes (:class:`similarities.Similarity`,
+:class:`similarities.MatrixSimilarity` and :class:`similarities.SparseMatrixSimilarity`).
+Also in the following, `index` can be an object of any of these. When in doubt,
+use :class:`similarities.Similarity`, as it is the most scalable version, and it also
+supports adding more documents to the index later.
 
 Performing queries
 +++++++++++++++++++++

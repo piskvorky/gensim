@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.8',
+        VERSION:     '0.8.0rc1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -111,7 +111,7 @@
 <span id="tut1"></span><h1>Corpora and Vector Spaces<a class="headerlink" href="#corpora-and-vector-spaces" title="Permalink to this headline">¶</a></h1>
 <p>Don&#8217;t forget to set</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span> <span class="c"># will suppress DEBUG level events</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>if you want to see logging events.</p>
@@ -140,9 +140,9 @@ as well as words that only appear once in the corpus:</p>
 <span class="gp">&gt;&gt;&gt; </span>         <span class="k">for</span> <span class="n">document</span> <span class="ow">in</span> <span class="n">documents</span><span class="p">]</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># remove words that appear only once</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">allTokens</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="p">[])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">tokensOnce</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">word</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">allTokens</span><span class="p">)</span> <span class="k">if</span> <span class="n">allTokens</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">texts</span> <span class="o">=</span> <span class="p">[[</span><span class="n">word</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">text</span> <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tokensOnce</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">all_tokens</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="p">[])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tokens_once</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">word</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">all_tokens</span><span class="p">)</span> <span class="k">if</span> <span class="n">all_tokens</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">texts</span> <span class="o">=</span> <span class="p">[[</span><span class="n">word</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">text</span> <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tokens_once</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span>         <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">texts</span><span class="p">]</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">texts</span>
@@ -192,9 +192,9 @@ To see the mapping between words and their ids:</p>
 </pre></div>
 </div>
 <p>To actually convert tokenized documents to vectors:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">newDoc</span> <span class="o">=</span> <span class="s">&quot;Human computer interaction&quot;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">newVec</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">newDoc</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">newVec</span> <span class="c"># the word &quot;interaction&quot; does not appear in the dictionary and is ignored</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">new_doc</span> <span class="o">=</span> <span class="s">&quot;Human computer interaction&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_vec</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">new_doc</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">new_vec</span> <span class="c"># the word &quot;interaction&quot; does not appear in the dictionary and is ignored</span>
 <span class="go">[(0, 1), (1, 1)]</span>
 </pre></div>
 </div>
@@ -227,7 +227,7 @@ we have arrived at exactly the same corpus of vectors as in the <a class="refere
 <p>Note that <cite>corpus</cite> above resides fully in memory, as a plain Python list.
 In this simple example, it doesn&#8217;t matter much, but just to make things clear,
 let&#8217;s assume there are millions of documents in the corpus. Storing all of them in RAM won&#8217;t do.
-Instead, the documents are stored in a file on disk, one document per line. Gensim
+Instead, let&#8217;s assume the documents are stored in a file on disk, one document per line. Gensim
 only requires that a corpus must be able to return one document vector at a time:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyCorpus</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -247,7 +247,7 @@ then convert the tokens via a dictionary to their ids and yield the resulting sp
 <span class="go">&lt;__main__.MyCorpus object at 0x10d5690&gt;</span>
 </pre></div>
 </div>
-<p>Corpus is now an object. We didn&#8217;t define any way to print it, so print just outputs address
+<p>Corpus is now an object. We didn&#8217;t define any way to print it, so <cite>print</cite> just outputs address
 of the object in memory. Not very useful. To see the constituent vectors, let&#8217;s
 iterate over the corpus and print each document vector (one at a time):</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">corpus_memory_friendly</span><span class="p">:</span> <span class="c"># load one vector into memory at a time</span>
@@ -273,7 +273,7 @@ corpus can now be as large as you want.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">stop_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">dictionary</span><span class="o">.</span><span class="n">token2id</span><span class="p">[</span><span class="n">stopword</span><span class="p">]</span> <span class="k">for</span> <span class="n">stopword</span> <span class="ow">in</span> <span class="n">stoplist</span>
 <span class="gp">&gt;&gt;&gt; </span>            <span class="k">if</span> <span class="n">stopword</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">token2id</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">once_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">tokenid</span> <span class="k">for</span> <span class="n">tokenid</span><span class="p">,</span> <span class="n">docfreq</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">dfs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="n">docfreq</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span><span class="o">.</span><span class="n">filterTokens</span><span class="p">(</span><span class="n">stop_ids</span> <span class="o">+</span> <span class="n">once_ids</span><span class="p">)</span> <span class="c"># remove stop words and words that appear only once</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span><span class="o">.</span><span class="n">filter_tokens</span><span class="p">(</span><span class="n">stop_ids</span> <span class="o">+</span> <span class="n">once_ids</span><span class="p">)</span> <span class="c"># remove stop words and words that appear only once</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dictionary</span><span class="o">.</span><span class="n">compactify</span><span class="p">()</span> <span class="c"># remove gaps in id sequence after words that were removed</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">dictionary</span>
 <span class="go">Dictionary(12 unique tokens)</span>
@@ -390,7 +390,7 @@ Or continue to the next tutorial on <a class="reference internal" href="tut2.htm
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 26, 2011.
+      Last updated on Jun 20, 2011.
     </div>
   </body>
 </html>

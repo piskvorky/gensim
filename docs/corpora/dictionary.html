@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.7.8',
+        VERSION:     '0.8.0rc1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="gensim" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
-    <link rel="next" title="corpora.dmlcorpus – Corpus in DML-CZ format" href="dmlcorpus.html" />
+    <link rel="next" title="corpora.lowcorpus – Corpus in List-of-Words format" href="lowcorpus.html" />
     <link rel="prev" title="corpora.bleicorpus – Corpus in Blei’s LDA-C format" href="bleicorpus.html" />
 <!-- twitter search widget
     <script type="text/javascript" src="_static/widget.js"></script>
@@ -50,7 +50,7 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="dmlcorpus.html" title="corpora.dmlcorpus – Corpus in DML-CZ format"
+          <a href="lowcorpus.html" title="corpora.lowcorpus – Corpus in List-of-Words format"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="bleicorpus.html" title="corpora.bleicorpus – Corpus in Blei’s LDA-C format"
@@ -71,8 +71,8 @@
   <p class="topless"><a href="bleicorpus.html"
                         title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">corpora.bleicorpus</span></tt> &#8211; Corpus in Blei&#8217;s LDA-C format</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="dmlcorpus.html"
-                        title="next chapter"><tt class="docutils literal"><span class="pre">corpora.dmlcorpus</span></tt> &#8211; Corpus in DML-CZ format</a></p>
+  <p class="topless"><a href="lowcorpus.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">corpora.lowcorpus</span></tt> &#8211; Corpus in List-of-Words format</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
@@ -102,23 +102,23 @@
 <p>This module implements the concept of Dictionary &#8211; a mapping between words and
 their integer ids.</p>
 <p>Dictionaries can be created from a corpus and can later be pruned according to
-document frequency (removing (un)common words via the <a class="reference internal" href="#gensim.corpora.dictionary.Dictionary.filterExtremes" title="gensim.corpora.dictionary.Dictionary.filterExtremes"><tt class="xref py py-func docutils literal"><span class="pre">Dictionary.filterExtremes()</span></tt></a> method),
+document frequency (removing (un)common words via the <a class="reference internal" href="#gensim.corpora.dictionary.Dictionary.filter_extremes" title="gensim.corpora.dictionary.Dictionary.filter_extremes"><tt class="xref py py-func docutils literal"><span class="pre">Dictionary.filter_extremes()</span></tt></a> method),
 save/loaded from disk (via <a class="reference internal" href="#gensim.corpora.dictionary.Dictionary.save" title="gensim.corpora.dictionary.Dictionary.save"><tt class="xref py py-func docutils literal"><span class="pre">Dictionary.save()</span></tt></a> and <a class="reference internal" href="#gensim.corpora.dictionary.Dictionary.load" title="gensim.corpora.dictionary.Dictionary.load"><tt class="xref py py-func docutils literal"><span class="pre">Dictionary.load()</span></tt></a> methods) etc.</p>
 <dl class="class">
 <dt id="gensim.corpora.dictionary.Dictionary">
 <em class="property">class </em><tt class="descclassname">gensim.corpora.dictionary.</tt><tt class="descname">Dictionary</tt><big>(</big><em>documents=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dictionary encapsulates mappings between normalized words and their integer ids.</p>
+<dd><p>Dictionary encapsulates the mapping between normalized words and their integer ids.</p>
 <p>The main function is <cite>doc2bow</cite>, which converts a collection of words to its
 bag-of-words representation, optionally also updating the dictionary mapping
 with newly encountered words and their ids.</p>
 <dl class="method">
-<dt id="gensim.corpora.dictionary.Dictionary.addDocuments">
-<tt class="descname">addDocuments</tt><big>(</big><em>documents</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.addDocuments" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.corpora.dictionary.Dictionary.add_documents">
+<tt class="descname">add_documents</tt><big>(</big><em>documents</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.add_documents" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build dictionary from a collection of documents. Each document is a list
 of tokens = <strong>tokenized and normalized</strong> utf-8 encoded strings.</p>
 <p>This is only a convenience wrapper for calling <cite>doc2bow</cite> on each document
-with <cite>allowUpdate=True</cite>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">Dictionary</span><span class="o">.</span><span class="n">fromDocuments</span><span class="p">([</span><span class="s">&quot;máma mele maso&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="s">&quot;ema má máma&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">()])</span>
+with <cite>allow_update=True</cite>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">Dictionary</span><span class="p">([</span><span class="s">&quot;máma mele maso&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="s">&quot;ema má máma&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">()])</span>
 <span class="go">Dictionary(5 unique tokens)</span>
 </pre></div>
 </div>
@@ -129,31 +129,31 @@ with <cite>allowUpdate=True</cite>.</p>
 <tt class="descname">compactify</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.compactify" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign new word ids to all words.</p>
 <p>This is done to make the ids more compact, e.g. after some tokens have
-been removed via <a class="reference internal" href="#gensim.corpora.dictionary.Dictionary.filterTokens" title="gensim.corpora.dictionary.Dictionary.filterTokens"><tt class="xref py py-func docutils literal"><span class="pre">filterTokens()</span></tt></a> and there are gaps in the id series.
+been removed via <a class="reference internal" href="#gensim.corpora.dictionary.Dictionary.filter_tokens" title="gensim.corpora.dictionary.Dictionary.filter_tokens"><tt class="xref py py-func docutils literal"><span class="pre">filter_tokens()</span></tt></a> and there are gaps in the id series.
 Calling this method will remove the gaps.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="gensim.corpora.dictionary.Dictionary.doc2bow">
-<tt class="descname">doc2bow</tt><big>(</big><em>document</em>, <em>allowUpdate=False</em>, <em>return_missing=False</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.doc2bow" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert <cite>document</cite> (a list of words) into the bag-of-words format = list 
+<tt class="descname">doc2bow</tt><big>(</big><em>document</em>, <em>allow_update=False</em>, <em>return_missing=False</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.doc2bow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert <cite>document</cite> (a list of words) into the bag-of-words format = list
 of <cite>(tokenId, tokenCount)</cite> 2-tuples. Each word is assumed to be a
 <strong>tokenized and normalized</strong> utf-8 encoded string.</p>
-<p>If <cite>allowUpdate</cite> is set, then also update dictionary in the process: create 
-ids for new words. At the same time, update document frequencies &#8211; for 
+<p>If <cite>allow_update</cite> is set, then also update dictionary in the process: create
+ids for new words. At the same time, update document frequencies &#8211; for
 each word appearing in this document, increase its <cite>self.dfs</cite> by one.</p>
-<p>If <cite>allowUpdate</cite> is <strong>not</strong> set, this function is <cite>const</cite>, i.e. read-only.</p>
+<p>If <cite>allow_update</cite> is <strong>not</strong> set, this function is <cite>const</cite>, i.e. read-only.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.corpora.dictionary.Dictionary.filterExtremes">
-<tt class="descname">filterExtremes</tt><big>(</big><em>noBelow=5</em>, <em>noAbove=0.5</em>, <em>keepN=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.filterExtremes" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.corpora.dictionary.Dictionary.filter_extremes">
+<tt class="descname">filter_extremes</tt><big>(</big><em>no_below=5</em>, <em>no_above=0.5</em>, <em>keep_n=100000</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.filter_extremes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Filter out tokens that appear in</p>
 <ol class="arabic simple">
-<li>less than <cite>noBelow</cite> documents (absolute number) or</li>
-<li>more than <cite>noAbove</cite> documents (fraction of total corpus size, <em>not</em>
+<li>less than <cite>no_below</cite> documents (absolute number) or</li>
+<li>more than <cite>no_above</cite> documents (fraction of total corpus size, <em>not</em>
 absolute number).</li>
-<li>after (1) and (2), keep only the first <cite>keepN&#8217; most frequent tokens (or
+<li>after (1) and (2), keep only the first <cite>keep_n&#8217; most frequent tokens (or
 keep all if `None</cite>).</li>
 </ol>
 <p>After the pruning, shrink resulting gaps in word ids.</p>
@@ -162,11 +162,11 @@ word id before and after the call to this function!</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.corpora.dictionary.Dictionary.filterTokens">
-<tt class="descname">filterTokens</tt><big>(</big><em>badIds=None</em>, <em>goodIds=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.filterTokens" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove the selected <cite>badIds</cite> tokens from all dictionary mappings, or, keep
-selected <cite>goodIds</cite> in the mapping and remove the rest.</p>
-<p><cite>badIds</cite> and <cite>goodIds</cite> are collections of word ids to be removed.</p>
+<dt id="gensim.corpora.dictionary.Dictionary.filter_tokens">
+<tt class="descname">filter_tokens</tt><big>(</big><em>bad_ids=None</em>, <em>good_ids=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.filter_tokens" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the selected <cite>bad_ids</cite> tokens from all dictionary mappings, or, keep
+selected <cite>good_ids</cite> in the mapping and remove the rest.</p>
+<p><cite>bad_ids</cite> and <cite>good_ids</cite> are collections of word ids to be removed.</p>
 </dd></dl>
 
 <dl class="method">
@@ -182,10 +182,10 @@ selected <cite>goodIds</cite> in the mapping and remove the rest.</p>
 </dd></dl>
 
 <dl class="staticmethod">
-<dt id="gensim.corpora.dictionary.Dictionary.loadFromText">
-<em class="property">static </em><tt class="descname">loadFromText</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.loadFromText" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.corpora.dictionary.Dictionary.load_from_text">
+<em class="property">static </em><tt class="descname">load_from_text</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.load_from_text" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a previously stored Dictionary from a text file.
-Mirror function to <cite>saveAsText</cite>.</p>
+Mirror function to <cite>save_as_text</cite>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -195,8 +195,8 @@ Mirror function to <cite>saveAsText</cite>.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.corpora.dictionary.Dictionary.saveAsText">
-<tt class="descname">saveAsText</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.saveAsText" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.corpora.dictionary.Dictionary.save_as_text">
+<tt class="descname">save_as_text</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.save_as_text" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save this Dictionary to a text file, in format:
 <cite>id[TAB]word_utf8[TAB]document frequency[NEWLINE]</cite>.</p>
 <p>Note: use <cite>save</cite>/<cite>load</cite> to store in binary format instead (pickle).</p>
@@ -223,7 +223,7 @@ Mirror function to <cite>saveAsText</cite>.</p>
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="dmlcorpus.html" title="corpora.dmlcorpus – Corpus in DML-CZ format"
+          <a href="lowcorpus.html" title="corpora.lowcorpus – Corpus in List-of-Words format"
              >next</a> |</li>
         <li class="right" >
           <a href="bleicorpus.html" title="corpora.bleicorpus – Corpus in Blei’s LDA-C format"
@@ -240,7 +240,7 @@ Mirror function to <cite>saveAsText</cite>.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 26, 2011.
+      Last updated on Jun 20, 2011.
     </div>
   </body>
 </html>

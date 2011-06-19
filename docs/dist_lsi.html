@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.8',
+        VERSION:     '0.8.0rc1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -145,9 +145,9 @@ can be another, distinct computer within the same broadcast domain. The dispatch
 won&#8217;t be  doing much with CPU most of the time, but pick a computer with ample memory.</p>
 <p>And that&#8217;s it! The cluster is set up and running, ready to accept jobs. To remove
 a worker later on, simply terminate its <cite>lsi_worker</cite> process. To add another worker, run another
-<cite>lsi_worker</cite> (this will not affect a computation that is already running). If you terminate
-<cite>lsi_dispatcher</cite>, you won&#8217;t be able to run computations until you run it again
-(surviving workers can be re-used though).</p>
+<cite>lsi_worker</cite> (this will not affect a computation that is already running, the additions/deletions are not dynamic).
+If you terminate <cite>lsi_dispatcher</cite>, you won&#8217;t be able to run computations until you run it again
+(surviving worker processes can be re-used though).</p>
 </div>
 <div class="section" id="running-lsa">
 <h2>Running LSA<a class="headerlink" href="#running-lsa" title="Permalink to this headline">¶</a></h2>
@@ -162,7 +162,7 @@ our choice is incidental) and try:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.mm&#39;</span><span class="p">)</span> <span class="c"># load a corpus of nine documents, from the Tutorials</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.dict&#39;</span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="c"># run distributed LSA on nine documents</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="c"># run distributed LSA on nine documents</span>
 </pre></div>
 </div>
 <p>This uses the corpus and feature-token mapping created in the <a class="reference internal" href="tut1.html"><em>Corpora and Vector Spaces</em></a> tutorial.
@@ -172,7 +172,7 @@ If you look at the log in your Python session, you should see a line similar to:
 <p>which means all went well. You can also check the logs coming from your worker and dispatcher
 processes &#8212; this is especially helpful in case of problems.
 To check the LSA results, let&#8217;s print the first two latent topics:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="n">numTopics</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">numWords</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">print_topics</span><span class="p">(</span><span class="n">num_topics</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_words</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="go">topic #0(3.341): -0.644*&quot;system&quot; + -0.404*&quot;user&quot; + -0.301*&quot;eps&quot; + -0.265*&quot;time&quot; + -0.265*&quot;response&quot;</span>
 <span class="go">topic #1(2.542): -0.623*&quot;graph&quot; + -0.490*&quot;trees&quot; + -0.451*&quot;minors&quot; + -0.274*&quot;survey&quot; + 0.167*&quot;system&quot;</span>
 </pre></div>
@@ -184,9 +184,9 @@ at a time, otherwise all documents would be processed by a single worker all at 
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># inflate the corpus to 1M documents, by repeating its documents over&amp;over</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus1m</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">RepeatCorpus</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="mi">1000000</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># run distributed LSA on 1 million documents</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus1m</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus1m</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="n">numTopics</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">numWords</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="n">num_topics</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_words</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="go">topic #0(1113.628): 0.644*&quot;system&quot; + 0.404*&quot;user&quot; + 0.301*&quot;eps&quot; + 0.265*&quot;time&quot; + 0.265*&quot;response&quot;</span>
 <span class="go">topic #1(847.233): 0.623*&quot;graph&quot; + 0.490*&quot;trees&quot; + 0.451*&quot;minors&quot; + 0.274*&quot;survey&quot; + -0.167*&quot;system&quot;</span>
 </pre></div>
@@ -214,7 +214,7 @@ the corpus iterator with:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># load id-&gt;word mapping (the dictionary)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">loadFromText</span><span class="p">(</span><span class="s">&#39;wiki_en_wordids.txt&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">load_from_text</span><span class="p">(</span><span class="s">&#39;wiki_en_wordids.txt&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># load corpus iterator</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mm</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;wiki_en_tfidf.mm&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># mm = gensim.corpora.MmCorpus(bz2.BZ2File(&#39;wiki_en_tfidf.mm.bz2&#39;)) # use this if you compressed the TFIDF output</span>
@@ -225,10 +225,10 @@ the corpus iterator with:</p>
 </div>
 <p>Now we&#8217;re ready to run distributed LSA on the English Wikipedia:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 400 LSI topics, using a cluster of nodes</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">20000</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">20000</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># print the most contributing words (both positively and negatively) for each of the first ten topics</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">print_topics</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="go">2010-11-03 16:08:27,602 : INFO : topic #0(200.990): -0.475*&quot;delete&quot; + -0.383*&quot;deletion&quot; + -0.275*&quot;debate&quot; + -0.223*&quot;comments&quot; + -0.220*&quot;edits&quot; + -0.213*&quot;modify&quot; + -0.208*&quot;appropriate&quot; + -0.194*&quot;subsequent&quot; + -0.155*&quot;wp&quot; + -0.117*&quot;notability&quot;</span>
 <span class="go">2010-11-03 16:08:27,626 : INFO : topic #1(143.129): -0.320*&quot;diff&quot; + -0.305*&quot;link&quot; + -0.199*&quot;image&quot; + -0.171*&quot;www&quot; + -0.162*&quot;user&quot; + 0.149*&quot;delete&quot; + -0.147*&quot;undo&quot; + -0.144*&quot;contribs&quot; + -0.122*&quot;album&quot; + 0.113*&quot;deletion&quot;</span>
 <span class="go">2010-11-03 16:08:27,651 : INFO : topic #2(135.665): -0.437*&quot;diff&quot; + -0.400*&quot;link&quot; + -0.202*&quot;undo&quot; + -0.192*&quot;user&quot; + -0.182*&quot;www&quot; + -0.176*&quot;contribs&quot; + 0.168*&quot;image&quot; + -0.109*&quot;added&quot; + 0.106*&quot;album&quot; + 0.097*&quot;copyright&quot;</span>
@@ -285,7 +285,7 @@ paper</a>.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 26, 2011.
+      Last updated on Jun 20, 2011.
     </div>
   </body>
 </html>

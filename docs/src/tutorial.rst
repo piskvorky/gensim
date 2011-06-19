@@ -31,7 +31,7 @@ Gensim uses Python's standard :mod:`logging` module to log various stuff at vari
 priority levels; to activate logging (this is optional), run
 
 >>> import logging
->>> logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s', level = logging.INFO)
+>>> logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 
 .. _first-example:

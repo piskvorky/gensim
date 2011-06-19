@@ -56,7 +56,7 @@ Manual for the gensim package is available in `HTML <http://nlp.fi.muni.cz/proje
 contains a walk-through of all its features and a complete reference section.
 It is also included in the source distribution package.
 
--------
+----------------
 
 Gensim is open source software, and has been released under the
 `GNU LPGL license <http://www.gnu.org/licenses/lgpl.html>`_.

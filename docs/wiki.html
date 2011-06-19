@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.7.8',
+        VERSION:     '0.8.0rc1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -142,7 +142,7 @@ Also, you will need about 15GB of free disk space to store the sparse output vec
 <span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># load id-&gt;word mapping (the dictionary), one of the results of step 2 above</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">wikicorpus</span><span class="o">.</span><span class="n">WikiCorpus</span><span class="o">.</span><span class="n">loadDictionary</span><span class="p">(</span><span class="s">&#39;wiki_en_wordids.txt&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">load_from_text</span><span class="p">(</span><span class="s">&#39;wiki_en_wordids.txt&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># load corpus iterator</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mm</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;wiki_en_tfidf.mm&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># mm = gensim.corpora.MmCorpus(bz2.BZ2File(&#39;wiki_en_tfidf.mm.bz2&#39;)) # use this if you compressed the TFIDF output</span>
@@ -156,10 +156,10 @@ tokens) and 0.5G non-zero entries in the sparse TF-IDF matrix. The corpus contai
 about 1.92 billion tokens in total.</p>
 <p>Now we&#8217;re ready to compute LSA of the English Wikipedia:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 400 LSI topics; use the default one-pass algorithm</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># print the most contributing words (both positively and negatively) for each of the first ten topics</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">print_topics</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="go">topic #0(200.540): 0.475*&quot;delete&quot; + 0.383*&quot;deletion&quot; + 0.275*&quot;debate&quot; + 0.223*&quot;comments&quot; + 0.221*&quot;edits&quot; + 0.213*&quot;modify&quot; + 0.208*&quot;appropriate&quot; + 0.195*&quot;subsequent&quot; + 0.155*&quot;wp&quot; + 0.116*&quot;notability&quot;</span>
 <span class="go">topic #1(142.463): -0.292*&quot;diff&quot; + -0.277*&quot;link&quot; + -0.210*&quot;image&quot; + -0.160*&quot;www&quot; + 0.151*&quot;delete&quot; + -0.149*&quot;user&quot; + -0.134*&quot;contribs&quot; + -0.133*&quot;undo&quot; + -0.128*&quot;album&quot; + -0.115*&quot;copyright&quot;</span>
 <span class="go">topic #2(134.758): -0.458*&quot;diff&quot; + -0.415*&quot;link&quot; + -0.210*&quot;undo&quot; + -0.201*&quot;user&quot; + -0.195*&quot;www&quot; + -0.186*&quot;contribs&quot; + 0.154*&quot;image&quot; + -0.115*&quot;added&quot; + 0.098*&quot;album&quot; + -0.096*&quot;accounts&quot;</span>
@@ -187,7 +187,7 @@ or where the cost of storing/iterating over the corpus multiple times is too hig
 <span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># load id-&gt;word mapping (the dictionary), one of the results of step 2 above</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">wikicorpus</span><span class="o">.</span><span class="n">WikiCorpus</span><span class="o">.</span><span class="n">loadDictionary</span><span class="p">(</span><span class="s">&#39;wiki_en_wordids.txt&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">load_from_text</span><span class="p">(</span><span class="s">&#39;wiki_en_wordids.txt&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># load corpus iterator</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mm</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;wiki_en_tfidf.mm&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># mm = gensim.corpora.MmCorpus(bz2.BZ2File(&#39;wiki_en_tfidf.mm.bz2&#39;)) # use this if you compressed the TFIDF output</span>
@@ -207,7 +207,7 @@ pass over the corpus: if the corpus has 3 million articles, and we update once a
 every 10,000 articles, this means we will have done 300 updates in one pass, quite likely
 enough to have a very accurate topics estimate:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 100 LDA topics, using 1 pass and updating once every 1 chunk (10,000 documents)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">update_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">passes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">update_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">passes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="go">using serial LDA version on this node</span>
 <span class="go">running online LDA training, 100 topics, 1 passes over the supplied corpus of 3146817 documets, updating model once every 10000 documents</span>
 <span class="go">..</span>
@@ -215,7 +215,7 @@ enough to have a very accurate topics estimate:</p>
 </div>
 <p>Unlike LSA, the topics coming from LDA are easier to interpret:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># print the most contributing words for 20 randomly selected topics</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span><span class="o">.</span><span class="n">print_topics</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
 <span class="go">topic #0: 0.065*india + 0.043*indian + 0.019*sri + 0.012*tamil + 0.011*singh + 0.011*lanka + 0.010*temple + 0.009*delhi + 0.007*pradesh + 0.007*bangladesh</span>
 <span class="go">topic #1: 0.083*game + 0.053*games + 0.051*video + 0.018*player + 0.010*players + 0.007*playstation + 0.006*pc + 0.006*entertainment + 0.005*nintendo + 0.005*online</span>
 <span class="go">topic #2: 0.096*church + 0.032*catholic + 0.022*bishop + 0.018*christian + 0.015*roman + 0.014*saint + 0.013*churches + 0.011*cathedral + 0.011*parish + 0.010*christ</span>
@@ -254,7 +254,7 @@ over time. <strong>Batch usage of LDA</strong>, where the entire training corpus
 not exihibit topic drift, <strong>is ok and not affected</strong>.</p>
 <p>To run batch LDA (not online), train <cite>LdaModel</cite> with:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 100 LDA topics, using 20 full passes, no online updates</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">numTopics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">update_every</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">passes</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">update_every</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">passes</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>As usual, a trained model can used be to transform new, unseen documents (plain bag-of-words count vectors)
@@ -338,7 +338,7 @@ By the way, improvements to the Wiki markup parsing code are welcome :-)</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 26, 2011.
+      Last updated on Jun 20, 2011.
     </div>
   </body>
 </html>

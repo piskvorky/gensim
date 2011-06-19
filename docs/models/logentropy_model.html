@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.7.8',
+        VERSION:     '0.8.0rc1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -114,7 +114,7 @@ P_{i,j} = frequency_{i,j} / sum_j frequency_{i,j}
 
                       sum_j P_{i,j} * log(P_{i,j})
 global_weight_i = 1 + ----------------------------
-                      log(document_frequency_of_i)
+                      log(number_of_documents)
 
 final_weight_{i,j} = local_weight_{i,j} * global_weight_i</pre>
 </div>
@@ -144,7 +144,7 @@ set to unit length.</p>
 <dl class="method">
 <dt id="gensim.models.logentropy_model.LogEntropyModel.initialize">
 <tt class="descname">initialize</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.models.logentropy_model.LogEntropyModel.initialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize internal statistics based on a training corpus. Called 
+<dd><p>Initialize internal statistics based on a training corpus. Called
 automatically from the constructor.</p>
 </dd></dl>
 
@@ -198,7 +198,7 @@ automatically from the constructor.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 26, 2011.
+      Last updated on Jun 20, 2011.
     </div>
   </body>
 </html>

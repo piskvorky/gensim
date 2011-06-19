@@ -28,12 +28,11 @@ def read(fname):
 
 setup(
     name = 'gensim',
-    version = '0.7.8',
+    version = '0.8.0rc1',
     description = 'Python framework for fast Vector Space Modelling',
     long_description = read('README.txt'),
 
-    package_dir = {'': 'src'},
-    packages = find_packages('src'),
+    packages = find_packages(),
 
     # there is a bug in python2.5, preventing distutils from using any non-ascii characters :( http://bugs.python.org/issue2562
     author = 'Radim Rehurek', # u'Radim Řehůřek', # <- should really be this...
@@ -65,12 +64,11 @@ setup(
     test_suite = "gensim.test",
 
     install_requires = [
-        'scipy >= 0.6.0',
+        'scipy >= 0.7.0',
     ],
 
     extras_require = {
         'distributed': ['Pyro >= 4.1'],
-        'lsi': ['sparsesvd >= 0.1'],
     },
 
     include_package_data = True,

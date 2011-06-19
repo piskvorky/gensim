@@ -1,6 +1,6 @@
 recursive-include docs *
-recursive-include src/gensim/test testcorpus*
-recursive-include src *.sh
+recursive-include gensim/test/test_data *
+recursive-include . *.sh
 prune docs/src*
 include COPYING
 include COPYING.LESSER
