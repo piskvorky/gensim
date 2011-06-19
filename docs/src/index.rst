@@ -8,7 +8,7 @@ Gensim -- Vector Space Modelling for Humans
 
 .. admonition:: What's new?
 
-   * 19/06/2011: version 0.8.0 is out! :doc:`CHANGELOG<changes_080>`
+   * 19/06/2011: version 0.8.0 is out! Faster & better: :doc:`CHANGELOG<changes_080>`
    * 12/02/2011: faster and leaner **Latent Semantic Indexing (LSI)** and **Latent Dirichlet Allocation (LDA)**:
 
      * :doc:`Processing the English Wikipedia <wiki>`, 3.2 million documents (`NIPS workshop paper <http://arxiv.org/abs/1102.5597>`_)
