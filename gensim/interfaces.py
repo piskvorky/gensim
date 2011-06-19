@@ -170,11 +170,8 @@ class SimilarityABC(utils.SaveLoad):
 
 
     def get_similarities(self, doc):
-        """
-        Return similarity of a sparse vector `doc` to all documents in the corpus,
-        or similarities of all documents in `doc` to all documents in corpus (if
-        `doc` is a corpus itself).
-        """
+        # (Sparse)MatrixSimilarity override this method so that they both use the
+        # same  __getitem__ method, defined below
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 
 
