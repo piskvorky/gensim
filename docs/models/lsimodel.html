@@ -237,7 +237,10 @@ of the topic (both negative and positive).</p>
 <dl class="method">
 <dt id="gensim.models.lsimodel.LsiModel.save">
 <tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.save" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+<dd><p>Override the default <cite>save</cite> (which uses cPickle), because that&#8217;s
+too inefficient and cPickle has bugs. Instead, single out the large transformation
+matrix and store that separately in binary format (that can be directly
+mmap&#8217;ed back in <cite>load()</cite>), under <cite>fname.npy</cite>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -309,7 +312,7 @@ corpus fits into core memory and a different (more efficient) code path is chose
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jun 13, 2011.
+      Last updated on Jun 20, 2011.
     </div>
   </body>
 </html>

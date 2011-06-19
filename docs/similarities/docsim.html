@@ -94,32 +94,45 @@
 <span id="similarities-docsim-document-similarity-queries"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">similarities.docsim</span></tt> &#8211; Document similarity queries<a class="headerlink" href="#module-gensim.similarities.docsim" title="Permalink to this headline">¶</a></h1>
 <p>This module contains functions and classes for computing similarities across
 a collection of documents in the Vector Space Model.</p>
-<p>The main class is <cite>Similarity</cite>, which builds an index for a fixed set of documents.
-Once the index is built, you can perform efficient queries like &#8220;tell me how similar
-is this query document to each document in the index&#8221; (a vector of numbers).
-You can also add new documents to the index via <cite>Similarity.add_documents()</cite>.</p>
+<p>The main class is <cite>Similarity</cite>, which builds an index for a given set of documents.
+Once the index is built, you can perform efficient queries like &#8220;Tell me how similar
+is this query document to each document in the index?&#8221;. The result is a vector
+of numbers as large as the size of the initial set of documents, that is, one float
+for each index document. Alternatively, you can also request only the top-N most
+similar index documents to the query.</p>
+<p>You can later add new documents to the index via <cite>Similarity.add_documents()</cite>.</p>
 <p>The <cite>Similarity</cite> class splits the index into several smaller sub-indexes (&#8220;shards&#8221;),
 which are disk-based. If your entire index fits in memory (~hundreds of thousands
 documents for 1GB of RAM), you can also use the <cite>MatrixSimilarity</cite> or <cite>SparseMatrixSimilarity</cite>
 classes directly. These are more simple but do not scale well (the entire index is
 kept in RAM).</p>
-<p>Once the index has been initialized, you can query for document similarity simply by</p>
+<p>Once the index has been initialized, you can query for document similarity simply by:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">Similarity</span><span class="p">(</span><span class="s">&#39;/tmp/tst&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">,</span> <span class="n">num_features</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span> <span class="c"># build the index</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">similarities</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">query</span><span class="p">]</span> <span class="c"># get similarities between the query and all index documents</span>
 </pre></div>
 </div>
-<p>There is also a special (and more efficient) syntax when you need similarity
-of index documents to the index itself (all vs. all, i.e. query=index documents themselves):</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">similarities</span> <span class="ow">in</span> <span class="n">index</span><span class="p">:</span> <span class="c"># return similarities of the 1st index document, then 2nd...</span>
+<p>If you have more query documents, you can submit them all at once, in a batch:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">similarities</span> <span class="ow">in</span> <span class="n">index</span><span class="p">[</span><span class="n">batch_of_documents</span><span class="p">]:</span> <span class="c"># the batch is simply an iterable of documents (=gensim corpus)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="o">...</span>
+</pre></div>
+</div>
+<p>The benefit of this batch (aka &#8220;chunked&#8221;) querying is much better performance.
+To see the speed-up on your machine, run <tt class="docutils literal"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">gensim.test.simspeed</span></tt>
+(compare to my results <a class="reference external" href="http://groups.google.com/group/gensim/msg/4f6f171a869e4fca?">here</a>).</p>
+<p>There is also a special syntax for when you need similarity of documents in the index
+to the index itself (i.e. query=index documents themselves). This special syntax
+already uses the faster, batch queries internally:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">similarities</span> <span class="ow">in</span> <span class="n">index</span><span class="p">:</span> <span class="c"># return all similarities of the 1st index document, then 2nd...</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="o">...</span>
 </pre></div>
 </div>
 <dl class="class">
 <dt id="gensim.similarities.docsim.MatrixSimilarity">
 <em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">MatrixSimilarity</tt><big>(</big><em>corpus</em>, <em>num_best=None</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em>, <em>num_features=None</em>, <em>chunks=256</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.MatrixSimilarity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute similarity against a corpus of documents by storing its
-term-document (or concept-document) matrix in memory. The similarity measure
-used is cosine between two vectors.</p>
+<dd><p>Compute similarity against a corpus of documents by storing the index matrix
+in memory. The similarity measure used is cosine between two vectors.</p>
+<p>Use this if your input corpus contains dense vectors (such as documents in LSI
+space) and fits into RAM.</p>
 <p>The matrix is internally stored as a <em>dense</em> numpy array. Unless the entire matrix
 fits into main memory, use <cite>Similarity</cite> instead.</p>
 <p>See also <cite>Similarity</cite> and <cite>SparseMatrixSimilarity</cite> in this module.</p>
@@ -134,6 +147,7 @@ as a numpy array.</p>
 <p>If <cite>query</cite> is a collection of documents, return a 2D array of similarities
 of each document in <cite>query</cite> to all documents in the corpus (=batch query,
 faster than processing each document in turn).</p>
+<p><strong>Do not use this function directly; use the self[query] syntax instead.</strong></p>
 </dd></dl>
 
 <dl class="classmethod">
@@ -148,7 +162,7 @@ faster than processing each document in turn).</p>
 <dd><p>Override the default <cite>save</cite> (which uses cPickle), because that&#8217;s
 too inefficient and cPickle has bugs. Instead, single out the large index
 matrix and store that separately in binary format (that can be directly
-mmap&#8217;ed), under <cite>fname.npy</cite>.</p>
+mmap&#8217;ed), under <cite>fname.npy</cite>. The rest of the object is pickled to <cite>fname</cite>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -184,22 +198,22 @@ fits into core memory (see the <cite>(Sparse)MatrixSimilarity</cite> classes in 
 The shards themselves are simply stored as files to disk and mmap&#8217;ed back as needed.</p>
 <p>Construct the index from <cite>corpus</cite>. The index can be later extended by calling
 the <cite>add_documents</cite> method. Documents are split into shards of <cite>shardsize</cite>
-each, converted to a matrix (for fast BLAS calls) and stored to disk
+documents each, converted to a matrix (for fast BLAS calls) and stored to disk
 under <cite>output_prefix.shard_number</cite> (=you need write access to that location).</p>
-<p><cite>shardsize</cite> should be chosen so that a shardsize x chunks matrix of floats
+<p><cite>shardsize</cite> should be chosen so that a <cite>shardsize x chunks</cite> matrix of floats
 fits comfortably into main memory.</p>
 <p><cite>num_features</cite> is the number of features in the <cite>corpus</cite> (e.g. size of the
 dictionary, or the number of latent topics for latent semantic models).</p>
 <p>If <cite>num_best</cite> is left unspecified, similarity queries will return a full
 vector with one float for every document in the index:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">Similarity</span><span class="p">(</span><span class="s">&#39;/tmp/index&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">,</span> <span class="n">num_features</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="p">[</span><span class="n">query</span><span class="p">]</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">Similarity</span><span class="p">(</span><span class="s">&#39;/tmp/index&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">,</span> <span class="n">num_features</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span> <span class="c"># if corpus has 7 documents...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="p">[</span><span class="n">query</span><span class="p">]</span> <span class="c"># ... then result will have 7 floats</span>
 <span class="go">[0.0, 0.0, 0.2, 0.13, 0.8, 0.0, 0.1]</span>
 </pre></div>
 </div>
 <p>If <cite>num_best</cite> is set, queries return only the <cite>num_best</cite> most similar documents:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="o">.</span><span class="n">num_best</span> <span class="o">=</span> <span class="mi">3</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="p">[</span><span class="n">query</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="p">[</span><span class="n">query</span><span class="p">]</span> <span class="c"># return at most &quot;num_best&quot; (index_of_document, similarity) tuples</span>
 <span class="go">[(4, 0.8), (2, 0.13), (3, 0.13)]</span>
 </pre></div>
 </div>
@@ -216,20 +230,12 @@ vector with one float for every document in the index:</p>
 <tt class="descname">close_shard</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.close_shard" title="Permalink to this definition">¶</a></dt>
 <dd><p>Force the latest shard to close (be converted to a matrix and stored
 to disk). Do nothing if no new documents added since last call.</p>
-<p>NOTE: the shard is closed even if it is not full yet (its size is smaller
+<p><strong>NOTE</strong>: the shard is closed even if it is not full yet (its size is smaller
 than <cite>self.shardsize</cite>). If documents are added later via <cite>add_documents()</cite>,
 this incomplete shard will be loaded again and completed. For this reason,
 avoid the pattern of calling <cite>add_documents</cite> followed by a query, with only a few
 documents added. The re-opening makes this pattern inefficient. Instead,
 try to add as many documents as possible (ideally, all of them), only then query.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="gensim.similarities.docsim.Similarity.get_similarities">
-<tt class="descname">get_similarities</tt><big>(</big><em>doc</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.get_similarities" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return similarity of a sparse vector <cite>doc</cite> to all documents in the corpus,
-or similarities of all documents in <cite>doc</cite> to all documents in corpus (if
-<cite>doc</cite> is a corpus itself).</p>
 </dd></dl>
 
 <dl class="classmethod">
@@ -240,8 +246,10 @@ or similarities of all documents in <cite>doc</cite> to all documents in corpus 
 
 <dl class="method">
 <dt id="gensim.similarities.docsim.Similarity.save">
-<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.save" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+<tt class="descname">save</tt><big>(</big><em>fname=None</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the object via pickling (also see load) under filename specified in
+the constructor.</p>
+<p>Calls <cite>close_shard</cite> internally to spill any unfinished shards to disk first.</p>
 </dd></dl>
 
 </dd></dl>
@@ -249,9 +257,10 @@ or similarities of all documents in <cite>doc</cite> to all documents in corpus 
 <dl class="class">
 <dt id="gensim.similarities.docsim.SparseMatrixSimilarity">
 <em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">SparseMatrixSimilarity</tt><big>(</big><em>corpus</em>, <em>num_best=None</em>, <em>chunks=500</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em>, <em>num_terms=None</em>, <em>num_docs=None</em>, <em>num_nnz=None</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.SparseMatrixSimilarity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute similarity against a corpus of documents by storing its sparse
-term-document (or concept-document) matrix in memory. The similarity measure
-used is cosine between two vectors.</p>
+<dd><p>Compute similarity against a corpus of documents by storing the sparse index
+matrix in memory. The similarity measure used is cosine between two vectors.</p>
+<p>Use this if your input corpus contains sparse vectors (such as documents in
+bag-of-words format) and fits into RAM.</p>
 <p>The matrix is internally stored as a <cite>scipy.sparse.csr</cite> matrix. Unless the entire
 matrix fits into main memory, use <cite>Similarity</cite> instead.</p>
 <p>See also <cite>Similarity</cite> and <cite>MatrixSimilarity</cite> in this module.</p>
@@ -263,6 +272,7 @@ as a numpy array.</p>
 <p>If <cite>query</cite> is a collection of documents, return a 2D array of similarities
 of each document in <cite>query</cite> to all documents in the corpus (=batch query,
 faster than processing each document in turn).</p>
+<p><strong>Do not use this function directly; use the self[query] syntax instead.</strong></p>
 </dd></dl>
 
 <dl class="classmethod">
@@ -315,7 +325,7 @@ mmap&#8217;ed), under <cite>fname.array_name.npy</cite>.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jun 13, 2011.
+      Last updated on Jun 20, 2011.
     </div>
   </body>
 </html>

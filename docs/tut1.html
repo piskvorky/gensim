@@ -194,7 +194,7 @@ To see the mapping between words and their ids:</p>
 <p>To actually convert tokenized documents to vectors:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">new_doc</span> <span class="o">=</span> <span class="s">&quot;Human computer interaction&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">new_vec</span> <span class="o">=</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">new_doc</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">newVec</span> <span class="c"># the word &quot;interaction&quot; does not appear in the dictionary and is ignored</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">new_vec</span> <span class="c"># the word &quot;interaction&quot; does not appear in the dictionary and is ignored</span>
 <span class="go">[(0, 1), (1, 1)]</span>
 </pre></div>
 </div>
@@ -390,7 +390,7 @@ Or continue to the next tutorial on <a class="reference internal" href="tut2.htm
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jun 13, 2011.
+      Last updated on Jun 20, 2011.
     </div>
   </body>
 </html>

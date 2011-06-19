@@ -171,14 +171,6 @@ similarities to individual corpus documents.</p>
 <p>There is also a convenience wrapper, where iterating over <cite>self</cite> yields
 similarities of each document in the corpus against the whole corpus (ie.,
 the query is each corpus document in turn).</p>
-<dl class="method">
-<dt id="gensim.interfaces.SimilarityABC.get_similarities">
-<tt class="descname">get_similarities</tt><big>(</big><em>doc</em><big>)</big><a class="headerlink" href="#gensim.interfaces.SimilarityABC.get_similarities" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return similarity of a sparse vector <cite>doc</cite> to all documents in the corpus,
-or similarities of all documents in <cite>doc</cite> to all documents in corpus (if
-<cite>doc</cite> is a corpus itself).</p>
-</dd></dl>
-
 <dl class="classmethod">
 <dt id="gensim.interfaces.SimilarityABC.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.interfaces.SimilarityABC.load" title="Permalink to this definition">¶</a></dt>
@@ -250,7 +242,7 @@ document in its stead.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jun 13, 2011.
+      Last updated on Jun 20, 2011.
     </div>
   </body>
 </html>

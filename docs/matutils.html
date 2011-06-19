@@ -133,10 +133,15 @@ to be rows of the matrix (and document features are columns).</p>
 <dl class="class">
 <dt id="gensim.matutils.MmWriter">
 <em class="property">class </em><tt class="descclassname">gensim.matutils.</tt><tt class="descname">MmWriter</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Store corpus in Matrix Market format.</p>
-<p>Note that the file is written one document at a time, not the whole
+<dd><p>Store a corpus in Matrix Market format.</p>
+<p>Note that the output is written one document at a time, not the whole
 matrix at once (unlike scipy.io.mmread). This allows us to process corpora
 which are larger than the available RAM.</p>
+<p>NOTE: the output file is created in a single pass through the input corpus, so
+that the input can be a once-only stream (iterator).
+To achieve this, a fake MM header is written first, statistics are collected
+during the pass (shape of the matrix, number of non-zeroes), followed by a seek
+back to the beginning of the file, rewriting the fake header with proper values.</p>
 <dl class="staticmethod">
 <dt id="gensim.matutils.MmWriter.write_corpus">
 <em class="property">static </em><tt class="descname">write_corpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>progress_cnt=1000</em>, <em>index=False</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmWriter.write_corpus" title="Permalink to this definition">¶</a></dt>
@@ -262,7 +267,7 @@ or numpy array=&gt;numpy array, scipy.sparse=&gt;scipy.sparse).</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jun 13, 2011.
+      Last updated on Jun 20, 2011.
     </div>
   </body>
 </html>

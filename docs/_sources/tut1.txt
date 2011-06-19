@@ -99,7 +99,7 @@ To actually convert tokenized documents to vectors:
 
 >>> new_doc = "Human computer interaction"
 >>> new_vec = dictionary.doc2bow(new_doc.lower().split())
->>> print newVec # the word "interaction" does not appear in the dictionary and is ignored
+>>> print new_vec # the word "interaction" does not appear in the dictionary and is ignored
 [(0, 1), (1, 1)]
 
 The function :func:`doc2bow` simply counts the number of occurences of
