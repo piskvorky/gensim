@@ -111,14 +111,14 @@ class Similarity(interfaces.SimilarityABC):
     The shards themselves are simply stored as files to disk and mmap'ed back as needed.
 
     """
-    def __init__(self, output_prefix, corpus, num_features, num_best=None, chunks=512, shardsize=5000):
+    def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=512, shardsize=5000):
         """
         Construct the index from `corpus`. The index can be later extended by calling
         the `add_documents` method. Documents are split into shards of `shardsize`
         documents each, converted to a matrix (for fast BLAS calls) and stored to disk
         under `output_prefix.shard_number` (=you need write access to that location).
 
-        `shardsize` should be chosen so that a `shardsize x chunks` matrix of floats
+        `shardsize` should be chosen so that a `shardsize x chunksize` matrix of floats
         fits comfortably into main memory.
 
         `num_features` is the number of features in the `corpus` (e.g. size of the
@@ -142,7 +142,7 @@ class Similarity(interfaces.SimilarityABC):
         self.num_features = num_features
         self.num_best = num_best
         self.normalize = True
-        self.chunks = int(chunks)
+        self.chunksize = int(chunksize)
         self.shardsize = shardsize
         self.shards = []
         self.fresh_docs, self.fresh_nnz = [], 0
@@ -274,14 +274,14 @@ class Similarity(interfaces.SimilarityABC):
         self.normalize = False
 
         for shard in self.shards:
-            # split each shard index into smaller chunks (of size self.chunks) and
+            # split each shard index into smaller chunks (of size self.chunksize) and
             # use each chunk as a query
             query = shard.get_index().index
-            for chunk_start in xrange(0, query.shape[0], self.chunks):
+            for chunk_start in xrange(0, query.shape[0], self.chunksize):
                 # scipy.sparse doesn't allow slicing beyond real size of the matrix
                 # (unlike numpy). so, clip the end of the chunk explicitly to make
                 # scipy.sparse happy
-                chunk_end = min(query.shape[0], chunk_start + self.chunks)
+                chunk_end = min(query.shape[0], chunk_start + self.chunksize)
                 chunk = query[chunk_start : chunk_end] # create a view
                 if chunk.shape[0] > 1:
                     for sim in self[chunk]:
@@ -320,7 +320,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
     See also `Similarity` and `SparseMatrixSimilarity` in this module.
 
     """
-    def __init__(self, corpus, num_best=None, dtype=numpy.float32, num_features=None, chunks=256):
+    def __init__(self, corpus, num_best=None, dtype=numpy.float32, num_features=None, chunksize=256):
         """
         `num_features` is the number of features in the corpus (will be determined
         automatically by scanning the corpus if not specified). See `Similarity`
@@ -334,7 +334,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         self.num_features = num_features
         self.num_best = num_best
         self.normalize = True
-        self.chunks = chunks
+        self.chunksize = chunksize
 
         if corpus is not None:
             logger.info("creating matrix for %s documents and %i features" %
@@ -428,11 +428,11 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
     See also `Similarity` and `MatrixSimilarity` in this module.
     """
-    def __init__(self, corpus, num_best=None, chunks=500, dtype=numpy.float32,
+    def __init__(self, corpus, num_best=None, chunksize=500, dtype=numpy.float32,
                  num_terms=None, num_docs=None, num_nnz=None):
         self.num_best = num_best
         self.normalize = True
-        self.chunks = chunks
+        self.chunksize = chunksize
 
         if corpus is not None:
             logger.info("creating sparse index")
