@@ -109,7 +109,7 @@ every 10,000 articles, this means we will have done 300 updates in one pass, qui
 enough to have a very accurate topics estimate::
 
     >>> # extract 100 LDA topics, using 1 pass and updating once every 1 chunk (10,000 documents)
-    >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, num_topics=100, update_every=1, chunks=10000, passes=1)
+    >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, num_topics=100, update_every=1, chunksize=10000, passes=1)
     using serial LDA version on this node
     running online LDA training, 100 topics, 1 passes over the supplied corpus of 3146817 documets, updating model once every 10000 documents
     ..

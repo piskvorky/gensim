@@ -31,6 +31,19 @@
 <meta property="og:title" content="#gensim" />
 <meta property="og:description" content="Efficient topic modelling in Python" />
 
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24066335-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
   </head>
   <body>
 <!--
@@ -128,7 +141,7 @@ already uses the faster, batch queries internally:</p>
 </div>
 <dl class="class">
 <dt id="gensim.similarities.docsim.MatrixSimilarity">
-<em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">MatrixSimilarity</tt><big>(</big><em>corpus</em>, <em>num_best=None</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em>, <em>num_features=None</em>, <em>chunks=256</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.MatrixSimilarity" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">MatrixSimilarity</tt><big>(</big><em>corpus</em>, <em>num_best=None</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em>, <em>num_features=None</em>, <em>chunksize=256</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.MatrixSimilarity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute similarity against a corpus of documents by storing the index matrix
 in memory. The similarity measure used is cosine between two vectors.</p>
 <p>Use this if your input corpus contains dense vectors (such as documents in LSI
@@ -190,7 +203,7 @@ request (query).</p>
 
 <dl class="class">
 <dt id="gensim.similarities.docsim.Similarity">
-<em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">Similarity</tt><big>(</big><em>output_prefix</em>, <em>corpus</em>, <em>num_features</em>, <em>num_best=None</em>, <em>chunks=512</em>, <em>shardsize=5000</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">Similarity</tt><big>(</big><em>output_prefix</em>, <em>corpus</em>, <em>num_features</em>, <em>num_best=None</em>, <em>chunksize=512</em>, <em>shardsize=5000</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute cosine similarity of a dynamic query against a static corpus of documents
 (&#8220;the index&#8221;).</p>
 <p>Scalability is achieved by sharding the index into smaller pieces, each of which
@@ -200,7 +213,7 @@ The shards themselves are simply stored as files to disk and mmap&#8217;ed back 
 the <cite>add_documents</cite> method. Documents are split into shards of <cite>shardsize</cite>
 documents each, converted to a matrix (for fast BLAS calls) and stored to disk
 under <cite>output_prefix.shard_number</cite> (=you need write access to that location).</p>
-<p><cite>shardsize</cite> should be chosen so that a <cite>shardsize x chunks</cite> matrix of floats
+<p><cite>shardsize</cite> should be chosen so that a <cite>shardsize x chunksize</cite> matrix of floats
 fits comfortably into main memory.</p>
 <p><cite>num_features</cite> is the number of features in the <cite>corpus</cite> (e.g. size of the
 dictionary, or the number of latent topics for latent semantic models).</p>
@@ -256,7 +269,7 @@ the constructor.</p>
 
 <dl class="class">
 <dt id="gensim.similarities.docsim.SparseMatrixSimilarity">
-<em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">SparseMatrixSimilarity</tt><big>(</big><em>corpus</em>, <em>num_best=None</em>, <em>chunks=500</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em>, <em>num_terms=None</em>, <em>num_docs=None</em>, <em>num_nnz=None</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.SparseMatrixSimilarity" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">SparseMatrixSimilarity</tt><big>(</big><em>corpus</em>, <em>num_best=None</em>, <em>chunksize=500</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em>, <em>num_terms=None</em>, <em>num_docs=None</em>, <em>num_nnz=None</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.SparseMatrixSimilarity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute similarity against a corpus of documents by storing the sparse index
 matrix in memory. The similarity measure used is cosine between two vectors.</p>
 <p>Use this if your input corpus contains sparse vectors (such as documents in
@@ -325,7 +338,7 @@ mmap&#8217;ed), under <cite>fname.array_name.npy</cite>.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jun 20, 2011.
+      Last updated on Jun 22, 2011.
     </div>
   </body>
 </html>

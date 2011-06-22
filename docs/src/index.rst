@@ -8,7 +8,7 @@ Gensim -- Vector Space Modelling for Humans
 
 .. admonition:: What's new?
 
-   * 19/06/2011: version 0.8.0 is out! Faster & better: :doc:`CHANGELOG<changes_080>`
+   * 19/06/2011: version 0.8.0 is out! Faster & better: :doc:`changes walkthrough<changes_080>`
    * 12/02/2011: faster and leaner **Latent Semantic Indexing (LSI)** and **Latent Dirichlet Allocation (LDA)**:
 
      * :doc:`Processing the English Wikipedia <wiki>`, 3.2 million documents (`NIPS workshop paper <http://arxiv.org/abs/1102.5597>`_)
@@ -18,7 +18,7 @@ For an **overview** of what you can (or cannot) do with `gensim`, go to the :doc
 
 For **installation** and **troubleshooting**, see the :doc:`installation <install>` page and the `gensim discussion group <http://groups.google.com/group/gensim/>`_.
 
-For **examples** on how to use it, try the :doc:`tutorials <tutorial>`.
+For **examples** on how to convert text to vectors and work with the result, try the :doc:`tutorials <tutorial>`.
 
 When **citing** `gensim` in academic papers, please use
 `this BibTeX entry <http://nlp.fi.muni.cz/projekty/gensim/bibtex_gensim.bib>`_.

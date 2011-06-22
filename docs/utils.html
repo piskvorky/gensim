@@ -32,6 +32,19 @@
 <meta property="og:title" content="#gensim" />
 <meta property="og:description" content="Efficient topic modelling in Python" />
 
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24066335-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
   </head>
   <body>
 <!--
@@ -168,9 +181,9 @@ attributes, such as lambda functions etc.</p>
 
 <dl class="function">
 <dt id="gensim.utils.chunkize">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">chunkize</tt><big>(</big><em>corpus</em>, <em>chunks</em>, <em>maxsize=0</em><big>)</big><a class="headerlink" href="#gensim.utils.chunkize" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">chunkize</tt><big>(</big><em>corpus</em>, <em>chunksize</em>, <em>maxsize=0</em><big>)</big><a class="headerlink" href="#gensim.utils.chunkize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Split a stream of values into smaller chunks.
-Each chunk is of length <cite>chunks</cite>, except the last one which may be smaller.
+Each chunk is of length <cite>chunksize</cite>, except the last one which may be smaller.
 A once-only input stream (<cite>corpus</cite> from a generator) is ok, chunking is done
 efficiently via itertools.</p>
 <p>If <cite>maxsize &gt; 1</cite>, don&#8217;t wait idly in between successive chunk <cite>yields</cite>, but
@@ -178,7 +191,7 @@ rather keep filling a short queue (of size at most <cite>maxsize</cite>) with fo
 chunks in advance. This is realized by starting a separate thread, and is
 meant to reduce I/O delays, which can be significant when <cite>corpus</cite> comes
 from a slow medium (like harddisk).</p>
-<p>If <cite>maxsize==0</cite>, don&#8217;t fool around with threads and simply yield the chunks
+<p>If <cite>maxsize==0</cite>, don&#8217;t fool around with threads and simply yield the chunksize
 via <cite>chunkize_serial()</cite> (no I/O optimizations).</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunkize</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="mi">4</span><span class="p">):</span> <span class="k">print</span> <span class="n">chunk</span>
 <span class="go">[0, 1, 2, 3]</span>
@@ -190,9 +203,9 @@ via <cite>chunkize_serial()</cite> (no I/O optimizations).</p>
 
 <dl class="function">
 <dt id="gensim.utils.chunkize_serial">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">chunkize_serial</tt><big>(</big><em>corpus</em>, <em>chunks</em><big>)</big><a class="headerlink" href="#gensim.utils.chunkize_serial" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">chunkize_serial</tt><big>(</big><em>corpus</em>, <em>chunksize</em><big>)</big><a class="headerlink" href="#gensim.utils.chunkize_serial" title="Permalink to this definition">¶</a></dt>
 <dd><p>Split a stream of values into smaller chunks.
-Each chunk is of length <cite>chunks</cite>, except the last one which may be smaller.
+Each chunk is of length <cite>chunksize</cite>, except the last one which may be smaller.
 A once-only input stream (<cite>corpus</cite> from a generator) is ok.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunkize_serial</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="mi">4</span><span class="p">):</span> <span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
 <span class="go">[0, 1, 2, 3]</span>
@@ -367,7 +380,7 @@ via <cite>texts[docid]</cite>, such as its fulltext or snippet.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jun 20, 2011.
+      Last updated on Jun 22, 2011.
     </div>
   </body>
 </html>
