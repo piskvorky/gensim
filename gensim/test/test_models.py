@@ -104,7 +104,7 @@ class TestLsiModel(unittest.TestCase):
         self.assertTrue(numpy.allclose(abs(vec), abs(expected), atol=1e-6)) # transformed entries must be equal up to sign
 
         # train on another 4 documents
-        model.add_documents(corpus[1:5], chunks=2) # train on 4 extra docs, in chunks of 2 documents, for the lols
+        model.add_documents(corpus[1:5], chunksize=2) # train on 4 extra docs, in chunks of 2 documents, for the lols
 
         # transform a document with this partial transformation
         transformed = model[doc]
