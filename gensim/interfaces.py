@@ -101,18 +101,18 @@ class CorpusABC(utils.SaveLoad):
 
 
 class TransformedCorpus(CorpusABC):
-    def __init__(self, obj, corpus, chunks=None):
-        self.obj, self.corpus, self.chunks = obj, corpus, chunks
+    def __init__(self, obj, corpus, chunksize=None):
+        self.obj, self.corpus, self.chunksize = obj, corpus, chunksize
 
     def __len__(self):
         return len(self.corpus)
 
     def __iter__(self):
-        if self.chunks:
-            chunker = itertools.groupby(enumerate(self.corpus), key=lambda (docno, doc): docno / self.chunks)
+        if self.chunksize:
+            chunker = itertools.groupby(enumerate(self.corpus), key=lambda (docno, doc): docno / self.chunksize)
             for chunk_no, (key, group) in enumerate(chunker):
                 chunk = list(doc for _, doc in group)
-                for transformed in self.obj.__getitem__(chunk, chunks=None):
+                for transformed in self.obj.__getitem__(chunk, chunksize=None):
                     yield transformed
         else:
             for doc in self.corpus:
@@ -140,12 +140,12 @@ class TransformationABC(utils.SaveLoad):
         raise NotImplementedError('cannot instantiate abstract base class')
 
 
-    def _apply(self, corpus, chunks=None):
+    def _apply(self, corpus, chunksize=None):
         """
         Apply the transformation to a whole corpus (as opposed to a single document)
         and return the result as another corpus.
         """
-        return TransformedCorpus(self, corpus, chunks)
+        return TransformedCorpus(self, corpus, chunksize)
 #endclass TransformationABC
 
 
@@ -230,7 +230,7 @@ class SimilarityABC(utils.SaveLoad):
         # yield the resulting similarities one after another, so that it looks
         # exactly the same as if they had been computed with many small queries.
         try:
-            chunking = self.chunks > 1
+            chunking = self.chunksize > 1
         except AttributeError:
             # chunking not supported; fall back to the (slower) mode of 1 query=1 document
             chunking = False
@@ -238,11 +238,11 @@ class SimilarityABC(utils.SaveLoad):
             # assumes `self.corpus` holds the index as a 2-d numpy array.
             # this is true for MatrixSimilarity and SparseMatrixSimilarity, but
             # may not be true for other (future) classes..?
-            for chunk_start in xrange(0, self.index.shape[0], self.chunks):
+            for chunk_start in xrange(0, self.index.shape[0], self.chunksize):
                 # scipy.sparse doesn't allow slicing beyond real size of the matrix
                 # (unlike numpy). so, clip the end of the chunk explicitly to make
                 # scipy.sparse happy
-                chunk_end = min(self.index.shape[0], chunk_start + self.chunks)
+                chunk_end = min(self.index.shape[0], chunk_start + self.chunksize)
                 chunk = self.index[chunk_start : chunk_end]
                 if chunk.shape[0] > 1:
                     for sim in self[chunk]:

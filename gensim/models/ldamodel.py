@@ -158,7 +158,7 @@ class LdaModel(interfaces.TransformationABC):
     Model persistency is achieved through its `load`/`save` methods.
     """
     def __init__(self, corpus=None, num_topics=100, id2word=None, distributed=False,
-                 chunks=1000, passes=1, update_every=1, alpha=None, eta=None, decay=0.5):
+                 chunksize=1000, passes=1, update_every=1, alpha=None, eta=None, decay=0.5):
         """
         `num_topics` is the number of requested latent topics to be extracted from
         the training corpus.
@@ -199,7 +199,7 @@ class LdaModel(interfaces.TransformationABC):
 
         self.distributed = bool(distributed)
         self.num_topics = int(num_topics)
-        self.chunks = chunks
+        self.chunksize = chunksize
         self.decay = decay
         self.num_updates = 0
 
@@ -233,7 +233,7 @@ class LdaModel(interfaces.TransformationABC):
                 dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word=id2word, num_topics=num_topics,
-                                      chunks=chunks, alpha=alpha, eta=eta, distributed=False)
+                                      chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
                 self.dispatcher = dispatcher
                 self.numworkers = len(dispatcher.getworkers())
                 logger.info("using distributed version with %i workers" % self.numworkers)
@@ -371,7 +371,7 @@ class LdaModel(interfaces.TransformationABC):
         state.numdocs += gamma.shape[0] # avoid calling len(chunk), might be a generator
 
 
-    def update(self, corpus, chunks=None, decay=None, passes=None, update_every=None):
+    def update(self, corpus, chunksize=None, decay=None, passes=None, update_every=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -388,8 +388,8 @@ class LdaModel(interfaces.TransformationABC):
         this equals the online update of Hoffman et al. and is guaranteed to
         converge for any `decay` in (0.5, 1.0>.
         """
-        if chunks is None:
-            chunks = self.chunks
+        if chunksize is None:
+            chunksize = self.chunksize
         if decay is None:
             decay = self.decay
         if passes is None:
@@ -417,7 +417,7 @@ class LdaModel(interfaces.TransformationABC):
 
         if update_every > 0:
             updatetype = "online"
-            updateafter = min(lencorpus, update_every * self.numworkers * chunks)
+            updateafter = min(lencorpus, update_every * self.numworkers * chunksize)
         else:
             updatetype = "batch"
             updateafter = lencorpus
@@ -439,20 +439,20 @@ class LdaModel(interfaces.TransformationABC):
                 other = LdaState(self.state.sstats)
             dirty = False
 
-            chunker = itertools.groupby(enumerate(corpus), key=lambda (docno, doc): docno / chunks)
+            chunker = itertools.groupby(enumerate(corpus), key=lambda (docno, doc): docno / chunksize)
             for chunk_no, (key, group) in enumerate(chunker):
                 chunk = list(doc for _, doc in group)
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
                     logger.info('PROGRESS: iteration %i, dispatching documents up to #%i/%i' %
-                                (iteration, chunk_no * chunks + len(chunk), lencorpus))
+                                (iteration, chunk_no * chunksize + len(chunk), lencorpus))
                     # this will eventually block until some jobs finish, because the queue has a small finite length
                     # convert each document to a 2d numpy array (~6x faster when transmitting
                     # list data over the wire, in Pyro)
                     self.dispatcher.putjob(chunk)
                 else:
                     logger.info('PROGRESS: iteration %i, at document #%i/%i' %
-                                (iteration, chunk_no * chunks + len(chunk), lencorpus))
+                                (iteration, chunk_no * chunksize + len(chunk), lencorpus))
                     self.do_estep(chunk, other)
                 dirty = True
 
@@ -510,7 +510,7 @@ class LdaModel(interfaces.TransformationABC):
         Elogbeta = numpy.log(self.expElogbeta)
 
         for d, doc in enumerate(corpus):
-            if d % self.chunks == 0:
+            if d % self.chunksize == 0:
                 logger.info("PROGRESS: at document #%i" % d)
             if gamma is None:
                 gammad, _ = self.inference([doc])
