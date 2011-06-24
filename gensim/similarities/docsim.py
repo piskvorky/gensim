@@ -349,8 +349,10 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
 
     def __len__(self):
-        return self.index.shape[0]
-
+        try:
+            return self.index.shape[0]
+        except AttributeError:
+            return 0
 
     def get_similarities(self, query):
         """
@@ -457,7 +459,10 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
 
     def __len__(self):
-        return self.index.shape[0]
+        try:
+            return self.index.shape[0]
+        except AttributeError:
+            return 0
 
 
     def get_similarities(self, query):
