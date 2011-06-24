@@ -290,9 +290,9 @@ class LsiModel(interfaces.TransformationABC):
                 raise NotImplementedError("distributed stochastic LSA not implemented yet; "
                                           "run either distributed one-pass, or serial randomized.")
             try:
-                import Pyro
-                ns = Pyro.naming.locateNS()
-                dispatcher = Pyro.core.Proxy('PYRONAME:gensim.lsi_dispatcher@%s' % ns._pyroUri.location)
+                import Pyro4
+                ns = Pyro4.naming.locateNS()
+                dispatcher = Pyro4.core.Proxy('PYRONAME:gensim.lsi_dispatcher@%s' % ns._pyroUri.location)
                 dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word=self.id2word, num_topics = num_topics,

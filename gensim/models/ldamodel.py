@@ -227,9 +227,9 @@ class LdaModel(interfaces.TransformationABC):
         else:
             # set up distributed version
             try:
-                import Pyro
-                ns = Pyro.naming.locateNS()
-                dispatcher = Pyro.core.Proxy('PYRONAME:gensim.lda_dispatcher@%s' % ns._pyroUri.location)
+                import Pyro4
+                ns = Pyro4.naming.locateNS()
+                dispatcher = Pyro4.core.Proxy('PYRONAME:gensim.lda_dispatcher@%s' % ns._pyroUri.location)
                 dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word=id2word, num_topics=num_topics,
@@ -479,7 +479,7 @@ class LdaModel(interfaces.TransformationABC):
                     # distributed mode: wait for all workers to finish
                     logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                     other = self.dispatcher.getstate()
-                self.doMstep(rho(), other)
+                self.do_mstep(rho(), other)
                 dirty = False
         #endfor corpus update
 
