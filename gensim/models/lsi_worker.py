@@ -21,8 +21,7 @@ import os, sys, logging
 import threading
 import tempfile
 
-import Pyro
-import Pyro.config
+import Pyro4
 
 from gensim.models import lsimodel
 from gensim import utils
@@ -97,10 +96,8 @@ def main():
         print globals()["__doc__"] % locals()
         sys.exit(1)
 
-    Pyro.config.HOST = utils.get_my_ip()
-
-    with Pyro.naming.locateNS() as ns:
-        with Pyro.core.Daemon() as daemon:
+    with Pyro4.naming.locateNS() as ns:
+        with Pyro4.core.Daemon() as daemon:
             worker = Worker()
             uri = daemon.register(worker)
             name = 'gensim.lsi_worker.' + str(uri)
