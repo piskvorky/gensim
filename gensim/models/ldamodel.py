@@ -479,7 +479,7 @@ class LdaModel(interfaces.TransformationABC):
                     # distributed mode: wait for all workers to finish
                     logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                     other = self.dispatcher.getstate()
-                self.doMstep(rho(), other)
+                self.do_mstep(rho(), other)
                 dirty = False
         #endfor corpus update
 
