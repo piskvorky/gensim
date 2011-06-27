@@ -87,22 +87,22 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
         yield match.group()
 
 
-def to_utf8(text, errors='strict'):
-    """
-    Like built-in `unicode.encode('utf8')`, but allow input to be bytestring,
-    too (so this is a no-op if input already is a bytestring in utf8).
+def any2utf8(text, errors='strict', encoding='utf8'):
+    """Convert a string (unicode or bytestring in `encoding`), to bytestring in utf8.
     """
     if isinstance(text, unicode):
         return text.encode('utf8')
     # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
-    return unicode(text, 'utf8', errors=errors).encode('utf8')
+    return unicode(text, encoding, errors=errors).encode('utf8')
+to_utf8 = any2utf8
 
 
-def to_unicode(text, encoding='utf8', errors='strict'):
-    """Like built-in `unicode`, but simply return input if `text` already is unicode."""
+def any2unicode(text, encoding='utf8', errors='strict'):
+    """Convert a string (bytestring in `encoding` or unicode), to unicode."""
     if isinstance(text, unicode):
         return text
     return unicode(text, encoding, errors=errors)
+to_unicode = any2unicode
 
 
 class SaveLoad(object):
