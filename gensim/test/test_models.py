@@ -92,11 +92,10 @@ class TestLsiModel(unittest.TestCase):
 
         # create the transformation model
         model2 = lsimodel.LsiModel(corpus=corpus, num_topics=5) # compute everything at once
-        model = lsimodel.LsiModel(corpus=None, id2word=model2.id2word, num_topics=5) # start with no documents, we will add then later
+        model = lsimodel.LsiModel(corpus=None, id2word=model2.id2word, num_topics=5) # start with no documents, we will add them later
 
         # train model on a single document
         model.add_documents([corpus[0]])
-        model.print_debug()
 
         # transform the testing document with this partial transformation
         transformed = model[doc]
@@ -105,8 +104,7 @@ class TestLsiModel(unittest.TestCase):
         self.assertTrue(numpy.allclose(abs(vec), abs(expected), atol=1e-6)) # transformed entries must be equal up to sign
 
         # train on another 4 documents
-        model.add_documents(corpus[1:5], chunks=2) # train on 4 extra docs, in chunks of 2 documents, for the lols
-        model.print_debug()
+        model.add_documents(corpus[1:5], chunksize=2) # train on 4 extra docs, in chunks of 2 documents, for the lols
 
         # transform a document with this partial transformation
         transformed = model[doc]
@@ -116,7 +114,6 @@ class TestLsiModel(unittest.TestCase):
 
         # train on the rest of documents
         model.add_documents(corpus[5:])
-        model.print_debug()
 
         # make sure the final transformation is the same as if we had decomposed the whole corpus at once
         vec1 = matutils.sparse2full(model[doc], model.num_topics)

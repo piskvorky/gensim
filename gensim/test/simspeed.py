@@ -52,8 +52,8 @@ if __name__ == '__main__':
 
     logging.info("test 1 (dense): similarity of all vs. all (%i documents, %i dense features)" %
                  (len(corpus_dense), index_dense.num_features))
-    for chunks in [0, 1, 4, 8, 16, 64, 128, 256, 512, 1024]:
-        index_dense.chunks = chunks
+    for chunksize in [0, 1, 4, 8, 16, 64, 128, 256, 512, 1024]:
+        index_dense.chunksize = chunksize
         start = time()
         # `sims` stores the entire N x N sim matrix in memory!
         # this is not necessary, but i added it to test the accuracy of the result
@@ -61,62 +61,62 @@ if __name__ == '__main__':
         sims = [sim for sim in index_dense]
         taken = time() - start
         sims = numpy.asarray(sims)
-        if chunks == 0:
-            logging.info("chunks=%i, time=%.4fs (%.2f docs/s)" % (chunks, taken, len(corpus_dense) / taken))
-            unchunked = sims
+        if chunksize == 0:
+            logging.info("chunksize=%i, time=%.4fs (%.2f docs/s)" % (chunksize, taken, len(corpus_dense) / taken))
+            unchunksizeed = sims
         else:
-            queries = math.ceil(1.0 * len(corpus_dense) / chunks)
-            diff = numpy.mean(numpy.abs(unchunked - sims))
-            logging.info("chunks=%i, time=%.4fs (%.2f docs/s, %.2f queries/s), meandiff=%.3e" %
-                         (chunks, taken, len(corpus_dense) / taken, queries / taken, diff))
+            queries = math.ceil(1.0 * len(corpus_dense) / chunksize)
+            diff = numpy.mean(numpy.abs(unchunksizeed - sims))
+            logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s), meandiff=%.3e" %
+                         (chunksize, taken, len(corpus_dense) / taken, queries / taken, diff))
         del sims
 
     index_dense.num_best = 10
     logging.info("test 2 (dense): as above, but only ask for the top-10 most similar for each document")
-    for chunks in [0, 1, 4, 8, 16, 64, 128, 256, 512, 1024]:
-        index_dense.chunks = chunks
+    for chunksize in [0, 1, 4, 8, 16, 64, 128, 256, 512, 1024]:
+        index_dense.chunksize = chunksize
         start = time()
         sims = [sim for sim in index_dense]
         taken = time() - start
-        if chunks == 0:
+        if chunksize == 0:
             queries = len(corpus_dense)
         else:
-            queries = math.ceil(1.0 * len(corpus_dense) / chunks)
-        logging.info("chunks=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
-                     (chunks, taken, len(corpus_dense) / taken, queries / taken))
+            queries = math.ceil(1.0 * len(corpus_dense) / chunksize)
+        logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
+                     (chunksize, taken, len(corpus_dense) / taken, queries / taken))
     index_dense.num_best = None
 
     logging.info("test 3 (sparse): similarity of all vs. all (%i documents, %i features, %.2f%% density)" %
                  (len(corpus_sparse), index_sparse.index.shape[1], density))
-    for chunks in [0, 5, 10, 100, 500, 1000, 5000]:
-        index_sparse.chunks = chunks
+    for chunksize in [0, 5, 10, 100, 500, 1000, 5000]:
+        index_sparse.chunksize = chunksize
         start = time()
         sims = [sim for sim in index_sparse]
         taken = time() - start
         sims = numpy.asarray(sims)
-        if chunks == 0:
-            logging.info("chunks=%i, time=%.4fs (%.2f docs/s)" % (chunks, taken, len(corpus_sparse) / taken))
-            unchunked = sims
+        if chunksize == 0:
+            logging.info("chunksize=%i, time=%.4fs (%.2f docs/s)" % (chunksize, taken, len(corpus_sparse) / taken))
+            unchunksizeed = sims
         else:
-            queries = math.ceil(1.0 * len(corpus_sparse) / chunks)
-            diff = numpy.mean(numpy.abs(unchunked - sims))
-            logging.info("chunks=%i, time=%.4fs (%.2f docs/s, %.2f queries/s), meandiff=%.3e" %
-                         (chunks, taken, len(corpus_sparse) / taken, queries / taken, diff))
+            queries = math.ceil(1.0 * len(corpus_sparse) / chunksize)
+            diff = numpy.mean(numpy.abs(unchunksizeed - sims))
+            logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s), meandiff=%.3e" %
+                         (chunksize, taken, len(corpus_sparse) / taken, queries / taken, diff))
         del sims
 
     index_sparse.num_best = 10
     logging.info("test 4 (sparse): as above, but only ask for the top-10 most similar for each document")
-    for chunks in [0, 5, 10, 100, 500, 1000, 5000]:
-        index_sparse.chunks = chunks
+    for chunksize in [0, 5, 10, 100, 500, 1000, 5000]:
+        index_sparse.chunksize = chunksize
         start = time()
         sims = [sim for sim in index_sparse]
         taken = time() - start
-        if chunks == 0:
+        if chunksize == 0:
             queries = len(corpus_sparse)
         else:
-            queries = math.ceil(1.0 * len(corpus_sparse) / chunks)
-        logging.info("chunks=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
-                     (chunks, taken, len(corpus_sparse) / taken, queries / taken))
+            queries = math.ceil(1.0 * len(corpus_sparse) / chunksize)
+        logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
+                     (chunksize, taken, len(corpus_sparse) / taken, queries / taken))
     index_sparse.num_best = None
 
     # Difference between test #5 and test #1 is that the query in #5 is a gensim iterable
@@ -126,38 +126,38 @@ if __name__ == '__main__':
     query = corpus_dense[:1000]
     logging.info("test 5 (dense): dense corpus of %i docs vs. index (%i documents, %i dense features)" %
                  (len(query), len(index_dense), index_dense.num_features))
-    for chunks in [1, 4, 8, 16, 64, 128, 256, 512, 1024]:
+    for chunksize in [1, 4, 8, 16, 64, 128, 256, 512, 1024]:
         start = time()
-        if chunks > 1:
+        if chunksize > 1:
             sims = []
-            for chunk in gensim.utils.chunkize_serial(query, chunks):
-                sim = index_dense[chunk]
+            for chunksize in gensim.utils.chunksizeize_serial(query, chunksize):
+                sim = index_dense[chunksize]
                 sims.extend(sim)
         else:
             sims = [index_dense[vec] for vec in query]
         assert len(sims) == len(query) # make sure we have one result for each query document
         taken = time() - start
-        queries = math.ceil(1.0 * len(query) / chunks)
-        logging.info("chunks=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
-                     (chunks, taken, len(query) / taken, queries / taken))
+        queries = math.ceil(1.0 * len(query) / chunksize)
+        logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
+                     (chunksize, taken, len(query) / taken, queries / taken))
 
     # Same comment as for test #5.
     query = corpus_sparse[:1000]
     logging.info("test 6 (sparse): sparse corpus of %i docs vs. sparse index (%i documents, %i features, %.2f%% density)" %
                  (len(query), len(corpus_sparse), index_sparse.index.shape[1], density))
-    for chunks in [1, 5, 10, 100, 500, 1000]:
+    for chunksize in [1, 5, 10, 100, 500, 1000]:
         start = time()
-        if chunks > 1:
+        if chunksize > 1:
             sims = []
-            for chunk in gensim.utils.chunkize_serial(query, chunks):
-                sim = index_sparse[chunk]
+            for chunksize in gensim.utils.chunksizeize_serial(query, chunksize):
+                sim = index_sparse[chunksize]
                 sims.extend(sim)
         else:
             sims = [index_sparse[vec] for vec in query]
         assert len(sims) == len(query) # make sure we have one result for each query document
         taken = time() - start
-        queries = math.ceil(1.0 * len(query) / chunks)
-        logging.info("chunks=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
-                     (chunks, taken, len(query) / taken, queries / taken))
+        queries = math.ceil(1.0 * len(query) / chunksize)
+        logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
+                     (chunksize, taken, len(query) / taken, queries / taken))
 
     logging.info("finished running %s" % program)

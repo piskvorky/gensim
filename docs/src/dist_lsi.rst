@@ -65,7 +65,7 @@ our choice is incidental) and try::
     >>> corpus = corpora.MmCorpus('/tmp/deerwester.mm') # load a corpus of nine documents, from the Tutorials
     >>> id2word = corpora.Dictionary.load('/tmp/deerwester.dict')
 
-    >>> lsi = models.LsiModel(corpus, id2word=id2word, num_topics=200, chunks=1, distributed=True) # run distributed LSA on nine documents
+    >>> lsi = models.LsiModel(corpus, id2word=id2word, num_topics=200, chunksize=1, distributed=True) # run distributed LSA on nine documents
 
 This uses the corpus and feature-token mapping created in the :doc:`tut1` tutorial.
 If you look at the log in your Python session, you should see a line similar to::
@@ -81,7 +81,7 @@ To check the LSA results, let's print the first two latent topics::
     topic #1(2.542): -0.623*"graph" + -0.490*"trees" + -0.451*"minors" + -0.274*"survey" + 0.167*"system"
 
 Success! But a corpus of nine documents is no challenge for our powerful cluster...
-In fact, we had to lower the job size (`chunks` parameter above) to a single document
+In fact, we had to lower the job size (`chunksize` parameter above) to a single document
 at a time, otherwise all documents would be processed by a single worker all at once.
 
 So let's run LSA on **one million documents** instead::
@@ -89,7 +89,7 @@ So let's run LSA on **one million documents** instead::
     >>> # inflate the corpus to 1M documents, by repeating its documents over&over
     >>> corpus1m = utils.RepeatCorpus(corpus, 1000000)
     >>> # run distributed LSA on 1 million documents
-    >>> lsi1m = models.LsiModel(corpus1m, id2word=id2word, num_topics=200, chunks=10000, distributed=True)
+    >>> lsi1m = models.LsiModel(corpus1m, id2word=id2word, num_topics=200, chunksize=10000, distributed=True)
 
     >>> lsi1m.printTopics(num_topics=2, num_words=5)
     topic #0(1113.628): 0.644*"system" + 0.404*"user" + 0.301*"eps" + 0.265*"time" + 0.265*"response"
@@ -133,7 +133,7 @@ the corpus iterator with::
 Now we're ready to run distributed LSA on the English Wikipedia::
 
     >>> # extract 400 LSI topics, using a cluster of nodes
-    >>> lsi = gensim.models.lsimodel.LsiModel(corpus=mm, id2word=id2word, num_topics=400, chunks=20000, distributed=True)
+    >>> lsi = gensim.models.lsimodel.LsiModel(corpus=mm, id2word=id2word, num_topics=400, chunksize=20000, distributed=True)
 
     >>> # print the most contributing words (both positively and negatively) for each of the first ten topics
     >>> lsi.print_topics(10)

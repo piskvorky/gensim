@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.0rc1',
+        VERSION:     '0.8.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -32,6 +32,19 @@
 <meta property="og:title" content="#gensim" />
 <meta property="og:description" content="Efficient topic modelling in Python" />
 
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24066335-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
   </head>
   <body>
 <!--
@@ -152,7 +165,7 @@ traffic due to data distribution across cluster nodes would likely make it
 </table>
 <dl class="class">
 <dt id="gensim.models.lsimodel.LsiModel">
-<em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus=None</em>, <em>num_topics=200</em>, <em>id2word=None</em>, <em>chunks=20000</em>, <em>decay=1.0</em>, <em>distributed=False</em>, <em>onepass=True</em>, <em>power_iters=2</em>, <em>extra_samples=100</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">LsiModel</tt><big>(</big><em>corpus=None</em>, <em>num_topics=200</em>, <em>id2word=None</em>, <em>chunksize=20000</em>, <em>decay=1.0</em>, <em>distributed=False</em>, <em>onepass=True</em>, <em>power_iters=2</em>, <em>extra_samples=100</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Objects of this class allow building and maintaining a model for Latent
 Semantic Indexing (also known as Latent Semantic Analysis).</p>
 <p>The main methods are:</p>
@@ -170,7 +183,7 @@ notation. You can also add new training documents, with <tt class="docutils lite
 so that training can be stopped and resumed at any time, and the
 LSI transformation is available at any point.</p>
 <p>If you specify a <cite>corpus</cite>, it will be used to train the model. See the
-method <cite>add_documents</cite> for a description of the <cite>chunks</cite> and <cite>decay</cite> parameters.</p>
+method <cite>add_documents</cite> for a description of the <cite>chunksize</cite> and <cite>decay</cite> parameters.</p>
 <p>Turn <cite>onepass</cite> off to force a multi-pass stochastic algorithm.</p>
 <p><cite>power_iters</cite> and <cite>extra_samples</cite> affect the accuracy of the stochastic
 multi-pass algorithm, which is used either internally (<cite>onepass=True</cite>) or
@@ -193,12 +206,12 @@ some hard numbers.</p>
 </table>
 <dl class="method">
 <dt id="gensim.models.lsimodel.LsiModel.add_documents">
-<tt class="descname">add_documents</tt><big>(</big><em>corpus</em>, <em>chunks=None</em>, <em>decay=None</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.add_documents" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">add_documents</tt><big>(</big><em>corpus</em>, <em>chunksize=None</em>, <em>decay=None</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.add_documents" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update singular value decomposition to take into account a new
 corpus of documents.</p>
-<p>Training proceeds in chunks of <cite>chunks</cite> documents at a time. The size of
-<cite>chunks</cite> is a tradeoff between increased speed (bigger <cite>chunks</cite>)
-vs. lower memory footprint (smaller <cite>chunks</cite>). If the distributed mode
+<p>Training proceeds in chunks of <cite>chunksize</cite> documents at a time. The size of
+<cite>chunksize</cite> is a tradeoff between increased speed (bigger <cite>chunksize</cite>)
+vs. lower memory footprint (smaller <cite>chunksize</cite>). If the distributed mode
 is on, each chunk is sent to a different worker/computer.</p>
 <p>Setting <cite>decay</cite> &lt; 1.0 causes re-orientation towards new data trends in the
 input document stream, by giving less emphasis to old observations. This allows
@@ -256,7 +269,7 @@ storing spurious (tiny, numerically instable) values.</p>
 
 <dl class="function">
 <dt id="gensim.models.lsimodel.stochastic_svd">
-<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">stochastic_svd</tt><big>(</big><em>corpus</em>, <em>rank</em>, <em>num_terms</em>, <em>chunks=20000</em>, <em>extra_dims=None</em>, <em>power_iters=0</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em>, <em>eps=9.9999999999999995e-07</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.stochastic_svd" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">stochastic_svd</tt><big>(</big><em>corpus</em>, <em>rank</em>, <em>num_terms</em>, <em>chunksize=20000</em>, <em>extra_dims=None</em>, <em>power_iters=0</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em>, <em>eps=9.9999999999999995e-07</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.stochastic_svd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return (U, S): the left singular vectors and the singular values of the streamed
 input corpus <cite>corpus</cite> <a class="footnote-reference" href="#id6" id="id5">[3]</a>.</p>
 <p>This may actually return less than the requested number of top <cite>rank</cite> factors,
@@ -312,7 +325,7 @@ corpus fits into core memory and a different (more efficient) code path is chose
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jun 20, 2011.
+      Last updated on Jun 28, 2011.
     </div>
   </body>
 </html>

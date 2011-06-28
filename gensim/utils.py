@@ -87,22 +87,22 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
         yield match.group()
 
 
-def to_utf8(text, errors='strict'):
-    """
-    Like built-in `unicode.encode('utf8')`, but allow input to be bytestring,
-    too (so this is a no-op if input already is a bytestring in utf8).
+def any2utf8(text, errors='strict', encoding='utf8'):
+    """Convert a string (unicode or bytestring in `encoding`), to bytestring in utf8.
     """
     if isinstance(text, unicode):
         return text.encode('utf8')
     # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
-    return unicode(text, 'utf8', errors=errors).encode('utf8')
+    return unicode(text, encoding, errors=errors).encode('utf8')
+to_utf8 = any2utf8
 
 
-def to_unicode(text, encoding='utf8', errors='strict'):
-    """Like built-in `unicode`, but simply return input if `text` already is unicode."""
+def any2unicode(text, encoding='utf8', errors='strict'):
+    """Convert a string (bytestring in `encoding` or unicode), to unicode."""
     if isinstance(text, unicode):
         return text
     return unicode(text, encoding, errors=errors)
+to_unicode = any2unicode
 
 
 class SaveLoad(object):
@@ -336,10 +336,10 @@ def decode_htmlentities(text):
         return text
 
 
-def chunkize_serial(corpus, chunks):
+def chunkize_serial(corpus, chunksize):
     """
     Split a stream of values into smaller chunks.
-    Each chunk is of length `chunks`, except the last one which may be smaller.
+    Each chunk is of length `chunksize`, except the last one which may be smaller.
     A once-only input stream (`corpus` from a generator) is ok.
 
     >>> for chunk in chunkize_serial(xrange(10), 4): print list(chunk)
@@ -348,20 +348,20 @@ def chunkize_serial(corpus, chunks):
     [8, 9]
 
     """
-    if chunks <= 0:
+    if chunksize <= 0:
         raise ValueError("chunk size must be greater than zero")
     i = (val for val in corpus) # create generator
     while True:
-        chunk = list(itertools.islice(i, int(chunks))) # consume `chunks` items from the generator
+        chunk = list(itertools.islice(i, int(chunksize))) # consume `chunksize` items from the generator
         if not chunk: # generator empty?
             break
         yield chunk
 
 
-def chunkize(corpus, chunks, maxsize=0):
+def chunkize(corpus, chunksize, maxsize=0):
     """
     Split a stream of values into smaller chunks.
-    Each chunk is of length `chunks`, except the last one which may be smaller.
+    Each chunk is of length `chunksize`, except the last one which may be smaller.
     A once-only input stream (`corpus` from a generator) is ok, chunking is done
     efficiently via itertools.
 
@@ -371,7 +371,7 @@ def chunkize(corpus, chunks, maxsize=0):
     meant to reduce I/O delays, which can be significant when `corpus` comes
     from a slow medium (like harddisk).
 
-    If `maxsize==0`, don't fool around with threads and simply yield the chunks
+    If `maxsize==0`, don't fool around with threads and simply yield the chunksize
     via `chunkize_serial()` (no I/O optimizations).
 
     >>> for chunk in chunkize(xrange(10), 4): print chunk
@@ -384,12 +384,12 @@ def chunkize(corpus, chunks, maxsize=0):
         """
         Help class for threaded `chunkize()`.
         """
-        def __init__(self, q, corpus, chunks, maxsize):
+        def __init__(self, q, corpus, chunksize, maxsize):
             super(InputQueue, self).__init__()
             self.q = q
             self.maxsize = maxsize
             self.corpus = corpus
-            self.chunks = chunks
+            self.chunksize = chunksize
 
         def run(self):
             import numpy # don't clutter the global namespace with a dependency on numpy
@@ -398,7 +398,7 @@ def chunkize(corpus, chunks, maxsize=0):
                 # HACK XXX convert documents to numpy arrays, to save memory.
                 # This also gives a scipy warning at runtime:
                 # "UserWarning: indices array has non-integer dtype (float64)"
-                chunk = [numpy.asarray(doc) for doc in itertools.islice(i, self.chunks)] # consume `chunks` items from the generator
+                chunk = [numpy.asarray(doc) for doc in itertools.islice(i, self.chunksize)] # consume `chunksize` items from the generator
                 if not chunk: # generator empty?
                     break
                 logger.info("prepared another chunk of %i documents (qsize=%i)" %
@@ -406,11 +406,11 @@ def chunkize(corpus, chunks, maxsize=0):
                 self.q.put(chunk, block=True)
     #endclass InputQueue
 
-    assert chunks > 0
+    assert chunksize > 0
 
     if maxsize > 0:
         q = Queue(maxsize=maxsize)
-        thread = InputQueue(q, corpus, chunks, maxsize=maxsize)
+        thread = InputQueue(q, corpus, chunksize, maxsize=maxsize)
         thread.start()
         while thread.isAlive() or not q.empty():
             try:
@@ -418,7 +418,7 @@ def chunkize(corpus, chunks, maxsize=0):
             except Empty:
                 pass
     else:
-        for chunk in chunkize_serial(corpus, chunks):
+        for chunk in chunkize_serial(corpus, chunksize):
             yield chunk
 
 
