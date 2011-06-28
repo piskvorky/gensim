@@ -67,8 +67,9 @@ setup(
         'scipy >= 0.7.0',
     ],
 
+    dependency_links = ['http://nlp.fi.muni.cz/projekty/gensim/Pyro-4.1.tar.gz'],
     extras_require = {
-        'distributed': ['Pyro >= 4.1'],
+        'distributed': ['Pyro == 4.1'],
     },
 
     include_package_data = True,
