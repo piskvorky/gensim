@@ -355,7 +355,7 @@ class LdaModel(interfaces.TransformationABC):
             # M step, so that
             # sstats[k, w] = \sum_d n_{dw} * phi_{dwk}
             # = \sum_d n_{dw} * exp{Elogtheta_{dk} + Elogbeta_{kw}} / phinorm_{dw}.
-            sstats = sstats * self.expElogbeta
+            sstats *= self.expElogbeta
         return gamma, sstats
 
 

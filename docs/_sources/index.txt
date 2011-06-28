@@ -8,7 +8,7 @@ Gensim -- Vector Space Modelling for Humans
 
 .. admonition:: What's new?
 
-   * 19/06/2011: version 0.8.0 is out! Faster & better: :doc:`changes walkthrough<changes_080>`
+   * 19/06/2011: version 0.8.0 is `out <http://pypi.python.org/pypi/gensim>`_! Faster & better: :doc:`walkthrough of the changes<changes_080>`.
    * 12/02/2011: faster and leaner **Latent Semantic Indexing (LSI)** and **Latent Dirichlet Allocation (LDA)**:
 
      * :doc:`Processing the English Wikipedia <wiki>`, 3.2 million documents (`NIPS workshop paper <http://arxiv.org/abs/1102.5597>`_)
@@ -20,7 +20,7 @@ For **installation** and **troubleshooting**, see the :doc:`installation <instal
 
 For **examples** on how to convert text to vectors and work with the result, try the :doc:`tutorials <tutorial>`.
 
-When **citing** `gensim` in academic papers, please use
+When **citing** `gensim` in academic papers, use
 `this BibTeX entry <http://nlp.fi.muni.cz/projekty/gensim/bibtex_gensim.bib>`_.
 
 
@@ -29,13 +29,16 @@ Quick Reference Example
 
 >>> from gensim import corpora, models, similarities
 >>>
->>> # load corpus iterator from a Matrix Market file on disk
+>>> # Load corpus iterator from a Matrix Market file on disk.
+>>> # See Tutorial 1 on text corpora and vectors.
 >>> corpus = corpora.MmCorpus('/path/to/corpus.mm')
 >>>
->>> # initialize a transformation (Latent Semantic Indexing with 200 latent dimensions)
+>>> # Initialize a transformation (Latent Semantic Indexing with 200 latent dimensions).
+>>> # See Tutorial 2 on semantic models.
 >>> lsi = models.LsiModel(corpus, num_topics=200)
 >>>
->>> # convert another corpus to the latent space and index it
+>>> # Convert another corpus to the latent space and index it.
+>>> # See Tutorial 3 on similarity queries.
 >>> index = similarities.MatrixSimilarity(lsi[another_corpus])
 >>>
 >>> # determine similarity of a query document against each document in the index
