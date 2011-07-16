@@ -187,6 +187,14 @@ mmap&#8217;ed), under <cite>fname.npy</cite>. The rest of the object is pickled 
 index.</p>
 <p>Basically just wraps (Sparse)MatrixSimilarity so that it mmaps from disk on
 request (query).</p>
+<dl class="method">
+<dt id="gensim.similarities.docsim.Shard.get_document_id">
+<tt class="descname">get_document_id</tt><big>(</big><em>pos</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Shard.get_document_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return index vector at position <cite>pos</cite>.</p>
+<p>The vector is of the same type as the underlying index (ie., dense for
+MatrixSimilarity and scipy.sparse for SparseMatrixSimilarity.</p>
+</dd></dl>
+
 <dl class="classmethod">
 <dt id="gensim.similarities.docsim.Shard.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Shard.load" title="Permalink to this definition">¶</a></dt>
@@ -249,6 +257,13 @@ this incomplete shard will be loaded again and completed. For this reason,
 avoid the pattern of calling <cite>add_documents</cite> followed by a query, with only a few
 documents added. The re-opening makes this pattern inefficient. Instead,
 try to add as many documents as possible (ideally, all of them), only then query.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.similarities.docsim.Similarity.get_similarity_id">
+<tt class="descname">get_similarity_id</tt><big>(</big><em>docid</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.get_similarity_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return similarity of the given document only. <cite>docid</cite> is the position
+of the query document within index.</p>
 </dd></dl>
 
 <dl class="classmethod">
@@ -338,7 +353,7 @@ mmap&#8217;ed), under <cite>fname.array_name.npy</cite>.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jun 28, 2011.
+      Last updated on Jul 17, 2011.
     </div>
   </body>
 </html>
