@@ -183,7 +183,7 @@ def main():
 
     with Pyro.naming.locateNS() as ns:
         with Pyro.core.Daemon() as daemon:
-            dispatcher = Dispatcher(maxsize = maxsize)
+            dispatcher = Dispatcher(maxsize=maxsize)
             uri = daemon.register(dispatcher)
             # prepare callback object for the workers
             dispatcher.callback = Pyro.core.Proxy(uri)

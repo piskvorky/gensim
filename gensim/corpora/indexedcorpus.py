@@ -61,10 +61,11 @@ class IndexedCorpus(interfaces.CorpusABC):
 
         This relies on the underlying corpus class `serializer` providing (in
         addition to standard iteration):
-          * `save_corpus` method that returns a sequence of byte offsets, one for
-             each saved document,
-          * the `docbyoffset(offset)` method, which returns a document
-            positioned at `offset` bytes within the persistent storage (file).
+
+        * `save_corpus` method that returns a sequence of byte offsets, one for
+           each saved document,
+        * the `docbyoffset(offset)` method, which returns a document
+          positioned at `offset` bytes within the persistent storage (file).
 
         Example:
 
