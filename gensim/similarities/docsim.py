@@ -91,6 +91,17 @@ class Shard(utils.SaveLoad):
         return self.cls.load(self.fname)
 
 
+    def get_document_id(self, pos):
+        """Return index vector at position `pos`.
+
+        The vector is of the same type as the underlying index (ie., dense for
+        MatrixSimilarity and scipy.sparse for SparseMatrixSimilarity.
+        """
+        assert 0 <= pos < len(self), "requested position out of range"
+        index = self.get_index()
+        return index.index[pos]
+
+
     def __getitem__(self, query):
         index = self.get_index()
         try:
@@ -99,6 +110,7 @@ class Shard(utils.SaveLoad):
         except:
             raise ValueError("num_best and normalize have to be set before querying a proxy Shard object")
         return index[query]
+
 
 
 class Similarity(interfaces.SimilarityABC):
@@ -149,7 +161,6 @@ class Similarity(interfaces.SimilarityABC):
 
         if corpus is not None:
             self.add_documents(corpus)
-#       TODO: make the index more robust against disk/power failures; use some db/pytables? don't reinvent the wheel
 
 
     def __len__(self):
@@ -262,6 +273,28 @@ class Similarity(interfaces.SimilarityABC):
                 merged = sorted(sum(parts, []), key=lambda item: -item[1])[ : self.num_best]
                 result.append(merged)
         return result
+
+
+    def similarity_by_id(self, docid):
+        """
+        Return similarity of the given document only. `docid` is the position
+        of the query document within index.
+        """
+        self.close_shard() # no-op if no documents added to index since last query
+        pos = 0
+        for shard in self.shards:
+            pos += len(shard)
+            if docid < pos:
+                break
+        if not self.shards or docid < 0 or docid >= pos:
+            raise ValueError("invalid document position: %s (must be 0 <= x < %s)" %
+                             (docid, len(self)))
+        norm, self.normalize = self.normalize, False
+        query = shard.get_document_id(docid - pos + len(shard))
+        result = self[query]
+        self.normalize = norm
+        return result
+
 
 
     def __iter__(self):
