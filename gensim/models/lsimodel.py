@@ -295,7 +295,7 @@ class LsiModel(interfaces.TransformationABC):
                 dispatcher = Pyro.core.Proxy('PYRONAME:gensim.lsi_dispatcher@%s' % ns._pyroUri.location)
                 dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
-                dispatcher.initialize(id2word=self.id2word, num_topics = num_topics,
+                dispatcher.initialize(id2word=self.id2word, num_topics=num_topics,
                                       chunksize=chunksize, decay=decay,
                                       distributed=False, onepass=onepass)
                 self.dispatcher = dispatcher
@@ -581,8 +581,6 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
 
     num_terms = int(num_terms)
 
-    eps = max(float(eps), 1e-9) # must ignore near-zero eigenvalues (probably numerical error); the associated eigenvectors are typically unstable/garbage
-
     # first phase: construct the orthonormal action matrix Q = orth(Y) = orth((A * A.T)^q * A * O)
     # build Y in blocks of `chunksize` documents (much faster than going one-by-one
     # and more memory friendly than processing all documents at once)
@@ -641,7 +639,6 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
     y = [y]
     q, r = matutils.qr_destroy(y) # orthonormalize the range
     del y
-    samples = clip_spectrum(numpy.diag(r), samples, discard=eps)
     qt = q[:, :samples].T.copy()
     del q
 
