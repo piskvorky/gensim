@@ -219,15 +219,15 @@ therefore reads: in the document <cite>&#8220;Human computer interaction&#8221;<
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[</span><span class="n">dictionary</span><span class="o">.</span><span class="n">doc2bow</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">texts</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s">&#39;/tmp/deerwester.mm&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span> <span class="c"># store to disk, for later use</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">corpus</span>
-<span class="go">[[(0, 1.0), (1, 1.0), (2, 1.0)],</span>
-<span class="go"> [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],</span>
-<span class="go"> [(1, 1.0), (3, 1.0), (4, 1.0), (7, 1.0)],</span>
-<span class="go"> [(0, 1.0), (4, 2.0), (7, 1.0)],</span>
-<span class="go"> [(3, 1.0), (5, 1.0), (6, 1.0)],</span>
-<span class="go"> [(9, 1.0)],</span>
-<span class="go"> [(9, 1.0), (10, 1.0)],</span>
-<span class="go"> [(9, 1.0), (10, 1.0), (11, 1.0)],</span>
-<span class="go"> [(8, 1.0), (10, 1.0), (11, 1.0)]]</span>
+<span class="go">[(0, 1), (1, 1), (2, 1)]</span>
+<span class="go">[(0, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]</span>
+<span class="go">[(2, 1), (5, 1), (7, 1), (8, 1)]</span>
+<span class="go">[(1, 1), (5, 2), (8, 1)]</span>
+<span class="go">[(3, 1), (6, 1), (7, 1)]</span>
+<span class="go">[(9, 1)]</span>
+<span class="go">[(9, 1), (10, 1)]</span>
+<span class="go">[(9, 1), (10, 1), (11, 1)]</span>
+<span class="go">[(4, 1), (10, 1), (11, 1)]</span>
 </pre></div>
 </div>
 <p>By now it should be clear that the vector feature with <tt class="docutils literal"><span class="pre">id=10</span></tt> stands for the question &#8220;How many
@@ -403,7 +403,7 @@ Or continue to the next tutorial on <a class="reference internal" href="tut2.htm
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jul 17, 2011.
+      Last updated on Aug 03, 2011.
     </div>
   </body>
 </html>

@@ -259,13 +259,6 @@ documents added. The re-opening makes this pattern inefficient. Instead,
 try to add as many documents as possible (ideally, all of them), only then query.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="gensim.similarities.docsim.Similarity.get_similarity_id">
-<tt class="descname">get_similarity_id</tt><big>(</big><em>docid</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.get_similarity_id" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return similarity of the given document only. <cite>docid</cite> is the position
-of the query document within index.</p>
-</dd></dl>
-
 <dl class="classmethod">
 <dt id="gensim.similarities.docsim.Similarity.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.load" title="Permalink to this definition">¶</a></dt>
@@ -278,6 +271,13 @@ of the query document within index.</p>
 <dd><p>Save the object via pickling (also see load) under filename specified in
 the constructor.</p>
 <p>Calls <cite>close_shard</cite> internally to spill any unfinished shards to disk first.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.similarities.docsim.Similarity.similarity_by_id">
+<tt class="descname">similarity_by_id</tt><big>(</big><em>docid</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.similarity_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return similarity of the given document only. <cite>docid</cite> is the position
+of the query document within index.</p>
 </dd></dl>
 
 </dd></dl>
@@ -353,7 +353,7 @@ mmap&#8217;ed), under <cite>fname.array_name.npy</cite>.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jul 17, 2011.
+      Last updated on Aug 03, 2011.
     </div>
   </body>
 </html>

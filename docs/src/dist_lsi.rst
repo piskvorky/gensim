@@ -19,7 +19,7 @@ To start with, install `gensim` and `Pyro` on each one of them with::
 
 and run Pyro's name server on exactly *one* of the machines (doesn't matter which one)::
 
-  $ python -m Pyro.naming &
+  $ python -m Pyro4.naming -n 0.0.0.0 &
 
 Let's say our example cluster consists of dual-core computers with loads of
 memory. We will therefore run **two** worker scripts on four of the physical machines,
@@ -91,7 +91,7 @@ So let's run LSA on **one million documents** instead::
     >>> # run distributed LSA on 1 million documents
     >>> lsi1m = models.LsiModel(corpus1m, id2word=id2word, num_topics=200, chunksize=10000, distributed=True)
 
-    >>> lsi1m.printTopics(num_topics=2, num_words=5)
+    >>> lsi1m.print_topics(num_topics=2, num_words=5)
     topic #0(1113.628): 0.644*"system" + 0.404*"user" + 0.301*"eps" + 0.265*"time" + 0.265*"response"
     topic #1(847.233): 0.623*"graph" + 0.490*"trees" + 0.451*"minors" + 0.274*"survey" + -0.167*"system"
 
@@ -119,7 +119,7 @@ First, download and prepare the Wikipedia corpus as per :doc:`wiki`, then load
 the corpus iterator with::
 
     >>> import logging, gensim, bz2
-    >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level logging.INFO)
+    >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
     >>> # load id->word mapping (the dictionary)
     >>> id2word = gensim.corpora.Dictionary.load_from_text('wiki_en_wordids.txt')

@@ -290,9 +290,9 @@ class LsiModel(interfaces.TransformationABC):
                 raise NotImplementedError("distributed stochastic LSA not implemented yet; "
                                           "run either distributed one-pass, or serial randomized.")
             try:
-                import Pyro
-                ns = Pyro.naming.locateNS()
-                dispatcher = Pyro.core.Proxy('PYRONAME:gensim.lsi_dispatcher@%s' % ns._pyroUri.location)
+                import Pyro4
+                ns = Pyro4.locateNS()
+                dispatcher = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher')
                 dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word=self.id2word, num_topics=num_topics,
@@ -490,7 +490,7 @@ class LsiModel(interfaces.TransformationABC):
         del self.projection.u
         try:
             utils.pickle(self, fname) # store projection-less object
-            numpy.save(fname + '.npy', u) # store projection
+            numpy.save(fname + '.npy', asfarray(u)) # store projection
         finally:
             self.projection.u = u
 
@@ -651,7 +651,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         # second phase: construct the covariance matrix X = B * B.T, where B = Q.T * A
         # again, construct X incrementally, in chunks of `chunksize` documents from the streaming
         # input corpus A, to avoid using O(number of documents) memory
-        x = numpy.zeros(shape = (samples, samples), dtype=dtype)
+        x = numpy.zeros(shape=(samples, samples), dtype=dtype)
         logger.info("2nd phase: constructing %s covariance matrix" % str(x.shape))
         chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunksize)
         for chunk_no, (key, group) in enumerate(chunker):
