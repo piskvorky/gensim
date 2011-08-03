@@ -18,8 +18,7 @@ from __future__ import with_statement
 import os, sys, logging, threading, time
 from Queue import Queue
 
-import Pyro
-import Pyro.config
+import Pyro4
 
 from gensim import utils
 
@@ -47,7 +46,7 @@ class Dispatcher(object):
     There should never be more than one dispatcher running at any one time.
     """
 
-    def __init__(self, maxsize = 100):
+    def __init__(self, maxsize=100):
         """
         Note that the constructor does not fully initialize the dispatcher;
         use the `initialize()` function to populate it with workers etc.
@@ -69,10 +68,10 @@ class Dispatcher(object):
 
         # locate all available workers and store their proxies, for subsequent RMI calls
         self.workers = {}
-        with Pyro.naming.locateNS() as ns:
+        with Pyro4.locateNS() as ns:
             for name, uri in ns.list(prefix='gensim.lsi_worker').iteritems():
                 try:
-                    worker = Pyro.core.Proxy(uri)
+                    worker = Pyro4.Proxy(uri)
                     workerid = len(self.workers)
                     # make time consuming methods work asynchronously
                     worker._pyroOneway.add("requestjob")
@@ -81,7 +80,7 @@ class Dispatcher(object):
                     worker.initialize(workerid, dispatcher=self.callback, **model_params)
                     self.workers[workerid] = worker
                     worker.requestjob()
-                except Pyro.errors.PyroError, err:
+                except Pyro4.errors.PyroError, err:
                     logger.warning("unresponsive worker at %s, deleting it from the name server" % uri)
                     ns.remove(name)
 
@@ -179,14 +178,14 @@ def main():
     else:
         maxsize = int(sys.argv[1])
 
-    Pyro.config.HOST = utils.get_my_ip()
+#    Pyro.config.HOST = utils.get_my_ip()
 
-    with Pyro.naming.locateNS() as ns:
-        with Pyro.core.Daemon() as daemon:
+    with Pyro4.locateNS() as ns:
+        with Pyro4.Daemon() as daemon:
             dispatcher = Dispatcher(maxsize=maxsize)
             uri = daemon.register(dispatcher)
             # prepare callback object for the workers
-            dispatcher.callback = Pyro.core.Proxy(uri)
+            dispatcher.callback = Pyro4.Proxy(uri)
 
             name = 'gensim.lsi_dispatcher'
             ns.remove(name)

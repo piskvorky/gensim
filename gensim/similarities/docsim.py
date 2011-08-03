@@ -296,7 +296,6 @@ class Similarity(interfaces.SimilarityABC):
         return result
 
 
-
     def __iter__(self):
         """
         For each index document, compute cosine similarity against all other

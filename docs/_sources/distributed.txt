@@ -36,11 +36,11 @@ Prerequisites
 -----------------
 
 For communication between nodes, `gensim` uses `Pyro (PYthon Remote Objects)
-<http://pypi.python.org/pypi/Pyro>`_, version >= 4.1. This is a library for low-level socket communication
+<http://pypi.python.org/pypi/Pyro4>`_, version >= 4.8. This is a library for low-level socket communication
 and remote procedure calls (RPC) in Python. `Pyro` is a pure-Python library, so its
 installation is quite painless and only involves copying its `*.py` files somewhere onto your Python's import path::
 
-  sudo easy_install Pyro
+  sudo easy_install Pyro4
 
 You don't have to install `Pyro` to run `gensim`, but if you don't, you won't be able
 to access the distributed features (i.e., everything will always run in serial mode,
@@ -57,8 +57,7 @@ run it over a cluster of computers!
 What you need to do is run a :term:`worker` script (see below) on each of your cluster nodes prior
 to starting your computation. Running this script tells `gensim` that it may use the node
 as a slave to delegate some work to it. During initialization, the algorithms
-inside `gensim` will automatically try to look for and enslave all available worker nodes.
-If at least one worker is found, things will run in the distributed mode; if not, in serial node.
+inside `gensim` will try to look for and enslave all available worker nodes.
 
 .. glossary::
 
