@@ -460,3 +460,39 @@ def toptexts(query, texts, index, n=10):
         result.append((topid, topcosine, texts[topid]))
     return result
 
+
+def randfname(prefix='gensim'):
+    randpart = hex(random.randint(0, 0xffffff))[2:]
+    return os.path.join(tempfile.gettempdir(), prefix + randpart)
+
+
+def grouper(iterable, chunksize):
+    """
+    Return elements from the iterable in `chunksize`-ed lists. The last returned
+    element may be smaller (if length of collection is not divisible by `chunksize`).
+
+    >>> print list(grouper(xrange(10))
+    [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
+    """
+    i = iter(iterable)
+    while True:
+        chunk = list(itertools.islice(i, int(chunksize)))
+        if not chunk:
+            break
+        yield chunk
+
+
+def upload_chunked(server, docs, chunksize=10000):
+    """
+    Memory-friendly upload of documents to a SimServer (or Pyro SimServer proxy).
+
+    Use this function to train or index large collections -- avoid sending the
+    entire corpus over the wire as a single Pyro in-memory object. The documents
+    will be sent in smaller chunks, of `chunksize` documents each.
+    """
+    start = 0
+    for chunk in grouper(docs, chunksize):
+        end = start + len(chunk)
+        logger.info("uploading documents %i-%i" % (start, end - 1))
+        server.add_documents(chunk)
+        start = end

@@ -152,10 +152,10 @@ AMD&#8217;s ACML, OS X&#8217;s vecLib, Sun&#8217;s Sunperf, ...) or some open-so
 </div>
 <div class="section" id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
-<p>For communication between nodes, <cite>gensim</cite> uses <a class="reference external" href="http://pypi.python.org/pypi/Pyro">Pyro (PYthon Remote Objects)</a>, version &gt;= 4.1. This is a library for low-level socket communication
+<p>For communication between nodes, <cite>gensim</cite> uses <a class="reference external" href="http://pypi.python.org/pypi/Pyro4">Pyro (PYthon Remote Objects)</a>, version &gt;= 4.8. This is a library for low-level socket communication
 and remote procedure calls (RPC) in Python. <cite>Pyro</cite> is a pure-Python library, so its
 installation is quite painless and only involves copying its <cite>*.py</cite> files somewhere onto your Python&#8217;s import path:</p>
-<div class="highlight-python"><pre>sudo easy_install Pyro</pre>
+<div class="highlight-python"><pre>sudo easy_install Pyro4</pre>
 </div>
 <p>You don&#8217;t have to install <cite>Pyro</cite> to run <cite>gensim</cite>, but if you don&#8217;t, you won&#8217;t be able
 to access the distributed features (i.e., everything will always run in serial mode,
@@ -169,8 +169,7 @@ run it over a cluster of computers!</p>
 <p>What you need to do is run a <a class="reference internal" href="#term-worker"><em class="xref std std-term">worker</em></a> script (see below) on each of your cluster nodes prior
 to starting your computation. Running this script tells <cite>gensim</cite> that it may use the node
 as a slave to delegate some work to it. During initialization, the algorithms
-inside <cite>gensim</cite> will automatically try to look for and enslave all available worker nodes.
-If at least one worker is found, things will run in the distributed mode; if not, in serial node.</p>
+inside <cite>gensim</cite> will try to look for and enslave all available worker nodes.</p>
 <dl class="glossary docutils">
 <dt id="term-node">Node</dt>
 <dd>A logical working unit. Can correspond to a single physical machine, but you
@@ -234,7 +233,7 @@ there can only be one active dispatcher at a time in the cluster.</dd>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jul 17, 2011.
+      Last updated on Aug 03, 2011.
     </div>
   </body>
 </html>

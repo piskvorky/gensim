@@ -296,7 +296,6 @@ class Similarity(interfaces.SimilarityABC):
         return result
 
 
-
     def __iter__(self):
         """
         For each index document, compute cosine similarity against all other
@@ -521,7 +520,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
         # compute cosine similarity against every other document in the collection
         result = self.index * query.tocsc() # N x T * T x C = N x C
-        if result.shape[1] == 1:
+        if result.shape[1] == 1 and not is_corpus:
             # for queries of one document, return a 1d array
             result = result.toarray().flatten()
         else:

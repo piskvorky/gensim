@@ -108,18 +108,18 @@ and returns the result as a sparse vector. The sparse vector ``[(0, 1), (1, 1)]`
 therefore reads: in the document `"Human computer interaction"`, the words `computer`
 (id 0) and `human` (id 1) appear once; the other ten dictionary words appear (implicitly) zero times.
 
->>> corpus = [dictionary.doc2bow(text) for text in texts]
->>> corpora.MmCorpus.serialize('/tmp/deerwester.mm', corpus) # store to disk, for later use
->>> print corpus
-[[(0, 1.0), (1, 1.0), (2, 1.0)],
- [(2, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (8, 1.0)],
- [(1, 1.0), (3, 1.0), (4, 1.0), (7, 1.0)],
- [(0, 1.0), (4, 2.0), (7, 1.0)],
- [(3, 1.0), (5, 1.0), (6, 1.0)],
- [(9, 1.0)],
- [(9, 1.0), (10, 1.0)],
- [(9, 1.0), (10, 1.0), (11, 1.0)],
- [(8, 1.0), (10, 1.0), (11, 1.0)]]
+    >>> corpus = [dictionary.doc2bow(text) for text in texts]
+    >>> corpora.MmCorpus.serialize('/tmp/deerwester.mm', corpus) # store to disk, for later use
+    >>> print corpus
+    [(0, 1), (1, 1), (2, 1)]
+    [(0, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]
+    [(2, 1), (5, 1), (7, 1), (8, 1)]
+    [(1, 1), (5, 2), (8, 1)]
+    [(3, 1), (6, 1), (7, 1)]
+    [(9, 1)]
+    [(9, 1), (10, 1)]
+    [(9, 1), (10, 1), (11, 1)]
+    [(4, 1), (10, 1), (11, 1)]
 
 By now it should be clear that the vector feature with ``id=10`` stands for the question "How many
 times does the word `graph` appear in the document?" and that the answer is "zero" for

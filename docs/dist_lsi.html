@@ -136,7 +136,7 @@ To start with, install <cite>gensim</cite> and <cite>Pyro</cite> on each one of 
 <div class="highlight-python"><pre>$ sudo easy_install gensim[distributed]</pre>
 </div>
 <p>and run Pyro&#8217;s name server on exactly <em>one</em> of the machines (doesn&#8217;t matter which one):</p>
-<div class="highlight-python"><pre>$ python -m Pyro.naming &amp;</pre>
+<div class="highlight-python"><pre>$ python -m Pyro4.naming -n 0.0.0.0 &amp;</pre>
 </div>
 <p>Let&#8217;s say our example cluster consists of dual-core computers with loads of
 memory. We will therefore run <strong>two</strong> worker scripts on four of the physical machines,
@@ -199,7 +199,7 @@ at a time, otherwise all documents would be processed by a single worker all at 
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># run distributed LSA on 1 million documents</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus1m</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span><span class="o">.</span><span class="n">printTopics</span><span class="p">(</span><span class="n">num_topics</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_words</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lsi1m</span><span class="o">.</span><span class="n">print_topics</span><span class="p">(</span><span class="n">num_topics</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_words</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="go">topic #0(1113.628): 0.644*&quot;system&quot; + 0.404*&quot;user&quot; + 0.301*&quot;eps&quot; + 0.265*&quot;time&quot; + 0.265*&quot;response&quot;</span>
 <span class="go">topic #1(847.233): 0.623*&quot;graph&quot; + 0.490*&quot;trees&quot; + 0.451*&quot;minors&quot; + 0.274*&quot;survey&quot; + -0.167*&quot;system&quot;</span>
 </pre></div>
@@ -224,7 +224,7 @@ Latent Semantic Analysis on the English Wikipedia.</p>
 <p>First, download and prepare the Wikipedia corpus as per <a class="reference internal" href="wiki.html"><em>Experiments on the English Wikipedia</em></a>, then load
 the corpus iterator with:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span><span class="o">,</span> <span class="nn">gensim</span><span class="o">,</span> <span class="nn">bz2</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> : </span><span class="si">%(levelname)s</span><span class="s"> : </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># load id-&gt;word mapping (the dictionary)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">load_from_text</span><span class="p">(</span><span class="s">&#39;wiki_en_wordids.txt&#39;</span><span class="p">)</span>
@@ -298,7 +298,7 @@ paper</a>.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jul 17, 2011.
+      Last updated on Aug 03, 2011.
     </div>
   </body>
 </html>

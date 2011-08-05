@@ -227,9 +227,9 @@ class LdaModel(interfaces.TransformationABC):
         else:
             # set up distributed version
             try:
-                import Pyro
-                ns = Pyro.naming.locateNS()
-                dispatcher = Pyro.core.Proxy('PYRONAME:gensim.lda_dispatcher@%s' % ns._pyroUri.location)
+                import Pyro4
+                ns = Pyro4.locateNS()
+                dispatcher = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher')
                 dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word=id2word, num_topics=num_topics,
