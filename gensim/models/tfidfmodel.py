@@ -100,7 +100,7 @@ class TfidfModel(interfaces.TransformationABC):
                 dfs[termid] = dfs.get(termid, 0) + 1
 
         # keep some stats about the training corpus
-        self.num_docs = docno + 1 # HACK using leftover from enumerate(corpus) above
+        self.num_docs = docno + 1
         self.num_nnz = numnnz
 
         # and finally compute the idf weights
