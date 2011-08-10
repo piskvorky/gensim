@@ -118,6 +118,13 @@ def ismatrix(m):
     return isinstance(m, numpy.ndarray) and m.ndim == 2 or scipy.sparse.issparse(m)
 
 
+def scipy2sparse(vec):
+    """Convert a scipy.sparse vector to gensim format (list of 2-tuples)."""
+    vec = vec.tocsr()
+    assert vec.shape[0] == 1
+    return zip(vec.indices, vec.data)
+
+
 def sparse2full(doc, length):
     """
     Convert a document in sparse corpus format (sequence of 2-tuples) into a dense

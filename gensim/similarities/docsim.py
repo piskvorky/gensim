@@ -54,6 +54,7 @@ import itertools
 import numpy
 import scipy
 import scipy.sparse
+import tempfile
 
 from gensim import interfaces, utils, matutils
 
@@ -123,12 +124,13 @@ class Similarity(interfaces.SimilarityABC):
     The shards themselves are simply stored as files to disk and mmap'ed back as needed.
 
     """
-    def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=512, shardsize=5000):
+    def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=1024, shardsize=16384):
         """
         Construct the index from `corpus`. The index can be later extended by calling
         the `add_documents` method. Documents are split into shards of `shardsize`
         documents each, converted to a matrix (for fast BLAS calls) and stored to disk
         under `output_prefix.shard_number` (=you need write access to that location).
+        If you don't specify an output prefix, a random filename in temp will be used.
 
         `shardsize` should be chosen so that a `shardsize x chunksize` matrix of floats
         fits comfortably into main memory.
@@ -139,18 +141,22 @@ class Similarity(interfaces.SimilarityABC):
         If `num_best` is left unspecified, similarity queries will return a full
         vector with one float for every document in the index:
 
-        >>> index = Similarity('/tmp/index', corpus, num_features=400) # if corpus has 7 documents...
+        >>> index = Similarity('/path/to/index', corpus, num_features=400) # if corpus has 7 documents...
         >>> index[query] # ... then result will have 7 floats
         [0.0, 0.0, 0.2, 0.13, 0.8, 0.0, 0.1]
 
         If `num_best` is set, queries return only the `num_best` most similar documents:
 
         >>> index.num_best = 3
-        >>> index[query] # return at most "num_best" (index_of_document, similarity) tuples
+        >>> index[query] # return at most "num_best" of `(index_of_document, similarity)` tuples
         [(4, 0.8), (2, 0.13), (3, 0.13)]
 
         """
-        self.output_prefix = output_prefix
+        if output_prefix:
+            outfile, self.output_prefix = tempfile.mkstemp(prefix='tmpindex')
+            outfile.close()
+        else:
+            self.output_prefix = output_prefix
         self.num_features = num_features
         self.num_best = num_best
         self.normalize = True
@@ -183,6 +189,10 @@ class Similarity(interfaces.SimilarityABC):
             # The last shard was incomplete; load it back and add the documents there, don't start a new shard.
             self.reopen_shard()
         for doc in corpus:
+            if isinstance(doc, numpy.ndarray):
+                doc = matutils.full2sparse(doc)
+            elif scipy.sparse.issparse(doc):
+                doc = matutils.scipy2sparse(doc)
             self.fresh_docs.append(doc)
             self.fresh_nnz += len(doc)
             if len(self.fresh_docs) >= self.shardsize:
@@ -275,9 +285,9 @@ class Similarity(interfaces.SimilarityABC):
         return result
 
 
-    def similarity_by_id(self, docid):
+    def similarity_by_id(self, pos):
         """
-        Return similarity of the given document only. `docid` is the position
+        Return similarity of the given document only. `pos` is the position
         of the query document within index.
         """
         self.close_shard() # no-op if no documents added to index since last query
@@ -301,26 +311,44 @@ class Similarity(interfaces.SimilarityABC):
         For each index document, compute cosine similarity against all other
         documents in the index and yield the result.
         """
-        # turn off query normalization (vectors in the index are already normalized)
-        norm = self.normalize
-        self.normalize = False
+        # turn off query normalization (vectors in the index are already normalized, save some CPU)
+        norm, self.normalize = self.normalize, False
+
+        for chunk in self.iter_chunks():
+            if chunk.shape[0] > 1:
+                for sim in self[chunk]:
+                    yield sim
+            else:
+                yield self[chunk]
+
+        self.normalize = norm # restore normalization
+
+
+    def iter_chunks(self, chunksize=None):
+        """
+        Iteratively yield the index as chunks of documents, each of size <= chunksize.
+
+        The chunk is returned in its raw form (matrix or sparse matrix slice).
+        The size of the chunk may be smaller than requested; it is up to the caller
+        to check the result for real length, using `chunk.shape[0]`.
+        """
+        self.close_shard()
+
+        if chunksize is None:
+            # if not explicitly specified, use the chunksize from the constructor
+            chunksize = self.chunksize
 
         for shard in self.shards:
             # split each shard index into smaller chunks (of size self.chunksize) and
             # use each chunk as a query
             query = shard.get_index().index
-            for chunk_start in xrange(0, query.shape[0], self.chunksize):
+            for chunk_start in xrange(0, query.shape[0], chunksize):
                 # scipy.sparse doesn't allow slicing beyond real size of the matrix
                 # (unlike numpy). so, clip the end of the chunk explicitly to make
                 # scipy.sparse happy
-                chunk_end = min(query.shape[0], chunk_start + self.chunksize)
+                chunk_end = min(query.shape[0], chunk_start + chunksize)
                 chunk = query[chunk_start : chunk_end] # create a view
-                if chunk.shape[0] > 1:
-                    for sim in self[chunk]:
-                        yield sim
-                else:
-                    yield self[chunk]
-        self.normalize = norm
+                yield chunk
 
 
     def save(self, fname=None):

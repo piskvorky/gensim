@@ -335,6 +335,21 @@ def decode_htmlentities(text):
         # e.g., ValueError: unichr() arg not in range(0x10000) (narrow Python build)
         return text
 
+def grouper(iterable, chunksize):
+    """
+    Return elements from the iterable in `chunksize`-ed lists. The last returned
+    element may be smaller (if length of collection is not divisible by `chunksize`).
+
+    >>> print list(grouper(xrange(10))
+    [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
+    """
+    i = iter(iterable)
+    while True:
+        chunk = list(itertools.islice(i, int(chunksize)))
+        if not chunk:
+            break
+        yield chunk
+
 
 def chunkize_serial(corpus, chunksize):
     """
