@@ -13,9 +13,6 @@ The server performs 3 main functions:
 2. indexes documents in the semantic representation, for faster retrieval
 3. for a given query document, returns the most similar documents from the index
 
-Run a sample (testing) server with:
-./simserver.py /tmp/simserver
-
 """
 
 from __future__ import with_statement
@@ -26,7 +23,8 @@ import logging
 import random
 import tempfile
 
-from sqlitedict import SqliteDict
+import numpy
+#from sqlitedict import SqliteDict
 
 import gensim
 
@@ -53,7 +51,7 @@ def simple_preprocess(doc):
 
 def merge_sim(oldsims, newsims):
     """Update precomputed similarities with new values."""
-    return sorted(oldsims + newsims, key=lambda item:-item[1])[: EudmlIndex.TOP_SIMS]
+    return sorted(oldsims + newsims, key=lambda item:-item[1])[: SimIndex.TOP_SIMS]
 
 
 class SimIndex(gensim.utils.SaveLoad):
@@ -89,12 +87,13 @@ class SimIndex(gensim.utils.SaveLoad):
         docids = fresh_docs.keys()
         vectors = (model.docs2vecs(fresh_docs[docid] for docid in docids))
 
-        logger.info("indexing %i new documents in %s" % (len(docids), self.fname))
+        logger.info("indexing %i new documents for %s" % (len(docids), self.fname))
         if not self.precompute:
             # we're not precomputing the "most similar" documents; just add the
             # vectors to the index and we're done
             self.qindex.add_documents(vectors)
             self.qindex.save()
+            self.updateids()
         else:
             # first, create a separate index only with the new documents
             logger.debug("adding %i documents to temporary index" % len(docids))
@@ -110,28 +109,32 @@ class SimIndex(gensim.utils.SaveLoad):
             for chunk in self.qindex.iter_chunks():
                 for sims in tmpindex[chunk]:
                     docid = self.pos2id[pos]
+                    sims = self.sims2scores(sims)
                     self.id2sims[docid] = merge_sim(self.id2sims[docid], sims)
                     pos += 1
 
             # add the tmpindex to qindex
             logger.debug("merging temporary index into permanent one")
+            pos = 0
             for chunk in tmpindex.iter_chunks():
                 self.qindex.add_documents(chunk)
             self.qindex.save()
+            self.updateids(docids)
 
             # precompute "most similar" for the newly added documents
             logger.debug("precomputing values for the new documents")
             pos = 0
-            for chunk in self.tmpindex.iter_chunks():
+            for chunk in tmpindex.iter_chunks():
                 for sims in self.qindex[chunk]:
                     docid = docids[pos]
-                    self.id2sims[docid] = sims
+                    self.id2sims[docid] = self.sims2scores(sims)
                     pos += 1
 
             # now the temporary index of new documents has been fully merged; clean up
             del tmpindex # TODO delete all created temp files!
         #endif
 
+    def updateids(self, docids):
         logger.info("updating %i id mappings" % len(docids))
         for docid in docids:
             # update position->id mappings
@@ -269,7 +272,7 @@ class SimModel(gensim.utils.SaveLoad):
 
 
 
-class SimServer(object):
+class SimServer(gensim.utils.SaveLoad):
     """
     This is top-level functionality for the similarity services. It takes care of
     indexing/creating models/querying.
@@ -278,30 +281,12 @@ class SimServer(object):
     client requests.
     """
     def __init__(self, basename):
+        """All data will be stored under `basename` (a filename prefix)."""
         self.basename = basename
-        logger.info("loading similarity server for %s" % self.basename)
-
-        try:
-            self.index = SimIndex.load(self.location('index.db'))
-            logger.debug("loaded index database for %s" % basename)
-        except IOError:
-            logger.debug("%s has no index yet" % basename)
-            self.index = None
-
-        try:
-            self.model = SimModel.load(self.location('model.db'))
-            logger.debug("loaded model for %s" % basename)
-        except IOError:
-            logger.debug("%s has no model yet" % basename)
-            self.model = None
-
-        self.fresh_docs = SqliteDict(self.location('freshdocs.db'))
-
+        self.simindex = None
+        self.simmodel = None
+        self.fresh_docs = {}
         self.flush()
-
-
-    def location(self, name):
-        return os.path.join(self.basename, name)
 
 
     def flush(self, delete_fresh=True):
@@ -309,42 +294,49 @@ class SimServer(object):
         Commit all changes, clear all caches. If `delete_fresh`, also clear the
         `add_documents()` cache.
         """
-        # flush any db changes to disk
-        if self.index:
-            self.index.save(self.location("index.db"))
-        if self.model:
-            self.model.save(self.location("model.db"))
         # erase all temporary documents
         if delete_fresh:
-            self.fresh_docs.clear()
+            self.fresh_docs = {}
+        self.save(self.basename)
 
 
-    def train(self, method='lsi'):
+    def train(self, corpus=None, method='lsi'):
         """
         Create an indexing model. Will overwrite the model if it already exists.
 
-        The model is trained on documents previously entered via `add_documents`.
+        The model is trained on documents previously entered via `add_documents`,
+        or directly on `corpus`, if specified.
         """
-        self.model = SimModel(self.fresh_docs)
+        if corpus is not None:
+            self.flush(delete_fresh=True)
+            self.add_documents(corpus)
+            del corpus
+        self.simmodel = SimModel(self.fresh_docs)
         self.flush(delete_fresh=True)
 
 
-    def index(self):
+    def index(self, corpus=None):
         """
-        Permanently index all documents added via `add_documents`.
+        Permanently index all documents previously added via `add_documents`, or
+        directly documents from `corpus`, if specified.
 
         The indexing model must already exist (see `train`) before this function
         is called.
         """
-        if not self.model:
+        if not self.simmodel:
             msg = 'must initialize the model for %s before indexing documents' % self.basename
             logger.error(msg)
             raise AttributeError(msg)
 
-        if not self.index:
-            logger.info("starting a new index for %s" % fname)
-            self.index = SimIndex(fname)
-        self.index.index_documents(self.fresh_docs, self.model)
+        if corpus is not None:
+            self.flush(delete_fresh=True)
+            self.add_documents(corpus)
+            del corpus
+
+        if not self.simindex:
+            logger.info("starting a new index for %s" % self.basename)
+            self.simindex = SimIndex(self.basename + ".index")
+        self.simindex.index_documents(self.fresh_docs, self.simmodel)
         self.flush(delete_fresh=True)
 
 
@@ -389,7 +381,7 @@ class SimServer(object):
             sims = index.sims_by_id(doc)
         else:
             # query by an arbitrary text (=string) inside doc['text']
-            sims = self.index.sims_by_doc(doc, self.model)
+            sims = self.simindex.sims_by_doc(doc, self.simmodel)
 
         result = []
         for docid, score in sims:
@@ -402,40 +394,17 @@ class SimServer(object):
         return result
 
 
+    def dropindex(self, keep_model=False):
+        self.simindex = None
+        if not keep_model:
+            self.simmodel = None
+        self.flush(delete_fresh=True)
+
+
     def __str__(self):
-        return "SimServer(%r, index=%s, model=%s)" % (self.basename, self.index, self.model)
+        return "SimServer(loc=%r, index=%s, model=%s)" % (self.basename, self.simindex, self.simmodel)
 
 
     def status(self):
         return str(self)
 #endclass SimServer
-
-
-
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
-    logging.root.setLevel(level=logging.DEBUG)
-    logger.info("running %s" % ' '.join(sys.argv))
-
-    program = os.path.basename(sys.argv[0])
-
-    # check and process input arguments
-    if len(sys.argv) < 2:
-        print globals()['__doc__'] % locals()
-        sys.exit(1)
-
-    basename = sys.argv[1]
-
-    server = SimServer(basename)
-
-    import Pyro4 # register server for remote access
-    with Pyro4.locateNS() as ns:
-        with Pyro4.Daemon() as daemon:
-            uri = daemon.register(server)
-            name = 'gensim.simserver'
-            ns.remove(name)
-            ns.register(name, uri)
-            logger.info("worker is ready at URI %s, or under nameserver as %r" % (uri, name))
-            daemon.requestLoop()
-
-    logger.info("finished running %s" % program)

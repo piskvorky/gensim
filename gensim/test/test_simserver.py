@@ -16,26 +16,39 @@ import os.path
 import unittest
 import tempfile
 
+import Pyro4
 
 import gensim
 
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
-corpus = list(gensim.corpora.MmCorpus(os.path.join(module_path, 'test_data/testcorpus.mm')))
+def mock_documents(language, category):
+    """Create a few SimilarityDocuments, for testing."""
+    documents = ["Human machine interface for lab abc computer applications",
+                 "A survey of user opinion of computer system response time",
+                 "The EPS user interface management system",
+                 "System and human system engineering testing of EPS",
+                 "Relation of user perceived response time to error measurement",
+                 "The generation of random binary unordered trees",
+                 "The intersection graph of paths in trees",
+                 "Graph minors IV Widths of trees and well quasi ordering",
+                 "Graph minors A survey"]
 
-
-def testfile():
-    # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'simserver')
+    # create SimilarityDocument-like objects from the texts
+    # these are the object that the gensim server expects as input, and translate
+    # directly into the java's SimilarityDocument class.
+    docs = [{'id': '_'.join((language, category, str(num))),
+             'text': document, 'values': range(num), 'language': language, 'category': category}
+            for num, document in enumerate(documents)]
+    return docs
 
 
 class SimServerTester(unittest.TestCase):
     """Test a running SimServer"""
     def setUp(self):
-        import Pyro4
+        self.docs = mock_documents('en', '')
         try:
             with Pyro4.locateNS() as ns:
-                self.server = Pyro4.Proxy(ns.lookup('gensim.simserver'))
+                self.server = Pyro4.Proxy(ns.lookup('gensim.testserver'))
         except Pyro4.errors.PyroError, e:
             logging.error("could not locate running SimServer: %s" % e)
             raise
@@ -45,10 +58,20 @@ class SimServerTester(unittest.TestCase):
 
 
     def test_model(self):
-        self.server.add_documents(docs[:2])
-        self.server.add_documents(docs[2:])
+        self.server.add_documents(self.docs[:2])
+        self.server.add_documents(self.docs[2:])
         self.server.train()
         logging.debug(self.server.status())
+
+
+    def test_index(self):
+        self.server.dropindex()
+        self.server.train(self.docs)
+        self.server.add_documents(self.docs[:3])
+        self.server.index()
+        self.server.index(self.docs[3:])
+        logging.debug(self.server.status())
+
 
 
 

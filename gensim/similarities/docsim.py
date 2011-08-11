@@ -50,6 +50,8 @@ already uses the faster, batch queries internally:
 
 import logging
 import itertools
+import os
+import random
 
 import numpy
 import scipy
@@ -152,9 +154,9 @@ class Similarity(interfaces.SimilarityABC):
         [(4, 0.8), (2, 0.13), (3, 0.13)]
 
         """
-        if output_prefix:
-            outfile, self.output_prefix = tempfile.mkstemp(prefix='tmpindex')
-            outfile.close()
+        if output_prefix is None:
+            randpart = hex(random.randint(0, 0xffffff))[2:]
+            self.output_prefix = os.path.join(tempfile.gettempdir(), 'simserver' + randpart)
         else:
             self.output_prefix = output_prefix
         self.num_features = num_features
