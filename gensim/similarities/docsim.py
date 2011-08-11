@@ -56,7 +56,6 @@ import random
 import numpy
 import scipy
 import scipy.sparse
-import tempfile
 
 from gensim import interfaces, utils, matutils
 
@@ -155,8 +154,7 @@ class Similarity(interfaces.SimilarityABC):
 
         """
         if output_prefix is None:
-            randpart = hex(random.randint(0, 0xffffff))[2:]
-            self.output_prefix = os.path.join(tempfile.gettempdir(), 'simserver' + randpart)
+            self.output_prefix = utils.randfname(prefix='simserver')
         else:
             self.output_prefix = output_prefix
         self.num_features = num_features

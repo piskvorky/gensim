@@ -24,9 +24,10 @@ import random
 import tempfile
 
 import numpy
-#from sqlitedict import SqliteDict
 
 import gensim
+from sqlitedict import SqliteDict
+
 
 logger = logging.getLogger('gensim_server')
 
@@ -93,14 +94,15 @@ class SimIndex(gensim.utils.SaveLoad):
             # vectors to the index and we're done
             self.qindex.add_documents(vectors)
             self.qindex.save()
-            self.updateids()
+            self.updateids(docids)
         else:
             # first, create a separate index only with the new documents
             logger.debug("adding %i documents to temporary index" % len(docids))
             tmpindex = gensim.similarities.Similarity(None, corpus=None,
-            num_best=self.qindex.num_best, num_features=self.qindex.num_features, shardsize=self.qindex.shardsize)
+                num_best=self.qindex.num_best, num_features=self.qindex.num_features, shardsize=self.qindex.shardsize)
             tmpindex.add_documents(vectors)
             tmpindex.close_shard()
+            tmpindex.normalize = False
 
             # update precomputed "most similar" for old documents (in case some of
             # the new docs make it to the top-N for some of the old documents)
@@ -124,11 +126,13 @@ class SimIndex(gensim.utils.SaveLoad):
             # precompute "most similar" for the newly added documents
             logger.debug("precomputing values for the new documents")
             pos = 0
+            norm, self.qindex.normalize = self.qindex.normalize, False
             for chunk in tmpindex.iter_chunks():
                 for sims in self.qindex[chunk]:
                     docid = docids[pos]
                     self.id2sims[docid] = self.sims2scores(sims)
                     pos += 1
+            self.qindex.normalize = norm
 
             # now the temporary index of new documents has been fully merged; clean up
             del tmpindex # TODO delete all created temp files!
@@ -218,13 +222,19 @@ class SimModel(gensim.utils.SaveLoad):
         """
         self.preprocess = preprocess
         self.method = method # TODO: use subclassing/injection for different methods, instead of param?
-        logger.info("creating model from %s documents" % len(fresh_docs))
-        texts = lambda : (self.preprocess(doc['text']) for doc in fresh_docs.itervalues())
+        docids = fresh_docs.keys()
+        random.shuffle(docids)
+        logger.info("creating model from %s documents" % len(docids))
+
+        logger.info("preprocessing texts")
+        preprocessed = SqliteDict(gensim.utils.randfname(prefix='gensim'))
+        for docid in docids:
+            preprocessed[docid] = self.preprocess(fresh_docs[docid]['text'])
 
         # create id->word (integer->string) mapping
         logger.info("creating dictionary from %s documents" % len(fresh_docs))
         if dictionary is None:
-            self.dictionary = gensim.corpora.Dictionary(texts())
+            self.dictionary = gensim.corpora.Dictionary(preprocessed.itervalues())
             if len(fresh_docs) >= 1000:
                 self.dictionary.filter_extremes(no_below=5, no_above=0.2, keep_n=50000)
             else:
@@ -235,10 +245,10 @@ class SimModel(gensim.utils.SaveLoad):
 
         if method == 'lsi':
             logger.info("training TF-IDF model")
-            corpus = (self.dictionary.doc2bow(text) for text in texts())
+            corpus = (self.dictionary.doc2bow(text) for text in preprocessed.itervalues())
             self.tfidf = gensim.models.TfidfModel(corpus, id2word=self.dictionary)
             logger.info("training LSI model")
-            corpus = (self.dictionary.doc2bow(text) for text in texts())
+            corpus = (self.dictionary.doc2bow(text) for text in preprocessed.itervalues())
             tfidf_corpus = self.tfidf[corpus]
             self.lsi = gensim.models.LsiModel(tfidf_corpus, id2word=self.dictionary, num_topics=LSI_TOPICS)
             self.num_features = len(self.lsi.projection.s)
@@ -378,7 +388,7 @@ class SimServer(gensim.utils.SaveLoad):
         logger.debug("received query call with %r" % doc)
         if isinstance(doc, basestring):
             # query by direct document id
-            sims = index.sims_by_id(doc)
+            sims = self.simindex.sims_by_id(doc)
         else:
             # query by an arbitrary text (=string) inside doc['text']
             sims = self.simindex.sims_by_doc(doc, self.simmodel)
@@ -387,14 +397,11 @@ class SimServer(gensim.utils.SaveLoad):
         for docid, score in sims:
             if score < min_score or 0 < max_results <= len(result):
                 break
-            else:
-                value = None
-            simresult = (docid, score, value)
-            result.append(simresult)
+            result.append((docid, score))
         return result
 
 
-    def dropindex(self, keep_model=False):
+    def drop_index(self, keep_model=False):
         self.simindex = None
         if not keep_model:
             self.simmodel = None
