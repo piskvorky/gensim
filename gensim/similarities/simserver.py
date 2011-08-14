@@ -20,6 +20,7 @@ from __future__ import with_statement
 import os
 import logging
 import random
+import threading
 
 import numpy
 
@@ -67,9 +68,7 @@ class SimIndex(gensim.utils.SaveLoad):
     """
     An index of documents. Used internally by SimServer.
 
-    It uses the Similarity class to persist the underlying document vectors to
-    disk (via mmap).
-
+    It uses the Similarity class to persist all document vectors to disk (via mmap).
     """
     def __init__(self, fname, num_features, shardsize=SHARD_SIZE, topsims=TOP_SIMS):
         """
@@ -106,13 +105,9 @@ class SimIndex(gensim.utils.SaveLoad):
         the same id). `fresh_docs` is a dictionary-like object (=dict, sqlitedict, shelve etc)
         that maps document_id->document.
         """
-
         docids = fresh_docs.keys()
         vectors = (model.docs2vecs(fresh_docs[docid] for docid in docids))
-
         logger.info("adding %i documents to %s" % (len(docids), self))
-        # we're not precomputing the "most similar" documents; just add the
-        # vectors to the index and we're done
         self.qindex.add_documents(vectors)
         self.qindex.save()
         self.update_ids(docids)
@@ -146,9 +141,9 @@ class SimIndex(gensim.utils.SaveLoad):
         logger.debug("deleting %i documents from %s" % (len(docids), self))
         deleted = 0
         for docid in docids:
-            deleted += 1
-            del self.id2pos[docid]
             try:
+                del self.id2pos[docid]
+                deleted += 1
                 del self.id2sims[docid]
             except:
                 pass
@@ -238,6 +233,9 @@ class SimIndex(gensim.utils.SaveLoad):
     def __contains__(self, docid):
         return docid in self.id2pos
 
+    def keys(self):
+        return self.id2pos.keys()
+
     def __str__(self):
         return "SimIndex(%i docs, %i real size)" % (len(self), self.length)
 #endclass SimIndex
@@ -278,7 +276,7 @@ class SimModel(gensim.utils.SaveLoad):
         # create id->word (integer->string) mapping
         logger.info("creating dictionary from %s documents" % len(fresh_docs))
         if dictionary is None:
-            self.dictionary = gensim.corpora.Dictionary(preprocessed.itervalues())
+            self.dictionary = gensim.corpora.Dictionary(preprocessed[docid] for docid in preprocessed)
             if len(fresh_docs) >= 1000:
                 self.dictionary.filter_extremes(no_below=5, no_above=0.2, keep_n=50000)
             else:
@@ -307,17 +305,13 @@ class SimModel(gensim.utils.SaveLoad):
         # TODO take method into account
         tokens = self.preprocess(doc['text'])
         bow = self.dictionary.doc2bow(tokens)
-        tfidf = self.tfidf[bow]
-        lsi = self.lsi[tfidf]
-        return lsi
+        return self.lsi[self.tfidf[bow]]
 
 
     def docs2vecs(self, docs):
         """Convert multiple SimilarityDocuments to vectors (batch version of doc2vec)."""
-        bow = (self.dictionary.doc2bow(self.preprocess(doc['text'])) for doc in docs)
-        tfidf = self.tfidf[bow]
-        lsi = self.lsi[tfidf]
-        return lsi
+        bows = (self.dictionary.doc2bow(self.preprocess(doc['text'])) for doc in docs)
+        return self.lsi[self.tfidf[bows]]
 
 
     def __str__(self):
@@ -363,6 +357,7 @@ class SimServer(object):
         except IOError:
             self.model = None
         self.fresh_docs = SqliteDict() # defaults to a random location in temp
+        self.lock_update = threading.Lock() # only one thread can modify the server at a time
         self.flush()
 
 
@@ -382,9 +377,12 @@ class SimServer(object):
         if self.model is not None:
             self.model.save(self.location('model'))
         if delete_fresh:
-            self.fresh_docs.clear() # erase all buffered documents
+            self.fresh_docs.terminate() # erase all buffered documents + file on disk
+            self.fresh_docs = SqliteDict()
+        self.fresh_docs.sync()
 
 
+    @gensim.utils.synchronous('lock_update')
     def train(self, corpus=None, method='lsi'):
         """
         Create an indexing model. Will overwrite the model if it already exists.
@@ -398,9 +396,10 @@ class SimServer(object):
             self.flush(delete_fresh=True)
             self.add_documents(corpus)
         self.model = SimModel(self.fresh_docs, method='lsi')
-        self.drop_index(keep_model=True) # delete old indexes
+        self.flush(delete_fresh=True)
 
 
+    @gensim.utils.synchronous('lock_update')
     def index(self, corpus=None):
         """
         Permanently index all documents previously added via `add_documents`, or
@@ -427,6 +426,7 @@ class SimServer(object):
         self.flush(delete_fresh=True)
 
 
+    @gensim.utils.synchronous('lock_update')
     def optimize(self):
         """
         Precompute top similarities for all indexed documents. This speeds up
@@ -454,6 +454,26 @@ class SimServer(object):
         self.flush(delete_fresh=False)
 
 
+    @gensim.utils.synchronous('lock_update')
+    def drop_index(self, keep_model=True):
+        """Drop all indexed documents. If `keep_model` is False, also dropped the model."""
+        modelstr = "" if keep_model else "and model "
+        logger.info("deleting similarity index " + modelstr + "from %s" % self.basename)
+        for index in [self.fresh_index, self.opt_index]:
+            if index is not None:
+                index.terminate()
+        self.fresh_index, self.opt_index = None, None
+        if not keep_model and self.model is not None:
+            fname = self.location('model')
+            try:
+                os.remove(fname)
+                logger.info("deleted %s" % fname)
+            except IOError:
+                logger.warning("failed to delete %s" % fname)
+            self.model = None
+        self.flush(delete_fresh=True)
+
+
     def add_documents(self, documents):
         """
         Add a sequence of documents to be processed (indexed or trained on).
@@ -469,12 +489,14 @@ class SimServer(object):
         A call to `flush()` clears this documents-to-be-processed buffer (`flush`
         is implicitly called when you call `index()` and `train()`).
         """
+        logger.info("adding %i documents to temporary buffer of %s" % (len(documents), self))
         for doc in documents:
             docid = doc['id']
             logger.debug("buffering document %r" % docid)
             if docid in self.fresh_docs:
                 logger.warning("asked to re-add id %r; rewriting old value" % docid)
             self.fresh_docs[docid] = doc
+        self.fresh_docs.sync()
 
 
     def find_similar(self, doc, min_score=0.0, max_results=100):
@@ -515,37 +537,19 @@ class SimServer(object):
         return result
 
 
-    def drop_index(self, keep_model=True):
-        """Drop all indexed documents. If `keep_model` is False, also dropped the model."""
-        modelstr = "" if keep_model else "and model "
-        logger.info("deleting similarity index " + modelstr + "from %s" % self.basename)
-        for index in [self.fresh_index, self.opt_index]:
-            if index is not None:
-                index.terminate()
-        self.fresh_index, self.opt_index = None, None
-        if not keep_model and self.model is not None:
-            fname = self.location('model')
-            try:
-                os.remove(fname)
-                logger.info("deleted %s" % fname)
-            except IOError:
-                logger.warning("failed to delete %s" % fname)
-            self.model = None
-        self.flush(delete_fresh=True)
-
-
     def __str__(self):
-        return ("SimServer(loc=%r, fresh=%s, opt=%s, model=%s)" %
-                (self.basename, self.fresh_index, self.opt_index, self.model))
-
+        return ("SimServer(loc=%r, fresh=%s, opt=%s, model=%s, docbuffer=%s)" %
+                (self.basename, self.fresh_index, self.opt_index, self.model, self.fresh_docs))
 
     def __contains__(self, docid):
-        for index in [self.opt_index, self.fresh_index]:
-            if index is not None and docid in index:
-                return True
-        return False
-
+        """Is document with `docid` in the index?"""
+        return any(index is not None and docid in index
+                   for index in [self.opt_index, self.fresh_index])
 
     def status(self):
         return str(self)
+
+    def keys(self):
+        """Return ids of all indexed documents."""
+        return self.fresh_index.keys() + self.opt_index.keys()
 #endclass SimServer

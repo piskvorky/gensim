@@ -242,6 +242,7 @@ class Similarity(interfaces.SimilarityABC):
             raise ValueError("cannot reopen a shard with fresh documents in index")
         last_shard = self.shards[-1]
         last_index = last_shard.get_index()
+        logger.info("reopening incomplete shard of %i documents" % len(last_shard))
 
         if scipy.sparse.issparse(last_index.index):
             self.fresh_docs = list(matutils.Sparse2Corpus(last_index.index.T))
