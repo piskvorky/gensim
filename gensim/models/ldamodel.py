@@ -396,11 +396,6 @@ class LdaModel(interfaces.TransformationABC):
             passes = self.passes
         if update_every is None:
             update_every = self.update_every
-        if not passes:
-            # if the number of whole-corpus iterations was not specified explicitly,
-            # assume iterating over the corpus until convergence (or until self.MAXITER
-            # iterations, whichever happens first)
-            passes = self.MAXITER
 
         # rho is the "speed" of updating; TODO try other fncs
         rho = lambda: pow(1.0 + self.num_updates, -decay)
@@ -584,26 +579,3 @@ class LdaModel(interfaces.TransformationABC):
         return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                 if topicvalue >= eps] # ignore document's topics that have prob < eps
 #endclass LdaModel
-
-
-
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
-                        level=logging.DEBUG)
-    logger.info("running %s" % ' '.join(sys.argv))
-
-    import os.path
-    program = os.path.basename(sys.argv[0])
-    from gensim.corpora import WikiCorpus, MmCorpus, LowCorpus
-    numpy.random.seed(100000001)
-
-    vocab = WikiCorpus.loadDictionary('/Users/kofola/gensim/results/wiki10_en_wordids.txt')
-    corpus = MmCorpus('/Users/kofola/gensim/results/wiki10_en_bow.mm')
-    K = 50
-
-    olda = LdaModel(num_topics=K, id2word=vocab, alpha=1./K, eta=1./K, decay=0.5)
-    olda.update(corpus)
-    olda.save('olda2.pkl')
-
-    logger.info("finished running %s" % program)
-
