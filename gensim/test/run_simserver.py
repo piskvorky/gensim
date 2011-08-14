@@ -19,14 +19,12 @@ from __future__ import with_statement
 import logging
 import os
 import sys
-import tempfile
-import random
 
 import gensim
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(funcName)s(%(threadName)s) : %(message)s')
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(module)s:%(lineno)d : %(funcName)s(%(threadName)s) : %(message)s')
     logging.root.setLevel(level=logging.INFO)
     logging.info("running %s" % ' '.join(sys.argv))
 
@@ -39,6 +37,8 @@ if __name__ == '__main__':
 
     basename = sys.argv[1]
 
+    if not os.path.exists(basename):
+        os.makedirs(basename)
     server = gensim.similarities.SimServer(basename)
 
     import Pyro4 # register server for remote access

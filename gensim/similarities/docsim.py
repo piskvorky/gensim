@@ -285,7 +285,7 @@ class Similarity(interfaces.SimilarityABC):
         return result
 
 
-    def similarity_by_id(self, pos):
+    def similarity_by_id(self, docpos):
         """
         Return similarity of the given document only. `pos` is the position
         of the query document within index.
@@ -294,13 +294,13 @@ class Similarity(interfaces.SimilarityABC):
         pos = 0
         for shard in self.shards:
             pos += len(shard)
-            if docid < pos:
+            if docpos < pos:
                 break
-        if not self.shards or docid < 0 or docid >= pos:
+        if not self.shards or docpos < 0 or docpos >= pos:
             raise ValueError("invalid document position: %s (must be 0 <= x < %s)" %
-                             (docid, len(self)))
+                             (docpos, len(self)))
         norm, self.normalize = self.normalize, False
-        query = shard.get_document_id(docid - pos + len(shard))
+        query = shard.get_document_id(docpos - pos + len(shard))
         result = self[query]
         self.normalize = norm
         return result

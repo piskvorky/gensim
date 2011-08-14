@@ -17,11 +17,9 @@ The server performs 3 main functions:
 
 from __future__ import with_statement
 
-import sys
 import os
 import logging
 import random
-import tempfile
 
 import numpy
 
@@ -36,6 +34,9 @@ logger = logging.getLogger('gensim_server')
 MODEL_METHOD = 'lsi' # use LSI to represent documents
 #MODEL_METHOD = 'tfidf'
 LSI_TOPICS = 400
+TOP_SIMS = 100 # when precomputing similarities, only consider this many "most similar" documents
+SHARD_SIZE = 50000 # spill index shards to disk in SHARD_SIZE-ed chunks of documents
+
 
 
 def simple_preprocess(doc):
@@ -50,147 +51,192 @@ def simple_preprocess(doc):
     return tokens
 
 
-def merge_sim(oldsims, newsims):
-    """Update precomputed similarities with new values."""
-    return sorted(oldsims + newsims, key=lambda item:-item[1])[: SimIndex.TOP_SIMS]
+def merge_sims(oldsims, newsims, clip=TOP_SIMS):
+    """Merge two precomputed lists, truncating the result to `clip` most similar items."""
+    if oldsims is None:
+        result = newsims or []
+    elif newsims is None:
+        result = oldsims
+    else:
+        result = sorted(oldsims + newsims, key=lambda item:-item[1])
+    return result[: clip]
+
 
 
 class SimIndex(gensim.utils.SaveLoad):
     """
     An index of documents. Used internally by SimServer.
 
-    Uses Similarity to persist the underlying document vectors to disk (via mmap).
-    """
-    SHARD_SIZE = 50000 # spill index shards to disk in SHARD_SIZE-ed chunks of documents
-    TOP_SIMS = 100 # Only consider this many "most similar" documents, to speed up querying. Set to None for no clipping
+    It uses the Similarity class to persist the underlying document vectors to
+    disk (via mmap).
 
-    def __init__(self, fname, precompute=True):
+    """
+    def __init__(self, fname, num_features, shardsize=SHARD_SIZE, topsims=TOP_SIMS):
+        """
+        Spill index shards to disk after every `shardsize` documents.
+        In similarity queries, return only the `topsims` most similar documents.
+        """
         self.fname = fname
-        self.id2pos = {}
-        self.pos2id = {}
-        self.id2sims = {}
-        self.precompute = precompute
+        self.shardsize = int(shardsize)
+        self.topsims = int(topsims)
+        self.id2pos = {} # map document id (string) to index position (integer)
+        self.pos2id = {} # reverse mapping for id2pos; redundant, for performance
+        self.id2sims = {} # precompute top similar: document id -> [(doc_id, similarity)]
+        self.qindex = gensim.similarities.Similarity(self.fname + '.idx', corpus=None,
+            num_best=None, num_features=num_features, shardsize=shardsize)
         self.length = 0
+
+
+    def terminate(self):
+        """Delete all files created by this index, invalidating it. Use with care."""
+        import glob
+        for fname in glob.glob(self.fname + '*'):
+            try:
+                os.remove(fname)
+                logger.info("deleted %s" % fname)
+            except IOError:
+                logger.warning("failed to delete %s" % fname)
+        for val in self.__dict__.keys():
+            delattr(self, val)
 
 
     def index_documents(self, fresh_docs, model):
         """
-        Update index with new documents (potentially replacing old ones with
-        the same id). `fresh_docs` is a dictionary-like object (=sqlitedict or dict)
+        Update fresh index with new documents (potentially replacing old ones with
+        the same id). `fresh_docs` is a dictionary-like object (=dict, sqlitedict, shelve etc)
         that maps document_id->document.
-
         """
-        if not hasattr(self, 'qindex'):
-            # this is the very first indexing call; create an empty index
-            self.qindex = gensim.similarities.Similarity(self.fname, corpus=None,
-                num_best=None, num_features=model.num_features, shardsize=SimIndex.SHARD_SIZE)
 
         docids = fresh_docs.keys()
         vectors = (model.docs2vecs(fresh_docs[docid] for docid in docids))
 
-        logger.info("indexing %i new documents for %s" % (len(docids), self.fname))
-        if not self.precompute:
-            # we're not precomputing the "most similar" documents; just add the
-            # vectors to the index and we're done
-            self.qindex.add_documents(vectors)
-            self.qindex.save()
-            self.updateids(docids)
-        else:
-            # first, create a separate index only with the new documents
-            logger.debug("adding %i documents to temporary index" % len(docids))
-            tmpindex = gensim.similarities.Similarity(None, corpus=None,
-                num_best=self.qindex.num_best, num_features=self.qindex.num_features, shardsize=self.qindex.shardsize)
-            tmpindex.add_documents(vectors)
-            tmpindex.close_shard()
-            tmpindex.normalize = False
+        logger.info("adding %i documents to %s" % (len(docids), self))
+        # we're not precomputing the "most similar" documents; just add the
+        # vectors to the index and we're done
+        self.qindex.add_documents(vectors)
+        self.qindex.save()
+        self.update_ids(docids)
 
-            # update precomputed "most similar" for old documents (in case some of
-            # the new docs make it to the top-N for some of the old documents)
-            logger.debug("updating old precomputed values")
-            pos = 0
-            for chunk in self.qindex.iter_chunks():
-                for sims in tmpindex[chunk]:
-                    docid = self.pos2id[pos]
-                    sims = self.sims2scores(sims)
-                    self.id2sims[docid] = merge_sim(self.id2sims[docid], sims)
-                    pos += 1
 
-            # add the tmpindex to qindex
-            logger.debug("merging temporary index into permanent one")
-            pos = 0
-            for chunk in tmpindex.iter_chunks():
-                self.qindex.add_documents(chunk)
-            self.qindex.save()
-            self.updateids(docids)
-
-            # precompute "most similar" for the newly added documents
-            logger.debug("precomputing values for the new documents")
-            pos = 0
-            norm, self.qindex.normalize = self.qindex.normalize, False
-            for chunk in tmpindex.iter_chunks():
-                for sims in self.qindex[chunk]:
-                    docid = docids[pos]
-                    self.id2sims[docid] = self.sims2scores(sims)
-                    pos += 1
-            self.qindex.normalize = norm
-
-            # now the temporary index of new documents has been fully merged; clean up
-            del tmpindex # TODO delete all created temp files!
-        #endif
-
-    def updateids(self, docids):
+    def update_ids(self, docids):
+        """Update id->pos mapping with new document ids."""
         logger.info("updating %i id mappings" % len(docids))
         for docid in docids:
-            # update position->id mappings
-            if docid in self.id2pos:
-                logger.info("replacing existing document %r in index %s" % (docid, self.fname))
-                del self.pos2id[self.id2pos[docid]]
-            self.id2pos[docid] = self.length
-            self.pos2id[self.length] = docid
+            if docid is not None:
+                if docid in self.id2pos:
+                    logger.info("replacing existing document %r in %s" % (docid, self))
+                    del self.pos2id[self.id2pos[docid]]
+                self.id2pos[docid] = self.length
+                try:
+                    del self.id2sims[docid]
+                except:
+                    pass
             self.length += 1
+        self.update_mappings()
 
 
-    def delete(self, docids):
-        logger.info("deleting %i documents from %s" % (len(docids), self.fname))
-        for docid in docids:
-            del self.id2pos[docid]
+    def update_mappings(self):
+        """Synchronize id<->position mappings."""
         self.pos2id = dict((v, k) for k, v in self.id2pos.iteritems())
         assert len(self.pos2id) == len(self.id2pos), "duplicate ids or positions detected"
 
 
+    def delete(self, docids):
+        """Delete documents (specified by their ids) from the index."""
+        logger.debug("deleting %i documents from %s" % (len(docids), self))
+        deleted = 0
+        for docid in docids:
+            deleted += 1
+            del self.id2pos[docid]
+            try:
+                del self.id2sims[docid]
+            except:
+                pass
+        if deleted:
+            logger.info("deleted %i documents from %s" % (deleted, self))
+        self.update_mappings()
+
+
     def sims2scores(self, sims):
+        """Convert raw similarity vector to list of (docid, similarity) results."""
         result = []
         sims = abs(sims) # TODO or maybe clip? are opposite vectors "similar" or "dissimilar"?!
         for pos in numpy.argsort(sims)[::-1]:
             if pos in self.pos2id: # ignore deleted/rewritten documents
                 # convert positions of resulting docs back to ids
                 result.append((self.pos2id[pos], sims[pos]))
-                if len(result) == SimIndex.TOP_SIMS:
+                if len(result) == self.topsims:
                     break
         return result
 
 
     def sims_by_id(self, docid):
-        # convert document id to internal position and perform the query
-        if self.precompute:
-            result = self.id2sims[docid]
-        else:
+        """Find the most similar documents to the (already indexed) document with `docid`."""
+        result = self.id2sims.get(docid, None)
+        if result is None:
             sims = self.qindex.similarity_by_id(self.id2pos[docid])
             result = self.sims2scores(sims)
         return result
 
 
     def sims_by_doc(self, doc, model):
-        # convert document (text) to vector
-        vec = model.doc2vec(doc)
-        # query the index
-        sims = self.qindex[vec]
+        """
+        Find the most similar documents to a fulltext document.
+
+        The document is first processed (tokenized etc) and converted to a vector
+        in the same way the training documents were, during `train()`.
+        """
+        vec = model.doc2vec(doc) # convert document (text) to vector
+        sims = self.qindex[vec] # query the index
         return self.sims2scores(sims)
+
+
+    def merge(self, other):
+        """Merge documents from the other index. Update precomputed similarities
+        in the process."""
+        other.qindex.normalize = False
+        # update precomputed "most similar" for old documents (in case some of
+        # the new docs make it to the top-N for some of the old documents)
+        logger.info("updating old precomputed values")
+        pos = 0
+        for chunk in self.qindex.iter_chunks():
+            for sims in other.qindex[chunk]:
+                if pos in self.pos2id:
+                    # ignore masked entries (deleted, overwritten documents)
+                    docid = self.pos2id[pos]
+                    sims = self.sims2scores(sims)
+                    self.id2sims[docid] = merge_sims(self.id2sims[docid], sims)
+                pos += 1
+
+        logger.info("merging fresh index into optimized one")
+        pos, docids = 0, []
+        for chunk in other.qindex.iter_chunks():
+            for vec in chunk:
+                if pos in other.pos2id: # don't copy deleted documents
+                    self.qindex.add_documents([vec])
+                    docids.append(other.pos2id[pos])
+                pos += 1
+        self.qindex.save()
+        self.update_ids(docids)
+
+        logger.info("precomputing most similar for the fresh index")
+        pos = 0
+        norm, self.qindex.normalize = self.qindex.normalize, False
+        for chunk in other.qindex.iter_chunks():
+            for sims in self.qindex[chunk]:
+                if pos in other.pos2id:
+                    # ignore masked entries (deleted, overwritten documents)
+                    docid = other.pos2id[pos]
+                    self.id2sims[docid] = self.sims2scores(sims)
+                pos += 1
+        self.qindex.normalize = norm
 
 
     def __len__(self):
         return len(self.id2pos)
 
+    def __contains__(self, docid):
+        return docid in self.id2pos
 
     def __str__(self):
         return "SimIndex(%i docs, %i real size)" % (len(self), self.length)
@@ -203,11 +249,8 @@ class SimModel(gensim.utils.SaveLoad):
     A semantic model responsible for translating between plain text and (semantic)
     vectors.
 
-    These vectors can then be indexed/queried for similarity, see the `EudmlIndex`
-    class.
-
-    Currently uses the Latent Semantic Analysis over tf-idf representation of documents.
-
+    These vectors can then be indexed/queried for similarity, see the `SimIndex`
+    class. Used internally by `SimServer`.
     """
     def __init__(self, fresh_docs, dictionary=None, method=MODEL_METHOD, preprocess=simple_preprocess):
         """
@@ -220,8 +263,9 @@ class SimModel(gensim.utils.SaveLoad):
         `preprocess` is a function that takes a text and returns a sequence of
         preprocessed tokens. It is used to parse documents.
         """
+        # FIXME TODO: use subclassing/injection for different methods, instead of param..
         self.preprocess = preprocess
-        self.method = method # TODO: use subclassing/injection for different methods, instead of param?
+        self.method = method
         docids = fresh_docs.keys()
         random.shuffle(docids)
         logger.info("creating model from %s documents" % len(docids))
@@ -245,10 +289,10 @@ class SimModel(gensim.utils.SaveLoad):
 
         if method == 'lsi':
             logger.info("training TF-IDF model")
-            corpus = (self.dictionary.doc2bow(text) for text in preprocessed.itervalues())
+            corpus = (self.dictionary.doc2bow(preprocessed[docid]) for docid in preprocessed)
             self.tfidf = gensim.models.TfidfModel(corpus, id2word=self.dictionary)
             logger.info("training LSI model")
-            corpus = (self.dictionary.doc2bow(text) for text in preprocessed.itervalues())
+            corpus = (self.dictionary.doc2bow(preprocessed[docid]) for docid in preprocessed)
             tfidf_corpus = self.tfidf[corpus]
             self.lsi = gensim.models.LsiModel(tfidf_corpus, id2word=self.dictionary, num_topics=LSI_TOPICS)
             self.num_features = len(self.lsi.projection.s)
@@ -282,37 +326,70 @@ class SimModel(gensim.utils.SaveLoad):
 
 
 
-class SimServer(gensim.utils.SaveLoad):
+class SimServer(object):
     """
-    This is top-level functionality for the similarity services. It takes care of
-    indexing/creating models/querying.
+    Top-level functionality for similarity services. A similarity server takes
+    care of
+    1. creating semantic models
+    2. indexing documents using these models
+    3. finding the most similar documents in an index.
 
     An object of this class can be shared across network via Pyro, to answer remote
-    client requests.
+    client requests. It is thread safe. Using a server concurrently from multiple
+    processes is safe only for reading (answering similarity queries). Modifying
+    (training/indexing) concurrently is not safe.
     """
     def __init__(self, basename):
-        """All data will be stored under `basename` (a filename prefix)."""
+        """
+        All data will be stored under directory `basename`. If there is a server
+        there already, it will be loaded (resumed).
+
+        The server object is stateless -- its state is defined entirely by its location.
+        There is therefore no need to store the server object.
+        """
+        if not os.path.isdir(basename):
+            raise ValueError("%r must be a writable directory" % basename)
         self.basename = basename
-        self.simindex = None
-        self.simmodel = None
-        self.fresh_docs = {}
+        try:
+            self.fresh_index = SimIndex.load(self.location('index_fresh'))
+        except IOError:
+            self.fresh_index = None
+        try:
+            self.opt_index = SimIndex.load(self.location('index_opt'))
+        except IOError:
+            self.opt_index = None
+        try:
+            self.model = SimModel.load(self.location('model'))
+        except IOError:
+            self.model = None
+        self.fresh_docs = SqliteDict() # defaults to a random location in temp
         self.flush()
+
+
+    def location(self, name):
+        return os.path.join(self.basename, name)
 
 
     def flush(self, delete_fresh=True):
         """
         Commit all changes, clear all caches. If `delete_fresh`, also clear the
-        `add_documents()` cache.
+        document upload buffer of `add_documents()`.
         """
-        # erase all temporary documents
+        if self.fresh_index is not None:
+            self.fresh_index.save(self.location('index_fresh'))
+        if self.opt_index is not None:
+            self.opt_index.save(self.location('index_opt'))
+        if self.model is not None:
+            self.model.save(self.location('model'))
         if delete_fresh:
-            self.fresh_docs = {}
-        self.save(self.basename)
+            self.fresh_docs.clear() # erase all buffered documents
 
 
     def train(self, corpus=None, method='lsi'):
         """
         Create an indexing model. Will overwrite the model if it already exists.
+        All indexes become invalid, because documents in them use a now-obsolete
+        representation.
 
         The model is trained on documents previously entered via `add_documents`,
         or directly on `corpus`, if specified.
@@ -320,9 +397,8 @@ class SimServer(gensim.utils.SaveLoad):
         if corpus is not None:
             self.flush(delete_fresh=True)
             self.add_documents(corpus)
-            del corpus
-        self.simmodel = SimModel(self.fresh_docs)
-        self.flush(delete_fresh=True)
+        self.model = SimModel(self.fresh_docs, method='lsi')
+        self.drop_index(keep_model=True) # delete old indexes
 
 
     def index(self, corpus=None):
@@ -333,7 +409,7 @@ class SimServer(gensim.utils.SaveLoad):
         The indexing model must already exist (see `train`) before this function
         is called.
         """
-        if not self.simmodel:
+        if not self.model:
             msg = 'must initialize the model for %s before indexing documents' % self.basename
             logger.error(msg)
             raise AttributeError(msg)
@@ -341,13 +417,41 @@ class SimServer(gensim.utils.SaveLoad):
         if corpus is not None:
             self.flush(delete_fresh=True)
             self.add_documents(corpus)
-            del corpus
 
-        if not self.simindex:
-            logger.info("starting a new index for %s" % self.basename)
-            self.simindex = SimIndex(self.basename + ".index")
-        self.simindex.index_documents(self.fresh_docs, self.simmodel)
+        if not self.fresh_index:
+            logger.info("starting a new fresh index for %s" % self)
+            self.fresh_index = SimIndex(self.location('index_fresh'), self.model.num_features)
+        self.fresh_index.index_documents(self.fresh_docs, self.model)
+        if self.opt_index is not None:
+            self.opt_index.delete(self.fresh_docs.keys())
         self.flush(delete_fresh=True)
+
+
+    def optimize(self):
+        """
+        Precompute top similarities for all indexed documents. This speeds up
+        `find_similar` queries by id (but not queries by fulltext).
+
+        Internally, documents are moved from a fresh index (=no precomputed similarities)
+        to an optimized index (precomputed similarities). Similarity queries always
+        query both indexes, so this split is transparent to clients.
+
+        If you add documents later via `index`, they go to the fresh index again.
+        To precompute top similarities for these new documents too, simply call
+        `optimize` again.
+
+        """
+        if self.fresh_index is None:
+            logger.warning("optimize called but there are no new documents")
+            return # nothing to do!
+
+        if self.opt_index is None:
+            logger.info("starting a new optimized index for %s" % self)
+            self.opt_index = SimIndex(self.location('index_opt'), self.model.num_features)
+
+        self.opt_index.merge(self.fresh_index)
+        self.fresh_index = self.fresh_index.terminate() # delete old files
+        self.flush(delete_fresh=False)
 
 
     def add_documents(self, documents):
@@ -375,41 +479,71 @@ class SimServer(gensim.utils.SaveLoad):
 
     def find_similar(self, doc, min_score=0.0, max_results=100):
         """
-        Find at most `max_results` most similar articles to the article `doc`,
+        Find at most `max_results` most similar articles in the index,
         each having similarity score of at least `min_score`.
 
         `doc` is either a string (document id, previously indexed) or a
-        SimilarityDocument-like object with a 'text' attribute. This text is
-        processed to produce a vector, which is then used as a query.
+        dict containing a 'text' key. This text is processed to produce a vector,
+        which is then used as a query.
 
         The similar documents are returned in decreasing similarity order, as
         (doc_id, doc_score) tuples.
         """
         logger.debug("received query call with %r" % doc)
+        sims_opt, sims_fresh = None, None
         if isinstance(doc, basestring):
             # query by direct document id
-            sims = self.simindex.sims_by_id(doc)
+            docid = doc
+            if self.opt_index is not None and docid in self.opt_index:
+                sims_opt = self.opt_index.sims_by_id(docid) # this is fast!
+            if self.fresh_index is not None and docid in self.fresh_index:
+                sims_fresh = self.fresh_index.sims_by_id(docid) # this is (potentially) slow
+            if sims_fresh is None and sims_opt is None:
+                raise ValueError("document %r not in index" % docid)
         else:
             # query by an arbitrary text (=string) inside doc['text']
-            sims = self.simindex.sims_by_doc(doc, self.simmodel)
+            if self.opt_index is not None:
+                sims_opt = self.opt_index.sims_by_doc(doc, self.model)
+            if self.fresh_index is not None:
+                sims_fresh = self.fresh_index.sims_by_doc(doc, self.model)
 
         result = []
-        for docid, score in sims:
+        for docid, score in merge_sims(sims_opt, sims_fresh):
             if score < min_score or 0 < max_results <= len(result):
                 break
             result.append((docid, score))
         return result
 
 
-    def drop_index(self, keep_model=False):
-        self.simindex = None
-        if not keep_model:
-            self.simmodel = None
+    def drop_index(self, keep_model=True):
+        """Drop all indexed documents. If `keep_model` is False, also dropped the model."""
+        modelstr = "" if keep_model else "and model "
+        logger.info("deleting similarity index " + modelstr + "from %s" % self.basename)
+        for index in [self.fresh_index, self.opt_index]:
+            if index is not None:
+                index.terminate()
+        self.fresh_index, self.opt_index = None, None
+        if not keep_model and self.model is not None:
+            fname = self.location('model')
+            try:
+                os.remove(fname)
+                logger.info("deleted %s" % fname)
+            except IOError:
+                logger.warning("failed to delete %s" % fname)
+            self.model = None
         self.flush(delete_fresh=True)
 
 
     def __str__(self):
-        return "SimServer(loc=%r, index=%s, model=%s)" % (self.basename, self.simindex, self.simmodel)
+        return ("SimServer(loc=%r, fresh=%s, opt=%s, model=%s)" %
+                (self.basename, self.fresh_index, self.opt_index, self.model))
+
+
+    def __contains__(self, docid):
+        for index in [self.opt_index, self.fresh_index]:
+            if index is not None and docid in index:
+                return True
+        return False
 
 
     def status(self):
