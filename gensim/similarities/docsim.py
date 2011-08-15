@@ -115,6 +115,23 @@ class Shard(utils.SaveLoad):
 
 
 
+class Scipy2Corpus(object):
+    def __init__(self, vecs):
+        """Convert a sequence of dense/sparse vector to a gensim corpus object."""
+        self.vecs = vecs
+
+    def __iter__(self):
+        for vec in self.vecs:
+            if isinstance(vec, numpy.ndarray):
+                yield matutils.full2sparse(vec)
+            else:
+                yield matutils.scipy2sparse(vec)
+
+    def __len__(self):
+        return len(self.vecs)
+
+
+
 class Similarity(interfaces.SimilarityABC):
     """
     Compute cosine similarity of a dynamic query against a static corpus of documents
@@ -125,7 +142,7 @@ class Similarity(interfaces.SimilarityABC):
     The shards themselves are simply stored as files to disk and mmap'ed back as needed.
 
     """
-    def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=1024, shardsize=16384):
+    def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=1024, shardsize=32768):
         """
         Construct the index from `corpus`. The index can be later extended by calling
         the `add_documents` method. Documents are split into shards of `shardsize`
@@ -185,18 +202,27 @@ class Similarity(interfaces.SimilarityABC):
         Internally, documents are buffered and then spilled to disk when there's
         `self.shardsize` of them (or when a query is issued).
         """
-        if self.shards and len(self.shards[-1]) < self.shardsize:
-            # The last shard was incomplete; load it back and add the documents there, don't start a new shard.
+        min_ratio = 1.0 # 0.5 to only reopen shards that are <50% complete
+        if self.shards and len(self.shards[-1]) < min_ratio * self.shardsize:
+            # The last shard was incomplete (<; load it back and add the documents there, don't start a new shard
             self.reopen_shard()
         for doc in corpus:
             if isinstance(doc, numpy.ndarray):
-                doc = matutils.full2sparse(doc)
+                doclen = len(doc)
             elif scipy.sparse.issparse(doc):
-                doc = matutils.scipy2sparse(doc)
+                doclen = doc.nnz
+            else:
+                doclen = len(doc)
+                if doclen < 0.3 * self.num_features:
+                    doc = matutils.corpus2csc([doc], self.num_features).T
+                else:
+                    doc = matutils.sparse2full(doc, self.num_features)
             self.fresh_docs.append(doc)
-            self.fresh_nnz += len(doc)
+            self.fresh_nnz += doclen
             if len(self.fresh_docs) >= self.shardsize:
                 self.close_shard()
+            if len(self.fresh_docs) % 1000 == 0:
+                logger.info("PROGRESS: fresh_shard size=%i" % len(self.fresh_docs))
 
 
     def shardid2filename(self, shardid):
@@ -220,6 +246,7 @@ class Similarity(interfaces.SimilarityABC):
         """
         if not self.fresh_docs:
             return
+        self.fresh_docs = Scipy2Corpus(self.fresh_docs)
         shardid = len(self.shards)
         # consider the shard sparse if its density is < 30%
         issparse = 0.3 > 1.0 * self.fresh_nnz / (len(self.fresh_docs) * self.num_features)
@@ -242,15 +269,12 @@ class Similarity(interfaces.SimilarityABC):
             raise ValueError("cannot reopen a shard with fresh documents in index")
         last_shard = self.shards[-1]
         last_index = last_shard.get_index()
-        logger.info("reopening incomplete shard of %i documents" % len(last_shard))
+        logger.info("reopening an incomplete shard of %i documents" % len(last_shard))
 
-        if scipy.sparse.issparse(last_index.index):
-            self.fresh_docs = list(matutils.Sparse2Corpus(last_index.index.T))
-        else:
-            self.fresh_docs = list(matutils.Dense2Corpus(last_index.index.T))
+        self.fresh_docs = list(last_index.index)
         self.fresh_nnz = last_shard.num_nnz
-
         del self.shards[-1] # remove the shard from index, *but its file on disk is not deleted*
+        logger.debug("reopen complete")
 
 
     def __getitem__(self, query):
@@ -510,7 +534,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
                 pass
             self.index = matutils.corpus2csc((matutils.unitvec(vector) for vector in corpus),
                                               num_terms=num_terms, num_docs=num_docs, num_nnz=num_nnz,
-                                              dtype=numpy.float32, printprogress=10000).T
+                                              dtype=dtype, printprogress=10000).T
 
             # convert to Compressed Sparse Row for efficient row slicing and multiplications
             self.index = self.index.tocsr() # currently no-op, CSC.T is already CSR
