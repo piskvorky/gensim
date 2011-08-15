@@ -485,7 +485,7 @@ def grouper(iterable, chunksize):
         yield chunk
 
 
-def upload_chunked(server, docs, chunksize=10000):
+def upload_chunked(server, docs, chunksize=1000):
     """
     Memory-friendly upload of documents to a SimServer (or Pyro SimServer proxy).
 

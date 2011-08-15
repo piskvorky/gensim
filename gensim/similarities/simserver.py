@@ -36,7 +36,7 @@ MODEL_METHOD = 'lsi' # use LSI to represent documents
 #MODEL_METHOD = 'tfidf'
 LSI_TOPICS = 400
 TOP_SIMS = 100 # when precomputing similarities, only consider this many "most similar" documents
-SHARD_SIZE = 50000 # spill index shards to disk in SHARD_SIZE-ed chunks of documents
+SHARD_SIZE = 32768 # spill index shards to disk in SHARD_SIZE-ed chunks of documents
 
 
 
@@ -80,10 +80,21 @@ class SimIndex(gensim.utils.SaveLoad):
         self.topsims = int(topsims)
         self.id2pos = {} # map document id (string) to index position (integer)
         self.pos2id = {} # reverse mapping for id2pos; redundant, for performance
-        self.id2sims = {} # precompute top similar: document id -> [(doc_id, similarity)]
+        self.id2sims = SqliteDict(self.fname + '.id2sims') # precomputed top similar: document id -> [(doc_id, similarity)]
         self.qindex = gensim.similarities.Similarity(self.fname + '.idx', corpus=None,
             num_best=None, num_features=num_features, shardsize=shardsize)
         self.length = 0
+
+    def save(self, fname):
+        tmp, self.id2sims = self.id2sims, None
+        super(SimIndex, self).save(fname)
+        self.id2sims = tmp
+
+    @staticmethod
+    def load(fname):
+        result = gensim.utils.SaveLoad.load(fname)
+        result.id2sims = SqliteDict(result.fname + '.id2sims')
+        return result
 
 
     def terminate(self):
@@ -127,6 +138,7 @@ class SimIndex(gensim.utils.SaveLoad):
                 except:
                     pass
             self.length += 1
+        self.id2sims.sync()
         self.update_mappings()
 
 
@@ -147,6 +159,7 @@ class SimIndex(gensim.utils.SaveLoad):
                 del self.id2sims[docid]
             except:
                 pass
+        self.id2sims.sync()
         if deleted:
             logger.info("deleted %i documents from %s" % (deleted, self))
         self.update_mappings()
@@ -193,7 +206,7 @@ class SimIndex(gensim.utils.SaveLoad):
         # update precomputed "most similar" for old documents (in case some of
         # the new docs make it to the top-N for some of the old documents)
         logger.info("updating old precomputed values")
-        pos = 0
+        pos, lenself = 0, len(self.qindex)
         for chunk in self.qindex.iter_chunks():
             for sims in other.qindex[chunk]:
                 if pos in self.pos2id:
@@ -202,6 +215,9 @@ class SimIndex(gensim.utils.SaveLoad):
                     sims = self.sims2scores(sims)
                     self.id2sims[docid] = merge_sims(self.id2sims[docid], sims)
                 pos += 1
+                if pos % 10000 == 0:
+                    logger.info("PROGRESS: updated doc #%i/%i" % (pos, lenself))
+        self.id2sims.sync()
 
         logger.info("merging fresh index into optimized one")
         pos, docids = 0, []
@@ -215,7 +231,7 @@ class SimIndex(gensim.utils.SaveLoad):
         self.update_ids(docids)
 
         logger.info("precomputing most similar for the fresh index")
-        pos = 0
+        pos, lenother = 0, len(other.qindex)
         norm, self.qindex.normalize = self.qindex.normalize, False
         for chunk in other.qindex.iter_chunks():
             for sims in self.qindex[chunk]:
@@ -224,7 +240,10 @@ class SimIndex(gensim.utils.SaveLoad):
                     docid = other.pos2id[pos]
                     self.id2sims[docid] = self.sims2scores(sims)
                 pos += 1
+                if pos % 10000 == 0:
+                    logger.info("PROGRESS: precomputed doc #%i/%i" % (pos, lenother))
         self.qindex.normalize = norm
+        self.id2sims.sync()
 
 
     def __len__(self):
@@ -293,11 +312,13 @@ class SimModel(gensim.utils.SaveLoad):
             corpus = (self.dictionary.doc2bow(preprocessed[docid]) for docid in preprocessed)
             tfidf_corpus = self.tfidf[corpus]
             self.lsi = gensim.models.LsiModel(tfidf_corpus, id2word=self.dictionary, num_topics=LSI_TOPICS)
+            self.lsi.projection.u = self.lsi.projection.u.astype(numpy.float32) # use single precision to save mem
             self.num_features = len(self.lsi.projection.s)
         else:
             msg = "unknown semantic method %s" % method
             logger.error(msg)
             raise NotImplementedError(msg)
+        preprocessed.terminate()
 
 
     def doc2vec(self, doc):
@@ -358,7 +379,7 @@ class SimServer(object):
             self.model = None
         self.fresh_docs = SqliteDict() # defaults to a random location in temp
         self.lock_update = threading.Lock() # only one thread can modify the server at a time
-        self.flush()
+        logger.info("loaded %s" % self)
 
 
     def location(self, name):
@@ -492,11 +513,13 @@ class SimServer(object):
         logger.info("adding %i documents to temporary buffer of %s" % (len(documents), self))
         for doc in documents:
             docid = doc['id']
-            logger.debug("buffering document %r" % docid)
+#            logger.debug("buffering document %r" % docid)
             if docid in self.fresh_docs:
                 logger.warning("asked to re-add id %r; rewriting old value" % docid)
             self.fresh_docs[docid] = doc
         self.fresh_docs.sync()
+
+    buffer = add_documents # alias
 
 
     def find_similar(self, doc, min_score=0.0, max_results=100):
@@ -552,4 +575,8 @@ class SimServer(object):
     def keys(self):
         """Return ids of all indexed documents."""
         return self.fresh_index.keys() + self.opt_index.keys()
+
+    def memdebug(self):
+        from guppy import hpy
+        return str(hpy().heap())
 #endclass SimServer

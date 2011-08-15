@@ -65,7 +65,7 @@ class SimServerTester(unittest.TestCase):
 
 
     def test_index(self):
-        self.server.dropindex()
+        self.server.drop_index()
         self.server.train(self.docs)
         self.server.add_documents(self.docs[:3])
         self.server.index()

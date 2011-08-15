@@ -25,7 +25,7 @@ import gensim
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(module)s:%(lineno)d : %(funcName)s(%(threadName)s) : %(message)s')
-    logging.root.setLevel(level=logging.INFO)
+    logging.root.setLevel(level=logging.DEBUG)
     logging.info("running %s" % ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
