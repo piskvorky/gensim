@@ -10,7 +10,9 @@ USAGE: %(program)s DATA_DIRECTORY
     Start a sample similarity server, register it with Pyro and leave it running \
 as a daemon. Assumes Pyro nameserve is already running.
 
-Example: ./run_simserver.py /tmp/simserver
+Example:
+    python -m Pyro4.naming -n 0.0.0.0 &                   # run Pyro naming server
+    python -m gensim.test.run_simserver /tmp/simserver # create SimServer and register it with Pyro
 
 """
 

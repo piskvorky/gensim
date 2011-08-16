@@ -166,15 +166,23 @@ class SimIndex(gensim.utils.SaveLoad):
 
 
     def sims2scores(self, sims):
-        """Convert raw similarity vector to list of (docid, similarity) results."""
+        """Convert raw similarity vector to a list of (docid, similarity) results."""
         result = []
-        sims = abs(sims) # TODO or maybe clip? are opposite vectors "similar" or "dissimilar"?!
-        for pos in numpy.argsort(sims)[::-1]:
-            if pos in self.pos2id: # ignore deleted/rewritten documents
-                # convert positions of resulting docs back to ids
-                result.append((self.pos2id[pos], sims[pos]))
-                if len(result) == self.topsims:
-                    break
+        if isinstance(sims, numpy.ndarray):
+            sims = abs(sims) # TODO or maybe clip? are opposite vectors "similar" or "dissimilar"?!
+            for pos in numpy.argsort(sims)[::-1]:
+                if pos in self.pos2id and sims[pos] > 1e-8: # ignore deleted/rewritten documents
+                    # convert positions of resulting docs back to ids
+                    result.append((self.pos2id[pos], sims[pos]))
+                    if len(result) == self.topsims:
+                        break
+        else:
+            for pos, score in sims:
+                if pos in self.pos2id and abs(score) > 1e-8: # ignore deleted/rewritten documents
+                    # convert positions of resulting docs back to ids
+                    result.append((self.pos2id[pos], abs(score)))
+                    if len(result) == self.topsims:
+                        break
         return result
 
 
@@ -202,7 +210,7 @@ class SimIndex(gensim.utils.SaveLoad):
     def merge(self, other):
         """Merge documents from the other index. Update precomputed similarities
         in the process."""
-        other.qindex.normalize = False
+        other.qindex.normalize, other.qindex.num_best = False, self.topsims
         # update precomputed "most similar" for old documents (in case some of
         # the new docs make it to the top-N for some of the old documents)
         logger.info("updating old precomputed values")
@@ -233,6 +241,7 @@ class SimIndex(gensim.utils.SaveLoad):
         logger.info("precomputing most similar for the fresh index")
         pos, lenother = 0, len(other.qindex)
         norm, self.qindex.normalize = self.qindex.normalize, False
+        topsims, self.qindex.num_best = self.qindex.num_best, self.topsims
         for chunk in other.qindex.iter_chunks():
             for sims in self.qindex[chunk]:
                 if pos in other.pos2id:
@@ -242,7 +251,7 @@ class SimIndex(gensim.utils.SaveLoad):
                 pos += 1
                 if pos % 10000 == 0:
                     logger.info("PROGRESS: precomputed doc #%i/%i" % (pos, lenother))
-        self.qindex.normalize = norm
+        self.qindex.normalize, self.qindex.num_best = norm, topsims
         self.id2sims.sync()
 
 
@@ -416,7 +425,7 @@ class SimServer(object):
         if corpus is not None:
             self.flush(delete_fresh=True)
             self.add_documents(corpus)
-        self.model = SimModel(self.fresh_docs, method='lsi')
+        self.model = SimModel(self.fresh_docs, method=method)
         self.flush(delete_fresh=True)
 
 
@@ -495,20 +504,20 @@ class SimServer(object):
         self.flush(delete_fresh=True)
 
 
-    def add_documents(self, documents):
+    def buffer(self, documents):
         """
         Add a sequence of documents to be processed (indexed or trained on).
 
         Here, the documents are simply collected; real processing is done later,
         during the `self.index` or `self.train` calls.
 
-        `add_documents` can be called repeatedly; the result is the same as if
-        it was called once, with a concatenation of all the partial document batches.
+        `buffer` can be called repeatedly; the result is the same as if it was
+        called once, with a concatenation of all the partial document batches.
         The point is to save memory when sending large corpora over network: the
-        entire `documents` must be serialized into RAM.
+        entire `documents` must be serialized into RAM. See `utils.upload_chunked()`.
 
         A call to `flush()` clears this documents-to-be-processed buffer (`flush`
-        is implicitly called when you call `index()` and `train()`).
+        is also implicitly called when you call `index()` and `train()`).
         """
         logger.info("adding %i documents to temporary buffer of %s" % (len(documents), self))
         for doc in documents:
@@ -519,7 +528,16 @@ class SimServer(object):
             self.fresh_docs[docid] = doc
         self.fresh_docs.sync()
 
-    buffer = add_documents # alias
+    add_documents = buffer # alias
+
+
+    def drop_documents(self, docids):
+        """Delete specified documents from the index."""
+        logger.info("asked to drop %i documents" % len(docids))
+        for index in [self.opt_index, self.fresh_index]:
+            if index is not None:
+                index.delete(docids)
+        self.flush(delete_fresh=False)
 
 
     def find_similar(self, doc, min_score=0.0, max_results=100):
@@ -561,7 +579,7 @@ class SimServer(object):
 
 
     def __str__(self):
-        return ("SimServer(loc=%r, fresh=%s, opt=%s, model=%s, docbuffer=%s)" %
+        return ("SimServer(loc=%r, fresh=%s, opt=%s, model=%s, buffer=%s)" %
                 (self.basename, self.fresh_index, self.opt_index, self.model, self.fresh_docs))
 
     def __contains__(self, docid):
