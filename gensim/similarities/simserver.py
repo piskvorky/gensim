@@ -504,6 +504,7 @@ class SimServer(object):
         self.flush(delete_fresh=True)
 
 
+    @gensim.utils.synchronous('lock_update')
     def buffer(self, documents):
         """
         Add a sequence of documents to be processed (indexed or trained on).
@@ -531,6 +532,7 @@ class SimServer(object):
     add_documents = buffer # alias
 
 
+    @gensim.utils.synchronous('lock_update')
     def drop_documents(self, docids):
         """Delete specified documents from the index."""
         logger.info("asked to drop %i documents" % len(docids))
@@ -550,17 +552,21 @@ class SimServer(object):
         which is then used as a query.
 
         The similar documents are returned in decreasing similarity order, as
-        (doc_id, doc_score) tuples.
+        (doc_id, doc_score) pairs.
         """
         logger.debug("received query call with %r" % doc)
+        if self.lock_update.locked():
+            msg = "cannot query while the server is being updated"
+            logger.error(msg)
+            raise RuntimeError(msg)
         sims_opt, sims_fresh = None, None
         if isinstance(doc, basestring):
             # query by direct document id
             docid = doc
             if self.opt_index is not None and docid in self.opt_index:
-                sims_opt = self.opt_index.sims_by_id(docid) # this is fast!
+                sims_opt = self.opt_index.sims_by_id(docid)
             if self.fresh_index is not None and docid in self.fresh_index:
-                sims_fresh = self.fresh_index.sims_by_id(docid) # this is (potentially) slow
+                sims_fresh = self.fresh_index.sims_by_id(docid)
             if sims_fresh is None and sims_opt is None:
                 raise ValueError("document %r not in index" % docid)
         else:

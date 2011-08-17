@@ -58,7 +58,7 @@ class SimServerTester(unittest.TestCase):
 
 
     def test_model(self):
-        # First, upload training documents to the server. Tthe documents will be
+        # First, upload training documents to the server. The documents will be
         # stored server-side in an Sqlite db, not in memory, so the training corpus
         # may be larger than RAM
         self.server.buffer(self.docs[:2]) # upload 2 documents to server
@@ -83,7 +83,7 @@ class SimServerTester(unittest.TestCase):
         logging.debug(self.server.status())
 
         # re-index documents. just index documents with the same id -- the old document
-        # will be replaced by the new one, so that only the latest indexing counts.
+        # will be replaced by the new one, so that only the latest update counts.
         self.server.index(self.docs[2:5])
         logging.debug(self.server.status())
 
@@ -97,6 +97,7 @@ class SimServerTester(unittest.TestCase):
         # to speed up queries by id, call server.optimize()
         # it will precompute the most similar documents, for all documents in the index,
         # and store them to Sqlite db for lightning-fast querying.
+        # this won't affect querying by fulltext though.
         self.server.optimize()
         logging.debug(self.server.status())
 
@@ -119,7 +120,7 @@ class SimServerTester(unittest.TestCase):
         # index some docs first
         self.test_index()
 
-        # query index by arbitrary document: document is converted to vector first
+        # query index by arbitrary document: document text is converted to vector first
         doc = self.docs[0].copy()
         del doc['id'] # id is irrelevant when querying by fulltext
         sims = self.server.find_similar(doc)
