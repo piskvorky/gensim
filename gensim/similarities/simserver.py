@@ -387,7 +387,7 @@ class SimServer(object):
         except IOError:
             self.model = None
         self.fresh_docs = SqliteDict() # defaults to a random location in temp
-        self.lock_update = threading.Lock() # only one thread can modify the server at a time
+        self.lock_update = threading.RLock() # only one thread can modify the server at a time
         logger.info("loaded %s" % self)
 
 
@@ -425,6 +425,10 @@ class SimServer(object):
         if corpus is not None:
             self.flush(delete_fresh=True)
             self.add_documents(corpus)
+        if not self.fresh_docs:
+            msg = "train called but no training corpus specified for %s" % self
+            logger.error(msg)
+            raise ValueError(msg)
         self.model = SimModel(self.fresh_docs, method=method)
         self.flush(delete_fresh=True)
 
@@ -446,6 +450,11 @@ class SimServer(object):
         if corpus is not None:
             self.flush(delete_fresh=True)
             self.add_documents(corpus)
+
+        if not self.fresh_docs:
+            msg = "index called but no training corpus specified for %s" % self
+            logger.error(msg)
+            raise ValueError(msg)
 
         if not self.fresh_index:
             logger.info("starting a new fresh index for %s" % self)
@@ -542,6 +551,10 @@ class SimServer(object):
         self.flush(delete_fresh=False)
 
 
+    def is_locked(self):
+        return self.lock_update._RLock__count > 0
+
+
     def find_similar(self, doc, min_score=0.0, max_results=100):
         """
         Find at most `max_results` most similar articles in the index,
@@ -555,7 +568,7 @@ class SimServer(object):
         (doc_id, doc_score) pairs.
         """
         logger.debug("received query call with %r" % doc)
-        if self.lock_update.locked():
+        if self.is_locked():
             msg = "cannot query while the server is being updated"
             logger.error(msg)
             raise RuntimeError(msg)
