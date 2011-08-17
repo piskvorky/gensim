@@ -389,31 +389,28 @@ class LsiModel(interfaces.TransformationABC):
                 (self.num_terms, self.num_topics, self.decay, self.chunksize)
 
 
-    def __getitem__(self, bow, scaled=False, chunksize=256):
+    def __getitem__(self, bow, scaled=False, chunksize=512):
         """
         Return latent representation, as a list of (topic_id, topic_value) 2-tuples.
 
         This is done by folding input document into the latent topic space.
         """
+        assert self.projection.u is not None, "decomposition not initialized yet"
+
         # if the input vector is in fact a corpus, return a transformed corpus as a result
         is_corpus, bow = utils.is_corpus(bow)
         if is_corpus and chunksize:
             # by default, transform 256 documents at once, when called as `lsi[corpus]`.
             # this chunking is completely transparent to the user, but it speeds
             # up internal computations (one mat * mat multiplication, instead of
-            # 256 smaller mat * vec multiplications, better use of cache).
+            # 256 smaller mat * vec multiplications).
             return self._apply(bow, chunksize=chunksize)
 
-        if is_corpus:
-            vec = numpy.vstack(matutils.sparse2full(doc, self.num_terms).astype(self.projection.u.dtype) for doc in bow).T
-        else:
-            vec = matutils.sparse2full(bow, self.num_terms).astype(self.projection.u.dtype)
+        if not is_corpus:
+            bow = [bow]
+        vec = matutils.corpus2csc(bow, num_terms=self.num_terms)
 
-        assert self.projection.u is not None, "decomposition not initialized yet"
-        # automatically convert U to memory order suitable for column slicing
-        # this will ideally be done only once, at the very first lsi[query] transformation
-        self.projection.u = asfarray(self.projection.u)
-        topic_dist = numpy.dot(self.projection.u[:, :self.num_topics].T, vec) # u^-1 * x
+        topic_dist = (vec.T * self.projection.u[:, :self.num_topics]).T # (x^T * u).T = u^-1 * x
         if scaled:
             topic_dist = (1.0 / self.projection.s[:self.num_topics]) * topic_dist # s^-1 * u^-1 * x
 
@@ -421,7 +418,7 @@ class LsiModel(interfaces.TransformationABC):
         # with no zero weights.
         if not is_corpus:
             # lsi[single_document]
-            result = matutils.full2sparse(topic_dist)
+            result = matutils.full2sparse(topic_dist.flat)
         else:
             # lsi[chunk of documents]
             result = matutils.Dense2Corpus(topic_dist)
@@ -490,7 +487,7 @@ class LsiModel(interfaces.TransformationABC):
         del self.projection.u
         try:
             utils.pickle(self, fname) # store projection-less object
-            numpy.save(fname + '.npy', asfarray(u)) # store projection
+            numpy.save(fname + '.npy', ascarray(u)) # store projection
         finally:
             self.projection.u = u
 
