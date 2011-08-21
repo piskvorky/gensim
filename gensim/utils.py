@@ -357,10 +357,10 @@ def chunkize_serial(corpus, chunksize):
         raise ValueError("chunk size must be greater than zero")
     i = (val for val in corpus) # create generator
     while True:
-        chunk = list(itertools.islice(i, int(chunksize))) # consume `chunksize` items from the generator
-        if not chunk: # generator empty?
+        chunk = [list(itertools.islice(i, int(chunksize)))] # consume `chunksize` items from the generator
+        if not chunk[0]: # generator empty?
             break
-        yield chunk
+        yield chunk.pop()
 
 
 def chunkize(corpus, chunksize, maxsize=0):
@@ -476,15 +476,15 @@ def grouper(iterable, chunksize):
     Return elements from the iterable in `chunksize`-ed lists. The last returned
     element may be smaller (if length of collection is not divisible by `chunksize`).
 
-    >>> print list(grouper(xrange(10))
+    >>> print list(grouper(xrange(10), 3))
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
     """
-    i = iter(iterable)
+    it = iter(iterable)
     while True:
-        chunk = list(itertools.islice(i, int(chunksize)))
-        if not chunk:
+        wrapped_chunk = [list(itertools.islice(it, int(chunksize)))]
+        if not wrapped_chunk[0]:
             break
-        yield chunk
+        yield wrapped_chunk.pop()
 
 
 def upload_chunked(server, docs, chunksize=1000):
