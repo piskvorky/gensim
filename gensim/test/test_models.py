@@ -274,5 +274,5 @@ class TestLogEntropyModel(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.root.setLevel(logging.WARNING)
+    logging.root.setLevel(logging.DEBUG)
     unittest.main()

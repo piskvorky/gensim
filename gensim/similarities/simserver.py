@@ -5,13 +5,19 @@
 
 
 """
-Server for vector space "find similar" service, using gensim as back-end.
+"Find similar" service, using gensim (=vector spaces) for backend.
 
 The server performs 3 main functions:
 
 1. converts documents to semantic representation
 2. indexes documents in the semantic representation, for faster retrieval
 3. for a given query document, returns the most similar documents from the index
+
+SessionServer objects are transactional, so that you can rollback/commit a specific set of changes.
+
+The server is ready for concurrent requests (thread-safe). Indexing is incremental
+and you can query the SessionServer even while it's being updated, so that there
+is virtually no down-time.
 
 """
 
@@ -36,7 +42,7 @@ MODEL_METHOD = 'lsi' # use LSI to represent documents
 #MODEL_METHOD = 'tfidf'
 LSI_TOPICS = 400
 TOP_SIMS = 100 # when precomputing similarities, only consider this many "most similar" documents
-SHARD_SIZE = 32768 # spill index shards to disk in SHARD_SIZE-ed chunks of documents
+SHARD_SIZE = 65536 # spill index shards to disk in SHARD_SIZE-ed chunks of documents
 
 
 
@@ -542,7 +548,7 @@ class SimServer(object):
 
 
     @gensim.utils.synchronous('lock_update')
-    def drop_documents(self, docids):
+    def delete(self, docids):
         """Delete specified documents from the index."""
         logger.info("asked to drop %i documents" % len(docids))
         for index in [self.opt_index, self.fresh_index]:
@@ -617,3 +623,172 @@ class SimServer(object):
         from guppy import hpy
         return str(hpy().heap())
 #endclass SimServer
+
+
+
+class SessionServer(gensim.utils.SaveLoad):
+    """
+    Similarity server that implements sessions = transactions.
+
+    A transaction is a set of server modifications (index/delete/train calls) that
+    may be either commited or rolled back entirely.
+
+    Sessions are realized by:
+
+    1. cloning (=copying) a SimServer at the beginning of a session
+    2. serving read-only queries from the original server (the clone may be modified during queries)
+    3. modifications affect only the clone
+    4. at commit, the clone and the original are switched
+    5. at rollback, do nothing (clone is discarded, next transaction starts from the original again)
+    """
+    def __init__(self, basedir, autosession=True):
+        self.basedir = basedir
+        self.autosession = autosession
+        self.locs = [self.location(loc) for loc in ['a', 'b']]
+        try:
+            stable = open(self.location('stable')).read().strip()
+            self.istable = self.locs.index(stable)
+        except:
+            self.istable = 0
+            logger.info("stable index pointer not found or invalid; starting from %s" %
+                        self.locs[self.istable])
+        try:
+            os.makedirs(self.locs[self.istable])
+        except:
+            pass
+        self.stable = SimServer(self.locs[self.istable])
+        self.session = None
+        self.lock_update = threading.RLock()
+
+
+    def location(self, name):
+        return os.path.join(self.basedir, name)
+
+    def __contains__(self, docid):
+        return docid in self.stable
+
+    def __str__(self):
+        return "SessionServer(\n\tstable=%s\n\tsession=%s\n)" % (self.stable, self.session)
+
+    def status(self): # str() alias, for remote pyro access
+        return str(self)
+
+    def keys(self):
+        return self.stable.keys()
+
+    @gensim.utils.synchronous('lock_update')
+    def check_session(self):
+        """
+        Make sure a session is open.
+
+        If it's not and autosession is turned on, create a new session automatically.
+        If it's not and autosession is off, raise an exception.
+        """
+        if self.session is None:
+            if self.autosession:
+                self.open_session()
+            else:
+                msg = "must open a session before modifying %s" % self
+                raise RuntimeError(msg)
+
+
+    @gensim.utils.synchronous('lock_update')
+    def open_session(self):
+        """
+        Open a new session to modify this server.
+
+        You can either call this fnc directly, or turn on autosession which will
+        open/commit sessions for you transparently.
+        """
+        if self.session is not None:
+            msg = "session already open; commit it or rollback before opening another one in %s" % self
+            logger.error(msg)
+            raise RuntimeError(msg)
+
+        logger.info("opening a new session")
+        import shutil
+        session = 1 - self.istable
+        logger.info("removing %s" % self.locs[session])
+        try:
+            shutil.rmtree(self.locs[session])
+        except OSError:
+            logger.info("failed to delete %s" % self.locs[session])
+        logger.info("cloning server from %s to %s" %
+                    (self.locs[self.istable], self.locs[session]))
+        shutil.copytree(self.locs[self.istable], self.locs[session])
+        self.session = SimServer(self.locs[session])
+
+    @gensim.utils.synchronous('lock_update')
+    def index(self, *args, **kwargs):
+        """Index documents, in the current session"""
+        self.check_session()
+        return self.session.index(*args, **kwargs)
+
+    @gensim.utils.synchronous('lock_update')
+    def train(self, *args, **kwargs):
+        """Update semantic model, in the current session."""
+        self.check_session()
+        return self.session.train(*args, **kwargs)
+
+    @gensim.utils.synchronous('lock_update')
+    def drop_index(self, keep_model=True):
+        """Drop all indexed documents from the session (optionally, drop model too)."""
+        self.check_session()
+        return self.session.drop_index(keep_model)
+
+    @gensim.utils.synchronous('lock_update')
+    def delete(self, docids):
+        self.check_session()
+        return self.session.delete(docids)
+
+    @gensim.utils.synchronous('lock_update')
+    def commit(self):
+        """Commit changes made by the latest session."""
+        if self.session is not None:
+            logger.info("committing transaction")
+            self.stable, self.session = self.session, None
+            self.istable = 1 - self.istable
+            with open(self.location('stable'), 'w') as fout:
+                fout.write(self.locs[self.istable])
+        else:
+            logger.warning("commit called but there's no open session in %s" % self)
+
+    @gensim.utils.synchronous('lock_update')
+    def rollback(self):
+        """Ignore all changes made in the latest session (terminate the session)."""
+        if self.session is not None:
+            logger.info("rolling back transaction")
+            self.session = None
+        else:
+            logger.warning("rollback called but there's no open session in %s" % self)
+
+    @gensim.utils.synchronous('lock_update')
+    def terminate(self):
+        """Delete everything (both session and stable index). The server cannot be
+        used anymore after this call. Use with care."""
+        import shutil
+        logger.info("removing the entire server %s" % self)
+        try:
+            shutil.rmtree(self.basedir)
+        except Exception, e:
+            logger.warning("failed to remove %s: %s" % (self, e))
+        for key in self.__dict__.keys():
+            try:
+                delattr(self, key)
+            except:
+                pass
+
+
+    def find_similar(self, *args, **kwargs):
+        """
+        Find similar articles.
+
+        With autosession off, use the index state *before* current session started,
+        so that changes made in the session will not be visible here. With autosession
+        on, close the current session first (so that session changes *are* committed
+        and visible).
+        """
+        if self.session is not None and self.autosession:
+            # with autosession on, commit the pending transaction first
+            self.commit()
+        return self.stable.find_similar(*args, **kwargs)
