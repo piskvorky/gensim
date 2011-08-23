@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
+# Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
 USAGE: %(program)s DATA_DIRECTORY
 
     Start a sample similarity server, register it with Pyro and leave it running \
-as a daemon. Assumes Pyro nameserve is already running.
+as a daemon. Assumes Pyro nameserver is already running.
 
 Example:
     python -m Pyro4.naming -n 0.0.0.0 &              # run Pyro naming server
     python -m gensim.test.run_simserver /tmp/server  # create SessionServer and register it with Pyro
-
 """
 
 from __future__ import with_statement
@@ -38,14 +37,12 @@ if __name__ == '__main__':
         sys.exit(1)
 
     basename = sys.argv[1]
-
-    if not os.path.exists(basename):
-        os.makedirs(basename)
     server = gensim.similarities.SessionServer(basename)
 
-    import Pyro4 # register server for remote access
+    import Pyro4 # don't import too early because Pyro messes up logging
     with Pyro4.locateNS() as ns:
         with Pyro4.Daemon() as daemon:
+            # register server for remote access
             uri = daemon.register(server)
             name = 'gensim.testserver'
             ns.remove(name)

@@ -32,7 +32,7 @@ import shutil
 import numpy
 
 import gensim
-from sqlitedict import SqliteDict
+from sqlitedict import SqliteDict # run "sudo easy_install sqlitedict"
 
 
 logger = logging.getLogger('gensim_server')
@@ -683,11 +683,11 @@ class SessionServer(gensim.utils.SaveLoad):
             self.istable = 0
             logger.info("stable index pointer not found or invalid; starting from %s" %
                         self.loc_stable)
-            self.write_istable()
         try:
             os.makedirs(self.loc_stable)
         except:
             pass
+        self.write_istable()
         self.stable = SimServer(self.loc_stable)
         self.session = None
 
@@ -709,9 +709,6 @@ class SessionServer(gensim.utils.SaveLoad):
     def __str__(self):
         return "SessionServer(\n\tstable=%s\n\tsession=%s\n)" % (self.stable, self.session)
 
-    def status(self): # str() alias, for remote pyro access
-        return str(self)
-
     def keys(self):
         return self.stable.keys()
 
@@ -729,7 +726,6 @@ class SessionServer(gensim.utils.SaveLoad):
             else:
                 msg = "must open a session before modifying %s" % self
                 raise RuntimeError(msg)
-
 
     @gensim.utils.synchronous('lock_update')
     def open_session(self):
@@ -754,7 +750,7 @@ class SessionServer(gensim.utils.SaveLoad):
                     (self.loc_stable, self.loc_session))
         shutil.copytree(self.loc_stable, self.loc_session)
         self.session = SimServer(self.loc_session)
-        return self.session
+        self.lock_update.acquire() # no other thread can call any modification methods until commit/rollback
 
     @gensim.utils.synchronous('lock_update')
     def buffer(self, *args, **kwargs):
@@ -821,6 +817,7 @@ class SessionServer(gensim.utils.SaveLoad):
             self.stable, self.session = self.session, None
             self.istable = 1 - self.istable
             self.write_istable()
+            self.lock_update.release()
         else:
             logger.warning("commit called but there's no open session in %s" % self)
 
@@ -830,8 +827,20 @@ class SessionServer(gensim.utils.SaveLoad):
         if self.session is not None:
             logger.info("rolling back transaction in %s" % self)
             self.session = None
+            self.lock_update.release()
         else:
             logger.warning("rollback called but there's no open session in %s" % self)
+
+    @gensim.utils.synchronous('lock_update')
+    def set_autosession(self, value=None):
+        """
+        Turn autosession (automatic committing after each modification call) on/off.
+        If value is None, only query current value (don't change anything)
+        """
+        if value is not None:
+            self.rollback()
+            self.autosession = value
+        return self.autosession
 
     def find_similar(self, *args, **kwargs):
         """
@@ -851,7 +860,5 @@ class SessionServer(gensim.utils.SaveLoad):
     def debug_model(self):
         return self.stable.model
 
-    def debug_autosession(self, value=None):
-        if value is not None:
-            self.autosession = value
-        return self.autosession
+    def status(self): # str() alias
+        return str(self)
