@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
+# Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
@@ -61,10 +61,19 @@ class SessionServerTester(unittest.TestCase):
         except Pyro4.errors.PyroError, e:
             logging.error("could not locate running SessionServer: %s" % e)
             raise
+        self.server.set_autosession(True)
 
     def tearDown(self):
         self.docs = None
         self.server._pyroRelease()
+
+
+    def check_equal(self, sims1, sims2):
+        """Check that two returned lists of similarities are equal."""
+        sims1, sims2 = dict(sims1), dict(sims2)
+        for docid in set(sims1.keys() + sims2.keys()):
+            self.assertTrue(numpy.allclose(sims1.get(docid, 0.0), sims2.get(docid, 0.0), atol=1e-7))
+
 
     def test_model(self):
         """test remote server model creation"""
@@ -96,13 +105,6 @@ class SessionServerTester(unittest.TestCase):
         got = model.doc2vec(self.docs[0])
         self.assertTrue(numpy.allclose(abs(gensim.matutils.sparse2full(vec0, model.num_features)),
                                        abs(gensim.matutils.sparse2full(got, model.num_features))))
-
-
-    def check_equal(self, sims1, sims2):
-        """Check that two returned lists of similarities are equal."""
-        sims1, sims2 = dict(sims1), dict(sims2)
-        for docid in set(sims1.keys() + sims2.keys()):
-            self.assertTrue(numpy.allclose(sims1.get(docid, 0.0), sims2.get(docid, 0.0), atol=1e-7))
 
 
     def test_index(self):
@@ -154,6 +156,7 @@ class SessionServerTester(unittest.TestCase):
                     ('en__0', 0.25648531), ('en__3', 0.20920435), ('en__5', 1.4901161e-08)]
         got = self.server.find_similar(self.docs[2]['id'])
         self.check_equal(expected, got)
+        self.assertRaises(ValueError, self.server.find_similar, to_delete[0]) # deleted document not there anymore
 
 
     def test_optimize(self):
@@ -166,7 +169,7 @@ class SessionServerTester(unittest.TestCase):
         self.server.index(self.docs)
         self.server.optimize()
         logging.debug(self.server.status())
-        # TODO how to test that it's faster? just read and verify server.status()?
+        # TODO how to test that it's faster?
 
 
     def test_query_id(self):
@@ -216,7 +219,49 @@ class SessionServerTester(unittest.TestCase):
         expected = [('en__0', 1.0), ('en__2', 0.30426699), ('en__1', 0.25648531)]
         got = self.server.find_similar(doc, max_results=3, min_score=0.2)
         self.check_equal(expected, got)
+
+    def test_sessions(self):
+        """check similarity server transactions (autosession off)"""
+        self.server.drop_index(keep_model=False)
+        self.server.set_autosession(False) # turn off auto-commit
+
+        # trying to modify index with auto-commit off and without an open session results in exception
+        self.assertRaises(RuntimeError, self.server.train, self.docs)
+        self.assertRaises(RuntimeError, self.server.index, self.docs)
+
+        # open session, train model & index some documents
+        self.server.open_session()
+        self.server.train(self.docs)
+        self.server.index(self.docs)
+
+        # cannot open 2 simultaneous sessions: must commit or rollback first
+        self.assertRaises(RuntimeError, self.server.open_session)
+
+        self.server.commit() # commit ends the session
+
+        # no session open; cannot modify
+        self.assertRaises(RuntimeError, self.server.index, self.docs)
+
+        # open another session (using outcome of the previously committed one)
+        self.server.open_session()
+        doc = self.docs[0]
+        self.server.delete([doc['id']]) # delete one document from the session
+        # queries hit the original index; current session modifications are ignored
+        self.server.find_similar(doc['id']) # document still there!
+        self.server.commit()
+
+        # session committed => document is gone now, querying for its id raises exception
+        self.assertRaises(ValueError, self.server.find_similar, doc['id'])
+
+        # open another session; this one will be rolled back
+        self.server.open_session()
+        self.server.index([doc]) # re-add the deleted document
+        self.assertRaises(ValueError, self.server.find_similar, doc['id']) # no commit yet -- document still gone!
+        self.server.rollback() # ignore all changes made since open_session
+
+        self.assertRaises(ValueError, self.server.find_similar, doc['id']) # addition was rolled back -- document still gone!
 #end SessionServerTester
+
 
 
 if __name__ == '__main__':
