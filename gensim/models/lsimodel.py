@@ -201,6 +201,12 @@ class Projection(utils.SaveLoad):
         q = ascarray(q, 'q')
         q = numpy.dot(q, u2_k)
         self.u += q
+
+        # make each column of U start with a non-negative number (to force canonical decomposition)
+        if self.u.shape[0] > 0:
+            for i in xrange(self.u.shape[1]):
+                if self.u[0, i] < 0.0:
+                    self.u[:, i] *= -1.0
 #        diff = numpy.dot(self.u.T, self.u) - numpy.eye(self.u.shape[1])
 #        logger.info('orth error after=%f' % numpy.sum(diff * diff))
 #endclass Projection
