@@ -46,7 +46,9 @@ def synchronous(tlockname):
             logger.debug("acquiring lock %r for %s" % (tlockname, func.func_name))
             with tlock: # use lock as a context manager to perform safe acquire/release pairs
                 logger.debug("acquired lock %r for %s" % (tlockname, func.func_name))
-                return func(self, *args, **kwargs)
+                result = func(self, *args, **kwargs)
+                logger.debug("releasing lock %r for %s" % (tlockname, func.func_name))
+                return result
         return _synchronizer
     return _synched
 
@@ -499,5 +501,5 @@ def upload_chunked(server, docs, chunksize=1000):
     for chunk in grouper(docs, chunksize):
         end = start + len(chunk)
         logger.info("uploading documents %i-%i" % (start, end - 1))
-        server.add_documents(chunk)
+        server.buffer(chunk)
         start = end

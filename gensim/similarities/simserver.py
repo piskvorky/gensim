@@ -27,6 +27,7 @@ import os
 import logging
 import random
 import threading
+import shutil
 
 import numpy
 
@@ -59,7 +60,7 @@ def simple_preprocess(doc):
 
 
 def merge_sims(oldsims, newsims, clip=TOP_SIMS):
-    """Merge two precomputed lists, truncating the result to `clip` most similar items."""
+    """Merge two precomputed similarity lists, truncating the result to `clip` most similar items."""
     if oldsims is None:
         result = newsims or []
     elif newsims is None:
@@ -96,11 +97,30 @@ class SimIndex(gensim.utils.SaveLoad):
         super(SimIndex, self).save(fname)
         self.id2sims = tmp
 
+
     @staticmethod
     def load(fname):
         result = gensim.utils.SaveLoad.load(fname)
+        result.check_moved(fname)
         result.id2sims = SqliteDict(result.fname + '.id2sims')
         return result
+
+
+    def check_moved(self, fname):
+        # Add extra logic to loading: if the location on filesystem changed,
+        # update locations of all shard files.
+        # The other option was making shard locations relative to a directory name.
+        # That way we wouldn't have to update their locations on load, but on the
+        # other hand we'd have to pass a dirname to each call that needs their
+        # absolute location... annoying.
+        if self.fname != fname:
+            logger.info("index seems to have moved from %s to %s; updating locations" %
+                        (self.fname, fname))
+            self.fname = fname
+            output_prefix = fname + '.idx'
+            for shard in self.qindex.shards:
+                shard.fname = shard.fname.replace(self.qindex.output_prefix, output_prefix, 1)
+            self.qindex.output_prefix = output_prefix
 
 
     def terminate(self):
@@ -110,10 +130,13 @@ class SimIndex(gensim.utils.SaveLoad):
             try:
                 os.remove(fname)
                 logger.info("deleted %s" % fname)
-            except IOError:
-                logger.warning("failed to delete %s" % fname)
+            except Exception, e:
+                logger.warning("failed to delete %s: %s" % (fname, e))
         for val in self.__dict__.keys():
-            delattr(self, val)
+            try:
+                delattr(self, val)
+            except:
+                pass
 
 
     def index_documents(self, fresh_docs, model):
@@ -171,20 +194,20 @@ class SimIndex(gensim.utils.SaveLoad):
         self.update_mappings()
 
 
-    def sims2scores(self, sims):
+    def sims2scores(self, sims, eps=1e-7):
         """Convert raw similarity vector to a list of (docid, similarity) results."""
         result = []
         if isinstance(sims, numpy.ndarray):
             sims = abs(sims) # TODO or maybe clip? are opposite vectors "similar" or "dissimilar"?!
             for pos in numpy.argsort(sims)[::-1]:
-                if pos in self.pos2id and sims[pos] > 1e-8: # ignore deleted/rewritten documents
+                if pos in self.pos2id and sims[pos] > eps: # ignore deleted/rewritten documents
                     # convert positions of resulting docs back to ids
                     result.append((self.pos2id[pos], sims[pos]))
                     if len(result) == self.topsims:
                         break
         else:
             for pos, score in sims:
-                if pos in self.pos2id and abs(score) > 1e-8: # ignore deleted/rewritten documents
+                if pos in self.pos2id and abs(score) > eps: # ignore deleted/rewritten documents
                     # convert positions of resulting docs back to ids
                     result.append((self.pos2id[pos], abs(score)))
                     if len(result) == self.topsims:
@@ -303,9 +326,12 @@ class SimModel(gensim.utils.SaveLoad):
         logger.info("creating model from %s documents" % len(docids))
 
         logger.info("preprocessing texts")
+        # preprocessing (parsing, tokenizing) is usually the most costly step,
+        # so precompute it once for all documents and cache the results in a
+        # temporary Sqlite database `preprocessed`
         preprocessed = SqliteDict(gensim.utils.randfname(prefix='gensim'))
         for docid in docids:
-            preprocessed[docid] = self.preprocess(fresh_docs[docid]['text'])
+            preprocessed[docid] = self.preprocess(fresh_docs[docid]['text']) # cache pure tokens
 
         # create id->word (integer->string) mapping
         logger.info("creating dictionary from %s documents" % len(fresh_docs))
@@ -319,13 +345,12 @@ class SimModel(gensim.utils.SaveLoad):
         else:
             self.dictionary = dictionary
 
+        corpus = lambda: (self.dictionary.doc2bow(preprocessed[docid]) for docid in preprocessed)
         if method == 'lsi':
             logger.info("training TF-IDF model")
-            corpus = (self.dictionary.doc2bow(preprocessed[docid]) for docid in preprocessed)
-            self.tfidf = gensim.models.TfidfModel(corpus, id2word=self.dictionary)
+            self.tfidf = gensim.models.TfidfModel(corpus(), id2word=self.dictionary)
             logger.info("training LSI model")
-            corpus = (self.dictionary.doc2bow(preprocessed[docid]) for docid in preprocessed)
-            tfidf_corpus = self.tfidf[corpus]
+            tfidf_corpus = self.tfidf[corpus()]
             self.lsi = gensim.models.LsiModel(tfidf_corpus, id2word=self.dictionary, num_topics=LSI_TOPICS)
             self.lsi.projection.u = self.lsi.projection.u.astype(numpy.float32) # use single precision to save mem
             self.num_features = len(self.lsi.projection.s)
@@ -382,17 +407,19 @@ class SimServer(object):
         self.basename = basename
         try:
             self.fresh_index = SimIndex.load(self.location('index_fresh'))
-        except IOError:
+        except:
             self.fresh_index = None
         try:
             self.opt_index = SimIndex.load(self.location('index_opt'))
-        except IOError:
+        except:
             self.opt_index = None
         try:
             self.model = SimModel.load(self.location('model'))
-        except IOError:
+        except:
             self.model = None
-        self.fresh_docs = SqliteDict() # defaults to a random location in temp
+        # save the opened objects right back. this is not necessary and costs extra
+        # time, but is cleaner when there are server location changes (see `check_moved`).
+        self.flush(save_index=True, save_model=True, clear_buffer=True)
         self.lock_update = threading.RLock() # only one thread can modify the server at a time
         logger.info("loaded %s" % self)
 
@@ -401,20 +428,23 @@ class SimServer(object):
         return os.path.join(self.basename, name)
 
 
-    def flush(self, delete_fresh=True):
-        """
-        Commit all changes, clear all caches. If `delete_fresh`, also clear the
-        document upload buffer of `add_documents()`.
-        """
-        if self.fresh_index is not None:
-            self.fresh_index.save(self.location('index_fresh'))
-        if self.opt_index is not None:
-            self.opt_index.save(self.location('index_opt'))
-        if self.model is not None:
-            self.model.save(self.location('model'))
-        if delete_fresh:
-            self.fresh_docs.terminate() # erase all buffered documents + file on disk
-            self.fresh_docs = SqliteDict()
+    def flush(self, save_index=False, save_model=False, clear_buffer=False):
+        """Commit all changes, clear all caches."""
+        if save_index:
+            if self.fresh_index is not None:
+                self.fresh_index.save(self.location('index_fresh'))
+            if self.opt_index is not None:
+                self.opt_index.save(self.location('index_opt'))
+        if save_model:
+            if self.model is not None:
+                self.model.save(self.location('model'))
+        if clear_buffer:
+            if hasattr(self, 'fresh_docs'):
+                try:
+                    self.fresh_docs.terminate() # erase all buffered documents + file on disk
+                except:
+                    pass
+            self.fresh_docs = SqliteDict() # buffer defaults to a random location in temp
         self.fresh_docs.sync()
 
 
@@ -425,37 +455,39 @@ class SimServer(object):
         All indexes become invalid, because documents in them use a now-obsolete
         representation.
 
-        The model is trained on documents previously entered via `add_documents`,
+        The model is trained on documents previously entered via `buffer`,
         or directly on `corpus`, if specified.
         """
         if corpus is not None:
-            self.flush(delete_fresh=True)
-            self.add_documents(corpus)
+            # use the supplied corpus only (erase existing buffer, if any)
+            self.flush(clear_buffer=True)
+            self.buffer(corpus)
         if not self.fresh_docs:
             msg = "train called but no training corpus specified for %s" % self
             logger.error(msg)
             raise ValueError(msg)
         self.model = SimModel(self.fresh_docs, method=method)
-        self.flush(delete_fresh=True)
+        self.flush(save_model=True, clear_buffer=True)
 
 
     @gensim.utils.synchronous('lock_update')
     def index(self, corpus=None):
         """
-        Permanently index all documents previously added via `add_documents`, or
-        directly documents from `corpus`, if specified.
+        Permanently index all documents previously added via `buffer`, or
+        directly index documents from `corpus`, if specified.
 
         The indexing model must already exist (see `train`) before this function
         is called.
         """
         if not self.model:
-            msg = 'must initialize the model for %s before indexing documents' % self.basename
+            msg = 'must initialize model for %s before indexing documents' % self.basename
             logger.error(msg)
             raise AttributeError(msg)
 
         if corpus is not None:
-            self.flush(delete_fresh=True)
-            self.add_documents(corpus)
+            # use the supplied corpus only (erase existing buffer, if any)
+            self.flush(clear_buffer=True)
+            self.buffer(corpus)
 
         if not self.fresh_docs:
             msg = "index called but no training corpus specified for %s" % self
@@ -468,7 +500,7 @@ class SimServer(object):
         self.fresh_index.index_documents(self.fresh_docs, self.model)
         if self.opt_index is not None:
             self.opt_index.delete(self.fresh_docs.keys())
-        self.flush(delete_fresh=True)
+        self.flush(save_index=True, clear_buffer=True)
 
 
     @gensim.utils.synchronous('lock_update')
@@ -496,7 +528,7 @@ class SimServer(object):
 
         self.opt_index.merge(self.fresh_index)
         self.fresh_index = self.fresh_index.terminate() # delete old files
-        self.flush(delete_fresh=False)
+        self.flush(save_index=True)
 
 
     @gensim.utils.synchronous('lock_update')
@@ -513,10 +545,10 @@ class SimServer(object):
             try:
                 os.remove(fname)
                 logger.info("deleted %s" % fname)
-            except IOError:
+            except Exception, e:
                 logger.warning("failed to delete %s" % fname)
             self.model = None
-        self.flush(delete_fresh=True)
+        self.flush(save_index=True, save_model=True, clear_buffer=True)
 
 
     @gensim.utils.synchronous('lock_update')
@@ -544,8 +576,6 @@ class SimServer(object):
             self.fresh_docs[docid] = doc
         self.fresh_docs.sync()
 
-    add_documents = buffer # alias
-
 
     @gensim.utils.synchronous('lock_update')
     def delete(self, docids):
@@ -554,7 +584,7 @@ class SimServer(object):
         for index in [self.opt_index, self.fresh_index]:
             if index is not None:
                 index.delete(docids)
-        self.flush(delete_fresh=False)
+        self.flush(save_index=True)
 
 
     def is_locked(self):
@@ -644,25 +674,34 @@ class SessionServer(gensim.utils.SaveLoad):
     def __init__(self, basedir, autosession=True):
         self.basedir = basedir
         self.autosession = autosession
-        self.locs = [self.location(loc) for loc in ['a', 'b']]
+        self.lock_update = threading.RLock()
+        self.locs = ['a', 'b'] # directories under which to store stable.session data
         try:
             stable = open(self.location('stable')).read().strip()
             self.istable = self.locs.index(stable)
         except:
             self.istable = 0
             logger.info("stable index pointer not found or invalid; starting from %s" %
-                        self.locs[self.istable])
+                        self.loc_stable)
+            self.write_istable()
         try:
-            os.makedirs(self.locs[self.istable])
+            os.makedirs(self.loc_stable)
         except:
             pass
-        self.stable = SimServer(self.locs[self.istable])
+        self.stable = SimServer(self.loc_stable)
         self.session = None
-        self.lock_update = threading.RLock()
 
 
     def location(self, name):
         return os.path.join(self.basedir, name)
+
+    @property
+    def loc_stable(self):
+        return self.location(self.locs[self.istable])
+
+    @property
+    def loc_session(self):
+        return self.location(self.locs[1 - self.istable])
 
     def __contains__(self, docid):
         return docid in self.stable
@@ -706,50 +745,82 @@ class SessionServer(gensim.utils.SaveLoad):
             raise RuntimeError(msg)
 
         logger.info("opening a new session")
-        import shutil
-        session = 1 - self.istable
-        logger.info("removing %s" % self.locs[session])
+        logger.info("removing %s" % self.loc_session)
         try:
-            shutil.rmtree(self.locs[session])
-        except OSError:
-            logger.info("failed to delete %s" % self.locs[session])
+            shutil.rmtree(self.loc_session)
+        except:
+            logger.info("failed to delete %s" % self.loc_session)
         logger.info("cloning server from %s to %s" %
-                    (self.locs[self.istable], self.locs[session]))
-        shutil.copytree(self.locs[self.istable], self.locs[session])
-        self.session = SimServer(self.locs[session])
+                    (self.loc_stable, self.loc_session))
+        shutil.copytree(self.loc_stable, self.loc_session)
+        self.session = SimServer(self.loc_session)
+        return self.session
+
+    @gensim.utils.synchronous('lock_update')
+    def buffer(self, *args, **kwargs):
+        """Buffer documents, in the current session"""
+        self.check_session()
+        result = self.session.buffer(*args, **kwargs)
+        return result
 
     @gensim.utils.synchronous('lock_update')
     def index(self, *args, **kwargs):
         """Index documents, in the current session"""
         self.check_session()
-        return self.session.index(*args, **kwargs)
+        result = self.session.index(*args, **kwargs)
+        if self.autosession:
+            self.commit()
+        return result
 
     @gensim.utils.synchronous('lock_update')
     def train(self, *args, **kwargs):
         """Update semantic model, in the current session."""
         self.check_session()
-        return self.session.train(*args, **kwargs)
+        result = self.session.train(*args, **kwargs)
+        if self.autosession:
+            self.commit()
+        return result
 
     @gensim.utils.synchronous('lock_update')
     def drop_index(self, keep_model=True):
-        """Drop all indexed documents from the session (optionally, drop model too)."""
+        """Drop all indexed documents from the session. Optionally, drop model too."""
         self.check_session()
-        return self.session.drop_index(keep_model)
+        result = self.session.drop_index(keep_model)
+        if self.autosession:
+            self.commit()
+        return result
 
     @gensim.utils.synchronous('lock_update')
     def delete(self, docids):
+        """Delete documents from the current session."""
         self.check_session()
-        return self.session.delete(docids)
+        result = self.session.delete(docids)
+        if self.autosession:
+            self.commit()
+        return result
+
+    @gensim.utils.synchronous('lock_update')
+    def optimize(self):
+        """Optimize index for faster by-document-id queries."""
+        self.check_session()
+        result = self.session.optimize()
+        if self.autosession:
+            self.commit()
+        return result
+
+    @gensim.utils.synchronous('lock_update')
+    def write_istable(self):
+        with open(self.location('stable'), 'w') as fout:
+            fout.write(os.path.basename(self.loc_stable))
 
     @gensim.utils.synchronous('lock_update')
     def commit(self):
         """Commit changes made by the latest session."""
         if self.session is not None:
-            logger.info("committing transaction")
+            logger.info("committing transaction in %s" % self)
             self.stable, self.session = self.session, None
             self.istable = 1 - self.istable
-            with open(self.location('stable'), 'w') as fout:
-                fout.write(self.locs[self.istable])
+            self.write_istable()
         else:
             logger.warning("commit called but there's no open session in %s" % self)
 
@@ -757,27 +828,10 @@ class SessionServer(gensim.utils.SaveLoad):
     def rollback(self):
         """Ignore all changes made in the latest session (terminate the session)."""
         if self.session is not None:
-            logger.info("rolling back transaction")
+            logger.info("rolling back transaction in %s" % self)
             self.session = None
         else:
             logger.warning("rollback called but there's no open session in %s" % self)
-
-    @gensim.utils.synchronous('lock_update')
-    def terminate(self):
-        """Delete everything (both session and stable index). The server cannot be
-        used anymore after this call. Use with care."""
-        import shutil
-        logger.info("removing the entire server %s" % self)
-        try:
-            shutil.rmtree(self.basedir)
-        except Exception, e:
-            logger.warning("failed to remove %s: %s" % (self, e))
-        for key in self.__dict__.keys():
-            try:
-                delattr(self, key)
-            except:
-                pass
-
 
     def find_similar(self, *args, **kwargs):
         """
@@ -792,3 +846,12 @@ class SessionServer(gensim.utils.SaveLoad):
             # with autosession on, commit the pending transaction first
             self.commit()
         return self.stable.find_similar(*args, **kwargs)
+
+    # add some functions for remote access (RPC via Pyro)
+    def debug_model(self):
+        return self.stable.model
+
+    def debug_autosession(self, value=None):
+        if value is not None:
+            self.autosession = value
+        return self.autosession

@@ -17,6 +17,9 @@ similar index documents to the query.
 
 You can later add new documents to the index via `Similarity.add_documents()`.
 
+How It Works
+------------
+
 The `Similarity` class splits the index into several smaller sub-indexes ("shards"),
 which are disk-based. If your entire index fits in memory (~hundreds of thousands
 documents for 1GB of RAM), you can also use the `MatrixSimilarity` or `SparseMatrixSimilarity`
@@ -115,23 +118,6 @@ class Shard(utils.SaveLoad):
 
 
 
-class Scipy2Corpus(object):
-    def __init__(self, vecs):
-        """Convert a sequence of dense/sparse vector to a gensim corpus object."""
-        self.vecs = vecs
-
-    def __iter__(self):
-        for vec in self.vecs:
-            if isinstance(vec, numpy.ndarray):
-                yield matutils.full2sparse(vec)
-            else:
-                yield matutils.scipy2sparse(vec)
-
-    def __len__(self):
-        return len(self.vecs)
-
-
-
 class Similarity(interfaces.SimilarityABC):
     """
     Compute cosine similarity of a dynamic query against a static corpus of documents
@@ -171,6 +157,7 @@ class Similarity(interfaces.SimilarityABC):
 
         """
         if output_prefix is None:
+            # undocumented feature: set output_prefix=None to create the server in temp
             self.output_prefix = utils.randfname(prefix='simserver')
         else:
             self.output_prefix = output_prefix
@@ -246,7 +233,7 @@ class Similarity(interfaces.SimilarityABC):
         """
         if not self.fresh_docs:
             return
-        self.fresh_docs = Scipy2Corpus(self.fresh_docs)
+        self.fresh_docs = matutils.Scipy2Corpus(self.fresh_docs)
         shardid = len(self.shards)
         # consider the shard sparse if its density is < 30%
         issparse = 0.3 > 1.0 * self.fresh_nnz / (len(self.fresh_docs) * self.num_features)

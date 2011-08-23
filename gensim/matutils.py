@@ -125,6 +125,22 @@ def scipy2sparse(vec):
     return zip(vec.indices, vec.data)
 
 
+class Scipy2Corpus(object):
+    def __init__(self, vecs):
+        """Convert a sequence of dense/sparse vector to a gensim corpus object."""
+        self.vecs = vecs
+
+    def __iter__(self):
+        for vec in self.vecs:
+            if isinstance(vec, numpy.ndarray):
+                yield full2sparse(vec)
+            else:
+                yield scipy2sparse(vec)
+
+    def __len__(self):
+        return len(self.vecs)
+
+
 def sparse2full(doc, length):
     """
     Convert a document in sparse corpus format (sequence of 2-tuples) into a dense
