@@ -11,8 +11,8 @@ USAGE: %(program)s DATA_DIRECTORY
 as a daemon. Assumes Pyro nameserve is already running.
 
 Example:
-    python -m Pyro4.naming -n 0.0.0.0 &                   # run Pyro naming server
-    python -m gensim.test.run_simserver /tmp/simserver # create SimServer and register it with Pyro
+    python -m Pyro4.naming -n 0.0.0.0 &              # run Pyro naming server
+    python -m gensim.test.run_simserver /tmp/server  # create SessionServer and register it with Pyro
 
 """
 
@@ -27,7 +27,7 @@ import gensim
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(module)s:%(lineno)d : %(funcName)s(%(threadName)s) : %(message)s')
-    logging.root.setLevel(level=logging.DEBUG)
+    logging.root.setLevel(level=logging.INFO)
     logging.info("running %s" % ' '.join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     if not os.path.exists(basename):
         os.makedirs(basename)
-    server = gensim.similarities.SimServer(basename)
+    server = gensim.similarities.SessionServer(basename)
 
     import Pyro4 # register server for remote access
     with Pyro4.locateNS() as ns:
