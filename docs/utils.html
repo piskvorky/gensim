@@ -281,6 +281,17 @@ local misconfigurations, which often mess up hostname resolution.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.utils.grouper">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">grouper</tt><big>(</big><em>iterable</em>, <em>chunksize</em><big>)</big><a class="headerlink" href="#gensim.utils.grouper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return elements from the iterable in <cite>chunksize</cite>-ed lists. The last returned
+element may be smaller (if length of collection is not divisible by <cite>chunksize</cite>).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="n">grouper</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.utils.is_corpus">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">is_corpus</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#gensim.utils.is_corpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check whether <cite>obj</cite> is a corpus. Return (is_corpus, new) 2-tuple, where
@@ -355,6 +366,15 @@ via <cite>texts[docid]</cite>, such as its fulltext or snippet.</p>
 <dd><p>Load pickled object from <cite>fname</cite></p>
 </dd></dl>
 
+<dl class="function">
+<dt id="gensim.utils.upload_chunked">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">upload_chunked</tt><big>(</big><em>server</em>, <em>docs</em>, <em>chunksize=1000</em><big>)</big><a class="headerlink" href="#gensim.utils.upload_chunked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Memory-friendly upload of documents to a SimServer (or Pyro SimServer proxy).</p>
+<p>Use this function to train or index large collections &#8211; avoid sending the
+entire corpus over the wire as a single Pyro in-memory object. The documents
+will be sent in smaller chunks, of <cite>chunksize</cite> documents each.</p>
+</dd></dl>
+
 </div>
 
 
@@ -391,7 +411,7 @@ via <cite>texts[docid]</cite>, such as its fulltext or snippet.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Aug 03, 2011.
+      Last updated on Aug 24, 2011.
     </div>
   </body>
 </html>

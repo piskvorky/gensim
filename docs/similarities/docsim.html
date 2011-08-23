@@ -76,6 +76,14 @@
     
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><tt class="docutils literal"><span class="pre">similarities.docsim</span></tt> &#8211; Document similarity queries</a><ul>
+<li><a class="reference internal" href="#how-it-works">How It Works</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Previous topic</h4>
   <p class="topless"><a href="../models/lda_worker.html"
                         title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.lda_worker</span></tt> &#8211; Worker for distributed LDA</a></p>
@@ -114,6 +122,8 @@ of numbers as large as the size of the initial set of documents, that is, one fl
 for each index document. Alternatively, you can also request only the top-N most
 similar index documents to the query.</p>
 <p>You can later add new documents to the index via <cite>Similarity.add_documents()</cite>.</p>
+<div class="section" id="how-it-works">
+<h2>How It Works<a class="headerlink" href="#how-it-works" title="Permalink to this headline">¶</a></h2>
 <p>The <cite>Similarity</cite> class splits the index into several smaller sub-indexes (&#8220;shards&#8221;),
 which are disk-based. If your entire index fits in memory (~hundreds of thousands
 documents for 1GB of RAM), you can also use the <cite>MatrixSimilarity</cite> or <cite>SparseMatrixSimilarity</cite>
@@ -211,7 +221,7 @@ MatrixSimilarity and scipy.sparse for SparseMatrixSimilarity.</p>
 
 <dl class="class">
 <dt id="gensim.similarities.docsim.Similarity">
-<em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">Similarity</tt><big>(</big><em>output_prefix</em>, <em>corpus</em>, <em>num_features</em>, <em>num_best=None</em>, <em>chunksize=512</em>, <em>shardsize=5000</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">Similarity</tt><big>(</big><em>output_prefix</em>, <em>corpus</em>, <em>num_features</em>, <em>num_best=None</em>, <em>chunksize=1024</em>, <em>shardsize=32768</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute cosine similarity of a dynamic query against a static corpus of documents
 (&#8220;the index&#8221;).</p>
 <p>Scalability is achieved by sharding the index into smaller pieces, each of which
@@ -220,21 +230,22 @@ The shards themselves are simply stored as files to disk and mmap&#8217;ed back 
 <p>Construct the index from <cite>corpus</cite>. The index can be later extended by calling
 the <cite>add_documents</cite> method. Documents are split into shards of <cite>shardsize</cite>
 documents each, converted to a matrix (for fast BLAS calls) and stored to disk
-under <cite>output_prefix.shard_number</cite> (=you need write access to that location).</p>
+under <cite>output_prefix.shard_number</cite> (=you need write access to that location).
+If you don&#8217;t specify an output prefix, a random filename in temp will be used.</p>
 <p><cite>shardsize</cite> should be chosen so that a <cite>shardsize x chunksize</cite> matrix of floats
 fits comfortably into main memory.</p>
 <p><cite>num_features</cite> is the number of features in the <cite>corpus</cite> (e.g. size of the
 dictionary, or the number of latent topics for latent semantic models).</p>
 <p>If <cite>num_best</cite> is left unspecified, similarity queries will return a full
 vector with one float for every document in the index:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">Similarity</span><span class="p">(</span><span class="s">&#39;/tmp/index&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">,</span> <span class="n">num_features</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span> <span class="c"># if corpus has 7 documents...</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">Similarity</span><span class="p">(</span><span class="s">&#39;/path/to/index&#39;</span><span class="p">,</span> <span class="n">corpus</span><span class="p">,</span> <span class="n">num_features</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span> <span class="c"># if corpus has 7 documents...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="p">[</span><span class="n">query</span><span class="p">]</span> <span class="c"># ... then result will have 7 floats</span>
 <span class="go">[0.0, 0.0, 0.2, 0.13, 0.8, 0.0, 0.1]</span>
 </pre></div>
 </div>
 <p>If <cite>num_best</cite> is set, queries return only the <cite>num_best</cite> most similar documents:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="o">.</span><span class="n">num_best</span> <span class="o">=</span> <span class="mi">3</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="p">[</span><span class="n">query</span><span class="p">]</span> <span class="c"># return at most &quot;num_best&quot; (index_of_document, similarity) tuples</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="p">[</span><span class="n">query</span><span class="p">]</span> <span class="c"># return at most &quot;num_best&quot; of `(index_of_document, similarity)` tuples</span>
 <span class="go">[(4, 0.8), (2, 0.13), (3, 0.13)]</span>
 </pre></div>
 </div>
@@ -259,6 +270,15 @@ documents added. The re-opening makes this pattern inefficient. Instead,
 try to add as many documents as possible (ideally, all of them), only then query.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="gensim.similarities.docsim.Similarity.iter_chunks">
+<tt class="descname">iter_chunks</tt><big>(</big><em>chunksize=None</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.iter_chunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iteratively yield the index as chunks of documents, each of size &lt;= chunksize.</p>
+<p>The chunk is returned in its raw form (matrix or sparse matrix slice).
+The size of the chunk may be smaller than requested; it is up to the caller
+to check the result for real length, using <cite>chunk.shape[0]</cite>.</p>
+</dd></dl>
+
 <dl class="classmethod">
 <dt id="gensim.similarities.docsim.Similarity.load">
 <em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.load" title="Permalink to this definition">¶</a></dt>
@@ -275,8 +295,8 @@ the constructor.</p>
 
 <dl class="method">
 <dt id="gensim.similarities.docsim.Similarity.similarity_by_id">
-<tt class="descname">similarity_by_id</tt><big>(</big><em>docid</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.similarity_by_id" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return similarity of the given document only. <cite>docid</cite> is the position
+<tt class="descname">similarity_by_id</tt><big>(</big><em>docpos</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.similarity_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return similarity of the given document only. <cite>pos</cite> is the position
 of the query document within index.</p>
 </dd></dl>
 
@@ -321,6 +341,7 @@ mmap&#8217;ed), under <cite>fname.array_name.npy</cite>.</p>
 </dd></dl>
 
 </div>
+</div>
 
 
           </div>
@@ -353,7 +374,7 @@ mmap&#8217;ed), under <cite>fname.array_name.npy</cite>.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Aug 03, 2011.
+      Last updated on Aug 24, 2011.
     </div>
   </body>
 </html>
