@@ -9,11 +9,12 @@
 
 The server performs 3 main functions:
 
-1. converts documents to semantic representation
-2. indexes documents in the semantic representation, for faster retrieval
-3. for a given query document, returns the most similar documents from the index
+1. converts documents to semantic representation (TF-IDF, LSA, LDA...)
+2. indexes documents in the vector representation, for faster retrieval
+3. for a given query document, return ids of the most similar documents from the index
 
-SessionServer objects are transactional, so that you can rollback/commit a specific set of changes.
+SessionServer objects are transactional, so that you can rollback/commit an entire
+set of changes.
 
 The server is ready for concurrent requests (thread-safe). Indexing is incremental
 and you can query the SessionServer even while it's being updated, so that there
@@ -364,14 +365,18 @@ class SimModel(gensim.utils.SaveLoad):
     def doc2vec(self, doc):
         """Convert a single SimilarityDocument to vector."""
         # TODO take method into account
-        tokens = self.preprocess(doc['text'])
+        tokens = doc.get('tokens', None)
+        if tokens is None:
+            tokens = self.preprocess(doc['text'])
         bow = self.dictionary.doc2bow(tokens)
         return self.lsi[self.tfidf[bow]]
 
 
     def docs2vecs(self, docs):
         """Convert multiple SimilarityDocuments to vectors (batch version of doc2vec)."""
-        bows = (self.dictionary.doc2bow(self.preprocess(doc['text'])) for doc in docs)
+        bows = (self.dictionary.doc2bow(self.preprocess(doc['text'])) if doc.get('tokens', None) is None
+                else self.dictionary.doc2bow(doc['tokens'])
+                for doc in docs)
         return self.lsi[self.tfidf[bows]]
 
 
