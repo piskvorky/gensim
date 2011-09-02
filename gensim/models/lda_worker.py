@@ -21,8 +21,6 @@ import os, sys, logging
 import threading
 import tempfile
 
-import Pyro4
-
 from gensim.models import ldamodel
 from gensim import utils
 
@@ -106,7 +104,8 @@ def main():
         print globals()["__doc__"] % locals()
         sys.exit(1)
 
-#    Pyro4.config.HOST = utils.get_my_ip()
+    import Pyro4
+    Pyro4.config.HOST = utils.get_my_ip()
 
     with Pyro4.locateNS() as ns:
         with Pyro4.Daemon() as daemon:

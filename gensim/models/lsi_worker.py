@@ -21,8 +21,6 @@ import os, sys, logging
 import threading
 import tempfile
 
-import Pyro4
-
 from gensim.models import lsimodel
 from gensim import utils
 
@@ -87,7 +85,7 @@ class Worker(object):
 
 
 def main():
-    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
+    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     logger.info("running %s" % " ".join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
@@ -96,7 +94,8 @@ def main():
         print globals()["__doc__"] % locals()
         sys.exit(1)
 
-#    Pyro.config.HOST = utils.get_my_ip()
+    import Pyro4
+    Pyro4.config.HOST = utils.get_my_ip()
 
     with Pyro4.locateNS() as ns:
         with Pyro4.Daemon() as daemon:

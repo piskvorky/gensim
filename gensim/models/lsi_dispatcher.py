@@ -18,8 +18,6 @@ from __future__ import with_statement
 import os, sys, logging, threading, time
 from Queue import Queue
 
-import Pyro4
-
 from gensim import utils
 
 
@@ -164,7 +162,7 @@ class Dispatcher(object):
 
 
 def main():
-    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     logger.info("running %s" % " ".join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
@@ -178,7 +176,8 @@ def main():
     else:
         maxsize = int(sys.argv[1])
 
-#    Pyro.config.HOST = utils.get_my_ip()
+    import Pyro4
+    Pyro4.config.HOST = utils.get_my_ip()
 
     with Pyro4.locateNS() as ns:
         with Pyro4.Daemon() as daemon:

@@ -436,7 +436,7 @@ class LdaModel(interfaces.TransformationABC):
 
             chunker = itertools.groupby(enumerate(corpus), key=lambda (docno, doc): docno / chunksize)
             for chunk_no, (key, group) in enumerate(chunker):
-                chunk = list(doc for _, doc in group)
+                chunk = numpy.array([doc for _, doc in group])
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
                     logger.info('PROGRESS: iteration %i, dispatching documents up to #%i/%i' %

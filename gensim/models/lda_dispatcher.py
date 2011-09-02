@@ -18,8 +18,6 @@ from __future__ import with_statement
 import os, sys, logging, threading, time
 from Queue import Queue
 
-import Pyro4
-
 from gensim import utils
 
 
@@ -46,7 +44,7 @@ class Dispatcher(object):
     There should never be more than one dispatcher running at any one time.
     """
 
-    def __init__(self, maxsize = MAX_JOBS_QUEUE):
+    def __init__(self, maxsize=MAX_JOBS_QUEUE):
         """
         Note that the constructor does not fully initialize the dispatcher;
         use the `initialize()` function to populate it with workers etc.
@@ -186,6 +184,7 @@ def main():
     else:
         maxsize = int(sys.argv[1])
 
+    import Pyro4
     Pyro4.config.HOST = utils.get_my_ip()
 
     with Pyro4.locateNS() as ns:
