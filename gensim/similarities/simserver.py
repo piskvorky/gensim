@@ -396,8 +396,8 @@ class SimServer(object):
 
     An object of this class can be shared across network via Pyro, to answer remote
     client requests. It is thread safe. Using a server concurrently from multiple
-    processes is safe only for reading (answering similarity queries). Modifying
-    (training/indexing) concurrently is not safe.
+    processes is safe for reading = answering similarity queries. Modifying
+    (training/indexing) is realized via locking = serialized internally.
     """
     def __init__(self, basename):
         """
@@ -410,6 +410,7 @@ class SimServer(object):
         if not os.path.isdir(basename):
             raise ValueError("%r must be a writable directory" % basename)
         self.basename = basename
+        self.lock_update = threading.RLock() # only one thread can modify the server at a time
         try:
             self.fresh_index = SimIndex.load(self.location('index_fresh'))
         except:
@@ -422,10 +423,10 @@ class SimServer(object):
             self.model = SimModel.load(self.location('model'))
         except:
             self.model = None
+        self.payload = SqliteDict(self.location('payload'), autocommit=True)
         # save the opened objects right back. this is not necessary and costs extra
         # time, but is cleaner when there are server location changes (see `check_moved`).
         self.flush(save_index=True, save_model=True, clear_buffer=True)
-        self.lock_update = threading.RLock() # only one thread can modify the server at a time
         logger.info("loaded %s" % self)
 
 
@@ -433,6 +434,7 @@ class SimServer(object):
         return os.path.join(self.basename, name)
 
 
+    @gensim.utils.synchronous('lock_update')
     def flush(self, save_index=False, save_model=False, clear_buffer=False):
         """Commit all changes, clear all caches."""
         if save_index:
@@ -443,6 +445,7 @@ class SimServer(object):
         if save_model:
             if self.model is not None:
                 self.model.save(self.location('model'))
+        self.payload.commit()
         if clear_buffer:
             if hasattr(self, 'fresh_docs'):
                 try:
@@ -505,6 +508,10 @@ class SimServer(object):
         self.fresh_index.index_documents(self.fresh_docs, self.model)
         if self.opt_index is not None:
             self.opt_index.delete(self.fresh_docs.keys())
+        for docid in self.fresh_docs:
+            payload = self.fresh_docs[docid].get('payload', None)
+            if payload is not None:
+                self.payload[docid] = payload
         self.flush(save_index=True, clear_buffer=True)
 
 
@@ -634,7 +641,7 @@ class SimServer(object):
         for docid, score in merge_sims(sims_opt, sims_fresh):
             if score < min_score or 0 < max_results <= len(result):
                 break
-            result.append((docid, score))
+            result.append((docid, score, self.payload.get(docid, None)))
         return result
 
 
@@ -652,7 +659,12 @@ class SimServer(object):
 
     def keys(self):
         """Return ids of all indexed documents."""
-        return self.fresh_index.keys() + self.opt_index.keys()
+        result = []
+        if self.fresh_index is not None:
+            result += self.fresh_index.keys()
+        if self.opt_index is not None:
+            result += self.opt_index.keys()
+        return result
 
     def memdebug(self):
         from guppy import hpy
@@ -867,3 +879,6 @@ class SessionServer(gensim.utils.SaveLoad):
 
     def status(self): # str() alias
         return str(self)
+
+    def keys(self):
+        return self.stable.keys()

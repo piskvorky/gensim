@@ -39,7 +39,9 @@ if __name__ == '__main__':
     basename = sys.argv[1]
     server = gensim.similarities.SessionServer(basename)
 
-    import Pyro4 # don't import too early because Pyro messes up logging
+    import Pyro4
+    Pyro4.config.HOST = gensim.utils.get_my_ip()
+
     with Pyro4.locateNS() as ns:
         with Pyro4.Daemon() as daemon:
             # register server for remote access

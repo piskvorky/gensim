@@ -70,7 +70,8 @@ class SessionServerTester(unittest.TestCase):
 
     def check_equal(self, sims1, sims2):
         """Check that two returned lists of similarities are equal."""
-        sims1, sims2 = dict(sims1), dict(sims2)
+        sims1 = dict(s[:2] for s in sims1)
+        sims2 = dict(s[:2] for s in sims2)
         for docid in set(sims1.keys() + sims2.keys()):
             self.assertTrue(numpy.allclose(sims1.get(docid, 0.0), sims2.get(docid, 0.0), atol=1e-7))
 
@@ -219,6 +220,29 @@ class SessionServerTester(unittest.TestCase):
         expected = [('en__0', 1.0), ('en__2', 0.30426699), ('en__1', 0.25648531)]
         got = self.server.find_similar(doc, max_results=3, min_score=0.2)
         self.check_equal(expected, got)
+
+
+    def test_payload(self):
+        """test storing/retrieving document payload"""
+        # delete any existing model and indexes first
+        self.server.drop_index(keep_model=False)
+        self.server.train(self.docs, method='lsi')
+
+        # create payload for three documents
+        docs = deepcopy(self.docs)
+        docs[0]['payload'] = 'some payload'
+        docs[1]['payload'] = range(10)
+        docs[2]['payload'] = 3.14
+        id2doc = dict((doc['id'], doc) for doc in docs)
+
+        # index documents & store payloads
+        self.server.index(docs)
+
+        # do a few queries, check that returned payloads match what we sent to the server
+        for queryid in [docs[0]['id'], docs[1]['id'], docs[2]['id']]:
+            for docid, sim, payload in self.server.find_similar(queryid):
+                self.assertEqual(payload, id2doc[docid].get('payload', None))
+
 
     def test_sessions(self):
         """check similarity server transactions (autosession off)"""
