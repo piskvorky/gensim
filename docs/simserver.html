@@ -185,7 +185,7 @@ clients in Java/.NET are trivial thanks to <a class="reference external" href="h
 <p>It is assumed you have <cite>gensim</cite> properly <a class="reference internal" href="install.html"><em>installed</em></a>. You&#8217;ll also
 need the <a class="reference external" href="http://pypi.python.org/pypi/sqlitedict">sqlitedict</a> package that wraps
 Python&#8217;s sqlite3 module in a thread-safe manner:</p>
-<div class="highlight-python"><pre>$ sudo easy_install sqlitedict</pre>
+<div class="highlight-python"><pre>$ sudo easy_install -U sqlitedict</pre>
 </div>
 <p>To test the remote server capabilities, install Pyro4 (Python Remote Object):</p>
 <div class="highlight-python"><pre>$ sudo easy_install Pyro4</pre>
@@ -207,6 +207,7 @@ Python&#8217;s sqlite3 module in a thread-safe manner:</p>
 </div>
 <p>This format was chosen because it coincides with plain JSON, and is therefore very
 easy to serialize and send over the wire, in almost any language.</p>
+<p>FIXME unicode</p>
 </div>
 <div class="section" id="what-is-a-corpus">
 <h2>What is a corpus?<a class="headerlink" href="#what-is-a-corpus" title="Permalink to this headline">¶</a></h2>
@@ -335,10 +336,10 @@ spawning, so it saves us a lot of trouble.</p>
 <p>That will make our objects discoverable by whatever name we register them with,
 so that we don&#8217;t have to bother with concrete IP addresses and ports. The process
 it spawns is extremely lightweight, so no harm leaving it running in the background.</p>
-<p>Now to create a similarity server, we just create a similarity object and register it
+<p>Now to create a similarity server, we just create a <cite>SessionServer</cite> (FIXME doc link!) object and register it
 with a Pyro daemon. There is an small <a class="reference external" href="https://github.com/piskvorky/gensim/blob/simserver/gensim/test/run_simserver.py">example script</a>
 included with gensim, run it with:</p>
-<div class="highlight-python"><pre>$ python -m gensim.test.run_simserver /tmp/test_server</pre>
+<div class="highlight-python"><pre>$ python -m gensim.test.run_simserver /tmp/testserver</pre>
 </div>
 <p>You can just <cite>ctrl+c</cite> to terminate the server, but leave it running for now.</p>
 <p>Now open your Python shell again and:</p>
@@ -358,14 +359,14 @@ within a network broadcast domain, but you don&#8217;t even know:</p>
 </div>
 <p>It is worth mentioning that Irmen, the author of Pyro, also released
 <a class="reference external" href="http://irmen.home.xs4all.nl/pyrolite/">Pyrolite</a> recently. That is a package
-which allows you to create Pyro proxies from Java and .NET. That way you can access
-the remote server from there too&#8212;the client doesn&#8217;t have to be in Python.</p>
+which allows you to create Pyro proxies from Java and .NET. That way you can call
+methods on the remote server from there too&#8212;the client doesn&#8217;t have to be in Python.</p>
 </div>
 <div class="section" id="concurrency">
 <h2>Concurrency<a class="headerlink" href="#concurrency" title="Permalink to this headline">¶</a></h2>
 <p>Ok, now it&#8217;s getting interesting. Since we can access the service remotely, what
 happens if multiple clients create proxies to it at the same time? What if they
-want to modify the index at the same time?</p>
+want to modify the server index at the same time?</p>
 <p>The <cite>SessionServer</cite> object is thread-safe, so that when each client spawns a request
 thread via Pyro, they don&#8217;t step on each others toes.</p>
 <p>This means that:</p>
@@ -443,7 +444,7 @@ cannot be two open sessions at the same time.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Aug 24, 2011.
+      Last updated on Sep 07, 2011.
     </div>
   </body>
 </html>

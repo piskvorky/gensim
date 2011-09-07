@@ -77,7 +77,7 @@ It is assumed you have `gensim` properly :doc:`installed <install>`. You'll also
 need the `sqlitedict <http://pypi.python.org/pypi/sqlitedict>`_ package that wraps
 Python's sqlite3 module in a thread-safe manner::
 
-    $ sudo easy_install sqlitedict
+    $ sudo easy_install -U sqlitedict
 
 To test the remote server capabilities, install Pyro4 (Python Remote Object)::
 
@@ -98,6 +98,9 @@ In case of text documents, the service expects::
 
 This format was chosen because it coincides with plain JSON, and is therefore very
 easy to serialize and send over the wire, in almost any language.
+
+FIXME unicode
+
 
 What is a corpus?
 -----------------
@@ -227,19 +230,11 @@ a pure Python package for Remote Procedure Calls (RPC), so I'll illustrate remot
 service access via Pyro.  Pyro takes care of all the socket listening/request routing/data marshalling/thread
 spawning, so it saves us a lot of trouble.
 
-To get Pyro object discovery service going, run::
-
-  $ python -m Pyro4.naming -n 0.0.0.0 &
-
-That will make our objects discoverable by whatever name we register them with,
-so that we don't have to bother with concrete IP addresses and ports. The process
-it spawns is extremely lightweight, so no harm leaving it running in the background.
-
-Now to create a similarity server, we just create a similarity object and register it
-with a Pyro daemon. There is an small `example script <https://github.com/piskvorky/gensim/blob/simserver/gensim/test/run_simserver.py>`_
+To create a similarity server, we just create a  :class:`similarities.SessionServer` object and register it
+with a Pyro daemon for remote access. There is an small `example script <https://github.com/piskvorky/gensim/blob/simserver/gensim/test/run_simserver.py>`_
 included with gensim, run it with::
 
-  $ python -m gensim.test.run_simserver /tmp/test_server
+  $ python -m gensim.test.run_simserver /tmp/testserver
 
 You can just `ctrl+c` to terminate the server, but leave it running for now.
 
@@ -260,15 +255,15 @@ within a network broadcast domain, but you don't even know::
 
 It is worth mentioning that Irmen, the author of Pyro, also released
 `Pyrolite <http://irmen.home.xs4all.nl/pyrolite/>`_ recently. That is a package
-which allows you to create Pyro proxies from Java and .NET. That way you can access
-the remote server from there too---the client doesn't have to be in Python.
+which allows you to create Pyro proxies from Java and .NET. That way you can call
+methods on the remote server from there too---the client doesn't have to be in Python.
 
 Concurrency
 -----------
 
 Ok, now it's getting interesting. Since we can access the service remotely, what
 happens if multiple clients create proxies to it at the same time? What if they
-want to modify the index at the same time?
+want to modify the server index at the same time?
 
 The `SessionServer` object is thread-safe, so that when each client spawns a request
 thread via Pyro, they don't step on each others toes.

@@ -265,6 +265,13 @@ only covers words actually used in the corpus, up to the highest wordId found.</
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.utils.getNS">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">getNS</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.utils.getNS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a Pyro name server proxy. If there is no name server running,
+start one on 0.0.0.0 (all interfaces), as a background process.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.utils.get_max_id">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">get_max_id</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.utils.get_max_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return highest feature id that appears in the corpus.</p>
@@ -307,6 +314,14 @@ result is forcefully defined as <cite>is_corpus=False</cite>.</p>
 <dt id="gensim.utils.pickle">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">pickle</tt><big>(</big><em>obj</em>, <em>fname</em>, <em>protocol=-1</em><big>)</big><a class="headerlink" href="#gensim.utils.pickle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pickle object <cite>obj</cite> to file <cite>fname</cite>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.utils.pyro_daemon">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">pyro_daemon</tt><big>(</big><em>name</em>, <em>object</em>, <em>random_suffix=False</em><big>)</big><a class="headerlink" href="#gensim.utils.pyro_daemon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register object with name server (starting the name server if not running
+yet) and block until the daemon is terminated. The object is registered under
+<cite>name</cite>, or <cite>name`+ some random suffix if `random_suffix</cite> is set.</p>
 </dd></dl>
 
 <dl class="function">
@@ -411,7 +426,7 @@ will be sent in smaller chunks, of <cite>chunksize</cite> documents each.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Aug 24, 2011.
+      Last updated on Sep 07, 2011.
     </div>
   </body>
 </html>

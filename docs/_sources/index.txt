@@ -21,7 +21,7 @@ For **installation** and **troubleshooting**, see the :doc:`installation <instal
 For **examples** on how to convert text to vectors and work with the result, try the :doc:`tutorials <tutorial>`.
 
 When **citing** `gensim` in academic papers, use
-`this BibTeX entry <http://nlp.fi.muni.cz/projekty/gensim/bibtex_gensim.bib>`_.
+`this BibTeX entry <bibtex_gensim.bib>`_.
 
 
 Quick Reference Example
