@@ -14,10 +14,6 @@ import unittest
 from gensim import utils
 
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
-                    level=logging.WARNING)
-
-
 class TestIsCorpus(unittest.TestCase):
 
     def test_None(self):

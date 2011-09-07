@@ -16,8 +16,6 @@ import tempfile
 
 from gensim.corpora import bleicorpus, mmcorpus, lowcorpus, svmlightcorpus, dictionary
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARNING)
-
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)

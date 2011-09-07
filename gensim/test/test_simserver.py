@@ -5,20 +5,13 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Automated tests for checking similarity server. Assumes run_simserver.py is already
-running; if not, run
-
-$ python -m Pyro4.naming -n 0.0.0.0 &              # run Pyro naming server
-$ python -m gensim.test.run_simserver /tmp/server  # create SessionServer and register it with Pyro
-
-first.
+Automated tests for checking similarity server.
 """
 
 from __future__ import with_statement
 
 import logging
-import os
-import os.path
+import os, shutil
 import unittest
 import tempfile
 from copy import deepcopy
@@ -26,6 +19,8 @@ from copy import deepcopy
 import numpy
 
 import gensim
+
+logger = logging.getLogger('test_simserver')
 
 
 def mock_documents(language, category):
@@ -52,20 +47,13 @@ def mock_documents(language, category):
 class SessionServerTester(unittest.TestCase):
     """Test a running SessionServer"""
     def setUp(self):
-        import Pyro4 # don't import pyro at global scope; it messes up logging
         self.docs = mock_documents('en', '')
-        # locate the running server on the network, using Pyro nameserver
-        try:
-            with Pyro4.locateNS() as ns:
-                self.server = Pyro4.Proxy(ns.lookup('gensim.testserver'))
-        except Pyro4.errors.PyroError, e:
-            logging.error("could not locate running SessionServer: %s" % e)
-            raise
+        self.server = gensim.similarities.SessionServer(gensim.utils.randfname())
         self.server.set_autosession(True)
 
     def tearDown(self):
         self.docs = None
-        self.server._pyroRelease()
+        shutil.rmtree(self.server.basedir)
 
 
     def check_equal(self, sims1, sims2):
@@ -78,7 +66,7 @@ class SessionServerTester(unittest.TestCase):
 
     def test_model(self):
         """test remote server model creation"""
-        logging.debug(self.server.status())
+        logger.debug(self.server.status())
         # calling train without specifying a training corpus raises a ValueError:
         self.assertRaises(ValueError, self.server.train, method='lsi')
 
@@ -112,7 +100,7 @@ class SessionServerTester(unittest.TestCase):
         """test remote server incremental indexing"""
         # delete any existing model and indexes first
         self.server.drop_index(keep_model=False)
-        logging.debug(self.server.status())
+        logger.debug(self.server.status())
 
         # try indexing without a model -- raises AttributeError
         self.assertRaises(AttributeError, self.server.index, self.docs)
@@ -130,7 +118,7 @@ class SessionServerTester(unittest.TestCase):
         self.check_equal(expected, got)
 
         self.server.index(self.docs[3:]) # upload & index the rest of the documents
-        logging.debug(self.server.status())
+        logger.debug(self.server.status())
         expected =  [('en__1', 0.99999994), ('en__4', 0.70710671), ('en__8', 0.27910081),
                      ('en__0', 0.25648531), ('en__2', 0.24981415), ('en__3', 0.20920435),
                      ('en__7', 2.9802322e-08), ('en__6', 2.9802322e-08), ('en__5', 1.4901161e-08)]
@@ -142,7 +130,7 @@ class SessionServerTester(unittest.TestCase):
         docs = deepcopy(self.docs)
         docs[2]['text'] = docs[1]['text'] # different text, same id
         self.server.index(docs[1:3]) # reindex the two modified docs -- total number of indexed docs doesn't change
-        logging.debug(self.server.status())
+        logger.debug(self.server.status())
         expected = [('en__2', 0.99999994), ('en__1', 0.99999994), ('en__4', 0.70710671),
                     ('en__8', 0.27910081), ('en__0', 0.25648531), ('en__3', 0.20920435),
                     ('en__7', 2.9802322e-08), ('en__6', 2.9802322e-08), ('en__5', 1.4901161e-08)]
@@ -152,7 +140,7 @@ class SessionServerTester(unittest.TestCase):
         # delete documents: pass it a collection of ids to be removed from the index
         to_delete = [doc['id'] for doc in self.docs[-3:]]
         self.server.delete(to_delete) # delete the last 3 documents
-        logging.debug(self.server.status())
+        logger.debug(self.server.status())
         expected = [('en__2', 0.99999994), ('en__1', 0.99999994), ('en__4', 0.70710671),
                     ('en__0', 0.25648531), ('en__3', 0.20920435), ('en__5', 1.4901161e-08)]
         got = self.server.find_similar(self.docs[2]['id'])
@@ -169,7 +157,7 @@ class SessionServerTester(unittest.TestCase):
         self.server.train(self.docs)
         self.server.index(self.docs)
         self.server.optimize()
-        logging.debug(self.server.status())
+        logger.debug(self.server.status())
         # TODO how to test that it's faster?
 
 
@@ -290,5 +278,4 @@ class SessionServerTester(unittest.TestCase):
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(module)s:%(lineno)d : %(funcName)s(%(threadName)s) : %(message)s')
-    logging.root.level=logging.INFO
     unittest.main()
