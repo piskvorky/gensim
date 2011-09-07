@@ -104,18 +104,7 @@ def main():
         print globals()["__doc__"] % locals()
         sys.exit(1)
 
-    import Pyro4
-    Pyro4.config.HOST = utils.get_my_ip()
-
-    with Pyro4.locateNS() as ns:
-        with Pyro4.Daemon() as daemon:
-            worker = Worker()
-            uri = daemon.register(worker)
-            name = 'gensim.lda_worker.' + str(uri)
-            ns.remove(name)
-            ns.register(name, uri)
-            logger.info("worker is ready at URI %s" % uri)
-            daemon.requestLoop()
+    utils.pyro_daemon('gensim.lda_worker', Worker(), random_suffix=True)
 
     logger.info("finished running %s" % program)
 

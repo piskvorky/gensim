@@ -8,11 +8,10 @@
 USAGE: %(program)s DATA_DIRECTORY
 
     Start a sample similarity server, register it with Pyro and leave it running \
-as a daemon. Assumes Pyro nameserver is already running.
+as a daemon.
 
 Example:
-    python -m Pyro4.naming -n 0.0.0.0 &              # run Pyro naming server
-    python -m gensim.test.run_simserver /tmp/server  # create SessionServer and register it with Pyro
+    python -m gensim.test.run_simserver /tmp/server
 """
 
 from __future__ import with_statement
@@ -38,18 +37,6 @@ if __name__ == '__main__':
 
     basename = sys.argv[1]
     server = gensim.similarities.SessionServer(basename)
-
-    import Pyro4
-    Pyro4.config.HOST = gensim.utils.get_my_ip()
-
-    with Pyro4.locateNS() as ns:
-        with Pyro4.Daemon() as daemon:
-            # register server for remote access
-            uri = daemon.register(server)
-            name = 'gensim.testserver'
-            ns.remove(name)
-            ns.register(name, uri)
-            logging.info("server is ready at URI '%s', or under nameserver as %r" % (uri, name))
-            daemon.requestLoop()
+    gensim.utils.pyro_daemon('gensim.testserver', server)
 
     logging.info("finished running %s" % program)

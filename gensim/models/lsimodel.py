@@ -297,7 +297,6 @@ class LsiModel(interfaces.TransformationABC):
                                           "run either distributed one-pass, or serial randomized.")
             try:
                 import Pyro4
-                ns = Pyro4.locateNS()
                 dispatcher = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher')
                 dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))

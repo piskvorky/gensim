@@ -232,7 +232,7 @@ class LdaModel(interfaces.TransformationABC):
                 dispatcher = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher')
                 dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
-                dispatcher.initialize(id2word=id2word, num_topics=num_topics,
+                dispatcher.initialize(id2word=self.id2word, num_topics=num_topics,
                                       chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
                 self.dispatcher = dispatcher
                 self.numworkers = len(dispatcher.getworkers())

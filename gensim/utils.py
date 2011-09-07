@@ -503,3 +503,41 @@ def upload_chunked(server, docs, chunksize=1000):
         logger.info("uploading documents %i-%i" % (start, end - 1))
         server.buffer(chunk)
         start = end
+
+
+def getNS():
+    """
+    Return a Pyro name server proxy. If there is no name server running,
+    start one on 0.0.0.0 (all interfaces), as a background process.
+    """
+    import Pyro4
+    try:
+        return Pyro4.locateNS()
+    except Pyro4.errors.NamingError:
+        logger.info("Pyro name server not found; starting a new one")
+    os.system("python -m Pyro4.naming -n 0.0.0.0 &")
+    # TODO: spawn a proper daemon ala http://code.activestate.com/recipes/278731/ ?
+    # like this, if there's an error somewhere, we'll never know... (and the loop
+    # below will block). And it probably doesn't work on windows, either.
+    while True:
+        try:
+            return Pyro4.locateNS()
+        except:
+            pass
+
+
+def pyro_daemon(name, object, random_suffix=False):
+    """Register object with name server (starting the name server if not running
+    yet) and block until the daemon is terminated. The object is registered under
+    `name`, or `name`+ some random suffix if `random_suffix` is set."""
+    if random_suffix:
+        name += '.' + hex(random.randint(0, 0xffffff))[2:]
+    import Pyro4
+    with getNS() as ns:
+        with Pyro4.Daemon(get_my_ip()) as daemon:
+            # register server for remote access
+            uri = daemon.register(object)
+            ns.remove(name)
+            ns.register(name, uri)
+            logger.info("%s registered with nameserver (URI '%s')" % (name, uri))
+            daemon.requestLoop()

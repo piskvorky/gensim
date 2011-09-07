@@ -44,12 +44,13 @@ class Dispatcher(object):
     There should never be more than one dispatcher running at any one time.
     """
 
-    def __init__(self, maxsize=100):
+    def __init__(self, maxsize=0):
         """
         Note that the constructor does not fully initialize the dispatcher;
         use the `initialize()` function to populate it with workers etc.
         """
         self.maxsize = maxsize
+        self.workers = {}
         self.callback = None # a pyro proxy to this object (unknown at init time, but will be set later)
 
 
@@ -60,13 +61,15 @@ class Dispatcher(object):
         """
         self.jobs = Queue(maxsize=self.maxsize)
         self.lock_update = threading.Lock()
-        self.callback._pyroOneway.add("jobdone") # make sure workers transfer control back to dispatcher asynchronously
         self._jobsdone = 0
         self._jobsreceived = 0
 
         # locate all available workers and store their proxies, for subsequent RMI calls
         self.workers = {}
-        with Pyro4.locateNS() as ns:
+        with utils.getNS() as ns:
+            import Pyro4
+            self.callback = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher') # = self
+            self.callback._pyroOneway.add("jobdone") # make sure workers transfer control back to dispatcher asynchronously
             for name, uri in ns.list(prefix='gensim.lsi_worker').iteritems():
                 try:
                     worker = Pyro4.Proxy(uri)
@@ -74,7 +77,7 @@ class Dispatcher(object):
                     # make time consuming methods work asynchronously
                     worker._pyroOneway.add("requestjob")
                     worker._pyroOneway.add("exit")
-                    logger.info("registering worker #%i at %s" % (workerid, uri))
+                    logger.info("registering worker #%i from %s" % (workerid, uri))
                     worker.initialize(workerid, dispatcher=self.callback, **model_params)
                     self.workers[workerid] = worker
                     worker.requestjob()
@@ -175,22 +178,7 @@ def main():
         maxsize = MAX_JOBS_QUEUE
     else:
         maxsize = int(sys.argv[1])
-
-    import Pyro4
-    Pyro4.config.HOST = utils.get_my_ip()
-
-    with Pyro4.locateNS() as ns:
-        with Pyro4.Daemon() as daemon:
-            dispatcher = Dispatcher(maxsize=maxsize)
-            uri = daemon.register(dispatcher)
-            # prepare callback object for the workers
-            dispatcher.callback = Pyro4.Proxy(uri)
-
-            name = 'gensim.lsi_dispatcher'
-            ns.remove(name)
-            ns.register(name, uri)
-            logger.info("dispatcher is ready at URI %s" % uri)
-            daemon.requestLoop()
+    utils.pyro_daemon('gensim.lsi_dispatcher', Dispatcher(maxsize=maxsize))
 
     logger.info("finished running %s" % program)
 

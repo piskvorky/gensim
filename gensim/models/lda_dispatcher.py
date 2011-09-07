@@ -60,13 +60,15 @@ class Dispatcher(object):
         """
         self.jobs = Queue(maxsize=self.maxsize)
         self.lock_update = threading.Lock()
-        self.callback._pyroOneway.add("jobdone") # make sure workers transfer control back to dispatcher asynchronously
         self._jobsdone = 0
         self._jobsreceived = 0
 
         # locate all available workers and store their proxies, for subsequent RMI calls
         self.workers = {}
-        with Pyro4.locateNS() as ns:
+        import Pyro4
+        with utils.getNS() as ns:
+            self.callback = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher') # = self
+            self.callback._pyroOneway.add("jobdone") # make sure workers transfer control back to dispatcher asynchronously
             for name, uri in ns.list(prefix='gensim.lda_worker').iteritems():
                 try:
                     worker = Pyro4.Proxy(uri)
@@ -170,7 +172,7 @@ class Dispatcher(object):
 
 
 def main():
-    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
+    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     logger.info("running %s" % " ".join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
@@ -183,22 +185,7 @@ def main():
         maxsize = MAX_JOBS_QUEUE
     else:
         maxsize = int(sys.argv[1])
-
-    import Pyro4
-    Pyro4.config.HOST = utils.get_my_ip()
-
-    with Pyro4.locateNS() as ns:
-        with Pyro4.Daemon() as daemon:
-            dispatcher = Dispatcher(maxsize=maxsize)
-            uri = daemon.register(dispatcher)
-            # prepare callback object for the workers
-            dispatcher.callback = Pyro4.Proxy(uri)
-
-            name = 'gensim.lda_dispatcher'
-            ns.remove(name)
-            ns.register(name, uri)
-            logger.info("dispatcher is ready at URI %s" % uri)
-            daemon.requestLoop()
+    utils.pyro_daemon('gensim.lda_dispatcher', Dispatcher(maxsize=maxsize))
 
     logger.info("finished running %s" % program)
 
