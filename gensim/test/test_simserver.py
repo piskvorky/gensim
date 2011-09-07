@@ -48,12 +48,21 @@ class SessionServerTester(unittest.TestCase):
     """Test a running SessionServer"""
     def setUp(self):
         self.docs = mock_documents('en', '')
-        self.server = gensim.similarities.SessionServer(gensim.utils.randfname())
+        try:
+            import Pyro4
+            self.server = Pyro4.Proxy('PYRONAME:gensim.testserver')
+            logger.info(self.server.status())
+        except Exception, e:
+            logger.info("could not locate running SessionServer; starting a local server")
+            self.server = gensim.similarities.SessionServer(gensim.utils.randfname())
         self.server.set_autosession(True)
 
     def tearDown(self):
         self.docs = None
-        shutil.rmtree(self.server.basedir)
+        try:
+            self.server._pyroRelease()
+        except AttributeError:
+            shutil.rmtree(self.server.basedir)
 
 
     def check_equal(self, sims1, sims2):

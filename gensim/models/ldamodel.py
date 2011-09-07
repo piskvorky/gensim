@@ -167,9 +167,9 @@ class LdaModel(interfaces.TransformationABC):
         used to determine the vocabulary size, as well as for debugging and topic
         printing.
 
-        `alpha` and `eta` are hyperparameters on document-topic (theta) and
-        topic-word (lambda) distributions. Both default to a symmetric 1.0/num_topics
-        (but can be set to a vector, for assymetric priors).
+        `alpha` and `eta` are hyperparameters that affect sparsity of the document-topic
+        (theta) and topic-word (lambda) distributions. Both default to a symmetric
+        1.0/num_topics (but can be set to a vector, for asymmetric priors).
 
         Turn on `distributed` to force distributed computing (see the web tutorial
         on how to set up a cluster of machines for gensim).
@@ -228,7 +228,6 @@ class LdaModel(interfaces.TransformationABC):
             # set up distributed version
             try:
                 import Pyro4
-                ns = Pyro4.locateNS()
                 dispatcher = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher')
                 dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
