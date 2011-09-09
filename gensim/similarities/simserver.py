@@ -48,18 +48,6 @@ SHARD_SIZE = 65536 # spill index shards to disk in SHARD_SIZE-ed chunks of docum
 
 
 
-def simple_preprocess(doc):
-    """
-    Convert a document into a list of tokens.
-
-    This lowercases, tokenizes, stems, normalizes etc. -- the output are final,
-    utf8 encoded strings that won't be processed any further.
-    """
-    tokens = [token.encode('utf8') for token in gensim.utils.tokenize(doc, lower=True, errors='ignore')
-            if 2 <= len(token) <= 15 and not token.startswith('_')]
-    return tokens
-
-
 def merge_sims(oldsims, newsims, clip=TOP_SIMS):
     """Merge two precomputed similarity lists, truncating the result to `clip` most similar items."""
     if oldsims is None:
@@ -308,36 +296,25 @@ class SimModel(gensim.utils.SaveLoad):
     These vectors can then be indexed/queried for similarity, see the `SimIndex`
     class. Used internally by `SimServer`.
     """
-    def __init__(self, fresh_docs, dictionary=None, method=MODEL_METHOD, preprocess=simple_preprocess):
+    def __init__(self, fresh_docs, dictionary=None, method=MODEL_METHOD):
         """
         Train a model, using `fresh_docs` as training corpus.
 
         If `dictionary` is not specified, it is computed from the documents.
 
         `method` is currently one of "tfidf"/"lsi"/"lda".
-
-        `preprocess` is a function that takes a text and returns a sequence of
-        preprocessed tokens. It is used to parse documents.
         """
         # FIXME TODO: use subclassing/injection for different methods, instead of param..
-        self.preprocess = preprocess
         self.method = method
+        logger.info("collecting %i document ids" % len(fresh_docs))
         docids = fresh_docs.keys()
-        random.shuffle(docids)
-        logger.info("creating model from %s documents" % len(docids))
-
-        logger.info("preprocessing texts")
-        # preprocessing (parsing, tokenizing) is usually the most costly step,
-        # so precompute it once for all documents and cache the results in a
-        # temporary Sqlite database `preprocessed`
-        preprocessed = SqliteDict(gensim.utils.randfname(prefix='gensim'))
-        for docid in docids:
-            preprocessed[docid] = self.preprocess(fresh_docs[docid]['text']) # cache pure tokens
+        logger.info("creating model from %s documents" % len(fresh_docs))
+        preprocessed = lambda : (fresh_docs[docid]['tokens'] for docid in docids)
 
         # create id->word (integer->string) mapping
         logger.info("creating dictionary from %s documents" % len(fresh_docs))
         if dictionary is None:
-            self.dictionary = gensim.corpora.Dictionary(preprocessed[docid] for docid in preprocessed)
+            self.dictionary = gensim.corpora.Dictionary(preprocessed())
             if len(fresh_docs) >= 1000:
                 self.dictionary.filter_extremes(no_below=5, no_above=0.2, keep_n=50000)
             else:
@@ -345,8 +322,7 @@ class SimModel(gensim.utils.SaveLoad):
                 self.dictionary.filter_extremes(no_below=2, no_above=0.5, keep_n=50000)
         else:
             self.dictionary = dictionary
-
-        corpus = lambda: (self.dictionary.doc2bow(preprocessed[docid]) for docid in preprocessed)
+        corpus = lambda: (self.dictionary.doc2bow(tokens) for tokens in preprocessed())
         if method == 'lsi':
             logger.info("training TF-IDF model")
             self.tfidf = gensim.models.TfidfModel(corpus(), id2word=self.dictionary)
@@ -359,24 +335,18 @@ class SimModel(gensim.utils.SaveLoad):
             msg = "unknown semantic method %s" % method
             logger.error(msg)
             raise NotImplementedError(msg)
-        preprocessed.terminate()
 
 
     def doc2vec(self, doc):
         """Convert a single SimilarityDocument to vector."""
-        # TODO take method into account
-        tokens = doc.get('tokens', None)
-        if tokens is None:
-            tokens = self.preprocess(doc['text'])
-        bow = self.dictionary.doc2bow(tokens)
+        # FIXME take self.method into account!
+        bow = self.dictionary.doc2bow(doc['tokens'])
         return self.lsi[self.tfidf[bow]]
 
 
     def docs2vecs(self, docs):
         """Convert multiple SimilarityDocuments to vectors (batch version of doc2vec)."""
-        bows = (self.dictionary.doc2bow(self.preprocess(doc['text'])) if doc.get('tokens', None) is None
-                else self.dictionary.doc2bow(doc['tokens'])
-                for doc in docs)
+        bows = (self.dictionary.doc2bow(doc['tokens']) for doc in docs)
         return self.lsi[self.tfidf[bows]]
 
 
@@ -457,7 +427,7 @@ class SimServer(object):
 
 
     @gensim.utils.synchronous('lock_update')
-    def train(self, corpus=None, method='lsi'):
+    def train(self, corpus=None, method='lsi', clear_buffer=True):
         """
         Create an indexing model. Will overwrite the model if it already exists.
         All indexes become invalid, because documents in them use a now-obsolete
@@ -475,11 +445,11 @@ class SimServer(object):
             logger.error(msg)
             raise ValueError(msg)
         self.model = SimModel(self.fresh_docs, method=method)
-        self.flush(save_model=True, clear_buffer=True)
+        self.flush(save_model=True, clear_buffer=clear_buffer)
 
 
     @gensim.utils.synchronous('lock_update')
-    def index(self, corpus=None):
+    def index(self, corpus=None, clear_buffer=True):
         """
         Permanently index all documents previously added via `buffer`, or
         directly index documents from `corpus`, if specified.
@@ -512,7 +482,7 @@ class SimServer(object):
             payload = self.fresh_docs[docid].get('payload', None)
             if payload is not None:
                 self.payload[docid] = payload
-        self.flush(save_index=True, clear_buffer=True)
+        self.flush(save_index=True, clear_buffer=clear_buffer)
 
 
     @gensim.utils.synchronous('lock_update')
@@ -609,8 +579,8 @@ class SimServer(object):
         each having similarity score of at least `min_score`.
 
         `doc` is either a string (document id, previously indexed) or a
-        dict containing a 'text' key. This text is processed to produce a vector,
-        which is then used as a query.
+        dict containing a 'tokens' key. These tokens are processed to produce a
+        vector, which is then used as a query.
 
         The similar documents are returned in decreasing similarity order, as
         (doc_id, doc_score) pairs.
@@ -631,7 +601,7 @@ class SimServer(object):
             if sims_fresh is None and sims_opt is None:
                 raise ValueError("document %r not in index" % docid)
         else:
-            # query by an arbitrary text (=string) inside doc['text']
+            # query by an arbitrary text (=tokens) inside doc['tokens']
             if self.opt_index is not None:
                 sims_opt = self.opt_index.sims_by_doc(doc, self.model)
             if self.fresh_index is not None:

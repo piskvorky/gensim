@@ -39,7 +39,8 @@ def mock_documents(language, category):
     # server expects as input. They must contain doc['id'] and doc['text'] attributes.
     # All other attributes are currently ignored.
     docs = [{'id': '_'.join((language, category, str(num))),
-             'text': document, 'payload': range(num), 'language': language, 'category': category}
+             'tokens': gensim.utils.simple_preprocess(document), 'payload': range(num),
+             'language': language, 'category': category}
             for num, document in enumerate(documents)]
     return docs
 
@@ -137,7 +138,7 @@ class SessionServerTester(unittest.TestCase):
         # re-index documents. just index documents with the same id -- the old document
         # will be replaced by the new one, so that only the latest update counts.
         docs = deepcopy(self.docs)
-        docs[2]['text'] = docs[1]['text'] # different text, same id
+        docs[2]['tokens'] = docs[1]['tokens'] # different text, same id
         self.server.index(docs[1:3]) # reindex the two modified docs -- total number of indexed docs doesn't change
         logger.debug(self.server.status())
         expected = [('en__2', 0.99999994), ('en__1', 0.99999994), ('en__4', 0.70710671),

@@ -94,6 +94,18 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
         yield match.group()
 
 
+def simple_preprocess(doc):
+    """
+    Convert a document into a list of tokens.
+
+    This lowercases, tokenizes, stems, normalizes etc. -- the output are final,
+    utf8 encoded strings that won't be processed any further.
+    """
+    tokens = [token.encode('utf8') for token in tokenize(doc, lower=True, errors='ignore')
+            if 2 <= len(token) <= 15 and not token.startswith('_')]
+    return tokens
+
+
 def any2utf8(text, errors='strict', encoding='utf8'):
     """Convert a string (unicode or bytestring in `encoding`), to bytestring in utf8.
     """
@@ -489,7 +501,7 @@ def grouper(iterable, chunksize):
         yield wrapped_chunk.pop()
 
 
-def upload_chunked(server, docs, chunksize=1000):
+def upload_chunked(server, docs, chunksize=1000, preprocess=None):
     """
     Memory-friendly upload of documents to a SimServer (or Pyro SimServer proxy).
 
@@ -501,6 +513,13 @@ def upload_chunked(server, docs, chunksize=1000):
     for chunk in grouper(docs, chunksize):
         end = start + len(chunk)
         logger.info("uploading documents %i-%i" % (start, end - 1))
+        if preprocess is not None:
+            pchunk = []
+            for doc in chunk:
+                doc['tokens'] = preprocess(doc['text'])
+                del doc['text']
+                pchunk.append(doc)
+            chunk = pchunk
         server.buffer(chunk)
         start = end
 
