@@ -111,16 +111,12 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         """
         result = {}
         missing = {}
-        if isinstance(document, list):
-            document = sorted(document)
-            iters = itertools.groupby(document)
-        elif isinstance(document, dict):
-            iters = [(i, document[i]*[i]) for i in sorted(document)]
+        document = sorted(document)
         # construct (word, frequency) mapping. in python3 this is done simply
         # using Counter(), but here i use itertools.groupby() for the job
-        for word_norm, group in iters:
+        for word_norm, group in itertools.groupby(document):
             frequency = len(list(group)) # how many times does this word appear in the input document
-            tokenid = self.token2id.get(word_norm, None)            
+            tokenid = self.token2id.get(word_norm, None)
             if tokenid is None:
                 # first time we see this token (~normalized form)
                 if return_missing:
