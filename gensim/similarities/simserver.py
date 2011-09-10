@@ -147,9 +147,10 @@ class SimIndex(gensim.utils.SaveLoad):
         logger.info("updating %i id mappings" % len(docids))
         for docid in docids:
             if docid is not None:
-                if docid in self.id2pos:
+                pos = self.id2pos.get(docid, None)
+                if pos is not None:
                     logger.info("replacing existing document %r in %s" % (docid, self))
-                    del self.pos2id[self.id2pos[docid]]
+                    del self.pos2id[pos]
                 self.id2pos[docid] = self.length
                 try:
                     del self.id2sims[docid]
@@ -478,10 +479,13 @@ class SimServer(object):
         self.fresh_index.index_documents(self.fresh_docs, self.model)
         if self.opt_index is not None:
             self.opt_index.delete(self.fresh_docs.keys())
+        logging.info("storing document payloads")
         for docid in self.fresh_docs:
             payload = self.fresh_docs[docid].get('payload', None)
-            if payload is not None:
-                self.payload[docid] = payload
+            if payload is None:
+                # TODO HACK: exit on first doc without a payload (=assume all docs have payload, or none does)
+                break
+            self.payload[docid] = payload
         self.flush(save_index=True, clear_buffer=clear_buffer)
 
 

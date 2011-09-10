@@ -208,7 +208,7 @@ class Similarity(interfaces.SimilarityABC):
             self.fresh_nnz += doclen
             if len(self.fresh_docs) >= self.shardsize:
                 self.close_shard()
-            if len(self.fresh_docs) % 1000 == 0:
+            if len(self.fresh_docs) % 10000 == 0:
                 logger.info("PROGRESS: fresh_shard size=%i" % len(self.fresh_docs))
 
 
