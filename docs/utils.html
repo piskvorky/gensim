@@ -333,6 +333,14 @@ result (which one is kept is arbitrary).</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.utils.simple_preprocess">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">simple_preprocess</tt><big>(</big><em>doc</em><big>)</big><a class="headerlink" href="#gensim.utils.simple_preprocess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a document into a list of tokens.</p>
+<p>This lowercases, tokenizes, stems, normalizes etc. &#8211; the output are final,
+utf8 encoded strings that won&#8217;t be processed any further.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.utils.synchronous">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">synchronous</tt><big>(</big><em>tlockname</em><big>)</big><a class="headerlink" href="#gensim.utils.synchronous" title="Permalink to this definition">¶</a></dt>
 <dd><p>A decorator to place an instance-based lock around a method.</p>
@@ -383,7 +391,7 @@ via <cite>texts[docid]</cite>, such as its fulltext or snippet.</p>
 
 <dl class="function">
 <dt id="gensim.utils.upload_chunked">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">upload_chunked</tt><big>(</big><em>server</em>, <em>docs</em>, <em>chunksize=1000</em><big>)</big><a class="headerlink" href="#gensim.utils.upload_chunked" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">upload_chunked</tt><big>(</big><em>server</em>, <em>docs</em>, <em>chunksize=1000</em>, <em>preprocess=None</em><big>)</big><a class="headerlink" href="#gensim.utils.upload_chunked" title="Permalink to this definition">¶</a></dt>
 <dd><p>Memory-friendly upload of documents to a SimServer (or Pyro SimServer proxy).</p>
 <p>Use this function to train or index large collections &#8211; avoid sending the
 entire corpus over the wire as a single Pyro in-memory object. The documents
@@ -426,7 +434,7 @@ will be sent in smaller chunks, of <cite>chunksize</cite> documents each.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 07, 2011.
+      Last updated on Sep 09, 2011.
     </div>
   </body>
 </html>

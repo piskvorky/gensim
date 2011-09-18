@@ -330,14 +330,8 @@ You don&#8217;t have to index <strong>all</strong> documents first to start quer
 a pure Python package for Remote Procedure Calls (RPC), so I&#8217;ll illustrate remote
 service access via Pyro.  Pyro takes care of all the socket listening/request routing/data marshalling/thread
 spawning, so it saves us a lot of trouble.</p>
-<p>To get Pyro object discovery service going, run:</p>
-<div class="highlight-python"><pre>$ python -m Pyro4.naming -n 0.0.0.0 &amp;</pre>
-</div>
-<p>That will make our objects discoverable by whatever name we register them with,
-so that we don&#8217;t have to bother with concrete IP addresses and ports. The process
-it spawns is extremely lightweight, so no harm leaving it running in the background.</p>
-<p>Now to create a similarity server, we just create a <cite>SessionServer</cite> (FIXME doc link!) object and register it
-with a Pyro daemon. There is an small <a class="reference external" href="https://github.com/piskvorky/gensim/blob/simserver/gensim/test/run_simserver.py">example script</a>
+<p>To create a similarity server, we just create a  <tt class="xref py py-class docutils literal"><span class="pre">similarities.SessionServer</span></tt> object and register it
+with a Pyro daemon for remote access. There is an small <a class="reference external" href="https://github.com/piskvorky/gensim/blob/simserver/gensim/test/run_simserver.py">example script</a>
 included with gensim, run it with:</p>
 <div class="highlight-python"><pre>$ python -m gensim.test.run_simserver /tmp/testserver</pre>
 </div>
@@ -444,7 +438,7 @@ cannot be two open sessions at the same time.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 07, 2011.
+      Last updated on Sep 09, 2011.
     </div>
   </body>
 </html>
