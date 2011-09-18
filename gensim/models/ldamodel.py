@@ -295,7 +295,10 @@ class LdaModel(interfaces.TransformationABC):
         `(gamma, sstats)`. Otherwise, return `(gamma, None)`. `gamma` is of shape
         `len(chunk) x topics`.
         """
-        chunk = list(chunk) # convert iterators/generators to plain list, so we have len() etc.
+        try:
+            tmp = len(chunk)
+        except:
+            chunk = list(chunk) # convert iterators/generators to plain list, so we have len() etc.
         logger.debug("performing inference on a chunk of %i documents" % len(chunk))
 
         # Initialize the variational distribution q(theta|gamma) for the chunk
@@ -435,7 +438,7 @@ class LdaModel(interfaces.TransformationABC):
 
             chunker = itertools.groupby(enumerate(corpus), key=lambda (docno, doc): docno / chunksize)
             for chunk_no, (key, group) in enumerate(chunker):
-                chunk = numpy.array([doc for _, doc in group])
+                chunk = numpy.array([numpy.array(doc) for _, doc in group])
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
                     logger.info('PROGRESS: iteration %i, dispatching documents up to #%i/%i' %
@@ -449,6 +452,7 @@ class LdaModel(interfaces.TransformationABC):
                                 (iteration, chunk_no * chunksize + len(chunk), lencorpus))
                     self.do_estep(chunk, other)
                 dirty = True
+                del chunk
 
                 if update_every and (chunk_no + 1) % (update_every * self.numworkers) == 0:
                     if self.dispatcher:
