@@ -540,8 +540,10 @@ class LdaModel(interfaces.TransformationABC):
 
         return score
 
-
     def print_topics(self, topics=10, topn=10):
+        self.show_topics(topics, topn, True)
+
+    def show_topics(self, topics=10, topn=10, log=False, formatted=True):
         """
         Print the `topN` most probable words for (randomly selected) `topics`
         number of topics. Set `topics=-1` to print all topics.
@@ -554,16 +556,26 @@ class LdaModel(interfaces.TransformationABC):
             # print all topics if `topics` is negative
             topics = self.num_topics
         topics = min(topics, self.num_topics)
+        shown  = []
         for i in xrange(topics):
-            logger.info("topic #%i: %s" % (i, self.print_topic(i, topn=topn)))
+            if formatted:
+                topic = self.print_topic(i, topn=topn)
+            else:
+                topic = self.show_topic(i, topn=topn)
+            shown.append(topic)
+            if log:
+                logger.info("topic #%i: %s" % (i, topic))
+        return shown
 
-
-    def print_topic(self, topicid, topn=10):
+    def show_topic(self, topicid, topn=10):
         topic = self.expElogbeta[topicid]
         topic = topic / topic.sum() # normalize to probability dist
         bestn = numpy.argsort(topic)[::-1][:topn]
-        beststr = ['%.3f*%s' % (topic[id], self.id2word[id]) for id in bestn]
-        return ' + '.join(beststr)
+        beststr = [(topic[id], self.id2word[id]) for id in bestn]
+        return beststr
+
+    def print_topic(self, topicid, topn=10):
+        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
 
 
     def __getitem__(self, bow, eps=0.01):
