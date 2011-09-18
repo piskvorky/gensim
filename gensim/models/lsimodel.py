@@ -425,7 +425,7 @@ class LsiModel(interfaces.TransformationABC):
         return result
 
 
-    def print_topic(self, topicno, topn=10):
+    def show_topic(self, topicno, topn=10):
         """
         Return a specified topic (=left singular vector), 0 <= `topicno` < `self.num_topics`,
         as string.
@@ -445,16 +445,28 @@ class LsiModel(interfaces.TransformationABC):
         c = numpy.asarray(self.projection.u.T[topicno, :]).flatten()
         norm = numpy.sqrt(numpy.sum(numpy.dot(c, c)))
         most = numpy.abs(c).argsort()[::-1][:topn]
-        return ' + '.join(['%.3f*"%s"' % (1.0 * c[val] / norm, self.id2word[val]) for val in most])
+        return [(1.0 * c[val] / norm, self.id2word[val]) for val in most]
 
-
-    def print_topics(self, num_topics=5, num_words=10):
+    def print_topic(self, topicno, topn=10):
+        return ' + '.join(['%.3f*"%s"' % v for v in self.show_topic(topicno, topn)])
+    
+    def show_topics(self, num_topics=5, num_words=10, log=False, formatted=True):
+        shown = []
         for i in xrange(min(num_topics, self.num_topics)):
             if i < len(self.projection.s):
-                logger.info("topic #%i(%.3f): %s" %
-                            (i, self.projection.s[i],
-                             self.print_topic(i, topn=num_words)))
+                if formatted:
+                    topic = self.print_topic(i, topn=num_words)
+                else:
+                    topic = self.show_topic(i, topn=num_words)
+                shown.append(topic)
+                if log:
+                    logger.info("topic #%i(%.3f): %s" %
+                                (i, self.projection.s[i],
+                                 topic))
+        return shown
 
+    def print_topics(self, num_topics=5, num_words=10):
+        self.show_topics(num_topics=5, num_words=10, log=True)
 
     def print_debug(self, num_topics=5, num_words=10):
         """
