@@ -56,7 +56,7 @@ If you don't know what distributed computing means, you can ignore it:
 `gensim` will work fine for you anyway.
 This optional extension can also be installed separately later with::
 
-    sudo easy_install Pyro
+    sudo easy_install Pyro4
 
 -----
 
