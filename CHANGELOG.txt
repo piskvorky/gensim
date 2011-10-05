@@ -1,6 +1,17 @@
 Changes
 =======
 
+0.8.1
+
+* transactional similarity server: see docs/simserver.html
+* website moved from university hosting to radimrehurek.com
+* much improved speed of lsi[corpus] transformation: 
+* accuracy tests of incremental svd: test/svd_error.py and http://groups.google.com/group/gensim/browse_thread/thread/4b605b72f8062770
+* further improvements to memory-efficiency of LDA and LSA
+* improved wiki preprocessing (thx to Luca de Alfaro)
+* model.print_topics() debug fncs now support std output, in addition to logging (thx to Homer Strong)
+* several smaller fixes and improvements
+
 0.8.0 (Armageddon)
 
 * changed all variable and function names to comply with PEP8 (numTopics->num_topics): BREAKS BACKWARD COMPATIBILITY!

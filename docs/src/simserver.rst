@@ -209,10 +209,15 @@ There are two types of queries:
    .. code-block:: python
 
      >>> print service.find_similar('doc_0')
-     [('doc_0', 1.0), ('doc_2', 0.30426699), ('doc_1', 0.25648531), ('doc_3', 0.25480536)]
+     [('doc_0', 1.0, None), ('doc_2', 0.30426699, None), ('doc_1', 0.25648531, None), ('doc_3', 0.25480536, None)]
 
    >>> print service.find_similar('doc_5') # we deleted doc_5 and doc_8, remember?
    ValueError: document 'doc_5' not in index
+
+   In the resulting 3-tuples, `doc_n` is the document id, `0.3042..` is the similarity of `doc_n` to the query, but what's up with that `None`, you ask? 
+   You can associate each document with a "payload", during indexing.
+   This payload object (anything pickle-able) is later returned during querying. 
+   If you don't specify `doc['payload']` during indexing, queries simply return `None` in the result tuple, as in our example here.
 
 2. or by document (using `document['tokens']`; id is ignored in this case):
 
@@ -220,7 +225,7 @@ There are two types of queries:
 
      >>> doc = {'tokens': utils.simple_preprocess('Graph and minors and humans and trees.')}
      >>> print service.find_similar(doc)
-     [('doc_7', 0.93350589), ('doc_3', 0.42718196), ('doc_6', 0.27212361)]
+     [('doc_7', 0.93350589, None), ('doc_3', 0.42718196, None), ('doc_6', 0.27212361, None)]
 
 Remote access
 -------------
@@ -230,7 +235,7 @@ a pure Python package for Remote Procedure Calls (RPC), so I'll illustrate remot
 service access via Pyro. Pyro takes care of all the socket listening/request routing/data marshalling/thread
 spawning, so it saves us a lot of trouble.
 
-To create a similarity server, we just create a :class:`gensim.similarities.SessionServer` object and register it
+To create a similarity server, we just create a :class:`gensim.similarities.simserver.SessionServer` object and register it
 with a Pyro daemon for remote access. There is a small `example script <https://github.com/piskvorky/gensim/blob/simserver/gensim/test/run_simserver.py>`_
 included with gensim, run it with::
 

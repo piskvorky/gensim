@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.0',
+        VERSION:     '0.8.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -309,18 +309,22 @@ You don&#8217;t have to index <strong>all</strong> documents first to start quer
 <ol class="arabic">
 <li><p class="first">by id:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">service</span><span class="o">.</span><span class="n">find_similar</span><span class="p">(</span><span class="s">&#39;doc_0&#39;</span><span class="p">)</span>
-<span class="go">[(&#39;doc_0&#39;, 1.0), (&#39;doc_2&#39;, 0.30426699), (&#39;doc_1&#39;, 0.25648531), (&#39;doc_3&#39;, 0.25480536)]</span>
+<span class="go">[(&#39;doc_0&#39;, 1.0, None), (&#39;doc_2&#39;, 0.30426699, None), (&#39;doc_1&#39;, 0.25648531, None), (&#39;doc_3&#39;, 0.25480536, None)]</span>
 </pre></div>
 </div>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">service</span><span class="o">.</span><span class="n">find_similar</span><span class="p">(</span><span class="s">&#39;doc_5&#39;</span><span class="p">)</span> <span class="c"># we deleted doc_5 and doc_8, remember?</span>
 <span class="go">ValueError: document &#39;doc_5&#39; not in index</span>
 </pre></div>
 </div>
+<p>In the resulting 3-tuples, <cite>doc_n</cite> is the document id, <cite>0.3042..</cite> is the similarity of <cite>doc_n</cite> to the query, but what&#8217;s up with that <cite>None</cite>, you ask?
+You can associate each document with a &#8220;payload&#8221;, during indexing.
+This payload object (anything pickle-able) is later returned during querying.
+If you don&#8217;t specify <cite>doc[&#8216;payload&#8217;]</cite> during indexing, queries simply return <cite>None</cite> in the result tuple, as in our example here.</p>
 </li>
 <li><p class="first">or by document (using <cite>document[&#8216;tokens&#8217;]</cite>; id is ignored in this case):</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;tokens&#39;</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">simple_preprocess</span><span class="p">(</span><span class="s">&#39;Graph and minors and humans and trees.&#39;</span><span class="p">)}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">service</span><span class="o">.</span><span class="n">find_similar</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
-<span class="go">[(&#39;doc_7&#39;, 0.93350589), (&#39;doc_3&#39;, 0.42718196), (&#39;doc_6&#39;, 0.27212361)]</span>
+<span class="go">[(&#39;doc_7&#39;, 0.93350589, None), (&#39;doc_3&#39;, 0.42718196, None), (&#39;doc_6&#39;, 0.27212361, None)]</span>
 </pre></div>
 </div>
 </li>
@@ -332,7 +336,7 @@ You don&#8217;t have to index <strong>all</strong> documents first to start quer
 a pure Python package for Remote Procedure Calls (RPC), so I&#8217;ll illustrate remote
 service access via Pyro. Pyro takes care of all the socket listening/request routing/data marshalling/thread
 spawning, so it saves us a lot of trouble.</p>
-<p>To create a similarity server, we just create a <tt class="xref py py-class docutils literal"><span class="pre">gensim.similarities.SessionServer</span></tt> object and register it
+<p>To create a similarity server, we just create a <a class="reference internal" href="similarities/simserver.html#gensim.similarities.simserver.SessionServer" title="gensim.similarities.simserver.SessionServer"><tt class="xref py py-class docutils literal"><span class="pre">gensim.similarities.simserver.SessionServer</span></tt></a> object and register it
 with a Pyro daemon for remote access. There is a small <a class="reference external" href="https://github.com/piskvorky/gensim/blob/simserver/gensim/test/run_simserver.py">example script</a>
 included with gensim, run it with:</p>
 <div class="highlight-python"><pre>$ python -m gensim.test.run_simserver /tmp/testserver</pre>

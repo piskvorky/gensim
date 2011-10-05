@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.0',
+        VERSION:     '0.8.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -218,16 +218,6 @@ to update the model&#8217;s topic-word distributions, and return a 2-tuple
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.models.ldamodel.LdaModel.print_topics">
-<tt class="descname">print_topics</tt><big>(</big><em>topics=10</em>, <em>topn=10</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.print_topics" title="Permalink to this definition">¶</a></dt>
-<dd><p>Print the <cite>topN</cite> most probable words for (randomly selected) <cite>topics</cite>
-number of topics. Set <cite>topics=-1</cite> to print all topics.</p>
-<p>Unlike LSA, there is no ordering between the topics in LDA.
-The printed <cite>topics &lt;= self.num_topics</cite> subset of all topics is therefore
-arbitrary and may change between two runs.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="gensim.models.ldamodel.LdaModel.save">
 <tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
@@ -239,6 +229,16 @@ arbitrary and may change between two runs.</p>
 <dd><p>Reset word-topic mixtures lambda (and beta) using collected counts of
 sufficient statistics (a <cite>num_topics x num_terms</cite> matrix).</p>
 <p>Return the aggregate amount of change in topics, log(old_lambda-new_lambda).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.ldamodel.LdaModel.show_topics">
+<tt class="descname">show_topics</tt><big>(</big><em>topics=10</em>, <em>topn=10</em>, <em>log=False</em>, <em>formatted=True</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.show_topics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the <cite>topN</cite> most probable words for (randomly selected) <cite>topics</cite>
+number of topics. Set <cite>topics=-1</cite> to print all topics.</p>
+<p>Unlike LSA, there is no ordering between the topics in LDA.
+The printed <cite>topics &lt;= self.num_topics</cite> subset of all topics is therefore
+arbitrary and may change between two runs.</p>
 </dd></dl>
 
 <dl class="method">

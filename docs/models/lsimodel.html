@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.0',
+        VERSION:     '0.8.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -235,8 +235,17 @@ human-interpretable description of topics.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.models.lsimodel.LsiModel.print_topic">
-<tt class="descname">print_topic</tt><big>(</big><em>topicno</em>, <em>topn=10</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.print_topic" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.models.lsimodel.LsiModel.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override the default <cite>save</cite> (which uses cPickle), because that&#8217;s
+too inefficient and cPickle has bugs. Instead, single out the large transformation
+matrix and store that separately in binary format (that can be directly
+mmap&#8217;ed back in <cite>load()</cite>), under <cite>fname.npy</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.lsimodel.LsiModel.show_topic">
+<tt class="descname">show_topic</tt><big>(</big><em>topicno</em>, <em>topn=10</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.show_topic" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a specified topic (=left singular vector), 0 &lt;= <cite>topicno</cite> &lt; <cite>self.num_topics</cite>,
 as string.</p>
 <p>Return only the <cite>topn</cite> words which contribute the most to the direction
@@ -245,15 +254,6 @@ of the topic (both negative and positive).</p>
 <span class="go">&#39;-0.340 * &quot;category&quot; + 0.298 * &quot;$M$&quot; + 0.183 * &quot;algebra&quot; + -0.174 * &quot;functor&quot; + -0.168 * &quot;operator&quot;&#39;</span>
 </pre></div>
 </div>
-</dd></dl>
-
-<dl class="method">
-<dt id="gensim.models.lsimodel.LsiModel.save">
-<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.save" title="Permalink to this definition">¶</a></dt>
-<dd><p>Override the default <cite>save</cite> (which uses cPickle), because that&#8217;s
-too inefficient and cPickle has bugs. Instead, single out the large transformation
-matrix and store that separately in binary format (that can be directly
-mmap&#8217;ed back in <cite>load()</cite>), under <cite>fname.npy</cite>.</p>
 </dd></dl>
 
 </dd></dl>
