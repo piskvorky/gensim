@@ -63,7 +63,7 @@ import scipy.sparse
 from gensim import interfaces, utils, matutils
 
 
-logger = logging.getLogger('gensim.similarity.docsim')
+logger = logging.getLogger('gensim.similarities.docsim')
 
 
 class Shard(utils.SaveLoad):

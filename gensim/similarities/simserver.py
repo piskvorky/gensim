@@ -33,10 +33,10 @@ import shutil
 import numpy
 
 import gensim
-from sqlitedict import SqliteDict # run "sudo easy_install sqlitedict"
+from sqlitedict import SqliteDict # needs sqlitedict: run "sudo easy_install sqlitedict"
 
 
-logger = logging.getLogger('gensim_server')
+logger = logging.getLogger('gensim.similarities.simserver')
 
 
 
