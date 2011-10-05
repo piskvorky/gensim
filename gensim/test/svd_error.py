@@ -15,7 +15,7 @@ only the first CLIP_TERMS are considered (features with id >= CLIP_TERMS are
 ignored, effectively restricting the vocabulary size). If you don't specify them,
 the entire matrix will be used.
 
-Example: ./svd_error.py ~/gensim/results/wiki_small.mm 100000 10000
+Example: ./svd_error.py ~/gensim/results/wiki_en_v10k.mm.bz2 100000 10000
 """
 
 from __future__ import with_statement
@@ -38,9 +38,9 @@ except ImportError:
 
 sparsesvd = None # don't use SVDLIBC
 
-FACTORS = [500, 100] # which num_topics to try
-CHUNKSIZE = [25000, 5000, 1000] # which chunksize to try
-POWER_ITERS = [0, 2, 4, 8] # extra power iterations for the randomized algo
+FACTORS = [300, 100] # which num_topics to try
+CHUNKSIZE = [10000, 5000, 1000] # which chunksize to try
+POWER_ITERS = [0, 2, 4] # extra power iterations for the randomized algo
 
 # when reporting reconstruction error, also report spectral norm error? (very slow)
 COMPUTE_NORM2 = False
@@ -168,7 +168,7 @@ if __name__ == '__main__':
             logging.info("computing multipass SVD for %i factors, %i power iterations" %
                    (factors, power_iters,))
             taken = time.time()
-            model = gensim.models.LsiModel(corpus, id2word=id2word, num_topics=factors, chunksize=20000,
+            model = gensim.models.LsiModel(corpus, id2word=id2word, num_topics=factors, chunksize=2000,
                                            onepass=False, power_iters=power_iters)
             taken = time.time() - taken
             u, s = model.projection.u.astype(numpy.float32), model.projection.s.astype(numpy.float32)**2
