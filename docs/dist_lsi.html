@@ -131,13 +131,13 @@
 <div class="section" id="setting-up-the-cluster">
 <h2>Setting up the cluster<a class="headerlink" href="#setting-up-the-cluster" title="Permalink to this headline">¶</a></h2>
 <p>We will show how to run distributed Latent Semantic Analysis by means of an example.
-Let&#8217;s say we have 5 computers at our disposal, all in the same broadcast domain.
-To start with, install <cite>gensim</cite> and <cite>Pyro</cite> on each one of them with:</p>
+Let&#8217;s say we have 5 computers at our disposal, all on the same network segment (=reachable
+by network broadcast). To start with, install <cite>gensim</cite> and <cite>Pyro</cite> on each computer with:</p>
 <div class="highlight-python"><pre>$ sudo easy_install gensim[distributed]</pre>
 </div>
-<p>and run Pyro&#8217;s name server on exactly <em>one</em> of the machines (doesn&#8217;t matter which one):</p>
-<div class="highlight-python"><pre>$ python -m Pyro4.naming -n 0.0.0.0 &amp;</pre>
-</div>
+<p>and run Pyro’s name server on exactly one of the machines (doesn’t matter which one):</p>
+<blockquote>
+<div>$ python -m Pyro4.naming -n 0.0.0.0 &amp;</div></blockquote>
 <p>Let&#8217;s say our example cluster consists of dual-core computers with loads of
 memory. We will therefore run <strong>two</strong> worker scripts on four of the physical machines,
 creating <strong>eight</strong> logical worker nodes:</p>
@@ -154,8 +154,8 @@ fifth computer to act as the dispatcher and from there run:</p>
 <div class="highlight-python"><pre>$ python -m gensim.models.lsi_dispatcher &amp;</pre>
 </div>
 <p>In general, the dispatcher can be run on the same machine as one of the worker nodes, or it
-can be another, distinct computer within the same broadcast domain. The dispatcher
-won&#8217;t be  doing much with CPU most of the time, but pick a computer with ample memory.</p>
+can be another, distinct computer (within the same broadcast domain). The dispatcher
+won&#8217;t be doing much with CPU most of the time, but pick a computer with ample memory.</p>
 <p>And that&#8217;s it! The cluster is set up and running, ready to accept jobs. To remove
 a worker later on, simply terminate its <cite>lsi_worker</cite> process. To add another worker, run another
 <cite>lsi_worker</cite> (this will not affect a computation that is already running, the additions/deletions are not dynamic).
@@ -186,8 +186,8 @@ If you look at the log in your Python session, you should see a line similar to:
 processes &#8212; this is especially helpful in case of problems.
 To check the LSA results, let&#8217;s print the first two latent topics:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">print_topics</span><span class="p">(</span><span class="n">num_topics</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">num_words</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="go">topic #0(3.341): -0.644*&quot;system&quot; + -0.404*&quot;user&quot; + -0.301*&quot;eps&quot; + -0.265*&quot;time&quot; + -0.265*&quot;response&quot;</span>
-<span class="go">topic #1(2.542): -0.623*&quot;graph&quot; + -0.490*&quot;trees&quot; + -0.451*&quot;minors&quot; + -0.274*&quot;survey&quot; + 0.167*&quot;system&quot;</span>
+<span class="go">topic #0(3.341): 0.644*&quot;system&quot; + 0.404*&quot;user&quot; + 0.301*&quot;eps&quot; + 0.265*&quot;time&quot; + 0.265*&quot;response&quot;</span>
+<span class="go">topic #1(2.542): 0.623*&quot;graph&quot; + 0.490*&quot;trees&quot; + 0.451*&quot;minors&quot; + 0.274*&quot;survey&quot; + -0.167*&quot;system&quot;</span>
 </pre></div>
 </div>
 <p>Success! But a corpus of nine documents is no challenge for our powerful cluster...
@@ -298,7 +298,7 @@ paper</a>.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Aug 03, 2011.
+      Last updated on Oct 05, 2011.
     </div>
   </body>
 </html>

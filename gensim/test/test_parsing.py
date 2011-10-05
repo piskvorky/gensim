@@ -12,10 +12,6 @@ import numpy as np
 from gensim.parsing.preprocessing import *
 
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
-                    level=logging.WARNING)
-
-
 # several documents
 doc1 = """C'est un trou de verdure où chante une rivière,
 Accrochant follement aux herbes des haillons

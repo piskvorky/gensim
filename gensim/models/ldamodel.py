@@ -167,9 +167,9 @@ class LdaModel(interfaces.TransformationABC):
         used to determine the vocabulary size, as well as for debugging and topic
         printing.
 
-        `alpha` and `eta` are hyperparameters on document-topic (theta) and
-        topic-word (lambda) distributions. Both default to a symmetric 1.0/num_topics
-        (but can be set to a vector, for assymetric priors).
+        `alpha` and `eta` are hyperparameters that affect sparsity of the document-topic
+        (theta) and topic-word (lambda) distributions. Both default to a symmetric
+        1.0/num_topics (but can be set to a vector, for asymmetric priors).
 
         Turn on `distributed` to force distributed computing (see the web tutorial
         on how to set up a cluster of machines for gensim).
@@ -228,11 +228,10 @@ class LdaModel(interfaces.TransformationABC):
             # set up distributed version
             try:
                 import Pyro4
-                ns = Pyro4.locateNS()
                 dispatcher = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher')
                 dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
-                dispatcher.initialize(id2word=id2word, num_topics=num_topics,
+                dispatcher.initialize(id2word=self.id2word, num_topics=num_topics,
                                       chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
                 self.dispatcher = dispatcher
                 self.numworkers = len(dispatcher.getworkers())
@@ -296,7 +295,10 @@ class LdaModel(interfaces.TransformationABC):
         `(gamma, sstats)`. Otherwise, return `(gamma, None)`. `gamma` is of shape
         `len(chunk) x topics`.
         """
-        chunk = list(chunk) # convert iterators/generators to plain list, so we have len() etc.
+        try:
+            tmp = len(chunk)
+        except:
+            chunk = list(chunk) # convert iterators/generators to plain list, so we have len() etc.
         logger.debug("performing inference on a chunk of %i documents" % len(chunk))
 
         # Initialize the variational distribution q(theta|gamma) for the chunk
@@ -396,11 +398,6 @@ class LdaModel(interfaces.TransformationABC):
             passes = self.passes
         if update_every is None:
             update_every = self.update_every
-        if not passes:
-            # if the number of whole-corpus iterations was not specified explicitly,
-            # assume iterating over the corpus until convergence (or until self.MAXITER
-            # iterations, whichever happens first)
-            passes = self.MAXITER
 
         # rho is the "speed" of updating; TODO try other fncs
         rho = lambda: pow(1.0 + self.num_updates, -decay)
@@ -441,7 +438,7 @@ class LdaModel(interfaces.TransformationABC):
 
             chunker = itertools.groupby(enumerate(corpus), key=lambda (docno, doc): docno / chunksize)
             for chunk_no, (key, group) in enumerate(chunker):
-                chunk = list(doc for _, doc in group)
+                chunk = numpy.array([numpy.array(doc) for _, doc in group])
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
                     logger.info('PROGRESS: iteration %i, dispatching documents up to #%i/%i' %
@@ -455,6 +452,7 @@ class LdaModel(interfaces.TransformationABC):
                                 (iteration, chunk_no * chunksize + len(chunk), lencorpus))
                     self.do_estep(chunk, other)
                 dirty = True
+                del chunk
 
                 if update_every and (chunk_no + 1) % (update_every * self.numworkers) == 0:
                     if self.dispatcher:
@@ -596,26 +594,3 @@ class LdaModel(interfaces.TransformationABC):
         return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                 if topicvalue >= eps] # ignore document's topics that have prob < eps
 #endclass LdaModel
-
-
-
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
-                        level=logging.DEBUG)
-    logger.info("running %s" % ' '.join(sys.argv))
-
-    import os.path
-    program = os.path.basename(sys.argv[0])
-    from gensim.corpora import WikiCorpus, MmCorpus, LowCorpus
-    numpy.random.seed(100000001)
-
-    vocab = WikiCorpus.loadDictionary('/Users/kofola/gensim/results/wiki10_en_wordids.txt')
-    corpus = MmCorpus('/Users/kofola/gensim/results/wiki10_en_bow.mm')
-    K = 50
-
-    olda = LdaModel(num_topics=K, id2word=vocab, alpha=1./K, eta=1./K, decay=0.5)
-    olda.update(corpus)
-    olda.save('olda2.pkl')
-
-    logger.info("finished running %s" % program)
-

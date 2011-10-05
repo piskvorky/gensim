@@ -8,6 +8,7 @@ Gensim -- Vector Space Modelling for Humans
 
 .. admonition:: What's new?
 
+   * 09/09/2011: moved website to `radimrehurek.com <http://radimrehurek.com/gensim>`_.
    * 19/06/2011: version 0.8.0 is `out <http://pypi.python.org/pypi/gensim>`_! Faster & better: :doc:`walkthrough of the changes<changes_080>`.
    * 12/02/2011: faster and leaner **Latent Semantic Indexing (LSI)** and **Latent Dirichlet Allocation (LDA)**:
 
@@ -21,7 +22,7 @@ For **installation** and **troubleshooting**, see the :doc:`installation <instal
 For **examples** on how to convert text to vectors and work with the result, try the :doc:`tutorials <tutorial>`.
 
 When **citing** `gensim` in academic papers, use
-`this BibTeX entry <http://nlp.fi.muni.cz/projekty/gensim/bibtex_gensim.bib>`_.
+`this BibTeX entry <bibtex_gensim.bib>`_.
 
 
 Quick Reference Example

@@ -36,6 +36,10 @@ html:
 	@echo
 	@echo "Build finished. The HTML pages are in ../"
 
+upload: 
+	scp -P8222 -r _build/html/* radim@radimrehurek.com:public_html/gensim/
+#	scp -P8222 -r perm/* radim@radimrehurek.com:public_html/gensim/
+
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
 	@echo

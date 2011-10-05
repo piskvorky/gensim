@@ -201,6 +201,12 @@ class Projection(utils.SaveLoad):
         q = ascarray(q, 'q')
         q = numpy.dot(q, u2_k)
         self.u += q
+
+        # make each column of U start with a non-negative number (to force canonical decomposition)
+        if self.u.shape[0] > 0:
+            for i in xrange(self.u.shape[1]):
+                if self.u[0, i] < 0.0:
+                    self.u[:, i] *= -1.0
 #        diff = numpy.dot(self.u.T, self.u) - numpy.eye(self.u.shape[1])
 #        logger.info('orth error after=%f' % numpy.sum(diff * diff))
 #endclass Projection
@@ -291,7 +297,6 @@ class LsiModel(interfaces.TransformationABC):
                                           "run either distributed one-pass, or serial randomized.")
             try:
                 import Pyro4
-                ns = Pyro4.locateNS()
                 dispatcher = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher')
                 dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
@@ -344,16 +349,14 @@ class LsiModel(interfaces.TransformationABC):
             else:
                 # the one-pass algo
                 doc_no = 0
-                chunker = itertools.groupby(enumerate(corpus), key=lambda (docno, doc): docno / chunksize)
-                for chunk_no, (key, group) in enumerate(chunker):
+                for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
                     logger.info("preparing a new chunk of documents")
-                    corpus = list(doc for _, doc in group)
-                    nnz = sum(len(doc) for doc in corpus)
+                    nnz = sum(len(doc) for doc in chunk)
                     # construct the job as a sparse matrix, to minimize memory overhead
                     # definitely avoid materializing it as a dense matrix!
                     logger.debug("converting corpus to csc format")
-                    job = matutils.corpus2csc(corpus, num_docs=len(corpus), num_terms=self.num_terms, num_nnz=nnz)
-                    del corpus
+                    job = matutils.corpus2csc(chunk, num_docs=len(chunk), num_terms=self.num_terms, num_nnz=nnz)
+                    del chunk
                     doc_no += job.shape[1]
                     if self.dispatcher:
                         # distributed version: add this job to the job queue, so workers can work on it
@@ -613,31 +616,30 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
             y = corpus.T * y
             y = corpus * y
     else:
-        chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunksize)
         num_docs = 0
-        for chunk_no, (key, group) in enumerate(chunker):
+        for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
             logger.info('PROGRESS: at document #%i' % (chunk_no * chunksize))
             # construct the chunk as a sparse matrix, to minimize memory overhead
             # definitely avoid materializing it as a dense (num_terms x chunksize) matrix!
-            chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
+            s = sum(len(doc) for doc in chunk)
+            chunk = matutils.corpus2csc(chunk, num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
             m, n = chunk.shape
             assert m == num_terms
             assert n <= chunksize # the very last chunk of A is allowed to be smaller in size
             num_docs += n
             logger.debug("multiplying chunk * gauss")
             o = numpy.random.normal(0.0, 1.0, (n, samples)).astype(dtype) # draw a random gaussian matrix
-            sparsetools.csc_matvecs(num_terms, n, samples, chunk.indptr, # y = y + chunk * o
-                                    chunk.indices, chunk.data, o.ravel(), y.ravel())
+            sparsetools.csc_matvecs(m, n, samples, chunk.indptr, chunk.indices, # y = y + chunk * o
+                                    chunk.data, o.ravel(), y.ravel())
             del chunk, o
 
         for power_iter in xrange(power_iters):
             logger.info("running power iteration #%i" % (power_iter + 1))
             yold = y.copy()
             y[:] = 0.0
-            chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunksize)
-            for chunk_no, (key, group) in enumerate(chunker):
+            for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
                 logger.info('PROGRESS: at document #%i/%i' % (chunk_no * chunksize, num_docs))
-                chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
+                chunk = matutils.corpus2csc(chunk, num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
                 tmp = chunk.T * yold
                 tmp = chunk * tmp
                 del chunk
@@ -660,15 +662,15 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         # second phase: construct the covariance matrix X = B * B.T, where B = Q.T * A
         # again, construct X incrementally, in chunks of `chunksize` documents from the streaming
         # input corpus A, to avoid using O(number of documents) memory
-        x = numpy.zeros(shape=(samples, samples), dtype=dtype)
+        x = numpy.zeros(shape=(qt.shape[0], qt.shape[0]), dtype=numpy.float64)
         logger.info("2nd phase: constructing %s covariance matrix" % str(x.shape))
-        chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunksize)
-        for chunk_no, (key, group) in enumerate(chunker):
+        for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
             logger.info('PROGRESS: at document #%i/%i' % (chunk_no * chunksize, num_docs))
-            chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype)
+            chunk = matutils.corpus2csc(chunk, num_terms=num_terms, dtype=qt.dtype)
             b = qt * chunk # dense * sparse matrix multiply
+            del chunk
             x += numpy.dot(b, b.T) # TODO should call the BLAS routine SYRK, but there is no SYRK wrapper in scipy :(
-            del chunk, b
+            del b
 
         # now we're ready to compute decomposition of the small matrix X
         logger.info("running dense decomposition on %s covariance matrix" % str(x.shape))
@@ -682,5 +684,5 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
     u = u[:, :keep].copy()
     s = s[:keep]
     u = numpy.dot(q, u)
-    return u, s
+    return u.astype(dtype), s.astype(dtype)
 

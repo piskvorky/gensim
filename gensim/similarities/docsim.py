@@ -17,6 +17,9 @@ similar index documents to the query.
 
 You can later add new documents to the index via `Similarity.add_documents()`.
 
+How It Works
+------------
+
 The `Similarity` class splits the index into several smaller sub-indexes ("shards"),
 which are disk-based. If your entire index fits in memory (~hundreds of thousands
 documents for 1GB of RAM), you can also use the `MatrixSimilarity` or `SparseMatrixSimilarity`
@@ -50,6 +53,8 @@ already uses the faster, batch queries internally:
 
 import logging
 import itertools
+import os
+import random
 
 import numpy
 import scipy
@@ -123,12 +128,13 @@ class Similarity(interfaces.SimilarityABC):
     The shards themselves are simply stored as files to disk and mmap'ed back as needed.
 
     """
-    def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=512, shardsize=5000):
+    def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=1024, shardsize=32768):
         """
         Construct the index from `corpus`. The index can be later extended by calling
         the `add_documents` method. Documents are split into shards of `shardsize`
         documents each, converted to a matrix (for fast BLAS calls) and stored to disk
         under `output_prefix.shard_number` (=you need write access to that location).
+        If you don't specify an output prefix, a random filename in temp will be used.
 
         `shardsize` should be chosen so that a `shardsize x chunksize` matrix of floats
         fits comfortably into main memory.
@@ -139,18 +145,22 @@ class Similarity(interfaces.SimilarityABC):
         If `num_best` is left unspecified, similarity queries will return a full
         vector with one float for every document in the index:
 
-        >>> index = Similarity('/tmp/index', corpus, num_features=400) # if corpus has 7 documents...
+        >>> index = Similarity('/path/to/index', corpus, num_features=400) # if corpus has 7 documents...
         >>> index[query] # ... then result will have 7 floats
         [0.0, 0.0, 0.2, 0.13, 0.8, 0.0, 0.1]
 
         If `num_best` is set, queries return only the `num_best` most similar documents:
 
         >>> index.num_best = 3
-        >>> index[query] # return at most "num_best" (index_of_document, similarity) tuples
+        >>> index[query] # return at most "num_best" of `(index_of_document, similarity)` tuples
         [(4, 0.8), (2, 0.13), (3, 0.13)]
 
         """
-        self.output_prefix = output_prefix
+        if output_prefix is None:
+            # undocumented feature: set output_prefix=None to create the server in temp
+            self.output_prefix = utils.randfname(prefix='simserver')
+        else:
+            self.output_prefix = output_prefix
         self.num_features = num_features
         self.num_best = num_best
         self.normalize = True
@@ -179,14 +189,27 @@ class Similarity(interfaces.SimilarityABC):
         Internally, documents are buffered and then spilled to disk when there's
         `self.shardsize` of them (or when a query is issued).
         """
-        if self.shards and len(self.shards[-1]) < self.shardsize:
-            # The last shard was incomplete; load it back and add the documents there, don't start a new shard.
+        min_ratio = 1.0 # 0.5 to only reopen shards that are <50% complete
+        if self.shards and len(self.shards[-1]) < min_ratio * self.shardsize:
+            # The last shard was incomplete (<; load it back and add the documents there, don't start a new shard
             self.reopen_shard()
         for doc in corpus:
+            if isinstance(doc, numpy.ndarray):
+                doclen = len(doc)
+            elif scipy.sparse.issparse(doc):
+                doclen = doc.nnz
+            else:
+                doclen = len(doc)
+                if doclen < 0.3 * self.num_features:
+                    doc = matutils.corpus2csc([doc], self.num_features).T
+                else:
+                    doc = matutils.sparse2full(doc, self.num_features)
             self.fresh_docs.append(doc)
-            self.fresh_nnz += len(doc)
+            self.fresh_nnz += doclen
             if len(self.fresh_docs) >= self.shardsize:
                 self.close_shard()
+            if len(self.fresh_docs) % 10000 == 0:
+                logger.info("PROGRESS: fresh_shard size=%i" % len(self.fresh_docs))
 
 
     def shardid2filename(self, shardid):
@@ -210,6 +233,7 @@ class Similarity(interfaces.SimilarityABC):
         """
         if not self.fresh_docs:
             return
+        self.fresh_docs = matutils.Scipy2Corpus(self.fresh_docs)
         shardid = len(self.shards)
         # consider the shard sparse if its density is < 30%
         issparse = 0.3 > 1.0 * self.fresh_nnz / (len(self.fresh_docs) * self.num_features)
@@ -232,14 +256,12 @@ class Similarity(interfaces.SimilarityABC):
             raise ValueError("cannot reopen a shard with fresh documents in index")
         last_shard = self.shards[-1]
         last_index = last_shard.get_index()
+        logger.info("reopening an incomplete shard of %i documents" % len(last_shard))
 
-        if scipy.sparse.issparse(last_index.index):
-            self.fresh_docs = list(matutils.Sparse2Corpus(last_index.index.T))
-        else:
-            self.fresh_docs = list(matutils.Dense2Corpus(last_index.index.T))
+        self.fresh_docs = list(last_index.index)
         self.fresh_nnz = last_shard.num_nnz
-
         del self.shards[-1] # remove the shard from index, *but its file on disk is not deleted*
+        logger.debug("reopen complete")
 
 
     def __getitem__(self, query):
@@ -275,22 +297,22 @@ class Similarity(interfaces.SimilarityABC):
         return result
 
 
-    def similarity_by_id(self, docid):
+    def similarity_by_id(self, docpos):
         """
-        Return similarity of the given document only. `docid` is the position
+        Return similarity of the given document only. `pos` is the position
         of the query document within index.
         """
         self.close_shard() # no-op if no documents added to index since last query
         pos = 0
         for shard in self.shards:
             pos += len(shard)
-            if docid < pos:
+            if docpos < pos:
                 break
-        if not self.shards or docid < 0 or docid >= pos:
+        if not self.shards or docpos < 0 or docpos >= pos:
             raise ValueError("invalid document position: %s (must be 0 <= x < %s)" %
-                             (docid, len(self)))
+                             (docpos, len(self)))
         norm, self.normalize = self.normalize, False
-        query = shard.get_document_id(docid - pos + len(shard))
+        query = shard.get_document_id(docpos - pos + len(shard))
         result = self[query]
         self.normalize = norm
         return result
@@ -301,26 +323,44 @@ class Similarity(interfaces.SimilarityABC):
         For each index document, compute cosine similarity against all other
         documents in the index and yield the result.
         """
-        # turn off query normalization (vectors in the index are already normalized)
-        norm = self.normalize
-        self.normalize = False
+        # turn off query normalization (vectors in the index are already normalized, save some CPU)
+        norm, self.normalize = self.normalize, False
+
+        for chunk in self.iter_chunks():
+            if chunk.shape[0] > 1:
+                for sim in self[chunk]:
+                    yield sim
+            else:
+                yield self[chunk]
+
+        self.normalize = norm # restore normalization
+
+
+    def iter_chunks(self, chunksize=None):
+        """
+        Iteratively yield the index as chunks of documents, each of size <= chunksize.
+
+        The chunk is returned in its raw form (matrix or sparse matrix slice).
+        The size of the chunk may be smaller than requested; it is up to the caller
+        to check the result for real length, using `chunk.shape[0]`.
+        """
+        self.close_shard()
+
+        if chunksize is None:
+            # if not explicitly specified, use the chunksize from the constructor
+            chunksize = self.chunksize
 
         for shard in self.shards:
             # split each shard index into smaller chunks (of size self.chunksize) and
             # use each chunk as a query
             query = shard.get_index().index
-            for chunk_start in xrange(0, query.shape[0], self.chunksize):
+            for chunk_start in xrange(0, query.shape[0], chunksize):
                 # scipy.sparse doesn't allow slicing beyond real size of the matrix
                 # (unlike numpy). so, clip the end of the chunk explicitly to make
                 # scipy.sparse happy
-                chunk_end = min(query.shape[0], chunk_start + self.chunksize)
+                chunk_end = min(query.shape[0], chunk_start + chunksize)
                 chunk = query[chunk_start : chunk_end] # create a view
-                if chunk.shape[0] > 1:
-                    for sim in self[chunk]:
-                        yield sim
-                else:
-                    yield self[chunk]
-        self.normalize = norm
+                yield chunk
 
 
     def save(self, fname=None):
@@ -481,7 +521,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
                 pass
             self.index = matutils.corpus2csc((matutils.unitvec(vector) for vector in corpus),
                                               num_terms=num_terms, num_docs=num_docs, num_nnz=num_nnz,
-                                              dtype=numpy.float32, printprogress=10000).T
+                                              dtype=dtype, printprogress=10000).T
 
             # convert to Compressed Sparse Row for efficient row slicing and multiplications
             self.index = self.index.tocsr() # currently no-op, CSC.T is already CSR

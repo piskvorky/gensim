@@ -99,7 +99,8 @@ class BleiCorpus(IndexedCorpus):
             for doc in corpus:
                 doc = list(doc)
                 offsets.append(fout.tell())
-                fout.write("%i %s\n" % (len(doc), ' '.join("%i:%s" % p for p in doc)))
+                fout.write("%i %s\n" % (len(doc),
+                                        ' '.join("%i:%s" % p for p in doc if abs(p[1]) > 1e-12)))
 
         # write out vocabulary, in a format compatible with Blei's topics.py script
         fname_vocab = fname + '.vocab'

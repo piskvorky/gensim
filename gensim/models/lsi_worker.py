@@ -21,8 +21,6 @@ import os, sys, logging
 import threading
 import tempfile
 
-import Pyro4
-
 from gensim.models import lsimodel
 from gensim import utils
 
@@ -87,7 +85,7 @@ class Worker(object):
 
 
 def main():
-    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
+    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     logger.info("running %s" % " ".join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
@@ -96,17 +94,7 @@ def main():
         print globals()["__doc__"] % locals()
         sys.exit(1)
 
-#    Pyro.config.HOST = utils.get_my_ip()
-
-    with Pyro4.locateNS() as ns:
-        with Pyro4.Daemon() as daemon:
-            worker = Worker()
-            uri = daemon.register(worker)
-            name = 'gensim.lsi_worker.' + str(uri)
-            ns.remove(name)
-            ns.register(name, uri)
-            logger.info("worker is ready at URI %s" % uri)
-            daemon.requestLoop()
+    utils.pyro_daemon('gensim.lsi_worker', Worker(), random_suffix=True)
 
     logger.info("finished running %s" % program)
 

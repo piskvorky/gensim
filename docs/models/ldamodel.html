@@ -156,9 +156,9 @@ the training corpus.</p>
 <p><cite>id2word</cite> is a mapping from word ids (integers) to words (strings). It is
 used to determine the vocabulary size, as well as for debugging and topic
 printing.</p>
-<p><cite>alpha</cite> and <cite>eta</cite> are hyperparameters on document-topic (theta) and
-topic-word (lambda) distributions. Both default to a symmetric 1.0/num_topics
-(but can be set to a vector, for assymetric priors).</p>
+<p><cite>alpha</cite> and <cite>eta</cite> are hyperparameters that affect sparsity of the document-topic
+(theta) and topic-word (lambda) distributions. Both default to a symmetric
+1.0/num_topics (but can be set to a vector, for asymmetric priors).</p>
 <p>Turn on <cite>distributed</cite> to force distributed computing (see the web tutorial
 on how to set up a cluster of machines for gensim).</p>
 <p>Example:</p>
@@ -355,7 +355,7 @@ approximation).</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Aug 03, 2011.
+      Last updated on Oct 05, 2011.
     </div>
   </body>
 </html>
