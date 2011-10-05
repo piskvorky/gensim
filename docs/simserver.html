@@ -117,7 +117,7 @@
             
   <div class="section" id="document-similarity-server">
 <span id="simserver"></span><h1>Document Similarity Server<a class="headerlink" href="#document-similarity-server" title="Permalink to this headline">¶</a></h1>
-<p>The 0.7.x series of <cite>gensim</cite> was about improving performance and consolidating API.
+<p>The 0.7.x series of <a class="reference external" href="http://radimrehurek.com/gensim/">gensim</a> was about improving performance and consolidating API.
 0.8.x will be about new features &#8212; 0.8.1, first of the series, is a <strong>document similarity service</strong>.</p>
 <div class="section" id="what-is-a-document-similarity-service">
 <h2>What is a document similarity service?<a class="headerlink" href="#what-is-a-document-similarity-service" title="Permalink to this headline">¶</a></h2>
@@ -134,8 +134,10 @@
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">server</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">training_corpus</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;lsi&#39;</span><span class="p">)</span> <span class="c"># create a semantic model</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">server</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">some_documents</span><span class="p">)</span> <span class="c"># convert plain text to semantic representation and index it</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">server</span><span class="o">.</span><span class="n">find_similar</span><span class="p">(</span><span class="n">query</span><span class="p">)</span> <span class="c"># convert query to semantic representation and compare against index</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">server</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">more_documents</span><span class="p">)</span> <span class="c"># incremental indexing works</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">server</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">more_documents</span><span class="p">)</span> <span class="c"># add to index: incremental indexing works</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">server</span><span class="o">.</span><span class="n">find_similar</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">server</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">ids_to_delete</span><span class="p">)</span> <span class="c"># incremental deleting also works</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">server</span><span class="o">.</span><span class="n">find_similar</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="o">...</span>
@@ -146,7 +148,7 @@
 <p class="last">&#8220;Semantic&#8221; here refers to semantics of the crude, statistical type &#8211;
 <a class="reference external" href="http://en.wikipedia.org/wiki/Latent_semantic_analysis">Latent Semantic Analysis</a>,
 <a class="reference external" href="http://en.wikipedia.org/wiki/Latent_Dirichlet_allocation">Latent Dirichlet Allocation</a> etc.
-Nothing to do with the semantic web, manual resource tagging or detailed linguistic analysis.</p>
+Nothing to do with the semantic web, manual resource tagging or detailed linguistic inference.</p>
 </div>
 </div>
 <div class="section" id="what-is-it-good-for">
@@ -158,10 +160,10 @@ organize and navigate documents in a more abstract way, compared to plain keywor
 <h2>How is it unique?<a class="headerlink" href="#how-is-it-unique" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li><strong>Memory independent</strong>. Gensim has unique algorithms for statistical analysis that allow
-you to create semantic models of arbitrarily large corpora (larger than RAM) very quickly
+you to create semantic models of arbitrarily large training corpora (larger than RAM) very quickly
 and in constant RAM.</li>
-<li><strong>Memory independent</strong>. Indexing shards are stored as files to disk/mmapped back as needed,
-so you can index very large corpora. Constant RAM independent of the number of indexed documents.</li>
+<li><strong>Memory independent (again)</strong>. Indexing shards are stored as files to disk/mmapped back as needed,
+so you can index very large corpora. So again, constant RAM, this time independent of the number of indexed documents.</li>
 <li><strong>Efficient</strong>. Gensim makes heavy use of Python&#8217;s NumPy and SciPy libraries to make indexing and
 querying efficient.</li>
 <li><strong>Robust</strong>. Modifications of the index are transactional, so you can commit/rollback an
@@ -169,14 +171,13 @@ entire indexing session. Also, during the session, the service is still availabl
 for querying (using its state from when the session started). Power failures leave
 service in a consistent state (implicit rollback).</li>
 <li><strong>Pure Python</strong>. Well, technically, NumPy and SciPy are mostly wrapped C and Fortran, but
-gensim itself is pure Python. No compiling, installing or root priviledges needed.</li>
+<a class="reference external" href="http://radimrehurek.com/gensim/">gensim</a> itself is pure Python. No compiling, installing or root priviledges needed.</li>
 <li><strong>Concurrency support</strong>. The underlying service object is thread-safe and can
 therefore be used as a daemon server: clients connect to it via RPC and issue train/index/query requests remotely.</li>
 <li><strong>Cross-network, cross-platform and cross-language</strong>. While the Python server runs
 over TCP using <a class="reference external" href="http://irmen.home.xs4all.nl/pyro/">Pyro</a>,
 clients in Java/.NET are trivial thanks to <a class="reference external" href="http://irmen.home.xs4all.nl/pyrolite/">Pyrolite</a>.</li>
 </ol>
-<p>TODO add some hard numbers (for wikipedia?)</p>
 <p>The rest of this document serves as a tutorial explaining the features in more detail.</p>
 </div>
 <hr class="docutils" />
@@ -202,18 +203,20 @@ Python&#8217;s sqlite3 module in a thread-safe manner:</p>
 <div class="section" id="what-is-a-document">
 <h2>What is a document?<a class="headerlink" href="#what-is-a-document" title="Permalink to this headline">¶</a></h2>
 <p>In case of text documents, the service expects:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">document</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;some_unique_string&#39;</span><span class="p">,</span> <span class="s">&#39;text&#39;</span><span class="p">:</span> <span class="s">&#39;Content of the document...&#39;</span><span class="p">,</span> <span class="s">&#39;other_fields_ok_but_ignored&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">document</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;some_unique_string&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="s">&#39;tokens&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s">&#39;content&#39;</span><span class="p">,</span> <span class="s">&#39;of&#39;</span><span class="p">,</span> <span class="s">&#39;the&#39;</span><span class="p">,</span> <span class="s">&#39;document&#39;</span><span class="p">,</span> <span class="s">&#39;...&#39;</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="s">&#39;other_fields_are_allowed_but_ignored&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
 </pre></div>
 </div>
-<p>This format was chosen because it coincides with plain JSON, and is therefore very
-easy to serialize and send over the wire, in almost any language.</p>
-<p>FIXME unicode</p>
+<p>This format was chosen because it coincides with plain JSON and is therefore easy to serialize and send over the wire, in almost any language.
+All strings involved must be utf8-encoded.</p>
 </div>
 <div class="section" id="what-is-a-corpus">
 <h2>What is a corpus?<a class="headerlink" href="#what-is-a-corpus" title="Permalink to this headline">¶</a></h2>
 <p>A sequence of documents. Anything that supports the <cite>for document in corpus: ...</cite>
-iterator protocol. Generators are ok. Plain lists are ok (but consume more memory).</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">texts</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;Human machine interface for lab abc computer applications&quot;</span><span class="p">,</span>
+iterator protocol. Generators are ok. Plain lists are also ok (but consume more memory).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">texts</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;Human machine interface for lab abc computer applications&quot;</span><span class="p">,</span>
 <span class="gp">&gt;&gt;&gt; </span>         <span class="s">&quot;A survey of user opinion of computer system response time&quot;</span><span class="p">,</span>
 <span class="gp">&gt;&gt;&gt; </span>         <span class="s">&quot;The EPS user interface management system&quot;</span><span class="p">,</span>
 <span class="gp">&gt;&gt;&gt; </span>         <span class="s">&quot;System and human system engineering testing of EPS&quot;</span><span class="p">,</span>
@@ -222,29 +225,29 @@ iterator protocol. Generators are ok. Plain lists are ok (but consume more memor
 <span class="gp">&gt;&gt;&gt; </span>         <span class="s">&quot;The intersection graph of paths in trees&quot;</span><span class="p">,</span>
 <span class="gp">&gt;&gt;&gt; </span>         <span class="s">&quot;Graph minors IV Widths of trees and well quasi ordering&quot;</span><span class="p">,</span>
 <span class="gp">&gt;&gt;&gt; </span>         <span class="s">&quot;Graph minors A survey&quot;</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;doc_</span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">num</span><span class="p">,</span> <span class="s">&#39;text&#39;</span><span class="p">:</span> <span class="n">text</span><span class="p">}</span> <span class="k">for</span> <span class="n">num</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">texts</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="s">&#39;doc_</span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">num</span><span class="p">,</span> <span class="s">&#39;tokens&#39;</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">simple_preprocess</span><span class="p">(</span><span class="n">text</span><span class="p">)}</span>
+<span class="gp">&gt;&gt;&gt; </span>          <span class="k">for</span> <span class="n">num</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">texts</span><span class="p">)]</span>
 </pre></div>
 </div>
 <p>Since corpora are allowed to be arbitrarily large, it is
 recommended client splits them into smaller chunks before uploading them to the server:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">utils</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">utils</span><span class="o">.</span><span class="n">upload_chunked</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="n">corpus</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="c"># send 1k docs at a time</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">utils</span><span class="o">.</span><span class="n">upload_chunked</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="n">corpus</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="c"># send 1k docs at a time</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="wait-upload-what-where">
 <h2>Wait, upload what, where?<a class="headerlink" href="#wait-upload-what-where" title="Permalink to this headline">¶</a></h2>
-<p>If you use the service object in
-your code directly&#8212;no remote access&#8212;that&#8217;s also fine. Remote access is an
+<p>If you use the similarity service object (instance of <a class="reference internal" href="similarities/simserver.html#gensim.similarities.simserver.SessionServer" title="gensim.similarities.simserver.SessionServer"><tt class="xref py py-class docutils literal"><span class="pre">gensim.similarities.simserver.SessionServer</span></tt></a>) in
+your code directly&#8212;no remote access&#8212;that&#8217;s perfectly fine. Using the service remotely, from a different process/machine, is an
 option, not a necessity.</p>
-<p>Document similarity can also act as a long-running service, a daemon process. In that
+<p>Document similarity can also act as a long-running service, a daemon process on a separate machine. In that
 case, I&#8217;ll call the service object a <em>server</em>.</p>
-<p>So let&#8217;s start with a local object. Open your <a class="reference external" href="http://ipython.org/">favourite shell</a> and:</p>
+<p>But let&#8217;s start with a local object. Open your <a class="reference external" href="http://ipython.org/">favourite shell</a> and:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">utils</span><span class="p">,</span> <span class="n">similarities</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">service</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">SessionServer</span><span class="p">(</span><span class="s">&#39;/tmp/my_server/&#39;</span><span class="p">)</span> <span class="c"># or wherever</span>
 </pre></div>
 </div>
-<p>That initialized a new service, located in <cite>/tmp/my_server</cite> (you need write access right in that directory).</p>
+<p>That initialized a new service, located in <cite>/tmp/my_server</cite> (you need write access rights to that directory).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The service is fully defined by the content of its location (&#8220;<cite>/tmp/my_server/</cite>&#8221;)
@@ -268,10 +271,9 @@ between plain text and semantics first:</p>
 </pre></div>
 </div>
 <p>That was easy. The <cite>method=&#8217;lsi&#8217;</cite> parameter meant that we trained a model for
-<a class="reference external" href="http://en.wikipedia.org/wiki/Latent_semantic_indexing">Latent Semantic Indexing</a>,
-using default preprocessing (lowercase+alphabetic tokenizer)
+<a class="reference external" href="http://en.wikipedia.org/wiki/Latent_semantic_indexing">Latent Semantic Indexing</a>
 and default dimensionality (400) over a <a class="reference external" href="http://en.wikipedia.org/wiki/Tf–idf">tf-idf</a>
-representation of our little <cite>corpus</cite>. More on that later.</p>
+representation of our little <cite>corpus</cite>, all automatically. More on that later.</p>
 <p>Note that for the semantic model to make sense, it should be trained
 on a corpus that is:</p>
 <ul class="simple">
@@ -279,7 +281,7 @@ on a corpus that is:</p>
 of recipes in French when all indexed documents will be about programming in English
 will not help.</li>
 <li>Reasonably large (at least thousands of documents), so that the statistical analysis has
-a chance to kick in. Don&#8217;t use this example corpus of 9 documents in production O_o</li>
+a chance to kick in. Don&#8217;t use my example corpus here of 9 documents in production O_o</li>
 </ul>
 </div>
 <div class="section" id="indexing-documents">
@@ -287,7 +289,7 @@ a chance to kick in. Don&#8217;t use this example corpus of 9 documents in produ
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">service</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span> <span class="c"># index the same documents that we trained on...</span>
 </pre></div>
 </div>
-<p>Indexing can happen over any documents, but I&#8217;m too lazy to create another example corpus.</p>
+<p>Indexing can happen over any documents, but I&#8217;m too lazy to create another example corpus, so we index the same 9 docs used for training.</p>
 <p>Delete documents with:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">service</span><span class="o">.</span><span class="n">delete</span><span class="p">([</span><span class="s">&#39;doc_5&#39;</span><span class="p">,</span> <span class="s">&#39;doc_8&#39;</span><span class="p">])</span> <span class="c"># supply a list of document ids to be removed from the index</span>
 </pre></div>
@@ -299,7 +301,7 @@ document ids are always unique per service):</p>
 </pre></div>
 </div>
 <p>The index/delete/overwrite calls can be arbitrarily interspersed with queries.
-You don&#8217;t have to index <strong>all</strong> documents first to start querying.</p>
+You don&#8217;t have to index <strong>all</strong> documents first to start querying, indexing can be incremental.</p>
 </div>
 <div class="section" id="querying">
 <h2>Querying<a class="headerlink" href="#querying" title="Permalink to this headline">¶</a></h2>
@@ -315,8 +317,8 @@ You don&#8217;t have to index <strong>all</strong> documents first to start quer
 </pre></div>
 </div>
 </li>
-<li><p class="first">or by document (using <cite>document[&#8216;text&#8217;]</cite>; id is ignored):</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;text&#39;</span><span class="p">:</span> <span class="s">&#39;Graph and minors and humans and trees.&#39;</span><span class="p">}</span>
+<li><p class="first">or by document (using <cite>document[&#8216;tokens&#8217;]</cite>; id is ignored in this case):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;tokens&#39;</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">simple_preprocess</span><span class="p">(</span><span class="s">&#39;Graph and minors and humans and trees.&#39;</span><span class="p">)}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">service</span><span class="o">.</span><span class="n">find_similar</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
 <span class="go">[(&#39;doc_7&#39;, 0.93350589), (&#39;doc_3&#39;, 0.42718196), (&#39;doc_6&#39;, 0.27212361)]</span>
 </pre></div>
@@ -328,23 +330,22 @@ You don&#8217;t have to index <strong>all</strong> documents first to start quer
 <h2>Remote access<a class="headerlink" href="#remote-access" title="Permalink to this headline">¶</a></h2>
 <p>So far, we did everything in our Python shell, locally. I very much like <a class="reference external" href="http://irmen.home.xs4all.nl/pyro/">Pyro</a>,
 a pure Python package for Remote Procedure Calls (RPC), so I&#8217;ll illustrate remote
-service access via Pyro.  Pyro takes care of all the socket listening/request routing/data marshalling/thread
+service access via Pyro. Pyro takes care of all the socket listening/request routing/data marshalling/thread
 spawning, so it saves us a lot of trouble.</p>
-<p>To create a similarity server, we just create a  <tt class="xref py py-class docutils literal"><span class="pre">similarities.SessionServer</span></tt> object and register it
-with a Pyro daemon for remote access. There is an small <a class="reference external" href="https://github.com/piskvorky/gensim/blob/simserver/gensim/test/run_simserver.py">example script</a>
+<p>To create a similarity server, we just create a <tt class="xref py py-class docutils literal"><span class="pre">gensim.similarities.SessionServer</span></tt> object and register it
+with a Pyro daemon for remote access. There is a small <a class="reference external" href="https://github.com/piskvorky/gensim/blob/simserver/gensim/test/run_simserver.py">example script</a>
 included with gensim, run it with:</p>
 <div class="highlight-python"><pre>$ python -m gensim.test.run_simserver /tmp/testserver</pre>
 </div>
 <p>You can just <cite>ctrl+c</cite> to terminate the server, but leave it running for now.</p>
-<p>Now open your Python shell again and:</p>
+<p>Now open your Python shell again, possibly on another machine, and:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">Pyro4</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">name_server</span> <span class="o">=</span> <span class="n">Pyro4</span><span class="o">.</span><span class="n">locateNS</span><span class="p">()</span> <span class="c"># &quot;Pyro4.naming&quot; must be running</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">service</span> <span class="o">=</span> <span class="n">Pyro4</span><span class="o">.</span><span class="n">Proxy</span><span class="p">(</span><span class="n">name_server</span><span class="o">.</span><span class="n">lookup</span><span class="p">(</span><span class="s">&#39;gensim.testserver&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">service</span> <span class="o">=</span> <span class="n">Pyro4</span><span class="o">.</span><span class="n">Proxy</span><span class="p">(</span><span class="n">Pyro4</span><span class="o">.</span><span class="n">locateNS</span><span class="p">()</span><span class="o">.</span><span class="n">lookup</span><span class="p">(</span><span class="s">&#39;gensim.testserver&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Now service is only a proxy object: every call is physically executed wherever
+<p>Now <cite>service</cite> is only a proxy object: every call is physically executed wherever
 you ran the <cite>run_server.py</cite> script, which can be a totally different computer
-within a network broadcast domain, but you don&#8217;t even know:</p>
+(within a network broadcast domain), but you don&#8217;t even know:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">service</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">service</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">service</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">other_corpus</span><span class="p">)</span>
@@ -353,22 +354,22 @@ within a network broadcast domain, but you don&#8217;t even know:</p>
 </div>
 <p>It is worth mentioning that Irmen, the author of Pyro, also released
 <a class="reference external" href="http://irmen.home.xs4all.nl/pyrolite/">Pyrolite</a> recently. That is a package
-which allows you to create Pyro proxies from Java and .NET. That way you can call
-methods on the remote server from there too&#8212;the client doesn&#8217;t have to be in Python.</p>
+which allows you to create Pyro proxies from Java and .NET, as well as from Python.
+That way you can utilize the remote server from there too&#8212;the client doesn&#8217;t have to be in Python.</p>
 </div>
 <div class="section" id="concurrency">
 <h2>Concurrency<a class="headerlink" href="#concurrency" title="Permalink to this headline">¶</a></h2>
 <p>Ok, now it&#8217;s getting interesting. Since we can access the service remotely, what
 happens if multiple clients create proxies to it at the same time? What if they
 want to modify the server index at the same time?</p>
-<p>The <cite>SessionServer</cite> object is thread-safe, so that when each client spawns a request
+<p>Answer: the <cite>SessionServer</cite> object is thread-safe, so that when each client spawns a request
 thread via Pyro, they don&#8217;t step on each others toes.</p>
 <p>This means that:</p>
 <ol class="arabic simple">
 <li>There can be multiple simultaneous <cite>service.find_similar</cite> queries (or, in
-general, simultaneus calls that are &#8220;read-only&#8221;).</li>
+general, multiple simultaneus calls that are &#8220;read-only&#8221;).</li>
 <li>When two clients issue modification calls (<cite>index</cite>/<cite>train</cite>/<cite>delete</cite>/<cite>drop_index</cite>/...)
-at the same time, an internal lock serializes them.</li>
+at the same time, an internal lock serializes them &#8211; the later call has to wait.</li>
 <li>While one client is modifying the index, all other clients&#8217; queries still see
 the original index. Only once the modifications are committed do they become
 &#8220;visible&#8221;.</li>
@@ -379,10 +380,10 @@ the original index. Only once the modifications are committed do they become
 <p>The service uses transactions internally. This means that each modification is
 done over a clone of the service. If the modification session fails for whatever
 reason (exception in code; power failure that turns off the server; client unhappy
-with how the session went) it can be rolled back. It also means other clients can
+with how the session went), it can be rolled back. It also means other clients can
 continue querying the original index during index updates.</p>
-<p>The mechanism is hidden from users by default through auto-committing (it was happenning
-in the examples above too), but auto-committing can be turned off:</p>
+<p>The mechanism is hidden from users by default through auto-committing (it was already happenning
+in the examples above too, transparently), but auto-committing can be turned off explicitly:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">service</span><span class="o">.</span><span class="n">set_autosession</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">service</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
 <span class="go">RuntimeError: must open a session before modifying SessionServer</span>
@@ -407,7 +408,8 @@ cannot be two open sessions at the same time.</p>
 </div>
 <div class="section" id="other-stuff">
 <h2>Other stuff<a class="headerlink" href="#other-stuff" title="Permalink to this headline">¶</a></h2>
-<p>TODO Custom document parsing. Different models. Optimizing index.</p>
+<p>TODO Custom document parsing (in lieu of <cite>utils.simple_preprocess</cite>). Different models (not just <cite>lsi</cite>). Optimizing the index with <cite>service.optimize()</cite>.
+TODO add some hard numbers; example tutorial for some bigger collection, e.g. arxiv.org or wikipedia.</p>
 </div>
 </div>
 
@@ -438,7 +440,7 @@ cannot be two open sessions at the same time.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 09, 2011.
+      Last updated on Oct 05, 2011.
     </div>
   </body>
 </html>

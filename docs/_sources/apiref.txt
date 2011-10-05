@@ -29,4 +29,5 @@ Modules:
     models/lda_dispatcher
     models/lda_worker
     similarities/docsim
+    similarities/simserver
 

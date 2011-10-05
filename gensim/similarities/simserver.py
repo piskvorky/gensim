@@ -360,7 +360,8 @@ class SimModel(gensim.utils.SaveLoad):
 class SimServer(object):
     """
     Top-level functionality for similarity services. A similarity server takes
-    care of
+    care of::
+
     1. creating semantic models
     2. indexing documents using these models
     3. finding the most similar documents in an index.
@@ -375,7 +376,7 @@ class SimServer(object):
         All data will be stored under directory `basename`. If there is a server
         there already, it will be loaded (resumed).
 
-        The server object is stateless -- its state is defined entirely by its location.
+        The server object is stateless in RAM -- its state is defined entirely by its location.
         There is therefore no need to store the server object.
         """
         if not os.path.isdir(basename):
@@ -649,7 +650,7 @@ class SimServer(object):
 
 class SessionServer(gensim.utils.SaveLoad):
     """
-    Similarity server that implements sessions = transactions.
+    Similarity server on top of :class:`SimServer` that implements sessions = transactions.
 
     A transaction is a set of server modifications (index/delete/train calls) that
     may be either commited or rolled back entirely.

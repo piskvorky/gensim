@@ -4,7 +4,7 @@ Document Similarity Server
 =============================
 
 
-The 0.7.x series of `gensim` was about improving performance and consolidating API.
+The 0.7.x series of `gensim <http://radimrehurek.com/gensim/>`_ was about improving performance and consolidating API.
 0.8.x will be about new features --- 0.8.1, first of the series, is a **document similarity service**.
 
 What is a document similarity service?
@@ -23,8 +23,10 @@ Conceptually, a service that lets you :
 >>> server.train(training_corpus, method='lsi') # create a semantic model
 >>> server.index(some_documents) # convert plain text to semantic representation and index it
 >>> server.find_similar(query) # convert query to semantic representation and compare against index
->>> server.index(more_documents) # incremental indexing works
+>>> ...
+>>> server.index(more_documents) # add to index: incremental indexing works
 >>> server.find_similar(query)
+>>> ...
 >>> server.delete(ids_to_delete) # incremental deleting also works
 >>> server.find_similar(query)
 >>> ...
@@ -33,7 +35,7 @@ Conceptually, a service that lets you :
     "Semantic" here refers to semantics of the crude, statistical type --
     `Latent Semantic Analysis <http://en.wikipedia.org/wiki/Latent_semantic_analysis>`_,
     `Latent Dirichlet Allocation <http://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_ etc.
-    Nothing to do with the semantic web, manual resource tagging or detailed linguistic analysis.
+    Nothing to do with the semantic web, manual resource tagging or detailed linguistic inference.
 
 
 What is it good for?
@@ -46,10 +48,10 @@ How is it unique?
 -----------------
 
 1. **Memory independent**. Gensim has unique algorithms for statistical analysis that allow
-   you to create semantic models of arbitrarily large corpora (larger than RAM) very quickly
+   you to create semantic models of arbitrarily large training corpora (larger than RAM) very quickly
    and in constant RAM.
-2. **Memory independent**. Indexing shards are stored as files to disk/mmapped back as needed,
-   so you can index very large corpora. Constant RAM independent of the number of indexed documents.
+2. **Memory independent (again)**. Indexing shards are stored as files to disk/mmapped back as needed,
+   so you can index very large corpora. So again, constant RAM, this time independent of the number of indexed documents.
 3. **Efficient**. Gensim makes heavy use of Python's NumPy and SciPy libraries to make indexing and
    querying efficient.
 4. **Robust**. Modifications of the index are transactional, so you can commit/rollback an
@@ -57,14 +59,12 @@ How is it unique?
    for querying (using its state from when the session started). Power failures leave
    service in a consistent state (implicit rollback).
 5. **Pure Python**. Well, technically, NumPy and SciPy are mostly wrapped C and Fortran, but
-   gensim itself is pure Python. No compiling, installing or root priviledges needed.
+   `gensim <http://radimrehurek.com/gensim/>`_ itself is pure Python. No compiling, installing or root priviledges needed.
 6. **Concurrency support**. The underlying service object is thread-safe and can
    therefore be used as a daemon server: clients connect to it via RPC and issue train/index/query requests remotely.
 7. **Cross-network, cross-platform and cross-language**. While the Python server runs
    over TCP using `Pyro <http://irmen.home.xs4all.nl/pyro/>`_,
    clients in Java/.NET are trivial thanks to `Pyrolite <http://irmen.home.xs4all.nl/pyrolite/>`_.
-
-TODO add some hard numbers (for wikipedia?)
 
 The rest of this document serves as a tutorial explaining the features in more detail.
 
@@ -94,20 +94,21 @@ What is a document?
 
 In case of text documents, the service expects::
 
->>> document = {'id': 'some_unique_string', 'text': 'Content of the document...', 'other_fields_ok_but_ignored': None}
+>>> document = {'id': 'some_unique_string', 
+>>>             'tokens': ['content', 'of', 'the', 'document', '...'], 
+>>>             'other_fields_are_allowed_but_ignored': None}
 
-This format was chosen because it coincides with plain JSON, and is therefore very
-easy to serialize and send over the wire, in almost any language.
-
-FIXME unicode
+This format was chosen because it coincides with plain JSON and is therefore easy to serialize and send over the wire, in almost any language.
+All strings involved must be utf8-encoded.
 
 
 What is a corpus?
 -----------------
 
 A sequence of documents. Anything that supports the `for document in corpus: ...`
-iterator protocol. Generators are ok. Plain lists are ok (but consume more memory).
+iterator protocol. Generators are ok. Plain lists are also ok (but consume more memory).
 
+>>> from gensim import utils
 >>> texts = ["Human machine interface for lab abc computer applications",
 >>>          "A survey of user opinion of computer system response time",
 >>>          "The EPS user interface management system",
@@ -117,30 +118,30 @@ iterator protocol. Generators are ok. Plain lists are ok (but consume more memor
 >>>          "The intersection graph of paths in trees",
 >>>          "Graph minors IV Widths of trees and well quasi ordering",
 >>>          "Graph minors A survey"]
->>> corpus = [{'id': 'doc_%i' % num, 'text': text} for num, text in enumerate(texts)]
+>>> corpus = [{'id': 'doc_%i' % num, 'tokens': utils.simple_preprocess(text)} 
+>>>           for num, text in enumerate(texts)]
 
 Since corpora are allowed to be arbitrarily large, it is
 recommended client splits them into smaller chunks before uploading them to the server:
 
->>> from gensim import utils
 >>> utils.upload_chunked(server, corpus, chunksize=1000) # send 1k docs at a time
 
 Wait, upload what, where?
 -------------------------
 
-If you use the service object in
-your code directly---no remote access---that's also fine. Remote access is an
+If you use the similarity service object (instance of :class:`gensim.similarities.simserver.SessionServer`) in
+your code directly---no remote access---that's perfectly fine. Using the service remotely, from a different process/machine, is an
 option, not a necessity.
 
-Document similarity can also act as a long-running service, a daemon process. In that
+Document similarity can also act as a long-running service, a daemon process on a separate machine. In that
 case, I'll call the service object a *server*.
 
-So let's start with a local object. Open your `favourite shell <http://ipython.org/>`_ and::
+But let's start with a local object. Open your `favourite shell <http://ipython.org/>`_ and::
 
 >>> from gensim import utils, similarities
 >>> service = similarities.SessionServer('/tmp/my_server/') # or wherever
 
-That initialized a new service, located in `/tmp/my_server` (you need write access right in that directory).
+That initialized a new service, located in `/tmp/my_server` (you need write access rights to that directory).
 
 .. note::
    The service is fully defined by the content of its location ("`/tmp/my_server/`")
@@ -165,10 +166,9 @@ between plain text and semantics first::
 >>> service.train(corpus, method='lsi')
 
 That was easy. The `method='lsi'` parameter meant that we trained a model for
-`Latent Semantic Indexing <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_,
-using default preprocessing (lowercase+alphabetic tokenizer)
+`Latent Semantic Indexing <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
 and default dimensionality (400) over a `tf-idf <http://en.wikipedia.org/wiki/Tf–idf>`_
-representation of our little `corpus`. More on that later.
+representation of our little `corpus`, all automatically. More on that later.
 
 Note that for the semantic model to make sense, it should be trained
 on a corpus that is:
@@ -177,14 +177,14 @@ on a corpus that is:
   of recipes in French when all indexed documents will be about programming in English
   will not help.
 * Reasonably large (at least thousands of documents), so that the statistical analysis has
-  a chance to kick in. Don't use this example corpus of 9 documents in production O_o
+  a chance to kick in. Don't use my example corpus here of 9 documents in production O_o
 
 Indexing documents
 ------------------
 
 >>> service.index(corpus) # index the same documents that we trained on...
 
-Indexing can happen over any documents, but I'm too lazy to create another example corpus.
+Indexing can happen over any documents, but I'm too lazy to create another example corpus, so we index the same 9 docs used for training.
 
 Delete documents with::
 
@@ -197,7 +197,7 @@ document ids are always unique per service)::
   >>> service.index(corpus[:3]) # overall index size unchanged (just 3 docs overwritten)
 
 The index/delete/overwrite calls can be arbitrarily interspersed with queries.
-You don't have to index **all** documents first to start querying.
+You don't have to index **all** documents first to start querying, indexing can be incremental.
 
 Querying
 ---------
@@ -214,11 +214,11 @@ There are two types of queries:
    >>> print service.find_similar('doc_5') # we deleted doc_5 and doc_8, remember?
    ValueError: document 'doc_5' not in index
 
-2. or by document (using `document['text']`; id is ignored):
+2. or by document (using `document['tokens']`; id is ignored in this case):
 
    .. code-block:: python
 
-     >>> doc = {'text': 'Graph and minors and humans and trees.'}
+     >>> doc = {'tokens': utils.simple_preprocess('Graph and minors and humans and trees.')}
      >>> print service.find_similar(doc)
      [('doc_7', 0.93350589), ('doc_3', 0.42718196), ('doc_6', 0.27212361)]
 
@@ -227,26 +227,25 @@ Remote access
 
 So far, we did everything in our Python shell, locally. I very much like `Pyro <http://irmen.home.xs4all.nl/pyro/>`_,
 a pure Python package for Remote Procedure Calls (RPC), so I'll illustrate remote
-service access via Pyro.  Pyro takes care of all the socket listening/request routing/data marshalling/thread
+service access via Pyro. Pyro takes care of all the socket listening/request routing/data marshalling/thread
 spawning, so it saves us a lot of trouble.
 
-To create a similarity server, we just create a  :class:`similarities.SessionServer` object and register it
-with a Pyro daemon for remote access. There is an small `example script <https://github.com/piskvorky/gensim/blob/simserver/gensim/test/run_simserver.py>`_
+To create a similarity server, we just create a :class:`gensim.similarities.SessionServer` object and register it
+with a Pyro daemon for remote access. There is a small `example script <https://github.com/piskvorky/gensim/blob/simserver/gensim/test/run_simserver.py>`_
 included with gensim, run it with::
 
   $ python -m gensim.test.run_simserver /tmp/testserver
 
 You can just `ctrl+c` to terminate the server, but leave it running for now.
 
-Now open your Python shell again and::
+Now open your Python shell again, possibly on another machine, and::
 
 >>> import Pyro4
->>> name_server = Pyro4.locateNS() # "Pyro4.naming" must be running
->>> service = Pyro4.Proxy(name_server.lookup('gensim.testserver'))
+>>> service = Pyro4.Proxy(Pyro4.locateNS().lookup('gensim.testserver'))
 
-Now service is only a proxy object: every call is physically executed wherever
+Now `service` is only a proxy object: every call is physically executed wherever
 you ran the `run_server.py` script, which can be a totally different computer
-within a network broadcast domain, but you don't even know::
+(within a network broadcast domain), but you don't even know::
 
 >>> print service.status()
 >>> service.train(corpus)
@@ -255,8 +254,8 @@ within a network broadcast domain, but you don't even know::
 
 It is worth mentioning that Irmen, the author of Pyro, also released
 `Pyrolite <http://irmen.home.xs4all.nl/pyrolite/>`_ recently. That is a package
-which allows you to create Pyro proxies from Java and .NET. That way you can call
-methods on the remote server from there too---the client doesn't have to be in Python.
+which allows you to create Pyro proxies from Java and .NET, as well as from Python. 
+That way you can utilize the remote server from there too---the client doesn't have to be in Python.
 
 Concurrency
 -----------
@@ -265,15 +264,15 @@ Ok, now it's getting interesting. Since we can access the service remotely, what
 happens if multiple clients create proxies to it at the same time? What if they
 want to modify the server index at the same time?
 
-The `SessionServer` object is thread-safe, so that when each client spawns a request
+Answer: the `SessionServer` object is thread-safe, so that when each client spawns a request
 thread via Pyro, they don't step on each others toes.
 
 This means that:
 
 1. There can be multiple simultaneous `service.find_similar` queries (or, in
-   general, simultaneus calls that are "read-only").
+   general, multiple simultaneus calls that are "read-only").
 2. When two clients issue modification calls (`index`/`train`/`delete`/`drop_index`/...)
-   at the same time, an internal lock serializes them.
+   at the same time, an internal lock serializes them -- the later call has to wait.
 3. While one client is modifying the index, all other clients' queries still see
    the original index. Only once the modifications are committed do they become
    "visible".
@@ -284,11 +283,11 @@ What do you mean, visible?
 The service uses transactions internally. This means that each modification is
 done over a clone of the service. If the modification session fails for whatever
 reason (exception in code; power failure that turns off the server; client unhappy
-with how the session went) it can be rolled back. It also means other clients can
+with how the session went), it can be rolled back. It also means other clients can
 continue querying the original index during index updates.
 
-The mechanism is hidden from users by default through auto-committing (it was happenning
-in the examples above too), but auto-committing can be turned off::
+The mechanism is hidden from users by default through auto-committing (it was already happenning
+in the examples above too, transparently), but auto-committing can be turned off explicitly::
 
   >>> service.set_autosession(False)
   >>> service.train(corpus)
@@ -315,5 +314,6 @@ or::
 Other stuff
 ------------
 
-TODO Custom document parsing. Different models. Optimizing index.
+TODO Custom document parsing (in lieu of `utils.simple_preprocess`). Different models (not just `lsi`). Optimizing the index with `service.optimize()`.
+TODO add some hard numbers; example tutorial for some bigger collection, e.g. arxiv.org or wikipedia.
 
