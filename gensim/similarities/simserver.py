@@ -479,7 +479,7 @@ class SimServer(object):
         self.fresh_index.index_documents(self.fresh_docs, self.model)
         if self.opt_index is not None:
             self.opt_index.delete(self.fresh_docs.keys())
-        logging.info("storing document payloads")
+        logger.info("storing document payloads")
         for docid in self.fresh_docs:
             payload = self.fresh_docs[docid].get('payload', None)
             if payload is None:
