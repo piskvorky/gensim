@@ -383,12 +383,12 @@ class MmWriter(object):
         """
         assert self.headers_written, "must write Matrix Market file headers before writing data!"
         assert self.last_docno < docno, "documents %i and %i not in sequential order!" % (self.last_docno, docno)
-        for termid, weight in sorted(vector): # write term ids in sorted order
-            if weight == 0:
-                # to ensure len(doc) does what is expected, there must not be any zero elements in the sparse document
-                raise ValueError("zero weights not allowed in sparse documents; check your document generator")
+        vector = [(i, w) for i, w in vector if abs(w) > 1e-12] # ignore near-zero entries
+        vector.sort()
+        for termid, weight in vector: # write term ids in sorted order
             self.fout.write("%i %i %s\n" % (docno + 1, termid + 1, weight)) # +1 because MM format starts counting from 1
         self.last_docno = docno
+        return (vector[-1][0], len(vector)) if vector else (-1, 0)
 
 
     @staticmethod
@@ -411,16 +411,15 @@ class MmWriter(object):
         for docno, bow in enumerate(corpus):
             if docno % progress_cnt == 0:
                 logger.info("PROGRESS: saving document #%i" % docno)
-            if len(bow) > 0:
-                num_terms = max(num_terms, 1 + max(wordid for wordid, val in bow))
-                num_nnz += len(bow)
             if index:
                 posnow = mw.fout.tell()
                 if posnow == poslast:
                     offsets[-1] = -1
                 offsets.append(posnow)
                 poslast = posnow
-            mw.write_vector(docno, bow)
+            max_id, veclen = mw.write_vector(docno, bow)
+            num_terms = max(num_terms, 1 + max_id)
+            num_nnz += veclen
         num_docs = docno + 1
 
         if num_docs * num_terms != 0:
