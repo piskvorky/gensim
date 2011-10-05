@@ -109,9 +109,7 @@ class TransformedCorpus(CorpusABC):
 
     def __iter__(self):
         if self.chunksize:
-            chunker = itertools.groupby(enumerate(self.corpus), key=lambda (docno, doc): docno / self.chunksize)
-            for chunk_no, (key, group) in enumerate(chunker):
-                chunk = list(doc for _, doc in group)
+            for chunk in utils.grouper(self.corpus, self.chunksize):
                 for transformed in self.obj.__getitem__(chunk, chunksize=None):
                     yield transformed
         else:

@@ -25,6 +25,8 @@ from gensim import corpora, models, similarities
 module_path = os.path.dirname(__file__)
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
+logger = logging.getLogger('test_miislita')
+
 
 def get_tmpfile(suffix):
     return os.path.join(tempfile.gettempdir(), suffix)
@@ -47,7 +49,7 @@ class CorpusMiislita(corpora.TextCorpus):
     def __len__(self):
         """Define this so we can use `len(corpus)`"""
         if 'length' not in self.__dict__:
-            logging.info("caching corpus size (calculating number of documents)")
+            logger.info("caching corpus size (calculating number of documents)")
             self.length = sum(1 for doc in self.get_texts())
         return self.length
 

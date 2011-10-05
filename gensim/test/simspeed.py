@@ -130,8 +130,8 @@ if __name__ == '__main__':
         start = time()
         if chunksize > 1:
             sims = []
-            for chunksize in gensim.utils.chunksizeize_serial(query, chunksize):
-                sim = index_dense[chunksize]
+            for chunk in gensim.utils.chunkize_serial(query, chunksize):
+                sim = index_dense[chunk]
                 sims.extend(sim)
         else:
             sims = [index_dense[vec] for vec in query]
@@ -149,8 +149,8 @@ if __name__ == '__main__':
         start = time()
         if chunksize > 1:
             sims = []
-            for chunksize in gensim.utils.chunksizeize_serial(query, chunksize):
-                sim = index_sparse[chunksize]
+            for chunk in gensim.utils.chunkize_serial(query, chunksize):
+                sim = index_sparse[chunk]
                 sims.extend(sim)
         else:
             sims = [index_sparse[vec] for vec in query]

@@ -20,9 +20,6 @@ from gensim.corpora import Dictionary
 # sample data files are located in the same folder
 module_path = os.path.dirname(__file__)
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s',
-                    level=logging.WARNING)
-
 
 def get_tmpfile(suffix):
     return os.path.join(tempfile.gettempdir(), suffix)

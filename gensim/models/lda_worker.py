@@ -21,9 +21,6 @@ import os, sys, logging
 import threading
 import tempfile
 
-import Pyro
-import Pyro.config
-
 from gensim.models import ldamodel
 from gensim import utils
 
@@ -107,17 +104,7 @@ def main():
         print globals()["__doc__"] % locals()
         sys.exit(1)
 
-    Pyro.config.HOST = utils.get_my_ip()
-
-    with Pyro.naming.locateNS() as ns:
-        with Pyro.core.Daemon() as daemon:
-            worker = Worker()
-            uri = daemon.register(worker)
-            name = 'gensim.lda_worker.' + str(uri)
-            ns.remove(name)
-            ns.register(name, uri)
-            logger.info("worker is ready at URI %s" % uri)
-            daemon.requestLoop()
+    utils.pyro_daemon('gensim.lda_worker', Worker(), random_suffix=True)
 
     logger.info("finished running %s" % program)
 

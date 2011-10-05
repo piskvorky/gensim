@@ -13,8 +13,11 @@ from __future__ import with_statement
 import logging
 import re
 import unicodedata
+import os
+import random
 import cPickle
 import itertools
+import tempfile
 from functools import wraps # for `synchronous` function lock
 from htmlentitydefs import name2codepoint as n2cp # for `decode_htmlentities`
 import threading, time
@@ -39,9 +42,13 @@ def synchronous(tlockname):
     def _synched(func):
         @wraps(func)
         def _synchronizer(self, *args, **kwargs):
-            tlock = self.__getattribute__(tlockname)
+            tlock = getattr(self, tlockname)
+            logger.debug("acquiring lock %r for %s" % (tlockname, func.func_name))
             with tlock: # use lock as a context manager to perform safe acquire/release pairs
-                return func(self, *args, **kwargs)
+                logger.debug("acquired lock %r for %s" % (tlockname, func.func_name))
+                result = func(self, *args, **kwargs)
+                logger.debug("releasing lock %r for %s" % (tlockname, func.func_name))
+                return result
         return _synchronizer
     return _synched
 
@@ -85,6 +92,18 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
         text = deaccent(text)
     for match in PAT_ALPHABETIC.finditer(text):
         yield match.group()
+
+
+def simple_preprocess(doc):
+    """
+    Convert a document into a list of tokens.
+
+    This lowercases, tokenizes, stems, normalizes etc. -- the output are final,
+    utf8 encoded strings that won't be processed any further.
+    """
+    tokens = [token.encode('utf8') for token in tokenize(doc, lower=True, errors='ignore')
+            if 2 <= len(token) <= 15 and not token.startswith('_')]
+    return tokens
 
 
 def any2utf8(text, errors='strict', encoding='utf8'):
@@ -352,10 +371,10 @@ def chunkize_serial(corpus, chunksize):
         raise ValueError("chunk size must be greater than zero")
     i = (val for val in corpus) # create generator
     while True:
-        chunk = list(itertools.islice(i, int(chunksize))) # consume `chunksize` items from the generator
-        if not chunk: # generator empty?
+        chunk = [list(itertools.islice(i, int(chunksize)))] # consume `chunksize` items from the generator
+        if not chunk[0]: # generator empty?
             break
-        yield chunk
+        yield chunk.pop()
 
 
 def chunkize(corpus, chunksize, maxsize=0):
@@ -460,3 +479,84 @@ def toptexts(query, texts, index, n=10):
         result.append((topid, topcosine, texts[topid]))
     return result
 
+
+def randfname(prefix='gensim'):
+    randpart = hex(random.randint(0, 0xffffff))[2:]
+    return os.path.join(tempfile.gettempdir(), prefix + randpart)
+
+
+def grouper(iterable, chunksize):
+    """
+    Return elements from the iterable in `chunksize`-ed lists. The last returned
+    element may be smaller (if length of collection is not divisible by `chunksize`).
+
+    >>> print list(grouper(xrange(10), 3))
+    [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
+    """
+    it = iter(iterable)
+    while True:
+        wrapped_chunk = [list(itertools.islice(it, int(chunksize)))]
+        if not wrapped_chunk[0]:
+            break
+        yield wrapped_chunk.pop()
+
+
+def upload_chunked(server, docs, chunksize=1000, preprocess=None):
+    """
+    Memory-friendly upload of documents to a SimServer (or Pyro SimServer proxy).
+
+    Use this function to train or index large collections -- avoid sending the
+    entire corpus over the wire as a single Pyro in-memory object. The documents
+    will be sent in smaller chunks, of `chunksize` documents each.
+    """
+    start = 0
+    for chunk in grouper(docs, chunksize):
+        end = start + len(chunk)
+        logger.info("uploading documents %i-%i" % (start, end - 1))
+        if preprocess is not None:
+            pchunk = []
+            for doc in chunk:
+                doc['tokens'] = preprocess(doc['text'])
+                del doc['text']
+                pchunk.append(doc)
+            chunk = pchunk
+        server.buffer(chunk)
+        start = end
+
+
+def getNS():
+    """
+    Return a Pyro name server proxy. If there is no name server running,
+    start one on 0.0.0.0 (all interfaces), as a background process.
+    """
+    import Pyro4
+    try:
+        return Pyro4.locateNS()
+    except Pyro4.errors.NamingError:
+        logger.info("Pyro name server not found; starting a new one")
+    os.system("python -m Pyro4.naming -n 0.0.0.0 &")
+    # TODO: spawn a proper daemon ala http://code.activestate.com/recipes/278731/ ?
+    # like this, if there's an error somewhere, we'll never know... (and the loop
+    # below will block). And it probably doesn't work on windows, either.
+    while True:
+        try:
+            return Pyro4.locateNS()
+        except:
+            pass
+
+
+def pyro_daemon(name, object, random_suffix=False):
+    """Register object with name server (starting the name server if not running
+    yet) and block until the daemon is terminated. The object is registered under
+    `name`, or `name`+ some random suffix if `random_suffix` is set."""
+    if random_suffix:
+        name += '.' + hex(random.randint(0, 0xffffff))[2:]
+    import Pyro4
+    with getNS() as ns:
+        with Pyro4.Daemon(get_my_ip()) as daemon:
+            # register server for remote access
+            uri = daemon.register(object)
+            ns.remove(name)
+            ns.register(name, uri)
+            logger.info("%s registered with nameserver (URI '%s')" % (name, uri))
+            daemon.requestLoop()

@@ -28,7 +28,7 @@ def read(fname):
 
 setup(
     name = 'gensim',
-    version = '0.8.0',
+    version = '0.8.1',
     description = 'Python framework for fast Vector Space Modelling',
     long_description = read('README.txt'),
 
@@ -67,9 +67,8 @@ setup(
         'scipy >= 0.7.0',
     ],
 
-    dependency_links = ['http://nlp.fi.muni.cz/projekty/gensim/Pyro-4.1.tar.gz'],
     extras_require = {
-        'distributed': ['Pyro == 4.1'],
+        'distributed': ['Pyro4 >= 4.8', 'sqlitedict >= 1.0.6'],
     },
 
     include_package_data = True,

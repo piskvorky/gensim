@@ -12,14 +12,14 @@ Setting up the cluster
 _______________________
 
 We will show how to run distributed Latent Semantic Analysis by means of an example.
-Let's say we have 5 computers at our disposal, all in the same broadcast domain.
-To start with, install `gensim` and `Pyro` on each one of them with::
+Let's say we have 5 computers at our disposal, all on the same network segment (=reachable
+by network broadcast). To start with, install `gensim` and `Pyro` on each computer with::
 
   $ sudo easy_install gensim[distributed]
 
-and run Pyro's name server on exactly *one* of the machines (doesn't matter which one)::
+and run Pyro’s name server on exactly one of the machines (doesn’t matter which one):
 
-  $ python -m Pyro.naming &
+  $ python -m Pyro4.naming -n 0.0.0.0 &
 
 Let's say our example cluster consists of dual-core computers with loads of
 memory. We will therefore run **two** worker scripts on four of the physical machines,
@@ -40,8 +40,8 @@ fifth computer to act as the dispatcher and from there run::
   $ python -m gensim.models.lsi_dispatcher &
 
 In general, the dispatcher can be run on the same machine as one of the worker nodes, or it
-can be another, distinct computer within the same broadcast domain. The dispatcher
-won't be  doing much with CPU most of the time, but pick a computer with ample memory.
+can be another, distinct computer (within the same broadcast domain). The dispatcher
+won't be doing much with CPU most of the time, but pick a computer with ample memory.
 
 And that's it! The cluster is set up and running, ready to accept jobs. To remove
 a worker later on, simply terminate its `lsi_worker` process. To add another worker, run another
@@ -77,8 +77,8 @@ processes --- this is especially helpful in case of problems.
 To check the LSA results, let's print the first two latent topics::
 
     >>> lsi.print_topics(num_topics=2, num_words=5)
-    topic #0(3.341): -0.644*"system" + -0.404*"user" + -0.301*"eps" + -0.265*"time" + -0.265*"response"
-    topic #1(2.542): -0.623*"graph" + -0.490*"trees" + -0.451*"minors" + -0.274*"survey" + 0.167*"system"
+    topic #0(3.341): 0.644*"system" + 0.404*"user" + 0.301*"eps" + 0.265*"time" + 0.265*"response"
+    topic #1(2.542): 0.623*"graph" + 0.490*"trees" + 0.451*"minors" + 0.274*"survey" + -0.167*"system"
 
 Success! But a corpus of nine documents is no challenge for our powerful cluster...
 In fact, we had to lower the job size (`chunksize` parameter above) to a single document
@@ -91,7 +91,7 @@ So let's run LSA on **one million documents** instead::
     >>> # run distributed LSA on 1 million documents
     >>> lsi1m = models.LsiModel(corpus1m, id2word=id2word, num_topics=200, chunksize=10000, distributed=True)
 
-    >>> lsi1m.printTopics(num_topics=2, num_words=5)
+    >>> lsi1m.print_topics(num_topics=2, num_words=5)
     topic #0(1113.628): 0.644*"system" + 0.404*"user" + 0.301*"eps" + 0.265*"time" + 0.265*"response"
     topic #1(847.233): 0.623*"graph" + 0.490*"trees" + 0.451*"minors" + 0.274*"survey" + -0.167*"system"
 
@@ -119,7 +119,7 @@ First, download and prepare the Wikipedia corpus as per :doc:`wiki`, then load
 the corpus iterator with::
 
     >>> import logging, gensim, bz2
-    >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level logging.INFO)
+    >>> logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
     >>> # load id->word mapping (the dictionary)
     >>> id2word = gensim.corpora.Dictionary.load_from_text('wiki_en_wordids.txt')

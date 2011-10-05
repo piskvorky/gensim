@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.0',
+        VERSION:     '0.8.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -114,11 +114,11 @@
 <span id="models-lsi-dispatcher-dispatcher-for-distributed-lsi"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">models.lsi_dispatcher</span></tt> &#8211; Dispatcher for distributed LSI<a class="headerlink" href="#module-gensim.models.lsi_dispatcher" title="Permalink to this headline">¶</a></h1>
 <p>USAGE: %(program)s SIZE_OF_JOBS_QUEUE</p>
 <blockquote>
-Dispatcher process which orchestrates distributed LSI computations. Run this script only once, on any node in your cluster.</blockquote>
+<div>Dispatcher process which orchestrates distributed LSI computations. Run this script only once, on any node in your cluster.</div></blockquote>
 <p>Example: python -m gensim.models.lsi_dispatcher</p>
 <dl class="class">
 <dt id="gensim.models.lsi_dispatcher.Dispatcher">
-<em class="property">class </em><tt class="descclassname">gensim.models.lsi_dispatcher.</tt><tt class="descname">Dispatcher</tt><big>(</big><em>maxsize=100</em><big>)</big><a class="headerlink" href="#gensim.models.lsi_dispatcher.Dispatcher" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.models.lsi_dispatcher.</tt><tt class="descname">Dispatcher</tt><big>(</big><em>maxsize=0</em><big>)</big><a class="headerlink" href="#gensim.models.lsi_dispatcher.Dispatcher" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dispatcher object that communicates and coordinates individual workers.</p>
 <p>There should never be more than one dispatcher running at any one time.</p>
 <p>Note that the constructor does not fully initialize the dispatcher;
@@ -201,7 +201,7 @@ worker.requestjob().</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jun 28, 2011.
+      Last updated on Oct 05, 2011.
     </div>
   </body>
 </html>

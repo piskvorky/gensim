@@ -60,4 +60,4 @@ It is also included in the source distribution package.
 
 Gensim is open source software, and has been released under the
 `GNU LPGL license <http://www.gnu.org/licenses/lgpl.html>`_.
-Copyright (c) 2010 Radim Rehurek
+Copyright (c) 2011 Radim Rehurek

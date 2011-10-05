@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.0',
+        VERSION:     '0.8.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -265,6 +265,13 @@ only covers words actually used in the corpus, up to the highest wordId found.</
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.utils.getNS">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">getNS</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.utils.getNS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a Pyro name server proxy. If there is no name server running,
+start one on 0.0.0.0 (all interfaces), as a background process.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.utils.get_max_id">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">get_max_id</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.utils.get_max_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return highest feature id that appears in the corpus.</p>
@@ -278,6 +285,17 @@ only covers words actually used in the corpus, up to the highest wordId found.</
 <p>This tries to sidestep the issue of bogus <cite>/etc/hosts</cite> entries and other
 local misconfigurations, which often mess up hostname resolution.</p>
 <p>If all else fails, fall back to simple <cite>socket.gethostbyname()</cite> lookup.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.utils.grouper">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">grouper</tt><big>(</big><em>iterable</em>, <em>chunksize</em><big>)</big><a class="headerlink" href="#gensim.utils.grouper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return elements from the iterable in <cite>chunksize</cite>-ed lists. The last returned
+element may be smaller (if length of collection is not divisible by <cite>chunksize</cite>).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="n">grouper</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -299,11 +317,27 @@ result is forcefully defined as <cite>is_corpus=False</cite>.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.utils.pyro_daemon">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">pyro_daemon</tt><big>(</big><em>name</em>, <em>object</em>, <em>random_suffix=False</em><big>)</big><a class="headerlink" href="#gensim.utils.pyro_daemon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register object with name server (starting the name server if not running
+yet) and block until the daemon is terminated. The object is registered under
+<cite>name</cite>, or <cite>name`+ some random suffix if `random_suffix</cite> is set.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.utils.revdict">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">revdict</tt><big>(</big><em>d</em><big>)</big><a class="headerlink" href="#gensim.utils.revdict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reverse a dictionary mapping.</p>
 <p>When two keys map to the same value, only one of them will be kept in the
 result (which one is kept is arbitrary).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.utils.simple_preprocess">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">simple_preprocess</tt><big>(</big><em>doc</em><big>)</big><a class="headerlink" href="#gensim.utils.simple_preprocess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a document into a list of tokens.</p>
+<p>This lowercases, tokenizes, stems, normalizes etc. &#8211; the output are final,
+utf8 encoded strings that won&#8217;t be processed any further.</p>
 </dd></dl>
 
 <dl class="function">
@@ -355,6 +389,15 @@ via <cite>texts[docid]</cite>, such as its fulltext or snippet.</p>
 <dd><p>Load pickled object from <cite>fname</cite></p>
 </dd></dl>
 
+<dl class="function">
+<dt id="gensim.utils.upload_chunked">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">upload_chunked</tt><big>(</big><em>server</em>, <em>docs</em>, <em>chunksize=1000</em>, <em>preprocess=None</em><big>)</big><a class="headerlink" href="#gensim.utils.upload_chunked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Memory-friendly upload of documents to a SimServer (or Pyro SimServer proxy).</p>
+<p>Use this function to train or index large collections &#8211; avoid sending the
+entire corpus over the wire as a single Pyro in-memory object. The documents
+will be sent in smaller chunks, of <cite>chunksize</cite> documents each.</p>
+</dd></dl>
+
 </div>
 
 
@@ -391,7 +434,7 @@ via <cite>texts[docid]</cite>, such as its fulltext or snippet.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jun 28, 2011.
+      Last updated on Oct 05, 2011.
     </div>
   </body>
 </html>

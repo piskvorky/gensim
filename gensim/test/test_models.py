@@ -25,8 +25,6 @@ from gensim import matutils
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.WARNING)
-
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [['human', 'interface', 'computer'],
@@ -274,5 +272,5 @@ class TestLogEntropyModel(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.root.setLevel(logging.WARNING)
+    logging.root.setLevel(logging.DEBUG)
     unittest.main()

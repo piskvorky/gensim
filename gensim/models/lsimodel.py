@@ -201,6 +201,12 @@ class Projection(utils.SaveLoad):
         q = ascarray(q, 'q')
         q = numpy.dot(q, u2_k)
         self.u += q
+
+        # make each column of U start with a non-negative number (to force canonical decomposition)
+        if self.u.shape[0] > 0:
+            for i in xrange(self.u.shape[1]):
+                if self.u[0, i] < 0.0:
+                    self.u[:, i] *= -1.0
 #        diff = numpy.dot(self.u.T, self.u) - numpy.eye(self.u.shape[1])
 #        logger.info('orth error after=%f' % numpy.sum(diff * diff))
 #endclass Projection
@@ -290,12 +296,11 @@ class LsiModel(interfaces.TransformationABC):
                 raise NotImplementedError("distributed stochastic LSA not implemented yet; "
                                           "run either distributed one-pass, or serial randomized.")
             try:
-                import Pyro
-                ns = Pyro.naming.locateNS()
-                dispatcher = Pyro.core.Proxy('PYRONAME:gensim.lsi_dispatcher@%s' % ns._pyroUri.location)
+                import Pyro4
+                dispatcher = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher')
                 dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
-                dispatcher.initialize(id2word=self.id2word, num_topics = num_topics,
+                dispatcher.initialize(id2word=self.id2word, num_topics=num_topics,
                                       chunksize=chunksize, decay=decay,
                                       distributed=False, onepass=onepass)
                 self.dispatcher = dispatcher
@@ -344,16 +349,14 @@ class LsiModel(interfaces.TransformationABC):
             else:
                 # the one-pass algo
                 doc_no = 0
-                chunker = itertools.groupby(enumerate(corpus), key=lambda (docno, doc): docno / chunksize)
-                for chunk_no, (key, group) in enumerate(chunker):
+                for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
                     logger.info("preparing a new chunk of documents")
-                    corpus = list(doc for _, doc in group)
-                    nnz = sum(len(doc) for doc in corpus)
+                    nnz = sum(len(doc) for doc in chunk)
                     # construct the job as a sparse matrix, to minimize memory overhead
                     # definitely avoid materializing it as a dense matrix!
                     logger.debug("converting corpus to csc format")
-                    job = matutils.corpus2csc(corpus, num_docs=len(corpus), num_terms=self.num_terms, num_nnz=nnz)
-                    del corpus
+                    job = matutils.corpus2csc(chunk, num_docs=len(chunk), num_terms=self.num_terms, num_nnz=nnz)
+                    del chunk
                     doc_no += job.shape[1]
                     if self.dispatcher:
                         # distributed version: add this job to the job queue, so workers can work on it
@@ -389,31 +392,28 @@ class LsiModel(interfaces.TransformationABC):
                 (self.num_terms, self.num_topics, self.decay, self.chunksize)
 
 
-    def __getitem__(self, bow, scaled=False, chunksize=256):
+    def __getitem__(self, bow, scaled=False, chunksize=512):
         """
         Return latent representation, as a list of (topic_id, topic_value) 2-tuples.
 
         This is done by folding input document into the latent topic space.
         """
+        assert self.projection.u is not None, "decomposition not initialized yet"
+
         # if the input vector is in fact a corpus, return a transformed corpus as a result
         is_corpus, bow = utils.is_corpus(bow)
         if is_corpus and chunksize:
             # by default, transform 256 documents at once, when called as `lsi[corpus]`.
             # this chunking is completely transparent to the user, but it speeds
             # up internal computations (one mat * mat multiplication, instead of
-            # 256 smaller mat * vec multiplications, better use of cache).
+            # 256 smaller mat * vec multiplications).
             return self._apply(bow, chunksize=chunksize)
 
-        if is_corpus:
-            vec = numpy.vstack(matutils.sparse2full(doc, self.num_terms).astype(self.projection.u.dtype) for doc in bow).T
-        else:
-            vec = matutils.sparse2full(bow, self.num_terms).astype(self.projection.u.dtype)
+        if not is_corpus:
+            bow = [bow]
+        vec = matutils.corpus2csc(bow, num_terms=self.num_terms)
 
-        assert self.projection.u is not None, "decomposition not initialized yet"
-        # automatically convert U to memory order suitable for column slicing
-        # this will ideally be done only once, at the very first lsi[query] transformation
-        self.projection.u = asfarray(self.projection.u)
-        topic_dist = numpy.dot(self.projection.u[:, :self.num_topics].T, vec) # u^-1 * x
+        topic_dist = (vec.T * self.projection.u[:, :self.num_topics]).T # (x^T * u).T = u^-1 * x
         if scaled:
             topic_dist = (1.0 / self.projection.s[:self.num_topics]) * topic_dist # s^-1 * u^-1 * x
 
@@ -421,14 +421,14 @@ class LsiModel(interfaces.TransformationABC):
         # with no zero weights.
         if not is_corpus:
             # lsi[single_document]
-            result = matutils.full2sparse(topic_dist)
+            result = matutils.full2sparse(topic_dist.flat)
         else:
             # lsi[chunk of documents]
             result = matutils.Dense2Corpus(topic_dist)
         return result
 
 
-    def print_topic(self, topicno, topn=10):
+    def show_topic(self, topicno, topn=10):
         """
         Return a specified topic (=left singular vector), 0 <= `topicno` < `self.num_topics`,
         as string.
@@ -448,16 +448,28 @@ class LsiModel(interfaces.TransformationABC):
         c = numpy.asarray(self.projection.u.T[topicno, :]).flatten()
         norm = numpy.sqrt(numpy.sum(numpy.dot(c, c)))
         most = numpy.abs(c).argsort()[::-1][:topn]
-        return ' + '.join(['%.3f*"%s"' % (1.0 * c[val] / norm, self.id2word[val]) for val in most])
+        return [(1.0 * c[val] / norm, self.id2word[val]) for val in most]
 
-
-    def print_topics(self, num_topics=5, num_words=10):
+    def print_topic(self, topicno, topn=10):
+        return ' + '.join(['%.3f*"%s"' % v for v in self.show_topic(topicno, topn)])
+    
+    def show_topics(self, num_topics=5, num_words=10, log=False, formatted=True):
+        shown = []
         for i in xrange(min(num_topics, self.num_topics)):
             if i < len(self.projection.s):
-                logger.info("topic #%i(%.3f): %s" %
-                            (i, self.projection.s[i],
-                             self.print_topic(i, topn=num_words)))
+                if formatted:
+                    topic = self.print_topic(i, topn=num_words)
+                else:
+                    topic = self.show_topic(i, topn=num_words)
+                shown.append(topic)
+                if log:
+                    logger.info("topic #%i(%.3f): %s" %
+                                (i, self.projection.s[i],
+                                 topic))
+        return shown
 
+    def print_topics(self, num_topics=5, num_words=10):
+        self.show_topics(num_topics=5, num_words=10, log=True)
 
     def print_debug(self, num_topics=5, num_words=10):
         """
@@ -490,7 +502,7 @@ class LsiModel(interfaces.TransformationABC):
         del self.projection.u
         try:
             utils.pickle(self, fname) # store projection-less object
-            numpy.save(fname + '.npy', u) # store projection
+            numpy.save(fname + '.npy', ascarray(u)) # store projection
         finally:
             self.projection.u = u
 
@@ -581,8 +593,6 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
 
     num_terms = int(num_terms)
 
-    eps = max(float(eps), 1e-9) # must ignore near-zero eigenvalues (probably numerical error); the associated eigenvectors are typically unstable/garbage
-
     # first phase: construct the orthonormal action matrix Q = orth(Y) = orth((A * A.T)^q * A * O)
     # build Y in blocks of `chunksize` documents (much faster than going one-by-one
     # and more memory friendly than processing all documents at once)
@@ -606,31 +616,30 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
             y = corpus.T * y
             y = corpus * y
     else:
-        chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunksize)
         num_docs = 0
-        for chunk_no, (key, group) in enumerate(chunker):
+        for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
             logger.info('PROGRESS: at document #%i' % (chunk_no * chunksize))
             # construct the chunk as a sparse matrix, to minimize memory overhead
             # definitely avoid materializing it as a dense (num_terms x chunksize) matrix!
-            chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
+            s = sum(len(doc) for doc in chunk)
+            chunk = matutils.corpus2csc(chunk, num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
             m, n = chunk.shape
             assert m == num_terms
             assert n <= chunksize # the very last chunk of A is allowed to be smaller in size
             num_docs += n
             logger.debug("multiplying chunk * gauss")
             o = numpy.random.normal(0.0, 1.0, (n, samples)).astype(dtype) # draw a random gaussian matrix
-            sparsetools.csc_matvecs(num_terms, n, samples, chunk.indptr, # y = y + chunk * o
-                                    chunk.indices, chunk.data, o.ravel(), y.ravel())
+            sparsetools.csc_matvecs(m, n, samples, chunk.indptr, chunk.indices, # y = y + chunk * o
+                                    chunk.data, o.ravel(), y.ravel())
             del chunk, o
 
         for power_iter in xrange(power_iters):
             logger.info("running power iteration #%i" % (power_iter + 1))
             yold = y.copy()
             y[:] = 0.0
-            chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunksize)
-            for chunk_no, (key, group) in enumerate(chunker):
+            for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
                 logger.info('PROGRESS: at document #%i/%i' % (chunk_no * chunksize, num_docs))
-                chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
+                chunk = matutils.corpus2csc(chunk, num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
                 tmp = chunk.T * yold
                 tmp = chunk * tmp
                 del chunk
@@ -641,7 +650,6 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
     y = [y]
     q, r = matutils.qr_destroy(y) # orthonormalize the range
     del y
-    samples = clip_spectrum(numpy.diag(r), samples, discard=eps)
     qt = q[:, :samples].T.copy()
     del q
 
@@ -654,15 +662,15 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         # second phase: construct the covariance matrix X = B * B.T, where B = Q.T * A
         # again, construct X incrementally, in chunks of `chunksize` documents from the streaming
         # input corpus A, to avoid using O(number of documents) memory
-        x = numpy.zeros(shape = (samples, samples), dtype=dtype)
+        x = numpy.zeros(shape=(qt.shape[0], qt.shape[0]), dtype=numpy.float64)
         logger.info("2nd phase: constructing %s covariance matrix" % str(x.shape))
-        chunker = itertools.groupby(enumerate(corpus), key = lambda (docno, doc): docno / chunksize)
-        for chunk_no, (key, group) in enumerate(chunker):
+        for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
             logger.info('PROGRESS: at document #%i/%i' % (chunk_no * chunksize, num_docs))
-            chunk = matutils.corpus2csc((doc for _, doc in group), num_terms=num_terms, dtype=dtype)
+            chunk = matutils.corpus2csc(chunk, num_terms=num_terms, dtype=qt.dtype)
             b = qt * chunk # dense * sparse matrix multiply
+            del chunk
             x += numpy.dot(b, b.T) # TODO should call the BLAS routine SYRK, but there is no SYRK wrapper in scipy :(
-            del chunk, b
+            del b
 
         # now we're ready to compute decomposition of the small matrix X
         logger.info("running dense decomposition on %s covariance matrix" % str(x.shape))
@@ -676,5 +684,5 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
     u = u[:, :keep].copy()
     s = s[:keep]
     u = numpy.dot(q, u)
-    return u, s
+    return u.astype(dtype), s.astype(dtype)
 

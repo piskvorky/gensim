@@ -31,8 +31,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
     Dictionary encapsulates the mapping between normalized words and their integer ids.
 
     The main function is `doc2bow`, which converts a collection of words to its
-    bag-of-words representation, optionally also updating the dictionary mapping
-    with newly encountered words and their ids.
+    bag-of-words representation: a list of (word_id, word_frequency) 2-tuples.
     """
     def __init__(self, documents=None):
         self.token2id = {} # token -> tokenId
@@ -98,14 +97,17 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
     def doc2bow(self, document, allow_update=False, return_missing=False):
         """
         Convert `document` (a list of words) into the bag-of-words format = list
-        of `(tokenId, tokenCount)` 2-tuples. Each word is assumed to be a
-        **tokenized and normalized** utf-8 encoded string.
+        of `(token_id, token_count)` 2-tuples. Each word is assumed to be a
+        **tokenized and normalized** utf-8 encoded string. No further preprocessing
+        is done on the words in `document`; apply tokenization, stemming etc. before
+        calling this method.
 
         If `allow_update` is set, then also update dictionary in the process: create
         ids for new words. At the same time, update document frequencies -- for
-        each word appearing in this document, increase its `self.dfs` by one.
+        each word appearing in this document, increase its document frequency (`self.dfs`)
+        by one.
 
-        If `allow_update` is **not** set, this function is `const`, i.e. read-only.
+        If `allow_update` is **not** set, this function is `const`, aka read-only.
         """
         result = {}
         missing = {}
@@ -135,7 +137,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
             for tokenid in result.iterkeys():
                 self.dfs[tokenid] = self.dfs.get(tokenid, 0) + 1
 
-        # return tokenIds, in ascending id order
+        # return tokenids, in ascending id order
         result = sorted(result.iteritems())
         if return_missing:
             return result, missing
@@ -150,7 +152,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         1. less than `no_below` documents (absolute number) or
         2. more than `no_above` documents (fraction of total corpus size, *not*
            absolute number).
-        3. after (1) and (2), keep only the first `keep_n' most frequent tokens (or
+        3. after (1) and (2), keep only the first `keep_n` most frequent tokens (or
            keep all if `None`).
 
         After the pruning, shrink resulting gaps in word ids.

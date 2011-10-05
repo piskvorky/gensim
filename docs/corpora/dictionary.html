@@ -13,7 +13,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.0',
+        VERSION:     '0.8.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -122,8 +122,7 @@ save/loaded from disk (via <a class="reference internal" href="#gensim.corpora.d
 <em class="property">class </em><tt class="descclassname">gensim.corpora.dictionary.</tt><tt class="descname">Dictionary</tt><big>(</big><em>documents=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dictionary encapsulates the mapping between normalized words and their integer ids.</p>
 <p>The main function is <cite>doc2bow</cite>, which converts a collection of words to its
-bag-of-words representation, optionally also updating the dictionary mapping
-with newly encountered words and their ids.</p>
+bag-of-words representation: a list of (word_id, word_frequency) 2-tuples.</p>
 <dl class="method">
 <dt id="gensim.corpora.dictionary.Dictionary.add_documents">
 <tt class="descname">add_documents</tt><big>(</big><em>documents</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.add_documents" title="Permalink to this definition">¶</a></dt>
@@ -150,12 +149,15 @@ Calling this method will remove the gaps.</p>
 <dt id="gensim.corpora.dictionary.Dictionary.doc2bow">
 <tt class="descname">doc2bow</tt><big>(</big><em>document</em>, <em>allow_update=False</em>, <em>return_missing=False</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.doc2bow" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert <cite>document</cite> (a list of words) into the bag-of-words format = list
-of <cite>(tokenId, tokenCount)</cite> 2-tuples. Each word is assumed to be a
-<strong>tokenized and normalized</strong> utf-8 encoded string.</p>
+of <cite>(token_id, token_count)</cite> 2-tuples. Each word is assumed to be a
+<strong>tokenized and normalized</strong> utf-8 encoded string. No further preprocessing
+is done on the words in <cite>document</cite>; apply tokenization, stemming etc. before
+calling this method.</p>
 <p>If <cite>allow_update</cite> is set, then also update dictionary in the process: create
 ids for new words. At the same time, update document frequencies &#8211; for
-each word appearing in this document, increase its <cite>self.dfs</cite> by one.</p>
-<p>If <cite>allow_update</cite> is <strong>not</strong> set, this function is <cite>const</cite>, i.e. read-only.</p>
+each word appearing in this document, increase its document frequency (<cite>self.dfs</cite>)
+by one.</p>
+<p>If <cite>allow_update</cite> is <strong>not</strong> set, this function is <cite>const</cite>, aka read-only.</p>
 </dd></dl>
 
 <dl class="method">
@@ -166,8 +168,8 @@ each word appearing in this document, increase its <cite>self.dfs</cite> by one.
 <li>less than <cite>no_below</cite> documents (absolute number) or</li>
 <li>more than <cite>no_above</cite> documents (fraction of total corpus size, <em>not</em>
 absolute number).</li>
-<li>after (1) and (2), keep only the first <cite>keep_n&#8217; most frequent tokens (or
-keep all if `None</cite>).</li>
+<li>after (1) and (2), keep only the first <cite>keep_n</cite> most frequent tokens (or
+keep all if <cite>None</cite>).</li>
 </ol>
 <p>After the pruning, shrink resulting gaps in word ids.</p>
 <p><strong>Note</strong>: Due to the gap shrinking, the same word may have a different
@@ -253,7 +255,7 @@ Mirror function to <cite>save_as_text</cite>.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jun 28, 2011.
+      Last updated on Oct 05, 2011.
     </div>
   </body>
 </html>

@@ -18,9 +18,6 @@ from __future__ import with_statement
 import os, sys, logging, threading, time
 from Queue import Queue
 
-import Pyro
-import Pyro.config
-
 from gensim import utils
 
 
@@ -47,7 +44,7 @@ class Dispatcher(object):
     There should never be more than one dispatcher running at any one time.
     """
 
-    def __init__(self, maxsize = MAX_JOBS_QUEUE):
+    def __init__(self, maxsize=MAX_JOBS_QUEUE):
         """
         Note that the constructor does not fully initialize the dispatcher;
         use the `initialize()` function to populate it with workers etc.
@@ -63,16 +60,18 @@ class Dispatcher(object):
         """
         self.jobs = Queue(maxsize=self.maxsize)
         self.lock_update = threading.Lock()
-        self.callback._pyroOneway.add("jobdone") # make sure workers transfer control back to dispatcher asynchronously
         self._jobsdone = 0
         self._jobsreceived = 0
 
         # locate all available workers and store their proxies, for subsequent RMI calls
         self.workers = {}
-        with Pyro.naming.locateNS() as ns:
-            for name, uri in ns.list(prefix = 'gensim.lda_worker').iteritems():
+        import Pyro4
+        with utils.getNS() as ns:
+            self.callback = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher') # = self
+            self.callback._pyroOneway.add("jobdone") # make sure workers transfer control back to dispatcher asynchronously
+            for name, uri in ns.list(prefix='gensim.lda_worker').iteritems():
                 try:
-                    worker = Pyro.core.Proxy(uri)
+                    worker = Pyro4.Proxy(uri)
                     workerid = len(self.workers)
                     # make time consuming methods work asynchronously
                     worker._pyroOneway.add("requestjob")
@@ -82,7 +81,7 @@ class Dispatcher(object):
                     worker.initialize(workerid, dispatcher=self.callback, **model_params)
                     self.workers[workerid] = worker
                     worker.requestjob()
-                except Pyro.errors.PyroError, err:
+                except Pyro4.errors.PyroError, err:
                     logger.warning("unresponsive worker at %s, deleting it from the name server" % uri)
                     ns.remove(name)
 
@@ -173,7 +172,7 @@ class Dispatcher(object):
 
 
 def main():
-    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s')
+    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     logger.info("running %s" % " ".join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
@@ -186,21 +185,7 @@ def main():
         maxsize = MAX_JOBS_QUEUE
     else:
         maxsize = int(sys.argv[1])
-
-    Pyro.config.HOST = utils.get_my_ip()
-
-    with Pyro.naming.locateNS() as ns:
-        with Pyro.core.Daemon() as daemon:
-            dispatcher = Dispatcher(maxsize = maxsize)
-            uri = daemon.register(dispatcher)
-            # prepare callback object for the workers
-            dispatcher.callback = Pyro.core.Proxy(uri)
-
-            name = 'gensim.lda_dispatcher'
-            ns.remove(name)
-            ns.register(name, uri)
-            logger.info("dispatcher is ready at URI %s" % uri)
-            daemon.requestLoop()
+    utils.pyro_daemon('gensim.lda_dispatcher', Dispatcher(maxsize=maxsize))
 
     logger.info("finished running %s" % program)
 
