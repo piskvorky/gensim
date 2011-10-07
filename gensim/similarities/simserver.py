@@ -309,17 +309,17 @@ class SimModel(gensim.utils.SaveLoad):
         self.method = method
         logger.info("collecting %i document ids" % len(fresh_docs))
         docids = fresh_docs.keys()
-        logger.info("creating model from %s documents" % len(fresh_docs))
+        logger.info("creating model from %s documents" % len(docids))
         preprocessed = lambda : (fresh_docs[docid]['tokens'] for docid in docids)
 
         # create id->word (integer->string) mapping
-        logger.info("creating dictionary from %s documents" % len(fresh_docs))
+        logger.info("creating dictionary from %s documents" % len(docids))
         if dictionary is None:
             self.dictionary = gensim.corpora.Dictionary(preprocessed())
-            if len(fresh_docs) >= 1000:
+            if len(docids) >= 1000:
                 self.dictionary.filter_extremes(no_below=5, no_above=0.2, keep_n=50000)
             else:
-                logger.warning("training model on only %i documents; is this intentional?" % len(fresh_docs))
+                logger.warning("training model on only %i documents; is this intentional?" % len(docids))
                 self.dictionary.filter_extremes(no_below=2, no_above=0.5, keep_n=50000)
         else:
             self.dictionary = dictionary
@@ -425,6 +425,32 @@ class SimServer(object):
                 except:
                     pass
             self.fresh_docs = SqliteDict() # buffer defaults to a random location in temp
+        self.fresh_docs.sync()
+
+
+    @gensim.utils.synchronous('lock_update')
+    def buffer(self, documents):
+        """
+        Add a sequence of documents to be processed (indexed or trained on).
+
+        Here, the documents are simply collected; real processing is done later,
+        during the `self.index` or `self.train` calls.
+
+        `buffer` can be called repeatedly; the result is the same as if it was
+        called once, with a concatenation of all the partial document batches.
+        The point is to save memory when sending large corpora over network: the
+        entire `documents` must be serialized into RAM. See `utils.upload_chunked()`.
+
+        A call to `flush()` clears this documents-to-be-processed buffer (`flush`
+        is also implicitly called when you call `index()` and `train()`).
+        """
+        logger.info("adding documents to temporary buffer of %s" % (self))
+        for doc in documents:
+            docid = doc['id']
+#            logger.debug("buffering document %r" % docid)
+            if docid in self.fresh_docs:
+                logger.warning("asked to re-add id %r; rewriting old value" % docid)
+            self.fresh_docs[docid] = doc
         self.fresh_docs.sync()
 
 
@@ -539,32 +565,6 @@ class SimServer(object):
 
 
     @gensim.utils.synchronous('lock_update')
-    def buffer(self, documents):
-        """
-        Add a sequence of documents to be processed (indexed or trained on).
-
-        Here, the documents are simply collected; real processing is done later,
-        during the `self.index` or `self.train` calls.
-
-        `buffer` can be called repeatedly; the result is the same as if it was
-        called once, with a concatenation of all the partial document batches.
-        The point is to save memory when sending large corpora over network: the
-        entire `documents` must be serialized into RAM. See `utils.upload_chunked()`.
-
-        A call to `flush()` clears this documents-to-be-processed buffer (`flush`
-        is also implicitly called when you call `index()` and `train()`).
-        """
-        logger.info("adding %i documents to temporary buffer of %s" % (len(documents), self))
-        for doc in documents:
-            docid = doc['id']
-#            logger.debug("buffering document %r" % docid)
-            if docid in self.fresh_docs:
-                logger.warning("asked to re-add id %r; rewriting old value" % docid)
-            self.fresh_docs[docid] = doc
-        self.fresh_docs.sync()
-
-
-    @gensim.utils.synchronous('lock_update')
     def delete(self, docids):
         """Delete specified documents from the index."""
         logger.info("asked to drop %i documents" % len(docids))
@@ -623,6 +623,12 @@ class SimServer(object):
     def __str__(self):
         return ("SimServer(loc=%r, fresh=%s, opt=%s, model=%s, buffer=%s)" %
                 (self.basename, self.fresh_index, self.opt_index, self.model, self.fresh_docs))
+
+
+    def __len__(self):
+        return sum(len(index) for index in [self.opt_index, self.fresh_index]
+                   if index is not None)
+
 
     def __contains__(self, docid):
         """Is document with `docid` in the index?"""
@@ -700,6 +706,9 @@ class SessionServer(gensim.utils.SaveLoad):
 
     def __str__(self):
         return "SessionServer(\n\tstable=%s\n\tsession=%s\n)" % (self.stable, self.session)
+
+    def __len__(self):
+        return len(self.stable)
 
     def keys(self):
         return self.stable.keys()
@@ -854,6 +863,3 @@ class SessionServer(gensim.utils.SaveLoad):
 
     def status(self): # str() alias
         return str(self)
-
-    def keys(self):
-        return self.stable.keys()
