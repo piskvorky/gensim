@@ -38,7 +38,7 @@ setup(
     author = 'Radim Rehurek', # u'Radim Řehůřek', # <- should really be this...
     author_email = 'radimrehurek@seznam.cz',
 
-    url = 'http://nlp.fi.muni.cz/projekty/gensim',
+    url = 'http://radimrehurek.com/gensim',
     download_url = 'http://pypi.python.org/pypi/gensim',
 
     keywords = 'Singular Value Decomposition, Latent Semantic Indexing, SVD, LSA, '
