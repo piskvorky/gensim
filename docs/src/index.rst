@@ -56,4 +56,5 @@ Quick Reference Example
    install
    tutorial
    distributed
+   simserver
    apiref

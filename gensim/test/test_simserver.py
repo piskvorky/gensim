@@ -19,6 +19,7 @@ from copy import deepcopy
 import numpy
 
 import gensim
+from gensim.similarities.simserver import SessionServer
 
 logger = logging.getLogger('test_simserver')
 
@@ -55,7 +56,7 @@ class SessionServerTester(unittest.TestCase):
             logger.info(self.server.status())
         except Exception, e:
             logger.info("could not locate running SessionServer; starting a local server")
-            self.server = gensim.similarities.SessionServer(gensim.utils.randfname())
+            self.server = SessionServer(gensim.utils.randfname())
         self.server.set_autosession(True)
 
     def tearDown(self):
