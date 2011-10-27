@@ -566,7 +566,7 @@ class LdaModel(interfaces.TransformationABC):
         return shown
 
     def show_topic(self, topicid, topn=10):
-        topic = self.expElogbeta[topicid]
+        topic = self._lambda[topicid]
         topic = topic / topic.sum() # normalize to probability dist
         bestn = numpy.argsort(topic)[::-1][:topn]
         beststr = [(topic[id], self.id2word[id]) for id in bestn]
@@ -589,8 +589,7 @@ class LdaModel(interfaces.TransformationABC):
             return self._apply(corpus)
 
         gamma, _ = self.inference([bow])
-        theta = numpy.exp(dirichlet_expectation(gamma[0]))
-        topic_dist = theta / theta.sum() # normalize to proper distribution
+        topic_dist = gamma[0] / sum(gamma[0]) # normalize to proper distribution
         return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                 if topicvalue >= eps] # ignore document's topics that have prob < eps
 #endclass LdaModel

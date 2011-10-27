@@ -179,7 +179,7 @@ class TestLdaModel(unittest.TestCase):
             transformed = model[doc]
 
             vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
-            expected = [0.049, 0.951]
+            expected = [0.13, 0.87]
             passed = numpy.allclose(sorted(vec), sorted(expected), atol=1e-2) # must contain the same values, up to re-ordering
             if passed:
                 break
