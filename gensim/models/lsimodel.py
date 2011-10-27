@@ -225,6 +225,10 @@ class LsiModel(interfaces.TransformationABC):
        latent space,
     3. `add_documents()` for incrementally updating the model with new documents.
 
+    The left singular vectors are stored in `lsi.projection.u`, singular values
+    in `lsi.projection.s`. Right singular vectors can be reconstructed from the output
+    of `lsi[training_corpus]`, if needed.
+
     Model persistency is achieved via its load/save methods.
 
     """
@@ -442,7 +446,7 @@ class LsiModel(interfaces.TransformationABC):
         """
         # size of the projection matrix can actually be smaller than `self.num_topics`,
         # if there were not enough factors (real rank of input matrix smaller than
-        # `self.num_topics`). in that case, return empty string
+        # `self.num_topics`). in that case, return an empty string
         if topicno >= len(self.projection.u.T):
             return ''
         c = numpy.asarray(self.projection.u.T[topicno, :]).flatten()
@@ -452,9 +456,21 @@ class LsiModel(interfaces.TransformationABC):
 
     def print_topic(self, topicno, topn=10):
         return ' + '.join(['%.3f*"%s"' % v for v in self.show_topic(topicno, topn)])
-    
-    def show_topics(self, num_topics=5, num_words=10, log=False, formatted=True):
+
+    def show_topics(self, num_topics=-1, num_words=10, log=False, formatted=True):
+        """
+        Show `num_topics` most significant topics (show all by default).
+        For each topic, show `num_words` most significant words (10 words by defaults).
+
+        Return the shown topics as a list -- a list of strings if `formatted` is
+        True, or a list of  (value, word) 2-tuples if it's False.
+
+        If `log` is True, also output this result to log.
+
+        """
         shown = []
+        if num_topics < 0:
+            num_topics = self.num_topics
         for i in xrange(min(num_topics, self.num_topics)):
             if i < len(self.projection.s):
                 if formatted:
@@ -469,7 +485,8 @@ class LsiModel(interfaces.TransformationABC):
         return shown
 
     def print_topics(self, num_topics=5, num_words=10):
-        self.show_topics(num_topics=5, num_words=10, log=True)
+        """Alias for `show_topics()` which prints the top 5 topics to log."""
+        self.show_topics(num_topics=num_topics, num_words=num_words, log=True)
 
     def print_debug(self, num_topics=5, num_words=10):
         """

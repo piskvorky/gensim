@@ -36,7 +36,8 @@ if __name__ == '__main__':
         sys.exit(1)
 
     basename = sys.argv[1]
-    server = gensim.similarities.SessionServer(basename)
+    from gensim.similarities.simserver import SessionServer
+    server = SessionServer(basename)
     gensim.utils.pyro_daemon('gensim.testserver', server)
 
     logging.info("finished running %s" % program)

@@ -438,14 +438,14 @@ class LdaModel(interfaces.TransformationABC):
 
             chunker = itertools.groupby(enumerate(corpus), key=lambda (docno, doc): docno / chunksize)
             for chunk_no, (key, group) in enumerate(chunker):
+                # convert each document to a 2d numpy array (~6x faster when transmitting
+                # list data over the wire, in Pyro)
                 chunk = [numpy.array(doc) for _, doc in group]
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
                     logger.info('PROGRESS: iteration %i, dispatching documents up to #%i/%i' %
                                 (iteration, chunk_no * chunksize + len(chunk), lencorpus))
                     # this will eventually block until some jobs finish, because the queue has a small finite length
-                    # convert each document to a 2d numpy array (~6x faster when transmitting
-                    # list data over the wire, in Pyro)
                     self.dispatcher.putjob(chunk)
                 else:
                     logger.info('PROGRESS: iteration %i, at document #%i/%i' %
@@ -469,7 +469,7 @@ class LdaModel(interfaces.TransformationABC):
                     else:
                         other = LdaState(self.state.sstats)
                     dirty = False
-            #endfor corpus iteration
+            #endfor single corpus iteration
 
             if dirty:
                 # finish any remaining updates
@@ -479,7 +479,7 @@ class LdaModel(interfaces.TransformationABC):
                     other = self.dispatcher.getstate()
                 self.do_mstep(rho(), other)
                 dirty = False
-        #endfor corpus update
+        #endfor entire corpus update
 
 
     def do_mstep(self, rho, other):

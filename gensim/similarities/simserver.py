@@ -113,7 +113,7 @@ class SimIndex(gensim.utils.SaveLoad):
 
 
     def terminate(self):
-        """Delete all files created by this index, invalidating it. Use with care."""
+        """Delete all files created by this index, invalidating `self`. Use with care."""
         import glob
         for fname in glob.glob(self.fname + '*'):
             try:
@@ -616,7 +616,7 @@ class SimServer(object):
         for docid, score in merge_sims(sims_opt, sims_fresh):
             if score < min_score or 0 < max_results <= len(result):
                 break
-            result.append((docid, score, self.payload.get(docid, None)))
+            result.append((docid, float(score), self.payload.get(docid, None)))
         return result
 
 
@@ -842,6 +842,24 @@ class SessionServer(gensim.utils.SaveLoad):
             self.rollback()
             self.autosession = value
         return self.autosession
+
+    @gensim.utils.synchronous('lock_update')
+    def terminate(self):
+        """Delete all files created by this server, invalidating `self`. Use with care."""
+        logger.info("deleting entire server %s" % self)
+        try:
+            shutil.rmtree(self.basedir)
+            logger.info("deleted server under %s" % self.basedir)
+            # delete everything from self, so that using this object fails results
+            # in an error as quickly as possible
+            for val in self.__dict__.keys():
+                try:
+                    delattr(self, val)
+                except:
+                    pass
+        except Exception, e:
+            logger.warning("failed to delete %s: %s" % (fname, e))
+
 
     def find_similar(self, *args, **kwargs):
         """
