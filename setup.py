@@ -30,7 +30,7 @@ setup(
     name = 'gensim',
     version = '0.8.1',
     description = 'Python framework for fast Vector Space Modelling',
-    long_description = read('README.txt'),
+    long_description = read('README.rst'),
 
     packages = find_packages(),
 
