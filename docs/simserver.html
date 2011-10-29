@@ -3,13 +3,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>Document Similarity Server &mdash; gensim</title>
+    
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
@@ -23,6 +26,8 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="gensim" href="index.html" />
+    <link rel="next" title="API Reference" href="apiref.html" />
+    <link rel="prev" title="Distributed Latent Dirichlet Allocation" href="dist_lda.html" />
 <!-- twitter search widget
     <script type="text/javascript" src="_static/widget.js"></script>
 -->
@@ -59,9 +64,17 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="apiref.html" title="API Reference"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dist_lda.html" title="Distributed Latent Dirichlet Allocation"
+             accesskey="P">previous</a> |</li>
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
-        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
-       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
+        <li><a href="tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>&raquo;</li>
  
       </ul>
     </div>
@@ -91,10 +104,16 @@
 </li>
 </ul>
 
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dist_lda.html"
+                        title="previous chapter">Distributed Latent Dirichlet Allocation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="apiref.html"
+                        title="next chapter">API Reference</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -238,7 +257,7 @@ recommended client splits them into smaller chunks before uploading them to the 
 </div>
 <div class="section" id="wait-upload-what-where">
 <h2>Wait, upload what, where?<a class="headerlink" href="#wait-upload-what-where" title="Permalink to this headline">¶</a></h2>
-<p>If you use the similarity service object (instance of <a class="reference internal" href="similarities/simserver.html#gensim.similarities.simserver.SessionServer" title="gensim.similarities.simserver.SessionServer"><tt class="xref py py-class docutils literal"><span class="pre">gensim.similarities.simserver.SessionServer</span></tt></a>) in
+<p>If you use the similarity service object (instance of <tt class="xref py py-class docutils literal"><span class="pre">gensim.similarities.simserver.SessionServer</span></tt>) in
 your code directly&#8212;no remote access&#8212;that&#8217;s perfectly fine. Using the service remotely, from a different process/machine, is an
 option, not a necessity.</p>
 <p>Document similarity can also act as a long-running service, a daemon process on a separate machine. In that
@@ -339,7 +358,7 @@ If you don&#8217;t specify <cite>doc[&#8216;payload&#8217;]</cite> during indexi
 a pure Python package for Remote Procedure Calls (RPC), so I&#8217;ll illustrate remote
 service access via Pyro. Pyro takes care of all the socket listening/request routing/data marshalling/thread
 spawning, so it saves us a lot of trouble.</p>
-<p>To create a similarity server, we just create a <a class="reference internal" href="similarities/simserver.html#gensim.similarities.simserver.SessionServer" title="gensim.similarities.simserver.SessionServer"><tt class="xref py py-class docutils literal"><span class="pre">gensim.similarities.simserver.SessionServer</span></tt></a> object and register it
+<p>To create a similarity server, we just create a <tt class="xref py py-class docutils literal"><span class="pre">gensim.similarities.simserver.SessionServer</span></tt> object and register it
 with a Pyro daemon for remote access. There is a small <a class="reference external" href="https://github.com/piskvorky/gensim/blob/simserver/gensim/test/run_simserver.py">example script</a>
 included with gensim, run it with:</p>
 <div class="highlight-python"><pre>$ python -m gensim.test.run_simserver /tmp/testserver</pre>
@@ -427,6 +446,7 @@ TODO add some hard numbers; example tutorial for some bigger collection, e.g. ar
       </div>
       <div class="clearer"></div>
     </div>
+    
         
     <div class="related">
       <h3>Navigation</h3>
@@ -437,18 +457,25 @@ TODO add some hard numbers; example tutorial for some bigger collection, e.g. ar
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="apiref.html" title="API Reference"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dist_lda.html" title="Distributed Latent Dirichlet Allocation"
+             >previous</a> |</li>
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
-        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
-       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
+        <li><a href="tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>&raquo;</li>
  
       </ul>
     </div>
     
-    
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 10, 2011.
+      Last updated on Oct 29, 2011.
     </div>
   </body>
 </html>

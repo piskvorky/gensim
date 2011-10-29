@@ -3,13 +3,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>models.lsimodel – Latent Semantic Indexing &mdash; gensim</title>
+    
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
@@ -69,8 +72,10 @@
           <a href="ldamodel.html" title="models.ldamodel – Latent Dirichlet Allocation"
              accesskey="P">previous</a> |</li>
         <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
-        <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
-       <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
+        <li><a href="../tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="../apiref.html">API reference</a>&raquo;</li>
 
           <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
       </ul>
@@ -89,7 +94,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -135,17 +140,17 @@ requesting the top 400 LSI factors:</p>
 <col width="21%" />
 </colgroup>
 <thead valign="bottom">
-<tr><th class="head">algorithm</th>
+<tr class="row-odd"><th class="head">algorithm</th>
 <th class="head">serial</th>
 <th class="head">distributed</th>
 </tr>
 </thead>
 <tbody valign="top">
-<tr><td>one-pass merge algorithm</td>
+<tr class="row-even"><td>one-pass merge algorithm</td>
 <td>5h14m</td>
 <td>1h41m</td>
 </tr>
-<tr><td>multi-pass stochastic algo (with 2 power iterations)</td>
+<tr class="row-odd"><td>multi-pass stochastic algo (with 2 power iterations)</td>
 <td>5h39m</td>
 <td>N/A <a class="footnote-reference" href="#id2" id="id1">[1]</a></td>
 </tr>
@@ -175,6 +180,9 @@ Semantic Indexing (also known as Latent Semantic Analysis).</p>
 latent space,</li>
 <li><cite>add_documents()</cite> for incrementally updating the model with new documents.</li>
 </ol>
+<p>The left singular vectors are stored in <cite>lsi.projection.u</cite>, singular values
+in <cite>lsi.projection.s</cite>. Right singular vectors can be reconstructed from the output
+of <cite>lsi[training_corpus]</cite>, if needed.</p>
 <p>Model persistency is achieved via its load/save methods.</p>
 <p><cite>num_topics</cite> is the number of requested factors (latent dimensions).</p>
 <p>After the model has been trained, you can estimate topics for an
@@ -235,6 +243,12 @@ human-interpretable description of topics.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="gensim.models.lsimodel.LsiModel.print_topics">
+<tt class="descname">print_topics</tt><big>(</big><em>num_topics=5</em>, <em>num_words=10</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.print_topics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for <cite>show_topics()</cite> which prints the top 5 topics to log.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="gensim.models.lsimodel.LsiModel.save">
 <tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override the default <cite>save</cite> (which uses cPickle), because that&#8217;s
@@ -256,6 +270,16 @@ of the topic (both negative and positive).</p>
 </div>
 </dd></dl>
 
+<dl class="method">
+<dt id="gensim.models.lsimodel.LsiModel.show_topics">
+<tt class="descname">show_topics</tt><big>(</big><em>num_topics=-1</em>, <em>num_words=10</em>, <em>log=False</em>, <em>formatted=True</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.LsiModel.show_topics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show <cite>num_topics</cite> most significant topics (show all by default).
+For each topic, show <cite>num_words</cite> most significant words (10 words by defaults).</p>
+<p>Return the shown topics as a list &#8211; a list of strings if <cite>formatted</cite> is
+True, or a list of  (value, word) 2-tuples if it&#8217;s False.</p>
+<p>If <cite>log</cite> is True, also output this result to log.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">
@@ -269,7 +293,7 @@ storing spurious (tiny, numerically instable) values.</p>
 
 <dl class="function">
 <dt id="gensim.models.lsimodel.stochastic_svd">
-<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">stochastic_svd</tt><big>(</big><em>corpus</em>, <em>rank</em>, <em>num_terms</em>, <em>chunksize=20000</em>, <em>extra_dims=None</em>, <em>power_iters=0</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em>, <em>eps=9.9999999999999995e-07</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.stochastic_svd" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.models.lsimodel.</tt><tt class="descname">stochastic_svd</tt><big>(</big><em>corpus</em>, <em>rank</em>, <em>num_terms</em>, <em>chunksize=20000</em>, <em>extra_dims=None</em>, <em>power_iters=0</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em>, <em>eps=1e-06</em><big>)</big><a class="headerlink" href="#gensim.models.lsimodel.stochastic_svd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return (U, S): the left singular vectors and the singular values of the streamed
 input corpus <cite>corpus</cite> <a class="footnote-reference" href="#id6" id="id5">[3]</a>.</p>
 <p>This may actually return less than the requested number of top <cite>rank</cite> factors,
@@ -297,6 +321,7 @@ corpus fits into core memory and a different (more efficient) code path is chose
       </div>
       <div class="clearer"></div>
     </div>
+    
         
     <div class="related">
       <h3>Navigation</h3>
@@ -314,18 +339,19 @@ corpus fits into core memory and a different (more efficient) code path is chose
           <a href="ldamodel.html" title="models.ldamodel – Latent Dirichlet Allocation"
              >previous</a> |</li>
         <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
-        <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
-       <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
+        <li><a href="../tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="../apiref.html">API reference</a>&raquo;</li>
 
           <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
       </ul>
     </div>
     
-    
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 10, 2011.
+      Last updated on Oct 29, 2011.
     </div>
   </body>
 </html>

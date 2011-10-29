@@ -3,13 +3,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Gensim – Vector Space Modelling for Humans &mdash; gensim</title>
+    <title>Gensim – Topic Modelling for Humans &mdash; gensim</title>
+    
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
@@ -64,8 +67,10 @@
           <a href="intro.html" title="Introduction"
              accesskey="N">next</a> |</li>
         <li><a href="#">Gensim home</a>|&nbsp;</li>
-        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
-       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
+        <li><a href="tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>&raquo;</li>
  
       </ul>
     </div>
@@ -74,7 +79,7 @@
     
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper"><h3>Download</h3>
-<p>Get <cite>gensim</cite> from the <a href="http://pypi.python.org/pypi/gensim">Python Package
+<p>Get <cite>gensim</cite> version 0.8.1 from the <a href="http://pypi.python.org/pypi/gensim">Python Package
 Index</a> or install directly with:</p>
 <pre>easy_install -U gensim</pre>
 <h3><a href="#">Table Of Contents</a></h3>
@@ -90,7 +95,7 @@ Index</a> or install directly with:</p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -106,72 +111,42 @@ Index</a> or install directly with:</p>
 
 <h3>Questions? Suggestions?</h3>
 
-<!--
-<p>Join the <a href="http://groups.google.com/group/gensim">Google group</a>:</p>
--->
-
-<table border=0 style="background-color: #fff; padding: 5px;" cellspacing=0>
-<!--   <tr><td>
-  <img src="http://groups.google.com/intl/en/images/logos/groups_logo_sm.gif"
-         height=30 width=140 alt="Google Groups">
-  </td></tr>
-   -->
-  <tr><td style="padding-left: 5px"><b>Subscribe to Google group</b></td></tr>
+<table border=0 style="padding: 5px; margin: 10px 0px;" cellspacing=0>
+  <tr><td style="padding-left: 5px">Join the <a href="http://groups.google.com/group/gensim">Google discussion group</a></td></tr>
   <form action="http://groups.google.com/group/gensim/boxsubscribe">
-  <tr><td style="padding-left: 5px;">
-  <input type="text" name="email" size="18">
-  <input type="submit" name="sub" value="Subscribe Email">
+  <tr><td style="padding-left: 5px; margin: 10px 0px;">
+  <input type="text" name="email" onfocus="if(this.value == 'yourname@domain.com') { this.value = ''; }" value="yourname@domain.com" size="24">
+  <input type="submit" name="sub" value="Subscribe">
   </td></tr>
 </form>
-<tr>
-<td align=right>
-<div style="float:left;margin:10px 0 4px 0px">
-  <a href="http://twitter.com/share" class="twitter-share-button" data-text="Efficient topic modelling in Python #gensim" data-count="none">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
-
-  <div style="margin:0px 4px 0px 4px; display:inline">
-  <a href="http://groups.google.com/group/gensim"><img src="http://groups.google.com/intl/en/images/logos/groups_logo_sm.gif" alt="Visit this group" width="100" height="20" border="0"/></a>
-  </div>
-
-  <iframe src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fnlp.fi.muni.cz%2Fprojekty%2Fgensim&amp;layout=button_count&amp;show_faces=false&amp;width=400&amp;action=like&amp;colorscheme=light&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:75px; height:21px;" allowTransparency="true"></iframe>
-</div>
-</td>
-</tr>
 </table>
 
-<p>You can also open an issue at the
-<a href="https://github.com/piskvorky/gensim/issues">github issue tracker</a>.</p>
 
 <!-- AddThis Button BEGIN -->
-<!--
-<div class="addthis_toolbox addthis_default_style ">
-<a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
-<a class="addthis_button_tweet"></a>
-<a class="addthis_counter addthis_pill_style"></a>
-</div>
-
+<div class="addthis_toolbox addthis_default_style addthis_32x32_style"
+    addthis:title="#gensim"
+    addthis:description="Efficient Topic Modelling in Python"
+    style="margin:20px 0 0 0">
 
 <script type="text/javascript">
 var addthis_share = {
-  templates: { twitter: 'Efficient topic modelling in Python #gensim http://goo.gl/ajYK8' }
+  templates: { twitter: 'Efficient topic modelling in Python #gensim http://goo.gl/2VQBS' }
 }
 </script>
 
-<div class="addthis_toolbox addthis_default_style"
-    addthis:title="#gensim"
-    addthis:description="Efficient Topic Modelling in Python"
-    style="margin:30px 0 0 0">
-<a href="http://www.addthis.com/bookmark.php?v=250&amp;pubid=ra-4d738b9b1d31ccbd" class="addthis_button_compact">Share</a>
-<span class="addthis_separator">|</span>
-<a class="addthis_button_twitter"></a>
-<a class="addthis_button_facebook"></a>
-<a class="addthis_button_digg"></a>
-<a class="addthis_button_email"></a>
+<a class="addthis_button_preferred_1"></a>
+<a class="addthis_button_preferred_2"></a>
+<a class="addthis_button_preferred_3"></a>
+<a class="addthis_button_preferred_4"></a>
+<a class="addthis_button_compact"></a>
+<a class="addthis_counter addthis_bubble_style"></a>
 </div>
-
-<script type="text/javascript">var addthis_config = {"data_track_clickback":true};</script>
 <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid=ra-4d738b9b1d31ccbd"></script>
--->
 <!-- AddThis Button END -->
+
+<p>
+Check the source code at <a href="https://github.com/piskvorky/gensim">Github</a>. Report bugs at the <a href="https://github.com/piskvorky/gensim/issues">issue tracker</a>.
+</p>
         </div>
       </div>
     
@@ -183,40 +158,35 @@ var addthis_share = {
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="gensim-vector-space-modelling-for-humans">
-<h1>Gensim &#8211; Vector Space Modelling for Humans<a class="headerlink" href="#gensim-vector-space-modelling-for-humans" title="Permalink to this headline">¶</a></h1>
-<div class="admonition-what-s-new admonition ">
+  <div class="section" id="gensim-topic-modelling-for-humans">
+<h1>Gensim &#8211; Topic Modelling for Humans<a class="headerlink" href="#gensim-topic-modelling-for-humans" title="Permalink to this headline">¶</a></h1>
+<p>Document similarity made easy.</p>
+<div class="admonition-what-s-new admonition">
 <p class="first admonition-title">What&#8217;s new?</p>
 <ul class="last simple">
-<li>05/10/2011: version 0.8.1 <a class="reference external" href="http://pypi.python.org/pypi/gensim">released</a>: new <a class="reference external" href="http://radimrehurek.com/gensim/simserver.html">document similarity server</a> and several speed-ups and fixes.</li>
-<li>09/09/2011: moved website to <a class="reference external" href="http://radimrehurek.com/gensim">radimrehurek.com</a>.</li>
-<li>19/06/2011: version 0.8.0 is <a class="reference external" href="http://pypi.python.org/pypi/gensim">out</a>! Faster &amp; better: <a class="reference internal" href="changes_080.html"><em>walkthrough of the changes</em></a>.</li>
-<li>12/02/2011: faster and leaner <strong>Latent Semantic Indexing (LSI)</strong> and <strong>Latent Dirichlet Allocation (LDA)</strong>:<ul>
-<li><a class="reference internal" href="wiki.html"><em>Processing the English Wikipedia</em></a>, 3.2 million documents (<a class="reference external" href="http://arxiv.org/abs/1102.5597">NIPS workshop paper</a>)</li>
-<li><a class="reference internal" href="dist_lsi.html"><em>Distributed Latent Semantic Analysis</em></a> &amp; <a class="reference internal" href="dist_lda.html"><em>Distributed Latent Dirichlet Allocation</em></a></li>
-</ul>
-</li>
+<li>9 Sep 2011: website moved to <a class="reference external" href="http://radimrehurek.com/gensim">radimrehurek.com</a>.</li>
 </ul>
 </div>
-<p>For an <strong>overview</strong> of what you can (or cannot) do with <cite>gensim</cite>, go to the <a class="reference internal" href="intro.html"><em>introduction</em></a>.</p>
-<p>For <strong>installation</strong> and <strong>troubleshooting</strong>, see the <a class="reference internal" href="install.html"><em>installation</em></a> page and the <a class="reference external" href="http://groups.google.com/group/gensim/">gensim discussion group</a>.</p>
-<p>For <strong>examples</strong> on how to convert text to vectors and work with the result, try the <a class="reference internal" href="tutorial.html"><em>tutorials</em></a>.</p>
-<p>When <strong>citing</strong> <cite>gensim</cite> in academic papers, use
-<a class="reference external" href="bibtex_gensim.bib">this BibTeX entry</a>.</p>
-<div class="section" id="quick-reference-example">
+<table class="links" style="font-size: 150%;">
+     <tr>
+             <td><a href='intro.html'>What is this?</a></td>
+             <td><a href='install.html'>Installation</a></td>
+     </tr>
+     <tr>
+             <td><a href='tutorial.html'>Get started!</a></td>
+             <td><a href='licensing.html'>Licensing</a></td>
+     </tr>
+</table><div class="section" id="quick-reference-example">
 <h2>Quick Reference Example<a class="headerlink" href="#quick-reference-example" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">similarities</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># Load corpus iterator from a Matrix Market file on disk.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># See Tutorial 1 on text corpora and vectors.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;/path/to/corpus.mm&#39;</span><span class="p">)</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># Initialize a transformation (Latent Semantic Indexing with 200 latent dimensions).</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># See Tutorial 2 on semantic models.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># Convert another corpus to the latent space and index it.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># See Tutorial 3 on similarity queries.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">MatrixSimilarity</span><span class="p">(</span><span class="n">lsi</span><span class="p">[</span><span class="n">another_corpus</span><span class="p">])</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># determine similarity of a query document against each document in the index</span>
@@ -234,30 +204,11 @@ var addthis_share = {
       </div>
       <div class="clearer"></div>
     </div>
-        
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="intro.html" title="Introduction"
-             >next</a> |</li>
-        <li><a href="#">Gensim home</a>|&nbsp;</li>
-        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
-       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
- 
-      </ul>
-    </div>
     
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 10, 2011.
+      Last updated on Oct 29, 2011.
     </div>
   </body>
 </html>

@@ -5,12 +5,14 @@ Introduction
 ============
 
 Gensim is a Python framework designed to automatically extract semantic
-topics from documents, as naturally and painlessly as possible.
+topics from documents, as efficiently (computer-wise) and painlessly (human-wise) as possible.
 
 
 Gensim aims at processing raw, unstructured digital texts ("*plain text*").
-The unsupervised algorithms in `gensim`, such as **Latent Semantic Analysis**, **Latent Dirichlet Allocation** or **Random Projections**,
-discover hidden (*latent*) semantic structure, based on word co-occurrence patterns within a corpus of training documents.
+The algorithms in `gensim`, such as **Latent Semantic Analysis**, **Latent Dirichlet Allocation** or **Random Projections**,
+discover semantic structure of documents, by examining word co-occurrence patterns within a corpus of training documents.
+These algorithms are unsupervised, which means no human input is necessary -- you only need a corpus of plain text documents.
+
 Once these statistical patterns are found, any plain text documents can be succinctly
 expressed in the new, semantic representation, and queried for topical similarity
 against other documents and so on.
@@ -33,7 +35,7 @@ Design objectives
   including **Tf-Idf**, distributed incremental **Latent Semantic Analysis**,
   distributed incremental **Latent Dirichlet Allocation (LDA)** or **Random Projection**; adding new ones is easy (really!).
 * I/O wrappers and converters around **several popular data formats**.
-* **Similarity queries** for documents in their latent, topical representation.
+* **Similarity queries** for documents in their semantic representation.
 
 Creation of `gensim` was motivated by a perceived lack of available, scalable software
 frameworks that realize topic modelling, and/or their overwhelming internal complexity (hail java!).
@@ -86,8 +88,9 @@ The whole gensim package revolves around the concepts of :term:`corpus`, :term:`
         2. How many paragraphs does the document consist of? Two.
         3. How many fonts does the document use? Five.
 
-        The question is usually represented only by its integer id, so that the
-        representation of a document becomes a series of pairs like ``(1, 0.0), (2, 2.0), (3, 5.0)``.
+        The question is usually represented only by its integer id (such as `1`, `2` and `3` here),
+        so that the
+        representation of this document becomes a series of pairs like ``(1, 0.0), (2, 2.0), (3, 5.0)``.
         If we know all the questions in advance, we may leave them implicit
         and simply write ``(0.0, 2.0, 5.0)``.
         This sequence of answers can be thought of as a high-dimensional (in this case 3-dimensional)
