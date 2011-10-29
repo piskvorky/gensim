@@ -6,12 +6,10 @@
 Gensim -- Topic Modelling for Humans
 =====================================================
 
-Document similarity made easy.
 
+.. raw:: html
+   :file: _static/tagcloud.html
 
-.. admonition:: What's new?
-
-   * 9 Sep 2011: website moved to `radimrehurek.com <http://radimrehurek.com/gensim>`_.
 
 .. raw:: html
 
@@ -22,7 +20,7 @@ Document similarity made easy.
         </tr>
         <tr>
                 <td><a href='tutorial.html'>Get started!</a></td>
-                <td><a href='licensing.html'>Licensing</a></td>
+                <td><a href='about.html'>About</a></td>
         </tr>
    </table>
 
@@ -43,6 +41,11 @@ Quick Reference Example
 >>>
 >>> # determine similarity of a query document against each document in the index
 >>> sims = index[query]
+
+
+.. admonition:: What's new?
+
+   * 9 Sep 2011: website moved to `radimrehurek.com <http://radimrehurek.com/gensim>`_.
 
 
 
