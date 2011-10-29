@@ -628,10 +628,16 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         # so check for equal dtype explicitly, to avoid the extra memory footprint if possible
         if y.dtype != dtype:
             y = y.astype(dtype)
+
+        logger.info("orthonormalizing %s action matrix" % str(y.shape))
+        y = [y]
+        q, _ = matutils.qr_destroy(y) # orthonormalize the range
+
         logger.debug("running %i power iterations" % power_iters)
         for power_iter in xrange(power_iters):
-            y = corpus.T * y
-            y = corpus * y
+            q = corpus.T * q
+            q = [corpus * q]
+            q, _ = matutils.qr_destroy(q) # orthonormalize the range after each power iteration step
     else:
         num_docs = 0
         for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
@@ -649,24 +655,24 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
             sparsetools.csc_matvecs(m, n, samples, chunk.indptr, chunk.indices, # y = y + chunk * o
                                     chunk.data, o.ravel(), y.ravel())
             del chunk, o
+        y = [y]
+        q, _ = matutils.qr_destroy(y) # orthonormalize the range
 
         for power_iter in xrange(power_iters):
             logger.info("running power iteration #%i" % (power_iter + 1))
-            yold = y.copy()
-            y[:] = 0.0
+            yold = q.copy()
+            q[:] = 0.0
             for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
                 logger.info('PROGRESS: at document #%i/%i' % (chunk_no * chunksize, num_docs))
                 chunk = matutils.corpus2csc(chunk, num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
                 tmp = chunk.T * yold
                 tmp = chunk * tmp
                 del chunk
-                y += tmp
+                q += tmp
             del yold
+            q = [q]
+            q, _ = matutils.qr_destroy(q) # orthonormalize the range
 
-    logger.info("orthonormalizing %s action matrix" % str(y.shape))
-    y = [y]
-    q, r = matutils.qr_destroy(y) # orthonormalize the range
-    del y
     qt = q[:, :samples].T.copy()
     del q
 
