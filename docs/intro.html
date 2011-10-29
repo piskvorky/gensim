@@ -25,6 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="gensim" href="index.html" />
     <link rel="next" title="Installation" href="install.html" />
     <link rel="prev" title="Gensim – Topic Modelling for Humans" href="index.html" />
@@ -86,7 +87,7 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Introduction</a><ul>
-<li><a class="reference internal" href="#design-objectives">Design objectives</a></li>
+<li><a class="reference internal" href="#features">Features</a></li>
 <li><a class="reference internal" href="#availability">Availability</a></li>
 <li><a class="reference internal" href="#core-concepts">Core concepts</a></li>
 </ul>
@@ -129,17 +130,19 @@
 topics from documents, as efficiently (computer-wise) and painlessly (human-wise) as possible.</p>
 <p>Gensim aims at processing raw, unstructured digital texts (&#8220;<em>plain text</em>&#8221;).
 The algorithms in <cite>gensim</cite>, such as <strong>Latent Semantic Analysis</strong>, <strong>Latent Dirichlet Allocation</strong> or <strong>Random Projections</strong>,
-discover semantic structure of documents, by examining word co-occurrence patterns within a corpus of training documents.
+discover semantic structure of documents, by examining word statistical co-occurrence patterns within a corpus of training documents.
 These algorithms are unsupervised, which means no human input is necessary &#8211; you only need a corpus of plain text documents.</p>
 <p>Once these statistical patterns are found, any plain text documents can be succinctly
 expressed in the new, semantic representation, and queried for topical similarity
-against other documents and so on.</p>
-<p>If the previous paragraphs left you confused, you can read more about the <a class="reference external" href="http://en.wikipedia.org/wiki/Vector_space_model">Vector
+against other documents.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If the previous paragraphs left you confused, you can read more about the <a class="reference external" href="http://en.wikipedia.org/wiki/Vector_space_model">Vector
 Space Model</a> and <a class="reference external" href="http://en.wikipedia.org/wiki/Latent_semantic_indexing">unsupervised
 document analysis</a> on Wikipedia.</p>
-<div class="section" id="design-objectives">
-<span id="design"></span><h2>Design objectives<a class="headerlink" href="#design-objectives" title="Permalink to this headline">¶</a></h2>
-<p><cite>gensim</cite> offers the following features:</p>
+</div>
+<div class="section" id="features">
+<span id="design"></span><h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><strong>Memory independence</strong> &#8211; there is no need for the whole training corpus to
 reside fully in RAM at any one time (can process large, web-scale corpora).</li>
@@ -169,7 +172,8 @@ at a time.</li>
 </div>
 <p>Gensim is licensed under the OSI-approved <a class="reference external" href="http://www.gnu.org/licenses/lgpl.html">GNU LPGL license</a>
 and can be downloaded either from its <a class="reference external" href="https://github.com/piskvorky/gensim/">github repository</a>
-or from the <a class="reference external" href="http://pypi.python.org/pypi/gensim">Python Package Index</a>.</p>
+or from the <a class="reference external" href="http://pypi.python.org/pypi/gensim">Python Package Index</a>. Also see the
+<a class="reference internal" href="about.html"><em>About</em></a> page.</p>
 </div>
 <div class="section" id="core-concepts">
 <h2>Core concepts<a class="headerlink" href="#core-concepts" title="Permalink to this headline">¶</a></h2>

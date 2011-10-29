@@ -25,6 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="gensim" href="index.html" />
     <link rel="next" title="API Reference" href="apiref.html" />
     <link rel="prev" title="Distributed Latent Dirichlet Allocation" href="dist_lda.html" />
@@ -257,7 +258,7 @@ recommended client splits them into smaller chunks before uploading them to the 
 </div>
 <div class="section" id="wait-upload-what-where">
 <h2>Wait, upload what, where?<a class="headerlink" href="#wait-upload-what-where" title="Permalink to this headline">¶</a></h2>
-<p>If you use the similarity service object (instance of <tt class="xref py py-class docutils literal"><span class="pre">gensim.similarities.simserver.SessionServer</span></tt>) in
+<p>If you use the similarity service object (instance of <a class="reference internal" href="similarities/simserver.html#gensim.similarities.simserver.SessionServer" title="gensim.similarities.simserver.SessionServer"><tt class="xref py py-class docutils literal"><span class="pre">gensim.similarities.simserver.SessionServer</span></tt></a>) in
 your code directly&#8212;no remote access&#8212;that&#8217;s perfectly fine. Using the service remotely, from a different process/machine, is an
 option, not a necessity.</p>
 <p>Document similarity can also act as a long-running service, a daemon process on a separate machine. In that
@@ -358,7 +359,7 @@ If you don&#8217;t specify <cite>doc[&#8216;payload&#8217;]</cite> during indexi
 a pure Python package for Remote Procedure Calls (RPC), so I&#8217;ll illustrate remote
 service access via Pyro. Pyro takes care of all the socket listening/request routing/data marshalling/thread
 spawning, so it saves us a lot of trouble.</p>
-<p>To create a similarity server, we just create a <tt class="xref py py-class docutils literal"><span class="pre">gensim.similarities.simserver.SessionServer</span></tt> object and register it
+<p>To create a similarity server, we just create a <a class="reference internal" href="similarities/simserver.html#gensim.similarities.simserver.SessionServer" title="gensim.similarities.simserver.SessionServer"><tt class="xref py py-class docutils literal"><span class="pre">gensim.similarities.simserver.SessionServer</span></tt></a> object and register it
 with a Pyro daemon for remote access. There is a small <a class="reference external" href="https://github.com/piskvorky/gensim/blob/simserver/gensim/test/run_simserver.py">example script</a>
 included with gensim, run it with:</p>
 <div class="highlight-python"><pre>$ python -m gensim.test.run_simserver /tmp/testserver</pre>

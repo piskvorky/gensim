@@ -10,24 +10,23 @@ topics from documents, as efficiently (computer-wise) and painlessly (human-wise
 
 Gensim aims at processing raw, unstructured digital texts ("*plain text*").
 The algorithms in `gensim`, such as **Latent Semantic Analysis**, **Latent Dirichlet Allocation** or **Random Projections**,
-discover semantic structure of documents, by examining word co-occurrence patterns within a corpus of training documents.
+discover semantic structure of documents, by examining word statistical co-occurrence patterns within a corpus of training documents.
 These algorithms are unsupervised, which means no human input is necessary -- you only need a corpus of plain text documents.
 
 Once these statistical patterns are found, any plain text documents can be succinctly
 expressed in the new, semantic representation, and queried for topical similarity
-against other documents and so on.
+against other documents.
 
-If the previous paragraphs left you confused, you can read more about the `Vector
-Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised
-document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
+.. note::
+   If the previous paragraphs left you confused, you can read more about the `Vector
+   Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised
+   document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
 
 
 .. _design:
 
-Design objectives
+Features
 ------------------
-
-`gensim` offers the following features:
 
 * **Memory independence** -- there is no need for the whole training corpus to
   reside fully in RAM at any one time (can process large, web-scale corpora).
@@ -59,7 +58,8 @@ Availability
 
 Gensim is licensed under the OSI-approved `GNU LPGL license <http://www.gnu.org/licenses/lgpl.html>`_
 and can be downloaded either from its `github repository <https://github.com/piskvorky/gensim/>`_
-or from the `Python Package Index <http://pypi.python.org/pypi/gensim>`_.
+or from the `Python Package Index <http://pypi.python.org/pypi/gensim>`_. Also see the
+:doc:`about` page.
 
 
 Core concepts
