@@ -28,7 +28,7 @@ def read(fname):
 
 setup(
     name = 'gensim',
-    version = '0.8.1',
+    version = '0.8.2',
     description = 'Python framework for fast Vector Space Modelling',
     long_description = read('README.rst'),
 
@@ -68,7 +68,7 @@ setup(
     ],
 
     extras_require = {
-        'distributed': ['Pyro4 >= 4.8', 'sqlitedict >= 1.0.6'],
+        'distributed': ['Pyro4 >= 4.8'],
     },
 
     include_package_data = True,

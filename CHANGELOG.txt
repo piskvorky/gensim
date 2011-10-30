@@ -1,11 +1,20 @@
 Changes
 =======
 
+0.8.2
+
+* improved gensim landing page
+* improved accuracy of SVD (Latent Semantic Analysis) (thx to Mark Tygert)
+* changed interpretation of LDA topics: github issue #57
+* took out similarity server code introduced in 0.8.1 (will become a separate project)
+* started using `tox` for testing
+* + several smaller fixes and optimizations
+
 0.8.1
 
 * transactional similarity server: see docs/simserver.html
 * website moved from university hosting to radimrehurek.com
-* much improved speed of lsi[corpus] transformation: 
+* much improved speed of lsi[corpus] transformation:
 * accuracy tests of incremental svd: test/svd_error.py and http://groups.google.com/group/gensim/browse_thread/thread/4b605b72f8062770
 * further improvements to memory-efficiency of LDA and LSA
 * improved wiki preprocessing (thx to Luca de Alfaro)
