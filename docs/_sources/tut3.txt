@@ -130,8 +130,8 @@ Where next?
 ------------
 
 Congratulations, you have finished the tutorials -- now you know how gensim works :-)
-To delve into more details, you can browse through the :doc:`API documentation <apiref>` or
-perhaps check out :doc:`distributed computing <distributed>` in `gensim`.
+To delve into more details, you can browse through the :doc:`API documentation <apiref>`,
+see the :doc:`Wikipedia experiments <wiki>` or perhaps check out :doc:`distributed computing <distributed>` in `gensim`.
 
 Please remember that gensim is an experimental package, aimed at the NLP research community.
 This means that:

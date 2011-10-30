@@ -38,9 +38,9 @@ except ImportError:
 
 sparsesvd = None # don't use SVDLIBC
 
-FACTORS = [300, 100] # which num_topics to try
-CHUNKSIZE = [10000, 5000, 1000] # which chunksize to try
-POWER_ITERS = [0, 2, 4] # extra power iterations for the randomized algo
+FACTORS = [300] # which num_topics to try
+CHUNKSIZE = [10000, 1000] # which chunksize to try
+POWER_ITERS = [0, 1, 2, 4, 6] # extra power iterations for the randomized algo
 
 # when reporting reconstruction error, also report spectral norm error? (very slow)
 COMPUTE_NORM2 = False

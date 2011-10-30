@@ -2,21 +2,13 @@
 
 {% block rootrellink %}
         <li><a href="{{ pathto('index') }}">Gensim home</a>|&nbsp;</li>
-        <li><a href="{{ pathto('apiref') }}">API reference</a>|&nbsp;</li>
-       <li><a href="{{ pathto('tutorial') }}">Tutorials</a> &raquo;</li>
-{% endblock %}
-
-
-{% block relbar1 %}
-<!--
-<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="{{ pathto('index') }}"><img src="{{pathto("_static/logo.png", 1) }}" border="0" alt="gensim logo"/></a>
-</div>
---!>
-{{ super() }}
+        <li><a href="{{ pathto('tutorial') }}">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="{{ pathto('apiref') }}">API reference</a>&raquo;</li>
 {% endblock %}
 
 
 {# put the sidebar before the body #}
-{% block sidebar1 %}{{ sidebar()}}{% endblock %}
+{% block sidebar1 %}{{ sidebar() }}{% endblock %}
 {% block sidebar2 %}{% endblock %}

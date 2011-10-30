@@ -3,13 +3,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>Document Similarity Server &mdash; gensim</title>
+    
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
@@ -22,7 +25,10 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="gensim" href="index.html" />
+    <link rel="next" title="API Reference" href="apiref.html" />
+    <link rel="prev" title="Distributed Latent Dirichlet Allocation" href="dist_lda.html" />
 <!-- twitter search widget
     <script type="text/javascript" src="_static/widget.js"></script>
 -->
@@ -59,9 +65,17 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="apiref.html" title="API Reference"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dist_lda.html" title="Distributed Latent Dirichlet Allocation"
+             accesskey="P">previous</a> |</li>
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
-        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
-       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
+        <li><a href="tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>&raquo;</li>
  
       </ul>
     </div>
@@ -91,10 +105,16 @@
 </li>
 </ul>
 
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dist_lda.html"
+                        title="previous chapter">Distributed Latent Dirichlet Allocation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="apiref.html"
+                        title="next chapter">API Reference</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -127,8 +147,8 @@
 <li>index arbitrary documents using this semantic model</li>
 <li>query the index for similar documents (the query can be either an id of a document already in the index, or an arbitrary text)</li>
 </ol>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">similarities</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">server</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">SessionServer</span><span class="p">(</span><span class="s">&#39;/tmp/my_server&#39;</span><span class="p">)</span> <span class="c"># resume server (or create a new one)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim.similarities.simserver</span> <span class="kn">import</span> <span class="n">SessionServer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">server</span> <span class="o">=</span> <span class="n">SessionServer</span><span class="p">(</span><span class="s">&#39;/tmp/my_server&#39;</span><span class="p">)</span> <span class="c"># resume server (or create a new one)</span>
 </pre></div>
 </div>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">server</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">training_corpus</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;lsi&#39;</span><span class="p">)</span> <span class="c"># create a semantic model</span>
@@ -188,7 +208,8 @@ need the <a class="reference external" href="http://pypi.python.org/pypi/sqlited
 Python&#8217;s sqlite3 module in a thread-safe manner:</p>
 <div class="highlight-python"><pre>$ sudo easy_install -U sqlitedict</pre>
 </div>
-<p>To test the remote server capabilities, install Pyro4 (Python Remote Object):</p>
+<p>To test the remote server capabilities, install Pyro4 (Python Remote Objects, at
+version 4.8 as of this writing):</p>
 <div class="highlight-python"><pre>$ sudo easy_install Pyro4</pre>
 </div>
 <div class="admonition note">
@@ -243,15 +264,16 @@ option, not a necessity.</p>
 <p>Document similarity can also act as a long-running service, a daemon process on a separate machine. In that
 case, I&#8217;ll call the service object a <em>server</em>.</p>
 <p>But let&#8217;s start with a local object. Open your <a class="reference external" href="http://ipython.org/">favourite shell</a> and:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">utils</span><span class="p">,</span> <span class="n">similarities</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">service</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">SessionServer</span><span class="p">(</span><span class="s">&#39;/tmp/my_server/&#39;</span><span class="p">)</span> <span class="c"># or wherever</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim.similarities.simserver</span> <span class="kn">import</span> <span class="n">SessionServer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">service</span> <span class="o">=</span> <span class="n">SessionServer</span><span class="p">(</span><span class="s">&#39;/tmp/my_server/&#39;</span><span class="p">)</span> <span class="c"># or wherever</span>
 </pre></div>
 </div>
 <p>That initialized a new service, located in <cite>/tmp/my_server</cite> (you need write access rights to that directory).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The service is fully defined by the content of its location (&#8220;<cite>/tmp/my_server/</cite>&#8221;)
-directory. If you use an existing location, the service object will resume
+<p class="last">The service is fully defined by the content of its location directory (&#8220;<cite>/tmp/my_server/</cite>&#8221;).
+If you use an existing location, the service object will resume
 from the index found there. Also, to &#8220;clone&#8221; a service, just copy that
 directory somewhere else. The copy will be a fully working duplicate of the
 original service.</p>
@@ -316,15 +338,16 @@ You don&#8217;t have to index <strong>all</strong> documents first to start quer
 <span class="go">ValueError: document &#39;doc_5&#39; not in index</span>
 </pre></div>
 </div>
-<p>In the resulting 3-tuples, <cite>doc_n</cite> is the document id, <cite>0.3042..</cite> is the similarity of <cite>doc_n</cite> to the query, but what&#8217;s up with that <cite>None</cite>, you ask?
-You can associate each document with a &#8220;payload&#8221;, during indexing.
+<p>In the resulting 3-tuples, <cite>doc_n</cite> is the document id we supplied during indexing,
+<cite>0.30426699</cite> is the similarity of <cite>doc_n</cite> to the query, but what&#8217;s up with that <cite>None</cite>, you ask?
+Well, you can associate each document with a &#8220;payload&#8221;, during indexing.
 This payload object (anything pickle-able) is later returned during querying.
 If you don&#8217;t specify <cite>doc[&#8216;payload&#8217;]</cite> during indexing, queries simply return <cite>None</cite> in the result tuple, as in our example here.</p>
 </li>
 <li><p class="first">or by document (using <cite>document[&#8216;tokens&#8217;]</cite>; id is ignored in this case):</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">doc</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;tokens&#39;</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">simple_preprocess</span><span class="p">(</span><span class="s">&#39;Graph and minors and humans and trees.&#39;</span><span class="p">)}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">service</span><span class="o">.</span><span class="n">find_similar</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
-<span class="go">[(&#39;doc_7&#39;, 0.93350589, None), (&#39;doc_3&#39;, 0.42718196, None), (&#39;doc_6&#39;, 0.27212361, None)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">service</span><span class="o">.</span><span class="n">find_similar</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">min_score</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">max_results</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="go">[(&#39;doc_7&#39;, 0.93350589, None), (&#39;doc_3&#39;, 0.42718196, None)]</span>
 </pre></div>
 </div>
 </li>
@@ -342,7 +365,7 @@ included with gensim, run it with:</p>
 <div class="highlight-python"><pre>$ python -m gensim.test.run_simserver /tmp/testserver</pre>
 </div>
 <p>You can just <cite>ctrl+c</cite> to terminate the server, but leave it running for now.</p>
-<p>Now open your Python shell again, possibly on another machine, and:</p>
+<p>Now open your Python shell again, in another terminal window or possibly on another machine, and:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">Pyro4</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">service</span> <span class="o">=</span> <span class="n">Pyro4</span><span class="o">.</span><span class="n">Proxy</span><span class="p">(</span><span class="n">Pyro4</span><span class="o">.</span><span class="n">locateNS</span><span class="p">()</span><span class="o">.</span><span class="n">lookup</span><span class="p">(</span><span class="s">&#39;gensim.testserver&#39;</span><span class="p">))</span>
 </pre></div>
@@ -353,13 +376,14 @@ you ran the <cite>run_server.py</cite> script, which can be a totally different 
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">service</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">service</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">service</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">other_corpus</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">service</span><span class="o">.</span><span class="n">find_similar</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="o">...</span>
 </pre></div>
 </div>
 <p>It is worth mentioning that Irmen, the author of Pyro, also released
 <a class="reference external" href="http://irmen.home.xs4all.nl/pyrolite/">Pyrolite</a> recently. That is a package
-which allows you to create Pyro proxies from Java and .NET, as well as from Python.
-That way you can utilize the remote server from there too&#8212;the client doesn&#8217;t have to be in Python.</p>
+which allows you to create Pyro proxies also from Java and .NET, in addition to Python.
+That way you can call remote methods from there too&#8212;the client doesn&#8217;t have to be in Python.</p>
 </div>
 <div class="section" id="concurrency">
 <h2>Concurrency<a class="headerlink" href="#concurrency" title="Permalink to this headline">¶</a></h2>
@@ -367,7 +391,7 @@ That way you can utilize the remote server from there too&#8212;the client doesn
 happens if multiple clients create proxies to it at the same time? What if they
 want to modify the server index at the same time?</p>
 <p>Answer: the <cite>SessionServer</cite> object is thread-safe, so that when each client spawns a request
-thread via Pyro, they don&#8217;t step on each others toes.</p>
+thread via Pyro, they don&#8217;t step on each other&#8217;s toes.</p>
 <p>This means that:</p>
 <ol class="arabic simple">
 <li>There can be multiple simultaneous <cite>service.find_similar</cite> queries (or, in
@@ -386,8 +410,8 @@ done over a clone of the service. If the modification session fails for whatever
 reason (exception in code; power failure that turns off the server; client unhappy
 with how the session went), it can be rolled back. It also means other clients can
 continue querying the original index during index updates.</p>
-<p>The mechanism is hidden from users by default through auto-committing (it was already happenning
-in the examples above too, transparently), but auto-committing can be turned off explicitly:</p>
+<p>The mechanism is hidden from users by default through auto-committing (it was already happening
+in the examples above too), but auto-committing can be turned off explicitly:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">service</span><span class="o">.</span><span class="n">set_autosession</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">service</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
 <span class="go">RuntimeError: must open a session before modifying SessionServer</span>
@@ -423,6 +447,7 @@ TODO add some hard numbers; example tutorial for some bigger collection, e.g. ar
       </div>
       <div class="clearer"></div>
     </div>
+    
         
     <div class="related">
       <h3>Navigation</h3>
@@ -433,18 +458,25 @@ TODO add some hard numbers; example tutorial for some bigger collection, e.g. ar
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="apiref.html" title="API Reference"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dist_lda.html" title="Distributed Latent Dirichlet Allocation"
+             >previous</a> |</li>
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
-        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
-       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
+        <li><a href="tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>&raquo;</li>
  
       </ul>
     </div>
     
-    
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 05, 2011.
+      Last updated on Oct 29, 2011.
     </div>
   </body>
 </html>

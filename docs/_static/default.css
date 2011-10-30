@@ -1,7 +1,55 @@
 /**
  * Alternate Sphinx design
  * Originally created by Armin Ronacher for Werkzeug, adapted by Georg Brandl.
+ * Minor modifications by Radim Rehurek, who was too lazy to fork the theme.
  */
+
+table.links {
+    border-collapse: separate;
+    border-spacing: 15px;
+    margin: 10px auto 0px auto;
+}
+
+table.links tr td {
+    -moz-border-radius: 15px;
+    border-radius: 15px;
+    padding: 10px 30px;
+    color: white;
+/*    border: 1px solid #86989B;*/
+    font-weight: bold;
+    background-color: #eee;
+    text-align: center;
+}
+
+table.links a { text-decoration: none; }
+
+#tagcloud {
+    font-size: 50%;
+    width: 80%;
+    margin: 20px auto 0px auto;
+    padding: 15px;
+    line-height: 2.4em;
+    word-spacing: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    text-align: justify;
+    text-indent: 0;
+    border: 1px dotted;
+}
+
+.wrd { padding:0; position:relative }
+.tagcloud0 { font-size:1.0em; color:#ACC1F3; z-index:10 }
+.tagcloud1 { font-size:1.4em; color:#ACC1F3; z-index:9 }
+.tagcloud2 { font-size:1.8em; color:#86A0DC; z-index:8}
+.tagcloud3 { font-size:2.2em; color:#86A0DC; z-index:7}
+.tagcloud4 { font-size:2.6em; color:#607EC5; z-index:6}
+.tagcloud5 { font-size:3.0em; color:#607EC5; z-index:5}
+.tagcloud6 { font-size:3.3em; color:#4C6DB9; z-index:4}
+.tagcloud7 { font-size:3.6em; color:#395CAE; z-index:3}
+.tagcloud8 { font-size:3.9em; color:#264CA2; z-index:2}
+.tagcloud9 { font-size:4.2em; color:#133B97; z-index:1}
+.tagcloud10 { font-size:4.5em; color:#002A8B; z-index:0}
+
 
 body {
     font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', sans-serif;
@@ -221,16 +269,17 @@ div.body a {
 
 div.sphinxsidebar {
     margin: 0;
-    padding: 0.5em 15px 15px 0;
+    padding: 0.5em 15px 15px 15px;
     width: 250px;
     float: right;
     text-align: left;
+    background-color: #eee;
 /*    margin-left: -100%; */
 }
 
 div.sphinxsidebarl {
     margin: 0;
-    padding: 0.5em 15px 15px 0;
+    padding: 0.5em 15px 15px 0px;
     width: 210px;
     float: left;
     clear: left;
@@ -271,8 +320,9 @@ p.rubric {
 h1 {
     margin: 0;
     padding: 0.7em 0 0.3em 0;
-    font-size: 1.5em;
-    color: #11557C;
+    font-size: 1.8em;
+    /*color: #11557C;*/
+    color: #000;
 }
 
 h2 {

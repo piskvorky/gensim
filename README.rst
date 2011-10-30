@@ -20,7 +20,7 @@ Features
 * Efficient implementations of popular algorithms, such as online **Latent Semantic Analysis**,
   **Latent Dirichlet Allocation** or **Random Projections**
 * **Distributed computing**: can run *Latent Semantic Analysis* and *Latent Dirichlet Allocation* on a cluster of computers.
-* Extensive `HTML documentation and tutorials <http://nlp.fi.muni.cz/projekty/gensim/>`_.
+* Extensive `HTML documentation and tutorials <http://radimrehurek.com/gensim/>`_.
 
 
 If this feature list left you scratching your head, you can first read more about the `Vector
@@ -45,19 +45,19 @@ you'll need to run::
 
 
 For alternative modes of installation (without root priviledges, development
-installation, optional install features), see the `documentation <http://nlp.fi.muni.cz/projekty/gensim/install.html>`_.
+installation, optional install features), see the `documentation <http://radimrehurek.com/gensim/install.html>`_.
 
 This version has been tested under Python 2.5 and 2.6, but should run on any 2.5 <= Python < 3.0.
 
 Documentation
 -------------
 
-Manual for the gensim package is available in `HTML <http://nlp.fi.muni.cz/projekty/gensim/>`_. It
+Manual for the gensim package is available in `HTML <http://radimrehurek.com/gensim/>`_. It
 contains a walk-through of all its features and a complete reference section.
 It is also included in the source distribution package.
 
 ----------------
 
 Gensim is open source software, and has been released under the
-`GNU LPGL license <http://www.gnu.org/licenses/lgpl.html>`_.
+`GNU LGPL license <http://www.gnu.org/licenses/lgpl.html>`_.
 Copyright (c) 2011 Radim Rehurek

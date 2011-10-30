@@ -3,17 +3,20 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>Installation &mdash; gensim</title>
+    
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.1',
+        VERSION:     '0.8.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,36 +25,33 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="gensim" href="index.html" />
     <link rel="next" title="Tutorials" href="tutorial.html" />
     <link rel="prev" title="Introduction" href="intro.html" />
-<!-- twitter search widget
-    <script type="text/javascript" src="_static/widget.js"></script>
--->
-<meta property="og:title" content="#gensim" />
-<meta property="og:description" content="Efficient topic modelling in Python" />
+	<!-- twitter search widget
+	    <script type="text/javascript" src="_static/widget.js"></script>
+	-->
+	<meta property="og:title" content="#gensim" />
+	<meta property="og:description" content="Efficient topic modelling in Python" />
 
-<script type="text/javascript">
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-24066335-1']);
+		_gaq.push(['_trackPageview']);
 
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-24066335-1']);
-  _gaq.push(['_trackPageview']);
+		(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
 
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
+    
 
-</script>
+
   </head>
   <body>
-<!--
-<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="index.html"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
-</div>
---!>
-
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -68,12 +68,13 @@
           <a href="intro.html" title="Introduction"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
-        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
-       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
+        <li><a href="tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>&raquo;</li>
  
       </ul>
     </div>
-
 
     
       <div class="sphinxsidebar">
@@ -81,7 +82,9 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Installation</a><ul>
-<li><a class="reference internal" href="#install-python">Install Python</a></li>
+<li><a class="reference internal" href="#quick-install">Quick install</a></li>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#install-python-and-easy-install">Install Python and <cite>easy_install</cite></a></li>
 <li><a class="reference internal" href="#install-scipy-numpy">Install SciPy &amp; NumPy</a></li>
 <li><a class="reference internal" href="#install-gensim">Install <cite>gensim</cite></a></li>
 <li><a class="reference internal" href="#testing-gensim">Testing <cite>gensim</cite></a></li>
@@ -99,7 +102,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -122,24 +125,39 @@
             
   <div class="section" id="installation">
 <span id="install"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="quick-install">
+<h2>Quick install<a class="headerlink" href="#quick-install" title="Permalink to this headline">¶</a></h2>
+<p>Run in your terminal:</p>
+<div class="highlight-python"><pre>sudo easy_install -U gensim</pre>
+</div>
+<p>In case that fails, or you don&#8217;t know what &#8220;terminal&#8221; means, read on.</p>
+</div>
+<hr class="docutils" />
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
 <p>Gensim is known to run on Linux, Windows and Mac OS X and should run on any other
 platform that supports Python 2.5 and NumPy. Gensim depends on the following software:</p>
 <ul class="simple">
 <li>3.0 &gt; <a class="reference external" href="http://www.python.org">Python</a> &gt;= 2.5. Tested with versions 2.5, 2.6 and 2.7.</li>
-<li><a class="reference external" href="http://www.numpy.org">NumPy</a> &gt;= 1.0.4. Tested with version 1.6.1rc2, 1.5.0rc1, 1.4.0, 1.3.0rc2 and 1.0.4.</li>
-<li><a class="reference external" href="http://www.scipy.org">SciPy</a> &gt;= 0.7. Tested with version 0.9.0, 0.8.0, 0.8.0b1, 0.7.1</li>
+<li><a class="reference external" href="http://www.numpy.org">NumPy</a> &gt;= 1.3. Tested with version 1.6.1rc2, 1.5.0rc1, 1.4.0, 1.3.0, 1.3.0rc2.</li>
+<li><a class="reference external" href="http://www.scipy.org">SciPy</a> &gt;= 0.7. Tested with version 0.9.0, 0.8.0, 0.8.0b1, 0.7.1, 0.7.0.</li>
 </ul>
-<div class="section" id="install-python">
-<h2>Install Python<a class="headerlink" href="#install-python" title="Permalink to this headline">¶</a></h2>
+<p><strong>Windows users</strong> are well advised to try the <a class="reference external" href="http://www.enthought.com/products/epd.php">Enthought distribution</a>,
+which conveniently includes Python&amp;NumPy&amp;SciPy in a single bundle, and is free for academic use.</p>
+</div>
+<div class="section" id="install-python-and-easy-install">
+<h2>Install Python and <cite>easy_install</cite><a class="headerlink" href="#install-python-and-easy-install" title="Permalink to this headline">¶</a></h2>
 <p>Check what version of Python you have with:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">python</span> <span class="o">--</span><span class="n">version</span>
 </pre></div>
 </div>
-<p>You can download Python 2.5 from <a class="reference external" href="http://python.org/download">http://python.org/download</a>.</p>
+<p>You can download Python from <a class="reference external" href="http://python.org/download">http://python.org/download</a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Gensim requires Python 2.5 or greater and will not run under earlier versions.</p>
 </div>
+<p>Next, install the <a class="reference external" href="http://pypi.python.org/pypi/setuptools">easy_install utility</a>,
+which will make installing other Python programs easier.</p>
 </div>
 <div class="section" id="install-scipy-numpy">
 <h2>Install SciPy &amp; NumPy<a class="headerlink" href="#install-scipy-numpy" title="Permalink to this headline">¶</a></h2>
@@ -166,7 +184,7 @@ of computers, in <a class="reference internal" href="distributed.html"><em>Distr
 If you don&#8217;t know what distributed computing means, you can ignore it:
 <cite>gensim</cite> will work fine for you anyway.
 This optional extension can also be installed separately later with:</p>
-<div class="highlight-python"><pre>sudo easy_install Pyro</pre>
+<div class="highlight-python"><pre>sudo easy_install Pyro4</pre>
 </div>
 <hr class="docutils" />
 <p>There are also alternative routes to install:</p>
@@ -213,6 +231,7 @@ me an email to the address at the bottom of this page.</p>
       </div>
       <div class="clearer"></div>
     </div>
+    
         
     <div class="related">
       <h3>Navigation</h3>
@@ -230,17 +249,18 @@ me an email to the address at the bottom of this page.</p>
           <a href="intro.html" title="Introduction"
              >previous</a> |</li>
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
-        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
-       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
+        <li><a href="tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>&raquo;</li>
  
       </ul>
     </div>
     
-    
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 05, 2011.
+      Last updated on Oct 31, 2011.
     </div>
   </body>
 </html>

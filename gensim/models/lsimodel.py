@@ -225,6 +225,10 @@ class LsiModel(interfaces.TransformationABC):
        latent space,
     3. `add_documents()` for incrementally updating the model with new documents.
 
+    The left singular vectors are stored in `lsi.projection.u`, singular values
+    in `lsi.projection.s`. Right singular vectors can be reconstructed from the output
+    of `lsi[training_corpus]`, if needed.
+
     Model persistency is achieved via its load/save methods.
 
     """
@@ -442,7 +446,7 @@ class LsiModel(interfaces.TransformationABC):
         """
         # size of the projection matrix can actually be smaller than `self.num_topics`,
         # if there were not enough factors (real rank of input matrix smaller than
-        # `self.num_topics`). in that case, return empty string
+        # `self.num_topics`). in that case, return an empty string
         if topicno >= len(self.projection.u.T):
             return ''
         c = numpy.asarray(self.projection.u.T[topicno, :]).flatten()
@@ -452,9 +456,21 @@ class LsiModel(interfaces.TransformationABC):
 
     def print_topic(self, topicno, topn=10):
         return ' + '.join(['%.3f*"%s"' % v for v in self.show_topic(topicno, topn)])
-    
-    def show_topics(self, num_topics=5, num_words=10, log=False, formatted=True):
+
+    def show_topics(self, num_topics=-1, num_words=10, log=False, formatted=True):
+        """
+        Show `num_topics` most significant topics (show all by default).
+        For each topic, show `num_words` most significant words (10 words by defaults).
+
+        Return the shown topics as a list -- a list of strings if `formatted` is
+        True, or a list of  (value, word) 2-tuples if it's False.
+
+        If `log` is True, also output this result to log.
+
+        """
         shown = []
+        if num_topics < 0:
+            num_topics = self.num_topics
         for i in xrange(min(num_topics, self.num_topics)):
             if i < len(self.projection.s):
                 if formatted:
@@ -469,7 +485,8 @@ class LsiModel(interfaces.TransformationABC):
         return shown
 
     def print_topics(self, num_topics=5, num_words=10):
-        self.show_topics(num_topics=5, num_words=10, log=True)
+        """Alias for `show_topics()` which prints the top 5 topics to log."""
+        self.show_topics(num_topics=num_topics, num_words=num_words, log=True)
 
     def print_debug(self, num_topics=5, num_words=10):
         """
@@ -611,10 +628,16 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         # so check for equal dtype explicitly, to avoid the extra memory footprint if possible
         if y.dtype != dtype:
             y = y.astype(dtype)
+
+        logger.info("orthonormalizing %s action matrix" % str(y.shape))
+        y = [y]
+        q, _ = matutils.qr_destroy(y) # orthonormalize the range
+
         logger.debug("running %i power iterations" % power_iters)
         for power_iter in xrange(power_iters):
-            y = corpus.T * y
-            y = corpus * y
+            q = corpus.T * q
+            q = [corpus * q]
+            q, _ = matutils.qr_destroy(q) # orthonormalize the range after each power iteration step
     else:
         num_docs = 0
         for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
@@ -632,24 +655,24 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
             sparsetools.csc_matvecs(m, n, samples, chunk.indptr, chunk.indices, # y = y + chunk * o
                                     chunk.data, o.ravel(), y.ravel())
             del chunk, o
+        y = [y]
+        q, _ = matutils.qr_destroy(y) # orthonormalize the range
 
         for power_iter in xrange(power_iters):
             logger.info("running power iteration #%i" % (power_iter + 1))
-            yold = y.copy()
-            y[:] = 0.0
+            yold = q.copy()
+            q[:] = 0.0
             for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
                 logger.info('PROGRESS: at document #%i/%i' % (chunk_no * chunksize, num_docs))
                 chunk = matutils.corpus2csc(chunk, num_terms=num_terms, dtype=dtype) # documents = columns of sparse CSC
                 tmp = chunk.T * yold
                 tmp = chunk * tmp
                 del chunk
-                y += tmp
+                q += tmp
             del yold
+            q = [q]
+            q, _ = matutils.qr_destroy(q) # orthonormalize the range
 
-    logger.info("orthonormalizing %s action matrix" % str(y.shape))
-    y = [y]
-    q, r = matutils.qr_destroy(y) # orthonormalize the range
-    del y
     qt = q[:, :samples].T.copy()
     del q
 

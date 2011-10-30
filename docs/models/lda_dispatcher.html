@@ -3,17 +3,20 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>models.lda_dispatcher – Dispatcher for distributed LDA &mdash; gensim</title>
+    
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.1',
+        VERSION:     '0.8.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,37 +25,34 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
     <link rel="top" title="gensim" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
     <link rel="next" title="models.lda_worker – Worker for distributed LDA" href="lda_worker.html" />
     <link rel="prev" title="models.lsi_worker – Worker for distributed LSI" href="lsi_worker.html" />
-<!-- twitter search widget
-    <script type="text/javascript" src="_static/widget.js"></script>
--->
-<meta property="og:title" content="#gensim" />
-<meta property="og:description" content="Efficient topic modelling in Python" />
+	<!-- twitter search widget
+	    <script type="text/javascript" src="_static/widget.js"></script>
+	-->
+	<meta property="og:title" content="#gensim" />
+	<meta property="og:description" content="Efficient topic modelling in Python" />
 
-<script type="text/javascript">
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-24066335-1']);
+		_gaq.push(['_trackPageview']);
 
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-24066335-1']);
-  _gaq.push(['_trackPageview']);
+		(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
 
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
+    
 
-</script>
+
   </head>
   <body>
-<!--
-<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="../index.html"><img src="../_static/logo.png" border="0" alt="gensim logo"/></a>
-</div>
---!>
-
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -69,13 +69,14 @@
           <a href="lsi_worker.html" title="models.lsi_worker – Worker for distributed LSI"
              accesskey="P">previous</a> |</li>
         <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
-        <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
-       <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
+        <li><a href="../tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="../apiref.html">API reference</a>&raquo;</li>
 
           <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
       </ul>
     </div>
-
 
     
       <div class="sphinxsidebar">
@@ -89,7 +90,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -179,6 +180,7 @@ and <cite>worker.requestjob()</cite>.</p>
       </div>
       <div class="clearer"></div>
     </div>
+    
         
     <div class="related">
       <h3>Navigation</h3>
@@ -196,18 +198,19 @@ and <cite>worker.requestjob()</cite>.</p>
           <a href="lsi_worker.html" title="models.lsi_worker – Worker for distributed LSI"
              >previous</a> |</li>
         <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
-        <li><a href="../apiref.html">API reference</a>|&nbsp;</li>
-       <li><a href="../tutorial.html">Tutorials</a> &raquo;</li>
+        <li><a href="../tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="../apiref.html">API reference</a>&raquo;</li>
 
           <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
       </ul>
     </div>
     
-    
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 05, 2011.
+      Last updated on Oct 30, 2011.
     </div>
   </body>
 </html>

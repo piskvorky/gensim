@@ -17,8 +17,8 @@ Conceptually, a service that lets you :
 3. query the index for similar documents (the query can be either an id of a document already in the index, or an arbitrary text)
 
 
->>> from gensim import similarities
->>> server = similarities.SessionServer('/tmp/my_server') # resume server (or create a new one)
+>>> from gensim.similarities.simserver import SessionServer
+>>> server = SessionServer('/tmp/my_server') # resume server (or create a new one)
 
 >>> server.train(training_corpus, method='lsi') # create a semantic model
 >>> server.index(some_documents) # convert plain text to semantic representation and index it
@@ -79,7 +79,8 @@ Python's sqlite3 module in a thread-safe manner::
 
     $ sudo easy_install -U sqlitedict
 
-To test the remote server capabilities, install Pyro4 (Python Remote Object)::
+To test the remote server capabilities, install Pyro4 (Python Remote Objects, at
+version 4.8 as of this writing)::
 
     $ sudo easy_install Pyro4
 
@@ -94,8 +95,8 @@ What is a document?
 
 In case of text documents, the service expects::
 
->>> document = {'id': 'some_unique_string', 
->>>             'tokens': ['content', 'of', 'the', 'document', '...'], 
+>>> document = {'id': 'some_unique_string',
+>>>             'tokens': ['content', 'of', 'the', 'document', '...'],
 >>>             'other_fields_are_allowed_but_ignored': None}
 
 This format was chosen because it coincides with plain JSON and is therefore easy to serialize and send over the wire, in almost any language.
@@ -118,7 +119,7 @@ iterator protocol. Generators are ok. Plain lists are also ok (but consume more 
 >>>          "The intersection graph of paths in trees",
 >>>          "Graph minors IV Widths of trees and well quasi ordering",
 >>>          "Graph minors A survey"]
->>> corpus = [{'id': 'doc_%i' % num, 'tokens': utils.simple_preprocess(text)} 
+>>> corpus = [{'id': 'doc_%i' % num, 'tokens': utils.simple_preprocess(text)}
 >>>           for num, text in enumerate(texts)]
 
 Since corpora are allowed to be arbitrarily large, it is
@@ -138,14 +139,15 @@ case, I'll call the service object a *server*.
 
 But let's start with a local object. Open your `favourite shell <http://ipython.org/>`_ and::
 
->>> from gensim import utils, similarities
->>> service = similarities.SessionServer('/tmp/my_server/') # or wherever
+>>> from gensim import utils
+>>> from gensim.similarities.simserver import SessionServer
+>>> service = SessionServer('/tmp/my_server/') # or wherever
 
 That initialized a new service, located in `/tmp/my_server` (you need write access rights to that directory).
 
 .. note::
-   The service is fully defined by the content of its location ("`/tmp/my_server/`")
-   directory. If you use an existing location, the service object will resume
+   The service is fully defined by the content of its location directory ("`/tmp/my_server/`").
+   If you use an existing location, the service object will resume
    from the index found there. Also, to "clone" a service, just copy that
    directory somewhere else. The copy will be a fully working duplicate of the
    original service.
@@ -214,9 +216,10 @@ There are two types of queries:
    >>> print service.find_similar('doc_5') # we deleted doc_5 and doc_8, remember?
    ValueError: document 'doc_5' not in index
 
-   In the resulting 3-tuples, `doc_n` is the document id, `0.3042..` is the similarity of `doc_n` to the query, but what's up with that `None`, you ask? 
-   You can associate each document with a "payload", during indexing.
-   This payload object (anything pickle-able) is later returned during querying. 
+   In the resulting 3-tuples, `doc_n` is the document id we supplied during indexing,
+   `0.30426699` is the similarity of `doc_n` to the query, but what's up with that `None`, you ask?
+   Well, you can associate each document with a "payload", during indexing.
+   This payload object (anything pickle-able) is later returned during querying.
    If you don't specify `doc['payload']` during indexing, queries simply return `None` in the result tuple, as in our example here.
 
 2. or by document (using `document['tokens']`; id is ignored in this case):
@@ -224,8 +227,8 @@ There are two types of queries:
    .. code-block:: python
 
      >>> doc = {'tokens': utils.simple_preprocess('Graph and minors and humans and trees.')}
-     >>> print service.find_similar(doc)
-     [('doc_7', 0.93350589, None), ('doc_3', 0.42718196, None), ('doc_6', 0.27212361, None)]
+     >>> print service.find_similar(doc, min_score=0.4, max_results=50)
+     [('doc_7', 0.93350589, None), ('doc_3', 0.42718196, None)]
 
 Remote access
 -------------
@@ -243,7 +246,7 @@ included with gensim, run it with::
 
 You can just `ctrl+c` to terminate the server, but leave it running for now.
 
-Now open your Python shell again, possibly on another machine, and::
+Now open your Python shell again, in another terminal window or possibly on another machine, and::
 
 >>> import Pyro4
 >>> service = Pyro4.Proxy(Pyro4.locateNS().lookup('gensim.testserver'))
@@ -255,12 +258,13 @@ you ran the `run_server.py` script, which can be a totally different computer
 >>> print service.status()
 >>> service.train(corpus)
 >>> service.index(other_corpus)
+>>> service.find_similar(query)
 >>> ...
 
 It is worth mentioning that Irmen, the author of Pyro, also released
 `Pyrolite <http://irmen.home.xs4all.nl/pyrolite/>`_ recently. That is a package
-which allows you to create Pyro proxies from Java and .NET, as well as from Python. 
-That way you can utilize the remote server from there too---the client doesn't have to be in Python.
+which allows you to create Pyro proxies also from Java and .NET, in addition to Python.
+That way you can call remote methods from there too---the client doesn't have to be in Python.
 
 Concurrency
 -----------
@@ -270,7 +274,7 @@ happens if multiple clients create proxies to it at the same time? What if they
 want to modify the server index at the same time?
 
 Answer: the `SessionServer` object is thread-safe, so that when each client spawns a request
-thread via Pyro, they don't step on each others toes.
+thread via Pyro, they don't step on each other's toes.
 
 This means that:
 
@@ -291,8 +295,8 @@ reason (exception in code; power failure that turns off the server; client unhap
 with how the session went), it can be rolled back. It also means other clients can
 continue querying the original index during index updates.
 
-The mechanism is hidden from users by default through auto-committing (it was already happenning
-in the examples above too, transparently), but auto-committing can be turned off explicitly::
+The mechanism is hidden from users by default through auto-committing (it was already happening
+in the examples above too), but auto-committing can be turned off explicitly::
 
   >>> service.set_autosession(False)
   >>> service.train(corpus)

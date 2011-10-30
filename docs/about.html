@@ -1,0 +1,211 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>About &mdash; gensim</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.8.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="#" />
+    <link rel="top" title="gensim" href="index.html" />
+	<!-- twitter search widget
+	    <script type="text/javascript" src="_static/widget.js"></script>
+	-->
+	<meta property="og:title" content="#gensim" />
+	<meta property="og:description" content="Efficient topic modelling in Python" />
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-24066335-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+    
+
+
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>&raquo;</li>
+ 
+      </ul>
+    </div>
+
+    
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">About</a><ul>
+<li><a class="reference internal" href="#history">History</a></li>
+<li><a class="reference internal" href="#licensing">Licensing</a></li>
+<li><a class="reference internal" href="#collaborators">Collaborators</a></li>
+<li><a class="reference internal" href="#academic-citing">Academic citing</a></li>
+</ul>
+</li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+    
+
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="about">
+<span id="id1"></span><h1>About<a class="headerlink" href="#about" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="history">
+<h2>History<a class="headerlink" href="#history" title="Permalink to this headline">¶</a></h2>
+<p>Gensim started off as a collection of various Python scripts for the Czech Digital Mathematics Library <a class="reference external" href="http://dml.cz/">dml.cz</a> in 2008,
+where it served to generate a short list of the most similar articles to a given article (&#8220;find similar&#8221;).
+I also wanted to try these fancy &#8220;Latent Semantic Methods&#8221;, but the libraries that
+realized the necessary computation were <a class="reference external" href="http://soi.stanford.edu/~rmunk/PROPACK/">not much fun to work with</a>.</p>
+<p>Naturally, I set out to reinvent the wheel. Our <a class="reference external" href="http://radimrehurek.com/gensim/lrec2010_final.pdf">2010 LREC publication</a>
+describes the initial design decisions behind gensim (clarity, efficiency and scalability)
+and is fairly representative of how gensim works even now.</p>
+<p>Later versions of gensim improved this efficiency and scalability tremendously (in fact,
+I made algorithmic scalability of distributional semantics the topic of my <a class="reference external" href="radimrehurek.com/phd_rehurek.pdf">PhD thesis</a>).</p>
+<p>By now, gensim is&#8212;to my knowledge&#8212;the most robust, efficient and hassle-free piece
+of software to realize unsupervised semantic modelling from plain text. It stands
+in contrast to brittle homework-assignment-implementations that do not scale on one hand,
+and java-esque projects that do scale, but only if you&#8217;re willing to sacrifice
+several weeks of your, your technician&#8217;s as well as your local scientist&#8217;s time just to run &#8220;hello world&#8221;.</p>
+<p>In 2011, I started using <a class="reference external" href="https://github.com/piskvorky/gensim">Github</a> for source code hosting,
+and the gensim website moved from university hosting to its present domain.</p>
+</div>
+<div class="section" id="licensing">
+<h2>Licensing<a class="headerlink" href="#licensing" title="Permalink to this headline">¶</a></h2>
+<p>Gensim is licensed under the OSI-approved <a class="reference external" href="http://www.gnu.org/licenses/lgpl.html">GNU LGPL license</a>.
+This means that it&#8217;s free for both personal and commercial use, but if you make any
+modification to gensim that you distribute to other people, you have to disclose
+the source code of these modifications.</p>
+<p>Apart form that, you are free to redistribute gensim in any way you like, though you&#8217;re
+not allowed to modify its license (doh!).</p>
+<p>My intent here is, of course, to get more help and community involvement with the development of gensim.
+The legalese is therefore less important to me than your input and contributions.
+Contact me if LGPL doesn&#8217;t fit your bill but you&#8217;d still like to use it &#8211; we&#8217;ll work something out.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">I also host a document similarity package <cite>gensim.simserver</cite>. This is a high-level
+interface to <cite>gensim</cite> functionality, and offers transactional remote (web-based)
+document similarity queries and indexing. It uses gensim to do the heavy lifting:
+you don&#8217;t need the <cite>simserver</cite> to use gensim, but you do need gensim to use the <cite>simserver</cite>.
+Note that unlike gensim, <cite>gensim.simserver</cite> is licensed under <a class="reference external" href="http://www.gnu.org/licenses/agpl-3.0.html">Affero GPL</a>,
+which is much more restrictive for inclusion in commercial projects.</p>
+</div>
+</div>
+<div class="section" id="collaborators">
+<h2>Collaborators<a class="headerlink" href="#collaborators" title="Permalink to this headline">¶</a></h2>
+<p>I would like to thank all the people who contributed to gensim, be it in <a class="reference external" href="http://groups.google.com/group/gensim">discussions</a>,
+ideas, <a class="reference external" href="https://github.com/piskvorky/gensim/pulls">code contributions</a> or bug reports.</p>
+<p>Some honorable mentions are included in the <a class="reference external" href="https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt">CHANGELOG.txt</a>.</p>
+</div>
+<div class="section" id="academic-citing">
+<h2>Academic citing<a class="headerlink" href="#academic-citing" title="Permalink to this headline">¶</a></h2>
+<p>Gensim has been used in many students&#8217; final theses as well as research papers. When citing gensim,
+please use <a class="reference external" href="bibtex_gensim.bib">this BibTeX entry</a>:</p>
+<div class="highlight-python"><pre>@inproceedings{rehurek_lrec,
+      title = {{Software Framework for Topic Modelling with Large Corpora}},
+      author = {Radim {\v R}eh{\r u}{\v r}ek and Petr Sojka},
+      booktitle = {{Proceedings of the LREC 2010 Workshop on New
+           Challenges for NLP Frameworks}},
+      pages = {45--50},
+      year = 2010,
+      month = May,
+      day = 22,
+      publisher = {ELRA},
+      address = {Valletta, Malta},
+      note={\url{http://is.muni.cz/publication/884893/en}},
+      language={English}
+}</pre>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>&raquo;</li>
+ 
+      </ul>
+    </div>
+    
+
+    <div class="footer">
+        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Oct 30, 2011.
+    </div>
+  </body>
+</html>

@@ -4,24 +4,43 @@
 Installation
 =============
 
+Quick install
+--------------
+
+Run in your terminal::
+
+  sudo easy_install -U gensim
+
+In case that fails, or you don't know what "terminal" means, read on.
+
+-----
+
+Dependencies
+-------------
 Gensim is known to run on Linux, Windows and Mac OS X and should run on any other
 platform that supports Python 2.5 and NumPy. Gensim depends on the following software:
 
 * 3.0 > `Python <http://www.python.org>`_ >= 2.5. Tested with versions 2.5, 2.6 and 2.7.
-* `NumPy <http://www.numpy.org>`_ >= 1.0.4. Tested with version 1.6.1rc2, 1.5.0rc1, 1.4.0, 1.3.0rc2 and 1.0.4.
-* `SciPy <http://www.scipy.org>`_ >= 0.7. Tested with version 0.9.0, 0.8.0, 0.8.0b1, 0.7.1
+* `NumPy <http://www.numpy.org>`_ >= 1.3. Tested with version 1.6.1rc2, 1.5.0rc1, 1.4.0, 1.3.0, 1.3.0rc2.
+* `SciPy <http://www.scipy.org>`_ >= 0.7. Tested with version 0.9.0, 0.8.0, 0.8.0b1, 0.7.1, 0.7.0.
+
+**Windows users** are well advised to try the `Enthought distribution <http://www.enthought.com/products/epd.php>`_,
+which conveniently includes Python&NumPy&SciPy in a single bundle, and is free for academic use.
 
 
-Install Python
----------------
+Install Python and `easy_install`
+---------------------------------
 
 Check what version of Python you have with::
 
     python --version
 
-You can download Python 2.5 from http://python.org/download.
+You can download Python from http://python.org/download.
 
 .. note:: Gensim requires Python 2.5 or greater and will not run under earlier versions.
+
+Next, install the `easy_install utility <http://pypi.python.org/pypi/setuptools>`_,
+which will make installing other Python programs easier.
 
 Install SciPy & NumPy
 ----------------------
@@ -56,7 +75,7 @@ If you don't know what distributed computing means, you can ignore it:
 `gensim` will work fine for you anyway.
 This optional extension can also be installed separately later with::
 
-    sudo easy_install Pyro
+    sudo easy_install Pyro4
 
 -----
 

@@ -3,17 +3,20 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>Introduction &mdash; gensim</title>
+    
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.1',
+        VERSION:     '0.8.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -22,36 +25,33 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="gensim" href="index.html" />
     <link rel="next" title="Installation" href="install.html" />
-    <link rel="prev" title="Gensim – Vector Space Modelling for Humans" href="index.html" />
-<!-- twitter search widget
-    <script type="text/javascript" src="_static/widget.js"></script>
--->
-<meta property="og:title" content="#gensim" />
-<meta property="og:description" content="Efficient topic modelling in Python" />
+    <link rel="prev" title="Gensim – Topic Modelling for Humans" href="index.html" />
+	<!-- twitter search widget
+	    <script type="text/javascript" src="_static/widget.js"></script>
+	-->
+	<meta property="og:title" content="#gensim" />
+	<meta property="og:description" content="Efficient topic modelling in Python" />
 
-<script type="text/javascript">
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-24066335-1']);
+		_gaq.push(['_trackPageview']);
 
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-24066335-1']);
-  _gaq.push(['_trackPageview']);
+		(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
 
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
+    
 
-</script>
+
   </head>
   <body>
-<!--
-<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="index.html"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
-</div>
---!>
-
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -65,15 +65,16 @@
           <a href="install.html" title="Installation"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="Gensim – Vector Space Modelling for Humans"
+          <a href="index.html" title="Gensim – Topic Modelling for Humans"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
-        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
-       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
+        <li><a href="tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>&raquo;</li>
  
       </ul>
     </div>
-
 
     
       <div class="sphinxsidebar">
@@ -81,7 +82,7 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Introduction</a><ul>
-<li><a class="reference internal" href="#design-objectives">Design objectives</a></li>
+<li><a class="reference internal" href="#features">Features</a></li>
 <li><a class="reference internal" href="#availability">Availability</a></li>
 <li><a class="reference internal" href="#core-concepts">Core concepts</a></li>
 </ul>
@@ -90,14 +91,14 @@
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="index.html"
-                        title="previous chapter">Gensim &#8211; Vector Space Modelling for Humans</a></p>
+                        title="previous chapter">Gensim &#8211; Topic Modelling for Humans</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="install.html"
                         title="next chapter">Installation</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -121,19 +122,22 @@
   <div class="section" id="introduction">
 <span id="intro"></span><h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
 <p>Gensim is a Python framework designed to automatically extract semantic
-topics from documents, as naturally and painlessly as possible.</p>
+topics from documents, as efficiently (computer-wise) and painlessly (human-wise) as possible.</p>
 <p>Gensim aims at processing raw, unstructured digital texts (&#8220;<em>plain text</em>&#8221;).
-The unsupervised algorithms in <cite>gensim</cite>, such as <strong>Latent Semantic Analysis</strong>, <strong>Latent Dirichlet Allocation</strong> or <strong>Random Projections</strong>,
-discover hidden (<em>latent</em>) semantic structure, based on word co-occurrence patterns within a corpus of training documents.
-Once these statistical patterns are found, any plain text documents can be succinctly
+The algorithms in <cite>gensim</cite>, such as <strong>Latent Semantic Analysis</strong>, <strong>Latent Dirichlet Allocation</strong> or <strong>Random Projections</strong>,
+discover semantic structure of documents, by examining word statistical co-occurrence patterns within a corpus of training documents.
+These algorithms are unsupervised, which means no human input is necessary &#8211; you only need a corpus of plain text documents.</p>
+<p>Once these statistical patterns are found, any plain text documents can be succinctly
 expressed in the new, semantic representation, and queried for topical similarity
-against other documents and so on.</p>
-<p>If the previous paragraphs left you confused, you can read more about the <a class="reference external" href="http://en.wikipedia.org/wiki/Vector_space_model">Vector
+against other documents.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If the previous paragraphs left you confused, you can read more about the <a class="reference external" href="http://en.wikipedia.org/wiki/Vector_space_model">Vector
 Space Model</a> and <a class="reference external" href="http://en.wikipedia.org/wiki/Latent_semantic_indexing">unsupervised
 document analysis</a> on Wikipedia.</p>
-<div class="section" id="design-objectives">
-<span id="design"></span><h2>Design objectives<a class="headerlink" href="#design-objectives" title="Permalink to this headline">¶</a></h2>
-<p><cite>gensim</cite> offers the following features:</p>
+</div>
+<div class="section" id="features">
+<span id="design"></span><h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><strong>Memory independence</strong> &#8211; there is no need for the whole training corpus to
 reside fully in RAM at any one time (can process large, web-scale corpora).</li>
@@ -141,7 +145,7 @@ reside fully in RAM at any one time (can process large, web-scale corpora).</li>
 including <strong>Tf-Idf</strong>, distributed incremental <strong>Latent Semantic Analysis</strong>,
 distributed incremental <strong>Latent Dirichlet Allocation (LDA)</strong> or <strong>Random Projection</strong>; adding new ones is easy (really!).</li>
 <li>I/O wrappers and converters around <strong>several popular data formats</strong>.</li>
-<li><strong>Similarity queries</strong> for documents in their latent, topical representation.</li>
+<li><strong>Similarity queries</strong> for documents in their semantic representation.</li>
 </ul>
 <p>Creation of <cite>gensim</cite> was motivated by a perceived lack of available, scalable software
 frameworks that realize topic modelling, and/or their overwhelming internal complexity (hail java!).
@@ -163,7 +167,8 @@ at a time.</li>
 </div>
 <p>Gensim is licensed under the OSI-approved <a class="reference external" href="http://www.gnu.org/licenses/lgpl.html">GNU LPGL license</a>
 and can be downloaded either from its <a class="reference external" href="https://github.com/piskvorky/gensim/">github repository</a>
-or from the <a class="reference external" href="http://pypi.python.org/pypi/gensim">Python Package Index</a>.</p>
+or from the <a class="reference external" href="http://pypi.python.org/pypi/gensim">Python Package Index</a>. Also see the
+<a class="reference internal" href="about.html"><em>About</em></a> page.</p>
 </div>
 <div class="section" id="core-concepts">
 <h2>Core concepts<a class="headerlink" href="#core-concepts" title="Permalink to this headline">¶</a></h2>
@@ -187,8 +192,9 @@ question-answer pair:</p>
 <li>How many paragraphs does the document consist of? Two.</li>
 <li>How many fonts does the document use? Five.</li>
 </ol>
-<p>The question is usually represented only by its integer id, so that the
-representation of a document becomes a series of pairs like <tt class="docutils literal"><span class="pre">(1,</span> <span class="pre">0.0),</span> <span class="pre">(2,</span> <span class="pre">2.0),</span> <span class="pre">(3,</span> <span class="pre">5.0)</span></tt>.
+<p>The question is usually represented only by its integer id (such as <cite>1</cite>, <cite>2</cite> and <cite>3</cite> here),
+so that the
+representation of this document becomes a series of pairs like <tt class="docutils literal"><span class="pre">(1,</span> <span class="pre">0.0),</span> <span class="pre">(2,</span> <span class="pre">2.0),</span> <span class="pre">(3,</span> <span class="pre">5.0)</span></tt>.
 If we know all the questions in advance, we may leave them implicit
 and simply write <tt class="docutils literal"><span class="pre">(0.0,</span> <span class="pre">2.0,</span> <span class="pre">5.0)</span></tt>.
 This sequence of answers can be thought of as a high-dimensional (in this case 3-dimensional)
@@ -233,6 +239,7 @@ and more useful: with similar documents having similar representations.</dd>
       </div>
       <div class="clearer"></div>
     </div>
+    
         
     <div class="related">
       <h3>Navigation</h3>
@@ -247,20 +254,21 @@ and more useful: with similar documents having similar representations.</dd>
           <a href="install.html" title="Installation"
              >next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="Gensim – Vector Space Modelling for Humans"
+          <a href="index.html" title="Gensim – Topic Modelling for Humans"
              >previous</a> |</li>
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
-        <li><a href="apiref.html">API reference</a>|&nbsp;</li>
-       <li><a href="tutorial.html">Tutorials</a> &raquo;</li>
+        <li><a href="tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="apiref.html">API reference</a>&raquo;</li>
  
       </ul>
     </div>
     
-    
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 05, 2011.
+      Last updated on Oct 30, 2011.
     </div>
   </body>
 </html>
