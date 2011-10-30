@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.1',
+        VERSION:     '0.8.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,33 +28,37 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="gensim" href="#" />
     <link rel="next" title="Introduction" href="intro.html" />
-<!-- twitter search widget
-    <script type="text/javascript" src="_static/widget.js"></script>
--->
-<meta property="og:title" content="#gensim" />
-<meta property="og:description" content="Efficient topic modelling in Python" />
+	<!-- twitter search widget
+	    <script type="text/javascript" src="_static/widget.js"></script>
+	-->
+	<meta property="og:title" content="#gensim" />
+	<meta property="og:description" content="Efficient topic modelling in Python" />
 
-<script type="text/javascript">
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-24066335-1']);
+		_gaq.push(['_trackPageview']);
 
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-24066335-1']);
-  _gaq.push(['_trackPageview']);
+		(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
 
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
+    
+    <script type="text/javascript">
+		(function() {
+		var at = document.createElement('script'); at.type = 'text/javascript'; at.async = true;
+		at.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 's7.addthis.com/js/250/addthis_widget.js#pubid=ra-4d738b9b1d31ccbd';
+		var sat = document.getElementsByTagName('script')[0]; sat.parentNode.insertBefore(at, sat);
+		})();
+	</script>
+    
 
-</script>
+
   </head>
   <body>
-<!--
-<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="#"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
-</div>
---!>
-
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -76,11 +80,10 @@
       </ul>
     </div>
 
-
     
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper"><h3>Download</h3>
-<p>Get <cite>gensim</cite> version 0.8.1 from the <a href="http://pypi.python.org/pypi/gensim">Python Package
+<p>Get <cite>gensim</cite> version 0.8.2 from the <a href="http://pypi.python.org/pypi/gensim">Python Package
 Index</a> or install directly with:</p>
 <pre>easy_install -U gensim</pre>
 <h3><a href="#">Table Of Contents</a></h3>
@@ -89,6 +92,7 @@ Index</a> or install directly with:</p>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="distributed.html">Distributed Computing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wiki.html">Experiments on the English Wikipedia</a></li>
 <li class="toctree-l1"><a class="reference internal" href="apiref.html">API Reference</a></li>
 </ul>
 
@@ -106,15 +110,11 @@ Index</a> or install directly with:</p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script><h3>Questions? Suggestions?</h3>
 
-<table border=0 style="padding: 5px; margin: 10px 0px;" cellspacing=0>
-  <tr><td style="padding-left: 5px">Join the <a href="http://groups.google.com/group/gensim">Google discussion group</a></td></tr>
-  <form action="http://groups.google.com/group/gensim/boxsubscribe">
-  <tr><td style="padding-left: 5px; margin: 10px 0px;">
-  <input type="text" name="email" onfocus="if(this.value == 'yourname@domain.com') { this.value = ''; }" value="yourname@domain.com" size="24">
-  <input type="submit" name="sub" value="Subscribe">
-  </td></tr>
+<p>Join the <a href="http://groups.google.com/group/gensim">Google discussion group</a></p>
+<form action="http://groups.google.com/group/gensim/boxsubscribe">
+<input type="text" name="email" onfocus="if(this.value == 'yourname@domain.com') { this.value = ''; }" value="yourname@domain.com" size="24" />
+<input type="submit" name="sub" value="Subscribe" />
 </form>
-</table>
 
 
 <!-- AddThis Button BEGIN -->
@@ -125,7 +125,7 @@ Index</a> or install directly with:</p>
 
 <script type="text/javascript">
 var addthis_share = {
-  templates: { twitter: 'Efficient topic modelling in Python #gensim http://goo.gl/2VQBS' }
+    templates: { twitter: 'Efficient topic modelling in Python #gensim http://goo.gl/2VQBS' }
 }
 </script>
 
@@ -136,7 +136,6 @@ var addthis_share = {
 <a class="addthis_button_compact"></a>
 <a class="addthis_counter addthis_bubble_style"></a>
 </div>
-<script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid=ra-4d738b9b1d31ccbd"></script>
 <!-- AddThis Button END -->
 
 <p>
@@ -158,7 +157,7 @@ Check the source code at <a href="https://github.com/piskvorky/gensim">Github</a
 <div id="tagcloud">
  <span id="0" class="wrd tagcloud2">algorithms</span>
  <span id="1" class="wrd tagcloud2">analysis</span>
- <span id="2" class="wrd tagcloud3">answer</span>
+ <span id="2" class="wrd tagcloud5">answer</span>
  <span id="3" class="wrd tagcloud2">api</span>
  <span id="7" class="wrd tagcloud2">collection</span>
  <span id="8" class="wrd tagcloud2">concepts</span>
@@ -167,7 +166,6 @@ Check the source code at <a href="https://github.com/piskvorky/gensim">Github</a
  <span id="12" class="wrd tagcloud9">documents</span>
  <span id="14" class="wrd tagcloud3">features</span>
  <span id="15" class="wrd tagcloud0">framework</span>
- <span id="16" class="wrd tagcloud10">gensim</span>
  <span id="17" class="wrd tagcloud1">human</span>
  <span id="18" class="wrd tagcloud2">index</span>
  <span id="19" class="wrd tagcloud0">infer</span>
@@ -180,7 +178,7 @@ Check the source code at <a href="https://github.com/piskvorky/gensim">Github</a
  <span id="27" class="wrd tagcloud0">paragraphs</span>
  <span id="29" class="wrd tagcloud3">python</span>
  <span id="29" class="wrd tagcloud6">query</span>
- <span id="30" class="wrd tagcloud6">questions</span>
+ <span id="30" class="wrd tagcloud4">questions</span>
  <span id="31" class="wrd tagcloud0">random</span>
  <span id="32" class="wrd tagcloud2">reference</span>
  <span id="33" class="wrd tagcloud6">representation</span>
@@ -229,7 +227,8 @@ Check the source code at <a href="https://github.com/piskvorky/gensim">Github</a
 <div class="admonition-what-s-new admonition">
 <p class="first admonition-title">What&#8217;s new?</p>
 <ul class="last simple">
-<li>9 Sep 2011: website moved to <a class="reference external" href="http://radimrehurek.com/gensim">radimrehurek.com</a>.</li>
+<li>30 Oct 2011: version 0.8.2 released: <a class="reference external" href="https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt">CHANGELOG</a>; note <a class="reference external" href="http://groups.google.com/group/gensim/msg/8ab53fc09711eea6">licensing</a></li>
+<li>9 Sep 2011: website moved to <a class="reference external" href="http://radimrehurek.com/gensim">radimrehurek.com</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
@@ -247,7 +246,7 @@ Check the source code at <a href="https://github.com/piskvorky/gensim">Github</a
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 30, 2011.
+      Last updated on Oct 31, 2011.
     </div>
   </body>
 </html>

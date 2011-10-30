@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.1',
+        VERSION:     '0.8.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -27,33 +27,29 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="#" />
     <link rel="top" title="gensim" href="index.html" />
-<!-- twitter search widget
-    <script type="text/javascript" src="_static/widget.js"></script>
--->
-<meta property="og:title" content="#gensim" />
-<meta property="og:description" content="Efficient topic modelling in Python" />
+	<!-- twitter search widget
+	    <script type="text/javascript" src="_static/widget.js"></script>
+	-->
+	<meta property="og:title" content="#gensim" />
+	<meta property="og:description" content="Efficient topic modelling in Python" />
 
-<script type="text/javascript">
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-24066335-1']);
+		_gaq.push(['_trackPageview']);
 
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-24066335-1']);
-  _gaq.push(['_trackPageview']);
+		(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
 
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
+    
 
-</script>
+
   </head>
   <body>
-<!--
-<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="index.html"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
-</div>
---!>
-
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -72,7 +68,6 @@
       </ul>
     </div>
 
-
     
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
@@ -81,6 +76,7 @@
 <li><a class="reference internal" href="#">About</a><ul>
 <li><a class="reference internal" href="#history">History</a></li>
 <li><a class="reference internal" href="#licensing">Licensing</a></li>
+<li><a class="reference internal" href="#collaborators">Collaborators</a></li>
 <li><a class="reference internal" href="#academic-citing">Academic citing</a></li>
 </ul>
 </li>
@@ -123,12 +119,12 @@ describes the initial design decisions behind gensim (clarity, efficiency and sc
 and is fairly representative of how gensim works even now.</p>
 <p>Later versions of gensim improved this efficiency and scalability tremendously (in fact,
 I made algorithmic scalability of distributional semantics the topic of my <a class="reference external" href="radimrehurek.com/phd_rehurek.pdf">PhD thesis</a>).</p>
-<p>By now, gensim is &#8211; to my knowledge &#8211; the most robust, efficient and hassle-free piece
+<p>By now, gensim is&#8212;to my knowledge&#8212;the most robust, efficient and hassle-free piece
 of software to realize unsupervised semantic modelling from plain text. It stands
-in contrast to naive homework-assignment-implementations that do not scale on one hand,
+in contrast to brittle homework-assignment-implementations that do not scale on one hand,
 and java-esque projects that do scale, but only if you&#8217;re willing to sacrifice
 several weeks of your, your technician&#8217;s as well as your local scientist&#8217;s time just to run &#8220;hello world&#8221;.</p>
-<p>In 2011, I started using <a class="reference external" href="https://github.com/piskvorky/gensim">Github</a> for source code versioning,
+<p>In 2011, I started using <a class="reference external" href="https://github.com/piskvorky/gensim">Github</a> for source code hosting,
 and the gensim website moved from university hosting to its present domain.</p>
 </div>
 <div class="section" id="licensing">
@@ -151,6 +147,12 @@ you don&#8217;t need the <cite>simserver</cite> to use gensim, but you do need g
 Note that unlike gensim, <cite>gensim.simserver</cite> is licensed under <a class="reference external" href="http://www.gnu.org/licenses/agpl-3.0.html">Affero GPL</a>,
 which is much more restrictive for inclusion in commercial projects.</p>
 </div>
+</div>
+<div class="section" id="collaborators">
+<h2>Collaborators<a class="headerlink" href="#collaborators" title="Permalink to this headline">¶</a></h2>
+<p>I would like to thank all the people who contributed to gensim, be it in <a class="reference external" href="http://groups.google.com/group/gensim">discussions</a>,
+ideas, <a class="reference external" href="https://github.com/piskvorky/gensim/pulls">code contributions</a> or bug reports.</p>
+<p>Some honorable mentions are included in the <a class="reference external" href="https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt">CHANGELOG.txt</a>.</p>
 </div>
 <div class="section" id="academic-citing">
 <h2>Academic citing<a class="headerlink" href="#academic-citing" title="Permalink to this headline">¶</a></h2>

@@ -45,7 +45,9 @@ Quick Reference Example
 
 .. admonition:: What's new?
 
-   * 9 Sep 2011: website moved to `radimrehurek.com <http://radimrehurek.com/gensim>`_.
+   * 30 Oct 2011: version 0.8.2 released: `CHANGELOG <https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt>`_; note `licensing <http://groups.google.com/group/gensim/msg/8ab53fc09711eea6>`_
+   * 9 Sep 2011: website moved to `radimrehurek.com <http://radimrehurek.com/gensim>`_
+
 
 
 
@@ -57,4 +59,5 @@ Quick Reference Example
    install
    tutorial
    distributed
+   wiki
    apiref

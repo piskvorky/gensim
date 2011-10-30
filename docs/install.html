@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.1',
+        VERSION:     '0.8.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -29,33 +29,29 @@
     <link rel="top" title="gensim" href="index.html" />
     <link rel="next" title="Tutorials" href="tutorial.html" />
     <link rel="prev" title="Introduction" href="intro.html" />
-<!-- twitter search widget
-    <script type="text/javascript" src="_static/widget.js"></script>
--->
-<meta property="og:title" content="#gensim" />
-<meta property="og:description" content="Efficient topic modelling in Python" />
+	<!-- twitter search widget
+	    <script type="text/javascript" src="_static/widget.js"></script>
+	-->
+	<meta property="og:title" content="#gensim" />
+	<meta property="og:description" content="Efficient topic modelling in Python" />
 
-<script type="text/javascript">
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-24066335-1']);
+		_gaq.push(['_trackPageview']);
 
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-24066335-1']);
-  _gaq.push(['_trackPageview']);
+		(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
 
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
+    
 
-</script>
+
   </head>
   <body>
-<!--
-<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="index.html"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
-</div>
---!>
-
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -79,7 +75,6 @@
  
       </ul>
     </div>
-
 
     
       <div class="sphinxsidebar">
@@ -137,15 +132,18 @@
 </div>
 <p>In case that fails, or you don&#8217;t know what &#8220;terminal&#8221; means, read on.</p>
 </div>
+<hr class="docutils" />
 <div class="section" id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
 <p>Gensim is known to run on Linux, Windows and Mac OS X and should run on any other
 platform that supports Python 2.5 and NumPy. Gensim depends on the following software:</p>
 <ul class="simple">
 <li>3.0 &gt; <a class="reference external" href="http://www.python.org">Python</a> &gt;= 2.5. Tested with versions 2.5, 2.6 and 2.7.</li>
-<li><a class="reference external" href="http://www.numpy.org">NumPy</a> &gt;= 1.0.4. Tested with version 1.6.1rc2, 1.5.0rc1, 1.4.0, 1.3.0rc2 and 1.0.4.</li>
-<li><a class="reference external" href="http://www.scipy.org">SciPy</a> &gt;= 0.7. Tested with version 0.9.0, 0.8.0, 0.8.0b1, 0.7.1</li>
+<li><a class="reference external" href="http://www.numpy.org">NumPy</a> &gt;= 1.3. Tested with version 1.6.1rc2, 1.5.0rc1, 1.4.0, 1.3.0, 1.3.0rc2.</li>
+<li><a class="reference external" href="http://www.scipy.org">SciPy</a> &gt;= 0.7. Tested with version 0.9.0, 0.8.0, 0.8.0b1, 0.7.1, 0.7.0.</li>
 </ul>
+<p><strong>Windows users</strong> are well advised to try the <a class="reference external" href="http://www.enthought.com/products/epd.php">Enthought distribution</a>,
+which conveniently includes Python&amp;NumPy&amp;SciPy in a single bundle, and is free for academic use.</p>
 </div>
 <div class="section" id="install-python-and-easy-install">
 <h2>Install Python and <cite>easy_install</cite><a class="headerlink" href="#install-python-and-easy-install" title="Permalink to this headline">¶</a></h2>
@@ -170,8 +168,6 @@ sudo easy_install scipy</pre>
 </div>
 <p>If that doesn&#8217;t work or if you&#8217;d rather install using a binary package, consult
 <a class="reference external" href="http://www.scipy.org/Download">http://www.scipy.org/Download</a>.</p>
-<p><strong>Windows users</strong> are well advised to try the <a class="reference external" href="http://www.enthought.com/products/epd.php">Enthought distribution</a>,
-which conveniently includes Python&amp;NumPy&amp;SciPy in a single bundle, and is free for academic use.</p>
 </div>
 <div class="section" id="install-gensim">
 <h2>Install <cite>gensim</cite><a class="headerlink" href="#install-gensim" title="Permalink to this headline">¶</a></h2>
@@ -264,7 +260,7 @@ me an email to the address at the bottom of this page.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 30, 2011.
+      Last updated on Oct 31, 2011.
     </div>
   </body>
 </html>

@@ -19,14 +19,15 @@ and is fairly representative of how gensim works even now.
 Later versions of gensim improved this efficiency and scalability tremendously (in fact,
 I made algorithmic scalability of distributional semantics the topic of my `PhD thesis <radimrehurek.com/phd_rehurek.pdf>`_).
 
-By now, gensim is -- to my knowledge -- the most robust, efficient and hassle-free piece
+By now, gensim is---to my knowledge---the most robust, efficient and hassle-free piece
 of software to realize unsupervised semantic modelling from plain text. It stands
-in contrast to naive homework-assignment-implementations that do not scale on one hand,
+in contrast to brittle homework-assignment-implementations that do not scale on one hand,
 and java-esque projects that do scale, but only if you're willing to sacrifice
 several weeks of your, your technician's as well as your local scientist's time just to run "hello world".
 
-In 2011, I started using `Github <https://github.com/piskvorky/gensim>`_ for source code versioning,
+In 2011, I started using `Github <https://github.com/piskvorky/gensim>`_ for source code hosting,
 and the gensim website moved from university hosting to its present domain.
+
 
 Licensing
 ----------
@@ -51,6 +52,14 @@ Contact me if LGPL doesn't fit your bill but you'd still like to use it -- we'll
     you don't need the `simserver` to use gensim, but you do need gensim to use the `simserver`.
     Note that unlike gensim, `gensim.simserver` is licensed under `Affero GPL <http://www.gnu.org/licenses/agpl-3.0.html>`_,
     which is much more restrictive for inclusion in commercial projects.
+
+Collaborators
+--------------
+
+I would like to thank all the people who contributed to gensim, be it in `discussions <http://groups.google.com/group/gensim>`_,
+ideas, `code contributions <https://github.com/piskvorky/gensim/pulls>`_ or bug reports.
+
+Some honorable mentions are included in the `CHANGELOG.txt <https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt>`_.
 
 
 Academic citing
