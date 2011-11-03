@@ -149,7 +149,11 @@ class Similarity(interfaces.SimilarityABC):
         >>> index[query] # ... then result will have 7 floats
         [0.0, 0.0, 0.2, 0.13, 0.8, 0.0, 0.1]
 
-        If `num_best` is set, queries return only the `num_best` most similar documents:
+        If `num_best` is set, queries return only the `num_best` most similar documents,
+        always leaving out documents for which the similarity is 0
+        (i.e. vectors with all dimensions zero and vectors with non-zero dimensions, but none in common).
+        If the input vector itself has only dimensions with value zero (the sparse representation is empty),
+        the returned list will always be empty.
 
         >>> index.num_best = 3
         >>> index[query] # return at most "num_best" of `(index_of_document, similarity)` tuples
