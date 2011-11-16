@@ -55,6 +55,7 @@ import logging
 import itertools
 import os
 import random
+import heapq
 
 import numpy
 import scipy
@@ -159,6 +160,9 @@ class Similarity(interfaces.SimilarityABC):
         >>> index[query] # return at most "num_best" of `(index_of_document, similarity)` tuples
         [(4, 0.8), (2, 0.13), (3, 0.13)]
 
+        You can also override `num_best` dynamically, simply by setting e.g.
+        `self.num_best = 10` before doing a query.
+
         """
         if output_prefix is None:
             # undocumented feature: set output_prefix=None to create the server in temp
@@ -230,10 +234,7 @@ class Similarity(interfaces.SimilarityABC):
 
         **NOTE**: the shard is closed even if it is not full yet (its size is smaller
         than `self.shardsize`). If documents are added later via `add_documents()`,
-        this incomplete shard will be loaded again and completed. For this reason,
-        avoid the pattern of calling `add_documents` followed by a query, with only a few
-        documents added. The re-opening makes this pattern inefficient. Instead,
-        try to add as many documents as possible (ideally, all of them), only then query.
+        this incomplete shard will be loaded again and completed.
         """
         if not self.fresh_docs:
             return
@@ -279,25 +280,40 @@ class Similarity(interfaces.SimilarityABC):
         """
         self.close_shard() # no-op if no documents added to index since last query
 
-        results = []
+        # reset num_best and normalize parameters, in case they were changed dynamically
         for shard in self.shards:
             shard.num_best = self.num_best
             shard.normalize = self.normalize
-            results.append(shard[query])
+
+        # there are 4 distinct code paths, depending on whether input `query` is
+        # a corpus (or numpy/scipy matrix) or a single document, and whether the
+        # similarity result is a full array or only num_best most similar documents.
 
         if self.num_best is None:
-            return numpy.hstack(results)
+            # user asked for all documents => just stack the sub-results into a single matrix
+            # (works for both corpus / single doc query)
+            return numpy.hstack(shard[query] for shard in self.shards)
 
-        # only top-n most similars requested; merge the partial results from all shards
-        is_corpus, results = utils.is_corpus(results)
-        if is_corpus:
-            # query = single document?
-            result = sorted(sum(results, []), key=lambda item: -item[1])[ : self.num_best]
-        else:
-            result = []
-            for parts in itertools.izip(*results):
-                merged = sorted(sum(parts, []), key=lambda item: -item[1])[ : self.num_best]
-                result.append(merged)
+        offsets = numpy.cumsum([0] + [len(shard) for shard in self.shards])
+        convert = lambda doc, shard_no: [(doc_index + offsets[shard_no], sim)
+                                         for doc_index, sim in doc]
+        is_corpus, query = utils.is_corpus(query)
+        is_corpus = is_corpus or hasattr(query, 'ndim') and query.ndim > 1 and query.shape[0] > 1
+        if not is_corpus:
+            # user asked for num_best most similar and query is a single doc
+            results = (convert(shard[query], shard_no)
+                       for shard_no, shard in enumerate(self.shards))
+            return heapq.nlargest(self.num_best, itertools.chain(*results), key=lambda item: item[1])
+
+        # the trickiest combination: returning num_best results when query was a corpus
+        shard_results = []
+        for shard_no, shard in enumerate(self.shards):
+            shard_result = [convert(doc, shard_no) for doc in shard[query]]
+            shard_results.append(shard_result)
+        result = []
+        for parts in itertools.izip(*shard_results):
+            merged = heapq.nlargest(self.num_best, itertools.chain(*parts), key=lambda item: item[1])
+            result.append(merged)
         return result
 
 
@@ -355,8 +371,6 @@ class Similarity(interfaces.SimilarityABC):
             chunksize = self.chunksize
 
         for shard in self.shards:
-            # split each shard index into smaller chunks (of size self.chunksize) and
-            # use each chunk as a query
             query = shard.get_index().index
             for chunk_start in xrange(0, query.shape[0], chunksize):
                 # scipy.sparse doesn't allow slicing beyond real size of the matrix
@@ -380,6 +394,7 @@ class Similarity(interfaces.SimilarityABC):
             fname = self.output_prefix
         super(Similarity, self).save(fname)
 #endclass Similarity
+
 
 
 class MatrixSimilarity(interfaces.SimilarityABC):
@@ -608,4 +623,3 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         result.index.data, result.index.indptr, result.index.indices = data, indptr, indices
         return result
 #endclass SparseMatrixSimilarity
-
