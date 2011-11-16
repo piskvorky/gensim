@@ -12,7 +12,6 @@ Automated tests for similarity algorithms (the similarities package).
 import logging
 import unittest
 import os
-import os.path
 import tempfile
 
 import numpy
@@ -27,14 +26,14 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [['human', 'interface', 'computer'],
- ['survey', 'user', 'computer', 'system', 'response', 'time'],
- ['eps', 'user', 'interface', 'system'],
- ['system', 'human', 'system', 'eps'],
- ['user', 'response', 'time'],
- ['trees'],
- ['graph', 'trees'],
- ['graph', 'minors', 'trees'],
- ['graph', 'minors', 'survey']]
+         ['survey', 'user', 'computer', 'system', 'response', 'time'],
+         ['eps', 'user', 'interface', 'system'],
+         ['system', 'human', 'system', 'eps'],
+         ['user', 'response', 'time'],
+         ['trees'],
+         ['graph', 'trees'],
+         ['graph', 'minors', 'trees'],
+         ['graph', 'minors', 'survey']]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
@@ -49,9 +48,9 @@ class TestSimilarityABC(object):
     Base class for SparseMatrixSimilarity and MatrixSimilarity unit tests.
     """
 
-    def testFull(self):
+    def testFull(self, num_best=None, shardsize=100):
         if self.cls == similarities.Similarity:
-            index = self.cls(testfile(), corpus, num_features=len(dictionary), shardsize=5)
+            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=shardsize)
         else:
             index = self.cls(corpus)
         if isinstance(index, similarities.MatrixSimilarity):
@@ -67,26 +66,28 @@ class TestSimilarityABC(object):
                 [ 0.0, 0.0, 0.0, 0.0, 0.57735026, 0.0, 0.0, 0.0, 0.0, 0.0, 0.57735026, 0.57735026 ]
                 ], dtype=numpy.float32)
             self.assertTrue(numpy.allclose(expected, index.index))
+        index.num_best = num_best
         query = corpus[0]
         sims = index[query]
-        expected = numpy.array([0.99999994, 0.23570226, 0.28867513, 0.23570226, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=numpy.float32)
+        expected = [(0, 0.99999994), (2, 0.28867513), (3, 0.23570226), (1, 0.23570226)][ : num_best]
+
+        # convert sims to full numpy arrays, so we can use allclose() and ignore
+        # ordering of items with the same similarity value
+        expected = matutils.sparse2full(expected, len(index))
+        if num_best is not None: # when num_best is None, sims is already a numpy array
+            sims = matutils.sparse2full(sims, len(index))
         self.assertTrue(numpy.allclose(expected, sims))
 
 
-    def testNumBest(self):
-        if self.cls == similarities.Similarity:
-            index = self.cls(testfile(), corpus, num_features=len(dictionary), shardsize=5, num_best=3)
-        else:
-            index = self.cls(corpus, num_best=3)
-        query = corpus[0]
-        sims = index[query]
-        expected = [(0, 0.99999994), (2, 0.28867513), (3, 0.23570226)]
-        self.assertTrue(numpy.allclose(expected, sims))
+    def testSharding(self):
+        for num_best in [None, 0, 1, 9, 1000]:
+            for shardsize in [1, 2, 9, 1000]:
+                self.testFull(num_best=num_best, shardsize=shardsize)
 
 
     def testChunking(self):
         if self.cls == similarities.Similarity:
-            index = self.cls(testfile(), corpus, num_features=len(dictionary), shardsize=5)
+            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         else:
             index = self.cls(corpus)
         query = corpus[:3]
@@ -107,10 +108,9 @@ class TestSimilarityABC(object):
         self.assertTrue(numpy.allclose(expected, sims))
 
 
-
     def testIter(self):
         if self.cls == similarities.Similarity:
-            index = self.cls(testfile(), corpus, num_features=len(dictionary), shardsize=5)
+            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         else:
             index = self.cls(corpus)
         sims = [sim for sim in index]
@@ -131,7 +131,7 @@ class TestSimilarityABC(object):
     def testPersistency(self):
         fname = testfile() + '.pkl'
         if self.cls == similarities.Similarity:
-            index = self.cls(testfile(), corpus, num_features=len(dictionary), shardsize=5)
+            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         else:
             index = self.cls(corpus)
         index.save(fname)
