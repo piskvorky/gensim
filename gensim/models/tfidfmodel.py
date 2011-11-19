@@ -122,7 +122,7 @@ class TfidfModel(interfaces.TransformationABC):
             return self._apply(bow)
 
         if self.normalize_tf:
-            doc_length = sum([tf for _, tf in bow])
+            doc_length = sum(tf for _, tf in bow)
             bow = [(termid, float(tf)/doc_length) for termid, tf in bow]
 
         # unknown (new) terms will be given zero weight (NOT infinity/huge weight,
