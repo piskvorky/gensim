@@ -54,16 +54,19 @@ class TfidfModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, corpus=None, id2word=None, dictionary=None, normalize=True):
+    def __init__(self, corpus=None, id2word=None, dictionary=None, normalize=True, normalize_tf=False):
         """
         `normalize` dictates whether the transformed vectors will be set to unit
-        length.
+        length (default is True).
+        `normalize_tf` dictates whether the term frequency will be normalized by
+        document length before it is multiplied with idf (default is False).
 
         If `dictionary` is specified, it must be a `corpora.Dictionary` object
         and it will be used to directly construct the inverse document frequency
         mapping (then `corpus`, if specified, is ignored).
         """
         self.normalize = normalize
+        self.normalize_tf = normalize_tf
         self.id2word = id2word
         self.num_docs, self.num_nnz, self.idfs = None, None, None
         if dictionary is not None:
@@ -117,6 +120,10 @@ class TfidfModel(interfaces.TransformationABC):
         is_corpus, bow = utils.is_corpus(bow)
         if is_corpus:
             return self._apply(bow)
+
+        if self.normalize_tf:
+            doc_length = sum([tf for _, tf in bow])
+            bow = [(termid, float(tf)/doc_length) for termid, tf in bow]
 
         # unknown (new) terms will be given zero weight (NOT infinity/huge weight,
         # as strict application of the IDF formula would dictate)
