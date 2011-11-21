@@ -16,23 +16,6 @@ from gensim import interfaces, matutils, utils
 logger = logging.getLogger('gensim.models.tfidfmodel')
 
 
-def dfs2idfs(dfs, totaldocs):
-    """
-    Given a mapping of `term->document frequency`, construct a mapping of
-    `term->inverse document frequency`.
-    """
-    return dict((termid, math.log(1.0 * totaldocs / docfreq, 2))
-                for termid, docfreq in dfs.iteritems())
-
-
-def idfs2dfs(idfs, totaldocs):
-    """
-    Inverse mapping for `dfs2idfs`.
-    """
-    return dict((termid, int(round(totaldocs / 2**weight)))
-                for termid, weight in idfs.iteritems())
-
-
 class TfidfModel(interfaces.TransformationABC):
     """
     Objects of this class realize the transformation between word-document co-occurence
@@ -54,7 +37,7 @@ class TfidfModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, corpus=None, id2word=None, dictionary=None, normalize=True):
+    def __init__(self, corpus=None, id2word=None, dictionary=None, normalize=True, dfs2idfs=None, idfs2dfs=None, gettf=None):
         """
         `normalize` dictates whether the transformed vectors will be set to unit
         length.
@@ -62,10 +45,19 @@ class TfidfModel(interfaces.TransformationABC):
         If `dictionary` is specified, it must be a `corpora.Dictionary` object
         and it will be used to directly construct the inverse document frequency
         mapping (then `corpus`, if specified, is ignored).
+
+        You can specify your own dfs2idfs, idfs2dfs and gettf functions to override default behavior.
+        Note: it's your responsability to make sure dfs2idfs and idfs2dfs are compatible. (i.e. they invert each other)
         """
         self.normalize = normalize
         self.id2word = id2word
         self.num_docs, self.num_nnz, self.idfs = None, None, None
+        if dfs2idfs is not None:
+            self.dfs2idfs = dfs2idfs
+        if idfs2dfs is not None:
+            self.idfs2dfs = idfs2dfs
+        if gettf is not None:
+            self.gettf = gettf
         if dictionary is not None:
             if corpus is not None:
                 logger.warning("constructor received both corpus and explicit "
@@ -83,6 +75,27 @@ class TfidfModel(interfaces.TransformationABC):
     def __str__(self):
         return "TfidfModel(num_docs=%s, num_nnz=%s)" % (self.num_docs, self.num_nnz)
 
+    def dfs2idfs(dfs, totaldocs):
+        """
+        Given a mapping of `term->document frequency`, construct a mapping of
+        `term->inverse document frequency`.
+        """
+        return dict((termid, math.log(1.0 * totaldocs / docfreq, 2))
+                    for termid, docfreq in dfs.iteritems())
+
+
+    def idfs2dfs(idfs, totaldocs):
+        """
+        Inverse mapping for `dfs2idfs`.
+        """
+        return dict((termid, int(round(totaldocs / 2**weight)))
+                    for termid, weight in idfs.iteritems())
+
+    def gettf(tf):
+        """
+        Do processing on TF. I.e. normalisation and whatnot
+        """
+        return tf
 
     def initialize(self, corpus):
         """
@@ -106,7 +119,7 @@ class TfidfModel(interfaces.TransformationABC):
         # and finally compute the idf weights
         logger.info("calculating IDF weights for %i documents and %i features (%i matrix non-zeros)" %
                      (self.num_docs, 1 + max([-1] + dfs.keys()), self.num_nnz))
-        self.idfs = dfs2idfs(dfs, self.num_docs)
+        self.idfs = self.dfs2idfs(dfs, self.num_docs)
 
 
     def __getitem__(self, bow):
@@ -120,7 +133,7 @@ class TfidfModel(interfaces.TransformationABC):
 
         # unknown (new) terms will be given zero weight (NOT infinity/huge weight,
         # as strict application of the IDF formula would dictate)
-        vector = [(termid, tf * self.idfs.get(termid, 0.0))
+        vector = [(termid, self.gettf(tf) * self.idfs.get(termid, 0.0))
                   for termid, tf in bow if self.idfs.get(termid, 0.0) != 0.0]
         if self.normalize:
             vector = matutils.unitvec(vector)
