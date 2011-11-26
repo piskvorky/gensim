@@ -209,9 +209,9 @@ class Similarity(interfaces.SimilarityABC):
             else:
                 doclen = len(doc)
                 if doclen < 0.3 * self.num_features:
-                    doc = matutils.corpus2csc([doc], self.num_features).T
+                    doc = matutils.unitvec(matutils.corpus2csc([doc], self.num_features).T)
                 else:
-                    doc = matutils.sparse2full(doc, self.num_features)
+                    doc = matutils.unitvec(matutils.sparse2full(doc, self.num_features))
             self.fresh_docs.append(doc)
             self.fresh_nnz += doclen
             if len(self.fresh_docs) >= self.shardsize:
@@ -238,7 +238,6 @@ class Similarity(interfaces.SimilarityABC):
         """
         if not self.fresh_docs:
             return
-        self.fresh_docs = matutils.Scipy2Corpus(self.fresh_docs)
         shardid = len(self.shards)
         # consider the shard sparse if its density is < 30%
         issparse = 0.3 > 1.0 * self.fresh_nnz / (len(self.fresh_docs) * self.num_features)
@@ -436,7 +435,17 @@ class MatrixSimilarity(interfaces.SimilarityABC):
             for docno, vector in enumerate(corpus):
                 if docno % 1000 == 0:
                     logger.debug("PROGRESS: at document #%i/%i" % (docno, len(corpus)))
-                self.index[docno] = matutils.unitvec(matutils.sparse2full(vector, num_features))
+                # individual documents in fact may be in numpy.scipy.sparse format as well.
+                # it's not documented because other it's not fully supported throughout.
+                # the user better know what he's doing (no normalization, must
+                # explicitly supply num_features etc).
+                if isinstance(vector, numpy.ndarray):
+                    pass
+                elif scipy.sparse.issparse(vector):
+                    vector = vector.toarray().flatten()
+                else:
+                    vector = matutils.unitvec(matutils.sparse2full(vector, num_features))
+                self.index[docno] = vector
 
 
     def __len__(self):
@@ -538,8 +547,10 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
                 # no MmCorpus, use the slower version (or maybe user supplied the
                 # num_* params in constructor)
                 pass
-            self.index = matutils.corpus2csc((matutils.unitvec(vector) for vector in corpus),
-                                              num_terms=num_terms, num_docs=num_docs, num_nnz=num_nnz,
+            corpus = (matutils.scipy2sparse(v) if scipy.sparse.issparse(v) else
+                      (matutils.full2sparse(v) if isinstance(v, numpy.ndarray) else
+                       matutils.unitvec(v)) for v in corpus)
+            self.index = matutils.corpus2csc(corpus, num_terms=num_terms, num_docs=num_docs, num_nnz=num_nnz,
                                               dtype=dtype, printprogress=10000).T
 
             # convert to Compressed Sparse Row for efficient row slicing and multiplications
