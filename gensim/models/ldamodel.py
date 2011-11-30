@@ -31,9 +31,8 @@ The algorithm:
 """
 
 
-import sys, logging
+import logging
 import itertools
-import time
 
 logger = logging.getLogger('gensim.models.ldamodel')
 
@@ -59,10 +58,11 @@ class LdaState(utils.SaveLoad):
         self.reset(shapemat)
 
 
-    def reset(self, mat=None):
+    def reset(self, mat):
         """
         Prepare the state for a new EM iteration (reset sufficient stats).
         """
+        assert mat is not None
         self.sstats = numpy.zeros_like(mat) # reset counts
         self.numdocs = 0
 
@@ -76,6 +76,7 @@ class LdaState(utils.SaveLoad):
         exact same result as if the computation was run on a single node (no
         approximation).
         """
+        assert other is not None
         self.sstats += other.sstats
         self.numdocs += other.numdocs
 
@@ -92,6 +93,7 @@ class LdaState(utils.SaveLoad):
         This procedure corresponds to the stochastic gradient update from Hoffman
         et al., algorithm 2 (eq. 14).
         """
+        assert other is not None
         if targetsize is None:
             targetsize = self.numdocs
 
@@ -118,6 +120,7 @@ class LdaState(utils.SaveLoad):
         """
         Alternative, more simple blend.
         """
+        assert other is not None
         if targetsize is None:
             targetsize = self.numdocs
 
@@ -241,8 +244,9 @@ class LdaModel(interfaces.TransformationABC):
                 raise RuntimeError("failed to initialize distributed LDA (%s)" % err)
 
         # Initialize the variational distribution q(beta|lambda)
-        state = LdaState(None)
-        state.sstats = numpy.random.gamma(100., 1./100., (self.num_topics, self.num_terms))
+        sstats = numpy.random.gamma(100., 1./100., (self.num_topics, self.num_terms))
+        state = LdaState(sstats)
+        state.sstats = sstats
         self.setstate(state)
 
         # if a training corpus was provided, start estimating the model right away
@@ -257,10 +261,12 @@ class LdaModel(interfaces.TransformationABC):
 
         Return the aggregate amount of change in topics, log(old_lambda-new_lambda).
         """
-        self.state = state
+        assert state is not None
+        assert state.sstats is not None
         # do we need to keep all {sstats+lambda+expEbeta} in memory all the
         # time? TODO compute them on the fly instead?
         # don't store redundant information in memory 3x...
+        self.state = state
         self._lambda = self.eta + self.state.sstats
         Elogbeta = dirichlet_expectation(self._lambda)
         if compute_diff:
@@ -441,6 +447,7 @@ class LdaModel(interfaces.TransformationABC):
                 # convert each document to a 2d numpy array (~6x faster when transmitting
                 # list data over the wire, in Pyro)
                 chunk = [numpy.array(doc) for _, doc in group]
+                assert chunk
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
                     logger.info('PROGRESS: iteration %i, dispatching documents up to #%i/%i' %
@@ -454,6 +461,7 @@ class LdaModel(interfaces.TransformationABC):
                 dirty = True
                 del chunk
 
+                # perform an M step. determine when based on update_every, don't do this after every chunk
                 if update_every and (chunk_no + 1) % (update_every * self.numworkers) == 0:
                     if self.dispatcher:
                         # distributed mode: wait for all workers to finish
@@ -483,8 +491,10 @@ class LdaModel(interfaces.TransformationABC):
 
 
     def do_mstep(self, rho, other):
-        """M step: use linear interpolation between the existing topics and
-        collected sufficient statistics in `other` to update new topics"""
+        """
+        M step: use linear interpolation between the existing topics and
+        collected sufficient statistics in `other` to update the topics.
+        """
         logger.debug("updating topics")
         # update self with the new blend; also keep track of how much did
         # the topics change through this update, to assess convergence

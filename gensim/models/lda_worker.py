@@ -74,14 +74,15 @@ class Worker(object):
     def getstate(self):
         logger.info("worker #%i returning its state after %s jobs" %
                     (self.myid, self.jobsdone))
-        assert isinstance(self.model.state, ldamodel.LdaState)
         result = self.model.state
+        assert isinstance(result, ldamodel.LdaState)
         self.model.clear() # free up mem in-between two EM cycles
         return result
 
 
     @utils.synchronous('lock_update')
     def reset(self, state):
+        assert state is not None
         logger.info("resetting worker #%i" % self.myid)
         self.model.setstate(state)
         self.model.state.reset(state.sstats)
