@@ -75,7 +75,6 @@ class Dispatcher(object):
                     workerid = len(self.workers)
                     # make time consuming methods work asynchronously
                     worker._pyroOneway.add("requestjob")
-                    worker._pyroOneway.add("reset")
                     worker._pyroOneway.add("exit")
                     logger.info("registering worker #%i at %s" % (workerid, uri))
                     worker.initialize(workerid, dispatcher=self.callback, **model_params)
