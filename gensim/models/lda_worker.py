@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
+# Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
@@ -84,8 +84,9 @@ class Worker(object):
     def reset(self, state):
         assert state is not None
         logger.info("resetting worker #%i" % self.myid)
-        self.model.setstate(state)
-        self.model.state.reset(state.sstats)
+        self.model.state = state
+        self.model.sync_state()
+        self.model.state.reset()
 
 
     def exit(self):

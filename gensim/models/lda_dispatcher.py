@@ -117,11 +117,10 @@ class Dispatcher(object):
             time.sleep(0.5) # check every half a second
 
         logger.info("merging states from %i workers" % len(self.workers))
-        workers = self.workers.items()
-        result = workers[0][1].getstate()
-        for workerid, worker in workers[1:]:
+        workers = self.workers.values()
+        result = workers[0].getstate()
+        for worker in workers[1:]:
             result.merge(worker.getstate())
-            logger.info("pulled state from worker %s" % workerid)
 
         logger.info("sending out merged state")
         return result
