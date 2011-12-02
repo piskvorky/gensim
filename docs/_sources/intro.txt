@@ -4,7 +4,7 @@
 Introduction
 ============
 
-Gensim is a Python framework designed to automatically extract semantic
+Gensim is a :ref:`free <availability>` Python framework designed to automatically extract semantic
 topics from documents, as efficiently (computer-wise) and painlessly (human-wise) as possible.
 
 
@@ -48,18 +48,23 @@ The **principal design objectives** behind `gensim` are:
    steps and algorithms operate in a streaming fashion, accessing one document
    at a time.
 
+.. seealso::
+
+    If you're interested in document indexing/similarity retrieval, I also maintain a higher-level package
+    of `document similarity server <http://pypi.python.org/pypi/simserver>`_. It uses gensim internally.
+
+.. _availability:
 
 Availability
 ------------
 
+Gensim is licensed under the OSI-approved `GNU LPGL license <http://www.gnu.org/licenses/lgpl.html>`_
+and can be downloaded either from its `github repository <https://github.com/piskvorky/gensim/>`_
+or from the `Python Package Index <http://pypi.python.org/pypi/gensim>`_.
+
 .. seealso::
 
     See the :doc:`install <install>` page for more info on `gensim` deployment.
-
-Gensim is licensed under the OSI-approved `GNU LPGL license <http://www.gnu.org/licenses/lgpl.html>`_
-and can be downloaded either from its `github repository <https://github.com/piskvorky/gensim/>`_
-or from the `Python Package Index <http://pypi.python.org/pypi/gensim>`_. Also see the
-:doc:`about` page.
 
 
 Core concepts

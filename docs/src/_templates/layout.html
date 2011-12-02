@@ -1,5 +1,7 @@
 {% extends "!layout.html" %}
 
+{% set script_files = ['http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js'] + script_files %}
+
 {% block rootrellink %}
         <li><a href="{{ pathto('index') }}">Gensim home</a>|&nbsp;</li>
         <li><a href="{{ pathto('tutorial') }}">Tutorials</a>|&nbsp;</li>

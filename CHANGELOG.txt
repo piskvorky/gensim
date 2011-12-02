@@ -1,6 +1,12 @@
 Changes
 =======
 
+0.8.3
+
+* fixed Similarity sharding bug (issue #65, thx to Paul Rudin)
+* improved LDA code (clarity & memory footprint)
+* optimized efficiency of Similarity sharding
+
 0.8.2
 
 * improved gensim landing page

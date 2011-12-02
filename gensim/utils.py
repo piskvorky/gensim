@@ -485,7 +485,7 @@ def randfname(prefix='gensim'):
     return os.path.join(tempfile.gettempdir(), prefix + randpart)
 
 
-def grouper(iterable, chunksize):
+def grouper(iterable, chunksize, as_numpy=False):
     """
     Return elements from the iterable in `chunksize`-ed lists. The last returned
     element may be smaller (if length of collection is not divisible by `chunksize`).
@@ -493,11 +493,18 @@ def grouper(iterable, chunksize):
     >>> print list(grouper(xrange(10), 3))
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
     """
+    import numpy
     it = iter(iterable)
     while True:
-        wrapped_chunk = [list(itertools.islice(it, int(chunksize)))]
+        if as_numpy:
+            # convert each document to a 2d numpy array (~6x faster when transmitting
+            # chunk data over the wire, in Pyro)
+            wrapped_chunk = [[numpy.array(doc) for doc in itertools.islice(it, int(chunksize))]]
+        else:
+            wrapped_chunk = [list(itertools.islice(it, int(chunksize)))]
         if not wrapped_chunk[0]:
             break
+        # memory opt: wrap the chunk and then pop(), to avoid leaving behind a dangling reference
         yield wrapped_chunk.pop()
 
 

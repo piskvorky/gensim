@@ -16,19 +16,21 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.2',
+        VERSION:     '0.8.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="top" title="gensim" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
     <link rel="prev" title="models.lda_worker – Worker for distributed LDA" href="../models/lda_worker.html" />
+     
+
 	<!-- twitter search widget
 	    <script type="text/javascript" src="_static/widget.js"></script>
 	-->
@@ -91,7 +93,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" size="24" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -244,12 +246,18 @@ vector with one float for every document in the index:</p>
 <span class="go">[0.0, 0.0, 0.2, 0.13, 0.8, 0.0, 0.1]</span>
 </pre></div>
 </div>
-<p>If <cite>num_best</cite> is set, queries return only the <cite>num_best</cite> most similar documents:</p>
+<p>If <cite>num_best</cite> is set, queries return only the <cite>num_best</cite> most similar documents,
+always leaving out documents for which the similarity is 0
+(i.e. vectors with all dimensions zero and vectors with non-zero dimensions, but none in common).
+If the input vector itself has only dimensions with value zero (the sparse representation is empty),
+the returned list will always be empty.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="o">.</span><span class="n">num_best</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="p">[</span><span class="n">query</span><span class="p">]</span> <span class="c"># return at most &quot;num_best&quot; of `(index_of_document, similarity)` tuples</span>
 <span class="go">[(4, 0.8), (2, 0.13), (3, 0.13)]</span>
 </pre></div>
 </div>
+<p>You can also override <cite>num_best</cite> dynamically, simply by setting e.g.
+<cite>self.num_best = 10</cite> before doing a query.</p>
 <dl class="method">
 <dt id="gensim.similarities.docsim.Similarity.add_documents">
 <tt class="descname">add_documents</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.add_documents" title="Permalink to this definition">¶</a></dt>
@@ -265,10 +273,7 @@ vector with one float for every document in the index:</p>
 to disk). Do nothing if no new documents added since last call.</p>
 <p><strong>NOTE</strong>: the shard is closed even if it is not full yet (its size is smaller
 than <cite>self.shardsize</cite>). If documents are added later via <cite>add_documents()</cite>,
-this incomplete shard will be loaded again and completed. For this reason,
-avoid the pattern of calling <cite>add_documents</cite> followed by a query, with only a few
-documents added. The re-opening makes this pattern inefficient. Instead,
-try to add as many documents as possible (ideally, all of them), only then query.</p>
+this incomplete shard will be loaded again and completed.</p>
 </dd></dl>
 
 <dl class="method">
@@ -377,7 +382,7 @@ mmap&#8217;ed), under <cite>fname.array_name.npy</cite>.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 30, 2011.
+      Last updated on Dec 02, 2011.
     </div>
   </body>
 </html>

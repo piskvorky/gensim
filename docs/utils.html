@@ -16,13 +16,13 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.2',
+        VERSION:     '0.8.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
@@ -30,6 +30,8 @@
     <link rel="up" title="API Reference" href="apiref.html" />
     <link rel="next" title="matutils – Math utils" href="matutils.html" />
     <link rel="prev" title="interfaces – Core gensim interfaces" href="interfaces.html" />
+     
+
 	<!-- twitter search widget
 	    <script type="text/javascript" src="_static/widget.js"></script>
 	-->
@@ -90,7 +92,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" size="24" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -290,7 +292,7 @@ local misconfigurations, which often mess up hostname resolution.</p>
 
 <dl class="function">
 <dt id="gensim.utils.grouper">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">grouper</tt><big>(</big><em>iterable</em>, <em>chunksize</em><big>)</big><a class="headerlink" href="#gensim.utils.grouper" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">grouper</tt><big>(</big><em>iterable</em>, <em>chunksize</em>, <em>as_numpy=False</em><big>)</big><a class="headerlink" href="#gensim.utils.grouper" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return elements from the iterable in <cite>chunksize</cite>-ed lists. The last returned
 element may be smaller (if length of collection is not divisible by <cite>chunksize</cite>).</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="n">grouper</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="mi">3</span><span class="p">))</span>
@@ -437,7 +439,7 @@ will be sent in smaller chunks, of <cite>chunksize</cite> documents each.</p>
 
     <div class="footer">
         &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 30, 2011.
+      Last updated on Dec 02, 2011.
     </div>
   </body>
 </html>
