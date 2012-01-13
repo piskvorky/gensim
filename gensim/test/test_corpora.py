@@ -9,12 +9,11 @@ Automated tests for checking corpus I/O formats (the corpora package).
 """
 
 import logging
-import os
 import os.path
 import unittest
 import tempfile
 
-from gensim.corpora import bleicorpus, mmcorpus, lowcorpus, svmlightcorpus, dictionary
+from gensim.corpora import bleicorpus, mmcorpus, lowcorpus, svmlightcorpus, ucicorpus
 
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
@@ -40,9 +39,7 @@ class CorpusTesterABC(object):
         self.assertEqual(len(docs), 9) # the deerwester corpus always has nine documents, no matter what format
 
 
-    def test_save(self):
-        corpus = [[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]
-
+    def test_save(self, corpus=[[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]):
         # make sure the corpus can be saved
         self.corpus_class.save_corpus(testfile(), corpus)
 
@@ -53,9 +50,7 @@ class CorpusTesterABC(object):
         # delete the temporary file
         os.remove(testfile())
 
-    def test_serialize(self):
-        corpus = [[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]
-
+    def test_serialize(self, corpus=[[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]):
         # make sure the corpus can be saved
         self.corpus_class.serialize(testfile(), corpus)
 
@@ -93,7 +88,21 @@ class TestBleiCorpus(unittest.TestCase, CorpusTesterABC):
 #endclass TestBleiCorpus
 
 
+class TestUciCorpus(unittest.TestCase, CorpusTesterABC):
+    def setUp(self):
+        self.corpus_class = ucicorpus.UciCorpus
+        self.file_extension = '.uci'
+
+    def test_save(self):
+        super(TestUciCorpus, self).test_save(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
+
+    def test_serialize(self):
+        super(TestUciCorpus, self).test_serialize(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
+
+#endclass TestUciCorpus
+
+
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=logging.DEBUG)
     unittest.main()
