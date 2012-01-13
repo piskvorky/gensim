@@ -16,7 +16,7 @@ from __future__ import with_statement
 import logging
 from collections import defaultdict
 
-from gensim import interfaces, utils
+from gensim import utils
 from gensim.corpora import Dictionary
 from gensim.corpora import IndexedCorpus
 from gensim.matutils import MmReader
@@ -24,6 +24,7 @@ from gensim.matutils import MmWriter
 
 
 logger = logging.getLogger('gensim.corpora.ucicorpus')
+
 
 class UciReader(MmReader):
     def __init__(self, input):
@@ -50,9 +51,10 @@ class UciReader(MmReader):
             (self.num_docs, self.num_terms, self.num_nnz))
 
     def skip_headers(self, input_file):
-        for i in range(0, 3):
+        for _ in range(3):
             next(input_file)
 #endclass UciReader
+
 
 class UciWriter(MmWriter):
     """
@@ -72,7 +74,7 @@ class UciWriter(MmWriter):
         """
         Write blank header lines. Will be updated later, once corpus stats are known.
         """
-        for i in range(0, 3):
+        for _ in range(3):
             self.fout.write(' ' * UciWriter.MAX_HEADER_LENGTH + '\n') # 20 digits per value
 
         self.last_docno = -1
@@ -111,7 +113,7 @@ class UciWriter(MmWriter):
                 offsets.append(posnow)
                 poslast = posnow
 
-            vector = [(x, int(y)) for (x, y) in bow] # integer count, not floating weights
+            vector = [(x, int(y)) for (x, y) in bow if int(y) != 0] # integer count, not floating weights
             max_id, veclen = writer.write_vector(docno, vector)
             num_terms = max(num_terms, 1 + max_id)
             num_nnz += veclen
@@ -132,11 +134,12 @@ class UciWriter(MmWriter):
             return offsets
 #endclass UciWriter
 
+
 class UciCorpus(UciReader, IndexedCorpus):
     """
     Corpus in the UCI bag-of-words format.
     """
-    def __init__(self, fname, fname_vocab):
+    def __init__(self, fname, fname_vocab=None):
         IndexedCorpus.__init__(self, fname)
         UciReader.__init__(self, fname)
 
@@ -176,7 +179,7 @@ class UciCorpus(UciReader, IndexedCorpus):
 
         for docno, doc in enumerate(self):
             if docno % 10000 == 0:
-              logger.info('PROGRESS: processing document %i of %i' % (docno, self.num_docs))
+                logger.info('PROGRESS: processing document %i of %i' % (docno, self.num_docs))
 
             for word, count in doc:
                 dictionary.dfs[word] += 1
