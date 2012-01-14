@@ -32,15 +32,19 @@ The algorithm:
 
 """
 
+from __future__ import with_statement
+
 import logging, os, itertools
 import numpy as np
 import scipy.special as sp
+import tempfile
 
 from gensim import interfaces, utils
 
 logger = logging.getLogger(__name__)
 
 meanchangethresh = 0.00001
+
 
 def log_normalize(v):
     log_max = 100.0
@@ -88,10 +92,8 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, expElogbeta, max_iter=100):
     expElogbetad = expElogbeta[:, doc_word_ids]
     phinorm = np.dot(expElogtheta, expElogbetad) + 1e-100
     counts = np.array(doc_word_counts)
-    iter = 0
-    while iter < max_iter:
+    for _ in xrange(max_iter):
         lastgamma = gamma
-        iter += 1
 
         gamma = alpha + expElogtheta * np.dot(counts/phinorm,  expElogbetad.T)
         Elogtheta = dirichlet_expectation(gamma)
@@ -101,7 +103,6 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, expElogbeta, max_iter=100):
         if (meanchange < meanchangethresh):
             break
 
-    likelihood = 0.0
     likelihood = np.sum(counts * np.log(phinorm))
     likelihood += np.sum((alpha-gamma) * Elogtheta)
     likelihood += np.sum(sp.gammaln(gamma) - sp.gammaln(alpha))
@@ -109,28 +110,30 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, expElogbeta, max_iter=100):
 
     return (likelihood, gamma)
 
-class suff_stats:
+
+class SuffStats(object):
     def __init__(self, T, Wt, Dt):
         self.m_batchsize = Dt
         self.m_var_sticks_ss = np.zeros(T)
         self.m_var_beta_ss = np.zeros((T, Wt))
-        self.m_var_sticks_ss.fill(0.0)
-        self.m_var_beta_ss.fill(0.0)
 
     def set_zero(self):
         self.m_var_sticks_ss.fill(0.0)
         self.m_var_beta_ss.fill(0.0)
 
+
 class HdpModel(interfaces.TransformationABC):
-    def __init__(self, corpus=None, id2word=None, outputdir=None,
+    def __init__(self, corpus, id2word, outputdir=None,
         chunksize=256, kappa=1.0, tau=64.0, K=15, T=150, alpha=1,
         gamma=1, eta=0.01, var_converge=0.0001):
         self.corpus = corpus
         self.id2word = id2word
         self.chunksize = chunksize
+        if outputdir is None:
+            outputdir = os.path.join(tempfile.gettempdir(), 'gensim_hdp')
+            if not os.path.exists(outputdir):
+                os.makedirs(outputdir)
         self.outputdir = outputdir
-
-        np.random.seed()
 
         # assumes id2word is provided
         self.m_W = len(id2word)
@@ -187,9 +190,7 @@ class HdpModel(interfaces.TransformationABC):
         docs = 0
         save_freq = int(10000 / self.chunksize)
 
-        chunker = itertools.groupby(enumerate(corpus), key=lambda (docno, doc): docno / self.chunksize)
-        for chunk_no, (key, group) in enumerate(chunker):
-            chunk = [np.array(doc) for _, doc in group]
+        for chunk_no, chunk in enumerate(utils.grouper(corpus, self.chunksize)):
             self.update_chunk(chunk)
 
             docs += len(chunk)
@@ -203,7 +204,6 @@ class HdpModel(interfaces.TransformationABC):
         self.save_topics()
 
     def update_chunk(self, chunk, update=True, opt_o=True):
-
         # Find the unique words in this chunk...
         unique_words = dict()
         word_list = []
@@ -211,7 +211,7 @@ class HdpModel(interfaces.TransformationABC):
             for word_id, _ in doc:
                 if word_id not in unique_words:
                     unique_words[word_id] = len(unique_words)
-                    word_list.append(word_id);
+                    word_list.append(word_id)
 
         Wt = len(word_list) # length of words in these documents
 
@@ -223,7 +223,7 @@ class HdpModel(interfaces.TransformationABC):
             sp.psi(self.m_W*self.m_eta + self.m_lambda_sum[:, np.newaxis])
         self.m_expElogbeta[:, word_list] = np.exp(self.m_Elogbeta[:, word_list])
 
-        ss = suff_stats(self.m_T, Wt, len(chunk))
+        ss = SuffStats(self.m_T, Wt, len(chunk))
 
         Elogsticks_1st = expect_log_sticks(self.m_var_sticks) # global sticks
 
@@ -248,7 +248,6 @@ class HdpModel(interfaces.TransformationABC):
         """
         e step for a single doc
         """
-
         batchids = [unique_words[id] for id in doc_word_ids]
 
         Elogbeta_doc = self.m_Elogbeta[:, doc_word_ids]
@@ -328,10 +327,9 @@ class HdpModel(interfaces.TransformationABC):
         ss.m_var_sticks_ss += np.sum(var_phi, 0)
         ss.m_var_beta_ss[:, batchids] += np.dot(var_phi.T, phi.T * doc_word_counts)
 
-        return(likelihood)
+        return likelihood
 
     def update_lambda(self, sstats, word_list, opt_o):
-
         self.m_status_up_to_date = False
         # rhot will be between 0 and 1, and says how much to weight
         # the information we got from this mini-batch.
@@ -364,7 +362,7 @@ class HdpModel(interfaces.TransformationABC):
         """
         ordering the topics
         """
-        idx = [i for i in reversed(np.argsort(self.m_lambda_sum))]
+        idx = np.argsort(self.m_lambda_sum)[::-1]
         self.m_varphi_ss = self.m_varphi_ss[idx]
         self.m_lambda = self.m_lambda[idx,:]
         self.m_lambda_sum = self.m_lambda_sum[idx]
@@ -379,7 +377,7 @@ class HdpModel(interfaces.TransformationABC):
         expElogbeta, so that if (for example) we want to print out the
         topics we've learned we'll get the correct behavior.
         """
-        for w in range(self.m_W):
+        for w in xrange(self.m_W):
             self.m_lambda[:, w] *= np.exp(self.m_r[-1] -
                                           self.m_r[self.m_timestamp[w]])
         self.m_Elogbeta = sp.psi(self.m_eta + self.m_lambda) - \
@@ -398,11 +396,12 @@ class HdpModel(interfaces.TransformationABC):
             fname = 'doc-%i' % doc_count
 
         fname = '%s/%s.topics' % (self.outputdir, fname)
+        logger.info("saving topics to %s" % fname)
 
         betas = self.m_lambda + self.m_eta
 
         np.savetxt(fname, betas)
-        hdp_formatter = HdpTopicFormatter(self.id2word, betas, None, HdpTopicFormatter.STYLE_PRETTY)
+        hdp_formatter = HdpTopicFormatter(self.id2word, betas)
         hdp_formatter.print_topics(20, 20)
 
     def hdp_to_lda(self):
@@ -443,6 +442,7 @@ class HdpModel(interfaces.TransformationABC):
         logger.info('TEST: average score: %.5f, total score: %.5f,  test docs: %d' % (score / total_words, score, len(corpus)))
         return score
 #endclass HdpModel
+
 
 class HdpTopicFormatter(object):
     (STYLE_GENSIM, STYLE_PRETTY) = (1, 2)
