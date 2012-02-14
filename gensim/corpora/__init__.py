@@ -12,3 +12,4 @@ from lowcorpus import LowCorpus
 from dictionary import Dictionary
 from wikicorpus import WikiCorpus
 from textcorpus import TextCorpus
+from ucicorpus import UciCorpus
