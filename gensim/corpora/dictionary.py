@@ -42,7 +42,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         self.num_pos = 0 # total number of corpus positions
         self.num_nnz = 0 # total number of non-zeroes in the BOW matrix
 
-        if documents:
+        if documents is not None:
             self.add_documents(documents)
 
 
