@@ -41,8 +41,10 @@ import numpy # for arrays, array broadcasting etc.
 #numpy.seterr(divide='ignore') # ignore 0*log(0) errors
 
 from scipy.special import gammaln, digamma, psi # gamma function utils
-from scipy.maxentropy import logsumexp # log(sum(exp(x))) that tries to avoid overflow
-
+try:
+    from scipy.maxentropy import logsumexp # log(sum(exp(x))) that tries to avoid overflow
+except ImportError as err: # maxentropy has been removed for next release
+    from scipy.misc import logsumexp
 from gensim import interfaces, utils
 
 
