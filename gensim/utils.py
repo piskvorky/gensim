@@ -656,4 +656,6 @@ if HAS_PATTERN:
             for prc in self.prcs:
                 prc.terminate()
             logger.info("terminated %i lemmatizer processes" % self.num_workers)
+
+    lemmatizer = Lemmatizer()
 #endif HAS_PATTERN

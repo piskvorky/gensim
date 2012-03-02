@@ -178,7 +178,7 @@ class WikiCorpus(TextCorpus):
         articles, articles_all = 0, 0
         intext, positions = False, 0
         if LEMMATIZE:
-            lemmatizer = utils.Lemmatizer()
+            lemmatizer = utils.lemmatizer
             yielded = 0
 
         for lineno, line in enumerate(bz2.BZ2File(self.fname)):
