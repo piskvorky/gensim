@@ -47,10 +47,14 @@ logger = logging.getLogger('gensim.corpora.wikicorpus')
 # Wiki is first scanned for all distinct word types (~7M). The types that appear
 # in more than 10% of articles are removed and from the rest, the DEFAULT_DICT_SIZE
 # most frequent types are kept (default 100K).
-DEFAULT_DICT_SIZE = 100000
+DEFAULT_DICT_SIZE = 50000
 
 # Ignore articles shorter than ARTICLE_MIN_CHARS characters (after preprocessing).
 ARTICLE_MIN_CHARS = 500
+
+# if 'pattern' package is installed, we can use a fancy shallow parsing to get
+# token lemmas. otherwise, use simple regexp tokenization
+LEMMATIZE = utils.HAS_PATTERN
 
 
 RE_P0 = re.compile('<!--.*?-->', re.DOTALL | re.UNICODE) # comments
@@ -173,6 +177,10 @@ class WikiCorpus(TextCorpus):
         """
         articles, articles_all = 0, 0
         intext, positions = False, 0
+        if LEMMATIZE:
+            lemmatizer = utils.Lemmatizer()
+            yielded = 0
+
         for lineno, line in enumerate(bz2.BZ2File(self.fname)):
             if line.startswith('      <text'):
                 intext = True
@@ -192,17 +200,32 @@ class WikiCorpus(TextCorpus):
                     articles += 1
                     if return_raw:
                         result = text
+                        yield result
                     else:
-                        result = tokenize(text) # text into tokens here
-                        positions += len(result)
-                    yield result
+                        if LEMMATIZE:
+                            _ = lemmatizer.feed(text)
+                            while lemmatizer.has_results():
+                                _, result = lemmatizer.read() # not necessarily the same text as entered above!
+                                positions += len(result)
+                                yielded += 1
+                                yield result
+                        else:
+                            result = tokenize(text) # text into tokens here
+                            positions += len(result)
+                            yield result
+
+        if LEMMATIZE:
+            while yielded < articles:
+                _, result = lemmatizer.read()
+                positions += len(result)
+                yielded += 1
+                yield result
 
         logger.info("finished iterating over Wikipedia corpus of %i documents with %i positions"
                      " (total %i articles before pruning)" %
                      (articles, positions, articles_all))
         self.length = articles # cache corpus length
 #endclass WikiCorpus
-
 
 
 

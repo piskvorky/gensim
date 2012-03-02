@@ -11,6 +11,8 @@ This module contains various general utility functions.
 from __future__ import with_statement
 
 import logging
+logger = logging.getLogger('gensim.utils')
+
 import re
 import unicodedata
 import os
@@ -24,8 +26,13 @@ import threading, time
 from Queue import Queue, Empty
 
 
-
-logger = logging.getLogger('gensim.utils')
+try:
+    from pattern.en import parse
+    from multiprocessing import Process, Queue as PQueue, cpu_count
+    logger.info("'pattern' package found; utils.Lemmatizater is available for English")
+    HAS_PATTERN = True
+except ImportError:
+    HAS_PATTERN = False
 
 
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
@@ -567,3 +574,86 @@ def pyro_daemon(name, object, random_suffix=False):
             ns.register(name, uri)
             logger.info("%s registered with nameserver (URI '%s')" % (name, uri))
             daemon.requestLoop()
+
+
+# the following is only available when the optional 'pattern' package is installed
+if HAS_PATTERN:
+    ALLOWED_TAGS = re.compile('(NN|VB|JJ|RB)') # ignore everything except nouns, verbs, adjectives and adverbs
+
+    def lemmatize(content):
+        """
+        Use the English lemmatizer from the `pattern` package to extract tokens in
+        their base form (lemmas: "are, is, being"->"be" etc.).
+        This is a smarter version of stemming.
+        """
+        # tokenization in `pattern` is weird; it gets thrown off by non-letters,
+        # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
+        content = u' '.join(tokenize(content, lower=True, errors='ignore'))
+        # use simpler, modified pattern.text.en.text.parser.parse that doesn't collapse the output at the end
+        parsed = parse(content, lemmata=True)
+        result = []
+        for sentence in parsed:
+            for token, tag, _, _, lemma in sentence:
+                if 2 <= len(lemma) <= 15 and not lemma.startswith('_'):
+                    if ALLOWED_TAGS.match(tag):
+                        lemma += "/" + tag[:2]
+                        result.append(lemma.encode('utf8'))
+        return result
+
+
+    def lemmatize_queue(qin, qout):
+        while True:
+            seq_id, content = qin.get()
+            if seq_id is None:
+                return
+            qout.put((seq_id, lemmatize(content)))
+
+
+    class Lemmatizer(object):
+        """
+        Wraps the lemmatize() fnc so that input can be processed in parallel, to
+        speed things up.
+
+        Main methods are `feed(content)`, which puts the content in queue for
+        lemmatization, and `read()`, which returns lemmatized content when it's ready.
+
+        Note that the order of content entered and read back isn't necessarily the same!
+        Use the sequence id returned from feed/read to match input to output.
+
+        This class is NOT thread-safe.
+        """
+        FEED_MAX_QUEUE = 1000 # block after the parsing queue has reached this length -- new feed()/read() calls will have to wait
+
+        def __init__(self, num_workers=cpu_count()):
+            logger.info("initializing lemmatizer with %i processes" % num_workers)
+            self.num_workers = num_workers
+            self.qin = PQueue(maxsize=Lemmatizer.FEED_MAX_QUEUE)
+            self.qout = PQueue(maxsize=Lemmatizer.FEED_MAX_QUEUE)
+            # start up processes that will be parsing in parallel
+            self.prcs = []
+            for _ in xrange(self.num_workers):
+                prc = Process(target=lemmatize_queue, args=(self.qin, self.qout))
+                prc.daemon = True
+                prc.start()
+                self.prcs.append(prc)
+
+        def feed(self, content):
+            seq_id = content.__hash__()
+            self.qin.put((seq_id, content))
+            return seq_id
+
+        def read(self):
+            seq_id, lemmas = self.qout.get()
+            if seq_id is None:
+                logger.warning('lemmatizer failed for input #%s' % seq_id)
+            return seq_id, lemmas
+
+        def has_results(self):
+            """The next call to read() won't block (not thread-safe!)."""
+            return not self.qout.empty()
+
+        def __del__(self):
+            for prc in self.prcs:
+                prc.terminate()
+            logger.info("terminated %i lemmatizer processes" % self.num_workers)
+#endif HAS_PATTERN
