@@ -21,7 +21,10 @@ The output Matrix Market files can then be compressed (e.g., by bzip2) to save \
 disk space; gensim's corpus iterators can work with compressed input, too.
 
 `VOCABULARY_SIZE` controls how many of the most frequent words to keep (after
-removing all tokens that appear in more than 10 percent documents). Defaults to 100,000.
+removing tokens that appear in more than 10%% of all documents). Defaults to 50,000.
+
+If you have the `pattern` package installed, this script will use a fancy lemmatization
+to get a lemma of each token (instead of plain alphabetic tokenizer).
 
 Example: ./wikicorpus.py ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki_en
 """
@@ -215,6 +218,8 @@ class WikiCorpus(TextCorpus):
                             yield result
 
         if LEMMATIZE:
+            logger.info("all %i articles read; waiting for lemmatizer to finish the %i remaining jobs" %
+                        (articles, articles - yielded))
             while yielded < articles:
                 _, result = lemmatizer.read()
                 positions += len(result)

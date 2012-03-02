@@ -653,9 +653,13 @@ if HAS_PATTERN:
             return not self.qout.empty()
 
         def __del__(self):
-            for prc in self.prcs:
-                prc.terminate()
-            logger.info("terminated %i lemmatizer processes" % self.num_workers)
+            try:
+                for prc in self.prcs:
+                    prc.terminate()
+                logger.info("terminated %i lemmatizer processes" % self.num_workers)
+            except:
+                # ignore errors at interpreter tear-down
+                pass
 
     lemmatizer = Lemmatizer()
 #endif HAS_PATTERN
