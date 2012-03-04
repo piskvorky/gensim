@@ -171,6 +171,7 @@ class HdpModel(interfaces.TransformationABC):
         if corpus is not None:
             self.update(corpus)
 
+
     def save_options(self):
         fname = '%s/options.dat' % self.outputdir
         with open(fname, 'wb') as fout:
@@ -186,9 +187,10 @@ class HdpModel(interfaces.TransformationABC):
             fout.write('eta: %s\n' % str(self.m_eta))
             fout.write('gamma: %s\n' % str(self.m_gamma))
 
+
     def update(self, corpus):
         docs = 0
-        save_freq = int(10000 / self.chunksize)
+        save_freq = max(1, int(10000 / self.chunksize))
 
         for chunk_no, chunk in enumerate(utils.grouper(corpus, self.chunksize)):
             self.update_chunk(chunk)
@@ -197,11 +199,14 @@ class HdpModel(interfaces.TransformationABC):
 
             if chunk_no > 0 and chunk_no % save_freq == 0:
                 self.update_expectations()
-                self.save_topics(docs)
+#                self.save_topics(docs)
+                self.print_topics(20)
+
                 logger.info('PROGRESS: finished document %i of %i' % (docs, self.m_D))
 
         self.update_expectations()
         self.save_topics()
+
 
     def update_chunk(self, chunk, update=True, opt_o=True):
         # Find the unique words in this chunk...
@@ -242,6 +247,7 @@ class HdpModel(interfaces.TransformationABC):
             self.update_lambda(ss, word_list, opt_o)
 
         return (score, count)
+
 
     def doc_e_step(self, doc, ss, Elogsticks_1st, word_list,
             unique_words, doc_word_ids, doc_word_counts, var_converge) :
@@ -329,6 +335,7 @@ class HdpModel(interfaces.TransformationABC):
 
         return likelihood
 
+
     def update_lambda(self, sstats, word_list, opt_o):
         self.m_status_up_to_date = False
         # rhot will be between 0 and 1, and says how much to weight
@@ -358,6 +365,7 @@ class HdpModel(interfaces.TransformationABC):
         var_phi_sum = np.flipud(self.m_varphi_ss[1:])
         self.m_var_sticks[1] = np.flipud(np.cumsum(var_phi_sum)) + self.m_gamma
 
+
     def optimal_ordering(self):
         """
         ordering the topics
@@ -368,6 +376,7 @@ class HdpModel(interfaces.TransformationABC):
         self.m_lambda_sum = self.m_lambda_sum[idx]
         self.m_Elogbeta = self.m_Elogbeta[idx,:]
         self.m_expElogbeta = self.m_expElogbeta[idx,:]
+
 
     def update_expectations(self):
         """
@@ -386,23 +395,25 @@ class HdpModel(interfaces.TransformationABC):
         self.m_timestamp[:] = self.m_updatect
         self.m_status_up_to_date = True
 
-    def save_topics(self, doc_count=None):
+
+    def print_topics(self, num_topics=20, num_words=20):
         if not self.m_status_up_to_date:
             self.update_expectations()
+        betas = self.m_lambda + self.m_eta
+        hdp_formatter = HdpTopicFormatter(self.id2word, betas)
+        hdp_formatter.print_topics(num_topics, num_words)
 
+
+    def save_topics(self, doc_count=None):
         if doc_count is None:
             fname = 'final'
         else:
             fname = 'doc-%i' % doc_count
-
         fname = '%s/%s.topics' % (self.outputdir, fname)
         logger.info("saving topics to %s" % fname)
-
         betas = self.m_lambda + self.m_eta
-
         np.savetxt(fname, betas)
-        hdp_formatter = HdpTopicFormatter(self.id2word, betas)
-        hdp_formatter.print_topics(20, 20)
+
 
     def hdp_to_lda(self):
         # compute the lda almost equivalent hdp
@@ -422,6 +433,7 @@ class HdpModel(interfaces.TransformationABC):
                 self.m_lambda_sum[:, np.newaxis])
 
         return (alpha, beta)
+
 
     def evaluate_test_corpus(self, corpus):
         logger.info('TEST: evaluating test corpus')
