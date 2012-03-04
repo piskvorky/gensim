@@ -589,14 +589,16 @@ if HAS_PATTERN:
         # tokenization in `pattern` is weird; it gets thrown off by non-letters,
         # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
         content = u' '.join(tokenize(content, lower=True, errors='ignore'))
-        # use simpler, modified pattern.text.en.text.parser.parse that doesn't collapse the output at the end
+        # use simpler, modified pattern.text.en.text.parser.parse that doesn't
+        # collapse the output at the end. TODO this is accomplished by modifying
+        # parser.py -- insert `return s` at line 373, before the collapsing.
         parsed = parse(content, lemmata=True)
         result = []
         for sentence in parsed:
             for token, tag, _, _, lemma in sentence:
                 if 2 <= len(lemma) <= 15 and not lemma.startswith('_'):
                     if ALLOWED_TAGS.match(tag):
-                        lemma += "/" + tag[:2]
+#                        lemma += "/" + tag[:2]
                         result.append(lemma.encode('utf8'))
         return result
 
