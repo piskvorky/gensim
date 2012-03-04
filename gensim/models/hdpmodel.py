@@ -266,7 +266,7 @@ class HdpModel(interfaces.TransformationABC):
         phi = np.ones((len(doc_word_ids), self.m_K)) * 1.0/self.m_K
 
         likelihood = 0.0
-        old_likelihood = -1e1000
+        old_likelihood = -1e100
         converge = 1.0
         eps = 1e-100
 
@@ -396,12 +396,12 @@ class HdpModel(interfaces.TransformationABC):
         self.m_status_up_to_date = True
 
 
-    def print_topics(self, num_topics=20, num_words=20):
+    def print_topics(self, topics=20, topn=20):
         if not self.m_status_up_to_date:
             self.update_expectations()
         betas = self.m_lambda + self.m_eta
         hdp_formatter = HdpTopicFormatter(self.id2word, betas)
-        hdp_formatter.print_topics(num_topics, num_words)
+        hdp_formatter.print_topics(topics, topn)
 
 
     def save_topics(self, doc_count=None):
@@ -492,7 +492,7 @@ class HdpTopicFormatter(object):
             lambdak = lambdak / sum(lambdak)
 
             temp = zip(lambdak, xrange(len(lambdak)))
-            temp = sorted(temp, key = lambda x: x[0], reverse=True)
+            temp = sorted(temp, key=lambda x: x[0], reverse=True)
 
             topic_terms = self.show_topic_terms(temp, topn)
 
