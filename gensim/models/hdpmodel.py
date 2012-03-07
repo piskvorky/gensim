@@ -46,7 +46,7 @@ from gensim import interfaces, utils
 logger = logging.getLogger(__name__)
 
 meanchangethresh = 0.00001
-
+rhot_bound = 0.0
 
 def log_normalize(v):
     log_max = 100.0
@@ -344,7 +344,7 @@ class HdpModel(interfaces.TransformationABC):
             converge = (likelihood - old_likelihood)/abs(old_likelihood)
             old_likelihood = likelihood
 
-            if converge < 0:
+            if converge < -0.000001:
                 logger.warning('likelihood is decreasing!')
 
             iter += 1
@@ -362,6 +362,8 @@ class HdpModel(interfaces.TransformationABC):
         # rhot will be between 0 and 1, and says how much to weight
         # the information we got from this mini-chunk.
         rhot = self.m_scale * pow(self.m_tau + self.m_updatect, -self.m_kappa)
+        if rhot < rhot_bound:
+            rhot = rhot_bound
         self.m_rhot = rhot
 
         # Update appropriate columns of lambda based on documents.
