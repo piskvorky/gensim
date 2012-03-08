@@ -21,7 +21,8 @@ def dfs2idfs(dfs, totaldocs):
     Given a mapping of `term->document frequency`, construct a mapping of
     `term->inverse document frequency`.
     """
-    return dict((termid, math.log(1.0 * totaldocs / docfreq, 2))
+    return dict((termid,
+                math.log(1.0 * totaldocs / docfreq, 2) if docfreq > 0 else 0)
                 for termid, docfreq in dfs.iteritems())
 
 
