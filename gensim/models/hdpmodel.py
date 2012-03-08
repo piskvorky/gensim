@@ -212,6 +212,7 @@ class HdpModel(interfaces.TransformationABC):
                 elif chunks_processed % save_freq == 0:
                     self.update_expectations()
                     # self.save_topics(self.m_num_docs_processed)
+                    self.print_topics(20)
                     logger.info('PROGRESS: finished document %i of %i' %
                         (self.m_num_docs_processed, self.m_D))
 
@@ -392,7 +393,7 @@ class HdpModel(interfaces.TransformationABC):
         """
         ordering the topics
         """
-        idx = [i for i in reversed(np.argsort(self.m_lambda_sum))]
+        idx = np.argsort(self.m_lambda_sum)[::-1]
         self.m_varphi_ss = self.m_varphi_ss[idx]
         self.m_lambda = self.m_lambda[idx,:]
         self.m_lambda_sum = self.m_lambda_sum[idx]
@@ -493,7 +494,7 @@ class HdpTopicFormatter(object):
 
         # sort topics
         topics_sums = np.sum(topics, axis=1)
-        idx = [i for i in reversed(np.argsort(topics_sums))]
+        idx = np.argsort(topics_sums)[::-1]
         self.data = topics[idx]
 
         self.dictionary = dictionary
