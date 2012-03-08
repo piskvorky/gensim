@@ -18,6 +18,7 @@ Modules:
     corpora/svmlightcorpus
     corpora/wikicorpus
     corpora/textcorpus
+    corpora/ucicorpus
     corpora/indexedcorpus
     models/ldamodel
     models/lsimodel

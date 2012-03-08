@@ -6,7 +6,7 @@
 
 
 """
-UCI Bag-of-Words format.
+University of California, Irvine (UCI) Bag-of-Words format.
 
 http://archive.ics.uci.edu/ml/datasets/Bag+of+Words
 """
