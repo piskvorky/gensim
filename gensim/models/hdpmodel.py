@@ -67,7 +67,7 @@ def log_normalize(v):
 
 def dirichlet_expectation(alpha):
     """
-    For a vector theta ~ Dir(alpha), computes E[log(theta)] given alpha.
+    For a vector theta ~ Dir(alpha), compute E[log(theta)] given alpha.
     """
     if (len(alpha.shape) == 1):
         return(sp.psi(alpha) - sp.psi(np.sum(alpha)))
@@ -75,7 +75,7 @@ def dirichlet_expectation(alpha):
 
 def expect_log_sticks(sticks):
     """
-    For stick-breaking hdp, this returns the E[log(sticks)]
+    For stick-breaking hdp, return the E[log(sticks)]
     """
     dig_sum = sp.psi(np.sum(sticks, 0))
     ElogW = sp.psi(sticks[0]) - dig_sum
@@ -126,18 +126,33 @@ class SuffStats(object):
 
 
 class HdpModel(interfaces.TransformationABC):
-    def __init__(self, corpus, id2word, outputdir=None,
+    """
+    The constructor estimates Hierachical Dirichlet Process model parameters based
+    on a training corpus:
+
+    >>> hdp = HdpModel(corpus, id2word)
+    >>> hdp.print_topics(topics=20, topn=10)
+
+    The model doesn't support inference of topics on new, unseen documents, yet.
+
+    Model persistency is achieved through its `load`/`save` methods.
+    """
+    def __init__(self, corpus, id2word, max_chunks=None, max_time=None,
                  chunksize=256, kappa=1.0, tau=64.0, K=15, T=150, alpha=1,
                  gamma=1, eta=0.01, scale=1.0, var_converge=0.0001,
-                 max_chunks=None, max_time=None):
+                 outputdir=None):
         """
-        gamma: first level concentration
-        alpha: second level concentration
-        eta: the topic Dirichlet
-        T: top level truncation level
-        K: second level truncation level
-        kappa: learning rate
-        tau: slow down parameter
+        `gamma`: first level concentration
+        `alpha`: second level concentration
+        `eta`: the topic Dirichlet
+        `T`: top level truncation level
+        `K`: second level truncation level
+        `kappa`: learning rate
+        `tau`: slow down parameter
+        `max_time`: stop training after this many seconds
+        `max_chunks`: stop after having processed this many chunks (wrap around
+        corpus beginning in another corpus pass, if there are not enough chunks
+        in the corpus)
         """
         self.corpus = corpus
         self.id2word = id2word
@@ -146,7 +161,6 @@ class HdpModel(interfaces.TransformationABC):
         self.max_time = max_time
         self.outputdir = outputdir
 
-        # assumes id2word is provided
         self.m_W = len(id2word)
         self.m_D = len(corpus)
 
@@ -185,25 +199,6 @@ class HdpModel(interfaces.TransformationABC):
             self.update(corpus)
 
 
-    def save_options(self):
-        if not self.outputdir:
-            logger.error("cannot store options without having specified an output directory")
-            return
-        fname = '%s/options.dat' % self.outputdir
-        with open(fname, 'wb') as fout:
-            fout.write('tau: %s\n' % str(self.m_tau - 1))
-            fout.write('chunksize: %s\n' % str(self.chunksize))
-            fout.write('var_converge: %s\n' % str(self.m_var_converge))
-            fout.write('D: %s\n' % str(self.m_D))
-            fout.write('K: %s\n' % str(self.m_K))
-            fout.write('T: %s\n' % str(self.m_T))
-            fout.write('W: %s\n' % str(self.m_W))
-            fout.write('alpha: %s\n' % str(self.m_alpha))
-            fout.write('kappa: %s\n' % str(self.m_kappa))
-            fout.write('eta: %s\n' % str(self.m_eta))
-            fout.write('gamma: %s\n' % str(self.m_gamma))
-
-
     def update(self, corpus):
         save_freq = max(1, int(10000 / self.chunksize)) # save every 10k docs, roughly
         chunks_processed = 0
@@ -217,6 +212,7 @@ class HdpModel(interfaces.TransformationABC):
 
                 if self.update_finished(start_time, chunks_processed, self.m_num_docs_processed):
                     self.update_expectations()
+                    self.print_topics(20)
                     if self.outputdir:
                         self.save_topics()
                     return
@@ -299,7 +295,7 @@ class HdpModel(interfaces.TransformationABC):
         phi = np.ones((len(doc_word_ids), self.m_K)) * 1.0/self.m_K
 
         likelihood = 0.0
-        old_likelihood = -1e100
+        old_likelihood = -1e1000
         converge = 1.0
         eps = 1e-100
 
@@ -439,6 +435,7 @@ class HdpModel(interfaces.TransformationABC):
 
 
     def save_topics(self, doc_count=None):
+        """legacy method; use `self.save()` instead"""
         if not self.outputdir:
             logger.error("cannot store topics without having specified an output directory")
 
@@ -452,9 +449,30 @@ class HdpModel(interfaces.TransformationABC):
         np.savetxt(fname, betas)
 
 
-    def hdp_to_lda(self):
-        # compute the lda almost equivalent hdp
+    def save_options(self):
+        """legacy method; use `self.save()` instead"""
+        if not self.outputdir:
+            logger.error("cannot store options without having specified an output directory")
+            return
+        fname = '%s/options.dat' % self.outputdir
+        with open(fname, 'wb') as fout:
+            fout.write('tau: %s\n' % str(self.m_tau - 1))
+            fout.write('chunksize: %s\n' % str(self.chunksize))
+            fout.write('var_converge: %s\n' % str(self.m_var_converge))
+            fout.write('D: %s\n' % str(self.m_D))
+            fout.write('K: %s\n' % str(self.m_K))
+            fout.write('T: %s\n' % str(self.m_T))
+            fout.write('W: %s\n' % str(self.m_W))
+            fout.write('alpha: %s\n' % str(self.m_alpha))
+            fout.write('kappa: %s\n' % str(self.m_kappa))
+            fout.write('eta: %s\n' % str(self.m_eta))
+            fout.write('gamma: %s\n' % str(self.m_gamma))
 
+
+    def hdp_to_lda(self):
+        """
+        Compute the LDA almost equivalent HDP.
+        """
         # alpha
         sticks = self.m_var_sticks[0]/(self.m_var_sticks[0]+self.m_var_sticks[1])
         alpha = np.zeros(self.m_T)
