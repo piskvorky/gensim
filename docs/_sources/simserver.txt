@@ -6,7 +6,7 @@ Document Similarity Server
 The 0.7.x series of `gensim <http://radimrehurek.com/gensim/>`_ was about improving performance and consolidating API.
 0.8.x will be about new features --- 0.8.1, first of the series, is a **document similarity service**.
 
-The source code itself has been moved from gensim to its own, dedicated package, named `simserver`. 
+The source code itself has been moved from gensim to its own, dedicated package, named `simserver`.
 Get it from `PyPI <http://pypi.python.org/pypi/simserver>`_ or clone it on `Github <https://github.com/piskvorky/gensim-simserver>`_.
 
 What is a document similarity service?

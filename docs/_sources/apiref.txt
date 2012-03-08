@@ -23,6 +23,7 @@ Modules:
     models/lsimodel
     models/tfidfmodel
     models/rpmodel
+    models/hdpmodel
     models/logentropy_model
     models/lsi_dispatcher
     models/lsi_worker
