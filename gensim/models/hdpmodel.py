@@ -39,7 +39,6 @@ from __future__ import with_statement
 import logging, os, itertools, time
 import numpy as np
 import scipy.special as sp
-import tempfile
 
 from gensim import interfaces, utils
 
@@ -112,6 +111,8 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
 
     return (likelihood, gamma)
 
+
+
 class SuffStats(object):
     def __init__(self, T, Wt, Dt):
         self.m_chunksize = Dt
@@ -122,21 +123,27 @@ class SuffStats(object):
         self.m_var_sticks_ss.fill(0.0)
         self.m_var_beta_ss.fill(0.0)
 
+
+
 class HdpModel(interfaces.TransformationABC):
     def __init__(self, corpus, id2word, outputdir=None,
-        chunksize=256, kappa=1.0, tau=64.0, K=15, T=150, alpha=1,
-        gamma=1, eta=0.01, scale=1.0, var_converge=0.0001,
-        max_chunks=None, max_time=None):
+                 chunksize=256, kappa=1.0, tau=64.0, K=15, T=150, alpha=1,
+                 gamma=1, eta=0.01, scale=1.0, var_converge=0.0001,
+                 max_chunks=None, max_time=None):
+        """
+        gamma: first level concentration
+        alpha: second level concentration
+        eta: the topic Dirichlet
+        T: top level truncation level
+        K: second level truncation level
+        kappa: learning rate
+        tau: slow down parameter
+        """
         self.corpus = corpus
         self.id2word = id2word
         self.chunksize = chunksize
         self.max_chunks = max_chunks
         self.max_time = max_time
-
-        if outputdir is None:
-            outputdir = os.path.join(tempfile.gettempdir(), 'gensim_hdp')
-            if not os.path.exists(outputdir):
-                os.makedirs(outputdir)
         self.outputdir = outputdir
 
         # assumes id2word is provided
@@ -170,7 +177,8 @@ class HdpModel(interfaces.TransformationABC):
 
         self.m_var_converge = var_converge
 
-        self.save_options()
+        if self.outputdir:
+            self.save_options()
 
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
@@ -178,6 +186,9 @@ class HdpModel(interfaces.TransformationABC):
 
 
     def save_options(self):
+        if not self.outputdir:
+            logger.error("cannot store options without having specified an output directory")
+            return
         fname = '%s/options.dat' % self.outputdir
         with open(fname, 'wb') as fout:
             fout.write('tau: %s\n' % str(self.m_tau - 1))
@@ -206,7 +217,8 @@ class HdpModel(interfaces.TransformationABC):
 
                 if self.update_finished(start_time, chunks_processed, self.m_num_docs_processed):
                     self.update_expectations()
-                    self.save_topics()
+                    if self.outputdir:
+                        self.save_topics()
                     return
 
                 elif chunks_processed % save_freq == 0:
@@ -427,6 +439,9 @@ class HdpModel(interfaces.TransformationABC):
 
 
     def save_topics(self, doc_count=None):
+        if not self.outputdir:
+            logger.error("cannot store topics without having specified an output directory")
+
         if doc_count is None:
             fname = 'final'
         else:
