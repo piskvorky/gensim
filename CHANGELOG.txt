@@ -1,6 +1,13 @@
 Changes
 =======
 
+0.8.4
+
+* a new corpus format: UCI (thx to Jonathan Esterhazy)
+* a new model: HDP (thx to Jonathan Esterhazy)
+* improved scipy version support (thx to Skipper Seabold)
+
+
 0.8.3
 
 * fixed Similarity sharding bug (issue #65, thx to Paul Rudin)

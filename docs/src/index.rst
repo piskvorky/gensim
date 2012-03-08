@@ -44,6 +44,7 @@ Quick Reference Example
 
 
 .. admonition:: What's new?
+
    * 8 Mar 2012: release 0.8.4: `Hierarchical Dirichlet Process <http://radimrehurek.com/gensim/models/hdpmodel.html>`_
    * 2 Dec 2011: bug-fix release 0.8.3 out; `CHANGELOG <https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt>`_
    * 1 Dec 2011: released `simserver <http://pypi.python.org/pypi/simserver>`_, a Python document similarity server based on gensim

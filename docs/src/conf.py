@@ -39,7 +39,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'gensim'
-copyright = u'2011, Radim Řehůřek <radimrehurek(at)seznam.cz>'
+copyright = u'2012, Radim Řehůřek <radimrehurek(at)seznam.cz>'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
