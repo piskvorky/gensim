@@ -51,8 +51,9 @@ class UciReader(MmReader):
             (self.num_docs, self.num_terms, self.num_nnz))
 
     def skip_headers(self, input_file):
-        for _ in range(3):
-            next(input_file)
+        for lineno, _ in enumerate(input_file):
+            if lineno == 2:
+                break
 #endclass UciReader
 
 
