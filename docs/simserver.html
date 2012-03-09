@@ -16,46 +16,42 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.1',
+        VERSION:     '0.8.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="gensim" href="index.html" />
-    <link rel="next" title="API Reference" href="apiref.html" />
-    <link rel="prev" title="Distributed Latent Dirichlet Allocation" href="dist_lda.html" />
-<!-- twitter search widget
-    <script type="text/javascript" src="_static/widget.js"></script>
--->
-<meta property="og:title" content="#gensim" />
-<meta property="og:description" content="Efficient topic modelling in Python" />
+     
 
-<script type="text/javascript">
+	<!-- twitter search widget
+	    <script type="text/javascript" src="_static/widget.js"></script>
+	-->
+	<meta property="og:title" content="#gensim" />
+	<meta property="og:description" content="Efficient topic modelling in Python" />
 
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-24066335-1']);
-  _gaq.push(['_trackPageview']);
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-24066335-1']);
+		_gaq.push(['_trackPageview']);
 
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
+		(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
 
-</script>
+    
+
+
   </head>
   <body>
-<!--
-<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="index.html"><img src="_static/logo.png" border="0" alt="gensim logo"/></a>
-</div>
---!>
-
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -65,12 +61,6 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="apiref.html" title="API Reference"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="dist_lda.html" title="Distributed Latent Dirichlet Allocation"
-             accesskey="P">previous</a> |</li>
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="tutorial.html">Tutorials</a>|&nbsp;</li>
         <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
@@ -79,7 +69,6 @@
  
       </ul>
     </div>
-
 
     
       <div class="sphinxsidebar">
@@ -105,16 +94,10 @@
 </li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="dist_lda.html"
-                        title="previous chapter">Distributed Latent Dirichlet Allocation</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="apiref.html"
-                        title="next chapter">API Reference</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" size="24" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -139,6 +122,8 @@
 <span id="simserver"></span><h1>Document Similarity Server<a class="headerlink" href="#document-similarity-server" title="Permalink to this headline">¶</a></h1>
 <p>The 0.7.x series of <a class="reference external" href="http://radimrehurek.com/gensim/">gensim</a> was about improving performance and consolidating API.
 0.8.x will be about new features &#8212; 0.8.1, first of the series, is a <strong>document similarity service</strong>.</p>
+<p>The source code itself has been moved from gensim to its own, dedicated package, named <cite>simserver</cite>.
+Get it from <a class="reference external" href="http://pypi.python.org/pypi/simserver">PyPI</a> or clone it on <a class="reference external" href="https://github.com/piskvorky/gensim-simserver">Github</a>.</p>
 <div class="section" id="what-is-a-document-similarity-service">
 <h2>What is a document similarity service?<a class="headerlink" href="#what-is-a-document-similarity-service" title="Permalink to this headline">¶</a></h2>
 <p>Conceptually, a service that lets you :</p>
@@ -147,7 +132,7 @@
 <li>index arbitrary documents using this semantic model</li>
 <li>query the index for similar documents (the query can be either an id of a document already in the index, or an arbitrary text)</li>
 </ol>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim.similarities.simserver</span> <span class="kn">import</span> <span class="n">SessionServer</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">simserver</span> <span class="kn">import</span> <span class="n">SessionServer</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">server</span> <span class="o">=</span> <span class="n">SessionServer</span><span class="p">(</span><span class="s">&#39;/tmp/my_server&#39;</span><span class="p">)</span> <span class="c"># resume server (or create a new one)</span>
 </pre></div>
 </div>
@@ -258,14 +243,14 @@ recommended client splits them into smaller chunks before uploading them to the 
 </div>
 <div class="section" id="wait-upload-what-where">
 <h2>Wait, upload what, where?<a class="headerlink" href="#wait-upload-what-where" title="Permalink to this headline">¶</a></h2>
-<p>If you use the similarity service object (instance of <a class="reference internal" href="similarities/simserver.html#gensim.similarities.simserver.SessionServer" title="gensim.similarities.simserver.SessionServer"><tt class="xref py py-class docutils literal"><span class="pre">gensim.similarities.simserver.SessionServer</span></tt></a>) in
+<p>If you use the similarity service object (instance of <tt class="xref py py-class docutils literal"><span class="pre">simserver.SessionServer</span></tt>) in
 your code directly&#8212;no remote access&#8212;that&#8217;s perfectly fine. Using the service remotely, from a different process/machine, is an
 option, not a necessity.</p>
 <p>Document similarity can also act as a long-running service, a daemon process on a separate machine. In that
 case, I&#8217;ll call the service object a <em>server</em>.</p>
 <p>But let&#8217;s start with a local object. Open your <a class="reference external" href="http://ipython.org/">favourite shell</a> and:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">utils</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim.similarities.simserver</span> <span class="kn">import</span> <span class="n">SessionServer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">simserver</span> <span class="kn">import</span> <span class="n">SessionServer</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">service</span> <span class="o">=</span> <span class="n">SessionServer</span><span class="p">(</span><span class="s">&#39;/tmp/my_server/&#39;</span><span class="p">)</span> <span class="c"># or wherever</span>
 </pre></div>
 </div>
@@ -359,10 +344,10 @@ If you don&#8217;t specify <cite>doc[&#8216;payload&#8217;]</cite> during indexi
 a pure Python package for Remote Procedure Calls (RPC), so I&#8217;ll illustrate remote
 service access via Pyro. Pyro takes care of all the socket listening/request routing/data marshalling/thread
 spawning, so it saves us a lot of trouble.</p>
-<p>To create a similarity server, we just create a <a class="reference internal" href="similarities/simserver.html#gensim.similarities.simserver.SessionServer" title="gensim.similarities.simserver.SessionServer"><tt class="xref py py-class docutils literal"><span class="pre">gensim.similarities.simserver.SessionServer</span></tt></a> object and register it
-with a Pyro daemon for remote access. There is a small <a class="reference external" href="https://github.com/piskvorky/gensim/blob/simserver/gensim/test/run_simserver.py">example script</a>
-included with gensim, run it with:</p>
-<div class="highlight-python"><pre>$ python -m gensim.test.run_simserver /tmp/testserver</pre>
+<p>To create a similarity server, we just create a <tt class="xref py py-class docutils literal"><span class="pre">simserver.SessionServer</span></tt> object and register it
+with a Pyro daemon for remote access. There is a small <a class="reference external" href="https://github.com/piskvorky/gensim-simserver/blob/master/simserver/run_simserver.py">example script</a>
+included with simserver, run it with:</p>
+<div class="highlight-python"><pre>$ python -m simserver.run_simserver /tmp/testserver</pre>
 </div>
 <p>You can just <cite>ctrl+c</cite> to terminate the server, but leave it running for now.</p>
 <p>Now open your Python shell again, in another terminal window or possibly on another machine, and:</p>
@@ -437,7 +422,7 @@ cannot be two open sessions at the same time.</p>
 <div class="section" id="other-stuff">
 <h2>Other stuff<a class="headerlink" href="#other-stuff" title="Permalink to this headline">¶</a></h2>
 <p>TODO Custom document parsing (in lieu of <cite>utils.simple_preprocess</cite>). Different models (not just <cite>lsi</cite>). Optimizing the index with <cite>service.optimize()</cite>.
-TODO add some hard numbers; example tutorial for some bigger collection, e.g. arxiv.org or wikipedia.</p>
+TODO add some hard numbers; example tutorial for some bigger collection, e.g. for <a class="reference external" href="http://aura.fi.muni.cz:8080/">arxiv.org</a> or wikipedia.</p>
 </div>
 </div>
 
@@ -458,12 +443,6 @@ TODO add some hard numbers; example tutorial for some bigger collection, e.g. ar
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="apiref.html" title="API Reference"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="dist_lda.html" title="Distributed Latent Dirichlet Allocation"
-             >previous</a> |</li>
         <li><a href="index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="tutorial.html">Tutorials</a>|&nbsp;</li>
         <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
@@ -475,8 +454,8 @@ TODO add some hard numbers; example tutorial for some bigger collection, e.g. ar
     
 
     <div class="footer">
-        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 29, 2011.
+        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Mar 09, 2012.
     </div>
   </body>
 </html>

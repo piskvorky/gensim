@@ -1,0 +1,263 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>models.hdpmodel – Hierarchical Dirichlet Process &mdash; gensim</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.8.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="top" title="gensim" href="../index.html" />
+    <link rel="up" title="API Reference" href="../apiref.html" />
+    <link rel="next" title="models.logentropy_model – LogEntropy model" href="logentropy_model.html" />
+    <link rel="prev" title="models.rpmodel – Random Projections" href="rpmodel.html" />
+     
+
+	<!-- twitter search widget
+	    <script type="text/javascript" src="_static/widget.js"></script>
+	-->
+	<meta property="og:title" content="#gensim" />
+	<meta property="og:description" content="Efficient topic modelling in Python" />
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-24066335-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+    
+
+
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="logentropy_model.html" title="models.logentropy_model – LogEntropy model"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="rpmodel.html" title="models.rpmodel – Random Projections"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="../tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="../apiref.html">API reference</a>&raquo;</li>
+
+          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="rpmodel.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">models.rpmodel</span></tt> &#8211; Random Projections</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="logentropy_model.html"
+                        title="next chapter"><tt class="docutils literal"><span class="pre">models.logentropy_model</span></tt> &#8211; LogEntropy model</a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="24" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+    
+
+
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-gensim.models.hdpmodel">
+<span id="models-hdpmodel-hierarchical-dirichlet-process"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">models.hdpmodel</span></tt> &#8211; Hierarchical Dirichlet Process<a class="headerlink" href="#module-gensim.models.hdpmodel" title="Permalink to this headline">¶</a></h1>
+<p>This module encapsulates functionality for the online Hierarchical Dirichlet Process algorithm.</p>
+<p>It allows both model estimation from a training corpus and inference of topic
+distribution on new, unseen documents.</p>
+<p>The core estimation code is directly adapted from the <cite>onlinelhdp.py</cite> script
+by C. Wang see
+<strong>Wang, Paisley, Blei: Online Variational Inference for the Hierarchical Dirichlet
+Process, JMLR (2011).</strong></p>
+<p><a class="reference external" href="http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf">http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf</a></p>
+<p>The algorithm:</p>
+<blockquote>
+<div><ul class="simple">
+<li>is <strong>streamed</strong>: training documents come in sequentially, no random access,</li>
+<li>runs in <strong>constant memory</strong> w.r.t. the number of documents: size of the
+training corpus does not affect memory footprint</li>
+</ul>
+</div></blockquote>
+<dl class="class">
+<dt id="gensim.models.hdpmodel.HdpModel">
+<em class="property">class </em><tt class="descclassname">gensim.models.hdpmodel.</tt><tt class="descname">HdpModel</tt><big>(</big><em>corpus</em>, <em>id2word</em>, <em>max_chunks=None</em>, <em>max_time=None</em>, <em>chunksize=256</em>, <em>kappa=1.0</em>, <em>tau=64.0</em>, <em>K=15</em>, <em>T=150</em>, <em>alpha=1</em>, <em>gamma=1</em>, <em>eta=0.01</em>, <em>scale=1.0</em>, <em>var_converge=0.0001</em>, <em>outputdir=None</em><big>)</big><a class="headerlink" href="#gensim.models.hdpmodel.HdpModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>The constructor estimates Hierachical Dirichlet Process model parameters based
+on a training corpus:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">hdp</span> <span class="o">=</span> <span class="n">HdpModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">id2word</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hdp</span><span class="o">.</span><span class="n">print_topics</span><span class="p">(</span><span class="n">topics</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">topn</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The model doesn&#8217;t support inference of topics on new, unseen documents, yet.</p>
+<p>Model persistency is achieved through its <cite>load</cite>/<cite>save</cite> methods.</p>
+<p><cite>gamma</cite>: first level concentration
+<cite>alpha</cite>: second level concentration
+<cite>eta</cite>: the topic Dirichlet
+<cite>T</cite>: top level truncation level
+<cite>K</cite>: second level truncation level
+<cite>kappa</cite>: learning rate
+<cite>tau</cite>: slow down parameter
+<cite>max_time</cite>: stop training after this many seconds
+<cite>max_chunks</cite>: stop after having processed this many chunks (wrap around
+corpus beginning in another corpus pass, if there are not enough chunks
+in the corpus)</p>
+<dl class="method">
+<dt id="gensim.models.hdpmodel.HdpModel.doc_e_step">
+<tt class="descname">doc_e_step</tt><big>(</big><em>doc</em>, <em>ss</em>, <em>Elogsticks_1st</em>, <em>word_list</em>, <em>unique_words</em>, <em>doc_word_ids</em>, <em>doc_word_counts</em>, <em>var_converge</em><big>)</big><a class="headerlink" href="#gensim.models.hdpmodel.HdpModel.doc_e_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>e step for a single doc</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.hdpmodel.HdpModel.hdp_to_lda">
+<tt class="descname">hdp_to_lda</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.models.hdpmodel.HdpModel.hdp_to_lda" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the LDA almost equivalent HDP.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="gensim.models.hdpmodel.HdpModel.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.hdpmodel.HdpModel.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.hdpmodel.HdpModel.optimal_ordering">
+<tt class="descname">optimal_ordering</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.models.hdpmodel.HdpModel.optimal_ordering" title="Permalink to this definition">¶</a></dt>
+<dd><p>ordering the topics</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.hdpmodel.HdpModel.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.hdpmodel.HdpModel.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.hdpmodel.HdpModel.save_options">
+<tt class="descname">save_options</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.models.hdpmodel.HdpModel.save_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>legacy method; use <cite>self.save()</cite> instead</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.hdpmodel.HdpModel.save_topics">
+<tt class="descname">save_topics</tt><big>(</big><em>doc_count=None</em><big>)</big><a class="headerlink" href="#gensim.models.hdpmodel.HdpModel.save_topics" title="Permalink to this definition">¶</a></dt>
+<dd><p>legacy method; use <cite>self.save()</cite> instead</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.hdpmodel.HdpModel.update_expectations">
+<tt class="descname">update_expectations</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.models.hdpmodel.HdpModel.update_expectations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Since we&#8217;re doing lazy updates on lambda, at any given moment
+the current state of lambda may not be accurate. This function
+updates all of the elements of lambda and Elogbeta
+so that if (for example) we want to print out the
+topics we&#8217;ve learned we&#8217;ll get the correct behavior.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.models.hdpmodel.dirichlet_expectation">
+<tt class="descclassname">gensim.models.hdpmodel.</tt><tt class="descname">dirichlet_expectation</tt><big>(</big><em>alpha</em><big>)</big><a class="headerlink" href="#gensim.models.hdpmodel.dirichlet_expectation" title="Permalink to this definition">¶</a></dt>
+<dd><p>For a vector theta ~ Dir(alpha), compute E[log(theta)] given alpha.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.models.hdpmodel.expect_log_sticks">
+<tt class="descclassname">gensim.models.hdpmodel.</tt><tt class="descname">expect_log_sticks</tt><big>(</big><em>sticks</em><big>)</big><a class="headerlink" href="#gensim.models.hdpmodel.expect_log_sticks" title="Permalink to this definition">¶</a></dt>
+<dd><p>For stick-breaking hdp, return the E[log(sticks)]</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="logentropy_model.html" title="models.logentropy_model – LogEntropy model"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="rpmodel.html" title="models.rpmodel – Random Projections"
+             >previous</a> |</li>
+        <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
+        <li><a href="../tutorial.html">Tutorials</a>|&nbsp;</li>
+        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
+        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
+        <li><a href="../apiref.html">API reference</a>&raquo;</li>
+
+          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    
+
+    <div class="footer">
+        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Mar 09, 2012.
+    </div>
+  </body>
+</html>

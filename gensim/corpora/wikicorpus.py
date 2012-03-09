@@ -21,7 +21,10 @@ The output Matrix Market files can then be compressed (e.g., by bzip2) to save \
 disk space; gensim's corpus iterators can work with compressed input, too.
 
 `VOCABULARY_SIZE` controls how many of the most frequent words to keep (after
-removing all tokens that appear in more than 10 percent documents). Defaults to 100,000.
+removing tokens that appear in more than 10%% of all documents). Defaults to 50,000.
+
+If you have the `pattern` package installed, this script will use a fancy lemmatization
+to get a lemma of each token (instead of plain alphabetic tokenizer).
 
 Example: ./wikicorpus.py ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki_en
 """
@@ -47,10 +50,14 @@ logger = logging.getLogger('gensim.corpora.wikicorpus')
 # Wiki is first scanned for all distinct word types (~7M). The types that appear
 # in more than 10% of articles are removed and from the rest, the DEFAULT_DICT_SIZE
 # most frequent types are kept (default 100K).
-DEFAULT_DICT_SIZE = 100000
+DEFAULT_DICT_SIZE = 50000
 
 # Ignore articles shorter than ARTICLE_MIN_CHARS characters (after preprocessing).
 ARTICLE_MIN_CHARS = 500
+
+# if 'pattern' package is installed, we can use a fancy shallow parsing to get
+# token lemmas. otherwise, use simple regexp tokenization
+LEMMATIZE = utils.HAS_PATTERN
 
 
 RE_P0 = re.compile('<!--.*?-->', re.DOTALL | re.UNICODE) # comments
@@ -173,6 +180,10 @@ class WikiCorpus(TextCorpus):
         """
         articles, articles_all = 0, 0
         intext, positions = False, 0
+        if LEMMATIZE:
+            lemmatizer = utils.lemmatizer
+            yielded = 0
+
         for lineno, line in enumerate(bz2.BZ2File(self.fname)):
             if line.startswith('      <text'):
                 intext = True
@@ -192,17 +203,34 @@ class WikiCorpus(TextCorpus):
                     articles += 1
                     if return_raw:
                         result = text
+                        yield result
                     else:
-                        result = tokenize(text) # text into tokens here
-                        positions += len(result)
-                    yield result
+                        if LEMMATIZE:
+                            _ = lemmatizer.feed(text)
+                            while lemmatizer.has_results():
+                                _, result = lemmatizer.read() # not necessarily the same text as entered above!
+                                positions += len(result)
+                                yielded += 1
+                                yield result
+                        else:
+                            result = tokenize(text) # text into tokens here
+                            positions += len(result)
+                            yield result
+
+        if LEMMATIZE:
+            logger.info("all %i articles read; waiting for lemmatizer to finish the %i remaining jobs" %
+                        (articles, articles - yielded))
+            while yielded < articles:
+                _, result = lemmatizer.read()
+                positions += len(result)
+                yielded += 1
+                yield result
 
         logger.info("finished iterating over Wikipedia corpus of %i documents with %i positions"
                      " (total %i articles before pruning)" %
                      (articles, positions, articles_all))
         self.length = articles # cache corpus length
 #endclass WikiCorpus
-
 
 
 

@@ -1,7 +1,7 @@
-:mod:`similarities.simserver` -- Document similarity server
-========================================================================
+:mod:`simserver` -- Document similarity server
+======================================================
 
-.. automodule:: gensim.similarities.simserver
+.. automodule:: simserver.simserver
     :synopsis: Document similarity server
     :members:
     :inherited-members:

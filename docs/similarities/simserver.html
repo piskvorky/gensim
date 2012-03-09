@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>similarities.simserver – Document similarity server &mdash; gensim</title>
+    <title>simserver – Document similarity server &mdash; gensim</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,46 +16,44 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.1',
+        VERSION:     '0.8.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="top" title="gensim" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
     <link rel="prev" title="similarities.docsim – Document similarity queries" href="docsim.html" />
-<!-- twitter search widget
-    <script type="text/javascript" src="_static/widget.js"></script>
--->
-<meta property="og:title" content="#gensim" />
-<meta property="og:description" content="Efficient topic modelling in Python" />
+     
 
-<script type="text/javascript">
+	<!-- twitter search widget
+	    <script type="text/javascript" src="_static/widget.js"></script>
+	-->
+	<meta property="og:title" content="#gensim" />
+	<meta property="og:description" content="Efficient topic modelling in Python" />
 
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-24066335-1']);
-  _gaq.push(['_trackPageview']);
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-24066335-1']);
+		_gaq.push(['_trackPageview']);
 
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
+		(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
 
-</script>
+    
+
+
   </head>
   <body>
-<!--
-<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
-<a href="../index.html"><img src="../_static/logo.png" border="0" alt="gensim logo"/></a>
-</div>
---!>
-
     <div class="related">
       <h3>Navigation</h3>
       <ul>
@@ -78,7 +76,6 @@
       </ul>
     </div>
 
-
     
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
@@ -88,7 +85,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" size="24" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -109,8 +106,8 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="module-gensim.similarities.simserver">
-<span id="similarities-simserver-document-similarity-server"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">similarities.simserver</span></tt> &#8211; Document similarity server<a class="headerlink" href="#module-gensim.similarities.simserver" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-simserver.simserver">
+<span id="simserver-document-similarity-server"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">simserver</span></tt> &#8211; Document similarity server<a class="headerlink" href="#module-simserver.simserver" title="Permalink to this headline">¶</a></h1>
 <p>&#8220;Find similar&#8221; service, using gensim (=vector spaces) for backend.</p>
 <p>The server performs 3 main functions:</p>
 <ol class="arabic simple">
@@ -124,54 +121,60 @@ set of changes.</p>
 and you can query the SessionServer even while it&#8217;s being updated, so that there
 is virtually no down-time.</p>
 <dl class="class">
-<dt id="gensim.similarities.simserver.SessionServer">
-<em class="property">class </em><tt class="descclassname">gensim.similarities.simserver.</tt><tt class="descname">SessionServer</tt><big>(</big><em>basedir</em>, <em>autosession=True</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Similarity server on top of <a class="reference internal" href="#gensim.similarities.simserver.SimServer" title="gensim.similarities.simserver.SimServer"><tt class="xref py py-class docutils literal"><span class="pre">SimServer</span></tt></a> that implements sessions = transactions.</p>
+<dt id="simserver.simserver.SessionServer">
+<em class="property">class </em><tt class="descclassname">simserver.simserver.</tt><tt class="descname">SessionServer</tt><big>(</big><em>basedir</em>, <em>autosession=True</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Similarity server on top of <a class="reference internal" href="#simserver.simserver.SimServer" title="simserver.simserver.SimServer"><tt class="xref py py-class docutils literal"><span class="pre">SimServer</span></tt></a> that implements sessions = transactions.</p>
 <p>A transaction is a set of server modifications (index/delete/train calls) that
-may be either commited or rolled back entirely.</p>
+may be either committed or rolled back entirely.</p>
 <p>Sessions are realized by:</p>
 <ol class="arabic simple">
 <li>cloning (=copying) a SimServer at the beginning of a session</li>
 <li>serving read-only queries from the original server (the clone may be modified during queries)</li>
 <li>modifications affect only the clone</li>
-<li>at commit, the clone and the original are switched</li>
+<li>at commit, the clone becomes the original</li>
 <li>at rollback, do nothing (clone is discarded, next transaction starts from the original again)</li>
 </ol>
 <dl class="method">
-<dt id="gensim.similarities.simserver.SessionServer.buffer">
-<tt class="descname">buffer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer.buffer" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SessionServer.buffer">
+<tt class="descname">buffer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.buffer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Buffer documents, in the current session</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SessionServer.check_session">
-<tt class="descname">check_session</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer.check_session" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SessionServer.check_session">
+<tt class="descname">check_session</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.check_session" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make sure a session is open.</p>
 <p>If it&#8217;s not and autosession is turned on, create a new session automatically.
 If it&#8217;s not and autosession is off, raise an exception.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SessionServer.commit">
-<tt class="descname">commit</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer.commit" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SessionServer.close">
+<tt class="descname">close</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Don&#8217;t wait for gc, try to release important resources manually</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="simserver.simserver.SessionServer.commit">
+<tt class="descname">commit</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.commit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Commit changes made by the latest session.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SessionServer.delete">
-<tt class="descname">delete</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer.delete" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SessionServer.delete">
+<tt class="descname">delete</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.delete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete documents from the current session.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SessionServer.drop_index">
-<tt class="descname">drop_index</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer.drop_index" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SessionServer.drop_index">
+<tt class="descname">drop_index</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.drop_index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Drop all indexed documents from the session. Optionally, drop model too.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SessionServer.find_similar">
-<tt class="descname">find_similar</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer.find_similar" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SessionServer.find_similar">
+<tt class="descname">find_similar</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.find_similar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find similar articles.</p>
 <p>With autosession off, use the index state <em>before</em> current session started,
 so that changes made in the session will not be visible here. With autosession
@@ -180,135 +183,141 @@ and visible).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SessionServer.index">
-<tt class="descname">index</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer.index" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SessionServer.index">
+<tt class="descname">index</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Index documents, in the current session</p>
 </dd></dl>
 
 <dl class="classmethod">
-<dt id="gensim.similarities.simserver.SessionServer.load">
-<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer.load" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SessionServer.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SessionServer.open_session">
-<tt class="descname">open_session</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer.open_session" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SessionServer.open_session">
+<tt class="descname">open_session</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.open_session" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a new session to modify this server.</p>
 <p>You can either call this fnc directly, or turn on autosession which will
 open/commit sessions for you transparently.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SessionServer.optimize">
-<tt class="descname">optimize</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer.optimize" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SessionServer.optimize">
+<tt class="descname">optimize</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.optimize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Optimize index for faster by-document-id queries.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SessionServer.rollback">
-<tt class="descname">rollback</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer.rollback" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SessionServer.rollback">
+<tt class="descname">rollback</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.rollback" title="Permalink to this definition">¶</a></dt>
 <dd><p>Ignore all changes made in the latest session (terminate the session).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SessionServer.save">
-<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer.save" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SessionServer.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SessionServer.set_autosession">
-<tt class="descname">set_autosession</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer.set_autosession" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SessionServer.set_autosession">
+<tt class="descname">set_autosession</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.set_autosession" title="Permalink to this definition">¶</a></dt>
 <dd><p>Turn autosession (automatic committing after each modification call) on/off.
-If value is None, only query current value (don&#8217;t change anything)</p>
+If value is None, only query the current value (don&#8217;t change anything).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SessionServer.terminate">
-<tt class="descname">terminate</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer.terminate" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SessionServer.terminate">
+<tt class="descname">terminate</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.terminate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete all files created by this server, invalidating <cite>self</cite>. Use with care.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SessionServer.train">
-<tt class="descname">train</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SessionServer.train" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SessionServer.train">
+<tt class="descname">train</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer.train" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update semantic model, in the current session.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="gensim.similarities.simserver.SimIndex">
-<em class="property">class </em><tt class="descclassname">gensim.similarities.simserver.</tt><tt class="descname">SimIndex</tt><big>(</big><em>fname</em>, <em>num_features</em>, <em>shardsize=65536</em>, <em>topsims=100</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimIndex" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimIndex">
+<em class="property">class </em><tt class="descclassname">simserver.simserver.</tt><tt class="descname">SimIndex</tt><big>(</big><em>fname</em>, <em>num_features</em>, <em>shardsize=65536</em>, <em>topsims=100</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex" title="Permalink to this definition">¶</a></dt>
 <dd><p>An index of documents. Used internally by SimServer.</p>
 <p>It uses the Similarity class to persist all document vectors to disk (via mmap).</p>
 <p>Spill index shards to disk after every <cite>shardsize</cite> documents.
 In similarity queries, return only the <cite>topsims</cite> most similar documents.</p>
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimIndex.delete">
-<tt class="descname">delete</tt><big>(</big><em>docids</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimIndex.delete" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimIndex.close">
+<tt class="descname">close</tt><big>(</big><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Explicitly release important resources (file handles, db, ...)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="simserver.simserver.SimIndex.delete">
+<tt class="descname">delete</tt><big>(</big><em>docids</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.delete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete documents (specified by their ids) from the index.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimIndex.index_documents">
-<tt class="descname">index_documents</tt><big>(</big><em>fresh_docs</em>, <em>model</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimIndex.index_documents" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimIndex.index_documents">
+<tt class="descname">index_documents</tt><big>(</big><em>fresh_docs</em>, <em>model</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.index_documents" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update fresh index with new documents (potentially replacing old ones with
 the same id). <cite>fresh_docs</cite> is a dictionary-like object (=dict, sqlitedict, shelve etc)
 that maps document_id-&gt;document.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimIndex.merge">
-<tt class="descname">merge</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimIndex.merge" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimIndex.merge">
+<tt class="descname">merge</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.merge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Merge documents from the other index. Update precomputed similarities
 in the process.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimIndex.sims2scores">
-<tt class="descname">sims2scores</tt><big>(</big><em>sims</em>, <em>eps=1e-07</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimIndex.sims2scores" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimIndex.sims2scores">
+<tt class="descname">sims2scores</tt><big>(</big><em>sims</em>, <em>eps=1e-07</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.sims2scores" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert raw similarity vector to a list of (docid, similarity) results.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimIndex.sims_by_doc">
-<tt class="descname">sims_by_doc</tt><big>(</big><em>doc</em>, <em>model</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimIndex.sims_by_doc" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimIndex.sims_by_doc">
+<tt class="descname">sims_by_doc</tt><big>(</big><em>doc</em>, <em>model</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.sims_by_doc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find the most similar documents to a fulltext document.</p>
 <p>The document is first processed (tokenized etc) and converted to a vector
 in the same way the training documents were, during <cite>train()</cite>.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimIndex.sims_by_id">
-<tt class="descname">sims_by_id</tt><big>(</big><em>docid</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimIndex.sims_by_id" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimIndex.sims_by_id">
+<tt class="descname">sims_by_id</tt><big>(</big><em>docid</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.sims_by_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find the most similar documents to the (already indexed) document with <cite>docid</cite>.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimIndex.terminate">
-<tt class="descname">terminate</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimIndex.terminate" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimIndex.terminate">
+<tt class="descname">terminate</tt><big>(</big><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.terminate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete all files created by this index, invalidating <cite>self</cite>. Use with care.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimIndex.update_ids">
-<tt class="descname">update_ids</tt><big>(</big><em>docids</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimIndex.update_ids" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimIndex.update_ids">
+<tt class="descname">update_ids</tt><big>(</big><em>docids</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.update_ids" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update id-&gt;pos mapping with new document ids.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimIndex.update_mappings">
-<tt class="descname">update_mappings</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimIndex.update_mappings" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimIndex.update_mappings">
+<tt class="descname">update_mappings</tt><big>(</big><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.update_mappings" title="Permalink to this definition">¶</a></dt>
 <dd><p>Synchronize id&lt;-&gt;position mappings.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="gensim.similarities.simserver.SimModel">
-<em class="property">class </em><tt class="descclassname">gensim.similarities.simserver.</tt><tt class="descname">SimModel</tt><big>(</big><em>fresh_docs</em>, <em>dictionary=None</em>, <em>method='lsi'</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimModel" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimModel">
+<em class="property">class </em><tt class="descclassname">simserver.simserver.</tt><tt class="descname">SimModel</tt><big>(</big><em>fresh_docs</em>, <em>dictionary=None</em>, <em>method='lsi'</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>A semantic model responsible for translating between plain text and (semantic)
 vectors.</p>
 <p>These vectors can then be indexed/queried for similarity, see the <cite>SimIndex</cite>
@@ -317,34 +326,40 @@ class. Used internally by <cite>SimServer</cite>.</p>
 <p>If <cite>dictionary</cite> is not specified, it is computed from the documents.</p>
 <p><cite>method</cite> is currently one of &#8220;tfidf&#8221;/&#8221;lsi&#8221;/&#8221;lda&#8221;.</p>
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimModel.doc2vec">
-<tt class="descname">doc2vec</tt><big>(</big><em>doc</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimModel.doc2vec" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimModel.close">
+<tt class="descname">close</tt><big>(</big><big>)</big><a class="headerlink" href="#simserver.simserver.SimModel.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Release important resources manually.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="simserver.simserver.SimModel.doc2vec">
+<tt class="descname">doc2vec</tt><big>(</big><em>doc</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimModel.doc2vec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a single SimilarityDocument to vector.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimModel.docs2vecs">
-<tt class="descname">docs2vecs</tt><big>(</big><em>docs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimModel.docs2vecs" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimModel.docs2vecs">
+<tt class="descname">docs2vecs</tt><big>(</big><em>docs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimModel.docs2vecs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert multiple SimilarityDocuments to vectors (batch version of doc2vec).</p>
 </dd></dl>
 
 <dl class="classmethod">
-<dt id="gensim.similarities.simserver.SimModel.load">
-<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimModel.load" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimModel.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimModel.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimModel.save">
-<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimModel.save" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimModel.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimModel.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="gensim.similarities.simserver.SimServer">
-<em class="property">class </em><tt class="descclassname">gensim.similarities.simserver.</tt><tt class="descname">SimServer</tt><big>(</big><em>basename</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimServer" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimServer">
+<em class="property">class </em><tt class="descclassname">simserver.simserver.</tt><tt class="descname">SimServer</tt><big>(</big><em>basename</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Top-level functionality for similarity services. A similarity server takes
 care of:</p>
 <ol class="arabic simple">
@@ -361,8 +376,8 @@ there already, it will be loaded (resumed).</p>
 <p>The server object is stateless in RAM &#8211; its state is defined entirely by its location.
 There is therefore no need to store the server object.</p>
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimServer.buffer">
-<tt class="descname">buffer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimServer.buffer" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimServer.buffer">
+<tt class="descname">buffer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer.buffer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a sequence of documents to be processed (indexed or trained on).</p>
 <p>Here, the documents are simply collected; real processing is done later,
 during the <cite>self.index</cite> or <cite>self.train</cite> calls.</p>
@@ -375,20 +390,26 @@ is also implicitly called when you call <cite>index()</cite> and <cite>train()</
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimServer.delete">
-<tt class="descname">delete</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimServer.delete" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimServer.close">
+<tt class="descname">close</tt><big>(</big><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Explicitly close open file handles, databases etc.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="simserver.simserver.SimServer.delete">
+<tt class="descname">delete</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer.delete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete specified documents from the index.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimServer.drop_index">
-<tt class="descname">drop_index</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimServer.drop_index" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimServer.drop_index">
+<tt class="descname">drop_index</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer.drop_index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Drop all indexed documents. If <cite>keep_model</cite> is False, also dropped the model.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimServer.find_similar">
-<tt class="descname">find_similar</tt><big>(</big><em>doc</em>, <em>min_score=0.0</em>, <em>max_results=100</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimServer.find_similar" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimServer.find_similar">
+<tt class="descname">find_similar</tt><big>(</big><em>doc</em>, <em>min_score=0.0</em>, <em>max_results=100</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer.find_similar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find at most <cite>max_results</cite> most similar articles in the index,
 each having similarity score of at least <cite>min_score</cite>.</p>
 <p><cite>doc</cite> is either a string (document id, previously indexed) or a
@@ -399,14 +420,14 @@ vector, which is then used as a query.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimServer.flush">
-<tt class="descname">flush</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimServer.flush" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimServer.flush">
+<tt class="descname">flush</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer.flush" title="Permalink to this definition">¶</a></dt>
 <dd><p>Commit all changes, clear all caches.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimServer.index">
-<tt class="descname">index</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimServer.index" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimServer.index">
+<tt class="descname">index</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer.index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Permanently index all documents previously added via <cite>buffer</cite>, or
 directly index documents from <cite>corpus</cite>, if specified.</p>
 <p>The indexing model must already exist (see <cite>train</cite>) before this function
@@ -414,14 +435,14 @@ is called.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimServer.keys">
-<tt class="descname">keys</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimServer.keys" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimServer.keys">
+<tt class="descname">keys</tt><big>(</big><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer.keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return ids of all indexed documents.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimServer.optimize">
-<tt class="descname">optimize</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimServer.optimize" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimServer.optimize">
+<tt class="descname">optimize</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer.optimize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Precompute top similarities for all indexed documents. This speeds up
 <cite>find_similar</cite> queries by id (but not queries by fulltext).</p>
 <p>Internally, documents are moved from a fresh index (=no precomputed similarities)
@@ -433,8 +454,8 @@ To precompute top similarities for these new documents too, simply call
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.similarities.simserver.SimServer.train">
-<tt class="descname">train</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.SimServer.train" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.SimServer.train">
+<tt class="descname">train</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer.train" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an indexing model. Will overwrite the model if it already exists.
 All indexes become invalid, because documents in them use a now-obsolete
 representation.</p>
@@ -445,8 +466,8 @@ or directly on <cite>corpus</cite>, if specified.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="gensim.similarities.simserver.merge_sims">
-<tt class="descclassname">gensim.similarities.simserver.</tt><tt class="descname">merge_sims</tt><big>(</big><em>oldsims</em>, <em>newsims</em>, <em>clip=100</em><big>)</big><a class="headerlink" href="#gensim.similarities.simserver.merge_sims" title="Permalink to this definition">¶</a></dt>
+<dt id="simserver.simserver.merge_sims">
+<tt class="descclassname">simserver.simserver.</tt><tt class="descname">merge_sims</tt><big>(</big><em>oldsims</em>, <em>newsims</em>, <em>clip=100</em><big>)</big><a class="headerlink" href="#simserver.simserver.merge_sims" title="Permalink to this definition">¶</a></dt>
 <dd><p>Merge two precomputed similarity lists, truncating the result to <cite>clip</cite> most similar items.</p>
 </dd></dl>
 
@@ -484,8 +505,8 @@ or directly on <cite>corpus</cite>, if specified.</p>
     
 
     <div class="footer">
-        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 29, 2011.
+        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Mar 09, 2012.
     </div>
   </body>
 </html>

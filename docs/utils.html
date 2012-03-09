@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.3',
+        VERSION:     '0.8.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -130,6 +130,24 @@ is a waste of memory.</p>
 internal id of a corpus = the vocabulary dimensionality.</p>
 <p>HACK: To avoid materializing the whole <cite>range(0, self.num_terms)</cite>, this returns
 <cite>[self.num_terms - 1]</cite> only.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="gensim.utils.Lemmatizer">
+<em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">Lemmatizer</tt><big>(</big><em>num_workers=2</em><big>)</big><a class="headerlink" href="#gensim.utils.Lemmatizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps the lemmatize() fnc so that input can be processed in parallel, to
+speed things up.</p>
+<p>Main methods are <cite>feed(content)</cite>, which puts the content in queue for
+lemmatization, and <cite>read()</cite>, which returns lemmatized content when it&#8217;s ready.</p>
+<p>Note that the order of content entered and read back isn&#8217;t necessarily the same!
+Use the sequence id returned from feed/read to match input to output.</p>
+<p>This class is NOT thread-safe.</p>
+<dl class="method">
+<dt id="gensim.utils.Lemmatizer.has_results">
+<tt class="descname">has_results</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.utils.Lemmatizer.has_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>The next call to read() won&#8217;t block (not thread-safe!).</p>
 </dd></dl>
 
 </dd></dl>
@@ -314,6 +332,14 @@ result is forcefully defined as <cite>is_corpus=False</cite>.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.utils.lemmatize">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">lemmatize</tt><big>(</big><em>content</em><big>)</big><a class="headerlink" href="#gensim.utils.lemmatize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use the English lemmatizer from the <cite>pattern</cite> package to extract tokens in
+their base form (lemmas: &#8220;are, is, being&#8221;-&gt;&#8221;be&#8221; etc.).
+This is a smarter version of stemming.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.utils.pickle">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">pickle</tt><big>(</big><em>obj</em>, <em>fname</em>, <em>protocol=-1</em><big>)</big><a class="headerlink" href="#gensim.utils.pickle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pickle object <cite>obj</cite> to file <cite>fname</cite>.</p>
@@ -438,8 +464,8 @@ will be sent in smaller chunks, of <cite>chunksize</cite> documents each.</p>
     
 
     <div class="footer">
-        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Dec 02, 2011.
+        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Mar 09, 2012.
     </div>
   </body>
 </html>

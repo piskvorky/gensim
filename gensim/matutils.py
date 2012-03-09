@@ -500,6 +500,15 @@ class MmReader(object):
         return ("MmCorpus(%i documents, %i features, %i non-zero entries)" %
                 (self.num_docs, self.num_terms, self.num_nnz))
 
+    def skip_headers(self, input_file):
+        """
+        Skip file headers that appear before the first document.
+        """
+        for line in input_file:
+            if line.startswith('%'):
+                continue
+            break
+
     def __iter__(self):
         """
         Iteratively yield vectors from the underlying file, in the format (row_no, vector),
@@ -515,11 +524,7 @@ class MmReader(object):
         else:
             fin = self.input
             fin.seek(0)
-        # skip headers
-        for line in fin:
-            if line.startswith('%'):
-                continue
-            break
+        self.skip_headers(fin)
 
         previd = -1
         for line in fin:
