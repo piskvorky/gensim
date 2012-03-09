@@ -3,10 +3,12 @@ Changes
 
 0.8.4
 
-* a new corpus format: UCI (thx to Jonathan Esterhazy)
-* a new model: HDP (thx to Jonathan Esterhazy)
-* improved scipy version support (thx to Skipper Seabold)
-
+* better support for Pandas series input (thx to JT Bates)
+* a new corpus format: UCI bag-of-words (thx to Jonathan Esterhazy)
+* a new model, non-parametric bayes: HDP (thx to Jonathan Esterhazy; based on Chong Wang's code)
+* improved support for new scipy versions (thx to Skipper Seabold)
+* lemmatizer support for wikipedia parsing (via the `pattern` python package)
+* extended the lemmatizer for multi-core processing, to improve its performance
 
 0.8.3
 
