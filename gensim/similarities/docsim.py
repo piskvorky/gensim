@@ -316,10 +316,9 @@ class Similarity(interfaces.SimilarityABC):
         return result
 
 
-    def similarity_by_id(self, docpos):
+    def vector_by_id(self, docpos):
         """
-        Return similarity of the given document only. `pos` is the position
-        of the query document within index.
+        Return indexed vector corresponding to the document at position `docpos`.
         """
         self.close_shard() # no-op if no documents added to index since last query
         pos = 0
@@ -330,8 +329,17 @@ class Similarity(interfaces.SimilarityABC):
         if not self.shards or docpos < 0 or docpos >= pos:
             raise ValueError("invalid document position: %s (must be 0 <= x < %s)" %
                              (docpos, len(self)))
+        result = shard.get_document_id(docpos - pos + len(shard))
+        return result
+
+
+    def similarity_by_id(self, docpos):
+        """
+        Return similarity of the given document only. `docpos` is the position
+        of the query document within index.
+        """
+        query = self.vector_by_id(docpos)
         norm, self.normalize = self.normalize, False
-        query = shard.get_document_id(docpos - pos + len(shard))
         result = self[query]
         self.normalize = norm
         return result
