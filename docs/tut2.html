@@ -215,7 +215,7 @@ document stream &#8211; actual conversions are done on-the-fly, during document 
 We cannot convert the entire corpus at the time of calling <tt class="docutils literal"><span class="pre">corpus_transformed</span> <span class="pre">=</span> <span class="pre">model[corpus]</span></tt>,
 because that would mean storing the result in main memory, and that contradicts gensim&#8217;s objective of memory-indepedence.
 If you will be iterating over the transformed <tt class="docutils literal"><span class="pre">corpus_transformed</span></tt> multiple times, and the
-transformation is costly, <a class="reference internal" href="tut1.html#corpus-formats"><em>serialize the resulting corpus to disk first</em></a> and continue
+transformation is costly, <a class="reference internal" href="examples.html#corpus-formats"><em>serialize the resulting corpus to disk first</em></a> and continue
 using that.</p>
 </div>
 <p>Transformations can also be serialized, one on top of another, in a sort of chain:</p>
@@ -231,6 +231,8 @@ dimensions stand for? Let&#8217;s inspect with <tt class="xref py py-func docuti
 <span class="go">topic #1(1.476): -0.460*&quot;system&quot; + -0.373*&quot;user&quot; + -0.332*&quot;eps&quot; + -0.328*&quot;interface&quot; + -0.320*&quot;response&quot; + -0.320*&quot;time&quot; + -0.293*&quot;computer&quot; + -0.280*&quot;human&quot; + -0.171*&quot;survey&quot; + 0.161*&quot;trees&quot;</span>
 </pre></div>
 </div>
+<p>(the topics are printed to log &#8211; see the note at the top of this page about activating
+logging)</p>
 <p>It appears that according to LSI, &#8220;trees&#8221;, &#8220;graph&#8221; and &#8220;minors&#8221; are all related
 words (and contribute the most to the direction of the first topic), while the
 second topic practically concerns itself with all the other words. As expected,
@@ -417,7 +419,7 @@ please <a class="reference external" href="mailto:radimrehurek&#37;&#52;&#48;sez
 
     <div class="footer">
         &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 09, 2012.
+      Last updated on Mar 24, 2012.
     </div>
   </body>
 </html>

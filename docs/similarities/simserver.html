@@ -81,7 +81,7 @@
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="docsim.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">similarities.docsim</span></tt> &#8211; Document similarity queries</a></p>
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">similarities.docsim</span></tt> &#8211; Document similarity queries</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
@@ -122,7 +122,7 @@ and you can query the SessionServer even while it&#8217;s being updated, so that
 is virtually no down-time.</p>
 <dl class="class">
 <dt id="simserver.simserver.SessionServer">
-<em class="property">class </em><tt class="descclassname">simserver.simserver.</tt><tt class="descname">SessionServer</tt><big>(</big><em>basedir</em>, <em>autosession=True</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">simserver.simserver.</tt><tt class="descname">SessionServer</tt><big>(</big><em>basedir</em>, <em>autosession=True</em>, <em>use_locks=True</em><big>)</big><a class="headerlink" href="#simserver.simserver.SessionServer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Similarity server on top of <a class="reference internal" href="#simserver.simserver.SimServer" title="simserver.simserver.SimServer"><tt class="xref py py-class docutils literal"><span class="pre">SimServer</span></tt></a> that implements sessions = transactions.</p>
 <p>A transaction is a set of server modifications (index/delete/train calls) that
 may be either committed or rolled back entirely.</p>
@@ -282,17 +282,15 @@ in the process.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="simserver.simserver.SimIndex.sims_by_doc">
-<tt class="descname">sims_by_doc</tt><big>(</big><em>doc</em>, <em>model</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.sims_by_doc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find the most similar documents to a fulltext document.</p>
-<p>The document is first processed (tokenized etc) and converted to a vector
-in the same way the training documents were, during <cite>train()</cite>.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="simserver.simserver.SimIndex.sims_by_id">
 <tt class="descname">sims_by_id</tt><big>(</big><em>docid</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.sims_by_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find the most similar documents to the (already indexed) document with <cite>docid</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="simserver.simserver.SimIndex.sims_by_vec">
+<tt class="descname">sims_by_vec</tt><big>(</big><em>vec</em>, <em>normalize=None</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.sims_by_vec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the most similar documents to a given vector (=already processed document).</p>
 </dd></dl>
 
 <dl class="method">
@@ -311,6 +309,12 @@ in the same way the training documents were, during <cite>train()</cite>.</p>
 <dt id="simserver.simserver.SimIndex.update_mappings">
 <tt class="descname">update_mappings</tt><big>(</big><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.update_mappings" title="Permalink to this definition">¶</a></dt>
 <dd><p>Synchronize id&lt;-&gt;position mappings.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="simserver.simserver.SimIndex.vec_by_id">
+<tt class="descname">vec_by_id</tt><big>(</big><em>docid</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.vec_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return indexed vector corresponding to document <cite>docid</cite>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -359,7 +363,7 @@ class. Used internally by <cite>SimServer</cite>.</p>
 
 <dl class="class">
 <dt id="simserver.simserver.SimServer">
-<em class="property">class </em><tt class="descclassname">simserver.simserver.</tt><tt class="descname">SimServer</tt><big>(</big><em>basename</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">simserver.simserver.</tt><tt class="descname">SimServer</tt><big>(</big><em>basename</em>, <em>use_locks=True</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Top-level functionality for similarity services. A similarity server takes
 care of:</p>
 <ol class="arabic simple">
@@ -506,7 +510,7 @@ or directly on <cite>corpus</cite>, if specified.</p>
 
     <div class="footer">
         &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 09, 2012.
+      Last updated on Mar 24, 2012.
     </div>
   </body>
 </html>

@@ -93,7 +93,7 @@
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="../models/lda_worker.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.lda_worker</span></tt> &#8211; Worker for distributed LDA</a></p>
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">models.lda_worker</span></tt> &#8211; Worker for distributed LDA</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="simserver.html"
                         title="next chapter"><tt class="docutils literal"><span class="pre">simserver</span></tt> &#8211; Document similarity server</a></p>
@@ -309,8 +309,14 @@ the constructor.</p>
 <dl class="method">
 <dt id="gensim.similarities.docsim.Similarity.similarity_by_id">
 <tt class="descname">similarity_by_id</tt><big>(</big><em>docpos</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.similarity_by_id" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return similarity of the given document only. <cite>pos</cite> is the position
+<dd><p>Return similarity of the given document only. <cite>docpos</cite> is the position
 of the query document within index.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.similarities.docsim.Similarity.vector_by_id">
+<tt class="descname">vector_by_id</tt><big>(</big><em>docpos</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.vector_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return indexed vector corresponding to the document at position <cite>docpos</cite>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -392,7 +398,7 @@ mmap&#8217;ed), under <cite>fname.array_name.npy</cite>.</p>
 
     <div class="footer">
         &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 09, 2012.
+      Last updated on Mar 24, 2012.
     </div>
   </body>
 </html>
