@@ -60,6 +60,13 @@ def synchronous(tlockname):
     return _synched
 
 
+class NoCM(object):
+    def __enter__(self):
+        pass
+    def __exit__(self, type, value, traceback):
+        pass
+nocm = NoCM()
+
 
 def deaccent(text):
     """
