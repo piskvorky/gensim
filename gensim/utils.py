@@ -278,9 +278,9 @@ def get_my_ip():
     """
     import socket
     try:
-        import Pyro
+        import Pyro4
         # we know the nameserver must exist, so use it as our anchor point
-        ns = Pyro.naming.locateNS()
+        ns = Pyro4.naming.locateNS()
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect((ns._pyroUri.host, ns._pyroUri.port))
         result, port = s.getsockname()
@@ -559,7 +559,7 @@ def getNS():
             pass
 
 
-def pyro_daemon(name, object, random_suffix=False):
+def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
     """Register object with name server (starting the name server if not running
     yet) and block until the daemon is terminated. The object is registered under
     `name`, or `name`+ some random suffix if `random_suffix` is set."""
@@ -567,9 +567,9 @@ def pyro_daemon(name, object, random_suffix=False):
         name += '.' + hex(random.randint(0, 0xffffff))[2:]
     import Pyro4
     with getNS() as ns:
-        with Pyro4.Daemon(get_my_ip()) as daemon:
+        with Pyro4.Daemon(ip or get_my_ip(), port or 0) as daemon:
             # register server for remote access
-            uri = daemon.register(object)
+            uri = daemon.register(obj, name)
             ns.remove(name)
             ns.register(name, uri)
             logger.info("%s registered with nameserver (URI '%s')" % (name, uri))
