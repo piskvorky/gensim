@@ -24,6 +24,7 @@ from functools import wraps # for `synchronous` function lock
 from htmlentitydefs import name2codepoint as n2cp # for `decode_htmlentities`
 import threading, time
 from Queue import Queue, Empty
+import shutil
 
 
 try:
@@ -82,6 +83,19 @@ def deaccent(text):
     norm = unicodedata.normalize("NFD", text)
     result = u''.join(ch for ch in norm if unicodedata.category(ch) != 'Mn')
     return unicodedata.normalize("NFC", result)
+
+
+def copytree_hardlink(source, dest):
+    """
+    Recursively copy a directory ala shutils.copytree, but hardlink files
+    instead of copying. Available on UNIX systems only.
+    """
+    copy2 = shutil.copy2
+    try:
+        shutil.copy2 = os.link
+        shutil.copytree(source, dest)
+    finally:
+        shutil.copy2 = copy2
 
 
 def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False, lower=False):
