@@ -66,6 +66,15 @@ from gensim import interfaces, utils, matutils
 
 logger = logging.getLogger('gensim.similarities.docsim')
 
+PARALLEL_SHARDS = False
+try:
+    import multiprocessing
+    PARALLEL_SHARDS = multiprocessing.cpu_count() # use #processes = #CPus
+except ImportError:
+    pass
+
+
+
 
 class Shard(utils.SaveLoad):
     """A proxy class that represents a single shard instance within a Similarity
@@ -117,6 +126,10 @@ class Shard(utils.SaveLoad):
             raise ValueError("num_best and normalize have to be set before querying a proxy Shard object")
         return index[query]
 
+
+def query_shard(args):
+    query, shard = args # simulate starmap (not part of multiprocessing in older Pythons)
+    return shard[query]
 
 
 class Similarity(interfaces.SimilarityABC):
@@ -268,6 +281,27 @@ class Similarity(interfaces.SimilarityABC):
         logger.debug("reopen complete")
 
 
+    def query_shards(self, query):
+        """
+        Return the result of applying shard[query] for each shard in self.shards,
+        as a sequence.
+
+        If PARALLEL_SHARDS is set, the shards are queried in parallel, using
+        the multiprocessing module.
+        """
+        args = zip([query] * len(self.shards), self.shards)
+        if PARALLEL_SHARDS:
+            pool = multiprocessing.Pool(PARALLEL_SHARDS)
+            result = pool.map(query_shard, args) # TODO set chunksize somehow?
+            # gc doesn't seem to collect the Pools... leading to "IOError 24: too many open files"
+            # so let's terminate it manually. this means we cannot use imap above :(
+            pool.terminate()
+        else:
+            # serial processing, one shard after another
+            result = itertools.imap(query_shard, args)
+        return result
+
+
     def __getitem__(self, query):
         """Get similarities of document `query` to all documents in the corpus.
 
@@ -288,11 +322,14 @@ class Similarity(interfaces.SimilarityABC):
         # a corpus (or numpy/scipy matrix) or a single document, and whether the
         # similarity result is a full array or only num_best most similar documents.
 
+        shard_results = self.query_shards(query)
         if self.num_best is None:
             # user asked for all documents => just stack the sub-results into a single matrix
             # (works for both corpus / single doc query)
-            return numpy.hstack(shard[query] for shard in self.shards)
+            return numpy.hstack(shard_results)
 
+        # the following uses a lot of lazy evaluation and (optionally) parallel
+        # processing, to improve query latency and minimize memory footprint.
         offsets = numpy.cumsum([0] + [len(shard) for shard in self.shards])
         convert = lambda doc, shard_no: [(doc_index + offsets[shard_no], sim)
                                          for doc_index, sim in doc]
@@ -300,17 +337,17 @@ class Similarity(interfaces.SimilarityABC):
         is_corpus = is_corpus or hasattr(query, 'ndim') and query.ndim > 1 and query.shape[0] > 1
         if not is_corpus:
             # user asked for num_best most similar and query is a single doc
-            results = (convert(shard[query], shard_no)
-                       for shard_no, shard in enumerate(self.shards))
+            results = (convert(result, shard_no)
+                       for shard_no, result in enumerate(shard_results))
             return heapq.nlargest(self.num_best, itertools.chain(*results), key=lambda item: item[1])
 
         # the trickiest combination: returning num_best results when query was a corpus
-        shard_results = []
-        for shard_no, shard in enumerate(self.shards):
-            shard_result = [convert(doc, shard_no) for doc in shard[query]]
-            shard_results.append(shard_result)
+        results = []
+        for shard_no, result in enumerate(shard_results):
+            shard_result = [convert(doc, shard_no) for doc in result]
+            results.append(shard_result)
         result = []
-        for parts in itertools.izip(*shard_results):
+        for parts in itertools.izip(*results):
             merged = heapq.nlargest(self.num_best, itertools.chain(*parts), key=lambda item: item[1])
             result.append(merged)
         return result
