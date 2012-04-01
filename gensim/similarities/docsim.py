@@ -54,11 +54,9 @@ already uses the faster, batch queries internally:
 import logging
 import itertools
 import os
-import random
 import heapq
 
 import numpy
-import scipy
 import scipy.sparse
 
 from gensim import interfaces, utils, matutils
