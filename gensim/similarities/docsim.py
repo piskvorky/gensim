@@ -129,7 +129,11 @@ class Shard(utils.SaveLoad):
 
 def query_shard(args):
     query, shard = args # simulate starmap (not part of multiprocessing in older Pythons)
-    return shard[query]
+    logger.debug("querying shard %s num_best=%s in process %s" % (shard, shard.num_best, os.getpid()))
+    result = shard[query]
+    logger.debug("finished querying shard %s in process %s" % (shard, os.getpid()))
+    return result
+
 
 
 class Similarity(interfaces.SimilarityABC):
@@ -291,15 +295,14 @@ class Similarity(interfaces.SimilarityABC):
         """
         args = zip([query] * len(self.shards), self.shards)
         if PARALLEL_SHARDS:
+            logger.debug("spawning %i query processes" % PARALLEL_SHARDS)
             pool = multiprocessing.Pool(PARALLEL_SHARDS)
-            result = pool.map(query_shard, args) # TODO set chunksize somehow?
-            # gc doesn't seem to collect the Pools... leading to "IOError 24: too many open files"
-            # so let's terminate it manually. this means we cannot use imap above :(
-            pool.terminate()
+            result = pool.imap(query_shard, args, chunksize=1 + len(args) / PARALLEL_SHARDS)
         else:
             # serial processing, one shard after another
+            pool = None
             result = itertools.imap(query_shard, args)
-        return result
+        return pool, result
 
 
     def __getitem__(self, query):
@@ -320,36 +323,39 @@ class Similarity(interfaces.SimilarityABC):
 
         # there are 4 distinct code paths, depending on whether input `query` is
         # a corpus (or numpy/scipy matrix) or a single document, and whether the
-        # similarity result is a full array or only num_best most similar documents.
-
-        shard_results = self.query_shards(query)
+        # similarity result should be a full array or only num_best most similar
+        # documents.
+        pool, shard_results = self.query_shards(query)
         if self.num_best is None:
             # user asked for all documents => just stack the sub-results into a single matrix
             # (works for both corpus / single doc query)
-            return numpy.hstack(shard_results)
-
-        # the following uses a lot of lazy evaluation and (optionally) parallel
-        # processing, to improve query latency and minimize memory footprint.
-        offsets = numpy.cumsum([0] + [len(shard) for shard in self.shards])
-        convert = lambda doc, shard_no: [(doc_index + offsets[shard_no], sim)
-                                         for doc_index, sim in doc]
-        is_corpus, query = utils.is_corpus(query)
-        is_corpus = is_corpus or hasattr(query, 'ndim') and query.ndim > 1 and query.shape[0] > 1
-        if not is_corpus:
-            # user asked for num_best most similar and query is a single doc
-            results = (convert(result, shard_no)
-                       for shard_no, result in enumerate(shard_results))
-            return heapq.nlargest(self.num_best, itertools.chain(*results), key=lambda item: item[1])
-
-        # the trickiest combination: returning num_best results when query was a corpus
-        results = []
-        for shard_no, result in enumerate(shard_results):
-            shard_result = [convert(doc, shard_no) for doc in result]
-            results.append(shard_result)
-        result = []
-        for parts in itertools.izip(*results):
-            merged = heapq.nlargest(self.num_best, itertools.chain(*parts), key=lambda item: item[1])
-            result.append(merged)
+            result = numpy.hstack(shard_results)
+        else:
+            # the following uses a lot of lazy evaluation and (optionally) parallel
+            # processing, to improve query latency and minimize memory footprint.
+            offsets = numpy.cumsum([0] + [len(shard) for shard in self.shards])
+            convert = lambda doc, shard_no: [(doc_index + offsets[shard_no], sim)
+                                             for doc_index, sim in doc]
+            is_corpus, query = utils.is_corpus(query)
+            is_corpus = is_corpus or hasattr(query, 'ndim') and query.ndim > 1 and query.shape[0] > 1
+            if not is_corpus:
+                # user asked for num_best most similar and query is a single doc
+                results = (convert(result, shard_no) for shard_no, result in enumerate(shard_results))
+                result = heapq.nlargest(self.num_best, itertools.chain(*results), key=lambda item: item[1])
+            else:
+                # the trickiest combination: returning num_best results when query was a corpus
+                results = []
+                for shard_no, result in enumerate(shard_results):
+                    shard_result = [convert(doc, shard_no) for doc in result]
+                    results.append(shard_result)
+                result = []
+                for parts in itertools.izip(*results):
+                    merged = heapq.nlargest(self.num_best, itertools.chain(*parts), key=lambda item: item[1])
+                    result.append(merged)
+        if pool:
+            # gc doesn't seem to collect the Pools, eventually leading to
+            # "IOError 24: too many open files". so let's terminate it manually.
+            pool.terminate()
         return result
 
 
