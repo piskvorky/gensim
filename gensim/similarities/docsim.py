@@ -67,15 +67,16 @@ logger = logging.getLogger('gensim.similarities.docsim')
 PARALLEL_SHARDS = False
 try:
     import multiprocessing
-    PARALLEL_SHARDS = multiprocessing.cpu_count() # use #processes = #CPus
+    # by default, don't parallelize queries. uncomment the following line if you want that.
+#    PARALLEL_SHARDS = multiprocessing.cpu_count() # use #parallel processes = #CPus
 except ImportError:
     pass
 
 
 
-
 class Shard(utils.SaveLoad):
-    """A proxy class that represents a single shard instance within a Similarity
+    """
+    A proxy class that represents a single shard instance within a Similarity
     index.
 
     Basically just wraps (Sparse)MatrixSimilarity so that it mmaps from disk on
@@ -88,19 +89,27 @@ class Shard(utils.SaveLoad):
         self.cls = index.__class__
         logger.info("saving index shard to %s" % fname)
         index.save(fname)
-        # TODO: support for remote shards (Pyro? multiprocessing?)
+        self.index = self.get_index()
 
 
     def __len__(self):
         return self.length
 
+    def __getstate__(self):
+        result = self.__dict__.copy()
+        del result['index']
+        return result
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.index = self.get_index()
 
     def __str__(self):
         return ("%s Shard(%i documents in %s)" % (self.cls.__name__, len(self), self.fname))
 
 
     def get_index(self):
-        logger.debug("loading index from %s" % self.fname)
+        logger.debug("mmaping index from %s" % self.fname)
         return self.cls.load(self.fname)
 
 
@@ -111,12 +120,11 @@ class Shard(utils.SaveLoad):
         MatrixSimilarity and scipy.sparse for SparseMatrixSimilarity.
         """
         assert 0 <= pos < len(self), "requested position out of range"
-        index = self.get_index()
-        return index.index[pos]
+        return self.index.index[pos]
 
 
     def __getitem__(self, query):
-        index = self.get_index()
+        index = self.index
         try:
             index.num_best = self.num_best
             index.normalize = self.normalize
@@ -292,7 +300,7 @@ class Similarity(interfaces.SimilarityABC):
         the multiprocessing module.
         """
         args = zip([query] * len(self.shards), self.shards)
-        if PARALLEL_SHARDS:
+        if PARALLEL_SHARDS and PARALLEL_SHARDS > 1:
             logger.debug("spawning %i query processes" % PARALLEL_SHARDS)
             pool = multiprocessing.Pool(PARALLEL_SHARDS)
             result = pool.imap(query_shard, args, chunksize=1 + len(args) / PARALLEL_SHARDS)
