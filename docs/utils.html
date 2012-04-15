@@ -88,7 +88,7 @@
                         title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">interfaces</span></tt> &#8211; Core gensim interfaces</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="matutils.html"
-                        title="next chapter"><tt class="docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils</a></p>
+                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -246,6 +246,13 @@ A once-only input stream (<cite>corpus</cite> from a generator) is ok.</p>
 <span class="go">[8, 9]</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.utils.copytree_hardlink">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">copytree_hardlink</tt><big>(</big><em>source</em>, <em>dest</em><big>)</big><a class="headerlink" href="#gensim.utils.copytree_hardlink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively copy a directory ala shutils.copytree, but hardlink files
+instead of copying. Available on UNIX systems only.</p>
 </dd></dl>
 
 <dl class="function">
@@ -465,7 +472,7 @@ will be sent in smaller chunks, of <cite>chunksize</cite> documents each.</p>
 
     <div class="footer">
         &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 24, 2012.
+      Last updated on Apr 15, 2012.
     </div>
   </body>
 </html>

@@ -93,7 +93,7 @@
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="../models/lda_worker.html"
-                        title="previous chapter"><tt class="docutils literal"><span class="pre">models.lda_worker</span></tt> &#8211; Worker for distributed LDA</a></p>
+                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.lda_worker</span></tt> &#8211; Worker for distributed LDA</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="simserver.html"
                         title="next chapter"><tt class="docutils literal"><span class="pre">simserver</span></tt> &#8211; Document similarity server</a></p>
@@ -299,6 +299,15 @@ to check the result for real length, using <cite>chunk.shape[0]</cite>.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="gensim.similarities.docsim.Similarity.query_shards">
+<tt class="descname">query_shards</tt><big>(</big><em>query</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.query_shards" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the result of applying shard[query] for each shard in self.shards,
+as a sequence.</p>
+<p>If PARALLEL_SHARDS is set, the shards are queried in parallel, using
+the multiprocessing module.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="gensim.similarities.docsim.Similarity.save">
 <tt class="descname">save</tt><big>(</big><em>fname=None</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the object via pickling (also see load) under filename specified in
@@ -398,7 +407,7 @@ mmap&#8217;ed), under <cite>fname.array_name.npy</cite>.</p>
 
     <div class="footer">
         &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 24, 2012.
+      Last updated on Apr 15, 2012.
     </div>
   </body>
 </html>
