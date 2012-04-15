@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
+# Copyright (C) 2012 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
@@ -27,10 +27,9 @@ def df2idf(docfreq, totaldocs, log_base=2.0, add=0.0):
 
 def precompute_idfs(wglobal, dfs, total_docs):
     """Precompute the inverse document frequency mapping for all terms."""
-    # not strictly necessary and could be computed on the fly in __get__.
+    # not strictly necessary and could be computed on the fly in TfidfModel__getitem__.
     # this method is here just to speed things up a little.
-    return dict((termid, wglobal(df, total_docs))
-                for termid, df in dfs.iteritems())
+    return dict((termid, wglobal(df, total_docs)) for termid, df in dfs.iteritems())
 
 
 class TfidfModel(interfaces.TransformationABC):
@@ -54,23 +53,26 @@ class TfidfModel(interfaces.TransformationABC):
                  wlocal=utils.identity, wglobal=df2idf, normalize=True):
         """
         Compute tf-idf by multiplying a local component (term frequency) with a
-        global component (inverse document frequency), and optionally normalizing
+        global component (inverse document frequency), and normalizing
         the resulting documents to unit length. Formula for unnormalized weight
-        of term `i` in document `j`::
+        of term `i` in document `j` in a corpus of D documents::
 
-          weight_{i,j} = frequency_{i,j} * log_2(total_docs / document_freq_{i})
+          weight_{i,j} = frequency_{i,j} * log_2(D / document_freq_{i})
 
         or, more generally::
 
           weight_{i,j} = wlocal(frequency_{i,j}) * wglobal(document_freq_{i}, D)
 
         so you can plug in your own custom `wlocal` and `wglobal` functions.
-        Default for `wlocal` is identity (other options: math.sqrt, math.log, ...)
+
+        Default for `wlocal` is identity (other options: math.sqrt, math.log1p, ...)
         and default for `wglobal` is `log_2(total_docs / doc_freq)`, giving the
         formula above.
 
-        `normalize` dictates whether the transformed vectors will be set to unit
-        length.
+        `normalize` dictates how the final transformed vectors will be normalized.
+        `normalize=True` means set to unit length (default); `False` means don't
+        normalize. You can also set `normalize` to your own function that accepts
+        and returns a sparse vector.
 
         If `dictionary` is specified, it must be a `corpora.Dictionary` object
         and it will be used to directly construct the inverse document frequency
@@ -81,6 +83,9 @@ class TfidfModel(interfaces.TransformationABC):
         self.wlocal, self.wglobal = wlocal, wglobal
         self.num_docs, self.num_nnz, self.idfs = None, None, None
         if dictionary is not None:
+            # user supplied a Dictionary object, which already contains all the
+            # statistics we need to construct the IDF mapping. we can skip the
+            # step that goes through the corpus (= an optimization).
             if corpus is not None:
                 logger.warning("constructor received both corpus and explicit "
                                "inverse document frequencies; ignoring the corpus")
@@ -125,7 +130,7 @@ class TfidfModel(interfaces.TransformationABC):
         self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
 
 
-    def __getitem__(self, bow):
+    def __getitem__(self, bow, eps=1e-12):
         """
         Return tf-idf representation of the input vector and/or corpus.
         """
@@ -138,7 +143,15 @@ class TfidfModel(interfaces.TransformationABC):
         # as strict application of the IDF formula would dictate)
         vector = [(termid, self.wlocal(tf) * self.idfs.get(termid))
                   for termid, tf in bow if self.idfs.get(termid, 0.0) != 0.0]
-        if self.normalize:
+
+        # and finally, normalize the vector either to unit length, or use a
+        # user-defined normalization function
+        if self.normalize is True:
             vector = matutils.unitvec(vector)
+        elif self.normalize:
+            vector = self.normalize(vector)
+
+        # make sure there are no explicit zeroes in the vector (must be sparse)
+        vector = [(termid, weight) for termid, weight in vector if abs(weight) > eps]
         return vector
 #endclass TfidfModel
