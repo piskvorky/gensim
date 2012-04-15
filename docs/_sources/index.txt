@@ -45,8 +45,9 @@ Quick Reference Example
 
 .. admonition:: What's new?
 
-   * 30 Oct 2011: version 0.8.2 released: `CHANGELOG <https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt>`_; note `licensing <http://groups.google.com/group/gensim/msg/8ab53fc09711eea6>`_
-   * 9 Sep 2011: website moved to `radimrehurek.com <http://radimrehurek.com/gensim>`_
+   * 9 Mar 2012: release 0.8.4: new model `Hierarchical Dirichlet Process <http://radimrehurek.com/gensim/models/hdpmodel.html>`_ (full `CHANGELOG <https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt>`_)
+   * 2 Dec 2011: bug-fix release 0.8.3 out; `CHANGELOG <https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt>`_
+   * 1 Dec 2011: released `simserver <http://pypi.python.org/pypi/simserver>`_, a Python document similarity server based on gensim
 
 
 

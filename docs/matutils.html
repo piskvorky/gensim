@@ -16,13 +16,13 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.2',
+        VERSION:     '0.8.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
@@ -30,6 +30,8 @@
     <link rel="up" title="API Reference" href="apiref.html" />
     <link rel="next" title="corpora.bleicorpus – Corpus in Blei’s LDA-C format" href="corpora/bleicorpus.html" />
     <link rel="prev" title="utils – Various utility functions" href="utils.html" />
+     
+
 	<!-- twitter search widget
 	    <script type="text/javascript" src="_static/widget.js"></script>
 	-->
@@ -90,7 +92,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" size="24" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -140,6 +142,12 @@ to be rows of the matrix (and document features are columns).</p>
 <dt id="gensim.matutils.MmReader.docbyoffset">
 <tt class="descname">docbyoffset</tt><big>(</big><em>offset</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmReader.docbyoffset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return document at file offset <cite>offset</cite> (in bytes)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.matutils.MmReader.skip_headers">
+<tt class="descname">skip_headers</tt><big>(</big><em>input_file</em><big>)</big><a class="headerlink" href="#gensim.matutils.MmReader.skip_headers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Skip file headers that appear before the first document.</p>
 </dd></dl>
 
 </dd></dl>
@@ -288,8 +296,8 @@ or numpy array=&gt;numpy array, scipy.sparse=&gt;scipy.sparse).</p>
     
 
     <div class="footer">
-        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 30, 2011.
+        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Mar 09, 2012.
     </div>
   </body>
 </html>

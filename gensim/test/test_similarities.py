@@ -47,7 +47,6 @@ class TestSimilarityABC(object):
     """
     Base class for SparseMatrixSimilarity and MatrixSimilarity unit tests.
     """
-
     def testFull(self, num_best=None, shardsize=100):
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=shardsize)
@@ -79,10 +78,9 @@ class TestSimilarityABC(object):
         self.assertTrue(numpy.allclose(expected, sims))
 
 
-    def testSharding(self):
+    def testNumBest(self):
         for num_best in [None, 0, 1, 9, 1000]:
-            for shardsize in [1, 2, 9, 1000]:
-                self.testFull(num_best=num_best, shardsize=shardsize)
+            self.testFull(num_best=num_best)
 
 
     def testChunking(self):
@@ -163,9 +161,24 @@ class TestSimilarity(unittest.TestCase, TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.Similarity
 
+    def testSharding(self):
+        for num_best in [None, 0, 1, 9, 1000]:
+            for shardsize in [1, 2, 9, 1000]:
+                self.testFull(num_best=num_best, shardsize=shardsize)
+
+    def testReopen(self):
+        """test re-opening partially full shards"""
+        index = similarities.Similarity(None, corpus[:5], num_features=len(dictionary), shardsize=9)
+        _ = index[corpus[0]] # forces shard close
+        index.add_documents(corpus[5:])
+        query = corpus[0]
+        sims = index[query]
+        expected = [(0, 0.99999994), (2, 0.28867513), (3, 0.23570226), (1, 0.23570226)]
+        expected = matutils.sparse2full(expected, len(index))
+        self.assertTrue(numpy.allclose(expected, sims))
 
 
 
 if __name__ == '__main__':
-    logging.root.setLevel(logging.WARNING)
+    logging.basicConfig(level=logging.DEBUG)
     unittest.main()

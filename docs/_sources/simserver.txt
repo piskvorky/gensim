@@ -3,9 +3,11 @@
 Document Similarity Server
 =============================
 
-
 The 0.7.x series of `gensim <http://radimrehurek.com/gensim/>`_ was about improving performance and consolidating API.
 0.8.x will be about new features --- 0.8.1, first of the series, is a **document similarity service**.
+
+The source code itself has been moved from gensim to its own, dedicated package, named `simserver`.
+Get it from `PyPI <http://pypi.python.org/pypi/simserver>`_ or clone it on `Github <https://github.com/piskvorky/gensim-simserver>`_.
 
 What is a document similarity service?
 ---------------------------------------
@@ -17,7 +19,7 @@ Conceptually, a service that lets you :
 3. query the index for similar documents (the query can be either an id of a document already in the index, or an arbitrary text)
 
 
->>> from gensim.similarities.simserver import SessionServer
+>>> from simserver import SessionServer
 >>> server = SessionServer('/tmp/my_server') # resume server (or create a new one)
 
 >>> server.train(training_corpus, method='lsi') # create a semantic model
@@ -130,7 +132,7 @@ recommended client splits them into smaller chunks before uploading them to the 
 Wait, upload what, where?
 -------------------------
 
-If you use the similarity service object (instance of :class:`gensim.similarities.simserver.SessionServer`) in
+If you use the similarity service object (instance of :class:`simserver.SessionServer`) in
 your code directly---no remote access---that's perfectly fine. Using the service remotely, from a different process/machine, is an
 option, not a necessity.
 
@@ -140,7 +142,7 @@ case, I'll call the service object a *server*.
 But let's start with a local object. Open your `favourite shell <http://ipython.org/>`_ and::
 
 >>> from gensim import utils
->>> from gensim.similarities.simserver import SessionServer
+>>> from simserver import SessionServer
 >>> service = SessionServer('/tmp/my_server/') # or wherever
 
 That initialized a new service, located in `/tmp/my_server` (you need write access rights to that directory).
@@ -238,11 +240,11 @@ a pure Python package for Remote Procedure Calls (RPC), so I'll illustrate remot
 service access via Pyro. Pyro takes care of all the socket listening/request routing/data marshalling/thread
 spawning, so it saves us a lot of trouble.
 
-To create a similarity server, we just create a :class:`gensim.similarities.simserver.SessionServer` object and register it
-with a Pyro daemon for remote access. There is a small `example script <https://github.com/piskvorky/gensim/blob/simserver/gensim/test/run_simserver.py>`_
-included with gensim, run it with::
+To create a similarity server, we just create a :class:`simserver.SessionServer` object and register it
+with a Pyro daemon for remote access. There is a small `example script <https://github.com/piskvorky/gensim-simserver/blob/master/simserver/run_simserver.py>`_
+included with simserver, run it with::
 
-  $ python -m gensim.test.run_simserver /tmp/testserver
+  $ python -m simserver.run_simserver /tmp/testserver
 
 You can just `ctrl+c` to terminate the server, but leave it running for now.
 
@@ -324,5 +326,5 @@ Other stuff
 ------------
 
 TODO Custom document parsing (in lieu of `utils.simple_preprocess`). Different models (not just `lsi`). Optimizing the index with `service.optimize()`.
-TODO add some hard numbers; example tutorial for some bigger collection, e.g. arxiv.org or wikipedia.
+TODO add some hard numbers; example tutorial for some bigger collection, e.g. for `arxiv.org <http://aura.fi.muni.cz:8080/>`_ or wikipedia.
 

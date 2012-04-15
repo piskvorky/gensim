@@ -16,13 +16,13 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.2',
+        VERSION:     '0.8.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
@@ -30,6 +30,8 @@
     <link rel="up" title="API Reference" href="../apiref.html" />
     <link rel="next" title="corpora.textcorpus – Building corpora with dictionaries" href="textcorpus.html" />
     <link rel="prev" title="corpora.svmlightcorpus – Corpus in SVMlight format" href="svmlightcorpus.html" />
+     
+
 	<!-- twitter search widget
 	    <script type="text/javascript" src="_static/widget.js"></script>
 	-->
@@ -90,7 +92,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" size="24" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -124,7 +126,9 @@
 </ul>
 <p>The output Matrix Market files can then be compressed (e.g., by bzip2) to save disk space; gensim&#8217;s corpus iterators can work with compressed input, too.</p>
 <p><cite>VOCABULARY_SIZE</cite> controls how many of the most frequent words to keep (after
-removing all tokens that appear in more than 10 percent documents). Defaults to 100,000.</p>
+removing tokens that appear in more than 10%% of all documents). Defaults to 50,000.</p>
+<p>If you have the <cite>pattern</cite> package installed, this script will use a fancy lemmatization
+to get a lemma of each token (instead of plain alphabetic tokenizer).</p>
 <p>Example: ./wikicorpus.py ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki_en</p>
 <dl class="class">
 <dt id="gensim.corpora.wikicorpus.VocabTransform">
@@ -157,7 +161,7 @@ can be used to filter vocabulary of a corpus &#8220;online&#8221;:</p>
 
 <dl class="class">
 <dt id="gensim.corpora.wikicorpus.WikiCorpus">
-<em class="property">class </em><tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">WikiCorpus</tt><big>(</big><em>fname</em>, <em>no_below=20</em>, <em>keep_words=100000</em>, <em>dictionary=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">WikiCorpus</tt><big>(</big><em>fname</em>, <em>no_below=20</em>, <em>keep_words=50000</em>, <em>dictionary=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Treat a wikipedia articles dump (<a href="#id1"><span class="problematic" id="id2">*</span></a>articles.xml.bz2) as a (read-only) corpus.</p>
 <p>The documents are extracted on-the-fly, so that the whole (massive) dump
 can stay compressed on disk.</p>
@@ -269,8 +273,8 @@ that 15 characters (not bytes!).</p>
     
 
     <div class="footer">
-        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 30, 2011.
+        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Mar 09, 2012.
     </div>
   </body>
 </html>

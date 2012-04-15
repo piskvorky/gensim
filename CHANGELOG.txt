@@ -1,6 +1,21 @@
 Changes
 =======
 
+0.8.4
+
+* better support for Pandas series input (thx to JT Bates)
+* a new corpus format: UCI bag-of-words (thx to Jonathan Esterhazy)
+* a new model, non-parametric bayes: HDP (thx to Jonathan Esterhazy; based on Chong Wang's code)
+* improved support for new scipy versions (thx to Skipper Seabold)
+* lemmatizer support for wikipedia parsing (via the `pattern` python package)
+* extended the lemmatizer for multi-core processing, to improve its performance
+
+0.8.3
+
+* fixed Similarity sharding bug (issue #65, thx to Paul Rudin)
+* improved LDA code (clarity & memory footprint)
+* optimized efficiency of Similarity sharding
+
 0.8.2
 
 * improved gensim landing page

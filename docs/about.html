@@ -16,17 +16,19 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.2',
+        VERSION:     '0.8.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="#" />
     <link rel="top" title="gensim" href="index.html" />
+     
+
 	<!-- twitter search widget
 	    <script type="text/javascript" src="_static/widget.js"></script>
 	-->
@@ -76,7 +78,7 @@
 <li><a class="reference internal" href="#">About</a><ul>
 <li><a class="reference internal" href="#history">History</a></li>
 <li><a class="reference internal" href="#licensing">Licensing</a></li>
-<li><a class="reference internal" href="#collaborators">Collaborators</a></li>
+<li><a class="reference internal" href="#contributors">Contributors</a></li>
 <li><a class="reference internal" href="#academic-citing">Academic citing</a></li>
 </ul>
 </li>
@@ -85,7 +87,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" size="24" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -111,21 +113,21 @@
 <div class="section" id="history">
 <h2>History<a class="headerlink" href="#history" title="Permalink to this headline">¶</a></h2>
 <p>Gensim started off as a collection of various Python scripts for the Czech Digital Mathematics Library <a class="reference external" href="http://dml.cz/">dml.cz</a> in 2008,
-where it served to generate a short list of the most similar articles to a given article (&#8220;find similar&#8221;).
+where it served to generate a short list of the most similar articles to a given article (gensim = &#8220;generate similar&#8221;).
 I also wanted to try these fancy &#8220;Latent Semantic Methods&#8221;, but the libraries that
 realized the necessary computation were <a class="reference external" href="http://soi.stanford.edu/~rmunk/PROPACK/">not much fun to work with</a>.</p>
 <p>Naturally, I set out to reinvent the wheel. Our <a class="reference external" href="http://radimrehurek.com/gensim/lrec2010_final.pdf">2010 LREC publication</a>
 describes the initial design decisions behind gensim (clarity, efficiency and scalability)
-and is fairly representative of how gensim works even now.</p>
+and is fairly representative of how gensim works even today.</p>
 <p>Later versions of gensim improved this efficiency and scalability tremendously (in fact,
-I made algorithmic scalability of distributional semantics the topic of my <a class="reference external" href="radimrehurek.com/phd_rehurek.pdf">PhD thesis</a>).</p>
+I made algorithmic scalability of distributional semantics the topic of my <a class="reference external" href="http://radimrehurek.com/phd_rehurek.pdf">PhD thesis</a>).</p>
 <p>By now, gensim is&#8212;to my knowledge&#8212;the most robust, efficient and hassle-free piece
 of software to realize unsupervised semantic modelling from plain text. It stands
 in contrast to brittle homework-assignment-implementations that do not scale on one hand,
-and java-esque projects that do scale, but only if you&#8217;re willing to sacrifice
+and robust java-esque projects that do scale, but only if you&#8217;re willing to sacrifice
 several weeks of your, your technician&#8217;s as well as your local scientist&#8217;s time just to run &#8220;hello world&#8221;.</p>
 <p>In 2011, I started using <a class="reference external" href="https://github.com/piskvorky/gensim">Github</a> for source code hosting,
-and the gensim website moved from university hosting to its present domain.</p>
+and the gensim website moved from my university hosting to its present domain.</p>
 </div>
 <div class="section" id="licensing">
 <h2>Licensing<a class="headerlink" href="#licensing" title="Permalink to this headline">¶</a></h2>
@@ -148,10 +150,11 @@ Note that unlike gensim, <cite>gensim.simserver</cite> is licensed under <a clas
 which is much more restrictive for inclusion in commercial projects.</p>
 </div>
 </div>
-<div class="section" id="collaborators">
-<h2>Collaborators<a class="headerlink" href="#collaborators" title="Permalink to this headline">¶</a></h2>
-<p>I would like to thank all the people who contributed to gensim, be it in <a class="reference external" href="http://groups.google.com/group/gensim">discussions</a>,
-ideas, <a class="reference external" href="https://github.com/piskvorky/gensim/pulls">code contributions</a> or bug reports.</p>
+<div class="section" id="contributors">
+<h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
+<p>Credit goes to all the people who contributed to gensim, be it in <a class="reference external" href="http://groups.google.com/group/gensim">discussions</a>,
+ideas, <a class="reference external" href="https://github.com/piskvorky/gensim/pulls">code contributions</a> or bug reports.
+It&#8217;s really useful and motivating to get feedback, in any shape or form, so big thanks to you all!</p>
 <p>Some honorable mentions are included in the <a class="reference external" href="https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt">CHANGELOG.txt</a>.</p>
 </div>
 <div class="section" id="academic-citing">
@@ -204,8 +207,8 @@ please use <a class="reference external" href="bibtex_gensim.bib">this BibTeX en
     
 
     <div class="footer">
-        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 30, 2011.
+        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Mar 09, 2012.
     </div>
   </body>
 </html>

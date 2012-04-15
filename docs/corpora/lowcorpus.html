@@ -16,13 +16,13 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.2',
+        VERSION:     '0.8.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
@@ -30,6 +30,8 @@
     <link rel="up" title="API Reference" href="../apiref.html" />
     <link rel="next" title="corpora.mmcorpus – Corpus in Matrix Market format" href="mmcorpus.html" />
     <link rel="prev" title="corpora.dictionary – Construct word&lt;-&gt;id mappings" href="dictionary.html" />
+     
+
 	<!-- twitter search widget
 	    <script type="text/javascript" src="_static/widget.js"></script>
 	-->
@@ -90,7 +92,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" size="24" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -116,7 +118,7 @@
 <p>Corpus in GibbsLda++ format of List-Of-Words.</p>
 <dl class="class">
 <dt id="gensim.corpora.lowcorpus.LowCorpus">
-<em class="property">class </em><tt class="descclassname">gensim.corpora.lowcorpus.</tt><tt class="descname">LowCorpus</tt><big>(</big><em>fname</em>, <em>id2word=None</em>, <em>line2words=&lt;function split_on_space at 0x2254870&gt;</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.corpora.lowcorpus.</tt><tt class="descname">LowCorpus</tt><big>(</big><em>fname</em>, <em>id2word=None</em>, <em>line2words=&lt;function split_on_space at 0x2515ef0&gt;</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>List_Of_Words corpus handles input in GibbsLda++ format.</p>
 <p>Quoting <a class="reference external" href="http://gibbslda.sourceforge.net/#3.2_Input_Data_Format">http://gibbslda.sourceforge.net/#3.2_Input_Data_Format</a>:</p>
 <div class="highlight-python"><pre>Both data for training/estimating the model and new data (i.e., previously
@@ -236,8 +238,8 @@ positioned at <cite>offset</cite> bytes within the persistent storage (file).</p
     
 
     <div class="footer">
-        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 30, 2011.
+        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Mar 09, 2012.
     </div>
   </body>
 </html>

@@ -42,7 +42,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         self.num_pos = 0 # total number of corpus positions
         self.num_nnz = 0 # total number of non-zeroes in the BOW matrix
 
-        if documents:
+        if documents is not None:
             self.add_documents(documents)
 
 
@@ -221,7 +221,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         logger.info("saving dictionary mapping to %s" % fname)
         with open(fname, 'wb') as fout:
             for token, tokenid in sorted(self.token2id.iteritems()):
-                fout.write("%i\t%s\t%i\n" % (tokenid, token, self.dfs[tokenid]))
+                fout.write("%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0)))
 
 
     @staticmethod

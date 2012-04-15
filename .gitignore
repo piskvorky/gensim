@@ -27,6 +27,8 @@
 *.sql
 *.sqlite
 *.pkl
+*.bak
+*.npy
 
 # OS generated files #
 ######################

@@ -21,7 +21,11 @@ The output Matrix Market files can then be compressed (e.g., by bzip2) to save \
 disk space; gensim's corpus iterators can work with compressed input, too.
 
 `VOCABULARY_SIZE` controls how many of the most frequent words to keep (after
-removing all tokens that appear in more than 10 percent documents). Defaults to 100,000.
+removing tokens that appear in more than 10%% of all documents). Defaults to 50,000.
+
+If you have the `pattern` package installed, this script will use a fancy lemmatization
+to get a lemma of each token (instead of plain alphabetic tokenizer). The package is available at
+https://github.com/clips/pattern .
 
 Example: ./wikicorpus.py ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki_en
 """
@@ -47,10 +51,14 @@ logger = logging.getLogger('gensim.corpora.wikicorpus')
 # Wiki is first scanned for all distinct word types (~7M). The types that appear
 # in more than 10% of articles are removed and from the rest, the DEFAULT_DICT_SIZE
 # most frequent types are kept (default 100K).
-DEFAULT_DICT_SIZE = 100000
+DEFAULT_DICT_SIZE = 50000
 
 # Ignore articles shorter than ARTICLE_MIN_CHARS characters (after preprocessing).
 ARTICLE_MIN_CHARS = 500
+
+# if 'pattern' package is installed, we can use a fancy shallow parsing to get
+# token lemmas. otherwise, use simple regexp tokenization
+LEMMATIZE = utils.HAS_PATTERN
 
 
 RE_P0 = re.compile('<!--.*?-->', re.DOTALL | re.UNICODE) # comments
@@ -68,6 +76,8 @@ RE_P11 = re.compile('<(.*?)>', re.DOTALL | re.UNICODE) # all other tags
 RE_P12 = re.compile('\n(({\|)|(\|-)|(\|}))(.*?)(?=\n)', re.UNICODE) # table formatting
 RE_P13 = re.compile('\n(\||\!)(.*?\|)*([^|]*?)', re.UNICODE) # table cell formatting
 RE_P14 = re.compile('\[\[Category:[^][]*\]\]', re.UNICODE) # categories
+# Remove File and Image template
+RE_P15 = re.compile('\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)
 
 
 def filter_wiki(raw):
@@ -88,6 +98,8 @@ def remove_markup(text):
     # instead of writing a recursive grammar, here we deal with that by removing
     # markup in a loop, starting with inner-most expressions and working outwards,
     # for as long as something changes.
+    text = remove_template(text)
+    text = remove_file(text)
     iters = 0
     while True:
         old, iters = text, iters + 1
@@ -96,13 +108,8 @@ def remove_markup(text):
         text = re.sub(RE_P9, "", text) # remove outside links
         text = re.sub(RE_P10, "", text) # remove math content
         text = re.sub(RE_P11, "", text) # remove all remaining tags
-        # remove templates (no recursion)
-        text = re.sub(RE_P3, '', text)
-        text = re.sub(RE_P4, '', text)
         text = re.sub(RE_P14, '', text) # remove categories
         text = re.sub(RE_P5, '\\3', text) # remove urls, keep description
-        text = re.sub(RE_P7, '\n\\3', text) # simplify images, keep description only
-        text = re.sub(RE_P8, '\n\\3', text) # simplify files, keep description only
         text = re.sub(RE_P6, '\\2', text) # simplify links, keep description only
         # remove table markup
         text = text.replace('||', '\n|') # each table cell on a separate line
@@ -118,6 +125,59 @@ def remove_markup(text):
     text = text.replace('[', '').replace(']', '') # promote all remaining markup to plain text
     return text
 
+def remove_template(s):
+    """Remove template wikimedia markup.
+
+    Return a copy of `s` with all the wikimedia markup template removed. See
+    http://meta.wikimedia.org/wiki/Help:Template for wikimedia templates
+    details.
+
+    Note: Since template can be nested, it is difficult remove them using
+    regular expresssions.
+    """
+
+    # Find the start and end position of each template by finding the opening
+    # '{{' and closing '}}'
+    n_open, n_close = 0, 0
+    starts, ends = [], []
+    in_template = False
+    prev_c = None
+    for i, c in enumerate(iter(s)):
+        if not in_template:
+            if c == '{' and c == prev_c:
+                starts.append(i-1)
+                in_template = True
+                n_open = 1
+        if in_template:
+            if c == '{':
+                n_open += 1
+            elif  c == '}':
+                n_close += 1
+            if n_open == n_close:
+                ends.append(i)
+                in_template = False
+                n_open, n_close = 0, 0
+        prev_c = c
+
+    # Remove all the templates
+    s = ''.join([s[end+1:start] for start,end in
+                 zip(starts + [None], [-1] + ends )])
+
+    return s
+
+def remove_file(s):
+    """Remove the 'File:' and 'Image:' markup, keeping the file caption.
+
+    Return a copy of `s` with all the 'File:' and 'Image:' markup replaced by
+    their corresponding captions. See http://www.mediawiki.org/wiki/Help:Images
+    for the markup details.
+    """
+    # The regex RE_P15 match a File: or Image: markup
+    for match in re.finditer(RE_P15, s):
+        m = match.group(0)
+        caption = m[:-2].split('|')[-1]
+        s = s.replace(m, caption, 1)
+    return s
 
 def tokenize(content):
     """
@@ -173,6 +233,10 @@ class WikiCorpus(TextCorpus):
         """
         articles, articles_all = 0, 0
         intext, positions = False, 0
+        if LEMMATIZE:
+            lemmatizer = utils.lemmatizer
+            yielded = 0
+
         for lineno, line in enumerate(bz2.BZ2File(self.fname)):
             if line.startswith('      <text'):
                 intext = True
@@ -192,17 +256,34 @@ class WikiCorpus(TextCorpus):
                     articles += 1
                     if return_raw:
                         result = text
+                        yield result
                     else:
-                        result = tokenize(text) # text into tokens here
-                        positions += len(result)
-                    yield result
+                        if LEMMATIZE:
+                            _ = lemmatizer.feed(text)
+                            while lemmatizer.has_results():
+                                _, result = lemmatizer.read() # not necessarily the same text as entered above!
+                                positions += len(result)
+                                yielded += 1
+                                yield result
+                        else:
+                            result = tokenize(text) # text into tokens here
+                            positions += len(result)
+                            yield result
+
+        if LEMMATIZE:
+            logger.info("all %i articles read; waiting for lemmatizer to finish the %i remaining jobs" %
+                        (articles, articles - yielded))
+            while yielded < articles:
+                _, result = lemmatizer.read()
+                positions += len(result)
+                yielded += 1
+                yield result
 
         logger.info("finished iterating over Wikipedia corpus of %i documents with %i positions"
                      " (total %i articles before pruning)" %
                      (articles, positions, articles_all))
         self.length = articles # cache corpus length
 #endclass WikiCorpus
-
 
 
 

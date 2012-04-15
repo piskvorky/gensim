@@ -11,6 +11,8 @@ This module contains various general utility functions.
 from __future__ import with_statement
 
 import logging
+logger = logging.getLogger('gensim.utils')
+
 import re
 import unicodedata
 import os
@@ -22,10 +24,16 @@ from functools import wraps # for `synchronous` function lock
 from htmlentitydefs import name2codepoint as n2cp # for `decode_htmlentities`
 import threading, time
 from Queue import Queue, Empty
+import shutil
 
 
-
-logger = logging.getLogger('gensim.utils')
+try:
+    from pattern.en import parse
+    from multiprocessing import Process, Queue as PQueue, cpu_count
+    logger.info("'pattern' package found; utils.Lemmatizater is available for English")
+    HAS_PATTERN = True
+except ImportError:
+    HAS_PATTERN = False
 
 
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
@@ -53,6 +61,13 @@ def synchronous(tlockname):
     return _synched
 
 
+class NoCM(object):
+    def __enter__(self):
+        pass
+    def __exit__(self, type, value, traceback):
+        pass
+nocm = NoCM()
+
 
 def deaccent(text):
     """
@@ -68,6 +83,19 @@ def deaccent(text):
     norm = unicodedata.normalize("NFD", text)
     result = u''.join(ch for ch in norm if unicodedata.category(ch) != 'Mn')
     return unicodedata.normalize("NFC", result)
+
+
+def copytree_hardlink(source, dest):
+    """
+    Recursively copy a directory ala shutils.copytree, but hardlink files
+    instead of copying. Available on UNIX systems only.
+    """
+    copy2 = shutil.copy2
+    try:
+        shutil.copy2 = os.link
+        shutil.copytree(source, dest)
+    finally:
+        shutil.copy2 = copy2
 
 
 def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False, lower=False):
@@ -271,9 +299,9 @@ def get_my_ip():
     """
     import socket
     try:
-        import Pyro
+        import Pyro4
         # we know the nameserver must exist, so use it as our anchor point
-        ns = Pyro.naming.locateNS()
+        ns = Pyro4.naming.locateNS()
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect((ns._pyroUri.host, ns._pyroUri.port))
         result, port = s.getsockname()
@@ -485,7 +513,7 @@ def randfname(prefix='gensim'):
     return os.path.join(tempfile.gettempdir(), prefix + randpart)
 
 
-def grouper(iterable, chunksize):
+def grouper(iterable, chunksize, as_numpy=False):
     """
     Return elements from the iterable in `chunksize`-ed lists. The last returned
     element may be smaller (if length of collection is not divisible by `chunksize`).
@@ -493,11 +521,18 @@ def grouper(iterable, chunksize):
     >>> print list(grouper(xrange(10), 3))
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
     """
+    import numpy
     it = iter(iterable)
     while True:
-        wrapped_chunk = [list(itertools.islice(it, int(chunksize)))]
+        if as_numpy:
+            # convert each document to a 2d numpy array (~6x faster when transmitting
+            # chunk data over the wire, in Pyro)
+            wrapped_chunk = [[numpy.array(doc) for doc in itertools.islice(it, int(chunksize))]]
+        else:
+            wrapped_chunk = [list(itertools.islice(it, int(chunksize)))]
         if not wrapped_chunk[0]:
             break
+        # memory opt: wrap the chunk and then pop(), to avoid leaving behind a dangling reference
         yield wrapped_chunk.pop()
 
 
@@ -545,7 +580,7 @@ def getNS():
             pass
 
 
-def pyro_daemon(name, object, random_suffix=False):
+def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
     """Register object with name server (starting the name server if not running
     yet) and block until the daemon is terminated. The object is registered under
     `name`, or `name`+ some random suffix if `random_suffix` is set."""
@@ -553,10 +588,103 @@ def pyro_daemon(name, object, random_suffix=False):
         name += '.' + hex(random.randint(0, 0xffffff))[2:]
     import Pyro4
     with getNS() as ns:
-        with Pyro4.Daemon(get_my_ip()) as daemon:
+        with Pyro4.Daemon(ip or get_my_ip(), port or 0) as daemon:
             # register server for remote access
-            uri = daemon.register(object)
+            uri = daemon.register(obj, name)
             ns.remove(name)
             ns.register(name, uri)
             logger.info("%s registered with nameserver (URI '%s')" % (name, uri))
             daemon.requestLoop()
+
+
+# the following is only available when the optional 'pattern' package is installed
+if HAS_PATTERN:
+    ALLOWED_TAGS = re.compile('(NN|VB|JJ|RB)') # ignore everything except nouns, verbs, adjectives and adverbs
+
+    def lemmatize(content):
+        """
+        Use the English lemmatizer from the `pattern` package to extract tokens in
+        their base form (lemmas: "are, is, being"->"be" etc.).
+        This is a smarter version of stemming.
+        """
+        # tokenization in `pattern` is weird; it gets thrown off by non-letters,
+        # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
+        # FIXME this throws away all fancy parsing cues, including sentence structure,
+        # abbreviations etc.
+        content = u' '.join(tokenize(content, lower=True, errors='ignore'))
+
+        # use simpler, modified pattern.text.en.text.parser.parse that doesn't
+        # collapse the output at the end: https://github.com/piskvorky/pattern
+        parsed = parse(content, lemmata=True, collapse=False)
+        result = []
+        for sentence in parsed:
+            for token, tag, _, _, lemma in sentence:
+                if 2 <= len(lemma) <= 15 and not lemma.startswith('_'):
+                    if ALLOWED_TAGS.match(tag):
+                        lemma += "/" + tag[:2]
+                        result.append(lemma.encode('utf8'))
+        return result
+
+
+    def lemmatize_queue(qin, qout):
+        while True:
+            seq_id, content = qin.get()
+            if seq_id is None:
+                return
+            qout.put((seq_id, lemmatize(content)))
+
+
+    class Lemmatizer(object):
+        """
+        Wraps the lemmatize() fnc so that input can be processed in parallel, to
+        speed things up.
+
+        Main methods are `feed(content)`, which puts the content in queue for
+        lemmatization, and `read()`, which returns lemmatized content when it's ready.
+
+        Note that the order of content entered and read back isn't necessarily the same!
+        Use the sequence id returned from feed/read to match input to output.
+
+        This class is NOT thread-safe.
+        """
+        FEED_MAX_QUEUE = 1000 # block after the parsing queue has reached this length -- new feed()/read() calls will have to wait
+
+        def __init__(self, num_workers=cpu_count()):
+            logger.info("initializing lemmatizer with %i processes" % num_workers)
+            self.num_workers = num_workers
+            self.qin = PQueue(maxsize=Lemmatizer.FEED_MAX_QUEUE)
+            self.qout = PQueue(maxsize=Lemmatizer.FEED_MAX_QUEUE)
+            # start up processes that will be parsing in parallel
+            self.prcs = []
+            for _ in xrange(self.num_workers):
+                prc = Process(target=lemmatize_queue, args=(self.qin, self.qout))
+                prc.daemon = True
+                prc.start()
+                self.prcs.append(prc)
+
+        def feed(self, content):
+            seq_id = content.__hash__()
+            self.qin.put((seq_id, content))
+            return seq_id
+
+        def read(self):
+            seq_id, lemmas = self.qout.get()
+            if seq_id is None:
+                logger.warning('lemmatizer failed for input #%s' % seq_id)
+            return seq_id, lemmas
+
+        def has_results(self):
+            """The next call to read() won't block (not thread-safe!)."""
+            return not self.qout.empty()
+
+        def __del__(self):
+            try:
+                for prc in self.prcs:
+                    prc.terminate()
+                logger.info("terminated %i lemmatizer processes" % self.num_workers)
+            except:
+                # ignore errors at interpreter tear-down
+                pass
+
+    lemmatizer = Lemmatizer()
+#endif HAS_PATTERN

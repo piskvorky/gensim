@@ -31,9 +31,8 @@ The algorithm:
 """
 
 
-import sys, logging
+import logging
 import itertools
-import time
 
 logger = logging.getLogger('gensim.models.ldamodel')
 
@@ -42,9 +41,24 @@ import numpy # for arrays, array broadcasting etc.
 #numpy.seterr(divide='ignore') # ignore 0*log(0) errors
 
 from scipy.special import gammaln, digamma, psi # gamma function utils
-from scipy.maxentropy import logsumexp # log(sum(exp(x))) that tries to avoid overflow
-
+try:
+    from scipy.maxentropy import logsumexp # log(sum(exp(x))) that tries to avoid overflow
+except ImportError: # maxentropy has been removed for next release
+    from scipy.misc import logsumexp
 from gensim import interfaces, utils
+
+
+
+
+def dirichlet_expectation(alpha):
+    """
+    For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
+    """
+    if (len(alpha.shape) == 1):
+        result = psi(alpha) - psi(numpy.sum(alpha))
+    else:
+        result = psi(alpha) - psi(numpy.sum(alpha, 1))[:, numpy.newaxis]
+    return result.astype(alpha.dtype) # keep the same precision as input
 
 
 
@@ -55,15 +69,17 @@ class LdaState(utils.SaveLoad):
     Objects of this class are sent over the network, so try to keep them lean to
     reduce traffic.
     """
-    def __init__(self, shapemat):
-        self.reset(shapemat)
+    def __init__(self, eta, shape):
+        self.eta = eta
+        self.sstats = numpy.zeros(shape)
+        self.numdocs = 0
 
 
-    def reset(self, mat=None):
+    def reset(self):
         """
         Prepare the state for a new EM iteration (reset sufficient stats).
         """
-        self.sstats = numpy.zeros_like(mat) # reset counts
+        self.sstats[:] = 0.0
         self.numdocs = 0
 
 
@@ -76,6 +92,7 @@ class LdaState(utils.SaveLoad):
         exact same result as if the computation was run on a single node (no
         approximation).
         """
+        assert other is not None
         self.sstats += other.sstats
         self.numdocs += other.numdocs
 
@@ -92,6 +109,7 @@ class LdaState(utils.SaveLoad):
         This procedure corresponds to the stochastic gradient update from Hoffman
         et al., algorithm 2 (eq. 14).
         """
+        assert other is not None
         if targetsize is None:
             targetsize = self.numdocs
 
@@ -118,25 +136,22 @@ class LdaState(utils.SaveLoad):
         """
         Alternative, more simple blend.
         """
+        assert other is not None
         if targetsize is None:
             targetsize = self.numdocs
 
         # merge the two matrices by summing
         self.sstats += other.sstats
         self.numdocs = targetsize
+
+
+    def get_lambda(self):
+        return self.eta + self.sstats
+
+
+    def get_Elogbeta(self):
+        return dirichlet_expectation(self.get_lambda())
 #endclass LdaState
-
-
-
-def dirichlet_expectation(alpha):
-    """
-    For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
-    """
-    if (len(alpha.shape) == 1):
-        result = psi(alpha) - psi(numpy.sum(alpha))
-    else:
-        result = psi(alpha) - psi(numpy.sum(alpha, 1))[:, numpy.newaxis]
-    return result.astype(alpha.dtype) # keep the same precision as input
 
 
 
@@ -158,7 +173,7 @@ class LdaModel(interfaces.TransformationABC):
     Model persistency is achieved through its `load`/`save` methods.
     """
     def __init__(self, corpus=None, num_topics=100, id2word=None, distributed=False,
-                 chunksize=1000, passes=1, update_every=1, alpha=None, eta=None, decay=0.5):
+                 chunksize=2000, passes=1, update_every=1, alpha=None, eta=None, decay=0.5):
         """
         `num_topics` is the number of requested latent topics to be extracted from
         the training corpus.
@@ -241,44 +256,23 @@ class LdaModel(interfaces.TransformationABC):
                 raise RuntimeError("failed to initialize distributed LDA (%s)" % err)
 
         # Initialize the variational distribution q(beta|lambda)
-        state = LdaState(None)
-        state.sstats = numpy.random.gamma(100., 1./100., (self.num_topics, self.num_terms))
-        self.setstate(state)
+        self.state = LdaState(self.eta, (self.num_topics, self.num_terms))
+        self.state.sstats = numpy.random.gamma(100., 1./100., (self.num_topics, self.num_terms))
+        self.sync_state()
 
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
             self.update(corpus)
 
 
-    def setstate(self, state, compute_diff=False):
-        """
-        Reset word-topic mixtures lambda (and beta) using collected counts of
-        sufficient statistics (a `num_topics x num_terms` matrix).
-
-        Return the aggregate amount of change in topics, log(old_lambda-new_lambda).
-        """
-        self.state = state
-        # do we need to keep all {sstats+lambda+expEbeta} in memory all the
-        # time? TODO compute them on the fly instead?
-        # don't store redundant information in memory 3x...
-        self._lambda = self.eta + self.state.sstats
-        Elogbeta = dirichlet_expectation(self._lambda)
-        if compute_diff:
-            if self.state.numdocs > 0:
-                diff = numpy.mean(numpy.abs(Elogbeta - numpy.log(self.expElogbeta)))
-            else:
-                diff = 0.0
-        else:
-            diff = None
-        self.expElogbeta = numpy.exp(Elogbeta)
-        return diff
+    def sync_state(self):
+        self.expElogbeta = numpy.exp(self.state.get_Elogbeta())
 
 
     def clear(self):
-        """Clear model state (free up some memory)."""
+        """Clear model state (free up some memory). Used in the distributed algo."""
         self.state = None
-        self._lambda = None
-        self.expElogbeta = None
+        self.Elogbeta = None
 
 
     def inference(self, chunk, collect_sstats=False):
@@ -296,7 +290,7 @@ class LdaModel(interfaces.TransformationABC):
         `len(chunk) x topics`.
         """
         try:
-            tmp = len(chunk)
+            _ = len(chunk)
         except:
             chunk = list(chunk) # convert iterators/generators to plain list, so we have len() etc.
         logger.debug("performing inference on a chunk of %i documents" % len(chunk))
@@ -328,7 +322,7 @@ class LdaModel(interfaces.TransformationABC):
             phinorm = numpy.dot(expElogthetad, expElogbetad) + 1e-100 # TODO treat zeros explicitly, instead of adding eps?
 
             # Iterate between gamma and phi until convergence
-            for it in xrange(self.VAR_MAXITER):
+            for _ in xrange(self.VAR_MAXITER):
                 lastgamma = gammad
                 # We represent phi implicitly to save memory and time.
                 # Substituting the value of the optimal phi back into
@@ -363,7 +357,7 @@ class LdaModel(interfaces.TransformationABC):
 
     def do_estep(self, chunk, state=None):
         """
-        Perform inference on a chunk of documents, and store (increment) the collected
+        Perform inference on a chunk of documents, and accumulate the collected
         sufficient statistics in `state` (or `self.state` if None).
         """
         if state is None:
@@ -371,6 +365,7 @@ class LdaModel(interfaces.TransformationABC):
         gamma, sstats = self.inference(chunk, collect_sstats=True)
         state.sstats += sstats
         state.numdocs += gamma.shape[0] # avoid calling len(chunk), might be a generator
+        return gamma
 
 
     def update(self, corpus, chunksize=None, decay=None, passes=None, update_every=None):
@@ -390,6 +385,7 @@ class LdaModel(interfaces.TransformationABC):
         this equals the online update of Hoffman et al. and is guaranteed to
         converge for any `decay` in (0.5, 1.0>.
         """
+        # use parameters given in constructor, unless user explicitly overrode them
         if chunksize is None:
             chunksize = self.chunksize
         if decay is None:
@@ -433,14 +429,10 @@ class LdaModel(interfaces.TransformationABC):
                 logger.info('initializing %s workers' % self.numworkers)
                 self.dispatcher.reset(self.state)
             else:
-                other = LdaState(self.state.sstats)
+                other = LdaState(self.eta, self.state.sstats.shape)
             dirty = False
 
-            chunker = itertools.groupby(enumerate(corpus), key=lambda (docno, doc): docno / chunksize)
-            for chunk_no, (key, group) in enumerate(chunker):
-                # convert each document to a 2d numpy array (~6x faster when transmitting
-                # list data over the wire, in Pyro)
-                chunk = [numpy.array(doc) for _, doc in group]
+            for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize, as_numpy=True)):
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
                     logger.info('PROGRESS: iteration %i, dispatching documents up to #%i/%i' %
@@ -454,20 +446,20 @@ class LdaModel(interfaces.TransformationABC):
                 dirty = True
                 del chunk
 
+                # perform an M step. determine when based on update_every, don't do this after every chunk
                 if update_every and (chunk_no + 1) % (update_every * self.numworkers) == 0:
                     if self.dispatcher:
                         # distributed mode: wait for all workers to finish
                         logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                         other = self.dispatcher.getstate()
-
-                    diff = self.do_mstep(rho(), other)
+                    self.do_mstep(rho(), other)
                     del other # free up some mem
 
                     if self.dispatcher:
                         logger.info('initializing workers')
                         self.dispatcher.reset(self.state)
                     else:
-                        other = LdaState(self.state.sstats)
+                        other = LdaState(self.eta, self.state.sstats.shape)
                     dirty = False
             #endfor single corpus iteration
 
@@ -478,22 +470,27 @@ class LdaModel(interfaces.TransformationABC):
                     logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                     other = self.dispatcher.getstate()
                 self.do_mstep(rho(), other)
+                del other
                 dirty = False
         #endfor entire corpus update
 
 
     def do_mstep(self, rho, other):
-        """M step: use linear interpolation between the existing topics and
-        collected sufficient statistics in `other` to update new topics"""
+        """
+        M step: use linear interpolation between the existing topics and
+        collected sufficient statistics in `other` to update the topics.
+        """
         logger.debug("updating topics")
         # update self with the new blend; also keep track of how much did
         # the topics change through this update, to assess convergence
+        diff = numpy.log(self.expElogbeta)
         self.state.blend(rho, other)
-        diff = self.setstate(self.state, compute_diff=True)
+        del other
+        diff -= self.state.get_Elogbeta()
+        self.sync_state()
         self.print_topics(15) # print out some debug info at the end of each EM iteration
-        logger.info("topic logdiff=%f, rho=%f" % (diff, rho))
+        logger.info("topic diff=%f, rho=%f" % (numpy.mean(numpy.abs(diff)), rho))
         self.num_updates += 1
-        return diff
 
 
     def bound(self, corpus, gamma=None):
@@ -505,7 +502,8 @@ class LdaModel(interfaces.TransformationABC):
         from the model.
         """
         score = 0.0
-        Elogbeta = numpy.log(self.expElogbeta)
+        _lambda = self.state.get_lambda()
+        Elogbeta = dirichlet_expectation(_lambda)
 
         for d, doc in enumerate(corpus):
             if d % self.chunksize == 0:
@@ -513,9 +511,8 @@ class LdaModel(interfaces.TransformationABC):
             if gamma is None:
                 gammad, _ = self.inference([doc])
             else:
-                gammad = gamma[d, :]
+                gammad = gamma[d]
             Elogthetad = dirichlet_expectation(gammad)
-            expElogthetad = numpy.exp(Elogthetad)
             ids = [id for id, _ in doc]
             cts = numpy.array([cnt for _, cnt in doc])
             phinorm = numpy.zeros(len(ids))
@@ -531,12 +528,11 @@ class LdaModel(interfaces.TransformationABC):
             score += gammaln(self.alpha * self.num_topics) - gammaln(numpy.sum(gammad))
 
         # E[log p(beta | eta) - log q (beta | lambda)]
-        score += numpy.sum((self.eta - self._lambda) * Elogbeta)
-        score += numpy.sum(gammaln(self._lambda) - gammaln(self.eta))
-        score += numpy.sum(gammaln(self.eta * self.num_terms) -
-                              gammaln(numpy.sum(self._lambda, 1)))
-
+        score += numpy.sum((self.eta - _lambda) * Elogbeta)
+        score += numpy.sum(gammaln(_lambda) - gammaln(self.eta))
+        score += numpy.sum(gammaln(self.eta * self.num_terms) - gammaln(numpy.sum(_lambda, 1)))
         return score
+
 
     def print_topics(self, topics=10, topn=10):
         self.show_topics(topics, topn, True)
@@ -566,7 +562,7 @@ class LdaModel(interfaces.TransformationABC):
         return shown
 
     def show_topic(self, topicid, topn=10):
-        topic = self._lambda[topicid]
+        topic = self.state.get_lambda()[topicid]
         topic = topic / topic.sum() # normalize to probability dist
         bestn = numpy.argsort(topic)[::-1][:topn]
         beststr = [(topic[id], self.id2word[id]) for id in bestn]

@@ -16,13 +16,13 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.2',
+        VERSION:     '0.8.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
@@ -30,6 +30,8 @@
     <link rel="up" title="API Reference" href="../apiref.html" />
     <link rel="next" title="corpora.svmlightcorpus – Corpus in SVMlight format" href="svmlightcorpus.html" />
     <link rel="prev" title="corpora.lowcorpus – Corpus in List-of-Words format" href="lowcorpus.html" />
+     
+
 	<!-- twitter search widget
 	    <script type="text/javascript" src="_static/widget.js"></script>
 	-->
@@ -90,7 +92,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" size="24" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -171,6 +173,12 @@ positioned at <cite>offset</cite> bytes within the persistent storage (file).</p
 </div>
 </dd></dl>
 
+<dl class="method">
+<dt id="gensim.corpora.mmcorpus.MmCorpus.skip_headers">
+<tt class="descname">skip_headers</tt><big>(</big><em>input_file</em><big>)</big><a class="headerlink" href="#gensim.corpora.mmcorpus.MmCorpus.skip_headers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Skip file headers that appear before the first document.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -210,8 +218,8 @@ positioned at <cite>offset</cite> bytes within the persistent storage (file).</p
     
 
     <div class="footer">
-        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 30, 2011.
+        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Mar 09, 2012.
     </div>
   </body>
 </html>

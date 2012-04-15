@@ -16,13 +16,13 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.2',
+        VERSION:     '0.8.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
@@ -30,6 +30,8 @@
     <link rel="up" title="API Reference" href="../apiref.html" />
     <link rel="next" title="models.lsimodel – Latent Semantic Indexing" href="lsimodel.html" />
     <link rel="prev" title="corpora.indexedcorpus – Random access to corpus documents" href="../corpora/indexedcorpus.html" />
+     
+
 	<!-- twitter search widget
 	    <script type="text/javascript" src="_static/widget.js"></script>
 	-->
@@ -90,7 +92,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" size="24" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -137,7 +139,7 @@ speed up model estimation.</li>
 </table>
 <dl class="class">
 <dt id="gensim.models.ldamodel.LdaModel">
-<em class="property">class </em><tt class="descclassname">gensim.models.ldamodel.</tt><tt class="descname">LdaModel</tt><big>(</big><em>corpus=None</em>, <em>num_topics=100</em>, <em>id2word=None</em>, <em>distributed=False</em>, <em>chunksize=1000</em>, <em>passes=1</em>, <em>update_every=1</em>, <em>alpha=None</em>, <em>eta=None</em>, <em>decay=0.5</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.models.ldamodel.</tt><tt class="descname">LdaModel</tt><big>(</big><em>corpus=None</em>, <em>num_topics=100</em>, <em>id2word=None</em>, <em>distributed=False</em>, <em>chunksize=2000</em>, <em>passes=1</em>, <em>update_every=1</em>, <em>alpha=None</em>, <em>eta=None</em>, <em>decay=0.5</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>The constructor estimates Latent Dirichlet Allocation model parameters based
 on a training corpus:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
@@ -181,13 +183,13 @@ from the model.</p>
 <dl class="method">
 <dt id="gensim.models.ldamodel.LdaModel.clear">
 <tt class="descname">clear</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.clear" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clear model state (free up some memory).</p>
+<dd><p>Clear model state (free up some memory). Used in the distributed algo.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="gensim.models.ldamodel.LdaModel.do_estep">
 <tt class="descname">do_estep</tt><big>(</big><em>chunk</em>, <em>state=None</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.do_estep" title="Permalink to this definition">¶</a></dt>
-<dd><p>Perform inference on a chunk of documents, and store (increment) the collected
+<dd><p>Perform inference on a chunk of documents, and accumulate the collected
 sufficient statistics in <cite>state</cite> (or <cite>self.state</cite> if None).</p>
 </dd></dl>
 
@@ -195,7 +197,7 @@ sufficient statistics in <cite>state</cite> (or <cite>self.state</cite> if None)
 <dt id="gensim.models.ldamodel.LdaModel.do_mstep">
 <tt class="descname">do_mstep</tt><big>(</big><em>rho</em>, <em>other</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.do_mstep" title="Permalink to this definition">¶</a></dt>
 <dd><p>M step: use linear interpolation between the existing topics and
-collected sufficient statistics in <cite>other</cite> to update new topics</p>
+collected sufficient statistics in <cite>other</cite> to update the topics.</p>
 </dd></dl>
 
 <dl class="method">
@@ -222,14 +224,6 @@ to update the model&#8217;s topic-word distributions, and return a 2-tuple
 <dt id="gensim.models.ldamodel.LdaModel.save">
 <tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="gensim.models.ldamodel.LdaModel.setstate">
-<tt class="descname">setstate</tt><big>(</big><em>state</em>, <em>compute_diff=False</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaModel.setstate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reset word-topic mixtures lambda (and beta) using collected counts of
-sufficient statistics (a <cite>num_topics x num_terms</cite> matrix).</p>
-<p>Return the aggregate amount of change in topics, log(old_lambda-new_lambda).</p>
 </dd></dl>
 
 <dl class="method">
@@ -262,7 +256,7 @@ converge for any <cite>decay</cite> in (0.5, 1.0&gt;.</p>
 
 <dl class="class">
 <dt id="gensim.models.ldamodel.LdaState">
-<em class="property">class </em><tt class="descclassname">gensim.models.ldamodel.</tt><tt class="descname">LdaState</tt><big>(</big><em>shapemat</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaState" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.models.ldamodel.</tt><tt class="descname">LdaState</tt><big>(</big><em>eta</em>, <em>shape</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Encapsulate information for distributed computation of LdaModel objects.</p>
 <p>Objects of this class are sent over the network, so try to keep them lean to
 reduce traffic.</p>
@@ -302,7 +296,7 @@ approximation).</p>
 
 <dl class="method">
 <dt id="gensim.models.ldamodel.LdaState.reset">
-<tt class="descname">reset</tt><big>(</big><em>mat=None</em><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaState.reset" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">reset</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.models.ldamodel.LdaState.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prepare the state for a new EM iteration (reset sufficient stats).</p>
 </dd></dl>
 
@@ -357,8 +351,8 @@ approximation).</p>
     
 
     <div class="footer">
-        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 30, 2011.
+        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Mar 09, 2012.
     </div>
   </body>
 </html>

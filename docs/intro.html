@@ -16,19 +16,21 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.2',
+        VERSION:     '0.8.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="gensim" href="index.html" />
     <link rel="next" title="Installation" href="install.html" />
     <link rel="prev" title="Gensim – Topic Modelling for Humans" href="index.html" />
+     
+
 	<!-- twitter search widget
 	    <script type="text/javascript" src="_static/widget.js"></script>
 	-->
@@ -98,7 +100,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" size="24" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -121,7 +123,7 @@
             
   <div class="section" id="introduction">
 <span id="intro"></span><h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<p>Gensim is a Python framework designed to automatically extract semantic
+<p>Gensim is a <a class="reference internal" href="#availability"><em>free</em></a> Python framework designed to automatically extract semantic
 topics from documents, as efficiently (computer-wise) and painlessly (human-wise) as possible.</p>
 <p>Gensim aims at processing raw, unstructured digital texts (&#8220;<em>plain text</em>&#8221;).
 The algorithms in <cite>gensim</cite>, such as <strong>Latent Semantic Analysis</strong>, <strong>Latent Dirichlet Allocation</strong> or <strong>Random Projections</strong>,
@@ -158,17 +160,21 @@ If you want to cite <cite>gensim</cite> in your own work, please refer to that a
 steps and algorithms operate in a streaming fashion, accessing one document
 at a time.</li>
 </ol>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">If you&#8217;re interested in document indexing/similarity retrieval, I also maintain a higher-level package
+of <a class="reference external" href="http://pypi.python.org/pypi/simserver">document similarity server</a>. It uses gensim internally.</p>
+</div>
 </div>
 <div class="section" id="availability">
-<h2>Availability<a class="headerlink" href="#availability" title="Permalink to this headline">¶</a></h2>
+<span id="id1"></span><h2>Availability<a class="headerlink" href="#availability" title="Permalink to this headline">¶</a></h2>
+<p>Gensim is licensed under the OSI-approved <a class="reference external" href="http://www.gnu.org/licenses/lgpl.html">GNU LPGL license</a>
+and can be downloaded either from its <a class="reference external" href="https://github.com/piskvorky/gensim/">github repository</a>
+or from the <a class="reference external" href="http://pypi.python.org/pypi/gensim">Python Package Index</a>.</p>
 <div class="admonition-see-also admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last">See the <a class="reference internal" href="install.html"><em>install</em></a> page for more info on <cite>gensim</cite> deployment.</p>
 </div>
-<p>Gensim is licensed under the OSI-approved <a class="reference external" href="http://www.gnu.org/licenses/lgpl.html">GNU LPGL license</a>
-and can be downloaded either from its <a class="reference external" href="https://github.com/piskvorky/gensim/">github repository</a>
-or from the <a class="reference external" href="http://pypi.python.org/pypi/gensim">Python Package Index</a>. Also see the
-<a class="reference internal" href="about.html"><em>About</em></a> page.</p>
 </div>
 <div class="section" id="core-concepts">
 <h2>Core concepts<a class="headerlink" href="#core-concepts" title="Permalink to this headline">¶</a></h2>
@@ -267,8 +273,8 @@ and more useful: with similar documents having similar representations.</dd>
     
 
     <div class="footer">
-        &copy; Copyright 2011, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Oct 30, 2011.
+        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Mar 09, 2012.
     </div>
   </body>
 </html>

@@ -112,6 +112,9 @@ dimensions stand for? Let's inspect with :func:`models.LsiModel.print_topics`:
   topic #0(1.594): -0.703*"trees" + -0.538*"graph" + -0.402*"minors" + -0.187*"survey" + -0.061*"system" + -0.060*"response" + -0.060*"time" + -0.058*"user" + -0.049*"computer" + -0.035*"interface"
   topic #1(1.476): -0.460*"system" + -0.373*"user" + -0.332*"eps" + -0.328*"interface" + -0.320*"response" + -0.320*"time" + -0.293*"computer" + -0.280*"human" + -0.171*"survey" + 0.161*"trees"
 
+(the topics are printed to log -- see the note at the top of this page about activating
+logging)
+
 It appears that according to LSI, "trees", "graph" and "minors" are all related
 words (and contribute the most to the direction of the first topic), while the
 second topic practically concerns itself with all the other words. As expected,
@@ -212,8 +215,17 @@ Gensim implements several popular Vector Space Model algorithms:
   `gensim` uses a fast implementation of online LDA parameter estimation based on [2]_,
   modified to run in :doc:`distributed mode <distributed>` on a cluster of computers.
 
+* `Hierarchical Dirichlet Process, HDP <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_
+  is a non-parametric bayesian method (note the missing number of requested topics):
+
+  >>> model = hdpmodel.HdpModel(bow_corpus, id2word=dictionary)
+
+  `gensim` uses a fast, online implementation based on [3]_.
+  The HDP model is a new addition to `gensim`, and still rough around its academic edges -- use with care.
+
 Adding new :abbr:`VSM (Vector Space Model)` transformations (such as different weighting schemes) is rather trivial;
-see the :doc:`API reference <apiref>` or directly the Python code for more info and examples.
+see the :doc:`API reference <apiref>` or directly the `Python code <https://github.com/piskvorky/gensim/blob/develop/gensim/models/tfidfmodel.py>`_
+for more info and examples.
 
 It is worth repeating that these are all unique, **incremental** implementations,
 which do not require the whole training corpus to be present in main memory all at once.
@@ -229,6 +241,8 @@ Continue on to the next tutorial on :doc:`tut3`.
 .. [1] Bradford. 2008. An empirical study of required dimensionality for large-scale latent semantic indexing applications.
 
 .. [2] Hoffman, Blei, Bach. 2010. Online learning for Latent Dirichlet Allocation.
+
+.. [3] Wang, Paisley, Blei. 2011. Online variational inference for the hierarchical Dirichlet process.
 
 .. [4] Halko, Martinsson, Tropp. 2009. Finding structure with randomness.
 

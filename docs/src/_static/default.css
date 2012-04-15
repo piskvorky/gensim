@@ -20,8 +20,8 @@ table.links tr td {
     font-weight: bold;
     background-color: #eee;
     text-align: center;
-    background: -webkit-gradient(linear, left top, left bottom, from(#e9e9e9), to(#eee));
-    background: -moz-linear-gradient(top,  #e9e9e9,  #eee);
+    background: -webkit-gradient(linear, left top, left bottom, from(#eee), to(#ddd));
+    background: -moz-linear-gradient(top,  #eee,  #ddd);
 }
 
 table.links a { text-decoration: none; }

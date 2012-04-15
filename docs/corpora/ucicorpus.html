@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>corpora.bleicorpus – Corpus in Blei’s LDA-C format &mdash; gensim</title>
+    <title>corpora.ucicorpus – Corpus in UCI bag-of-words format &mdash; gensim</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -28,8 +28,8 @@
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="top" title="gensim" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
-    <link rel="next" title="corpora.dictionary – Construct word&lt;-&gt;id mappings" href="dictionary.html" />
-    <link rel="prev" title="matutils – Math utils" href="../matutils.html" />
+    <link rel="next" title="corpora.indexedcorpus – Random access to corpus documents" href="indexedcorpus.html" />
+    <link rel="prev" title="corpora.textcorpus – Building corpora with dictionaries" href="textcorpus.html" />
      
 
 	<!-- twitter search widget
@@ -65,10 +65,10 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="dictionary.html" title="corpora.dictionary – Construct word&lt;-&gt;id mappings"
+          <a href="indexedcorpus.html" title="corpora.indexedcorpus – Random access to corpus documents"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="../matutils.html" title="matutils – Math utils"
+          <a href="textcorpus.html" title="corpora.textcorpus – Building corpora with dictionaries"
              accesskey="P">previous</a> |</li>
         <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="../tutorial.html">Tutorials</a>|&nbsp;</li>
@@ -84,11 +84,11 @@
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="../matutils.html"
-                        title="previous chapter"><tt class="docutils literal"><span class="pre">matutils</span></tt> &#8211; Math utils</a></p>
+  <p class="topless"><a href="textcorpus.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">corpora.textcorpus</span></tt> &#8211; Building corpora with dictionaries</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="dictionary.html"
-                        title="next chapter"><tt class="docutils literal"><span class="pre">corpora.dictionary</span></tt> &#8211; Construct word&lt;-&gt;id mappings</a></p>
+  <p class="topless"><a href="indexedcorpus.html"
+                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">corpora.indexedcorpus</span></tt> &#8211; Random access to corpus documents</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
@@ -113,54 +113,52 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="module-gensim.corpora.bleicorpus">
-<span id="corpora-bleicorpus-corpus-in-blei-s-lda-c-format"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">corpora.bleicorpus</span></tt> &#8211; Corpus in Blei&#8217;s LDA-C format<a class="headerlink" href="#module-gensim.corpora.bleicorpus" title="Permalink to this headline">¶</a></h1>
-<p>Blei&#8217;s LDA-C format.</p>
+  <div class="section" id="module-gensim.corpora.ucicorpus">
+<span id="corpora-ucicorpus-corpus-in-uci-bag-of-words-format"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">corpora.ucicorpus</span></tt> &#8211; Corpus in UCI bag-of-words format<a class="headerlink" href="#module-gensim.corpora.ucicorpus" title="Permalink to this headline">¶</a></h1>
+<p>University of California, Irvine (UCI) Bag-of-Words format.</p>
+<p><a class="reference external" href="http://archive.ics.uci.edu/ml/datasets/Bag+of+Words">http://archive.ics.uci.edu/ml/datasets/Bag+of+Words</a></p>
 <dl class="class">
-<dt id="gensim.corpora.bleicorpus.BleiCorpus">
-<em class="property">class </em><tt class="descclassname">gensim.corpora.bleicorpus.</tt><tt class="descname">BleiCorpus</tt><big>(</big><em>fname</em>, <em>fname_vocab=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.bleicorpus.BleiCorpus" title="Permalink to this definition">¶</a></dt>
-<dd><p>Corpus in Blei&#8217;s LDA-C format.</p>
-<p>The corpus is represented as two files: one describing the documents, and another
-describing the mapping between words and their ids.</p>
-<p>Each document is one line:</p>
-<div class="highlight-python"><pre>N fieldId1:fieldValue1 fieldId2:fieldValue2 ... fieldIdN:fieldValueN</pre>
-</div>
-<p>The vocabulary is a file with words, one word per line; word at line K has an
-implicit <tt class="docutils literal"><span class="pre">id=K</span></tt>.</p>
-<p>Initialize the corpus from a file.</p>
-<p><cite>fname_vocab</cite> is the file with vocabulary; if not specified, it defaults to
-<cite>fname.vocab</cite>.</p>
+<dt id="gensim.corpora.ucicorpus.UciCorpus">
+<em class="property">class </em><tt class="descclassname">gensim.corpora.ucicorpus.</tt><tt class="descname">UciCorpus</tt><big>(</big><em>fname</em>, <em>fname_vocab=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.ucicorpus.UciCorpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Corpus in the UCI bag-of-words format.</p>
 <dl class="method">
-<dt id="gensim.corpora.bleicorpus.BleiCorpus.docbyoffset">
-<tt class="descname">docbyoffset</tt><big>(</big><em>offset</em><big>)</big><a class="headerlink" href="#gensim.corpora.bleicorpus.BleiCorpus.docbyoffset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the document stored at file position <cite>offset</cite>.</p>
+<dt id="gensim.corpora.ucicorpus.UciCorpus.create_dictionary">
+<tt class="descname">create_dictionary</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.corpora.ucicorpus.UciCorpus.create_dictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Utility method to generate gensim-style Dictionary directly from
+the corpus and vocabulary data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.ucicorpus.UciCorpus.docbyoffset">
+<tt class="descname">docbyoffset</tt><big>(</big><em>offset</em><big>)</big><a class="headerlink" href="#gensim.corpora.ucicorpus.UciCorpus.docbyoffset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return document at file offset <cite>offset</cite> (in bytes)</p>
 </dd></dl>
 
 <dl class="classmethod">
-<dt id="gensim.corpora.bleicorpus.BleiCorpus.load">
-<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.bleicorpus.BleiCorpus.load" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.corpora.ucicorpus.UciCorpus.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.ucicorpus.UciCorpus.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gensim.corpora.bleicorpus.BleiCorpus.save">
-<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.bleicorpus.BleiCorpus.save" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.corpora.ucicorpus.UciCorpus.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.ucicorpus.UciCorpus.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
 </dd></dl>
 
 <dl class="staticmethod">
-<dt id="gensim.corpora.bleicorpus.BleiCorpus.save_corpus">
-<em class="property">static </em><tt class="descname">save_corpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.bleicorpus.BleiCorpus.save_corpus" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save a corpus in the LDA-C format.</p>
+<dt id="gensim.corpora.ucicorpus.UciCorpus.save_corpus">
+<em class="property">static </em><tt class="descname">save_corpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em>, <em>progress_cnt=10000</em><big>)</big><a class="headerlink" href="#gensim.corpora.ucicorpus.UciCorpus.save_corpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a corpus in the UCI Bag-of-Words format.</p>
 <p>There are actually two files saved: <cite>fname</cite> and <cite>fname.vocab</cite>, where
 <cite>fname.vocab</cite> is the vocabulary file.</p>
-<p>This function is automatically called by <cite>BleiCorpus.serialize</cite>; don&#8217;t
+<p>This function is automatically called by <cite>UciCorpus.serialize</cite>; don&#8217;t
 call it directly, call <cite>serialize</cite> instead.</p>
 </dd></dl>
 
 <dl class="classmethod">
-<dt id="gensim.corpora.bleicorpus.BleiCorpus.serialize">
-<em class="property">classmethod </em><tt class="descname">serialize</tt><big>(</big><em>serializer</em>, <em>fname</em>, <em>corpus</em>, <em>id2word=None</em>, <em>index_fname=None</em>, <em>progress_cnt=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.bleicorpus.BleiCorpus.serialize" title="Permalink to this definition">¶</a></dt>
+<dt id="gensim.corpora.ucicorpus.UciCorpus.serialize">
+<em class="property">classmethod </em><tt class="descname">serialize</tt><big>(</big><em>serializer</em>, <em>fname</em>, <em>corpus</em>, <em>id2word=None</em>, <em>index_fname=None</em>, <em>progress_cnt=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.ucicorpus.UciCorpus.serialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate through the document stream <cite>corpus</cite>, saving the documents to <cite>fname</cite>
 and recording byte offset of each document. Save the resulting index
 structure to file <cite>index_fname</cite> (or <cite>fname</cite>.index is not set).</p>
@@ -187,6 +185,36 @@ positioned at <cite>offset</cite> bytes within the persistent storage (file).</p
 
 </dd></dl>
 
+<dl class="class">
+<dt id="gensim.corpora.ucicorpus.UciWriter">
+<em class="property">class </em><tt class="descclassname">gensim.corpora.ucicorpus.</tt><tt class="descname">UciWriter</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.ucicorpus.UciWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store a corpus in UCI Bag-of-Words format.</p>
+<p>This corpus format is identical to MM format, except for
+different file headers. There is no format line, and the first
+three lines of the file contain number_docs, num_terms, and num_nnz,
+one value per line.</p>
+<p>This implementation is based on matutils.MmWriter, and works the same way.</p>
+<dl class="method">
+<dt id="gensim.corpora.ucicorpus.UciWriter.update_headers">
+<tt class="descname">update_headers</tt><big>(</big><em>num_docs</em>, <em>num_terms</em>, <em>num_nnz</em><big>)</big><a class="headerlink" href="#gensim.corpora.ucicorpus.UciWriter.update_headers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update headers with actual values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.ucicorpus.UciWriter.write_headers">
+<tt class="descname">write_headers</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.corpora.ucicorpus.UciWriter.write_headers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write blank header lines. Will be updated later, once corpus stats are known.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.ucicorpus.UciWriter.write_vector">
+<tt class="descname">write_vector</tt><big>(</big><em>docno</em>, <em>vector</em><big>)</big><a class="headerlink" href="#gensim.corpora.ucicorpus.UciWriter.write_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a single sparse vector to the file.</p>
+<p>Sparse vector is any iterable yielding (field id, field value) pairs.</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 
@@ -207,10 +235,10 @@ positioned at <cite>offset</cite> bytes within the persistent storage (file).</p
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="dictionary.html" title="corpora.dictionary – Construct word&lt;-&gt;id mappings"
+          <a href="indexedcorpus.html" title="corpora.indexedcorpus – Random access to corpus documents"
              >next</a> |</li>
         <li class="right" >
-          <a href="../matutils.html" title="matutils – Math utils"
+          <a href="textcorpus.html" title="corpora.textcorpus – Building corpora with dictionaries"
              >previous</a> |</li>
         <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="../tutorial.html">Tutorials</a>|&nbsp;</li>
