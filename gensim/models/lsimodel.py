@@ -486,7 +486,7 @@ class LsiModel(interfaces.TransformationABC):
 
     def print_topics(self, num_topics=5, num_words=10):
         """Alias for `show_topics()` which prints the top 5 topics to log."""
-        self.show_topics(num_topics=num_topics, num_words=num_words, log=True)
+        return self.show_topics(num_topics=num_topics, num_words=num_words, log=True)
 
     def print_debug(self, num_topics=5, num_words=10):
         """
