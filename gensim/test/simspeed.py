@@ -50,7 +50,48 @@ if __name__ == '__main__':
 
     density = 100.0 * index_sparse.index.nnz / (index_sparse.index.shape[0] * index_sparse.index.shape[1])
 
-    logging.info("test 1 (dense): similarity of all vs. all (%i documents, %i dense features)" %
+    # Difference between test #1 and test #3 is that the query in #1 is a gensim iterable
+    # corpus, while in #3, the index is used directly (numpy arrays). So #1 is slower,
+    # because it needs to convert sparse vecs to numpy arrays and normalize them to
+    # unit length=extra work, which #3 avoids.
+    query = list(itertools.islice(corpus_dense, 1000))
+    logging.info("test 1 (dense): dense corpus of %i docs vs. index (%i documents, %i dense features)" %
+                 (len(query), len(index_dense), index_dense.num_features))
+    for chunksize in [1, 4, 8, 16, 64, 128, 256, 512, 1024]:
+        start = time()
+        if chunksize > 1:
+            sims = []
+            for chunk in gensim.utils.chunkize_serial(query, chunksize):
+                sim = index_dense[chunk]
+                sims.extend(sim)
+        else:
+            sims = [index_dense[vec] for vec in query]
+        assert len(sims) == len(query) # make sure we have one result for each query document
+        taken = time() - start
+        queries = math.ceil(1.0 * len(query) / chunksize)
+        logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
+                     (chunksize, taken, len(query) / taken, queries / taken))
+
+    # Same comment as for test #1 but vs. test #4.
+    query = list(itertools.islice(corpus_sparse, 1000))
+    logging.info("test 2 (sparse): sparse corpus of %i docs vs. sparse index (%i documents, %i features, %.2f%% density)" %
+                 (len(query), len(corpus_sparse), index_sparse.index.shape[1], density))
+    for chunksize in [1, 5, 10, 100, 500, 1000]:
+        start = time()
+        if chunksize > 1:
+            sims = []
+            for chunk in gensim.utils.chunkize_serial(query, chunksize):
+                sim = index_sparse[chunk]
+                sims.extend(sim)
+        else:
+            sims = [index_sparse[vec] for vec in query]
+        assert len(sims) == len(query) # make sure we have one result for each query document
+        taken = time() - start
+        queries = math.ceil(1.0 * len(query) / chunksize)
+        logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
+                     (chunksize, taken, len(query) / taken, queries / taken))
+
+    logging.info("test 3 (dense): similarity of all vs. all (%i documents, %i dense features)" %
                  (len(corpus_dense), index_dense.num_features))
     for chunksize in [0, 1, 4, 8, 16, 64, 128, 256, 512, 1024]:
         index_dense.chunksize = chunksize
@@ -72,7 +113,7 @@ if __name__ == '__main__':
         del sims
 
     index_dense.num_best = 10
-    logging.info("test 2 (dense): as above, but only ask for the top-10 most similar for each document")
+    logging.info("test 4 (dense): as above, but only ask for the top-10 most similar for each document")
     for chunksize in [0, 1, 4, 8, 16, 64, 128, 256, 512, 1024]:
         index_dense.chunksize = chunksize
         start = time()
@@ -86,7 +127,7 @@ if __name__ == '__main__':
                      (chunksize, taken, len(corpus_dense) / taken, queries / taken))
     index_dense.num_best = None
 
-    logging.info("test 3 (sparse): similarity of all vs. all (%i documents, %i features, %.2f%% density)" %
+    logging.info("test 5 (sparse): similarity of all vs. all (%i documents, %i features, %.2f%% density)" %
                  (len(corpus_sparse), index_sparse.index.shape[1], density))
     for chunksize in [0, 5, 10, 100, 500, 1000, 5000]:
         index_sparse.chunksize = chunksize
@@ -105,7 +146,7 @@ if __name__ == '__main__':
         del sims
 
     index_sparse.num_best = 10
-    logging.info("test 4 (sparse): as above, but only ask for the top-10 most similar for each document")
+    logging.info("test 6 (sparse): as above, but only ask for the top-10 most similar for each document")
     for chunksize in [0, 5, 10, 100, 500, 1000, 5000]:
         index_sparse.chunksize = chunksize
         start = time()
@@ -118,46 +159,5 @@ if __name__ == '__main__':
         logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
                      (chunksize, taken, len(corpus_sparse) / taken, queries / taken))
     index_sparse.num_best = None
-
-    # Difference between test #5 and test #1 is that the query in #5 is a gensim iterable
-    # corpus, while in #1, the index is used directly (numpy arrays). So #5 is slower,
-    # because it needs to convert sparse vecs to numpy arrays and normalize them to
-    # unit length=extra work, which #1 avoids.
-    query = corpus_dense[:1000]
-    logging.info("test 5 (dense): dense corpus of %i docs vs. index (%i documents, %i dense features)" %
-                 (len(query), len(index_dense), index_dense.num_features))
-    for chunksize in [1, 4, 8, 16, 64, 128, 256, 512, 1024]:
-        start = time()
-        if chunksize > 1:
-            sims = []
-            for chunk in gensim.utils.chunkize_serial(query, chunksize):
-                sim = index_dense[chunk]
-                sims.extend(sim)
-        else:
-            sims = [index_dense[vec] for vec in query]
-        assert len(sims) == len(query) # make sure we have one result for each query document
-        taken = time() - start
-        queries = math.ceil(1.0 * len(query) / chunksize)
-        logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
-                     (chunksize, taken, len(query) / taken, queries / taken))
-
-    # Same comment as for test #5.
-    query = corpus_sparse[:1000]
-    logging.info("test 6 (sparse): sparse corpus of %i docs vs. sparse index (%i documents, %i features, %.2f%% density)" %
-                 (len(query), len(corpus_sparse), index_sparse.index.shape[1], density))
-    for chunksize in [1, 5, 10, 100, 500, 1000]:
-        start = time()
-        if chunksize > 1:
-            sims = []
-            for chunk in gensim.utils.chunkize_serial(query, chunksize):
-                sim = index_sparse[chunk]
-                sims.extend(sim)
-        else:
-            sims = [index_sparse[vec] for vec in query]
-        assert len(sims) == len(query) # make sure we have one result for each query document
-        taken = time() - start
-        queries = math.ceil(1.0 * len(query) / chunksize)
-        logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)" %
-                     (chunksize, taken, len(query) / taken, queries / taken))
 
     logging.info("finished running %s" % program)
