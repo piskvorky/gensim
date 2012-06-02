@@ -27,7 +27,7 @@ class LogEntropyModel(interfaces.TransformationABC):
 
                             sum_j P_{i,j} * log(P_{i,j})
       global_weight_i = 1 + ----------------------------
-                            log(number_of_documents)
+                            log(number_of_documents + 1)
 
       final_weight_{i,j} = local_weight_{i,j} * global_weight_i
 
@@ -95,7 +95,7 @@ class LogEntropyModel(interfaces.TransformationABC):
 
         logger.debug('iterating over keys')
         for key in self.entr:
-            self.entr[key] = 1 + self.entr[key] / math.log(self.n_docs)
+            self.entr[key] = 1 + self.entr[key] / math.log(self.n_docs + 1)
 
     def __getitem__(self, bow):
         """
