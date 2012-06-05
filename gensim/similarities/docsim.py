@@ -585,8 +585,8 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
     See also `Similarity` and `MatrixSimilarity` in this module.
     """
-    def __init__(self, corpus, num_best=None, chunksize=500, dtype=numpy.float32,
-                 num_terms=None, num_docs=None, num_nnz=None):
+    def __init__(self, corpus, num_features=None, num_terms=None, num_docs=None, num_nnz=None,
+                 num_best=None, chunksize=500, dtype=numpy.float32):
         self.num_best = num_best
         self.normalize = True
         self.chunksize = chunksize
@@ -604,6 +604,11 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
                 # no MmCorpus, use the slower version (or maybe user supplied the
                 # num_* params in constructor)
                 pass
+            if num_features is not None:
+                # num_terms is just an alias for num_features, for compatibility with MatrixSimilarity
+                num_terms = num_features
+            if num_terms is None:
+                raise ValueError("refusing to guess the number of sparse features: specify num_features explicitly")
             corpus = (matutils.scipy2sparse(v) if scipy.sparse.issparse(v) else
                       (matutils.full2sparse(v) if isinstance(v, numpy.ndarray) else
                        matutils.unitvec(v)) for v in corpus)

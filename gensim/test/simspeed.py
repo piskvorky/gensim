@@ -36,17 +36,17 @@ if __name__ == '__main__':
         print globals()['__doc__'] % locals()
         sys.exit(1)
 
+    corpus_dense = gensim.corpora.MmCorpus(sys.argv[1])
+    corpus_sparse = gensim.corpora.MmCorpus(sys.argv[2])
+    NUMTERMS = corpus_sparse.num_terms
     if len(sys.argv) > 3:
         NUMDOCS = int(sys.argv[3])
-        corpus_dense = list(itertools.islice(gensim.corpora.MmCorpus(sys.argv[1]), NUMDOCS))
-        corpus_sparse = list(itertools.islice(gensim.corpora.MmCorpus(sys.argv[2]), NUMDOCS))
-    else:
-        corpus_dense = gensim.corpora.MmCorpus(sys.argv[1])
-        corpus_sparse = gensim.corpora.MmCorpus(sys.argv[2])
+        corpus_dense = list(itertools.islice(corpus_dense, NUMDOCS))
+        corpus_sparse = list(itertools.islice(corpus_sparse, NUMDOCS))
 
     # create the query index to be tested (one for dense input, one for sparse)
     index_dense = gensim.similarities.MatrixSimilarity(corpus_dense)
-    index_sparse = gensim.similarities.SparseMatrixSimilarity(corpus_sparse)
+    index_sparse = gensim.similarities.SparseMatrixSimilarity(corpus_sparse, num_terms=NUMTERMS)
 
     density = 100.0 * index_sparse.index.nnz / (index_sparse.index.shape[0] * index_sparse.index.shape[1])
 
