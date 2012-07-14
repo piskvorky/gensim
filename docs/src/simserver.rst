@@ -1,1 +1,0 @@
-/Users/kofola/svn/gensim/simserver/docs/simserver.rst
