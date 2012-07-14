@@ -50,4 +50,5 @@ gensim.egg-info
 *.dict
 *.index
 .coverage
+.*.sw[op]
 data
