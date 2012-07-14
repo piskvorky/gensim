@@ -43,6 +43,7 @@ Thumbs.db
 .pydevproject
 .settings/
 docs/src/_build/
+docs/_static
 dedan_gensim.tmproj
 gensim.egg-info
 *,cover
@@ -51,3 +52,4 @@ gensim.egg-info
 *.index
 .coverage
 data
+*.bak

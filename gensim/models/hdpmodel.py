@@ -295,7 +295,7 @@ class HdpModel(interfaces.TransformationABC):
         phi = np.ones((len(doc_word_ids), self.m_K)) * 1.0/self.m_K
 
         likelihood = 0.0
-        old_likelihood = -1e1000
+        old_likelihood = -1e200
         converge = 1.0
         eps = 1e-100
 
