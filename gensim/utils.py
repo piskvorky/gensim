@@ -643,9 +643,27 @@ if HAS_PATTERN:
         lemmatization, and `read()`, which returns lemmatized content when it's ready.
 
         Note that the order of content entered and read back isn't necessarily the same!
-        Use the sequence id returned from feed/read to match input to output.
+        Use the sequence id returned from `feed`/`read` to match input to output.
 
         This class is NOT thread-safe.
+
+        Example:
+
+        >>> from gensim import utils
+        >>> lm = utils.Lemmatizer()
+        >>> docs = ['quick brown fox', 'slow yellow tortoise', 'document nr. three']
+        >>> for doc in docs:
+        >>>     print lm.feed(doc) # feed the documents into the parser, to be processed in parallel
+        -2939683893812816931
+        5130064701692321566
+        -1045879559712133929
+        >>> lm.read()
+        (5130064701692321566, ['slow/JJ', 'yellow/JJ', 'tortoise/NN'])
+        >>> lm.read()
+        (-2939683893812816931, ['quick/JJ', 'brown/JJ', 'fox/NN'])
+        >>> lm.read()
+        (-1045879559712133929, ['document/NN', 'nr/NN'])
+
         """
         FEED_MAX_QUEUE = 1000 # block after the parsing queue has reached this length -- new feed()/read() calls will have to wait
 
@@ -663,11 +681,13 @@ if HAS_PATTERN:
                 self.prcs.append(prc)
 
         def feed(self, content):
+            """Place a document (text) into the "to be lemmatized" queue"""
             seq_id = content.__hash__()
             self.qin.put((seq_id, content))
             return seq_id
 
         def read(self):
+            """Return one lemmatized document; blocks if no document ready yet."""
             seq_id, lemmas = self.qout.get()
             if seq_id is None:
                 logger.warning('lemmatizer failed for input #%s' % seq_id)
