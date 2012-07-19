@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
+# Copyright (C) 2012 Lars Buitinck <larsmans@gmail.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
@@ -37,6 +38,8 @@ import sys
 import os.path
 import re
 import bz2
+# LXML isn't faster, so let's go with the built-in solution.
+from xml.etree.cElementTree import iterparse
 
 from gensim import interfaces, matutils, utils
 
@@ -87,7 +90,7 @@ def filter_wiki(raw):
     """
     # parsing of the wiki markup is not perfect, but sufficient for our purposes
     # contributions to improving this code are welcome :)
-    text = utils.decode_htmlentities(utils.to_unicode(raw, 'utf8', errors='ignore'))
+    text = utils.to_unicode(raw, 'utf8', errors='ignore')
     text = utils.decode_htmlentities(text) # '&amp;nbsp;' --> '\xa0'
     return remove_markup(text)
 
@@ -192,6 +195,52 @@ def tokenize(content):
             if 2 <= len(token) <= 15 and not token.startswith('_')]
 
 
+def _get_namespace(tag):
+    """Returns the namespace of tag."""
+    m = re.match("^{(.*?)}", tag)
+    namespace = m.group(1) if m else ""
+    if not namespace.startswith("http://www.mediawiki.org/xml/export-"):
+        raise ValueError("%s not recognized as MediaWiki dump namespace"
+                         % namespace)
+    return namespace
+
+
+def _extract_pages(f):
+    """Extract pages from MediaWiki database dump.
+
+    Returns
+    -------
+    pages : iterable over (str, str)
+        Generates (title, content) pairs.
+    """
+    elems = (elem for _, elem in iterparse(f, events=("end",)))
+
+    # We can't rely on the namespace for database dumps, since it's changed
+    # it every time a small modification to the format is made. So, determine
+    # those from the first element we find, which will be part of the metadata,
+    # and construct element paths.
+    elem = next(elems)
+    namespace = _get_namespace(elem.tag)
+    ns_mapping = {"ns": namespace}
+    page_tag = "{%(ns)s}page" % ns_mapping
+    text_path = "./{%(ns)s}revision/{%(ns)s}text" % ns_mapping
+    title_path = "./{%(ns)s}title" % ns_mapping
+
+    for elem in elems:
+        if elem.tag == page_tag:
+            title = elem.find(title_path).text
+            text = elem.find(text_path).text
+            yield title, text or ""     # empty page will yield None
+
+            # Prune the element tree, as per
+            # http://www.ibm.com/developerworks/xml/library/x-hiperfparse/
+            # except that we don't need to prune backlinks from the parent
+            # because we don't use LXML.
+            # We do this only for <page>s, since we need to inspect the
+            # ./revision/text element. The pages comprise the bulk of the
+            # file, so in practice we prune away enough.
+            elem.clear()
+
 
 class WikiCorpus(TextCorpus):
     """
@@ -237,38 +286,26 @@ class WikiCorpus(TextCorpus):
             lemmatizer = utils.lemmatizer
             yielded = 0
 
-        for lineno, line in enumerate(bz2.BZ2File(self.fname)):
-            if line.startswith('      <text'):
-                intext = True
-                line = line[line.find('>') + 1 : ]
-                lines = [line]
-            elif intext:
-                lines.append(line)
-            pos = line.find('</text>') # can be on the same line as <text>
-            if pos >= 0:
-                articles_all += 1
-                intext = False
-                if not lines:
-                    continue
-                lines[-1] = line[:pos]
-                text = filter_wiki(''.join(lines))
-                if len(text) > ARTICLE_MIN_CHARS: # article redirects are pruned here
-                    articles += 1
-                    if return_raw:
-                        result = text
-                        yield result
-                    else:
-                        if LEMMATIZE:
-                            _ = lemmatizer.feed(text)
-                            while lemmatizer.has_results():
-                                _, result = lemmatizer.read() # not necessarily the same text as entered above!
-                                positions += len(result)
-                                yielded += 1
-                                yield result
-                        else:
-                            result = tokenize(text) # text into tokens here
+        for _, text in _extract_pages(bz2.BZ2File(self.fname)):
+            text = filter_wiki(text)
+            articles_all += 1
+            if len(text) > ARTICLE_MIN_CHARS: # article redirects are pruned here
+                articles += 1
+                if return_raw:
+                    result = text
+                    yield result
+                else:
+                    if LEMMATIZE:
+                        _ = lemmatizer.feed(text)
+                        while lemmatizer.has_results():
+                            _, result = lemmatizer.read() # not necessarily the same text as entered above!
                             positions += len(result)
+                            yielded += 1
                             yield result
+                    else:
+                        result = tokenize(text) # text into tokens here
+                        positions += len(result)
+                        yield result
 
         if LEMMATIZE:
             logger.info("all %i articles read; waiting for lemmatizer to finish the %i remaining jobs" %
