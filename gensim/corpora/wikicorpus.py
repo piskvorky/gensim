@@ -2,48 +2,33 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
+# Copyright (C) 2012 Lars Buitinck <larsmans@gmail.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
 """
-USAGE: %(program)s WIKI_XML_DUMP OUTPUT_PREFIX [VOCABULARY_SIZE]
+Construct a corpus from a Wikipedia (or other MediaWiki-based) database dump.
 
-    Convert articles from a Wikipedia dump to (sparse) vectors. The input is a bz2-compressed \
-dump of Wikipedia articles, in XML format.
+If you have the `pattern` package installed, this module will use a fancy
+lemmatization to get a lemma of each token (instead of plain alphabetic
+tokenizer). The package is available at https://github.com/clips/pattern .
 
-This actually creates three files:
-
-* `OUTPUT_PREFIX_wordids.txt`: mapping between words and their integer ids
-* `OUTPUT_PREFIX_bow.mm`: bag-of-words (word counts) representation, in Matrix Matrix format
-* `OUTPUT_PREFIX_tfidf.mm`: TF-IDF representation
-
-The output Matrix Market files can then be compressed (e.g., by bzip2) to save \
-disk space; gensim's corpus iterators can work with compressed input, too.
-
-`VOCABULARY_SIZE` controls how many of the most frequent words to keep (after
-removing tokens that appear in more than 10%% of all documents). Defaults to 50,000.
-
-If you have the `pattern` package installed, this script will use a fancy lemmatization
-to get a lemma of each token (instead of plain alphabetic tokenizer). The package is available at
-https://github.com/clips/pattern .
-
-Example: ./wikicorpus.py ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki_en
+See scripts/make_wikicorpus.py for a canned (example) script based on this
+module.
 """
 
 
-import logging
-import itertools
-import sys
-import os.path
-import re
 import bz2
+import logging
+import re
+# LXML isn't faster, so let's go with the built-in solution.
+from xml.etree.cElementTree import iterparse
 
-from gensim import interfaces, matutils, utils
+from gensim import utils
 
 # cannot import whole gensim.corpora, because that imports wikicorpus...
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.textcorpus import TextCorpus
-from gensim.corpora.mmcorpus import MmCorpus
 
 logger = logging.getLogger('gensim.corpora.wikicorpus')
 
@@ -87,7 +72,7 @@ def filter_wiki(raw):
     """
     # parsing of the wiki markup is not perfect, but sufficient for our purposes
     # contributions to improving this code are welcome :)
-    text = utils.decode_htmlentities(utils.to_unicode(raw, 'utf8', errors='ignore'))
+    text = utils.to_unicode(raw, 'utf8', errors='ignore')
     text = utils.decode_htmlentities(text) # '&amp;nbsp;' --> '\xa0'
     return remove_markup(text)
 
@@ -192,6 +177,52 @@ def tokenize(content):
             if 2 <= len(token) <= 15 and not token.startswith('_')]
 
 
+def _get_namespace(tag):
+    """Returns the namespace of tag."""
+    m = re.match("^{(.*?)}", tag)
+    namespace = m.group(1) if m else ""
+    if not namespace.startswith("http://www.mediawiki.org/xml/export-"):
+        raise ValueError("%s not recognized as MediaWiki dump namespace"
+                         % namespace)
+    return namespace
+
+
+def _extract_pages(f):
+    """Extract pages from MediaWiki database dump.
+
+    Returns
+    -------
+    pages : iterable over (str, str)
+        Generates (title, content) pairs.
+    """
+    elems = (elem for _, elem in iterparse(f, events=("end",)))
+
+    # We can't rely on the namespace for database dumps, since it's changed
+    # it every time a small modification to the format is made. So, determine
+    # those from the first element we find, which will be part of the metadata,
+    # and construct element paths.
+    elem = next(elems)
+    namespace = _get_namespace(elem.tag)
+    ns_mapping = {"ns": namespace}
+    page_tag = "{%(ns)s}page" % ns_mapping
+    text_path = "./{%(ns)s}revision/{%(ns)s}text" % ns_mapping
+    title_path = "./{%(ns)s}title" % ns_mapping
+
+    for elem in elems:
+        if elem.tag == page_tag:
+            title = elem.find(title_path).text
+            text = elem.find(text_path).text
+            yield title, text or ""     # empty page will yield None
+
+            # Prune the element tree, as per
+            # http://www.ibm.com/developerworks/xml/library/x-hiperfparse/
+            # except that we don't need to prune backlinks from the parent
+            # because we don't use LXML.
+            # We do this only for <page>s, since we need to inspect the
+            # ./revision/text element. The pages comprise the bulk of the
+            # file, so in practice we prune away enough.
+            elem.clear()
+
 
 class WikiCorpus(TextCorpus):
     """
@@ -211,6 +242,8 @@ class WikiCorpus(TextCorpus):
         appear in at least `noBelow` documents are kept).
         """
         self.fname = fname
+        if keep_words is None:
+            keep_words = DEFAULT_DICT_SIZE
         if dictionary is None:
             self.dictionary = Dictionary(self.get_texts())
             self.dictionary.filter_extremes(no_below=no_below, no_above=0.1, keep_n=keep_words)
@@ -237,38 +270,26 @@ class WikiCorpus(TextCorpus):
             lemmatizer = utils.lemmatizer
             yielded = 0
 
-        for lineno, line in enumerate(bz2.BZ2File(self.fname)):
-            if line.startswith('      <text'):
-                intext = True
-                line = line[line.find('>') + 1 : ]
-                lines = [line]
-            elif intext:
-                lines.append(line)
-            pos = line.find('</text>') # can be on the same line as <text>
-            if pos >= 0:
-                articles_all += 1
-                intext = False
-                if not lines:
-                    continue
-                lines[-1] = line[:pos]
-                text = filter_wiki(''.join(lines))
-                if len(text) > ARTICLE_MIN_CHARS: # article redirects are pruned here
-                    articles += 1
-                    if return_raw:
-                        result = text
-                        yield result
-                    else:
-                        if LEMMATIZE:
-                            _ = lemmatizer.feed(text)
-                            while lemmatizer.has_results():
-                                _, result = lemmatizer.read() # not necessarily the same text as entered above!
-                                positions += len(result)
-                                yielded += 1
-                                yield result
-                        else:
-                            result = tokenize(text) # text into tokens here
+        for _, text in _extract_pages(bz2.BZ2File(self.fname)):
+            text = filter_wiki(text)
+            articles_all += 1
+            if len(text) > ARTICLE_MIN_CHARS: # article redirects are pruned here
+                articles += 1
+                if return_raw:
+                    result = text
+                    yield result
+                else:
+                    if LEMMATIZE:
+                        _ = lemmatizer.feed(text)
+                        while lemmatizer.has_results():
+                            _, result = lemmatizer.read() # not necessarily the same text as entered above!
                             positions += len(result)
+                            yielded += 1
                             yield result
+                    else:
+                        result = tokenize(text) # text into tokens here
+                        positions += len(result)
+                        yield result
 
         if LEMMATIZE:
             logger.info("all %i articles read; waiting for lemmatizer to finish the %i remaining jobs" %
@@ -284,46 +305,3 @@ class WikiCorpus(TextCorpus):
                      (articles, positions, articles_all))
         self.length = articles # cache corpus length
 #endclass WikiCorpus
-
-
-
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
-    logging.root.setLevel(level=logging.INFO)
-    logger.info("running %s" % ' '.join(sys.argv))
-
-    program = os.path.basename(sys.argv[0])
-
-    # check and process input arguments
-    if len(sys.argv) < 3:
-        print globals()['__doc__'] % locals()
-        sys.exit(1)
-    input, output = sys.argv[1:3]
-    if len(sys.argv) > 3:
-        keep_words = int(sys.argv[3])
-    else:
-        keep_words = DEFAULT_DICT_SIZE
-
-    # build dictionary. only keep 100k most frequent words (out of total ~8.2m unique tokens)
-    # takes about 9h on a macbook pro, for 3.5m articles (june 2011 wiki dump)
-    wiki = WikiCorpus(input, keep_words=keep_words)
-    # save dictionary and bag-of-words (term-document frequency matrix)
-    # another ~9h
-    wiki.dictionary.save_as_text(output + '_wordids.txt')
-    MmCorpus.serialize(output + '_bow.mm', wiki, progress_cnt=10000)
-    del wiki
-
-    # initialize corpus reader and word->id mapping
-    id2token = Dictionary.load_from_text(output + '_wordids.txt')
-    mm = MmCorpus(output + '_bow.mm')
-
-    # build tfidf,
-    # ~30min
-    from gensim.models import TfidfModel
-    tfidf = TfidfModel(mm, id2word=id2token, normalize=True)
-
-    # save tfidf vectors in matrix market format
-    # ~2h; result file is 15GB! bzip2'ed down to 4.5GB
-    MmCorpus.serialize(output + '_tfidf.mm', tfidf[mm], progress_cnt=10000)
-
-    logger.info("finished running %s" % program)
