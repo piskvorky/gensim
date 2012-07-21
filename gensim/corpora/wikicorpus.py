@@ -13,7 +13,7 @@ If you have the `pattern` package installed, this module will use a fancy
 lemmatization to get a lemma of each token (instead of plain alphabetic
 tokenizer). The package is available at https://github.com/clips/pattern .
 
-See scripts/make_wikicorpus.py for a canned (example) script based on this
+See scripts/process_wiki.py for a canned (example) script based on this
 module.
 """
 
