@@ -22,7 +22,7 @@ Preparing the corpus
    even need to uncompress the whole archive to disk. There is a script included in
    `gensim` that does just that, run::
 
-   $ python -m gensim.corpora.wikicorpus
+   $ python -m gensim.scripts.make_wikicorpus
 
 .. note::
   This pre-processing step makes two passes over the 6GB wiki dump (one to extract

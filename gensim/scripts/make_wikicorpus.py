@@ -30,7 +30,7 @@ If you have the `pattern` package installed, this script will use a fancy
 lemmatization to get a lemma of each token (instead of plain alphabetic
 tokenizer). The package is available at https://github.com/clips/pattern .
 
-Example: %(program)s ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki_en
+Example: python -m gensim.scripts.make_wikicorpus ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki_en
 """
 
 
@@ -66,7 +66,7 @@ if len(sys.argv) > 3:
 else:
     keep_words = DEFAULT_DICT_SIZE
 
-# build dictionary. only keep 100k most frequent words (out of total ~8.2m
+# build dictionary. only keep the most frequent words (out of total ~8.2m
 # unique tokens) takes about 9h on a macbook pro, for 3.5m articles (june 2011)
 wiki = WikiCorpus(inp, keep_words=keep_words)
 # save dictionary and bag-of-words (term-document frequency matrix)
