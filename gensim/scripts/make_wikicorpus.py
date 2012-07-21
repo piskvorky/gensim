@@ -30,7 +30,7 @@ If you have the `pattern` package installed, this script will use a fancy
 lemmatization to get a lemma of each token (instead of plain alphabetic
 tokenizer). The package is available at https://github.com/clips/pattern .
 
-Example: %(program) ~/gensim/results/enwiki-latest-pages-articles.xml.bz3 ~/gensim/results/wiki_en
+Example: %(program)s ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki_en
 """
 
 
@@ -58,7 +58,6 @@ logger.info("running %s" % ' '.join(sys.argv))
 
 # check and process input arguments
 if len(sys.argv) < 3:
-    print __doc__ % locals()
     print globals()['__doc__'] % locals()
     sys.exit(1)
 inp, outp = sys.argv[1:3]
