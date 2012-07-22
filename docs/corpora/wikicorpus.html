@@ -16,13 +16,14 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.4',
+        VERSION:     '0.8.5',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
@@ -85,10 +86,10 @@
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="svmlightcorpus.html"
-                        title="previous chapter"><tt class="docutils literal"><span class="pre">corpora.svmlightcorpus</span></tt> &#8211; Corpus in SVMlight format</a></p>
+                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">corpora.svmlightcorpus</span></tt> &#8211; Corpus in SVMlight format</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="textcorpus.html"
-                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">corpora.textcorpus</span></tt> &#8211; Building corpora with dictionaries</a></p>
+                        title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">corpora.textcorpus</span></tt> &#8211; Building corpora with dictionaries</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
@@ -115,51 +116,12 @@
             
   <div class="section" id="module-gensim.corpora.wikicorpus">
 <span id="corpora-wikicorpus-corpus-from-a-wikipedia-dump"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">corpora.wikicorpus</span></tt> &#8211; Corpus from a Wikipedia dump<a class="headerlink" href="#module-gensim.corpora.wikicorpus" title="Permalink to this headline">¶</a></h1>
-<p>USAGE: %(program)s WIKI_XML_DUMP OUTPUT_PREFIX [VOCABULARY_SIZE]</p>
-<blockquote>
-<div>Convert articles from a Wikipedia dump to (sparse) vectors. The input is a bz2-compressed dump of Wikipedia articles, in XML format.</div></blockquote>
-<p>This actually creates three files:</p>
-<ul class="simple">
-<li><cite>OUTPUT_PREFIX_wordids.txt</cite>: mapping between words and their integer ids</li>
-<li><cite>OUTPUT_PREFIX_bow.mm</cite>: bag-of-words (word counts) representation, in Matrix Matrix format</li>
-<li><cite>OUTPUT_PREFIX_tfidf.mm</cite>: TF-IDF representation</li>
-</ul>
-<p>The output Matrix Market files can then be compressed (e.g., by bzip2) to save disk space; gensim&#8217;s corpus iterators can work with compressed input, too.</p>
-<p><cite>VOCABULARY_SIZE</cite> controls how many of the most frequent words to keep (after
-removing tokens that appear in more than 10%% of all documents). Defaults to 50,000.</p>
-<p>If you have the <cite>pattern</cite> package installed, this script will use a fancy lemmatization
-to get a lemma of each token (instead of plain alphabetic tokenizer). The package is available at
-<a class="reference external" href="https://github.com/clips/pattern">https://github.com/clips/pattern</a> .</p>
-<p>Example: ./wikicorpus.py ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki_en</p>
-<dl class="class">
-<dt id="gensim.corpora.wikicorpus.VocabTransform">
-<em class="property">class </em><tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">VocabTransform</tt><big>(</big><em>old2new</em>, <em>id2token=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.VocabTransform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remap feature ids to new values.</p>
-<p>Given a mapping between old ids and new ids (some old ids may be missing = these
-features are to be discarded), this will wrap a corpus so that iterating over
-<cite>VocabTransform[corpus]</cite> returns the same vectors but with the new ids.</p>
-<p>Old features that have no counterpart in the new ids are discarded. This
-can be used to filter vocabulary of a corpus &#8220;online&#8221;:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">old2new</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">oldid</span><span class="p">,</span> <span class="n">newid</span><span class="p">)</span> <span class="k">for</span> <span class="n">newid</span><span class="p">,</span> <span class="n">oldid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ids_you_want_to_keep</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">vt</span> <span class="o">=</span> <span class="n">VocabTransform</span><span class="p">(</span><span class="n">old2new</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">vec_with_new_ids</span> <span class="ow">in</span> <span class="n">vt</span><span class="p">[</span><span class="n">corpus_with_old_ids</span><span class="p">]:</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="o">...</span>
-</pre></div>
-</div>
-<dl class="classmethod">
-<dt id="gensim.corpora.wikicorpus.VocabTransform.load">
-<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.VocabTransform.load" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="gensim.corpora.wikicorpus.VocabTransform.save">
-<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.VocabTransform.save" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
-</dd></dl>
-
-</dd></dl>
-
+<p>Construct a corpus from a Wikipedia (or other MediaWiki-based) database dump.</p>
+<p>If you have the <cite>pattern</cite> package installed, this module will use a fancy
+lemmatization to get a lemma of each token (instead of plain alphabetic
+tokenizer). The package is available at <a class="reference external" href="https://github.com/clips/pattern">https://github.com/clips/pattern</a> .</p>
+<p>See scripts/process_wiki.py for a canned (example) script based on this
+module.</p>
 <dl class="class">
 <dt id="gensim.corpora.wikicorpus.WikiCorpus">
 <em class="property">class </em><tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">WikiCorpus</tt><big>(</big><em>fname</em>, <em>no_below=20</em>, <em>keep_words=50000</em>, <em>dictionary=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus" title="Permalink to this definition">¶</a></dt>
@@ -294,8 +256,8 @@ that 15 characters (not bytes!).</p>
     
 
     <div class="footer">
-        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Apr 15, 2012.
+        &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Jul 22, 2012.
     </div>
   </body>
 </html>

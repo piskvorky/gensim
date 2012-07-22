@@ -16,13 +16,14 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.4',
+        VERSION:     '0.8.5',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
@@ -332,7 +333,7 @@ of the query document within index.</p>
 
 <dl class="class">
 <dt id="gensim.similarities.docsim.SparseMatrixSimilarity">
-<em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">SparseMatrixSimilarity</tt><big>(</big><em>corpus</em>, <em>num_best=None</em>, <em>chunksize=500</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em>, <em>num_terms=None</em>, <em>num_docs=None</em>, <em>num_nnz=None</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.SparseMatrixSimilarity" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">SparseMatrixSimilarity</tt><big>(</big><em>corpus</em>, <em>num_features=None</em>, <em>num_terms=None</em>, <em>num_docs=None</em>, <em>num_nnz=None</em>, <em>num_best=None</em>, <em>chunksize=500</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.SparseMatrixSimilarity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute similarity against a corpus of documents by storing the sparse index
 matrix in memory. The similarity measure used is cosine between two vectors.</p>
 <p>Use this if your input corpus contains sparse vectors (such as documents in
@@ -406,8 +407,8 @@ mmap&#8217;ed), under <cite>fname.array_name.npy</cite>.</p>
     
 
     <div class="footer">
-        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Apr 15, 2012.
+        &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Jul 22, 2012.
     </div>
   </body>
 </html>

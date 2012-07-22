@@ -18,13 +18,14 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.4',
+        VERSION:     '0.8.5',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
@@ -549,10 +550,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="utils.html#gensim.utils.Lemmatizer.has_results">has_results() (gensim.utils.Lemmatizer method)</a>
-  </dt>
-
-      
   <dt><a href="models/hdpmodel.html#gensim.models.hdpmodel.HdpModel.hdp_to_lda">hdp_to_lda() (gensim.models.hdpmodel.HdpModel method)</a>
   </dt>
 
@@ -667,14 +664,6 @@
   </dt>
 
       
-  <dt><a href="utils.html#gensim.utils.lemmatize">lemmatize() (in module gensim.utils)</a>
-  </dt>
-
-      
-  <dt><a href="utils.html#gensim.utils.Lemmatizer">Lemmatizer (class in gensim.utils)</a>
-  </dt>
-
-      
   <dt><a href="corpora/bleicorpus.html#gensim.corpora.bleicorpus.BleiCorpus.load">load() (gensim.corpora.bleicorpus.BleiCorpus class method)</a>
   </dt>
 
@@ -708,10 +697,6 @@
   </dt>
 
         
-  <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.VocabTransform.load">(gensim.corpora.wikicorpus.VocabTransform class method)</a>
-  </dt>
-
-        
   <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.WikiCorpus.load">(gensim.corpora.wikicorpus.WikiCorpus class method)</a>
   </dt>
 
@@ -725,6 +710,10 @@
 
         
   <dt><a href="interfaces.html#gensim.interfaces.TransformationABC.load">(gensim.interfaces.TransformationABC class method)</a>
+  </dt>
+
+        
+  <dt><a href="models/models.html#gensim.models.VocabTransform.load">(gensim.models.VocabTransform class method)</a>
   </dt>
 
         
@@ -780,12 +769,12 @@
   </dt>
 
       </dl></dd>
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="corpora/dictionary.html#gensim.corpora.dictionary.Dictionary.load_from_text">load_from_text() (gensim.corpora.dictionary.Dictionary static method)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="models/logentropy_model.html#gensim.models.logentropy_model.LogEntropyModel">LogEntropyModel (class in gensim.models.logentropy_model)</a>
   </dt>
@@ -976,10 +965,6 @@
   </dt>
 
         
-  <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.VocabTransform.save">(gensim.corpora.wikicorpus.VocabTransform method)</a>
-  </dt>
-
-        
   <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.WikiCorpus.save">(gensim.corpora.wikicorpus.WikiCorpus method)</a>
   </dt>
 
@@ -993,6 +978,10 @@
 
         
   <dt><a href="interfaces.html#gensim.interfaces.TransformationABC.save">(gensim.interfaces.TransformationABC method)</a>
+  </dt>
+
+        
+  <dt><a href="models/models.html#gensim.models.VocabTransform.save">(gensim.models.VocabTransform method)</a>
   </dt>
 
         
@@ -1305,7 +1294,7 @@
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="corpora/wikicorpus.html#gensim.corpora.wikicorpus.VocabTransform">VocabTransform (class in gensim.corpora.wikicorpus)</a>
+  <dt><a href="models/models.html#gensim.models.VocabTransform">VocabTransform (class in gensim.models)</a>
   </dt>
 
   </dl></td>
@@ -1370,8 +1359,8 @@
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Apr 15, 2012.
+        &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Jul 22, 2012.
     </div>
   </body>
 </html>

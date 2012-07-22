@@ -2,7 +2,7 @@
  * doctools.js
  * ~~~~~~~~~~~
  *
- * Sphinx JavaScript utilties for all documentation.
+ * Sphinx JavaScript utilities for all documentation.
  *
  * :copyright: Copyright 2007-2011 by the Sphinx team, see AUTHORS.
  * :license: BSD, see LICENSE for details.

@@ -13,7 +13,7 @@ Gensim -- Topic Modelling for Humans
 
 .. raw:: html
 
-   <table class="links" style="font-size: 150%;">
+   <table class="links" style="font-size: 200%;">
         <tr>
                 <td><a href='intro.html'>What is this?</a></td>
                 <td><a href='install.html'>Installation</a></td>
@@ -45,11 +45,9 @@ Quick Reference Example
 
 .. admonition:: What's new?
 
+   * 22 Jul 2012: release 0.8.5 `out <https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt>`_ : better Wikipedia parsing, faster similarity queries, maintenance fixes
+   * 30 Apr 2012: William Bert's `interview with me <http://williamjohnbert.com/2012/04/interview-with-radim-rehurek-creator-of-gensim/>`_
    * 9 Mar 2012: release 0.8.4: new model `Hierarchical Dirichlet Process <http://radimrehurek.com/gensim/models/hdpmodel.html>`_ (full `CHANGELOG <https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt>`_)
-   * 2 Dec 2011: bug-fix release 0.8.3 out; `CHANGELOG <https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt>`_
-   * 1 Dec 2011: released `simserver <http://pypi.python.org/pypi/simserver>`_, a Python document similarity server based on gensim
-
-
 
 
 .. toctree::

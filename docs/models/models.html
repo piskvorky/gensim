@@ -16,13 +16,14 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.4',
+        VERSION:     '0.8.5',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
@@ -101,6 +102,35 @@
 <span id="models-package-for-transformation-models"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">models</span></tt> &#8211; Package for transformation models<a class="headerlink" href="#module-gensim.models" title="Permalink to this headline">¶</a></h1>
 <p>This package contains algorithms for extracting document representations from their raw
 bag-of-word counts.</p>
+<dl class="class">
+<dt id="gensim.models.VocabTransform">
+<em class="property">class </em><tt class="descclassname">gensim.models.</tt><tt class="descname">VocabTransform</tt><big>(</big><em>old2new</em>, <em>id2token=None</em><big>)</big><a class="headerlink" href="#gensim.models.VocabTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remap feature ids to new values.</p>
+<p>Given a mapping between old ids and new ids (some old ids may be missing = these
+features are to be discarded), this will wrap a corpus so that iterating over
+<cite>VocabTransform[corpus]</cite> returns the same vectors but with the new ids.</p>
+<p>Old features that have no counterpart in the new ids are discarded. This
+can be used to filter vocabulary of a corpus &#8220;online&#8221;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">old2new</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">oldid</span><span class="p">,</span> <span class="n">newid</span><span class="p">)</span> <span class="k">for</span> <span class="n">newid</span><span class="p">,</span> <span class="n">oldid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ids_you_want_to_keep</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vt</span> <span class="o">=</span> <span class="n">VocabTransform</span><span class="p">(</span><span class="n">old2new</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">vec_with_new_ids</span> <span class="ow">in</span> <span class="n">vt</span><span class="p">[</span><span class="n">corpus_with_old_ids</span><span class="p">]:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="o">...</span>
+</pre></div>
+</div>
+<dl class="classmethod">
+<dt id="gensim.models.VocabTransform.load">
+<em class="property">classmethod </em><tt class="descname">load</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.VocabTransform.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a previously saved object from file (also see <cite>save</cite>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.models.VocabTransform.save">
+<tt class="descname">save</tt><big>(</big><em>fname</em><big>)</big><a class="headerlink" href="#gensim.models.VocabTransform.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the object to file via pickling (also see <cite>load</cite>).</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 
@@ -131,8 +161,8 @@ bag-of-word counts.</p>
     
 
     <div class="footer">
-        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Apr 15, 2012.
+        &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Jul 22, 2012.
     </div>
   </body>
 </html>
