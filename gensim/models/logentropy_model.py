@@ -27,7 +27,7 @@ class LogEntropyModel(interfaces.TransformationABC):
 
                             sum_j P_{i,j} * log(P_{i,j})
       global_weight_i = 1 + ----------------------------
-                            log(number_of_documents)
+                            log(number_of_documents + 1)
 
       final_weight_{i,j} = local_weight_{i,j} * global_weight_i
 
@@ -85,14 +85,17 @@ class LogEntropyModel(interfaces.TransformationABC):
                      "documents and %i features (%i matrix non-zeros)"
                      % (self.n_docs, len(glob_freq), self.n_words))
         logger.debug('iterating over corpus')
-        for bow in corpus:
+        for doc_no2, bow in enumerate(corpus):
             for key, freq in bow:
                 p = (float(freq) / glob_freq[key]) * math.log(float(freq) /
                                                               glob_freq[key])
                 self.entr[key] = self.entr.get(key, 0.0) + p
+        if doc_no2 != doc_no:
+            raise ValueError("LogEntropyModel doesn't support generators as training data")
+
         logger.debug('iterating over keys')
         for key in self.entr:
-            self.entr[key] = 1 + self.entr[key] / math.log(self.n_docs)
+            self.entr[key] = 1 + self.entr[key] / math.log(self.n_docs + 1)
 
     def __getitem__(self, bow):
         """

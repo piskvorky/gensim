@@ -221,9 +221,8 @@ class TestTfidfModel(unittest.TestCase):
         model1 = tfidfmodel.TfidfModel(corpus)
 
         # make sure the dfs<->idfs transformation works
-        dfs = tfidfmodel.idfs2dfs(model1.idfs, len(corpus))
-        self.assertEqual(dfs, dictionary.dfs)
-        self.assertEqual(model1.idfs, tfidfmodel.dfs2idfs(dfs, len(corpus)))
+        self.assertEqual(model1.dfs, dictionary.dfs)
+        self.assertEqual(model1.idfs, tfidfmodel.precompute_idfs(model1.wglobal, dictionary.dfs, len(corpus)))
 
         # create the transformation model by directly supplying a term->docfreq
         # mapping from the global var `dictionary`.
@@ -254,9 +253,10 @@ class TestLogEntropyModel(unittest.TestCase):
         # transform one document
         doc = list(self.corpus_ok)[0]
         transformed = model[doc]
-        expected =  [(0, 0.29155145321295795),
-                     (1, 0.024757785476437949),
-                     (3, 1.0569257878828748)]
+
+        expected = [(0, 0.3748900964125389),
+                    (1, 0.30730215324230725),
+                    (3, 1.20941755462856)]
         self.assertTrue(numpy.allclose(transformed, expected))
 
 

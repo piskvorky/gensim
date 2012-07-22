@@ -51,7 +51,7 @@ class TestSimilarityABC(object):
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=shardsize)
         else:
-            index = self.cls(corpus)
+            index = self.cls(corpus, num_features=len(dictionary))
         if isinstance(index, similarities.MatrixSimilarity):
             expected = numpy.array([
                 [ 0.57735026, 0.57735026, 0.57735026, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
@@ -87,7 +87,7 @@ class TestSimilarityABC(object):
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         else:
-            index = self.cls(corpus)
+            index = self.cls(corpus, num_features=len(dictionary))
         query = corpus[:3]
         sims = index[query]
         expected = numpy.array([
@@ -110,7 +110,7 @@ class TestSimilarityABC(object):
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         else:
-            index = self.cls(corpus)
+            index = self.cls(corpus, num_features=len(dictionary))
         sims = [sim for sim in index]
         expected = numpy.array([
             [ 0.99999994, 0.23570226, 0.28867513, 0.23570226, 0.0, 0.0, 0.0, 0.0, 0.0 ],
@@ -131,7 +131,7 @@ class TestSimilarityABC(object):
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
         else:
-            index = self.cls(corpus)
+            index = self.cls(corpus, num_features=len(dictionary))
         index.save(fname)
         index2 = self.cls.load(fname)
         if self.cls == similarities.Similarity:

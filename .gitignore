@@ -27,6 +27,8 @@
 *.sql
 *.sqlite
 *.pkl
+*.bak
+*.npy
 
 # OS generated files #
 ######################
@@ -49,5 +51,6 @@ gensim.egg-info
 *.dict
 *.index
 .coverage
+.*.sw[op]
 data
 *.bak

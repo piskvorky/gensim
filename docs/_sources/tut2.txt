@@ -112,6 +112,9 @@ dimensions stand for? Let's inspect with :func:`models.LsiModel.print_topics`:
   topic #0(1.594): -0.703*"trees" + -0.538*"graph" + -0.402*"minors" + -0.187*"survey" + -0.061*"system" + -0.060*"response" + -0.060*"time" + -0.058*"user" + -0.049*"computer" + -0.035*"interface"
   topic #1(1.476): -0.460*"system" + -0.373*"user" + -0.332*"eps" + -0.328*"interface" + -0.320*"response" + -0.320*"time" + -0.293*"computer" + -0.280*"human" + -0.171*"survey" + 0.161*"trees"
 
+(the topics are printed to log -- see the note at the top of this page about activating
+logging)
+
 It appears that according to LSI, "trees", "graph" and "minors" are all related
 words (and contribute the most to the direction of the first topic), while the
 second topic practically concerns itself with all the other words. As expected,

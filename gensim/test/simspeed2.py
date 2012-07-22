@@ -103,7 +103,7 @@ if __name__ == '__main__':
     # corpus, while in #1, the index is used directly (numpy arrays). So #5 is slower,
     # because it needs to convert sparse vecs to numpy arrays and normalize them to
     # unit length=extra work, which #1 avoids.
-    query = list(corpus_dense)[:1000]
+    query = list(itertools.islice(corpus_dense, 1000))
     logging.info("test 5 (dense): dense corpus of %i docs vs. index (%i documents, %i dense features)" %
                  (len(query), len(index_dense), index_dense.num_features))
     for chunksize in [1, 8, 32, 64, 128, 256, 512, 1024]:
@@ -121,7 +121,7 @@ if __name__ == '__main__':
                      (chunksize, taken, len(query) / taken, queries / taken))
 
     # Same comment as for test #5.
-    query = list(corpus_sparse)[:1000]
+    query = list(itertools.islice(corpus_dense, 1000))
     logging.info("test 6 (sparse): sparse corpus of %i docs vs. sparse index (%i documents, %i features, %.2f%% density)" %
                  (len(query), len(corpus_sparse), index_sparse.num_features, density))
     for chunksize in [1, 5, 10, 100, 500, 1000]:

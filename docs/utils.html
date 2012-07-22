@@ -16,13 +16,14 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.4',
+        VERSION:     '0.8.5',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
@@ -135,24 +136,6 @@ internal id of a corpus = the vocabulary dimensionality.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="gensim.utils.Lemmatizer">
-<em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">Lemmatizer</tt><big>(</big><em>num_workers=2</em><big>)</big><a class="headerlink" href="#gensim.utils.Lemmatizer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wraps the lemmatize() fnc so that input can be processed in parallel, to
-speed things up.</p>
-<p>Main methods are <cite>feed(content)</cite>, which puts the content in queue for
-lemmatization, and <cite>read()</cite>, which returns lemmatized content when it&#8217;s ready.</p>
-<p>Note that the order of content entered and read back isn&#8217;t necessarily the same!
-Use the sequence id returned from feed/read to match input to output.</p>
-<p>This class is NOT thread-safe.</p>
-<dl class="method">
-<dt id="gensim.utils.Lemmatizer.has_results">
-<tt class="descname">has_results</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.utils.Lemmatizer.has_results" title="Permalink to this definition">¶</a></dt>
-<dd><p>The next call to read() won&#8217;t block (not thread-safe!).</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
 <dt id="gensim.utils.RepeatCorpus">
 <em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">RepeatCorpus</tt><big>(</big><em>corpus</em>, <em>reps</em><big>)</big><a class="headerlink" href="#gensim.utils.RepeatCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used in the tutorial on distributed computing and likely not useful anywhere else.</p>
@@ -249,6 +232,13 @@ A once-only input stream (<cite>corpus</cite> from a generator) is ok.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.utils.copytree_hardlink">
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">copytree_hardlink</tt><big>(</big><em>source</em>, <em>dest</em><big>)</big><a class="headerlink" href="#gensim.utils.copytree_hardlink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively copy a directory ala shutils.copytree, but hardlink files
+instead of copying. Available on UNIX systems only.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.utils.deaccent">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">deaccent</tt><big>(</big><em>text</em><big>)</big><a class="headerlink" href="#gensim.utils.deaccent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove accentuation from the given string. Input text is either a unicode string or utf8 encoded bytestring.</p>
@@ -332,14 +322,6 @@ result is forcefully defined as <cite>is_corpus=False</cite>.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="gensim.utils.lemmatize">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">lemmatize</tt><big>(</big><em>content</em><big>)</big><a class="headerlink" href="#gensim.utils.lemmatize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Use the English lemmatizer from the <cite>pattern</cite> package to extract tokens in
-their base form (lemmas: &#8220;are, is, being&#8221;-&gt;&#8221;be&#8221; etc.).
-This is a smarter version of stemming.</p>
-</dd></dl>
-
-<dl class="function">
 <dt id="gensim.utils.pickle">
 <tt class="descclassname">gensim.utils.</tt><tt class="descname">pickle</tt><big>(</big><em>obj</em>, <em>fname</em>, <em>protocol=-1</em><big>)</big><a class="headerlink" href="#gensim.utils.pickle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pickle object <cite>obj</cite> to file <cite>fname</cite>.</p>
@@ -347,7 +329,7 @@ This is a smarter version of stemming.</p>
 
 <dl class="function">
 <dt id="gensim.utils.pyro_daemon">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">pyro_daemon</tt><big>(</big><em>name</em>, <em>object</em>, <em>random_suffix=False</em><big>)</big><a class="headerlink" href="#gensim.utils.pyro_daemon" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">pyro_daemon</tt><big>(</big><em>name</em>, <em>obj</em>, <em>random_suffix=False</em>, <em>ip=None</em>, <em>port=None</em><big>)</big><a class="headerlink" href="#gensim.utils.pyro_daemon" title="Permalink to this definition">¶</a></dt>
 <dd><p>Register object with name server (starting the name server if not running
 yet) and block until the daemon is terminated. The object is registered under
 <cite>name</cite>, or <cite>name`+ some random suffix if `random_suffix</cite> is set.</p>
@@ -464,8 +446,8 @@ will be sent in smaller chunks, of <cite>chunksize</cite> documents each.</p>
     
 
     <div class="footer">
-        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 09, 2012.
+        &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Jul 22, 2012.
     </div>
   </body>
 </html>

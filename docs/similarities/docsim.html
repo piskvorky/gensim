@@ -16,13 +16,14 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.4',
+        VERSION:     '0.8.5',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
@@ -299,6 +300,15 @@ to check the result for real length, using <cite>chunk.shape[0]</cite>.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="gensim.similarities.docsim.Similarity.query_shards">
+<tt class="descname">query_shards</tt><big>(</big><em>query</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.query_shards" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the result of applying shard[query] for each shard in self.shards,
+as a sequence.</p>
+<p>If PARALLEL_SHARDS is set, the shards are queried in parallel, using
+the multiprocessing module.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="gensim.similarities.docsim.Similarity.save">
 <tt class="descname">save</tt><big>(</big><em>fname=None</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the object via pickling (also see load) under filename specified in
@@ -309,15 +319,21 @@ the constructor.</p>
 <dl class="method">
 <dt id="gensim.similarities.docsim.Similarity.similarity_by_id">
 <tt class="descname">similarity_by_id</tt><big>(</big><em>docpos</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.similarity_by_id" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return similarity of the given document only. <cite>pos</cite> is the position
+<dd><p>Return similarity of the given document only. <cite>docpos</cite> is the position
 of the query document within index.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.similarities.docsim.Similarity.vector_by_id">
+<tt class="descname">vector_by_id</tt><big>(</big><em>docpos</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.vector_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return indexed vector corresponding to the document at position <cite>docpos</cite>.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="gensim.similarities.docsim.SparseMatrixSimilarity">
-<em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">SparseMatrixSimilarity</tt><big>(</big><em>corpus</em>, <em>num_best=None</em>, <em>chunksize=500</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em>, <em>num_terms=None</em>, <em>num_docs=None</em>, <em>num_nnz=None</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.SparseMatrixSimilarity" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.similarities.docsim.</tt><tt class="descname">SparseMatrixSimilarity</tt><big>(</big><em>corpus</em>, <em>num_features=None</em>, <em>num_terms=None</em>, <em>num_docs=None</em>, <em>num_nnz=None</em>, <em>num_best=None</em>, <em>chunksize=500</em>, <em>dtype=&lt;type 'numpy.float32'&gt;</em><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.SparseMatrixSimilarity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute similarity against a corpus of documents by storing the sparse index
 matrix in memory. The similarity measure used is cosine between two vectors.</p>
 <p>Use this if your input corpus contains sparse vectors (such as documents in
@@ -391,8 +407,8 @@ mmap&#8217;ed), under <cite>fname.array_name.npy</cite>.</p>
     
 
     <div class="footer">
-        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 09, 2012.
+        &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Jul 22, 2012.
     </div>
   </body>
 </html>

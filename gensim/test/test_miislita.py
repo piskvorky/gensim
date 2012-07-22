@@ -97,7 +97,7 @@ class TestMiislita(unittest.TestCase):
 
         # initialize tfidf transformation and similarity index
         tfidf = models.TfidfModel(miislita, miislita.dictionary, normalize=False)
-        index = similarities.SparseMatrixSimilarity(tfidf[miislita])
+        index = similarities.SparseMatrixSimilarity(tfidf[miislita], num_features=len(miislita.dictionary))
 
         # compare to query
         query = 'latent semantic indexing'

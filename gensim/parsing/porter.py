@@ -26,19 +26,17 @@ Further adjustments by Santiago Bruno (bananabruno@gmail.com)
 to allow word input not restricted to one word per line, leading
 to:
 
-release 2: July 2008
+Release 2: July 2008
+
+Optimizations and cleanup of the code by Lars Buitinck, July 2012.
 """
 
-import sys
-
-class PorterStemmer:
-
+class PorterStemmer(object):
     def __init__(self):
         """The main part of the stemming algorithm starts here.
-        b is a buffer holding a word to be stemmed. The letters are in b[k0],
-        b[k0+1] ... ending at b[k]. In fact k0 = 0 in this demo program. k is
-        readjusted downwards as the stemming progresses. Zero termination is
-        not in fact used in the algorithm.
+        b is a buffer holding a word to be stemmed. The letters are in b[0],
+        b[1] ... ending at b[k]. k is readjusted downwards as the stemming
+        progresses.
 
         Note that only lower case sequences are stemmed. Forcing to lower case
         should be done before stem(...) is called.
@@ -46,23 +44,21 @@ class PorterStemmer:
 
         self.b = ""  # buffer for word to be stemmed
         self.k = 0
-        self.k0 = 0
         self.j = 0   # j is a general offset into the string
 
-    def cons(self, i):
-        """cons(i) is TRUE <=> b[i] is a consonant."""
-        if self.b[i] == 'a' or self.b[i] == 'e' or self.b[i] == 'i' or self.b[i] == 'o' or self.b[i] == 'u':
-            return 0
-        if self.b[i] == 'y':
-            if i == self.k0:
-                return 1
-            else:
-                return (not self.cons(i - 1))
-        return 1
+    def _cons(self, i):
+        """True <=> b[i] is a consonant."""
+        ch = self.b[i]
+        if ch in "aeiou":
+            return False
+        if ch == 'y':
+            return i == 0 or not self._cons(i - 1)
+        return True
 
-    def m(self):
-        """m() measures the number of consonant sequences between k0 and j.
-        if c is a consonant sequence and v a vowel sequence, and <..>
+    def _m(self):
+        """Returns the number of consonant sequences between 0 and j.
+
+        If c is a consonant sequence and v a vowel sequence, and <..>
         indicates arbitrary presence,
 
            <c><v>       gives 0
@@ -71,87 +67,75 @@ class PorterStemmer:
            <c>vcvcvc<v> gives 3
            ....
         """
-        n = 0
-        i = self.k0
-        while 1:
+        i = 0
+        while True:
             if i > self.j:
-                return n
-            if not self.cons(i):
+                return 0
+            if not self._cons(i):
                 break
-            i = i + 1
-        i = i + 1
-        while 1:
+            i += 1
+        i += 1
+        n = 0
+        while True:
+            while True:
+                if i > self.j:
+                    return n
+                if self._cons(i):
+                    break
+                i += 1
+            i += 1
+            n += 1
             while 1:
                 if i > self.j:
                     return n
-                if self.cons(i):
+                if not self._cons(i):
                     break
-                i = i + 1
-            i = i + 1
-            n = n + 1
-            while 1:
-                if i > self.j:
-                    return n
-                if not self.cons(i):
-                    break
-                i = i + 1
-            i = i + 1
+                i += 1
+            i += 1
 
-    def vowelinstem(self):
-        """vowelinstem() is TRUE <=> k0,...j contains a vowel"""
-        for i in range(self.k0, self.j + 1):
-            if not self.cons(i):
-                return 1
-        return 0
+    def _vowelinstem(self):
+        """True <=> 0,...j contains a vowel"""
+        return not all(self._cons(i) for i in xrange(self.j + 1))
 
-    def doublec(self, j):
-        """doublec(j) is TRUE <=> j,(j-1) contain a double consonant."""
-        if j < (self.k0 + 1):
-            return 0
-        if (self.b[j] != self.b[j-1]):
-            return 0
-        return self.cons(j)
+    def _doublec(self, j):
+        """True <=> j,(j-1) contain a double consonant."""
+        return j > 0 and self.b[j] == self.b[j-1] and self._cons(j)
 
-    def cvc(self, i):
-        """cvc(i) is TRUE <=> i-2,i-1,i has the form consonant - vowel - consonant
-        and also if the second c is not w,x or y. this is used when trying to
-        restore an e at the end of a short  e.g.
+    def _cvc(self, i):
+        """True <=> i-2,i-1,i has the form consonant - vowel - consonant
+        and also if the second c is not w,x or y. This is used when trying to
+        restore an e at the end of a short word, e.g.
 
            cav(e), lov(e), hop(e), crim(e), but
            snow, box, tray.
         """
-        if i < (self.k0 + 2) or not self.cons(i) or self.cons(i-1) or not self.cons(i-2):
-            return 0
-        ch = self.b[i]
-        if ch == 'w' or ch == 'x' or ch == 'y':
-            return 0
-        return 1
+        if i < 2 or not self._cons(i) or self._cons(i-1) or not self._cons(i-2):
+            return False
+        return self.b[i] not in "wxy"
 
-    def ends(self, s):
-        """ends(s) is TRUE <=> k0,...k ends with the string s."""
-        length = len(s)
-        if s[length - 1] != self.b[self.k]: # tiny speed-up
+    def _ends(self, s):
+        """True <=> 0,...k ends with the string s."""
+        if s[-1] != self.b[self.k]: # tiny speed-up
             return 0
-        if length > (self.k - self.k0 + 1):
+        length = len(s)
+        if length > (self.k + 1):
             return 0
         if self.b[self.k-length+1:self.k+1] != s:
             return 0
         self.j = self.k - length
         return 1
 
-    def setto(self, s):
-        """setto(s) sets (j+1),...k to the characters in the string s, readjusting k."""
-        length = len(s)
-        self.b = self.b[:self.j+1] + s + self.b[self.j+length+1:]
-        self.k = self.j + length
+    def _setto(self, s):
+        """Set (j+1),...k to the characters in the string s, adjusting k."""
+        self.b = self.b[:self.j+1] + s
+        self.k = len(self.b) - 1
 
-    def r(self, s):
-        """r(s) is used further down."""
-        if self.m() > 0:
-            self.setto(s)
+    def _r(self, s):
+        if self._m() > 0:
+            self._setto(s)
 
-    def step1ab(self):
-        """step1ab() gets rid of plurals and -ed or -ing. e.g.
+    def _step1ab(self):
+        """Get rid of plurals and -ed or -ing. E.g.,
 
            caresses  ->  caress
            ponies    ->  poni
@@ -172,178 +156,158 @@ class PorterStemmer:
            meetings  ->  meet
         """
         if self.b[self.k] == 's':
-            if self.ends("sses"):
-                self.k = self.k - 2
-            elif self.ends("ies"):
-                self.setto("i")
+            if self._ends("sses"):
+                self.k -= 2
+            elif self._ends("ies"):
+                self._setto("i")
             elif self.b[self.k - 1] != 's':
-                self.k = self.k - 1
-        if self.ends("eed"):
-            if self.m() > 0:
-                self.k = self.k - 1
-        elif (self.ends("ed") or self.ends("ing")) and self.vowelinstem():
+                self.k -= 1
+        if self._ends("eed"):
+            if self._m() > 0:
+                self.k -= 1
+        elif (self._ends("ed") or self._ends("ing")) and self._vowelinstem():
             self.k = self.j
-            if self.ends("at"):   self.setto("ate")
-            elif self.ends("bl"): self.setto("ble")
-            elif self.ends("iz"): self.setto("ize")
-            elif self.doublec(self.k):
-                self.k = self.k - 1
-                ch = self.b[self.k]
-                if ch == 'l' or ch == 's' or ch == 'z':
-                    self.k = self.k + 1
-            elif (self.m() == 1 and self.cvc(self.k)):
-                self.setto("e")
+            if self._ends("at"):   self._setto("ate")
+            elif self._ends("bl"): self._setto("ble")
+            elif self._ends("iz"): self._setto("ize")
+            elif self._doublec(self.k):
+                if self.b[self.k - 1] not in "lsz":
+                    self.k -= 1
+            elif self._m() == 1 and self._cvc(self.k):
+                self._setto("e")
 
-    def step1c(self):
-        """step1c() turns terminal y to i when there is another vowel in the stem."""
-        if (self.ends("y") and self.vowelinstem()):
-            self.b = self.b[:self.k] + 'i' + self.b[self.k+1:]
+    def _step1c(self):
+        """Turn terminal y to i when there is another vowel in the stem."""
+        if self._ends("y") and self._vowelinstem():
+            self.b = self.b[:self.k] + 'i'
 
-    def step2(self):
-        """step2() maps double suffices to single ones.
-        so -ization ( = -ize plus -ation) maps to -ize etc. note that the
-        string before the suffix must give m() > 0.
+    def _step2(self):
+        """Map double suffices to single ones.
+
+        So, -ization ( = -ize plus -ation) maps to -ize etc. Note that the
+        string before the suffix must give _m() > 0.
         """
-        if self.b[self.k - 1] == 'a':
-            if self.ends("ational"):   self.r("ate")
-            elif self.ends("tional"):  self.r("tion")
-        elif self.b[self.k - 1] == 'c':
-            if self.ends("enci"):      self.r("ence")
-            elif self.ends("anci"):    self.r("ance")
-        elif self.b[self.k - 1] == 'e':
-            if self.ends("izer"):      self.r("ize")
-        elif self.b[self.k - 1] == 'l':
-            if self.ends("bli"):       self.r("ble") # --DEPARTURE--
+        ch = self.b[self.k - 1]
+        if ch == 'a':
+            if self._ends("ational"):   self._r("ate")
+            elif self._ends("tional"):  self._r("tion")
+        elif ch == 'c':
+            if self._ends("enci"):      self._r("ence")
+            elif self._ends("anci"):    self._r("ance")
+        elif ch == 'e':
+            if self._ends("izer"):      self._r("ize")
+        elif ch == 'l':
+            if self._ends("bli"):       self._r("ble") # --DEPARTURE--
             # To match the published algorithm, replace this phrase with
-            #   if self.ends("abli"):      self.r("able")
-            elif self.ends("alli"):    self.r("al")
-            elif self.ends("entli"):   self.r("ent")
-            elif self.ends("eli"):     self.r("e")
-            elif self.ends("ousli"):   self.r("ous")
-        elif self.b[self.k - 1] == 'o':
-            if self.ends("ization"):   self.r("ize")
-            elif self.ends("ation"):   self.r("ate")
-            elif self.ends("ator"):    self.r("ate")
-        elif self.b[self.k - 1] == 's':
-            if self.ends("alism"):     self.r("al")
-            elif self.ends("iveness"): self.r("ive")
-            elif self.ends("fulness"): self.r("ful")
-            elif self.ends("ousness"): self.r("ous")
-        elif self.b[self.k - 1] == 't':
-            if self.ends("aliti"):     self.r("al")
-            elif self.ends("iviti"):   self.r("ive")
-            elif self.ends("biliti"):  self.r("ble")
-        elif self.b[self.k - 1] == 'g': # --DEPARTURE--
-            if self.ends("logi"):      self.r("log")
+            #   if self._ends("abli"):      self._r("able")
+            elif self._ends("alli"):    self._r("al")
+            elif self._ends("entli"):   self._r("ent")
+            elif self._ends("eli"):     self._r("e")
+            elif self._ends("ousli"):   self._r("ous")
+        elif ch == 'o':
+            if self._ends("ization"):   self._r("ize")
+            elif self._ends("ation"):   self._r("ate")
+            elif self._ends("ator"):    self._r("ate")
+        elif ch == 's':
+            if self._ends("alism"):     self._r("al")
+            elif self._ends("iveness"): self._r("ive")
+            elif self._ends("fulness"): self._r("ful")
+            elif self._ends("ousness"): self._r("ous")
+        elif ch == 't':
+            if self._ends("aliti"):     self._r("al")
+            elif self._ends("iviti"):   self._r("ive")
+            elif self._ends("biliti"):  self._r("ble")
+        elif ch == 'g': # --DEPARTURE--
+            if self._ends("logi"):      self._r("log")
         # To match the published algorithm, delete this phrase
 
-    def step3(self):
-        """step3() dels with -ic-, -full, -ness etc. similar strategy to step2."""
-        if self.b[self.k] == 'e':
-            if self.ends("icate"):     self.r("ic")
-            elif self.ends("ative"):   self.r("")
-            elif self.ends("alize"):   self.r("al")
-        elif self.b[self.k] == 'i':
-            if self.ends("iciti"):     self.r("ic")
-        elif self.b[self.k] == 'l':
-            if self.ends("ical"):      self.r("ic")
-            elif self.ends("ful"):     self.r("")
-        elif self.b[self.k] == 's':
-            if self.ends("ness"):      self.r("")
+    def _step3(self):
+        """Deal with -ic-, -full, -ness etc. Similar strategy to _step2."""
+        ch = self.b[self.k]
+        if ch == 'e':
+            if self._ends("icate"):     self._r("ic")
+            elif self._ends("ative"):   self._r("")
+            elif self._ends("alize"):   self._r("al")
+        elif ch == 'i':
+            if self._ends("iciti"):     self._r("ic")
+        elif ch == 'l':
+            if self._ends("ical"):      self._r("ic")
+            elif self._ends("ful"):     self._r("")
+        elif ch == 's':
+            if self._ends("ness"):      self._r("")
 
-    def step4(self):
-        """step4() takes off -ant, -ence etc., in context <c>vcvc<v>."""
-        if self.b[self.k - 1] == 'a':
-            if self.ends("al"): pass
+    def _step4(self):
+        """_step4() takes off -ant, -ence etc., in context <c>vcvc<v>."""
+        ch = self.b[self.k - 1]
+        if ch == 'a':
+            if not self._ends("al"): return
+        elif ch == 'c':
+            if not self._ends("ance") and not self._ends("ence"): return
+        elif ch == 'e':
+            if not self._ends("er"): return
+        elif ch == 'i':
+            if not self._ends("ic"): return
+        elif ch == 'l':
+            if not self._ends("able") and not self._ends("ible"): return
+        elif ch == 'n':
+            if self._ends("ant"): pass
+            elif self._ends("ement"): pass
+            elif self._ends("ment"): pass
+            elif self._ends("ent"): pass
             else: return
-        elif self.b[self.k - 1] == 'c':
-            if self.ends("ance"): pass
-            elif self.ends("ence"): pass
-            else: return
-        elif self.b[self.k - 1] == 'e':
-            if self.ends("er"): pass
-            else: return
-        elif self.b[self.k - 1] == 'i':
-            if self.ends("ic"): pass
-            else: return
-        elif self.b[self.k - 1] == 'l':
-            if self.ends("able"): pass
-            elif self.ends("ible"): pass
-            else: return
-        elif self.b[self.k - 1] == 'n':
-            if self.ends("ant"): pass
-            elif self.ends("ement"): pass
-            elif self.ends("ment"): pass
-            elif self.ends("ent"): pass
-            else: return
-        elif self.b[self.k - 1] == 'o':
-            if self.ends("ion") and (self.b[self.j] == 's' or self.b[self.j] == 't'): pass
-            elif self.ends("ou"): pass
+        elif ch == 'o':
+            if self._ends("ion") and self.b[self.j] in "st": pass
+            elif self._ends("ou"): pass
             # takes care of -ous
             else: return
-        elif self.b[self.k - 1] == 's':
-            if self.ends("ism"): pass
-            else: return
-        elif self.b[self.k - 1] == 't':
-            if self.ends("ate"): pass
-            elif self.ends("iti"): pass
-            else: return
-        elif self.b[self.k - 1] == 'u':
-            if self.ends("ous"): pass
-            else: return
-        elif self.b[self.k - 1] == 'v':
-            if self.ends("ive"): pass
-            else: return
-        elif self.b[self.k - 1] == 'z':
-            if self.ends("ize"): pass
-            else: return
+        elif ch == 's':
+            if not self._ends("ism"): return
+        elif ch == 't':
+            if not self._ends("ate") and not self._ends("iti"): return
+        elif ch == 'u':
+            if not self._ends("ous"): return
+        elif ch == 'v':
+            if not self._ends("ive"): return
+        elif ch == 'z':
+            if not self._ends("ize"): return
         else:
             return
-        if self.m() > 1:
+        if self._m() > 1:
             self.k = self.j
 
-    def step5(self):
-        """step5() removes a final -e if m() > 1, and changes -ll to -l if
-        m() > 1.
+    def _step5(self):
+        """Remove a final -e if _m() > 1, and change -ll to -l if m() > 1.
         """
-        self.j = self.k
-        if self.b[self.k] == 'e':
-            a = self.m()
-            if a > 1 or (a == 1 and not self.cvc(self.k-1)):
-                self.k = self.k - 1
-        if self.b[self.k] == 'l' and self.doublec(self.k) and self.m() > 1:
-            self.k = self.k -1
+        k = self.j = self.k
+        if self.b[k] == 'e':
+            a = self._m()
+            if a > 1 or (a == 1 and not self._cvc(k - 1)):
+                self.k -= 1
+        if self.b[self.k] == 'l' and self._doublec(self.k) and self._m() > 1:
+            self.k -= 1
 
-    def stem(self, p, i=None, j=None):
-        """In stem(p,i,j), p is a char pointer, and the string to be stemmed
-        is from p[i] to p[j] inclusive. Typically i is zero and j is the
-        offset to the last character of a string, (p[j+1] == '\0'). The
-        stemmer adjusts the characters p[i] ... p[j] and returns the new
-        end-point of the string, k. Stemming never increases word length, so
-        i <= k <= j. To turn the stemmer into a module, declare 'stem' as
-        extern, and delete the remainder of this file.
-        """
-        # copy the parameters into statics
-        if i is None: i = 0
-        if j is None: j = len(p)-1
-        self.b = p
-        self.k = j
-        self.k0 = i
-        if self.k <= self.k0 + 1:
-            return self.b # --DEPARTURE--
+    def stem(self, w):
+        """Stem the word w, return the stemmed form."""
+        w = w.lower()
+        k = len(w) - 1
+        if k <= 1:
+            return w # --DEPARTURE--
 
         # With this line, strings of length 1 or 2 don't go through the
         # stemming process, although no mention is made of this in the
         # published algorithm. Remove the line to match the published
         # algorithm.
 
-        self.step1ab()
-        self.step1c()
-        self.step2()
-        self.step3()
-        self.step4()
-        self.step5()
-        return self.b[self.k0:self.k+1]
+        self.b = w
+        self.k = k
+
+        self._step1ab()
+        self._step1c()
+        self._step2()
+        self._step3()
+        self._step4()
+        self._step5()
+        return self.b[:self.k+1]
 
     def stem_sentence(self, txt):
         return " ".join(map(self.stem, txt.split()))
@@ -353,23 +317,11 @@ class PorterStemmer:
 
 
 if __name__ == '__main__':
+    import sys
+
     p = PorterStemmer()
-    if len(sys.argv) > 1:
-        for f in sys.argv[1:]:
-            infile = open(f, 'r')
-            while 1:
-                output = ''
-                word = ''
-                line = infile.readline()
-                if line == '':
-                    break
-                for c in line:
-                    if c.isalpha():
-                        word += c.lower()
-                    else:
-                        if word:
-                            output += p.stem(word, 0,len(word)-1)
-                            word = ''
-                        output += c.lower()
-                print output,
-            infile.close()
+
+    for f in sys.argv[1:]:
+        with open(f) as infile:
+            for line in infile:
+                print(p.stem_sentence(line))

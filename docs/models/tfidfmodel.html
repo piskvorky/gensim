@@ -16,13 +16,14 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.4',
+        VERSION:     '0.8.5',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
       };
     </script>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
@@ -117,15 +118,12 @@
 <span id="models-tfidfmodel-tf-idf-model"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model<a class="headerlink" href="#module-gensim.models.tfidfmodel" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="gensim.models.tfidfmodel.TfidfModel">
-<em class="property">class </em><tt class="descclassname">gensim.models.tfidfmodel.</tt><tt class="descname">TfidfModel</tt><big>(</big><em>corpus=None</em>, <em>id2word=None</em>, <em>dictionary=None</em>, <em>normalize=True</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Objects of this class realize the transformation between word-document co-occurence
-matrix (integers) into a locally/globally weighted matrix (positive floats).</p>
-<p>This is done by combining the term frequency counts (the TF part) with inverse
-document frequency counts (the IDF part), optionally normalizing the resulting
-documents to unit length.</p>
+<em class="property">class </em><tt class="descclassname">gensim.models.tfidfmodel.</tt><tt class="descname">TfidfModel</tt><big>(</big><em>corpus=None</em>, <em>id2word=None</em>, <em>dictionary=None</em>, <em>wlocal=&lt;function identity at 0x10bd6d0c8&gt;</em>, <em>wglobal=&lt;function df2idf at 0x10cb0a0c8&gt;</em>, <em>normalize=True</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Objects of this class realize the transformation between word-document co-occurrence
+matrix (integers) into a locally/globally weighted TF_IDF matrix (positive floats).</p>
 <p>The main methods are:</p>
 <ol class="arabic simple">
-<li>constructor, which calculates IDF weights for all terms in the training corpus.</li>
+<li>constructor, which calculates inverse document counts for all terms in the training corpus.</li>
 <li>the [] method, which transforms a simple count representation into the TfIdf
 space.</li>
 </ol>
@@ -135,8 +133,23 @@ space.</li>
 </pre></div>
 </div>
 <p>Model persistency is achieved via its load/save methods.</p>
-<p><cite>normalize</cite> dictates whether the transformed vectors will be set to unit
-length.</p>
+<p>Compute tf-idf by multiplying a local component (term frequency) with a
+global component (inverse document frequency), and normalizing
+the resulting documents to unit length. Formula for unnormalized weight
+of term <cite>i</cite> in document <cite>j</cite> in a corpus of D documents:</p>
+<div class="highlight-python"><pre>weight_{i,j} = frequency_{i,j} * log_2(D / document_freq_{i})</pre>
+</div>
+<p>or, more generally:</p>
+<div class="highlight-python"><pre>weight_{i,j} = wlocal(frequency_{i,j}) * wglobal(document_freq_{i}, D)</pre>
+</div>
+<p>so you can plug in your own custom <cite>wlocal</cite> and <cite>wglobal</cite> functions.</p>
+<p>Default for <cite>wlocal</cite> is identity (other options: math.sqrt, math.log1p, ...)
+and default for <cite>wglobal</cite> is <cite>log_2(total_docs / doc_freq)</cite>, giving the
+formula above.</p>
+<p><cite>normalize</cite> dictates how the final transformed vectors will be normalized.
+<cite>normalize=True</cite> means set to unit length (default); <cite>False</cite> means don&#8217;t
+normalize. You can also set <cite>normalize</cite> to your own function that accepts
+and returns a sparse vector.</p>
 <p>If <cite>dictionary</cite> is specified, it must be a <cite>corpora.Dictionary</cite> object
 and it will be used to directly construct the inverse document frequency
 mapping (then <cite>corpus</cite>, if specified, is ignored).</p>
@@ -162,16 +175,16 @@ frequencies for documents.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="gensim.models.tfidfmodel.dfs2idfs">
-<tt class="descclassname">gensim.models.tfidfmodel.</tt><tt class="descname">dfs2idfs</tt><big>(</big><em>dfs</em>, <em>totaldocs</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.dfs2idfs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given a mapping of <cite>term-&gt;document frequency</cite>, construct a mapping of
-<cite>term-&gt;inverse document frequency</cite>.</p>
+<dt id="gensim.models.tfidfmodel.df2idf">
+<tt class="descclassname">gensim.models.tfidfmodel.</tt><tt class="descname">df2idf</tt><big>(</big><em>docfreq</em>, <em>totaldocs</em>, <em>log_base=2.0</em>, <em>add=0.0</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.df2idf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute default inverse-document-frequency for a term with document frequency <cite>doc_freq</cite>:</p>
+<p>idf = add + log(totaldocs / doc_freq)</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="gensim.models.tfidfmodel.idfs2dfs">
-<tt class="descclassname">gensim.models.tfidfmodel.</tt><tt class="descname">idfs2dfs</tt><big>(</big><em>idfs</em>, <em>totaldocs</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.idfs2dfs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Inverse mapping for <cite>dfs2idfs</cite>.</p>
+<dt id="gensim.models.tfidfmodel.precompute_idfs">
+<tt class="descclassname">gensim.models.tfidfmodel.</tt><tt class="descname">precompute_idfs</tt><big>(</big><em>wglobal</em>, <em>dfs</em>, <em>total_docs</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.precompute_idfs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Precompute the inverse document frequency mapping for all terms.</p>
 </dd></dl>
 
 </div>
@@ -211,8 +224,8 @@ frequencies for documents.</p>
     
 
     <div class="footer">
-        &copy; Copyright 2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Mar 09, 2012.
+        &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
+      Last updated on Jul 22, 2012.
     </div>
   </body>
 </html>

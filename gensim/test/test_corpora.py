@@ -87,6 +87,18 @@ class TestBleiCorpus(unittest.TestCase, CorpusTesterABC):
         self.file_extension = '.blei'
 #endclass TestBleiCorpus
 
+class TestLowCorpus(unittest.TestCase, CorpusTesterABC):
+    def setUp(self):
+        self.corpus_class = lowcorpus.LowCorpus
+        self.file_extension = '.low'
+
+    def test_save(self):
+        super(TestLowCorpus, self).test_save(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
+
+    def test_serialize(self):
+        super(TestLowCorpus, self).test_serialize(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
+#endclass TestLowCorpus
+
 
 class TestUciCorpus(unittest.TestCase, CorpusTesterABC):
     def setUp(self):
@@ -98,7 +110,6 @@ class TestUciCorpus(unittest.TestCase, CorpusTesterABC):
 
     def test_serialize(self):
         super(TestUciCorpus, self).test_serialize(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
-
 #endclass TestUciCorpus
 
 

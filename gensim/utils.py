@@ -24,6 +24,7 @@ from functools import wraps # for `synchronous` function lock
 from htmlentitydefs import name2codepoint as n2cp # for `decode_htmlentities`
 import threading, time
 from Queue import Queue, Empty
+import shutil
 
 
 try:
@@ -60,6 +61,13 @@ def synchronous(tlockname):
     return _synched
 
 
+class NoCM(object):
+    def __enter__(self):
+        pass
+    def __exit__(self, type, value, traceback):
+        pass
+nocm = NoCM()
+
 
 def deaccent(text):
     """
@@ -75,6 +83,19 @@ def deaccent(text):
     norm = unicodedata.normalize("NFD", text)
     result = u''.join(ch for ch in norm if unicodedata.category(ch) != 'Mn')
     return unicodedata.normalize("NFC", result)
+
+
+def copytree_hardlink(source, dest):
+    """
+    Recursively copy a directory ala shutils.copytree, but hardlink files
+    instead of copying. Available on UNIX systems only.
+    """
+    copy2 = shutil.copy2
+    try:
+        shutil.copy2 = os.link
+        shutil.copytree(source, dest)
+    finally:
+        shutil.copy2 = copy2
 
 
 def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False, lower=False):
@@ -278,9 +299,9 @@ def get_my_ip():
     """
     import socket
     try:
-        import Pyro
+        import Pyro4
         # we know the nameserver must exist, so use it as our anchor point
-        ns = Pyro.naming.locateNS()
+        ns = Pyro4.naming.locateNS()
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect((ns._pyroUri.host, ns._pyroUri.port))
         result, port = s.getsockname()
@@ -559,7 +580,7 @@ def getNS():
             pass
 
 
-def pyro_daemon(name, object, random_suffix=False):
+def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
     """Register object with name server (starting the name server if not running
     yet) and block until the daemon is terminated. The object is registered under
     `name`, or `name`+ some random suffix if `random_suffix` is set."""
@@ -567,9 +588,9 @@ def pyro_daemon(name, object, random_suffix=False):
         name += '.' + hex(random.randint(0, 0xffffff))[2:]
     import Pyro4
     with getNS() as ns:
-        with Pyro4.Daemon(get_my_ip()) as daemon:
+        with Pyro4.Daemon(ip or get_my_ip(), port or 0) as daemon:
             # register server for remote access
-            uri = daemon.register(object)
+            uri = daemon.register(obj, name)
             ns.remove(name)
             ns.register(name, uri)
             logger.info("%s registered with nameserver (URI '%s')" % (name, uri))
@@ -622,9 +643,27 @@ if HAS_PATTERN:
         lemmatization, and `read()`, which returns lemmatized content when it's ready.
 
         Note that the order of content entered and read back isn't necessarily the same!
-        Use the sequence id returned from feed/read to match input to output.
+        Use the sequence id returned from `feed`/`read` to match input to output.
 
         This class is NOT thread-safe.
+
+        Example:
+
+        >>> from gensim import utils
+        >>> lm = utils.Lemmatizer()
+        >>> docs = ['quick brown fox', 'slow yellow tortoise', 'document nr. three']
+        >>> for doc in docs:
+        >>>     print lm.feed(doc) # feed the documents into the parser, to be processed in parallel
+        -2939683893812816931
+        5130064701692321566
+        -1045879559712133929
+        >>> lm.read()
+        (5130064701692321566, ['slow/JJ', 'yellow/JJ', 'tortoise/NN'])
+        >>> lm.read()
+        (-2939683893812816931, ['quick/JJ', 'brown/JJ', 'fox/NN'])
+        >>> lm.read()
+        (-1045879559712133929, ['document/NN', 'nr/NN'])
+
         """
         FEED_MAX_QUEUE = 1000 # block after the parsing queue has reached this length -- new feed()/read() calls will have to wait
 
@@ -642,11 +681,13 @@ if HAS_PATTERN:
                 self.prcs.append(prc)
 
         def feed(self, content):
+            """Place a document (text) into the "to be lemmatized" queue"""
             seq_id = content.__hash__()
             self.qin.put((seq_id, content))
             return seq_id
 
         def read(self):
+            """Return one lemmatized document; blocks if no document ready yet."""
             seq_id, lemmas = self.qout.get()
             if seq_id is None:
                 logger.warning('lemmatizer failed for input #%s' % seq_id)

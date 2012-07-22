@@ -79,7 +79,7 @@ def stem_text(text):
     Return lowercase and (porter-)stemmed version of string `text`.
     """
     p = PorterStemmer()
-    return ' '.join(p.stem(word) for word in text.lower().split()) # lowercasing required by the stemmer
+    return ' '.join(p.stem(word) for word in text.split())
 stem = stem_text
 
 DEFAULT_FILTERS = [str.lower, strip_tags, strip_punctuation, strip_multiple_whitespaces,

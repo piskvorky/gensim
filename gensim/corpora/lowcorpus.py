@@ -66,7 +66,7 @@ class LowCorpus(IndexedCorpus):
 
         self.fname = fname # input file, see class doc for format
         self.line2words = line2words # how to translate lines into words (simply split on space by default)
-        self.numDocs = int(open(fname).readline()) # the first line in input data is the number of documents (integer). throws exception on bad input.
+        self.num_docs = int(open(fname).readline()) # the first line in input data is the number of documents (integer). throws exception on bad input.
 
         if not id2word:
             # build a list of all word types in the corpus (distinct words)
@@ -85,11 +85,11 @@ class LowCorpus(IndexedCorpus):
         self.use_wordids = True # return documents as (wordIndex, wordCount) 2-tuples
 
         logger.info("loaded corpus with %i documents and %i terms from %s" %
-                     (self.numDocs, self.numTerms, fname))
+                     (self.num_docs, self.num_terms, fname))
 
 
     def __len__(self):
-        return self.numDocs
+        return self.num_docs
 
 
     def line2doc(self, line):
