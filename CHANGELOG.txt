@@ -1,6 +1,14 @@
 Changes
 =======
 
+0.8.5
+
+* improved performance of sharding (similarity queries)
+* better Wikipedia parsing (thx to Alejandro Weinstein and Lars Buitinck)
+* faster Porter stemmer (thx to Lars Buitinck)
+* several minor fixes (in HDP model thx to Greg Ver Steeg)
+* improvements to documentation
+
 0.8.4
 
 * better support for Pandas series input (thx to JT Bates)
