@@ -51,8 +51,7 @@ class RestrictedHash:
         """
         Iterates over the hashes which have been calculated
         """
-        for v in self.reverse.values():
-            yield v
+        self.reverse.itervalues()
 
     def __getitem__(self, key):
         """
@@ -61,13 +60,10 @@ class RestrictedHash:
         If maintain_reverse, we also keep track of the inverse hash.
         """
         h = self.restricted_hash(key)
-        if self.maintain_reverse and not self.reverse.get(h, None):
+        if self.maintain_reverse:
             self.reverse[h] = key
             if self.debug:
-                if self.debug_reverse.get(h, None):
-                    self.debug_reverse[h] = self.debug_reverse[h].add(key)
-                else:
-                    self.debug_reverse[h] = set([key])
+                self.debug_reverse.setdefault(h, set()).add(key)
         return h
 
     def itervalues(self):

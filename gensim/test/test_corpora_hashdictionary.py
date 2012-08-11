@@ -4,7 +4,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Unit tests for the `corpora.Dictionary` class.
+Unit tests for the `corpora.HashDictionary` class.
 """
 
 
