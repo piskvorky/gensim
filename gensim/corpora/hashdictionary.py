@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
+# Copyright (C) 2012 Homer Strong, Radim Rehurek
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
@@ -13,8 +13,7 @@ their integer ids.
 
 from __future__ import with_statement
 
-import codecs                    # for unicode output
-import zlib
+import codecs
 import logging
 import itertools
 import UserDict
@@ -66,7 +65,7 @@ class RestrictedHash:
             self.reverse[h] = key
             if self.debug:
                 if self.debug_reverse.get(h, None):
-                   self.debug_reverse[h] = self.debug_reverse[h].add(key)
+                    self.debug_reverse[h] = self.debug_reverse[h].add(key)
                 else:
                     self.debug_reverse[h] = set([key])
         return h
@@ -75,7 +74,7 @@ class RestrictedHash:
         return self.reverse.keys()
 
     def iteritems(self):
-        return dict((v,k) for k, v in self.reverse.iteritems())
+        return dict((v, k) for k, v in self.reverse.iteritems())
 
     def values(self):
         return self.reverse.keys()
@@ -84,7 +83,7 @@ class RestrictedHash:
         return self.reverse.values()
 
     def subset(self, key_subset):
-        self.reverse = dict((k,v) for k, v in self.reverse.iteritems() if k in key_subset)
+        self.reverse = dict((k, v) for k, v in self.reverse.iteritems() if k in key_subset)
 
     def restricted_hash(self, key):
         """Calculates the hash mod the range"""
@@ -239,7 +238,7 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
         Note: use `save`/`load` to store in binary format instead (pickle).
         """
         logger.info("saving hashdictionary mapping to %s" % fname)
-        with codecs.open(fname, 'wb',encoding='utf-8') as fout:
+        with codecs.open(fname, 'wb', encoding='utf-8') as fout:
             for token, tokenid in sorted(self.token2id.iteritems()):
                 fout.write("%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0)))
 
