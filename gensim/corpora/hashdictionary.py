@@ -6,8 +6,13 @@
 
 
 """
-This module implements the concept of HashDictionary -- a drop-in replacement for gensim.corpora.dictionary
-their integer ids.
+This module implements the concept of HashDictionary -- a mapping between words
+and their integer ids. The ids are computed as `hash(word) % id_range`, the idea
+being that new words can be represented immediately, without an extra pass through
+the corpus to collect all the ids first.
+
+This means that, unline plain Dictionary, several words may map to the same id
+(~hash collisions). The word<->id mapping is no longer a bijection.
 
 """
 
@@ -17,6 +22,7 @@ import codecs
 import logging
 import itertools
 import UserDict
+import zlib
 
 from gensim import utils
 
@@ -24,81 +30,27 @@ from gensim import utils
 logger = logging.getLogger('gensim.corpora.hashdictionary')
 
 
-class RestrictedHash:
-    """
-    Mimics a dict, using a restricted hash.
-    """
-    def __init__(self, key_range=32000, myhash=hash, maintain_reverse=True, debug=False):
-        """
-        Initialize a RestrictedHash with given key range and hash function.
-
-        maintain_reverse determines whether to keep a dict mapping the inverse hash function..
-        """
-        self.key_range = key_range
-        self.myhash = myhash
-        self.debug = debug
-        self.maintain_reverse = maintain_reverse
-        self.reverse = {}
-        self.debug_reverse = {}
-
-    def __len__(self):
-        """
-        Reports the size of the domain of possible keys.
-        """
-        return self.key_range
-
-    def __iter__(self):
-        """
-        Iterates over the hashes which have been calculated
-        """
-        self.reverse.itervalues()
-
-    def __getitem__(self, key):
-        """
-        Calculate the hash on submitted key.
-
-        If maintain_reverse, we also keep track of the inverse hash.
-        """
-        h = self.restricted_hash(key)
-        if self.maintain_reverse:
-            self.reverse[h] = key
-            if self.debug:
-                self.debug_reverse.setdefault(h, set()).add(key)
-        return h
-
-    def itervalues(self):
-        return self.reverse.keys()
-
-    def iteritems(self):
-        return dict((v, k) for k, v in self.reverse.iteritems())
-
-    def values(self):
-        return self.reverse.keys()
-
-    def keys(self):
-        return self.reverse.values()
-
-    def subset(self, key_subset):
-        self.reverse = dict((k, v) for k, v in self.reverse.iteritems() if k in key_subset)
-
-    def restricted_hash(self, key):
-        """Calculates the hash mod the range"""
-        return self.myhash(key) % self.key_range
-
-
 
 class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
     """
-    HashDictionary is a drop-in replacement for Dictionary; see it for more info.
+    HashDictionary encapsulates the mapping between normalized words and their
+    integer ids.
+
+    Unlike `Dictionary`, building a `HashDictionary` before using it is not a necessary
+    step. The documents can be computed immediately, from an uninitialized `HashDictionary`,
+    without seeing the rest of the corpus first.
 
     The main function is `doc2bow`, which converts a collection of words to its
-    bag-of-words representation: a list of (word_id, word_frequency) 2-tuples
+    bag-of-words representation: a list of (word_id, word_frequency) 2-tuples.
 
     """
-    def __init__(self, documents=None, id_range=32000, myhash=hash, debug=False):
-        self.token2id = RestrictedHash(key_range=id_range, myhash=myhash, debug=debug)
-        self.id2token = self.token2id.reverse # reverse mapping for token2id; only formed on request, to save memory
-        self.dfs = {} # document frequencies: tokenId -> in how many documents this token appeared
+    def __init__(self, documents=None, id_range=32000, myhash=zlib.adler32, debug=True):
+        self.myhash = myhash # hash fnc: string->integer
+        self.id_range = id_range # hash range: id = myhash(key) % id_range
+        self.debug = debug
+        self.token2id = {} # only formed if `debug` is True
+        self.id2token = {} # reverse mapping int->set(words); only formed if `debug` is True
+        self.dfs = {} # document frequencies: token_id -> how many documents this token appeared in
         self.num_docs = 0 # number of documents processed
         self.num_pos = 0 # total number of corpus positions
         self.num_nnz = 0 # total number of non-zeroes in the BOW matrix
@@ -108,18 +60,36 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
 
 
     def __getitem__(self, tokenid):
-        return self.id2token[tokenid]
+        """
+        Return all words that have mapped to the given id so far, as a set.
 
-    def keys(self):
-        """Return a list of all token ids."""
-        return self.token2id.keys()
+        Only works if `self.debug` was enabled.
+        """
+        return self.id2token.get(tokenid, set())
+
+
+    def restricted_hash(self, token):
+        """
+        Calculate id of the given token. Also keep track of what words were mapped
+        to what ids, for debugging reasons.
+        """
+        h = self.myhash(token) % self.id_range
+        if self.debug:
+            self.token2id[token] = h
+            self.id2token.setdefault(h, set()).add(token)
+        return h
 
 
     def __len__(self):
         """
-        Return the number of token->id mappings seen.
+        Return the number of distinct ids = the entire dictionary size.
         """
-        return len(self.token2id)
+        return self.id_range
+
+
+    def keys(self):
+        """Return a list of all token ids."""
+        return range(len(self))
 
 
     def __str__(self):
@@ -127,8 +97,8 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
 
 
     @staticmethod
-    def from_documents(documents):
-        return HashDictionary(documents=documents)
+    def from_documents(*args, **kwargs):
+        return HashDictionary(*args, **kwargs)
 
 
     def add_documents(self, documents):
@@ -138,9 +108,6 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
 
         This is only a convenience wrapper for calling `doc2bow` on each document
         with `allow_update=True`.
-
-        >>> print Dictionary(["máma mele maso".split(), "ema má máma".split()])
-        Dictionary(5 unique tokens)
         """
         for docno, document in enumerate(documents):
             if docno % 10000 == 0:
@@ -158,27 +125,18 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
         is done on the words in `document`; apply tokenization, stemming etc. before
         calling this method.
 
-        If `allow_update` is set, then also update dictionary in the process: create
-        ids for new words. At the same time, update document frequencies -- for
-        each word appearing in this document, increase its document frequency (`self.dfs`)
-        by one.
-
-        If `allow_update` is **not** set, this function is `const`, aka read-only.
+        If `allow_update` is set, then also update dictionary in the process: update
+        overall corpus statistics and document frequencies. For each id appearing
+        in this document, increase its document frequency (`self.dfs`) by one.
 
         """
         result = {}
         missing = {}
-        document = sorted(document)
-        # construct (word, frequency) mapping. in python3 this is done simply
-        # using Counter(), but here i use itertools.groupby() for the job
+        document = sorted(document) # convert the input to plain list (needed below)
         for word_norm, group in itertools.groupby(document):
             frequency = len(list(group)) # how many times does this word appear in the input document
-            tokenid = self.token2id[word_norm]
-                # first time we see this token (~normalized form)
-#            if not allow_update: # if we aren't allowed to create new tokens, continue with the next unique token
-
-            # update how many times a token appeared in the document
-            result[tokenid] = frequency
+            tokenid = self.restricted_hash(word_norm)
+            result[tokenid] = result.get(tokenid, 0) + frequency
 
         if allow_update:
             self.num_docs += 1
@@ -198,7 +156,7 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
 
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000):
         """
-        Filter out tokens that appear in
+        Remove document frequency statistics for tokens that appear in
 
         1. less than `no_below` documents (absolute number) or
         2. more than `no_above` documents (fraction of total corpus size, *not*
@@ -206,54 +164,40 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
         3. after (1) and (2), keep only the first `keep_n` most frequent tokens (or
            keep all if `None`).
 
-        After the pruning, shrink resulting gaps in word ids.
-
-        **Note**: Due to the gap shrinking, the same word may have a different
-        word id before and after the call to this function!
+        **Note:** since HashDictionary's id range is fixed and doesn't depend on
+        the number of tokens seen, this doesn't really "remove" anything. It only
+        clears some supplementary statistics, for easier debugging and smaller RAM
+        footprint.
         """
         no_above_abs = int(no_above * self.num_docs) # convert fractional threshold to absolute threshold
 
-        # determine which tokens to keep
-        good_ids = (v for v in self.token2id.itervalues() if no_below <= self.dfs[v] <= no_above_abs)
-        good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
+        # statistics of which ids do we keep?
+        good_ids = (hash_id for hash_id in self.keys() if no_below <= self.dfs.get(hash_id, 0) <= no_above_abs)
 
         if keep_n is not None:
+            good_ids = sorted(good_ids, key=lambda item: self.dfs.get(item, 0), reverse=True)
             good_ids = good_ids[:keep_n]
-        self.token2id.subset(key_subset=good_ids)
-        self.dfs = dict((tokenid, freq) for tokenid, freq in self.dfs.iteritems()
-                        if tokenid in good_ids)
-        logger.info("keeping %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents" %
+        good_ids = set(good_ids)
+
+        self.id2token = dict((tokenid, freq) for tokenid, freq in self.id2token.iteritems() if tokenid in good_ids)
+        self.dfs = dict((tokenid, freq) for tokenid, freq in self.dfs.iteritems() if tokenid in good_ids)
+        logger.info("kept statistics for %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents" %
                      (len(good_ids), no_below, no_above_abs, 100.0 * no_above))
 
 
     def save_as_text(self, fname):
         """
-        Save this Dictionary to a text file, in format:
-        `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`.
+        Save this HashDictionary to a text file, for easier debugging.
+
+        The format is:
+        `id[TAB]document frequency of this id[TAB]tab-separated set of words in UTF8 that map to this id[NEWLINE]`.
 
         Note: use `save`/`load` to store in binary format instead (pickle).
         """
-        logger.info("saving hashdictionary mapping to %s" % fname)
-        with codecs.open(fname, 'wb', encoding='utf-8') as fout:
-            for token, tokenid in sorted(self.token2id.iteritems()):
-                fout.write("%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0)))
-
-    @staticmethod
-    def load_from_text(fname):
-        """
-        Load a previously stored HashDictionary from a text file.
-        Mirror function to `save_as_text`.
-        """
-        result = HashDictionary()
-        with open(fname, 'rb') as f:
-            for lineno, line in enumerate(f):
-                try:
-                    wordid, word, docfreq = line[:-1].split('\t')
-                except Exception:
-                    raise ValueError("invalid line in dictionary file %s: %s"
-                                     % (fname, line.strip()))
-                wordid = int(wordid)
-                result.token2id[word] = wordid
-                result.dfs[wordid] = int(docfreq)
-        return result
+        logger.info("saving HashDictionary mapping to %s" % fname)
+        with open(fname, 'wb') as fout:
+            for tokenid in self.keys():
+                words = sorted(self[tokenid])
+                if words:
+                    fout.write("%i\t%i\t%s\n" % (tokenid, self.dfs.get(tokenid, 0), '\t'.join(words)))
 #endclass HashDictionary
