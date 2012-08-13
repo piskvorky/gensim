@@ -53,7 +53,7 @@ class IndexedCorpus(interfaces.CorpusABC):
 
 
     @classmethod
-    def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None):
+    def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None, labels=None):
         """
         Iterate through the document stream `corpus`, saving the documents to `fname`
         and recording byte offset of each document. Save the resulting index
@@ -77,9 +77,15 @@ class IndexedCorpus(interfaces.CorpusABC):
             index_fname = fname + '.index'
 
         if progress_cnt is not None:
+            if labels is not None:
+                raise NotImplementedError('I cant handle progress_cnt and labels at the same time, I think.')
             offsets = serializer.save_corpus(fname, corpus, id2word, progress_cnt=progress_cnt)
         else:
-            offsets = serializer.save_corpus(fname, corpus, id2word)
+            if labels is not None:
+                offsets = serializer.save_corpus(fname, corpus, id2word, labels=labels)
+            else:
+                offsets = serializer.save_corpus(fname, corpus, id2word)
+            
         if offsets is None:
             raise NotImplementedError("called serialize on class %s which \
             doesn't support indexing!" % serializer.__name__)
