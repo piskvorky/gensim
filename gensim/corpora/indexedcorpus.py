@@ -78,17 +78,18 @@ class IndexedCorpus(interfaces.CorpusABC):
 
         if progress_cnt is not None:
             if labels is not None:
-                raise NotImplementedError('I cant handle progress_cnt and labels at the same time, I think.')
-            offsets = serializer.save_corpus(fname, corpus, id2word, progress_cnt=progress_cnt)
+                offsets = serializer.save_corpus(fname, corpus, id2word, labels=labels, progress_cnt=progress_cnt)
+            else:
+                offsets = serializer.save_corpus(fname, corpus, id2word, progress_cnt=progress_cnt)
         else:
             if labels is not None:
                 offsets = serializer.save_corpus(fname, corpus, id2word, labels=labels)
             else:
                 offsets = serializer.save_corpus(fname, corpus, id2word)
-            
+
         if offsets is None:
-            raise NotImplementedError("called serialize on class %s which \
-            doesn't support indexing!" % serializer.__name__)
+            raise NotImplementedError("called serialize on class %s which doesn't support indexing!" %
+                serializer.__name__)
 
         # store offsets persistently, using pickle
         logger.info("saving %s index to %s" % (serializer.__name__, index_fname))
