@@ -13,6 +13,7 @@ Modules:
     matutils
     corpora/bleicorpus
     corpora/dictionary
+    corpora/hashdictionary
     corpora/lowcorpus
     corpora/mmcorpus
     corpora/svmlightcorpus

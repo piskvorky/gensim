@@ -10,6 +10,7 @@ from bleicorpus import BleiCorpus
 from svmlightcorpus import SvmLightCorpus
 from lowcorpus import LowCorpus
 from dictionary import Dictionary
+from hashdictionary import HashDictionary
 from wikicorpus import WikiCorpus
 from textcorpus import TextCorpus
 from ucicorpus import UciCorpus
