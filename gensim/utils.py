@@ -670,7 +670,7 @@ if HAS_PATTERN:
         def __init__(self, num_workers=cpu_count()):
             logger.info("initializing lemmatizer with %i processes" % num_workers)
             self.num_workers = num_workers
-            self.qin = PQueue(maxsize=Lemmatizer.FEED_MAX_QUEUE)
+            self.qin = PQueue() #maxsize=Lemmatizer.FEED_MAX_QUEUE)
             self.qout = PQueue(maxsize=Lemmatizer.FEED_MAX_QUEUE)
             # start up processes that will be parsing in parallel
             self.prcs = []

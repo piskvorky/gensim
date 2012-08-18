@@ -38,7 +38,7 @@ import logging
 import os.path
 import sys
 
-from gensim.corpora import Dictionary, MmCorpus, WikiCorpus
+from gensim.corpora import Dictionary, HashDictionary, MmCorpus, WikiCorpus
 from gensim.models import TfidfModel
 
 
@@ -48,43 +48,47 @@ from gensim.models import TfidfModel
 DEFAULT_DICT_SIZE = 50000
 
 
-program = os.path.basename(sys.argv[0])
-logger = logging.getLogger(program)
+if __name__ == '__main__':
+    program = os.path.basename(sys.argv[0])
+    logger = logging.getLogger(program)
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
-logging.root.setLevel(level=logging.INFO)
-logger.info("running %s" % ' '.join(sys.argv))
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
+    logging.root.setLevel(level=logging.INFO)
+    logger.info("running %s" % ' '.join(sys.argv))
 
+    # check and process input arguments
+    if len(sys.argv) < 3:
+        print globals()['__doc__'] % locals()
+        sys.exit(1)
+    inp, outp = sys.argv[1:3]
+    if len(sys.argv) > 3:
+        keep_words = int(sys.argv[3])
+    else:
+        keep_words = DEFAULT_DICT_SIZE
 
-# check and process input arguments
-if len(sys.argv) < 3:
-    print globals()['__doc__'] % locals()
-    sys.exit(1)
-inp, outp = sys.argv[1:3]
-if len(sys.argv) > 3:
-    keep_words = int(sys.argv[3])
-else:
-    keep_words = DEFAULT_DICT_SIZE
+    dictionary = HashDictionary(id_range=DEFAULT_DICT_SIZE) if 'online' in program else None
 
-# build dictionary. only keep the most frequent words (out of total ~8.2m
-# unique tokens) takes about 9h on a macbook pro, for 3.5m articles (june 2011)
-wiki = WikiCorpus(inp, keep_words=keep_words)
-# save dictionary and bag-of-words (term-document frequency matrix)
-# another ~9h
-wiki.dictionary.save_as_text(outp + '_wordids.txt')
-MmCorpus.serialize(outp + '_bow.mm', wiki, progress_cnt=10000)
-del wiki
+    # takes about 9h on a macbook pro, for 3.5m articles (june 2011)
+    wiki = WikiCorpus(inp, keep_words=keep_words, dictionary=dictionary)
+    # only keep the most frequent words (out of total ~8.2m unique tokens)
+    wiki.dictionary.filter_extremes(no_below=20, no_above=0.1, keep_n=DEFAULT_DICT_SIZE)
 
-# initialize corpus reader and word->id mapping
-id2token = Dictionary.load_from_text(outp + '_wordids.txt')
-mm = MmCorpus(outp + '_bow.mm')
+    # save dictionary and bag-of-words (term-document frequency matrix)
+    # another ~9h
+    wiki.dictionary.save_as_text(outp + '_wordids.txt')
+    MmCorpus.serialize(outp + '_bow.mm', wiki, progress_cnt=10000)
+    del wiki
 
-# build tfidf,
-# ~30min
-tfidf = TfidfModel(mm, id2word=id2token, normalize=True)
+    # initialize corpus reader and word->id mapping
+    id2token = Dictionary.load_from_text(outp + '_wordids.txt')
+    mm = MmCorpus(outp + '_bow.mm')
 
-# save tfidf vectors in matrix market format
-# ~2h; result file is 15GB! bzip2'ed down to 4.5GB
-MmCorpus.serialize(outp + '_tfidf.mm', tfidf[mm], progress_cnt=10000)
+    # build tfidf,
+    # ~30min
+    tfidf = TfidfModel(mm, id2word=id2token, normalize=True)
 
-logger.info("finished running %s" % program)
+    # save tfidf vectors in matrix market format
+    # ~2h; result file is 15GB! bzip2'ed down to 4.5GB
+    MmCorpus.serialize(outp + '_tfidf.mm', tfidf[mm], progress_cnt=10000)
+
+    logger.info("finished running %s" % program)

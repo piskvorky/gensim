@@ -33,11 +33,6 @@ from gensim.corpora.textcorpus import TextCorpus
 logger = logging.getLogger('gensim.corpora.wikicorpus')
 
 
-# Wiki is first scanned for all distinct word types (~7M). The types that appear
-# in more than 10% of articles are removed and from the rest, the DEFAULT_DICT_SIZE
-# most frequent types are kept.
-DEFAULT_DICT_SIZE = 50000
-
 # Ignore articles shorter than ARTICLE_MIN_CHARS characters (after preprocessing).
 ARTICLE_MIN_CHARS = 500
 
@@ -235,18 +230,15 @@ class WikiCorpus(TextCorpus):
     >>> wiki.saveAsText('wiki_en_vocab200k') # another 8h, creates a file in MatrixMarket format plus file with id->word
 
     """
-    def __init__(self, fname, no_below=20, keep_words=DEFAULT_DICT_SIZE, dictionary=None):
+    def __init__(self, fname, dictionary=None):
         """
         Initialize the corpus. This scans the corpus once, to determine its
         vocabulary (only the first `keep_words` most frequent words that
         appear in at least `noBelow` documents are kept).
         """
         self.fname = fname
-        if keep_words is None:
-            keep_words = DEFAULT_DICT_SIZE
         if dictionary is None:
             self.dictionary = Dictionary(self.get_texts())
-            self.dictionary.filter_extremes(no_below=no_below, no_above=0.1, keep_n=keep_words)
         else:
             self.dictionary = dictionary
 
