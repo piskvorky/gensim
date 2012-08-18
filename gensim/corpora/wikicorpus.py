@@ -21,8 +21,8 @@ module.
 import bz2
 import logging
 import re
-# LXML isn't faster, so let's go with the built-in solution.
-from xml.etree.cElementTree import iterparse
+from xml.etree.cElementTree import iterparse # LXML isn't faster, so let's go with the built-in solution
+import multiprocessing
 
 from gensim import utils
 
@@ -32,13 +32,8 @@ from gensim.corpora.textcorpus import TextCorpus
 
 logger = logging.getLogger('gensim.corpora.wikicorpus')
 
-
 # Ignore articles shorter than ARTICLE_MIN_CHARS characters (after preprocessing).
-ARTICLE_MIN_CHARS = 500
-
-# if 'pattern' package is installed, we can use a fancy shallow parsing to get
-# token lemmas. otherwise, use simple regexp tokenization
-LEMMATIZE = utils.HAS_PATTERN
+ARTICLE_MIN_WORDS = 100
 
 
 RE_P0 = re.compile('<!--.*?-->', re.DOTALL | re.UNICODE) # comments
@@ -105,6 +100,7 @@ def remove_markup(text):
     text = text.replace('[', '').replace(']', '') # promote all remaining markup to plain text
     return text
 
+
 def remove_template(s):
     """Remove template wikimedia markup.
 
@@ -125,7 +121,7 @@ def remove_template(s):
     for i, c in enumerate(iter(s)):
         if not in_template:
             if c == '{' and c == prev_c:
-                starts.append(i-1)
+                starts.append(i - 1)
                 in_template = True
                 n_open = 1
         if in_template:
@@ -140,10 +136,11 @@ def remove_template(s):
         prev_c = c
 
     # Remove all the templates
-    s = ''.join([s[end+1:start] for start,end in
-                 zip(starts + [None], [-1] + ends )])
+    s = ''.join([s[end + 1:start] for start, end in
+                 zip(starts + [None], [-1] + ends)])
 
     return s
+
 
 def remove_file(s):
     """Remove the 'File:' and 'Image:' markup, keeping the file caption.
@@ -158,6 +155,7 @@ def remove_file(s):
         caption = m[:-2].split('|')[-1]
         s = s.replace(m, caption, 1)
     return s
+
 
 def tokenize(content):
     """
@@ -183,7 +181,8 @@ def _get_namespace(tag):
 
 
 def _extract_pages(f):
-    """Extract pages from MediaWiki database dump.
+    """
+    Extract pages from MediaWiki database dump.
 
     Returns
     -------
@@ -219,6 +218,21 @@ def _extract_pages(f):
             elem.clear()
 
 
+def process_article(args):
+    """
+    Parse a wikipedia article, returning its content as a list of tokens
+    (utf8-encoded strings).
+    """
+    text, lemmatize = args
+    text = filter_wiki(text)
+    if lemmatize:
+        result = utils.lemmatize(text)
+    else:
+        result = tokenize(text)
+    return result
+
+
+
 class WikiCorpus(TextCorpus):
     """
     Treat a wikipedia articles dump (*articles.xml.bz2) as a (read-only) corpus.
@@ -230,22 +244,29 @@ class WikiCorpus(TextCorpus):
     >>> wiki.saveAsText('wiki_en_vocab200k') # another 8h, creates a file in MatrixMarket format plus file with id->word
 
     """
-    def __init__(self, fname, dictionary=None):
+    def __init__(self, fname, processes=None, lemmatize=utils.HAS_PATTERN, dictionary=None):
         """
-        Initialize the corpus. This scans the corpus once, to determine its
-        vocabulary (only the first `keep_words` most frequent words that
-        appear in at least `noBelow` documents are kept).
+        Initialize the corpus. Unless a dictionary is provided, this scans the
+        corpus once, to determine its vocabulary.
+
+        If `pattern` package is installed, use fancier shallow parsing to get
+        token lemmas. Otherwise, use simple regexp tokenization. You can override
+        this automatic logic by forcing the `lemmatize` parameter explicitly.
+
         """
         self.fname = fname
+        self.processes = processes
+        self.lemmatize = lemmatize
         if dictionary is None:
             self.dictionary = Dictionary(self.get_texts())
         else:
             self.dictionary = dictionary
 
 
-    def get_texts(self, return_raw=False):
+    def get_texts(self):
         """
-        Iterate over the dump, returning text version of each article.
+        Iterate over the dump, returning text version of each article as a list
+        of tokens.
 
         Only articles of sufficient length are returned (short articles & redirects
         etc are ignored).
@@ -258,42 +279,19 @@ class WikiCorpus(TextCorpus):
         """
         articles, articles_all = 0, 0
         intext, positions = False, 0
-        if LEMMATIZE:
-            lemmatizer = utils.lemmatizer
-            yielded = 0
-
-        for _, text in _extract_pages(bz2.BZ2File(self.fname)):
-            text = filter_wiki(text)
+        texts = ((text, self.lemmatize) for _, text in _extract_pages(bz2.BZ2File(self.fname)))
+        pool = multiprocessing.Pool(self.processes)
+        for docno, tokens in enumerate(pool.imap_unordered(process_article, texts)):
+            # logger.info("PROGRESS: at article #%i, %i tokens" % (docno, len(tokens)))
             articles_all += 1
-            if len(text) > ARTICLE_MIN_CHARS: # article redirects are pruned here
+            if len(tokens) > ARTICLE_MIN_WORDS: # article redirects are pruned here
                 articles += 1
-                if return_raw:
-                    result = text
-                    yield result
-                else:
-                    if LEMMATIZE:
-                        _ = lemmatizer.feed(text)
-                        while lemmatizer.has_results():
-                            _, result = lemmatizer.read() # not necessarily the same text as entered above!
-                            positions += len(result)
-                            yielded += 1
-                            yield result
-                    else:
-                        result = tokenize(text) # text into tokens here
-                        positions += len(result)
-                        yield result
-
-        if LEMMATIZE:
-            logger.info("all %i articles read; waiting for lemmatizer to finish the %i remaining jobs" %
-                        (articles, articles - yielded))
-            while yielded < articles:
-                _, result = lemmatizer.read()
-                positions += len(result)
-                yielded += 1
-                yield result
+                positions += len(tokens)
+                yield tokens
+        pool.close()
 
         logger.info("finished iterating over Wikipedia corpus of %i documents with %i positions"
-                     " (total %i articles before pruning)" %
-                     (articles, positions, articles_all))
+            " (total %i articles before pruning)" %
+            (articles, positions, articles_all))
         self.length = articles # cache corpus length
 #endclass WikiCorpus

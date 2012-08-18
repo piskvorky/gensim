@@ -18,7 +18,6 @@ This means that, unline plain Dictionary, several words may map to the same id
 
 from __future__ import with_statement
 
-import codecs
 import logging
 import itertools
 import UserDict

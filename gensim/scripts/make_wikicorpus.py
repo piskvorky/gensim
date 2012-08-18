@@ -38,6 +38,7 @@ import logging
 import os.path
 import sys
 
+import gensim
 from gensim.corpora import Dictionary, HashDictionary, MmCorpus, WikiCorpus
 from gensim.models import TfidfModel
 
@@ -65,18 +66,28 @@ if __name__ == '__main__':
         keep_words = int(sys.argv[3])
     else:
         keep_words = DEFAULT_DICT_SIZE
+    online = 'online' in program
+    lemmatize = 'lemma' in program
 
-    dictionary = HashDictionary(id_range=DEFAULT_DICT_SIZE) if 'online' in program else None
+    if online:
+        dictionary = HashDictionary(id_range=DEFAULT_DICT_SIZE, debug=True)
+        wiki = WikiCorpus(inp, lemmatize=lemmatize, dictionary=dictionary)
+    else:
+        # takes about 9h on a macbook pro, for 3.5m articles (june 2011)
+        wiki = WikiCorpus(inp, lemmatize=lemmatize)
+        # only keep the most frequent words (out of total ~8.2m unique tokens)
+        wiki.dictionary.filter_extremes(no_below=20, no_above=0.1, keep_n=DEFAULT_DICT_SIZE)
+        # save dictionary and bag-of-words (term-document frequency matrix)
+        # another ~9h
+        wiki.dictionary.save_as_text(outp + '_wordids.txt')
 
-    # takes about 9h on a macbook pro, for 3.5m articles (june 2011)
-    wiki = WikiCorpus(inp, keep_words=keep_words, dictionary=dictionary)
-    # only keep the most frequent words (out of total ~8.2m unique tokens)
-    wiki.dictionary.filter_extremes(no_below=20, no_above=0.1, keep_n=DEFAULT_DICT_SIZE)
-
-    # save dictionary and bag-of-words (term-document frequency matrix)
-    # another ~9h
-    wiki.dictionary.save_as_text(outp + '_wordids.txt')
     MmCorpus.serialize(outp + '_bow.mm', wiki, progress_cnt=10000)
+
+    if online:
+        # with HashDictionary, the token->id mapping is only fully instantiated after the full corpus pass
+        wiki.dictionary.save_as_text(outp + '_wordids.txt')
+        wiki.save(outp + '_corpus.pkl')
+
     del wiki
 
     # initialize corpus reader and word->id mapping
