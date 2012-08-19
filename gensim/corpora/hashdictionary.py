@@ -53,6 +53,7 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
         self.num_docs = 0 # number of documents processed
         self.num_pos = 0 # total number of corpus positions
         self.num_nnz = 0 # total number of non-zeroes in the BOW matrix
+        self.allow_update = True
 
         if documents is not None:
             self.add_documents(documents)
@@ -124,9 +125,10 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
         is done on the words in `document`; apply tokenization, stemming etc. before
         calling this method.
 
-        If `allow_update` is set, then also update dictionary in the process: update
-        overall corpus statistics and document frequencies. For each id appearing
-        in this document, increase its document frequency (`self.dfs`) by one.
+        If `allow_update` or `self.allow_update` is set, then also update dictionary
+        in the process: update overall corpus statistics and document frequencies.
+        For each id appearing in this document, increase its document frequency
+        (`self.dfs`) by one.
 
         """
         result = {}
@@ -137,11 +139,11 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
             tokenid = self.restricted_hash(word_norm)
             result[tokenid] = result.get(tokenid, 0) + frequency
 
-        if allow_update:
+        if allow_update or self.allow_update:
             self.num_docs += 1
             self.num_pos += len(document)
             self.num_nnz += len(result)
-            # increase document count for each unique token that appeared in the document
+            # increment document count for each unique tokenid that appeared in the document
             for tokenid in result.iterkeys():
                 self.dfs[tokenid] = self.dfs.get(tokenid, 0) + 1
 
