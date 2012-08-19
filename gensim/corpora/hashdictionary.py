@@ -186,18 +186,14 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
         """
         no_above_abs = int(no_above * self.num_docs) # convert fractional threshold to absolute threshold
 
-        # statistics of which ids do we keep?
-        good_ids = (hash_id for hash_id in self.keys() if no_below <= self.dfs.get(hash_id, 0) <= no_above_abs)
+        self.dfs_debug = dict((word, freq) for word, freq in self.dfs_debug.iteritems() if no_below <= freq <= no_above_abs)
+        self.token2id = dict((token, tokenid) for token, tokenid in self.token2id.iteritems() if token in self.dfs_debug)
+        self.id2token = dict((tokenid, set(token for token in tokens if token in self.dfs_debug)) for tokenid, tokens in self.id2token.iteritems())
+        self.dfs = dict((tokenid, freq) for tokenid, freq in self.dfs.iteritems() if self.id2token.get(tokenid, set()))
 
-        if keep_n is not None:
-            good_ids = sorted(good_ids, key=lambda item: self.dfs.get(item, 0), reverse=True)
-            good_ids = good_ids[:keep_n]
-        good_ids = set(good_ids)
-
-        self.id2token = dict((tokenid, freq) for tokenid, freq in self.id2token.iteritems() if tokenid in good_ids)
-        self.dfs = dict((tokenid, freq) for tokenid, freq in self.dfs.iteritems() if tokenid in good_ids)
-        logger.info("kept statistics for %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents" %
-                     (len(good_ids), no_below, no_above_abs, 100.0 * no_above))
+        # for word->document frequency
+        logger.info("kept statistics for which were in no less than %i and no more than %i (=%.1f%%) documents" %
+            (no_below, no_above_abs, 100.0 * no_above))
 
 
     def save_as_text(self, fname):
