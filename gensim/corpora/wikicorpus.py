@@ -32,8 +32,8 @@ from gensim.corpora.textcorpus import TextCorpus
 
 logger = logging.getLogger('gensim.corpora.wikicorpus')
 
-# Ignore articles shorter than ARTICLE_MIN_CHARS characters (after preprocessing).
-ARTICLE_MIN_WORDS = 100
+# ignore articles shorter than ARTICLE_MIN_WORDS characters (after full preprocessing)
+ARTICLE_MIN_WORDS = 50
 
 
 RE_P0 = re.compile('<!--.*?-->', re.DOTALL | re.UNICODE) # comments
@@ -255,6 +255,8 @@ class WikiCorpus(TextCorpus):
 
         """
         self.fname = fname
+        if processes is None:
+            processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
         self.lemmatize = lemmatize
         if dictionary is None:
@@ -281,13 +283,15 @@ class WikiCorpus(TextCorpus):
         intext, positions = False, 0
         texts = ((text, self.lemmatize) for _, text in _extract_pages(bz2.BZ2File(self.fname)))
         pool = multiprocessing.Pool(self.processes)
-        for docno, tokens in enumerate(pool.imap_unordered(process_article, texts)):
-            # logger.info("PROGRESS: at article #%i, %i tokens" % (docno, len(tokens)))
-            articles_all += 1
-            if len(tokens) > ARTICLE_MIN_WORDS: # article redirects are pruned here
-                articles += 1
-                positions += len(tokens)
-                yield tokens
+        # process the corpus in smaller chunks of docs, because multiprocessing.Pool
+        # is dumb and would load the entire input into RAM at once...
+        for group in utils.chunkize(texts, chunksize=10 * pool._processes, maxsize=1):
+            for tokens in pool.imap_unordered(process_article, group):
+                articles_all += 1
+                if len(tokens) > ARTICLE_MIN_WORDS: # article redirects are pruned here
+                    articles += 1
+                    positions += len(tokens)
+                    yield tokens
         pool.close()
 
         logger.info("finished iterating over Wikipedia corpus of %i documents with %i positions"

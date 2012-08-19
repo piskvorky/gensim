@@ -38,7 +38,6 @@ import logging
 import os.path
 import sys
 
-import gensim
 from gensim.corpora import Dictionary, HashDictionary, MmCorpus, WikiCorpus
 from gensim.models import TfidfModel
 
@@ -68,35 +67,34 @@ if __name__ == '__main__':
         keep_words = DEFAULT_DICT_SIZE
     online = 'online' in program
     lemmatize = 'lemma' in program
+    debug = 'nodebug' not in program
 
     if online:
-        dictionary = HashDictionary(id_range=DEFAULT_DICT_SIZE, debug=True)
+        dictionary = HashDictionary(id_range=keep_words, debug=debug)
+        dictionary.allow_update = True # start collecting document frequencies
         wiki = WikiCorpus(inp, lemmatize=lemmatize, dictionary=dictionary)
+        MmCorpus.serialize(outp + '_bow.mm', wiki, progress_cnt=10000) # ~4h on my macbook pro without lemmatization, 3.1m articles (august 2012)
+        # with HashDictionary, the token->id mapping is only fully instantiated now, after `serialize`
+        dictionary.save_as_text(outp + '_wordids.txt')
+        wiki.save(outp + '_corpus.pkl')
+        dictionary.allow_update = False
     else:
-        # takes about 9h on a macbook pro, for 3.5m articles (june 2011)
-        wiki = WikiCorpus(inp, lemmatize=lemmatize)
+        wiki = WikiCorpus(inp, lemmatize=lemmatize) # takes about 9h on a macbook pro, for 3.5m articles (june 2011)
         # only keep the most frequent words (out of total ~8.2m unique tokens)
         wiki.dictionary.filter_extremes(no_below=20, no_above=0.1, keep_n=DEFAULT_DICT_SIZE)
         # save dictionary and bag-of-words (term-document frequency matrix)
-        # another ~9h
+        MmCorpus.serialize(outp + '_bow.mm', wiki, progress_cnt=10000) # another ~9h
         wiki.dictionary.save_as_text(outp + '_wordids.txt')
-
-    MmCorpus.serialize(outp + '_bow.mm', wiki, progress_cnt=10000)
-
-    if online:
-        # with HashDictionary, the token->id mapping is only fully instantiated after the full corpus pass
-        wiki.dictionary.save_as_text(outp + '_wordids.txt')
-        wiki.save(outp + '_corpus.pkl')
-
+        # load back the id->word mapping directly from file
+        # this seems to save more memory, compared to keeping the wiki.dictionary object from above
+        dictionary = Dictionary.load_from_text(outp + '_wordids.txt')
     del wiki
 
     # initialize corpus reader and word->id mapping
-    id2token = Dictionary.load_from_text(outp + '_wordids.txt')
     mm = MmCorpus(outp + '_bow.mm')
 
-    # build tfidf,
-    # ~30min
-    tfidf = TfidfModel(mm, id2word=id2token, normalize=True)
+    # build tfidf, ~30min
+    tfidf = TfidfModel(mm, id2word=dictionary, normalize=True)
 
     # save tfidf vectors in matrix market format
     # ~2h; result file is 15GB! bzip2'ed down to 4.5GB
