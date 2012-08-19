@@ -22,14 +22,12 @@ import itertools
 import tempfile
 from functools import wraps # for `synchronous` function lock
 from htmlentitydefs import name2codepoint as n2cp # for `decode_htmlentities`
-import threading, time
-from Queue import Queue, Empty
+import multiprocessing
 import shutil
-
+from Queue import Empty
 
 try:
     from pattern.en import parse
-    from multiprocessing import Process, Queue as PQueue, cpu_count
     logger.info("'pattern' package found; utils.Lemmatizater is available for English")
     HAS_PATTERN = True
 except ImportError:
@@ -383,29 +381,33 @@ def decode_htmlentities(text):
         return text
 
 
-def chunkize_serial(corpus, chunksize):
+def chunkize_serial(iterable, chunksize, as_numpy=False):
     """
-    Split a stream of values into smaller chunks.
-    Each chunk is of length `chunksize`, except the last one which may be smaller.
-    A once-only input stream (`corpus` from a generator) is ok.
+    Return elements from the iterable in `chunksize`-ed lists. The last returned
+    element may be smaller (if length of collection is not divisible by `chunksize`).
 
-    >>> for chunk in chunkize_serial(xrange(10), 4): print list(chunk)
-    [0, 1, 2, 3]
-    [4, 5, 6, 7]
-    [8, 9]
-
+    >>> print list(grouper(xrange(10), 3))
+    [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
     """
-    if chunksize <= 0:
-        raise ValueError("chunk size must be greater than zero")
-    i = (val for val in corpus) # create generator
+    import numpy
+    it = iter(iterable)
     while True:
-        chunk = [list(itertools.islice(i, int(chunksize)))] # consume `chunksize` items from the generator
-        if not chunk[0]: # generator empty?
+        if as_numpy:
+            # convert each document to a 2d numpy array (~6x faster when transmitting
+            # chunk data over the wire, in Pyro)
+            wrapped_chunk = [[numpy.array(doc) for doc in itertools.islice(it, int(chunksize))]]
+        else:
+            wrapped_chunk = [list(itertools.islice(it, int(chunksize)))]
+        if not wrapped_chunk[0]:
             break
-        yield chunk.pop()
+        # memory opt: wrap the chunk and then pop(), to avoid leaving behind a dangling reference
+        yield wrapped_chunk.pop()
+
+grouper = chunkize_serial
 
 
-def chunkize(corpus, chunksize, maxsize=0):
+
+def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
     """
     Split a stream of values into smaller chunks.
     Each chunk is of length `chunksize`, except the last one which may be smaller.
@@ -414,11 +416,11 @@ def chunkize(corpus, chunksize, maxsize=0):
 
     If `maxsize > 1`, don't wait idly in between successive chunk `yields`, but
     rather keep filling a short queue (of size at most `maxsize`) with forthcoming
-    chunks in advance. This is realized by starting a separate thread, and is
+    chunks in advance. This is realized by starting a separate process, and is
     meant to reduce I/O delays, which can be significant when `corpus` comes
     from a slow medium (like harddisk).
 
-    If `maxsize==0`, don't fool around with threads and simply yield the chunksize
+    If `maxsize==0`, don't fool around with parallelism and simply yield the chunksize
     via `chunkize_serial()` (no I/O optimizations).
 
     >>> for chunk in chunkize(xrange(10), 4): print chunk
@@ -427,43 +429,54 @@ def chunkize(corpus, chunksize, maxsize=0):
     [8, 9]
 
     """
-    class InputQueue(threading.Thread):
-        """
-        Help class for threaded `chunkize()`.
-        """
-        def __init__(self, q, corpus, chunksize, maxsize):
+    class InputQueue(multiprocessing.Process):
+        def __init__(self, q, corpus, chunksize, maxsize, as_numpy):
             super(InputQueue, self).__init__()
             self.q = q
             self.maxsize = maxsize
             self.corpus = corpus
             self.chunksize = chunksize
+            self.as_numpy = as_numpy
 
         def run(self):
-            import numpy # don't clutter the global namespace with a dependency on numpy
-            i = (val for val in self.corpus) # create generator
+            if self.as_numpy:
+                import numpy # don't clutter the global namespace with a dependency on numpy
+            it = iter(self.corpus)
             while True:
-                # HACK XXX convert documents to numpy arrays, to save memory.
-                # This also gives a scipy warning at runtime:
-                # "UserWarning: indices array has non-integer dtype (float64)"
-                chunk = [numpy.asarray(doc) for doc in itertools.islice(i, self.chunksize)] # consume `chunksize` items from the generator
-                if not chunk: # generator empty?
+                chunk = itertools.islice(it, self.chunksize)
+                if self.as_numpy:
+                    # HACK XXX convert documents to numpy arrays, to save memory.
+                    # This also gives a scipy warning at runtime:
+                    # "UserWarning: indices array has non-integer dtype (float64)"
+                    wrapped_chunk = [[numpy.asarray(doc) for doc in chunk]]
+                else:
+                    wrapped_chunk = [list(chunk)]
+
+                if not wrapped_chunk[0]:
+                    self.q.put(None, block=True)
                     break
-                logger.info("prepared another chunk of %i documents (qsize=%i)" %
-                            (len(chunk), self.q.qsize()))
-                self.q.put(chunk, block=True)
+
+                try:
+                    qsize = self.q.qsize()
+                except NotImplementedError:
+                    qsize = '?'
+                logger.debug("prepared another chunk of %i documents (qsize=%s)" %
+                            (len(wrapped_chunk[0]), qsize))
+                self.q.put(wrapped_chunk.pop(), block=True)
     #endclass InputQueue
 
     assert chunksize > 0
 
     if maxsize > 0:
-        q = Queue(maxsize=maxsize)
-        thread = InputQueue(q, corpus, chunksize, maxsize=maxsize)
-        thread.start()
-        while thread.isAlive() or not q.empty():
-            try:
-                yield q.get(block=True, timeout=1)
-            except Empty:
-                pass
+        q = multiprocessing.Queue(maxsize=maxsize)
+        worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy)
+        worker.daemon = True
+        worker.start()
+        while True:
+            chunk = [q.get(block=True)]
+            if chunk[0] is None:
+                break
+            yield chunk.pop()
     else:
         for chunk in chunkize_serial(corpus, chunksize):
             yield chunk
@@ -511,29 +524,6 @@ def toptexts(query, texts, index, n=10):
 def randfname(prefix='gensim'):
     randpart = hex(random.randint(0, 0xffffff))[2:]
     return os.path.join(tempfile.gettempdir(), prefix + randpart)
-
-
-def grouper(iterable, chunksize, as_numpy=False):
-    """
-    Return elements from the iterable in `chunksize`-ed lists. The last returned
-    element may be smaller (if length of collection is not divisible by `chunksize`).
-
-    >>> print list(grouper(xrange(10), 3))
-    [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
-    """
-    import numpy
-    it = iter(iterable)
-    while True:
-        if as_numpy:
-            # convert each document to a 2d numpy array (~6x faster when transmitting
-            # chunk data over the wire, in Pyro)
-            wrapped_chunk = [[numpy.array(doc) for doc in itertools.islice(it, int(chunksize))]]
-        else:
-            wrapped_chunk = [list(itertools.islice(it, int(chunksize)))]
-        if not wrapped_chunk[0]:
-            break
-        # memory opt: wrap the chunk and then pop(), to avoid leaving behind a dangling reference
-        yield wrapped_chunk.pop()
 
 
 def upload_chunked(server, docs, chunksize=1000, preprocess=None):
