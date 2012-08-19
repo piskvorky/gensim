@@ -280,22 +280,23 @@ class WikiCorpus(TextCorpus):
         >>>     print vec
         """
         articles, articles_all = 0, 0
-        intext, positions = False, 0
+        positions, positions_all = 0, 0
         texts = ((text, self.lemmatize) for _, text in _extract_pages(bz2.BZ2File(self.fname)))
         pool = multiprocessing.Pool(self.processes)
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
         # is dumb and would load the entire input into RAM at once...
         for group in utils.chunkize(texts, chunksize=10 * pool._processes, maxsize=1):
-            for tokens in pool.imap_unordered(process_article, group):
+            for tokens in pool.imap(process_article, group): # chunksize=10):
                 articles_all += 1
+                positions_all += len(tokens)
                 if len(tokens) > ARTICLE_MIN_WORDS: # article redirects are pruned here
                     articles += 1
                     positions += len(tokens)
                     yield tokens
-        pool.close()
+        pool.terminate()
 
         logger.info("finished iterating over Wikipedia corpus of %i documents with %i positions"
-            " (total %i articles before pruning)" %
-            (articles, positions, articles_all))
+            " (total %i articles, %i positions before pruning articles shorter than %i words)" %
+            (articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS))
         self.length = articles # cache corpus length
 #endclass WikiCorpus

@@ -24,11 +24,10 @@ from functools import wraps # for `synchronous` function lock
 from htmlentitydefs import name2codepoint as n2cp # for `decode_htmlentities`
 import multiprocessing
 import shutil
-from Queue import Empty
 
 try:
     from pattern.en import parse
-    logger.info("'pattern' package found; utils.Lemmatizater is available for English")
+    logger.info("'pattern' package found; utils.lemmatize() is available for English")
     HAS_PATTERN = True
 except ImportError:
     HAS_PATTERN = False

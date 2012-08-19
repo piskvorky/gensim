@@ -75,13 +75,14 @@ if __name__ == '__main__':
         wiki = WikiCorpus(inp, lemmatize=lemmatize, dictionary=dictionary)
         MmCorpus.serialize(outp + '_bow.mm', wiki, progress_cnt=10000) # ~4h on my macbook pro without lemmatization, 3.1m articles (august 2012)
         # with HashDictionary, the token->id mapping is only fully instantiated now, after `serialize`
+        dictionary.filter_extremes(no_below=20, no_above=0.5, keep_n=DEFAULT_DICT_SIZE)
         dictionary.save_as_text(outp + '_wordids.txt')
         wiki.save(outp + '_corpus.pkl')
         dictionary.allow_update = False
     else:
         wiki = WikiCorpus(inp, lemmatize=lemmatize) # takes about 9h on a macbook pro, for 3.5m articles (june 2011)
         # only keep the most frequent words (out of total ~8.2m unique tokens)
-        wiki.dictionary.filter_extremes(no_below=20, no_above=0.1, keep_n=DEFAULT_DICT_SIZE)
+        wiki.dictionary.filter_extremes(no_below=20, no_above=0.5, keep_n=DEFAULT_DICT_SIZE)
         # save dictionary and bag-of-words (term-document frequency matrix)
         MmCorpus.serialize(outp + '_bow.mm', wiki, progress_cnt=10000) # another ~9h
         wiki.dictionary.save_as_text(outp + '_wordids.txt')
