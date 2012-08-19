@@ -45,7 +45,7 @@ from gensim.models import TfidfModel
 # Wiki is first scanned for all distinct word types (~7M). The types that
 # appear in more than 10% of articles are removed and from the rest, the
 # DEFAULT_DICT_SIZE most frequent types are kept.
-DEFAULT_DICT_SIZE = 50000
+DEFAULT_DICT_SIZE = 100000
 
 
 if __name__ == '__main__':
@@ -93,11 +93,11 @@ if __name__ == '__main__':
     # initialize corpus reader and word->id mapping
     mm = MmCorpus(outp + '_bow.mm')
 
-    # build tfidf, ~30min
+    # build tfidf, ~50min
     tfidf = TfidfModel(mm, id2word=dictionary, normalize=True)
 
     # save tfidf vectors in matrix market format
-    # ~2h; result file is 15GB! bzip2'ed down to 4.5GB
+    # ~4h; result file is 15GB! bzip2'ed down to 4.5GB
     MmCorpus.serialize(outp + '_tfidf.mm', tfidf[mm], progress_cnt=10000)
 
     logger.info("finished running %s" % program)
