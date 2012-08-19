@@ -44,12 +44,21 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
 
     """
     def __init__(self, documents=None, id_range=32000, myhash=zlib.adler32, debug=True):
+        """
+        By default, keep track of debug statistics and mappings. If you find yourself
+        running out of memory (or are sure you don't need the debug info), set
+        `debug=False`.
+        """
         self.myhash = myhash # hash fnc: string->integer
         self.id_range = id_range # hash range: id = myhash(key) % id_range
         self.debug = debug
-        self.token2id = {} # only formed if `debug` is True
-        self.id2token = {} # reverse mapping int->set(words); only formed if `debug` is True
-        self.dfs = {} # document frequencies: token_id -> how many documents this token appeared in
+
+        # the following (potentially massive!) dictionaries are only formed if `debug` is True
+        self.token2id = {}
+        self.id2token = {} # reverse mapping int->set(words)
+        self.dfs = {} # token_id -> how many documents this token_id appeared in
+        self.dfs_debug = {} # token_string->how many documents this word appeared in
+
         self.num_docs = 0 # number of documents processed
         self.num_pos = 0 # total number of corpus positions
         self.num_nnz = 0 # total number of non-zeroes in the BOW matrix
@@ -138,14 +147,19 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
             frequency = len(list(group)) # how many times does this word appear in the input document
             tokenid = self.restricted_hash(word_norm)
             result[tokenid] = result.get(tokenid, 0) + frequency
+            if self.debug:
+                # increment document count for each unique token that appeared in the document
+                self.dfs_debug[word_norm] = self.dfs_debug.get(word_norm, 0) + 1
 
         if allow_update or self.allow_update:
             self.num_docs += 1
             self.num_pos += len(document)
             self.num_nnz += len(result)
-            # increment document count for each unique tokenid that appeared in the document
-            for tokenid in result.iterkeys():
-                self.dfs[tokenid] = self.dfs.get(tokenid, 0) + 1
+            if self.debug:
+                # increment document count for each unique tokenid that appeared in the document
+                # done here, because several words may map to the same tokenid
+                for tokenid in result.iterkeys():
+                    self.dfs[tokenid] = self.dfs.get(tokenid, 0) + 1
 
         # return tokenids, in ascending id order
         result = sorted(result.iteritems())
@@ -200,5 +214,7 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
             for tokenid in self.keys():
                 words = sorted(self[tokenid])
                 if words:
-                    fout.write("%i\t%i\t%s\n" % (tokenid, self.dfs.get(tokenid, 0), '\t'.join(words)))
+                    words_df = [(word, self.dfs_debug.get(word, 0)) for word in words]
+                    words_df = ["%s(%i)" % item for item in sorted(words_df, key=lambda item: -item[1])]
+                    fout.write("%i\t%i\t%s\n" % (tokenid, self.dfs.get(tokenid, 0), '\t'.join(words_df)))
 #endclass HashDictionary
