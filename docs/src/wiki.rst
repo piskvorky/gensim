@@ -14,7 +14,7 @@ Preparing the corpus
 ----------------------
 
 1. First, download the dump of all Wikipedia articles from http://download.wikimedia.org/enwiki/
-   (you want a file like `enwiki-latest-pages-articles.xml.bz2`). This file is about 6GB in size
+   (you want a file like `enwiki-latest-pages-articles.xml.bz2`). This file is about 8GB in size
    and contains (a compressed version of) all articles from the English Wikipedia.
 
 2. Convert the articles to plain text (process Wiki markup) and store the result as
@@ -22,13 +22,16 @@ Preparing the corpus
    even need to uncompress the whole archive to disk. There is a script included in
    `gensim` that does just that, run::
 
-   $ python -m gensim.scripts.make_wikicorpus
+   $ python -m gensim.scripts.make_wiki
 
 .. note::
-  This pre-processing step makes two passes over the 6GB wiki dump (one to extract
+  This pre-processing step makes two passes over the 8.2GB compressed wiki dump (one to extract
   the dictionary, one to create and store the sparse vectors) and takes about
-  15 hours on my laptop, so you may want to go have a coffee or two.
-  Also, you will need about 15GB of free disk space to store the sparse output vectors.
+  12 hours on my laptop, so you may want to go have a coffee or two.
+
+  Also, you will need about 35GB of free disk space to store the sparse output vectors.
+  I recommend compressing these files immediately, e.g. with bzip2 (~10GB). Gensim
+  can work with compressed files directly, so this lets you save disk space.
 
 Latent Sematic Analysis
 --------------------------
@@ -42,14 +45,14 @@ First let's load the corpus iterator and dictionary, created in the second step 
     >>> id2word = gensim.corpora.Dictionary.load_from_text('wiki_en_wordids.txt')
     >>> # load corpus iterator
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
-    >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output
+    >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output (recommended)
 
     >>> print mm
-    MmCorpus(3199665 documents, 100000 features, 495547400 non-zero entries)
+    MmCorpus(3931787 documents, 100000 features, 852018838 non-zero entries)
 
-We see that our corpus contains 3.2M documents, 100K features (distinct
-tokens) and 0.5G non-zero entries in the sparse TF-IDF matrix. The corpus contains
-about 1.92 billion tokens in total.
+We see that our corpus contains 3.9M documents, 100K features (distinct
+tokens) and 0.85G non-zero entries in the sparse TF-IDF matrix. The corpus contains
+about 2.24 billion tokens in total.
 
 Now we're ready to compute LSA of the English Wikipedia::
 
