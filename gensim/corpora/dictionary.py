@@ -242,5 +242,31 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
                 result.token2id[word] = wordid
                 result.dfs[wordid] = int(docfreq)
         return result
+
+
+    @staticmethod
+    def from_corpus(corpus):
+        import numpy as np  # temporary
+        #TODO: test function
+        """
+        Scan corpus for all word ids that appear in it, then construct and return
+        Dictionary with a mapping  which maps each ``wordId -> str(wordId)``.
+
+        The resulting mapping only covers words actually used in the corpus,
+        up to the highest wordId found.
+        """
+        num_terms = 1 + utils.get_max_id(corpus)
+        result = Dictionary()
+        docfreqs = np.zeros((num_terms), dtype=np.int64)
+        for document in corpus:
+            result.num_docs += 1
+            result.num_nnz += len(document)
+            for wordid, word in document:
+                docfreqs[wordid] += word
+                result.num_pos += word
+        for wordid, docfreq in enumerate(docfreqs):
+            result.token2id[str(wordid)] = wordid
+            result.dfs[wordid] = int(docfreq)
+        return result
 #endclass Dictionary
 
