@@ -257,7 +257,9 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         Usefull only if you do not have text corpus.
         """
         result = Dictionary()
-        for document in corpus:
+        for docno, document in enumerate(corpus):
+            if docno % 10000 == 0:
+                logger.info("adding document #%i to %s" % (docno, result))
             result.num_docs += 1
             result.num_nnz += len(document)
             for wordid, word in document:
@@ -269,6 +271,8 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
                     result.token2id[str_wordid] = wordid
                 else:
                     result.dfs[wordid] += 1
+        logger.info("built %s from %i documents (total %i corpus positions)" %
+                     (result, result.num_docs, result.num_pos))
         return result
 #endclass Dictionary
 
