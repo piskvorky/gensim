@@ -247,7 +247,6 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
     @staticmethod
     def from_corpus(corpus):
         import numpy as np  # temporary
-        #TODO: test function
         """
         Scan corpus for all word ids that appear in it, then construct and return
         Dictionary with a mapping  which maps each ``wordId -> str(wordId)``.
@@ -262,7 +261,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
             result.num_docs += 1
             result.num_nnz += len(document)
             for wordid, word in document:
-                docfreqs[wordid] += word
+                docfreqs[wordid] += 1
                 result.num_pos += word
         for wordid, docfreq in enumerate(docfreqs):
             result.token2id[str(wordid)] = wordid

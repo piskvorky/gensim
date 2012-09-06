@@ -136,11 +136,13 @@ class TestDictionary(unittest.TestCase):
                 for text in texts]
         dictionary = Dictionary(texts)
         corpus = [dictionary.doc2bow(text) for text in texts]
-        print corpus
-        #TODO: Fix test this can't be the same, because there are no information
-        #about words in corpus
         dictionary_from_corpus = Dictionary.from_corpus(corpus)
-        self.assertEqual(dictionary.token2id, dictionary_from_corpus.token2id)
+
+        #we have to compare values, because in creating dictionary from corpus
+        #informations about words are lost
+        dict_token2id_vals = sorted(dictionary.token2id.values())
+        dict_from_corpus_vals = sorted(dictionary_from_corpus.token2id.values())
+        self.assertEqual(dict_token2id_vals, dict_from_corpus_vals)
         self.assertEqual(dictionary.dfs, dictionary_from_corpus.dfs)
         self.assertEqual(dictionary.num_docs, dictionary_from_corpus.num_docs)
         self.assertEqual(dictionary.num_pos, dictionary_from_corpus.num_pos)
