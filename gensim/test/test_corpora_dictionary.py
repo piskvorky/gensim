@@ -103,7 +103,7 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(d.dfs, expected)
 
     def test_saveAsText_and_loadFromText(self):
-        """ `Dictionary` can be saved as textfile and loaded again from textfile. """
+        """`Dictionary` can be saved as textfile and loaded again from textfile. """
         tmpf = get_tmpfile('dict_test.txt')
         d = Dictionary(self.texts)
         d.save_as_text(tmpf)
@@ -115,6 +115,7 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(d_loaded.token2id, d.token2id)
 
     def test_from_corpus(self):
+        """build `Dictionary` from an existing corpus"""
 
         documents = ["Human machine interface for lab abc computer applications",
                 "A survey of user opinion of computer system response time",

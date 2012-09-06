@@ -247,30 +247,29 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
     @staticmethod
     def from_corpus(corpus):
         """
-        Scan document term word count matrix for all word ids that appear
-        in it, then construct and return Dictionary with a mapping  which
-        maps each ``wordId -> str(wordId)``.
+        Create Dictionary from an existing corpus. This can be useful if you only
+        have a term-document BOW matrix (represented by `corpus`), but not the
+        original text corpus.
 
-        The resulting mapping only covers words actually used in the corpus,
-        up to the highest wordId found.
-
-        Usefull only if you do not have text corpus.
+        This will scan the term-document count matrix for all word ids that
+        appear in it, then construct and return Dictionary which maps each
+        `word_id -> str(word_id)`.
         """
         result = Dictionary()
+        max_id = -1
         for docno, document in enumerate(corpus):
             if docno % 10000 == 0:
                 logger.info("adding document #%i to %s" % (docno, result))
             result.num_docs += 1
             result.num_nnz += len(document)
-            for wordid, word in document:
-                result.num_pos += word
-                str_wordid = str(wordid)
-                tokenid = result.token2id.get(str_wordid, None)
-                if tokenid is None:
-                    result.dfs[wordid] = 1
-                    result.token2id[str_wordid] = wordid
-                else:
-                    result.dfs[wordid] += 1
+            for wordid, word_freq in document:
+                max_id = max(wordid, max_id)
+                result.num_pos += word_freq
+                result.dfs[wordid] = result.dfs.get(wordid, 0) + 1
+        # now make sure length(result) == get_max_id(corpus) + 1
+        for i in xrange(max_id + 1):
+            result.token2id[str(i)] = i
+
         logger.info("built %s from %i documents (total %i corpus positions)" %
                      (result, result.num_docs, result.num_pos))
         return result
