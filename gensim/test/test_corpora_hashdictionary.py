@@ -155,8 +155,8 @@ class TestHashDictionary(unittest.TestCase):
         self.assertEqual(d.dfs, expected)
 
         d = HashDictionary(self.texts, myhash=zlib.adler32)
-        d.filter_extremes(no_below=3, no_above=1.0, keep_n=3)
-        expected = {5798: 3, 12736: 3, 18451: 3}
+        d.filter_extremes(no_below=3, no_above=1.0, keep_n=4)
+        expected = {5798: 3, 12736: 3, 18451: 3, 23844: 3}
         self.assertEqual(d.dfs, expected)
 
     def test_saveAsText(self):
@@ -170,5 +170,5 @@ class TestHashDictionary(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.WARNING)
     unittest.main()
