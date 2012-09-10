@@ -155,10 +155,11 @@ class Similarity(interfaces.SimilarityABC):
     def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=1024, shardsize=32768):
         """
         Construct the index from `corpus`. The index can be later extended by calling
-        the `add_documents` method. Documents are split into shards of `shardsize`
-        documents each, converted to a matrix (for fast BLAS calls) and stored to disk
-        under `output_prefix.shard_number` (=you need write access to that location).
-        If you don't specify an output prefix, a random filename in temp will be used.
+        the `add_documents` method. **Note**: documents are split (internally, transparently)
+        into shards of `shardsize` documents each, converted to a matrix, for faster BLAS calls.
+        Each shard is stored to disk under `output_prefix.shard_number` (=you need write
+        access to that location). If you don't specify an output prefix, a random
+        filename in temp will be used.
 
         `shardsize` should be chosen so that a `shardsize x chunksize` matrix of floats
         fits comfortably into main memory.
@@ -174,10 +175,9 @@ class Similarity(interfaces.SimilarityABC):
         [0.0, 0.0, 0.2, 0.13, 0.8, 0.0, 0.1]
 
         If `num_best` is set, queries return only the `num_best` most similar documents,
-        always leaving out documents for which the similarity is 0
-        (i.e. vectors with all dimensions zero and vectors with non-zero dimensions, but none in common).
-        If the input vector itself has only dimensions with value zero (the sparse representation is empty),
-        the returned list will always be empty.
+        always leaving out documents for which the similarity is 0.
+        If the input vector itself only has features with zero values (=the sparse
+        representation is empty), the returned list will always be empty.
 
         >>> index.num_best = 3
         >>> index[query] # return at most "num_best" of `(index_of_document, similarity)` tuples
