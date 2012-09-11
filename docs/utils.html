@@ -136,53 +136,6 @@ internal id of a corpus = the vocabulary dimensionality.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="gensim.utils.Lemmatizer">
-<em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">Lemmatizer</tt><big>(</big><em>num_workers=8</em><big>)</big><a class="headerlink" href="#gensim.utils.Lemmatizer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wraps the lemmatize() fnc so that input can be processed in parallel, to
-speed things up.</p>
-<p>Main methods are <cite>feed(content)</cite>, which puts the content in queue for
-lemmatization, and <cite>read()</cite>, which returns lemmatized content when it&#8217;s ready.</p>
-<p>Note that the order of content entered and read back isn&#8217;t necessarily the same!
-Use the sequence id returned from <cite>feed</cite>/<cite>read</cite> to match input to output.</p>
-<p>This class is NOT thread-safe.</p>
-<p>Example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">utils</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lm</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">Lemmatizer</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">docs</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;quick brown fox&#39;</span><span class="p">,</span> <span class="s">&#39;slow yellow tortoise&#39;</span><span class="p">,</span> <span class="s">&#39;document nr. three&#39;</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">docs</span><span class="p">:</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="k">print</span> <span class="n">lm</span><span class="o">.</span><span class="n">feed</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span> <span class="c"># feed the documents into the parser, to be processed in parallel</span>
-<span class="go">-2939683893812816931</span>
-<span class="go">5130064701692321566</span>
-<span class="go">-1045879559712133929</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lm</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-<span class="go">(5130064701692321566, [&#39;slow/JJ&#39;, &#39;yellow/JJ&#39;, &#39;tortoise/NN&#39;])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lm</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-<span class="go">(-2939683893812816931, [&#39;quick/JJ&#39;, &#39;brown/JJ&#39;, &#39;fox/NN&#39;])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">lm</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-<span class="go">(-1045879559712133929, [&#39;document/NN&#39;, &#39;nr/NN&#39;])</span>
-</pre></div>
-</div>
-<dl class="method">
-<dt id="gensim.utils.Lemmatizer.feed">
-<tt class="descname">feed</tt><big>(</big><em>content</em><big>)</big><a class="headerlink" href="#gensim.utils.Lemmatizer.feed" title="Permalink to this definition">¶</a></dt>
-<dd><p>Place a document (text) into the &#8220;to be lemmatized&#8221; queue</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="gensim.utils.Lemmatizer.has_results">
-<tt class="descname">has_results</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.utils.Lemmatizer.has_results" title="Permalink to this definition">¶</a></dt>
-<dd><p>The next call to read() won&#8217;t block (not thread-safe!).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="gensim.utils.Lemmatizer.read">
-<tt class="descname">read</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.utils.Lemmatizer.read" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return one lemmatized document; blocks if no document ready yet.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
 <dt id="gensim.utils.RepeatCorpus">
 <em class="property">class </em><tt class="descclassname">gensim.utils.</tt><tt class="descname">RepeatCorpus</tt><big>(</big><em>corpus</em>, <em>reps</em><big>)</big><a class="headerlink" href="#gensim.utils.RepeatCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used in the tutorial on distributed computing and likely not useful anywhere else.</p>
@@ -244,17 +197,17 @@ attributes, such as lambda functions etc.</p>
 
 <dl class="function">
 <dt id="gensim.utils.chunkize">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">chunkize</tt><big>(</big><em>corpus</em>, <em>chunksize</em>, <em>maxsize=0</em><big>)</big><a class="headerlink" href="#gensim.utils.chunkize" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">chunkize</tt><big>(</big><em>corpus</em>, <em>chunksize</em>, <em>maxsize=0</em>, <em>as_numpy=False</em><big>)</big><a class="headerlink" href="#gensim.utils.chunkize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Split a stream of values into smaller chunks.
 Each chunk is of length <cite>chunksize</cite>, except the last one which may be smaller.
 A once-only input stream (<cite>corpus</cite> from a generator) is ok, chunking is done
 efficiently via itertools.</p>
 <p>If <cite>maxsize &gt; 1</cite>, don&#8217;t wait idly in between successive chunk <cite>yields</cite>, but
 rather keep filling a short queue (of size at most <cite>maxsize</cite>) with forthcoming
-chunks in advance. This is realized by starting a separate thread, and is
+chunks in advance. This is realized by starting a separate process, and is
 meant to reduce I/O delays, which can be significant when <cite>corpus</cite> comes
 from a slow medium (like harddisk).</p>
-<p>If <cite>maxsize==0</cite>, don&#8217;t fool around with threads and simply yield the chunksize
+<p>If <cite>maxsize==0</cite>, don&#8217;t fool around with parallelism and simply yield the chunksize
 via <cite>chunkize_serial()</cite> (no I/O optimizations).</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunkize</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="mi">4</span><span class="p">):</span> <span class="k">print</span> <span class="n">chunk</span>
 <span class="go">[0, 1, 2, 3]</span>
@@ -266,14 +219,11 @@ via <cite>chunkize_serial()</cite> (no I/O optimizations).</p>
 
 <dl class="function">
 <dt id="gensim.utils.chunkize_serial">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">chunkize_serial</tt><big>(</big><em>corpus</em>, <em>chunksize</em><big>)</big><a class="headerlink" href="#gensim.utils.chunkize_serial" title="Permalink to this definition">¶</a></dt>
-<dd><p>Split a stream of values into smaller chunks.
-Each chunk is of length <cite>chunksize</cite>, except the last one which may be smaller.
-A once-only input stream (<cite>corpus</cite> from a generator) is ok.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunkize_serial</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="mi">4</span><span class="p">):</span> <span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
-<span class="go">[0, 1, 2, 3]</span>
-<span class="go">[4, 5, 6, 7]</span>
-<span class="go">[8, 9]</span>
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">chunkize_serial</tt><big>(</big><em>iterable</em>, <em>chunksize</em>, <em>as_numpy=False</em><big>)</big><a class="headerlink" href="#gensim.utils.chunkize_serial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return elements from the iterable in <cite>chunksize</cite>-ed lists. The last returned
+element may be smaller (if length of collection is not divisible by <cite>chunksize</cite>).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="n">grouper</span><span class="p">(</span><span class="nb">xrange</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -502,7 +452,7 @@ will be sent in smaller chunks, of <cite>chunksize</cite> documents each.</p>
 
     <div class="footer">
         &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jul 23, 2012.
+      Last updated on Sep 10, 2012.
     </div>
   </body>
 </html>

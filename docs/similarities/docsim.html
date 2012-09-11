@@ -239,10 +239,11 @@ MatrixSimilarity and scipy.sparse for SparseMatrixSimilarity.</p>
 fits into core memory (see the <cite>(Sparse)MatrixSimilarity</cite> classes in this module).
 The shards themselves are simply stored as files to disk and mmap&#8217;ed back as needed.</p>
 <p>Construct the index from <cite>corpus</cite>. The index can be later extended by calling
-the <cite>add_documents</cite> method. Documents are split into shards of <cite>shardsize</cite>
-documents each, converted to a matrix (for fast BLAS calls) and stored to disk
-under <cite>output_prefix.shard_number</cite> (=you need write access to that location).
-If you don&#8217;t specify an output prefix, a random filename in temp will be used.</p>
+the <cite>add_documents</cite> method. <strong>Note</strong>: documents are split (internally, transparently)
+into shards of <cite>shardsize</cite> documents each, converted to a matrix, for faster BLAS calls.
+Each shard is stored to disk under <cite>output_prefix.shard_number</cite> (=you need write
+access to that location). If you don&#8217;t specify an output prefix, a random
+filename in temp will be used.</p>
 <p><cite>shardsize</cite> should be chosen so that a <cite>shardsize x chunksize</cite> matrix of floats
 fits comfortably into main memory.</p>
 <p><cite>num_features</cite> is the number of features in the <cite>corpus</cite> (e.g. size of the
@@ -255,10 +256,9 @@ vector with one float for every document in the index:</p>
 </pre></div>
 </div>
 <p>If <cite>num_best</cite> is set, queries return only the <cite>num_best</cite> most similar documents,
-always leaving out documents for which the similarity is 0
-(i.e. vectors with all dimensions zero and vectors with non-zero dimensions, but none in common).
-If the input vector itself has only dimensions with value zero (the sparse representation is empty),
-the returned list will always be empty.</p>
+always leaving out documents for which the similarity is 0.
+If the input vector itself only has features with zero values (=the sparse
+representation is empty), the returned list will always be empty.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="o">.</span><span class="n">num_best</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="p">[</span><span class="n">query</span><span class="p">]</span> <span class="c"># return at most &quot;num_best&quot; of `(index_of_document, similarity)` tuples</span>
 <span class="go">[(4, 0.8), (2, 0.13), (3, 0.13)]</span>
@@ -408,7 +408,7 @@ mmap&#8217;ed), under <cite>fname.array_name.npy</cite>.</p>
 
     <div class="footer">
         &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jul 23, 2012.
+      Last updated on Sep 10, 2012.
     </div>
   </body>
 </html>

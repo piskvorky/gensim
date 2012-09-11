@@ -41,6 +41,9 @@ frameworks that realize topic modelling, and/or their overwhelming internal comp
 You can read more about the motivation in our `LREC 2010 workshop paper <lrec2010_final.pdf>`_.
 If you want to cite `gensim` in your own work, please refer to that article (`BibTeX <bibtex_gensim.bib>`_).
 
+You're welcome to share your results on the `mailing list <https://groups.google.com/group/gensim>`_,
+so others can learn from your success :)
+
 The **principal design objectives** behind `gensim` are:
 
 1. Straightforward interfaces and low API learning curve for developers. Good for prototyping.

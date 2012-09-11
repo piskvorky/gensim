@@ -255,7 +255,7 @@ To save the same Matrix Market document stream in Blei's LDA-C format,
 In this way, `gensim` can also be used as a memory-efficient **I/O format conversion tool**:
 just load a document stream using one format and immediately save it in another format.
 Adding new formats is dead easy, check out the `code for the SVMlight corpus
-<https://github.com/piskvorky/gensim/blob/master/src/gensim/corpora/svmlightcorpus.py>`_ for an example.
+<https://github.com/piskvorky/gensim/blob/develop/gensim/corpora/svmlightcorpus.py>`_ for an example.
 
 -------------
 

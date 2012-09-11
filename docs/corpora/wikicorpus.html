@@ -124,7 +124,7 @@ tokenizer). The package is available at <a class="reference external" href="http
 module.</p>
 <dl class="class">
 <dt id="gensim.corpora.wikicorpus.WikiCorpus">
-<em class="property">class </em><tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">WikiCorpus</tt><big>(</big><em>fname</em>, <em>no_below=20</em>, <em>keep_words=50000</em>, <em>dictionary=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">WikiCorpus</tt><big>(</big><em>fname</em>, <em>processes=None</em>, <em>lemmatize=True</em>, <em>dictionary=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Treat a wikipedia articles dump (<a href="#id1"><span class="problematic" id="id2">*</span></a>articles.xml.bz2) as a (read-only) corpus.</p>
 <p>The documents are extracted on-the-fly, so that the whole (massive) dump
 can stay compressed on disk.</p>
@@ -132,13 +132,16 @@ can stay compressed on disk.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">wiki</span><span class="o">.</span><span class="n">saveAsText</span><span class="p">(</span><span class="s">&#39;wiki_en_vocab200k&#39;</span><span class="p">)</span> <span class="c"># another 8h, creates a file in MatrixMarket format plus file with id-&gt;word</span>
 </pre></div>
 </div>
-<p>Initialize the corpus. This scans the corpus once, to determine its
-vocabulary (only the first <cite>keep_words</cite> most frequent words that
-appear in at least <cite>noBelow</cite> documents are kept).</p>
+<p>Initialize the corpus. Unless a dictionary is provided, this scans the
+corpus once, to determine its vocabulary.</p>
+<p>If <cite>pattern</cite> package is installed, use fancier shallow parsing to get
+token lemmas. Otherwise, use simple regexp tokenization. You can override
+this automatic logic by forcing the <cite>lemmatize</cite> parameter explicitly.</p>
 <dl class="method">
 <dt id="gensim.corpora.wikicorpus.WikiCorpus.get_texts">
-<tt class="descname">get_texts</tt><big>(</big><em>return_raw=False</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.get_texts" title="Permalink to this definition">¶</a></dt>
-<dd><p>Iterate over the dump, returning text version of each article.</p>
+<tt class="descname">get_texts</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.WikiCorpus.get_texts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate over the dump, returning text version of each article as a list
+of tokens.</p>
 <p>Only articles of sufficient length are returned (short articles &amp; redirects
 etc are ignored).</p>
 <p>Note that this iterates over the <strong>texts</strong>; if you want vectors, just use
@@ -188,6 +191,13 @@ at the same time, so you want to store the corpus with:</p>
 <tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">filter_wiki</tt><big>(</big><em>raw</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.filter_wiki" title="Permalink to this definition">¶</a></dt>
 <dd><p>Filter out wiki mark-up from <cite>raw</cite>, leaving only text. <cite>raw</cite> is either unicode
 or utf-8 encoded string.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gensim.corpora.wikicorpus.process_article">
+<tt class="descclassname">gensim.corpora.wikicorpus.</tt><tt class="descname">process_article</tt><big>(</big><em>args</em><big>)</big><a class="headerlink" href="#gensim.corpora.wikicorpus.process_article" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a wikipedia article, returning its content as a list of tokens
+(utf8-encoded strings).</p>
 </dd></dl>
 
 <dl class="function">
@@ -257,7 +267,7 @@ that 15 characters (not bytes!).</p>
 
     <div class="footer">
         &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jul 23, 2012.
+      Last updated on Sep 10, 2012.
     </div>
   </body>
 </html>

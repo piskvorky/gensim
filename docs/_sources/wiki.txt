@@ -14,7 +14,7 @@ Preparing the corpus
 ----------------------
 
 1. First, download the dump of all Wikipedia articles from http://download.wikimedia.org/enwiki/
-   (you want a file like `enwiki-latest-pages-articles.xml.bz2`). This file is about 6GB in size
+   (you want a file like `enwiki-latest-pages-articles.xml.bz2`). This file is about 8GB in size
    and contains (a compressed version of) all articles from the English Wikipedia.
 
 2. Convert the articles to plain text (process Wiki markup) and store the result as
@@ -22,13 +22,16 @@ Preparing the corpus
    even need to uncompress the whole archive to disk. There is a script included in
    `gensim` that does just that, run::
 
-   $ python -m gensim.scripts.make_wikicorpus
+   $ python -m gensim.scripts.make_wiki
 
 .. note::
-  This pre-processing step makes two passes over the 6GB wiki dump (one to extract
+  This pre-processing step makes two passes over the 8.2GB compressed wiki dump (one to extract
   the dictionary, one to create and store the sparse vectors) and takes about
-  15 hours on my laptop, so you may want to go have a coffee or two.
-  Also, you will need about 15GB of free disk space to store the sparse output vectors.
+  9 hours on my laptop, so you may want to go have a coffee or two.
+
+  Also, you will need about 35GB of free disk space to store the sparse output vectors.
+  I recommend compressing these files immediately, e.g. with bzip2 (~13GB). Gensim
+  can work with compressed files directly, so this lets you save disk space.
 
 Latent Sematic Analysis
 --------------------------
@@ -42,14 +45,14 @@ First let's load the corpus iterator and dictionary, created in the second step 
     >>> id2word = gensim.corpora.Dictionary.load_from_text('wiki_en_wordids.txt')
     >>> # load corpus iterator
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
-    >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output
+    >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output (recommended)
 
     >>> print mm
-    MmCorpus(3199665 documents, 100000 features, 495547400 non-zero entries)
+    MmCorpus(3931787 documents, 100000 features, 756379027 non-zero entries)
 
-We see that our corpus contains 3.2M documents, 100K features (distinct
-tokens) and 0.5G non-zero entries in the sparse TF-IDF matrix. The corpus contains
-about 1.92 billion tokens in total.
+We see that our corpus contains 3.9M documents, 100K features (distinct
+tokens) and 0.76G non-zero entries in the sparse TF-IDF matrix. The Wikipedia corpus
+contains about 2.24 billion tokens in total.
 
 Now we're ready to compute LSA of the English Wikipedia::
 
@@ -58,22 +61,27 @@ Now we're ready to compute LSA of the English Wikipedia::
 
     >>> # print the most contributing words (both positively and negatively) for each of the first ten topics
     >>> lsi.print_topics(10)
-    topic #0(200.540): 0.475*"delete" + 0.383*"deletion" + 0.275*"debate" + 0.223*"comments" + 0.221*"edits" + 0.213*"modify" + 0.208*"appropriate" + 0.195*"subsequent" + 0.155*"wp" + 0.116*"notability"
-    topic #1(142.463): -0.292*"diff" + -0.277*"link" + -0.210*"image" + -0.160*"www" + 0.151*"delete" + -0.149*"user" + -0.134*"contribs" + -0.133*"undo" + -0.128*"album" + -0.115*"copyright"
-    topic #2(134.758): -0.458*"diff" + -0.415*"link" + -0.210*"undo" + -0.201*"user" + -0.195*"www" + -0.186*"contribs" + 0.154*"image" + -0.115*"added" + 0.098*"album" + -0.096*"accounts"
-    topic #3(124.902): 0.352*"image" + -0.240*"age" + -0.219*"median" + 0.212*"copyright" + -0.205*"population" + -0.196*"income" + 0.194*"fair" + -0.168*"census" + -0.166*"km" + -0.162*"households"
-    topic #4(116.735): 0.309*"image" + -0.195*"players" + 0.185*"copyright" + 0.182*"median" + 0.178*"age" + 0.169*"fair" + 0.159*"income" + 0.149*"population" + 0.134*"households" + -0.133*"football"
-    topic #5(100.069): -0.502*"players" + -0.317*"football" + -0.284*"league" + -0.194*"footballers" + -0.142*"image" + -0.132*"season" + -0.118*"cup" + -0.113*"club" + -0.110*"baseball" + 0.103*"album"
-    topic #6(92.077): 0.411*"album" + 0.275*"albums" + 0.217*"band" + 0.214*"song" + 0.184*"chart" + 0.163*"songs" + 0.160*"singles" + 0.149*"vocals" + 0.139*"guitar" + 0.129*"track"
-    topic #7(83.568): 0.248*"wikipedia" + 0.184*"keep" + -0.180*"delete" + 0.167*"articles" + 0.152*"your" + 0.150*"my" + -0.141*"film" + 0.130*"we" + 0.123*"think" + 0.121*"user"
-    topic #8(78.753): 0.485*"kategori" + 0.273*"categoria" + 0.240*"kategorija" + 0.226*"kategorie" + 0.167*"категория" + 0.160*"categoría" + 0.156*"kategoria" + 0.146*"film" + 0.143*"categorie" + 0.122*"kategória"
-    topic #9(78.701): -0.570*"film" + -0.444*"films" + 0.128*"kategori" + 0.126*"album" + 0.120*"station" + -0.118*"television" + -0.113*"poster" + -0.108*"directed" + -0.107*"actors" + 0.091*"railway"
+    topic #0(332.762): 0.425*"utc" + 0.299*"talk" + 0.293*"page" + 0.226*"article" + 0.224*"delete" + 0.216*"discussion" + 0.205*"deletion" + 0.198*"should" + 0.146*"debate" + 0.132*"be"
+    topic #1(201.852): 0.282*"link" + 0.209*"he" + 0.145*"com" + 0.139*"his" + -0.137*"page" + -0.118*"delete" + 0.114*"blacklist" + -0.108*"deletion" + -0.105*"discussion" + 0.100*"diff"
+    topic #2(191.991): -0.565*"link" + -0.241*"com" + -0.238*"blacklist" + -0.202*"diff" + -0.193*"additions" + -0.182*"users" + -0.158*"coibot" + -0.136*"user" + 0.133*"he" + -0.130*"resolves"
+    topic #3(141.284): -0.476*"image" + -0.255*"copyright" + -0.245*"fair" + -0.225*"use" + -0.173*"album" + -0.163*"cover" + -0.155*"resolution" + -0.141*"licensing" + 0.137*"he" + -0.121*"copies"
+    topic #4(130.909): 0.264*"population" + 0.246*"age" + 0.243*"median" + 0.213*"income" + 0.195*"census" + -0.189*"he" + 0.184*"households" + 0.175*"were" + 0.167*"females" + 0.166*"males"
+    topic #5(120.397): 0.304*"diff" + 0.278*"utc" + 0.213*"you" + -0.171*"additions" + 0.165*"talk" + -0.159*"image" + 0.159*"undo" + 0.155*"www" + -0.152*"page" + 0.148*"contribs"
+    topic #6(115.414): -0.362*"diff" + -0.203*"www" + 0.197*"you" + -0.180*"undo" + -0.180*"kategori" + 0.164*"users" + 0.157*"additions" + -0.150*"contribs" + -0.139*"he" + -0.136*"image"
+    topic #7(111.440): 0.429*"kategori" + 0.276*"categoria" + 0.251*"category" + 0.207*"kategorija" + 0.198*"kategorie" + -0.188*"diff" + 0.163*"категория" + 0.153*"categoría" + 0.139*"kategoria" + 0.133*"categorie"
+    topic #8(109.907): 0.385*"album" + 0.224*"song" + 0.209*"chart" + 0.204*"band" + 0.169*"released" + 0.151*"music" + 0.142*"diff" + 0.141*"vocals" + 0.138*"she" + 0.132*"guitar"
+    topic #9(102.599): -0.237*"league" + -0.214*"he" + -0.180*"season" + -0.174*"football" + -0.166*"team" + 0.159*"station" + -0.137*"played" + -0.131*"cup" + 0.131*"she" + -0.128*"utc"
 
-Creating the LSI model of Wikipedia takes about 5 hours and 14 minutes on my laptop [1]_.
-If you need your results even faster, see the tutorial on :doc:`distributed`.
+Creating the LSI model of Wikipedia takes about 4 hours and 9 minutes on my laptop [1]_.
+That's about **16,000 documents per minute, including all I/O**.
+
+.. note::
+  If you need your results even faster, see the tutorial on :doc:`distributed`. Note
+  that the BLAS libraries inside `gensim` make use of multiple cores transparently, so the same data
+  will be processed faster on a multicore machine "for free", without any distributed setup.
 
 We see that the total processing time is dominated by the preprocessing step of
-preparing the TF-IDF corpus, which took 15h. [2]_
+preparing the TF-IDF corpus from a raw Wikipedia XML dump, which took 9h. [2]_
 
 The algorithm used in `gensim` only needs to see each input document once, so it
 is suitable for environments where the documents come as a non-repeatable stream,
@@ -95,7 +103,7 @@ As with Latent Semantic Analysis above, first load the corpus iterator and dicti
     >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output
 
     >>> print mm
-    MmCorpus(3199665 documents, 100000 features, 495547400 non-zero entries)
+    MmCorpus(3931787 documents, 100000 features, 756379027 non-zero entries)
 
 We will run online LDA (see Hoffman et al. [3]_), which is an algorithm that takes a chunk of documents,
 updates the LDA model, takes another chunk, updates the model etc. Online LDA can be contrasted
@@ -111,35 +119,35 @@ enough to have a very accurate topics estimate::
     >>> # extract 100 LDA topics, using 1 pass and updating once every 1 chunk (10,000 documents)
     >>> lda = gensim.models.ldamodel.LdaModel(corpus=mm, id2word=id2word, num_topics=100, update_every=1, chunksize=10000, passes=1)
     using serial LDA version on this node
-    running online LDA training, 100 topics, 1 passes over the supplied corpus of 3146817 documets, updating model once every 10000 documents
-    ..
+    running online LDA training, 100 topics, 1 passes over the supplied corpus of 3931787 documents, updating model once every 10000 documents
+    ...
 
 Unlike LSA, the topics coming from LDA are easier to interpret::
 
     >>> # print the most contributing words for 20 randomly selected topics
     >>> lda.print_topics(20)
-    topic #0: 0.065*india + 0.043*indian + 0.019*sri + 0.012*tamil + 0.011*singh + 0.011*lanka + 0.010*temple + 0.009*delhi + 0.007*pradesh + 0.007*bangladesh
-    topic #1: 0.083*game + 0.053*games + 0.051*video + 0.018*player + 0.010*players + 0.007*playstation + 0.006*pc + 0.006*entertainment + 0.005*nintendo + 0.005*online
-    topic #2: 0.096*church + 0.032*catholic + 0.022*bishop + 0.018*christian + 0.015*roman + 0.014*saint + 0.013*churches + 0.011*cathedral + 0.011*parish + 0.010*christ
-    topic #3: 0.037*island + 0.019*islands + 0.019*sea + 0.015*coast + 0.013*storm + 0.012*tropical + 0.012*bay + 0.010*ocean + 0.008*hurricane + 0.007*pacific
-    topic #4: 0.189*class + 0.055*assessed + 0.048*rev + 0.046*stub + 0.032*quality + 0.032*low + 0.026*start + 0.025*added + 0.022*importance + 0.013*rating
-    topic #5: 0.061*italian + 0.039*italy + 0.031*di + 0.015*milan + 0.013*serie + 0.012*il + 0.009*rome + 0.008*la + 0.008*roma + 0.008*del
-    topic #6: 0.017*project + 0.014*development + 0.012*organization + 0.011*services + 0.010*community + 0.010*organizations + 0.009*management + 0.008*program + 0.008*association + 0.007*service
-    topic #7: 0.051*language + 0.025*culture + 0.024*admins + 0.017*categories + 0.016*languages + 0.016*native + 0.015*groups + 0.014*cultural + 0.011*ethnic + 0.010*african
-    topic #8: 0.043*women + 0.035*children + 0.018*child + 0.018*age + 0.018*mother + 0.016*young + 0.014*woman + 0.014*female + 0.013*sex + 0.012*wife
-    topic #9: 0.032*business + 0.024*companies + 0.012*bank + 0.012*management + 0.011*industry + 0.010*inc + 0.010*products + 0.009*services + 0.008*co + 0.008*founded
-    topic #10: 0.035*season + 0.028*football + 0.024*basketball + 0.015*game + 0.014*coach + 0.011*player + 0.010*conference + 0.010*players + 0.009*college + 0.009*hockey
-    topic #11: 0.270*user + 0.167*link + 0.082*added + 0.077*username + 0.070*www + 0.023*accounts + 0.023*records + 0.021*involved + 0.016*reporting + 0.012*report
-    topic #12: 0.202*diff + 0.010*david + 0.008*michael + 0.006*paul + 0.006*james + 0.005*smith + 0.005*robert + 0.005*mark + 0.004*peter + 0.004*chris
-    topic #13: 0.017*episode + 0.012*character + 0.011*characters + 0.010*man + 0.009*comics + 0.008*episodes + 0.008*fictional + 0.007*comic + 0.005*season + 0.005*show
-    topic #14: 0.043*college + 0.035*students + 0.032*education + 0.029*schools + 0.016*student + 0.010*campus + 0.009*educational + 0.009*program + 0.008*elementary + 0.008*training
-    topic #15: 0.085*ireland + 0.065*irish + 0.025*dublin + 0.022*northern + 0.013*mac + 0.012*cork + 0.011*galway + 0.011*patrick + 0.009*kelly + 0.008*belfast
-    topic #16: 0.019*pennsylvania + 0.018*ohio + 0.018*virginia + 0.016*florida + 0.015*illinois + 0.015*chicago + 0.013*jersey + 0.013*michigan + 0.011*washington + 0.010*georgia
-    topic #17: 0.061*air + 0.031*aircraft + 0.026*force + 0.024*airport + 0.017*squadron + 0.015*flight + 0.013*flying + 0.011*aviation + 0.010*wing + 0.008*pilot
-    topic #18: 0.064*california + 0.038*texas + 0.036*san + 0.022*los + 0.020*angeles + 0.016*oregon + 0.015*washington + 0.015*wisconsin + 0.014*colorado + 0.013*francisco
-    topic #19: 0.021*anime + 0.020*manga + 0.017*dragon + 0.012*theme + 0.011*dvd + 0.011*super + 0.011*hunter + 0.009*ash + 0.009*dream + 0.009*angel
+    topic #0: 0.009*river + 0.008*lake + 0.006*island + 0.005*mountain + 0.004*area + 0.004*park + 0.004*antarctic + 0.004*south + 0.004*mountains + 0.004*dam
+    topic #1: 0.026*relay + 0.026*athletics + 0.025*metres + 0.023*freestyle + 0.022*hurdles + 0.020*ret + 0.017*divisão + 0.017*athletes + 0.016*bundesliga + 0.014*medals
+    topic #2: 0.002*were + 0.002*he + 0.002*court + 0.002*his + 0.002*had + 0.002*law + 0.002*government + 0.002*police + 0.002*patrolling + 0.002*their
+    topic #3: 0.040*courcelles + 0.035*centimeters + 0.023*mattythewhite + 0.021*wine + 0.019*stamps + 0.018*oko + 0.017*perennial + 0.014*stubs + 0.012*ovate + 0.011*greyish
+    topic #4: 0.039*al + 0.029*sysop + 0.019*iran + 0.015*pakistan + 0.014*ali + 0.013*arab + 0.010*islamic + 0.010*arabic + 0.010*saudi + 0.010*muhammad
+    topic #5: 0.020*copyrighted + 0.020*northamerica + 0.014*uncopyrighted + 0.007*rihanna + 0.005*cloudz + 0.005*knowles + 0.004*gaga + 0.004*zombie + 0.004*wigan + 0.003*maccabi
+    topic #6: 0.061*israel + 0.056*israeli + 0.030*sockpuppet + 0.025*jerusalem + 0.025*tel + 0.023*aviv + 0.022*palestinian + 0.019*ifk + 0.016*palestine + 0.014*hebrew
+    topic #7: 0.015*melbourne + 0.014*rovers + 0.013*vfl + 0.012*australian + 0.012*wanderers + 0.011*afl + 0.008*dinamo + 0.008*queensland + 0.008*tracklist + 0.008*brisbane
+    topic #8: 0.011*film + 0.007*her + 0.007*she + 0.004*he + 0.004*series + 0.004*his + 0.004*episode + 0.003*films + 0.003*television + 0.003*best
+    topic #9: 0.019*wrestling + 0.013*château + 0.013*ligue + 0.012*discus + 0.012*estonian + 0.009*uci + 0.008*hockeyarchives + 0.008*wwe + 0.008*estonia + 0.007*reign
+    topic #10: 0.078*edits + 0.059*notability + 0.035*archived + 0.025*clearer + 0.022*speedy + 0.021*deleted + 0.016*hook + 0.015*checkuser + 0.014*ron + 0.011*nominator
+    topic #11: 0.013*admins + 0.009*acid + 0.009*molniya + 0.009*chemical + 0.007*ch + 0.007*chemistry + 0.007*compound + 0.007*anemone + 0.006*mg + 0.006*reaction
+    topic #12: 0.018*india + 0.013*indian + 0.010*tamil + 0.009*singh + 0.008*film + 0.008*temple + 0.006*kumar + 0.006*hindi + 0.006*delhi + 0.005*bengal
+    topic #13: 0.047*bwebs + 0.024*malta + 0.020*hobart + 0.019*basa + 0.019*columella + 0.019*huon + 0.018*tasmania + 0.016*popups + 0.014*tasmanian + 0.014*modèle
+    topic #14: 0.014*jewish + 0.011*rabbi + 0.008*bgwhite + 0.008*lebanese + 0.007*lebanon + 0.006*homs + 0.005*beirut + 0.004*jews + 0.004*hebrew + 0.004*caligari
+    topic #15: 0.025*german + 0.020*der + 0.017*von + 0.015*und + 0.014*berlin + 0.012*germany + 0.012*die + 0.010*des + 0.008*kategorie + 0.007*cross
+    topic #16: 0.003*can + 0.003*system + 0.003*power + 0.003*are + 0.003*energy + 0.002*data + 0.002*be + 0.002*used + 0.002*or + 0.002*using
+    topic #17: 0.049*indonesia + 0.042*indonesian + 0.031*malaysia + 0.024*singapore + 0.022*greek + 0.021*jakarta + 0.016*greece + 0.015*dord + 0.014*athens + 0.011*malaysian
+    topic #18: 0.031*stakes + 0.029*webs + 0.018*futsal + 0.014*whitish + 0.013*hyun + 0.012*thoroughbred + 0.012*dnf + 0.012*jockey + 0.011*medalists + 0.011*racehorse
+    topic #19: 0.119*oblast + 0.034*uploaded + 0.034*uploads + 0.033*nordland + 0.025*selsoviet + 0.023*raion + 0.022*krai + 0.018*okrug + 0.015*hålogaland + 0.015*russiae + 0.020*manga + 0.017*dragon + 0.012*theme + 0.011*dvd + 0.011*super + 0.011*hunter + 0.009*ash + 0.009*dream + 0.009*angel
 
-Creating this LDA model of Wikipedia takes about 11 hours on my laptop [1]_.
+Creating this LDA model of Wikipedia takes about 6 hours and 20 minutes on my laptop [1]_.
 If you need your results faster, consider running :doc:`dist_lda` on a cluster of
 computers.
 
@@ -168,7 +176,7 @@ into LDA topic distributions:
 
 --------------------
 
-.. [1] My laptop = Core2Duo 2.53GHz MacBook Pro, 4GB RAM, OS X with `libVec`.
+.. [1] My laptop = MacBook Pro, Intel Core i7 2.3GHz, 16GB DDR3 RAM, OS X with `libVec`.
 
 .. [2]
   Here we're mostly interested in performance, but it is interesting to look at the

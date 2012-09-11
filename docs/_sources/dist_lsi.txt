@@ -17,7 +17,7 @@ by network broadcast). To start with, install `gensim` and `Pyro` on each comput
 
   $ sudo easy_install gensim[distributed]
 
-and run Pyro’s name server on exactly one of the machines (doesn’t matter which one):
+and run Pyro’s name server on exactly one of the machines (doesn’t matter which one)::
 
   $ python -m Pyro4.naming -n 0.0.0.0 &
 

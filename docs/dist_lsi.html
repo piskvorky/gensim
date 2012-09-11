@@ -140,8 +140,8 @@ by network broadcast). To start with, install <cite>gensim</cite> and <cite>Pyro
 <div class="highlight-python"><pre>$ sudo easy_install gensim[distributed]</pre>
 </div>
 <p>and run Pyro’s name server on exactly one of the machines (doesn’t matter which one):</p>
-<blockquote>
-<div>$ python -m Pyro4.naming -n 0.0.0.0 &amp;</div></blockquote>
+<div class="highlight-python"><pre>$ python -m Pyro4.naming -n 0.0.0.0 &amp;</pre>
+</div>
 <p>Let&#8217;s say our example cluster consists of dual-core computers with loads of
 memory. We will therefore run <strong>two</strong> worker scripts on four of the physical machines,
 creating <strong>eight</strong> logical worker nodes:</p>
@@ -304,7 +304,7 @@ paper</a>.</p>
 
     <div class="footer">
         &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jul 23, 2012.
+      Last updated on Sep 10, 2012.
     </div>
   </body>
 </html>
