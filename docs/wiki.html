@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.5',
+        VERSION:     '0.8.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -131,23 +131,25 @@ anyone can reproduce the results. It is assumed you have <cite>gensim</cite> pro
 <h2>Preparing the corpus<a class="headerlink" href="#preparing-the-corpus" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic">
 <li><p class="first">First, download the dump of all Wikipedia articles from <a class="reference external" href="http://download.wikimedia.org/enwiki/">http://download.wikimedia.org/enwiki/</a>
-(you want a file like <cite>enwiki-latest-pages-articles.xml.bz2</cite>). This file is about 6GB in size
+(you want a file like <cite>enwiki-latest-pages-articles.xml.bz2</cite>). This file is about 8GB in size
 and contains (a compressed version of) all articles from the English Wikipedia.</p>
 </li>
 <li><p class="first">Convert the articles to plain text (process Wiki markup) and store the result as
 sparse TF-IDF vectors. In Python, this is easy to do on-the-fly and we don&#8217;t
 even need to uncompress the whole archive to disk. There is a script included in
 <cite>gensim</cite> that does just that, run:</p>
-<div class="highlight-python"><pre>$ python -m gensim.scripts.make_wikicorpus</pre>
+<div class="highlight-python"><pre>$ python -m gensim.scripts.make_wiki</pre>
 </div>
 </li>
 </ol>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">This pre-processing step makes two passes over the 6GB wiki dump (one to extract
+<p>This pre-processing step makes two passes over the 8.2GB compressed wiki dump (one to extract
 the dictionary, one to create and store the sparse vectors) and takes about
-15 hours on my laptop, so you may want to go have a coffee or two.
-Also, you will need about 15GB of free disk space to store the sparse output vectors.</p>
+9 hours on my laptop, so you may want to go have a coffee or two.</p>
+<p class="last">Also, you will need about 35GB of free disk space to store the sparse output vectors.
+I recommend compressing these files immediately, e.g. with bzip2 (down to ~13GB). Gensim
+can work with compressed files directly, so this lets you save disk space.</p>
 </div>
 </div>
 <div class="section" id="latent-sematic-analysis">
@@ -160,37 +162,43 @@ Also, you will need about 15GB of free disk space to store the sparse output vec
 <span class="gp">&gt;&gt;&gt; </span><span class="n">id2word</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">load_from_text</span><span class="p">(</span><span class="s">&#39;wiki_en_wordids.txt&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># load corpus iterator</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mm</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">corpora</span><span class="o">.</span><span class="n">MmCorpus</span><span class="p">(</span><span class="s">&#39;wiki_en_tfidf.mm&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c"># mm = gensim.corpora.MmCorpus(bz2.BZ2File(&#39;wiki_en_tfidf.mm.bz2&#39;)) # use this if you compressed the TFIDF output</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># mm = gensim.corpora.MmCorpus(bz2.BZ2File(&#39;wiki_en_tfidf.mm.bz2&#39;)) # use this if you compressed the TFIDF output (recommended)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mm</span>
-<span class="go">MmCorpus(3199665 documents, 100000 features, 495547400 non-zero entries)</span>
+<span class="go">MmCorpus(3931787 documents, 100000 features, 756379027 non-zero entries)</span>
 </pre></div>
 </div>
-<p>We see that our corpus contains 3.2M documents, 100K features (distinct
-tokens) and 0.5G non-zero entries in the sparse TF-IDF matrix. The corpus contains
-about 1.92 billion tokens in total.</p>
+<p>We see that our corpus contains 3.9M documents, 100K features (distinct
+tokens) and 0.76G non-zero entries in the sparse TF-IDF matrix. The Wikipedia corpus
+contains about 2.24 billion tokens in total.</p>
 <p>Now we&#8217;re ready to compute LSA of the English Wikipedia:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 400 LSI topics; use the default one-pass algorithm</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">lsimodel</span><span class="o">.</span><span class="n">LsiModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># print the most contributing words (both positively and negatively) for each of the first ten topics</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lsi</span><span class="o">.</span><span class="n">print_topics</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
-<span class="go">topic #0(200.540): 0.475*&quot;delete&quot; + 0.383*&quot;deletion&quot; + 0.275*&quot;debate&quot; + 0.223*&quot;comments&quot; + 0.221*&quot;edits&quot; + 0.213*&quot;modify&quot; + 0.208*&quot;appropriate&quot; + 0.195*&quot;subsequent&quot; + 0.155*&quot;wp&quot; + 0.116*&quot;notability&quot;</span>
-<span class="go">topic #1(142.463): -0.292*&quot;diff&quot; + -0.277*&quot;link&quot; + -0.210*&quot;image&quot; + -0.160*&quot;www&quot; + 0.151*&quot;delete&quot; + -0.149*&quot;user&quot; + -0.134*&quot;contribs&quot; + -0.133*&quot;undo&quot; + -0.128*&quot;album&quot; + -0.115*&quot;copyright&quot;</span>
-<span class="go">topic #2(134.758): -0.458*&quot;diff&quot; + -0.415*&quot;link&quot; + -0.210*&quot;undo&quot; + -0.201*&quot;user&quot; + -0.195*&quot;www&quot; + -0.186*&quot;contribs&quot; + 0.154*&quot;image&quot; + -0.115*&quot;added&quot; + 0.098*&quot;album&quot; + -0.096*&quot;accounts&quot;</span>
-<span class="go">topic #3(124.902): 0.352*&quot;image&quot; + -0.240*&quot;age&quot; + -0.219*&quot;median&quot; + 0.212*&quot;copyright&quot; + -0.205*&quot;population&quot; + -0.196*&quot;income&quot; + 0.194*&quot;fair&quot; + -0.168*&quot;census&quot; + -0.166*&quot;km&quot; + -0.162*&quot;households&quot;</span>
-<span class="go">topic #4(116.735): 0.309*&quot;image&quot; + -0.195*&quot;players&quot; + 0.185*&quot;copyright&quot; + 0.182*&quot;median&quot; + 0.178*&quot;age&quot; + 0.169*&quot;fair&quot; + 0.159*&quot;income&quot; + 0.149*&quot;population&quot; + 0.134*&quot;households&quot; + -0.133*&quot;football&quot;</span>
-<span class="go">topic #5(100.069): -0.502*&quot;players&quot; + -0.317*&quot;football&quot; + -0.284*&quot;league&quot; + -0.194*&quot;footballers&quot; + -0.142*&quot;image&quot; + -0.132*&quot;season&quot; + -0.118*&quot;cup&quot; + -0.113*&quot;club&quot; + -0.110*&quot;baseball&quot; + 0.103*&quot;album&quot;</span>
-<span class="go">topic #6(92.077): 0.411*&quot;album&quot; + 0.275*&quot;albums&quot; + 0.217*&quot;band&quot; + 0.214*&quot;song&quot; + 0.184*&quot;chart&quot; + 0.163*&quot;songs&quot; + 0.160*&quot;singles&quot; + 0.149*&quot;vocals&quot; + 0.139*&quot;guitar&quot; + 0.129*&quot;track&quot;</span>
-<span class="go">topic #7(83.568): 0.248*&quot;wikipedia&quot; + 0.184*&quot;keep&quot; + -0.180*&quot;delete&quot; + 0.167*&quot;articles&quot; + 0.152*&quot;your&quot; + 0.150*&quot;my&quot; + -0.141*&quot;film&quot; + 0.130*&quot;we&quot; + 0.123*&quot;think&quot; + 0.121*&quot;user&quot;</span>
-<span class="go">topic #8(78.753): 0.485*&quot;kategori&quot; + 0.273*&quot;categoria&quot; + 0.240*&quot;kategorija&quot; + 0.226*&quot;kategorie&quot; + 0.167*&quot;категория&quot; + 0.160*&quot;categoría&quot; + 0.156*&quot;kategoria&quot; + 0.146*&quot;film&quot; + 0.143*&quot;categorie&quot; + 0.122*&quot;kategória&quot;</span>
-<span class="go">topic #9(78.701): -0.570*&quot;film&quot; + -0.444*&quot;films&quot; + 0.128*&quot;kategori&quot; + 0.126*&quot;album&quot; + 0.120*&quot;station&quot; + -0.118*&quot;television&quot; + -0.113*&quot;poster&quot; + -0.108*&quot;directed&quot; + -0.107*&quot;actors&quot; + 0.091*&quot;railway&quot;</span>
+<span class="go">topic #0(332.762): 0.425*&quot;utc&quot; + 0.299*&quot;talk&quot; + 0.293*&quot;page&quot; + 0.226*&quot;article&quot; + 0.224*&quot;delete&quot; + 0.216*&quot;discussion&quot; + 0.205*&quot;deletion&quot; + 0.198*&quot;should&quot; + 0.146*&quot;debate&quot; + 0.132*&quot;be&quot;</span>
+<span class="go">topic #1(201.852): 0.282*&quot;link&quot; + 0.209*&quot;he&quot; + 0.145*&quot;com&quot; + 0.139*&quot;his&quot; + -0.137*&quot;page&quot; + -0.118*&quot;delete&quot; + 0.114*&quot;blacklist&quot; + -0.108*&quot;deletion&quot; + -0.105*&quot;discussion&quot; + 0.100*&quot;diff&quot;</span>
+<span class="go">topic #2(191.991): -0.565*&quot;link&quot; + -0.241*&quot;com&quot; + -0.238*&quot;blacklist&quot; + -0.202*&quot;diff&quot; + -0.193*&quot;additions&quot; + -0.182*&quot;users&quot; + -0.158*&quot;coibot&quot; + -0.136*&quot;user&quot; + 0.133*&quot;he&quot; + -0.130*&quot;resolves&quot;</span>
+<span class="go">topic #3(141.284): -0.476*&quot;image&quot; + -0.255*&quot;copyright&quot; + -0.245*&quot;fair&quot; + -0.225*&quot;use&quot; + -0.173*&quot;album&quot; + -0.163*&quot;cover&quot; + -0.155*&quot;resolution&quot; + -0.141*&quot;licensing&quot; + 0.137*&quot;he&quot; + -0.121*&quot;copies&quot;</span>
+<span class="go">topic #4(130.909): 0.264*&quot;population&quot; + 0.246*&quot;age&quot; + 0.243*&quot;median&quot; + 0.213*&quot;income&quot; + 0.195*&quot;census&quot; + -0.189*&quot;he&quot; + 0.184*&quot;households&quot; + 0.175*&quot;were&quot; + 0.167*&quot;females&quot; + 0.166*&quot;males&quot;</span>
+<span class="go">topic #5(120.397): 0.304*&quot;diff&quot; + 0.278*&quot;utc&quot; + 0.213*&quot;you&quot; + -0.171*&quot;additions&quot; + 0.165*&quot;talk&quot; + -0.159*&quot;image&quot; + 0.159*&quot;undo&quot; + 0.155*&quot;www&quot; + -0.152*&quot;page&quot; + 0.148*&quot;contribs&quot;</span>
+<span class="go">topic #6(115.414): -0.362*&quot;diff&quot; + -0.203*&quot;www&quot; + 0.197*&quot;you&quot; + -0.180*&quot;undo&quot; + -0.180*&quot;kategori&quot; + 0.164*&quot;users&quot; + 0.157*&quot;additions&quot; + -0.150*&quot;contribs&quot; + -0.139*&quot;he&quot; + -0.136*&quot;image&quot;</span>
+<span class="go">topic #7(111.440): 0.429*&quot;kategori&quot; + 0.276*&quot;categoria&quot; + 0.251*&quot;category&quot; + 0.207*&quot;kategorija&quot; + 0.198*&quot;kategorie&quot; + -0.188*&quot;diff&quot; + 0.163*&quot;категория&quot; + 0.153*&quot;categoría&quot; + 0.139*&quot;kategoria&quot; + 0.133*&quot;categorie&quot;</span>
+<span class="go">topic #8(109.907): 0.385*&quot;album&quot; + 0.224*&quot;song&quot; + 0.209*&quot;chart&quot; + 0.204*&quot;band&quot; + 0.169*&quot;released&quot; + 0.151*&quot;music&quot; + 0.142*&quot;diff&quot; + 0.141*&quot;vocals&quot; + 0.138*&quot;she&quot; + 0.132*&quot;guitar&quot;</span>
+<span class="go">topic #9(102.599): -0.237*&quot;league&quot; + -0.214*&quot;he&quot; + -0.180*&quot;season&quot; + -0.174*&quot;football&quot; + -0.166*&quot;team&quot; + 0.159*&quot;station&quot; + -0.137*&quot;played&quot; + -0.131*&quot;cup&quot; + 0.131*&quot;she&quot; + -0.128*&quot;utc&quot;</span>
 </pre></div>
 </div>
-<p>Creating the LSI model of Wikipedia takes about 5 hours and 14 minutes on my laptop <a class="footnote-reference" href="#id6" id="id1">[1]</a>.
-If you need your results even faster, see the tutorial on <a class="reference internal" href="distributed.html"><em>Distributed Computing</em></a>.</p>
+<p>Creating the LSI model of Wikipedia takes about 4 hours and 9 minutes on my laptop <a class="footnote-reference" href="#id6" id="id1">[1]</a>.
+That&#8217;s about <strong>16,000 documents per minute, including all I/O</strong>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you need your results even faster, see the tutorial on <a class="reference internal" href="distributed.html"><em>Distributed Computing</em></a>. Note
+that the BLAS libraries inside <cite>gensim</cite> make use of multiple cores transparently, so the same data
+will be processed faster on a multicore machine &#8220;for free&#8221;, without any distributed setup.</p>
+</div>
 <p>We see that the total processing time is dominated by the preprocessing step of
-preparing the TF-IDF corpus, which took 15h. <a class="footnote-reference" href="#id7" id="id2">[2]</a></p>
+preparing the TF-IDF corpus from a raw Wikipedia XML dump, which took 9h. <a class="footnote-reference" href="#id7" id="id2">[2]</a></p>
 <p>The algorithm used in <cite>gensim</cite> only needs to see each input document once, so it
 is suitable for environments where the documents come as a non-repeatable stream,
 or where the cost of storing/iterating over the corpus multiple times is too high.</p>
@@ -208,7 +216,7 @@ or where the cost of storing/iterating over the corpus multiple times is too hig
 <span class="gp">&gt;&gt;&gt; </span><span class="c"># mm = gensim.corpora.MmCorpus(bz2.BZ2File(&#39;wiki_en_tfidf.mm.bz2&#39;)) # use this if you compressed the TFIDF output</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mm</span>
-<span class="go">MmCorpus(3199665 documents, 100000 features, 495547400 non-zero entries)</span>
+<span class="go">MmCorpus(3931787 documents, 100000 features, 756379027 non-zero entries)</span>
 </pre></div>
 </div>
 <p>We will run online LDA (see Hoffman et al. <a class="footnote-reference" href="#id8" id="id3">[3]</a>), which is an algorithm that takes a chunk of documents,
@@ -224,36 +232,36 @@ enough to have a very accurate topics estimate:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 100 LDA topics, using 1 pass and updating once every 1 chunk (10,000 documents)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">update_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">passes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="go">using serial LDA version on this node</span>
-<span class="go">running online LDA training, 100 topics, 1 passes over the supplied corpus of 3146817 documets, updating model once every 10000 documents</span>
-<span class="go">..</span>
+<span class="go">running online LDA training, 100 topics, 1 passes over the supplied corpus of 3931787 documents, updating model once every 10000 documents</span>
+<span class="gp">...</span>
 </pre></div>
 </div>
 <p>Unlike LSA, the topics coming from LDA are easier to interpret:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># print the most contributing words for 20 randomly selected topics</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span><span class="o">.</span><span class="n">print_topics</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
-<span class="go">topic #0: 0.065*india + 0.043*indian + 0.019*sri + 0.012*tamil + 0.011*singh + 0.011*lanka + 0.010*temple + 0.009*delhi + 0.007*pradesh + 0.007*bangladesh</span>
-<span class="go">topic #1: 0.083*game + 0.053*games + 0.051*video + 0.018*player + 0.010*players + 0.007*playstation + 0.006*pc + 0.006*entertainment + 0.005*nintendo + 0.005*online</span>
-<span class="go">topic #2: 0.096*church + 0.032*catholic + 0.022*bishop + 0.018*christian + 0.015*roman + 0.014*saint + 0.013*churches + 0.011*cathedral + 0.011*parish + 0.010*christ</span>
-<span class="go">topic #3: 0.037*island + 0.019*islands + 0.019*sea + 0.015*coast + 0.013*storm + 0.012*tropical + 0.012*bay + 0.010*ocean + 0.008*hurricane + 0.007*pacific</span>
-<span class="go">topic #4: 0.189*class + 0.055*assessed + 0.048*rev + 0.046*stub + 0.032*quality + 0.032*low + 0.026*start + 0.025*added + 0.022*importance + 0.013*rating</span>
-<span class="go">topic #5: 0.061*italian + 0.039*italy + 0.031*di + 0.015*milan + 0.013*serie + 0.012*il + 0.009*rome + 0.008*la + 0.008*roma + 0.008*del</span>
-<span class="go">topic #6: 0.017*project + 0.014*development + 0.012*organization + 0.011*services + 0.010*community + 0.010*organizations + 0.009*management + 0.008*program + 0.008*association + 0.007*service</span>
-<span class="go">topic #7: 0.051*language + 0.025*culture + 0.024*admins + 0.017*categories + 0.016*languages + 0.016*native + 0.015*groups + 0.014*cultural + 0.011*ethnic + 0.010*african</span>
-<span class="go">topic #8: 0.043*women + 0.035*children + 0.018*child + 0.018*age + 0.018*mother + 0.016*young + 0.014*woman + 0.014*female + 0.013*sex + 0.012*wife</span>
-<span class="go">topic #9: 0.032*business + 0.024*companies + 0.012*bank + 0.012*management + 0.011*industry + 0.010*inc + 0.010*products + 0.009*services + 0.008*co + 0.008*founded</span>
-<span class="go">topic #10: 0.035*season + 0.028*football + 0.024*basketball + 0.015*game + 0.014*coach + 0.011*player + 0.010*conference + 0.010*players + 0.009*college + 0.009*hockey</span>
-<span class="go">topic #11: 0.270*user + 0.167*link + 0.082*added + 0.077*username + 0.070*www + 0.023*accounts + 0.023*records + 0.021*involved + 0.016*reporting + 0.012*report</span>
-<span class="go">topic #12: 0.202*diff + 0.010*david + 0.008*michael + 0.006*paul + 0.006*james + 0.005*smith + 0.005*robert + 0.005*mark + 0.004*peter + 0.004*chris</span>
-<span class="go">topic #13: 0.017*episode + 0.012*character + 0.011*characters + 0.010*man + 0.009*comics + 0.008*episodes + 0.008*fictional + 0.007*comic + 0.005*season + 0.005*show</span>
-<span class="go">topic #14: 0.043*college + 0.035*students + 0.032*education + 0.029*schools + 0.016*student + 0.010*campus + 0.009*educational + 0.009*program + 0.008*elementary + 0.008*training</span>
-<span class="go">topic #15: 0.085*ireland + 0.065*irish + 0.025*dublin + 0.022*northern + 0.013*mac + 0.012*cork + 0.011*galway + 0.011*patrick + 0.009*kelly + 0.008*belfast</span>
-<span class="go">topic #16: 0.019*pennsylvania + 0.018*ohio + 0.018*virginia + 0.016*florida + 0.015*illinois + 0.015*chicago + 0.013*jersey + 0.013*michigan + 0.011*washington + 0.010*georgia</span>
-<span class="go">topic #17: 0.061*air + 0.031*aircraft + 0.026*force + 0.024*airport + 0.017*squadron + 0.015*flight + 0.013*flying + 0.011*aviation + 0.010*wing + 0.008*pilot</span>
-<span class="go">topic #18: 0.064*california + 0.038*texas + 0.036*san + 0.022*los + 0.020*angeles + 0.016*oregon + 0.015*washington + 0.015*wisconsin + 0.014*colorado + 0.013*francisco</span>
-<span class="go">topic #19: 0.021*anime + 0.020*manga + 0.017*dragon + 0.012*theme + 0.011*dvd + 0.011*super + 0.011*hunter + 0.009*ash + 0.009*dream + 0.009*angel</span>
+<span class="go">topic #0: 0.009*river + 0.008*lake + 0.006*island + 0.005*mountain + 0.004*area + 0.004*park + 0.004*antarctic + 0.004*south + 0.004*mountains + 0.004*dam</span>
+<span class="go">topic #1: 0.026*relay + 0.026*athletics + 0.025*metres + 0.023*freestyle + 0.022*hurdles + 0.020*ret + 0.017*divisão + 0.017*athletes + 0.016*bundesliga + 0.014*medals</span>
+<span class="go">topic #2: 0.002*were + 0.002*he + 0.002*court + 0.002*his + 0.002*had + 0.002*law + 0.002*government + 0.002*police + 0.002*patrolling + 0.002*their</span>
+<span class="go">topic #3: 0.040*courcelles + 0.035*centimeters + 0.023*mattythewhite + 0.021*wine + 0.019*stamps + 0.018*oko + 0.017*perennial + 0.014*stubs + 0.012*ovate + 0.011*greyish</span>
+<span class="go">topic #4: 0.039*al + 0.029*sysop + 0.019*iran + 0.015*pakistan + 0.014*ali + 0.013*arab + 0.010*islamic + 0.010*arabic + 0.010*saudi + 0.010*muhammad</span>
+<span class="go">topic #5: 0.020*copyrighted + 0.020*northamerica + 0.014*uncopyrighted + 0.007*rihanna + 0.005*cloudz + 0.005*knowles + 0.004*gaga + 0.004*zombie + 0.004*wigan + 0.003*maccabi</span>
+<span class="go">topic #6: 0.061*israel + 0.056*israeli + 0.030*sockpuppet + 0.025*jerusalem + 0.025*tel + 0.023*aviv + 0.022*palestinian + 0.019*ifk + 0.016*palestine + 0.014*hebrew</span>
+<span class="go">topic #7: 0.015*melbourne + 0.014*rovers + 0.013*vfl + 0.012*australian + 0.012*wanderers + 0.011*afl + 0.008*dinamo + 0.008*queensland + 0.008*tracklist + 0.008*brisbane</span>
+<span class="go">topic #8: 0.011*film + 0.007*her + 0.007*she + 0.004*he + 0.004*series + 0.004*his + 0.004*episode + 0.003*films + 0.003*television + 0.003*best</span>
+<span class="go">topic #9: 0.019*wrestling + 0.013*château + 0.013*ligue + 0.012*discus + 0.012*estonian + 0.009*uci + 0.008*hockeyarchives + 0.008*wwe + 0.008*estonia + 0.007*reign</span>
+<span class="go">topic #10: 0.078*edits + 0.059*notability + 0.035*archived + 0.025*clearer + 0.022*speedy + 0.021*deleted + 0.016*hook + 0.015*checkuser + 0.014*ron + 0.011*nominator</span>
+<span class="go">topic #11: 0.013*admins + 0.009*acid + 0.009*molniya + 0.009*chemical + 0.007*ch + 0.007*chemistry + 0.007*compound + 0.007*anemone + 0.006*mg + 0.006*reaction</span>
+<span class="go">topic #12: 0.018*india + 0.013*indian + 0.010*tamil + 0.009*singh + 0.008*film + 0.008*temple + 0.006*kumar + 0.006*hindi + 0.006*delhi + 0.005*bengal</span>
+<span class="go">topic #13: 0.047*bwebs + 0.024*malta + 0.020*hobart + 0.019*basa + 0.019*columella + 0.019*huon + 0.018*tasmania + 0.016*popups + 0.014*tasmanian + 0.014*modèle</span>
+<span class="go">topic #14: 0.014*jewish + 0.011*rabbi + 0.008*bgwhite + 0.008*lebanese + 0.007*lebanon + 0.006*homs + 0.005*beirut + 0.004*jews + 0.004*hebrew + 0.004*caligari</span>
+<span class="go">topic #15: 0.025*german + 0.020*der + 0.017*von + 0.015*und + 0.014*berlin + 0.012*germany + 0.012*die + 0.010*des + 0.008*kategorie + 0.007*cross</span>
+<span class="go">topic #16: 0.003*can + 0.003*system + 0.003*power + 0.003*are + 0.003*energy + 0.002*data + 0.002*be + 0.002*used + 0.002*or + 0.002*using</span>
+<span class="go">topic #17: 0.049*indonesia + 0.042*indonesian + 0.031*malaysia + 0.024*singapore + 0.022*greek + 0.021*jakarta + 0.016*greece + 0.015*dord + 0.014*athens + 0.011*malaysian</span>
+<span class="go">topic #18: 0.031*stakes + 0.029*webs + 0.018*futsal + 0.014*whitish + 0.013*hyun + 0.012*thoroughbred + 0.012*dnf + 0.012*jockey + 0.011*medalists + 0.011*racehorse</span>
+<span class="go">topic #19: 0.119*oblast + 0.034*uploaded + 0.034*uploads + 0.033*nordland + 0.025*selsoviet + 0.023*raion + 0.022*krai + 0.018*okrug + 0.015*hålogaland + 0.015*russiae + 0.020*manga + 0.017*dragon + 0.012*theme + 0.011*dvd + 0.011*super + 0.011*hunter + 0.009*ash + 0.009*dream + 0.009*angel</span>
 </pre></div>
 </div>
-<p>Creating this LDA model of Wikipedia takes about 11 hours on my laptop <a class="footnote-reference" href="#id6" id="id4">[1]</a>.
+<p>Creating this LDA model of Wikipedia takes about 6 hours and 20 minutes on my laptop <a class="footnote-reference" href="#id6" id="id4">[1]</a>.
 If you need your results faster, consider running <a class="reference internal" href="dist_lda.html"><em>Distributed Latent Dirichlet Allocation</em></a> on a cluster of
 computers.</p>
 <p>Note two differences between the LDA and LSA runs: we asked LSA
@@ -266,7 +274,7 @@ diminishes. If there is topic drift in the input document stream, LDA will get
 confused and be increasingly slower at adjusting itself to the new state of affairs.</p>
 <p>In short, be careful if using LDA to incrementally add new documents to the model
 over time. <strong>Batch usage of LDA</strong>, where the entire training corpus is either known beforehand or does
-not exihibit topic drift, <strong>is ok and not affected</strong>.</p>
+not exhibit topic drift, <strong>is ok and not affected</strong>.</p>
 <p>To run batch LDA (not online), train <cite>LdaModel</cite> with:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 100 LDA topics, using 20 full passes, no online updates</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">update_every</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">passes</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
@@ -281,7 +289,7 @@ into LDA topic distributions:</p>
 <table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> My laptop = Core2Duo 2.53GHz MacBook Pro, 4GB RAM, OS X with <cite>libVec</cite>.</td></tr>
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> My laptop = MacBook Pro, Intel Core i7 2.3GHz, 16GB DDR3 RAM, OS X with <cite>libVec</cite>.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id7" rules="none">
@@ -354,7 +362,7 @@ By the way, improvements to the Wiki markup parsing code are welcome :-)</p>
 
     <div class="footer">
         &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jul 22, 2012.
+      Last updated on Sep 16, 2012.
     </div>
   </body>
 </html>

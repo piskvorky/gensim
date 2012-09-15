@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.5',
+        VERSION:     '0.8.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <link rel="top" title="gensim" href="../index.html" />
     <link rel="up" title="API Reference" href="../apiref.html" />
     <link rel="next" title="corpora.mmcorpus – Corpus in Matrix Market format" href="mmcorpus.html" />
-    <link rel="prev" title="corpora.dictionary – Construct word&lt;-&gt;id mappings" href="dictionary.html" />
+    <link rel="prev" title="corpora.hashdictionary – Construct word&lt;-&gt;id mappings" href="hashdictionary.html" />
      
 
 	<!-- twitter search widget
@@ -69,7 +69,7 @@
           <a href="mmcorpus.html" title="corpora.mmcorpus – Corpus in Matrix Market format"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="dictionary.html" title="corpora.dictionary – Construct word&lt;-&gt;id mappings"
+          <a href="hashdictionary.html" title="corpora.hashdictionary – Construct word&lt;-&gt;id mappings"
              accesskey="P">previous</a> |</li>
         <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="../tutorial.html">Tutorials</a>|&nbsp;</li>
@@ -85,8 +85,8 @@
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="dictionary.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">corpora.dictionary</span></tt> &#8211; Construct word&lt;-&gt;id mappings</a></p>
+  <p class="topless"><a href="hashdictionary.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">corpora.hashdictionary</span></tt> &#8211; Construct word&lt;-&gt;id mappings</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="mmcorpus.html"
                         title="next chapter"><tt class="docutils literal"><span class="pre">corpora.mmcorpus</span></tt> &#8211; Corpus in Matrix Market format</a></p>
@@ -119,7 +119,7 @@
 <p>Corpus in GibbsLda++ format of List-Of-Words.</p>
 <dl class="class">
 <dt id="gensim.corpora.lowcorpus.LowCorpus">
-<em class="property">class </em><tt class="descclassname">gensim.corpora.lowcorpus.</tt><tt class="descname">LowCorpus</tt><big>(</big><em>fname</em>, <em>id2word=None</em>, <em>line2words=&lt;function split_on_space at 0x10c9442a8&gt;</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.corpora.lowcorpus.</tt><tt class="descname">LowCorpus</tt><big>(</big><em>fname</em>, <em>id2word=None</em>, <em>line2words=&lt;function split_on_space at 0x10faabaa0&gt;</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>List_Of_Words corpus handles input in GibbsLda++ format.</p>
 <p>Quoting <a class="reference external" href="http://gibbslda.sourceforge.net/#3.2_Input_Data_Format">http://gibbslda.sourceforge.net/#3.2_Input_Data_Format</a>:</p>
 <div class="highlight-python"><pre>Both data for training/estimating the model and new data (i.e., previously
@@ -175,7 +175,7 @@ call it directly, call <cite>serialize</cite> instead.</p>
 
 <dl class="classmethod">
 <dt id="gensim.corpora.lowcorpus.LowCorpus.serialize">
-<em class="property">classmethod </em><tt class="descname">serialize</tt><big>(</big><em>serializer</em>, <em>fname</em>, <em>corpus</em>, <em>id2word=None</em>, <em>index_fname=None</em>, <em>progress_cnt=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus.serialize" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><tt class="descname">serialize</tt><big>(</big><em>serializer</em>, <em>fname</em>, <em>corpus</em>, <em>id2word=None</em>, <em>index_fname=None</em>, <em>progress_cnt=None</em>, <em>labels=None</em><big>)</big><a class="headerlink" href="#gensim.corpora.lowcorpus.LowCorpus.serialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Iterate through the document stream <cite>corpus</cite>, saving the documents to <cite>fname</cite>
 and recording byte offset of each document. Save the resulting index
 structure to file <cite>index_fname</cite> (or <cite>fname</cite>.index is not set).</p>
@@ -225,7 +225,7 @@ positioned at <cite>offset</cite> bytes within the persistent storage (file).</p
           <a href="mmcorpus.html" title="corpora.mmcorpus – Corpus in Matrix Market format"
              >next</a> |</li>
         <li class="right" >
-          <a href="dictionary.html" title="corpora.dictionary – Construct word&lt;-&gt;id mappings"
+          <a href="hashdictionary.html" title="corpora.hashdictionary – Construct word&lt;-&gt;id mappings"
              >previous</a> |</li>
         <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
         <li><a href="../tutorial.html">Tutorials</a>|&nbsp;</li>
@@ -240,7 +240,7 @@ positioned at <cite>offset</cite> bytes within the persistent storage (file).</p
 
     <div class="footer">
         &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Jul 22, 2012.
+      Last updated on Sep 16, 2012.
     </div>
   </body>
 </html>

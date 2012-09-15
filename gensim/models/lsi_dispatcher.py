@@ -82,7 +82,7 @@ class Dispatcher(object):
                     self.workers[workerid] = worker
                     worker.requestjob()
                 except Pyro4.errors.PyroError, err:
-                    logger.warning("unresponsive worker at %s, deleting it from the name server" % uri)
+                    logger.exception("unresponsive worker at %s, deleting it from the name server" % uri)
                     ns.remove(name)
 
         if len(self.workers) == 0:
@@ -98,14 +98,14 @@ class Dispatcher(object):
 
     def getjob(self, worker_id):
         logger.info("worker #%i requesting a new job" % worker_id)
-        job = self.jobs.get(block = True, timeout=HUGE_TIMEOUT)
+        job = self.jobs.get(block=True, timeout=HUGE_TIMEOUT)
         logger.info("worker #%i got a new job (%i left)" % (worker_id, self.jobs.qsize()))
         return job
 
 
     def putjob(self, job):
         self._jobsreceived += 1
-        self.jobs.put(job, block = True, timeout=HUGE_TIMEOUT)
+        self.jobs.put(job, block=True, timeout=HUGE_TIMEOUT)
         logger.info("added a new job (len(queue)=%i items)" % self.jobs.qsize())
 
 

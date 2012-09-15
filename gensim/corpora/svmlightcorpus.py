@@ -70,7 +70,7 @@ class SvmLightCorpus(IndexedCorpus):
 
 
     @staticmethod
-    def save_corpus(fname, corpus, id2word=None):
+    def save_corpus(fname, corpus, id2word=None, labels=False):
         """
         Save a corpus in the SVMlight format.
 
@@ -80,12 +80,13 @@ class SvmLightCorpus(IndexedCorpus):
         call it directly, call `serialize` instead.
         """
         logger.info("converting corpus to SVMlight format: %s" % fname)
-
+        
         offsets = []
         with open(fname, 'w') as fout:
             for docno, doc in enumerate(corpus):
+                label = labels[docno] if labels else 0 # target class is 0 by default
                 offsets.append(fout.tell())
-                fout.write(SvmLightCorpus.doc2line(doc)) # target class is always 0
+                fout.write(SvmLightCorpus.doc2line(doc, label))
         return offsets
 
 
@@ -112,8 +113,8 @@ class SvmLightCorpus(IndexedCorpus):
 
 
     @staticmethod
-    def doc2line(doc):
+    def doc2line(doc, label=0):
         pairs = ' '.join("%i:%s" % (termid + 1, termval) for termid, termval in doc) # +1 to convert 0-base to 1-base
-        return "0 %s\n" % pairs
+        return str(label) + " %s\n" % pairs
 #endclass SvmLightCorpus
 
