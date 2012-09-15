@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.5',
+        VERSION:     '0.8.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -148,7 +148,7 @@ even need to uncompress the whole archive to disk. There is a script included in
 the dictionary, one to create and store the sparse vectors) and takes about
 9 hours on my laptop, so you may want to go have a coffee or two.</p>
 <p class="last">Also, you will need about 35GB of free disk space to store the sparse output vectors.
-I recommend compressing these files immediately, e.g. with bzip2 (~13GB). Gensim
+I recommend compressing these files immediately, e.g. with bzip2 (down to ~13GB). Gensim
 can work with compressed files directly, so this lets you save disk space.</p>
 </div>
 </div>
@@ -274,7 +274,7 @@ diminishes. If there is topic drift in the input document stream, LDA will get
 confused and be increasingly slower at adjusting itself to the new state of affairs.</p>
 <p>In short, be careful if using LDA to incrementally add new documents to the model
 over time. <strong>Batch usage of LDA</strong>, where the entire training corpus is either known beforehand or does
-not exihibit topic drift, <strong>is ok and not affected</strong>.</p>
+not exhibit topic drift, <strong>is ok and not affected</strong>.</p>
 <p>To run batch LDA (not online), train <cite>LdaModel</cite> with:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># extract 100 LDA topics, using 20 full passes, no online updates</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">lda</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ldamodel</span><span class="o">.</span><span class="n">LdaModel</span><span class="p">(</span><span class="n">corpus</span><span class="o">=</span><span class="n">mm</span><span class="p">,</span> <span class="n">id2word</span><span class="o">=</span><span class="n">id2word</span><span class="p">,</span> <span class="n">num_topics</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">update_every</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">passes</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
@@ -362,7 +362,7 @@ By the way, improvements to the Wiki markup parsing code are welcome :-)</p>
 
     <div class="footer">
         &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 11, 2012.
+      Last updated on Sep 16, 2012.
     </div>
   </body>
 </html>
