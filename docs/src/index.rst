@@ -45,7 +45,8 @@ Quick Reference Example
 
 .. admonition:: What's new?
 
-   * 22 Jul 2012: release 0.8.5 `out <https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt>`_ : better Wikipedia parsing, faster similarity queries, maintenance fixes
+   * 15 Sep 2012: release 0.8.6 : added the `hashing trick <http://en.wikipedia.org/wiki/Hashing-Trick>`_ to allow online changes to the vocabulary; fixed parallel lemmatization + `other minor improvements <https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt>`_
+   * 22 Jul 2012: release 0.8.5 : better Wikipedia parsing, faster similarity queries, maintenance fixes
    * 30 Apr 2012: William Bert's `interview with me <http://williamjohnbert.com/2012/04/interview-with-radim-rehurek-creator-of-gensim/>`_
    * 9 Mar 2012: release 0.8.4: new model `Hierarchical Dirichlet Process <http://radimrehurek.com/gensim/models/hdpmodel.html>`_ (full `CHANGELOG <https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt>`_)
 

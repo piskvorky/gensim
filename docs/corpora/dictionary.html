@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.8.5',
+        VERSION:     '0.8.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -188,6 +188,17 @@ selected <cite>good_ids</cite> in the mapping and remove the rest.</p>
 <p><cite>bad_ids</cite> and <cite>good_ids</cite> are collections of word ids to be removed.</p>
 </dd></dl>
 
+<dl class="staticmethod">
+<dt id="gensim.corpora.dictionary.Dictionary.from_corpus">
+<em class="property">static </em><tt class="descname">from_corpus</tt><big>(</big><em>corpus</em><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.from_corpus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create Dictionary from an existing corpus. This can be useful if you only
+have a term-document BOW matrix (represented by <cite>corpus</cite>), but not the
+original text corpus.</p>
+<p>This will scan the term-document count matrix for all word ids that
+appear in it, then construct and return Dictionary which maps each
+<cite>word_id -&gt; str(word_id)</cite>.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="gensim.corpora.dictionary.Dictionary.keys">
 <tt class="descname">keys</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.corpora.dictionary.Dictionary.keys" title="Permalink to this definition">¶</a></dt>
@@ -261,7 +272,7 @@ Mirror function to <cite>save_as_text</cite>.</p>
 
     <div class="footer">
         &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 10, 2012.
+      Last updated on Sep 16, 2012.
     </div>
   </body>
 </html>

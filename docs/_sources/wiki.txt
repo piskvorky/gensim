@@ -30,7 +30,7 @@ Preparing the corpus
   9 hours on my laptop, so you may want to go have a coffee or two.
 
   Also, you will need about 35GB of free disk space to store the sparse output vectors.
-  I recommend compressing these files immediately, e.g. with bzip2 (~13GB). Gensim
+  I recommend compressing these files immediately, e.g. with bzip2 (down to ~13GB). Gensim
   can work with compressed files directly, so this lets you save disk space.
 
 Latent Sematic Analysis
@@ -162,7 +162,7 @@ confused and be increasingly slower at adjusting itself to the new state of affa
 
 In short, be careful if using LDA to incrementally add new documents to the model
 over time. **Batch usage of LDA**, where the entire training corpus is either known beforehand or does
-not exihibit topic drift, **is ok and not affected**.
+not exhibit topic drift, **is ok and not affected**.
 
 To run batch LDA (not online), train `LdaModel` with::
 

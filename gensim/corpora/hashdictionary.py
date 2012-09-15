@@ -9,7 +9,7 @@
 This module implements the concept of HashDictionary -- a mapping between words
 and their integer ids. The ids are computed as `hash(word) % id_range`, the idea
 being that new words can be represented immediately, without an extra pass through
-the corpus to collect all the ids first.
+the corpus to collect all the ids first. See http://en.wikipedia.org/wiki/Hashing-Trick .
 
 This means that, unline plain Dictionary, several words may map to the same id
 (~hash collisions). The word<->id mapping is no longer a bijection.
