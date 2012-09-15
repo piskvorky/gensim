@@ -1,6 +1,14 @@
 Changes
 =======
 
+0.8.6
+
+* added HashDictionary (by Homer Strong)
+* support for adding target classes in SVMlight format (by Corrado Monti)
+* fixed problems with global lemmatizer object when running in parallel on Windows
+* parallelization of Wikipedia processing + added script version that lemmatizes the input documents
+* added class method to initialize Dictionary from an existing corpus (by Marko Burjek)
+
 0.8.5
 
 * improved performance of sharding (similarity queries)
