@@ -406,6 +406,43 @@ grouper = chunkize_serial
 
 
 
+class InputQueue(multiprocessing.Process):
+    def __init__(self, q, corpus, chunksize, maxsize, as_numpy):
+        super(InputQueue, self).__init__()
+        self.q = q
+        self.maxsize = maxsize
+        self.corpus = corpus
+        self.chunksize = chunksize
+        self.as_numpy = as_numpy
+
+    def run(self):
+        if self.as_numpy:
+            import numpy # don't clutter the global namespace with a dependency on numpy
+        it = iter(self.corpus)
+        while True:
+            chunk = itertools.islice(it, self.chunksize)
+            if self.as_numpy:
+                # HACK XXX convert documents to numpy arrays, to save memory.
+                # This also gives a scipy warning at runtime:
+                # "UserWarning: indices array has non-integer dtype (float64)"
+                wrapped_chunk = [[numpy.asarray(doc) for doc in chunk]]
+            else:
+                wrapped_chunk = [list(chunk)]
+
+            if not wrapped_chunk[0]:
+                self.q.put(None, block=True)
+                break
+
+            try:
+                qsize = self.q.qsize()
+            except NotImplementedError:
+                qsize = '?'
+            logger.debug("prepared another chunk of %i documents (qsize=%s)" %
+                        (len(wrapped_chunk[0]), qsize))
+            self.q.put(wrapped_chunk.pop(), block=True)
+#endclass InputQueue
+
+
 def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
     """
     Split a stream of values into smaller chunks.
@@ -428,42 +465,6 @@ def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
     [8, 9]
 
     """
-    class InputQueue(multiprocessing.Process):
-        def __init__(self, q, corpus, chunksize, maxsize, as_numpy):
-            super(InputQueue, self).__init__()
-            self.q = q
-            self.maxsize = maxsize
-            self.corpus = corpus
-            self.chunksize = chunksize
-            self.as_numpy = as_numpy
-
-        def run(self):
-            if self.as_numpy:
-                import numpy # don't clutter the global namespace with a dependency on numpy
-            it = iter(self.corpus)
-            while True:
-                chunk = itertools.islice(it, self.chunksize)
-                if self.as_numpy:
-                    # HACK XXX convert documents to numpy arrays, to save memory.
-                    # This also gives a scipy warning at runtime:
-                    # "UserWarning: indices array has non-integer dtype (float64)"
-                    wrapped_chunk = [[numpy.asarray(doc) for doc in chunk]]
-                else:
-                    wrapped_chunk = [list(chunk)]
-
-                if not wrapped_chunk[0]:
-                    self.q.put(None, block=True)
-                    break
-
-                try:
-                    qsize = self.q.qsize()
-                except NotImplementedError:
-                    qsize = '?'
-                logger.debug("prepared another chunk of %i documents (qsize=%s)" %
-                            (len(wrapped_chunk[0]), qsize))
-                self.q.put(wrapped_chunk.pop(), block=True)
-    #endclass InputQueue
-
     assert chunksize > 0
 
     if maxsize > 0:
