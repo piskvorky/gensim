@@ -208,6 +208,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
 
         # reassign mappings to new ids
         self.token2id = dict((token, idmap[tokenid]) for token, tokenid in self.token2id.iteritems())
+        self.id2token = {}
         self.dfs = dict((idmap[tokenid], freq) for tokenid, freq in self.dfs.iteritems())
 
 
