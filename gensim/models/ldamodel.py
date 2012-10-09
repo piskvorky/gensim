@@ -203,7 +203,7 @@ class LdaModel(interfaces.TransformationABC):
             raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
 
         if self.id2word is None:
-            logger.info("no word id mapping provided; initializing from corpus, assuming identity")
+            logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
         else:
@@ -535,7 +535,7 @@ class LdaModel(interfaces.TransformationABC):
 
 
     def print_topics(self, topics=10, topn=10):
-        self.show_topics(topics, topn, True)
+        return self.show_topics(topics, topn, True)
 
     def show_topics(self, topics=10, topn=10, log=False, formatted=True):
         """
