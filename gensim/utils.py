@@ -24,6 +24,8 @@ from functools import wraps # for `synchronous` function lock
 from htmlentitydefs import name2codepoint as n2cp # for `decode_htmlentities`
 import multiprocessing
 import shutil
+import traceback
+
 
 try:
     from pattern.en import parse
@@ -49,6 +51,7 @@ def synchronous(tlockname):
         def _synchronizer(self, *args, **kwargs):
             tlock = getattr(self, tlockname)
             logger.debug("acquiring lock %r for %s" % (tlockname, func.func_name))
+
             with tlock: # use lock as a context manager to perform safe acquire/release pairs
                 logger.debug("acquired lock %r for %s" % (tlockname, func.func_name))
                 result = func(self, *args, **kwargs)
@@ -59,6 +62,10 @@ def synchronous(tlockname):
 
 
 class NoCM(object):
+    def acquire(self):
+        pass
+    def release(self):
+        pass
     def __enter__(self):
         pass
     def __exit__(self, type, value, traceback):

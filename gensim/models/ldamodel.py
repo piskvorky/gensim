@@ -550,7 +550,7 @@ class LdaModel(interfaces.TransformationABC):
             # print all topics if `topics` is negative
             topics = self.num_topics
         topics = min(topics, self.num_topics)
-        shown  = []
+        shown = []
         for i in xrange(topics):
             if formatted:
                 topic = self.print_topic(i, topn=topn)
