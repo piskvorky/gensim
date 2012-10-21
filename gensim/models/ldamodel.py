@@ -293,7 +293,8 @@ class LdaModel(interfaces.TransformationABC):
             _ = len(chunk)
         except:
             chunk = list(chunk) # convert iterators/generators to plain list, so we have len() etc.
-        logger.debug("performing inference on a chunk of %i documents" % len(chunk))
+        if len(chunk) > 1:
+            logger.debug("performing inference on a chunk of %i documents" % len(chunk))
 
         # Initialize the variational distribution q(theta|gamma) for the chunk
         gamma = numpy.random.gamma(100., 1./100., (len(chunk), self.num_topics))

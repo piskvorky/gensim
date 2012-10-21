@@ -84,33 +84,34 @@ class Shard(utils.SaveLoad):
 
     """
     def __init__(self, fname, index):
-        self.fname = fname
+        self.dirname, self.fname = os.path.split(fname)
         self.length = len(index)
         self.cls = index.__class__
-        logger.info("saving index shard to %s" % fname)
-        index.save(fname)
+        logger.info("saving index shard to %s" % self.fullname())
+        index.save(self.fullname())
         self.index = self.get_index()
 
+    def fullname(self):
+        return os.path.join(self.dirname, self.fname)
 
     def __len__(self):
         return self.length
 
     def __getstate__(self):
         result = self.__dict__.copy()
+        # (S)MS objects must be loaded via load() because of mmap (simple pickle.load won't do)
         del result['index']
         return result
 
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-        self.index = self.get_index()
-
     def __str__(self):
-        return ("%s Shard(%i documents in %s)" % (self.cls.__name__, len(self), self.fname))
+        return ("%s Shard(%i documents in %s)" % (self.cls.__name__, len(self), self.fullname()))
 
 
     def get_index(self):
-        logger.debug("mmaping index from %s" % self.fname)
-        return self.cls.load(self.fname)
+        if not hasattr(self, 'index'):
+            logger.debug("mmaping index from %s" % self.fullname())
+            self.index = self.cls.load(self.fullname())
+        return self.index
 
 
     def get_document_id(self, pos):
@@ -120,11 +121,11 @@ class Shard(utils.SaveLoad):
         MatrixSimilarity and scipy.sparse for SparseMatrixSimilarity.
         """
         assert 0 <= pos < len(self), "requested position out of range"
-        return self.index.index[pos]
+        return self.get_index().index[pos]
 
 
     def __getitem__(self, query):
-        index = self.index
+        index = self.get_index()
         try:
             index.num_best = self.num_best
             index.normalize = self.normalize
@@ -433,8 +434,17 @@ class Similarity(interfaces.SimilarityABC):
                 # (unlike numpy). so, clip the end of the chunk explicitly to make
                 # scipy.sparse happy
                 chunk_end = min(query.shape[0], chunk_start + chunksize)
-                chunk = query[chunk_start : chunk_end] # create a view
+                chunk = query[chunk_start: chunk_end] # create a view
                 yield chunk
+
+
+    def check_moved(self):
+        """
+        Update shard locations, in case the server directory has moved on filesystem.
+        """
+        dirname = os.path.dirname(self.output_prefix)
+        for shard in self.shards:
+            shard.dirname = dirname
 
 
     def save(self, fname=None):
