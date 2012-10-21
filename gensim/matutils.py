@@ -118,11 +118,20 @@ def ismatrix(m):
     return isinstance(m, numpy.ndarray) and m.ndim == 2 or scipy.sparse.issparse(m)
 
 
-def scipy2sparse(vec):
+def any2sparse(vec, eps=1e-9):
+    """Convert a numpy/scipy vector gensim format (list of 2-tuples)."""
+    if isinstance(vec, numpy.ndarray):
+        return dense2vec(vec, eps)
+    if scipy.sparse.issparse(vec):
+        return scipy2sparse(vec, eps)
+    return [(int(fid), float(fw)) for fid, fw in vec if numpy.abs(fw) > eps]
+
+
+def scipy2sparse(vec, eps=1e-9):
     """Convert a scipy.sparse vector to gensim format (list of 2-tuples)."""
     vec = vec.tocsr()
     assert vec.shape[0] == 1
-    return zip(vec.indices, vec.data)
+    return [(int(pos), float(val)) for pos, val in zip(vec.indices, vec.data) if numpy.abs(val) > eps]
 
 
 class Scipy2Corpus(object):
@@ -158,7 +167,7 @@ def full2sparse(vec, eps=1e-9):
 
     Values of magnitude < `eps` are treated as zero (ignored).
     """
-    return [(pos, val) for pos, val in enumerate(vec) if numpy.abs(val) > eps]
+    return [(pos, float(val)) for pos, val in enumerate(vec) if numpy.abs(val) > eps]
 #    # slightly faster but less flexible:
 #    nnz = vec.nonzero()[0]
 #    return zip(nnz, vec[nnz])
@@ -177,7 +186,7 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
     result = []
     for i in numpy.argsort(vec)[::-1]:
         if abs(vec[i]) > eps: # ignore features with near-zero weight
-            result.append((i, vec[i]))
+            result.append((i, float(vec[i])))
             if len(result) == topn:
                 break
     return result
