@@ -485,7 +485,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
         """
         if num_features is None:
-            logger.info("scanning corpus to determine the number of features")
+            logger.warning("scanning corpus to determine the number of features (consider setting `num_features` explicitly)")
             num_features = 1 + utils.get_max_id(corpus)
 
         self.num_features = num_features
@@ -494,6 +494,8 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         self.chunksize = chunksize
 
         if corpus is not None:
+            if self.num_features <= 0:
+                raise ValueError("cannot index a corpus with zero features (you must specify either `num_features` or a non-empty corpus in the constructor)")
             logger.info("creating matrix for %s documents and %i features" %
                          (len(corpus), num_features))
             self.index = numpy.empty(shape=(len(corpus), num_features), dtype=dtype)
