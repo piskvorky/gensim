@@ -74,8 +74,8 @@ def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_n
             if printprogress and docno % printprogress == 0:
                 logger.info("PROGRESS: at document #%i/%i" % (docno, num_docs))
             posnext = posnow + len(doc)
-            indices[posnow : posnext] = [feature_id for feature_id, _ in doc]
-            data[posnow : posnext] = [feature_weight for _, feature_weight in doc]
+            indices[posnow: posnext] = [feature_id for feature_id, _ in doc]
+            data[posnow: posnext] = [feature_weight for _, feature_weight in doc]
             indptr.append(posnext)
             posnow = posnext
         assert posnow == num_nnz, "mismatch between supplied and computed number of non-zeros"
