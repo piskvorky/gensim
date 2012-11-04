@@ -363,6 +363,7 @@ class Similarity(interfaces.SimilarityABC):
             # gc doesn't seem to collect the Pools, eventually leading to
             # "IOError 24: too many open files". so let's terminate it manually.
             pool.terminate()
+
         return result
 
 

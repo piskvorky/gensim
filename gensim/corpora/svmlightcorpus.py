@@ -14,7 +14,6 @@ from __future__ import with_statement
 
 import logging
 
-from gensim import interfaces, utils
 from gensim.corpora import IndexedCorpus
 
 
@@ -74,13 +73,14 @@ class SvmLightCorpus(IndexedCorpus):
         """
         Save a corpus in the SVMlight format.
 
-        The SVMlight `<target>` class tag is set to 0 for all documents.
+        The SVMlight `<target>` class tag is taken from the `labels` array, or set
+        to 0 for all documents if `labels` is not supplied.
 
         This function is automatically called by `SvmLightCorpus.serialize`; don't
         call it directly, call `serialize` instead.
         """
         logger.info("converting corpus to SVMlight format: %s" % fname)
-        
+
         offsets = []
         with open(fname, 'w') as fout:
             for docno, doc in enumerate(corpus):
@@ -100,13 +100,15 @@ class SvmLightCorpus(IndexedCorpus):
 
 
     def line2doc(self, line):
+        """
+        Create a document from a single line (string) in SVMlight format
+        """
         line = line[: line.find('#')].strip()
         if not line:
             return None # ignore comments and empty lines
         parts = line.split()
         if not parts:
-            raise ValueError('invalid format at line no. %i in %s' %
-                             (lineNo, self.fname))
+            raise ValueError('invalid line format in %s' % self.fname)
         target, fields = parts[0], [part.rsplit(':', 1) for part in parts[1:]]
         doc = [(int(p1) - 1, float(p2)) for p1, p2 in fields if p1 != 'qid'] # ignore 'qid' features, convert 1-based feature ids to 0-based
         return doc
@@ -114,7 +116,9 @@ class SvmLightCorpus(IndexedCorpus):
 
     @staticmethod
     def doc2line(doc, label=0):
+        """
+        Output the document in SVMlight format, as a string. Inverse function to `line2doc`.
+        """
         pairs = ' '.join("%i:%s" % (termid + 1, termval) for termid, termval in doc) # +1 to convert 0-base to 1-base
         return str(label) + " %s\n" % pairs
 #endclass SvmLightCorpus
-
