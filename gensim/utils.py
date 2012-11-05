@@ -126,14 +126,14 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
         yield match.group()
 
 
-def simple_preprocess(doc):
+def simple_preprocess(doc, deacc=False):
     """
     Convert a document into a list of tokens.
 
     This lowercases, tokenizes, stems, normalizes etc. -- the output are final,
     utf8 encoded strings that won't be processed any further.
     """
-    tokens = [token.encode('utf8') for token in tokenize(doc, lower=True, errors='ignore')
+    tokens = [token.encode('utf8') for token in tokenize(doc, lower=True, deacc=deacc, errors='ignore')
             if 2 <= len(token) <= 15 and not token.startswith('_')]
     return tokens
 
