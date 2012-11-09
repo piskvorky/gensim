@@ -242,6 +242,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
                 wordid = int(wordid)
                 result.token2id[word] = wordid
                 result.dfs[wordid] = int(docfreq)
+        result.num_docs = len(result.dfs)
         return result
 
 
