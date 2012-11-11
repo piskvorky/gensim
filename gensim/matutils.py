@@ -281,7 +281,7 @@ def unitvec(vec):
     except:
         return vec
 
-    if isinstance(first, tuple): # gensim sparse format?
+    if isinstance(first, (tuple, list)) and len(first) == 2: # gensim sparse format?
         length = 1.0 * math.sqrt(sum(val**2 for _, val in vec))
         assert length > 0.0, "sparse documents must not contain any explicit zero entries"
         if length != 1.0:
