@@ -257,7 +257,7 @@ class LdaModel(interfaces.TransformationABC):
 
         # Initialize the variational distribution q(beta|lambda)
         self.state = LdaState(self.eta, (self.num_topics, self.num_terms))
-        self.state.sstats = numpy.random.gamma(100., 1./100., (self.num_topics, self.num_terms))
+        self.state.sstats = numpy.random.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
         self.sync_state()
 
         # if a training corpus was provided, start estimating the model right away
@@ -302,7 +302,7 @@ class LdaModel(interfaces.TransformationABC):
             logger.debug("performing inference on a chunk of %i documents" % len(chunk))
 
         # Initialize the variational distribution q(theta|gamma) for the chunk
-        gamma = numpy.random.gamma(100., 1./100., (len(chunk), self.num_topics))
+        gamma = numpy.random.gamma(100., 1. / 100., (len(chunk), self.num_topics))
         Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = numpy.exp(Elogtheta)
         if collect_sstats:
