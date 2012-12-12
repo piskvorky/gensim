@@ -46,7 +46,20 @@ class BleiCorpus(IndexedCorpus):
         logger.info("loading corpus from %s" % fname)
 
         if fname_vocab is None:
-            fname_vocab = fname + '.vocab'
+            from os import path
+            fname_base,_ = path.splitext(fname)
+            fname_dir = path.dirname(fname)
+            for fname_vocab in [
+                        fname + '.vocab',
+                        fname + '/vocab.txt',
+                        fname_base + '.vocab',
+                        fname_dir + '/vocab.txt',
+                        ]:
+                if path.exists(fname_vocab):
+                    break
+            else:
+                raise IOError('BleiCorpus: could not find vocabulary file')
+
 
         self.fname = fname
         words = [word.rstrip() for word in open(fname_vocab)]
