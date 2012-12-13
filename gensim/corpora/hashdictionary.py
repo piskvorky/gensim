@@ -198,7 +198,7 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
             (no_below, no_above_abs, 100.0 * no_above))
 
 
-    def save_as_text(self, fname):
+    def save_as_text(self, fname, use_bzip2=False):
         """
         Save this HashDictionary to a text file, for easier debugging.
 
@@ -208,7 +208,7 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
         Note: use `save`/`load` to store in binary format instead (pickle).
         """
         logger.info("saving HashDictionary mapping to %s" % fname)
-        with open(fname, 'wb') as fout:
+        with utils.open_maybe_bz2(fname, 'wb', use_bzip2) as fout:
             for tokenid in self.keys():
                 words = sorted(self[tokenid])
                 if words:

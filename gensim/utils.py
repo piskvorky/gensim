@@ -488,16 +488,21 @@ def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         for chunk in chunkize_serial(corpus, chunksize):
             yield chunk
 
+def open_maybe_bz2(fname, mode, use_bzip2):
+    if use_bzip2:
+        from bz2 import BZ2File
+        return BZ2File(fname, mode)
+    return open(fname, mode)
 
-def pickle(obj, fname, protocol=-1):
+def pickle(obj, fname, protocol=-1, use_bzip2=False):
     """Pickle object `obj` to file `fname`."""
-    with open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
+    with open_maybe_bz2(fname, 'wb', use_bzip2) as fout: # 'b' for binary, needed on Windows
         cPickle.dump(obj, fout, protocol=protocol)
 
 
-def unpickle(fname):
+def unpickle(fname, use_bzip2=False):
     """Load pickled object from `fname`"""
-    return cPickle.load(open(fname, 'rb'))
+    return cPickle.load(open_maybe_bz2(fname, 'rb', use_bzip2))
 
 
 def revdict(d):
