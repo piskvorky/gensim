@@ -212,7 +212,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         self.dfs = dict((idmap[tokenid], freq) for tokenid, freq in self.dfs.iteritems())
 
 
-    def save_as_text(self, fname, use_bzip2=False):
+    def save_as_text(self, fname):
         """
         Save this Dictionary to a text file, in format:
         `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`.
@@ -220,19 +220,19 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         Note: use `save`/`load` to store in binary format instead (pickle).
         """
         logger.info("saving dictionary mapping to %s" % fname)
-        with utils.open_maybe_bz2(fname, 'wb', use_bzip2) as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             for token, tokenid in sorted(self.token2id.iteritems()):
                 fout.write("%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0)))
 
 
     @staticmethod
-    def load_from_text(fname, use_bzip2=False):
+    def load_from_text(fname):
         """
         Load a previously stored Dictionary from a text file.
         Mirror function to `save_as_text`.
         """
         result = Dictionary()
-        with utils.open_maybe_bz2(fname, 'rb', True) as f:
+        with utils.smart_open(fname, 'rb') as f:
             for lineno, line in enumerate(f):
                 try:
                     wordid, word, docfreq = line[:-1].split('\t')
