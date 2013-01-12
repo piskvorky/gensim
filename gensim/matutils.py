@@ -33,7 +33,7 @@ try:
 except ImportError:
     # numpy < 1.4
     def triu_indices(n, k=0):
-        m = numpy.ones((n,n), int)
+        m = numpy.ones((n, n), int)
         a = triu(m, k)
         return numpy.where(a != 0)
 

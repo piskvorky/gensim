@@ -36,7 +36,7 @@ The algorithm:
 
 from __future__ import with_statement
 
-import logging, os, itertools, time
+import logging, itertools, time
 import numpy as np
 import scipy.special as sp
 
@@ -47,23 +47,25 @@ logger = logging.getLogger(__name__)
 meanchangethresh = 0.00001
 rhot_bound = 0.0
 
+
 def log_normalize(v):
     log_max = 100.0
     if len(v.shape) == 1:
         max_val = np.max(v)
-        log_shift = log_max - np.log(len(v)+1.0) - max_val
+        log_shift = log_max - np.log(len(v) + 1.0) - max_val
         tot = np.sum(np.exp(v + log_shift))
         log_norm = np.log(tot) - log_shift
         v = v - log_norm
     else:
         max_val = np.max(v, 1)
-        log_shift = log_max - np.log(v.shape[1]+1.0) - max_val
-        tot = np.sum(np.exp(v + log_shift[:,np.newaxis]), 1)
+        log_shift = log_max - np.log(v.shape[1] + 1.0) - max_val
+        tot = np.sum(np.exp(v + log_shift[:, np.newaxis]), 1)
 
         log_norm = np.log(tot) - log_shift
-        v = v - log_norm[:,np.newaxis]
+        v = v - log_norm[:, np.newaxis]
 
     return (v, log_norm)
+
 
 def dirichlet_expectation(alpha):
     """
@@ -72,6 +74,7 @@ def dirichlet_expectation(alpha):
     if (len(alpha.shape) == 1):
         return(sp.psi(alpha) - sp.psi(np.sum(alpha)))
     return(sp.psi(alpha) - sp.psi(np.sum(alpha, 1))[:, np.newaxis])
+
 
 def expect_log_sticks(sticks):
     """
@@ -83,9 +86,10 @@ def expect_log_sticks(sticks):
 
     n = len(sticks[0]) + 1
     Elogsticks = np.zeros(n)
-    Elogsticks[0:n-1] = ElogW
+    Elogsticks[0: n - 1] = ElogW
     Elogsticks[1:] = Elogsticks[1:] + np.cumsum(Elog1_W)
     return Elogsticks
+
 
 def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
     gamma = np.ones(len(alpha))
@@ -96,16 +100,16 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
     for _ in xrange(max_iter):
         lastgamma = gamma
 
-        gamma = alpha + expElogtheta * np.dot(counts/phinorm,  betad.T)
+        gamma = alpha + expElogtheta * np.dot(counts / phinorm, betad.T)
         Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = np.exp(Elogtheta)
         phinorm = np.dot(expElogtheta, betad) + 1e-100
-        meanchange = np.mean(abs(gamma-lastgamma))
+        meanchange = np.mean(abs(gamma - lastgamma))
         if (meanchange < meanchangethresh):
             break
 
     likelihood = np.sum(counts * np.log(phinorm))
-    likelihood += np.sum((alpha-gamma) * Elogtheta)
+    likelihood += np.sum((alpha - gamma) * Elogtheta)
     likelihood += np.sum(sp.gammaln(gamma) - sp.gammaln(alpha))
     likelihood += sp.gammaln(np.sum(alpha)) - sp.gammaln(np.sum(gamma))
 
@@ -169,12 +173,12 @@ class HdpModel(interfaces.TransformationABC):
         self.m_alpha = alpha
         self.m_gamma = gamma
 
-        self.m_var_sticks = np.zeros((2, T-1))
+        self.m_var_sticks = np.zeros((2, T - 1))
         self.m_var_sticks[0] = 1.0
-        self.m_var_sticks[1] = range(T-1, 0, -1)
+        self.m_var_sticks[1] = range(T - 1, 0, -1)
         self.m_varphi_ss = np.zeros(T)
 
-        self.m_lambda = np.random.gamma(1.0, 1.0, (T, self.m_W)) * self.m_D*100/(T*self.m_W)-eta
+        self.m_lambda = np.random.gamma(1.0, 1.0, (T, self.m_W)) * self.m_D * 100 / (T * self.m_W) - eta
         self.m_eta = eta
         self.m_Elogbeta = dirichlet_expectation(self.m_eta + self.m_lambda)
 
@@ -254,7 +258,7 @@ class HdpModel(interfaces.TransformationABC):
         self.m_lambda[:, word_list] *= np.exp(self.m_r[-1] - rw)
         self.m_Elogbeta[:, word_list] = \
             sp.psi(self.m_eta + self.m_lambda[:, word_list]) - \
-            sp.psi(self.m_W*self.m_eta + self.m_lambda_sum[:, np.newaxis])
+            sp.psi(self.m_W * self.m_eta + self.m_lambda_sum[:, np.newaxis])
 
         ss = SuffStats(self.m_T, Wt, len(chunk))
 
@@ -287,12 +291,12 @@ class HdpModel(interfaces.TransformationABC):
 
         Elogbeta_doc = self.m_Elogbeta[:, doc_word_ids]
         ## very similar to the hdp equations
-        v = np.zeros((2, self.m_K-1))
+        v = np.zeros((2, self.m_K - 1))
         v[0] = 1.0
         v[1] = self.m_alpha
 
         # back to the uniform
-        phi = np.ones((len(doc_word_ids), self.m_K)) * 1.0/self.m_K
+        phi = np.ones((len(doc_word_ids), self.m_K)) * 1.0 / self.m_K
 
         likelihood = 0.0
         old_likelihood = -1e200
@@ -326,9 +330,9 @@ class HdpModel(interfaces.TransformationABC):
                 phi = np.exp(log_phi)
 
             # v
-            phi_all = phi * np.array(doc_word_counts)[:,np.newaxis]
-            v[0] = 1.0 + np.sum(phi_all[:,:self.m_K-1], 0)
-            phi_cum = np.flipud(np.sum(phi_all[:,1:], 0))
+            phi_all = phi * np.array(doc_word_counts)[:, np.newaxis]
+            v[0] = 1.0 + np.sum(phi_all[:, :self.m_K - 1], 0)
+            phi_cum = np.flipud(np.sum(phi_all[:, 1:], 0))
             v[1] = self.m_alpha + np.flipud(np.cumsum(phi_cum))
             Elogsticks_2nd = expect_log_sticks(v)
 
@@ -339,9 +343,9 @@ class HdpModel(interfaces.TransformationABC):
 
             # v part/ v in john's notation, john's beta is alpha here
             log_alpha = np.log(self.m_alpha)
-            likelihood += (self.m_K-1) * log_alpha
+            likelihood += (self.m_K - 1) * log_alpha
             dig_sum = sp.psi(np.sum(v, 0))
-            likelihood += np.sum((np.array([1.0, self.m_alpha])[:,np.newaxis]-v) * (sp.psi(v)-dig_sum))
+            likelihood += np.sum((np.array([1.0, self.m_alpha])[:, np.newaxis] - v) * (sp.psi(v) - dig_sum))
             likelihood -= np.sum(sp.gammaln(np.sum(v, 0))) - np.sum(sp.gammaln(v))
 
             # Z part
@@ -350,7 +354,7 @@ class HdpModel(interfaces.TransformationABC):
             # X part, the data part
             likelihood += np.sum(phi.T * np.dot(var_phi, Elogbeta_doc * doc_word_counts))
 
-            converge = (likelihood - old_likelihood)/abs(old_likelihood)
+            converge = (likelihood - old_likelihood) / abs(old_likelihood)
             old_likelihood = likelihood
 
             if converge < -0.000001:
@@ -376,23 +380,23 @@ class HdpModel(interfaces.TransformationABC):
         self.m_rhot = rhot
 
         # Update appropriate columns of lambda based on documents.
-        self.m_lambda[:, word_list] = self.m_lambda[:, word_list] * (1-rhot) + \
+        self.m_lambda[:, word_list] = self.m_lambda[:, word_list] * (1 - rhot) + \
             rhot * self.m_D * sstats.m_var_beta_ss / sstats.m_chunksize
-        self.m_lambda_sum = (1-rhot) * self.m_lambda_sum+ \
+        self.m_lambda_sum = (1 - rhot) * self.m_lambda_sum + \
             rhot * self.m_D * np.sum(sstats.m_var_beta_ss, axis=1) / sstats.m_chunksize
 
         self.m_updatect += 1
         self.m_timestamp[word_list] = self.m_updatect
-        self.m_r.append(self.m_r[-1] + np.log(1-rhot))
+        self.m_r.append(self.m_r[-1] + np.log(1 - rhot))
 
-        self.m_varphi_ss = (1.0-rhot) * self.m_varphi_ss + rhot * \
+        self.m_varphi_ss = (1.0 - rhot) * self.m_varphi_ss + rhot * \
                sstats.m_var_sticks_ss * self.m_D / sstats.m_chunksize
 
         if opt_o:
-            self.optimal_ordering();
+            self.optimal_ordering()
 
         ## update top level sticks
-        self.m_var_sticks[0] = self.m_varphi_ss[:self.m_T-1] + 1.0
+        self.m_var_sticks[0] = self.m_varphi_ss[:self.m_T - 1] + 1.0
         var_phi_sum = np.flipud(self.m_varphi_ss[1:])
         self.m_var_sticks[1] = np.flipud(np.cumsum(var_phi_sum)) + self.m_gamma
 
@@ -403,9 +407,9 @@ class HdpModel(interfaces.TransformationABC):
         """
         idx = np.argsort(self.m_lambda_sum)[::-1]
         self.m_varphi_ss = self.m_varphi_ss[idx]
-        self.m_lambda = self.m_lambda[idx,:]
+        self.m_lambda = self.m_lambda[idx, :]
         self.m_lambda_sum = self.m_lambda_sum[idx]
-        self.m_Elogbeta = self.m_Elogbeta[idx,:]
+        self.m_Elogbeta = self.m_Elogbeta[idx, :]
 
 
     def update_expectations(self):
@@ -420,7 +424,7 @@ class HdpModel(interfaces.TransformationABC):
             self.m_lambda[:, w] *= np.exp(self.m_r[-1] -
                                           self.m_r[self.m_timestamp[w]])
         self.m_Elogbeta = sp.psi(self.m_eta + self.m_lambda) - \
-            sp.psi(self.m_W*self.m_eta + self.m_lambda_sum[:, np.newaxis])
+            sp.psi(self.m_W * self.m_eta + self.m_lambda_sum[:, np.newaxis])
 
         self.m_timestamp[:] = self.m_updatect
         self.m_status_up_to_date = True
@@ -474,13 +478,13 @@ class HdpModel(interfaces.TransformationABC):
         Compute the LDA almost equivalent HDP.
         """
         # alpha
-        sticks = self.m_var_sticks[0]/(self.m_var_sticks[0]+self.m_var_sticks[1])
+        sticks = self.m_var_sticks[0] / (self.m_var_sticks[0] + self.m_var_sticks[1])
         alpha = np.zeros(self.m_T)
         left = 1.0
-        for i in range(0, self.m_T-1):
+        for i in range(0, self.m_T - 1):
             alpha[i] = sticks[i] * left
             left = left - alpha[i]
-        alpha[self.m_T-1] = left
+        alpha[self.m_T - 1] = left
         alpha = alpha * self.m_alpha
 
         # beta

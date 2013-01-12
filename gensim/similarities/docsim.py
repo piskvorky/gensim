@@ -100,7 +100,8 @@ class Shard(utils.SaveLoad):
     def __getstate__(self):
         result = self.__dict__.copy()
         # (S)MS objects must be loaded via load() because of mmap (simple pickle.load won't do)
-        del result['index']
+        if 'index' in result:
+            del result['index']
         return result
 
     def __str__(self):
