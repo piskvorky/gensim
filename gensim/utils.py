@@ -488,16 +488,26 @@ def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         for chunk in chunkize_serial(corpus, chunksize):
             yield chunk
 
+def smart_open(fname, mode):
+    from os import path
+    _,ext = path.splitext(fname)
+    if ext == '.bz2':
+        from bz2 import BZ2File
+        return BZ2File(fname, mode)
+    if ext == '.gz':
+        from gzip import GzipFile
+        return GzipFile(fname, mode)
+    return open(fname, mode)
 
 def pickle(obj, fname, protocol=-1):
     """Pickle object `obj` to file `fname`."""
-    with open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
+    with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
         cPickle.dump(obj, fout, protocol=protocol)
 
 
 def unpickle(fname):
     """Load pickled object from `fname`"""
-    return cPickle.load(open(fname, 'rb'))
+    return cPickle.load(smart_open(fname, 'rb'))
 
 
 def revdict(d):
