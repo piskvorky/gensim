@@ -606,13 +606,15 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
 
 # the following is only available when the optional 'pattern' package is installed
 if HAS_PATTERN:
-    ALLOWED_TAGS = re.compile('(NN|VB|JJ|RB)') # ignore everything except nouns, verbs, adjectives and adverbs
-
-    def lemmatize(content, light=False):
+    def lemmatize(content, light=False, allowed_tags=re.compile('(NN|VB|JJ|RB)')):
         """
         Use the English lemmatizer from the `pattern` package to extract tokens in
         their base form=lemma, e.g. "are, is, being" -> "be" etc.
-        This is a smarter version of stemming.
+        This is a smarter version of stemming. Only consider nouns, verbs, adjectives
+        and adverbs by default (=all other lemmas are discarded).
+
+        >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
+        ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
 
         From http://www.clips.ua.ac.be/pages/pattern-en#parser :
 
@@ -635,7 +637,7 @@ if HAS_PATTERN:
         for sentence in parsed:
             for token, tag, _, _, lemma in sentence:
                 if 2 <= len(lemma) <= 15 and not lemma.startswith('_'):
-                    if ALLOWED_TAGS.match(tag):
+                    if allowed_tags.match(tag):
                         lemma += "/" + tag[:2]
                         result.append(lemma.encode('utf8'))
         return result
