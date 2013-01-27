@@ -608,14 +608,19 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
 if HAS_PATTERN:
     ALLOWED_TAGS = re.compile('(NN|VB|JJ|RB)') # ignore everything except nouns, verbs, adjectives and adverbs
 
-    def lemmatize(content, light = False):
+    def lemmatize(content, light=False):
         """
         Use the English lemmatizer from the `pattern` package to extract tokens in
-        their base form (lemmas: "are, is, being"->"be" etc.).
+        their base form=lemma, e.g. "are, is, being" -> "be" etc.
         This is a smarter version of stemming.
-        
-        If light=True a different algorithm is used as descriped here:
-        http://www.clips.ua.ac.be/pages/pattern-en#parser.
+
+        From http://www.clips.ua.ac.be/pages/pattern-en#parser :
+
+            The parser is built on a Brill lexicon of tagged words and rules to
+            improve the tags context-wise. With light=False, it uses Brill's contextual
+            rules. With light=True it uses Jason Wiener's simpler ruleset. This
+            ruleset is 5-10x faster but also 25% less accurate.
+
         """
         # tokenization in `pattern` is weird; it gets thrown off by non-letters,
         # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
