@@ -252,6 +252,7 @@ def veclen(vec):
 blas_nrm2 = blas('nrm2', numpy.array([], dtype=float))
 blas_scal = blas('scal', numpy.array([], dtype=float))
 
+
 def unitvec(vec):
     """
     Scale a vector to unit length. The only exception is the zero vector, which
@@ -262,7 +263,7 @@ def unitvec(vec):
     """
     if scipy.sparse.issparse(vec): # convert scipy.sparse to standard numpy array
         vec = vec.tocsr()
-        veclen = numpy.sqrt(numpy.sum(vec.data**2))
+        veclen = numpy.sqrt(numpy.sum(vec.data ** 2))
         if veclen > 0.0:
             return vec / veclen
         else:
@@ -282,7 +283,7 @@ def unitvec(vec):
         return vec
 
     if isinstance(first, (tuple, list)) and len(first) == 2: # gensim sparse format?
-        length = 1.0 * math.sqrt(sum(val**2 for _, val in vec))
+        length = 1.0 * math.sqrt(sum(val ** 2 for _, val in vec))
         assert length > 0.0, "sparse documents must not contain any explicit zero entries"
         if length != 1.0:
             return [(termid, val / length) for termid, val in vec]
