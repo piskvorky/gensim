@@ -167,10 +167,9 @@ def full2sparse(vec, eps=1e-9):
 
     Values of magnitude < `eps` are treated as zero (ignored).
     """
-    return [(pos, float(val)) for pos, val in enumerate(vec) if numpy.abs(val) > eps]
-#    # slightly faster but less flexible:
-#    nnz = vec.nonzero()[0]
-#    return zip(nnz, vec[nnz])
+    vec = numpy.asarray(vec, dtype=float)
+    nnz = numpy.nonzero(abs(vec) > eps)[0]
+    return zip(nnz, vec.take(nnz))
 
 dense2vec = full2sparse
 
@@ -183,13 +182,10 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
     # this is about 40x faster than explicitly forming all 2-tuples to run sort() or heapq.nlargest() on.
     if topn <= 0:
         return []
-    result = []
-    for i in numpy.argsort(vec)[::-1]:
-        if abs(vec[i]) > eps: # ignore features with near-zero weight
-            result.append((i, float(vec[i])))
-            if len(result) == topn:
-                break
-    return result
+    vec = numpy.asarray(vec, dtype=float)
+    nnz = numpy.nonzero(abs(vec) > eps)[0]
+    biggest = nnz.take(numpy.argsort(vec.take(nnz))[::-1][:topn])
+    return zip(biggest, vec.take(biggest))
 
 
 def corpus2dense(corpus, num_terms):
