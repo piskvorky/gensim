@@ -39,7 +39,7 @@ priority levels; to activate logging (this is optional), run
 Quick Example
 -------------
 
-First, let's import gensim and create a small corpus of nine documents [1]_:
+First, let's import gensim and create a small corpus of nine documents and twelve features [1]_:
 
 >>> from gensim import corpora, models, similarities
 >>>
@@ -91,7 +91,7 @@ Transformations are covered in detail in the tutorial on :doc:`tut2`.
 
 To transform the whole corpus via TfIdf and index it, in preparation for similarity queries:
 
->>> index = similarities.SparseMatrixSimilarity(tfidf[corpus])
+>>> index = similarities.SparseMatrixSimilarity(tfidf[corpus], num_features=12)
 
 and to query the similarity of our query vector ``vec`` against every document in the corpus:
 

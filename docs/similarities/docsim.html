@@ -275,6 +275,12 @@ representation is empty), the returned list will always be empty.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="gensim.similarities.docsim.Similarity.check_moved">
+<tt class="descname">check_moved</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.check_moved" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update shard locations, in case the server directory has moved on filesystem.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="gensim.similarities.docsim.Similarity.close_shard">
 <tt class="descname">close_shard</tt><big>(</big><big>)</big><a class="headerlink" href="#gensim.similarities.docsim.Similarity.close_shard" title="Permalink to this definition">¶</a></dt>
 <dd><p>Force the latest shard to close (be converted to a matrix and stored
@@ -408,7 +414,7 @@ mmap&#8217;ed), under <cite>fname.array_name.npy</cite>.</p>
 
     <div class="footer">
         &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 16, 2012.
+      Last updated on Feb 17, 2013.
     </div>
   </body>
 </html>

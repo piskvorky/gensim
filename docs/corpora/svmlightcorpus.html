@@ -137,10 +137,22 @@ feature ids to be 1-based (counting starts at 1). We convert features to 0-base
 internally by decrementing all ids when loading a SVMlight input file, and
 increment them again when saving as SVMlight.</p>
 <p>Initialize the corpus from a file.</p>
+<dl class="staticmethod">
+<dt id="gensim.corpora.svmlightcorpus.SvmLightCorpus.doc2line">
+<em class="property">static </em><tt class="descname">doc2line</tt><big>(</big><em>doc</em>, <em>label=0</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus.doc2line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output the document in SVMlight format, as a string. Inverse function to <cite>line2doc</cite>.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="gensim.corpora.svmlightcorpus.SvmLightCorpus.docbyoffset">
 <tt class="descname">docbyoffset</tt><big>(</big><em>offset</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus.docbyoffset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the document stored at file position <cite>offset</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="gensim.corpora.svmlightcorpus.SvmLightCorpus.line2doc">
+<tt class="descname">line2doc</tt><big>(</big><em>line</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus.line2doc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a document from a single line (string) in SVMlight format</p>
 </dd></dl>
 
 <dl class="classmethod">
@@ -159,7 +171,8 @@ increment them again when saving as SVMlight.</p>
 <dt id="gensim.corpora.svmlightcorpus.SvmLightCorpus.save_corpus">
 <em class="property">static </em><tt class="descname">save_corpus</tt><big>(</big><em>fname</em>, <em>corpus</em>, <em>id2word=None</em>, <em>labels=False</em><big>)</big><a class="headerlink" href="#gensim.corpora.svmlightcorpus.SvmLightCorpus.save_corpus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save a corpus in the SVMlight format.</p>
-<p>The SVMlight <cite>&lt;target&gt;</cite> class tag is set to 0 for all documents.</p>
+<p>The SVMlight <cite>&lt;target&gt;</cite> class tag is taken from the <cite>labels</cite> array, or set
+to 0 for all documents if <cite>labels</cite> is not supplied.</p>
 <p>This function is automatically called by <cite>SvmLightCorpus.serialize</cite>; don&#8217;t
 call it directly, call <cite>serialize</cite> instead.</p>
 </dd></dl>
@@ -231,7 +244,7 @@ positioned at <cite>offset</cite> bytes within the persistent storage (file).</p
 
     <div class="footer">
         &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 16, 2012.
+      Last updated on Feb 17, 2013.
     </div>
   </body>
 </html>

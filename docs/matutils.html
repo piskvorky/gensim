@@ -189,6 +189,12 @@ is allowed to be larger than the available RAM.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="gensim.matutils.any2sparse">
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">any2sparse</tt><big>(</big><em>vec</em>, <em>eps=1e-09</em><big>)</big><a class="headerlink" href="#gensim.matutils.any2sparse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a numpy/scipy vector gensim format (list of 2-tuples).</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="gensim.matutils.corpus2csc">
 <tt class="descclassname">gensim.matutils.</tt><tt class="descname">corpus2csc</tt><big>(</big><em>corpus</em>, <em>num_terms=None</em>, <em>dtype=&lt;type 'numpy.float64'&gt;</em>, <em>num_docs=None</em>, <em>num_nnz=None</em>, <em>printprogress=0</em><big>)</big><a class="headerlink" href="#gensim.matutils.corpus2csc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format,
@@ -240,7 +246,7 @@ because the memory used in <cite>la[0]</cite> is reclaimed earlier.</p>
 
 <dl class="function">
 <dt id="gensim.matutils.scipy2sparse">
-<tt class="descclassname">gensim.matutils.</tt><tt class="descname">scipy2sparse</tt><big>(</big><em>vec</em><big>)</big><a class="headerlink" href="#gensim.matutils.scipy2sparse" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.matutils.</tt><tt class="descname">scipy2sparse</tt><big>(</big><em>vec</em>, <em>eps=1e-09</em><big>)</big><a class="headerlink" href="#gensim.matutils.scipy2sparse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a scipy.sparse vector to gensim format (list of 2-tuples).</p>
 </dd></dl>
 
@@ -298,7 +304,7 @@ or numpy array=&gt;numpy array, scipy.sparse=&gt;scipy.sparse).</p>
 
     <div class="footer">
         &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 16, 2012.
+      Last updated on Feb 17, 2013.
     </div>
   </body>
 </html>

@@ -320,10 +320,21 @@ result is forcefully defined as <cite>is_corpus=False</cite>.</p>
 
 <dl class="function">
 <dt id="gensim.utils.lemmatize">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">lemmatize</tt><big>(</big><em>content</em><big>)</big><a class="headerlink" href="#gensim.utils.lemmatize" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">lemmatize</tt><big>(</big><em>content</em>, <em>light=False</em>, <em>allowed_tags=&lt;_sre.SRE_Pattern object at 0x107d529f0&gt;</em><big>)</big><a class="headerlink" href="#gensim.utils.lemmatize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use the English lemmatizer from the <cite>pattern</cite> package to extract tokens in
-their base form (lemmas: &#8220;are, is, being&#8221;-&gt;&#8221;be&#8221; etc.).
-This is a smarter version of stemming.</p>
+their base form=lemma, e.g. &#8220;are, is, being&#8221; -&gt; &#8220;be&#8221; etc.
+This is a smarter version of stemming. Only consider nouns, verbs, adjectives
+and adverbs by default (=all other lemmas are discarded).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lemmatize</span><span class="p">(</span><span class="s">&#39;Hello World! How is it going?! Nonexistentword, 21&#39;</span><span class="p">)</span>
+<span class="go">[&#39;world/NN&#39;, &#39;be/VB&#39;, &#39;go/VB&#39;, &#39;nonexistentword/NN&#39;]</span>
+</pre></div>
+</div>
+<p>From <a class="reference external" href="http://www.clips.ua.ac.be/pages/pattern-en#parser">http://www.clips.ua.ac.be/pages/pattern-en#parser</a> :</p>
+<blockquote>
+<div>The parser is built on a Brill lexicon of tagged words and rules to
+improve the tags context-wise. With light=False, it uses Brill&#8217;s contextual
+rules. With light=True it uses Jason Wiener&#8217;s simpler ruleset. This
+ruleset is 5-10x faster but also 25% less accurate.</div></blockquote>
 </dd></dl>
 
 <dl class="function">
@@ -350,7 +361,7 @@ result (which one is kept is arbitrary).</p>
 
 <dl class="function">
 <dt id="gensim.utils.simple_preprocess">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">simple_preprocess</tt><big>(</big><em>doc</em><big>)</big><a class="headerlink" href="#gensim.utils.simple_preprocess" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">simple_preprocess</tt><big>(</big><em>doc</em>, <em>deacc=False</em><big>)</big><a class="headerlink" href="#gensim.utils.simple_preprocess" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a document into a list of tokens.</p>
 <p>This lowercases, tokenizes, stems, normalizes etc. &#8211; the output are final,
 utf8 encoded strings that won&#8217;t be processed any further.</p>
@@ -452,7 +463,7 @@ will be sent in smaller chunks, of <cite>chunksize</cite> documents each.</p>
 
     <div class="footer">
         &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 16, 2012.
+      Last updated on Feb 17, 2013.
     </div>
   </body>
 </html>

@@ -270,6 +270,13 @@ that maps document_id-&gt;document.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="simserver.simserver.SimIndex.index_vectors">
+<tt class="descname">index_vectors</tt><big>(</big><em>vectors</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.index_vectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update fresh index with new vectors. <cite>vectors</cite> is a dictionary-like object (=dict, sqlitedict, shelve etc)
+that maps document_id-&gt;vector.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="simserver.simserver.SimIndex.merge">
 <tt class="descname">merge</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimIndex.merge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Merge documents from the other index. Update precomputed similarities
@@ -322,7 +329,7 @@ in the process.</p>
 
 <dl class="class">
 <dt id="simserver.simserver.SimModel">
-<em class="property">class </em><tt class="descclassname">simserver.simserver.</tt><tt class="descname">SimModel</tt><big>(</big><em>fresh_docs</em>, <em>dictionary=None</em>, <em>method='lsi'</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">simserver.simserver.</tt><tt class="descname">SimModel</tt><big>(</big><em>fresh_docs</em>, <em>dictionary=None</em>, <em>method=None</em>, <em>params=None</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>A semantic model responsible for translating between plain text and (semantic)
 vectors.</p>
 <p>These vectors can then be indexed/queried for similarity, see the <cite>SimIndex</cite>
@@ -364,7 +371,7 @@ class. Used internally by <cite>SimServer</cite>.</p>
 
 <dl class="class">
 <dt id="simserver.simserver.SimServer">
-<em class="property">class </em><tt class="descclassname">simserver.simserver.</tt><tt class="descname">SimServer</tt><big>(</big><em>basename</em>, <em>use_locks=True</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">simserver.simserver.</tt><tt class="descname">SimServer</tt><big>(</big><em>basename</em>, <em>use_locks=False</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Top-level functionality for similarity services. A similarity server takes
 care of:</p>
 <ol class="arabic simple">
@@ -415,13 +422,15 @@ is also implicitly called when you call <cite>index()</cite> and <cite>train()</
 <dl class="method">
 <dt id="simserver.simserver.SimServer.find_similar">
 <tt class="descname">find_similar</tt><big>(</big><em>doc</em>, <em>min_score=0.0</em>, <em>max_results=100</em><big>)</big><a class="headerlink" href="#simserver.simserver.SimServer.find_similar" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find at most <cite>max_results</cite> most similar articles in the index,
-each having similarity score of at least <cite>min_score</cite>.</p>
-<p><cite>doc</cite> is either a string (document id, previously indexed) or a
+<dd><p>Find <cite>max_results</cite> most similar articles in the index, each having similarity
+score of at least <cite>min_score</cite>. The resulting list may be shorter than <cite>max_results</cite>,
+in case there are not enough matching documents.</p>
+<p><cite>doc</cite> is either a string (=document id, previously indexed) or a
 dict containing a &#8216;tokens&#8217; key. These tokens are processed to produce a
-vector, which is then used as a query.</p>
+vector, which is then used as a query against the index.</p>
 <p>The similar documents are returned in decreasing similarity order, as
-(doc_id, doc_score) pairs.</p>
+<cite>(doc_id, similarity_score, doc_payload)</cite> 3-tuples. The payload returned
+is identical to what was supplied for this document during indexing.</p>
 </dd></dl>
 
 <dl class="method">
@@ -472,7 +481,7 @@ or directly on <cite>corpus</cite>, if specified.</p>
 
 <dl class="function">
 <dt id="simserver.simserver.merge_sims">
-<tt class="descclassname">simserver.simserver.</tt><tt class="descname">merge_sims</tt><big>(</big><em>oldsims</em>, <em>newsims</em>, <em>clip=100</em><big>)</big><a class="headerlink" href="#simserver.simserver.merge_sims" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">simserver.simserver.</tt><tt class="descname">merge_sims</tt><big>(</big><em>oldsims</em>, <em>newsims</em>, <em>clip=None</em><big>)</big><a class="headerlink" href="#simserver.simserver.merge_sims" title="Permalink to this definition">¶</a></dt>
 <dd><p>Merge two precomputed similarity lists, truncating the result to <cite>clip</cite> most similar items.</p>
 </dd></dl>
 
@@ -511,7 +520,7 @@ or directly on <cite>corpus</cite>, if specified.</p>
 
     <div class="footer">
         &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 16, 2012.
+      Last updated on Feb 17, 2013.
     </div>
   </body>
 </html>

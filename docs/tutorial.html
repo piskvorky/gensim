@@ -175,7 +175,7 @@ priority levels; to activate logging (this is optional), run</p>
 </div>
 <div class="section" id="quick-example">
 <span id="first-example"></span><h2>Quick Example<a class="headerlink" href="#quick-example" title="Permalink to this headline">¶</a></h2>
-<p>First, let&#8217;s import gensim and create a small corpus of nine documents <a class="footnote-reference" href="#id2" id="id1">[1]</a>:</p>
+<p>First, let&#8217;s import gensim and create a small corpus of nine documents and twelve features <a class="footnote-reference" href="#id2" id="id1">[1]</a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">gensim</span> <span class="kn">import</span> <span class="n">corpora</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">similarities</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">corpus</span> <span class="o">=</span> <span class="p">[[(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)],</span>
@@ -222,7 +222,7 @@ a weighting which discounts common terms (or, equivalently, promotes rare terms)
 It also scales the resulting vector to unit length (in the <a class="reference external" href="http://en.wikipedia.org/wiki/Norm_%28mathematics%29#Euclidean_norm">Euclidean norm</a>).</p>
 <p>Transformations are covered in detail in the tutorial on <a class="reference internal" href="tut2.html"><em>Topics and Transformations</em></a>.</p>
 <p>To transform the whole corpus via TfIdf and index it, in preparation for similarity queries:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">SparseMatrixSimilarity</span><span class="p">(</span><span class="n">tfidf</span><span class="p">[</span><span class="n">corpus</span><span class="p">])</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">index</span> <span class="o">=</span> <span class="n">similarities</span><span class="o">.</span><span class="n">SparseMatrixSimilarity</span><span class="p">(</span><span class="n">tfidf</span><span class="p">[</span><span class="n">corpus</span><span class="p">],</span> <span class="n">num_features</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>and to query the similarity of our query vector <tt class="docutils literal"><span class="pre">vec</span></tt> against every document in the corpus:</p>
@@ -283,7 +283,7 @@ with <tt class="docutils literal"><span class="pre">vec</span></tt> at all (docu
 
     <div class="footer">
         &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Sep 16, 2012.
+      Last updated on Feb 17, 2013.
     </div>
   </body>
 </html>
