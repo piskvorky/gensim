@@ -40,6 +40,28 @@ except ImportError:
 blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
 
 
+try:
+    # with bottleneck installed, we can use faster sorting
+    import bottleneck
+
+    def argsort(x, topn=None):
+        """Return indices of the `topn` greatest elements in numpy array `x`, in order."""
+        if topn is None:
+            topn = x.size
+        if topn <= 0:
+            return []
+        if topn >= x.size:
+            return numpy.argsort(x)[::-1]
+        biggest = bottleneck.argpartsort(x, x.size - topn)[-topn:]
+        # the indices in `biggest` are not sorted by magnitude => sort & return
+        return biggest.take(numpy.argsort(x.take(biggest))[::-1])
+except ImportError:
+    # no bottleneck => fall back to numpy
+    def argsort(x, topn=None):
+        if topn is None:
+            topn = x.size
+        return numpy.argsort(x)[::-1][:topn]
+
 
 logger = logging.getLogger("gensim.matutils")
 
@@ -184,7 +206,7 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
         return []
     vec = numpy.asarray(vec, dtype=float)
     nnz = numpy.nonzero(abs(vec) > eps)[0]
-    biggest = nnz.take(numpy.argsort(vec.take(nnz))[::-1][:topn])
+    biggest = nnz.take(argsort(vec.take(nnz), topn))
     return zip(biggest, vec.take(biggest))
 
 

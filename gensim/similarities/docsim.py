@@ -73,7 +73,6 @@ except ImportError:
     pass
 
 
-
 class Shard(utils.SaveLoad):
     """
     A proxy class that represents a single shard instance within a Similarity
