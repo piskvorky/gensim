@@ -1,0 +1,696 @@
+a,a img{
+text-decoration:none;
+border:0;
+}
+html,
+body {    
+margin:0;
+padding:0;
+height:100%;
+}
+body{
+background: #fafafa url('../images/bg.png') top center repeat;   
+color:#333333;        
+font-family:arial;
+font-size:12px;
+}
+p{ 
+color:#333333;        
+font-family:arial;
+font-size:12px;
+}
+
+/* UKAZKY KODU */
+
+pre{
+overflow: auto;
+font-family: 'Consolas','Deja Vu Sans Mono', 'Bitstream Vera Sans Mono',monospace;
+font-size: 12px;
+text-align:left;
+background-color: #eeeaff;
+overflow-x: auto;
+white-space: -moz-pre-wrap !important; 
+word-wrap: break-word;
+margin: 0px 0px 0px 0px;
+padding:8px 9px 8px 13px;
+white-space : normal; 
+}   
+    /* BLACK */  
+.b{
+color:#000000; 
+}   /* BLACK BOLD */  
+.bb{
+color:#000000;   
+font-weight:bold;   
+font-size:13px;
+}   /* LIGHT BLUE */  
+.lb{   
+color:#0099CC; 
+}   /* ITALIC */        
+.i{
+font-style: italic;  
+font-weight:bold;   
+}   /* LIGHT BLUE ITALIC */  
+.lbi{
+color:#0099CC; 
+font-style: italic;
+}  /* GREEN */ 
+.g{   
+color:#2C6700; 
+}  /* GREEN BOLD */   
+.gb{   
+color:#2C6700;    
+font-weight:bold;  
+}  /* RED */   
+.r{   
+color:#FF0000;     
+}  /* RED BOLD */   
+.rb{   
+color:#FF0000; 
+font-weight:bold;      
+}  
+
+/* DALSI OBECNE */
+
+ul li{
+color:#333333;        
+font-family:arial;
+font-size:12px;
+}
+.obsah ul li a,.obsah a{
+color:#006699;   
+font-weight:bold;     
+text-decoration:underline;
+}
+.obsah ul li a:hover,.obsah a:hover{
+color:#000;   
+font-weight:bold;  
+}
+h1{
+margin:0;
+padding:0;
+}
+h2{
+margin:0;
+padding:0;
+font-size:36px;
+color:#fff;
+text-shadow: 3px 3px 3px #404040;
+}              
+h3{
+margin:0;
+padding:0 0 40px 0; 
+font-size:32px;
+color:#333333;
+}
+h4{
+margin:0;
+padding:0 0 40px 0; 
+font-size:22px;
+color:#333333;
+}
+h5{
+margin:0;
+padding:0 0 40px 0; 
+font-size:18px;
+color:#333333;
+}
+
+/* LOGO, NADPIS A DOWNLOAD */
+
+#topwrap{
+width:980px;
+margin: 0 auto;
+}
+#top{
+height:225px;
+}
+#left{
+float:left; 
+padding-top: 83px;
+width: 120px;
+}
+#middleright{
+float:right;     
+}
+#middle{     
+float:left;
+width:490px;  
+padding-top: 83px;
+}  
+#right{     
+float:right;
+width:351px;      
+padding-top: 83px;
+}  
+#tagline{     
+padding-left:85px;
+}        
+#install{   
+float:right; 
+padding-right: 12px;           
+background: url('../images/direct-install.png') top center no-repeat;    
+width: 244px;
+height: 52px;
+}   
+#command{                   
+color:#485420;
+font-size:14px;
+font-family:arial;
+font-weight:bold;
+padding: 27px 0 0 72px;
+}
+.space10{
+height:10px;
+}
+
+/* MENU, MODRY PRUH */
+
+#menu{
+width: 974px;
+display: inline;
+}
+#odsazeni{
+padding-top:90px;
+float:right;
+}
+.menubuttonblue{
+float:left; 
+display: block;
+width: 124px;
+height: 39px;
+background: url('../images/menubutton.png') top;
+font-size:16px;    
+font-weight:bold;
+color:#ffffff;
+font-family:arial;    
+text-align:center; 
+line-height: 39px; 
+}     
+.menubutton{    
+line-height: 39px; 
+float:left;
+display: block;
+width: 124px;
+height: 39px;
+background: url('../images/menubutton.png') bottom;
+font-size:16px;    
+font-weight:bold;
+color:#333333;
+font-family:arial;
+text-align:center;
+}
+.menubutton:hover {    
+background-position: 0 0;
+}  
+.menubuttonblue a{
+color:#ffffff;
+}
+.menubutton a{
+color:#333333;
+}
+.menubutton a:hover{
+color:#ffffff;
+}
+#banner{
+width: 100%;
+height: 274px;
+clear:both;
+background: #006699;
+}     
+#thinbanner{
+width: 100%;
+height: 124px;
+clear:both;
+background: #006699;
+}   
+#bodythinbanner{
+width: 980px;
+height: 124px;
+padding-top:30px;
+margin: 0 auto;
+}
+#bodybanner{
+width: 980px;
+height: 274px;
+padding-top:30px;
+margin: 0 auto;
+}
+.leftbanner{
+float:left;
+}
+.rightbanner{
+float:right;
+}
+ul.description li{
+list-style: none;
+background: url('../images/checker.png') no-repeat left top;        
+font-size: 14px;
+padding: 6px 0 0 45px; 
+height:44px;
+font-weight:bold;
+color: #ffffff;   
+}
+ul.description{ 
+padding-left:6px;    
+padding-top:9px;    
+}     
+
+
+/* HLAVNI OBSAH, FEATURES, REFERENCE, GET STARTED */
+
+
+.podklad{
+margin-top:80px;
+margin-left:auto;
+margin-right:auto;
+width: 974px;
+background: #ffffff;
+-ms-filter: "progid:DXImageTransform.Microsoft.Shadow(Strength=4, Direction=135, Color='#cccccc')";
+filter: progid:DXImageTransform.Microsoft.Shadow(Strength=9, Direction=135, Color='#cccccc');
+-moz-border-radius: 5px;
+-webkit-border-radius: 5px;
+-khtml-border-radius: 5px;
+border-radius: 5px;         
+-moz-box-shadow: 3px 2px 3px 4px #cccccc;
+-webkit-box-shadow:  3px 2px 3px 4px #cccccc;
+box-shadow:  3px 2px 3px 4px #cccccc;
+}
+.podkladwrapper{
+padding:30px 0 20px 27px;
+}
+.obsah{
+margin-top:0;
+margin-left:auto;
+margin-right:auto;
+width: 974px;
+background: #ffffff;
+}
+.obsahwrapper{
+padding:30px 27px 20px 27px;
+}
+.feature{   
+padding-top:5px;
+vertical-align: 100%;  
+font-size:15px;
+padding-left: 15px;
+font-weight:bold;
+color:#333333;   
+}             
+.half1{
+width:520px;
+float:left;   
+}          
+.half2{
+width:400px;  
+float:right;   
+}
+.lefthalf1{
+float:left;
+display:block;
+}
+.lefthalf2{
+float:right;
+display:block;
+}
+.quarter1{
+width:260px;
+height: 90px; 
+}
+.quarter2{
+width:250px;    
+height: 90px;   
+}   
+.quarter3{
+width:195px;
+height: 90px; 
+}
+.quarter4{
+width:160px;
+height: 90px; 
+}
+.clearit{
+clear:both;
+}
+.center{
+margin:0 auto;
+text-align:center;
+}
+ul.reference{
+list-style-type: none;
+padding:0;
+margin:0;
+}
+ul.reference li{
+display:inline-block;
+padding-right:20px;
+}
+.reference1{   
+display:inline-block;
+width:247px;  
+background: url('../images/references/logo_edml.png') top center no-repeat; 
+padding-top: 100px; 
+padding-bottom:24px;  
+font-size:14px;
+font-style:italic;
+color:#333333;
+font-weight:bold;
+}
+.reference2{   
+display:inline-block;
+width:247px;  
+background: url('../images/references/logo_roistr.png') top center no-repeat; 
+padding-top: 100px;   
+font-size:14px;
+font-style:italic;
+color:#333333;
+font-weight:bold;
+}
+.reference3{ 
+display:inline-block;
+width:247px;  
+background: url('../images/references/logo_sportsauthority.png') top center no-repeat; 
+padding-top: 100px;   
+font-size:14px;
+font-style:italic;
+color:#333333;
+font-weight:bold;
+}
+.getstarted{
+text-align:center;
+padding: 30px 0 20px 0;
+}
+
+
+/* FOOTER */
+
+
+#footer{      
+margin: 0;
+width: 100%;
+height: 270px;
+clear:both;
+background: #072a47;  
+padding: 0;
+}
+#footerwrapper{
+width: 980px;
+height: 270px;
+padding-top:16px;
+margin: 0 auto;
+}
+#footerleft{
+width:329px;
+float:left;
+}
+#footermiddleright{   
+width:640px;
+float:right;    
+}
+#footermiddle{   
+width:355px;
+float:left;  
+padding-top:20px;  
+}
+#footerright{   
+width:285px;
+float:right;    
+}
+.smallerlogo{
+width: 44px;
+height: 44px;
+padding-right: 12px;
+}
+.copyright{
+font-size:14px;
+color:#ffffff;
+padding-top: 168px;
+}
+.navigation{
+list-style-type:none;   
+padding:0;
+margin:0;
+}
+.navigation li{
+display:inline-block;
+padding-right:5px;  
+font-size:14px;
+color:#ffffff;
+}
+.navigation li a{
+display:inline-block;   
+font-size:14px;
+color:#ffffff;
+}
+.tweetodsazeni{
+padding-top:174px;
+}
+.tweet{
+width:179px;
+height:39px;
+padding-left: 50px;  
+padding-top: 6px;  
+font-size:14px;
+color:#ffffff;
+background:url('../images/twitterbird.png') top left no-repeat;
+}
+a.tweet{
+font-size:14px;
+color:#ffffff;
+}
+.footernadpis{
+font-size:34px;
+color:#ffffff;
+}
+.googlegroupsodsazeni{
+padding-top:18px;
+}
+.googlegroups{
+width:300px;
+height:39px;
+padding-left: 45px;  
+padding-top: 10px;  
+font-size:14px;
+color:#ffffff;
+background:url('../images/googlegroups.png') top left no-repeat;
+}
+a.googlegroups{
+font-size:14px;
+color:#ffffff;
+}
+
+
+
+/* SLIDER STYLY */
+
+/*
+ * jQuery Nivo Slider v3.1
+ * http://nivo.dev7studios.com
+ *
+ * Copyright 2012, Dev7studios
+ * Free to use and abuse under the MIT license.
+ * http://www.opensource.org/licenses/mit-license.php
+ */
+
+.nivoSlider {
+	position:relative;
+	width:100%;
+	height:auto;
+	overflow: hidden;
+}
+.nivoSlider img {
+	position:absolute;
+	top:0px;
+	left:0px;
+	max-width: none;
+}
+.nivo-main-image {
+	display: block !important;
+	position: relative !important; 
+	width: 100% !important;  
+}
+
+.nivoSlider a.nivo-imageLink {
+	position:absolute;
+	top:0px;
+	left:0px;
+	width:100%;
+	height:100%;
+	border:0;
+	padding:0;
+	margin:0;
+	z-index:6;
+	display:none;
+}
+
+.nivo-slice {
+	display:block;
+	position:absolute;
+	z-index:5;
+	height:100%;
+	top:0;
+}
+.nivo-box {
+	display:block;
+	position:absolute;
+	z-index:5;
+	overflow:hidden;
+}
+.nivo-box img { display:block; }
+
+.nivo-caption {
+	position:absolute;
+	left:0px;
+	bottom:0px;
+	background:#000;
+	color:#fff;
+	width:100%;
+	z-index:8;
+	padding: 5px 10px;
+	opacity: 0.8;
+	overflow: hidden;
+	display: none;
+	-moz-opacity: 0.8;
+	filter:alpha(opacity=8);
+	-webkit-box-sizing: border-box; 
+	-moz-box-sizing: border-box;    
+	box-sizing: border-box;        
+}
+.nivo-caption p {
+	padding:5px;
+	margin:0;
+}
+.nivo-caption a {
+	display:inline !important;
+}
+.nivo-html-caption {
+    display:none;
+}
+
+.nivo-directionNav a {
+	position:absolute;
+	top:45%;
+	z-index:9;
+	cursor:pointer;
+}
+.nivo-prevNav {
+	left:0px;
+}
+.nivo-nextNav {
+	right:0px;
+}
+
+.nivo-controlNav {
+	text-align:center;
+	padding: 15px 0;
+}
+.nivo-controlNav a {
+	cursor:pointer;
+}
+.nivo-controlNav a.active {
+	font-weight:bold;
+}
+
+/*
+Skin Name: Nivo Slider Dark Theme
+Skin URI: http://nivo.dev7studios.com
+Description: A dark skin for the Nivo Slider.
+Version: 1.0
+Author: Gilbert Pellegrom
+Author URI: http://dev7studios.com
+Supports Thumbs: true
+*/
+
+.theme-dark.slider-wrapper {      
+    width: 281px;    
+    height: 196px;
+    padding-top:10px;
+    padding-bottom:10px;
+    padding-left:15px;
+    
+}
+.theme-dark .nivoSlider {
+	position:relative;
+	background: url(../images/loading.gif) no-repeat 50% 50%;
+  overflow: visible;
+  width: 281px;   
+  height: 196px;
+}                   
+.theme-dark .nivoSlider img {
+	position:absolute;
+	top:0px;
+	left:0px;
+	display:none;
+}
+.theme-dark .nivoSlider a {
+	border:0;
+	display:block;
+}
+
+.theme-dark .nivo-controlNav {
+	text-align: center;
+	padding: 0;
+  padding-top: 5px;
+	position: relative;
+	z-index: 10;     
+}
+.theme-dark .nivo-controlNav a {
+	display:inline-block;
+	width:10px;
+	height:10px;
+	background:url(../images/bullets.png) no-repeat 0 2px;
+	text-indent:-9999px;
+	border:0;
+	margin: 0 2px;
+}
+.theme-dark .nivo-controlNav a.active {
+	background-position:0 100%;
+}
+     
+.theme-dark .nivo-directionNav a {
+	display:block;
+	width:30px;
+	height:30px;
+	background: url(../images/arrows.png) no-repeat;
+	text-indent:-9999px;
+	border:0;
+  top: auto;
+	bottom: -27px;
+	z-index: 11;
+}               
+.theme-dark a.nivo-nextNav {
+	background-position:-16px 50%;
+	right:0px;
+}
+.theme-dark a.nivo-prevNav {
+    background-position:11px 50%;
+    left: auto;
+	right: 35px;
+}       
+
+.theme-dark .nivo-caption {
+    font-family: Helvetica, Arial, sans-serif;
+}
+.theme-dark .nivo-caption a {
+    color:#fff;
+    border-bottom:1px dotted #fff;
+}
+.theme-dark .nivo-caption a:hover {
+    color:#fff;
+}
+
+.theme-dark .nivo-controlNav.nivo-thumbs-enabled {
+	width: 80%;
+}
+.theme-dark .nivo-controlNav.nivo-thumbs-enabled a {
+	width: auto;
+	height: auto;
+	background: none;
+	margin-bottom: 5px;
+}
+.theme-dark .nivo-controlNav.nivo-thumbs-enabled img {
+	display: block;
+	width: 120px;
+	height: auto;
+}
+

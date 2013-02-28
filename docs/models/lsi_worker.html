@@ -1,119 +1,83 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+
+
+
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>models.lsi_worker – Worker for distributed LSI &mdash; gensim</title>
+      <title>models.lsi_worker – Worker for distributed LSI</title>
+
     
-    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/css/jquery.qtip.min.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/style.css" type="text/css" />
+
     
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '0.8.6',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+  <script type="text/javascript">
+  var DOCUMENTATION_OPTIONS = {
+    URL_ROOT: '../',
+    VERSION: '0.8.7',
+    COLLAPSE_INDEX: false,
+    FILE_SUFFIX: '.html',
+    HAS_SOURCE: true
+  };
+  </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="author" title="About these documents" href="../about.html" />
-    <link rel="top" title="gensim" href="../index.html" />
-    <link rel="up" title="API Reference" href="../apiref.html" />
-    <link rel="next" title="models.lda_dispatcher – Dispatcher for distributed LDA" href="lda_dispatcher.html" />
-    <link rel="prev" title="models.lsi_dispatcher – Dispatcher for distributed LSI" href="lsi_dispatcher.html" />
-     
+    <script type="text/javascript" src="../_static/js/changeimage.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery.nivo.slider.pack.js"></script>
 
-	<!-- twitter search widget
-	    <script type="text/javascript" src="_static/widget.js"></script>
-	-->
-	<meta property="og:title" content="#gensim" />
-	<meta property="og:description" content="Efficient topic modelling in Python" />
-
-	<script type="text/javascript">
-		var _gaq = _gaq || [];
-		_gaq.push(['_setAccount', 'UA-24066335-1']);
-		_gaq.push(['_trackPageview']);
-
-		(function() {
-		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-		})();
-	</script>
-
-    
-
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
 
   </head>
+
   <body>
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="lda_dispatcher.html" title="models.lda_dispatcher – Dispatcher for distributed LDA"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="lsi_dispatcher.html" title="models.lsi_dispatcher – Dispatcher for distributed LSI"
-             accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
-        <li><a href="../tutorial.html">Tutorials</a>|&nbsp;</li>
-        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
-        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
-        <li><a href="../apiref.html">API reference</a>&raquo;</li>
+    <div id="topwrap">
 
-          <li><a href="../apiref.html" accesskey="U">API Reference</a> &raquo;</li> 
-      </ul>
-    </div>
+      <div id="top1">
+        <div id="left1"><span class="h1gensim"><img src="../_static/images/logo-gensim.png" alt="gensim logo" /></span></div>
 
-    
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="lsi_dispatcher.html"
-                        title="previous chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.lsi_dispatcher</span></tt> &#8211; Dispatcher for distributed LSI</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="lda_dispatcher.html"
-                        title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">models.lda_dispatcher</span></tt> &#8211; Dispatcher for distributed LDA</a></p>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" size="24" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+        <div id="middleright">
+          <div id="middle1">
+            <div id="gensim"><a href="."><img src="../_static/images/gensim.png" alt="gensim" /></a></div>
+            <div id="tagline"><img src="../_static/images/tagline.png" alt="gensim tagline" /></div>
+          </div>
         </div>
       </div>
     
-
-
+      <div id="menu">
+        <div id="indentation">
+          <ul class="menubuttons">
+            <li class="menubuttonblue"><a href="index.html">Home</a></li>
+            <li class="menubutton"><a href="../tutorial.html">Tutorials</a></li>
+            <li class="menubutton"><a href="../install.html">Install</a></li>
+            <li class="menubutton"><a href="../support.html">Support</a></li>
+            <li class="menubutton"><a href="../about.html">About</a></li>
+          </ul>
+        </div>
+      </div>
+    
+      <div class="clearer"></div>
+    </div>
 
     <div class="document">
       <div class="documentwrapper">
-        <div class="bodywrapper">
           <div class="body">
-            
+            <div id="thinbanner">
+              <div id="bodythinbanner">
+                <span class="h2gensim">models.lsi_worker – Worker for distributed LSI</span>
+              </div>
+            </div>
+           <div class="obsah">
+              <div class="obsahwrapper">
+                
   <div class="section" id="module-gensim.models.lsi_worker">
 <span id="models-lsi-worker-worker-for-distributed-lsi"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">models.lsi_worker</span></tt> &#8211; Worker for distributed LSI<a class="headerlink" href="#module-gensim.models.lsi_worker" title="Permalink to this headline">¶</a></h1>
 <p>USAGE: %(program)s</p>
@@ -123,42 +87,78 @@
 </div>
 
 
+              </div>
+            </div>
           </div>
-        </div>
       </div>
+
       <div class="clearer"></div>
     </div>
-    
-        
-    <div class="related">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="lda_dispatcher.html" title="models.lda_dispatcher – Dispatcher for distributed LDA"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="lsi_dispatcher.html" title="models.lsi_dispatcher – Dispatcher for distributed LSI"
-             >previous</a> |</li>
-        <li><a href="../index.html">Gensim home</a>|&nbsp;</li>
-        <li><a href="../tutorial.html">Tutorials</a>|&nbsp;</li>
-        <li><a href="http://groups.google.com/group/gensim">Support</a>|&nbsp;</li>
-        <li><a href="https://github.com/piskvorky/gensim/wiki">Contribute</a>|&nbsp;</li>
-        <li><a href="../apiref.html">API reference</a>&raquo;</li>
 
-          <li><a href="../apiref.html" >API Reference</a> &raquo;</li> 
-      </ul>
-    </div>
-    
+    <div id="footer">
+      <div id="footerwrapper">
+        <div id="footerleft">
+          <img src="../_static/images/logo-gensim.png" class="smallerlogo" alt="smaller gensim logo" />
+          <img src="../_static/images/gensim-footer.png" alt="gensim footer image" />
+          <div class="copyright">
+            &copy; Copyright 2009-2013 Radim Řehůřek.<br />
+              Last updated on Feb 28, 2013.
+          </div>
+        </div>
 
-    <div class="footer">
-        &copy; Copyright 2009-2012, Radim Řehůřek &lt;radimrehurek(at)seznam.cz&gt;.
-      Last updated on Feb 17, 2013.
+        <div id="footermiddleright">
+          <div id="footermiddle">
+
+            <ul class="navigation">
+              <li><a href=".">
+                Home
+              </a></li>
+              <li>|</li>
+              <li><a href="../tutorial.html">
+                Tutorials
+              </a></li>
+              <li>|</li>
+              <li><a href="#">
+                Install
+              </a></li>
+              <li>|</li>
+              <li><a href="#">
+                Support
+              </a></li>
+              <li>|</li>
+              <li><a href="#">
+                About
+              </a></li>
+            </ul>
+
+            <div class="tweetodsazeni">
+              <div class="tweet">
+                Feel free to tweet !
+              </div>
+            </div>
+
+          </div>
+
+          <div id="footerright">
+            <div class="footernadpis">
+              Support:
+            </div>
+            <div class="googlegroupsodsazeni">
+              <div class="googlegroups">
+                Join the Google discussion group
+              </div>
+
+              <form action="http://groups.google.com/group/gensim/boxsubscribe">
+                <input type="text" name="email" placeholder="your@email.com" size="24" />
+                <input type="submit" name="sub" value="Subscribe" />
+              </form>
+
+            </div>
+
+          </div>
+
+        </div>
+      </div>
     </div>
   </body>
 </html>

@@ -41,9 +41,8 @@ blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
 
 
 try:
-    # with bottleneck installed, we can use faster sorting
+    # with bottleneck installed, we can use faster partial sorting
     import bottleneck
-
     def argsort(x, topn=None):
         """Return indices of the `topn` greatest elements in numpy array `x`, in order."""
         if topn is None:

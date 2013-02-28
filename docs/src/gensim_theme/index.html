@@ -1,0 +1,117 @@
+{% extends "layout.html" %}
+{% set title = _('Gensim: Topic modelling for humans') %}
+
+{% block body %}
+
+<p> FIXME </p>
+<div id="topwrap">
+  <div id="banner">
+
+    <div id="bodybanner">
+
+      <div class="leftbanner">
+        <div class="slider-wrapper theme-dark">
+          <div id="slider" class="nivoSlider">
+            <img src="{{ pathto('_static/images/ukazka.png', 1) }}" alt="What Gensim looks like" />
+            <img src="{{ pathto('_static/images/ukazka2.png', 1) }}" alt="What Gensim looks like" />
+            <img src="{{ pathto('_static/images/ukazka.png', 1) }}" alt="What Gensim looks like" />
+          </div>
+        </div>
+
+        <script type="text/javascript">
+        $(window).load(function() {
+          $('#slider').nivoSlider();
+        });
+        </script>
+
+      </div>
+
+      <div class="rightbanner">
+        <h2>Gensim is a FREE Python framework</h2>
+        <ul class="description">
+          <li>Automatically extracts semantic topics from documents</li>
+          <li>Aims at processing raw plain texts using the semantic structure of documents</li>
+          <li>Memory independent, straightforward interfaces, ideal for prototyping</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="podklad">
+  <div class="podkladwrapper">
+    <h3>Features</h3>
+
+    <div class="half1">
+      <div class="lefthalf1">
+        <div class="quarter1">
+          <img src="{{ pathto('_static/images/features/memory_independence.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Memory independence</a>
+        </div>
+        <div class="quarter2">
+          <img src="{{ pathto('_static/images/features/efficient_implementations.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Efficient implementations</a>
+        </div>
+      </div>
+      <div class="lefthalf2">
+        <div class="quarter1">
+          <img src="{{ pathto('_static/images/features/converters.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Converters &amp; I/O wrappers</a>
+        </div>
+        <div class="quarter2">
+          <img src="{{ pathto('_static/images/features/platform_independence.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Platform independence</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="half2">
+      <div class="lefthalf1">
+        <div class="quarter4">
+          <img src="{{ pathto('_static/images/features/robust.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Robust</a>
+        </div>
+        <div class="quarter3">
+          <img src="{{ pathto('_static/images/features/similarity_queries.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Similarity queries</a>
+        </div>
+      </div>
+      <div class="lefthalf2">
+        <div class="quarter3">
+          <img src="{{ pathto('_static/images/features/free_lgpl.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Free</a>
+        </div>
+        <div class="quarter3">
+          <img src="{{ pathto('_static/images/features/support.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Support</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="clearit"></div>
+  </div>
+</div>
+
+
+
+<div class="podklad">
+  <div class="podkladwrapper">
+    <h3>Who is using Gensim?</h3>
+
+    <div class="center">
+      <ul class="reference">
+        <li><div class="reference1">
+          “Gensim empowers the gigantic<br /> network of the EUDML”
+        </div></li>
+        <li><div class="reference2">
+          “Gensim is the core of Roistr's<br /> Semantic Relevance Engine”
+        </div></li>
+        <li><div class="reference3">
+          “Sports Authority uses<br />Gensim for db searching”
+        </div></li>
+      </ul>
+    </div>
+
+    <div class="clearit"></div>
+  </div>
+</div>
+
+<div class="getstarted">
+  <a href="#"><img src="{{ pathto('_static/images/get-started.png', 1) }}" alt="" /></a>
+</div>
+
+</div>
+
+{% endblock %}
