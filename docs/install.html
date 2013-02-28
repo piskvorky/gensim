@@ -31,11 +31,11 @@
     HAS_SOURCE: true
   };
   </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery.min.js"></script>
     <script type="text/javascript" src="_static/js/changeimage.js"></script>
     <script type="text/javascript" src="_static/js/jquery.nivo.slider.pack.js"></script>
+    <script type="text/javascript" src="_static/js/jquery.qtip.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-migrate-1.0.0.js"></script>
 
     <link rel="shortcut icon" href="_static/favicon.ico"/>
 
@@ -297,6 +297,15 @@ me an email to the address at the bottom of this page.</p>
       </div>
     </div>
     
+
+    <script type="text/javascript" class="example">
+      $(document).ready(function()
+      {
+        $('a[title]').qtip();
+      });
+    </script>
+
+    <script type="text/javascript" src="http://code.jquery.com/jquery-migrate-1.0.0.js"></script>
 
   </body>
 </html>

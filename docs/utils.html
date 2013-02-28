@@ -31,11 +31,11 @@
     HAS_SOURCE: true
   };
   </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/js/jquery.min.js"></script>
     <script type="text/javascript" src="_static/js/changeimage.js"></script>
     <script type="text/javascript" src="_static/js/jquery.nivo.slider.pack.js"></script>
+    <script type="text/javascript" src="_static/js/jquery.qtip.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-migrate-1.0.0.js"></script>
 
     <link rel="shortcut icon" href="_static/favicon.ico"/>
 
@@ -311,7 +311,7 @@ result is forcefully defined as <cite>is_corpus=False</cite>.</p>
 
 <dl class="function">
 <dt id="gensim.utils.lemmatize">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">lemmatize</tt><big>(</big><em>content</em>, <em>light=False</em>, <em>allowed_tags=&lt;_sre.SRE_Pattern object at 0x10c224ac0&gt;</em><big>)</big><a class="headerlink" href="#gensim.utils.lemmatize" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">lemmatize</tt><big>(</big><em>content</em>, <em>light=False</em>, <em>allowed_tags=&lt;_sre.SRE_Pattern object at 0x10f67aac0&gt;</em><big>)</big><a class="headerlink" href="#gensim.utils.lemmatize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use the English lemmatizer from the <cite>pattern</cite> package to extract tokens in
 their base form=lemma, e.g. &#8220;are, is, being&#8221; -&gt; &#8220;be&#8221; etc.
 This is a smarter version of stemming. Only consider nouns, verbs, adjectives
@@ -508,6 +508,15 @@ will be sent in smaller chunks, of <cite>chunksize</cite> documents each.</p>
       </div>
     </div>
     
+
+    <script type="text/javascript" class="example">
+      $(document).ready(function()
+      {
+        $('a[title]').qtip();
+      });
+    </script>
+
+    <script type="text/javascript" src="http://code.jquery.com/jquery-migrate-1.0.0.js"></script>
 
   </body>
 </html>

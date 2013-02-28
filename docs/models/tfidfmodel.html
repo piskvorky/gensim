@@ -31,11 +31,11 @@
     HAS_SOURCE: true
   };
   </script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery.min.js"></script>
     <script type="text/javascript" src="../_static/js/changeimage.js"></script>
     <script type="text/javascript" src="../_static/js/jquery.nivo.slider.pack.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery.qtip.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-migrate-1.0.0.js"></script>
 
     <link rel="shortcut icon" href="../_static/favicon.ico"/>
 
@@ -109,7 +109,7 @@
 <span id="models-tfidfmodel-tf-idf-model"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">models.tfidfmodel</span></tt> &#8211; TF-IDF model<a class="headerlink" href="#module-gensim.models.tfidfmodel" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="gensim.models.tfidfmodel.TfidfModel">
-<em class="property">class </em><tt class="descclassname">gensim.models.tfidfmodel.</tt><tt class="descname">TfidfModel</tt><big>(</big><em>corpus=None</em>, <em>id2word=None</em>, <em>dictionary=None</em>, <em>wlocal=&lt;function identity at 0x10c2770c8&gt;</em>, <em>wglobal=&lt;function df2idf at 0x10cd11758&gt;</em>, <em>normalize=True</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">gensim.models.tfidfmodel.</tt><tt class="descname">TfidfModel</tt><big>(</big><em>corpus=None</em>, <em>id2word=None</em>, <em>dictionary=None</em>, <em>wlocal=&lt;function identity at 0x10f6ce0c8&gt;</em>, <em>wglobal=&lt;function df2idf at 0x110167758&gt;</em>, <em>normalize=True</em><big>)</big><a class="headerlink" href="#gensim.models.tfidfmodel.TfidfModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Objects of this class realize the transformation between word-document co-occurrence
 matrix (integers) into a locally/globally weighted TF_IDF matrix (positive floats).</p>
 <p>The main methods are:</p>
@@ -270,6 +270,15 @@ frequencies for documents.</p>
       </div>
     </div>
     
+
+    <script type="text/javascript" class="example">
+      $(document).ready(function()
+      {
+        $('a[title]').qtip();
+      });
+    </script>
+
+    <script type="text/javascript" src="http://code.jquery.com/jquery-migrate-1.0.0.js"></script>
 
   </body>
 </html>
