@@ -10,6 +10,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta property="og:title" content="#gensim" />
+    <meta property="og:description" content="Efficient topic modelling in Python" />
+
     
       <title>utils – Various utility functions</title>
 
@@ -36,11 +39,31 @@
 
     <link rel="shortcut icon" href="_static/favicon.ico"/>
 
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-24066335-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+
+    <script type="text/javascript">
+      (function() {
+      var at = document.createElement('script'); at.type = 'text/javascript'; at.async = true;
+      at.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 's7.addthis.com/js/250/addthis_widget.js#pubid=ra-4d738b9b1d31ccbd';
+      var sat = document.getElementsByTagName('script')[0]; sat.parentNode.insertBefore(at, sat);
+      })();
+    </script>
+
   </head>
 
   <body>
     <div id="topwrap">
-
+      
       <div id="top1">
         <div id="left1"><span class="h1gensim"><img src="_static/images/logo-gensim.png" alt="gensim logo" /></span></div>
 
@@ -51,7 +74,9 @@
           </div>
         </div>
       </div>
-    
+     
+
+      
       <div id="menu">
         <div id="indentation">
           <ul class="menubuttons">
@@ -63,21 +88,23 @@
           </ul>
         </div>
       </div>
-    
+      
+
       <div class="clearer"></div>
     </div>
 
+    
+
     <div class="document">
-      <div class="documentwrapper">
-          <div class="body">
-            <div id="thinbanner">
-              <div id="bodythinbanner">
-                <span class="h2gensim">utils – Various utility functions</span>
-              </div>
-            </div>
-           <div class="obsah">
-              <div class="obsahwrapper">
-                
+      
+        <div id="thinbanner">
+          <div id="bodythinbanner">
+            <span class="h2gensim">utils – Various utility functions</span>
+          </div>
+        </div>
+        <div class="obsah">
+          <div class="obsahwrapper">
+            
   <div class="section" id="module-gensim.utils">
 <span id="utils-various-utility-functions"></span><h1><tt class="xref py py-mod docutils literal"><span class="pre">utils</span></tt> &#8211; Various utility functions<a class="headerlink" href="#module-gensim.utils" title="Permalink to this headline">¶</a></h1>
 <p>This module contains various general utility functions.</p>
@@ -284,7 +311,7 @@ result is forcefully defined as <cite>is_corpus=False</cite>.</p>
 
 <dl class="function">
 <dt id="gensim.utils.lemmatize">
-<tt class="descclassname">gensim.utils.</tt><tt class="descname">lemmatize</tt><big>(</big><em>content</em>, <em>light=False</em>, <em>allowed_tags=&lt;_sre.SRE_Pattern object at 0x10df56ac0&gt;</em><big>)</big><a class="headerlink" href="#gensim.utils.lemmatize" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">gensim.utils.</tt><tt class="descname">lemmatize</tt><big>(</big><em>content</em>, <em>light=False</em>, <em>allowed_tags=&lt;_sre.SRE_Pattern object at 0x10c224ac0&gt;</em><big>)</big><a class="headerlink" href="#gensim.utils.lemmatize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use the English lemmatizer from the <cite>pattern</cite> package to extract tokens in
 their base form=lemma, e.g. &#8220;are, is, being&#8221; -&gt; &#8220;be&#8221; etc.
 This is a smarter version of stemming. Only consider nouns, verbs, adjectives
@@ -392,13 +419,15 @@ will be sent in smaller chunks, of <cite>chunksize</cite> documents each.</p>
 </div>
 
 
-              </div>
-            </div>
           </div>
-      </div>
+        </div>
+      
 
       <div class="clearer"></div>
     </div>
+    
+
+    
 
     <div id="footer">
       <div id="footerwrapper">
@@ -413,9 +442,8 @@ will be sent in smaller chunks, of <cite>chunksize</cite> documents each.</p>
 
         <div id="footermiddleright">
           <div id="footermiddle">
-
             <ul class="navigation">
-              <li><a href=".">
+              <li><a href="index.html">
                 Home
               </a></li>
               <li>|</li>
@@ -423,18 +451,32 @@ will be sent in smaller chunks, of <cite>chunksize</cite> documents each.</p>
                 Tutorials
               </a></li>
               <li>|</li>
-              <li><a href="#">
+              <li><a href="install.html">
                 Install
               </a></li>
               <li>|</li>
-              <li><a href="#">
+              <li><a href="support.html">
                 Support
               </a></li>
               <li>|</li>
-              <li><a href="#">
+              <li><a href="about.html">
                 About
               </a></li>
             </ul>
+
+            <!-- AddThis Button BEGIN -->
+            <div class="addthis_toolbox addthis_default_style addthis_32x32_style"
+                addthis:title="#gensim"
+                addthis:description="Efficient Topic Modelling in Python"
+                style="margin:20px 0 0 0">
+              <a class="addthis_button_preferred_1"></a>
+              <a class="addthis_button_preferred_2"></a>
+              <a class="addthis_button_preferred_3"></a>
+              <a class="addthis_button_preferred_4"></a>
+              <a class="addthis_button_compact"></a>
+              <a class="addthis_counter addthis_bubble_style"></a>
+            </div>
+            <!-- AddThis Button END -->
 
             <div class="tweetodsazeni">
               <div class="tweet">
@@ -465,5 +507,7 @@ will be sent in smaller chunks, of <cite>chunksize</cite> documents each.</p>
         </div>
       </div>
     </div>
+    
+
   </body>
 </html>

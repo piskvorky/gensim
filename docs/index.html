@@ -10,8 +10,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta property="og:title" content="#gensim" />
+    <meta property="og:description" content="Efficient topic modelling in Python" />
+
     
-      <title>Gensim</title>
+      <title>Topic modelling for humans</title>
 
     
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -36,27 +39,50 @@
 
     <link rel="shortcut icon" href="_static/favicon.ico"/>
 
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-24066335-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+
+    <script type="text/javascript">
+      (function() {
+      var at = document.createElement('script'); at.type = 'text/javascript'; at.async = true;
+      at.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 's7.addthis.com/js/250/addthis_widget.js#pubid=ra-4d738b9b1d31ccbd';
+      var sat = document.getElementsByTagName('script')[0]; sat.parentNode.insertBefore(at, sat);
+      })();
+    </script>
+
   </head>
 
   <body>
     <div id="topwrap">
-      <div id="top">
-        <div id="left"><span class="h1gensim"><img src="_static/images/logo-gensim.png" alt="gensim logo" /></span></div>
+      
+    <div id="top">
+      <div id="left"><span class="h1gensim"><img src="_static/images/logo-gensim.png" alt="gensim logo" /></span></div>
 
-        <div id="middleright">
-          <div id="middle">
-            <div id="design_gensim"><a href="."><img src="_static/images/gensim.png" alt="gensim" /></a></div>
-            <div id="design_tagline"><img src="_static/images/tagline.png" alt="gensim tagline" /></div>
-          </div>
+      <div id="middleright">
+        <div id="middle">
+          <div id="design_gensim"><a href="."><img src="_static/images/gensim.png" alt="gensim" /></a></div>
+          <div id="design_tagline"><img src="_static/images/tagline.png" alt="gensim tagline" /></div>
+        </div>
 
-          <div id="right">
-            <div id="design_download"><a href="#"><img src="_static/images/download.png" alt="download" /></a></div>
-            <div class="space10"></div>
-            <div id="design_install"><div id="command">easy_install -U gensim</div></div>
-          </div>
+        <div id="right">
+          <div id="design_download"><a href="#"><img src="_static/images/download.png" alt="download" /></a></div>
+          <div class="space10"></div>
+          <div id="design_install"><div id="command">easy_install -U gensim</div></div>
         </div>
       </div>
+    </div>
 
+
+      
       <div id="menu">
         <div id="indentation">
           <ul class="menubuttons">
@@ -68,126 +94,125 @@
           </ul>
         </div>
       </div>
-    
+      
+
       <div class="clearer"></div>
     </div>
+
+    
 
     <div class="document">
-      <div class="documentwrapper">
-          <div class="body">
-            <div id="topwrap">
-              <div id="banner">
+      
+    <div id="design_banner">
 
-                <div id="bodybanner">
+      <div id="bodybanner">
 
-                  <div class="leftbanner">
-                    <div class="slider-wrapper theme-dark">
-                      <div id="slider" class="nivoSlider">
-                        <img src="_static/images/ukazka.png" alt="What Gensim looks like" />
-                        <img src="_static/images/ukazka2.png" alt="What Gensim looks like" />
-                        <img src="_static/images/ukazka.png" alt="What Gensim looks like" />
-                      </div>
-                    </div>
-
-                    <script type="text/javascript">
-                    $(window).load(function() {
-                      $('#slider').nivoSlider();
-                    });
-                    </script>
-
-                  </div>
-
-                  <div class="rightbanner">
-                    <span class="h2gensim">Gensim is a FREE Python framework</span>
-                    <ul class="description">
-                      <li>Automatically extracts semantic topics from documents</li>
-                      <li>Aims at processing raw plain texts using the semantic structure of documents</li>
-                      <li>Memory independent, straightforward interfaces, ideal for prototyping</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="podklad">
-              <div class="podkladwrapper">
-                <h3>Features</h3>
-
-                <div class="half1">
-                  <div class="lefthalf1">
-                    <div class="quarter1">
-                      <img src="_static/images/features/memory_independence.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Memory independence</a>
-                    </div>
-                    <div class="quarter2">
-                      <img src="_static/images/features/efficient_implementations.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Efficient implementations</a>
-                    </div>
-                  </div>
-                  <div class="lefthalf2">
-                    <div class="quarter1">
-                      <img src="_static/images/features/converters.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Converters &amp; I/O wrappers</a>
-                    </div>
-                    <div class="quarter2">
-                      <img src="_static/images/features/platform_independence.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Platform independence</a>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="half2">
-                  <div class="lefthalf1">
-                    <div class="quarter4">
-                      <img src="_static/images/features/robust.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Robust</a>
-                    </div>
-                    <div class="quarter3">
-                      <img src="_static/images/features/similarity_queries.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Similarity queries</a>
-                    </div>
-                  </div>
-                  <div class="lefthalf2">
-                    <div class="quarter3">
-                      <img src="_static/images/features/free_lgpl.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Free</a>
-                    </div>
-                    <div class="quarter3">
-                      <img src="_static/images/features/support.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Support</a>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="clearit"></div>
-              </div>
-            </div>
-
-            <div class="podklad">
-              <div class="podkladwrapper">
-                <h3>Who is using Gensim?</h3>
-
-                <div class="center">
-                  <ul class="reference">
-                    <li><div class="reference1">
-                      “Gensim empowers the gigantic<br /> network of the EUDML”
-                    </div></li>
-                    <li><div class="reference2">
-                      “Gensim is the core of Roistr's<br /> Semantic Relevance Engine”
-                    </div></li>
-                    <li><div class="reference3">
-                      “Sports Authority uses<br />Gensim for db searching”
-                    </div></li>
-                  </ul>
-                </div>
-
-                <div class="clearit"></div>
-              </div>
-            </div>
-
-            <div class="getstarted">
-              <a href="#"><img src="_static/images/get-started.png" alt="" /></a>
-            </div>
-
+        <div class="leftbanner">
+          <div class="slider-wrapper theme-dark">
+            <div id="slider" class="nivoSlider">
+              <img src="_static/images/ukazka.png" alt="What Gensim looks like" />
+              <img src="_static/images/ukazka2.png" alt="What Gensim looks like" />
+              <img src="_static/images/ukazka.png" alt="What Gensim looks like" />
             </div>
           </div>
+
+          <script type="text/javascript">
+          $(window).load(function() {
+            $('#slider').nivoSlider();
+          });
+          </script>
+
+        </div>
+
+        <div class="rightbanner">
+          <span class="h2gensim">Gensim is a FREE Python framework</span>
+          <ul class="description">
+            <li>Automatically extracts semantic topics from documents</li>
+            <li>Aims at processing raw plain texts using the semantic structure of documents</li>
+            <li>Memory independent, straightforward interfaces, ideal for prototyping</li>
+          </ul>
+        </div>
       </div>
+    </div>
+
+    <div class="podklad">
+      <div class="podkladwrapper">
+        <h3>Features</h3>
+
+        <div class="half1">
+          <div class="lefthalf1">
+            <div class="quarter1">
+              <img src="_static/images/features/memory_independence.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Memory independence</a>
+            </div>
+            <div class="quarter2">
+              <img src="_static/images/features/efficient_implementations.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Efficient implementations</a>
+            </div>
+          </div>
+          <div class="lefthalf2">
+            <div class="quarter1">
+              <img src="_static/images/features/converters.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Converters &amp; I/O wrappers</a>
+            </div>
+            <div class="quarter2">
+              <img src="_static/images/features/platform_independence.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Platform independence</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="half2">
+          <div class="lefthalf1">
+            <div class="quarter4">
+              <img src="_static/images/features/robust.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Robust</a>
+            </div>
+            <div class="quarter3">
+              <img src="_static/images/features/similarity_queries.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Similarity queries</a>
+            </div>
+          </div>
+          <div class="lefthalf2">
+            <div class="quarter3">
+              <img src="_static/images/features/free_lgpl.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Free</a>
+            </div>
+            <div class="quarter3">
+              <img src="_static/images/features/support.png" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Support</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="clearit"></div>
+      </div>
+    </div>
+
+    <div class="podklad">
+      <div class="podkladwrapper">
+        <h3>Who is using Gensim?</h3>
+
+        <div class="center">
+          <ul class="reference">
+            <li><div class="reference1">
+              “Gensim empowers the gigantic<br /> network of the EUDML”
+            </div></li>
+            <li><div class="reference2">
+              “Gensim is the core of Roistr's<br /> Semantic Relevance Engine”
+            </div></li>
+            <li><div class="reference3">
+              “Sports Authority uses<br />Gensim for db searching”
+            </div></li>
+          </ul>
+        </div>
+
+        <div class="clearit"></div>
+      </div>
+    </div>
+
+    <div class="getstarted">
+      <a href="tutorial.html"><img src="_static/images/get-started.png" alt="" /></a>
+    </div>
 
 
       <div class="clearer"></div>
     </div>
+    
+
+    
 
     <div id="footer">
       <div id="footerwrapper">
@@ -202,9 +227,8 @@
 
         <div id="footermiddleright">
           <div id="footermiddle">
-
             <ul class="navigation">
-              <li><a href=".">
+              <li><a href="index.html">
                 Home
               </a></li>
               <li>|</li>
@@ -212,18 +236,32 @@
                 Tutorials
               </a></li>
               <li>|</li>
-              <li><a href="#">
+              <li><a href="install.html">
                 Install
               </a></li>
               <li>|</li>
-              <li><a href="#">
+              <li><a href="support.html">
                 Support
               </a></li>
               <li>|</li>
-              <li><a href="#">
+              <li><a href="about.html">
                 About
               </a></li>
             </ul>
+
+            <!-- AddThis Button BEGIN -->
+            <div class="addthis_toolbox addthis_default_style addthis_32x32_style"
+                addthis:title="#gensim"
+                addthis:description="Efficient Topic Modelling in Python"
+                style="margin:20px 0 0 0">
+              <a class="addthis_button_preferred_1"></a>
+              <a class="addthis_button_preferred_2"></a>
+              <a class="addthis_button_preferred_3"></a>
+              <a class="addthis_button_preferred_4"></a>
+              <a class="addthis_button_compact"></a>
+              <a class="addthis_counter addthis_bubble_style"></a>
+            </div>
+            <!-- AddThis Button END -->
 
             <div class="tweetodsazeni">
               <div class="tweet">
@@ -254,5 +292,7 @@
         </div>
       </div>
     </div>
+    
+
   </body>
 </html>
