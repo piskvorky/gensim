@@ -79,12 +79,13 @@
     <div id="topwrap">
       {% block header %}
       <div id="top1">
-        <div id="left1"><span class="h1gensim"><img src="{{ pathto('_static/images/logo-gensim.png', 1) }}" alt="gensim logo" /></span></div>
-
+        <div id="left1"><span class="h1gensim"><img src="{{ pathto('_static/images/logo-gensim_compact.png', 1) }}" alt="gensim logo" /></span></div>
         <div id="middleright">
           <div id="middle1">
-            <div id="gensim"><a href="."><img src="{{ pathto('_static/images/gensim.png', 1) }}" alt="gensim" /></a></div>
-            <div id="tagline"><img src="{{ pathto('_static/images/tagline.png', 1) }}" alt="gensim tagline" /></div>
+            <div id="gensim"><a href="index.html"><img src="{{ pathto('_static/images/gensim_compact.png', 1) }}" alt="gensim" /></a></div>
+            <div id="tagline"><img src="{{ pathto('_static/images/tagline_compact.png', 1) }}" alt="gensim tagline" /></div>
+          </div>
+          <div id="right1">
           </div>
         </div>
       </div>
@@ -92,7 +93,7 @@
 
       {% block navbar %}
       <div id="menu">
-        <div id="indentation">
+        <div id="indentation1">
           <ul class="menubuttons">
             <li class="menubuttonblue"><a href="index.html">Home</a></li>
             <li class="menubutton"><a href="{{ pathto("tutorial") }}">Tutorials</a></li>
@@ -108,7 +109,6 @@
     </div>
 
     {% block content %}
-
     <div class="document">
       {% block document %}
         <div id="thinbanner">

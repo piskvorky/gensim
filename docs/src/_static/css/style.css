@@ -736,20 +736,31 @@ Supports Thumbs: true
 	padding: 23px 0 0 64px;
 }
 
-#top1 {
-	height:178px;
+#top1{
+height:148px;
 }
 
-#left1 {
-	float: left;
-	padding-top: 53px;
-	width: 120px;
+#left1{
+float:left;
+padding-top: 53px;
+width: 76px;
 }
 
-#middle1 {
-	float: left;
-	width: 490px;
-	padding-top: 53px;
+#middle1{
+float:left;
+width:540px;
+padding-top: 53px;
+}
+
+#tagline1{
+padding-left:50px;
+}
+
+#indentation1{
+padding-top:10px;
+float:right;
+position:relative;
+text-align:left;
 }
 
 #right1 {
