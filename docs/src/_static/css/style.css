@@ -87,8 +87,9 @@ ul li{
 }
 
 .h1gensim {
-	margin:0;
-	padding:0;
+	margin: 0;
+	padding: 0;
+	display: block;
 }
 
 .h2gensim {
@@ -498,6 +499,7 @@ a.tweet{
 	color:#ffffff;
 	background:url('../images/googlegroups.png') top left no-repeat;
 }
+
 a.googlegroups{
 	font-size:14px;
 	color:#ffffff;
