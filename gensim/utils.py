@@ -604,11 +604,12 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
             daemon.requestLoop()
 
 
-# the following is only available when the optional 'pattern' package is installed
 if HAS_PATTERN:
     def lemmatize(content, light=False, allowed_tags=re.compile('(NN|VB|JJ|RB)')):
         """
-        Use the English lemmatizer from the `pattern` package to extract tokens in
+        This function is only available when the optional 'pattern' package is installed.
+
+        Use the English lemmatizer from `pattern` to extract tokens in
         their base form=lemma, e.g. "are, is, being" -> "be" etc.
         This is a smarter version of stemming. Only consider nouns, verbs, adjectives
         and adverbs by default (=all other lemmas are discarded).
