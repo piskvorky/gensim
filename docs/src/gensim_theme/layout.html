@@ -52,11 +52,11 @@
 {%- endmacro %}
 
 {%- macro css() %}
-  <link rel="stylesheet" href="{{ pathto('_static/pygments.css', 1) }}" type="text/css" />
+  <link rel="stylesheet" href="{{ pathto('_static/css/style.css', 1) }}" type="text/css" />
   {%- for cssfile in css_files %}
     <link rel="stylesheet" href="{{ pathto(cssfile, 1) }}" type="text/css" />
   {%- endfor %}
-  <link rel="stylesheet" href="{{ pathto('_static/css/style.css', 1) }}" type="text/css" />
+  <link rel="stylesheet" href="{{ pathto('_static/pygments.css', 1) }}" type="text/css" />
 {%- endmacro %}
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -106,7 +106,7 @@
         <div id="left1"><h1 class="h1gensim"><img src="{{ pathto('_static/images/logo-gensim_compact.png', 1) }}" alt="gensim logo" title="Gensim - topic modelling for humans" /></h1></div>
         <div id="middleright">
           <div id="middle1">
-            <div id="gensim"><a href="index.html"><img src="{{ pathto('_static/images/gensim_compact.png', 1) }}" alt="gensim" title="Gensim home" /></a></div>
+            <div id="gensim"><a href="{{ pathto('index') }}"><img src="{{ pathto('_static/images/gensim_compact.png', 1) }}" alt="gensim" title="Gensim home" /></a></div>
             <div id="tagline"><img src="{{ pathto('_static/images/tagline_compact.png', 1) }}" alt="gensim tagline" /></div>
           </div>
           <div id="right1">
@@ -119,11 +119,12 @@
       <div id="menu">
         <div id="indentation1">
           <ul class="menubuttons">
-            <li class="menubuttonblue"><a href="index.html">Home</a></li>
-            <li class="menubutton"><a href="{{ pathto("tutorial") }}">Tutorials</a></li>
-            <li class="menubutton"><a href="{{ pathto("install") }}">Install</a></li>
-            <li class="menubutton"><a href="{{ pathto("support") }}">Support</a></li>
-            <li class="menubutton"><a href="{{ pathto("about") }}">About</a></li>
+            <li class="{% if pagename == "index" %}menubuttonblue{% else %}menubutton{% endif %}"><a href="{{ pathto("index") }}">Home</a></li>
+            <li class="{% if pagename == "tutorial" %}menubuttonblue{% else %}menubutton{% endif %}"><a href="{{ pathto("tutorial") }}">Tutorials</a></li>
+            <li class="{% if pagename == "install" %}menubuttonblue{% else %}menubutton{% endif %}"><a href="{{ pathto("install") }}">Install</a></li>
+            <li class="{% if pagename == "support" %}menubuttonblue{% else %}menubutton{% endif %}"><a href="{{ pathto("support") }}">Support</a></li>
+            <li class="{% if pagename == "apiref" %}menubuttonblue{% else %}menubutton{% endif %}"><a href="{{ pathto("apiref") }}">API</a></li>
+            <li class="{% if pagename == "about" %}menubuttonblue{% else %}menubutton{% endif %}"><a href="{{ pathto("about") }}">About</a></li>
           </ul>
         </div>
       </div>
@@ -152,14 +153,13 @@
     {% endblock %}
 
     {% block footer %}
-
     <div id="footer">
       <div id="footerwrapper">
         <div id="footerleft">
           <img src="{{ pathto('_static/images/logo-gensim.png', 1) }}" class="smallerlogo" alt="smaller gensim logo" />
-          <a href="index.html"><img src="{{ pathto('_static/images/gensim-footer.png', 1) }}" alt="gensim footer image" title="Gensim home" /></a>
+          <a href="{{ pathto('index') }}"><img src="{{ pathto('_static/images/gensim-footer.png', 1) }}" alt="gensim footer image" title="Gensim home" /></a>
           <div class="copyright">
-            &copy; Copyright 2009-2013 Radim Řehůřek.<br />
+            {% trans copyright=copyright|e %}&copy; Copyright {{ copyright }}.{% endtrans %}
             {%- if last_updated %}
               {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}
             {%- endif %}
@@ -169,7 +169,7 @@
         <div id="footermiddleright">
           <div id="footermiddle">
             <ul class="navigation">
-              <li><a href="index.html">
+              <li><a href="{{ pathto("index") }}">
                 Home
               </a></li>
               <li>|</li>

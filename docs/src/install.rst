@@ -25,7 +25,7 @@ platform that supports Python 2.5 and NumPy. Gensim depends on the following sof
 * `SciPy <http://www.scipy.org>`_ >= 0.7. Tested with version 0.11.0, 0.10.1, 0.9.0, 0.8.0, 0.8.0b1, 0.7.1, 0.7.0.
 
 **Windows users** are well advised to try the `Enthought distribution <http://www.enthought.com/products/epd.php>`_,
-which conveniently includes Python&NumPy&SciPy in a single bundle, and is free for academic use.
+which conveniently includes Python & NumPy & SciPy in a single bundle, and is free for academic use.
 
 
 Install Python and `easy_install`
