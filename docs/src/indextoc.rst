@@ -6,5 +6,6 @@
    install
    tutorial
    distributed
+   support
    wiki
    apiref

@@ -110,9 +110,8 @@ To test the package, unzip the `tar.gz source <http://pypi.python.org/pypi/gensi
     python setup.py test
 
 
-Contact
---------
+Problems?
+---------
 
 Use the `gensim discussion group <http://groups.google.com/group/gensim/>`_ for
-any questions and troubleshooting. For private enquiries, you can also send
-me an email to the address at the bottom of this page.
+questions and troubleshooting. See the :doc:`support page <support>`.

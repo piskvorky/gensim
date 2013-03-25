@@ -377,19 +377,23 @@ ul.reference li{
     padding-top:16px;
     margin: 0 auto;
 }
-#footerleft{
-    width:329px;
-    float:left;
+
+#footerleft {
+/*    width:329px;
+*/    float:left;
 }
-#footermiddleright{
-    width:640px;
-    float:right;
+
+#footermiddleright {
+/*    width:640px;
+*/    float:right;
 }
-#footermiddle{
+
+#footermiddle {
     width:355px;
     float:left;
-    padding-top:20px;
+    padding: 15px 10px;
 }
+
 #footerright{
     width:285px;
     float:right;
@@ -402,7 +406,7 @@ ul.reference li{
 .copyright{
     font-size:14px;
     color:#ffffff;
-    padding-top: 168px;
+    padding-top: 158px;
 }
 .navigation{
     list-style-type:none;

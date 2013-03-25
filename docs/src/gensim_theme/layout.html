@@ -159,7 +159,8 @@
           <img src="{{ pathto('_static/images/logo-gensim.png', 1) }}" class="smallerlogo" alt="smaller gensim logo" />
           <a href="{{ pathto('index') }}"><img src="{{ pathto('_static/images/gensim-footer.png', 1) }}" alt="gensim footer image" title="Gensim home" /></a>
           <div class="copyright">
-            {% trans copyright=copyright|e %}&copy; Copyright {{ copyright }}.{% endtrans %}
+            &copy; Copyright 2009-2013, <a href="mailto:radimrehurek@seznam.cz"> Radim Řehůřek</a>.
+            <br />
             {%- if last_updated %}
               {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}
             {%- endif %}
@@ -183,6 +184,10 @@
               <li>|</li>
               <li><a href="{{ pathto("support") }}">
                 Support
+              </a></li>
+              <li>|</li>
+              <li><a href="{{ pathto("apiref") }}">
+                API
               </a></li>
               <li>|</li>
               <li><a href="{{ pathto("about") }}">
