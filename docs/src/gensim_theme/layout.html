@@ -45,8 +45,6 @@
 
     {{ css() }}
 
-    {{ script() }}
-
     <link rel="shortcut icon" href="{{ pathto('_static/favicon.ico', 1) }}"/>
 
     <script type="text/javascript">
@@ -58,14 +56,6 @@
       var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
       ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
       var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
-    </script>
-
-    <script type="text/javascript">
-      (function() {
-      var at = document.createElement('script'); at.type = 'text/javascript'; at.async = true;
-      at.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 's7.addthis.com/js/250/addthis_widget.js#pubid=ra-4d738b9b1d31ccbd';
-      var sat = document.getElementsByTagName('script')[0]; sat.parentNode.insertBefore(at, sat);
       })();
     </script>
 
@@ -109,6 +99,8 @@
 
       <div class="clearer"></div>
     </div>
+
+    {{ script() }}
 
     {% block content %}
     <div class="document">
@@ -185,10 +177,8 @@
               Support:
             </div>
             <div class="googlegroupsodsazeni">
-              <a href="https://groups.google.com/group/gensim">
-                <div class="googlegroups">
-                  Join the Google discussion group
-                </div>
+              <a href="https://groups.google.com/group/gensim" class="googlegroups">
+                Join the Google discussion group
               </a>
 
               <form action="http://groups.google.com/group/gensim/boxsubscribe">
@@ -215,6 +205,14 @@
       </div>
     </div>
     {% endblock %}
+
+    <script type="text/javascript">
+      (function() {
+      var at = document.createElement('script'); at.type = 'text/javascript'; at.async = true;
+      at.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 's7.addthis.com/js/250/addthis_widget.js#pubid=ra-4d738b9b1d31ccbd';
+      var sat = document.getElementsByTagName('script')[0]; sat.parentNode.insertBefore(at, sat);
+      })();
+    </script>
 
   </body>
 </html>

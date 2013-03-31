@@ -484,14 +484,16 @@ a.tweet{
 .googlegroupsodsazeni{
     padding-top:18px;
 }
+
 .googlegroups{
-    width:300px;
-    height:39px;
+    width: 300px;
+    height: 39px;
     padding-left: 45px;
     padding-top: 10px;
-    font-size:14px;
-    color:#ffffff;
-    background:url('../images/googlegroups.png') top left no-repeat;
+    font-size: 14px;
+    color: #ffffff;
+    background: url('../images/googlegroups.png') top left no-repeat;
+    display: block;
 }
 
 a.googlegroups{
