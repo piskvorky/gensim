@@ -13,7 +13,7 @@
         </div>
 
         <div id="right">
-          <div id="design_download"><a href="#"><img src="{{ pathto('_static/images/download.png', 1) }}" alt="download" /></a></div>
+          <div id="design_download"><a href="https://pypi.python.org/pypi/gensim"><img src="{{ pathto('_static/images/download.png', 1) }}" alt="download" /></a></div>
           <div class="space10"></div>
           <div id="design_install"><div id="command">easy_install -U gensim</div></div>
         </div>
@@ -24,32 +24,41 @@
 
 {% block document %}
     <script type="text/javascript">
-    $(window).load(function() {
-      $('#slider').nivoSlider();
-      $('#slider_testimonials').nivoSlider({randomStart: true, pauseTime: 5000, effect: 'slideInRight'});
-    });
+      $(window).load(function() {
+        $('#slider_testimonials').anythingSlider({
+          theme: 'metallic',
+          showMultiple: 3,
+          resizeContents: false,
+          hashTags: false,
+          infiniteSlides: true,
+          buildArrows: false,
+          buildNavigation: false,
+          buildStartStop: false,
+          startPanel: 3,
+          delay: 5000,
+          autoPlay: true // FIXME
+        });
+      });
     </script>
 
-    <div id="design_banner">
+    <a href="https://github.com/piskvorky/gensim/">
+      <img style="position: absolute; top: 0; left: 0; border: 0;" src="{{ pathto('_static/images/forkme_left_white_ffffff.png', 1) }}" alt="Fork me on GitHub" />
+    </a>
 
+    <div id="design_banner">
       <div id="bodybanner">
 
         <div class="leftbanner">
-          <div class="slider-wrapper theme-dark">
-            <div id="slider" class="nivoSlider">
-              <img src="{{ pathto('_static/images/ukazka.png', 1) }}" alt="What Gensim looks like" />
-              <img src="{{ pathto('_static/images/ukazka2.png', 1) }}" alt="What Gensim looks like" />
-              <img src="{{ pathto('_static/images/ukazka.png', 1) }}" alt="What Gensim looks like" />
-            </div>
-          </div>
+          <img src="{{ pathto('_static/images/ukazka.png', 1) }}" alt="gensim code example" />
         </div>
 
         <div class="rightbanner">
-          <span class="h2gensim">Gensim is a FREE Python framework</span>
+          <span class="h2gensim">Gensim is a FREE Python library</span>
           <ul class="description">
-            <li>Automatically extracts semantic topics from documents</li>
-            <li>Aims at processing raw plain texts using the semantic structure of documents</li>
-            <li>Memory independent, straightforward interfaces, ideal for prototyping</li>
+            <li>Automatically extract semantic topics from a corpus</li>
+            <li>Ready for big data: memory independent and efficient algorithms</li>
+            <li>Suitable for both prototyping and production</li>
+            <li>Extensive documentation</li>
           </ul>
         </div>
       </div>
@@ -65,15 +74,15 @@
               <img src="{{ pathto('_static/images/features/memory_independence.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Memory independence</a>
             </div>
             <div class="quarter2">
-              <img src="{{ pathto('_static/images/features/efficient_implementations.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Efficient implementations</a>
+              <img src="{{ pathto('_static/images/features/efficient_implementations.png', 1) }}" alt="efficient implementations" /><a class="feature" href="#" title="FIXME">Efficient implementations</a>
             </div>
           </div>
           <div class="lefthalf2">
             <div class="quarter1">
-              <img src="{{ pathto('_static/images/features/converters.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Converters &amp; I/O wrappers</a>
+              <img src="{{ pathto('_static/images/features/converters.png', 1) }}" alt="converters and wrappers" /><a class="feature" href="#" title="FIXME">Converters &amp; I/O wrappers</a>
             </div>
             <div class="quarter2">
-              <img src="{{ pathto('_static/images/features/platform_independence.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Platform independence</a>
+              <img src="{{ pathto('_static/images/features/platform_independence.png', 1) }}" alt="platform independent" /><a class="feature" href="#" title="FIXME">Platform independent</a>
             </div>
           </div>
         </div>
@@ -81,18 +90,18 @@
         <div class="half2">
           <div class="lefthalf1">
             <div class="quarter4">
-              <img src="{{ pathto('_static/images/features/robust.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Robust</a>
+              <img src="{{ pathto('_static/images/features/robust.png', 1) }}" alt="robust" /><a class="feature" href="#" title="">Robust</a>
             </div>
             <div class="quarter3">
-              <img src="{{ pathto('_static/images/features/similarity_queries.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Similarity queries</a>
+              <img src="{{ pathto('_static/images/features/similarity_queries.png', 1) }}" alt="similarity queries" /><a class="feature" href="#" title="FIXME">Similarity queries</a>
             </div>
           </div>
           <div class="lefthalf2">
             <div class="quarter3">
-              <img src="{{ pathto('_static/images/features/free_lgpl.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Open source</a>
+              <img src="{{ pathto('_static/images/features/free_lgpl.png', 1) }}" alt="open source" /><a class="feature" href="#" title="FIXME">Open source</a>
             </div>
             <div class="quarter3">
-              <img src="{{ pathto('_static/images/features/support.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Support</a>
+              <img src="{{ pathto('_static/images/features/support.png', 1) }}" alt="support" /><a class="feature" href="#" title="FIXME">Support</a>
             </div>
           </div>
         </div>
@@ -106,31 +115,30 @@
         <h3>Who is using Gensim?</h3>
 
         <div class="center">
-          <ul class="reference">
-          <div class="slider-wrapper theme-dark">
-            <div id="slider_testimonials" class="nivoSlider">
-            <li><div class="reference1">
-              “I used gensim at Ghent university. I found it easy to build prototypes with various models, extend it with additional features and gain empirical insights quickly. It's a reliable library that can be used beyond prototyping too.” <b>Dieter Plaetinck</b>, IBCN group, U of Ghent
+          <ul id="slider_testimonials" class="reference">
+            <li><div class="reference1 testimonial">
+              “I used gensim at Ghent university. I found it easy to build prototypes with various models, extend it with additional features and gain empirical insights quickly. It's a reliable library that can be used beyond prototyping too.” <span class="testimonial-author"><a href="http://dieter.plaetinck.be/">Dieter Plaetinck</a>, <a href="http://www.ibcn.intec.ugent.be/">IBCN group</a></span>
             </div></li>
-            <li><div class="reference2">
-              “Gensim hits the sweetest spot of being a simple yet powerful way to access some incredibly complex NLP goodness.” <b>Alan J. Salmoni, Roistr.com</b>
+            <li><div class="reference2 testimonial">
+              “Gensim hits the sweetest spot of being a simple yet powerful way to access some incredibly complex NLP goodness.” <span class="testimonial-author">Alan J. Salmoni, <a href="http://roistr.com/">Roistr.com</a></span>
             </div></li>
-            <li><div class="reference3">
-              “We used gensim in several text mining projects at Sports Authority. The data were from free-form text fields in customer surveys, as well as social media sources. Having gensim significantly sped our time to development, and it is still my go-to package for topic modeling with large retail data sets.” <b>Josh Hemann, Sports Authority</b>
+            <li><div class="reference3 testimonial">
+              “We used gensim in several text mining projects at Sports Authority. The data were from free-form text fields in customer surveys, as well as social media sources. Having gensim significantly sped our time to development, and it is still my go-to package for topic modeling with large retail data sets.” <span class="testimonial-author">Josh Hemann, <a href="http://www.sportsauthority.com/home/index.jsp">Sports Authority</a></span>
             </div></li>
-            <li><div class="reference4">
+            <li><div class="reference4 testimonial">
               “Semantic analysis is a hot topic in online marketing, but there are few products on the market that are truly powerful.
 Gensim is undoubtedly one of the best frameworks that efficiently implement algorithms for statistical analysis.
-Few products, even commercial, have this level of quality.” <b>Bruno Champion, CEO DynAdmic</b>
+Few products, even commercial, have this level of quality.” <span class="testimonial-author">Bruno Champion, <a href="http://www.dynadmic.com/">DynAdmic</a></span>
             </div></li>
-<!--             <li><div class="reference5">
+<!--             <li><div class="reference5 testimonial">
               “Gensim provides powerful and efficient tools for semantic similarity
 and topic modelling behind a consistent, idiomatic, well-thought-out,
 and well-documented API. It's an excellent example of what a
-programming library should be, in Python or in any language.” <b>William Bert, Carney inc.</b>
+programming library should be, in Python or in any language.” <span class="testimonial-author">William Bert, Carney inc.</span>
             </div></li>
- -->            <li><div class="reference6">
-              “EuDML.”
+ -->
+            <li><div class="reference6 testimonial">
+              “EuDML.”<span class="testimonial-author">someone, <a href="https://eudml.org/">EuDML</a></span>
             </div></li>
           </ul>
         </div>
@@ -140,6 +148,6 @@ programming library should be, in Python or in any language.” <b>William Bert,
     </div>
 
     <div class="getstarted">
-      <a href="{{ pathto('tutorial') }}"><img src="{{ pathto('_static/images/get-started.png', 1) }}" alt="" /></a>
+      <a href="{{ pathto('tutorial') }}"><img src="{{ pathto('_static/images/get-started.png', 1) }}" alt="get started" /></a>
     </div>
 {% endblock %}

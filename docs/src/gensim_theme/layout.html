@@ -3,8 +3,8 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 {%- endblock %}
 
-{% set script_files = ["_static/js/jquery.min.js", "_static/js/changeimage.js", "_static/js/jquery.nivo.slider.pack.js", "_static/js/jquery.qtip.min.js", "_static/js/jquery-migrate-1.0.0.js"] %}
-{% set css_files = css_files + ["_static/css/jquery.qtip.min.css"] %}
+{% set script_files = ["_static/js/jquery.min.js", "_static/js/changeimage.js", "_static/js/jquery.qtip.min.js", "_static/js/jquery-migrate-1.0.0.js", "_static/js/jquery.anythingslider.min.js"] %}
+{% set css_files = css_files + ["_static/css/jquery.qtip.min.css", "_static/css/anythingslider.css"] %}
 {%- set url_root = pathto('', 1) %}
 
 {%- macro script() %}
@@ -16,34 +16,6 @@
     FILE_SUFFIX: '{{ '' if no_search_suffix else file_suffix }}',
     HAS_SOURCE: {{ has_source|lower }}
   };
-  </script>
-
-  <script type="text/javascript">
-  $(window).load(function() {
-      $('#slider').nivoSlider({
-          effect: 'fold',
-          slices: 15,
-          boxCols: 8,
-          boxRows: 4,
-          animSpeed: 500,
-          pauseTime: 3500,
-          startSlide: 0,
-          directionNav: true,
-          directionNavHide: true,
-          controlNav: true,
-          controlNavThumbs: false,
-          pauseOnHover: true,
-          manualAdvance: false,
-          prevText: 'Prev',
-          nextText: 'Next',
-          randomStart: false,
-          beforeChange: function(){},
-          afterChange: function(){},
-          slideshowEnd: function(){},
-          lastSlide: function(){},
-          afterLoad: function(){}
-      });
-  });
   </script>
 
   {%- for scriptfile in script_files %}
@@ -103,7 +75,12 @@
     <div id="topwrap">
       {% block header %}
       <div id="top1">
-        <div id="left1"><h1 class="h1gensim"><img src="{{ pathto('_static/images/logo-gensim_compact.png', 1) }}" alt="gensim logo" title="Gensim - topic modelling for humans" /></h1></div>
+        <div id="left1">
+          <h1 class="h1gensim">
+            <img src="{{ pathto('_static/images/logo-gensim_compact.png', 1) }}" alt="gensim logo" title="Gensim - topic modelling for humans" />
+          </h1>
+        </div>
+
         <div id="middleright">
           <div id="middle1">
             <div id="gensim"><a href="{{ pathto('index') }}"><img src="{{ pathto('_static/images/gensim_compact.png', 1) }}" alt="gensim" title="Gensim home" /></a></div>
@@ -221,7 +198,6 @@
 
             </div>
 
-            <!-- AddThis Button BEGIN -->
             <div class="addthis_toolbox addthis_default_style addthis_32x32_style"
                 addthis:title="#gensim"
                 addthis:description="Efficient Topic Modelling in Python"
@@ -233,8 +209,6 @@
               <a class="addthis_button_compact"></a>
               <a class="addthis_counter addthis_bubble_style"></a>
             </div>
-            <!-- AddThis Button END -->
-
           </div>
 
         </div>
