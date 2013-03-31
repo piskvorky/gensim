@@ -5,8 +5,8 @@ Tutorials
 
 
 The tutorials are organized as a series of examples that highlight various features
-of `gensim`. It is assumed that the reader is familiar with the Python language
-and has read the :doc:`intro`.
+of `gensim`. It is assumed that the reader is familiar with the Python language, has :doc:`installed gensim <install>`
+and read the :doc:`introduction <intro>`.
 
 The examples are divided into parts on:
 
@@ -22,10 +22,7 @@ The examples are divided into parts on:
 Preliminaries
 --------------
 
-All the examples can be directly copied to your Python interpreter shell (assuming
-you have :doc:`gensim installed <install>`, of course).
-`IPython <http://ipython.scipy.org>`_'s ``cpaste`` command is especially handy for copypasting code fragments which include superfluous
-characters, such as the leading ``>>>``.
+All the examples can be directly copied to your Python interpreter shell. `IPython <http://ipython.scipy.org>`_'s ``cpaste`` command is especially handy for copypasting code fragments, including the leading ``>>>`` characters.
 
 Gensim uses Python's standard :mod:`logging` module to log various stuff at various
 priority levels; to activate logging (this is optional), run

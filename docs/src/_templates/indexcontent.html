@@ -24,7 +24,8 @@
 
 {% block document %}
     <script type="text/javascript">
-      $(window).load(function() {
+      $(document).ready(function ()
+      {
         $('#slider_testimonials').anythingSlider({
           theme: 'metallic',
           showMultiple: 3,
@@ -36,8 +37,10 @@
           buildStartStop: false,
           startPanel: 3,
           delay: 5000,
-          autoPlay: true // FIXME
+          autoPlay: true
         });
+
+        $('a[title]').qtip();
       });
     </script>
 
