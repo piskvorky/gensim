@@ -23,6 +23,13 @@
 
 
 {% block document %}
+    <script type="text/javascript">
+    $(window).load(function() {
+      $('#slider').nivoSlider();
+      $('#slider_testimonials').nivoSlider({randomStart: true, pauseTime: 5000, effect: 'slideInRight'});
+    });
+    </script>
+
     <div id="design_banner">
 
       <div id="bodybanner">
@@ -35,13 +42,6 @@
               <img src="{{ pathto('_static/images/ukazka.png', 1) }}" alt="What Gensim looks like" />
             </div>
           </div>
-
-          <script type="text/javascript">
-          $(window).load(function() {
-            $('#slider').nivoSlider();
-          });
-          </script>
-
         </div>
 
         <div class="rightbanner">
@@ -89,7 +89,7 @@
           </div>
           <div class="lefthalf2">
             <div class="quarter3">
-              <img src="{{ pathto('_static/images/features/free_lgpl.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Free</a>
+              <img src="{{ pathto('_static/images/features/free_lgpl.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Open source</a>
             </div>
             <div class="quarter3">
               <img src="{{ pathto('_static/images/features/support.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Support</a>
@@ -107,14 +107,30 @@
 
         <div class="center">
           <ul class="reference">
+          <div class="slider-wrapper theme-dark">
+            <div id="slider_testimonials" class="nivoSlider">
             <li><div class="reference1">
-              “Gensim empowers the gigantic<br /> network of the EUDML”
+              “I used gensim at Ghent university. I found it easy to build prototypes with various models, extend it with additional features and gain empirical insights quickly. It's a reliable library that can be used beyond prototyping too.” <b>Dieter Plaetinck</b>, IBCN group, U of Ghent
             </div></li>
             <li><div class="reference2">
-              “Gensim is the core of Roistr's<br /> Semantic Relevance Engine”
+              “Gensim hits the sweetest spot of being a simple yet powerful way to access some incredibly complex NLP goodness.” <b>Alan J. Salmoni, Roistr.com</b>
             </div></li>
             <li><div class="reference3">
-              “Sports Authority uses<br />Gensim for db searching”
+              “We used gensim in several text mining projects at Sports Authority. The data were from free-form text fields in customer surveys, as well as social media sources. Having gensim significantly sped our time to development, and it is still my go-to package for topic modeling with large retail data sets.” <b>Josh Hemann, Sports Authority</b>
+            </div></li>
+            <li><div class="reference4">
+              “Semantic analysis is a hot topic in online marketing, but there are few products on the market that are truly powerful.
+Gensim is undoubtedly one of the best frameworks that efficiently implement algorithms for statistical analysis.
+Few products, even commercial, have this level of quality.” <b>Bruno Champion, CEO DynAdmic</b>
+            </div></li>
+<!--             <li><div class="reference5">
+              “Gensim provides powerful and efficient tools for semantic similarity
+and topic modelling behind a consistent, idiomatic, well-thought-out,
+and well-documented API. It's an excellent example of what a
+programming library should be, in Python or in any language.” <b>William Bert, Carney inc.</b>
+            </div></li>
+ -->            <li><div class="reference6">
+              “EuDML.”
             </div></li>
           </ul>
         </div>

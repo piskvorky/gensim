@@ -319,41 +319,73 @@ ul.reference{
     padding:0;
     margin:0;
 }
-ul.reference li{
+
+ul.reference li {
     display:inline-block;
     padding-right:20px;
+    font-size:13px;
+    font-style:italic;
 }
-.reference1{
+
+.reference1 {
     display:inline-block;
     width:247px;
-    background: url('../images/references/logo_edml.png') top center no-repeat;
+/*    background: url('../images/references/logo_ghent.png') top center no-repeat;
+*/    background: url('../images/references/logo_ibcn.png') top center no-repeat;
+    background-size: 60%;
     padding-top: 100px;
     padding-bottom:24px;
-    font-size:14px;
     font-style:italic;
     color:#333333;
     font-weight:bold;
 }
-.reference2{
-    display:inline-block;
+
+.reference2 {
     width:247px;
     background: url('../images/references/logo_roistr.png') top center no-repeat;
     padding-top: 100px;
-    font-size:14px;
+    padding-bottom:24px;
     font-style:italic;
     color:#333333;
     font-weight:bold;
 }
-.reference3{
+
+.reference3 {
     display:inline-block;
     width:247px;
     background: url('../images/references/logo_sportsauthority.png') top center no-repeat;
     padding-top: 100px;
-    font-size:14px;
     font-style:italic;
     color:#333333;
     font-weight:bold;
 }
+
+.reference4 {
+    display:inline-block;
+    width:247px;
+    background: url('../images/references/logo_dynadmic.jpg') top center no-repeat;
+    padding-top: 100px;
+    color:#333333;
+    font-weight:bold;
+}
+
+.reference5 {
+    display:inline-block;
+    width:247px;
+    padding-top: 100px;
+    color:#333333;
+    font-weight:bold;
+}
+
+.reference6 {
+    display:inline-block;
+    width:247px;
+    background: url('../images/references/logo_eudml.png') top center no-repeat;
+    padding-top: 100px;
+    color:#333333;
+    font-weight:bold;
+}
+
 .getstarted{
     text-align:center;
     padding: 30px 0 20px 0;
@@ -479,12 +511,14 @@ a.googlegroups{
     height:auto;
     overflow: hidden;
 }
+
 .nivoSlider img {
     position:absolute;
     top:0px;
     left:0px;
     max-width: none;
 }
+
 .nivo-main-image {
     display: block !important;
     position: relative !important;
@@ -755,25 +789,6 @@ a.headerlink:hover {
     visibility: visible;
 }
 
-div.admonition {
-    margin-top: 10px;
-    margin-bottom: 10px;
-    padding: 7px;
-}
-
-div.admonition dt {
-    font-weight: bold;
-}
-
-div.admonition dl {
-    margin-bottom: 0;
-}
-
-p.admonition-title {
-    margin: 0px 10px 5px 0px;
-    font-weight: bold;
-}
-
 div.body p.centered {
     text-align: center;
     margin-top: 25px;
@@ -782,6 +797,19 @@ div.body p.centered {
 table.docutils {
     border: 0;
     border-collapse: collapse;
+}
+
+div.versioninfo {
+    margin: 1em 0 0 0;
+    border: 1px solid #ccc;
+    background-color: #DDEAF0;
+    padding: 8px;
+    line-height: 1.3em;
+    font-size: 0.9em;
+}
+
+.document {
+    line-height: 150%;
 }
 
 /*table.docutils td, table.docutils th {
@@ -815,47 +843,49 @@ table.citation td {
     border-bottom: none;
 }
 
-div.admonition p.admonition-title + p {
-    display: inline;
+div.admonition, div.warning {
+    font-size: 0.9em;
+    margin: 1em 0 0 0;
+    border: 1px solid #86989B;
+    background-color: #f7f7f7;
 }
 
-div.admonition p {
-    margin-bottom: 5px;
+div.admonition p, div.warning p {
+    margin: 0.5em 1em 0.5em 1em;
+    padding: 0;
 }
 
-div.admonition pre {
-    margin-bottom: 5px;
+div.admonition pre, div.warning pre {
+    margin: 0.4em 1em 0.4em 1em;
 }
 
-div.admonition ul, div.admonition ol {
-    margin-bottom: 5px;
-}
-
-div.note {
-    background-color: #eee;
-    border: 1px solid #ccc;
-}
-
-div.seealso {
-    background-color: #ffc;
-    border: 1px solid #ff6;
-}
-
-div.topic {
-    background-color: #eee;
+div.admonition p.admonition-title,
+div.warning p.admonition-title {
+    margin: 0;
+    padding: 0.1em 0 0.1em 0.5em;
+    color: white;
+    border-bottom: 1px solid #86989B;
+    font-weight: bold;
+    background-color: #AFC1C4;
 }
 
 div.warning {
-    background-color: #ffe4e4;
-    border: 1px solid #f66;
+    border: 1px solid #940000;
 }
 
-p.admonition-title {
-    display: inline;
+div.warning p.admonition-title {
+    background-color: #CF0000;
+    border-bottom-color: #940000;
 }
 
-p.admonition-title:after {
-    content: ":";
+div.admonition ul, div.admonition ol,
+div.warning ul, div.warning ol {
+    margin: 0.1em 0.5em 0.5em 3em;
+    padding: 0;
+}
+
+.first {
+    margin-top: 0 !important;
 }
 
 pre {
@@ -872,10 +902,6 @@ tt {
     background-color: #ecf0f3;
     padding: 0 1px 0 1px;
     font-size: 0.95em;
-}
-
-.toctree-wrapper {
-    line-height: 150%;
 }
 
 dt:target,
