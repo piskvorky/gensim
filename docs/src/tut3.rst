@@ -68,8 +68,9 @@ might also be indexing a different corpus altogether.
   The class :class:`similarities.MatrixSimilarity` is only appropriate when the whole
   set of vectors fits into memory. For example, a corpus of one million documents
   would require 2GB of RAM in a 256-dimensional LSI space, when used with this class.
+
   Without 2GB of free RAM, you would need to use the :class:`similarities.Similarity` class.
-  This class operates in fixed memory, by splitting the index across multiple files on disk.
+  This class operates in fixed memory, by splitting the index across multiple files on disk, called shards.
   It uses :class:`similarities.MatrixSimilarity` and :class:`similarities.SparseMatrixSimilarity` internally,
   so it is still fast, although slightly more complex.
 

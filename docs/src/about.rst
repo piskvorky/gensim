@@ -4,8 +4,6 @@
 About
 ============
 
-FIXME effort of , mainly
-
 History
 --------
 

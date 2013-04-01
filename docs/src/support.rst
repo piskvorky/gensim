@@ -4,15 +4,27 @@
 Support
 =============
 
-Open source
------------
+Open source support
+--------------------
 
-Commercial
------------
+The main communication channel is the `gensim mailing list <https://groups.google.com/group/gensim">`_.
+This is the preferred way to **ask for help**, **report problems** and **share insights** with the community. Newbie questions are perfectly fine, just make sure you've read the :doc:`tutorials <tutorial>`.
 
-TODO
---------------
+I discourage sending private emails, because the mailing list serves as a knowledge base for all gensim users, cutting maintenance efforts needed for support. If you feel your problem is too special, data too sensitive, or you're just too shy, see the "commercial" section below.
 
-* next / prev links at bottom
-* support
-*
+When posting on the mailing list, please try to include all relevant information, such as what it is you are trying to achieve, what went wrong, relevant gensim logs etc.
+
+**FAQ** and some useful **snippets of code** are maintained on GitHub: https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ.
+
+You can also try asking on StackOverflow, using the `gensim tag <http://stackoverflow.com/questions/tagged/gensim>`_.
+
+Developer issues
+----------------
+
+Developers who `tweak gensim internals <https://github.com/piskvorky/gensim/wiki/Developer-page>`_ are encouraged to report issues at the `GitHub issue tracker <https://github.com/piskvorky/gensim/issues>`_.
+Note that this is not a medium for discussions or asking open-ended questions; please use the mailing list for that.
+
+Commercial support
+------------------
+
+In case you need deterministic response times or have extra support/development needs, `contact me <mailto:me@radimrehurek.com>`_ for a quote on commercial support and contracting.

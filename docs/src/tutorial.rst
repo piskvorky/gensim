@@ -5,7 +5,7 @@ Tutorials
 
 
 The tutorials are organized as a series of examples that highlight various features
-of `gensim`. It is assumed that the reader is familiar with the Python language, has :doc:`installed gensim <install>`
+of `gensim`. It is assumed that the reader is familiar with the `Python language <http://www.python.org/>`_, has :doc:`installed gensim <install>`
 and read the :doc:`introduction <intro>`.
 
 The examples are divided into parts on:
@@ -51,14 +51,10 @@ First, let's import gensim and create a small corpus of nine documents and twelv
 >>>           [(8, 1.0), (10, 1.0), (11, 1.0)]]
 
 :dfn:`Corpus` is simply an object which, when iterated over, returns its documents represented
-as sparse vectors.
+as sparse vectors. If you're not familiar with the `vector space model <http://en.wikipedia.org/wiki/Vector_space_model>`_, we'll bridge the gap between **raw strings**, **corpora** and **sparse vectors** in the next tutorial on :doc:`tut1`.
 
-If you're familiar with the `Vector Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_,
-you'll probably know that the way you parse your documents and convert them to vectors
-has major impact on the quality of any subsequent applications. If you're not familiar
-with :abbr:`VSM (Vector Space Model)`, we'll bridge the gap between **raw strings**
-and **sparse vectors** in the next tutorial
-on :doc:`tut1`.
+If you're familiar with the vector space model, you'll probably know that the way you parse your documents and convert them to vectors
+has major impact on the quality of any subsequent applications.
 
 .. note::
     In this example, the whole corpus is stored in memory, as a Python list. However,

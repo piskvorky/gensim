@@ -35,7 +35,7 @@
           buildArrows: false,
           buildNavigation: false,
           buildStartStop: false,
-          startPanel: 3,
+          startPanel: 2,
           delay: 5000,
           autoPlay: true
         });
@@ -74,12 +74,12 @@
 
     <div class="podklad">
       <div class="podkladwrapper">
-        <h3>Features<div class="more-info">Hover your mouse over each feature for more info.</div></h3>
+        <h3 class="h3gensim">Features<div class="more-info">Hover your mouse over each feature for more info.</div></h3>
 
         <div class="half1">
           <div class="lefthalf1">
             <div class="quarter1">
-              <img src="{{ pathto('_static/images/features/memory_independence.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="Gensim can process large, web-scale corpora, using incremental online training. There is no need for the whole training corpus to reside fully in RAM at any one time, which makes gensim extremely scalable.">Memory independence</a>
+              <img src="{{ pathto('_static/images/features/memory_independence.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="Gensim can process large, web-scale corpora, using incremental online training. There is no need for the whole training corpus to reside fully in RAM at any one time, which makes gensim extremely scalable.">Scalability</a>
             </div>
             <div class="quarter2">
               <img src="{{ pathto('_static/images/features/efficient_implementations.png', 1) }}" alt="efficient implementations" /><a class="feature" href="#" title="The core algorithms in gensim use highly optimized BLAS routines that utilize CPU caches. Gensim also contains a distributed version of several algorithms, intended for machine clusters.">Efficient implementations</a>
@@ -87,10 +87,10 @@
           </div>
           <div class="lefthalf2">
             <div class="quarter1">
-              <img src="{{ pathto('_static/images/features/converters.png', 1) }}" alt="converters and wrappers" /><a class="feature" href="#" title="Gensim contains memory-efficient implementations to several popular data formats: Matrix Market, SVMlight, Blei's LDA-C... These can be used for input, output, or to convert between one another.">Converters &amp; I/O wrappers</a>
+              <img src="{{ pathto('_static/images/features/platform_independence.png', 1) }}" alt="platform independent" /><a class="feature" href="#" title="Being pure Python, gensim runs on Linux, Windows and OS X, as well as any other platform that supports Python and NumPy.">Platform independent</a>
             </div>
             <div class="quarter2">
-              <img src="{{ pathto('_static/images/features/platform_independence.png', 1) }}" alt="platform independent" /><a class="feature" href="#" title="Being pure Python, gensim runs on Linux, Windows and OS X, as well as any other platform that supports Python and NumPy.">Platform independent</a>
+              <img src="{{ pathto('_static/images/features/converters.png', 1) }}" alt="converters and wrappers" /><a class="feature" href="#" title="Gensim contains memory-efficient implementations to several popular data formats: Matrix Market, SVMlight, Blei's LDA-C... These can be used for input, output, or to convert between one another.">Converters &amp; I/O wrappers</a>
             </div>
           </div>
         </div>
@@ -106,7 +106,7 @@
           </div>
           <div class="lefthalf2">
             <div class="quarter3">
-              <img src="{{ pathto('_static/images/features/free_lgpl.png', 1) }}" alt="open source" /><a class="feature" href="#" title="The LGPL license allows both personal and commercial use, provided any modifications to gensim itself are in turn open-sourced. Other modes (dual licensing) are also possible.">Open source</a>
+              <img src="{{ pathto('_static/images/features/free_lgpl.png', 1) }}" alt="open source" /><a class="feature" href="#" title="The GNU LGPL license allows both personal and commercial use, provided any modifications to gensim itself are in turn open-sourced. Other modes (dual licensing) are also possible.">Open source</a>
             </div>
             <div class="quarter3">
               <img src="{{ pathto('_static/images/features/support.png', 1) }}" alt="support" /><a class="feature" href="#" title="Gensim is supported and maintained by means of community effort. See the support page for information on using the mailing list, tutorials, FAQ, code hosting and instructions for contributors.">Support</a>
@@ -120,18 +120,18 @@
 
     <div class="podklad">
       <div class="podkladwrapper">
-        <h3>Who is using Gensim?<div class="more-info">Doing something interesting with gensim? Ask to be featured here.</div></h3>
+        <h3 class="h3gensim">Who is using Gensim?<div class="more-info">Doing something interesting with gensim? Ask to be featured here.</div></h3>
 
         <div class="center">
           <ul id="slider_testimonials" class="reference">
             <li><div class="reference1 testimonial">
               “I used gensim at Ghent university. I found it easy to build prototypes with various models, extend it with additional features and gain empirical insights quickly. It's a reliable library that can be used beyond prototyping too.” <span class="testimonial-author"><a href="http://dieter.plaetinck.be/">Dieter Plaetinck</a>, <a href="http://www.ibcn.intec.ugent.be/">IBCN group</a></span>
             </div></li>
-            <li><div class="reference2 testimonial">
-              “Gensim hits the sweetest spot of being a simple yet powerful way to access some incredibly complex NLP goodness.” <span class="testimonial-author">Alan J. Salmoni, <a href="http://roistr.com/">Roistr.com</a></span>
-            </div></li>
             <li><div class="reference3 testimonial">
               “We used gensim in several text mining projects at Sports Authority. The data were from free-form text fields in customer surveys, as well as social media sources. Having gensim significantly sped our time to development, and it is still my go-to package for topic modeling with large retail data sets.” <span class="testimonial-author">Josh Hemann, <a href="http://www.sportsauthority.com/home/index.jsp">Sports Authority</a></span>
+            </div></li>
+            <li><div class="reference2 testimonial">
+              “Gensim hits the sweetest spot of being a simple yet powerful way to access some incredibly complex NLP goodness.” <span class="testimonial-author">Alan J. Salmoni, <a href="http://roistr.com/">Roistr.com</a></span>
             </div></li>
             <li><div class="reference4 testimonial">
               “Semantic analysis is a hot topic in online marketing, but there are few products on the market that are truly powerful.
@@ -142,11 +142,11 @@ Few products, even commercial, have this level of quality.” <span class="testi
               “Gensim provides powerful and efficient tools for semantic similarity
 and topic modelling behind a consistent, idiomatic, well-thought-out,
 and well-documented API. It's an excellent example of what a
-programming library should be, in Python or in any language.” <span class="testimonial-author">William Bert, Carney inc.</span>
+programming library should be, in Python or in any language.” <span class="testimonial-author"><a href="http://williamjohnbert.com/">William Bert</a></span>
             </div></li>
- -->
-            <li><div class="reference6 testimonial">
-              “EuDML.”<span class="testimonial-author">someone, <a href="https://eudml.org/">EuDML</a></span>
+ -->            <li><div class="reference6 testimonial">
+              “Based on our experience with gensim on <a href="http://dml.cz">DML-CZ</a>, we naturally opted to use it on a much bigger scale for similarity
+of fulltexts of scientific papers in the European Digital Mathematics Library. In evaluation with other approaches, gensim became a clear winner, especially because of speed, scalability and ease of use.”<span class="testimonial-author">Petr Sojka, <a href="https://eudml.org/">EuDML</a></span>
             </div></li>
           </ul>
         </div>
@@ -156,6 +156,6 @@ programming library should be, in Python or in any language.” <span class="tes
     </div>
 
     <div class="getstarted">
-      <a href="{{ pathto('tutorial') }}"><img src="{{ pathto('_static/images/get-started.png', 1) }}" alt="get started" /></a>
+      <a href="{{ pathto('intro') }}"><img src="{{ pathto('_static/images/get-started.png', 1) }}" alt="get started" /></a>
     </div>
 {% endblock %}
