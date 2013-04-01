@@ -76,6 +76,11 @@ h5{
     color:#333333;
 }
 
+.qtip-content {
+    font-size: 12px;
+    line-height: 14px;
+}
+
 /* LOGO, NADPIS A DOWNLOAD */
 
 #topwrap{
@@ -292,10 +297,12 @@ ul.description{
     font-weight: bold;
     color: #333333;
 }
+
 .half1{
     width:520px;
     float:left;
 }
+
 .half2{
     width:400px;
     float:right;
