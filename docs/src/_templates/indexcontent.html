@@ -40,7 +40,12 @@
           autoPlay: true
         });
 
-        $('a[title]').qtip();
+        $('a[title]').qtip({
+          position: {
+            my: 'top center',
+            at: 'bottom center'
+          }
+        });
       });
     </script>
 
@@ -52,14 +57,14 @@
       <div id="bodybanner">
 
         <div class="leftbanner">
-          <img src="{{ pathto('_static/images/ukazka.png', 1) }}" alt="gensim code example" />
+          <img src="{{ pathto('_static/images/gensim_code.png', 1) }}" alt="gensim code example" />
         </div>
 
         <div class="rightbanner">
           <span class="h2gensim">Gensim is a FREE Python library</span>
           <ul class="description">
-            <li>Automatically extract semantic topics from a corpus</li>
-            <li>Ready for big data: memory independent and efficient algorithms</li>
+            <li>Extract semantic topics from a text corpus</li>
+            <li>Ready for big data: efficient, out-of-core algorithms</li>
             <li>Suitable for both prototyping and production</li>
             <li>Extensive documentation</li>
           </ul>
@@ -69,23 +74,23 @@
 
     <div class="podklad">
       <div class="podkladwrapper">
-        <h3>Features</h3>
+        <h3>Features<div class="more-info">Hover your mouse over each feature for more info.</div></h3>
 
         <div class="half1">
           <div class="lefthalf1">
             <div class="quarter1">
-              <img src="{{ pathto('_static/images/features/memory_independence.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="There is no need for the whole training corpus to reside fully in RAM at any one time (can process large, web-scale corpora)">Memory independence</a>
+              <img src="{{ pathto('_static/images/features/memory_independence.png', 1) }}" alt="memory independence" /><a class="feature" href="#" title="Gensim can process large, web-scale corpora, using incremental online training. There is no need for the whole training corpus to reside fully in RAM at any one time, which makes gensim extremely scalable.">Memory independence</a>
             </div>
             <div class="quarter2">
-              <img src="{{ pathto('_static/images/features/efficient_implementations.png', 1) }}" alt="efficient implementations" /><a class="feature" href="#" title="FIXME">Efficient implementations</a>
+              <img src="{{ pathto('_static/images/features/efficient_implementations.png', 1) }}" alt="efficient implementations" /><a class="feature" href="#" title="The core algorithms in gensim use highly optimized BLAS routines that utilize CPU caches. Gensim also contains a distributed version of several algorithms, intended for machine clusters.">Efficient implementations</a>
             </div>
           </div>
           <div class="lefthalf2">
             <div class="quarter1">
-              <img src="{{ pathto('_static/images/features/converters.png', 1) }}" alt="converters and wrappers" /><a class="feature" href="#" title="FIXME">Converters &amp; I/O wrappers</a>
+              <img src="{{ pathto('_static/images/features/converters.png', 1) }}" alt="converters and wrappers" /><a class="feature" href="#" title="Gensim contains memory-efficient implementations to several popular data formats: Matrix Market, SVMlight, Blei's LDA-C... These can be used for input, output, or to convert between one another.">Converters &amp; I/O wrappers</a>
             </div>
             <div class="quarter2">
-              <img src="{{ pathto('_static/images/features/platform_independence.png', 1) }}" alt="platform independent" /><a class="feature" href="#" title="FIXME">Platform independent</a>
+              <img src="{{ pathto('_static/images/features/platform_independence.png', 1) }}" alt="platform independent" /><a class="feature" href="#" title="Being pure Python, gensim runs on Linux, Windows and OS X, as well as any other platform that supports Python and NumPy.">Platform independent</a>
             </div>
           </div>
         </div>
@@ -93,18 +98,18 @@
         <div class="half2">
           <div class="lefthalf1">
             <div class="quarter4">
-              <img src="{{ pathto('_static/images/features/robust.png', 1) }}" alt="robust" /><a class="feature" href="#" title="">Robust</a>
+              <img src="{{ pathto('_static/images/features/robust.png', 1) }}" alt="robust" /><a class="feature" href="#" title="Gensim has been in use in various systems by various people and organizations for over 4 years. It's well past the initial “look mom, I published a script“ stage of open-source projects.">Robust</a>
             </div>
             <div class="quarter3">
-              <img src="{{ pathto('_static/images/features/similarity_queries.png', 1) }}" alt="similarity queries" /><a class="feature" href="#" title="FIXME">Similarity queries</a>
+              <img src="{{ pathto('_static/images/features/similarity_queries.png', 1) }}" alt="similarity queries" /><a class="feature" href="#" title="As a natural next step to topic modelling, gensim also contains code for fast indexing of documents in their semantic representation, and retrieval of topically similar documents.">Similarity queries</a>
             </div>
           </div>
           <div class="lefthalf2">
             <div class="quarter3">
-              <img src="{{ pathto('_static/images/features/free_lgpl.png', 1) }}" alt="open source" /><a class="feature" href="#" title="FIXME">Open source</a>
+              <img src="{{ pathto('_static/images/features/free_lgpl.png', 1) }}" alt="open source" /><a class="feature" href="#" title="The LGPL license allows both personal and commercial use, provided any modifications to gensim itself are in turn open-sourced. Other modes (dual licensing) are also possible.">Open source</a>
             </div>
             <div class="quarter3">
-              <img src="{{ pathto('_static/images/features/support.png', 1) }}" alt="support" /><a class="feature" href="#" title="FIXME">Support</a>
+              <img src="{{ pathto('_static/images/features/support.png', 1) }}" alt="support" /><a class="feature" href="#" title="Gensim is supported and maintained by means of community effort. See the support page for information on using the mailing list, tutorials, FAQ, code hosting and instructions for contributors.">Support</a>
             </div>
           </div>
         </div>
@@ -115,7 +120,7 @@
 
     <div class="podklad">
       <div class="podkladwrapper">
-        <h3>Who is using Gensim?</h3>
+        <h3>Who is using Gensim?<div class="more-info">Doing something interesting with gensim? Ask to be featured here.</div></h3>
 
         <div class="center">
           <ul id="slider_testimonials" class="reference">

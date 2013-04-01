@@ -203,12 +203,22 @@ li.menubutton a {
 #bodybanner{
     width: 980px;
     height: 274px;
-    padding-top:30px;
+    padding-top: 30px;
     margin: 0 auto;
 }
 
 .leftbanner{
     float:left;
+    width: 418px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.leftbanner img {
+    border-radius: 10px;
+    overflow: hidden;
+    width: 418px;
+    margin: 10px 0 0 0;
 }
 
 .rightbanner{
@@ -220,21 +230,21 @@ ul.description li{
     background: url('../images/checker.png') no-repeat left top;
     font-size: 14px;
     padding: 6px 0 0 45px;
-    height:44px;
-    font-weight:bold;
+    height: 44px;
+    font-weight: bold;
     color: #ffffff;
 }
 
 ul.description{
-    padding-left:6px;
-    padding-top:9px;
+    padding-left: 6px;
+    padding-top: 9px;
 }
 
 
 /* HLAVNI OBSAH, FEATURES, REFERENCE, GET STARTED */
 
 
-.podklad{
+.podklad {
     margin-top:80px;
     margin-left:auto;
     margin-right:auto;
@@ -251,8 +261,15 @@ ul.description{
     box-shadow:  3px 2px 3px 4px #cccccc;
 }
 
-.podkladwrapper{
-    padding:30px 0 20px 27px;
+.podkladwrapper {
+    padding: 30px 0 20px 27px;
+}
+
+.more-info {
+    font-size: 12px;
+    font-weight: bold;
+    color: #777777;
+    margin: 6px 2px;
 }
 
 .obsah{
@@ -268,12 +285,12 @@ ul.description{
 }
 
 .feature{
-    padding-top:5px;
+    padding-top: 5px;
     vertical-align: 100%;
-    font-size:15px;
+    font-size: 15px;
     padding-left: 15px;
-    font-weight:bold;
-    color:#333333;
+    font-weight: bold;
+    color: #333333;
 }
 .half1{
     width:520px;
@@ -461,17 +478,19 @@ ul.reference li {
     font-size:14px;
     color:#ffffff;
 }
-.tweetodsazeni{
-    padding-top:174px;
+
+.tweetodsazeni {
+    padding-top: 160px;
 }
-.tweet{
-    width:179px;
-    height:39px;
+
+.tweet {
+    width: 179px;
+    height: 39px;
     padding-left: 50px;
-    padding-top: 6px;
-    font-size:14px;
-    color:#ffffff;
-    background:url('../images/twitterbird.png') top left no-repeat;
+    padding-top: 0px;
+    font-size: 14px;
+    color: #ffffff;
+    background: url('../images/twitterbird.png') top left no-repeat;
 }
 a.tweet{
     font-size:14px;
