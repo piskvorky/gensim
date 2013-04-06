@@ -400,6 +400,15 @@ ul.reference li {
     padding-bottom: 24px;
 }
 
+.reference4 {
+    display: inline-block;
+    width: 247px;
+    background: url('../images/references/logo_dynadmic.png') top center no-repeat;
+    background-size: 45%;
+    padding-top: 100px;
+    padding-bottom: 24px;
+}
+
 .reference5 {
     display: inline-block;
     width: 247px;
@@ -411,6 +420,15 @@ ul.reference li {
     display: inline-block;
     width: 247px;
     background: url('../images/references/logo_eudml.png') top center no-repeat;
+    padding-top: 100px;
+    padding-bottom: 24px;
+}
+
+.reference7 {
+    display: inline-block;
+    width: 247px;
+    background: url('../images/references/logo_dtu.gif') top center no-repeat;
+    background-size: 25%;
     padding-top: 100px;
     padding-bottom: 24px;
 }
