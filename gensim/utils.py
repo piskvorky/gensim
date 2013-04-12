@@ -450,47 +450,55 @@ class InputQueue(multiprocessing.Process):
 #endclass InputQueue
 
 
-def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
-    """
-    Split a stream of values into smaller chunks.
-    Each chunk is of length `chunksize`, except the last one which may be smaller.
-    A once-only input stream (`corpus` from a generator) is ok, chunking is done
-    efficiently via itertools.
+if os.name == 'nt':
+    logger.info("detected Windows; aliasing chunkize to chunkize_serial")
 
-    If `maxsize > 1`, don't wait idly in between successive chunk `yields`, but
-    rather keep filling a short queue (of size at most `maxsize`) with forthcoming
-    chunks in advance. This is realized by starting a separate process, and is
-    meant to reduce I/O delays, which can be significant when `corpus` comes
-    from a slow medium (like harddisk).
-
-    If `maxsize==0`, don't fool around with parallelism and simply yield the chunksize
-    via `chunkize_serial()` (no I/O optimizations).
-
-    >>> for chunk in chunkize(xrange(10), 4): print chunk
-    [0, 1, 2, 3]
-    [4, 5, 6, 7]
-    [8, 9]
-
-    """
-    assert chunksize > 0
-
-    if maxsize > 0:
-        q = multiprocessing.Queue(maxsize=maxsize)
-        worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy)
-        worker.daemon = True
-        worker.start()
-        while True:
-            chunk = [q.get(block=True)]
-            if chunk[0] is None:
-                break
-            yield chunk.pop()
-    else:
-        for chunk in chunkize_serial(corpus, chunksize):
+    def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
+        for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
             yield chunk
+else:
+    def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
+        """
+        Split a stream of values into smaller chunks.
+        Each chunk is of length `chunksize`, except the last one which may be smaller.
+        A once-only input stream (`corpus` from a generator) is ok, chunking is done
+        efficiently via itertools.
+
+        If `maxsize > 1`, don't wait idly in between successive chunk `yields`, but
+        rather keep filling a short queue (of size at most `maxsize`) with forthcoming
+        chunks in advance. This is realized by starting a separate process, and is
+        meant to reduce I/O delays, which can be significant when `corpus` comes
+        from a slow medium (like harddisk).
+
+        If `maxsize==0`, don't fool around with parallelism and simply yield the chunksize
+        via `chunkize_serial()` (no I/O optimizations).
+
+        >>> for chunk in chunkize(xrange(10), 4): print chunk
+        [0, 1, 2, 3]
+        [4, 5, 6, 7]
+        [8, 9]
+
+        """
+        assert chunksize > 0
+
+        if maxsize > 0:
+            q = multiprocessing.Queue(maxsize=maxsize)
+            worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy)
+            worker.daemon = True
+            worker.start()
+            while True:
+                chunk = [q.get(block=True)]
+                if chunk[0] is None:
+                    break
+                yield chunk.pop()
+        else:
+            for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
+                yield chunk
+
 
 def smart_open(fname, mode):
     from os import path
-    _,ext = path.splitext(fname)
+    _, ext = path.splitext(fname)
     if ext == '.bz2':
         from bz2 import BZ2File
         return BZ2File(fname, mode)
@@ -498,6 +506,7 @@ def smart_open(fname, mode):
         from gzip import GzipFile
         return GzipFile(fname, mode)
     return open(fname, mode)
+
 
 def pickle(obj, fname, protocol=-1):
     """Pickle object `obj` to file `fname`."""
