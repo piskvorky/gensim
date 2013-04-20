@@ -257,10 +257,24 @@ just load a document stream using one format and immediately save it in another 
 Adding new formats is dead easy, check out the `code for the SVMlight corpus
 <https://github.com/piskvorky/gensim/blob/develop/gensim/corpora/svmlightcorpus.py>`_ for an example.
 
+Compatibility with NumPy and SciPy
+----------------------------------
+
+Gensim also contains `efficient utility functions <http://radimrehurek.com/gensim/matutils.html>`_
+to help converting from/to numpy matrices::
+
+>>> corpus = gensim.matutils.Dense2Corpus(numpy_matrix)
+>>> numpy_matrix = gensim.matutils.corpus2dense(corpus)
+
+and from/to `scipy.sparse` matrices::
+
+>>> corpus = gensim.matutils.Sparse2Corpus(scipy_sparse_matrix)
+>>> scipy_csc_matrix = gensim.matutils.corpus2csc(corpus)
+
 -------------
 
 For a complete reference (Want to prune the dictionary to a smaller size?
-Convert between corpora and NumPy/SciPy arrays?), see the :doc:`API documentation <apiref>`.
+Optimize converting between corpora and NumPy/SciPy arrays?), see the :doc:`API documentation <apiref>`.
 Or continue to the next tutorial on :doc:`tut2`.
 
 

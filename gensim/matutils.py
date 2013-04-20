@@ -140,7 +140,7 @@ def ismatrix(m):
 
 
 def any2sparse(vec, eps=1e-9):
-    """Convert a numpy/scipy vector gensim format (list of 2-tuples)."""
+    """Convert a numpy/scipy vector into gensim format (list of 2-tuples)."""
     if isinstance(vec, numpy.ndarray):
         return dense2vec(vec, eps)
     if scipy.sparse.issparse(vec):
