@@ -518,13 +518,14 @@ class LsiModel(interfaces.TransformationABC):
             utils.pickle(self, fname)
 
         # first, remove the projection from self.__dict__, so it doesn't get pickled
-        u = self.projection.u
+        u, dispatcher = self.projection.u, self.dispatcher
         del self.projection.u
+        self.dispatcher = None
         try:
             utils.pickle(self, fname) # store projection-less object
             numpy.save(fname + '.npy', ascarray(u)) # store projection
         finally:
-            self.projection.u = u
+            self.projection.u, self.dispatcher = u, dispatcher
 
 
     @classmethod
@@ -539,6 +540,7 @@ class LsiModel(interfaces.TransformationABC):
             result.projection.u = numpy.load(ufname, mmap_mode='r') # load back as read-only
         except:
             logger.debug("failed to load mmap'ed projection from %s" % ufname)
+        result.dispatcher = None # TODO load back incl. distributed state? will require re-initialization of worker state
         return result
 #endclass LsiModel
 

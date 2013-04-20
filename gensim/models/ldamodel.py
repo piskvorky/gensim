@@ -594,4 +594,12 @@ class LdaModel(interfaces.TransformationABC):
         topic_dist = gamma[0] / sum(gamma[0]) # normalize to proper distribution
         return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                 if topicvalue >= eps] # ignore document's topics that have prob < eps
+
+
+    def save(self, fname):
+        dispatcher, self.dispatcher = self.dispatcher, None
+        try:
+            super(LdaModel, self).save(fname)
+        finally:
+            self.dispatcher = dispatcher
 #endclass LdaModel
