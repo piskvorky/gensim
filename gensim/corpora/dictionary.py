@@ -222,7 +222,9 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         logger.info("saving dictionary mapping to %s" % fname)
         with utils.smart_open(fname, 'wb') as fout:
             for token, tokenid in sorted(self.token2id.iteritems()):
-                fout.write("%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0)))
+                line = "%i\t%s\t%i\n" % (
+                    tokenid, token, self.dfs.get(tokenid, 0))
+                fout.write(line.encode("utf-8"))
 
 
     @staticmethod
@@ -235,6 +237,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         with utils.smart_open(fname, 'rb') as f:
             for lineno, line in enumerate(f):
                 try:
+                    line = line.decode("utf-8")
                     wordid, word, docfreq = line[:-1].split('\t')
                 except Exception:
                     raise ValueError("invalid line in dictionary file %s: %s"
