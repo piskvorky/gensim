@@ -3,7 +3,6 @@ gensim -- Python Framework for Topic Modelling
 ==============================================
 
 
-
 Gensim is a Python library for *topic modelling*, *document indexing* and *similarity retrieval* with large corpora.
 Target audience is the *natural language processing* (NLP) and *information retrieval* (IR) community.
 
@@ -32,6 +31,8 @@ Installation
 
 This software depends on `NumPy and Scipy <http://www.scipy.org/Download>`_, two Python packages for scientific computing.
 You must have them installed prior to installing `gensim`.
+
+It is also recommended you install a fast BLAS library prior to installing NumPy. This is optional, but using an optimized BLAS such as `ATLAS <http://math-atlas.sourceforge.net/>` or `OpenBLAS <http://xianyi.github.io/OpenBLAS/>` is known to improve performance by as much as an order of magnitude.
 
 The simple way to install `gensim` is::
 
