@@ -242,6 +242,8 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
                     raise ValueError("invalid line in dictionary file %s: %s"
                                      % (fname, line.strip()))
                 wordid = int(wordid)
+                if word in result.token2id:
+                    raise KeyError('token %s is defined as ID %d and as ID %d' % (word,wordid,result.token2id[word]))
                 result.token2id[word] = wordid
                 result.dfs[wordid] = int(docfreq)
         return result
