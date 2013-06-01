@@ -32,7 +32,7 @@ Installation
 This software depends on `NumPy and Scipy <http://www.scipy.org/Download>`_, two Python packages for scientific computing.
 You must have them installed prior to installing `gensim`.
 
-It is also recommended you install a fast BLAS library prior to installing NumPy. This is optional, but using an optimized BLAS such as `ATLAS <http://math-atlas.sourceforge.net/>` or `OpenBLAS <http://xianyi.github.io/OpenBLAS/>` is known to improve performance by as much as an order of magnitude.
+It is also recommended you install a fast BLAS library prior to installing NumPy. This is optional, but using an optimized BLAS such as `ATLAS <http://math-atlas.sourceforge.net/>`_ or `OpenBLAS <http://xianyi.github.io/OpenBLAS/>`_ is known to improve performance by as much as an order of magnitude.
 
 The simple way to install `gensim` is::
 
@@ -61,4 +61,4 @@ It is also included in the source distribution package.
 
 Gensim is open source software, and has been released under the
 `GNU LGPL license <http://www.gnu.org/licenses/lgpl.html>`_.
-Copyright (c) 2009-2012 Radim Rehurek
+Copyright (c) 2009-2013 Radim Rehurek
