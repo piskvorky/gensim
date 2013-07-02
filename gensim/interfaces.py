@@ -251,4 +251,3 @@ class SimilarityABC(utils.SaveLoad):
         # restore old normalization value
         self.normalize = norm
 #endclass SimilarityABC
-

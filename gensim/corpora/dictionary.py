@@ -279,4 +279,3 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
                      (result, result.num_docs, result.num_pos))
         return result
 #endclass Dictionary
-

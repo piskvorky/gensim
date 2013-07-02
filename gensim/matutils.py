@@ -419,7 +419,7 @@ class MmWriter(object):
 
 
     @staticmethod
-    def write_corpus(fname, corpus, progress_cnt=1000, index=False):
+    def write_corpus(fname, corpus, progress_cnt=1000, index=False, num_terms=None):
         """
         Save the vector space representation of an entire corpus to disk.
 
@@ -432,7 +432,7 @@ class MmWriter(object):
         mw.write_headers(-1, -1, -1) # will print 50 spaces followed by newline on the stats line
 
         # calculate necessary header info (nnz elements, num terms, num docs) while writing out vectors
-        num_terms, num_nnz = 0, 0
+        _num_terms, num_nnz = 0, 0
         docno, poslast = -1, -1
         offsets = []
         for docno, bow in enumerate(corpus):
@@ -445,16 +445,17 @@ class MmWriter(object):
                 offsets.append(posnow)
                 poslast = posnow
             max_id, veclen = mw.write_vector(docno, bow)
-            num_terms = max(num_terms, 1 + max_id)
+            _num_terms = max(_num_terms, 1 + max_id)
             num_nnz += veclen
         num_docs = docno + 1
+        num_terms = num_terms or _num_terms
 
         if num_docs * num_terms != 0:
-            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" %
-                         (num_docs, num_terms,
-                          100.0 * num_nnz / (num_docs * num_terms),
-                          num_nnz,
-                          num_docs * num_terms))
+            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" % (
+                num_docs, num_terms,
+                100.0 * num_nnz / (num_docs * num_terms),
+                num_nnz,
+                num_docs * num_terms))
 
         # now write proper headers, by seeking and overwriting the spaces written earlier
         mw.fake_headers(num_docs, num_terms, num_nnz)
