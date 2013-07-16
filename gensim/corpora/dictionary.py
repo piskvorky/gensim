@@ -236,18 +236,17 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
 
         `other` can be any id=>word mapping (a dict, a Dictionary object, ...).
 
-        Return an object which, when accessed as `result[doc_from_other_corpus]`,
+        Return a transformation object which, when accessed as `result[doc_from_other_corpus]`,
         will convert documents from a corpus built using the `other` dictionary
-        into a document using the new, merged dictionary (see `gensim.models.VocabTransform`).
+        into a document using the new, merged dictionary (see :class:`gensim.interfaces.TransformationABC`).
 
         Example:
 
-        dict1 = Dictionary(some_documents)
-        dict2 = Dictionary(other_documents)  # ids not compatible with corpus1!
-        dict2_to_dict1 = dict1.merge_with(dict2)
-
-        # now we can merge corpora from the two incompatible dictionaries into one
-        merged_corpus = itertools.chain(some_corpus_from_dict1, dict2_to_dict1[some_corpus_from_dict2])
+        >>> dict1 = Dictionary(some_documents)
+        >>> dict2 = Dictionary(other_documents)  # ids not compatible with dict1!
+        >>> dict2_to_dict1 = dict1.merge_with(dict2)
+        >>> # now we can merge corpora from the two incompatible dictionaries into one
+        >>> merged_corpus = itertools.chain(some_corpus_from_dict1, dict2_to_dict1[some_corpus_from_dict2])
 
         """
         old2new = {}
