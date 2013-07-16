@@ -11,7 +11,8 @@ their integer ids.
 
 Dictionaries can be created from a corpus and can later be pruned according to
 document frequency (removing (un)common words via the :func:`Dictionary.filter_extremes` method),
-save/loaded from disk (via :func:`Dictionary.save` and :func:`Dictionary.load` methods) etc.
+save/loaded from disk (via :func:`Dictionary.save` and :func:`Dictionary.load` methods), merged
+with other dictionary (:func:`Dictionary.merge_with`) etc.
 """
 
 from __future__ import with_statement
@@ -225,6 +226,40 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         with utils.smart_open(fname, 'wb') as fout:
             for token, tokenid in sorted(self.token2id.iteritems()):
                 fout.write("%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0)))
+
+
+    def merge_with(self, other):
+        """
+        Merge another dictionary into this dictionary, mapping same tokens to the
+        same ids and new tokens to new ids. The purpose is to merge two corpora
+        created using two different dictionaries, one from `self` and one from `other`.
+
+        `other` can be any id=>word mapping (a dict, a Dictionary object, ...).
+
+        Return an object which, when accessed as `result[doc_from_other_corpus]`,
+        will convert documents from a corpus built using the `other` dictionary
+        into a document using the new, merged dictionary (see `gensim.models.VocabTransform`).
+
+        Example:
+
+        dict1 = Dictionary(some_documents)
+        dict2 = Dictionary(other_documents)  # ids not compatible with corpus1!
+        dict2_to_dict1 = dict1.merge_with(dict2)
+
+        # now we can merge corpora from the two incompatible dictionaries into one
+        merged_corpus = itertools.chain(some_corpus_from_dict1, dict2_to_dict1[some_corpus_from_dict2])
+
+        """
+        old2new = {}
+        for other_id, other_token in other.iteritems():
+            if other_token in self.token2id:
+                new_id = self.token2id[other_token]
+            else:
+                new_id = len(self.token2id)
+                self.token2id[other_token] = new_id
+            old2new[other_id] = new_id
+        import gensim.models
+        return gensim.models.VocabTransform(old2new)
 
 
     @staticmethod

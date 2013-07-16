@@ -46,5 +46,5 @@ class VocabTransform(interfaces.TransformationABC):
         if is_corpus:
             return self._apply(bow)
 
-        return [(self.old2new[oldid], weight) for oldid, weight in bow if oldid in self.old2new]
+        return sorted((self.old2new[oldid], weight) for oldid, weight in bow if oldid in self.old2new)
 #endclass VocabTransform
