@@ -236,52 +236,36 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
 
         `other` can be any id=>word mapping (a dict, a Dictionary object, ...).
 
-        Return a transformation object which, when accessed as `result[doc_from_other_corpus]`,
+        Return an object which, when accessed as `result[doc_from_other_corpus]`,
         will convert documents from a corpus built using the `other` dictionary
-        into a document using the new, merged dictionary (see :class:`gensim.interfaces.TransformationABC`).
+        into a document using the new, merged dictionary (see `gensim.models.VocabTransform`).
 
         Example:
 
-        >>> dict1 = Dictionary(some_documents)
-        >>> dict2 = Dictionary(other_documents)  # ids not compatible with dict1!
-        >>> dict2_to_dict1 = dict1.merge_with(dict2)
-        >>> # now we can merge corpora from the two incompatible dictionaries into one
-        >>> merged_corpus = itertools.chain(some_corpus_from_dict1, dict2_to_dict1[some_corpus_from_dict2])
+        dict1 = Dictionary(some_documents)
+        dict2 = Dictionary(other_documents)  # ids not compatible with corpus1!
+        dict2_to_dict1 = dict1.merge_with(dict2)
+
+        # now we can merge corpora from the two incompatible dictionaries into one
+        merged_corpus = itertools.chain(some_corpus_from_dict1, dict2_to_dict1[some_corpus_from_dict2])
 
         """
         old2new = {}
         for other_id, other_token in other.iteritems():
             if other_token in self.token2id:
                 new_id = self.token2id[other_token]
+                self.dfs[new_id] =  self.dfs[new_id] + other.dfs[other_id]
             else:
                 new_id = len(self.token2id)
                 self.token2id[other_token] = new_id
+                self.dfs[new_id] = other.dfs[other_id]
             old2new[other_id] = new_id
+            
+        self.num_docs = self.num_docs + other.num_docs
+        self.num_nnz = self.num_nnz + other.num_nnz
+        self.num_pos = self.num_pos + other.num_pos
         import gensim.models
         return gensim.models.VocabTransform(old2new)
-
-
-    @staticmethod
-    def load_from_text(fname):
-        """
-        Load a previously stored Dictionary from a text file.
-        Mirror function to `save_as_text`.
-        """
-        result = Dictionary()
-        with utils.smart_open(fname, 'rb') as f:
-            for lineno, line in enumerate(f):
-                try:
-                    wordid, word, docfreq = line[:-1].split('\t')
-                except Exception:
-                    raise ValueError("invalid line in dictionary file %s: %s"
-                                     % (fname, line.strip()))
-                wordid = int(wordid)
-                if word in result.token2id:
-                    raise KeyError('token %s is defined as ID %d and as ID %d' % (word, wordid, result.token2id[word]))
-                result.token2id[word] = wordid
-                result.dfs[wordid] = int(docfreq)
-        return result
-
 
     @staticmethod
     def from_corpus(corpus):
