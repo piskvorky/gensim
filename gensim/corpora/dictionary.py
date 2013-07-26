@@ -256,7 +256,20 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
             else:
                 new_id = len(self.token2id)
                 self.token2id[other_token] = new_id
+                self.dfs[new_id] = 0
             old2new[other_id] = new_id
+            try:
+                self.dfs[new_id] += other.dfs[other_id]
+            except:
+                # `other` isn't a Dictionary (probably just a dict) => ignore dfs, keep going
+                pass
+        try:
+            self.num_docs += other.num_docs
+            self.num_nnz += other.num_nnz
+            self.num_pos += other.num_pos
+        except:
+            pass
+
         import gensim.models
         return gensim.models.VocabTransform(old2new)
 
