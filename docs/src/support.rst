@@ -7,7 +7,7 @@ Support
 Open source support
 --------------------
 
-The main communication channel is the `gensim mailing list <https://groups.google.com/group/gensim">`_.
+The main communication channel is the `gensim mailing list <https://groups.google.com/group/gensim>`_.
 This is the preferred way to **ask for help**, **report problems** and **share insights** with the community. Newbie questions are perfectly fine, just make sure you've read the :doc:`tutorials <tutorial>`.
 
 I discourage sending private emails, because the mailing list serves as a knowledge base for all gensim users, cutting maintenance efforts needed for support. If you feel your problem is too special, data too sensitive, or you're just too shy, see the "commercial" section below.
