@@ -16,19 +16,14 @@ import os
 import heapq
 import time
 
-from numpy import zeros_like, exp, dot, outer, random, float32 as REAL, seterr, array, uint8, vstack, argsort
+from numpy import zeros_like, empty, exp, dot, outer, random, dtype,\
+    float32 as REAL, seterr, array, uint8, vstack, argsort, fromstring
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 
 logger = logging.getLogger(__name__)
 
-SENTENCE_MARK = '</s>'  # use the same sentence delimiter as word2vec
 MIN_ALPHA = 0.0001  # don't allow learning rate to drop below this threshold
-
-try:
-    _ = profile  # are we running under kernprof profiler?
-except:
-    profile = lambda x: x  # no => ignore all @profile decorators
 
 
 def dumb_preprocess(text):
@@ -39,7 +34,7 @@ def dumb_preprocess(text):
 
     """
     for sentence in text.split('\n'):
-        yield sentence.split() + [SENTENCE_MARK]
+        yield sentence.split()
 
 
 def text2sentences(text):
@@ -54,7 +49,7 @@ def text2sentences(text):
     if not isinstance(text, unicode):
         text = unicode(text, 'utf8', 'strict')
     for sentence in sent_tokenize(text):
-        yield [word.encode('utf8') for word in utils.tokenize(sentence, lower=True) if 2 <= len(word) <= 15] + [SENTENCE_MARK]
+        yield [word.encode('utf8') for word in utils.tokenize(sentence, lower=True) if 2 <= len(word) <= 15]
 
 
 class Vocab(object):
@@ -89,7 +84,7 @@ class Word2Vec(utils.SaveLoad):
 
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
-        self.index2word = {}  # map from a word's matrix index (int) to word (string)
+        self.index2word = []  # map from a word's matrix index (int) to word (string)
         self.layer1_size = int(layer1_size)
         self.alpha = float(alpha)
         self.window = int(window)
@@ -146,33 +141,31 @@ class Word2Vec(utils.SaveLoad):
         """
         logger.info("collecting all words and their counts")
         text_no, vocab = -1, {}
-        total_sentences = lambda: vocab.get(SENTENCE_MARK, Vocab()).count
         total_words = lambda: sum(v.count for v in vocab.itervalues())
         for text_no, text in enumerate(texts):
             if text_no % 10000 == 0:
-                logger.info("PROGRESS: at document #%i, total %i sentences, %i words and %i word types" %
-                    (text_no, total_sentences(), total_words(), len(vocab)))
+                logger.info("PROGRESS: at document #%i, processed %i words and %i word types" %
+                    (text_no, total_words(), len(vocab)))
             for sentence in self.preprocess(text):
                 for word in sentence:
                     v = vocab.setdefault(word, Vocab())
                     v.count += 1
-        logger.info("collected %i word types from a corpus of %i words and %i sentences" %
-            (len(vocab), total_words(), total_sentences()))
+        logger.info("collected %i word types from a corpus of %i words" %
+            (len(vocab), total_words()))
 
         # assign a unique index to each word
-        self.vocab = {}
+        self.vocab, self.index2word = {}, []
         for word, v in vocab.iteritems():
             if v.count >= self.min_count:
                 v.index = len(self.vocab)
+                self.index2word.append(word)
                 self.vocab[word] = v
-                self.index2word[v.index] = word
         logger.info("total %i word types after removing those with count<%s" % (len(self.vocab), self.min_count))
 
         # add info about each word's Huffman encoding
         self.create_binary_tree()
 
 
-    @profile
     def train_sentence(self, words, alpha):
         """
         Update skip-gram hierarchical softmax model by training on a single sentence,
@@ -212,25 +205,25 @@ class Word2Vec(utils.SaveLoad):
             self.syn1 = zeros_like(self.syn0)
 
         # iterate over documents, training the model one sentence at a time
-        total_sentences = self.vocab.get(SENTENCE_MARK, Vocab()).count
+        total_words = sum(v.count for v in self.vocab.itervalues())
         alpha = self.alpha
         word_count, sentences, start = 0, 0, time.clock()
         for text_no, text in enumerate(texts):
             for sentence in self.preprocess(text):
                 if sentences % 100 == 0:
                     # decrease learning rate as the training progresses
-                    alpha = max(MIN_ALPHA, self.alpha * (1 - 1.0 * sentences / total_sentences))
+                    alpha = max(MIN_ALPHA, self.alpha * (1 - 1.0 * word_count / total_words))
 
                     # print progress and training stats
                     elapsed = time.clock() - start
-                    logger.info("PROGRESS: at document #%i, sentence #%i/%i=%.2f%%, alpha %f, %.1f words per second" %
-                        (text_no, sentences, total_sentences, 100.0 * sentences / total_sentences, alpha, word_count / elapsed if elapsed else 0.0))
-                words = [self.vocab.get(word, None) for word in sentence[:-1]]
+                    logger.info("PROGRESS: at document #%i, sentence #%i, %.2f%% words, alpha %f, %.0f words per second" %
+                        (text_no, sentences, 100.0 * word_count / total_words, alpha, word_count / elapsed if elapsed else 0.0))
+                words = [self.vocab.get(word, None) for word in sentence]
                 self.train_sentence(words, alpha=alpha)
                 word_count += len(filter(None, words))  # don't consider OOV words for the statistics
                 sentences += 1
         logger.info("training took %.1fs" % (time.clock() - start))
-        self.syn0norm = None
+        self.init_sims()
 
 
     def save_word2vec_format(self, fname, binary=False):
@@ -334,26 +327,6 @@ class Word2Vec(utils.SaveLoad):
         if getattr(self, 'syn0norm', None) is None:
             logger.info("precomputing L2-norms of word weight vectors")
             self.syn0norm = vstack(matutils.unitvec(vec) for vec in self.syn0).astype(REAL)
-
-
-class Texts(object):
-    """
-    Read documents from a file "on the fly", without loading them all into RAM.
-    One line represents one document.
-
-    """
-    def __init__(self, fname):
-        self.fname = fname
-
-    def __iter__(self):
-        for line in open(self.fname):
-            yield line.strip()
-
-    def save_as_word2vec(self):
-        with open(self.fname + '.cleaned', 'wb') as fout:
-            for text in self:
-                for sentence in text2sentences(text):
-                    fout.write(' '.join(sentence[:-1]) + '\n')
 
 
 
