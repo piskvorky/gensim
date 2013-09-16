@@ -91,6 +91,7 @@ class Word2Vec(utils.SaveLoad):
 
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
+        self.index2word = {}  # map from a word's matrix index (int) to word (string)
         self.layer1_size = int(layer1_size)
         self.alpha = float(alpha)
         self.window = int(window)
@@ -165,6 +166,7 @@ class Word2Vec(utils.SaveLoad):
             if v.count >= self.min_count:
                 v.index = len(self.vocab)
                 self.vocab[word] = v
+                self.index2word[v.index] = word
         logger.info("total %i word types after removing those with count<%s" % (len(self.vocab), self.min_count))
 
         # add info about each word's Huffman encoding
@@ -192,7 +194,7 @@ class Word2Vec(utils.SaveLoad):
                     continue
                 l1 = self.syn0[word2.index]
                 # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
-                l2a = self.syn1[word.point]
+                l2a = self.syn1[word.point]  # 2d matrix, codelen x layer1_size
                 fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden => output
                 ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
                 self.syn1[word.point] += outer(ga, l1)  # propagate hidden -> output
@@ -235,7 +237,7 @@ class Word2Vec(utils.SaveLoad):
     def save_word2vec_format(self, fname, binary=False):
         """
         Store the input-hidden weight matrix in the same format used by the original
-        word2vec-tool.
+        word2vec-tool, for compatibility.
 
         """
         logger.info("storing %sx%s projection weights into %s" % (len(self.vocab), self.layer1_size, fname))
@@ -265,9 +267,7 @@ class Word2Vec(utils.SaveLoad):
         [('queen', 0.50882536), ...]
 
         """
-        if getattr(self, 'syn0norm', None) is None:
-            self.syn0norm = vstack(matutils.unitvec(vec) for vec in self.syn0).astype(REAL)
-            self.index2word = dict((v.index, word) for word, v in self.vocab.iteritems())
+        self.init_sims()
 
         # add weights for each word, if not already present
         positive = [(word, 1.0) if isinstance(word, basestring) else word for word in positive]
@@ -286,6 +286,11 @@ class Word2Vec(utils.SaveLoad):
         result = [(self.index2word[sim], dists[sim]) for sim in best if sim not in all_words]
         return result[:topn]
 
+
+    def init_sims(self):
+        if getattr(self, 'syn0norm', None) is None:
+            logger.info("precomputing L2-norms of word weight vectors")
+            self.syn0norm = vstack(matutils.unitvec(vec) for vec in self.syn0).astype(REAL)
 
 
 class Texts(object):
