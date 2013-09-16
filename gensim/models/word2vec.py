@@ -10,7 +10,6 @@ Module for deep learning via the skip-gram model from https://code.google.com/p/
 
 """
 
-
 import logging
 import sys
 import os
@@ -25,7 +24,6 @@ logger = logging.getLogger(__name__)
 
 SENTENCE_MARK = '</s>'  # use the same sentence delimiter as word2vec
 MIN_ALPHA = 0.0001  # don't allow learning rate to drop below this threshold
-
 
 try:
     _ = profile  # are we running under kernprof profiler?
@@ -122,20 +120,21 @@ class Word2Vec(utils.SaveLoad):
             heapq.heappush(heap, Vocab(count=min1.count + min2.count, index=i + len(self.vocab), left=min1, right=min2))
 
         # recurse over the tree, assigning a binary code to each vocabulary word
-        max_depth, stack = 0, [(heap[0], [], [])]
-        while stack:
-            node, codes, points = stack.pop()
-            if node.index < len(self.vocab):
-                # leaf node => store its path from the root
-                node.code, node.point = codes, points
-                max_depth = max(len(codes), max_depth)
-            else:
-                # inner node => continue recursion
-                points = array(list(points) + [node.index - len(self.vocab)], dtype=int)
-                stack.append((node.left, array(list(codes) + [0], dtype=uint8), points))
-                stack.append((node.right, array(list(codes) + [1], dtype=uint8), points))
+        if heap:
+            max_depth, stack = 0, [(heap[0], [], [])]
+            while stack:
+                node, codes, points = stack.pop()
+                if node.index < len(self.vocab):
+                    # leaf node => store its path from the root
+                    node.code, node.point = codes, points
+                    max_depth = max(len(codes), max_depth)
+                else:
+                    # inner node => continue recursion
+                    points = array(list(points) + [node.index - len(self.vocab)], dtype=int)
+                    stack.append((node.left, array(list(codes) + [0], dtype=uint8), points))
+                    stack.append((node.right, array(list(codes) + [1], dtype=uint8), points))
 
-        logger.info("built huffman tree with maximum node depth %i" % max_depth)
+            logger.info("built huffman tree with maximum node depth %i" % max_depth)
 
 
     def build_vocab(self, texts):
@@ -295,7 +294,7 @@ class Word2Vec(utils.SaveLoad):
 
 class Texts(object):
     """
-    Read documents from a file "on the fly", without reading them all into RAM.
+    Read documents from a file "on the fly", without loading them all into RAM.
     One line represents one document.
 
     """
@@ -318,14 +317,14 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     logging.info("running %s" % " ".join(sys.argv))
 
-    seterr(all='raise')
-
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
     if len(sys.argv) < 2:
         print globals()['__doc__'] % locals()
         sys.exit(1)
     infile = sys.argv[1]
+
+    seterr(all='raise')  # don't ignore numpy errors
 
     w = Word2Vec(Texts(infile), layer1_size=20, preprocess=dumb_preprocess, seed=1, min_count=0)
     w.save(infile + '.model')
