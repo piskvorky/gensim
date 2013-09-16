@@ -74,7 +74,7 @@ class Word2Vec(utils.SaveLoad):
     compatible with the original word2vec implementation via `save_word2vec_format()`.
 
     """
-    def __init__(self, texts=None, layer1_size=100, alpha=0.025, window=5, preprocess=text2sentences, min_count=5, seed=None):
+    def __init__(self, texts=None, layer1_size=100, alpha=0.025, window=5, preprocess=text2sentences, min_count=5, seed=1):
         """
         Initialize a model with the document sequence `texts`. Each document is
         a string that will be used for training.
@@ -343,7 +343,7 @@ if __name__ == "__main__":
 
     seterr(all='raise')  # don't ignore numpy errors
 
-    w = Word2Vec(Texts(infile), layer1_size=20, preprocess=dumb_preprocess, seed=1, min_count=0)
+    w = Word2Vec(Texts(infile), layer1_size=20, preprocess=dumb_preprocess, min_count=0)
     w.save(infile + '.model')
     w.save_word2vec_format(infile + '.model.bin', binary=True)
     w.save_word2vec_format(infile + '.model.txt', binary=False)
