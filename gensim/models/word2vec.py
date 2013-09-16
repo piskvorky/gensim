@@ -252,6 +252,50 @@ class Word2Vec(utils.SaveLoad):
                     fout.write("%s %s\n" % (word, ' '.join("%f" % val for val in row)))
 
 
+    @classmethod
+    def load_word2vec_format(cls, fname, binary=False):
+        """
+        Load the input-hidden weight matrix from the original word2vec-tool format.
+
+        Note that the information loaded is incomplete (the binary tree is missing),
+        so while you can query for word similarity etc., you cannot continue training
+        with a model loaded this way.
+
+        """
+        logger.info("loading projection weights from %s" % (fname))
+        with open(fname) as fin:
+            header = fin.readline()
+            vocab_size, layer1_size = map(int, header.split())  # throws for invalid file format
+            result = Word2Vec(layer1_size=layer1_size)
+            result.syn0 = empty((vocab_size, layer1_size), dtype=REAL)
+            if binary:
+                binary_len = dtype(REAL).itemsize * layer1_size
+                for line_no in xrange(vocab_size):
+                    # mixed text and binary: read text first, then binary
+                    word = []
+                    while True:
+                        ch = fin.read(1)
+                        if ch == ' ':
+                            word = ''.join(word)
+                            break
+                        word.append(ch)
+                    result.vocab[word] = Vocab(index=line_no)
+                    result.index2word.append(word)
+                    result.syn0[line_no] = fromstring(fin.read(binary_len), dtype=REAL)
+                    fin.read(1)  # newline
+            else:
+                for line_no, line in enumerate(fin):
+                    parts = line.split()
+                    assert len(parts) == layer1_size + 1
+                    word, weights = parts[0], map(REAL, parts[1:])
+                    result.vocab[word] = Vocab(index=line_no)
+                    result.index2word.append(word)
+                    result.syn0[line_no] = weights
+        logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
+        result.init_sims()
+        return result
+
+
     def most_similar(self, positive=[], negative=[], topn=10):
         """
         Find the top-N most similar words. Positive words contribute positively towards the
