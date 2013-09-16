@@ -127,7 +127,6 @@ class Word2Vec(utils.SaveLoad):
             if node.index < len(self.vocab):
                 # leaf node => store its path from the root
                 node.code, node.point = codes, points
-                print node
                 max_depth = max(len(codes), max_depth)
             else:
                 # inner node => continue recursion
@@ -323,7 +322,7 @@ if __name__ == "__main__":
         sys.exit(1)
     infile = sys.argv[1]
 
-    w = Word2Vec(Texts(infile), layer1_size=20, preprocess=dumb_preprocess, seed=1)
+    w = Word2Vec(Texts(infile), layer1_size=20, preprocess=dumb_preprocess, seed=1, min_count=0)
     w.save(infile + '.model')
     w.save_word2vec_format(infile + '.model.bin', binary=True)
     w.save_word2vec_format(infile + '.model.txt', binary=False)
