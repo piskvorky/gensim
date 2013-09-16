@@ -26,32 +26,6 @@ logger = logging.getLogger(__name__)
 MIN_ALPHA = 0.0001  # don't allow learning rate to drop below this threshold
 
 
-def dumb_preprocess(text):
-    """
-    Trivial preprocessor: 1 line = 1 sentence; words = whitespace delimited tokens.
-
-    This corresponds to preprocessing done in the original word2vec implementation.
-
-    """
-    for sentence in text.split('\n'):
-        yield sentence.split()
-
-
-def text2sentences(text):
-    """
-    Iterate over individual sentences in `text`, yielding each as a list of utf8-encoded tokens.
-
-    Sentence splitting = NLTK algo; word splitting = maximal contiguous alphabetic
-    sequences, between 2 and 15 characters long, lowercased.
-
-    """
-    from nltk.tokenize import sent_tokenize
-    if not isinstance(text, unicode):
-        text = unicode(text, 'utf8', 'strict')
-    for sentence in sent_tokenize(text):
-        yield [word.encode('utf8') for word in utils.tokenize(sentence, lower=True) if 2 <= len(word) <= 15]
-
-
 class Vocab(object):
     """A single vocabulary item, used in constructing binary trees (incl. both word leaves and inner nodes)."""
     def __init__(self, **kwargs):
@@ -74,12 +48,12 @@ class Word2Vec(utils.SaveLoad):
     compatible with the original word2vec implementation via `save_word2vec_format()`.
 
     """
-    def __init__(self, texts=None, layer1_size=100, alpha=0.025, window=5, preprocess=text2sentences, min_count=5, seed=1):
+    def __init__(self, sentences=None, layer1_size=100, alpha=0.025, window=5, min_count=5, seed=1):
         """
-        Initialize a model with the document sequence `texts`. Each document is
-        a string that will be used for training.
+        Initialize a model from `sentences`. Each sentence is a list of words
+        (utf8 strings) that will be used for training.
 
-        If you don't supply `texts`, the model is left uninitialized -- use if
+        If you don't supply `sentences`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
 
         """
@@ -88,12 +62,11 @@ class Word2Vec(utils.SaveLoad):
         self.layer1_size = int(layer1_size)
         self.alpha = float(alpha)
         self.window = int(window)
-        self.preprocess = preprocess
         self.seed = seed
         self.min_count = min_count
-        if texts is not None:
-            self.build_vocab(texts)
-            self.train_model(texts)
+        if sentences is not None:
+            self.build_vocab(sentences)
+            self.train_model(sentences)
 
 
     def create_binary_tree(self):
@@ -132,26 +105,20 @@ class Word2Vec(utils.SaveLoad):
             logger.info("built huffman tree with maximum node depth %i" % max_depth)
 
 
-    def build_vocab(self, texts):
-        """
-        Build vocabulary from a sequence of documents (strings). Each document will
-        be split into sentences (and words) using the `preprocess` method supplied
-        in the constructor.
-
-        """
+    def build_vocab(self, sentences):
+        """Build vocabulary from a sequence of sentences."""
         logger.info("collecting all words and their counts")
-        text_no, vocab = -1, {}
+        sentence_no, vocab = -1, {}
         total_words = lambda: sum(v.count for v in vocab.itervalues())
-        for text_no, text in enumerate(texts):
-            if text_no % 10000 == 0:
-                logger.info("PROGRESS: at document #%i, processed %i words and %i word types" %
-                    (text_no, total_words(), len(vocab)))
-            for sentence in self.preprocess(text):
-                for word in sentence:
-                    v = vocab.setdefault(word, Vocab())
-                    v.count += 1
-        logger.info("collected %i word types from a corpus of %i words" %
-            (len(vocab), total_words()))
+        for sentence_no, sentence in enumerate(sentences):
+            if sentence_no % 10000 == 0:
+                logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
+                    (sentence_no, total_words(), len(vocab)))
+            for word in sentence:
+                v = vocab.setdefault(word, Vocab())
+                v.count += 1
+        logger.info("collected %i word types from a corpus of %i words and %i sentences" %
+            (len(vocab), total_words(), sentence_no + 1))
 
         # assign a unique index to each word
         self.vocab, self.index2word = {}, []
@@ -196,7 +163,7 @@ class Word2Vec(utils.SaveLoad):
                 l1 += dot(ga, l2a)  # propagate input -> hidden
 
 
-    def train_model(self, texts, reset=True):
+    def train_model(self, sentences, reset=True, total_words=None):
         logger.info("training model with %i words and %i features" % (len(self.vocab), self.layer1_size))
         random.seed(self.seed)
         if reset:
@@ -205,23 +172,21 @@ class Word2Vec(utils.SaveLoad):
             self.syn1 = zeros_like(self.syn0)
 
         # iterate over documents, training the model one sentence at a time
-        total_words = sum(v.count for v in self.vocab.itervalues())
+        total_words = total_words or sum(v.count for v in self.vocab.itervalues())
         alpha = self.alpha
-        word_count, sentences, start = 0, 0, time.clock()
-        for text_no, text in enumerate(texts):
-            for sentence in self.preprocess(text):
-                if sentences % 100 == 0:
-                    # decrease learning rate as the training progresses
-                    alpha = max(MIN_ALPHA, self.alpha * (1 - 1.0 * word_count / total_words))
+        word_count, sentence_no, start = 0, -1, time.clock()
+        for sentence_no, sentence in enumerate(sentences):
+            if sentence_no % 100 == 0:
+                # decrease learning rate as the training progresses
+                alpha = max(MIN_ALPHA, self.alpha * (1 - 1.0 * word_count / total_words))
 
-                    # print progress and training stats
-                    elapsed = time.clock() - start
-                    logger.info("PROGRESS: at document #%i, sentence #%i, %.2f%% words, alpha %f, %.0f words per second" %
-                        (text_no, sentences, 100.0 * word_count / total_words, alpha, word_count / elapsed if elapsed else 0.0))
-                words = [self.vocab.get(word, None) for word in sentence]
-                self.train_sentence(words, alpha=alpha)
-                word_count += len(filter(None, words))  # don't consider OOV words for the statistics
-                sentences += 1
+                # print progress and training stats
+                elapsed = time.clock() - start
+                logger.info("PROGRESS: at sentence #%i, %.2f%% words, alpha %f, %.0f words per second" %
+                    (sentence_no, 100.0 * word_count / total_words, alpha, word_count / elapsed if elapsed else 0.0))
+            words = [self.vocab.get(word, None) for word in sentence]  # replace OOV words with None
+            self.train_sentence(words, alpha=alpha)
+            word_count += len(filter(None, words))  # don't consider OOV words for the statistics
         logger.info("training took %.1fs" % (time.clock() - start))
         self.init_sims()
 
@@ -329,6 +294,35 @@ class Word2Vec(utils.SaveLoad):
             self.syn0norm = vstack(matutils.unitvec(vec) for vec in self.syn0).astype(REAL)
 
 
+class BrownCorpus(object):
+    def __init__(self, dirname):
+        self.dirname = dirname
+
+    def __iter__(self):
+        for fname in os.listdir(self.dirname):
+            fname = os.path.join(self.dirname, fname)
+            if not os.path.isfile(fname):
+                continue
+            for line in open(fname):
+                # each line is a single sentence in a file from the Brown corpus
+                tokentags = [t.split('/') for t in line.split()]
+                words = [t[0].lower() for t in tokentags if len(t) == 2 and t[1].isalpha()]
+                if not words:
+                    continue
+                yield words
+
+
+class Text8Corpus(object):
+    def __init__(self, fname):
+        self.fname = fname
+
+    def __iter__(self):
+        # there are no sentence marks in this corpus, so just split the sequence of
+        # tokens arbitrarily: one sentence = 1000 tokens
+        tokens = open(self.fname).read().split()
+        return (tokens[i : i + 1000] for i in xrange(0, len(tokens), 1000))
+
+
 
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -336,16 +330,16 @@ if __name__ == "__main__":
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         print globals()['__doc__'] % locals()
         sys.exit(1)
-    infile = sys.argv[1]
+    infile, outfile = sys.argv[1:3]
 
     seterr(all='raise')  # don't ignore numpy errors
 
-    w = Word2Vec(Texts(infile), layer1_size=20, preprocess=dumb_preprocess, min_count=0)
-    w.save(infile + '.model')
-    w.save_word2vec_format(infile + '.model.bin', binary=True)
-    w.save_word2vec_format(infile + '.model.txt', binary=False)
+    w = Word2Vec(BrownCorpus(infile), layer1_size=20, min_count=5)
+    w.save(outfile + '.model')
+    w.save_word2vec_format(outfile + '.model.bin', binary=True)
+    w.save_word2vec_format(outfile + '.model.txt', binary=False)
 
     logging.info("finished running %s" % program)
