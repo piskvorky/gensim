@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2013 Radim Rehurek <radimrehurek@seznam.cz>
+# Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
@@ -73,9 +73,6 @@ class Word2Vec(utils.SaveLoad):
         """
         Create a binary Huffman tree using stored vocabulary word counts. Frequent words
         will have shorter binary codes.
-
-        This is equivalent to the original word2vec code except the special "</s>"
-        word is not treated specially here -- it's sorted and processed like any other word.
 
         """
         logger.info("constructing a huffman tree from %i words" % len(self.vocab))
@@ -304,10 +301,12 @@ class BrownCorpus(object):
             if not os.path.isfile(fname):
                 continue
             for line in open(fname):
-                # each line is a single sentence in a file from the Brown corpus
-                tokentags = [t.split('/') for t in line.split()]
-                words = [t[0].lower() for t in tokentags if len(t) == 2 and t[1].isalpha()]
-                if not words:
+                # each file line is a single sentence in the Brown corpus
+                # each token is WORD/POS_TAG
+                token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
+                # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
+                words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
+                if not words:  # don't bother sending out empty sentences
                     continue
                 yield words
 
@@ -317,8 +316,8 @@ class Text8Corpus(object):
         self.fname = fname
 
     def __iter__(self):
-        # there are no sentence marks in this corpus, so just split the sequence of
-        # tokens arbitrarily: one sentence = 1000 tokens
+        # the entire corpus is one gigantic line -- there are no sentence marks at all
+        # so just split the sequence of tokens arbitrarily: 1 sentence = 1000 tokens
         tokens = open(self.fname).read().split()
         return (tokens[i : i + 1000] for i in xrange(0, len(tokens), 1000))
 
