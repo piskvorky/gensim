@@ -151,13 +151,13 @@ class Word2Vec(utils.SaveLoad):
                 l1 = self.syn0[word2.index]
                 # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
                 l2a = self.syn1[word.point]  # 2d matrix, codelen x layer1_size
-                fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden => output
+                fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
                 ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
-                self.syn1[word.point] += outer(ga, l1)  # propagate hidden -> output
+                self.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
 
                 # TODO add negative sampling?
 
-                l1 += dot(ga, l2a)  # propagate input -> hidden
+                l1 += dot(ga, l2a)  # learn input -> hidden
 
 
     def train_model(self, sentences, reset=True, total_words=None):
@@ -234,7 +234,7 @@ class Word2Vec(utils.SaveLoad):
                             word = ''.join(word)
                             break
                         word.append(ch)
-                    result.vocab[word] = Vocab(index=line_no)
+                    result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
                     result.index2word.append(word)
                     result.syn0[line_no] = fromstring(fin.read(binary_len), dtype=REAL)
                     fin.read(1)  # newline
@@ -243,7 +243,7 @@ class Word2Vec(utils.SaveLoad):
                     parts = line.split()
                     assert len(parts) == layer1_size + 1
                     word, weights = parts[0], map(REAL, parts[1:])
-                    result.vocab[word] = Vocab(index=line_no)
+                    result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
                     result.index2word.append(word)
                     result.syn0[line_no] = weights
         logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
@@ -267,7 +267,7 @@ class Word2Vec(utils.SaveLoad):
         """
         self.init_sims()
 
-        # add weights for each word, if not already present
+        # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
         positive = [(word, 1.0) if isinstance(word, basestring) else word for word in positive]
         negative = [(word, -1.0) if isinstance(word, basestring) else word for word in negative]
         all_words, mean = set(), []
@@ -277,8 +277,12 @@ class Word2Vec(utils.SaveLoad):
                 all_words.add(self.vocab[word].index)
             else:
                 logger.warning("word '%s' not in vocabulary; ignoring it" % word)
+        if not mean:
+            raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
         dists = dot(self.syn0norm, mean)
+        if not topn:
+            return dists
         best = argsort(dists)[::-1][:topn + len(all_words)]
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], dists[sim]) for sim in best if sim not in all_words]
@@ -289,6 +293,71 @@ class Word2Vec(utils.SaveLoad):
         if getattr(self, 'syn0norm', None) is None:
             logger.info("precomputing L2-norms of word weight vectors")
             self.syn0norm = vstack(matutils.unitvec(vec) for vec in self.syn0).astype(REAL)
+
+
+    def accuracy(self, questions, restrict_vocab=30000):
+        """
+        Compute accuracy of the model. `questions` is a filename with lines of
+        word 4-tuples, split into sections by ": SECTION NAME" lines.
+        See https://code.google.com/p/word2vec/source/browse/trunk/questions-words.txt
+
+        The accuracy is reported (=printed to log and returned as list) for each
+        section separately, plus there's one aggregate summary at the end.
+
+        Use `restrict_vocab` to ignore all questions containing a word whose frequency
+        is not in the top-N most frequent words (default 30000).
+
+        This method corresponds to the `compute-accuracy` script in the original word2vec.
+
+        """
+        ok_vocab = dict(sorted(self.vocab.iteritems(), key=lambda item: -item[1].count)[:restrict_vocab])
+        ok_index = set(v.index for v in ok_vocab.itervalues())
+
+        def log_accuracy(section):
+            correct, incorrect = section['correct'], section['incorrect']
+            if correct + incorrect > 0:
+                logger.info("%s: %.1f%% (%i/%i)" %
+                    (section['section'], 100.0 * correct / (correct + incorrect),
+                    correct, correct + incorrect))
+
+        sections, section = [], None
+        for line_no, line in enumerate(open(questions)):
+            if line.startswith(': '):
+                # a new section starts => store the old section
+                if section:
+                    sections.append(section)
+                    log_accuracy(section)
+                section = {'section': line.lstrip(': ').strip(), 'correct': 0, 'incorrect': 0}
+            else:
+                if not section:
+                    raise ValueError("missing section header before line #%i in %s" % (line_no, questions))
+                try:
+                    a, b, c, expected = [word.lower() for word in line.split()]  # TODO assumes vocabulary uses lowercase, too...
+                except:
+                    logger.info("skipping invalid line #%i in %s" % (line_no, questions))
+                if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
+                    logger.debug("skipping line #%i with OOV words: %s" % (line_no, line))
+                    continue
+
+                predicted, ignore = None, set(self.vocab[v].index for v in [a, b, c])
+                # go over predicted words, starting from the most likely, but ignoring OOV words and input words
+                for index in argsort(self.most_similar(positive=[b, c], negative=[a], topn=False))[::-1]:
+                    if index in ok_index and index not in ignore:
+                        predicted = self.index2word[index]
+                        if predicted != expected:
+                            logger.debug("%s: expected %s, predicted %s" % (line.strip(), expected, predicted))
+                        break
+                section['correct' if predicted == expected else 'incorrect'] += 1
+        if section:
+            # store the last section, too
+            sections.append(section)
+            log_accuracy(section)
+
+        total = {'section': 'total', 'correct': sum(s['correct'] for s in sections), 'incorrect': sum(s['incorrect'] for s in sections)}
+        log_accuracy(total)
+        sections.append(total)
+        return sections
+
 
 
 class BrownCorpus(object):
