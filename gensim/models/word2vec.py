@@ -6,7 +6,24 @@
 
 
 """
-Module for deep learning via the skip-gram model from https://code.google.com/p/word2vec/ .
+Module for deep learning via *hierarchical softmax skip-gram* from [1]_.
+The algorithm is ported from the C package https://code.google.com/p/word2vec/ .
+
+Initialize a model with e.g.::
+
+>>> model = Word2Vec(sentences, size=100, window=5, min_count=5)
+
+Store/load a model with::
+
+>>> model.save(fname)
+>>> model = Word2Vec.load(fname)
+
+The model can also be instantiated from an existing, trained file on disk in word2vec format::
+
+>>> model = Word2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # text format
+>>> model = Word2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # binary format
+
+.. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
 
 """
 
@@ -27,7 +44,7 @@ MIN_ALPHA = 0.0001  # don't allow learning rate to drop below this threshold
 
 
 class Vocab(object):
-    """A single vocabulary item, used in constructing binary trees (incl. both word leaves and inner nodes)."""
+    """A single vocabulary item, used internally for constructing binary trees (incl. both word leaves and inner nodes)."""
     def __init__(self, **kwargs):
         self.count = 0
         self.__dict__.update(kwargs)
@@ -42,13 +59,13 @@ class Vocab(object):
 
 class Word2Vec(utils.SaveLoad):
     """
-    Model for training, using, storing and loading neural networks described in https://code.google.com/p/word2vec/
+    Class for training, using and evaluating neural networks described in https://code.google.com/p/word2vec/
 
     The model can be stored/loaded via its `save()` and `load()` methods, or stored in a format
     compatible with the original word2vec implementation via `save_word2vec_format()`.
 
     """
-    def __init__(self, sentences=None, layer1_size=100, alpha=0.025, window=5, min_count=5, seed=1):
+    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1):
         """
         Initialize a model from `sentences`. Each sentence is a list of words
         (utf8 strings) that will be used for training.
@@ -56,23 +73,30 @@ class Word2Vec(utils.SaveLoad):
         If you don't supply `sentences`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
 
+        `layer1_size` is the dimensionality of the feature vectors.
+        `window` is the maximum distance between the current and predicted word within a sentence.
+        `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
+        `seed` = for the random number generator.
+        `min_count` = ignore all words with total frequency lower than this.
+
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
-        self.layer1_size = int(layer1_size)
+        self.layer1_size = int(size)
         self.alpha = float(alpha)
         self.window = int(window)
         self.seed = seed
         self.min_count = min_count
         if sentences is not None:
             self.build_vocab(sentences)
+            self.reset_weights()
             self.train_model(sentences)
 
 
     def create_binary_tree(self):
         """
         Create a binary Huffman tree using stored vocabulary word counts. Frequent words
-        will have shorter binary codes.
+        will have shorter binary codes. Called internally from `build_vocab()`.
 
         """
         logger.info("constructing a huffman tree from %i words" % len(self.vocab))
@@ -134,7 +158,7 @@ class Word2Vec(utils.SaveLoad):
         """
         Update skip-gram hierarchical softmax model by training on a single sentence,
         where `sentence` is a list of Vocab objects (or None, where the corresponding
-        word is not in the vocabulary).
+        word is not in the vocabulary). Called internally from `train_model())`.
 
         """
         for pos, word in enumerate(words):
@@ -160,13 +184,13 @@ class Word2Vec(utils.SaveLoad):
                 l1 += dot(ga, l2a)  # learn input -> hidden
 
 
-    def train_model(self, sentences, reset=True, total_words=None):
+    def train_model(self, sentences, total_words=None):
+        """
+        Train the model on a sequence of sentences, updating its existing neural weights.
+        Each sentence is a list of utf8 strings.
+
+        """
         logger.info("training model with %i words and %i features" % (len(self.vocab), self.layer1_size))
-        random.seed(self.seed)
-        if reset:
-            # reset all projection weights
-            self.syn0 = ((random.rand(len(self.vocab), self.layer1_size) - 0.5) / self.layer1_size).astype(dtype=REAL)
-            self.syn1 = zeros_like(self.syn0)
 
         # iterate over documents, training the model one sentence at a time
         total_words = total_words or sum(v.count for v in self.vocab.itervalues())
@@ -185,7 +209,13 @@ class Word2Vec(utils.SaveLoad):
             self.train_sentence(words, alpha=alpha)
             word_count += len(filter(None, words))  # don't consider OOV words for the statistics
         logger.info("training took %.1fs" % (time.clock() - start))
-        self.init_sims()
+
+
+    def reset_weights(self):
+        """Reset all projection weights, but keep the existing vocabulary."""
+        random.seed(self.seed)
+        self.syn0 = ((random.rand(len(self.vocab), self.layer1_size) - 0.5) / self.layer1_size).astype(dtype=REAL)
+        self.syn1 = zeros_like(self.syn0)
 
 
     def save_word2vec_format(self, fname, binary=False):
@@ -260,9 +290,10 @@ class Word2Vec(utils.SaveLoad):
         weight vectors of the given words, and corresponds to the `word-analogy`
         script in the original word2vec implementation.
 
-        Example:
-        >>> trained_model.most_similar(positive=['woman', 'king'], negative=['man'])
-        [('queen', 0.50882536), ...]
+        Example::
+
+          >>> trained_model.most_similar(positive=['woman', 'king'], negative=['man'])
+          [('queen', 0.50882536), ...]
 
         """
         self.init_sims()
@@ -297,17 +328,17 @@ class Word2Vec(utils.SaveLoad):
 
     def accuracy(self, questions, restrict_vocab=30000):
         """
-        Compute accuracy of the model. `questions` is a filename with lines of
-        word 4-tuples, split into sections by ": SECTION NAME" lines.
-        See https://code.google.com/p/word2vec/source/browse/trunk/questions-words.txt
+        Compute accuracy of the model. `questions` is a filename where lines are
+        4-tuples of words, split into sections by ": SECTION NAME" lines.
+        See https://code.google.com/p/word2vec/source/browse/trunk/questions-words.txt for an example.
 
         The accuracy is reported (=printed to log and returned as list) for each
         section separately, plus there's one aggregate summary at the end.
 
         Use `restrict_vocab` to ignore all questions containing a word whose frequency
-        is not in the top-N most frequent words (default 30000).
+        is not in the top-N most frequent words (default top 30000).
 
-        This method corresponds to the `compute-accuracy` script in the original word2vec.
+        This method corresponds to the `compute-accuracy` script of the original C word2vec.
 
         """
         ok_vocab = dict(sorted(self.vocab.iteritems(), key=lambda item: -item[1].count)[:restrict_vocab])
@@ -361,6 +392,7 @@ class Word2Vec(utils.SaveLoad):
 
 
 class BrownCorpus(object):
+    """Yield sentences from the Brown corpus (part of NLTK data)."""
     def __init__(self, dirname):
         self.dirname = dirname
 
@@ -381,6 +413,7 @@ class BrownCorpus(object):
 
 
 class Text8Corpus(object):
+    """Yield sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip ."""
     def __init__(self, fname):
         self.fname = fname
 
@@ -405,7 +438,7 @@ if __name__ == "__main__":
 
     seterr(all='raise')  # don't ignore numpy errors
 
-    w = Word2Vec(BrownCorpus(infile), layer1_size=20, min_count=5)
+    w = Word2Vec(BrownCorpus(infile), size=20, min_count=5)
     w.save(outfile + '.model')
     w.save_word2vec_format(outfile + '.model.bin', binary=True)
     w.save_word2vec_format(outfile + '.model.txt', binary=False)

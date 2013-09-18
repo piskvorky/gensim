@@ -31,6 +31,7 @@ Modules:
     models/lsi_worker
     models/lda_dispatcher
     models/lda_worker
+    models/word2vec
     similarities/docsim
     similarities/simserver
 
