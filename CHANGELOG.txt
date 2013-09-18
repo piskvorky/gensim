@@ -1,6 +1,24 @@
 Changes
 =======
 
+0.8.7
+
+* initial version of word2vec, a neural network deep learning algo
+* make distributed gensim compatible with the new Pyro
+* allow merging dictionaries (by Florent Chandelier)
+* new design for the gensim website!
+* speed up handling of corner cases when returning top-n most similar
+* make Random Projections compatible with new scipy (andrewjOc360, PR #110)
+* allow "light" (faster) word lemmatization (by Karsten Jeschkies)
+* save/load directly from bzip2 files (by Luis Pedro Coelho, PR #101)
+* Blei corpus now tries harder to find its vocabulary file (by Luis Pedro Coelho, PR #100)
+* sparse vector elements can now be a list (was: only a 2-tuple)
+* simple_preprocess now optionally de-accents letters (ř/š/ú etc.)
+* better serialization of numpy corpora
+* print_topics() returns the topics, in addition to printing/logging
+* fixes for more robust Windows multiprocessing
+* lots of small fixes, data checks and documentation updates
+
 0.8.6
 
 * added HashDictionary (by Homer Strong)

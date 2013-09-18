@@ -11,6 +11,7 @@ Blei's LDA-C format.
 
 from __future__ import with_statement
 
+from os import path
 import logging
 
 from gensim import interfaces, utils
@@ -46,8 +47,7 @@ class BleiCorpus(IndexedCorpus):
         logger.info("loading corpus from %s" % fname)
 
         if fname_vocab is None:
-            from os import path
-            fname_base,_ = path.splitext(fname)
+            fname_base, _ = path.splitext(fname)
             fname_dir = path.dirname(fname)
             for fname_vocab in [
                         fname + '.vocab',
