@@ -410,8 +410,7 @@ class MmWriter(object):
         """
         assert self.headers_written, "must write Matrix Market file headers before writing data!"
         assert self.last_docno < docno, "documents %i and %i not in sequential order!" % (self.last_docno, docno)
-        vector = [(i, w) for i, w in vector if abs(w) > 1e-12] # ignore near-zero entries
-        vector.sort()
+        vector = sorted((i, w) for i, w in vector if abs(w) > 1e-12) # ignore near-zero entries
         for termid, weight in vector: # write term ids in sorted order
             self.fout.write("%i %i %s\n" % (docno + 1, termid + 1, weight)) # +1 because MM format starts counting from 1
         self.last_docno = docno
