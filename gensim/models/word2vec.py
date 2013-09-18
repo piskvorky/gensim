@@ -73,7 +73,7 @@ class Word2Vec(utils.SaveLoad):
         If you don't supply `sentences`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
 
-        `layer1_size` is the dimensionality of the feature vectors.
+        `size` is the dimensionality of the feature vectors.
         `window` is the maximum distance between the current and predicted word within a sentence.
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
         `seed` = for the random number generator.
@@ -251,7 +251,7 @@ class Word2Vec(utils.SaveLoad):
         with open(fname) as fin:
             header = fin.readline()
             vocab_size, layer1_size = map(int, header.split())  # throws for invalid file format
-            result = Word2Vec(layer1_size=layer1_size)
+            result = Word2Vec(size=layer1_size)
             result.syn0 = empty((vocab_size, layer1_size), dtype=REAL)
             if binary:
                 binary_len = dtype(REAL).itemsize * layer1_size
@@ -420,8 +420,21 @@ class Text8Corpus(object):
     def __iter__(self):
         # the entire corpus is one gigantic line -- there are no sentence marks at all
         # so just split the sequence of tokens arbitrarily: 1 sentence = 1000 tokens
-        tokens = open(self.fname).read().split()
-        return (tokens[i : i + 1000] for i in xrange(0, len(tokens), 1000))
+        sentence, rest, max_sentence_length = [], '', 1000
+        with open(self.fname) as fin:
+            while True:
+                text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
+                if text == rest:  # EOF
+                    sentence.extend(rest.split()) # return the last chunk of words, too (may be shorter/longer)
+                    if sentence:
+                        yield sentence
+                    break
+                last_token = text.rfind(' ')  # the last token may have been split in two... keep it for the next iteration
+                words, rest = (text[:last_token].split(), text[last_token:].strip()) if last_token >= 0 else ([], text)
+                sentence.extend(words)
+                while len(sentence) >= max_sentence_length:
+                    yield sentence[:max_sentence_length]
+                    sentence = sentence[max_sentence_length:]
 
 
 

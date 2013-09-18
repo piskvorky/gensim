@@ -25,7 +25,7 @@ in contrast to brittle homework-assignment-implementations that do not scale on 
 and robust java-esque projects that take forever just to run "hello world".
 
 In 2011, I started using `Github <https://github.com/piskvorky/gensim>`_ for source code hosting
-and the gensim website moved to its present domain.
+and the gensim website moved to its present domain. In 2013, gensim got its current logo and website design.
 
 
 Licensing
