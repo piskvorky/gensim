@@ -320,6 +320,26 @@ class Word2Vec(utils.SaveLoad):
         return result[:topn]
 
 
+    def doesnt_match(self, words):
+        """
+        Which word from the given list doesn't go with the others?
+
+        Example::
+
+          >>> trained_model.doesnt_match("breakfast cereal dinner lunch".split())
+          'cereal'
+
+        """
+        words = [word for word in words if word in self.vocab]  # filter out OOV words
+        logger.debug("using words %s" % words)
+        if not words:
+            raise ValueError("cannot select a word from an empty list")
+        vectors = vstack(matutils.unitvec(self.syn0[self.vocab[word].index]) for word in words).astype(REAL)
+        mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
+        dists = dot(vectors, mean)
+        return sorted(zip(dists, words))[0][1]
+
+
     def init_sims(self):
         if getattr(self, 'syn0norm', None) is None:
             logger.info("precomputing L2-norms of word weight vectors")
@@ -370,8 +390,8 @@ class Word2Vec(utils.SaveLoad):
                     logger.debug("skipping line #%i with OOV words: %s" % (line_no, line))
                     continue
 
+                # find the most likely prediction, ignoring OOV words and input words
                 predicted, ignore = None, set(self.vocab[v].index for v in [a, b, c])
-                # go over predicted words, starting from the most likely, but ignoring OOV words and input words
                 for index in argsort(self.most_similar(positive=[b, c], negative=[a], topn=False))[::-1]:
                     if index in ok_index and index not in ignore:
                         predicted = self.index2word[index]
