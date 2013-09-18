@@ -208,7 +208,7 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
         Note: use `save`/`load` to store in binary format instead (pickle).
         """
         logger.info("saving HashDictionary mapping to %s" % fname)
-        with open(fname, 'wb') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             for tokenid in self.keys():
                 words = sorted(self[tokenid])
                 if words:

@@ -16,17 +16,16 @@ Naturally, I set out to reinvent the wheel. Our `2010 LREC publication <http://r
 describes the initial design decisions behind gensim (clarity, efficiency and scalability)
 and is fairly representative of how gensim works even today.
 
-Later versions of gensim improved this efficiency and scalability tremendously (in fact,
-I made algorithmic scalability of distributional semantics the topic of my `PhD thesis <http://radimrehurek.com/phd_rehurek.pdf>`_).
+Later versions of gensim improved this efficiency and scalability tremendously. In fact,
+I made algorithmic scalability of distributional semantics the topic of my `PhD thesis <http://radimrehurek.com/phd_rehurek.pdf>`_.
 
 By now, gensim is---to my knowledge---the most robust, efficient and hassle-free piece
 of software to realize unsupervised semantic modelling from plain text. It stands
 in contrast to brittle homework-assignment-implementations that do not scale on one hand,
-and robust java-esque projects that do scale, but only if you're willing to sacrifice
-several weeks of your, your technician's as well as your local scientist's time just to run "hello world".
+and robust java-esque projects that take forever just to run "hello world".
 
-In 2011, I started using `Github <https://github.com/piskvorky/gensim>`_ for source code hosting,
-and the gensim website moved from my university hosting to its present domain.
+In 2011, I started using `Github <https://github.com/piskvorky/gensim>`_ for source code hosting
+and the gensim website moved to its present domain. In 2013, gensim got its current logo and website design.
 
 
 Licensing
@@ -37,7 +36,7 @@ This means that it's free for both personal and commercial use, but if you make 
 modification to gensim that you distribute to other people, you have to disclose
 the source code of these modifications.
 
-Apart form that, you are free to redistribute gensim in any way you like, though you're
+Apart from that, you are free to redistribute gensim in any way you like, though you're
 not allowed to modify its license (doh!).
 
 My intent here is, of course, to get more help and community involvement with the development of gensim.

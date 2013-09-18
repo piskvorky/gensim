@@ -54,3 +54,6 @@ gensim.egg-info
 .*.sw[op]
 data
 *.bak
+/build/
+/dist/
+

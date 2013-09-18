@@ -119,9 +119,16 @@ class TransformationABC(utils.SaveLoad):
     """
     Interface for transformations. A 'transformation' is any object which accepts
     a sparse document via the dictionary notation `[]` and returns another sparse
-    document in its stead.
+    document in its stead::
+
+    >>> transformed_doc = transformation[doc]
+
+    or also::
+
+    >>> transformed_corpus = transformation[corpus]
 
     See the :mod:`gensim.models.tfidfmodel` module for an example of a transformation.
+
     """
 
     def __getitem__(self, vec):
@@ -251,4 +258,3 @@ class SimilarityABC(utils.SaveLoad):
         # restore old normalization value
         self.normalize = norm
 #endclass SimilarityABC
-

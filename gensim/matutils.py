@@ -33,12 +33,33 @@ try:
 except ImportError:
     # numpy < 1.4
     def triu_indices(n, k=0):
-        m = numpy.ones((n,n), int)
+        m = numpy.ones((n, n), int)
         a = triu(m, k)
         return numpy.where(a != 0)
 
 blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
 
+
+try:
+    # with bottleneck installed, we can use faster partial sorting
+    import bottleneck
+    def argsort(x, topn=None):
+        """Return indices of the `topn` greatest elements in numpy array `x`, in order."""
+        if topn is None:
+            topn = x.size
+        if topn <= 0:
+            return []
+        if topn >= x.size:
+            return numpy.argsort(x)[::-1]
+        biggest = bottleneck.argpartsort(x, x.size - topn)[-topn:]
+        # the indices in `biggest` are not sorted by magnitude => sort & return
+        return biggest.take(numpy.argsort(x.take(biggest))[::-1])
+except ImportError:
+    # no bottleneck => fall back to numpy
+    def argsort(x, topn=None):
+        if topn is None:
+            topn = x.size
+        return numpy.argsort(x)[::-1][:topn]
 
 
 logger = logging.getLogger("gensim.matutils")
@@ -74,8 +95,8 @@ def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_n
             if printprogress and docno % printprogress == 0:
                 logger.info("PROGRESS: at document #%i/%i" % (docno, num_docs))
             posnext = posnow + len(doc)
-            indices[posnow : posnext] = [feature_id for feature_id, _ in doc]
-            data[posnow : posnext] = [feature_weight for _, feature_weight in doc]
+            indices[posnow: posnext] = [feature_id for feature_id, _ in doc]
+            data[posnow: posnext] = [feature_weight for _, feature_weight in doc]
             indptr.append(posnext)
             posnow = posnext
         assert posnow == num_nnz, "mismatch between supplied and computed number of non-zeros"
@@ -118,11 +139,20 @@ def ismatrix(m):
     return isinstance(m, numpy.ndarray) and m.ndim == 2 or scipy.sparse.issparse(m)
 
 
-def scipy2sparse(vec):
+def any2sparse(vec, eps=1e-9):
+    """Convert a numpy/scipy vector into gensim format (list of 2-tuples)."""
+    if isinstance(vec, numpy.ndarray):
+        return dense2vec(vec, eps)
+    if scipy.sparse.issparse(vec):
+        return scipy2sparse(vec, eps)
+    return [(int(fid), float(fw)) for fid, fw in vec if numpy.abs(fw) > eps]
+
+
+def scipy2sparse(vec, eps=1e-9):
     """Convert a scipy.sparse vector to gensim format (list of 2-tuples)."""
     vec = vec.tocsr()
     assert vec.shape[0] == 1
-    return zip(vec.indices, vec.data)
+    return [(int(pos), float(val)) for pos, val in zip(vec.indices, vec.data) if numpy.abs(val) > eps]
 
 
 class Scipy2Corpus(object):
@@ -158,10 +188,9 @@ def full2sparse(vec, eps=1e-9):
 
     Values of magnitude < `eps` are treated as zero (ignored).
     """
-    return [(pos, val) for pos, val in enumerate(vec) if numpy.abs(val) > eps]
-#    # slightly faster but less flexible:
-#    nnz = vec.nonzero()[0]
-#    return zip(nnz, vec[nnz])
+    vec = numpy.asarray(vec, dtype=float)
+    nnz = numpy.nonzero(abs(vec) > eps)[0]
+    return zip(nnz, vec.take(nnz))
 
 dense2vec = full2sparse
 
@@ -174,13 +203,10 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
     # this is about 40x faster than explicitly forming all 2-tuples to run sort() or heapq.nlargest() on.
     if topn <= 0:
         return []
-    result = []
-    for i in numpy.argsort(vec)[::-1]:
-        if abs(vec[i]) > eps: # ignore features with near-zero weight
-            result.append((i, vec[i]))
-            if len(result) == topn:
-                break
-    return result
+    vec = numpy.asarray(vec, dtype=float)
+    nnz = numpy.nonzero(abs(vec) > eps)[0]
+    biggest = nnz.take(argsort(vec.take(nnz), topn))
+    return zip(biggest, vec.take(biggest))
 
 
 def corpus2dense(corpus, num_terms):
@@ -243,6 +269,7 @@ def veclen(vec):
 blas_nrm2 = blas('nrm2', numpy.array([], dtype=float))
 blas_scal = blas('scal', numpy.array([], dtype=float))
 
+
 def unitvec(vec):
     """
     Scale a vector to unit length. The only exception is the zero vector, which
@@ -253,7 +280,7 @@ def unitvec(vec):
     """
     if scipy.sparse.issparse(vec): # convert scipy.sparse to standard numpy array
         vec = vec.tocsr()
-        veclen = numpy.sqrt(numpy.sum(vec.data**2))
+        veclen = numpy.sqrt(numpy.sum(vec.data ** 2))
         if veclen > 0.0:
             return vec / veclen
         else:
@@ -272,8 +299,8 @@ def unitvec(vec):
     except:
         return vec
 
-    if isinstance(first, tuple): # gensim sparse format?
-        length = 1.0 * math.sqrt(sum(val**2 for _, val in vec))
+    if isinstance(first, (tuple, list)) and len(first) == 2: # gensim sparse format?
+        length = 1.0 * math.sqrt(sum(val ** 2 for _, val in vec))
         assert length > 0.0, "sparse documents must not contain any explicit zero entries"
         if length != 1.0:
             return [(termid, val / length) for termid, val in vec]
@@ -383,8 +410,7 @@ class MmWriter(object):
         """
         assert self.headers_written, "must write Matrix Market file headers before writing data!"
         assert self.last_docno < docno, "documents %i and %i not in sequential order!" % (self.last_docno, docno)
-        vector = [(i, w) for i, w in vector if abs(w) > 1e-12] # ignore near-zero entries
-        vector.sort()
+        vector = sorted((i, w) for i, w in vector if abs(w) > 1e-12) # ignore near-zero entries
         for termid, weight in vector: # write term ids in sorted order
             self.fout.write("%i %i %s\n" % (docno + 1, termid + 1, weight)) # +1 because MM format starts counting from 1
         self.last_docno = docno
@@ -392,7 +418,7 @@ class MmWriter(object):
 
 
     @staticmethod
-    def write_corpus(fname, corpus, progress_cnt=1000, index=False):
+    def write_corpus(fname, corpus, progress_cnt=1000, index=False, num_terms=None):
         """
         Save the vector space representation of an entire corpus to disk.
 
@@ -405,7 +431,7 @@ class MmWriter(object):
         mw.write_headers(-1, -1, -1) # will print 50 spaces followed by newline on the stats line
 
         # calculate necessary header info (nnz elements, num terms, num docs) while writing out vectors
-        num_terms, num_nnz = 0, 0
+        _num_terms, num_nnz = 0, 0
         docno, poslast = -1, -1
         offsets = []
         for docno, bow in enumerate(corpus):
@@ -418,16 +444,17 @@ class MmWriter(object):
                 offsets.append(posnow)
                 poslast = posnow
             max_id, veclen = mw.write_vector(docno, bow)
-            num_terms = max(num_terms, 1 + max_id)
+            _num_terms = max(_num_terms, 1 + max_id)
             num_nnz += veclen
         num_docs = docno + 1
+        num_terms = num_terms or _num_terms
 
         if num_docs * num_terms != 0:
-            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" %
-                         (num_docs, num_terms,
-                          100.0 * num_nnz / (num_docs * num_terms),
-                          num_nnz,
-                          num_docs * num_terms))
+            logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" % (
+                num_docs, num_terms,
+                100.0 * num_nnz / (num_docs * num_terms),
+                num_nnz,
+                num_docs * num_terms))
 
         # now write proper headers, by seeking and overwriting the spaces written earlier
         mw.fake_headers(num_docs, num_terms, num_nnz)

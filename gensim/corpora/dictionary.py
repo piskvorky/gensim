@@ -11,7 +11,8 @@ their integer ids.
 
 Dictionaries can be created from a corpus and can later be pruned according to
 document frequency (removing (un)common words via the :func:`Dictionary.filter_extremes` method),
-save/loaded from disk (via :func:`Dictionary.save` and :func:`Dictionary.load` methods) etc.
+save/loaded from disk (via :func:`Dictionary.save` and :func:`Dictionary.load` methods), merged
+with other dictionary (:func:`Dictionary.merge_with`) etc.
 """
 
 from __future__ import with_statement
@@ -111,7 +112,9 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         """
         result = {}
         missing = {}
-        document = sorted(document)
+        if isinstance(document, basestring):
+            raise TypeError("doc2bow expects an array of utf8 tokens on input, not a string")
+        document = sorted(utils.to_utf8(token) for token in document)
         # construct (word, frequency) mapping. in python3 this is done simply
         # using Counter(), but here i use itertools.groupby() for the job
         for word_norm, group in itertools.groupby(document):
@@ -208,6 +211,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
 
         # reassign mappings to new ids
         self.token2id = dict((token, idmap[tokenid]) for token, tokenid in self.token2id.iteritems())
+        self.id2token = {}
         self.dfs = dict((idmap[tokenid], freq) for tokenid, freq in self.dfs.iteritems())
 
 
@@ -219,9 +223,55 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         Note: use `save`/`load` to store in binary format instead (pickle).
         """
         logger.info("saving dictionary mapping to %s" % fname)
-        with open(fname, 'wb') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             for token, tokenid in sorted(self.token2id.iteritems()):
                 fout.write("%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0)))
+
+
+    def merge_with(self, other):
+        """
+        Merge another dictionary into this dictionary, mapping same tokens to the
+        same ids and new tokens to new ids. The purpose is to merge two corpora
+        created using two different dictionaries, one from `self` and one from `other`.
+
+        `other` can be any id=>word mapping (a dict, a Dictionary object, ...).
+
+        Return a transformation object which, when accessed as `result[doc_from_other_corpus]`,
+        will convert documents from a corpus built using the `other` dictionary
+        into a document using the new, merged dictionary (see :class:`gensim.interfaces.TransformationABC`).
+
+        Example:
+
+        >>> dict1 = Dictionary(some_documents)
+        >>> dict2 = Dictionary(other_documents)  # ids not compatible with dict1!
+        >>> dict2_to_dict1 = dict1.merge_with(dict2)
+        >>> # now we can merge corpora from the two incompatible dictionaries into one
+        >>> merged_corpus = itertools.chain(some_corpus_from_dict1, dict2_to_dict1[some_corpus_from_dict2])
+
+        """
+        old2new = {}
+        for other_id, other_token in other.iteritems():
+            if other_token in self.token2id:
+                new_id = self.token2id[other_token]
+            else:
+                new_id = len(self.token2id)
+                self.token2id[other_token] = new_id
+                self.dfs[new_id] = 0
+            old2new[other_id] = new_id
+            try:
+                self.dfs[new_id] += other.dfs[other_id]
+            except:
+                # `other` isn't a Dictionary (probably just a dict) => ignore dfs, keep going
+                pass
+        try:
+            self.num_docs += other.num_docs
+            self.num_nnz += other.num_nnz
+            self.num_pos += other.num_pos
+        except:
+            pass
+
+        import gensim.models
+        return gensim.models.VocabTransform(old2new)
 
 
     @staticmethod
@@ -231,7 +281,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         Mirror function to `save_as_text`.
         """
         result = Dictionary()
-        with open(fname, 'rb') as f:
+        with utils.smart_open(fname, 'rb') as f:
             for lineno, line in enumerate(f):
                 try:
                     wordid, word, docfreq = line[:-1].split('\t')
@@ -239,6 +289,8 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
                     raise ValueError("invalid line in dictionary file %s: %s"
                                      % (fname, line.strip()))
                 wordid = int(wordid)
+                if word in result.token2id:
+                    raise KeyError('token %s is defined as ID %d and as ID %d' % (word, wordid, result.token2id[word]))
                 result.token2id[word] = wordid
                 result.dfs[wordid] = int(docfreq)
         return result
@@ -274,4 +326,3 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
                      (result, result.num_docs, result.num_pos))
         return result
 #endclass Dictionary
-

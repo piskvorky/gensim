@@ -285,7 +285,7 @@ class WikiCorpus(TextCorpus):
         pool = multiprocessing.Pool(self.processes)
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
         # is dumb and would load the entire input into RAM at once...
-        for group in utils.chunkize(texts, chunksize=10 * pool._processes, maxsize=1):
+        for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
             for tokens in pool.imap(process_article, group): # chunksize=10):
                 articles_all += 1
                 positions_all += len(tokens)

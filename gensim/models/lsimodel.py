@@ -99,7 +99,7 @@ def ascarray(a, name=''):
 
 
 class Projection(utils.SaveLoad):
-    def __init__(self, m, k, docs=None, use_svdlibc=False):
+    def __init__(self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS, extra_dims=P2_EXTRA_DIMS):
         """
         Construct the (U, S) projection from a corpus `docs`. The projection can
         be later updated by merging it with another Projection via `self.merge()`.
@@ -109,12 +109,14 @@ class Projection(utils.SaveLoad):
         the higher-level `LsiModel` class.
         """
         self.m, self.k = m, k
+        self.power_iters = power_iters
+        self.extra_dims = extra_dims
         if docs is not None:
             # base case decomposition: given a job `docs`, compute its decomposition,
             # *in-core*.
             if not use_svdlibc:
                 u, s = stochastic_svd(docs, k, chunksize=sys.maxint, num_terms=m,
-                    power_iters=P2_EXTRA_ITERS, extra_dims=P2_EXTRA_DIMS)
+                    power_iters=self.power_iters, extra_dims=self.extra_dims)
             else:
                 try:
                     import sparsesvd
@@ -134,7 +136,7 @@ class Projection(utils.SaveLoad):
 
 
     def empty_like(self):
-        return Projection(self.m, self.k)
+        return Projection(self.m, self.k, power_iters=self.power_iters, extra_dims=self.extra_dims)
 
 
     def merge(self, other, decay=1.0):
@@ -282,14 +284,14 @@ class LsiModel(interfaces.TransformationABC):
             raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
 
         if self.id2word is None:
-            logger.info("no word id mapping provided; initializing from corpus, assuming identity")
+            logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
         else:
             self.num_terms = 1 + max([-1] + self.id2word.keys())
 
         self.docs_processed = 0
-        self.projection = Projection(self.num_terms, self.num_topics)
+        self.projection = Projection(self.num_terms, self.num_topics, power_iters=self.power_iters, extra_dims=self.extra_samples)
 
         self.numworkers = 1
         if not distributed:
@@ -306,6 +308,7 @@ class LsiModel(interfaces.TransformationABC):
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word=self.id2word, num_topics=num_topics,
                                       chunksize=chunksize, decay=decay,
+                                      power_iters=self.power_iters, extra_samples=self.extra_samples,
                                       distributed=False, onepass=onepass)
                 self.dispatcher = dispatcher
                 self.numworkers = len(dispatcher.getworkers())
@@ -370,7 +373,7 @@ class LsiModel(interfaces.TransformationABC):
                         logger.info("dispatched documents up to #%s" % doc_no)
                     else:
                         # serial version, there is only one "worker" (myself) => process the job directly
-                        update = Projection(self.num_terms, self.num_topics, job)
+                        update = Projection(self.num_terms, self.num_topics, job, extra_dims=self.extra_samples, power_iters=self.power_iters)
                         del job
                         self.projection.merge(update, decay=decay)
                         del update
@@ -386,7 +389,7 @@ class LsiModel(interfaces.TransformationABC):
         else:
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             assert self.onepass, "distributed two-pass algo not supported yet"
-            update = Projection(self.num_terms, self.num_topics, corpus.tocsc())
+            update = Projection(self.num_terms, self.num_topics, corpus.tocsc(), extra_dims=self.extra_samples, power_iters=self.power_iters)
             self.projection.merge(update, decay=decay)
             logger.info("processed sparse job of %i documents" % (corpus.shape[1]))
 
@@ -515,13 +518,14 @@ class LsiModel(interfaces.TransformationABC):
             utils.pickle(self, fname)
 
         # first, remove the projection from self.__dict__, so it doesn't get pickled
-        u = self.projection.u
+        u, dispatcher = self.projection.u, self.dispatcher
         del self.projection.u
+        self.dispatcher = None
         try:
             utils.pickle(self, fname) # store projection-less object
             numpy.save(fname + '.npy', ascarray(u)) # store projection
         finally:
-            self.projection.u = u
+            self.projection.u, self.dispatcher = u, dispatcher
 
 
     @classmethod
@@ -536,6 +540,7 @@ class LsiModel(interfaces.TransformationABC):
             result.projection.u = numpy.load(ufname, mmap_mode='r') # load back as read-only
         except:
             logger.debug("failed to load mmap'ed projection from %s" % ufname)
+        result.dispatcher = None # TODO load back incl. distributed state? will require re-initialization of worker state
         return result
 #endclass LsiModel
 

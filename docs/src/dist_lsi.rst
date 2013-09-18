@@ -13,11 +13,13 @@ _______________________
 
 We will show how to run distributed Latent Semantic Analysis by means of an example.
 Let's say we have 5 computers at our disposal, all on the same network segment (=reachable
-by network broadcast). To start with, install `gensim` and `Pyro` on each computer with::
+by network broadcast). To start with, install `gensim` and set up `Pyro` on each computer with::
 
   $ sudo easy_install gensim[distributed]
+  $ export PYRO_SERIALIZERS_ACCEPTED=pickle
+  $ export PYRO_SERIALIZER=pickle
 
-and run Pyro’s name server on exactly one of the machines (doesn’t matter which one)::
+Then run Pyro’s name server on exactly one of the machines (doesn’t matter which one)::
 
   $ python -m Pyro4.naming -n 0.0.0.0 &
 

@@ -68,8 +68,9 @@ might also be indexing a different corpus altogether.
   The class :class:`similarities.MatrixSimilarity` is only appropriate when the whole
   set of vectors fits into memory. For example, a corpus of one million documents
   would require 2GB of RAM in a 256-dimensional LSI space, when used with this class.
+
   Without 2GB of free RAM, you would need to use the :class:`similarities.Similarity` class.
-  This class operates in fixed memory, by splitting the index across multiple files on disk.
+  This class operates in fixed memory, by splitting the index across multiple files on disk, called shards.
   It uses :class:`similarities.MatrixSimilarity` and :class:`similarities.SparseMatrixSimilarity` internally,
   so it is still fast, although slightly more complex.
 
@@ -133,15 +134,16 @@ Congratulations, you have finished the tutorials -- now you know how gensim work
 To delve into more details, you can browse through the :doc:`API documentation <apiref>`,
 see the :doc:`Wikipedia experiments <wiki>` or perhaps check out :doc:`distributed computing <distributed>` in `gensim`.
 
-Please remember that gensim is an experimental package, aimed at the NLP research community.
-This means that:
+Gensim is a fairly mature package that has been used successfully by many individuals and companies, both for rapid prototyping and in production.
+That doesn't mean it's perfect though:
 
-* there certainly are parts that could be implemented more efficiently (in C, for example), and there may also be bugs in the code
-* your **feedback is most welcome** and appreciated, be it in code and
+* there are parts that could be implemented more efficiently (in C, for example), or make better use of parallelism (multiple machines cores)
+* new algorithms are published all the time; help gensim keep up by `discussing them <http://groups.google.com/group/gensim>`_ and `contributing code <https://github.com/piskvorky/gensim/wiki/Developer-page>`_
+* your **feedback is most welcome** and appreciated (and it's not just the code!):
   `idea contributions <https://github.com/piskvorky/gensim/wiki/Ideas-&-Features-proposals>`_,
-  `bug reports <https://github.com/piskvorky/gensim/issues>`_ or just
+  `bug reports <https://github.com/piskvorky/gensim/issues>`_ or just consider contributing
   `user stories and general questions <http://groups.google.com/group/gensim/topics>`_.
 
-Gensim has no ambition to become an all-encompassing production level tool, with robust failure handling
-and error recoveries. Its main goal is to help NLP newcomers try out popular algorithms
-and to facilitate prototyping of new algorithms for NLP researchers.
+Gensim has no ambition to become an all-encompassing framework, across all NLP (or even Machine Learning) subfields.
+Its mission is to help NLP practicioners try out popular topic modelling algorithms
+on large datasets easily, and to facilitate prototyping of new algorithms for researchers.

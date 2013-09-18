@@ -203,7 +203,7 @@ class LdaModel(interfaces.TransformationABC):
             raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
 
         if self.id2word is None:
-            logger.info("no word id mapping provided; initializing from corpus, assuming identity")
+            logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
         else:
@@ -257,12 +257,17 @@ class LdaModel(interfaces.TransformationABC):
 
         # Initialize the variational distribution q(beta|lambda)
         self.state = LdaState(self.eta, (self.num_topics, self.num_terms))
-        self.state.sstats = numpy.random.gamma(100., 1./100., (self.num_topics, self.num_terms))
+        self.state.sstats = numpy.random.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
         self.sync_state()
 
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
             self.update(corpus)
+
+
+    def __str__(self):
+        return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s, alpha=%s)" % \
+                (self.num_terms, self.num_topics, self.decay, self.chunksize, self.alpha)
 
 
     def sync_state(self):
@@ -293,10 +298,11 @@ class LdaModel(interfaces.TransformationABC):
             _ = len(chunk)
         except:
             chunk = list(chunk) # convert iterators/generators to plain list, so we have len() etc.
-        logger.debug("performing inference on a chunk of %i documents" % len(chunk))
+        if len(chunk) > 1:
+            logger.debug("performing inference on a chunk of %i documents" % len(chunk))
 
         # Initialize the variational distribution q(theta|gamma) for the chunk
-        gamma = numpy.random.gamma(100., 1./100., (len(chunk), self.num_topics))
+        gamma = numpy.random.gamma(100., 1. / 100., (len(chunk), self.num_topics))
         Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = numpy.exp(Elogtheta)
         if collect_sstats:
@@ -535,7 +541,7 @@ class LdaModel(interfaces.TransformationABC):
 
 
     def print_topics(self, topics=10, topn=10):
-        self.show_topics(topics, topn, True)
+        return self.show_topics(topics, topn, True)
 
     def show_topics(self, topics=10, topn=10, log=False, formatted=True):
         """
@@ -550,7 +556,7 @@ class LdaModel(interfaces.TransformationABC):
             # print all topics if `topics` is negative
             topics = self.num_topics
         topics = min(topics, self.num_topics)
-        shown  = []
+        shown = []
         for i in xrange(topics):
             if formatted:
                 topic = self.print_topic(i, topn=topn)
@@ -588,4 +594,12 @@ class LdaModel(interfaces.TransformationABC):
         topic_dist = gamma[0] / sum(gamma[0]) # normalize to proper distribution
         return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                 if topicvalue >= eps] # ignore document's topics that have prob < eps
+
+
+    def save(self, fname):
+        dispatcher, self.dispatcher = self.dispatcher, None
+        try:
+            super(LdaModel, self).save(fname)
+        finally:
+            self.dispatcher = dispatcher
 #endclass LdaModel

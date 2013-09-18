@@ -114,4 +114,3 @@ class IndexedCorpus(interfaces.CorpusABC):
             raise RuntimeError("cannot call corpus[docid] without an index")
         return self.docbyoffset(self.index[docno])
 #endclass IndexedCorpus
-

@@ -24,6 +24,8 @@ from functools import wraps # for `synchronous` function lock
 from htmlentitydefs import name2codepoint as n2cp # for `decode_htmlentities`
 import multiprocessing
 import shutil
+import traceback
+
 
 try:
     from pattern.en import parse
@@ -49,6 +51,7 @@ def synchronous(tlockname):
         def _synchronizer(self, *args, **kwargs):
             tlock = getattr(self, tlockname)
             logger.debug("acquiring lock %r for %s" % (tlockname, func.func_name))
+
             with tlock: # use lock as a context manager to perform safe acquire/release pairs
                 logger.debug("acquired lock %r for %s" % (tlockname, func.func_name))
                 result = func(self, *args, **kwargs)
@@ -59,6 +62,10 @@ def synchronous(tlockname):
 
 
 class NoCM(object):
+    def acquire(self):
+        pass
+    def release(self):
+        pass
     def __enter__(self):
         pass
     def __exit__(self, type, value, traceback):
@@ -119,14 +126,14 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
         yield match.group()
 
 
-def simple_preprocess(doc):
+def simple_preprocess(doc, deacc=False):
     """
     Convert a document into a list of tokens.
 
     This lowercases, tokenizes, stems, normalizes etc. -- the output are final,
     utf8 encoded strings that won't be processed any further.
     """
-    tokens = [token.encode('utf8') for token in tokenize(doc, lower=True, errors='ignore')
+    tokens = [token.encode('utf8') for token in tokenize(doc, lower=True, deacc=deacc, errors='ignore')
             if 2 <= len(token) <= 15 and not token.startswith('_')]
     return tokens
 
@@ -406,90 +413,110 @@ grouper = chunkize_serial
 
 
 
-def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
-    """
-    Split a stream of values into smaller chunks.
-    Each chunk is of length `chunksize`, except the last one which may be smaller.
-    A once-only input stream (`corpus` from a generator) is ok, chunking is done
-    efficiently via itertools.
+class InputQueue(multiprocessing.Process):
+    def __init__(self, q, corpus, chunksize, maxsize, as_numpy):
+        super(InputQueue, self).__init__()
+        self.q = q
+        self.maxsize = maxsize
+        self.corpus = corpus
+        self.chunksize = chunksize
+        self.as_numpy = as_numpy
 
-    If `maxsize > 1`, don't wait idly in between successive chunk `yields`, but
-    rather keep filling a short queue (of size at most `maxsize`) with forthcoming
-    chunks in advance. This is realized by starting a separate process, and is
-    meant to reduce I/O delays, which can be significant when `corpus` comes
-    from a slow medium (like harddisk).
-
-    If `maxsize==0`, don't fool around with parallelism and simply yield the chunksize
-    via `chunkize_serial()` (no I/O optimizations).
-
-    >>> for chunk in chunkize(xrange(10), 4): print chunk
-    [0, 1, 2, 3]
-    [4, 5, 6, 7]
-    [8, 9]
-
-    """
-    class InputQueue(multiprocessing.Process):
-        def __init__(self, q, corpus, chunksize, maxsize, as_numpy):
-            super(InputQueue, self).__init__()
-            self.q = q
-            self.maxsize = maxsize
-            self.corpus = corpus
-            self.chunksize = chunksize
-            self.as_numpy = as_numpy
-
-        def run(self):
-            if self.as_numpy:
-                import numpy # don't clutter the global namespace with a dependency on numpy
-            it = iter(self.corpus)
-            while True:
-                chunk = itertools.islice(it, self.chunksize)
-                if self.as_numpy:
-                    # HACK XXX convert documents to numpy arrays, to save memory.
-                    # This also gives a scipy warning at runtime:
-                    # "UserWarning: indices array has non-integer dtype (float64)"
-                    wrapped_chunk = [[numpy.asarray(doc) for doc in chunk]]
-                else:
-                    wrapped_chunk = [list(chunk)]
-
-                if not wrapped_chunk[0]:
-                    self.q.put(None, block=True)
-                    break
-
-                try:
-                    qsize = self.q.qsize()
-                except NotImplementedError:
-                    qsize = '?'
-                logger.debug("prepared another chunk of %i documents (qsize=%s)" %
-                            (len(wrapped_chunk[0]), qsize))
-                self.q.put(wrapped_chunk.pop(), block=True)
-    #endclass InputQueue
-
-    assert chunksize > 0
-
-    if maxsize > 0:
-        q = multiprocessing.Queue(maxsize=maxsize)
-        worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy)
-        worker.daemon = True
-        worker.start()
+    def run(self):
+        if self.as_numpy:
+            import numpy # don't clutter the global namespace with a dependency on numpy
+        it = iter(self.corpus)
         while True:
-            chunk = [q.get(block=True)]
-            if chunk[0] is None:
+            chunk = itertools.islice(it, self.chunksize)
+            if self.as_numpy:
+                # HACK XXX convert documents to numpy arrays, to save memory.
+                # This also gives a scipy warning at runtime:
+                # "UserWarning: indices array has non-integer dtype (float64)"
+                wrapped_chunk = [[numpy.asarray(doc) for doc in chunk]]
+            else:
+                wrapped_chunk = [list(chunk)]
+
+            if not wrapped_chunk[0]:
+                self.q.put(None, block=True)
                 break
-            yield chunk.pop()
-    else:
-        for chunk in chunkize_serial(corpus, chunksize):
+
+            try:
+                qsize = self.q.qsize()
+            except NotImplementedError:
+                qsize = '?'
+            logger.debug("prepared another chunk of %i documents (qsize=%s)" %
+                        (len(wrapped_chunk[0]), qsize))
+            self.q.put(wrapped_chunk.pop(), block=True)
+#endclass InputQueue
+
+
+if os.name == 'nt':
+    logger.info("detected Windows; aliasing chunkize to chunkize_serial")
+
+    def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
+        for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
             yield chunk
+else:
+    def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
+        """
+        Split a stream of values into smaller chunks.
+        Each chunk is of length `chunksize`, except the last one which may be smaller.
+        A once-only input stream (`corpus` from a generator) is ok, chunking is done
+        efficiently via itertools.
+
+        If `maxsize > 1`, don't wait idly in between successive chunk `yields`, but
+        rather keep filling a short queue (of size at most `maxsize`) with forthcoming
+        chunks in advance. This is realized by starting a separate process, and is
+        meant to reduce I/O delays, which can be significant when `corpus` comes
+        from a slow medium (like harddisk).
+
+        If `maxsize==0`, don't fool around with parallelism and simply yield the chunksize
+        via `chunkize_serial()` (no I/O optimizations).
+
+        >>> for chunk in chunkize(xrange(10), 4): print chunk
+        [0, 1, 2, 3]
+        [4, 5, 6, 7]
+        [8, 9]
+
+        """
+        assert chunksize > 0
+
+        if maxsize > 0:
+            q = multiprocessing.Queue(maxsize=maxsize)
+            worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy)
+            worker.daemon = True
+            worker.start()
+            while True:
+                chunk = [q.get(block=True)]
+                if chunk[0] is None:
+                    break
+                yield chunk.pop()
+        else:
+            for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
+                yield chunk
+
+
+def smart_open(fname, mode):
+    from os import path
+    _, ext = path.splitext(fname)
+    if ext == '.bz2':
+        from bz2 import BZ2File
+        return BZ2File(fname, mode)
+    if ext == '.gz':
+        from gzip import GzipFile
+        return GzipFile(fname, mode)
+    return open(fname, mode)
 
 
 def pickle(obj, fname, protocol=-1):
     """Pickle object `obj` to file `fname`."""
-    with open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
+    with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
         cPickle.dump(obj, fout, protocol=protocol)
 
 
 def unpickle(fname):
     """Load pickled object from `fname`"""
-    return cPickle.load(open(fname, 'rb'))
+    return cPickle.load(smart_open(fname, 'rb'))
 
 
 def revdict(d):
@@ -586,15 +613,26 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
             daemon.requestLoop()
 
 
-# the following is only available when the optional 'pattern' package is installed
 if HAS_PATTERN:
-    ALLOWED_TAGS = re.compile('(NN|VB|JJ|RB)') # ignore everything except nouns, verbs, adjectives and adverbs
-
-    def lemmatize(content):
+    def lemmatize(content, light=False, allowed_tags=re.compile('(NN|VB|JJ|RB)')):
         """
-        Use the English lemmatizer from the `pattern` package to extract tokens in
-        their base form (lemmas: "are, is, being"->"be" etc.).
-        This is a smarter version of stemming.
+        This function is only available when the optional 'pattern' package is installed.
+
+        Use the English lemmatizer from `pattern` to extract tokens in
+        their base form=lemma, e.g. "are, is, being" -> "be" etc.
+        This is a smarter version of stemming. Only consider nouns, verbs, adjectives
+        and adverbs by default (=all other lemmas are discarded).
+
+        >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
+        ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
+
+        From http://www.clips.ua.ac.be/pages/pattern-en#parser :
+
+            The parser is built on a Brill lexicon of tagged words and rules to
+            improve the tags context-wise. With light=False, it uses Brill's contextual
+            rules. With light=True it uses Jason Wiener's simpler ruleset. This
+            ruleset is 5-10x faster but also 25% less accurate.
+
         """
         # tokenization in `pattern` is weird; it gets thrown off by non-letters,
         # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
@@ -604,12 +642,12 @@ if HAS_PATTERN:
 
         # use simpler, modified pattern.text.en.text.parser.parse that doesn't
         # collapse the output at the end: https://github.com/piskvorky/pattern
-        parsed = parse(content, lemmata=True, collapse=False)
+        parsed = parse(content, lemmata=True, collapse=False, light=light)
         result = []
         for sentence in parsed:
             for token, tag, _, _, lemma in sentence:
                 if 2 <= len(lemma) <= 15 and not lemma.startswith('_'):
-                    if ALLOWED_TAGS.match(tag):
+                    if allowed_tags.match(tag):
                         lemma += "/" + tag[:2]
                         result.append(lemma.encode('utf8'))
         return result
