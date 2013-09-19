@@ -20,8 +20,8 @@ Store/load a model with::
 
 The model can also be instantiated from an existing, trained file on disk in word2vec format::
 
->>> model = Word2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # text format
->>> model = Word2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # binary format
+  >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # text format
+  >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # binary format
 
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
 
@@ -33,14 +33,56 @@ import os
 import heapq
 import time
 
-from numpy import zeros_like, empty, exp, dot, outer, random, dtype,\
-    float32 as REAL, seterr, array, uint8, vstack, argsort, fromstring
-
-from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
+from numpy import zeros_like, empty, exp, dot, outer, random, dtype, get_include,\
+    float32 as REAL, uint32, seterr, array, uint8, vstack, argsort, fromstring
 
 logger = logging.getLogger(__name__)
 
+
+from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
+
+
 MIN_ALPHA = 0.0001  # don't allow learning rate to drop below this threshold
+
+try:
+    # try to compile the faster cython version first
+    import pyximport
+    pyximport.install(inplace=True, setup_args={"include_dirs": get_include()})
+    from word2vec_inner import train_sentence
+    cython_sentence = True
+except:
+    # failed... fall back to plain numpy version
+    cython_sentence = False
+
+    def train_sentence(model, sentence, alpha):
+        """
+        Update skip-gram hierarchical softmax model by training on a single sentence,
+        where `sentence` is a list of Vocab objects (or None, where the corresponding
+        word is not in the vocabulary). Called internally from `Word2Vec.train()`.
+
+        """
+        for pos, word in enumerate(sentence):
+            if word is None:
+                continue  # OOV word in the input sentence => skip
+            reduced_window = random.randint(model.window)  # `b` in the original word2vec code
+
+            # now go over all words from the (reduced) window, predicting each one in turn
+            start = max(0, pos - model.window + reduced_window)
+            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
+                if pos2 == pos or word2 is None:
+                    # don't train on OOV words and on the `word` itself
+                    continue
+                l1 = model.syn0[word2.index]
+                # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
+                l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
+                fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
+                ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
+                model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
+
+                # TODO add negative sampling?
+
+                l1 += dot(ga, l2a)  # learn input -> hidden
+
 
 
 class Vocab(object):
@@ -90,7 +132,7 @@ class Word2Vec(utils.SaveLoad):
         if sentences is not None:
             self.build_vocab(sentences)
             self.reset_weights()
-            self.train_model(sentences)
+            self.train(sentences)
 
 
     def create_binary_tree(self):
@@ -119,7 +161,7 @@ class Word2Vec(utils.SaveLoad):
                     max_depth = max(len(codes), max_depth)
                 else:
                     # inner node => continue recursion
-                    points = array(list(points) + [node.index - len(self.vocab)], dtype=int)
+                    points = array(list(points) + [node.index - len(self.vocab)], dtype=uint32)
                     stack.append((node.left, array(list(codes) + [0], dtype=uint8), points))
                     stack.append((node.right, array(list(codes) + [1], dtype=uint8), points))
 
@@ -154,37 +196,7 @@ class Word2Vec(utils.SaveLoad):
         self.create_binary_tree()
 
 
-    def train_sentence(self, words, alpha):
-        """
-        Update skip-gram hierarchical softmax model by training on a single sentence,
-        where `sentence` is a list of Vocab objects (or None, where the corresponding
-        word is not in the vocabulary). Called internally from `train_model())`.
-
-        """
-        for pos, word in enumerate(words):
-            if word is None:
-                continue  # OOV word in the input sentence => skip
-            reduced_window = random.randint(self.window)  # `b` in the original word2vec code
-
-            # now go over all words from the (reduced) window, predicting each one in turn
-            start = max(0, pos - self.window + reduced_window)
-            for pos2, word2 in enumerate(words[start : pos + self.window + 1 - reduced_window], start):
-                if pos2 == pos or word2 is None:
-                    # don't train on OOV words and on the `word` itself
-                    continue
-                l1 = self.syn0[word2.index]
-                # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
-                l2a = self.syn1[word.point]  # 2d matrix, codelen x layer1_size
-                fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
-                ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
-                self.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
-
-                # TODO add negative sampling?
-
-                l1 += dot(ga, l2a)  # learn input -> hidden
-
-
-    def train_model(self, sentences, total_words=None):
+    def train(self, sentences, total_words=None):
         """
         Train the model on a sequence of sentences, updating its existing neural weights.
         Each sentence is a list of utf8 strings.
@@ -206,7 +218,7 @@ class Word2Vec(utils.SaveLoad):
                 logger.info("PROGRESS: at sentence #%i, %.2f%% words, alpha %f, %.0f words per second" %
                     (sentence_no, 100.0 * word_count / total_words, alpha, word_count / elapsed if elapsed else 0.0))
             words = [self.vocab.get(word, None) for word in sentence]  # replace OOV words with None
-            self.train_sentence(words, alpha=alpha)
+            train_sentence(self, words, alpha)
             word_count += len(filter(None, words))  # don't consider OOV words for the statistics
         logger.info("training took %.1fs" % (time.clock() - start))
 
@@ -287,8 +299,8 @@ class Word2Vec(utils.SaveLoad):
         similarity, negative words negatively.
 
         This method computes cosine similarity between a simple mean of the projection
-        weight vectors of the given words, and corresponds to the `word-analogy`
-        script in the original word2vec implementation.
+        weight vectors of the given words, and corresponds to the `word-analogy` and
+        `distance` scripts in the original word2vec implementation.
 
         Example::
 
@@ -468,6 +480,7 @@ if __name__ == "__main__":
         print globals()['__doc__'] % locals()
         sys.exit(1)
     infile, outfile = sys.argv[1:3]
+    from gensim.models import Word2Vec
 
     seterr(all='raise')  # don't ignore numpy errors
 

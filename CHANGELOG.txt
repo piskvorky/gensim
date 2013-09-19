@@ -13,7 +13,7 @@ Changes
 * save/load directly from bzip2 files (by Luis Pedro Coelho, PR #101)
 * Blei corpus now tries harder to find its vocabulary file (by Luis Pedro Coelho, PR #100)
 * sparse vector elements can now be a list (was: only a 2-tuple)
-* simple_preprocess now optionally de-accents letters (ř/š/ú etc.)
+* simple_preprocess now optionally deaccents letters (ř/š/ú=>r/s/u etc.)
 * better serialization of numpy corpora
 * print_topics() returns the topics, in addition to printing/logging
 * fixes for more robust Windows multiprocessing
