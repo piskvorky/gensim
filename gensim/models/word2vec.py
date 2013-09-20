@@ -32,6 +32,7 @@ import sys
 import os
 import heapq
 import time
+import itertools
 
 from numpy import zeros_like, empty, exp, dot, outer, random, dtype, get_include,\
     float32 as REAL, uint32, seterr, array, uint8, vstack, argsort, fromstring
@@ -44,15 +45,14 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 
 MIN_ALPHA = 0.0001  # don't allow learning rate to drop below this threshold
 
+
 try:
-    # try to compile the faster cython version first
+    # try to compile and use the faster cython version
     import pyximport
-    pyximport.install(inplace=True, setup_args={"include_dirs": get_include()})
+    pyximport.install(setup_args={"include_dirs": get_include()})
     from word2vec_inner import train_sentence
-    cython_sentence = True
 except:
-    # failed... fall back to plain numpy version
-    cython_sentence = False
+    # failed... fall back to plain numpy (~18x slower training than above)
 
     def train_sentence(model, sentence, alpha):
         """
@@ -72,6 +72,7 @@ except:
                 if pos2 == pos or word2 is None:
                     # don't train on OOV words and on the `word` itself
                     continue
+
                 l1 = model.syn0[word2.index]
                 # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
                 l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
@@ -107,7 +108,7 @@ class Word2Vec(utils.SaveLoad):
     compatible with the original word2vec implementation via `save_word2vec_format()`.
 
     """
-    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1):
+    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, threads=1):
         """
         Initialize a model from `sentences`. Each sentence is a list of words
         (utf8 strings) that will be used for training.
@@ -129,6 +130,7 @@ class Word2Vec(utils.SaveLoad):
         self.window = int(window)
         self.seed = seed
         self.min_count = min_count
+        self.threads = threads
         if sentences is not None:
             self.build_vocab(sentences)
             self.reset_weights()
@@ -220,6 +222,7 @@ class Word2Vec(utils.SaveLoad):
             words = [self.vocab.get(word, None) for word in sentence]  # replace OOV words with None
             train_sentence(self, words, alpha)
             word_count += len(filter(None, words))  # don't consider OOV words for the statistics
+
         logger.info("training took %.1fs" % (time.clock() - start))
 
 
@@ -424,7 +427,7 @@ class Word2Vec(utils.SaveLoad):
 
 
 class BrownCorpus(object):
-    """Yield sentences from the Brown corpus (part of NLTK data)."""
+    """Iterate over sentences from the Brown corpus (part of NLTK data)."""
     def __init__(self, dirname):
         self.dirname = dirname
 
@@ -445,7 +448,7 @@ class BrownCorpus(object):
 
 
 class Text8Corpus(object):
-    """Yield sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip ."""
+    """Iter over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip ."""
     def __init__(self, fname):
         self.fname = fname
 
@@ -469,6 +472,15 @@ class Text8Corpus(object):
                     sentence = sentence[max_sentence_length:]
 
 
+class LineSentence(object):
+    def __init__(self, fname):
+        """Simple format: one sentence = one line; words already preprocessed and separated by whitespace."""
+        self.fname = fname
+
+    def __iter__(self):
+        for line in open(self.fname):
+            yield line.split()
+
 
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -480,11 +492,11 @@ if __name__ == "__main__":
         print globals()['__doc__'] % locals()
         sys.exit(1)
     infile, outfile = sys.argv[1:3]
-    from gensim.models import Word2Vec
+    from gensim.models.word2vec import Word2Vec  # avoid referencing __main__ in pickle
 
     seterr(all='raise')  # don't ignore numpy errors
 
-    w = Word2Vec(BrownCorpus(infile), size=20, min_count=5)
+    w = Word2Vec(LineSentence(infile), size=200, min_count=5)
     w.save(outfile + '.model')
     w.save_word2vec_format(outfile + '.model.bin', binary=True)
     w.save_word2vec_format(outfile + '.model.txt', binary=False)
