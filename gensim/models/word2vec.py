@@ -85,7 +85,6 @@ except:
                 l1 += dot(ga, l2a)  # learn input -> hidden
 
 
-
 class Vocab(object):
     """A single vocabulary item, used internally for constructing binary trees (incl. both word leaves and inner nodes)."""
     def __init__(self, **kwargs):
@@ -198,10 +197,12 @@ class Word2Vec(utils.SaveLoad):
         self.create_binary_tree()
 
 
-    def train(self, sentences, total_words=None):
+    def train(self, sentences, total_words=None, report_every=10.0):
         """
         Train the model on a sequence of sentences, updating its existing neural weights.
         Each sentence is a list of utf8 strings.
+
+        Log statistics every `report_every` seconds.
 
         """
         logger.info("training model with %i words and %i features" % (len(self.vocab), self.layer1_size))
@@ -211,17 +212,15 @@ class Word2Vec(utils.SaveLoad):
         alpha = self.alpha
         word_count, sentence_no, next_report, start = 0, -1, 0.0, time.clock()
         for sentence_no, sentence in enumerate(sentences):
+            # decrease learning rate as the training progresses
+            alpha = max(MIN_ALPHA, self.alpha * (1 - 1.0 * word_count / total_words))
+
             elapsed = time.clock() - start
             if elapsed >= next_report:
-                # decrease learning rate as the training progresses
-                alpha = max(MIN_ALPHA, self.alpha * (1 - 1.0 * word_count / total_words))
-
-                # print progress and training stats
-                elapsed = time.clock() - start
                 logger.info("PROGRESS: at sentence #%i, %.2f%% words, alpha %f, %.0f words per second" %
                     (sentence_no, 100.0 * word_count / total_words, alpha, word_count / elapsed if elapsed else 0.0))
+                next_report = elapsed + report_every  # report again in 10 seconds
 
-                next_report = elapsed + 1.0  # report again in a second
             words = [self.vocab.get(word, None) for word in sentence]  # replace OOV words with None
             train_sentence(self, words, alpha)
             word_count += len(filter(None, words))  # don't consider OOV words for the statistics
@@ -232,8 +231,9 @@ class Word2Vec(utils.SaveLoad):
     def reset_weights(self):
         """Reset all projection weights, but keep the existing vocabulary."""
         random.seed(self.seed)
-        self.syn0 = ((random.rand(len(self.vocab), self.layer1_size) - 0.5) / self.layer1_size).astype(dtype=REAL)
-        self.syn1 = zeros_like(self.syn0)
+        self.syn0 = matutils.zeros_aligned((len(self.vocab), self.layer1_size), dtype=REAL)
+        self.syn1 = matutils.zeros_aligned((len(self.vocab), self.layer1_size), dtype=REAL)
+        self.syn0 += (random.rand(len(self.vocab), self.layer1_size) - 0.5) / self.layer1_size
 
 
     def save_word2vec_format(self, fname, binary=False):
@@ -451,7 +451,7 @@ class BrownCorpus(object):
 
 
 class Text8Corpus(object):
-    """Iter over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip ."""
+    """Iterate over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip ."""
     def __init__(self, fname):
         self.fname = fname
 
@@ -499,7 +499,7 @@ if __name__ == "__main__":
 
     seterr(all='raise')  # don't ignore numpy errors
 
-    w = Word2Vec(LineSentence(infile), size=200, min_count=5)
+    w = Word2Vec(LineSentence(infile), size=256, min_count=5)
     w.save(outfile + '.model')
     w.save_word2vec_format(outfile + '.model.bin', binary=True)
     w.save_word2vec_format(outfile + '.model.txt', binary=False)

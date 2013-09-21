@@ -138,7 +138,7 @@ def train_sentence(model, sentence, alpha):
     """
     Update skip-gram hierarchical softmax model by training on a single sentence,
     where `sentence` is a list of Vocab objects (or None, where the corresponding
-    word is not in the vocabulary). Called internally from `train_model())`.
+    word is not in the vocabulary). Called internally from `Word2Vec.train()`.
 
     """
     work = np.empty(model.layer1_size, dtype=REAL)  # each thread must have its own work memory

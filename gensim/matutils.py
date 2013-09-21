@@ -135,6 +135,14 @@ def pad(mat, padrow, padcol):
                       [numpy.matrix(numpy.zeros((padrow, cols + padcol)))]])
 
 
+def zeros_aligned(shape, dtype, order='C', align=128):
+    """Like `numpy.empty()`, but the array will be aligned at `align` byte boundary."""
+    nbytes = numpy.prod(shape) * numpy.dtype(dtype).itemsize
+    buffer = numpy.zeros(nbytes + align, dtype=numpy.uint8)
+    start_index = -buffer.ctypes.data % align
+    return buffer[start_index : start_index + nbytes].view(dtype).reshape(shape, order=order)
+
+
 def ismatrix(m):
     return isinstance(m, numpy.ndarray) and m.ndim == 2 or scipy.sparse.issparse(m)
 
