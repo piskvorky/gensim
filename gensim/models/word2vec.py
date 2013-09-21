@@ -209,9 +209,10 @@ class Word2Vec(utils.SaveLoad):
         # iterate over documents, training the model one sentence at a time
         total_words = total_words or sum(v.count for v in self.vocab.itervalues())
         alpha = self.alpha
-        word_count, sentence_no, start = 0, -1, time.clock()
+        word_count, sentence_no, next_report, start = 0, -1, 0.0, time.clock()
         for sentence_no, sentence in enumerate(sentences):
-            if sentence_no % 100 == 0:
+            elapsed = time.clock() - start
+            if elapsed >= next_report:
                 # decrease learning rate as the training progresses
                 alpha = max(MIN_ALPHA, self.alpha * (1 - 1.0 * word_count / total_words))
 
@@ -219,6 +220,8 @@ class Word2Vec(utils.SaveLoad):
                 elapsed = time.clock() - start
                 logger.info("PROGRESS: at sentence #%i, %.2f%% words, alpha %f, %.0f words per second" %
                     (sentence_no, 100.0 * word_count / total_words, alpha, word_count / elapsed if elapsed else 0.0))
+
+                next_report = elapsed + 1.0  # report again in a second
             words = [self.vocab.get(word, None) for word in sentence]  # replace OOV words with None
             train_sentence(self, words, alpha)
             word_count += len(filter(None, words))  # don't consider OOV words for the statistics

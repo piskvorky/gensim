@@ -83,10 +83,6 @@ cdef inline void fast_sentence(
     #     f = <REAL_t>0.0
     #     for a in range(size):
     #         f += syn0[row1 + a] * syn1[row2 + a]
-    #     # if f <= -MAX_EXP or f >= MAX_EXP:
-    #     #     continue
-    #     # f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-    #     # g = (1 - word_code[b] - f) * alpha
     #     g = (1 - word_code[b] - <REAL_t>1.0 / (<REAL_t>1.0 + exp(-f))) * alpha
     #     for a in range(size):
     #         work[a] += g * syn1[row2 + a]
