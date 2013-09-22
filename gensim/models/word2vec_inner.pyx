@@ -17,23 +17,16 @@ from libc.string cimport memset
 from cpython cimport PyCObject_AsVoidPtr
 from scipy.linalg.blas import cblas
 
-# y = x
+
 ctypedef void (*scopy_ptr) (const int *N, const float *X, const int *incX, float *Y, const int *incY) nogil
-
-# y += alpha * x
 ctypedef void (*saxpy_ptr) (const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil
-
-# dot(x, y); return value should be `float`, but it only works with `double` (?!)
 ctypedef double (*sdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
-
-# sqrt(x*x); again, only works with `double`
 ctypedef double (*snrm2_ptr) (const int *N, const float *X, const int *incX) nogil
 
-
-cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(cblas.scopy._cpointer)
-cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(cblas.saxpy._cpointer)
-cdef sdot_ptr sdot=<sdot_ptr>PyCObject_AsVoidPtr(cblas.sdot._cpointer)
-cdef snrm2_ptr snrm2=<snrm2_ptr>PyCObject_AsVoidPtr(cblas.snrm2._cpointer)
+cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(cblas.scopy._cpointer)  # y = x
+cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(cblas.saxpy._cpointer)  # y += alpha * x
+cdef sdot_ptr sdot=<sdot_ptr>PyCObject_AsVoidPtr(cblas.sdot._cpointer)  # dot(x, y)
+cdef snrm2_ptr snrm2=<snrm2_ptr>PyCObject_AsVoidPtr(cblas.snrm2._cpointer)  # sqrt(x^2)
 
 
 REAL = np.float32
@@ -59,21 +52,15 @@ def init():
 init()  # initialize the module
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
 cdef inline void fast_sentence(
-    np.uint32_t[::1] word_point, np.uint8_t[::1] word_code, unsigned long int codelen,
-    REAL_t[:, ::1] _syn0, REAL_t[:, ::1] _syn1, int size,
-    np.uint32_t word2_index, REAL_t alpha, REAL_t[::1] _work) nogil:
+    np.uint32_t *word_point, np.uint8_t *word_code, unsigned long int codelen,
+    REAL_t *syn0, REAL_t *syn1, int size,
+    np.uint32_t word2_index, REAL_t alpha, REAL_t *work) nogil:
     cdef int one = 1
     cdef REAL_t onef = <REAL_t>1.0
     cdef long long a, b
     cdef long long row1 = word2_index * size, row2
     cdef REAL_t f, g
-    cdef REAL_t *syn0 = &_syn0[0, 0]
-    cdef REAL_t *syn1 = &_syn1[0, 0]
-    cdef REAL_t *work = &_work[0]
 
     # plain cython
     # for a in range(size):
@@ -141,7 +128,14 @@ def train_sentence(model, sentence, alpha):
     word is not in the vocabulary). Called internally from `Word2Vec.train()`.
 
     """
-    work = np.empty(model.layer1_size, dtype=REAL)  # each thread must have its own work memory
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+    cdef REAL_t *work
+    cdef np.uint32_t *point
+    cdef np.uint8_t *code
+
+    _work = np.empty(model.layer1_size, dtype=REAL)  # each thread must have its own work memory
+    work = <REAL_t *>np.PyArray_DATA(_work)
     for pos, word in enumerate(sentence):
         if word is None:
             continue  # OOV word in the input sentence => skip
@@ -153,4 +147,6 @@ def train_sentence(model, sentence, alpha):
             if pos2 == pos or word2 is None:
                 # don't train on OOV words and on the `word` itself
                 continue
-            fast_sentence(word.point, word.code, len(word.point), model.syn0, model.syn1, model.layer1_size, word2.index, alpha, work)
+            point = <np.uint32_t *>np.PyArray_DATA(word.point)
+            code = <np.uint8_t *>np.PyArray_DATA(word.code)
+            fast_sentence(point, code, len(word.point), syn0, syn1, model.layer1_size, word2.index, alpha, work)
