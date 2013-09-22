@@ -197,7 +197,7 @@ class Word2Vec(utils.SaveLoad):
         self.create_binary_tree()
 
 
-    def train(self, sentences, total_words=None, report_every=10.0):
+    def train(self, sentences, total_words=None, report_every=1.0):
         """
         Train the model on a sequence of sentences, updating its existing neural weights.
         Each sentence is a list of utf8 strings.
@@ -499,7 +499,7 @@ if __name__ == "__main__":
 
     seterr(all='raise')  # don't ignore numpy errors
 
-    w = Word2Vec(LineSentence(infile), size=256, min_count=5)
+    w = Word2Vec(LineSentence(infile), size=200, min_count=5)
     w.save(outfile + '.model')
     w.save_word2vec_format(outfile + '.model.bin', binary=True)
     w.save_word2vec_format(outfile + '.model.txt', binary=False)

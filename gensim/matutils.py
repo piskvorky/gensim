@@ -136,7 +136,7 @@ def pad(mat, padrow, padcol):
 
 
 def zeros_aligned(shape, dtype, order='C', align=128):
-    """Like `numpy.empty()`, but the array will be aligned at `align` byte boundary."""
+    """Like `numpy.zeros()`, but the array will be aligned at `align` byte boundary."""
     nbytes = numpy.prod(shape) * numpy.dtype(dtype).itemsize
     buffer = numpy.zeros(nbytes + align, dtype=numpy.uint8)
     start_index = -buffer.ctypes.data % align
