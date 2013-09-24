@@ -37,7 +37,7 @@ import itertools
 from numpy import zeros_like, empty, exp, dot, outer, random, dtype, get_include,\
     float32 as REAL, uint32, seterr, array, uint8, vstack, argsort, fromstring
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("gensim.models.word2vec")
 
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
@@ -52,7 +52,7 @@ try:
     pyximport.install(setup_args={"include_dirs": get_include()})
     from word2vec_inner import train_sentence
 except:
-    # failed... fall back to plain numpy (~18x slower training than above)
+    # failed... fall back to plain numpy (20-80x slower training than above)
 
     def train_sentence(model, sentence, alpha):
         """

@@ -46,79 +46,37 @@ def init():
     """
     cdef int i
     for i in range(EXP_TABLE_SIZE):
-        EXP_TABLE[i] = exp((i / <REAL_t>EXP_TABLE_SIZE * 2 - 1) * MAX_EXP)
-        EXP_TABLE[i] = EXP_TABLE[i] / (EXP_TABLE[i] + 1)
+        EXP_TABLE[i] = <REAL_t>exp((i / <REAL_t>EXP_TABLE_SIZE * 2 - 1) * MAX_EXP)
+        EXP_TABLE[i] = <REAL_t>(EXP_TABLE[i] / (EXP_TABLE[i] + 1))
 
 init()  # initialize the module
+
+cdef int ONE = 1
+cdef REAL_t ONEF = <REAL_t>1.0
 
 
 cdef inline void fast_sentence(
     np.uint32_t *word_point, np.uint8_t *word_code, unsigned long int codelen,
     REAL_t *syn0, REAL_t *syn1, int size,
     np.uint32_t word2_index, REAL_t alpha, REAL_t *work) nogil:
-    cdef int one = 1
-    cdef REAL_t onef = <REAL_t>1.0
+
     cdef long long a, b
     cdef long long row1 = word2_index * size, row2
     cdef REAL_t f, g
-
-    # plain cython
-    # for a in range(size):
-    #     work[a] = <REAL_t>0.0
-    # for b in range(codelen):
-    #     row2 = word_point[b] * size
-    #     f = <REAL_t>0.0
-    #     for a in range(size):
-    #         f += syn0[row1 + a] * syn1[row2 + a]
-    #     g = (1 - word_code[b] - <REAL_t>1.0 / (<REAL_t>1.0 + exp(-f))) * alpha
-    #     for a in range(size):
-    #         work[a] += g * syn1[row2 + a]
-    #     for a in range(size):
-    #         syn1[row2 + a] += g * syn0[row1 + a]
-    # for a in range(size):
-    #     syn0[row1 + a] += work[a]
-
-    # cython + EXP_TABLE
-    # for a in range(size):
-    #     work[a] = <REAL_t>0.0
-    # for b in range(codelen):
-    #     row2 = word_point[b] * size
-    #     f = <REAL_t>0.0
-    #     for a in range(size):
-    #         f += syn0[row1 + a] * syn1[row2 + a]
-    #     if f <= -MAX_EXP or f >= MAX_EXP:
-    #         continue
-    #     f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-    #     g = (1 - word_code[b] - f) * alpha
-    #     for a in range(size):
-    #         work[a] += g * syn1[row2 + a]
-    #     for a in range(size):
-    #         syn1[row2 + a] += g * syn0[row1 + a]
-    # for a in range(size):
-    #     syn0[row1 + a] += work[a]
-
-    # cython + BLAS
-    # memset(work, 0, size * cython.sizeof(REAL_t))
-    # for b in range(codelen):
-    #     row2 = word_point[b] * size
-    #     f = sdot(&size, &syn0[row1], &one, &syn1[row2], &one)
-    #     g = (1 - word_code[b] - <REAL_t>1.0 / (<REAL_t>1.0 + exp(-f))) * alpha
-    #     saxpy(&size, &g, &syn1[row2], &one, work, &one)
-    #     saxpy(&size, &g, &syn0[row1], &one, &syn1[row2], &one)
-    # saxpy(&size, &onef, work, &one, &syn0[row1], &one)
 
     # cython + BLAS + EXP_TABLE
     memset(work, 0, size * cython.sizeof(REAL_t))
     for b in range(codelen):
         row2 = word_point[b] * size
-        f = sdot(&size, &syn0[row1], &one, &syn1[row2], &one)
+        f = <REAL_t>sdot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
         if f <= -MAX_EXP or f >= MAX_EXP:
             continue
         f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (1 - word_code[b] - f) * alpha
-        saxpy(&size, &g, &syn1[row2], &one, work, &one)
-        saxpy(&size, &g, &syn0[row1], &one, &syn1[row2], &one)
-    saxpy(&size, &onef, work, &one, &syn0[row1], &one)
+        saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
+        saxpy(&size, &g, &syn0[row1], &ONE, &syn1[row2], &ONE)
+    saxpy(&size, &ONEF, work, &ONE, &syn0[row1], &ONE)
+
 
 
 def train_sentence(model, sentence, alpha):

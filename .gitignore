@@ -7,7 +7,6 @@
 *.o
 *.so
 *.pyc
-*.pyx
 
 # Packages #
 ############
