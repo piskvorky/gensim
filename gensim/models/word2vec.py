@@ -50,9 +50,10 @@ try:
     # try to compile and use the faster cython version
     import pyximport
     pyximport.install(setup_args={"include_dirs": get_include()})
-    from word2vec_inner import train_sentence
+    from word2vec_inner import train_sentence, FAST_VERSION
 except:
     # failed... fall back to plain numpy (20-80x slower training than above)
+    FAST_VERSION = 0
 
     def train_sentence(model, sentence, alpha):
         """
@@ -488,6 +489,7 @@ class LineSentence(object):
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     logging.info("running %s" % " ".join(sys.argv))
+    logging.info("using optimization %s" % FAST_VERSION)
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
