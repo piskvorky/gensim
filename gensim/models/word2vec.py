@@ -37,6 +37,8 @@ import itertools
 from numpy import zeros_like, empty, exp, dot, outer, random, dtype, get_include,\
     float32 as REAL, uint32, seterr, array, uint8, vstack, argsort, fromstring
 
+from numpy.linalg import norm
+	
 logger = logging.getLogger("gensim.models.word2vec")
 
 
@@ -358,6 +360,43 @@ class Word2Vec(utils.SaveLoad):
         dists = dot(vectors, mean)
         return sorted(zip(dists, words))[0][1]
 
+	def get_vector_representation(self, word):
+		"""
+		Find the word representations in vector space.
+
+		This method return a numpy word vector representation.
+
+		Example::
+
+		  >>> trained_model.get_vector_representation('woman')
+		  array([ -1.40128313e-02, ...] 
+
+		"""
+		return self.syn0[self.vocab[word].index]
+
+	def cosine_similarity(self, w1, w2):
+		"""
+		Compute the a similarity measure between two words.
+
+		This method computes cosine similarity between two given words.
+
+		Example::
+
+		  >>> trained_model.cosine_similarity('woman', 'man')
+		  0.73723527
+		  
+		  >>> trained_model.cosine_similarity('woman', 'woman')
+		  1.0
+
+		"""
+		v1 = self.get_vector_representation(w1)
+		v2 = self.get_vector_representation(w2)
+		n = norm(v1) * norm(v2)
+		
+		if (n == 0.0):
+			return 0.0
+		
+		return dot(v1, v2) / n	
 
     def init_sims(self):
         if getattr(self, 'syn0norm', None) is None:
