@@ -13,15 +13,26 @@ Initialize a model with e.g.::
 
 >>> model = Word2Vec(sentences, size=100, window=5, min_count=5)
 
-Store/load a model with::
+Persist a model to disk with::
 
 >>> model.save(fname)
->>> model = Word2Vec.load(fname)
+>>> model = Word2Vec.load(fname)  # can continue training with the loaded model!
 
-The model can also be instantiated from an existing, trained file on disk in word2vec format::
+The model can also be instantiated from an existing file on disk in the word2vec C format::
 
   >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # text format
   >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # binary format
+
+You can perform various syntactic/semantic NLP word tasks with a trained model. Some of them
+are already built-in::
+
+  >>> model.most_similar(positive=['woman', 'king'], negative=['man'])
+  [('queen', 0.50882536), ...]
+
+  >>> model.doesnt_match("breakfast cereal dinner lunch".split())
+  'cereal'
+
+and so on.
 
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
 
@@ -52,7 +63,7 @@ try:
     pyximport.install(setup_args={"include_dirs": get_include()})
     from word2vec_inner import train_sentence, FAST_VERSION
 except:
-    # failed... fall back to plain numpy (20-80x slower training than above)
+    # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = 0
 
     def train_sentence(model, sentence, alpha):
@@ -108,10 +119,10 @@ class Word2Vec(utils.SaveLoad):
     compatible with the original word2vec implementation via `save_word2vec_format()`.
 
     """
-    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, threads=1):
+    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1):
         """
-        Initialize a model from `sentences`. Each sentence is a list of words
-        (utf8 strings) that will be used for training.
+        Initialize the model from an iterable of `sentences`. Each sentence is a
+        list of words (utf8 strings) that will be used for training.
 
         If you don't supply `sentences`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
@@ -121,6 +132,7 @@ class Word2Vec(utils.SaveLoad):
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
         `seed` = for the random number generator.
         `min_count` = ignore all words with total frequency lower than this.
+        `workers` = use this many worker threads to train the model (=faster training with multicore machines)
 
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
@@ -130,7 +142,7 @@ class Word2Vec(utils.SaveLoad):
         self.window = int(window)
         self.seed = seed
         self.min_count = min_count
-        self.threads = threads
+        self.workers = workers
         if sentences is not None:
             self.build_vocab(sentences)
             self.reset_weights()
@@ -171,7 +183,7 @@ class Word2Vec(utils.SaveLoad):
 
 
     def build_vocab(self, sentences):
-        """Build vocabulary from a sequence of sentences."""
+        """Build vocabulary from a sequence of sentences (can be a generator)."""
         logger.info("collecting all words and their counts")
         sentence_no, vocab = -1, {}
         total_words = lambda: sum(v.count for v in vocab.itervalues())
@@ -240,7 +252,7 @@ class Word2Vec(utils.SaveLoad):
     def save_word2vec_format(self, fname, binary=False):
         """
         Store the input-hidden weight matrix in the same format used by the original
-        word2vec-tool, for compatibility.
+        C word2vec-tool, for compatibility.
 
         """
         logger.info("storing %sx%s projection weights into %s" % (len(self.vocab), self.layer1_size, fname))
@@ -259,7 +271,7 @@ class Word2Vec(utils.SaveLoad):
     @classmethod
     def load_word2vec_format(cls, fname, binary=False):
         """
-        Load the input-hidden weight matrix from the original word2vec-tool format.
+        Load the input-hidden weight matrix from the original C word2vec-tool format.
 
         Note that the information loaded is incomplete (the binary tree is missing),
         so while you can query for word similarity etc., you cannot continue training
@@ -371,7 +383,7 @@ class Word2Vec(utils.SaveLoad):
         4-tuples of words, split into sections by ": SECTION NAME" lines.
         See https://code.google.com/p/word2vec/source/browse/trunk/questions-words.txt for an example.
 
-        The accuracy is reported (=printed to log and returned as list) for each
+        The accuracy is reported (=printed to log and returned as a list) for each
         section separately, plus there's one aggregate summary at the end.
 
         Use `restrict_vocab` to ignore all questions containing a word whose frequency
