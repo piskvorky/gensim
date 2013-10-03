@@ -213,7 +213,7 @@ class Word2Vec(utils.SaveLoad):
         self.create_binary_tree()
 
 
-    def train(self, sentences, total_words=None, chunksize=1000):
+    def train(self, sentences, total_words=None, chunksize=100):
         """
         Update the model's neural weights from a sequence of sentences (can be a generator).
         Each sentence is a list of utf8 strings.
@@ -227,17 +227,19 @@ class Word2Vec(utils.SaveLoad):
 
         def worker_train(job):
             """Train model on a list of sentences. Each worker runs in a separate thread, executing this function repeatedly."""
-            alpha = max(self.min_alpha, self.alpha * (1 - 1.0 * word_count / total_words))  # update the learning rate before every job
+            # update the learning rate before every job
+            alpha = max(self.min_alpha, self.alpha * (1 - 1.0 * word_count / total_words))
+            # return back how many words we trained on. out-of-vocabulary (unknown) words do not count
             return sum(train_sentence(self, [self.vocab.get(word, None) for word in sentence], alpha) for sentence in job)
 
-        chunks = utils.grouper(sentences, chunksize)  # group sentences into chunksize'd jobs, which the workers will process in parallel
+        jobs = utils.grouper(sentences, chunksize)  # group sentences into chunksize'd jobs, which the workers will process in parallel
         pool = ThreadPool(self.workers)  # start the worker pool
-        for sentence_no, job_words in enumerate(pool.imap(worker_train, chunks)):
+        for job_no, job_words in enumerate(pool.imap(worker_train, jobs)):
             word_count += job_words  # gather stats about the no. of words used for training
             elapsed = time.time() - start
             if elapsed >= next_report:
-                logger.info("PROGRESS: at sentence #%i, %.2f%% words, %.0f words/s" %
-                    (sentence_no, 100.0 * word_count / total_words, wps()))
+                logger.info("PROGRESS: at job #%i, %.2f%% words, %.0f words/s" %
+                    (job_no, 100.0 * word_count / total_words, wps()))
                 next_report = elapsed + 1.0  # don't flood the log, wait at least a second between progress reports
         pool.close()
         pool.join()
@@ -527,7 +529,6 @@ if __name__ == "__main__":
         model.save(outfile + '.model')
         model.save_word2vec_format(outfile + '.model.bin', binary=True)
         model.save_word2vec_format(outfile + '.model.txt', binary=False)
-    print model.most_similar(positive=['woman', 'king'], negative=['man'])
 
     if len(sys.argv) > 2:
         questions_file = sys.argv[2]

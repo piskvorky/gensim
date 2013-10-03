@@ -174,7 +174,7 @@ def train_sentence(model, sentence, alpha):
                     continue
                 fast_sentence(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work)
 
-        return result
+    return result
 
 
 def init():
