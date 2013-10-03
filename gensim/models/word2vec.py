@@ -96,7 +96,7 @@ except:
 
                 l1 += dot(ga, l2a)  # learn input -> hidden
 
-        return len(word for word in sentence if word is not None)
+        return len([word for word in sentence if word is not None])
 
 
 class Vocab(object):
@@ -221,31 +221,48 @@ class Word2Vec(utils.SaveLoad):
         """
         logger.info("training model with %i workers on %i vocabulary and %i features" % (self.workers, len(self.vocab), self.layer1_size))
 
-        word_count, total_words = 0, total_words or sum(v.count for v in self.vocab.itervalues())
-        wps = lambda: word_count / elapsed if elapsed else 0.0  # words per second stats
-        start, next_report = time.time(), 1.0
+        start, next_report = time.time(), [1.0]
+        word_count, total_words = [0], total_words or sum(v.count for v in self.vocab.itervalues())
+        jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
+        lock = threading.Lock()  # for shared state (=number of words trained so far, log reports...)
 
-        def worker_train(job):
-            """Train model on a list of sentences. Each worker runs in a separate thread, executing this function repeatedly."""
-            # update the learning rate before every job
-            alpha = max(self.min_alpha, self.alpha * (1 - 1.0 * word_count / total_words))
-            # return back how many words we trained on. out-of-vocabulary (unknown) words do not count
-            return sum(train_sentence(self, [self.vocab.get(word, None) for word in sentence], alpha) for sentence in job)
+        def worker_train():
+            """Train the model, lifting lists of sentences from the jobs queue."""
+            while True:
+                job = jobs.get()
+                if job is None:  # data finished, exit
+                    break
+                # update the learning rate before every job
+                alpha = max(self.min_alpha, self.alpha * (1 - 1.0 * word_count[0] / total_words))
+                # how many words did we train on? out-of-vocabulary (unknown) words do not count
+                job_words = sum(train_sentence(self, sentence, alpha) for sentence in job)
+                with lock:
+                    word_count[0] += job_words
+                    elapsed = time.time() - start
+                    if elapsed >= next_report[0]:
+                        logger.info("PROGRESS: at %.2f%% words, alpha %.05f, %.0f words/s" %
+                            (100.0 * word_count[0] / total_words, alpha, word_count[0] / elapsed if elapsed else 0.0))
+                        next_report[0] = elapsed + 1.0  # don't flood the log, wait at least a second between progress reports
 
-        jobs = utils.grouper(sentences, chunksize)  # group sentences into chunksize'd jobs, which the workers will process in parallel
-        pool = ThreadPool(self.workers)  # start the worker pool
-        for job_no, job_words in enumerate(pool.imap(worker_train, jobs)):
-            word_count += job_words  # gather stats about the no. of words used for training
-            elapsed = time.time() - start
-            if elapsed >= next_report:
-                logger.info("PROGRESS: at job #%i, %.2f%% words, %.0f words/s" %
-                    (job_no, 100.0 * word_count / total_words, wps()))
-                next_report = elapsed + 1.0  # don't flood the log, wait at least a second between progress reports
-        pool.close()
-        pool.join()
+        workers = [threading.Thread(target=worker_train) for _ in xrange(self.workers)]
+        for thread in workers:
+            thread.daemon = True
+            thread.start()
+
+        # convert input strings to Vocab objects (or None for OOV words), and start filling the jobs queue
+        no_oov = ([self.vocab.get(word, None) for word in sentence] for sentence in sentences)
+        for job_no, job in enumerate(utils.grouper(no_oov, chunksize)):
+            logger.debug("putting job #%i in the queue, qsize=%i" % (job_no, jobs.qsize()))
+            jobs.put(job)
+        logger.info("reached the end of input; waiting to finish %i outstanding jobs" % jobs.qsize())
+        for _ in xrange(self.workers):
+            jobs.put(None)  # give the workers heads up that they can finish -- no more work!
+
+        for thread in workers:
+            thread.join()
 
         elapsed = time.time() - start
-        logger.info("training took %.1fs, %.0f words/s" % (elapsed, wps()))
+        logger.info("training took %.1fs, %.0f words/s" % (elapsed, word_count[0] / elapsed if elapsed else 0.0))
 
 
     def reset_weights(self):
@@ -523,7 +540,7 @@ if __name__ == "__main__":
     seterr(all='raise')  # don't ignore numpy errors
 
     # model = Word2Vec(LineSentence(infile), size=200, min_count=5)
-    model = Word2Vec(Text8Corpus(infile), size=200, min_count=5)
+    model = Word2Vec(Text8Corpus(infile), size=200, min_count=5, workers=1)
     if len(sys.argv) > 3:
         outfile = sys.argv[3]
         model.save(outfile + '.model')
