@@ -27,7 +27,7 @@ ctypedef float (*sdot_ptr) (const int *N, const float *X, const int *incX, const
 ctypedef double (*dsdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
 ctypedef double (*snrm2_ptr) (const int *N, const float *X, const int *incX) nogil
 ctypedef void (*fast_sentence_ptr) (
-    const np.uint32_t *word_point, const np.uint8_t *word_code, const unsigned long int codelen,
+    const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work) nogil
 
@@ -48,8 +48,8 @@ cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
 
-cdef inline void fast_sentence0(
-    const np.uint32_t *word_point, const np.uint8_t *word_code, const unsigned long int codelen,
+cdef void fast_sentence0(
+    const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work) nogil:
 
@@ -70,8 +70,8 @@ cdef inline void fast_sentence0(
     saxpy(&size, &ONEF, work, &ONE, &syn0[row1], &ONE)
 
 
-cdef inline void fast_sentence1(
-    const np.uint32_t *word_point, const np.uint8_t *word_code, const unsigned long int codelen,
+cdef void fast_sentence1(
+    const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work) nogil:
 
@@ -92,8 +92,8 @@ cdef inline void fast_sentence1(
     saxpy(&size, &ONEF, work, &ONE, &syn0[row1], &ONE)
 
 
-cdef inline void fast_sentence2(
-    const np.uint32_t *word_point, const np.uint8_t *word_code, const unsigned long int codelen,
+cdef void fast_sentence2(
+    const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work) nogil:
 
@@ -120,37 +120,61 @@ cdef inline void fast_sentence2(
         syn0[row1 + a] += work[a]
 
 
-def train_sentence(model, sentence, _alpha):
-    """
-    Update skip-gram hierarchical softmax model by training on a single sentence,
-    where `sentence` is a list of Vocab objects (or None, where the corresponding
-    word is not in the vocabulary). Called internally from `Word2Vec.train()`.
+DEF MAX_SENTENCE_LEN = 1000
 
-    """
+def train_sentence(model, sentence, alpha):
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
     cdef REAL_t *syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
     cdef REAL_t *work
-    cdef np.uint32_t *point
-    cdef np.uint8_t *code
-    cdef int size = model.layer1_size   # FIXME
-    cdef REAL_t alpha = _alpha
+    cdef np.uint32_t word2_index
+    cdef REAL_t _alpha = alpha
+    cdef int size = model.layer1_size
 
+    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
+    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
+    cdef int codelens[MAX_SENTENCE_LEN]
+    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
+    cdef int sentence_len = len(sentence)
+    cdef int window = model.window
+
+    cdef int i, j, k
+    cdef int result = 0
+
+    sentence = sentence[:MAX_SENTENCE_LEN]  # clip sentences that are too long
     _work = np.empty(model.layer1_size, dtype=REAL)  # each thread must have its own work memory
-    work = <REAL_t *>np.PyArray_DATA(_work)
-    for pos, word in enumerate(sentence):
-        if word is None:
-            continue  # OOV word in the input sentence => skip
-        reduced_window = np.random.randint(model.window)  # `b` in the original word2vec code
 
-        # now go over all words from the (reduced) window, predicting each one in turn
-        start = max(0, pos - model.window + reduced_window)
-        for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
-            if pos2 == pos or word2 is None:
-                # don't train on OOV words and on the `word` itself
+    # convert Python structures to primitive types, so we can release the GIL
+    work = <REAL_t *>np.PyArray_DATA(_work)
+    for i in range(sentence_len):
+        word = sentence[i]
+        if word is None:
+            codelens[i] = 0
+        else:
+            indexes[i] = word.index
+            codelens[i] = len(word.code)
+            codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+            points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+            reduced_windows[i] = np.random.randint(window)
+            result += 1
+
+    # release GIL & train on the sentence
+    with nogil:
+        for i in range(sentence_len):
+            if codelens[i] == 0:
                 continue
-            point = <np.uint32_t *>np.PyArray_DATA(word.point)
-            code = <np.uint8_t *>np.PyArray_DATA(word.code)
-            fast_sentence(point, code, len(word.point), syn0, syn1, model.layer1_size, word2.index, alpha, work)
+            j = i - window + reduced_windows[i]
+            if j < 0:
+                j = 0
+            k = i + window + 1 - reduced_windows[i]
+            if k > sentence_len:
+                k = sentence_len
+            for j in range(j, k):
+                if j == i or codelens[j] == 0:
+                    continue
+                fast_sentence(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work)
+
+        return result
 
 
 def init():

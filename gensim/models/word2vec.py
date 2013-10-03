@@ -44,6 +44,9 @@ import os
 import heapq
 import time
 import itertools
+import threading
+from multiprocessing.pool import ThreadPool
+from Queue import Queue
 
 from numpy import zeros_like, empty, exp, dot, outer, random, dtype, get_include,\
     float32 as REAL, uint32, seterr, array, uint8, vstack, argsort, fromstring
@@ -52,9 +55,6 @@ logger = logging.getLogger("gensim.models.word2vec")
 
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-
-
-MIN_ALPHA = 0.0001  # don't allow learning rate to drop below this threshold
 
 
 try:
@@ -96,6 +96,8 @@ except:
 
                 l1 += dot(ga, l2a)  # learn input -> hidden
 
+        return len(word for word in sentence if word is not None)
+
 
 class Vocab(object):
     """A single vocabulary item, used internally for constructing binary trees (incl. both word leaves and inner nodes)."""
@@ -115,11 +117,11 @@ class Word2Vec(utils.SaveLoad):
     """
     Class for training, using and evaluating neural networks described in https://code.google.com/p/word2vec/
 
-    The model can be stored/loaded via its `save()` and `load()` methods, or stored in a format
-    compatible with the original word2vec implementation via `save_word2vec_format()`.
+    The model can be stored/loaded via its `save()` and `load()` methods, or stored/loaded in a format
+    compatible with the original word2vec implementation via `save_word2vec_format()` and `load_word2vec_format()`.
 
     """
-    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1):
+    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1, min_alpha=0.0001):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (utf8 strings) that will be used for training.
@@ -143,6 +145,7 @@ class Word2Vec(utils.SaveLoad):
         self.seed = seed
         self.min_count = min_count
         self.workers = workers
+        self.min_alpha = min_alpha
         if sentences is not None:
             self.build_vocab(sentences)
             self.reset_weights()
@@ -210,39 +213,41 @@ class Word2Vec(utils.SaveLoad):
         self.create_binary_tree()
 
 
-    def train(self, sentences, total_words=None, report_every=1.0):
+    def train(self, sentences, total_words=None, chunksize=1000):
         """
-        Train the model on a sequence of sentences, updating its existing neural weights.
+        Update the model's neural weights from a sequence of sentences (can be a generator).
         Each sentence is a list of utf8 strings.
 
-        Log statistics every `report_every` seconds.
-
         """
-        logger.info("training model with %i words and %i features" % (len(self.vocab), self.layer1_size))
+        logger.info("training model with %i workers on %i vocabulary and %i features" % (self.workers, len(self.vocab), self.layer1_size))
 
-        # iterate over documents, training the model one sentence at a time
-        total_words = total_words or sum(v.count for v in self.vocab.itervalues())
-        alpha = self.alpha
-        word_count, sentence_no, next_report, start = 0, -1, 0.0, time.clock()
-        for sentence_no, sentence in enumerate(sentences):
-            # decrease learning rate as the training progresses
-            alpha = max(MIN_ALPHA, self.alpha * (1 - 1.0 * word_count / total_words))
+        word_count, total_words = 0, total_words or sum(v.count for v in self.vocab.itervalues())
+        wps = lambda: word_count / elapsed if elapsed else 0.0  # words per second stats
+        start, next_report = time.time(), 1.0
 
-            elapsed = time.clock() - start
+        def worker_train(job):
+            """Train model on a list of sentences. Each worker runs in a separate thread, executing this function repeatedly."""
+            alpha = max(self.min_alpha, self.alpha * (1 - 1.0 * word_count / total_words))  # update the learning rate before every job
+            return sum(train_sentence(self, [self.vocab.get(word, None) for word in sentence], alpha) for sentence in job)
+
+        chunks = utils.grouper(sentences, chunksize)  # group sentences into chunksize'd jobs, which the workers will process in parallel
+        pool = ThreadPool(self.workers)  # start the worker pool
+        for sentence_no, job_words in enumerate(pool.imap(worker_train, chunks)):
+            word_count += job_words  # gather stats about the no. of words used for training
+            elapsed = time.time() - start
             if elapsed >= next_report:
-                logger.info("PROGRESS: at sentence #%i, %.2f%% words, alpha %f, %.0f words per second" %
-                    (sentence_no, 100.0 * word_count / total_words, alpha, word_count / elapsed if elapsed else 0.0))
-                next_report = elapsed + report_every  # report again in 10 seconds
+                logger.info("PROGRESS: at sentence #%i, %.2f%% words, %.0f words/s" %
+                    (sentence_no, 100.0 * word_count / total_words, wps()))
+                next_report = elapsed + 1.0  # don't flood the log, wait at least a second between progress reports
+        pool.close()
+        pool.join()
 
-            words = [self.vocab.get(word, None) for word in sentence]  # replace OOV words with None
-            train_sentence(self, words, alpha)
-            word_count += len(filter(None, words))  # don't consider OOV words for the statistics
-
-        logger.info("training took %.1fs" % (time.clock() - start))
+        elapsed = time.time() - start
+        logger.info("training took %.1fs, %.0f words/s" % (elapsed, wps()))
 
 
     def reset_weights(self):
-        """Reset all projection weights, but keep the existing vocabulary."""
+        """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
         random.seed(self.seed)
         self.syn0 = matutils.zeros_aligned((len(self.vocab), self.layer1_size), dtype=REAL)
         self.syn1 = matutils.zeros_aligned((len(self.vocab), self.layer1_size), dtype=REAL)
@@ -498,24 +503,34 @@ class LineSentence(object):
             yield line.split()
 
 
+
+# Example: ./word2vec.py ~/workspace/word2vec/text8 ~/workspace/word2vec/questions-words.txt ./text8
 if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
     logging.info("running %s" % " ".join(sys.argv))
     logging.info("using optimization %s" % FAST_VERSION)
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2:
         print globals()['__doc__'] % locals()
         sys.exit(1)
-    infile, outfile = sys.argv[1:3]
+    infile = sys.argv[1]
     from gensim.models.word2vec import Word2Vec  # avoid referencing __main__ in pickle
 
     seterr(all='raise')  # don't ignore numpy errors
 
-    w = Word2Vec(LineSentence(infile), size=200, min_count=5)
-    w.save(outfile + '.model')
-    w.save_word2vec_format(outfile + '.model.bin', binary=True)
-    w.save_word2vec_format(outfile + '.model.txt', binary=False)
+    # model = Word2Vec(LineSentence(infile), size=200, min_count=5)
+    model = Word2Vec(Text8Corpus(infile), size=200, min_count=5)
+    if len(sys.argv) > 3:
+        outfile = sys.argv[3]
+        model.save(outfile + '.model')
+        model.save_word2vec_format(outfile + '.model.bin', binary=True)
+        model.save_word2vec_format(outfile + '.model.txt', binary=False)
+    print model.most_similar(positive=['woman', 'king'], negative=['man'])
+
+    if len(sys.argv) > 2:
+        questions_file = sys.argv[2]
+        model.accuracy(sys.argv[2])
 
     logging.info("finished running %s" % program)
