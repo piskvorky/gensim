@@ -75,11 +75,9 @@ class IndexedCorpus(interfaces.CorpusABC):
         """
         if hasattr(corpus, 'fname'):
             if fname == corpus.fname:
-                msg = (
+                raise ValueError(
                     "fname == corpus.fname == %s, attempt to serialize would "
-                    "erase corpus.  Aborting serialization." % fname)
-                logger.warn(msg)
-                return
+                    "erase corpus.  Serialization aborted." % fname)
 
         if index_fname is None:
             index_fname = fname + '.index'
