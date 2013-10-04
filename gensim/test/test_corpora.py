@@ -25,22 +25,6 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_corpus.tst')
 
 
-class ListCorpus(object):
-    """A corpus initialized from a list"""
-    def __init__(self, corpus_list, fname='from_list'):
-        self.fname = fname
-        self.corpus_list = corpus_list
-
-    def __iter__(self):
-        return self.corpus_list.__iter__()
-
-    def __len__(self):
-        return len(self.corpus_list)
-
-    def __getitem__(self, docno):
-        return self.corpus_list[docno]
-
-
 class CorpusTesterABC(object):
     def __init__(self):
         raise NotImplementedError("cannot instantiate Abstract Base Class")
@@ -55,26 +39,24 @@ class CorpusTesterABC(object):
         self.assertEqual(len(docs), 9) # the deerwester corpus always has nine documents, no matter what format
 
 
-    def test_save(self, corpus_list=[[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]):
+    def test_save(self, corpus=[[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]):
         # make sure the corpus can be saved
-        corpus = ListCorpus(corpus_list)
         self.corpus_class.save_corpus(testfile(), corpus)
 
         # and loaded back, resulting in exactly the same corpus
         corpus2 = list(self.corpus_class(testfile()))
-        self.assertEqual(list(corpus), corpus2)
+        self.assertEqual(corpus, corpus2)
 
         # delete the temporary file
         os.remove(testfile())
 
-    def test_serialize(self, corpus_list=[[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]):
+    def test_serialize(self, corpus=[[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]):
         # make sure the corpus can be saved
-        corpus = ListCorpus(corpus_list)
         self.corpus_class.serialize(testfile(), corpus)
 
         # and loaded back, resulting in exactly the same corpus
         corpus2 = self.corpus_class(testfile())
-        self.assertEqual(list(corpus), list(corpus2))
+        self.assertEqual(corpus, list(corpus2))
 
         # make sure the indexing corpus[i] works
         for i in xrange(len(corpus)):
@@ -111,10 +93,10 @@ class TestLowCorpus(unittest.TestCase, CorpusTesterABC):
         self.file_extension = '.low'
 
     def test_save(self):
-        super(TestLowCorpus, self).test_save(corpus_list=[[(1, 1)], [], [(0, 2), (2, 1)], []])
+        super(TestLowCorpus, self).test_save(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
 
     def test_serialize(self):
-        super(TestLowCorpus, self).test_serialize(corpus_list=[[(1, 1)], [], [(0, 2), (2, 1)], []])
+        super(TestLowCorpus, self).test_serialize(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
 #endclass TestLowCorpus
 
 
@@ -124,10 +106,10 @@ class TestUciCorpus(unittest.TestCase, CorpusTesterABC):
         self.file_extension = '.uci'
 
     def test_save(self):
-        super(TestUciCorpus, self).test_save(corpus_list=[[(1, 1)], [], [(0, 2), (2, 1)], []])
+        super(TestUciCorpus, self).test_save(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
 
     def test_serialize(self):
-        super(TestUciCorpus, self).test_serialize(corpus_list=[[(1, 1)], [], [(0, 2), (2, 1)], []])
+        super(TestUciCorpus, self).test_serialize(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
 #endclass TestUciCorpus
 
 
