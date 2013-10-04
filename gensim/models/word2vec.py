@@ -184,9 +184,8 @@ class Word2Vec(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i" % max_depth)
 
-
     def build_vocab(self, sentences):
-        """Build vocabulary from a sequence of sentences (can be a generator)."""
+        """Build vocabulary from a sequence of sentences (can be a once-only generator stream)."""
         logger.info("collecting all words and their counts")
         sentence_no, vocab = -1, {}
         total_words = lambda: sum(v.count for v in vocab.itervalues())
@@ -215,7 +214,7 @@ class Word2Vec(utils.SaveLoad):
 
     def train(self, sentences, total_words=None, chunksize=100):
         """
-        Update the model's neural weights from a sequence of sentences (can be a generator).
+        Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         Each sentence is a list of utf8 strings.
 
         """
@@ -246,7 +245,7 @@ class Word2Vec(utils.SaveLoad):
 
         workers = [threading.Thread(target=worker_train) for _ in xrange(self.workers)]
         for thread in workers:
-            thread.daemon = True
+            thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
 
         # convert input strings to Vocab objects (or None for OOV words), and start filling the jobs queue
@@ -262,7 +261,8 @@ class Word2Vec(utils.SaveLoad):
             thread.join()
 
         elapsed = time.time() - start
-        logger.info("training took %.1fs, %.0f words/s" % (elapsed, word_count[0] / elapsed if elapsed else 0.0))
+        logger.info("training on %i words took %.1fs, %.0f words/s" %
+            (word_count[0], elapsed, word_count[0] / elapsed if elapsed else 0.0))
 
 
     def reset_weights(self):
@@ -411,7 +411,7 @@ class Word2Vec(utils.SaveLoad):
         section separately, plus there's one aggregate summary at the end.
 
         Use `restrict_vocab` to ignore all questions containing a word whose frequency
-        is not in the top-N most frequent words (default top 30000).
+        is not in the top-N most frequent words (default top 30,000).
 
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
 
@@ -438,15 +438,16 @@ class Word2Vec(utils.SaveLoad):
                 if not section:
                     raise ValueError("missing section header before line #%i in %s" % (line_no, questions))
                 try:
-                    a, b, c, expected = [word.lower() for word in line.split()]  # TODO assumes vocabulary uses lowercase, too...
+                    a, b, c, expected = [word.lower() for word in line.split()]  # TODO assumes vocabulary preprocessing uses lowercase, too...
                 except:
                     logger.info("skipping invalid line #%i in %s" % (line_no, questions))
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
                     logger.debug("skipping line #%i with OOV words: %s" % (line_no, line))
                     continue
 
+                ignore = set(self.vocab[v].index for v in [a, b, c])  # indexes of words to ignore
+                predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
-                predicted, ignore = None, set(self.vocab[v].index for v in [a, b, c])
                 for index in argsort(self.most_similar(positive=[b, c], negative=[a], topn=False))[::-1]:
                     if index in ok_index and index not in ignore:
                         predicted = self.index2word[index]
