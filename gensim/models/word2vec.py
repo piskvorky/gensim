@@ -220,6 +220,9 @@ class Word2Vec(utils.SaveLoad):
         """
         logger.info("training model with %i workers on %i vocabulary and %i features" % (self.workers, len(self.vocab), self.layer1_size))
 
+        if not self.vocab:
+            raise RuntimeError("you must first build vocabulary before training the model")
+
         start, next_report = time.time(), [1.0]
         word_count, total_words = [0], total_words or sum(v.count for v in self.vocab.itervalues())
         jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
@@ -271,6 +274,7 @@ class Word2Vec(utils.SaveLoad):
         self.syn0 = matutils.zeros_aligned((len(self.vocab), self.layer1_size), dtype=REAL)
         self.syn1 = matutils.zeros_aligned((len(self.vocab), self.layer1_size), dtype=REAL)
         self.syn0 += (random.rand(len(self.vocab), self.layer1_size) - 0.5) / self.layer1_size
+        self.syn0norm = None
 
 
     def save_word2vec_format(self, fname, binary=False):
@@ -428,6 +432,7 @@ class Word2Vec(utils.SaveLoad):
 
         sections, section = [], None
         for line_no, line in enumerate(open(questions)):
+            # TODO: use level3 BLAS (=evaluate multiple questions at once), for speed
             if line.startswith(': '):
                 # a new section starts => store the old section
                 if section:
@@ -542,6 +547,7 @@ if __name__ == "__main__":
 
     # model = Word2Vec(LineSentence(infile), size=200, min_count=5)
     model = Word2Vec(Text8Corpus(infile), size=200, min_count=5, workers=1)
+
     if len(sys.argv) > 3:
         outfile = sys.argv[3]
         model.save(outfile + '.model')
