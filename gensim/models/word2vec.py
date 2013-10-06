@@ -194,8 +194,9 @@ class Word2Vec(utils.SaveLoad):
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                     (sentence_no, total_words(), len(vocab)))
             for word in sentence:
-                v = vocab.setdefault(word, Vocab())
-                v.count += 1
+                if word not in vocab:
+                    vocab[word] = Vocab()
+                vocab[word].count += 1
         logger.info("collected %i word types from a corpus of %i words and %i sentences" %
             (len(vocab), total_words(), sentence_no + 1))
 
