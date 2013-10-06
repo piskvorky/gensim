@@ -73,6 +73,12 @@ class IndexedCorpus(interfaces.CorpusABC):
         >>> mm = MmCorpus('test.mm') # `mm` document stream now has random access
         >>> print mm[42] # retrieve document no. 42, etc.
         """
+        if hasattr(corpus, 'fname'):
+            if fname == corpus.fname:
+                raise ValueError(
+                    "fname == corpus.fname == %s, attempt to serialize would "
+                    "erase corpus.  Serialization aborted." % fname)
+
         if index_fname is None:
             index_fname = fname + '.index'
 
