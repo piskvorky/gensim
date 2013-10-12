@@ -68,7 +68,7 @@ except:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = 0
 
-    def train_sentence(model, sentence, alpha):
+    def train_sentence(model, sentence, alpha, work=None):
         """
         Update skip-gram hierarchical softmax model by training on a single sentence,
         where `sentence` is a list of Vocab objects (or None, where the corresponding
@@ -196,9 +196,10 @@ class Word2Vec(utils.SaveLoad):
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                     (sentence_no, total_words(), len(vocab)))
             for word in sentence:
-                if word not in vocab:
-                    vocab[word] = Vocab()
-                vocab[word].count += 1
+                if word in vocab:
+                    vocab[word].count += 1
+                else:
+                    vocab[word] = Vocab(count=1)
         logger.info("collected %i word types from a corpus of %i words and %i sentences" %
             (len(vocab), total_words(), sentence_no + 1))
 
@@ -233,6 +234,8 @@ class Word2Vec(utils.SaveLoad):
 
         def worker_train():
             """Train the model, lifting lists of sentences from the jobs queue."""
+            work = matutils.zeros_aligned(self.layer1_size, dtype=REAL)  # each thread must have its own work memory
+
             while True:
                 job = jobs.get()
                 if job is None:  # data finished, exit
@@ -240,7 +243,7 @@ class Word2Vec(utils.SaveLoad):
                 # update the learning rate before every job
                 alpha = max(self.min_alpha, self.alpha * (1 - 1.0 * word_count[0] / total_words))
                 # how many words did we train on? out-of-vocabulary (unknown) words do not count
-                job_words = sum(train_sentence(self, sentence, alpha) for sentence in job)
+                job_words = sum(train_sentence(self, sentence, alpha, work) for sentence in job)
                 with lock:
                     word_count[0] += job_words
                     elapsed = time.time() - start

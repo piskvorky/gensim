@@ -122,7 +122,7 @@ cdef void fast_sentence2(
 
 DEF MAX_SENTENCE_LEN = 1000
 
-def train_sentence(model, sentence, alpha):
+def train_sentence(model, sentence, alpha, _work):
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
     cdef REAL_t *syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
     cdef REAL_t *work
@@ -135,14 +135,14 @@ def train_sentence(model, sentence, alpha):
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
-    cdef int sentence_len = len(sentence)
+    cdef long sentence_len
     cdef int window = model.window
 
     cdef int i, j, k
-    cdef int result = 0
+    cdef long result = 0
 
     sentence = sentence[:MAX_SENTENCE_LEN]  # clip sentences that are too long
-    _work = np.empty(model.layer1_size, dtype=REAL)  # each thread must have its own work memory
+    sentence_len = len(sentence)
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
