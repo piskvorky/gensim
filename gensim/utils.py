@@ -499,9 +499,9 @@ else:
 def make_closing(base, **attrs):
     """
     Add support for `with Base(attrs) as fout:` to the base class if it's missing.
-    The base class' `close()` method will be called on context exit, to properly terminate the object.
+    The base class' `close()` method will be called on context exit, to always close the file properly.
 
-    Needed for gzip.GzipFile, bz2.BZ2File etc in older Pythons (<=2.6), which otherwise
+    This is needed for gzip.GzipFile, bz2.BZ2File etc in older Pythons (<=2.6), which otherwise
     raise "AttributeError: GzipFile instance has no attribute '__exit__'".
 
     """

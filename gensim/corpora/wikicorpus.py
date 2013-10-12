@@ -289,7 +289,7 @@ class WikiCorpus(TextCorpus):
             for tokens in pool.imap(process_article, group): # chunksize=10):
                 articles_all += 1
                 positions_all += len(tokens)
-                if len(tokens) > ARTICLE_MIN_WORDS: # article redirects are pruned here
+                if len(tokens) > ARTICLE_MIN_WORDS: # article redirects and short stubs are pruned here
                     articles += 1
                     positions += len(tokens)
                     yield tokens

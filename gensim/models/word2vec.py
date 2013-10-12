@@ -7,23 +7,24 @@
 
 """
 Module for deep learning via *hierarchical softmax skip-gram* from [1]_.
-The algorithm is ported from the C package https://code.google.com/p/word2vec/ .
+The training algorithm was originally ported from the C package https://code.google.com/p/word2vec/
+and extended with additional functionality.
 
 Initialize a model with e.g.::
 
->>> model = Word2Vec(sentences, size=100, window=5, min_count=5)
+>>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
 
 Persist a model to disk with::
 
 >>> model.save(fname)
->>> model = Word2Vec.load(fname)  # can continue training with the loaded model!
+>>> model = Word2Vec.load(fname)  # you can continue training with the loaded model!
 
 The model can also be instantiated from an existing file on disk in the word2vec C format::
 
-  >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # text format
-  >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # binary format
+  >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
+  >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
 
-You can perform various syntactic/semantic NLP word tasks with a trained model. Some of them
+You can perform various syntactic/semantic NLP word tasks with the model. Some of them
 are already built-in::
 
   >>> model.most_similar(positive=['woman', 'king'], negative=['man'])
@@ -31,6 +32,12 @@ are already built-in::
 
   >>> model.doesnt_match("breakfast cereal dinner lunch".split())
   'cereal'
+
+  >>> model.similarity('woman', 'man')
+  0.73723527
+
+  >>> model['computer']  # raw numpy vector of a word
+  array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
 
 and so on.
 
@@ -51,8 +58,6 @@ from Queue import Queue
 from numpy import zeros_like, empty, exp, dot, outer, random, dtype, get_include,\
     float32 as REAL, uint32, seterr, array, uint8, vstack, argsort, fromstring
 
-from numpy.linalg import norm
-    
 logger = logging.getLogger("gensim.models.word2vec")
 
 
@@ -127,6 +132,7 @@ class Word2Vec(utils.SaveLoad):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (utf8 strings) that will be used for training.
+        See :class:`BrownCorpus` in this module for an example.
 
         If you don't supply `sentences`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
@@ -366,6 +372,8 @@ class Word2Vec(utils.SaveLoad):
         # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
         positive = [(word, 1.0) if isinstance(word, basestring) else word for word in positive]
         negative = [(word, -1.0) if isinstance(word, basestring) else word for word in negative]
+
+        # compute the weighted average of all words
         all_words, mean = set(), []
         for word, weight in positive + negative:
             if word in self.vocab:
@@ -376,6 +384,7 @@ class Word2Vec(utils.SaveLoad):
         if not mean:
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
+
         dists = dot(self.syn0norm, mean)
         if not topn:
             return dists
@@ -404,43 +413,35 @@ class Word2Vec(utils.SaveLoad):
         dists = dot(vectors, mean)
         return sorted(zip(dists, words))[0][1]
 
-    def get_vector_representation(self, word):
-        """
-        Find the word representations in vector space.
 
-        This method return a numpy word vector representation.
+    def __getitem__(self, word):
+        """
+        Return a word's representations in vector space, as a 1D numpy array.
 
         Example::
 
-          >>> trained_model.get_vector_representation('woman')
-          array([ -1.40128313e-02, ...] 
+          >>> trained_model['woman']
+          array([ -1.40128313e-02, ...]
 
         """
         return self.syn0[self.vocab[word].index]
 
-    def cosine_similarity(self, w1, w2):
-        """
-        Compute the a similarity measure between two words.
 
-        This method computes cosine similarity between two given words.
+    def similarity(self, w1, w2):
+        """
+        Compute cosine similarity between two words.
 
         Example::
 
-          >>> trained_model.cosine_similarity('woman', 'man')
+          >>> trained_model.similarity('woman', 'man')
           0.73723527
-          
-          >>> trained_model.cosine_similarity('woman', 'woman')
+
+          >>> trained_model.similarity('woman', 'woman')
           1.0
 
         """
-        v1 = self.get_vector_representation(w1)
-        v2 = self.get_vector_representation(w2)
-        n = norm(v1) * norm(v2)
-        
-        if (n == 0.0):
-            return 0.0
-        
-        return dot(v1, v2) / n    
+        return dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
+
 
     def init_sims(self):
         if getattr(self, 'syn0norm', None) is None:
@@ -589,7 +590,7 @@ if __name__ == "__main__":
     seterr(all='raise')  # don't ignore numpy errors
 
     # model = Word2Vec(LineSentence(infile), size=200, min_count=5)
-    model = Word2Vec(Text8Corpus(infile), size=200, min_count=5, workers=1)
+    model = Word2Vec(Text8Corpus(infile), size=200, min_count=5, workers=4)
 
     if len(sys.argv) > 3:
         outfile = sys.argv[3]

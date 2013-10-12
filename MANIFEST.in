@@ -7,3 +7,4 @@ include CHANGELOG.txt
 include COPYING
 include COPYING.LESSER
 include ez_setup.py
+include gensim/models/word2vec_inner.pyx
