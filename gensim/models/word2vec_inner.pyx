@@ -202,14 +202,14 @@ def init():
     p_res = <float *>&d_res
     if (abs(d_res - expected) < 0.0001):
         fast_sentence = fast_sentence0
-        return 3  # double
+        return 0  # double
     elif (abs(p_res[0] - expected) < 0.0001):
         fast_sentence = fast_sentence1
-        return 2  # float
+        return 1  # float
     else:
         # neither => use cython loops, no BLAS
         # actually, the BLAS is so messed up we'll probably have segfaulted above and never even reach here
         fast_sentence = fast_sentence2
-        return 1
+        return 2
 
 FAST_VERSION = init()  # initialize the module

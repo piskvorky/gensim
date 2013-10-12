@@ -66,7 +66,7 @@ try:
     from word2vec_inner import train_sentence, FAST_VERSION
 except:
     # failed... fall back to plain numpy (20-80x slower training than the above)
-    FAST_VERSION = 0
+    FAST_VERSION = -1
 
     def train_sentence(model, sentence, alpha, work=None):
         """
