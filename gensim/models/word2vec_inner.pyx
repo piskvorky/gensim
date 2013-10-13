@@ -135,7 +135,7 @@ def train_sentences(model, job, alpha, _work):
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
-    cdef long sentence_len
+    cdef int sentence_len
     cdef int window = model.window
 
     cdef int i, j, k
@@ -144,14 +144,14 @@ def train_sentences(model, job, alpha, _work):
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
     for sentence in job:
-        sentence_len = min(MAX_SENTENCE_LEN, len(sentence))
+        sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
         for i in range(sentence_len):
             word = sentence[i]
             if word is None:
                 codelens[i] = 0
             else:
                 indexes[i] = word.index
-                codelens[i] = len(word.code)
+                codelens[i] = <int>len(word.code)
                 codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
                 points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
                 reduced_windows[i] = np.random.randint(window)
@@ -184,9 +184,9 @@ def init():
     """
     global fast_sentence
     cdef int i
-    cdef float *x = [10.0]
-    cdef float *y = [0.01]
-    cdef float expected = 0.1
+    cdef float *x = [<float>10.0]
+    cdef float *y = [<float>0.01]
+    cdef float expected = <float>0.1
     cdef int size = 1
     cdef double d_res
     cdef float *p_res
