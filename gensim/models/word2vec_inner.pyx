@@ -144,8 +144,7 @@ def train_sentence(model, job, alpha, _work):
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
     for sentence in job:
-        sentence = sentence[:MAX_SENTENCE_LEN]  # clip sentences that are too long
-        sentence_len = len(sentence)
+        sentence_len = min(MAX_SENTENCE_LEN, len(sentence))
         for i in range(sentence_len):
             word = sentence[i]
             if word is None:
