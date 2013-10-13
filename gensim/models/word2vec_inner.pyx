@@ -122,7 +122,7 @@ cdef void fast_sentence2(
 
 DEF MAX_SENTENCE_LEN = 1000
 
-def train_sentence(model, sentence, alpha, _work):
+def train_sentence(model, job, alpha, _work):
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
     cdef REAL_t *syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
     cdef REAL_t *work
@@ -141,38 +141,38 @@ def train_sentence(model, sentence, alpha, _work):
     cdef int i, j, k
     cdef long result = 0
 
-    sentence = sentence[:MAX_SENTENCE_LEN]  # clip sentences that are too long
-    sentence_len = len(sentence)
-
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
-    for i in range(sentence_len):
-        word = sentence[i]
-        if word is None:
-            codelens[i] = 0
-        else:
-            indexes[i] = word.index
-            codelens[i] = len(word.code)
-            codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-            points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
-            reduced_windows[i] = np.random.randint(window)
-            result += 1
-
-    # release GIL & train on the sentence
-    with nogil:
+    for sentence in job:
+        sentence = sentence[:MAX_SENTENCE_LEN]  # clip sentences that are too long
+        sentence_len = len(sentence)
         for i in range(sentence_len):
-            if codelens[i] == 0:
-                continue
-            j = i - window + reduced_windows[i]
-            if j < 0:
-                j = 0
-            k = i + window + 1 - reduced_windows[i]
-            if k > sentence_len:
-                k = sentence_len
-            for j in range(j, k):
-                if j == i or codelens[j] == 0:
+            word = sentence[i]
+            if word is None:
+                codelens[i] = 0
+            else:
+                indexes[i] = word.index
+                codelens[i] = len(word.code)
+                codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+                reduced_windows[i] = np.random.randint(window)
+                result += 1
+
+        # release GIL & train on the sentence
+        with nogil:
+            for i in range(sentence_len):
+                if codelens[i] == 0:
                     continue
-                fast_sentence(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work)
+                j = i - window + reduced_windows[i]
+                if j < 0:
+                    j = 0
+                k = i + window + 1 - reduced_windows[i]
+                if k > sentence_len:
+                    k = sentence_len
+                for j in range(j, k):
+                    if j == i or codelens[j] == 0:
+                        continue
+                    fast_sentence(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work)
 
     return result
 
