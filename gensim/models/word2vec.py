@@ -197,7 +197,11 @@ class Word2Vec(utils.SaveLoad):
             logger.info("built huffman tree with maximum node depth %i" % max_depth)
 
     def build_vocab(self, sentences):
-        """Build vocabulary from a sequence of sentences (can be a once-only generator stream)."""
+        """
+        Build vocabulary from a sequence of sentences (can be a once-only generator stream).
+        Each sentence must be a list of utf8 strings.
+
+        """
         logger.info("collecting all words and their counts")
         sentence_no, vocab = -1, {}
         total_words = lambda: sum(v.count for v in vocab.itervalues())
@@ -206,7 +210,6 @@ class Word2Vec(utils.SaveLoad):
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                     (sentence_no, total_words(), len(vocab)))
             for word in sentence:
-                word = utils.to_utf8(word)  # make sure we've got utf8 on input (and raise if cannot encode as utf8)
                 if word in vocab:
                     vocab[word].count += 1
                 else:
@@ -217,6 +220,7 @@ class Word2Vec(utils.SaveLoad):
         # assign a unique index to each word
         self.vocab, self.index2word = {}, []
         for word, v in vocab.iteritems():
+            word = utils.to_utf8(word)  # make sure we've got utf8 on input (and raise if cannot encode as utf8)
             if v.count >= self.min_count:
                 v.index = len(self.vocab)
                 self.index2word.append(word)
@@ -230,7 +234,7 @@ class Word2Vec(utils.SaveLoad):
     def train(self, sentences, total_words=None, chunksize=100):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
-        Each sentence is a list of utf8 strings.
+        Each sentence must be a list of utf8 strings.
 
         """
         logger.info("training model with %i workers on %i vocabulary and %i features" % (self.workers, len(self.vocab), self.layer1_size))
