@@ -122,7 +122,7 @@ cdef void fast_sentence2(
 
 DEF MAX_SENTENCE_LEN = 1000
 
-def train_sentence(model, job, alpha, _work):
+def train_sentences(model, job, alpha, _work):
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
     cdef REAL_t *syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
     cdef REAL_t *work
