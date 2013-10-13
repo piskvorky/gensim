@@ -202,6 +202,7 @@ class Word2Vec(utils.SaveLoad):
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                     (sentence_no, total_words(), len(vocab)))
             for word in sentence:
+                word = utils.to_utf8(word)  # make sure we've got utf8 on input (and raise if cannot encode as utf8)
                 if word in vocab:
                     vocab[word].count += 1
                 else:
@@ -301,6 +302,7 @@ class Word2Vec(utils.SaveLoad):
             fout.write("%s %s\n" % self.syn0.shape)
             # store in sorted order: most frequent words at the top
             for word, vocab in sorted(self.vocab.iteritems(), key=lambda item: -item[1].count):
+                word = utils.to_utf8(word)  # always store in utf8
                 row = self.syn0[vocab.index]
                 if binary:
                     fout.write("%s %s\n" % (word, row.tostring()))
