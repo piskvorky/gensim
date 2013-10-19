@@ -68,46 +68,43 @@ try:
     # try to compile and use the faster cython version
     import pyximport
     pyximport.install(setup_args={"include_dirs": get_include()})
-    from word2vec_inner import train_sentences, FAST_VERSION
+    from word2vec_inner import train_sentence, FAST_VERSION
 except:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
 
-    def train_sentences(model, job, alpha, work=None):
+    def train_sentence(model, sentence, alpha, work=None):
         """
-        Update skip-gram hierarchical softmax model by training on a job = sequence of sentences.
+        Update skip-gram hierarchical softmax model by training on a single sentence.
 
-        Each sentence is a list of Vocab objects (or None, where the corresponding
+        The sentence is a list of Vocab objects (or None, where the corresponding
         word is not in the vocabulary. Called internally from `Word2Vec.train()`.
 
         """
-        result = 0
-        for sentence in job:
-            for pos, word in enumerate(sentence):
-                if word is None:
-                    continue  # OOV word in the input sentence => skip
-                reduced_window = random.randint(model.window)  # `b` in the original word2vec code
+        for pos, word in enumerate(sentence):
+            if word is None:
+                continue  # OOV word in the input sentence => skip
+            reduced_window = random.randint(model.window)  # `b` in the original word2vec code
 
-                # now go over all words from the (reduced) window, predicting each one in turn
-                start = max(0, pos - model.window + reduced_window)
-                for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
-                    if pos2 == pos or word2 is None:
-                        # don't train on OOV words and on the `word` itself
-                        continue
+            # now go over all words from the (reduced) window, predicting each one in turn
+            start = max(0, pos - model.window + reduced_window)
+            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
+                if pos2 == pos or word2 is None:
+                    # don't train on OOV words and on the `word` itself
+                    continue
 
-                    l1 = model.syn0[word2.index]
-                    # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
-                    l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
-                    fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
-                    ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
-                    model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
+                l1 = model.syn0[word2.index]
+                # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
+                l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
+                fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
+                ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
+                model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
 
-                    # TODO add negative sampling?
+                # TODO add negative sampling?
 
-                    l1 += dot(ga, l2a)  # learn input -> hidden
+                l1 += dot(ga, l2a)  # learn input -> hidden
 
-            result += len([word for word in sentence if word is not None])
-        return result
+        return len([word for word in sentence if word is not None])
 
 
 class Vocab(object):
@@ -220,7 +217,6 @@ class Word2Vec(utils.SaveLoad):
         # assign a unique index to each word
         self.vocab, self.index2word = {}, []
         for word, v in vocab.iteritems():
-            word = utils.to_utf8(word)  # make sure we've got utf8 on input (and raise if cannot encode as utf8)
             if v.count >= self.min_count:
                 v.index = len(self.vocab)
                 self.index2word.append(word)
@@ -258,7 +254,7 @@ class Word2Vec(utils.SaveLoad):
                 # update the learning rate before every job
                 alpha = max(self.min_alpha, self.alpha * (1 - 1.0 * word_count[0] / total_words))
                 # how many words did we train on? out-of-vocabulary (unknown) words do not count
-                job_words = train_sentences(self, job, alpha, work)
+                job_words = sum(train_sentence(self, sentence, alpha, work) for sentence in job)
                 with lock:
                     word_count[0] += job_words
                     elapsed = time.time() - start
@@ -604,7 +600,7 @@ if __name__ == "__main__":
     seterr(all='raise')  # don't ignore numpy errors
 
     # model = Word2Vec(LineSentence(infile), size=200, min_count=5)
-    model = Word2Vec(Text8Corpus(infile), size=200, min_count=5, workers=4)
+    model = Word2Vec(Text8Corpus(infile), size=200, min_count=5, workers=1)
 
     if len(sys.argv) > 3:
         outfile = sys.argv[3]
