@@ -549,7 +549,7 @@ class LdaModel(interfaces.TransformationABC):
 
 
     def print_topics(self, topics=10, topn=10):
-        return self.show_topics(topics, topn, True)
+        return self.show_topics(topics, topn, log=True)
 
     def show_topics(self, topics=10, topn=10, log=False, formatted=True):
         """
@@ -559,6 +559,9 @@ class LdaModel(interfaces.TransformationABC):
         Unlike LSA, there is no ordering between the topics in LDA.
         The printed `topics <= self.num_topics` subset of all topics is therefore
         arbitrary and may change between two runs.
+
+        Set `formatted=True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
+
         """
         if topics < 0:
             # print all topics if `topics` is negative
