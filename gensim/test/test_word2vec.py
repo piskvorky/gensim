@@ -13,6 +13,7 @@ import logging
 import unittest
 import os
 import tempfile
+import itertools
 
 import numpy
 
@@ -35,6 +36,11 @@ def testfile():
 
 
 class TestWord2VecModel(unittest.TestCase):
+    def testPersistence(self):
+        """Test storing/loading the entire model."""
+        model = word2vec.Word2Vec(LeeCorpus(), min_count=2)
+        model.save(testfile())
+        self.models_equal(model, word2vec.Word2Vec.load(testfile()))
 
     def testVocab(self):
         """Test word2vec vocabulary building."""
@@ -58,34 +64,51 @@ class TestWord2VecModel(unittest.TestCase):
         # no input => "RuntimeError: you must first build vocabulary before training the model"
         self.assertRaises(RuntimeError, word2vec.Word2Vec, [])
 
-        # filter out *all* words, make sure things still work as expected
+        # input not empty, but rather completely filtered out
         self.assertRaises(RuntimeError, word2vec.Word2Vec, corpus, min_count=total_words+1)
 
 
     def testTraining(self):
         """Test word2vec training."""
-        pass
+        # for training, make the corpus larger by repeating its sentences 10k times
+        corpus = lambda: itertools.islice(itertools.cycle(LeeCorpus()), 10000)
 
+        # build vocabulary, don't train yet
+        model = word2vec.Word2Vec(size=50)
+        model.build_vocab(corpus())
+        self.assertTrue(model.syn0.shape == (len(model.vocab), 50))
+        self.assertTrue(model.syn1.shape == (len(model.vocab), 50))
 
-    def testResumeTraining(self):
-        """Test resuming training from a trained word2vec model."""
-        pass
+        model.train(corpus())
+        sims = model.most_similar('israeli')
+        self.assertTrue(sims[0][0] == 'palestinian', sims)  # most similar
 
-
-    def testAccuracy(self):
-        pass
+        # build vocab and train in one step; must be the same as above
+        model2 = word2vec.Word2Vec(utils.RepeatCorpus(LeeCorpus(), 10000), size=50)
+        self.models_equal(model, model2)
 
 
     def testParallel(self):
-        pass
+        """Test word2vec training."""
+        corpus = utils.RepeatCorpus(LeeCorpus(), 20000)
+
+        for workers in [2, 4]:
+            model = word2vec.Word2Vec(corpus, workers=workers)
+            sims = model.most_similar('israeli')
+            # the exact vectors and therefore similarities may differ, due to different thread collisions
+            # so let's test only for top3
+            self.assertTrue('palestinian' in [sims[i][0] for i in xrange(3)])
 
 
-    def testPersistence(self):
-        """Test storing/loading the entire model."""
-        model = word2vec.Word2Vec(LeeCorpus(), min_count=2)
-        model.save(testfile())
-        model2 = word2vec.Word2Vec.load(testfile())
-        self.assertEqual(model.min_count, model2.min_count)
+    def testRNG(self):
+        """Test word2vec results identical with identical RNG seed."""
+        model = word2vec.Word2Vec(LeeCorpus(), min_count=2, seed=42, workers=1)
+        model2 = word2vec.Word2Vec(LeeCorpus(), min_count=2, seed=42, workers=1)
+        self.models_equal(model, model2)
+
+
+    def models_equal(self, model, model2):
+        self.assertEqual(len(model.vocab), len(model2.vocab))
         self.assertTrue(numpy.allclose(model.syn0, model2.syn0))
         self.assertTrue(numpy.allclose(model.syn1, model2.syn1))
         self.assertTrue(numpy.allclose(model['the'], model2['the']))

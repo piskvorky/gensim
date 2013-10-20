@@ -157,7 +157,6 @@ class Word2Vec(utils.SaveLoad):
         self.min_alpha = min_alpha
         if sentences is not None:
             self.build_vocab(sentences)
-            self.reset_weights()
             self.train(sentences)
 
 
@@ -225,9 +224,10 @@ class Word2Vec(utils.SaveLoad):
 
         # add info about each word's Huffman encoding
         self.create_binary_tree()
+        self.reset_weights()
 
 
-    def train(self, sentences, total_words=None, chunksize=100):
+    def train(self, sentences, total_words=None, word_count=0, chunksize=100):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of utf8 strings.
@@ -239,7 +239,7 @@ class Word2Vec(utils.SaveLoad):
             raise RuntimeError("you must first build vocabulary before training the model")
 
         start, next_report = time.time(), [1.0]
-        word_count, total_words = [0], total_words or sum(v.count for v in self.vocab.itervalues())
+        word_count, total_words = [word_count], total_words or sum(v.count for v in self.vocab.itervalues())
         jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         lock = threading.Lock()  # for shared state (=number of words trained so far, log reports...)
 
@@ -283,6 +283,8 @@ class Word2Vec(utils.SaveLoad):
         elapsed = time.time() - start
         logger.info("training on %i words took %.1fs, %.0f words/s" %
             (word_count[0], elapsed, word_count[0] / elapsed if elapsed else 0.0))
+
+        return word_count[0]
 
 
     def reset_weights(self):
@@ -375,6 +377,10 @@ class Word2Vec(utils.SaveLoad):
         """
         self.init_sims()
 
+        if isinstance(positive, basestring) and not negative:
+            # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
+            positive = [positive]
+
         # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
         positive = [(word, 1.0) if isinstance(word, basestring) else word for word in positive]
         negative = [(word, -1.0) if isinstance(word, basestring) else word for word in negative]
@@ -386,7 +392,7 @@ class Word2Vec(utils.SaveLoad):
                 mean.append(weight * matutils.unitvec(self.syn0[self.vocab[word].index]))
                 all_words.add(self.vocab[word].index)
             else:
-                logger.warning("word '%s' not in vocabulary; ignoring it" % word)
+                raise KeyError("word '%s' not in vocabulary" % word)
         if not mean:
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
@@ -431,6 +437,10 @@ class Word2Vec(utils.SaveLoad):
 
         """
         return self.syn0[self.vocab[word].index]
+
+
+    def __contains__(self, word):
+        return word in self.vocab
 
 
     def similarity(self, w1, w2):
@@ -599,7 +609,7 @@ if __name__ == "__main__":
 
     seterr(all='raise')  # don't ignore numpy errors
 
-    # model = Word2Vec(LineSentence(infile), size=200, min_count=5)
+    # model = Word2Vec(LineSentence(infile), size=200, min_count=5, workers=4)
     model = Word2Vec(Text8Corpus(infile), size=200, min_count=5, workers=1)
 
     if len(sys.argv) > 3:
