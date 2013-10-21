@@ -30,15 +30,28 @@ class LeeCorpus(object):
             yield utils.simple_preprocess(line)
 
 
+sentences = [
+    ['human', 'interface', 'computer'],
+    ['survey', 'user', 'computer', 'system', 'response', 'time'],
+    ['eps', 'user', 'interface', 'system'],
+    ['system', 'human', 'system', 'eps'],
+    ['user', 'response', 'time'],
+    ['trees'],
+    ['graph', 'trees'],
+    ['graph', 'minors', 'trees'],
+    ['graph', 'minors', 'survey']
+]
+
+
 def testfile():
     # temporary data will be stored to this file
-    return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
+    return os.path.join(tempfile.gettempdir(), 'gensim_word2vec.tst')
 
 
 class TestWord2VecModel(unittest.TestCase):
     def testPersistence(self):
         """Test storing/loading the entire model."""
-        model = word2vec.Word2Vec(LeeCorpus(), min_count=2)
+        model = word2vec.Word2Vec(sentences, min_count=1)
         model.save(testfile())
         self.models_equal(model, word2vec.Word2Vec.load(testfile()))
 
@@ -56,8 +69,9 @@ class TestWord2VecModel(unittest.TestCase):
         # make sure the binary codes are correct
         numpy.allclose(model.vocab['the'].code, [1, 1, 0, 0])
 
-        # test building directly from constructor, with default params
-        model = word2vec.Word2Vec(corpus)
+        # test building vocab with default params
+        model = word2vec.Word2Vec()
+        model.build_vocab(corpus)
         self.assertTrue(len(model.vocab) == 1750)
         numpy.allclose(model.vocab['the'].code, [1, 1, 1, 0])
 
@@ -70,27 +84,28 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testTraining(self):
         """Test word2vec training."""
-        # for training, make the corpus larger by repeating its sentences 10k times
-        corpus = lambda: itertools.islice(itertools.cycle(LeeCorpus()), 10000)
-
+        # to test training, make the corpus larger by repeating its sentences over and over
         # build vocabulary, don't train yet
-        model = word2vec.Word2Vec(size=50)
-        model.build_vocab(corpus())
-        self.assertTrue(model.syn0.shape == (len(model.vocab), 50))
-        self.assertTrue(model.syn1.shape == (len(model.vocab), 50))
+        model = word2vec.Word2Vec(size=2, min_count=1)
+        model.build_vocab(sentences)
+        self.assertTrue(model.syn0.shape == (len(model.vocab), 2))
+        self.assertTrue(model.syn1.shape == (len(model.vocab), 2))
 
-        model.train(corpus())
-        sims = model.most_similar('israeli')
-        self.assertTrue(sims[0][0] == 'palestinian', sims)  # most similar
+        model.train(sentences)
+        sims = model.most_similar('graph')
+        self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # build vocab and train in one step; must be the same as above
-        model2 = word2vec.Word2Vec(utils.RepeatCorpus(LeeCorpus(), 10000), size=50)
+        model2 = word2vec.Word2Vec(sentences, size=2, min_count=1)
         self.models_equal(model, model2)
 
 
     def testParallel(self):
-        """Test word2vec training."""
-        corpus = utils.RepeatCorpus(LeeCorpus(), 20000)
+        """Test word2vec parallel training."""
+        if word2vec.FAST_VERSION < 0:  # don't test the plain NumPy version for parallelism (too slow)
+            return
+
+        corpus = utils.RepeatCorpus(LeeCorpus(), 10000)
 
         for workers in [2, 4]:
             model = word2vec.Word2Vec(corpus, workers=workers)
@@ -102,8 +117,8 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testRNG(self):
         """Test word2vec results identical with identical RNG seed."""
-        model = word2vec.Word2Vec(LeeCorpus(), min_count=2, seed=42, workers=1)
-        model2 = word2vec.Word2Vec(LeeCorpus(), min_count=2, seed=42, workers=1)
+        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        model2 = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
         self.models_equal(model, model2)
 
 
@@ -111,7 +126,8 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(len(model.vocab), len(model2.vocab))
         self.assertTrue(numpy.allclose(model.syn0, model2.syn0))
         self.assertTrue(numpy.allclose(model.syn1, model2.syn1))
-        self.assertTrue(numpy.allclose(model['the'], model2['the']))
+        most_common_word = max(model.vocab.iteritems(), key=lambda item: -item[1].count)[0]
+        self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
 #endclass TestWord2VecModel
 
 
