@@ -5,7 +5,8 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Corpus in CSV format. TODO: still serializes to SVMLight format, feel free to change this.
+Corpus in CSV format.
+
 """
 
 
@@ -13,94 +14,53 @@ from __future__ import with_statement
 
 import logging
 import csv
+import itertools
 
-from gensim.corpora import IndexedCorpus
-from gensim.corpora import SvmLightCorpus
+from gensim import interfaces
 
 logger = logging.getLogger('gensim.corpora.csvcorpus')
 
 
-class CsvCorpus(IndexedCorpus):
+class CsvCorpus(interfaces.CorpusABC):
     """
-    Corpus in CSV format.
+    Corpus in CSV format. The CSV delimiter, headers etc. are guessed automatically
+    based on the file content.
+
+    All row values are expected to be ints/floats.
 
     """
 
     def __init__(self, fname, labels):
         """
-        Initialize the corpus from a file. labels (bool) - whether labels are present in the input file.
-        """
-        IndexedCorpus.__init__(self, fname)
-        logger.info("loading corpus from %s" % fname)
+        Initialize the corpus from a file.
+        `labels` = are class labels present in the input file? => skip the first column
 
-        self.fname = fname # input file, see class doc for format
+        """
+        logger.info("loading corpus from %s" % fname)
+        self.fname = fname
         self.length = None
         self.labels = labels
+
+        # load the first few lines, to guess the CSV dialect
+        head = ''.join(itertools.islice(open(self.fname), 5))
+        self.headers = csv.Sniffer().has_header(head)
+        self.dialect = csv.Sniffer().sniff(head)
+        logger.info("sniffed CSV delimiter=%r, headers=%s" % (self.dialect.delimiter, self.headers))
 
 
     def __iter__(self):
         """
         Iterate over the corpus, returning one sparse vector at a time.
-        """
-        length = 0
-        reader = csv.reader(open(self.fname))
-        #line_no = 0
-        
-        for line in reader:
-            doc = self.line2doc(line)
-            if doc is not None:
-                length += 1
-                #line_no += 1
-                #if line_no % 1000 == 0:
-                    #print line_no
-                    
-                yield doc
-        self.length = length
-        
-    @staticmethod
-    def save_corpus(fname, corpus, id2word=None, labels=False):
-        """
-        Save a corpus in the SVMlight format.
 
-        The SVMlight `<target>` class tag is taken from the `labels` array, or set
-        to 0 for all documents if `labels` is not supplied.
-
-        This function is automatically called by `SvmLightCorpus.serialize`; don't
-        call it directly, call `serialize` instead.
         """
-        logger.info("converting corpus to SVMlight format: %s" % fname)
+        reader = csv.reader(open(self.fname), self.dialect)
+        if self.headers:
+            reader.next()  # skip the headers
 
-        offsets = []
-        with open(fname, 'w') as fout:
-            for docno, doc in enumerate(corpus):
-                label = labels[docno] if labels else 0 # target class is 0 by default
-                offsets.append(fout.tell())
-                fout.write(SvmLightCorpus.doc2line(doc, label))
-        return offsets
+        line_no = -1
+        for line_no, line in enumerate(reader):
+            if self.labels:
+                line.pop(0)  # ignore the first column = class label
+            yield list(enumerate(map(float, line)))
 
-
-    def docbyoffset(self, offset):
-        """
-        Return the document stored at file position `offset`.
-        """
-        with open(self.fname) as f:
-            f.seek(offset)
-            return self.line2doc(f.readline())
-
-    def line2doc(self, line):
-        if self.labels:
-            line.pop(0)
-        line = map(float, line)
-        indexes = range(len(line))
-        doc = zip(indexes, line)
-        return doc
-
-    # used by save_corpus
-    @staticmethod
-    def doc2line(doc, label=0):
-        """
-        Output the document in SVMlight format, as a string. Inverse function to `line2doc`.
-        """
-        pairs = ' '.join("%i:%s" % (termid + 1, termval) for termid, termval in doc) # +1 to convert 0-base to 1-base
-        return str(label) + " %s\n" % pairs
-#endclass SvmLightCorpus
+        self.length = line_no + 1  # store the total number of CSV rows = documents
