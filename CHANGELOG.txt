@@ -6,6 +6,7 @@ Changes
 * python3 port by Parikshit Samant: https://github.com/samantp/gensimPy3
 * massive optimizations to word2vec (cython, BLAS, multithreading): ~20x-300x speedup
 * new word2vec functionality (thx to Ghassen Hamrouni, PR #124)
+* new CSV corpus class (thx to Zygmunt Zając)
 * corpus serialization checks to prevent overwriting (by Ian Langmore, PR #125)
 * add context manager support for older Python<=2.6 for gzip and bz2
 * added unittests for word2vec
