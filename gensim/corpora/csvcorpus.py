@@ -31,17 +31,19 @@ class CsvCorpus(interfaces.CorpusABC):
 
     """
 
-    def __init__(self, fname, has_labels):
+    def __init__(self, fname, has_labels, store_labels=False):
         """
         Initialize the corpus from a file.
         `has_labels` = are class labels present in the input file? => skip the first column
+        `store_labels` = store labels while reading a corpus for later retrieval with get_labels()
 
         """
         logger.info("loading corpus from %s" % fname)
         self.fname = fname
         self.length = None
         self.has_labels = has_labels
-        self.labels = []
+        self.store_labels = store_labels
+           self.labels = []
 
         # load the first few lines, to guess the CSV dialect
         head = ''.join(itertools.islice(open(self.fname), 5))
@@ -66,7 +68,8 @@ class CsvCorpus(interfaces.CorpusABC):
         for line_no, line in enumerate(reader):
             if self.has_labels:
                 label = line.pop(0)  # ignore the first column = class label
-                self.labels.append(label)
+                if self.store_labels:
+                    self.labels.append(label)
             yield list(enumerate(map(float, line)))
 
         self.length = line_no + 1  # store the total number of CSV rows = documents
