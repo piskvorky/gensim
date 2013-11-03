@@ -10,6 +10,8 @@ Module for deep learning via *hierarchical softmax skip-gram* from [1]_.
 The training algorithm was originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality.
 
+**Install Cython with `pip install cython` before to use optimized word2vec training** (70x speedup [2]_).
+
 Initialize a model with e.g.::
 
 >>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
@@ -42,7 +44,7 @@ are already built-in::
 and so on.
 
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
-
+.. [2] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
 """
 
 import logging
@@ -233,6 +235,9 @@ class Word2Vec(utils.SaveLoad):
         Each sentence must be a list of utf8 strings.
 
         """
+        if FAST_VERSION < 0:
+            import warnings
+            warnings.warn("Cython compilation failed, training will be slow. Do you have Cython installed? `pip install cython`")
         logger.info("training model with %i workers on %i vocabulary and %i features" % (self.workers, len(self.vocab), self.layer1_size))
 
         if not self.vocab:
