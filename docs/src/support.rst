@@ -18,13 +18,13 @@ When posting on the mailing list, please try to include all relevant information
 
 You can also try asking on StackOverflow, using the `gensim tag <http://stackoverflow.com/questions/tagged/gensim>`_.
 
+Business support
+------------------
+
+In case you need SLA-based support, design validation, training or custom development, `contact me <http://radimrehurek.com/contact/>`_ for a commercial quote.
+
 Developer support
 ------------------
 
 Developers who `tweak gensim internals <https://github.com/piskvorky/gensim/wiki/Developer-page>`_ are encouraged to report issues at the `GitHub issue tracker <https://github.com/piskvorky/gensim/issues>`_.
 Note that this is not a medium for discussions or asking open-ended questions; please use the mailing list for that.
-
-Business support
-------------------
-
-In case you need SLA-based support, design validation, training or extra development, `contact me <http://radimrehurek.com/contact/>`_ for a commercial quote.
