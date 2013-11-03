@@ -33,7 +33,7 @@ Preparing the corpus
   I recommend compressing these files immediately, e.g. with bzip2 (down to ~13GB). Gensim
   can work with compressed files directly, so this lets you save disk space.
 
-Latent Sematic Analysis
+Latent Semantic Analysis
 --------------------------
 
 First let's load the corpus iterator and dictionary, created in the second step above::

@@ -175,6 +175,9 @@ class LdaModel(interfaces.TransformationABC):
     def __init__(self, corpus=None, num_topics=100, id2word=None, distributed=False,
                  chunksize=2000, passes=1, update_every=1, alpha=None, eta=None, decay=0.5):
         """
+        If given, start training from the iterable `corpus` straight away. If not given,
+        the model is left untrained (presumably because you want to call `update()` manually).
+
         `num_topics` is the number of requested latent topics to be extracted from
         the training corpus.
 
@@ -378,7 +381,7 @@ class LdaModel(interfaces.TransformationABC):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
-        is reached).
+        is reached). `corpus` must be an iterable (repeatable stream of documents),
 
         In distributed mode, the E step is distributed over a cluster of machines.
 
@@ -412,6 +415,7 @@ class LdaModel(interfaces.TransformationABC):
         if lencorpus == 0:
             logger.warning("LdaModel.update() called with an empty corpus")
             return
+
         self.state.numdocs += lencorpus
 
         if update_every > 0:
@@ -438,7 +442,9 @@ class LdaModel(interfaces.TransformationABC):
                 other = LdaState(self.eta, self.state.sstats.shape)
             dirty = False
 
+            reallen = 0
             for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize, as_numpy=True)):
+                reallen += len(chunk)  # keep track of how many documents we've processed so far
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
                     logger.info('PROGRESS: iteration %i, dispatching documents up to #%i/%i' %
@@ -468,6 +474,8 @@ class LdaModel(interfaces.TransformationABC):
                         other = LdaState(self.eta, self.state.sstats.shape)
                     dirty = False
             #endfor single corpus iteration
+            if reallen != lencorpus:
+                raise RuntimeError("input corpus size changed during training (don't use generators as input)")
 
             if dirty:
                 # finish any remaining updates
@@ -541,7 +549,7 @@ class LdaModel(interfaces.TransformationABC):
 
 
     def print_topics(self, topics=10, topn=10):
-        return self.show_topics(topics, topn, True)
+        return self.show_topics(topics, topn, log=True)
 
     def show_topics(self, topics=10, topn=10, log=False, formatted=True):
         """
@@ -551,6 +559,9 @@ class LdaModel(interfaces.TransformationABC):
         Unlike LSA, there is no ordering between the topics in LDA.
         The printed `topics <= self.num_topics` subset of all topics is therefore
         arbitrary and may change between two runs.
+
+        Set `formatted=True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
+
         """
         if topics < 0:
             # print all topics if `topics` is negative

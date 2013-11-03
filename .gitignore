@@ -56,4 +56,8 @@ data
 *.bak
 /build/
 /dist/
-
+*.prof
+*.lprof
+*.bin
+*.old
+*.model
