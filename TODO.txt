@@ -1,4 +1,0 @@
-Changes for future releases:
------------------------------
-
-See https://github.com/piskvorky/gensim/wiki/Ideas-&-Features-proposals .
