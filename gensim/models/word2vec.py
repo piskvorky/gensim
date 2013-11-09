@@ -588,13 +588,33 @@ class Text8Corpus(object):
 
 
 class LineSentence(object):
-    def __init__(self, fname):
-        """Simple format: one sentence = one line; words already preprocessed and separated by whitespace."""
-        self.fname = fname
+    def __init__(self, source):
+        """Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
+
+        source can be either a string or a file object
+
+        Thus, one can use this for just plain files:
+
+            sentences = LineSentence('myfile.txt')
+
+        Or for compressed files:
+
+            sentences = LineSentence(bz2.BZ2File('compressed_text.bz2'))
+        """
+        self.source = source
 
     def __iter__(self):
-        for line in open(self.fname):
-            yield line.split()
+        """Iterate through the lines in the source."""
+        try:
+            # Assume it is a file-like object and try treating it as such
+            # Things that don't have seek will trigger an exception
+            self.source.seek(0)
+            for line in self.source:
+                yield line.split()
+        except AttributeError:
+            # If it didn't work like a file, use it as a string filename
+            for line in open(self.source):
+                yield line.split()
 
 
 
