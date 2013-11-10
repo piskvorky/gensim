@@ -61,7 +61,6 @@ from numpy import zeros_like, empty, exp, dot, outer, random, dtype, get_include
 
 logger = logging.getLogger("gensim.models.word2vec")
 
-import tempfile
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 
 
