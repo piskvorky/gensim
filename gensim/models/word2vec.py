@@ -51,6 +51,7 @@ import logging
 import sys
 import os
 import heapq
+import re
 import time
 import itertools
 import threading
@@ -65,6 +66,7 @@ logger = logging.getLogger("gensim.models.word2vec")
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 
+SPLIT_SENTENCES = re.compile(u"[.!?:]\s+")
 
 try:
     # try to compile and use the faster cython version
@@ -539,7 +541,25 @@ class Word2Vec(utils.SaveLoad):
     def __str__(self):
         return "Word2Vec(vocab=%s, size=%s, alpha=%s)" % (len(self.index2word), self.layer1_size, self.alpha)
 
+class DirOfPlainTextCorpus(object):
+    """Iterate over sentences of all plaintext files in a directory """
 
+    def __init__(self, dirname):
+        self.dirname = dirname
+
+    def __iter__(self):
+        for (dirpath, dirnames, filenames) in os.walk(self.dirname):
+            files = filenames
+        for fn in files:
+            if self.dirname.endswith('/'):
+                f = open(self.dirname + fn, 'r')
+            else:
+                f = open(self.dirname + '/' + fn, 'r')
+            sentences = SPLIT_SENTENCES.split(f.read())
+            for sentence in sentences:
+                yield [token.encode('utf8') for token in utils.tokenize(sentence, lowercase=True, deacc=True, errors='ignore')
+                    if 2 <= len(token) <= 25 and not token.startswith('_')]
+            f.close()
 
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
