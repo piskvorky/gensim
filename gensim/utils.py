@@ -126,7 +126,7 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
         yield match.group()
 
 
-def simple_preprocess(doc, deacc=False):
+def simple_preprocess(doc, deacc=False, min_len=2, max_len=15):
     """
     Convert a document into a list of tokens.
 
@@ -134,7 +134,7 @@ def simple_preprocess(doc, deacc=False):
     utf8 encoded strings that won't be processed any further.
     """
     tokens = [token.encode('utf8') for token in tokenize(doc, lower=True, deacc=deacc, errors='ignore')
-            if 2 <= len(token) <= 15 and not token.startswith('_')]
+            if min_len <= len(token) <= max_len and not token.startswith('_')]
     return tokens
 
 
