@@ -202,18 +202,19 @@ class Word2Vec(utils.SaveLoad):
         """
         logger.info("collecting all words and their counts")
         sentence_no, vocab = -1, {}
-        total_words = lambda: sum(v.count for v in vocab.itervalues())
+        total_words = 0
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % 10000 == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
-                    (sentence_no, total_words(), len(vocab)))
+                    (sentence_no, total_words, len(vocab)))
             for word in sentence:
+                total_words += 1
                 if word in vocab:
                     vocab[word].count += 1
                 else:
                     vocab[word] = Vocab(count=1)
         logger.info("collected %i word types from a corpus of %i words and %i sentences" %
-            (len(vocab), total_words(), sentence_no + 1))
+            (len(vocab), total_words, sentence_no + 1))
 
         # assign a unique index to each word
         self.vocab, self.index2word = {}, []
