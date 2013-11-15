@@ -336,7 +336,7 @@ class Word2Vec(utils.SaveLoad):
             header = fin.readline()
             vocab_size, layer1_size = map(int, header.split())  # throws for invalid file format
             result = Word2Vec(size=layer1_size)
-            result.syn0 = empty((vocab_size, layer1_size), dtype=REAL)
+            result.syn0 = matutils.zeros_aligned((vocab_size, layer1_size), dtype=REAL)
             if binary:
                 binary_len = dtype(REAL).itemsize * layer1_size
                 for line_no in xrange(vocab_size):
