@@ -79,12 +79,11 @@ class Dispatcher(object):
                     logger.info("registering worker #%i at %s" % (workerid, uri))
                     worker.initialize(workerid, dispatcher=self.callback, **model_params)
                     self.workers[workerid] = worker
-                    worker.requestjob()
                 except Pyro4.errors.PyroError, err:
                     logger.warning("unresponsive worker at %s, deleting it from the name server" % uri)
                     ns.remove(name)
 
-        if len(self.workers) == 0:
+        if not self.workers:
             raise RuntimeError('no workers found; run some lda_worker scripts on your machines first!')
 
 
@@ -97,7 +96,7 @@ class Dispatcher(object):
 
     def getjob(self, worker_id):
         logger.info("worker #%i requesting a new job" % worker_id)
-        job = self.jobs.get(block=True, timeout=HUGE_TIMEOUT)
+        job = self.jobs.get(block=True, timeout=1)
         logger.info("worker #%i got a new job (%i left)" % (worker_id, self.jobs.qsize()))
         return job
 
@@ -113,6 +112,7 @@ class Dispatcher(object):
         Merge states from across all workers and return the result.
         """
         logger.info("end of input, assigning all remaining jobs")
+        logger.debug("jobs done: %s, jobs received: %s" % (self._jobsdone, self._jobsreceived))
         while self._jobsdone < self._jobsreceived:
             time.sleep(0.5) # check every half a second
 
@@ -133,6 +133,7 @@ class Dispatcher(object):
         for workerid, worker in self.workers.iteritems():
             logger.info("resetting worker %s" % workerid)
             worker.reset(state)
+            worker.requestjob()
         self._jobsdone = 0
         self._jobsreceived = 0
 

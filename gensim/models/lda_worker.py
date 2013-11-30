@@ -20,6 +20,7 @@ from __future__ import with_statement
 import os, sys, logging
 import threading
 import tempfile
+import Queue
 
 from gensim.models import ldamodel
 from gensim import utils
@@ -42,21 +43,30 @@ class Worker(object):
         self.jobsdone = 0 # how many jobs has this worker completed?
         self.myid = myid # id of this worker in the dispatcher; just a convenience var for easy access/logging TODO remove?
         self.dispatcher = dispatcher
+        self.finished = False
         logger.info("initializing worker #%s" % myid)
         self.model = ldamodel.LdaModel(**model_params)
 
 
     def requestjob(self):
         """
-        Request jobs from the dispatcher in an infinite loop. The requests are
-        blocking, so if there are no jobs available, the thread will wait.
+        Request jobs from the dispatcher in an infinite loop.
         """
         if self.model is None:
             raise RuntimeError("worker must be initialized before receiving jobs")
-        job = self.dispatcher.getjob(self.myid) # blocks until a new job is available from the dispatcher
-        logger.info("worker #%s received job #%i" % (self.myid, self.jobsdone))
-        self.processjob(job)
-        self.dispatcher.jobdone(self.myid)
+        job = None
+        while job is None and not self.finished:
+            try:
+                job = self.dispatcher.getjob(self.myid)
+            except Queue.Empty:
+                # no new job: try again, unless we're finished with all work
+                continue
+        if job is not None:
+            logger.info("worker #%s received job #%i" % (self.myid, self.jobsdone))
+            self.processjob(job)
+            self.dispatcher.jobdone(self.myid)
+        else:
+            logger.info("worker #%i stopping asking for jobs")
 
 
     @utils.synchronous('lock_update')
@@ -77,6 +87,7 @@ class Worker(object):
         result = self.model.state
         assert isinstance(result, ldamodel.LdaState)
         self.model.clear() # free up mem in-between two EM cycles
+        self.finished = True
         return result
 
 
@@ -87,6 +98,7 @@ class Worker(object):
         self.model.state = state
         self.model.sync_state()
         self.model.state.reset()
+        self.finished = False
 
 
     def exit(self):
