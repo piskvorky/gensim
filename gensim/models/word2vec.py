@@ -54,11 +54,10 @@ import heapq
 import time
 import itertools
 import threading
-from multiprocessing.pool import ThreadPool
 from Queue import Queue
 
-from numpy import zeros_like, empty, exp, dot, outer, random, dtype, get_include,\
-    float32 as REAL, uint32, seterr, array, uint8, vstack, argsort, fromstring
+from numpy import exp, dot, outer, random, dtype, get_include, float32 as REAL,\
+    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -468,7 +467,7 @@ class Word2Vec(utils.SaveLoad):
     def init_sims(self):
         if getattr(self, 'syn0norm', None) is None:
             logger.info("precomputing L2-norms of word weight vectors")
-            self.syn0norm = vstack(matutils.unitvec(vec) for vec in self.syn0).astype(REAL)
+            self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
 
     def accuracy(self, questions, restrict_vocab=30000):

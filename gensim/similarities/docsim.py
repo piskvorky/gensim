@@ -193,6 +193,7 @@ class Similarity(interfaces.SimilarityABC):
             self.output_prefix = utils.randfname(prefix='simserver')
         else:
             self.output_prefix = output_prefix
+        logger.info("starting similarity index under %s" % self.output_prefix)
         self.num_features = num_features
         self.num_best = num_best
         self.normalize = True

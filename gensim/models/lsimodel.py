@@ -533,13 +533,13 @@ class LsiModel(interfaces.TransformationABC):
         """
         Load a previously saved object from file (also see `save`).
         """
-        logger.debug("loading %s object from %s" % (cls.__name__, fname))
+        logger.info("loading %s object from %s" % (cls.__name__, fname))
         result = utils.unpickle(fname)
         ufname = fname + '.npy'
         try:
             result.projection.u = numpy.load(ufname, mmap_mode='r') # load back as read-only
         except:
-            logger.debug("failed to load mmap'ed projection from %s" % ufname)
+            logger.info("failed to load mmap'ed projection from %s" % ufname)
         result.dispatcher = None # TODO load back incl. distributed state? will require re-initialization of worker state
         return result
 #endclass LsiModel
