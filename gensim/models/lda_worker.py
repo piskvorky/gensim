@@ -50,10 +50,11 @@ class Worker(object):
 
     def requestjob(self):
         """
-        Request jobs from the dispatcher in an infinite loop.
+        Request jobs from the dispatcher, in a perpetual loop until `getstate()` is called.
         """
         if self.model is None:
             raise RuntimeError("worker must be initialized before receiving jobs")
+
         job = None
         while job is None and not self.finished:
             try:
@@ -66,7 +67,7 @@ class Worker(object):
             self.processjob(job)
             self.dispatcher.jobdone(self.myid)
         else:
-            logger.info("worker #%i stopping asking for jobs")
+            logger.info("worker #%i stopping asking for jobs" % self.myid)
 
 
     @utils.synchronous('lock_update')
