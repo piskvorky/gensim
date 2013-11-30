@@ -1,6 +1,13 @@
 Changes
 =======
 
+0.8.9
+
+* fix Pyro thread leak in distributed algos (Brian Feeny)
+* optimizations in word2vec (Bryan Rink)
+* allow compressed input in LineSentence corpus (Eric Moyer)
+* upgrade ez_setup, doc improvements, minor fixes etc.
+
 0.8.8 (aka "word2vec release")
 
 * python3 port by Parikshit Samant: https://github.com/samantp/gensimPy3

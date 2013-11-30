@@ -41,6 +41,8 @@ import numpy # for arrays, array broadcasting etc.
 #numpy.seterr(divide='ignore') # ignore 0*log(0) errors
 
 from scipy.special import gammaln, digamma, psi # gamma function utils
+from scipy.special import gamma as gammafunc
+from scipy.special import polygamma
 try:
     from scipy.maxentropy import logsumexp # log(sum(exp(x))) that tries to avoid overflow
 except ImportError: # maxentropy has been removed for next release
@@ -173,7 +175,8 @@ class LdaModel(interfaces.TransformationABC):
     Model persistency is achieved through its `load`/`save` methods.
     """
     def __init__(self, corpus=None, num_topics=100, id2word=None, distributed=False,
-                 chunksize=2000, passes=1, update_every=1, alpha=None, eta=None, decay=0.5):
+                 chunksize=2000, passes=1, update_every=1, alpha=None, eta=None, decay=0.5,
+                 optimize_alpha=False):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -191,6 +194,10 @@ class LdaModel(interfaces.TransformationABC):
 
         Turn on `distributed` to force distributed computing (see the web tutorial
         on how to set up a cluster of machines for gensim).
+
+        optimize_alpha tells gensim to optimize the hyperparameter alpha.
+        It should only be used in online non-distributed mode and you
+        should probably set alpha=None.
 
         Example:
 
@@ -224,8 +231,9 @@ class LdaModel(interfaces.TransformationABC):
         self.passes = passes
         self.update_every = update_every
 
+        self.optimize_alpha = optimize_alpha
         if alpha is None:
-            self.alpha = 1.0 / num_topics
+            self.alpha = numpy.asarray([1.0 / num_topics for i in range(num_topics)])
         else:
             self.alpha = alpha
         if eta is None:
@@ -377,6 +385,36 @@ class LdaModel(interfaces.TransformationABC):
         return gamma
 
 
+    def update_alpha(self, gammat, rho):
+        """
+        Update the parameters for the Dirichlet prior on the per-document
+        topic weights given the last gamma_t.
+
+        I'm using Newton's method but here are a zillion more techniques:
+            http://www.stanford.edu/~jhuang11/research/dirichlet/dirichlet.pdf
+        """
+        N = float(len(gammat))
+        logphat = sum(dirichlet_expectation(_) for _ in gammat) / N
+        dalpha = numpy.copy(self.alpha)
+        gradf = N * (psi(numpy.sum(self.alpha)) - psi(self.alpha) + logphat)
+
+        c = N * polygamma(1, numpy.sum(self.alpha))
+        q = -N * polygamma(1, self.alpha)
+
+        b = numpy.sum(gradf / q) / ( 1 / c + numpy.sum(1 / q))
+
+        dalpha = -(gradf - b) / q
+
+        old_alpha = self.alpha
+        if all(rho() * dalpha + self.alpha > 0):
+            self.alpha += rho() * dalpha
+        else:
+            logger.debug("updated alpha not positive")
+        logger.info("optimized alpha from %s to %s" % (old_alpha, self.alpha))
+
+        return self.alpha
+
+
     def update(self, corpus, chunksize=None, decay=None, passes=None, update_every=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
@@ -454,7 +492,11 @@ class LdaModel(interfaces.TransformationABC):
                 else:
                     logger.info('PROGRESS: iteration %i, at document #%i/%i' %
                                 (iteration, chunk_no * chunksize + len(chunk), lencorpus))
-                    self.do_estep(chunk, other)
+                    gammat = self.do_estep(chunk, other)
+
+                    if self.optimize_alpha:
+                        self.update_alpha(gammat, rho)
+
                 dirty = True
                 del chunk
 
@@ -486,6 +528,7 @@ class LdaModel(interfaces.TransformationABC):
                 self.do_mstep(rho(), other)
                 del other
                 dirty = False
+
         #endfor entire corpus update
 
 
