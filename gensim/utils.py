@@ -630,7 +630,7 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
 
 
 if HAS_PATTERN:
-    def lemmatize(content, light=False, allowed_tags=re.compile('(NN|VB|JJ|RB)')):
+    def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False):
         """
         This function is only available when the optional 'pattern' package is installed.
 
@@ -642,23 +642,18 @@ if HAS_PATTERN:
         >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
         ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
 
-        From http://www.clips.ua.ac.be/pages/pattern-en#parser :
-
-            The parser is built on a Brill lexicon of tagged words and rules to
-            improve the tags context-wise. With light=False, it uses Brill's contextual
-            rules. With light=True it uses Jason Wiener's simpler ruleset. This
-            ruleset is 5-10x faster but also 25% less accurate.
-
         """
+        if light:
+            import warnings
+            warnings.warn("The light flag is no longer supported by pattern.")
+
         # tokenization in `pattern` is weird; it gets thrown off by non-letters,
         # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
         # FIXME this throws away all fancy parsing cues, including sentence structure,
         # abbreviations etc.
         content = u' '.join(tokenize(content, lower=True, errors='ignore'))
 
-        # use simpler, modified pattern.text.en.text.parser.parse that doesn't
-        # collapse the output at the end: https://github.com/piskvorky/pattern
-        parsed = parse(content, lemmata=True, collapse=False, light=light)
+        parsed = parse(content, lemmata=True, collapse=False)
         result = []
         for sentence in parsed:
             for token, tag, _, _, lemma in sentence:
