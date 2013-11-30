@@ -356,6 +356,9 @@ class LsiModel(interfaces.TransformationABC):
             else:
                 # the one-pass algo
                 doc_no = 0
+                if self.dispatcher:
+                    logger.info('initializing %s workers' % self.numworkers)
+                    self.dispatcher.reset()
                 for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
                     logger.info("preparing a new chunk of documents")
                     nnz = sum(len(doc) for doc in chunk)
