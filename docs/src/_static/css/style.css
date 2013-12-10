@@ -732,6 +732,7 @@ pre {
     border: 1px solid #ccc;
     background-color: #f8f8f8;
     line-height: 120%;
+    overflow-x: auto;
 }
 
 tt {
