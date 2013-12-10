@@ -405,12 +405,12 @@ class LdaModel(interfaces.TransformationABC):
 
         dalpha = -(gradf - b) / q
 
-        old_alpha = self.alpha
+        old_alpha = self.alpha[:]
         if all(rho() * dalpha + self.alpha > 0):
             self.alpha += rho() * dalpha
         else:
             logger.debug("updated alpha not positive")
-        logger.info("optimized alpha from %s to %s" % (old_alpha, self.alpha))
+        logger.debug("optimized alpha from %s to %s" % (old_alpha, self.alpha))
 
         return self.alpha
 

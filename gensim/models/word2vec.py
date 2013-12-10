@@ -134,7 +134,11 @@ class Word2Vec(utils.SaveLoad):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (utf8 strings) that will be used for training.
-        See :class:`BrownCorpus` in this module for an example.
+
+        The `sentences` iterable can be simply a list, but for larger corpora,
+        consider an iterable that streams the sentences directly from disk/network.
+        See :class:`BrownCorpus`, :class:`Text8Corpus` or :class:`LineSentence` in
+        this module for such examples.
 
         If you don't supply `sentences`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
