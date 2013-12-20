@@ -3,6 +3,8 @@ Changes
 
 0.8.9
 
+* doc rendering fix (Dan Foreman-Mackey)
+* better LDA perplexity logging
 * fix Pyro thread leak in distributed algos (Brian Feeny)
 * optimizations in word2vec (Bryan Rink)
 * allow compressed input in LineSentence corpus (Eric Moyer)

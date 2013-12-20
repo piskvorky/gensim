@@ -217,11 +217,25 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
     return zip(biggest, vec.take(biggest))
 
 
-def corpus2dense(corpus, num_terms):
+def corpus2dense(corpus, num_terms, num_docs=None, dtype=numpy.float32):
     """
-    Convert corpus into a dense numpy array (documents will be columns).
+    Convert corpus into a dense numpy array (documents will be columns). You
+    must supply the number of features `num_terms`, because dimensionality
+    cannot be deduced from sparse vectors alone.
+
+    You can optionally supply `num_docs` (=the corpus length) as well, so that
+    a more memory efficient code path is taken.
+
     """
-    return numpy.column_stack(sparse2full(doc, num_terms) for doc in corpus)
+    if num_docs is not None:
+        # we know the number of documents => don't bother column_stacking
+        docno, result = -1, numpy.empty((num_terms, num_docs), dtype=dtype)
+        for docno, doc in enumerate(corpus):
+            numpy[:, docno] = sparse2full(doc, num_terms)
+        assert docno + 1 == num_docs
+    else:
+        result = numpy.column_stack(sparse2full(doc, num_terms) for doc in corpus)
+    return result.astype(dtype)
 
 
 
