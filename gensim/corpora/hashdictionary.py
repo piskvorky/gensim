@@ -181,7 +181,7 @@ class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
 
         **Note:** since HashDictionary's id range is fixed and doesn't depend on
         the number of tokens seen, this doesn't really "remove" anything. It only
-        clears some supplementary statistics, for easier debugging and smaller RAM
+        clears some supplementary statistics, for easier debugging and a smaller RAM
         footprint.
         """
         no_above_abs = int(no_above * self.num_docs) # convert fractional threshold to absolute threshold

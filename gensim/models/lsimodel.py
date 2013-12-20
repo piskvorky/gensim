@@ -6,7 +6,9 @@
 
 
 """
-Module for Latent Semantic Indexing.
+Module for Latent Semantic Indexing. Implements scalable truncated
+Singular Value Decomposition, SVD. The SVD decomposition can be updated with new
+observations at any time (online, incremental training).
 
 This module actually contains several algorithms for decomposition of large corpora, a
 combination of which effectively and transparently allows building LSI models for:
@@ -413,10 +415,10 @@ class LsiModel(interfaces.TransformationABC):
         # if the input vector is in fact a corpus, return a transformed corpus as a result
         is_corpus, bow = utils.is_corpus(bow)
         if is_corpus and chunksize:
-            # by default, transform 256 documents at once, when called as `lsi[corpus]`.
+            # by default, transform `chunksize` documents at once, when called as `lsi[corpus]`.
             # this chunking is completely transparent to the user, but it speeds
             # up internal computations (one mat * mat multiplication, instead of
-            # 256 smaller mat * vec multiplications).
+            # `chunksize` smaller mat * vec multiplications).
             return self._apply(bow, chunksize=chunksize)
 
         if not is_corpus:
