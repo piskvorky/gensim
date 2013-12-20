@@ -348,6 +348,8 @@ class Word2Vec(utils.SaveLoad):
                     word = []
                     while True:
                         ch = fin.read(1)
+                        if ch == '\n':
+                            continue
                         if ch == ' ':
                             word = ''.join(word)
                             break
