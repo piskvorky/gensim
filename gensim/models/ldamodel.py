@@ -446,7 +446,8 @@ class LdaModel(interfaces.TransformationABC):
 
     def log_perplexity(self, chunk, total_docs):
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
-        perwordbound = self.bound(chunk, total_docs=total_docs) * len(chunk) / (total_docs * corpus_words)
+        subsample_ratio = 1.0 * total_docs / len(chunk)
+        perwordbound = self.bound(chunk, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
         logger.info("%.3f per-word bound, %.1f perplexity estimate based on held-out corpus of %i documents with %i words" %
             (perwordbound, numpy.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
@@ -595,7 +596,7 @@ class LdaModel(interfaces.TransformationABC):
         self.num_updates += 1
 
 
-    def bound(self, corpus, gamma=None, total_docs=None):
+    def bound(self, corpus, gamma=None, subsample_ratio=1.0):
         """
         Estimate the variational bound of documents from `corpus`:
         E_q[log p(corpus)] - E_q[log q(corpus)]
@@ -621,18 +622,15 @@ class LdaModel(interfaces.TransformationABC):
             # E[log p(doc | theta, beta)]
             score += numpy.sum(cnt * logsumexp(Elogthetad + Elogbeta[:, id]) for id, cnt in doc)
 
-            # E[log p(theta | alpha) - log q(theta | gamma)]
+            # E[log p(theta | alpha) - log q(theta | gamma)]; assumes alpha is a vector
             score += numpy.sum((self.alpha - gammad) * Elogthetad)
             score += numpy.sum(gammaln(gammad) - gammaln(self.alpha))
-            score += gammaln(numpy.sum(self.alpha)) - gammaln(numpy.sum(gammad))  # assumes alpha is a vector
+            score += gammaln(numpy.sum(self.alpha)) - gammaln(numpy.sum(gammad))
 
-        # if total_docs is given, compensate for subsampling to get a whole-corpus estimate.
-        # this effectively scales the document-independent part below by len(corpus) / total_docs,
-        # when computing per-word perplexity later on.
-        score *= 1.0 * (total_docs or 1) / len(corpus)
+        # compensate likelihood for when `corpus` above is only a sample of the whole corpus
+        score *= subsample_ratio
 
-        # update bound parts that are document-independent; assumes eta is a scalar
-        # E[log p(beta | eta) - log q (beta | lambda)]
+        # E[log p(beta | eta) - log q (beta | lambda)]; assumes eta is a scalar
         score += numpy.sum((self.eta - _lambda) * Elogbeta)
         score += numpy.sum(gammaln(_lambda) - gammaln(self.eta))
         score += numpy.sum(gammaln(self.eta * self.num_terms) - gammaln(numpy.sum(_lambda, 1)))
