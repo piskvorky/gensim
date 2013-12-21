@@ -609,7 +609,7 @@ class LdaModel(interfaces.TransformationABC):
         _lambda = self.state.get_lambda()
         Elogbeta = dirichlet_expectation(_lambda)
 
-        for d, doc in enumerate(corpus):  # stream the input doc-by-doc, in case it's large
+        for d, doc in enumerate(corpus):  # stream the input doc-by-doc, in case it's too large to fit in RAM
             if d % self.chunksize == 0:
                 logger.debug("bound: at document #%i" % d)
             if gamma is None:
@@ -625,7 +625,10 @@ class LdaModel(interfaces.TransformationABC):
             score += numpy.sum((self.alpha - gammad) * Elogthetad)
             score += numpy.sum(gammaln(gammad) - gammaln(self.alpha))
             score += gammaln(numpy.sum(self.alpha)) - gammaln(numpy.sum(gammad))  # assumes alpha is a vector
-        # if total_docs is given, compensate for subsampling to get a whole-corpus estimate
+
+        # if total_docs is given, compensate for subsampling to get a whole-corpus estimate.
+        # this effectively scales the document-independent part below by len(corpus) / total_docs,
+        # when computing per-word perplexity later on.
         score *= 1.0 * (total_docs or 1) / len(corpus)
 
         # update bound parts that are document-independent; assumes eta is a scalar

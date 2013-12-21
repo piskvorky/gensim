@@ -348,16 +348,14 @@ class Word2Vec(utils.SaveLoad):
                     word = []
                     while True:
                         ch = fin.read(1)
-                        if ch == '\n':
-                            continue
                         if ch == ' ':
                             word = ''.join(word)
                             break
-                        word.append(ch)
+                        if ch != '\n':  # ignore newlines in front of words (some binary files have newline, some not)
+                            word.append(ch)
                     result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
                     result.index2word.append(word)
                     result.syn0[line_no] = fromstring(fin.read(binary_len), dtype=REAL)
-                    fin.read(1)  # newline
             else:
                 for line_no, line in enumerate(fin):
                     parts = line.split()
