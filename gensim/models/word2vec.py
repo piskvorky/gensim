@@ -357,7 +357,7 @@ class Word2Vec(utils.SaveLoad):
                     result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
                     result.index2word.append(word)
                     result.syn0[line_no] = fromstring(fin.read(binary_len), dtype=REAL)
-                    fin.read(1)  # newline
+                    #fin.read(1)  # newline
             else:
                 for line_no, line in enumerate(fin):
                     parts = line.split()
