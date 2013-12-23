@@ -3,7 +3,8 @@ Changes
 
 0.8.9
 
-* fix for new word2vec binary format (darenr)
+* auto-optimize LDA asymmetric prior (Ben Trahan)
+* update for new word2vec binary format (Daren Race)
 * doc rendering fix (Dan Foreman-Mackey)
 * better LDA perplexity logging
 * fix Pyro thread leak in distributed algos (Brian Feeny)

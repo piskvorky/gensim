@@ -434,7 +434,6 @@ class LdaModel(interfaces.TransformationABC):
 
         dalpha = -(gradf - b) / q
 
-        old_alpha = list(self.alpha)
         if all(rho() * dalpha + self.alpha > 0):
             self.alpha += rho() * dalpha
         else:
@@ -444,11 +443,13 @@ class LdaModel(interfaces.TransformationABC):
         return self.alpha
 
 
-    def log_perplexity(self, chunk, total_docs):
+    def log_perplexity(self, chunk, total_docs=None):
+        if total_docs is None:
+            total_docs = len(chunk)
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         subsample_ratio = 1.0 * total_docs / len(chunk)
         perwordbound = self.bound(chunk, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
-        logger.info("%.3f per-word bound, %.1f perplexity estimate based on held-out corpus of %i documents with %i words" %
+        logger.info("%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words" %
             (perwordbound, numpy.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
 
@@ -526,6 +527,10 @@ class LdaModel(interfaces.TransformationABC):
             reallen = 0
             for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize, as_numpy=True)):
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
+
+                if eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % (eval_every * self.numworkers) == 0)):
+                    self.log_perplexity(chunk, total_docs=lencorpus)
+
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
                     logger.info('PROGRESS: iteration %i, dispatching documents up to #%i/%i' %
@@ -541,9 +546,6 @@ class LdaModel(interfaces.TransformationABC):
                         self.update_alpha(gammat, rho)
 
                 dirty = True
-
-                if eval_every and (chunk_no + 1) % (eval_every * self.numworkers) == 0:
-                    self.log_perplexity(chunk, total_docs=lencorpus)
                 del chunk
 
                 # perform an M step. determine when based on update_every, don't do this after every chunk
