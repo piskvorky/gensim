@@ -6,7 +6,8 @@
 
 
 """
-Module for deep learning via *hierarchical softmax skip-gram* from [1]_.
+Deep learning via word2vec's "hierarchical softmax skip-gram model" [1]_.
+
 The training algorithm was originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality.
 

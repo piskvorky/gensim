@@ -9,22 +9,22 @@
 
 
 """
-This module encapsulates functionality for the Latent Dirichlet Allocation algorithm.
+Latent Dirichlet Allocation (LDA) in Python.
 
-It allows both model estimation from a training corpus and inference of topic
-distribution on new, unseen documents.
+This module allows both LDA model estimation from a training corpus and inference of topic
+distribution on new, unseen documents. The model can also be updated with new documents
+for online training.
 
-The core estimation code is directly adapted from the `onlineldavb.py` script
-by M. Hoffman [1]_, see
+The core estimation code is based on the `onlineldavb.py` script by M. Hoffman [1]_, see
 **Hoffman, Blei, Bach: Online Learning for Latent Dirichlet Allocation, NIPS 2010.**
 
 The algorithm:
 
-  * is **streamed**: training documents come in sequentially, no random access,
-  * runs in **constant memory** w.r.t. the number of documents: size of the
-    training corpus does not affect memory footprint, and
-  * is **distributed**: makes use of a cluster of machines, if available, to
-    speed up model estimation.
+* is **streamed**: training documents may come in sequentially, no random access required,
+* runs in **constant memory** w.r.t. the number of documents: size of the
+  training corpus does not affect memory footprint, can process corpora larger than RAM, and
+* is **distributed**: makes use of a cluster of machines, if available, to
+  speed up model estimation.
 
 .. [1] http://www.cs.princeton.edu/~mdhoffma
 
