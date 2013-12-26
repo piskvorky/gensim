@@ -194,7 +194,8 @@ class SimilarityABC(utils.SaveLoad):
             # as well, but in that case assume tricks are happening and don't normalize
             # anything (self.normalize has no effect).
             if matutils.ismatrix(query):
-                logger.warning("non-gensim input must already come normalized")
+                import warnings
+                # warnings.warn("non-gensim input must already come normalized")
             else:
                 if is_corpus:
                     query = [matutils.unitvec(v) for v in query]

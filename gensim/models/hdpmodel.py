@@ -542,7 +542,7 @@ class HdpTopicFormatter(object):
         self.style = style
 
     def print_topics(self, topics=10, topn=10):
-        self.show_topics(topics, topn, True)
+        return self.show_topics(topics, topn, True)
 
     def show_topics(self, topics=10, topn=10, log=False, formatted=True):
         shown = []

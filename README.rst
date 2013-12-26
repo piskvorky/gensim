@@ -2,6 +2,10 @@
 gensim -- Python Framework for Topic Modelling
 ==============================================
 
+|Travis|_
+
+.. |Travis| image:: https://api.travis-ci.org/piskvorky/gensim.png?branch=develop
+.. _Travis: https://travis-ci.org/piskvorky/gensim
 
 Gensim is a Python library for *topic modelling*, *document indexing* and *similarity retrieval* with large corpora.
 Target audience is the *natural language processing* (NLP) and *information retrieval* (IR) community.
@@ -18,8 +22,8 @@ Features
   * easy to extend with other Vector Space algorithms (trivial transformation API)
 
 * Efficient implementations of popular algorithms, such as online **Latent Semantic Analysis**,
-  **Latent Dirichlet Allocation** or **Random Projections**
-* **Distributed computing**: can run *Latent Semantic Analysis* and *Latent Dirichlet Allocation* on a cluster of computers.
+  **Latent Dirichlet Allocation**, **Random Projections** or **word2vec deep learning**.
+* **Distributed computing**: can run *Latent Semantic Analysis* and *Latent Dirichlet Allocation* on a cluster of computers, and *word2vec* on multiple cores.
 * Extensive `HTML documentation and tutorials <http://radimrehurek.com/gensim/>`_.
 
 

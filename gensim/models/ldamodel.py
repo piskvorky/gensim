@@ -9,22 +9,22 @@
 
 
 """
-This module encapsulates functionality for the Latent Dirichlet Allocation algorithm.
+Latent Dirichlet Allocation (LDA) in Python.
 
-It allows both model estimation from a training corpus and inference of topic
-distribution on new, unseen documents.
+This module allows both LDA model estimation from a training corpus and inference of topic
+distribution on new, unseen documents. The model can also be updated with new documents
+for online training.
 
-The core estimation code is directly adapted from the `onlineldavb.py` script
-by M. Hoffman [1]_, see
+The core estimation code is based on the `onlineldavb.py` script by M. Hoffman [1]_, see
 **Hoffman, Blei, Bach: Online Learning for Latent Dirichlet Allocation, NIPS 2010.**
 
 The algorithm:
 
-  * is **streamed**: training documents come in sequentially, no random access,
-  * runs in **constant memory** w.r.t. the number of documents: size of the
-    training corpus does not affect memory footprint, and
-  * is **distributed**: makes use of a cluster of machines, if available, to
-    speed up model estimation.
+* is **streamed**: training documents may come in sequentially, no random access required,
+* runs in **constant memory** w.r.t. the number of documents: size of the
+  training corpus does not affect memory footprint, can process corpora larger than RAM, and
+* is **distributed**: makes use of a cluster of machines, if available, to
+  speed up model estimation.
 
 .. [1] http://www.cs.princeton.edu/~mdhoffma
 
@@ -41,6 +41,8 @@ import numpy # for arrays, array broadcasting etc.
 #numpy.seterr(divide='ignore') # ignore 0*log(0) errors
 
 from scipy.special import gammaln, digamma, psi # gamma function utils
+from scipy.special import gamma as gammafunc
+from scipy.special import polygamma
 try:
     from scipy.maxentropy import logsumexp # log(sum(exp(x))) that tries to avoid overflow
 except ImportError: # maxentropy has been removed for next release
@@ -53,6 +55,7 @@ from gensim import interfaces, utils
 def dirichlet_expectation(alpha):
     """
     For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
+
     """
     if (len(alpha.shape) == 1):
         result = psi(alpha) - psi(numpy.sum(alpha))
@@ -68,6 +71,7 @@ class LdaState(utils.SaveLoad):
 
     Objects of this class are sent over the network, so try to keep them lean to
     reduce traffic.
+
     """
     def __init__(self, eta, shape):
         self.eta = eta
@@ -78,6 +82,7 @@ class LdaState(utils.SaveLoad):
     def reset(self):
         """
         Prepare the state for a new EM iteration (reset sufficient stats).
+
         """
         self.sstats[:] = 0.0
         self.numdocs = 0
@@ -91,6 +96,7 @@ class LdaState(utils.SaveLoad):
         The merging is trivial and after merging all cluster nodes, we have the
         exact same result as if the computation was run on a single node (no
         approximation).
+
         """
         assert other is not None
         self.sstats += other.sstats
@@ -108,6 +114,7 @@ class LdaState(utils.SaveLoad):
 
         This procedure corresponds to the stochastic gradient update from Hoffman
         et al., algorithm 2 (eq. 14).
+
         """
         assert other is not None
         if targetsize is None:
@@ -173,7 +180,8 @@ class LdaModel(interfaces.TransformationABC):
     Model persistency is achieved through its `load`/`save` methods.
     """
     def __init__(self, corpus=None, num_topics=100, id2word=None, distributed=False,
-                 chunksize=2000, passes=1, update_every=1, alpha=None, eta=None, decay=0.5):
+                 chunksize=2000, passes=1, update_every=1, alpha='symmetric', eta=None, decay=0.5,
+                 eval_every=10):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -187,17 +195,28 @@ class LdaModel(interfaces.TransformationABC):
 
         `alpha` and `eta` are hyperparameters that affect sparsity of the document-topic
         (theta) and topic-word (lambda) distributions. Both default to a symmetric
-        1.0/num_topics (but can be set to a vector, for asymmetric priors).
+        1.0/num_topics prior.
+
+        `alpha` can be also set to an explicit array = prior of your choice. It also
+        support special values of 'asymmetric' and 'auto': the former uses a fixed
+        normalized asymmetric 1.0/topicno prior, the latter learns an asymmetric
+        prior directly from your data.
 
         Turn on `distributed` to force distributed computing (see the web tutorial
         on how to set up a cluster of machines for gensim).
 
+        Calculate and log perplexity estimate from the latest mini-batch every
+        `eval_every` model updates (setting this to 1 slows down training ~2x;
+        default is 10 for better performance). Set to None to disable perplexity estimation.
+
         Example:
 
-        >>> lda = LdaModel(corpus, num_topics=100)
+        >>> lda = LdaModel(corpus, num_topics=100)  # train model
         >>> print lda[doc_bow] # get topic probability distribution for a document
         >>> lda.update(corpus2) # update the LDA model with additional documents
         >>> print lda[doc_bow]
+
+        >>> lda = LdaModel(corpus, num_topics=50, alpha='auto', eval_every=5)  # train asymmetric alpha from data
 
         """
         # store user-supplied parameters
@@ -223,11 +242,25 @@ class LdaModel(interfaces.TransformationABC):
 
         self.passes = passes
         self.update_every = update_every
+        self.eval_every = eval_every
 
-        if alpha is None:
-            self.alpha = 1.0 / num_topics
+        self.optimize_alpha = alpha == 'auto'
+        if alpha == 'symmetric' or alpha is None:
+            logger.info("using symmetric alpha at %s" % (1.0 / num_topics))
+            self.alpha = numpy.asarray([1.0 / num_topics for i in xrange(num_topics)])
+        elif alpha == 'asymmetric':
+            self.alpha = numpy.asarray([1.0 / (i + numpy.sqrt(num_topics)) for i in xrange(num_topics)])
+            self.alpha /= self.alpha.sum()
+            logger.info("using asymmetric alpha %s" % list(self.alpha))
+        elif alpha == 'auto':
+            self.alpha = numpy.asarray([1.0 / num_topics for i in xrange(num_topics)])
+            logger.info("using autotuned alpha, starting with %s" % list(self.alpha))
         else:
-            self.alpha = alpha
+            # must be either float or an array of floats, of size num_topics
+            self.alpha = alpha if isinstance(alpha, numpy.ndarray) else numpy.asarray([alpha] * num_topics)
+            if len(self.alpha) != num_topics:
+                raise RuntimeError("invalid alpha shape (must match num_topics)")
+
         if eta is None:
             self.eta = 1.0 / num_topics
         else:
@@ -243,6 +276,8 @@ class LdaModel(interfaces.TransformationABC):
             self.dispatcher = None
             self.numworkers = 1
         else:
+            if self.optimize_alpha:
+                raise NotImplementedError("auto-optimizing alpha not implemented in distributed LDA")
             # set up distributed version
             try:
                 import Pyro4
@@ -296,6 +331,7 @@ class LdaModel(interfaces.TransformationABC):
         to update the model's topic-word distributions, and return a 2-tuple
         `(gamma, sstats)`. Otherwise, return `(gamma, None)`. `gamma` is of shape
         `len(chunk) x topics`.
+
         """
         try:
             _ = len(chunk)
@@ -368,6 +404,7 @@ class LdaModel(interfaces.TransformationABC):
         """
         Perform inference on a chunk of documents, and accumulate the collected
         sufficient statistics in `state` (or `self.state` if None).
+
         """
         if state is None:
             state = self.state
@@ -377,7 +414,47 @@ class LdaModel(interfaces.TransformationABC):
         return gamma
 
 
-    def update(self, corpus, chunksize=None, decay=None, passes=None, update_every=None):
+    def update_alpha(self, gammat, rho):
+        """
+        Update parameters for the Dirichlet prior on the per-document
+        topic weights `alpha` given the last `gammat`.
+
+        Uses Newton's method: http://www.stanford.edu/~jhuang11/research/dirichlet/dirichlet.pdf
+
+        """
+        N = float(len(gammat))
+        logphat = sum(dirichlet_expectation(gamma) for gamma in gammat) / N
+        dalpha = numpy.copy(self.alpha)
+        gradf = N * (psi(numpy.sum(self.alpha)) - psi(self.alpha) + logphat)
+
+        c = N * polygamma(1, numpy.sum(self.alpha))
+        q = -N * polygamma(1, self.alpha)
+
+        b = numpy.sum(gradf / q) / ( 1 / c + numpy.sum(1 / q))
+
+        dalpha = -(gradf - b) / q
+
+        if all(rho() * dalpha + self.alpha > 0):
+            self.alpha += rho() * dalpha
+        else:
+            logger.warning("updated alpha not positive")
+        logger.info("optimized alpha %s" % list(self.alpha))
+
+        return self.alpha
+
+
+    def log_perplexity(self, chunk, total_docs=None):
+        if total_docs is None:
+            total_docs = len(chunk)
+        corpus_words = sum(cnt for document in chunk for _, cnt in document)
+        subsample_ratio = 1.0 * total_docs / len(chunk)
+        perwordbound = self.bound(chunk, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
+        logger.info("%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words" %
+            (perwordbound, numpy.exp2(-perwordbound), len(chunk), corpus_words))
+        return perwordbound
+
+
+    def update(self, corpus, chunksize=None, decay=None, passes=None, update_every=None, eval_every=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -393,6 +470,7 @@ class LdaModel(interfaces.TransformationABC):
         For stationary input (no topic drift in new documents), on the other hand,
         this equals the online update of Hoffman et al. and is guaranteed to
         converge for any `decay` in (0.5, 1.0>.
+
         """
         # use parameters given in constructor, unless user explicitly overrode them
         if chunksize is None:
@@ -403,6 +481,8 @@ class LdaModel(interfaces.TransformationABC):
             passes = self.passes
         if update_every is None:
             update_every = self.update_every
+        if eval_every is None:
+            eval_every = self.eval_every
 
         # rho is the "speed" of updating; TODO try other fncs
         rho = lambda: pow(1.0 + self.num_updates, -decay)
@@ -421,15 +501,17 @@ class LdaModel(interfaces.TransformationABC):
         if update_every > 0:
             updatetype = "online"
             updateafter = min(lencorpus, update_every * self.numworkers * chunksize)
+            evalafter = min(lencorpus, eval_every * self.numworkers * chunksize)
         else:
             updatetype = "batch"
             updateafter = lencorpus
+            evalafter = lencorpus
 
         updates_per_pass = max(1, lencorpus / updateafter)
         logger.info("running %s LDA training, %s topics, %i passes over "
                     "the supplied corpus of %i documents, updating model once "
-                    "every %i documents" %
-                    (updatetype, self.num_topics, passes, lencorpus, updateafter))
+                    "every %i documents, evaluating every %i documents" %
+                    (updatetype, self.num_topics, passes, lencorpus, updateafter, evalafter))
         if updates_per_pass * passes < 10:
             logger.warning("too few updates, training might not converge; consider "
                            "increasing the number of passes to improve accuracy")
@@ -445,6 +527,10 @@ class LdaModel(interfaces.TransformationABC):
             reallen = 0
             for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize, as_numpy=True)):
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
+
+                if eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % (eval_every * self.numworkers) == 0)):
+                    self.log_perplexity(chunk, total_docs=lencorpus)
+
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
                     logger.info('PROGRESS: iteration %i, dispatching documents up to #%i/%i' %
@@ -454,7 +540,11 @@ class LdaModel(interfaces.TransformationABC):
                 else:
                     logger.info('PROGRESS: iteration %i, at document #%i/%i' %
                                 (iteration, chunk_no * chunksize + len(chunk), lencorpus))
-                    self.do_estep(chunk, other)
+                    gammat = self.do_estep(chunk, other)
+
+                    if self.optimize_alpha:
+                        self.update_alpha(gammat, rho)
+
                 dirty = True
                 del chunk
 
@@ -493,6 +583,7 @@ class LdaModel(interfaces.TransformationABC):
         """
         M step: use linear interpolation between the existing topics and
         collected sufficient statistics in `other` to update the topics.
+
         """
         logger.debug("updating topics")
         # update self with the new blend; also keep track of how much did
@@ -507,41 +598,41 @@ class LdaModel(interfaces.TransformationABC):
         self.num_updates += 1
 
 
-    def bound(self, corpus, gamma=None):
+    def bound(self, corpus, gamma=None, subsample_ratio=1.0):
         """
-        Estimate the variational bound of documents from `corpus`.
+        Estimate the variational bound of documents from `corpus`:
+        E_q[log p(corpus)] - E_q[log q(corpus)]
 
-        `gamma` are the variational parameters on topic weights (one for each
-        document in `corpus`). If not supplied, will be automatically inferred
-        from the model.
+        `gamma` are the variational parameters on topic weights for each `corpus`
+        document (=2d matrix=what comes out of `inference()`).
+        If not supplied, will be inferred from the model.
+
         """
         score = 0.0
         _lambda = self.state.get_lambda()
         Elogbeta = dirichlet_expectation(_lambda)
 
-        for d, doc in enumerate(corpus):
+        for d, doc in enumerate(corpus):  # stream the input doc-by-doc, in case it's too large to fit in RAM
             if d % self.chunksize == 0:
-                logger.info("PROGRESS: at document #%i" % d)
+                logger.debug("bound: at document #%i" % d)
             if gamma is None:
                 gammad, _ = self.inference([doc])
             else:
                 gammad = gamma[d]
             Elogthetad = dirichlet_expectation(gammad)
-            ids = [id for id, _ in doc]
-            cts = numpy.array([cnt for _, cnt in doc])
-            phinorm = numpy.zeros(len(ids))
-            for i in xrange(len(ids)):
-                phinorm[i] = logsumexp(Elogthetad + Elogbeta[:, ids[i]])
 
-            # E[log p(docs | theta, beta)]
-            score += numpy.sum(cts * phinorm)
+            # E[log p(doc | theta, beta)]
+            score += numpy.sum(cnt * logsumexp(Elogthetad + Elogbeta[:, id]) for id, cnt in doc)
 
-            # E[log p(theta | alpha) - log q(theta | gamma)]
+            # E[log p(theta | alpha) - log q(theta | gamma)]; assumes alpha is a vector
             score += numpy.sum((self.alpha - gammad) * Elogthetad)
             score += numpy.sum(gammaln(gammad) - gammaln(self.alpha))
-            score += gammaln(self.alpha * self.num_topics) - gammaln(numpy.sum(gammad))
+            score += gammaln(numpy.sum(self.alpha)) - gammaln(numpy.sum(gammad))
 
-        # E[log p(beta | eta) - log q (beta | lambda)]
+        # compensate likelihood for when `corpus` above is only a sample of the whole corpus
+        score *= subsample_ratio
+
+        # E[log p(beta | eta) - log q (beta | lambda)]; assumes eta is a scalar
         score += numpy.sum((self.eta - _lambda) * Elogbeta)
         score += numpy.sum(gammaln(_lambda) - gammaln(self.eta))
         score += numpy.sum(gammaln(self.eta * self.num_terms) - gammaln(numpy.sum(_lambda, 1)))
@@ -553,8 +644,8 @@ class LdaModel(interfaces.TransformationABC):
 
     def show_topics(self, topics=10, topn=10, log=False, formatted=True):
         """
-        Print the `topN` most probable words for (randomly selected) `topics`
-        number of topics. Set `topics=-1` to print all topics.
+        Print the `topN` most probable words for `topics` number of topics.
+        Set `topics=-1` to print all topics.
 
         Unlike LSA, there is no ordering between the topics in LDA.
         The printed `topics <= self.num_topics` subset of all topics is therefore
@@ -563,19 +654,23 @@ class LdaModel(interfaces.TransformationABC):
         Set `formatted=True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
 
         """
-        if topics < 0:
-            # print all topics if `topics` is negative
+        if topics < 0 or topics >= self.num_topics:
             topics = self.num_topics
-        topics = min(topics, self.num_topics)
+            chosen_topics = range(topics)
+        else:
+            topics = min(topics, self.num_topics)
+            sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha)) # add a little random jitter, to randomize results around the same alpha
+            sorted_topics = list(numpy.argsort(sort_alpha))
+            chosen_topics = sorted_topics[ : topics/2] + sorted_topics[-topics/2 : ]
         shown = []
-        for i in xrange(topics):
+        for i in chosen_topics[::-1]:
             if formatted:
                 topic = self.print_topic(i, topn=topn)
             else:
                 topic = self.show_topic(i, topn=topn)
             shown.append(topic)
             if log:
-                logger.info("topic #%i: %s" % (i, topic))
+                logger.info("topic #%i (%.3f): %s" % (i, self.alpha[i], topic))
         return shown
 
     def show_topic(self, topicid, topn=10):
@@ -595,6 +690,7 @@ class LdaModel(interfaces.TransformationABC):
         (topic_id, topic_probability) 2-tuples.
 
         Ignore topics with very low probability (below `eps`).
+
         """
         # if the input vector is in fact a corpus, return a transformed corpus as result
         is_corpus, corpus = utils.is_corpus(bow)

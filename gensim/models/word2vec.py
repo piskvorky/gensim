@@ -6,7 +6,8 @@
 
 
 """
-Module for deep learning via *hierarchical softmax skip-gram* from [1]_.
+Deep learning via word2vec's "hierarchical softmax skip-gram model" [1]_.
+
 The training algorithm was originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality.
 
@@ -54,11 +55,10 @@ import heapq
 import time
 import itertools
 import threading
-from multiprocessing.pool import ThreadPool
 from Queue import Queue
 
-from numpy import zeros_like, empty, exp, dot, outer, random, dtype, get_include,\
-    float32 as REAL, uint32, seterr, array, uint8, vstack, argsort, fromstring
+from numpy import exp, dot, outer, random, dtype, get_include, float32 as REAL,\
+    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -135,7 +135,11 @@ class Word2Vec(utils.SaveLoad):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (utf8 strings) that will be used for training.
-        See :class:`BrownCorpus` in this module for an example.
+
+        The `sentences` iterable can be simply a list, but for larger corpora,
+        consider an iterable that streams the sentences directly from disk/network.
+        See :class:`BrownCorpus`, :class:`Text8Corpus` or :class:`LineSentence` in
+        this module for such examples.
 
         If you don't supply `sentences`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
@@ -202,18 +206,19 @@ class Word2Vec(utils.SaveLoad):
         """
         logger.info("collecting all words and their counts")
         sentence_no, vocab = -1, {}
-        total_words = lambda: sum(v.count for v in vocab.itervalues())
+        total_words = 0
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % 10000 == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
-                    (sentence_no, total_words(), len(vocab)))
+                    (sentence_no, total_words, len(vocab)))
             for word in sentence:
+                total_words += 1
                 if word in vocab:
                     vocab[word].count += 1
                 else:
                     vocab[word] = Vocab(count=1)
         logger.info("collected %i word types from a corpus of %i words and %i sentences" %
-            (len(vocab), total_words(), sentence_no + 1))
+            (len(vocab), total_words, sentence_no + 1))
 
         # assign a unique index to each word
         self.vocab, self.index2word = {}, []
@@ -336,7 +341,7 @@ class Word2Vec(utils.SaveLoad):
             header = fin.readline()
             vocab_size, layer1_size = map(int, header.split())  # throws for invalid file format
             result = Word2Vec(size=layer1_size)
-            result.syn0 = empty((vocab_size, layer1_size), dtype=REAL)
+            result.syn0 = matutils.zeros_aligned((vocab_size, layer1_size), dtype=REAL)
             if binary:
                 binary_len = dtype(REAL).itemsize * layer1_size
                 for line_no in xrange(vocab_size):
@@ -347,11 +352,11 @@ class Word2Vec(utils.SaveLoad):
                         if ch == ' ':
                             word = ''.join(word)
                             break
-                        word.append(ch)
+                        if ch != '\n':  # ignore newlines in front of words (some binary files have newline, some not)
+                            word.append(ch)
                     result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
                     result.index2word.append(word)
                     result.syn0[line_no] = fromstring(fin.read(binary_len), dtype=REAL)
-                    fin.read(1)  # newline
             else:
                 for line_no, line in enumerate(fin):
                     parts = line.split()
@@ -467,7 +472,7 @@ class Word2Vec(utils.SaveLoad):
     def init_sims(self):
         if getattr(self, 'syn0norm', None) is None:
             logger.info("precomputing L2-norms of word weight vectors")
-            self.syn0norm = vstack(matutils.unitvec(vec) for vec in self.syn0).astype(REAL)
+            self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
 
     def accuracy(self, questions, restrict_vocab=30000):
@@ -588,13 +593,33 @@ class Text8Corpus(object):
 
 
 class LineSentence(object):
-    def __init__(self, fname):
-        """Simple format: one sentence = one line; words already preprocessed and separated by whitespace."""
-        self.fname = fname
+    def __init__(self, source):
+        """Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
+
+        source can be either a string or a file object
+
+        Thus, one can use this for just plain files:
+
+            sentences = LineSentence('myfile.txt')
+
+        Or for compressed files:
+
+            sentences = LineSentence(bz2.BZ2File('compressed_text.bz2'))
+        """
+        self.source = source
 
     def __iter__(self):
-        for line in open(self.fname):
-            yield line.split()
+        """Iterate through the lines in the source."""
+        try:
+            # Assume it is a file-like object and try treating it as such
+            # Things that don't have seek will trigger an exception
+            self.source.seek(0)
+            for line in self.source:
+                yield line.split()
+        except AttributeError:
+            # If it didn't work like a file, use it as a string filename
+            for line in open(self.source):
+                yield line.split()
 
 
 

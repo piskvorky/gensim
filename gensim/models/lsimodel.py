@@ -6,7 +6,11 @@
 
 
 """
-Module for Latent Semantic Indexing.
+Module for Latent Semantic Analysis (aka Latent Semantic Indexing) in Python.
+
+Implements scalable truncated Singular Value Decomposition in Python. The SVD
+decomposition can be updated with new observations at any time (online, incremental,
+memory-efficient training).
 
 This module actually contains several algorithms for decomposition of large corpora, a
 combination of which effectively and transparently allows building LSI models for:
@@ -20,8 +24,8 @@ combination of which effectively and transparently allows building LSI models fo
 * distributed computing for very large corpora, making use of a cluster of
   machines
 
-Wall-clock performance on the English Wikipedia (2G corpus positions, 3.2M
-documents, 100K features, 0.5G non-zero entries in the final TF-IDF matrix),
+Wall-clock `performance on the English Wikipedia <http://radimrehurek.com/gensim/wiki.html>`_
+(2G corpus positions, 3.2M documents, 100K features, 0.5G non-zero entries in the final TF-IDF matrix),
 requesting the top 400 LSI factors:
 
 
@@ -229,9 +233,11 @@ class LsiModel(interfaces.TransformationABC):
 
     The left singular vectors are stored in `lsi.projection.u`, singular values
     in `lsi.projection.s`. Right singular vectors can be reconstructed from the output
-    of `lsi[training_corpus]`, if needed.
+    of `lsi[training_corpus]`, if needed. See also FAQ [2]_.
 
     Model persistency is achieved via its load/save methods.
+
+    .. [2] https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ#q4-how-do-you-output-the-u-s-vt-matrices-of-lsi
 
     """
     def __init__(self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
@@ -254,7 +260,7 @@ class LsiModel(interfaces.TransformationABC):
         `power_iters` and `extra_samples` affect the accuracy of the stochastic
         multi-pass algorithm, which is used either internally (`onepass=True`) or
         as the front-end algorithm (`onepass=False`). Increasing the number of
-        power iterations improves accuracy, but lowers performance. See [2]_ for
+        power iterations improves accuracy, but lowers performance. See [3]_ for
         some hard numbers.
 
         Turn on `distributed` to enable distributed computing.
@@ -266,7 +272,7 @@ class LsiModel(interfaces.TransformationABC):
         >>> lsi.add_documents(corpus2) # update LSI on additional documents
         >>> print lsi[doc_tfidf]
 
-        .. [2] http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf
+        .. [3] http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf
 
         """
         self.id2word = id2word
@@ -356,6 +362,9 @@ class LsiModel(interfaces.TransformationABC):
             else:
                 # the one-pass algo
                 doc_no = 0
+                if self.dispatcher:
+                    logger.info('initializing %s workers' % self.numworkers)
+                    self.dispatcher.reset()
                 for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
                     logger.info("preparing a new chunk of documents")
                     nnz = sum(len(doc) for doc in chunk)
@@ -410,10 +419,10 @@ class LsiModel(interfaces.TransformationABC):
         # if the input vector is in fact a corpus, return a transformed corpus as a result
         is_corpus, bow = utils.is_corpus(bow)
         if is_corpus and chunksize:
-            # by default, transform 256 documents at once, when called as `lsi[corpus]`.
+            # by default, transform `chunksize` documents at once, when called as `lsi[corpus]`.
             # this chunking is completely transparent to the user, but it speeds
             # up internal computations (one mat * mat multiplication, instead of
-            # 256 smaller mat * vec multiplications).
+            # `chunksize` smaller mat * vec multiplications).
             return self._apply(bow, chunksize=chunksize)
 
         if not is_corpus:
@@ -533,13 +542,13 @@ class LsiModel(interfaces.TransformationABC):
         """
         Load a previously saved object from file (also see `save`).
         """
-        logger.debug("loading %s object from %s" % (cls.__name__, fname))
+        logger.info("loading %s object from %s" % (cls.__name__, fname))
         result = utils.unpickle(fname)
         ufname = fname + '.npy'
         try:
             result.projection.u = numpy.load(ufname, mmap_mode='r') # load back as read-only
         except:
-            logger.debug("failed to load mmap'ed projection from %s" % ufname)
+            logger.info("failed to load mmap'ed projection from %s" % ufname)
         result.dispatcher = None # TODO load back incl. distributed state? will require re-initialization of worker state
         return result
 #endclass LsiModel
@@ -589,21 +598,23 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
 def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
                   power_iters=0, dtype=numpy.float64, eps=1e-6):
     """
-    Return (U, S): the left singular vectors and the singular values of the streamed
-    input corpus `corpus` [3]_.
+    Run truncated Singular Value Decomposition (SVD) on a sparse input.
 
-    This may actually return less than the requested number of top `rank` factors,
-    in case the input is of lower rank. The `extra_dims` (oversampling) and especially
+    Return (U, S): the left singular vectors and the singular values of the input
+    data stream `corpus` [4]_. The corpus may be larger than RAM (iterator of vectors).
+
+    This may return less than the requested number of top `rank` factors, in case
+    the input itself is of lower rank. The `extra_dims` (oversampling) and especially
     `power_iters` (power iterations) parameters affect accuracy of the decomposition.
 
-    This algorithm uses `2+power_iters` passes over the data. In case you can only
-    afford a single pass over the input corpus, set `onepass=True` in :class:`LsiModel`
-    and avoid using this algorithm directly.
+    This algorithm uses `2+power_iters` passes over the input data. In case you can only
+    afford a single pass, set `onepass=True` in :class:`LsiModel` and avoid using
+    this function directly.
 
     The decomposition algorithm is based on
     **Halko, Martinsson, Tropp. Finding structure with randomness, 2009.**
 
-    .. [3] If `corpus` is a scipy.sparse matrix instead, it is assumed the whole
+    .. [4] If `corpus` is a scipy.sparse matrix instead, it is assumed the whole
        corpus fits into core memory and a different (more efficient) code path is chosen.
     """
     rank = int(rank)

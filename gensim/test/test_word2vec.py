@@ -14,6 +14,7 @@ import unittest
 import os
 import tempfile
 import itertools
+import bz2
 
 import numpy
 
@@ -129,6 +130,32 @@ class TestWord2VecModel(unittest.TestCase):
         most_common_word = max(model.vocab.iteritems(), key=lambda item: item[1].count)[0]
         self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
 #endclass TestWord2VecModel
+
+class TestWord2VecSentenceIterators(unittest.TestCase):
+    def testLineSentenceWorksWithFilename(self):
+        """Does LineSentence work with a filename argument?"""
+        with open(datapath('lee_background.cor')) as orig:
+            sentences = word2vec.LineSentence(datapath('lee_background.cor'))
+            for words in sentences:
+                self.assertEqual(words, orig.readline().split())
+
+    def testLineSentenceWorksWithCompressedFile(self):
+        """Does LineSentence work with a compressed file object argument?"""
+        with open(datapath('head500.noblanks.cor')) as orig:
+            sentences = word2vec.LineSentence(
+                bz2.BZ2File(
+                    datapath('head500.noblanks.cor.bz2')))
+            for words in sentences:
+                self.assertEqual(words, orig.readline().split())
+
+    def testLineSentenceWorksWithNormalFile(self):
+        """Does LineSentence work with a normal file object argument?"""
+        with open(datapath('head500.noblanks.cor')) as orig:
+            sentences = word2vec.LineSentence(
+                open(datapath('head500.noblanks.cor')))
+            for words in sentences:
+                self.assertEqual(words, orig.readline().split())
+#endclass TestWord2VecSentenceIterators
 
 
 if __name__ == '__main__':
