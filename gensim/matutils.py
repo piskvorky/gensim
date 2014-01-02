@@ -231,7 +231,7 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=numpy.float32):
         # we know the number of documents => don't bother column_stacking
         docno, result = -1, numpy.empty((num_terms, num_docs), dtype=dtype)
         for docno, doc in enumerate(corpus):
-            numpy[:, docno] = sparse2full(doc, num_terms)
+            result[:, docno] = sparse2full(doc, num_terms)
         assert docno + 1 == num_docs
     else:
         result = numpy.column_stack(sparse2full(doc, num_terms) for doc in corpus)
