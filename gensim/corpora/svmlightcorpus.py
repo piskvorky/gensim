@@ -52,6 +52,7 @@ class SvmLightCorpus(IndexedCorpus):
 
         self.fname = fname # input file, see class doc for format
         self.length = None
+        self.labels = []
 
 
     def __iter__(self):
@@ -59,12 +60,14 @@ class SvmLightCorpus(IndexedCorpus):
         Iterate over the corpus, returning one sparse vector at a time.
         """
         length = 0
+        self.labels = []
         with open(self.fname) as fin:
             for lineNo, line in enumerate(fin):
                 doc = self.line2doc(line)
                 if doc is not None:
+                    self.labels.append(doc[1])
                     length += 1
-                    yield doc
+                    yield doc[0]
         self.length = length
 
 
@@ -96,7 +99,7 @@ class SvmLightCorpus(IndexedCorpus):
         """
         with open(self.fname) as f:
             f.seek(offset)
-            return self.line2doc(f.readline())
+            return self.line2doc(f.readline())[0]
 
 
     def line2doc(self, line):
@@ -111,7 +114,7 @@ class SvmLightCorpus(IndexedCorpus):
             raise ValueError('invalid line format in %s' % self.fname)
         target, fields = parts[0], [part.rsplit(':', 1) for part in parts[1:]]
         doc = [(int(p1) - 1, float(p2)) for p1, p2 in fields if p1 != 'qid'] # ignore 'qid' features, convert 1-based feature ids to 0-based
-        return doc
+        return doc, target
 
 
     @staticmethod
