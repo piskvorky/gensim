@@ -202,7 +202,7 @@ class LdaModel(interfaces.TransformationABC):
         normalized asymmetric 1.0/topicno prior, the latter learns an asymmetric
         prior directly from your data.
 
-        Turn on `distributed` to force distributed computing (see the web tutorial
+        Turn on `distributed` to force distributed computing (see the `web tutorial <http://radimrehurek.com/gensim/distributed.html>`_
         on how to set up a cluster of machines for gensim).
 
         Calculate and log perplexity estimate from the latest mini-batch every

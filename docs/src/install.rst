@@ -113,6 +113,11 @@ To test the package, unzip the `tar.gz source <http://pypi.python.org/pypi/gensi
 
     python setup.py test
 
+Gensim uses Travis CI for continuous integration: |Travis|_
+
+.. |Travis| image:: https://api.travis-ci.org/piskvorky/gensim.png?branch=develop
+.. _Travis: https://travis-ci.org/piskvorky/gensim
+
 
 Problems?
 ---------
