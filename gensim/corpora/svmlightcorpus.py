@@ -41,17 +41,25 @@ class SvmLightCorpus(IndexedCorpus):
     feature ids to be 1-based (counting starts at 1). We convert features to 0-base
     internally by decrementing all ids when loading a SVMlight input file, and
     increment them again when saving as SVMlight.
+
     """
 
-    def __init__(self, fname):
+    def __init__(self, fname, store_labels=True):
         """
         Initialize the corpus from a file.
+
+        Although vector labels (~SVM target class) are not used in gensim in any way,
+        they are parsed and stored in `self.labels` for convenience. Set `store_labels=False`
+        to skip storing these labels (e.g. if there are too many vectors to store
+        the self.labels array in memory).
+
         """
         IndexedCorpus.__init__(self, fname)
         logger.info("loading corpus from %s" % fname)
 
         self.fname = fname # input file, see class doc for format
         self.length = None
+        self.store_labels = store_labels
         self.labels = []
 
 
@@ -65,7 +73,8 @@ class SvmLightCorpus(IndexedCorpus):
             for lineNo, line in enumerate(fin):
                 doc = self.line2doc(line)
                 if doc is not None:
-                    self.labels.append(doc[1])
+                    if self.store_labels:
+                        self.labels.append(doc[1])
                     length += 1
                     yield doc[0]
         self.length = length
