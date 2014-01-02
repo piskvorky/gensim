@@ -427,9 +427,24 @@ class LsiModel(interfaces.TransformationABC):
 
         if not is_corpus:
             bow = [bow]
-        vec = matutils.corpus2csc(bow, num_terms=self.num_terms)
 
+        # convert input to scipy.sparse CSC, then do "sparse * dense = dense" multiplication
+        vec = matutils.corpus2csc(bow, num_terms=self.num_terms, dtype=self.projection.u.dtype)
         topic_dist = (vec.T * self.projection.u[:, :self.num_topics]).T # (x^T * u).T = u^-1 * x
+
+        # # convert input to dense, then do dense * dense multiplication
+        # # ± same performance as above (BLAS dense * dense is better optimized than scipy.sparse), but consumes more memory
+        # vec = matutils.corpus2dense(bow, num_terms=self.num_terms, num_docs=len(bow))
+        # topic_dist = numpy.dot(self.projection.u[:, :self.num_topics].T, vec)
+
+        # # use numpy's advanced indexing to simulate sparse * dense
+        # # ± same speed again
+        # u = self.projection.u[:, :self.num_topics]
+        # topic_dist = numpy.empty((u.shape[1], len(bow)), dtype=u.dtype)
+        # for vecno, vec in enumerate(bow):
+        #     indices, data = zip(*vec) if vec else ([], [])
+        #     topic_dist[:, vecno] = numpy.dot(u.take(indices, axis=0).T, numpy.array(data, dtype=u.dtype))
+
         if scaled:
             topic_dist = (1.0 / self.projection.s[:self.num_topics]) * topic_dist # s^-1 * u^-1 * x
 
