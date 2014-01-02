@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.8.10
+
+* store labels in SvmLight corpus (Ritesh)
+
 0.8.9
 
 * use travis-ci for continuous integration
