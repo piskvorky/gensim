@@ -169,7 +169,9 @@ class HdpModel(interfaces.TransformationABC):
         self.lda_beta = None
         
         self.m_W = len(id2word)
-        self.m_D = len(corpus)
+        self.m_D = 0
+        if corpus:
+          self.m_D = len(corpus)
 
         self.m_T = T
         self.m_K = K
@@ -208,7 +210,7 @@ class HdpModel(interfaces.TransformationABC):
     def inference(self,chunk):
         lda_alpha = self.lda_alpha
         lda_beta = self.lda_beta
-        if not (lda_alpha and lda_beta):
+        if not (isinstance(lda_alpha,np.ndarray) and isinstance(lda_beta,np.ndarray)):
             raise RuntimeError("corpus must be trained to perform inference")
         try:
             _ = len(chunk)
@@ -219,10 +221,10 @@ class HdpModel(interfaces.TransformationABC):
 
         gamma = np.zeros((len(chunk),lda_beta.shape[0]))
         for d, doc in enumerate(chunk):
-            ids = numpy.array([ i for i , _ in doc ])
-            counts = numpy.array([cnt for _, cnt in doc])
+            ids = np.array([ i for i , _ in doc ])
+            counts = np.array([cnt for _, cnt in doc])
             _,gammad = lda_e_step(ids, counts, lda_alpha, lda_beta)
-            gamma[d,:] = gamma
+            gamma[d,:] = gammad
         return gamma
 
     def __getitem__(self, bow, eps = 0.01):
@@ -534,8 +536,10 @@ class HdpModel(interfaces.TransformationABC):
         logger.info('TEST: evaluating test corpus')
         lda_alpha = self.lda_alpha
         lda_beta = self.lda_beta
-        if not (lda_alpha and lda_beta):
-          (lda_alpha, lda_beta) = self.hdp_to_lda()
+        if not (isinstance(lda_alpha,np.ndarray) and isinstance(lda_beta,np.ndarray)):
+            (lda_alpha, lda_beta) = self.hdp_to_lda()
+            self.lda_alpha = lda_alpha
+            self.lda_beta = lda_beta
         score = 0.0
         total_words = 0
         for i, doc in enumerate(corpus):
