@@ -55,7 +55,10 @@ import heapq
 import time
 import itertools
 import threading
-from Queue import Queue
+try:
+    from queue import Queue
+except ImportError:
+    from Queue import Queue
 
 from numpy import exp, dot, outer, random, dtype, get_include, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis, ndarray
@@ -636,7 +639,7 @@ if __name__ == "__main__":
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
     if len(sys.argv) < 2:
-        print globals()['__doc__'] % locals()
+        print(globals()['__doc__'] % locals())
         sys.exit(1)
     infile = sys.argv[1]
     from gensim.models.word2vec import Word2Vec  # avoid referencing __main__ in pickle

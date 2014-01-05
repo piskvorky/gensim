@@ -96,7 +96,7 @@ class IndexedCorpus(interfaces.CorpusABC):
 
         # store offsets persistently, using pickle
         logger.info("saving %s index to %s" % (serializer.__name__, index_fname))
-        utils.pickle(offsets, index_fname)
+        utils.pickle_dump(offsets, index_fname)
 
 
     def __len__(self):

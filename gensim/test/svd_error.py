@@ -18,7 +18,7 @@ the entire matrix will be used.
 Example: ./svd_error.py ~/gensim/results/wiki_en_v10k.mm.bz2 100000 10000
 """
 
-from __future__ import with_statement
+from __future__ import print_function, with_statement
 
 import logging
 import os, sys, time
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])
     # do we have enough cmd line arguments?
     if len(sys.argv) < 2:
-        print globals()["__doc__"] % locals()
+        print(globals()["__doc__"] % locals())
         sys.exit(1)
 
     fname = sys.argv[1]
@@ -133,8 +133,8 @@ if __name__ == '__main__':
         ideal_fro = numpy.linalg.norm(err)
         del err
         ideal_n2 = spectrum_s[factors + 1]
-        print '*' * 40, "%i factors, ideal error norm_frobenius=%f, norm_2=%f" % (factors, ideal_fro, ideal_n2)
-        print "*" * 30,
+        print('*' * 40, "%i factors, ideal error norm_frobenius=%f, norm_2=%f" % (factors, ideal_fro, ideal_n2))
+        print("*" * 30, end="")
         print_error("baseline", aat,
                     numpy.zeros((m, factors)), numpy.zeros((factors)), ideal_fro, ideal_n2)
         if sparsesvd:
@@ -147,7 +147,8 @@ if __name__ == '__main__':
             del vt
             u, s = ut.T.astype(numpy.float32), s.astype(numpy.float32)**2 # convert singular values to eigenvalues
             del ut
-            print "SVDLIBC SVD for %i factors took %s s (spectrum %f .. %f)" % (factors, taken, s[0], s[-1])
+            print("SVDLIBC SVD for %i factors took %s s (spectrum %f .. %f)"
+                  % (factors, taken, s[0], s[-1]))
             print_error("SVDLIBC", aat, u, s, ideal_fro, ideal_n2)
             del u
         for power_iters in POWER_ITERS:

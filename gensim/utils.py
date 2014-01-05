@@ -13,18 +13,29 @@ from __future__ import with_statement
 import logging
 logger = logging.getLogger('gensim.utils')
 
+try:
+    from html.entities import name2codepoint as n2cp
+except ImportError:
+    from htmlentitydefs import name2codepoint as n2cp
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
 import re
 import unicodedata
 import os
 import random
-import cPickle
 import itertools
 import tempfile
 from functools import wraps # for `synchronous` function lock
-from htmlentitydefs import name2codepoint as n2cp # for `decode_htmlentities`
 import multiprocessing
 import shutil
+import sys
 import traceback
+
+if sys.version_info.major >= 3:
+    unicode = str
 
 
 try:
@@ -161,8 +172,8 @@ class SaveLoad(object):
     Objects which inherit from this class have save/load functions, which un/pickle
     them to disk.
 
-    This uses cPickle for de/serializing, so objects must not contains unpicklable
-    attributes, such as lambda functions etc.
+    This uses pickle for de/serializing, so objects must not contain
+    unpicklable attributes, such as lambda functions etc.
     """
     @classmethod
     def load(cls, fname):
@@ -177,7 +188,7 @@ class SaveLoad(object):
         Save the object to file via pickling (also see `load`).
         """
         logger.info("saving %s object to %s" % (self.__class__.__name__, fname))
-        pickle(self, fname)
+        pickle_dump(self, fname)
 #endclass SaveLoad
 
 
@@ -353,11 +364,11 @@ def decode_htmlentities(text):
     Adapted from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
 
     >>> u = u'E tu vivrai nel terrore - L&#x27;aldil&#xE0; (1981)'
-    >>> print decode_htmlentities(u).encode('UTF-8')
+    >>> print(decode_htmlentities(u).encode('UTF-8'))
     E tu vivrai nel terrore - L'aldilà (1981)
-    >>> print decode_htmlentities("l&#39;eau")
+    >>> print(decode_htmlentities("l&#39;eau"))
     l'eau
-    >>> print decode_htmlentities("foo &lt; bar")
+    >>> print(decode_htmlentities("foo &lt; bar"))
     foo < bar
 
     """
@@ -392,7 +403,7 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
     Return elements from the iterable in `chunksize`-ed lists. The last returned
     element may be smaller (if length of collection is not divisible by `chunksize`).
 
-    >>> print list(grouper(xrange(10), 3))
+    >>> print(list(grouper(xrange(10), 3)))
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
     """
     import numpy
@@ -473,7 +484,7 @@ else:
         If `maxsize==0`, don't fool around with parallelism and simply yield the chunksize
         via `chunkize_serial()` (no I/O optimizations).
 
-        >>> for chunk in chunkize(xrange(10), 4): print chunk
+        >>> for chunk in chunkize(xrange(10), 4): print(chunk)
         [0, 1, 2, 3]
         [4, 5, 6, 7]
         [8, 9]
@@ -524,15 +535,15 @@ def smart_open(fname, mode='r'):
     return open(fname, mode)
 
 
-def pickle(obj, fname, protocol=-1):
+def pickle_dump(obj, fname, protocol=-1):
     """Pickle object `obj` to file `fname`."""
     with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
-        cPickle.dump(obj, fout, protocol=protocol)
+        pickle.dump(obj, fout, protocol=protocol)
 
 
 def unpickle(fname):
     """Load pickled object from `fname`"""
-    return cPickle.load(smart_open(fname, 'rb'))
+    return pickle.load(smart_open(fname, 'rb'))
 
 
 def revdict(d):
