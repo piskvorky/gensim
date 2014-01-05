@@ -137,9 +137,10 @@ class HdpModel(interfaces.TransformationABC):
     >>> hdp = HdpModel(corpus, id2word)
     >>> hdp.print_topics(topics=20, topn=10)
 
-    Inference is based on the approximately LDA-equivalent topics
+    Inference on new documents is based on the approximately LDA-equivalent topics.
 
     Model persistency is achieved through its `load`/`save` methods.
+
     """
     def __init__(self, corpus, id2word, max_chunks=None, max_time=None,
                  chunksize=256, kappa=1.0, tau=64.0, K=15, T=150, alpha=1,
@@ -167,7 +168,7 @@ class HdpModel(interfaces.TransformationABC):
 
         self.lda_alpha = None
         self.lda_beta = None
-        
+
         self.m_W = len(id2word)
         self.m_D = 0
         if corpus:
@@ -207,42 +208,32 @@ class HdpModel(interfaces.TransformationABC):
         if corpus is not None:
             self.update(corpus)
 
-    def inference(self,chunk):
-        lda_alpha = self.lda_alpha
-        lda_beta = self.lda_beta
-        if not (isinstance(lda_alpha,np.ndarray) and isinstance(lda_beta,np.ndarray)):
-            raise RuntimeError("corpus must be trained to perform inference")
-        try:
-            _ = len(chunk)
-        except:
-            chunk = list(chunk)
+    def inference(self, chunk):
+        if self.lda_alpha is None or self.lda_beta is None:
+            raise RuntimeError("model must be trained to perform inference")
+        chunk = list(chunk)
         if len(chunk) > 1:
-            logger.debug("performing inference on a chunk of %i documents"%len(chunk))
+            logger.debug("performing inference on a chunk of %i documents" % len(chunk))
 
-        gamma = np.zeros((len(chunk),lda_beta.shape[0]))
+        gamma = np.zeros((len(chunk), self.lda_beta.shape[0]))
         for d, doc in enumerate(chunk):
-            if len(doc) == 0:
+            if not doc:  # leave gamma at zero for empty documents
                 continue
-            ids = np.array([ i for i , _ in doc ])
-            counts = np.array([cnt for _, cnt in doc])
-            _,gammad = lda_e_step(ids, counts, lda_alpha, lda_beta)
-            gamma[d,:] = gammad
+            ids, counts = zip(*doc)
+            _, gammad = lda_e_step(ids, counts, self.lda_alpha, self.lda_beta)
+            gamma[d, :] = gammad
         return gamma
 
-    def __getitem__(self, bow, eps = 0.01):
+    def __getitem__(self, bow, eps=0.01):
         is_corpus, corpus = utils.is_corpus(bow)
         if is_corpus:
-          #### I don't know what this does
           return self._apply(corpus)
 
-        gamma = self.inference([bow])
-        gamma_sum = sum(gamma[0])
-        if gamma_sum == 0:
-            return []
-        topic_dist = gamma[0] / gamma_sum
+        gamma = self.inference([bow])[0]
+        topic_dist = gamma / sum(gamma) if sum(gamma) != 0 else []
         return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                 if topicvalue >= eps]
-    
+
     def update(self, corpus):
         save_freq = max(1, int(10000 / self.chunksize)) # save every 10k docs, roughly
         chunks_processed = 0
@@ -271,7 +262,6 @@ class HdpModel(interfaces.TransformationABC):
                     logger.info('PROGRESS: finished document %i of %i' %
                         (self.m_num_docs_processed, self.m_D))
 
-
     def update_finished(self, start_time, chunks_processed, docs_processed):
         return (
             # chunk limit reached
@@ -282,7 +272,6 @@ class HdpModel(interfaces.TransformationABC):
 
             # no limits and whole corpus has been processed once
             (not self.max_chunks and not self.max_time and docs_processed >= self.m_D))
-
 
     def update_chunk(self, chunk, update=True, opt_o=True):
         # Find the unique words in this chunk...
@@ -323,7 +312,6 @@ class HdpModel(interfaces.TransformationABC):
             self.update_lambda(ss, word_list, opt_o)
 
         return (score, count)
-
 
     def doc_e_step(self, doc, ss, Elogsticks_1st, word_list,
             unique_words, doc_word_ids, doc_word_counts, var_converge) :
@@ -412,7 +400,6 @@ class HdpModel(interfaces.TransformationABC):
 
         return likelihood
 
-
     def update_lambda(self, sstats, word_list, opt_o):
         self.m_status_up_to_date = False
         # rhot will be between 0 and 1, and says how much to weight
@@ -443,7 +430,6 @@ class HdpModel(interfaces.TransformationABC):
         var_phi_sum = np.flipud(self.m_varphi_ss[1:])
         self.m_var_sticks[1] = np.flipud(np.cumsum(var_phi_sum)) + self.m_gamma
 
-
     def optimal_ordering(self):
         """
         ordering the topics
@@ -453,7 +439,6 @@ class HdpModel(interfaces.TransformationABC):
         self.m_lambda = self.m_lambda[idx, :]
         self.m_lambda_sum = self.m_lambda_sum[idx]
         self.m_Elogbeta = self.m_Elogbeta[idx, :]
-
 
     def update_expectations(self):
         """
@@ -472,14 +457,12 @@ class HdpModel(interfaces.TransformationABC):
         self.m_timestamp[:] = self.m_updatect
         self.m_status_up_to_date = True
 
-
     def print_topics(self, topics=20, topn=20):
         if not self.m_status_up_to_date:
             self.update_expectations()
         betas = self.m_lambda + self.m_eta
         hdp_formatter = HdpTopicFormatter(self.id2word, betas)
         hdp_formatter.print_topics(topics, topn)
-
 
     def save_topics(self, doc_count=None):
         """legacy method; use `self.save()` instead"""
@@ -494,7 +477,6 @@ class HdpModel(interfaces.TransformationABC):
         logger.info("saving topics to %s" % fname)
         betas = self.m_lambda + self.m_eta
         np.savetxt(fname, betas)
-
 
     def save_options(self):
         """legacy method; use `self.save()` instead"""
@@ -515,7 +497,6 @@ class HdpModel(interfaces.TransformationABC):
             fout.write('eta: %s\n' % str(self.m_eta))
             fout.write('gamma: %s\n' % str(self.m_gamma))
 
-
     def hdp_to_lda(self):
         """
         Compute the LDA almost equivalent HDP.
@@ -524,7 +505,7 @@ class HdpModel(interfaces.TransformationABC):
         sticks = self.m_var_sticks[0] / (self.m_var_sticks[0] + self.m_var_sticks[1])
         alpha = np.zeros(self.m_T)
         left = 1.0
-        for i in range(0, self.m_T - 1):
+        for i in xrange(0, self.m_T - 1):
             alpha[i] = sticks[i] * left
             left = left - alpha[i]
         alpha[self.m_T - 1] = left
@@ -536,23 +517,18 @@ class HdpModel(interfaces.TransformationABC):
 
         return (alpha, beta)
 
-
     def evaluate_test_corpus(self, corpus):
         logger.info('TEST: evaluating test corpus')
-        lda_alpha = self.lda_alpha
-        lda_beta = self.lda_beta
-        if not (isinstance(lda_alpha,np.ndarray) and isinstance(lda_beta,np.ndarray)):
-            (lda_alpha, lda_beta) = self.hdp_to_lda()
-            self.lda_alpha = lda_alpha
-            self.lda_beta = lda_beta
+        if self.lda_alpha is None or self.lda_beta is None:
+            self.lda_alpha, self.lda_beta = self.hdp_to_lda()
         score = 0.0
         total_words = 0
         for i, doc in enumerate(corpus):
             if len(doc) > 0:
                 doc_word_ids, doc_word_counts = zip(*doc)
-                (likelihood, gamma) = lda_e_step(doc_word_ids, doc_word_counts, lda_alpha, lda_beta)
+                likelihood, gamma = lda_e_step(doc_word_ids, doc_word_counts, self.lda_alpha, self.lda_beta)
                 theta = gamma / np.sum(gamma)
-                lda_betad = lda_beta[:, doc_word_ids]
+                lda_betad = self.lda_beta[:, doc_word_ids]
                 log_predicts = np.log(np.dot(theta, lda_betad))
                 doc_score = sum(log_predicts) / len(doc)
                 logger.info('TEST: %6d    %.5f' % (i, doc_score))
