@@ -82,7 +82,7 @@ def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_n
             num_docs = corpus.num_docs
         if num_nnz is None:
             num_nnz = corpus.num_nnz
-    except AttributeError, e:
+    except AttributeError as e:
         pass # not a MmCorpus...
     if printprogress:
         logger.info("creating sparse matrix from corpus")

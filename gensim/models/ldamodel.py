@@ -212,9 +212,9 @@ class LdaModel(interfaces.TransformationABC):
         Example:
 
         >>> lda = LdaModel(corpus, num_topics=100)  # train model
-        >>> print lda[doc_bow] # get topic probability distribution for a document
+        >>> print(lda[doc_bow]) # get topic probability distribution for a document
         >>> lda.update(corpus2) # update the LDA model with additional documents
-        >>> print lda[doc_bow]
+        >>> print(lda[doc_bow])
 
         >>> lda = LdaModel(corpus, num_topics=50, alpha='auto', eval_every=5)  # train asymmetric alpha from data
 
@@ -289,7 +289,7 @@ class LdaModel(interfaces.TransformationABC):
                 self.dispatcher = dispatcher
                 self.numworkers = len(dispatcher.getworkers())
                 logger.info("using distributed version with %i workers" % self.numworkers)
-            except Exception, err:
+            except Exception as err:
                 logger.error("failed to initialize distributed LDA (%s)" % err)
                 raise RuntimeError("failed to initialize distributed LDA (%s)" % err)
 

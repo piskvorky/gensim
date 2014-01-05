@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     # check and process input arguments
     if len(sys.argv) < 2:
-        print globals()['__doc__'] % locals()
+        print(globals()['__doc__'] % locals())
         sys.exit(1)
     language = sys.argv[1]
 

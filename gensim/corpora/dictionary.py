@@ -19,15 +19,31 @@ from __future__ import with_statement
 
 import logging
 import itertools
-import UserDict
+import sys
 
-from gensim import utils
+from .. import utils
+
+if sys.version_info.major >= 3:
+    basestring = str
+
+    def iteritems(d):
+        return d.items()
+
+    def iterkeys(d):
+        return d.keys()
+
+else:
+    def iteritems(d):
+        return d.iteritems()
+
+    def iterkeys(d):
+        return d.iterkeys()
 
 
 logger = logging.getLogger('gensim.corpora.dictionary')
 
 
-class Dictionary(utils.SaveLoad, UserDict.DictMixin):
+class Dictionary(utils.SaveLoad, dict):
     """
     Dictionary encapsulates the mapping between normalized words and their integer ids.
 
@@ -51,7 +67,7 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         if len(self.id2token) != len(self.token2id):
             # the word->id mapping has changed (presumably via add_documents);
             # recompute id->word accordingly
-            self.id2token = dict((v, k) for k, v in self.token2id.iteritems())
+            self.id2token = dict((v, k) for k, v in iteritems(self.token2id))
         return self.id2token[tokenid] # will throw for non-existent ids
 
 
@@ -137,11 +153,11 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
             self.num_pos += len(document)
             self.num_nnz += len(result)
             # increase document count for each unique token that appeared in the document
-            for tokenid in result.iterkeys():
+            for tokenid in iterkeys(result):
                 self.dfs[tokenid] = self.dfs.get(tokenid, 0) + 1
 
         # return tokenids, in ascending id order
-        result = sorted(result.iteritems())
+        result = sorted(iteritems(result))
         if return_missing:
             return result, missing
         else:
@@ -188,12 +204,20 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         """
         if bad_ids is not None:
             bad_ids = set(bad_ids)
-            self.token2id = dict((token, tokenid) for token, tokenid in self.token2id.iteritems() if tokenid not in bad_ids)
-            self.dfs = dict((tokenid, freq) for tokenid, freq in self.dfs.iteritems() if tokenid not in bad_ids)
+            self.token2id = dict((token, tokenid)
+                                 for token, tokenid in iteritems(self.token2id)
+                                 if tokenid not in bad_ids)
+            self.dfs = dict((tokenid, freq)
+                            for tokenid, freq in iteritems(self.dfs)
+                            if tokenid not in bad_ids)
         if good_ids is not None:
             good_ids = set(good_ids)
-            self.token2id = dict((token, tokenid) for token, tokenid in self.token2id.iteritems() if tokenid in good_ids)
-            self.dfs = dict((tokenid, freq) for tokenid, freq in self.dfs.iteritems() if tokenid in good_ids)
+            self.token2id = dict((token, tokenid)
+                                 for token, tokenid in iteritems(self.token2id)
+                                 if tokenid in good_ids)
+            self.dfs = dict((tokenid, freq)
+                            for tokenid, freq in self.dfs.iteritems()
+                            if tokenid in good_ids)
 
 
     def compactify(self):
