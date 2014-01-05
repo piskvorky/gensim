@@ -3,6 +3,7 @@ Changes
 
 0.8.10
 
+* HDP estimation on new documents (Elliot Kulakow)
 * store labels in SvmLight corpus (Ritesh)
 
 0.8.9
