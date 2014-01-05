@@ -4,24 +4,26 @@
 Support
 =============
 
+Business support
+------------------
+
+I run a consulting business for data mining and information retrieval solutions, `radimrehurek.com <http://radimrehurek.com>`_.
+
+In case you need SLA-based support, design validation, technical training or custom system development, `contact me <http://radimrehurek.com/contact/>`_ for a commercial quote.
+
 Open source support
 --------------------
 
 The main communication channel is the `gensim mailing list <https://groups.google.com/group/gensim>`_.
 This is the preferred way to **ask for help**, **report problems** and **share insights** with the community. Newbie questions are perfectly fine, just make sure you've read the :doc:`tutorials <tutorial>`.
 
-I discourage sending private emails, because the mailing list serves as a knowledge base for all gensim users, cutting maintenance efforts needed for support. If you feel your problem is too special, data too sensitive, or you're just too shy, see the "commercial" section below.
+I discourage sending private emails, because the mailing list serves as a knowledge base for all gensim users, cutting maintenance efforts needed for support. If you feel your problem is too special, data too sensitive, technical scope too demanding, see the "business" section above.
 
 When posting on the mailing list, please try to include all relevant information, such as what it is you are trying to achieve, what went wrong, relevant gensim logs etc.
 
 **FAQ** and some useful **snippets of code** are maintained on GitHub: https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ.
 
 You can also try asking on StackOverflow, using the `gensim tag <http://stackoverflow.com/questions/tagged/gensim>`_.
-
-Business support
-------------------
-
-In case you need SLA-based support, design validation, training or custom development, `contact me <http://radimrehurek.com/contact/>`_ for a commercial quote.
 
 Developer support
 ------------------
