@@ -31,7 +31,7 @@ class RpModel(interfaces.TransformationABC):
        space.
 
     >>> rp = RpModel(corpus)
-    >>> print rp[some_doc]
+    >>> print(rp[some_doc])
     >>> rp.save('/tmp/foo.rp_model')
 
     Model persistency is achieved via its load/save methods.

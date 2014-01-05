@@ -13,21 +13,34 @@ from __future__ import with_statement
 import logging
 logger = logging.getLogger('gensim.utils')
 
+try:
+    from html.entities import name2codepoint as n2cp
+except ImportError:
+    from htmlentitydefs import name2codepoint as n2cp
+try:
+    import cPickle as _pickle
+except ImportError:
+    import pickle as _pickle
+
 import re
 import unicodedata
 import os
 import random
-import cPickle
 import itertools
 import tempfile
 from functools import wraps # for `synchronous` function lock
-from htmlentitydefs import name2codepoint as n2cp # for `decode_htmlentities`
 import multiprocessing
 import shutil
+import sys
 import traceback
 
 import numpy
 import scipy.sparse
+
+if sys.version_info.major >= 3:
+    unicode = str
+
+from ._six import u
 
 try:
     from pattern.en import parse
@@ -85,9 +98,10 @@ def deaccent(text):
     u'Sef chomutovskych komunistu dostal postou bily prasek'
     """
     if not isinstance(text, unicode):
-        text = unicode(text, 'utf8') # assume utf8 for byte strings, use default (strict) error handling
+        # assume utf8 for byte strings, use default (strict) error handling
+        text = text.decode('utf8')
     norm = unicodedata.normalize("NFD", text)
-    result = u''.join(ch for ch in norm if unicodedata.category(ch) != 'Mn')
+    result = u('').join(ch for ch in norm if unicodedata.category(ch) != 'Mn')
     return unicodedata.normalize("NFC", result)
 
 
@@ -163,8 +177,8 @@ class SaveLoad(object):
     Objects which inherit from this class have save/load functions, which un/pickle
     them to disk.
 
-    This uses cPickle for de/serializing, so objects must not contains unpicklable
-    attributes, such as lambda functions etc.
+    This uses pickle for de/serializing, so objects must not contain
+    unpicklable attributes, such as lambda functions etc.
     """
     @classmethod
     def load(cls, fname, mmap=None):
@@ -431,11 +445,11 @@ def decode_htmlentities(text):
     Adapted from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
 
     >>> u = u'E tu vivrai nel terrore - L&#x27;aldil&#xE0; (1981)'
-    >>> print decode_htmlentities(u).encode('UTF-8')
+    >>> print(decode_htmlentities(u).encode('UTF-8'))
     E tu vivrai nel terrore - L'aldilà (1981)
-    >>> print decode_htmlentities("l&#39;eau")
+    >>> print(decode_htmlentities("l&#39;eau"))
     l'eau
-    >>> print decode_htmlentities("foo &lt; bar")
+    >>> print(decode_htmlentities("foo &lt; bar"))
     foo < bar
 
     """
@@ -470,7 +484,7 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
     Return elements from the iterable in `chunksize`-ed lists. The last returned
     element may be smaller (if length of collection is not divisible by `chunksize`).
 
-    >>> print list(grouper(xrange(10), 3))
+    >>> print(list(grouper(xrange(10), 3)))
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
     """
     import numpy
@@ -551,7 +565,7 @@ else:
         If `maxsize==0`, don't fool around with parallelism and simply yield the chunksize
         via `chunkize_serial()` (no I/O optimizations).
 
-        >>> for chunk in chunkize(xrange(10), 4): print chunk
+        >>> for chunk in chunkize(xrange(10), 4): print(chunk)
         [0, 1, 2, 3]
         [4, 5, 6, 7]
         [8, 9]
@@ -605,12 +619,12 @@ def smart_open(fname, mode='rb'):
 def pickle(obj, fname, protocol=-1):
     """Pickle object `obj` to file `fname`."""
     with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
-        cPickle.dump(obj, fout, protocol=protocol)
+        _pickle.dump(obj, fout, protocol=protocol)
 
 
 def unpickle(fname):
     """Load pickled object from `fname`"""
-    return cPickle.load(smart_open(fname, 'rb'))
+    return _pickle.load(smart_open(fname, 'rb'))
 
 
 def revdict(d):
@@ -729,7 +743,7 @@ if HAS_PATTERN:
         # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
         # FIXME this throws away all fancy parsing cues, including sentence structure,
         # abbreviations etc.
-        content = u' '.join(tokenize(content, lower=True, errors='ignore'))
+        content = u(' ').join(tokenize(content, lower=True, errors='ignore'))
 
         parsed = parse(content, lemmata=True, collapse=False)
         result = []

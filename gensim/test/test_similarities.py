@@ -43,7 +43,7 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_similarities.tst')
 
 
-class TestSimilarityABC(object):
+class _TestSimilarityABC(object):
     """
     Base class for SparseMatrixSimilarity and MatrixSimilarity unit tests.
     """
@@ -189,17 +189,17 @@ class TestSimilarityABC(object):
         self.assertTrue(numpy.allclose(index.index, index2.index))
         self.assertEqual(index.num_best, index2.num_best)
 
-class TestMatrixSimilarity(unittest.TestCase, TestSimilarityABC):
+class TestMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.MatrixSimilarity
 
 
-class TestSparseMatrixSimilarity(unittest.TestCase, TestSimilarityABC):
+class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.SparseMatrixSimilarity
 
 
-class TestSimilarity(unittest.TestCase, TestSimilarityABC):
+class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.Similarity
 

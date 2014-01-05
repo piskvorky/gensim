@@ -16,7 +16,7 @@ from __future__ import with_statement
 import logging
 import itertools
 
-import utils, matutils
+from . import utils, matutils
 
 
 logger = logging.getLogger('gensim.interfaces')

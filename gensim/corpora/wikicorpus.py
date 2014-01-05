@@ -277,7 +277,7 @@ class WikiCorpus(TextCorpus):
         the standard corpus interface instead of this function::
 
         >>> for vec in wiki_corpus:
-        >>>     print vec
+        >>>     print(vec)
         """
         articles, articles_all = 0, 0
         positions, positions_all = 0, 0

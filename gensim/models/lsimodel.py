@@ -270,9 +270,9 @@ class LsiModel(interfaces.TransformationABC):
         Example:
 
         >>> lsi = LsiModel(corpus, num_topics=10)
-        >>> print lsi[doc_tfidf] # project some document into LSI space
+        >>> print(lsi[doc_tfidf]) # project some document into LSI space
         >>> lsi.add_documents(corpus2) # update LSI on additional documents
-        >>> print lsi[doc_tfidf]
+        >>> print(lsi[doc_tfidf])
 
         .. [3] http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf
 
@@ -321,7 +321,7 @@ class LsiModel(interfaces.TransformationABC):
                 self.dispatcher = dispatcher
                 self.numworkers = len(dispatcher.getworkers())
                 logger.info("using distributed version with %i workers" % self.numworkers)
-            except Exception, err:
+            except Exception as err:
                 # distributed version was specifically requested, so this is an error state
                 logger.error("failed to initialize distributed LSI (%s)" % err)
                 raise RuntimeError("failed to initialize distributed LSI (%s)" % err)

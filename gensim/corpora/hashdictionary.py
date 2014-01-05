@@ -20,17 +20,16 @@ from __future__ import with_statement
 
 import logging
 import itertools
-import UserDict
 import zlib
 
-from gensim import utils
+from .. import utils
 
 
 logger = logging.getLogger('gensim.corpora.hashdictionary')
 
 
 
-class HashDictionary(utils.SaveLoad, UserDict.DictMixin):
+class HashDictionary(utils.SaveLoad, dict):
     """
     HashDictionary encapsulates the mapping between normalized words and their
     integer ids.
