@@ -137,7 +137,7 @@ class HdpModel(interfaces.TransformationABC):
     >>> hdp = HdpModel(corpus, id2word)
     >>> hdp.print_topics(topics=20, topn=10)
 
-    The model doesn't support inference of topics on new, unseen documents, yet.
+    Inference is based on the approximately LDA-equivalent topics
 
     Model persistency is achieved through its `load`/`save` methods.
     """
@@ -165,8 +165,13 @@ class HdpModel(interfaces.TransformationABC):
         self.max_time = max_time
         self.outputdir = outputdir
 
+        self.lda_alpha = None
+        self.lda_beta = None
+        
         self.m_W = len(id2word)
-        self.m_D = len(corpus)
+        self.m_D = 0
+        if corpus:
+          self.m_D = len(corpus)
 
         self.m_T = T
         self.m_K = K
@@ -202,7 +207,42 @@ class HdpModel(interfaces.TransformationABC):
         if corpus is not None:
             self.update(corpus)
 
+    def inference(self,chunk):
+        lda_alpha = self.lda_alpha
+        lda_beta = self.lda_beta
+        if not (isinstance(lda_alpha,np.ndarray) and isinstance(lda_beta,np.ndarray)):
+            raise RuntimeError("corpus must be trained to perform inference")
+        try:
+            _ = len(chunk)
+        except:
+            chunk = list(chunk)
+        if len(chunk) > 1:
+            logger.debug("performing inference on a chunk of %i documents"%len(chunk))
 
+        gamma = np.zeros((len(chunk),lda_beta.shape[0]))
+        for d, doc in enumerate(chunk):
+            if len(doc) == 0:
+                continue
+            ids = np.array([ i for i , _ in doc ])
+            counts = np.array([cnt for _, cnt in doc])
+            _,gammad = lda_e_step(ids, counts, lda_alpha, lda_beta)
+            gamma[d,:] = gammad
+        return gamma
+
+    def __getitem__(self, bow, eps = 0.01):
+        is_corpus, corpus = utils.is_corpus(bow)
+        if is_corpus:
+          #### I don't know what this does
+          return self._apply(corpus)
+
+        gamma = self.inference([bow])
+        gamma_sum = sum(gamma[0])
+        if gamma_sum == 0:
+            return []
+        topic_dist = gamma[0] / gamma_sum
+        return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
+                if topicvalue >= eps]
+    
     def update(self, corpus):
         save_freq = max(1, int(10000 / self.chunksize)) # save every 10k docs, roughly
         chunks_processed = 0
@@ -216,6 +256,9 @@ class HdpModel(interfaces.TransformationABC):
 
                 if self.update_finished(start_time, chunks_processed, self.m_num_docs_processed):
                     self.update_expectations()
+                    alpha, beta = self.hdp_to_lda()
+                    self.lda_alpha = alpha
+                    self.lda_beta = beta
                     self.print_topics(20)
                     if self.outputdir:
                         self.save_topics()
@@ -496,7 +539,12 @@ class HdpModel(interfaces.TransformationABC):
 
     def evaluate_test_corpus(self, corpus):
         logger.info('TEST: evaluating test corpus')
-        (lda_alpha, lda_beta) = self.hdp_to_lda()
+        lda_alpha = self.lda_alpha
+        lda_beta = self.lda_beta
+        if not (isinstance(lda_alpha,np.ndarray) and isinstance(lda_beta,np.ndarray)):
+            (lda_alpha, lda_beta) = self.hdp_to_lda()
+            self.lda_alpha = lda_alpha
+            self.lda_beta = lda_beta
         score = 0.0
         total_words = 0
         for i, doc in enumerate(corpus):
