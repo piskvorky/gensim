@@ -221,6 +221,8 @@ class HdpModel(interfaces.TransformationABC):
 
         gamma = np.zeros((len(chunk),lda_beta.shape[0]))
         for d, doc in enumerate(chunk):
+            if len(doc) == 0:
+                continue
             ids = np.array([ i for i , _ in doc ])
             counts = np.array([cnt for _, cnt in doc])
             _,gammad = lda_e_step(ids, counts, lda_alpha, lda_beta)
@@ -234,7 +236,10 @@ class HdpModel(interfaces.TransformationABC):
           return self._apply(corpus)
 
         gamma = self.inference([bow])
-        topic_dist = gamma[0] / sum(gamma[0])
+        gamma_sum = sum(gamma[0])
+        if gamma_sum == 0:
+            return []
+        topic_dist = gamma[0] / gamma_sum
         return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                 if topicvalue >= eps]
     
