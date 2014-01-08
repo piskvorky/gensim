@@ -501,7 +501,10 @@ class LdaModel(interfaces.TransformationABC):
         if update_every > 0:
             updatetype = "online"
             updateafter = min(lencorpus, update_every * self.numworkers * chunksize)
-            evalafter = min(lencorpus, eval_every * self.numworkers * chunksize)
+            if eval_every is not None:
+                evalafter = min(lencorpus, eval_every * self.numworkers * chunksize)
+            else:
+                evalafter = lencorpus
         else:
             updatetype = "batch"
             updateafter = lencorpus
