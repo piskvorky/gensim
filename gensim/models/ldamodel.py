@@ -498,17 +498,13 @@ class LdaModel(interfaces.TransformationABC):
 
         self.state.numdocs += lencorpus
 
-        if update_every > 0:
+        if update_every:
             updatetype = "online"
             updateafter = min(lencorpus, update_every * self.numworkers * chunksize)
-            if eval_every is not None:
-                evalafter = min(lencorpus, eval_every * self.numworkers * chunksize)
-            else:
-                evalafter = lencorpus
         else:
             updatetype = "batch"
             updateafter = lencorpus
-            evalafter = lencorpus
+        evalafter = min(lencorpus, (eval_every or 0) * self.numworkers * chunksize)
 
         updates_per_pass = max(1, lencorpus / updateafter)
         logger.info("running %s LDA training, %s topics, %i passes over "
