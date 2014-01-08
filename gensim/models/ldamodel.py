@@ -509,7 +509,7 @@ class LdaModel(interfaces.TransformationABC):
         updates_per_pass = max(1, lencorpus / updateafter)
         logger.info("running %s LDA training, %s topics, %i passes over "
                     "the supplied corpus of %i documents, updating model once "
-                    "every %i documents, evaluating every %i documents" %
+                    "every %i documents, evaluating perplexity every %i documents" %
                     (updatetype, self.num_topics, passes, lencorpus, updateafter, evalafter))
         if updates_per_pass * passes < 10:
             logger.warning("too few updates, training might not converge; consider "
