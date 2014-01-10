@@ -399,7 +399,7 @@ class Word2Vec(utils.SaveLoad):
         all_words, mean = set(), []
         for word, weight in positive + negative:
             if word in self.vocab:
-                mean.append(weight * matutils.unitvec(self.syn0[self.vocab[word].index]))
+                mean.append(weight * self.syn0norm[self.vocab[word].index])
                 all_words.add(self.vocab[word].index)
             else:
                 raise KeyError("word '%s' not in vocabulary" % word)
