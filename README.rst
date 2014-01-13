@@ -51,8 +51,7 @@ you'll need to run::
 For alternative modes of installation (without root privileges, development
 installation, optional install features), see the `documentation <http://radimrehurek.com/gensim/install.html>`_.
 
-This version has been tested under Python 2.6, 2.7 and 3.2,
-and should run on newer versions as well.
+This version has been tested under Python 2.6, 2.7 and 3.3, and should run on newer versions as well.
 
 Documentation
 -------------

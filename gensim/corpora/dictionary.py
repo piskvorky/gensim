@@ -157,7 +157,7 @@ class Dictionary(utils.SaveLoad, dict):
                 self.dfs[tokenid] = self.dfs.get(tokenid, 0) + 1
 
         # return tokenids, in ascending id order
-        result = sorted(iteritems(result))
+        result = sorted(result.items())
         if return_missing:
             return result, missing
         else:
@@ -216,7 +216,7 @@ class Dictionary(utils.SaveLoad, dict):
                                  for token, tokenid in iteritems(self.token2id)
                                  if tokenid in good_ids)
             self.dfs = dict((tokenid, freq)
-                            for tokenid, freq in self.dfs.iteritems()
+                            for tokenid, freq in iteritems(self.dfs)
                             if tokenid in good_ids)
 
 
