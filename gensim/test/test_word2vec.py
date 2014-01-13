@@ -93,8 +93,13 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.syn1.shape == (len(model.vocab), 2))
 
         model.train(sentences)
-        sims = model.most_similar('graph')
+        sims = model.most_similar('graph', topn=10)
         self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
+
+        # test querying for "most similar" by vector
+        graph_vector = model.syn0norm[model.vocab['graph'].index]
+        sims2 = model.most_similar(positive=[graph_vector], topn=11)
+        self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is 'graph' itself
 
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1)
@@ -130,6 +135,7 @@ class TestWord2VecModel(unittest.TestCase):
         most_common_word = max(model.vocab.iteritems(), key=lambda item: item[1].count)[0]
         self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
 #endclass TestWord2VecModel
+
 
 class TestWord2VecSentenceIterators(unittest.TestCase):
     def testLineSentenceWorksWithFilename(self):

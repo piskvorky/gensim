@@ -58,7 +58,7 @@ import threading
 from Queue import Queue
 
 from numpy import exp, dot, outer, random, dtype, get_include, float32 as REAL,\
-    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis
+    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis, ndarray
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -392,13 +392,15 @@ class Word2Vec(utils.SaveLoad):
             positive = [positive]
 
         # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
-        positive = [(word, 1.0) if isinstance(word, basestring) else word for word in positive]
-        negative = [(word, -1.0) if isinstance(word, basestring) else word for word in negative]
+        positive = [(word, 1.0) if isinstance(word, (basestring, ndarray)) else word for word in positive]
+        negative = [(word, -1.0) if isinstance(word, (basestring, ndarray)) else word for word in negative]
 
         # compute the weighted average of all words
         all_words, mean = set(), []
         for word, weight in positive + negative:
-            if word in self.vocab:
+            if isinstance(word, ndarray):
+                mean.append(weight * word)
+            elif word in self.vocab:
                 mean.append(weight * self.syn0norm[self.vocab[word].index])
                 all_words.add(self.vocab[word].index)
             else:
@@ -426,11 +428,13 @@ class Word2Vec(utils.SaveLoad):
           'cereal'
 
         """
+        self.init_sims()
+
         words = [word for word in words if word in self.vocab]  # filter out OOV words
         logger.debug("using words %s" % words)
         if not words:
             raise ValueError("cannot select a word from an empty list")
-        vectors = vstack(matutils.unitvec(self.syn0[self.vocab[word].index]) for word in words).astype(REAL)
+        vectors = vstack(self.syn0norm[self.vocab[word].index] for word in words).astype(REAL)
         mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
         dists = dot(vectors, mean)
         return sorted(zip(dists, words))[0][1]
