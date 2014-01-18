@@ -6,6 +6,7 @@ Changes
 * python 3 support (Lars Buitinck)
 * HDP estimation on new documents (Elliot Kulakow)
 * store labels in SvmLight corpus (Ritesh)
+* fix word2vec binary load on Windows (Stephanus van Schalkwyk)
 
 0.8.9
 

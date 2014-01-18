@@ -337,7 +337,7 @@ class Word2Vec(utils.SaveLoad):
 
         """
         logger.info("loading projection weights from %s" % (fname))
-        with utils.smart_open(fname, 'rb') as fin:
+        with utils.smart_open(fname) as fin:
             header = fin.readline()
             vocab_size, layer1_size = map(int, header.split())  # throws for invalid file format
             result = Word2Vec(size=layer1_size)

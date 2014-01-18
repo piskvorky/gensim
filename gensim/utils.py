@@ -512,7 +512,7 @@ def make_closing(base, **attrs):
     return type('Closing' + base.__name__, (base, object), attrs)
 
 
-def smart_open(fname, mode='r'):
+def smart_open(fname, mode='rb'):
     from os import path
     _, ext = path.splitext(fname)
     if ext == '.bz2':
