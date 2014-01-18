@@ -331,13 +331,13 @@ class Word2Vec(utils.SaveLoad):
         """
         Load the input-hidden weight matrix from the original C word2vec-tool format.
 
-        Note that the information loaded is incomplete (the binary tree is missing),
+        Note that the information stored in the file is incomplete (the binary tree is missing),
         so while you can query for word similarity etc., you cannot continue training
         with a model loaded this way.
 
         """
         logger.info("loading projection weights from %s" % (fname))
-        with open(fname) as fin:
+        with utils.smart_open(fname, 'rb') as fin:
             header = fin.readline()
             vocab_size, layer1_size = map(int, header.split())  # throws for invalid file format
             result = Word2Vec(size=layer1_size)
