@@ -55,6 +55,7 @@ import itertools
 import sys
 
 import numpy
+import scipy.linalg
 import scipy.sparse
 from scipy.sparse import sparsetools
 
@@ -189,10 +190,11 @@ class Projection(utils.SaveLoad):
             # SVD again, but over k*k^T.
             # see http://www.mail-archive.com/numpy-discussion@scipy.org/msg07224.html and
             # bug ticket http://projects.scipy.org/numpy/ticket/706
-            u_k, s_k, _ = numpy.linalg.svd(k, full_matrices=False) # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK wrapper for partial svd/eigendecomp in numpy :(
-        except numpy.linalg.LinAlgError:
+            # sdoering: replaced numpy's linalg.svd with scipy's linalg.svd:
+            u_k, s_k, _ = scipy.linalg.svd(k, full_matrices=False) # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK wrapper for partial svd/eigendecomp in numpy :( //sdoering: maybe there is one in scipy?
+        except scipy.linalg.LinAlgError:
             logger.error("SVD(A) failed; trying SVD(A * A^T)")
-            u_k, s_k, _ = numpy.linalg.svd(numpy.dot(k, k.T), full_matrices=False) # if this fails too, give up with an exception
+            u_k, s_k, _ = scipy.linalg.svd(numpy.dot(k, k.T), full_matrices=False) # if this fails too, give up with an exception
             s_k = numpy.sqrt(s_k) # go back from eigen values to singular values
 
         k = clip_spectrum(s_k**2, self.k)
@@ -710,7 +712,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
     if scipy.sparse.issparse(corpus):
         b = qt * corpus
         logger.info("2nd phase: running dense svd on %s matrix" % str(b.shape))
-        u, s, vt = numpy.linalg.svd(b, full_matrices=False)
+        u, s, vt = scipy.linalg.svd(b, full_matrices=False)
         del b, vt
     else:
         # second phase: construct the covariance matrix X = B * B.T, where B = Q.T * A
@@ -728,7 +730,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
 
         # now we're ready to compute decomposition of the small matrix X
         logger.info("running dense decomposition on %s covariance matrix" % str(x.shape))
-        u, s, vt = numpy.linalg.svd(x) # could use linalg.eigh, but who cares... and svd returns the factors already sorted :)
+        u, s, vt = scipy.linalg.svd(x) # could use linalg.eigh, but who cares... and svd returns the factors already sorted :)
         s = numpy.sqrt(s) # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
     q = qt.T.copy()
     del qt
