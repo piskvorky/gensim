@@ -55,7 +55,7 @@ import itertools
 import sys
 
 import numpy
-import scipy
+import scipy.linalg
 import scipy.sparse
 from scipy.sparse import sparsetools
 
