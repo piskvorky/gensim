@@ -16,6 +16,7 @@ import os.path
 import tempfile
 
 import numpy
+import scipy
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import lsimodel, ldamodel, tfidfmodel, rpmodel, logentropy_model
@@ -55,7 +56,7 @@ class TestLsiModel(unittest.TestCase):
         model = lsimodel.LsiModel(self.corpus, num_topics=2)
 
         # make sure the decomposition is enough accurate
-        u, s, vt = numpy.linalg.svd(matutils.corpus2dense(self.corpus, self.corpus.num_terms), full_matrices=False)
+        u, s, vt = scipy.linalg.svd(matutils.corpus2dense(self.corpus, self.corpus.num_terms), full_matrices=False)
         self.assertTrue(numpy.allclose(s[:2], model.projection.s)) # singular values must match
 
         # transform one document
