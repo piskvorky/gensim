@@ -57,7 +57,7 @@ import itertools
 import threading
 from Queue import Queue
 
-from numpy import exp, dot, outer, random, dtype, get_include, float32 as REAL,\
+from numpy import exp, dot, zeros, outer, random, dtype, get_include, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis, ndarray
 
 logger = logging.getLogger("gensim.models.word2vec")
@@ -155,6 +155,8 @@ class Word2Vec(utils.SaveLoad):
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
         self.layer1_size = int(size)
+        if size % 4 != 0:
+            logger.warning("consider setting layer size to a multiple of 4 for greater performance")
         self.alpha = float(alpha)
         self.window = int(window)
         self.seed = seed
@@ -255,7 +257,7 @@ class Word2Vec(utils.SaveLoad):
 
         def worker_train():
             """Train the model, lifting lists of sentences from the jobs queue."""
-            work = matutils.zeros_aligned(self.layer1_size, dtype=REAL)  # each thread must have its own work memory
+            work = zeros(self.layer1_size, dtype=REAL)  # each thread must have its own work memory
 
             while True:
                 job = jobs.get()
@@ -300,8 +302,8 @@ class Word2Vec(utils.SaveLoad):
     def reset_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
         random.seed(self.seed)
-        self.syn0 = matutils.zeros_aligned((len(self.vocab), self.layer1_size), dtype=REAL)
-        self.syn1 = matutils.zeros_aligned((len(self.vocab), self.layer1_size), dtype=REAL)
+        self.syn0 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
+        self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
         self.syn0 += (random.rand(len(self.vocab), self.layer1_size) - 0.5) / self.layer1_size
         self.syn0norm = None
 
@@ -341,7 +343,7 @@ class Word2Vec(utils.SaveLoad):
             header = fin.readline()
             vocab_size, layer1_size = map(int, header.split())  # throws for invalid file format
             result = Word2Vec(size=layer1_size)
-            result.syn0 = matutils.zeros_aligned((vocab_size, layer1_size), dtype=REAL)
+            result.syn0 = zeros((vocab_size, layer1_size), dtype=REAL)
             if binary:
                 binary_len = dtype(REAL).itemsize * layer1_size
                 for line_no in xrange(vocab_size):
