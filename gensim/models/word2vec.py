@@ -11,8 +11,6 @@ Deep learning via word2vec's "hierarchical softmax skip-gram model" [1]_.
 The training algorithm was originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality.
 
-**Install Cython with `pip install cython` before to use optimized word2vec training** (70x speedup [2]_).
-
 Initialize a model with e.g.::
 
 >>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
@@ -45,7 +43,7 @@ are already built-in::
 and so on.
 
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
-.. [2] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
+
 """
 
 import logging
@@ -60,8 +58,8 @@ from Queue import Queue
 from numpy import exp, dot, zeros, outer, random, dtype, get_include, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis, ndarray
 
-logger = logging.getLogger("gensim.models.word2vec")
 
+logger = logging.getLogger("gensim.models.word2vec")
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 
@@ -131,7 +129,7 @@ class Word2Vec(utils.SaveLoad):
     compatible with the original word2vec implementation via `save_word2vec_format()` and `load_word2vec_format()`.
 
     """
-    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1, min_alpha=0.0001):
+    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1, min_alpha=0.0001, thresholds= [100], phrase_pass=0):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (utf8 strings) that will be used for training.
@@ -150,6 +148,8 @@ class Word2Vec(utils.SaveLoad):
         `seed` = for the random number generator.
         `min_count` = ignore all words with total frequency lower than this.
         `workers` = use this many worker threads to train the model (=faster training with multicore machines)
+        `phrase_pass`  is number of times sentences are evaluated for phrase ( will result in higher order ngrams ).
+        `threshold` array of thresholds for forming the phrases at each pass. ( higher means less phrases ).
 
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
@@ -163,11 +163,86 @@ class Word2Vec(utils.SaveLoad):
         self.min_count = min_count
         self.workers = workers
         self.min_alpha = min_alpha
+        self.phrase_pass = int(phrase_pass)
+        self.thresholds = thresholds
+        
         if sentences is not None:
+            if phrase_pass > 0 :
+                sentences = self.build_phrases( sentences)
             self.build_vocab(sentences)
             self.train(sentences)
 
 
+    def build_phrases( self, sentences ):
+        """
+        Generate phrases for given sentences.
+
+        """
+        logger.info("building phrases. will run %i passes" % (self.phrase_pass) )
+
+        for p in range(self.phrase_pass):
+
+            # build vocab
+            logger.info("Start building phrases using sentences. Pass %i" % p)
+            self.build_phrase_vocab( sentences )
+            
+            ## lets train for phrases
+            new_sentences = self.find_bigrams(sentences, float(self.thresholds[p]) )
+            sentences = new_sentences;
+        return sentences   
+
+        
+    def find_bigrams( self, sentences, threshold ) :
+        """
+        Find bigrams using words that appear together frequently together and infrequently
+        in other contexts. Frequent bigrams are calculated based on unigram and bigram counts.
+        
+        """
+        logger.info("Selecting  phrases based on threshold %i." % threshold )
+        new_sentences = []
+        total_bigrams = 0
+        for sentence_no, sentence in enumerate( sentences ):
+            
+            last_word, bigram_word = None, None
+            last_word_count, score, bigram_count  = 0,0,0
+            new_sentence = []
+            for word in sentence:
+                out_of_vocab = False
+                if word in self.vocab:
+                    word_count = self.vocab[word].count
+                else:
+                    out_of_vocab = True
+                if last_word is None:
+                    out_of_vocab = True
+                else :    
+                    bigram_word = last_word + '_' + word
+                    if bigram_word in self.vocab:
+                        bigram_count = self.vocab[bigram_word].count
+                    else:
+                        out_of_vocab = True
+                if ( last_word_count < self.min_count or word_count < self.min_count ):
+                    out_of_vocab = True
+                if ( out_of_vocab ) :
+                    score = 0
+                else :
+                    score = ( bigram_count - self.min_count ) / ( float(last_word_count) * (float(word_count) / self.train_words))
+                    
+                if ( score > threshold ) :
+                    ## remove last word from the sentence and add the new bigram word
+                    new_sentence.pop()
+                    new_sentence.append( bigram_word )
+                    total_bigrams +=1
+                    word_count = 0
+                else:
+                    new_sentence.append( word )
+
+                last_word = word
+                last_word_count = word_count
+            new_sentences.append( new_sentence )    
+        logger.info("collected %i bigrams for %i sentences" % ( total_bigrams, (sentence_no+1) ))
+        return new_sentences
+
+        
     def create_binary_tree(self):
         """
         Create a binary Huffman tree using stored vocabulary word counts. Frequent words
@@ -200,6 +275,51 @@ class Word2Vec(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i" % max_depth)
 
+
+    def build_phrase_vocab(self, sentences ):
+        """
+        Build vocabulary from a sequence of sentences. Add all possible bi-grams to the dictionay. 
+        Each sentence must be a list of utf8 strings.
+
+        """
+        logger.info("collecting all words and their counts")
+        sentence_no, vocab = -1, {}
+        total_words = lambda: sum(v.count for v in vocab.itervalues())
+        train_words,bigram_total = 0, 0
+        for sentence_no, sentence in enumerate(sentences):
+            if sentence_no % 10000 == 0:
+                logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
+                    (sentence_no, total_words(), len(vocab)))
+            last_word = None
+            for word in sentence:
+                train_words += 1
+                if word in vocab:
+                    vocab[word].count += 1
+                else:
+                    vocab[word] = Vocab(count=1)
+                ## start of the sentence    
+                if last_word is None:
+                    last_word = word
+                    continue
+                else:
+                    bigram_word = last_word+'_'+word
+                    last_word = word
+                    if bigram_word in vocab:
+                        vocab[bigram_word].count +=1
+                    else:
+                        vocab[bigram_word] = Vocab(count=1)
+                        bigram_total +=1
+        logger.info("collected %i bigrams from a corpus of %i words and %i sentences" %
+                    (bigram_total, total_words(), sentence_no+1 ))
+        logger.info("collected %i word types from a corpus of %i words and %i sentences" %
+            (len(vocab), total_words(), sentence_no + 1))
+        self.train_words = train_words
+        # assign a unique index to each word
+        self.create_unique_index( vocab )
+        logger.info("total %i word types after removing those with count<%s" % (len(self.vocab), self.min_count))
+
+        
+        
     def build_vocab(self, sentences):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
@@ -223,6 +343,14 @@ class Word2Vec(utils.SaveLoad):
             (len(vocab), total_words, sentence_no + 1))
 
         # assign a unique index to each word
+        self.create_unique_index( vocab )
+        # add info about each word's Huffman encoding
+        self.create_binary_tree()
+        self.reset_weights()
+
+
+        
+    def create_unique_index( self, vocab ) :
         self.vocab, self.index2word = {}, []
         for word, v in vocab.iteritems():
             if v.count >= self.min_count:
@@ -231,10 +359,6 @@ class Word2Vec(utils.SaveLoad):
                 self.vocab[word] = v
         logger.info("total %i word types after removing those with count<%s" % (len(self.vocab), self.min_count))
 
-        # add info about each word's Huffman encoding
-        self.create_binary_tree()
-        self.reset_weights()
-
 
     def train(self, sentences, total_words=None, word_count=0, chunksize=100):
         """
@@ -242,9 +366,6 @@ class Word2Vec(utils.SaveLoad):
         Each sentence must be a list of utf8 strings.
 
         """
-        if FAST_VERSION < 0:
-            import warnings
-            warnings.warn("Cython compilation failed, training will be slow. Do you have Cython installed? `pip install cython`")
         logger.info("training model with %i workers on %i vocabulary and %i features" % (self.workers, len(self.vocab), self.layer1_size))
 
         if not self.vocab:
@@ -599,33 +720,13 @@ class Text8Corpus(object):
 
 
 class LineSentence(object):
-    def __init__(self, source):
-        """Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
-
-        source can be either a string or a file object
-
-        Thus, one can use this for just plain files:
-
-            sentences = LineSentence('myfile.txt')
-
-        Or for compressed files:
-
-            sentences = LineSentence(bz2.BZ2File('compressed_text.bz2'))
-        """
-        self.source = source
+    def __init__(self, fname):
+        """Simple format: one sentence = one line; words already preprocessed and separated by whitespace."""
+        self.fname = fname
 
     def __iter__(self):
-        """Iterate through the lines in the source."""
-        try:
-            # Assume it is a file-like object and try treating it as such
-            # Things that don't have seek will trigger an exception
-            self.source.seek(0)
-            for line in self.source:
-                yield line.split()
-        except AttributeError:
-            # If it didn't work like a file, use it as a string filename
-            for line in open(self.source):
-                yield line.split()
+        for line in open(self.fname):
+            yield line.split()
 
 
 
