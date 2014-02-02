@@ -11,7 +11,7 @@ Deep learning via word2vec's "hierarchical softmax skip-gram model" [1]_.
 The training algorithm was originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality.
 
-**Install Cython with `pip install cython` before to use optimized word2vec training** (70x speedup [2]_).
+**Install Cython with `pip install cython` to use optimized word2vec training** (70x speedup [2]_).
 
 Initialize a model with e.g.::
 
@@ -416,7 +416,7 @@ class Word2Vec(utils.SaveLoad):
             return dists
         best = argsort(dists)[::-1][:topn + len(all_words)]
         # ignore (don't return) words from the input
-        result = [(self.index2word[sim], dists[sim]) for sim in best if sim not in all_words]
+        result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
 
