@@ -362,7 +362,8 @@ class Word2Vec(utils.SaveLoad):
             else:
                 for line_no, line in enumerate(fin):
                     parts = line.split()
-                    assert len(parts) == layer1_size + 1
+                    if len(parts) != layer1_size + 1:
+                        raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
                     word, weights = parts[0], map(REAL, parts[1:])
                     result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
                     result.index2word.append(word)
