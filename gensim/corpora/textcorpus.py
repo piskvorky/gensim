@@ -31,8 +31,8 @@ from __future__ import with_statement
 
 import logging
 
-from gensim import interfaces, utils
-from dictionary import Dictionary
+from .. import interfaces, utils
+from .dictionary import Dictionary
 
 logger = logging.getLogger('gensim.corpora.textcorpus')
 

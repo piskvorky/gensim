@@ -270,9 +270,9 @@ class LsiModel(interfaces.TransformationABC):
         Example:
 
         >>> lsi = LsiModel(corpus, num_topics=10)
-        >>> print lsi[doc_tfidf] # project some document into LSI space
+        >>> print(lsi[doc_tfidf]) # project some document into LSI space
         >>> lsi.add_documents(corpus2) # update LSI on additional documents
-        >>> print lsi[doc_tfidf]
+        >>> print(lsi[doc_tfidf])
 
         .. [3] http://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf
 
@@ -321,7 +321,7 @@ class LsiModel(interfaces.TransformationABC):
                 self.dispatcher = dispatcher
                 self.numworkers = len(dispatcher.getworkers())
                 logger.info("using distributed version with %i workers" % self.numworkers)
-            except Exception, err:
+            except Exception as err:
                 # distributed version was specifically requested, so this is an error state
                 logger.error("failed to initialize distributed LSI (%s)" % err)
                 raise RuntimeError("failed to initialize distributed LSI (%s)" % err)
@@ -541,14 +541,14 @@ class LsiModel(interfaces.TransformationABC):
         logger.info("storing %s object to %s and %s" % (self.__class__.__name__, fname, fname + '.npy'))
         if self.projection.u is None:
             # model not initialized: there is no projection
-            utils.pickle(self, fname)
+            utils.pickle_dump(self, fname)
 
         # first, remove the projection from self.__dict__, so it doesn't get pickled
         u, dispatcher = self.projection.u, self.dispatcher
         del self.projection.u
         self.dispatcher = None
         try:
-            utils.pickle(self, fname) # store projection-less object
+            utils.pickle_dump(self, fname) # store projection-less object
             numpy.save(fname + '.npy', ascarray(u)) # store projection
         finally:
             self.projection.u, self.dispatcher = u, dispatcher

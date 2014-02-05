@@ -567,7 +567,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         index = self.index
         del self.index
         try:
-            utils.pickle(self, fname) # store index-less object
+            utils.pickle_dump(self, fname) # store index-less object
             numpy.save(fname + '.npy', index) # store index
         finally:
             self.index = index
@@ -688,7 +688,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         data, indptr, indices = self.index.data, self.index.indptr, self.index.indices
         del self.index.data, self.index.indptr, self.index.indices
         try:
-            utils.pickle(self, fname) # store array-less object
+            utils.pickle_dump(self, fname) # store array-less object
             # store arrays (.npy suffix is appended by numpy automatically)
             numpy.save(fname + '.data.npy', data)
             numpy.save(fname + '.indptr.npy', indptr)
