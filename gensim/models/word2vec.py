@@ -558,8 +558,8 @@ class Word2Vec(utils.SaveLoad):
 
 
     def save(self, *args, **kwargs):
-        # don't bother storing the cached normalized vectors
-        super(Word2Vec, self).save(*args, ignore=kwargs.get('ignore', ['syn0norm']), **kwargs)
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm']) # don't bother storing the cached normalized vectors
+        super(Word2Vec, self).save(*args, **kwargs)
 
 
 class BrownCorpus(object):
