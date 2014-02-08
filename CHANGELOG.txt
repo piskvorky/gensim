@@ -3,6 +3,7 @@ Changes
 
 0.9.0 ("py3k")
 
+* save/load automatically single out large arrays + allow mmap
 * python 3 support (Lars Buitinck)
 * HDP estimation on new documents (Elliot Kulakow)
 * store labels in SvmLight corpus (Ritesh)
