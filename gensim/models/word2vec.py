@@ -44,6 +44,8 @@ are already built-in::
 
 and so on.
 
+For a tutorial with an interactive word2vec model trained on GoogleNews, visit http://radimrehurek.com/2014/02/word2vec-tutorial/
+
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
 .. [2] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
 """
