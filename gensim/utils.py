@@ -183,8 +183,12 @@ class SaveLoad(object):
             logger.info("loading %s from %s with mmap=%s" % (attrib, subname(attrib), mmap))
             setattr(obj, attrib, numpy.load(subname(attrib), mmap_mode=mmap))
         for attrib in getattr(obj, '__scipys', []):
-            # TODO mmap back the three scipy sparse arrays into csc/csr
-            pass
+            logger.info("loading %s from %s with mmap=%s" % (attrib, subname(attrib), mmap))
+            sparse = unpickle(subname(attrib))
+            sparse.data = numpy.load(subname(attrib) + '.data.npy', mmap_mode=mmap)
+            sparse.indptr = numpy.load(subname(attrib) + '.indptr.npy', mmap_mode=mmap)
+            sparse.indices = numpy.load(subname(attrib) + '.indices.npy', mmap_mode=mmap)
+            setattr(obj, attrib, sparse)
         for attrib in getattr(obj, '__ignoreds', []):
             logger.info("setting ignored attribute %s to None" % (attrib))
             setattr(obj, attrib, None)
@@ -213,7 +217,7 @@ class SaveLoad(object):
             for attrib, val in self.__dict__.iteritems():
                 if isinstance(val, numpy.ndarray) and val.size >= sep_limit:
                     separately.append(attrib)
-                elif scipy.sparse.issparse(val) and val.nnz >= sep_limit:
+                elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and val.nnz >= sep_limit:
                     separately.append(attrib)
 
         # whatever's in `separately` or `ignore` at this point won't get pickled anymore
@@ -227,11 +231,20 @@ class SaveLoad(object):
             for attrib, val in tmp.iteritems():
                 if isinstance(val, numpy.ndarray) and attrib not in ignore:
                     numpys.append(attrib)
-                    logger.info("storing %s numpy array to %s" % (attrib, subname(attrib)))
+                    logger.info("storing numpy array '%s' to %s" % (attrib, subname(attrib)))
                     numpy.save(subname(attrib), numpy.ascontiguousarray(val))
-                elif scipy.sparse.issparse(val) and attrib not in ignore:
-                    # TODO convert to csr/csc => stores .indices .data .indptr arrays separately
-                    raise NotImplementedError("mmap for scipy.sparse arrays not supported yet")
+                elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and attrib not in ignore:
+                    scipys.append(attrib)
+                    logger.info("storing scipy.sparse array '%s' under %s" % (attrib, subname(attrib)))
+                    numpy.save(subname(attrib) + '.data.npy', val.data)
+                    numpy.save(subname(attrib) + '.indptr.npy', val.indptr)
+                    numpy.save(subname(attrib) + '.indices.npy', val.indices)
+                    data, indptr, indices = val.data, val.indptr, val.indices
+                    val.data, val.indptr, val.indices = None, None, None
+                    try:
+                        pickle(val, subname(attrib)) # store array-less object
+                    finally:
+                        val.data, val.indptr, val.indices = data, indptr, indices
                 else:
                     logger.info("not storing attribute %s" % (attrib))
                     ignoreds.append(attrib)
