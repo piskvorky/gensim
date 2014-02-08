@@ -60,7 +60,7 @@ import threading
 from Queue import Queue
 
 from numpy import exp, dot, zeros, outer, random, dtype, get_include, float32 as REAL,\
-    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis, ndarray
+    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis, ndarray, empty
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -303,10 +303,13 @@ class Word2Vec(utils.SaveLoad):
 
     def reset_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
+        logger.info("resetting layer weights")
         random.seed(self.seed)
-        self.syn0 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
+        self.syn0 = empty((len(self.vocab), self.layer1_size), dtype=REAL)
+        # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
+        for i in xrange(len(self.vocab)):
+            self.syn0[i] = (random.rand(self.layer1_size) - 0.5) / self.layer1_size
         self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
-        self.syn0 += (random.rand(len(self.vocab), self.layer1_size) - 0.5) / self.layer1_size
         self.syn0norm = None
 
 
