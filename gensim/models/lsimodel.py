@@ -553,8 +553,10 @@ class LsiModel(interfaces.TransformationABC):
         """
         kwargs['mmap'] = kwargs.get('mmap', 'r')
         result = super(LsiModel, cls).load(fname, *args, **kwargs)
-        if hasattr(result, 'projection'):
+        try:
             result.projection = super(LsiModel, cls).load(fname + '.projection', *args, **kwargs)
+        except Exception as e:
+            logging.warning("failed to load projection from %s: %s" % (fname + '.state', e))
         return result
 #endclass LsiModel
 

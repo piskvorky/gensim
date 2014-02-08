@@ -724,7 +724,9 @@ class LdaModel(interfaces.TransformationABC):
         """
         kwargs['mmap'] = kwargs.get('mmap', 'r')
         result = super(LdaModel, cls).load(fname, *args, **kwargs)
-        if hasattr(result, 'state'):
+        try:
             result.state = super(LdaModel, cls).load(fname + '.state', *args, **kwargs)
+        except Exception as e:
+            logging.warning("failed to load state from %s: %s" % (fname + '.state', e))
         return result
 #endclass LdaModel
