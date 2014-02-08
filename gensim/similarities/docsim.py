@@ -110,7 +110,7 @@ class Shard(utils.SaveLoad):
     def get_index(self):
         if not hasattr(self, 'index'):
             logger.debug("mmaping index from %s" % self.fullname())
-            self.index = self.cls.load(self.fullname())
+            self.index = self.cls.load(self.fullname(), mmap='r')
         return self.index
 
 
@@ -449,7 +449,7 @@ class Similarity(interfaces.SimilarityABC):
             shard.dirname = dirname
 
 
-    def save(self, fname=None):
+    def save(self, fname=None, *args, **kwargs):
         """
         Save the object via pickling (also see load) under filename specified in
         the constructor.
@@ -460,7 +460,7 @@ class Similarity(interfaces.SimilarityABC):
         self.close_shard()
         if fname is None:
             fname = self.output_prefix
-        super(Similarity, self).save(fname)
+        super(Similarity, self).save(fname, *args, **kwargs)
 #endclass Similarity
 
 
@@ -553,35 +553,6 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         # self.index internally in numpy.dot (very slow).
         result = numpy.dot(self.index, query.T).T # return #queries x #index
         return result # XXX: removed casting the result from array to list; does anyone care?
-
-
-    def save(self, fname):
-        """
-        Override the default `save` (which uses cPickle), because that's
-        too inefficient and cPickle has bugs. Instead, single out the large index
-        matrix and store that separately in binary format (that can be directly
-        mmap'ed), under `fname.npy`. The rest of the object is pickled to `fname`.
-        """
-        logger.info("storing %s object to %s and %s" % (self.__class__.__name__, fname, fname + '.npy'))
-        # first, remove the index from self.__dict__, so it doesn't get pickled
-        index = self.index
-        del self.index
-        try:
-            utils.pickle(self, fname) # store index-less object
-            numpy.save(fname + '.npy', index) # store index
-        finally:
-            self.index = index
-
-
-    @classmethod
-    def load(cls, fname):
-        """
-        Load a previously saved object from file (also see `save`).
-        """
-        logger.debug("loading %s object from %s" % (cls.__name__, fname))
-        result = utils.unpickle(fname)
-        result.index = numpy.load(fname + '.npy', mmap_mode='r') # load back as read-only
-        return result
 #endclass MatrixSimilarity
 
 
@@ -672,41 +643,5 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         else:
             # otherwise, return a 2d matrix (#queries x #index)
             result = result.toarray().T
-        return result
-
-
-    def save(self, fname):
-        """
-        Override the default `save` (which uses cPickle), because that's
-        too inefficient and cPickle has bugs. Instead, single out the large internal
-        arrays and store them separately in binary format (that can be directly
-        mmap'ed), under `fname.array_name.npy`.
-        """
-        logger.info("storing %s object to %s and %s.npy" % (self.__class__.__name__, fname, fname))
-        assert isinstance(self.index, scipy.sparse.csr_matrix)
-        # first, remove the arrays from self.__dict__, so they don't get pickled
-        data, indptr, indices = self.index.data, self.index.indptr, self.index.indices
-        del self.index.data, self.index.indptr, self.index.indices
-        try:
-            utils.pickle(self, fname) # store array-less object
-            # store arrays (.npy suffix is appended by numpy automatically)
-            numpy.save(fname + '.data.npy', data)
-            numpy.save(fname + '.indptr.npy', indptr)
-            numpy.save(fname + '.indices.npy', indices)
-        finally:
-            self.index.data, self.index.indptr, self.index.indices = data, indptr, indices
-
-
-    @classmethod
-    def load(cls, fname):
-        """
-        Load a previously saved object from file (also see `save`).
-        """
-        logger.debug("loading %s object from %s and %s.*.npy" % (cls.__name__, fname, fname))
-        result = utils.unpickle(fname)
-        data = numpy.load(fname + '.data.npy', mmap_mode='r') # load back as read-only
-        indptr = numpy.load(fname + '.indptr.npy', mmap_mode='r')
-        indices = numpy.load(fname + '.indices.npy', mmap_mode='r')
-        result.index.data, result.index.indptr, result.index.indices = data, indptr, indices
         return result
 #endclass SparseMatrixSimilarity
