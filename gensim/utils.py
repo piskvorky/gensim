@@ -173,7 +173,7 @@ class SaveLoad(object):
 
         If the object was saved with large arrays stored separately, you can load
         these arrays via mmap (shared memory) using `mmap='r'`. Default: don't use
-        mmap, load arrays as normal objects.
+        mmap, load large arrays as normal objects.
 
         """
         logger.info("loading %s object from %s" % (cls.__name__, fname))
@@ -192,14 +192,17 @@ class SaveLoad(object):
 
     def save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset()):
         """
-        Save the object to file via pickling (also see `load`).
+        Save the object to file (also see `load`).
 
         If `separately` is None, automatically detect large numpy/scipy.sparse arrays
-        among direct attributes of the object being stored, and store them into separate files.
-        This avoids pickle memory errors and allows mmap'ing large arrays back on load efficiently.
+        in the object being stored, and store them into separate files. This avoids
+        pickle memory errors and allows mmap'ing large arrays back on load efficiently.
 
         You can also set `separately` manually, in which case it must be a list of attribute
         names to be stored in separate files. The automatic check is not performed in this case.
+
+        `ignore` is a set of attribute names to *not* serialize (file handles, caches etc). On
+        subsequent load() these attributes will be set to None.
 
         """
         logger.info("saving %s object under %s, separately %s" % (self.__class__.__name__, fname, separately))

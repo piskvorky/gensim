@@ -702,10 +702,29 @@ class LdaModel(interfaces.TransformationABC):
                 if topicvalue >= eps] # ignore document's topics that have prob < eps
 
 
-    def save(self, fname):
-        dispatcher, self.dispatcher = self.dispatcher, None
-        try:
-            super(LdaModel, self).save(fname)
-        finally:
-            self.dispatcher = dispatcher
+    def save(self, fname, *args, **kwargs):
+        """
+        Save the model to file.
+
+        Large internal arrays may be stored into separate files, with `fname` as prefix.
+
+        """
+        if self.state is not None:
+            self.state.save(fname + '.state', *args, **kwargs)
+        super(LdaModel, self).save(fname, *args, ignore=['state', 'dispatcher'], **kwargs)
+
+
+    @classmethod
+    def load(cls, fname, *args, **kwargs):
+        """
+        Load a previously saved object from file (also see `save`).
+
+        Large arrays are mmap'ed back as read-only (shared memory).
+
+        """
+        kwargs['mmap'] = kwargs.get('mmap', 'r')
+        result = super(LdaModel, cls).load(fname, *args, **kwargs)
+        if hasattr(result, 'state'):
+            result.state = super(LdaModel, cls).load(fname + '.state', *args, **kwargs)
+        return result
 #endclass LdaModel

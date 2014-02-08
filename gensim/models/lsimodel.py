@@ -531,42 +531,30 @@ class LsiModel(interfaces.TransformationABC):
                    num_words=num_words)
 
 
-    def save(self, fname):
+    def save(self, fname, *args, **kwargs):
         """
-        Override the default `save` (which uses cPickle), because that's
-        too inefficient and cPickle has bugs. Instead, single out the large transformation
-        matrix and store that separately in binary format (that can be directly
-        mmap'ed back in `load()`), under `fname.npy`.
-        """
-        logger.info("storing %s object to %s and %s" % (self.__class__.__name__, fname, fname + '.npy'))
-        if self.projection.u is None:
-            # model not initialized: there is no projection
-            utils.pickle(self, fname)
+        Save the model to file.
 
-        # first, remove the projection from self.__dict__, so it doesn't get pickled
-        u, dispatcher = self.projection.u, self.dispatcher
-        del self.projection.u
-        self.dispatcher = None
-        try:
-            utils.pickle(self, fname) # store projection-less object
-            numpy.save(fname + '.npy', ascarray(u)) # store projection
-        finally:
-            self.projection.u, self.dispatcher = u, dispatcher
+        Large internal arrays may be stored into separate files, with `fname` as prefix.
+
+        """
+        if self.projection is not None:
+            self.projection.save(fname + '.projection', *args, **kwargs)
+        super(LsiModel, self).save(fname, *args, ignore=['projection', 'dispatcher'], **kwargs)
 
 
     @classmethod
-    def load(cls, fname):
+    def load(cls, fname, *args, **kwargs):
         """
         Load a previously saved object from file (also see `save`).
+
+        Large arrays are mmap'ed back as read-only (shared memory).
+
         """
-        logger.info("loading %s object from %s" % (cls.__name__, fname))
-        result = utils.unpickle(fname)
-        ufname = fname + '.npy'
-        try:
-            result.projection.u = numpy.load(ufname, mmap_mode='r') # load back as read-only
-        except:
-            logger.info("failed to load mmap'ed projection from %s" % ufname)
-        result.dispatcher = None # TODO load back incl. distributed state? will require re-initialization of worker state
+        kwargs['mmap'] = kwargs.get('mmap', 'r')
+        result = super(LsiModel, cls).load(fname, *args, **kwargs)
+        if hasattr(result, 'projection'):
+            result.projection = super(LsiModel, cls).load(fname + '.projection', *args, **kwargs)
         return result
 #endclass LsiModel
 
