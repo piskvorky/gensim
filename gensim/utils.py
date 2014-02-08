@@ -26,6 +26,8 @@ import multiprocessing
 import shutil
 import traceback
 
+import numpy
+import scipy.sparse
 
 try:
     from pattern.en import parse
@@ -165,19 +167,79 @@ class SaveLoad(object):
     attributes, such as lambda functions etc.
     """
     @classmethod
-    def load(cls, fname):
+    def load(cls, fname, mmap=None):
         """
         Load a previously saved object from file (also see `save`).
+
+        If the object was saved with large arrays stored separately, you can load
+        these arrays via mmap (shared memory) using `mmap='r'`. Default: don't use
+        mmap, load arrays as normal objects.
+
         """
         logger.info("loading %s object from %s" % (cls.__name__, fname))
-        return unpickle(fname)
+        subname = lambda suffix: fname + '.' + suffix + '.npy'
+        obj = unpickle(fname)
+        for attrib in getattr(obj, '__numpys', []):
+            logger.info("loading %s from %s with mmap=%s" % (attrib, subname(attrib), mmap))
+            setattr(obj, attrib, numpy.load(subname(attrib), mmap_mode=mmap))
+        for attrib in getattr(obj, '__scipys', []):
+            # TODO mmap back the three scipy sparse arrays into csc/csr
+            pass
+        for attrib in getattr(obj, '__ignoreds', []):
+            logger.info("setting ignored attribute %s to None" % (attrib))
+            setattr(obj, attrib, None)
+        return obj
 
-    def save(self, fname):
+    def save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset()):
         """
         Save the object to file via pickling (also see `load`).
+
+        If `separately` is None, automatically detect large numpy/scipy.sparse arrays
+        among direct attributes of the object being stored, and store them into separate files.
+        This avoids pickle memory errors and allows mmap'ing large arrays back on load efficiently.
+
+        You can also set `separately` manually, in which case it must be a list of attribute
+        names to be stored in separate files. The automatic check is not performed in this case.
+
         """
-        logger.info("saving %s object to %s" % (self.__class__.__name__, fname))
-        pickle(self, fname)
+        logger.info("saving %s object under %s, separately %s" % (self.__class__.__name__, fname, separately))
+        subname = lambda suffix: fname + '.' + suffix + '.npy'
+        tmp = {}
+        if separately is None:
+            separately = []
+            for attrib, val in self.__dict__.iteritems():
+                if isinstance(val, numpy.ndarray) and val.size >= sep_limit:
+                    separately.append(attrib)
+                elif scipy.sparse.issparse(val) and val.nnz >= sep_limit:
+                    separately.append(attrib)
+
+        # whatever's in `separately` or `ignore` at this point won't get pickled anymore
+        for attrib in separately + list(ignore):
+            if hasattr(self, attrib):
+                tmp[attrib] = getattr(self, attrib)
+                delattr(self, attrib)
+
+        try:
+            numpys, scipys, ignoreds = [], [], []
+            for attrib, val in tmp.iteritems():
+                if isinstance(val, numpy.ndarray) and attrib not in ignore:
+                    numpys.append(attrib)
+                    logger.info("storing %s numpy array to %s" % (attrib, subname(attrib)))
+                    numpy.save(subname(attrib), numpy.ascontiguousarray(val))
+                elif scipy.sparse.issparse(val) and attrib not in ignore:
+                    # TODO convert to csr/csc => stores .indices .data .indptr arrays separately
+                    raise NotImplementedError("mmap for scipy.sparse arrays not supported yet")
+                else:
+                    logger.info("not storing attribute %s" % (attrib))
+                    ignoreds.append(attrib)
+            self.__dict__['__numpys'] = numpys
+            self.__dict__['__scipys'] = scipys
+            self.__dict__['__ignoreds'] = ignoreds
+            pickle(self, fname)
+        finally:
+            # restore the attributes
+            for attrib, val in tmp.iteritems():
+                setattr(self, attrib, val)
 #endclass SaveLoad
 
 
