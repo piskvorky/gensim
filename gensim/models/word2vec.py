@@ -557,6 +557,9 @@ class Word2Vec(utils.SaveLoad):
         return "Word2Vec(vocab=%s, size=%s, alpha=%s)" % (len(self.index2word), self.layer1_size, self.alpha)
 
 
+    def save(self, *args, **kwargs):
+        super(Word2Vec, self).save(*args, ignore=['syn0norm'], **kwargs)  # don't bother storing the cached normalized vectors
+
 
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
