@@ -56,6 +56,17 @@ class TestWord2VecModel(unittest.TestCase):
         model.save(testfile())
         self.models_equal(model, word2vec.Word2Vec.load(testfile()))
 
+    def testLargeMmap(self):
+        """Test storing/loading the entire model."""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+
+        # test storing the internal arrays into separate files
+        model.save(testfile(), sep_limit=0)
+        self.models_equal(model, word2vec.Word2Vec.load(testfile()))
+
+        # make sure mmaping the arrays back works, too
+        self.models_equal(model, word2vec.Word2Vec.load(testfile(), mmap='r'))
+
     def testVocab(self):
         """Test word2vec vocabulary building."""
         corpus = LeeCorpus()
@@ -165,5 +176,5 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.root.setLevel(logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()

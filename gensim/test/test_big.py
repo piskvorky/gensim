@@ -50,7 +50,7 @@ if os.environ.get('GENSIM_BIG', False):
         def testWord2Vec(self):
             corpus = BigCorpus(words_only=True, num_docs=100000, num_terms=3000000, doc_len=200)
             model = gensim.models.Word2Vec(corpus, size=300, workers=4)
-            model.save(testfile())
+            model.save(testfile(), ignore=['syn1'])
             model = gensim.models.Word2Vec.load(testfile())
 
         def testLsiModel(self):

@@ -129,6 +129,27 @@ class TestLsiModel(unittest.TestCase):
         self.assertTrue(numpy.allclose(model.projection.s, model2.projection.s))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+
+    def testLargeMmap(self):
+        model = lsimodel.LsiModel(self.corpus, num_topics=2)
+
+        # test storing the internal arrays into separate files
+        model.save(testfile(), sep_limit=0)
+
+        model2 = lsimodel.LsiModel.load(testfile())
+        self.assertEqual(model.num_topics, model2.num_topics)
+        self.assertTrue(numpy.allclose(model.projection.u, model2.projection.u))
+        self.assertTrue(numpy.allclose(model.projection.s, model2.projection.s))
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+
+        # now load the external arrays via mmap
+        model2 = lsimodel.LsiModel.load(testfile(), mmap='r')
+        self.assertEqual(model.num_topics, model2.num_topics)
+        self.assertTrue(numpy.allclose(model.projection.u, model2.projection.u))
+        self.assertTrue(numpy.allclose(model.projection.s, model2.projection.s))
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 #endclass TestLsiModel
 
 
@@ -193,6 +214,25 @@ class TestLdaModel(unittest.TestCase):
         model = ldamodel.LdaModel(self.corpus, num_topics=2)
         model.save(testfile())
         model2 = ldamodel.LdaModel.load(testfile())
+        self.assertEqual(model.num_topics, model2.num_topics)
+        self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+
+    def testLargeMmap(self):
+        model = ldamodel.LdaModel(self.corpus, num_topics=2)
+
+        # simulate storing large arrays separately
+        model.save(testfile(), sep_limit=0)
+
+        model2 = ldamodel.LdaModel.load(testfile())
+        self.assertEqual(model.num_topics, model2.num_topics)
+        self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+
+        # test loading the large model arrays with mmap
+        model2 = ldamodel.LdaModel.load(testfile(), mmap='r')
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
@@ -273,5 +313,5 @@ class TestLogEntropyModel(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.root.setLevel(logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
