@@ -51,18 +51,21 @@ if os.environ.get('GENSIM_BIG', False):
             corpus = BigCorpus(words_only=True, num_docs=100000, num_terms=3000000, doc_len=200)
             model = gensim.models.Word2Vec(corpus, size=300, workers=4)
             model.save(testfile(), ignore=['syn1'])
+            del model
             model = gensim.models.Word2Vec.load(testfile())
 
         def testLsiModel(self):
             corpus = BigCorpus(num_docs=50000)
             model = gensim.models.LsiModel(corpus, num_topics=500, id2word=corpus.dictionary)
             model.save(testfile())
+            del model
             model = gensim.models.LsiModel.load(testfile())
 
         def testLdaModel(self):
             corpus = BigCorpus(num_docs=5000)
             model = gensim.models.LdaModel(corpus, num_topics=500, id2word=corpus.dictionary)
             model.save(testfile())
+            del model
             model = gensim.models.LdaModel.load(testfile())
 
 
