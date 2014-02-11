@@ -44,6 +44,12 @@ are already built-in::
 
 and so on.
 
+If you're finished training a model (=no more updates, only querying), you can do
+
+  >>> model.init_sims(replace=True)
+
+to trim unneeded model memory = use (much) less RAM.
+
 For a tutorial with an interactive word2vec model trained on GoogleNews, visit http://radimrehurek.com/2014/02/word2vec-tutorial/
 
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
@@ -484,12 +490,24 @@ class Word2Vec(utils.SaveLoad):
 
 
     def init_sims(self, replace=False):
-        if getattr(self, 'syn0norm', None) is None:
+        """
+        Precompute L2-normalized vectors.
+
+        If `replace` is set, forget the original vectors and only keep the normalized
+        ones = saves lots of memory!
+
+        Note that you **cannot continue training** after doing a replace. The model becomes
+        effectively read-only = you can call `most_similar`, `similarity` etc., but not `train`.
+
+        """
+        if getattr(self, 'syn0norm', None) is None or replace:
             logger.info("precomputing L2-norms of word weight vectors")
             if replace:
                 for i in range(self.syn0.shape[0]):
-                    self.syn0[i,:] /= sqrt((self.syn0[i,:] ** 2).sum(-1))
+                    self.syn0[i, :] /= sqrt((self.syn0[i, :] ** 2).sum(-1))
                 self.syn0norm = self.syn0
+                if hasattr(self, 'syn1'):
+                    del self.syn1
             else:
                 self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
