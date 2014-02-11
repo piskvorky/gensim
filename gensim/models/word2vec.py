@@ -334,7 +334,7 @@ class Word2Vec(utils.SaveLoad):
 
 
     @classmethod
-    def load_word2vec_format(cls, fname, binary=False):
+    def load_word2vec_format(cls, fname, binary=False, norm_only=True):
         """
         Load the input-hidden weight matrix from the original C word2vec-tool format.
 
@@ -342,6 +342,8 @@ class Word2Vec(utils.SaveLoad):
         so while you can query for word similarity etc., you cannot continue training
         with a model loaded this way.
 
+        `binary` is a boolean indicating whether the data is in binary word2vec format
+        `norm_only` is a boolean indicating whether to only store normalised word2vec vectors in memory
         """
         logger.info("loading projection weights from %s" % (fname))
         with utils.smart_open(fname) as fin:
@@ -374,7 +376,7 @@ class Word2Vec(utils.SaveLoad):
                     result.index2word.append(word)
                     result.syn0[line_no] = weights
         logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
-        result.init_sims()
+        result.init_sims(norm_only)
         return result
 
 
@@ -481,10 +483,15 @@ class Word2Vec(utils.SaveLoad):
         return dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
 
 
-    def init_sims(self):
+    def init_sims(self, replace=False):
         if getattr(self, 'syn0norm', None) is None:
             logger.info("precomputing L2-norms of word weight vectors")
-            self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
+            if replace:
+                for i in range(self.syn0.shape[0]):
+                    self.syn0[i,:] /= sqrt((self.syn0[i,:] ** 2).sum(-1))
+                self.syn0norm = self.syn0
+            else:
+                self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
 
     def accuracy(self, questions, restrict_vocab=30000):
