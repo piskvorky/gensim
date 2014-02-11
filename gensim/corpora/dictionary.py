@@ -68,7 +68,8 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
 
 
     def __str__(self):
-        return ("Dictionary(%i unique tokens)" % len(self))
+        some_keys = list(itertools.islice(self.token2id.iterkeys(), 5))
+        return "Dictionary(%i unique tokens: %s%s)" % (len(self), some_keys, '...' if len(self) > 5 else '')
 
 
     @staticmethod
