@@ -6,13 +6,18 @@
 
 
 """
-This module implements the concept of HashDictionary -- a mapping between words
-and their integer ids. The ids are computed as `hash(word) % id_range`, the idea
-being that new words can be represented immediately, without an extra pass through
-the corpus to collect all the ids first. See http://en.wikipedia.org/wiki/Hashing-Trick .
+This module implements the `"hashing trick" <http://en.wikipedia.org/wiki/Hashing-Trick>`_ --
+a mapping between words and their integer ids using a fixed, static mapping. The
+static mapping has a constant memory footprint, regardless of the number of word-types (features)
+in your corpus, so it's suitable for processing extremely large corpora.
 
-This means that, unline plain Dictionary, several words may map to the same id
-(~hash collisions). The word<->id mapping is no longer a bijection.
+The ids are computed as `hash(word) % id_range`, where `hash` is a user-configurable
+function (adler32 by default). Using HashDictionary, new words can be represented immediately,
+without an extra pass through the corpus to collect all the ids first. This is another
+advantage: HashDictionary can be used with non-repeatable (once-only) streams of documents.
+
+A disadvantage of HashDictionary is that, unline plain :class:`Dictionary`, several words may map
+to the same id, causing hash collisions. The word<->id mapping is no longer a bijection.
 
 """
 
