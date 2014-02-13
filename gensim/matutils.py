@@ -395,9 +395,7 @@ class MmWriter(object):
 
     def __init__(self, fname):
         self.fname = fname
-        tmp = open(self.fname, 'w') # reset/create the target file
-        tmp.close()
-        self.fout = open(self.fname, 'rb+') # open for both reading and writing
+        self.fout = open(self.fname, 'w+') # open for both reading and writing
         self.headers_written = False
 
 

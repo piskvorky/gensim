@@ -40,7 +40,7 @@ import scipy.sparse
 if sys.version_info.major >= 3:
     unicode = str
 
-from ._six import u
+from ._six import iteritems, u
 
 try:
     from pattern.en import parse
@@ -228,7 +228,7 @@ class SaveLoad(object):
         tmp = {}
         if separately is None:
             separately = []
-            for attrib, val in self.__dict__.iteritems():
+            for attrib, val in iteritems(self.__dict__):
                 if isinstance(val, numpy.ndarray) and val.size >= sep_limit:
                     separately.append(attrib)
                 elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and val.nnz >= sep_limit:
@@ -242,7 +242,7 @@ class SaveLoad(object):
 
         try:
             numpys, scipys, ignoreds = [], [], []
-            for attrib, val in tmp.iteritems():
+            for attrib, val in iteritems(tmp):
                 if isinstance(val, numpy.ndarray) and attrib not in ignore:
                     numpys.append(attrib)
                     logger.info("storing numpy array '%s' to %s" % (attrib, subname(attrib)))
@@ -268,7 +268,7 @@ class SaveLoad(object):
             pickle(self, fname)
         finally:
             # restore the attributes
-            for attrib, val in tmp.iteritems():
+            for attrib, val in iteritems(tmp):
                 setattr(self, attrib, val)
 #endclass SaveLoad
 
@@ -633,7 +633,7 @@ def revdict(d):
 
     When two keys map to the same value, only one of them will be kept in the
     result (which one is kept is arbitrary)."""
-    return dict((v, k) for (k, v) in d.iteritems())
+    return dict((v, k) for (k, v) in iteritems(d))
 
 
 def toptexts(query, texts, index, n=10):

@@ -22,7 +22,7 @@ import itertools
 import sys
 
 from .. import utils
-from .._six import iteritems, iterkeys
+from .._six import iteritems, iterkeys, string_types
 
 
 logger = logging.getLogger('gensim.corpora.dictionary')
@@ -69,7 +69,7 @@ class Dictionary(utils.SaveLoad, dict):
 
 
     def __str__(self):
-        some_keys = list(itertools.islice(self.token2id.iterkeys(), 5))
+        some_keys = list(itertools.islice(iterkeys(self.token2id), 5))
         return "Dictionary(%i unique tokens: %s%s)" % (len(self), some_keys, '...' if len(self) > 5 else '')
 
 
@@ -114,7 +114,7 @@ class Dictionary(utils.SaveLoad, dict):
         """
         result = {}
         missing = {}
-        if isinstance(document, basestring):
+        if isinstance(document, string_types):
             raise TypeError("doc2bow expects an array of utf8 tokens on input, not a string")
         document = sorted(utils.to_utf8(token) for token in document)
         # construct (word, frequency) mapping. in python3 this is done simply
