@@ -13,13 +13,14 @@ from __future__ import with_statement
 
 import logging
 import math
-import os
-import itertools
 
 import numpy
 import scipy.sparse
 import scipy.linalg
-from scipy.linalg.lapack import get_lapack_funcs, find_best_lapack_type
+from scipy.linalg.lapack import get_lapack_funcs
+
+from ._six import iteritems, itervalues
+from ._six.moves import zip as izip
 
 # scipy is not a stable package yet, locations change, so try to work
 # around differences (currently only concerns location of 'triu' in scipy 0.7 vs. 0.8)
@@ -82,7 +83,7 @@ def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_n
             num_docs = corpus.num_docs
         if num_nnz is None:
             num_nnz = corpus.num_nnz
-    except AttributeError as e:
+    except AttributeError:
         pass # not a MmCorpus...
     if printprogress:
         logger.info("creating sparse matrix from corpus")
@@ -272,7 +273,7 @@ class Sparse2Corpus(object):
             self.sparse = sparse.tocsr().T # make sure shape[1]=number of docs (needed in len())
 
     def __iter__(self):
-        for indprev, indnow in itertools.izip(self.sparse.indptr, self.sparse.indptr[1:]):
+        for indprev, indnow in izip(self.sparse.indptr, self.sparse.indptr[1:]):
             yield zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow])
 
     def __len__(self):
@@ -336,12 +337,13 @@ def cossim(vec1, vec2):
     vec1, vec2 = dict(vec1), dict(vec2)
     if not vec1 or not vec2:
         return 0.0
-    vec1len = 1.0 * math.sqrt(sum(val * val for val in vec1.itervalues()))
-    vec2len = 1.0 * math.sqrt(sum(val * val for val in vec2.itervalues()))
+    vec1len = 1.0 * math.sqrt(sum(val * val for val in itervalues(vec1)))
+    vec2len = 1.0 * math.sqrt(sum(val * val for val in itervalues(vec2)))
     assert vec1len > 0.0 and vec2len > 0.0, "sparse documents must not contain any explicit zero entries"
     if len(vec2) < len(vec1):
         vec1, vec2 = vec2, vec1 # swap references so that we iterate over the shorter vector
-    result = sum(value * vec2.get(index, 0.0) for index, value in vec1.iteritems())
+    result = sum(value * vec2.get(index, 0.0)
+                 for index, value in iteritems(vec1))
     result /= vec1len * vec2len # rescale by vector lengths
     return result
 

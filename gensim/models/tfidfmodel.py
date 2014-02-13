@@ -10,7 +10,8 @@ import itertools
 
 import math
 
-from gensim import interfaces, matutils, utils
+from .. import interfaces, matutils, utils
+from .._six import iteritems
 
 
 logger = logging.getLogger('gensim.models.tfidfmodel')
@@ -29,7 +30,8 @@ def precompute_idfs(wglobal, dfs, total_docs):
     """Precompute the inverse document frequency mapping for all terms."""
     # not strictly necessary and could be computed on the fly in TfidfModel__getitem__.
     # this method is here just to speed things up a little.
-    return dict((termid, wglobal(df, total_docs)) for termid, df in dfs.iteritems())
+    return dict((termid, wglobal(df, total_docs))
+                for termid, df in iteritems(dfs))
 
 
 class TfidfModel(interfaces.TransformationABC):

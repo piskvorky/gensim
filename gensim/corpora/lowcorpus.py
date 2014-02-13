@@ -12,10 +12,11 @@ Corpus in GibbsLda++ format of List-Of-Words.
 from __future__ import with_statement
 
 import logging
-import itertools
 
-from gensim import interfaces, utils
-from gensim.corpora import IndexedCorpus
+from .. import utils
+from ..corpora import IndexedCorpus
+from .._six import iteritems, iterkeys
+from .._six.moves import xrange, zip as izip
 
 
 logger = logging.getLogger('gensim.corpora.lowcorpus')
@@ -76,11 +77,11 @@ class LowCorpus(IndexedCorpus):
             for doc in self:
                 all_terms.update(word for word, wordCnt in doc)
             all_terms = sorted(all_terms) # sort the list of all words; rank in that list = word's integer id
-            self.id2word = dict(itertools.izip(xrange(len(all_terms)), all_terms)) # build a mapping of word id(int) -> word (string)
+            self.id2word = dict(izip(xrange(len(all_terms)), all_terms)) # build a mapping of word id(int) -> word (string)
         else:
             logger.info("using provided word mapping (%i ids)" % len(id2word))
             self.id2word = id2word
-        self.word2id = dict((v, k) for k, v in self.id2word.iteritems())
+        self.word2id = dict((v, k) for k, v in iteritems(self.id2word))
         self.num_terms = len(self.word2id)
         self.use_wordids = True # return documents as (wordIndex, wordCount) 2-tuples
 
@@ -97,7 +98,7 @@ class LowCorpus(IndexedCorpus):
 
         if self.use_wordids:
             # get all distinct terms in this document, ignore unknown words
-            uniq_words = set(words).intersection(self.word2id.iterkeys())
+            uniq_words = set(words).intersection(iterkeys(self.word2id))
 
             # the following creates a unique list of words *in the same order*
             # as they were in the input. when iterating over the documents,

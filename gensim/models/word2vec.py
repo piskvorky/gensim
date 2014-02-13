@@ -61,7 +61,6 @@ import sys
 import os
 import heapq
 import time
-import itertools
 import threading
 try:
     from queue import Queue
@@ -74,7 +73,9 @@ from numpy import exp, dot, zeros, outer, random, dtype, get_include, float32 as
 logger = logging.getLogger("gensim.models.word2vec")
 
 
-from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
+from .. import utils, matutils  # utility fnc for pickling, common scipy operations etc
+from .._six import iteritems, itervalues, string_types
+from .._six.moves import xrange
 
 
 try:
@@ -235,7 +236,7 @@ class Word2Vec(utils.SaveLoad):
 
         # assign a unique index to each word
         self.vocab, self.index2word = {}, []
-        for word, v in vocab.iteritems():
+        for word, v in iteritems(vocab):
             if v.count >= self.min_count:
                 v.index = len(self.vocab)
                 self.index2word.append(word)
@@ -262,7 +263,7 @@ class Word2Vec(utils.SaveLoad):
             raise RuntimeError("you must first build vocabulary before training the model")
 
         start, next_report = time.time(), [1.0]
-        word_count, total_words = [word_count], total_words or sum(v.count for v in self.vocab.itervalues())
+        word_count, total_words = [word_count], total_words or sum(v.count for v in itervalues(self.vocab))
         jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         lock = threading.Lock()  # for shared state (=number of words trained so far, log reports...)
 
@@ -333,7 +334,8 @@ class Word2Vec(utils.SaveLoad):
         with open(fname, 'wb') as fout:
             fout.write("%s %s\n" % self.syn0.shape)
             # store in sorted order: most frequent words at the top
-            for word, vocab in sorted(self.vocab.iteritems(), key=lambda item: -item[1].count):
+            for word, vocab in sorted(iteritems(self.vocab),
+                                      key=lambda item: -item[1].count):
                 word = utils.to_utf8(word)  # always store in utf8
                 row = self.syn0[vocab.index]
                 if binary:
@@ -406,13 +408,15 @@ class Word2Vec(utils.SaveLoad):
         """
         self.init_sims()
 
-        if isinstance(positive, basestring) and not negative:
+        if isinstance(positive, string_types) and not negative:
             # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
             positive = [positive]
 
         # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
-        positive = [(word, 1.0) if isinstance(word, (basestring, ndarray)) else word for word in positive]
-        negative = [(word, -1.0) if isinstance(word, (basestring, ndarray)) else word for word in negative]
+        positive = [(word, 1.0) if isinstance(word, string_types + (ndarray,))
+                                else word for word in positive]
+        negative = [(word, -1.0) if isinstance(word, string_types + (ndarray,))
+                                 else word for word in negative]
 
         # compute the weighted average of all words
         all_words, mean = set(), []
@@ -530,8 +534,9 @@ class Word2Vec(utils.SaveLoad):
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
 
         """
-        ok_vocab = dict(sorted(self.vocab.iteritems(), key=lambda item: -item[1].count)[:restrict_vocab])
-        ok_index = set(v.index for v in ok_vocab.itervalues())
+        ok_vocab = dict(sorted(iteritems(self.vocab),
+                               key=lambda item: -item[1].count)[:restrict_vocab])
+        ok_index = set(v.index for v in itervalues(ok_vocab))
 
         def log_accuracy(section):
             correct, incorrect = section['correct'], section['incorrect']

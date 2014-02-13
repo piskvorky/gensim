@@ -16,11 +16,13 @@ from __future__ import with_statement
 import logging
 from collections import defaultdict
 
-from gensim import utils
-from gensim.corpora import Dictionary
-from gensim.corpora import IndexedCorpus
-from gensim.matutils import MmReader
-from gensim.matutils import MmWriter
+from .. import utils
+from ..corpora import Dictionary
+from ..corpora import IndexedCorpus
+from ..matutils import MmReader
+from ..matutils import MmWriter
+from .._six import iteritems, string_types
+from .._six.moves import xrange
 
 
 logger = logging.getLogger('gensim.corpora.ucicorpus')
@@ -39,7 +41,7 @@ class UciReader(MmReader):
 
         self.input = input
 
-        if isinstance(input, basestring):
+        if isinstance(input, string_types):
             input = open(input)
 
         self.num_docs = self.num_terms = self.num_nnz = 0
@@ -173,7 +175,7 @@ class UciCorpus(UciReader, IndexedCorpus):
         dictionary.dfs = defaultdict(int)
 
         dictionary.id2token = self.id2word
-        dictionary.token2id = dict((v, k) for k, v in self.id2word.iteritems())
+        dictionary.token2id = dict((v, k) for k, v in iteritems(self.id2word))
 
         dictionary.num_docs = self.num_docs
         dictionary.num_nnz = self.num_nnz

@@ -59,7 +59,8 @@ import scipy.linalg
 import scipy.sparse
 from scipy.sparse import sparsetools
 
-from gensim import interfaces, matutils, utils
+from .. import interfaces, matutils, utils
+from .._six import iterkeys
 
 
 logger = logging.getLogger('gensim.models.lsimodel')
@@ -576,7 +577,7 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
             result.setdefault(topic, []).append((udiff[topic], uvecno))
 
     logger.debug("printing %i+%i salient words" % (num_words, num_neg))
-    for topic in sorted(result.iterkeys()):
+    for topic in sorted(iterkeys(result)):
         weights = sorted(result[topic], key=lambda x: -abs(x[0]))
         _, most = weights[0]
         if u[most, topic] < 0.0: # the most significant word has a negative sign => flip sign of u[most]

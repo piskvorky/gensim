@@ -22,7 +22,9 @@ import itertools
 import sys
 
 from .. import utils
-from .._six import iteritems, iterkeys, string_types
+from .._six import iteritems, iterkeys, itervalues, string_types
+from .._six.moves import xrange
+from .._six.moves import zip as izip
 
 
 logger = logging.getLogger('gensim.corpora.dictionary')
@@ -168,7 +170,8 @@ class Dictionary(utils.SaveLoad, dict):
         no_above_abs = int(no_above * self.num_docs) # convert fractional threshold to absolute threshold
 
         # determine which tokens to keep
-        good_ids = (v for v in self.token2id.itervalues() if no_below <= self.dfs[v] <= no_above_abs)
+        good_ids = (v for v in itervalues(self.token2id)
+                      if no_below <= self.dfs[v] <= no_above_abs)
         good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
         if keep_n is not None:
             good_ids = good_ids[:keep_n]
@@ -202,7 +205,7 @@ class Dictionary(utils.SaveLoad, dict):
                                  for token, tokenid in iteritems(self.token2id)
                                  if tokenid in good_ids)
             self.dfs = dict((tokenid, freq)
-                            for tokenid, freq in self.dfs.iteritems()
+                            for tokenid, freq in iteritems(self.dfs)
                             if tokenid in good_ids)
 
 
@@ -217,12 +220,15 @@ class Dictionary(utils.SaveLoad, dict):
         logger.debug("rebuilding dictionary, shrinking gaps")
 
         # build mapping from old id -> new id
-        idmap = dict(itertools.izip(self.token2id.itervalues(), xrange(len(self.token2id))))
+        idmap = dict(izip(itervalues(self.token2id),
+                     xrange(len(self.token2id))))
 
         # reassign mappings to new ids
-        self.token2id = dict((token, idmap[tokenid]) for token, tokenid in self.token2id.iteritems())
+        self.token2id = dict((token, idmap[tokenid])
+                             for token, tokenid in iteritems(self.token2id))
         self.id2token = {}
-        self.dfs = dict((idmap[tokenid], freq) for tokenid, freq in self.dfs.iteritems())
+        self.dfs = dict((idmap[tokenid], freq)
+                        for tokenid, freq in iteritems(self.dfs))
 
 
     def save_as_text(self, fname):
@@ -234,7 +240,7 @@ class Dictionary(utils.SaveLoad, dict):
         """
         logger.info("saving dictionary mapping to %s" % fname)
         with utils.smart_open(fname, 'wb') as fout:
-            for token, tokenid in sorted(self.token2id.iteritems()):
+            for token, tokenid in sorted(iteritems(self.token2id)):
                 fout.write("%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0)))
 
 
@@ -260,7 +266,7 @@ class Dictionary(utils.SaveLoad, dict):
 
         """
         old2new = {}
-        for other_id, other_token in other.iteritems():
+        for other_id, other_token in iteritems(other):
             if other_token in self.token2id:
                 new_id = self.token2id[other_token]
             else:

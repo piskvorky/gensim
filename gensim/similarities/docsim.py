@@ -59,7 +59,8 @@ import heapq
 import numpy
 import scipy.sparse
 
-from gensim import interfaces, utils, matutils
+from .. import interfaces, utils, matutils
+from .._six.moves import map as imap, zip as izip
 
 
 logger = logging.getLogger('gensim.similarities.docsim')
@@ -309,7 +310,7 @@ class Similarity(interfaces.SimilarityABC):
         else:
             # serial processing, one shard after another
             pool = None
-            result = itertools.imap(query_shard, args)
+            result = imap(query_shard, args)
         return pool, result
 
 
@@ -357,7 +358,7 @@ class Similarity(interfaces.SimilarityABC):
                     shard_result = [convert(doc, shard_no) for doc in result]
                     results.append(shard_result)
                 result = []
-                for parts in itertools.izip(*results):
+                for parts in izip(*results):
                     merged = heapq.nlargest(self.num_best, itertools.chain(*parts), key=lambda item: item[1])
                     result.append(merged)
         if pool:
