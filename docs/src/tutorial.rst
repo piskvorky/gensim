@@ -72,7 +72,7 @@ Next, let's initialize a :dfn:`transformation`:
 A transformation is used to convert documents from one vector representation into another:
 
 >>> vec = [(0, 1), (4, 1)]
->>> print tfidf[vec]
+>>> print(tfidf[vec])
 [(0, 0.8075244), (4, 0.5898342)]
 
 Here, we used `Tf-Idf <http://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_, a simple
@@ -89,7 +89,7 @@ To transform the whole corpus via TfIdf and index it, in preparation for similar
 and to query the similarity of our query vector ``vec`` against every document in the corpus:
 
 >>> sims = index[tfidf[vec]]
->>> print list(enumerate(sims))
+>>> print(list(enumerate(sims)))
 [(0, 0.4662244), (1, 0.19139354), (2, 0.24600551), (3, 0.82094586), (4, 0.0), (5, 0.0), (6, 0.0), (7, 0.0), (8, 0.0)]
 
 How to read this output? Document number zero (the first document) has a similarity score of 0.466=46.6\%,

@@ -28,7 +28,7 @@ seminal 1990 article):
 >>> from gensim import corpora, models, similarities
 >>> dictionary = corpora.Dictionary.load('/tmp/deerwester.dict')
 >>> corpus = corpora.MmCorpus('/tmp/deerwester.mm') # comes from the first tutorial, "From strings to vectors"
->>> print corpus
+>>> print(corpus)
 MmCorpus(9 documents, 12 features, 28 non-zero entries)
 
 To follow Deerwester's example, we first use this tiny corpus to define a 2-dimensional
@@ -45,7 +45,7 @@ no random-walk static ranks, just a semantic extension over the boolean keyword 
 >>> doc = "Human computer interaction"
 >>> vec_bow = dictionary.doc2bow(doc.lower().split())
 >>> vec_lsi = lsi[vec_bow] # convert the query to LSI space
->>> print vec_lsi
+>>> print(vec_lsi)
 [(0, -0.461821), (1, 0.070028)]
 
 In addition, we will be considering `cosine similarity <http://en.wikipedia.org/wiki/Cosine_similarity>`_
@@ -91,7 +91,7 @@ Performing queries
 To obtain similarities of our query document against the nine indexed documents:
 
 >>> sims = index[vec_lsi] # perform a similarity query against the corpus
->>> print list(enumerate(sims)) # print (document_number, document_similarity) 2-tuples
+>>> print(list(enumerate(sims))) # print (document_number, document_similarity) 2-tuples
 [(0, 0.99809301), (1, 0.93748635), (2, 0.99844527), (3, 0.9865886), (4, 0.90755945),
 (5, -0.12416792), (6, -0.1063926), (7, -0.098794639), (8, 0.05004178)]
 
@@ -102,7 +102,7 @@ With some standard Python magic we sort these similarities into descending
 order, and obtain the final answer to the query `"Human computer interaction"`:
 
 >>> sims = sorted(enumerate(sims), key=lambda item: -item[1])
->>> print sims # print sorted (document number, similarity score) 2-tuples
+>>> print(sims) # print sorted (document number, similarity score) 2-tuples
 [(2, 0.99844527), # The EPS user interface management system
 (0, 0.99809301), # Human machine interface for lab abc computer applications
 (3, 0.9865886), # System and human system engineering testing of EPS

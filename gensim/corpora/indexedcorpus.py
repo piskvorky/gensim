@@ -38,7 +38,7 @@ class IndexedCorpus(interfaces.CorpusABC):
         >>> gensim.corpora.SvmLightCorpus.serialize('testfile.svmlight', corpus)
         >>> # load back as a document stream (*not* plain Python list)
         >>> corpus_with_random_access = gensim.corpora.SvmLightCorpus('tstfile.svmlight')
-        >>> print corpus_with_random_access[1]
+        >>> print(corpus_with_random_access[1])
         [(0, 1.0), (1, 2.0)]
 
         """
@@ -71,7 +71,7 @@ class IndexedCorpus(interfaces.CorpusABC):
 
         >>> MmCorpus.serialize('test.mm', corpus)
         >>> mm = MmCorpus('test.mm') # `mm` document stream now has random access
-        >>> print mm[42] # retrieve document no. 42, etc.
+        >>> print(mm[42]) # retrieve document no. 42, etc.
         """
         if getattr(corpus, 'fname', None) == fname:
             raise ValueError("identical input vs. output corpus filename, refusing to serialize: %s" % fname)

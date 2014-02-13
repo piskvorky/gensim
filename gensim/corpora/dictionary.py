@@ -86,7 +86,7 @@ class Dictionary(utils.SaveLoad, dict):
         This is only a convenience wrapper for calling `doc2bow` on each document
         with `allow_update=True`.
 
-        >>> print Dictionary(["máma mele maso".split(), "ema má máma".split()])
+        >>> print(Dictionary(["máma mele maso".split(), "ema má máma".split()]))
         Dictionary(5 unique tokens)
         """
         for docno, document in enumerate(documents):
