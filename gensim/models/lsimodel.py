@@ -61,6 +61,7 @@ from scipy.sparse import sparsetools
 
 from .. import interfaces, matutils, utils
 from .._six import iterkeys
+from .._six.moves import xrange
 
 
 logger = logging.getLogger('gensim.models.lsimodel')

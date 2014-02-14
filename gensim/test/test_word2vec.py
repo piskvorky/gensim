@@ -140,7 +140,7 @@ class TestWord2VecModel(unittest.TestCase):
             sims = model.most_similar('israeli')
             # the exact vectors and therefore similarities may differ, due to different thread collisions
             # so let's test only for top3
-            self.assertTrue('palestinian' in [sims[i][0] for i in xrange(3)])
+            self.assertTrue('palestinian' in [sims[i][0] for i in range(3)])
 
 
     def testRNG(self):

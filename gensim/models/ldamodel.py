@@ -47,9 +47,10 @@ try:
     from scipy.maxentropy import logsumexp # log(sum(exp(x))) that tries to avoid overflow
 except ImportError: # maxentropy has been removed for next release
     from scipy.misc import logsumexp
-from gensim import interfaces, utils
 
 
+from .. import interfaces, utils
+from .._six.moves import xrange
 
 
 def dirichlet_expectation(alpha):

@@ -55,7 +55,7 @@ class CsvCorpus(interfaces.CorpusABC):
         """
         reader = csv.reader(open(self.fname), self.dialect)
         if self.headers:
-            reader.next()  # skip the headers
+            next(reader)    # skip the headers
 
         line_no = -1
         for line_no, line in enumerate(reader):

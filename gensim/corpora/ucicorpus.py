@@ -45,9 +45,9 @@ class UciReader(MmReader):
             input = open(input)
 
         self.num_docs = self.num_terms = self.num_nnz = 0
-        self.num_docs = int(input.next().strip())
-        self.num_terms = int(input.next().strip())
-        self.num_nnz = int(input.next().strip())
+        self.num_docs = int(next(input).strip())
+        self.num_terms = int(next(input).strip())
+        self.num_nnz = int(next(input).strip())
 
         logger.info('accepted corpus with %i documents, %i features, %i non-zero entries' %
             (self.num_docs, self.num_terms, self.num_nnz))

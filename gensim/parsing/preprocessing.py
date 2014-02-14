@@ -93,7 +93,7 @@ def preprocess_string(s, filters=DEFAULT_FILTERS):
 
 
 def preprocess_documents(docs):
-    return map(preprocess_string, docs)
+    return [preprocess_string(d) for d in docs]
 
 
 def read_file(path):
@@ -101,4 +101,4 @@ def read_file(path):
 
 
 def read_files(pattern):
-    return map(read_file, glob.glob(pattern))
+    return [read_file(fname) for fname in glob.glob(pattern)]

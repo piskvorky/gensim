@@ -19,8 +19,8 @@ import scipy.sparse
 import scipy.linalg
 from scipy.linalg.lapack import get_lapack_funcs
 
-from ._six import iteritems, itervalues
-from ._six.moves import zip as izip
+from ._six import iteritems, itervalues, string_types
+from ._six.moves import xrange, zip as izip
 
 # scipy is not a stable package yet, locations change, so try to work
 # around differences (currently only concerns location of 'triu' in scipy 0.7 vs. 0.8)
@@ -318,7 +318,7 @@ def unitvec(vec):
             return vec
 
     try:
-        first = iter(vec).next() # is there at least one element?
+        first = next(iter(vec))     # is there at least one element?
     except:
         return vec
 
@@ -526,9 +526,9 @@ class MmReader(object):
         """
         logger.info("initializing corpus reader from %s" % input)
         self.input, self.transposed = input, transposed
-        if isinstance(input, basestring):
+        if isinstance(input, string_types):
             input = open(input)
-        header = input.next().strip()
+        header = next(input).strip()
         if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
             raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
                              (self.input, header))
@@ -568,7 +568,7 @@ class MmReader(object):
         yielded where appropriate, even if they are not explicitly stored in the
         Matrix Market file.
         """
-        if isinstance(self.input, basestring):
+        if isinstance(self.input, string_types):
             fin = open(self.input)
         else:
             fin = self.input
@@ -614,7 +614,7 @@ class MmReader(object):
         # them with a special offset, -1.
         if offset == -1:
             return []
-        if isinstance(self.input, basestring):
+        if isinstance(self.input, string_types):
             fin = open(self.input)
         else:
             fin = self.input

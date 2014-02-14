@@ -34,7 +34,7 @@ class BigCorpus(object):
         self.doc_len = doc_len
 
     def __iter__(self):
-        for _ in xrange(self.num_docs):
+        for _ in range(self.num_docs):
             doc_len = numpy.random.poisson(self.doc_len)
             ids = numpy.random.randint(0, len(self.dictionary), doc_len)
             if self.words_only:

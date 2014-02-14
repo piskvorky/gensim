@@ -14,8 +14,9 @@ from __future__ import with_statement
 from os import path
 import logging
 
-from gensim import interfaces, utils
-from gensim.corpora import IndexedCorpus
+from .. import interfaces, utils
+from ..corpora import IndexedCorpus
+from .._six.moves import xrange
 
 
 logger = logging.getLogger('gensim.corpora.bleicorpus')

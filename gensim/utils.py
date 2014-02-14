@@ -41,6 +41,7 @@ if sys.version_info.major >= 3:
     unicode = str
 
 from ._six import iteritems, u
+from ._six.moves import xrange
 
 try:
     from pattern.en import parse
@@ -370,13 +371,13 @@ def is_corpus(obj):
             # the input is an iterator object, meaning once we call next()
             # that element could be gone forever. we must be careful to put
             # whatever we retrieve back again
-            doc1 = obj.next()
+            doc1 = next(obj)
             obj = itertools.chain([doc1], obj)
         else:
-            doc1 = iter(obj).next() # empty corpus is resolved to False here
+            doc1 = next(iter(obj)) # empty corpus is resolved to False here
         if len(doc1) == 0: # sparse documents must have a __len__ function (list, tuple...)
             return True, obj # the first document is empty=>assume this is a corpus
-        id1, val1 = iter(doc1).next() # if obj is a numpy array, it resolves to False here
+        id1, val1 = next(iter(doc1)) # if obj is a numpy array, it resolves to False here
         id1, val1 = int(id1), float(val1) # must be a 2-tuple (integer, float)
     except:
         return False, obj
@@ -484,7 +485,7 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
     Return elements from the iterable in `chunksize`-ed lists. The last returned
     element may be smaller (if length of collection is not divisible by `chunksize`).
 
-    >>> print(list(grouper(xrange(10), 3)))
+    >>> print(list(grouper(range(10), 3)))
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
     """
     import numpy
@@ -565,7 +566,7 @@ else:
         If `maxsize==0`, don't fool around with parallelism and simply yield the chunksize
         via `chunkize_serial()` (no I/O optimizations).
 
-        >>> for chunk in chunkize(xrange(10), 4): print(chunk)
+        >>> for chunk in chunkize(range(10), 4): print(chunk)
         [0, 1, 2, 3]
         [4, 5, 6, 7]
         [8, 9]

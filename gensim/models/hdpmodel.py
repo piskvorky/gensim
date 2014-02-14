@@ -40,7 +40,8 @@ import logging, itertools, time
 import numpy as np
 import scipy.special as sp
 
-from gensim import interfaces, utils
+from .. import interfaces, utils
+from .._six.moves import xrange
 
 logger = logging.getLogger(__name__)
 
