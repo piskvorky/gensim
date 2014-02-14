@@ -30,6 +30,8 @@ from gensim import utils
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.textcorpus import TextCorpus
 
+import cPickle as pickle
+
 logger = logging.getLogger('gensim.corpora.wikicorpus')
 
 # ignore articles shorter than ARTICLE_MIN_WORDS characters (after full preprocessing)
@@ -201,12 +203,14 @@ def _extract_pages(f):
     page_tag = "{%(ns)s}page" % ns_mapping
     text_path = "./{%(ns)s}revision/{%(ns)s}text" % ns_mapping
     title_path = "./{%(ns)s}title" % ns_mapping
+    pageid_path = "./{%(ns)s}id" % ns_mapping
 
     for elem in elems:
         if elem.tag == page_tag:
             title = elem.find(title_path).text
             text = elem.find(text_path).text
-            yield title, text or ""     # empty page will yield None
+            pageid = elem.find(pageid_path).text
+            yield title, text or "", pageid     # empty page will yield None
 
             # Prune the element tree, as per
             # http://www.ibm.com/developerworks/xml/library/x-hiperfparse/
@@ -223,13 +227,13 @@ def process_article(args):
     Parse a wikipedia article, returning its content as a list of tokens
     (utf8-encoded strings).
     """
-    text, lemmatize = args
+    text, lemmatize, title, pageid = args
     text = filter_wiki(text)
     if lemmatize:
         result = utils.lemmatize(text)
     else:
         result = tokenize(text)
-    return result
+    return result, title, pageid
 
 
 
@@ -254,18 +258,22 @@ class WikiCorpus(TextCorpus):
         this automatic logic by forcing the `lemmatize` parameter explicitly.
 
         """
+		self.show_metadata = False
         self.fname = fname
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
         self.lemmatize = lemmatize
-        if dictionary is None:
-            self.dictionary = Dictionary(self.get_texts())
-        else:
-            self.dictionary = dictionary
+        print 'this is new'
+        for i in self.get_texts():
+            pass
+        #if dictionary is None:
+        #    self.dictionary = Dictionary(self.get_texts())
+        #else:
+        #    self.dictionary = dictionary
 
 
-    def get_texts(self):
+    def get_texts(self, withTitlesAndPageID=False):
         """
         Iterate over the dump, returning text version of each article as a list
         of tokens.
@@ -281,19 +289,28 @@ class WikiCorpus(TextCorpus):
         """
         articles, articles_all = 0, 0
         positions, positions_all = 0, 0
-        texts = ((text, self.lemmatize) for _, text in _extract_pages(bz2.BZ2File(self.fname)))
+        texts = ((text, self.lemmatize, title, pageid) for title, text, pageid in _extract_pages(bz2.BZ2File(self.fname)))
         pool = multiprocessing.Pool(self.processes)
+        docno2pid = {}
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
         # is dumb and would load the entire input into RAM at once...
         for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
-            for tokens in pool.imap(process_article, group): # chunksize=10):
+            for tokens, title, pageid in pool.imap(process_article, group): # chunksize=10):
                 articles_all += 1
                 positions_all += len(tokens)
                 if len(tokens) > ARTICLE_MIN_WORDS: # article redirects and short stubs are pruned here
+                    if articles % 10000 == 0:
+                        print '%d -> %s (%s)' % (articles, pageid, title)
+                    docno2pid[articles] = (pageid, title)
                     articles += 1
                     positions += len(tokens)
                     yield tokens
         pool.terminate()
+        print 'articles_all', articles_all
+        print 'articles', articles
+
+        with open('docno2pid.cpickle', 'wb') as fp:
+            pickle.dump(docno2pid, fp)
 
         logger.info("finished iterating over Wikipedia corpus of %i documents with %i positions"
             " (total %i articles, %i positions before pruning articles shorter than %i words)" %
