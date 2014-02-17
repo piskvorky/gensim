@@ -458,14 +458,17 @@ class MmWriter(object):
         _num_terms, num_nnz = 0, 0
         docno, poslast = -1, -1
         offsets = []
-        orig_metadata = corpus.metadata
-        corpus.metadata = metadata
-        if metadata:
-            docno2metadata = {}
+        if hasattr(corpus, 'metadata'):
+            orig_metadata = corpus.metadata
+            corpus.metadata = metadata
+            if metadata:
+                docno2metadata = {}
+        else:
+            metadata = False
         for docno, doc in enumerate(corpus):
             if metadata:
-                bow, metadata = doc
-                docno2metadata[docno] = metadata
+                bow, data = doc
+                docno2metadata[docno] = data
             else:
                 bow = doc
             if docno % progress_cnt == 0:
@@ -482,7 +485,7 @@ class MmWriter(object):
         if metadata:
             with open(fname+'.metadata.cpickle', 'wb') as fp:
                 pickle.dump(docno2metadata, fp, -1)
-        corpus.metadata = orig_metadata
+            corpus.metadata = orig_metadata
 
         num_docs = docno + 1
         num_terms = num_terms or _num_terms
