@@ -100,6 +100,7 @@ class CorpusABC(utils.SaveLoad):
 class TransformedCorpus(CorpusABC):
     def __init__(self, obj, corpus, chunksize=None):
         self.obj, self.corpus, self.chunksize = obj, corpus, chunksize
+        self.metadata = False
 
     def __len__(self):
         return len(self.corpus)

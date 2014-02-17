@@ -30,8 +30,6 @@ from gensim import utils
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.textcorpus import TextCorpus
 
-import cPickle as pickle
-
 logger = logging.getLogger('gensim.corpora.wikicorpus')
 
 # ignore articles shorter than ARTICLE_MIN_WORDS characters (after full preprocessing)
@@ -258,22 +256,19 @@ class WikiCorpus(TextCorpus):
         this automatic logic by forcing the `lemmatize` parameter explicitly.
 
         """
-		self.show_metadata = False
         self.fname = fname
+        self.metadata = False
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
         self.lemmatize = lemmatize
-        print 'this is new'
-        for i in self.get_texts():
-            pass
-        #if dictionary is None:
-        #    self.dictionary = Dictionary(self.get_texts())
-        #else:
-        #    self.dictionary = dictionary
+        if dictionary is None:
+            self.dictionary = Dictionary(self.get_texts())
+        else:
+            self.dictionary = dictionary
 
 
-    def get_texts(self, withTitlesAndPageID=False):
+    def get_texts(self):
         """
         Iterate over the dump, returning text version of each article as a list
         of tokens.
@@ -291,7 +286,6 @@ class WikiCorpus(TextCorpus):
         positions, positions_all = 0, 0
         texts = ((text, self.lemmatize, title, pageid) for title, text, pageid in _extract_pages(bz2.BZ2File(self.fname)))
         pool = multiprocessing.Pool(self.processes)
-        docno2pid = {}
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
         # is dumb and would load the entire input into RAM at once...
         for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
@@ -299,18 +293,13 @@ class WikiCorpus(TextCorpus):
                 articles_all += 1
                 positions_all += len(tokens)
                 if len(tokens) > ARTICLE_MIN_WORDS: # article redirects and short stubs are pruned here
-                    if articles % 10000 == 0:
-                        print '%d -> %s (%s)' % (articles, pageid, title)
-                    docno2pid[articles] = (pageid, title)
                     articles += 1
                     positions += len(tokens)
-                    yield tokens
+                    if self.metadata:
+                        yield (tokens, (pageid, title))
+                    else:
+                        yield tokens
         pool.terminate()
-        print 'articles_all', articles_all
-        print 'articles', articles
-
-        with open('docno2pid.cpickle', 'wb') as fp:
-            pickle.dump(docno2pid, fp)
 
         logger.info("finished iterating over Wikipedia corpus of %i documents with %i positions"
             " (total %i articles, %i positions before pruning articles shorter than %i words)" %
