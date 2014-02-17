@@ -72,6 +72,9 @@ from numpy import exp, dot, zeros, outer, random, dtype, get_include, float32 as
 
 logger = logging.getLogger("gensim.models.word2vec")
 
+if __name__ == "__main__" and __package__ is None:
+    import gensim
+    __package__ = "gensim.models" # allows using relative imports when run as a script
 
 from .. import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from .._six import iteritems, itervalues, string_types
