@@ -180,7 +180,7 @@ def _get_namespace(tag):
     return namespace
 
 
-def _extract_pages(f):
+def _extract_pages(f, filter_namespaces=False):
     """
     Extract pages from MediaWiki database dump.
 
@@ -201,11 +201,17 @@ def _extract_pages(f):
     page_tag = "{%(ns)s}page" % ns_mapping
     text_path = "./{%(ns)s}revision/{%(ns)s}text" % ns_mapping
     title_path = "./{%(ns)s}title" % ns_mapping
+    ns_path = "./{%(ns)s}ns" % ns_mapping
 
     for elem in elems:
         if elem.tag == page_tag:
             title = elem.find(title_path).text
             text = elem.find(text_path).text
+
+            ns = elem.find(ns_path).text
+            if filter_namespaces and ns not in filter_namespaces:
+                text = None
+
             yield title, text or ""     # empty page will yield None
 
             # Prune the element tree, as per
@@ -244,7 +250,7 @@ class WikiCorpus(TextCorpus):
     >>> wiki.saveAsText('wiki_en_vocab200k') # another 8h, creates a file in MatrixMarket format plus file with id->word
 
     """
-    def __init__(self, fname, processes=None, lemmatize=utils.HAS_PATTERN, dictionary=None):
+    def __init__(self, fname, processes=None, lemmatize=utils.HAS_PATTERN, dictionary=None, filter_namespaces=('0',)):
         """
         Initialize the corpus. Unless a dictionary is provided, this scans the
         corpus once, to determine its vocabulary.
@@ -255,6 +261,7 @@ class WikiCorpus(TextCorpus):
 
         """
         self.fname = fname
+        self.filter_namespaces = filter_namespaces
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
@@ -281,7 +288,7 @@ class WikiCorpus(TextCorpus):
         """
         articles, articles_all = 0, 0
         positions, positions_all = 0, 0
-        texts = ((text, self.lemmatize) for _, text in _extract_pages(bz2.BZ2File(self.fname)))
+        texts = ((text, self.lemmatize) for _, text in _extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces))
         pool = multiprocessing.Pool(self.processes)
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
         # is dumb and would load the entire input into RAM at once...
