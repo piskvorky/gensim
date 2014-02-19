@@ -323,12 +323,18 @@ class Word2Vec(utils.SaveLoad):
         self.syn0norm = None
 
 
-    def save_word2vec_format(self, fname, binary=False):
+    def save_word2vec_format(self, fname, fvocab=None, binary=False):
         """
         Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
 
         """
+        if fvocab is not None:
+            logger.info("Storing vocabulary in %s" % (fvocab))
+            with open(fvocab, 'w') as vout:
+                for word, vocab in sorted(iteritems(self.vocab),
+                                          key=lambda item: -item[1].count): 
+                    vout.write("%s %s\n" % (word, vocab.count))
         logger.info("storing %sx%s projection weights into %s" % (len(self.vocab), self.layer1_size, fname))
         assert (len(self.vocab), self.layer1_size) == self.syn0.shape
         with open(fname, 'wb') as fout:
@@ -345,7 +351,7 @@ class Word2Vec(utils.SaveLoad):
 
 
     @classmethod
-    def load_word2vec_format(cls, fname, binary=False, norm_only=True):
+    def load_word2vec_format(cls, fname, fvocab=None, binary=False, norm_only=True):
         """
         Load the input-hidden weight matrix from the original C word2vec-tool format.
 
@@ -356,6 +362,13 @@ class Word2Vec(utils.SaveLoad):
         `binary` is a boolean indicating whether the data is in binary word2vec format
         `norm_only` is a boolean indicating whether to only store normalised word2vec vectors in memory
         """
+        counts = None
+        if fvocab is not None:
+            logger.info("loading word counts from %s" % (fvocab))
+            counts = {}
+            for line in open(fvocab):
+                word, count = line.strip().split()
+                counts[word] = int(count)
         logger.info("loading projection weights from %s" % (fname))
         with utils.smart_open(fname) as fin:
             header = fin.readline()
@@ -374,7 +387,13 @@ class Word2Vec(utils.SaveLoad):
                             break
                         if ch != '\n':  # ignore newlines in front of words (some binary files have newline, some not)
                             word.append(ch)
-                    result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
+                    if counts is None:
+                        result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
+                    elif counts.has_key(word):
+                        result.vocab[word] = Vocab(index=line_no, count=counts[word])
+                    else:
+                        logger.warning("vocabulary file is incomplete")
+                        result.vocab[word] = Vocab(index=line_no, count=None)
                     result.index2word.append(word)
                     result.syn0[line_no] = fromstring(fin.read(binary_len), dtype=REAL)
             else:
@@ -383,7 +402,13 @@ class Word2Vec(utils.SaveLoad):
                     if len(parts) != layer1_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
                     word, weights = parts[0], map(REAL, parts[1:])
-                    result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
+                    if counts is None:
+                        result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
+                    elif counts.has_key(word):
+                        result.vocab[word] = Vocab(index=line_no, count=counts[word])
+                    else:
+                        logger.warning("vocabulary file is incomplete")
+                        result.vocab[word] = Vocab(index=line_no, count=None)
                     result.index2word.append(word)
                     result.syn0[line_no] = weights
         logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))

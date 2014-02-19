@@ -67,6 +67,17 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human']))
         self.assertTrue(numpy.allclose(model.syn0norm[model.vocab['human'].index], norm_only_model['human']))
 
+    def testPersistenceWord2VecFormatWithVocab(self):
+        """Test storing/loading the entire model and vocabulary in word2vec format."""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        testvocab = os.path.join(tempfile.gettempdir(), 'gensim_word2vec.vocab')
+        model.save_word2vec_format(testfile(), testvocab, binary=True)
+        binary_model_with_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), testvocab, binary=True)
+        self.assertEqual(model.vocab['human'].count, binary_model_with_vocab.vocab['human'].count)
+        binary_model_without_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
+        self.assertFalse(model.vocab['human'].count == binary_model_without_vocab.vocab['human'].count)
+
     def testLargeMmap(self):
         """Test storing/loading the entire model."""
         model = word2vec.Word2Vec(sentences, min_count=1)
