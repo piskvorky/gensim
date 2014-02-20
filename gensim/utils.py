@@ -716,11 +716,18 @@ if HAS_PATTERN:
 
         Use the English lemmatizer from `pattern` to extract tokens in
         their base form=lemma, e.g. "are, is, being" -> "be" etc.
-        This is a smarter version of stemming. Only consider nouns, verbs, adjectives
-        and adverbs by default (=all other lemmas are discarded).
+        This is a smarter version of stemming, taking word context into account.
+
+        Only considers nouns, verbs, adjectives and adverbs by default (=all other lemmas are discarded).
 
         >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
         ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
+
+        >>> lemmatize('The study ranks high.')
+        ['study/NN', 'rank/VB', 'high/JJ']
+
+        >>> lemmatize('The ranks study hard.')
+        ['rank/NN', 'study/VB', 'hard/RB']
 
         """
         if light:
