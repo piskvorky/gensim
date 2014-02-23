@@ -182,7 +182,7 @@ class LdaModel(interfaces.TransformationABC):
     """
     def __init__(self, corpus=None, num_topics=100, id2word=None, distributed=False,
                  chunksize=2000, passes=1, update_every=1, alpha='symmetric', eta=None, decay=0.5,
-                 eval_every=10):
+                 eval_every=10, iterations=50, gamma_threshold=0.001):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -268,8 +268,8 @@ class LdaModel(interfaces.TransformationABC):
             self.eta = eta
 
         # VB constants
-        self.VAR_MAXITER = 50
-        self.VAR_THRESH = 0.001
+        self.iterations = iterations
+        self.gamma_threshold = gamma_threshold
 
         # set up distributed environment if necessary
         if not distributed:
@@ -368,7 +368,7 @@ class LdaModel(interfaces.TransformationABC):
             phinorm = numpy.dot(expElogthetad, expElogbetad) + 1e-100 # TODO treat zeros explicitly, instead of adding eps?
 
             # Iterate between gamma and phi until convergence
-            for _ in xrange(self.VAR_MAXITER):
+            for _ in xrange(self.iterations):
                 lastgamma = gammad
                 # We represent phi implicitly to save memory and time.
                 # Substituting the value of the optimal phi back into
@@ -379,7 +379,7 @@ class LdaModel(interfaces.TransformationABC):
                 phinorm = numpy.dot(expElogthetad, expElogbetad) + 1e-100
                 # If gamma hasn't changed much, we're done.
                 meanchange = numpy.mean(abs(gammad - lastgamma))
-                if (meanchange < self.VAR_THRESH):
+                if (meanchange < self.gamma_threshold):
                     converged += 1
                     break
             gamma[d, :] = gammad
@@ -390,7 +390,7 @@ class LdaModel(interfaces.TransformationABC):
 
         if len(chunk) > 1:
             logger.info("%i/%i documents converged within %i iterations" %
-                         (converged, len(chunk), self.VAR_MAXITER))
+                         (converged, len(chunk), self.iterations))
 
         if collect_sstats:
             # This step finishes computing the sufficient statistics for the
@@ -455,7 +455,8 @@ class LdaModel(interfaces.TransformationABC):
         return perwordbound
 
 
-    def update(self, corpus, chunksize=None, decay=None, passes=None, update_every=None, eval_every=None):
+    def update(self, corpus, chunksize=None, decay=None, passes=None, update_every=None, eval_every=None,
+            iterations=None, gamma_threshold=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -484,6 +485,10 @@ class LdaModel(interfaces.TransformationABC):
             update_every = self.update_every
         if eval_every is None:
             eval_every = self.eval_every
+        if iterations is None:
+            iterations = self.iterations
+        if gamma_threshold is None:
+            gamma_threshold = self.gamma_threshold
 
         # rho is the "speed" of updating; TODO try other fncs
         rho = lambda: pow(1.0 + self.num_updates, -decay)
@@ -510,13 +515,17 @@ class LdaModel(interfaces.TransformationABC):
         updates_per_pass = max(1, lencorpus / updateafter)
         logger.info("running %s LDA training, %s topics, %i passes over "
                     "the supplied corpus of %i documents, updating model once "
-                    "every %i documents, evaluating perplexity every %i documents" %
-                    (updatetype, self.num_topics, passes, lencorpus, updateafter, evalafter))
+                    "every %i documents, evaluating perplexity every %i documents,"
+                    "iterating %i with a convergence threshold of %i" %
+                    (updatetype, self.num_topics, passes, lencorpus,
+                        updateafter, evalafter, iterations,
+                        gamma_threshold))
+
         if updates_per_pass * passes < 10:
             logger.warning("too few updates, training might not converge; consider "
-                           "increasing the number of passes to improve accuracy")
+                           "increasing the number of passes or iterations to improve accuracy")
 
-        for iteration in xrange(passes):
+        for pass_ in xrange(passes):
             if self.dispatcher:
                 logger.info('initializing %s workers' % self.numworkers)
                 self.dispatcher.reset(self.state)
@@ -533,13 +542,13 @@ class LdaModel(interfaces.TransformationABC):
 
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
-                    logger.info('PROGRESS: iteration %i, dispatching documents up to #%i/%i' %
-                                (iteration, chunk_no * chunksize + len(chunk), lencorpus))
+                    logger.info('PROGRESS: pass %i, dispatching documents up to #%i/%i' %
+                                (pass_, chunk_no * chunksize + len(chunk), lencorpus))
                     # this will eventually block until some jobs finish, because the queue has a small finite length
                     self.dispatcher.putjob(chunk)
                 else:
-                    logger.info('PROGRESS: iteration %i, at document #%i/%i' %
-                                (iteration, chunk_no * chunksize + len(chunk), lencorpus))
+                    logger.info('PROGRESS: pass %i, at document #%i/%i' %
+                                (pass_, chunk_no * chunksize + len(chunk), lencorpus))
                     gammat = self.do_estep(chunk, other)
 
                     if self.optimize_alpha:
