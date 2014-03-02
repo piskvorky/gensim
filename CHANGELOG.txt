@@ -11,6 +11,7 @@ Changes
 * fix word2vec binary load on Windows (Stephanus van Schalkwyk)
 * replace numpy.svd with scipy.svd for more stability (Sven Döring)
 * parametrize LDA constructor (Christopher Corley, #174)
+* load/store vocabulary files for word2vec C format (Yves Raimond, #172)
 
 0.8.9
 
