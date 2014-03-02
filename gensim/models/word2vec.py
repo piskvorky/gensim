@@ -299,9 +299,9 @@ class Word2Vec(utils.SaveLoad):
             return worker_train
 
         if skip_n_gram:
-            workers = [threading.Thread(target=worker_train_factory(train_sentence)) for _ in xrange(self.workers)]
-        else:
             workers = [threading.Thread(target=worker_train_factory(train_skip_n_gram)) for _ in xrange(self.workers)]
+        else:
+            workers = [threading.Thread(target=worker_train_factory(train_sentence)) for _ in xrange(self.workers)]
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
