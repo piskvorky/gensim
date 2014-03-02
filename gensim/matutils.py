@@ -19,8 +19,8 @@ import scipy.sparse
 import scipy.linalg
 from scipy.linalg.lapack import get_lapack_funcs
 
-from ._six import iteritems, itervalues, string_types
-from ._six.moves import xrange, zip as izip
+from gensim._six import iteritems, itervalues, string_types
+from gensim._six.moves import xrange, zip as izip
 
 # scipy is not a stable package yet, locations change, so try to work
 # around differences (currently only concerns location of 'triu' in scipy 0.7 vs. 0.8)

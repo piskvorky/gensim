@@ -49,8 +49,8 @@ except ImportError: # maxentropy has been removed for next release
     from scipy.misc import logsumexp
 
 
-from .. import interfaces, utils
-from .._six.moves import xrange
+from gensim import interfaces, utils
+from gensim._six.moves import xrange
 
 
 def dirichlet_expectation(alpha):

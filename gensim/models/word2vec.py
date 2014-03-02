@@ -73,9 +73,9 @@ from numpy import exp, dot, zeros, outer, random, dtype, get_include, float32 as
 logger = logging.getLogger("gensim.models.word2vec")
 
 
-from .. import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from .._six import iteritems, itervalues, string_types
-from .._six.moves import xrange
+from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
+from gensim._six import iteritems, itervalues, string_types
+from gensim._six.moves import xrange
 
 
 try:

@@ -13,10 +13,10 @@ from __future__ import with_statement
 
 import logging
 
-from .. import utils
-from ..corpora import IndexedCorpus
-from .._six import iteritems, iterkeys
-from .._six.moves import xrange, zip as izip
+from gensim import utils
+from gensim.corpora import IndexedCorpus
+from gensim._six import iteritems, iterkeys
+from gensim._six.moves import xrange, zip as izip
 
 
 logger = logging.getLogger('gensim.corpora.lowcorpus')

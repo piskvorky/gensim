@@ -36,12 +36,12 @@ The algorithm:
 
 from __future__ import with_statement
 
-import logging, itertools, time
+import logging, time
 import numpy as np
 import scipy.special as sp
 
-from .. import interfaces, utils
-from .._six.moves import xrange
+from gensim import interfaces, utils
+from gensim._six.moves import xrange
 
 logger = logging.getLogger(__name__)
 

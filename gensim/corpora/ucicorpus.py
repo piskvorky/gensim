@@ -16,13 +16,13 @@ from __future__ import with_statement
 import logging
 from collections import defaultdict
 
-from .. import utils
-from ..corpora import Dictionary
-from ..corpora import IndexedCorpus
-from ..matutils import MmReader
-from ..matutils import MmWriter
-from .._six import iteritems, string_types
-from .._six.moves import xrange
+from gensim import utils
+from gensim.corpora import Dictionary
+from gensim.corpora import IndexedCorpus
+from gensim.matutils import MmReader
+from gensim.matutils import MmWriter
+from gensim._six import iteritems, string_types
+from gensim._six.moves import xrange
 
 
 logger = logging.getLogger('gensim.corpora.ucicorpus')

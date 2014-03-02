@@ -59,8 +59,8 @@ import heapq
 import numpy
 import scipy.sparse
 
-from .. import interfaces, utils, matutils
-from .._six.moves import map as imap, xrange, zip as izip
+from gensim import interfaces, utils, matutils
+from gensim._six.moves import map as imap, xrange, zip as izip
 
 
 logger = logging.getLogger('gensim.similarities.docsim')

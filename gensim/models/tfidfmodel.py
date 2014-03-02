@@ -6,12 +6,10 @@
 
 
 import logging
-import itertools
-
 import math
 
-from .. import interfaces, matutils, utils
-from .._six import iteritems
+from gensim import interfaces, matutils, utils
+from gensim._six import iteritems
 
 
 logger = logging.getLogger('gensim.models.tfidfmodel')

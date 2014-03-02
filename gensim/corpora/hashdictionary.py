@@ -27,8 +27,8 @@ import logging
 import itertools
 import zlib
 
-from .. import utils
-from .._six import iteritems, iterkeys
+from gensim import utils
+from gensim._six import iteritems, iterkeys
 
 
 logger = logging.getLogger('gensim.corpora.hashdictionary')

@@ -51,7 +51,6 @@ with dual core Xeon 2.0GHz, 4GB RAM, ATLAS
 
 
 import logging
-import itertools
 import sys
 
 import numpy
@@ -59,9 +58,9 @@ import scipy.linalg
 import scipy.sparse
 from scipy.sparse import sparsetools
 
-from .. import interfaces, matutils, utils
-from .._six import iterkeys
-from .._six.moves import xrange
+from gensim import interfaces, matutils, utils
+from gensim._six import iterkeys
+from gensim._six.moves import xrange
 
 
 logger = logging.getLogger('gensim.models.lsimodel')

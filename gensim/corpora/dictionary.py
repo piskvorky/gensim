@@ -19,12 +19,11 @@ from __future__ import with_statement
 
 import logging
 import itertools
-import sys
 
-from .. import utils
-from .._six import iteritems, iterkeys, itervalues, string_types
-from .._six.moves import xrange
-from .._six.moves import zip as izip
+from gensim import utils
+from gensim._six import iteritems, iterkeys, itervalues, string_types
+from gensim._six.moves import xrange
+from gensim._six.moves import zip as izip
 
 
 logger = logging.getLogger('gensim.corpora.dictionary')

@@ -12,7 +12,7 @@ from .rpmodel import RpModel
 from .logentropy_model import LogEntropyModel
 from .word2vec import Word2Vec
 
-from .. import interfaces, utils
+from gensim import interfaces, utils
 
 
 class VocabTransform(interfaces.TransformationABC):
