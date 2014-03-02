@@ -228,6 +228,7 @@ class Word2Vec(utils.SaveLoad):
         sentence_no, vocab = -1, {}
         total_words = 0
         for sentence_no, sentence in enumerate(sentences):
+            count = 1
             if skip_n_gram:
                 sentence, distance, count = sentence
             if sentence_no % 10000 == 0:
@@ -236,7 +237,7 @@ class Word2Vec(utils.SaveLoad):
             for word in sentence:
                 total_words += 1
                 if word in vocab:
-                    vocab[word].count += 1
+                    vocab[word].count += count
                 else:
                     vocab[word] = Vocab(count=1)
         logger.info("collected %i word types from a corpus of %i words and %i sentences" %
@@ -297,7 +298,7 @@ class Word2Vec(utils.SaveLoad):
                             next_report[0] = elapsed + 1.0  # don't flood the log, wait at least a second between progress reports
             return worker_train
 
-        if self.skip_n_gram:
+        if skip_n_gram:
             workers = [threading.Thread(target=worker_train_factory(train_sentence)) for _ in xrange(self.workers)]
         else:
             workers = [threading.Thread(target=worker_train_factory(train_skip_n_gram)) for _ in xrange(self.workers)]
