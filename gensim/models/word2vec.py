@@ -72,10 +72,22 @@ try:
     # try to compile and use the faster cython version
     import pyximport
     pyximport.install(setup_args={"include_dirs": get_include()})
-    from word2vec_inner import train_sentence, FAST_VERSION
+    from word2vec_inner import train_sentence, train_skip_n_gram, FAST_VERSION
 except:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
+
+    def slow_sentence(model, alpha, word, word2):
+        l1 = model.syn0[word2.index]
+        # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
+        l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
+        fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
+        ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
+        model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
+
+        # TODO add negative sampling?
+
+        l1 += dot(ga, l2a)  # learn input -> hidden
 
     def train_sentence(model, sentence, alpha, work=None):
         """
@@ -97,16 +109,20 @@ except:
                     # don't train on OOV words and on the `word` itself
                     continue
 
-                l1 = model.syn0[word2.index]
-                # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
-                l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
-                fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
-                ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
-                model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
+                slow_sentence(model, alpha, word, word2)
 
-                # TODO add negative sampling?
+        return len([word for word in sentence if word is not None])
 
-                l1 += dot(ga, l2a)  # learn input -> hidden
+    def train_skip_n_gram(model, sentence, alpha, work=None):
+        sentence, distance, count = sentence
+        word, word2 = sentence
+
+        # simulated random down_simple (reduced window)
+        reduced_count = int( (model.window - distance + 1.0)*count / model.window )
+
+        # TODO change the math so that there's only one function call that includes the reduced count
+        for i in range(reduced_count):
+            slow_sentence(model, alpha, word, word2)
 
         return len([word for word in sentence if word is not None])
 
@@ -133,7 +149,7 @@ class Word2Vec(utils.SaveLoad):
     compatible with the original word2vec implementation via `save_word2vec_format()` and `load_word2vec_format()`.
 
     """
-    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1, min_alpha=0.0001):
+    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1, min_alpha=0.0001, skip_n_gram=False):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (utf8 strings) that will be used for training.
@@ -166,8 +182,8 @@ class Word2Vec(utils.SaveLoad):
         self.workers = workers
         self.min_alpha = min_alpha
         if sentences is not None:
-            self.build_vocab(sentences)
-            self.train(sentences)
+            self.build_vocab(sentences, skip_n_gram=skip_n_gram)
+            self.train(sentences, skip_n_gram=skip_n_gram)
 
 
     def create_binary_tree(self):
@@ -202,7 +218,7 @@ class Word2Vec(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i" % max_depth)
 
-    def build_vocab(self, sentences):
+    def build_vocab(self, sentences, skip_n_gram=False):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of utf8 strings.
@@ -212,6 +228,8 @@ class Word2Vec(utils.SaveLoad):
         sentence_no, vocab = -1, {}
         total_words = 0
         for sentence_no, sentence in enumerate(sentences):
+            if skip_n_gram:
+                sentence, distance, count = sentence
             if sentence_no % 10000 == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                     (sentence_no, total_words, len(vocab)))
@@ -238,7 +256,7 @@ class Word2Vec(utils.SaveLoad):
         self.reset_weights()
 
 
-    def train(self, sentences, total_words=None, word_count=0, chunksize=100):
+    def train(self, sentences, total_words=None, word_count=0, chunksize=100, skip_n_gram=False):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of utf8 strings.
@@ -257,33 +275,41 @@ class Word2Vec(utils.SaveLoad):
         jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         lock = threading.Lock()  # for shared state (=number of words trained so far, log reports...)
 
-        def worker_train():
-            """Train the model, lifting lists of sentences from the jobs queue."""
-            work = zeros(self.layer1_size, dtype=REAL)  # each thread must have its own work memory
+        def worker_train_factory(processor):
+            def worker_train():
+                """Train the model, lifting lists of sentences from the jobs queue."""
+                work = zeros(self.layer1_size, dtype=REAL)  # each thread must have its own work memory
 
-            while True:
-                job = jobs.get()
-                if job is None:  # data finished, exit
-                    break
-                # update the learning rate before every job
-                alpha = max(self.min_alpha, self.alpha * (1 - 1.0 * word_count[0] / total_words))
-                # how many words did we train on? out-of-vocabulary (unknown) words do not count
-                job_words = sum(train_sentence(self, sentence, alpha, work) for sentence in job)
-                with lock:
-                    word_count[0] += job_words
-                    elapsed = time.time() - start
-                    if elapsed >= next_report[0]:
-                        logger.info("PROGRESS: at %.2f%% words, alpha %.05f, %.0f words/s" %
-                            (100.0 * word_count[0] / total_words, alpha, word_count[0] / elapsed if elapsed else 0.0))
-                        next_report[0] = elapsed + 1.0  # don't flood the log, wait at least a second between progress reports
+                while True:
+                    job = jobs.get()
+                    if job is None:  # data finished, exit
+                        break
+                    # update the learning rate before every job
+                    alpha = max(self.min_alpha, self.alpha * (1 - 1.0 * word_count[0] / total_words))
+                    # how many words did we train on? out-of-vocabulary (unknown) words do not count
+                    job_words = sum(processor(self, sentence, alpha, work) for sentence in job)
+                    with lock:
+                        word_count[0] += job_words
+                        elapsed = time.time() - start
+                        if elapsed >= next_report[0]:
+                            logger.info("PROGRESS: at %.2f%% words, alpha %.05f, %.0f words/s" %
+                                (100.0 * word_count[0] / total_words, alpha, word_count[0] / elapsed if elapsed else 0.0))
+                            next_report[0] = elapsed + 1.0  # don't flood the log, wait at least a second between progress reports
+            return worker_train
 
-        workers = [threading.Thread(target=worker_train) for _ in xrange(self.workers)]
+        if self.skip_n_gram:
+            workers = [threading.Thread(target=worker_train_factory(train_sentence)) for _ in xrange(self.workers)]
+        else:
+            workers = [threading.Thread(target=worker_train_factory(train_skip_n_gram)) for _ in xrange(self.workers)]
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
 
         # convert input strings to Vocab objects (or None for OOV words), and start filling the jobs queue
-        no_oov = ([self.vocab.get(word, None) for word in sentence] for sentence in sentences)
+        if skip_n_gram:
+            no_oov = ([[self.vocab.get(word, None) for word in sentence], distance, count] for sentence, distance, count in sentences)
+        else:
+            no_oov = ([self.vocab.get(word, None) for word in sentence] for sentence in sentences)
         for job_no, job in enumerate(utils.grouper(no_oov, chunksize)):
             logger.debug("putting job #%i in the queue, qsize=%i" % (job_no, jobs.qsize()))
             jobs.put(job)
