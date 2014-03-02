@@ -72,7 +72,7 @@ try:
     # try to compile and use the faster cython version
     import pyximport
     pyximport.install(setup_args={"include_dirs": get_include()})
-    from word2vec_inner import train_sentence, train_skip_n_gram, FAST_VERSION
+    from word2vec_inner import train_sentence, train_skip_ngram, FAST_VERSION
 except:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
@@ -113,7 +113,17 @@ except:
 
         return len([word for word in sentence if word is not None])
 
-    def train_skip_n_gram(model, sentence, alpha, work=None):
+    def train_skip_ngram(model, sentence, alpha, work=None):
+        """
+        Update skip-gram hierarchical softmax model by training on a precalculated skip ngram counts.
+
+        The sentence is a list of two Vocab objects, their distance, and their
+        count (or None, where the corresponding word is not in the vocabulary):
+            ([Vocab1, Vocab2], distance, count)
+        Called internally from `Word2Vec.train()` if the skip_ngram parameter
+        is set to true.
+
+        """
         sentence, distance, count = sentence
         word, word2 = sentence
 
@@ -121,6 +131,7 @@ except:
         reduced_count = int( (model.window - distance + 1.0)*count / model.window )
 
         # TODO change the math so that there's only one function call that includes the reduced count
+        # doing so can potentially make this function A LOT faster
         for i in range(reduced_count):
             slow_sentence(model, alpha, word, word2)
 
@@ -149,7 +160,7 @@ class Word2Vec(utils.SaveLoad):
     compatible with the original word2vec implementation via `save_word2vec_format()` and `load_word2vec_format()`.
 
     """
-    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1, min_alpha=0.0001, skip_n_gram=False):
+    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1, min_alpha=0.0001, skip_ngram=False):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (utf8 strings) that will be used for training.
@@ -158,6 +169,10 @@ class Word2Vec(utils.SaveLoad):
         consider an iterable that streams the sentences directly from disk/network.
         See :class:`BrownCorpus`, :class:`Text8Corpus` or :class:`LineSentence` in
         this module for such examples.
+
+        However, if skip_ngram is set, the `sentences` iterable are skip ngrams
+        in the format of: [([word1, word2], distance, count), ...]. This can be
+        useful if you are starting with a ngram model instead of raw text.
 
         If you don't supply `sentences`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
@@ -168,6 +183,7 @@ class Word2Vec(utils.SaveLoad):
         `seed` = for the random number generator.
         `min_count` = ignore all words with total frequency lower than this.
         `workers` = use this many worker threads to train the model (=faster training with multicore machines)
+        `skip_ngram` = if set to true, the input sentences are skip ngrams with distance and count
 
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
@@ -182,8 +198,8 @@ class Word2Vec(utils.SaveLoad):
         self.workers = workers
         self.min_alpha = min_alpha
         if sentences is not None:
-            self.build_vocab(sentences, skip_n_gram=skip_n_gram)
-            self.train(sentences, skip_n_gram=skip_n_gram)
+            self.build_vocab(sentences, skip_ngram=skip_ngram)
+            self.train(sentences, skip_ngram=skip_ngram)
 
 
     def create_binary_tree(self):
@@ -218,7 +234,7 @@ class Word2Vec(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i" % max_depth)
 
-    def build_vocab(self, sentences, skip_n_gram=False):
+    def build_vocab(self, sentences, skip_ngram=False):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of utf8 strings.
@@ -229,7 +245,7 @@ class Word2Vec(utils.SaveLoad):
         total_words = 0
         for sentence_no, sentence in enumerate(sentences):
             count = 1
-            if skip_n_gram:
+            if skip_ngram:
                 sentence, distance, count = sentence
             if sentence_no % 10000 == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
@@ -257,7 +273,7 @@ class Word2Vec(utils.SaveLoad):
         self.reset_weights()
 
 
-    def train(self, sentences, total_words=None, word_count=0, chunksize=100, skip_n_gram=False):
+    def train(self, sentences, total_words=None, word_count=0, chunksize=100, skip_ngram=False):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of utf8 strings.
@@ -298,8 +314,8 @@ class Word2Vec(utils.SaveLoad):
                             next_report[0] = elapsed + 1.0  # don't flood the log, wait at least a second between progress reports
             return worker_train
 
-        if skip_n_gram:
-            workers = [threading.Thread(target=worker_train_factory(train_skip_n_gram)) for _ in xrange(self.workers)]
+        if skip_ngram:
+            workers = [threading.Thread(target=worker_train_factory(train_skip_ngram)) for _ in xrange(self.workers)]
         else:
             workers = [threading.Thread(target=worker_train_factory(train_sentence)) for _ in xrange(self.workers)]
         for thread in workers:
@@ -307,7 +323,7 @@ class Word2Vec(utils.SaveLoad):
             thread.start()
 
         # convert input strings to Vocab objects (or None for OOV words), and start filling the jobs queue
-        if skip_n_gram:
+        if skip_ngram:
             no_oov = ([[self.vocab.get(word, None) for word in sentence], distance, count] for sentence, distance, count in sentences)
         else:
             no_oov = ([self.vocab.get(word, None) for word in sentence] for sentence in sentences)

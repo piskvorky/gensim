@@ -176,7 +176,7 @@ def train_sentence(model, sentence, alpha, _work):
 
     return result
 
-def train_skip_n_gram(model, sentence, alpha, _work):
+def train_skip_ngram(model, sentence, alpha, _work):
 
     sentence, _distance, _count = sentence
 
