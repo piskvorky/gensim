@@ -10,6 +10,7 @@ Changes
 * store labels in SvmLight corpus (Ritesh)
 * fix word2vec binary load on Windows (Stephanus van Schalkwyk)
 * replace numpy.svd with scipy.svd for more stability (Sven Döring)
+* parametrize LDA constructor (Christopher Corley, #174)
 
 0.8.9
 
