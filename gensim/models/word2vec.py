@@ -331,17 +331,15 @@ class Word2Vec(utils.SaveLoad):
         """
         if fvocab is not None:
             logger.info("Storing vocabulary in %s" % (fvocab))
-            with open(fvocab, 'w') as vout:
-                for word, vocab in sorted(iteritems(self.vocab),
-                                          key=lambda item: -item[1].count): 
+            with utils.smart_open(fvocab, 'wb') as vout:
+                for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
                     vout.write("%s %s\n" % (word, vocab.count))
         logger.info("storing %sx%s projection weights into %s" % (len(self.vocab), self.layer1_size, fname))
         assert (len(self.vocab), self.layer1_size) == self.syn0.shape
-        with open(fname, 'wb') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             fout.write("%s %s\n" % self.syn0.shape)
             # store in sorted order: most frequent words at the top
-            for word, vocab in sorted(iteritems(self.vocab),
-                                      key=lambda item: -item[1].count):
+            for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
                 word = utils.to_utf8(word)  # always store in utf8
                 row = self.syn0[vocab.index]
                 if binary:
@@ -366,9 +364,11 @@ class Word2Vec(utils.SaveLoad):
         if fvocab is not None:
             logger.info("loading word counts from %s" % (fvocab))
             counts = {}
-            for line in open(fvocab):
-                word, count = line.strip().split()
-                counts[word] = int(count)
+            with utils.smart_open(fvocab) as fin:
+                for line in fin:
+                    word, count = line.strip().split()
+                    counts[word] = int(count)
+
         logger.info("loading projection weights from %s" % (fname))
         with utils.smart_open(fname) as fin:
             header = fin.readline()
@@ -650,7 +650,7 @@ class Text8Corpus(object):
         # the entire corpus is one gigantic line -- there are no sentence marks at all
         # so just split the sequence of tokens arbitrarily: 1 sentence = 1000 tokens
         sentence, rest, max_sentence_length = [], '', 1000
-        with open(self.fname) as fin:
+        with utils.smart_open(self.fname) as fin:
             while True:
                 text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
                 if text == rest:  # EOF
@@ -692,8 +692,9 @@ class LineSentence(object):
                 yield line.split()
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
-            for line in open(self.source):
-                yield line.split()
+            with utils.smart_open(self.source) as fin:
+                for line in fin:
+                    yield line.split()
 
 
 
