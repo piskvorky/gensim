@@ -122,6 +122,8 @@ cdef void fast_sentence2(
 
 DEF MAX_SENTENCE_LEN = 1000
 
+
+
 def train_sentence(model, sentence, alpha, _work):
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
     cdef REAL_t *syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
@@ -171,6 +173,50 @@ def train_sentence(model, sentence, alpha, _work):
                 if j == i or codelens[j] == 0:
                     continue
                 fast_sentence(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work)
+
+    return result
+
+def train_skip_ngram(model, sentence, alpha, _work):
+
+    sentence, _distance, _count = sentence
+
+    cdef int distance = _distance
+    cdef int count = _count
+    cdef int reduced_count = int( (model.window - distance + 1.0)*count / model.window )
+
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+    cdef REAL_t *work
+    cdef REAL_t _alpha = alpha
+    cdef int size = model.layer1_size
+
+    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
+    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
+    cdef int codelens[MAX_SENTENCE_LEN]
+    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
+    cdef int sentence_len
+
+    cdef int i, j, k
+    cdef long result = 0
+
+    # convert Python structures to primitive types, so we can release the GIL
+    work = <REAL_t *>np.PyArray_DATA(_work)
+    sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
+    for i in range(sentence_len):
+        word = sentence[i]
+        if word is None:
+            codelens[i] = 0
+        else:
+            indexes[i] = word.index
+            codelens[i] = <int>len(word.code)
+            codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+            points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+            result += 1
+
+    # release GIL & train on the sentence
+    with nogil:
+        for i in range(reduced_count):
+            fast_sentence(points[0], codes[0], codelens[0], syn0, syn1, size, indexes[1], _alpha, work)
 
     return result
 
