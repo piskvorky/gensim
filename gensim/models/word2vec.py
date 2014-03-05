@@ -6,7 +6,7 @@
 
 
 """
-Deep learning via word2vec's "hierarchical softmax skip-gram model" [1]_.
+Deep learning via word2vec's "hierarchical softmax skip-gram and CBOW models" [1]_.
 
 The training algorithm was originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality.
@@ -82,12 +82,12 @@ try:
     # try to compile and use the faster cython version
     import pyximport
     pyximport.install(setup_args={"include_dirs": get_include()})
-    from word2vec_inner import train_sentence, FAST_VERSION
+    from word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
 except:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
 
-    def train_sentence(model, sentence, alpha, work=None):
+    def train_sentence_sg(model, sentence, alpha, work=None):
         """
         Update skip-gram hierarchical softmax model by training on a single sentence.
 
@@ -120,6 +120,47 @@ except:
 
         return len([word for word in sentence if word is not None])
 
+    def train_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
+        """
+        Update CBOW hierarchical softmax model by training on a single sentence.
+
+        The sentence is a list of Vocab objects (or None, where the corresponding
+        word is not in the vocabulary. Called internally from `Word2Vec.train()`.
+
+        """
+
+        for pos, word in enumerate(sentence):
+            if word is None:
+                continue  # OOV word in the input sentence => skip
+            reduced_window = random.randint(model.window)  # `b` in the original word2vec code
+
+            # Combine all context words into an appropriate input
+            start = max(0, pos - model.window + reduced_window)
+            l1 = matutils.zeros_aligned((model.layer1_size), dtype=REAL)
+            count = 0
+            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
+                if pos2 == pos or word2 is None:
+                    pass
+                else:
+                    count += 1    
+                    l1 += model.syn0[word2.index] 
+
+            if count > 0:
+                l1 = l1 / count
+            
+            l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
+            fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
+            ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
+            model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
+            
+            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
+                if pos2 == pos or word2 is None:
+                    pass
+                else:
+                    model.syn0[word2.index] += dot(ga, l2a)
+
+        return len([word for word in sentence if word is not None])
+
 
 class Vocab(object):
     """A single vocabulary item, used internally for constructing binary trees (incl. both word leaves and inner nodes)."""
@@ -143,7 +184,7 @@ class Word2Vec(utils.SaveLoad):
     compatible with the original word2vec implementation via `save_word2vec_format()` and `load_word2vec_format()`.
 
     """
-    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1, min_alpha=0.0001):
+    def __init__(self, sentences=None, sg=1, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1, min_alpha=0.0001):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (utf8 strings) that will be used for training.
@@ -156,6 +197,7 @@ class Word2Vec(utils.SaveLoad):
         If you don't supply `sentences`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
 
+        `sg` defines the training algorithm. By default (`sg=1`), skip-gram is used. Otherwise, `cbow` is employed.
         `size` is the dimensionality of the feature vectors.
         `window` is the maximum distance between the current and predicted word within a sentence.
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
@@ -166,6 +208,7 @@ class Word2Vec(utils.SaveLoad):
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
+        self.sg = int(sg)
         self.layer1_size = int(size)
         if size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
@@ -270,6 +313,7 @@ class Word2Vec(utils.SaveLoad):
         def worker_train():
             """Train the model, lifting lists of sentences from the jobs queue."""
             work = zeros(self.layer1_size, dtype=REAL)  # each thread must have its own work memory
+            neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
 
             while True:
                 job = jobs.get()
@@ -278,7 +322,10 @@ class Word2Vec(utils.SaveLoad):
                 # update the learning rate before every job
                 alpha = max(self.min_alpha, self.alpha * (1 - 1.0 * word_count[0] / total_words))
                 # how many words did we train on? out-of-vocabulary (unknown) words do not count
-                job_words = sum(train_sentence(self, sentence, alpha, work) for sentence in job)
+                if self.sg:
+                    job_words = sum(train_sentence_sg(self, sentence, alpha, work) for sentence in job)
+                else:
+                    job_words = sum(train_sentence_cbow(self, sentence, alpha, work, neu1) for sentence in job)
                 with lock:
                     word_count[0] += job_words
                     elapsed = time.time() - start
