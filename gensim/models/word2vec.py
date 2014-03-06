@@ -105,18 +105,46 @@ except:
             for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
                 if pos2 == pos or word2 is None:
                     # don't train on OOV words and on the `word` itself
-                    continue
+                    continue 
 
                 l1 = model.syn0[word2.index]
-                # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
-                l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
-                fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
-                ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
-                model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
+                neu1e = zeros(model.layer1_size, dtype=REAL)
 
-                # TODO add negative sampling?
+                # hierarchical softmax
+                if model.hs:
+                    # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
+                    l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
+                    fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
+                    ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
+                    neu1e += dot(ga, l2a)  # propagate errors output -> hidden
+                    model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
 
-                l1 += dot(ga, l2a)  # learn input -> hidden
+                # negative sampling
+                if model.negative > 0:
+                    targets = [word.index]
+                    labels = [1]
+                    for i in xrange(model.negative):
+                        # categorical distribution sampling method in c-version word2vec
+                        # random next index from the uniform barrels(merged by word frequency ** 2)
+                        next_random = random.randint(model.table_size)
+                        target = model.table[next_random]
+                        if target == 0:
+                            target = next_random % (len(model.vocab) - 1) + 1
+                        if target == word.index:
+                            continue
+                        targets.append(target)
+                        labels.append(1)
+                    targets = array(targets, dtype=uint32)
+                    labels = array(labels, dtype=uint32)
+
+                    # update syn0 and synlneg, similar with hs
+                    l2a = model.synlneg[targets]
+                    fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  
+                    ga = (labels - fa) * alpha     # gradients different with hs   
+                    neu1e += dot(ga, l2a)  
+                    model.synlneg[targets] += outer(ga, l1)  
+
+                l1 += neu1e  # learn weights input -> hidden
 
         return len([word for word in sentence if word is not None])
 
@@ -143,7 +171,7 @@ class Word2Vec(utils.SaveLoad):
     compatible with the original word2vec implementation via `save_word2vec_format()` and `load_word2vec_format()`.
 
     """
-    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1, min_alpha=0.0001):
+    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1, min_alpha=0.0001, hs=1, negative=0):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (utf8 strings) that will be used for training.
@@ -175,9 +203,43 @@ class Word2Vec(utils.SaveLoad):
         self.min_count = min_count
         self.workers = workers
         self.min_alpha = min_alpha
+        self.hs = hs
+        self.negative = negative
+        if negative > 0 :
+            self.table_size = 1e8;
         if sentences is not None:
             self.build_vocab(sentences)
             self.train(sentences)
+
+
+    def init_unigram_table(self):
+        """
+        Create a CDF table for sampling. 
+        Used the changed categorical distribution sampling method implement in c-version word2vec
+
+        """
+        if len(self.vocab) <= 0:
+            return
+
+        logger.info("constructing a unigram table from words' distribution")
+
+        train_words_pow = 0
+        power = 0.75
+        for word in self.index2word:
+            train_words_pow += pow(self.vocab[word].count, power)
+
+        word_index = 0
+        self.table = []
+        dl = pow(self.vocab[self.index2word[0]].count, power) / train_words_pow
+        for i in xrange(int(self.table_size)):
+            self.table.append(word_index)
+            if i / self.table_size > dl:
+                word_index += 1
+                dl += pow(self.vocab[self.index2word[word_index]].count, power) / train_words_pow
+            if word_index >= len(self.vocab):
+                word_index = len(self.vocab) - 1
+
+        logger.info("builded the table")
 
 
     def create_binary_tree(self):
@@ -241,7 +303,12 @@ class Word2Vec(utils.SaveLoad):
                 v.index = len(self.vocab)
                 self.index2word.append(word)
                 self.vocab[word] = v
+
         logger.info("total %i word types after removing those with count<%s" % (len(self.vocab), self.min_count))
+
+        # init the categorical distribution sampling table for negative sampling
+        if self.negative > 0:
+            self.init_unigram_table()
 
         # add info about each word's Huffman encoding
         self.create_binary_tree()
@@ -319,7 +386,10 @@ class Word2Vec(utils.SaveLoad):
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
         for i in xrange(len(self.vocab)):
             self.syn0[i] = (random.rand(self.layer1_size) - 0.5) / self.layer1_size
-        self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
+        if self.hs:
+            self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
+        if self.negative > 0:
+            self.synlneg = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
         self.syn0norm = None
 
 
