@@ -515,7 +515,7 @@ class LdaModel(interfaces.TransformationABC):
         updates_per_pass = max(1, lencorpus / updateafter)
         logger.info("running %s LDA training, %s topics, %i passes over "
                     "the supplied corpus of %i documents, updating model once "
-                    "every %i documents, evaluating perplexity every %i documents,"
+                    "every %i documents, evaluating perplexity every %i documents, "
                     "iterating %i with a convergence threshold of %i" %
                     (updatetype, self.num_topics, passes, lencorpus,
                         updateafter, evalafter, iterations,
