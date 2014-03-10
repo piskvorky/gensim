@@ -342,8 +342,7 @@ def cossim(vec1, vec2):
     assert vec1len > 0.0 and vec2len > 0.0, "sparse documents must not contain any explicit zero entries"
     if len(vec2) < len(vec1):
         vec1, vec2 = vec2, vec1 # swap references so that we iterate over the shorter vector
-    result = sum(value * vec2.get(index, 0.0)
-                 for index, value in iteritems(vec1))
+    result = sum(value * vec2.get(index, 0.0) for index, value in iteritems(vec1))
     result /= vec1len * vec2len # rescale by vector lengths
     return result
 
