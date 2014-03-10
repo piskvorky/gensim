@@ -16,7 +16,7 @@ import math
 import os
 import itertools
 
-import cPickle as pickle
+from gensim import utils
 
 import numpy
 import scipy.sparse
@@ -483,8 +483,7 @@ class MmWriter(object):
             _num_terms = max(_num_terms, 1 + max_id)
             num_nnz += veclen
         if metadata:
-            with open(fname+'.metadata.cpickle', 'wb') as fp:
-                pickle.dump(docno2metadata, fp, -1)
+            utils.pickle(docno2metadata, fname+'.metadata.cpickle')
             corpus.metadata = orig_metadata
 
         num_docs = docno + 1
