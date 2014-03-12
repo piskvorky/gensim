@@ -3,6 +3,7 @@ Changes
 
 0.8.10
 
+* CBOW model for word2vec (Sébastien Jean, #176)
 * new LdaMallet class = train LDA using wrapped Mallet
 * better Wikipedia article parsing (Joseph Chang)
 * word2vec load_word2vec_format uses less memory (Yves Raimond)

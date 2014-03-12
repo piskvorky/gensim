@@ -152,7 +152,7 @@ cdef void fast_sentence0_cbow(
             saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
     if count > (<REAL_t>0.5):
         inv_count = ONEF/count
-        sscal(&size, &inv_count , neu1, &ONE)
+        sscal(&size, &inv_count, neu1, &ONE)
 
     memset(work, 0, size * cython.sizeof(REAL_t))
     for b in range(codelens[i]):
@@ -165,11 +165,11 @@ cdef void fast_sentence0_cbow(
         saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
         saxpy(&size, &g, neu1, &ONE, &syn1[row2], &ONE)
 
-    for m in range(j,k):
+    for m in range(j, k):
         if m == i or codelens[m] == 0:
             continue
         else:
-            saxpy(&size, &ONEF, work, &ONE, &syn0[indexes[m]*size], &ONE)
+            saxpy(&size, &ONEF, work, &ONE, &syn0[indexes[m] * size], &ONE)
 
 cdef void fast_sentence1_cbow(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
@@ -205,7 +205,7 @@ cdef void fast_sentence1_cbow(
         saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
         saxpy(&size, &g, neu1, &ONE, &syn1[row2], &ONE)
 
-    for m in range(j,k):
+    for m in range(j, k):
         if m == i or codelens[m] == 0:
             continue
         else:
@@ -231,7 +231,7 @@ cdef void fast_sentence2_cbow(
         else:
             count += ONEF
             for a in range(size):
-                neu1[a] += syn0[indexes[m]*size]
+                neu1[a] += syn0[indexes[m] * size]
     if count > (<REAL_t>0.5):
         for a in range(size):
             neu1[a] /= count
@@ -252,12 +252,12 @@ cdef void fast_sentence2_cbow(
         for a in range(size):
             syn1[row2 + a] += g * neu1[a]
 
-    for m in range(j,k):
+    for m in range(j, k):
         if m == i or codelens[m] == 0:
             continue
         else:
             for a in range(size):
-                syn0[indexes[m]*size+a] += work[a]
+                syn0[indexes[m] * size + a] += work[a]
 
 def train_sentence_sg(model, sentence, alpha, _work):
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
@@ -360,7 +360,7 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
             if k > sentence_len:
                 k = sentence_len
 
-            fast_sentence_cbow(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k)                      
+            fast_sentence_cbow(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k)
 
     return result
 
