@@ -90,7 +90,7 @@ class BleiCorpus(IndexedCorpus):
 
 
     @staticmethod
-    def save_corpus(fname, corpus, id2word=None):
+    def save_corpus(fname, corpus, id2word=None, metadata=False):
         """
         Save a corpus in the LDA-C format.
 

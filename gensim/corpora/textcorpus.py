@@ -72,6 +72,7 @@ class TextCorpus(interfaces.CorpusABC):
         super(TextCorpus, self).__init__()
         self.input = input
         self.dictionary = Dictionary()
+        self.metadata = False
         if input is not None:
             self.dictionary.add_documents(self.get_texts())
         else:
@@ -86,7 +87,10 @@ class TextCorpus(interfaces.CorpusABC):
         Iterating over the corpus must yield sparse vectors, one for each document.
         """
         for text in self.get_texts():
-            yield self.dictionary.doc2bow(text, allow_update=False)
+            if self.metadata:
+                yield (self.dictionary.doc2bow(text[0], allow_update=False), text[1])
+            else:
+                yield self.dictionary.doc2bow(text, allow_update=False)
 
 
     def getstream(self):

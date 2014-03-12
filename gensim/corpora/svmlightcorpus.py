@@ -81,7 +81,7 @@ class SvmLightCorpus(IndexedCorpus):
 
 
     @staticmethod
-    def save_corpus(fname, corpus, id2word=None, labels=False):
+    def save_corpus(fname, corpus, id2word=None, labels=False, metadata=False):
         """
         Save a corpus in the SVMlight format.
 

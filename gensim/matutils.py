@@ -14,6 +14,8 @@ from __future__ import with_statement
 import logging
 import math
 
+from gensim import utils
+
 import numpy
 import scipy.sparse
 import scipy.linalg
@@ -439,7 +441,7 @@ class MmWriter(object):
 
 
     @staticmethod
-    def write_corpus(fname, corpus, progress_cnt=1000, index=False, num_terms=None):
+    def write_corpus(fname, corpus, progress_cnt=1000, index=False, num_terms=None, metadata=False):
         """
         Save the vector space representation of an entire corpus to disk.
 
@@ -455,7 +457,19 @@ class MmWriter(object):
         _num_terms, num_nnz = 0, 0
         docno, poslast = -1, -1
         offsets = []
-        for docno, bow in enumerate(corpus):
+        if hasattr(corpus, 'metadata'):
+            orig_metadata = corpus.metadata
+            corpus.metadata = metadata
+            if metadata:
+                docno2metadata = {}
+        else:
+            metadata = False
+        for docno, doc in enumerate(corpus):
+            if metadata:
+                bow, data = doc
+                docno2metadata[docno] = data
+            else:
+                bow = doc
             if docno % progress_cnt == 0:
                 logger.info("PROGRESS: saving document #%i" % docno)
             if index:
@@ -467,6 +481,10 @@ class MmWriter(object):
             max_id, veclen = mw.write_vector(docno, bow)
             _num_terms = max(_num_terms, 1 + max_id)
             num_nnz += veclen
+        if metadata:
+            utils.pickle(docno2metadata, fname+'.metadata.cpickle')
+            corpus.metadata = orig_metadata
+
         num_docs = docno + 1
         num_terms = num_terms or _num_terms
 
