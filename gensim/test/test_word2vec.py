@@ -138,6 +138,27 @@ class TestWord2VecModel(unittest.TestCase):
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1)
         self.models_equal(model, model2)
 
+    def testTrainingCbow(self):
+        """Test CBOW word2vec training."""
+        # to test training, make the corpus larger by repeating its sentences over and over
+        # build vocabulary, don't train yet
+        model = word2vec.Word2Vec(size=2, min_count=1, sg=0)
+        model.build_vocab(sentences)
+        self.assertTrue(model.syn0.shape == (len(model.vocab), 2))
+        self.assertTrue(model.syn1.shape == (len(model.vocab), 2))
+
+        model.train(sentences)
+        sims = model.most_similar('graph', topn=10)
+        self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
+
+        # test querying for "most similar" by vector
+        graph_vector = model.syn0norm[model.vocab['graph'].index]
+        sims2 = model.most_similar(positive=[graph_vector], topn=11)
+        self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is 'graph' itself
+
+        # build vocab and train in one step; must be the same as above
+        model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, sg=0)
+        self.models_equal(model, model2)
 
     def testParallel(self):
         """Test word2vec parallel training."""
