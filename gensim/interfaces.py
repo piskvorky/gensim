@@ -67,7 +67,7 @@ class CorpusABC(utils.SaveLoad):
 #        return sum(1 for doc in self) # sum(empty generator) == 0, so this works even for an empty corpus
 
     @staticmethod
-    def save_corpus(fname, corpus, id2word=None):
+    def save_corpus(fname, corpus, id2word=None, metadata=False):
         """
         Save an existing `corpus` to disk.
 
@@ -101,6 +101,7 @@ class CorpusABC(utils.SaveLoad):
 class TransformedCorpus(CorpusABC):
     def __init__(self, obj, corpus, chunksize=None):
         self.obj, self.corpus, self.chunksize = obj, corpus, chunksize
+        self.metadata = False
 
     def __len__(self):
         return len(self.corpus)

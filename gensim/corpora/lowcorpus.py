@@ -132,7 +132,7 @@ class LowCorpus(IndexedCorpus):
 
 
     @staticmethod
-    def save_corpus(fname, corpus, id2word=None):
+    def save_corpus(fname, corpus, id2word=None, metadata=False):
         """
         Save a corpus in the List-of-words format.
 
