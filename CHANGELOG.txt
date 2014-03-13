@@ -3,6 +3,7 @@ Changes
 
 0.8.10
 
+* allow .gz/.bz2 corpus filenames => transparently (de)compressed I/O
 * CBOW model for word2vec (Sébastien Jean, #176)
 * new API for storing corpus metadata (Joseph Chang, #169)
 * new LdaMallet class = train LDA using wrapped Mallet
