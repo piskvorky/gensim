@@ -13,7 +13,7 @@ import os.path
 import unittest
 import tempfile
 
-from gensim.corpora import bleicorpus, mmcorpus, lowcorpus, svmlightcorpus, ucicorpus
+from gensim.corpora import bleicorpus, mmcorpus, lowcorpus, svmlightcorpus, ucicorpus, malletcorpus
 
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
@@ -31,13 +31,11 @@ class CorpusTesterABC(object):
         self.corpus_class = None # to be overridden with a particular class
         self.file_extension = None # file 'testcorpus.fileExtension' must exist and be in the format of corpusClass
 
-
     def test_load(self):
         fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
         corpus = self.corpus_class(fname)
         docs = list(corpus)
         self.assertEqual(len(docs), 9) # the deerwester corpus always has nine documents, no matter what format
-
 
     def test_save(self, corpus=[[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]):
         # make sure the corpus can be saved
@@ -112,6 +110,30 @@ class TestUciCorpus(unittest.TestCase, CorpusTesterABC):
         super(TestUciCorpus, self).test_serialize(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
 #endclass TestUciCorpus
 
+class TestMalletCorpus(unittest.TestCase, CorpusTesterABC):
+    def setUp(self):
+        self.corpus_class = malletcorpus.MalletCorpus
+        self.file_extension = '.mallet'
+
+    def test_load_with_metadata(self):
+        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        corpus = self.corpus_class(fname)
+        corpus.metadata = True
+        docs = list(corpus)
+        self.assertEqual(len(docs), 9) # the deerwester corpus always has nine documents, no matter what format
+        for i, docmeta in enumerate(docs):
+            doc = docmeta[0]
+            metadata = docmeta[1]
+
+            self.assertEqual(metadata[0], str(i+1))
+            self.assertEqual(metadata[1], 'en')
+
+    def test_save(self):
+        super(TestMalletCorpus, self).test_save(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
+
+    def test_serialize(self):
+        super(TestMalletCorpus, self).test_serialize(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
+#endclass TestLowCorpus
 
 
 if __name__ == '__main__':
