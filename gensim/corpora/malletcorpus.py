@@ -39,7 +39,9 @@ class MalletCorpus(LowCorpus):
         LowCorpus.__init__(self, fname, id2word)
 
     def _calculate_num_docs(self):
-        return sum([1 for x in open(self.fname)])
+        with utils.smart_open(self.fname) as fin:
+            result = sum([1 for x in fin])
+        return result
 
     def __iter__(self):
         """
@@ -47,7 +49,7 @@ class MalletCorpus(LowCorpus):
 
         Yields a bag-of-words, a.k.a list of tuples of (word id, word count), based on the given id2word dictionary.
         """
-        with open(self.fname) as f:
+        with utils.smart_open(self.fname) as f:
             for line in f:
                 yield self.line2doc(line)
 
@@ -76,18 +78,17 @@ class MalletCorpus(LowCorpus):
 
         This function is automatically called by `MalletCorpus.serialize`; don't
         call it directly, call `serialize` instead.
-        """
 
+        """
         if id2word is None:
             logger.info("no word id mapping provided; initializing from corpus")
             id2word = utils.dict_from_corpus(corpus)
 
-        logger.info("storing corpus in Mallet format: %s" % fname)
+        logger.info("storing corpus in Mallet format into %s" % fname)
 
         truncated = 0
         offsets = []
-        lineno = 0
-        with open(fname, 'w') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             for doc_id, doc in enumerate(corpus):
                 if metadata:
                     doc_id, doc_lang = doc[1]
@@ -115,7 +116,6 @@ class MalletCorpus(LowCorpus):
         """
         Return the document stored at file position `offset`.
         """
-        with open(self.fname) as f:
+        with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())
-

@@ -14,6 +14,7 @@ from __future__ import with_statement
 
 import logging
 
+from gensim import utils
 from gensim.corpora import IndexedCorpus
 
 
@@ -69,7 +70,7 @@ class SvmLightCorpus(IndexedCorpus):
         """
         length = 0
         self.labels = []
-        with open(self.fname) as fin:
+        with utils.smart_open(self.fname) as fin:
             for lineNo, line in enumerate(fin):
                 doc = self.line2doc(line)
                 if doc is not None:
@@ -94,7 +95,7 @@ class SvmLightCorpus(IndexedCorpus):
         logger.info("converting corpus to SVMlight format: %s" % fname)
 
         offsets = []
-        with open(fname, 'w') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             for docno, doc in enumerate(corpus):
                 label = labels[docno] if labels else 0 # target class is 0 by default
                 offsets.append(fout.tell())
@@ -106,7 +107,7 @@ class SvmLightCorpus(IndexedCorpus):
         """
         Return the document stored at file position `offset`.
         """
-        with open(self.fname) as f:
+        with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())[0]
 

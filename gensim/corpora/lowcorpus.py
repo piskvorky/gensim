@@ -89,7 +89,10 @@ class LowCorpus(IndexedCorpus):
                      (self.num_docs, self.num_terms, fname))
 
     def _calculate_num_docs(self):
-        return int(open(self.fname).readline()) # the first line in input data is the number of documents (integer). throws exception on bad input.
+        # the first line in input data is the number of documents (integer). throws exception on bad input.
+        with utils.smart_open(self.fname) as fin:
+            result = int(fin.readline())
+        return result
 
     def __len__(self):
         return self.num_docs
@@ -128,9 +131,10 @@ class LowCorpus(IndexedCorpus):
         """
         Iterate over the corpus, returning one bag-of-words vector at a time.
         """
-        for lineno, line in enumerate(open(self.fname)):
-            if lineno > 0: # ignore the first line = number of documents
-                yield self.line2doc(line)
+        with utils.smart_open(self.fname) as fin:
+            for lineno, line in enumerate(fin):
+                if lineno > 0: # ignore the first line = number of documents
+                    yield self.line2doc(line)
 
 
     @staticmethod
@@ -145,10 +149,10 @@ class LowCorpus(IndexedCorpus):
             logger.info("no word id mapping provided; initializing from corpus")
             id2word = utils.dict_from_corpus(corpus)
 
-        logger.info("storing corpus in List-Of-Words format: %s" % fname)
+        logger.info("storing corpus in List-Of-Words format into %s" % fname)
         truncated = 0
         offsets = []
-        with open(fname, 'w') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             fout.write('%i\n' % len(corpus))
             for doc in corpus:
                 words = []
@@ -170,8 +174,7 @@ class LowCorpus(IndexedCorpus):
         """
         Return the document stored at file position `offset`.
         """
-        with open(self.fname) as f:
+        with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())
 #endclass LowCorpus
-

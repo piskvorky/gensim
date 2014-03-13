@@ -6,6 +6,7 @@ Changes
 * CBOW model for word2vec (Sébastien Jean, #176)
 * new API for storing corpus metadata (Joseph Chang, #169)
 * new LdaMallet class = train LDA using wrapped Mallet
+* new MalletCorpus class for corpora in Mallet format (Christopher Corley, #179)
 * better Wikipedia article parsing (Joseph Chang)
 * word2vec load_word2vec_format uses less memory (Yves Raimond)
 * save/load automatically single out large arrays + allow mmap

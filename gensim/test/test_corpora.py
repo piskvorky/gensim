@@ -26,6 +26,7 @@ def testfile():
 
 
 class CorpusTesterABC(object):
+    TEST_CORPUS = [[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]
     def __init__(self):
         raise NotImplementedError("cannot instantiate Abstract Base Class")
         self.corpus_class = None # to be overridden with a particular class
@@ -37,7 +38,9 @@ class CorpusTesterABC(object):
         docs = list(corpus)
         self.assertEqual(len(docs), 9) # the deerwester corpus always has nine documents, no matter what format
 
-    def test_save(self, corpus=[[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]):
+    def test_save(self):
+        corpus = self.TEST_CORPUS
+
         # make sure the corpus can be saved
         self.corpus_class.save_corpus(testfile(), corpus)
 
@@ -48,7 +51,9 @@ class CorpusTesterABC(object):
         # delete the temporary file
         os.remove(testfile())
 
-    def test_serialize(self, corpus=[[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]):
+    def test_serialize(self):
+        corpus = self.TEST_CORPUS
+
         # make sure the corpus can be saved
         self.corpus_class.serialize(testfile(), corpus)
 
@@ -62,6 +67,25 @@ class CorpusTesterABC(object):
 
         # delete the temporary file
         os.remove(testfile())
+
+    def test_serialize_compressed(self):
+        corpus = self.TEST_CORPUS
+
+        for extension in ['.gz', '.bz2']:
+            fname = testfile() + extension
+            # make sure the corpus can be saved
+            self.corpus_class.serialize(fname, corpus)
+
+            # and loaded back, resulting in exactly the same corpus
+            corpus2 = self.corpus_class(fname)
+            self.assertEqual(corpus, list(corpus2))
+
+            # make sure the indexing corpus[i] works
+            for i in range(len(corpus)):
+                self.assertEqual(corpus[i], corpus2[i])
+
+            # delete the temporary file
+            os.remove(fname)
 #endclass CorpusTesterABC
 
 
@@ -85,32 +109,28 @@ class TestBleiCorpus(unittest.TestCase, CorpusTesterABC):
         self.file_extension = '.blei'
 #endclass TestBleiCorpus
 
+
 class TestLowCorpus(unittest.TestCase, CorpusTesterABC):
+    TEST_CORPUS = [[(1, 1)], [], [(0, 2), (2, 1)], []]
+
     def setUp(self):
         self.corpus_class = lowcorpus.LowCorpus
         self.file_extension = '.low'
-
-    def test_save(self):
-        super(TestLowCorpus, self).test_save(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
-
-    def test_serialize(self):
-        super(TestLowCorpus, self).test_serialize(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
 #endclass TestLowCorpus
 
 
 class TestUciCorpus(unittest.TestCase, CorpusTesterABC):
+    TEST_CORPUS = [[(1, 1)], [], [(0, 2), (2, 1)], []]
+
     def setUp(self):
         self.corpus_class = ucicorpus.UciCorpus
         self.file_extension = '.uci'
-
-    def test_save(self):
-        super(TestUciCorpus, self).test_save(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
-
-    def test_serialize(self):
-        super(TestUciCorpus, self).test_serialize(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
 #endclass TestUciCorpus
 
+
 class TestMalletCorpus(unittest.TestCase, CorpusTesterABC):
+    TEST_CORPUS = [[(1, 1)], [], [(0, 2), (2, 1)], []]
+
     def setUp(self):
         self.corpus_class = malletcorpus.MalletCorpus
         self.file_extension = '.mallet'
@@ -122,18 +142,11 @@ class TestMalletCorpus(unittest.TestCase, CorpusTesterABC):
         docs = list(corpus)
         self.assertEqual(len(docs), 9) # the deerwester corpus always has nine documents, no matter what format
         for i, docmeta in enumerate(docs):
-            doc = docmeta[0]
-            metadata = docmeta[1]
+            doc, metadata = docmeta
 
-            self.assertEqual(metadata[0], str(i+1))
+            self.assertEqual(metadata[0], str(i + 1))
             self.assertEqual(metadata[1], 'en')
-
-    def test_save(self):
-        super(TestMalletCorpus, self).test_save(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
-
-    def test_serialize(self):
-        super(TestMalletCorpus, self).test_serialize(corpus=[[(1, 1)], [], [(0, 2), (2, 1)], []])
-#endclass TestLowCorpus
+#endclass TestMalletCorpus
 
 
 if __name__ == '__main__':
