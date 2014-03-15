@@ -404,8 +404,10 @@ class Word2Vec(utils.SaveLoad):
         so while you can query for word similarity etc., you cannot continue training
         with a model loaded this way.
 
-        `binary` is a boolean indicating whether the data is in binary word2vec format
-        `norm_only` is a boolean indicating whether to only store normalised word2vec vectors in memory
+        `binary` is a boolean indicating whether the data is in binary word2vec format.
+        `norm_only` is a boolean indicating whether to only store normalised word2vec vectors in memory.
+        Word counts are read from `fvocab` filename, if set (this is the file generated
+        by `-save-vocab` flag of the original C tool).
         """
         counts = None
         if fvocab is not None:
