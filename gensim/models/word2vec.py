@@ -11,6 +11,8 @@ Deep learning via word2vec's "hierarchical softmax skip-gram and CBOW models" [1
 The training algorithm was originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality.
 
+For a blog tutorial on gensim word2vec, with an interactive web app trained on GoogleNews, visit http://radimrehurek.com/2014/02/word2vec-tutorial/
+
 **Install Cython with `pip install cython` to use optimized word2vec training** (70x speedup [2]_).
 
 Initialize a model with e.g.::
@@ -49,8 +51,6 @@ If you're finished training a model (=no more updates, only querying), you can d
   >>> model.init_sims(replace=True)
 
 to trim unneeded model memory = use (much) less RAM.
-
-For a tutorial with an interactive word2vec model trained on GoogleNews, visit http://radimrehurek.com/2014/02/word2vec-tutorial/
 
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
 .. [2] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
@@ -142,17 +142,17 @@ except:
                 if pos2 == pos or word2 is None:
                     pass
                 else:
-                    count += 1    
-                    l1 += model.syn0[word2.index] 
+                    count += 1
+                    l1 += model.syn0[word2.index]
 
             if count > 0:
                 l1 = l1 / count
-            
+
             l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
             fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
             ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
             model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
-            
+
             for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
                 if pos2 == pos or word2 is None:
                     pass
