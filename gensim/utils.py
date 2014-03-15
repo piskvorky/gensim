@@ -37,7 +37,7 @@ import traceback
 import numpy
 import scipy.sparse
 
-if sys.version_info.major >= 3:
+if sys.version_info[0] >= 3:
     unicode = str
 
 from gensim._six import iteritems, u
