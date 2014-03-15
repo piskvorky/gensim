@@ -433,6 +433,14 @@ ul.reference li {
     padding-bottom: 24px;
 }
 
+.reference8 {
+    display: inline-block;
+    width: 247px;
+    background: url('../images/references/logo_issuu.jpeg') top center no-repeat;
+    padding-top: 100px;
+    padding-bottom: 24px;
+}
+
 .getstarted{
     text-align: center;
     padding: 30px 0 20px 0;
@@ -598,6 +606,14 @@ a.googlegroups{
     padding-top: 53px;
 }
 
+.consulting-banner {
+    background-color: #ff2010;
+    background-color: rgba(255, 32, 16, 0.2);
+    padding: 1px 10px;
+    -moz-border-radius: 15px;
+    border-radius: 15px;
+    line-height: 0.8em;
+}
 
 /* copied from sphinx themes */
 

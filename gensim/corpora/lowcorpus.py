@@ -12,10 +12,11 @@ Corpus in GibbsLda++ format of List-Of-Words.
 from __future__ import with_statement
 
 import logging
-import itertools
 
-from gensim import interfaces, utils
+from gensim import utils
 from gensim.corpora import IndexedCorpus
+from gensim._six import iteritems, iterkeys
+from gensim._six.moves import xrange, zip as izip
 
 
 logger = logging.getLogger('gensim.corpora.lowcorpus')
@@ -66,7 +67,7 @@ class LowCorpus(IndexedCorpus):
 
         self.fname = fname # input file, see class doc for format
         self.line2words = line2words # how to translate lines into words (simply split on space by default)
-        self.num_docs = int(open(fname).readline()) # the first line in input data is the number of documents (integer). throws exception on bad input.
+        self.num_docs = self._calculate_num_docs()
 
         if not id2word:
             # build a list of all word types in the corpus (distinct words)
@@ -76,17 +77,22 @@ class LowCorpus(IndexedCorpus):
             for doc in self:
                 all_terms.update(word for word, wordCnt in doc)
             all_terms = sorted(all_terms) # sort the list of all words; rank in that list = word's integer id
-            self.id2word = dict(itertools.izip(xrange(len(all_terms)), all_terms)) # build a mapping of word id(int) -> word (string)
+            self.id2word = dict(izip(xrange(len(all_terms)), all_terms)) # build a mapping of word id(int) -> word (string)
         else:
             logger.info("using provided word mapping (%i ids)" % len(id2word))
             self.id2word = id2word
-        self.word2id = dict((v, k) for k, v in self.id2word.iteritems())
+        self.word2id = dict((v, k) for k, v in iteritems(self.id2word))
         self.num_terms = len(self.word2id)
         self.use_wordids = True # return documents as (wordIndex, wordCount) 2-tuples
 
         logger.info("loaded corpus with %i documents and %i terms from %s" %
                      (self.num_docs, self.num_terms, fname))
 
+    def _calculate_num_docs(self):
+        # the first line in input data is the number of documents (integer). throws exception on bad input.
+        with utils.smart_open(self.fname) as fin:
+            result = int(fin.readline())
+        return result
 
     def __len__(self):
         return self.num_docs
@@ -97,7 +103,7 @@ class LowCorpus(IndexedCorpus):
 
         if self.use_wordids:
             # get all distinct terms in this document, ignore unknown words
-            uniq_words = set(words).intersection(self.word2id.iterkeys())
+            uniq_words = set(words).intersection(iterkeys(self.word2id))
 
             # the following creates a unique list of words *in the same order*
             # as they were in the input. when iterating over the documents,
@@ -125,13 +131,14 @@ class LowCorpus(IndexedCorpus):
         """
         Iterate over the corpus, returning one bag-of-words vector at a time.
         """
-        for lineno, line in enumerate(open(self.fname)):
-            if lineno > 0: # ignore the first line = number of documents
-                yield self.line2doc(line)
+        with utils.smart_open(self.fname) as fin:
+            for lineno, line in enumerate(fin):
+                if lineno > 0: # ignore the first line = number of documents
+                    yield self.line2doc(line)
 
 
     @staticmethod
-    def save_corpus(fname, corpus, id2word=None):
+    def save_corpus(fname, corpus, id2word=None, metadata=False):
         """
         Save a corpus in the List-of-words format.
 
@@ -142,10 +149,10 @@ class LowCorpus(IndexedCorpus):
             logger.info("no word id mapping provided; initializing from corpus")
             id2word = utils.dict_from_corpus(corpus)
 
-        logger.info("storing corpus in List-Of-Words format: %s" % fname)
+        logger.info("storing corpus in List-Of-Words format into %s" % fname)
         truncated = 0
         offsets = []
-        with open(fname, 'w') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             fout.write('%i\n' % len(corpus))
             for doc in corpus:
                 words = []
@@ -167,8 +174,7 @@ class LowCorpus(IndexedCorpus):
         """
         Return the document stored at file position `offset`.
         """
-        with open(self.fname) as f:
+        with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())
 #endclass LowCorpus
-

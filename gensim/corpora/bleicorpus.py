@@ -16,6 +16,7 @@ import logging
 
 from gensim import interfaces, utils
 from gensim.corpora import IndexedCorpus
+from gensim._six.moves import xrange
 
 
 logger = logging.getLogger('gensim.corpora.bleicorpus')
@@ -72,9 +73,10 @@ class BleiCorpus(IndexedCorpus):
         Iterate over the corpus, returning one sparse vector at a time.
         """
         length = 0
-        for lineNo, line in enumerate(open(self.fname)):
-            length += 1
-            yield self.line2doc(line)
+        with utils.smart_open(self.fname) as fin:
+            for lineno, line in enumerate(fin):
+                length += 1
+                yield self.line2doc(line)
         self.length = length
 
 
@@ -89,7 +91,7 @@ class BleiCorpus(IndexedCorpus):
 
 
     @staticmethod
-    def save_corpus(fname, corpus, id2word=None):
+    def save_corpus(fname, corpus, id2word=None, metadata=False):
         """
         Save a corpus in the LDA-C format.
 
@@ -106,14 +108,13 @@ class BleiCorpus(IndexedCorpus):
         else:
             num_terms = 1 + max([-1] + id2word.keys())
 
-        logger.info("storing corpus in Blei's LDA-C format: %s" % fname)
-        with open(fname, 'w') as fout:
+        logger.info("storing corpus in Blei's LDA-C format into %s" % fname)
+        with utils.smart_open(fname, 'wb') as fout:
             offsets = []
             for doc in corpus:
                 doc = list(doc)
                 offsets.append(fout.tell())
-                fout.write("%i %s\n" % (len(doc),
-                                        ' '.join("%i:%s" % p for p in doc if abs(p[1]) > 1e-12)))
+                fout.write("%i %s\n" % (len(doc), ' '.join("%i:%s" % p for p in doc if abs(p[1]) > 1e-12)))
 
         # write out vocabulary, in a format compatible with Blei's topics.py script
         fname_vocab = fname + '.vocab'
@@ -128,7 +129,7 @@ class BleiCorpus(IndexedCorpus):
         """
         Return the document stored at file position `offset`.
         """
-        with open(self.fname) as f:
+        with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())
 #endclass BleiCorpus

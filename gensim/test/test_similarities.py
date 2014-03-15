@@ -43,7 +43,7 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_similarities.tst')
 
 
-class TestSimilarityABC(object):
+class _TestSimilarityABC(object):
     """
     Base class for SparseMatrixSimilarity and MatrixSimilarity unit tests.
     """
@@ -145,19 +145,61 @@ class TestSimilarityABC(object):
         self.assertTrue(numpy.allclose(index.index, index2.index))
         self.assertEqual(index.num_best, index2.num_best)
 
+    def testLarge(self):
+        fname = testfile() + '.pkl'
+        if self.cls == similarities.Similarity:
+            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        else:
+            index = self.cls(corpus, num_features=len(dictionary))
+        # store all arrays separately
+        index.save(fname, sep_limit=0)
+
+        index2 = self.cls.load(fname)
+        if self.cls == similarities.Similarity:
+            # for Similarity, only do a basic check
+            self.assertTrue(len(index.shards) == len(index2.shards))
+            return
+        if isinstance(index, similarities.SparseMatrixSimilarity):
+            # hack SparseMatrixSim indexes so they're easy to compare
+            index.index = index.index.todense()
+            index2.index = index2.index.todense()
+        self.assertTrue(numpy.allclose(index.index, index2.index))
+        self.assertEqual(index.num_best, index2.num_best)
 
 
-class TestMatrixSimilarity(unittest.TestCase, TestSimilarityABC):
+    def testMmap(self):
+        fname = testfile() + '.pkl'
+        if self.cls == similarities.Similarity:
+            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        else:
+            index = self.cls(corpus, num_features=len(dictionary))
+        # store all arrays separately
+        index.save(fname, sep_limit=0)
+
+        # same thing, but use mmap to load arrays
+        index2 = self.cls.load(fname, mmap='r')
+        if self.cls == similarities.Similarity:
+            # for Similarity, only do a basic check
+            self.assertTrue(len(index.shards) == len(index2.shards))
+            return
+        if isinstance(index, similarities.SparseMatrixSimilarity):
+            # hack SparseMatrixSim indexes so they're easy to compare
+            index.index = index.index.todense()
+            index2.index = index2.index.todense()
+        self.assertTrue(numpy.allclose(index.index, index2.index))
+        self.assertEqual(index.num_best, index2.num_best)
+
+class TestMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.MatrixSimilarity
 
 
-class TestSparseMatrixSimilarity(unittest.TestCase, TestSimilarityABC):
+class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.SparseMatrixSimilarity
 
 
-class TestSimilarity(unittest.TestCase, TestSimilarityABC):
+class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.Similarity
 
@@ -180,5 +222,5 @@ class TestSimilarity(unittest.TestCase, TestSimilarityABC):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()

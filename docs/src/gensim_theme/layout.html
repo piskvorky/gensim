@@ -77,6 +77,12 @@
             <div id="tagline"><img src="{{ pathto('_static/images/tagline_compact.png', 1) }}" alt="gensim tagline" /></div>
           </div>
           <div id="right1">
+            <div class="consulting-banner">
+              <h3><a href="http://radimrehurek.com/">Get Expert Help</a></h3>
+              <p>• machine learning, NLP, data mining</p>
+              <p>• custom system design, development, optimizations</p>
+              <p>• tech trainings &amp; business consulting</p>
+            </div>
           </div>
         </div>
       </div>
@@ -127,8 +133,9 @@
         <div id="footerleft">
           <img src="{{ pathto('_static/images/logo-gensim.png', 1) }}" class="smallerlogo" alt="smaller gensim logo" />
           <a href="{{ pathto('index') }}"><img src="{{ pathto('_static/images/gensim-footer.png', 1) }}" alt="gensim footer image" title="Gensim home" /></a>
+
           <div class="copyright">
-            &copy; Copyright 2009-2013, <a href="mailto:radimrehurek@seznam.cz" style="color:white"> Radim Řehůřek</a>
+            &copy; Copyright 2009-2014, <a href="mailto:radimrehurek@seznam.cz" style="color:white"> Radim Řehůřek</a>
             <br />
             {%- if last_updated %}
               {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}
@@ -178,7 +185,7 @@
             </div>
             <div class="googlegroupsodsazeni">
               <a href="https://groups.google.com/group/gensim" class="googlegroups">
-                Join the gensim discussion group
+                Stay informed via gensim mailing list:
               </a>
 
               <form action="http://groups.google.com/group/gensim/boxsubscribe">

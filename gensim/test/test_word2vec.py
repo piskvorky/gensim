@@ -56,6 +56,39 @@ class TestWord2VecModel(unittest.TestCase):
         model.save(testfile())
         self.models_equal(model, word2vec.Word2Vec.load(testfile()))
 
+    def testPersistenceWord2VecFormat(self):
+        """Test storing/loading the entire model in word2vec format."""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        model.save_word2vec_format(testfile(), binary=True)
+        binary_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, norm_only=False)
+        self.assertTrue(numpy.allclose(model['human'], binary_model['human']))
+        norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, norm_only=True)
+        self.assertFalse(numpy.allclose(model['human'], norm_only_model['human']))
+        self.assertTrue(numpy.allclose(model.syn0norm[model.vocab['human'].index], norm_only_model['human']))
+
+    def testPersistenceWord2VecFormatWithVocab(self):
+        """Test storing/loading the entire model and vocabulary in word2vec format."""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        testvocab = os.path.join(tempfile.gettempdir(), 'gensim_word2vec.vocab')
+        model.save_word2vec_format(testfile(), testvocab, binary=True)
+        binary_model_with_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), testvocab, binary=True)
+        self.assertEqual(model.vocab['human'].count, binary_model_with_vocab.vocab['human'].count)
+        binary_model_without_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
+        self.assertFalse(model.vocab['human'].count == binary_model_without_vocab.vocab['human'].count)
+
+    def testLargeMmap(self):
+        """Test storing/loading the entire model."""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+
+        # test storing the internal arrays into separate files
+        model.save(testfile(), sep_limit=0)
+        self.models_equal(model, word2vec.Word2Vec.load(testfile()))
+
+        # make sure mmaping the arrays back works, too
+        self.models_equal(model, word2vec.Word2Vec.load(testfile(), mmap='r'))
+
     def testVocab(self):
         """Test word2vec vocabulary building."""
         corpus = LeeCorpus()
@@ -93,13 +126,39 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.syn1.shape == (len(model.vocab), 2))
 
         model.train(sentences)
-        sims = model.most_similar('graph')
+        sims = model.most_similar('graph', topn=10)
         self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
+
+        # test querying for "most similar" by vector
+        graph_vector = model.syn0norm[model.vocab['graph'].index]
+        sims2 = model.most_similar(positive=[graph_vector], topn=11)
+        self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is 'graph' itself
 
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1)
         self.models_equal(model, model2)
 
+    def testTrainingCbow(self):
+        """Test CBOW word2vec training."""
+        # to test training, make the corpus larger by repeating its sentences over and over
+        # build vocabulary, don't train yet
+        model = word2vec.Word2Vec(size=2, min_count=1, sg=0)
+        model.build_vocab(sentences)
+        self.assertTrue(model.syn0.shape == (len(model.vocab), 2))
+        self.assertTrue(model.syn1.shape == (len(model.vocab), 2))
+
+        model.train(sentences)
+        sims = model.most_similar('graph', topn=10)
+        self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
+
+        # test querying for "most similar" by vector
+        graph_vector = model.syn0norm[model.vocab['graph'].index]
+        sims2 = model.most_similar(positive=[graph_vector], topn=11)
+        self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is 'graph' itself
+
+        # build vocab and train in one step; must be the same as above
+        model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, sg=0)
+        self.models_equal(model, model2)
 
     def testParallel(self):
         """Test word2vec parallel training."""
@@ -113,7 +172,7 @@ class TestWord2VecModel(unittest.TestCase):
             sims = model.most_similar('israeli')
             # the exact vectors and therefore similarities may differ, due to different thread collisions
             # so let's test only for top3
-            self.assertTrue('palestinian' in [sims[i][0] for i in xrange(3)])
+            self.assertTrue('palestinian' in [sims[i][0] for i in range(3)])
 
 
     def testRNG(self):
@@ -130,6 +189,7 @@ class TestWord2VecModel(unittest.TestCase):
         most_common_word = max(model.vocab.iteritems(), key=lambda item: item[1].count)[0]
         self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
 #endclass TestWord2VecModel
+
 
 class TestWord2VecSentenceIterators(unittest.TestCase):
     def testLineSentenceWorksWithFilename(self):
@@ -159,5 +219,5 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.root.setLevel(logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()

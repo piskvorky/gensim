@@ -47,7 +47,7 @@ First let's load the corpus iterator and dictionary, created in the second step 
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
     >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output (recommended)
 
-    >>> print mm
+    >>> print(mm)
     MmCorpus(3931787 documents, 100000 features, 756379027 non-zero entries)
 
 We see that our corpus contains 3.9M documents, 100K features (distinct
@@ -102,7 +102,7 @@ As with Latent Semantic Analysis above, first load the corpus iterator and dicti
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
     >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output
 
-    >>> print mm
+    >>> print(mm)
     MmCorpus(3931787 documents, 100000 features, 756379027 non-zero entries)
 
 We will run online LDA (see Hoffman et al. [3]_), which is an algorithm that takes a chunk of documents,

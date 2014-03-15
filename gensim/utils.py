@@ -13,19 +13,35 @@ from __future__ import with_statement
 import logging
 logger = logging.getLogger('gensim.utils')
 
+try:
+    from html.entities import name2codepoint as n2cp
+except ImportError:
+    from htmlentitydefs import name2codepoint as n2cp
+try:
+    import cPickle as _pickle
+except ImportError:
+    import pickle as _pickle
+
 import re
 import unicodedata
 import os
 import random
-import cPickle
 import itertools
 import tempfile
 from functools import wraps # for `synchronous` function lock
-from htmlentitydefs import name2codepoint as n2cp # for `decode_htmlentities`
 import multiprocessing
 import shutil
+import sys
 import traceback
 
+import numpy
+import scipy.sparse
+
+if sys.version_info[0] >= 3:
+    unicode = str
+
+from gensim._six import iteritems, u
+from gensim._six.moves import xrange
 
 try:
     from pattern.en import parse
@@ -83,9 +99,10 @@ def deaccent(text):
     u'Sef chomutovskych komunistu dostal postou bily prasek'
     """
     if not isinstance(text, unicode):
-        text = unicode(text, 'utf8') # assume utf8 for byte strings, use default (strict) error handling
+        # assume utf8 for byte strings, use default (strict) error handling
+        text = text.decode('utf8')
     norm = unicodedata.normalize("NFD", text)
-    result = u''.join(ch for ch in norm if unicodedata.category(ch) != 'Mn')
+    result = u('').join(ch for ch in norm if unicodedata.category(ch) != 'Mn')
     return unicodedata.normalize("NFC", result)
 
 
@@ -161,23 +178,99 @@ class SaveLoad(object):
     Objects which inherit from this class have save/load functions, which un/pickle
     them to disk.
 
-    This uses cPickle for de/serializing, so objects must not contains unpicklable
-    attributes, such as lambda functions etc.
+    This uses pickle for de/serializing, so objects must not contain
+    unpicklable attributes, such as lambda functions etc.
     """
     @classmethod
-    def load(cls, fname):
+    def load(cls, fname, mmap=None):
         """
         Load a previously saved object from file (also see `save`).
+
+        If the object was saved with large arrays stored separately, you can load
+        these arrays via mmap (shared memory) using `mmap='r'`. Default: don't use
+        mmap, load large arrays as normal objects.
+
         """
         logger.info("loading %s object from %s" % (cls.__name__, fname))
-        return unpickle(fname)
+        subname = lambda suffix: fname + '.' + suffix + '.npy'
+        obj = unpickle(fname)
+        for attrib in getattr(obj, '__numpys', []):
+            logger.info("loading %s from %s with mmap=%s" % (attrib, subname(attrib), mmap))
+            setattr(obj, attrib, numpy.load(subname(attrib), mmap_mode=mmap))
+        for attrib in getattr(obj, '__scipys', []):
+            logger.info("loading %s from %s with mmap=%s" % (attrib, subname(attrib), mmap))
+            sparse = unpickle(subname(attrib))
+            sparse.data = numpy.load(subname(attrib) + '.data.npy', mmap_mode=mmap)
+            sparse.indptr = numpy.load(subname(attrib) + '.indptr.npy', mmap_mode=mmap)
+            sparse.indices = numpy.load(subname(attrib) + '.indices.npy', mmap_mode=mmap)
+            setattr(obj, attrib, sparse)
+        for attrib in getattr(obj, '__ignoreds', []):
+            logger.info("setting ignored attribute %s to None" % (attrib))
+            setattr(obj, attrib, None)
+        return obj
 
-    def save(self, fname):
+    def save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset()):
         """
-        Save the object to file via pickling (also see `load`).
+        Save the object to file (also see `load`).
+
+        If `separately` is None, automatically detect large numpy/scipy.sparse arrays
+        in the object being stored, and store them into separate files. This avoids
+        pickle memory errors and allows mmap'ing large arrays back on load efficiently.
+
+        You can also set `separately` manually, in which case it must be a list of attribute
+        names to be stored in separate files. The automatic check is not performed in this case.
+
+        `ignore` is a set of attribute names to *not* serialize (file handles, caches etc). On
+        subsequent load() these attributes will be set to None.
+
         """
-        logger.info("saving %s object to %s" % (self.__class__.__name__, fname))
-        pickle(self, fname)
+        logger.info("saving %s object under %s, separately %s" % (self.__class__.__name__, fname, separately))
+        subname = lambda suffix: fname + '.' + suffix + '.npy'
+        tmp = {}
+        if separately is None:
+            separately = []
+            for attrib, val in iteritems(self.__dict__):
+                if isinstance(val, numpy.ndarray) and val.size >= sep_limit:
+                    separately.append(attrib)
+                elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and val.nnz >= sep_limit:
+                    separately.append(attrib)
+
+        # whatever's in `separately` or `ignore` at this point won't get pickled anymore
+        for attrib in separately + list(ignore):
+            if hasattr(self, attrib):
+                tmp[attrib] = getattr(self, attrib)
+                delattr(self, attrib)
+
+        try:
+            numpys, scipys, ignoreds = [], [], []
+            for attrib, val in iteritems(tmp):
+                if isinstance(val, numpy.ndarray) and attrib not in ignore:
+                    numpys.append(attrib)
+                    logger.info("storing numpy array '%s' to %s" % (attrib, subname(attrib)))
+                    numpy.save(subname(attrib), numpy.ascontiguousarray(val))
+                elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and attrib not in ignore:
+                    scipys.append(attrib)
+                    logger.info("storing scipy.sparse array '%s' under %s" % (attrib, subname(attrib)))
+                    numpy.save(subname(attrib) + '.data.npy', val.data)
+                    numpy.save(subname(attrib) + '.indptr.npy', val.indptr)
+                    numpy.save(subname(attrib) + '.indices.npy', val.indices)
+                    data, indptr, indices = val.data, val.indptr, val.indices
+                    val.data, val.indptr, val.indices = None, None, None
+                    try:
+                        pickle(val, subname(attrib)) # store array-less object
+                    finally:
+                        val.data, val.indptr, val.indices = data, indptr, indices
+                else:
+                    logger.info("not storing attribute %s" % (attrib))
+                    ignoreds.append(attrib)
+            self.__dict__['__numpys'] = numpys
+            self.__dict__['__scipys'] = scipys
+            self.__dict__['__ignoreds'] = ignoreds
+            pickle(self, fname)
+        finally:
+            # restore the attributes
+            for attrib, val in iteritems(tmp):
+                setattr(self, attrib, val)
 #endclass SaveLoad
 
 
@@ -278,13 +371,13 @@ def is_corpus(obj):
             # the input is an iterator object, meaning once we call next()
             # that element could be gone forever. we must be careful to put
             # whatever we retrieve back again
-            doc1 = obj.next()
+            doc1 = next(obj)
             obj = itertools.chain([doc1], obj)
         else:
-            doc1 = iter(obj).next() # empty corpus is resolved to False here
+            doc1 = next(iter(obj)) # empty corpus is resolved to False here
         if len(doc1) == 0: # sparse documents must have a __len__ function (list, tuple...)
             return True, obj # the first document is empty=>assume this is a corpus
-        id1, val1 = iter(doc1).next() # if obj is a numpy array, it resolves to False here
+        id1, val1 = next(iter(doc1)) # if obj is a numpy array, it resolves to False here
         id1, val1 = int(id1), float(val1) # must be a 2-tuple (integer, float)
     except:
         return False, obj
@@ -353,11 +446,11 @@ def decode_htmlentities(text):
     Adapted from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
 
     >>> u = u'E tu vivrai nel terrore - L&#x27;aldil&#xE0; (1981)'
-    >>> print decode_htmlentities(u).encode('UTF-8')
+    >>> print(decode_htmlentities(u).encode('UTF-8'))
     E tu vivrai nel terrore - L'aldilà (1981)
-    >>> print decode_htmlentities("l&#39;eau")
+    >>> print(decode_htmlentities("l&#39;eau"))
     l'eau
-    >>> print decode_htmlentities("foo &lt; bar")
+    >>> print(decode_htmlentities("foo &lt; bar"))
     foo < bar
 
     """
@@ -392,7 +485,7 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
     Return elements from the iterable in `chunksize`-ed lists. The last returned
     element may be smaller (if length of collection is not divisible by `chunksize`).
 
-    >>> print list(grouper(xrange(10), 3))
+    >>> print(list(grouper(range(10), 3)))
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
     """
     import numpy
@@ -473,7 +566,7 @@ else:
         If `maxsize==0`, don't fool around with parallelism and simply yield the chunksize
         via `chunkize_serial()` (no I/O optimizations).
 
-        >>> for chunk in chunkize(xrange(10), 4): print chunk
+        >>> for chunk in chunkize(range(10), 4): print(chunk)
         [0, 1, 2, 3]
         [4, 5, 6, 7]
         [8, 9]
@@ -496,43 +589,30 @@ else:
                 yield chunk
 
 
-def make_closing(base, **attrs):
-    """
-    Add support for `with Base(attrs) as fout:` to the base class if it's missing.
-    The base class' `close()` method will be called on context exit, to always close the file properly.
-
-    This is needed for gzip.GzipFile, bz2.BZ2File etc in older Pythons (<=2.6), which otherwise
-    raise "AttributeError: GzipFile instance has no attribute '__exit__'".
-
-    """
-    if not hasattr(base, '__enter__'):
-        attrs['__enter__'] = lambda self: self
-    if not hasattr(base, '__exit__'):
-        attrs['__exit__'] = lambda self, type, value, traceback: self.close()
-    return type('Closing' + base.__name__, (base, object), attrs)
-
-
-def smart_open(fname, mode='r'):
+def smart_open(fname, mode='rb'):
+    from contextlib import closing
     from os import path
+
     _, ext = path.splitext(fname)
     if ext == '.bz2':
         from bz2 import BZ2File
-        return make_closing(BZ2File)(fname, mode)
+        return closing(BZ2File(fname, mode))
     if ext == '.gz':
-        from gzip import GzipFile
-        return make_closing(GzipFile)(fname, mode)
+        import gzip
+        return closing(gzip.open(fname, mode))
     return open(fname, mode)
 
 
 def pickle(obj, fname, protocol=-1):
     """Pickle object `obj` to file `fname`."""
     with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
-        cPickle.dump(obj, fout, protocol=protocol)
+        _pickle.dump(obj, fout, protocol=protocol)
 
 
 def unpickle(fname):
     """Load pickled object from `fname`"""
-    return cPickle.load(smart_open(fname, 'rb'))
+    with smart_open(fname, 'rb') as f:
+        return _pickle.load(f)
 
 
 def revdict(d):
@@ -541,7 +621,7 @@ def revdict(d):
 
     When two keys map to the same value, only one of them will be kept in the
     result (which one is kept is arbitrary)."""
-    return dict((v, k) for (k, v) in d.iteritems())
+    return dict((v, k) for (k, v) in iteritems(d))
 
 
 def toptexts(query, texts, index, n=10):
@@ -636,11 +716,18 @@ if HAS_PATTERN:
 
         Use the English lemmatizer from `pattern` to extract tokens in
         their base form=lemma, e.g. "are, is, being" -> "be" etc.
-        This is a smarter version of stemming. Only consider nouns, verbs, adjectives
-        and adverbs by default (=all other lemmas are discarded).
+        This is a smarter version of stemming, taking word context into account.
+
+        Only considers nouns, verbs, adjectives and adverbs by default (=all other lemmas are discarded).
 
         >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
         ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
+
+        >>> lemmatize('The study ranks high.')
+        ['study/NN', 'rank/VB', 'high/JJ']
+
+        >>> lemmatize('The ranks study hard.')
+        ['rank/NN', 'study/VB', 'hard/RB']
 
         """
         if light:
@@ -651,7 +738,7 @@ if HAS_PATTERN:
         # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
         # FIXME this throws away all fancy parsing cues, including sentence structure,
         # abbreviations etc.
-        content = u' '.join(tokenize(content, lower=True, errors='ignore'))
+        content = u(' ').join(tokenize(content, lower=True, errors='ignore'))
 
         parsed = parse(content, lemmata=True, collapse=False)
         result = []

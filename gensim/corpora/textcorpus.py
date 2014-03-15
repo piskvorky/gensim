@@ -32,6 +32,7 @@ from __future__ import with_statement
 import logging
 
 from gensim import interfaces, utils
+from gensim._six import string_types
 from dictionary import Dictionary
 
 logger = logging.getLogger('gensim.corpora.textcorpus')
@@ -43,7 +44,7 @@ def getstream(input):
     If input is a file-like object, reset it to the beginning with `input.seek(0)`.
     """
     assert input is not None
-    if isinstance(input, basestring):
+    if isinstance(input, string_types):
         # input was a filename: open as text file
         result = open(input)
     else:
@@ -71,6 +72,7 @@ class TextCorpus(interfaces.CorpusABC):
         super(TextCorpus, self).__init__()
         self.input = input
         self.dictionary = Dictionary()
+        self.metadata = False
         if input is not None:
             self.dictionary.add_documents(self.get_texts())
         else:
@@ -85,7 +87,10 @@ class TextCorpus(interfaces.CorpusABC):
         Iterating over the corpus must yield sparse vectors, one for each document.
         """
         for text in self.get_texts():
-            yield self.dictionary.doc2bow(text, allow_update=False)
+            if self.metadata:
+                yield (self.dictionary.doc2bow(text[0], allow_update=False), text[1])
+            else:
+                yield self.dictionary.doc2bow(text, allow_update=False)
 
 
     def getstream(self):

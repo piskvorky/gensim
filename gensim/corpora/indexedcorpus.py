@@ -38,7 +38,7 @@ class IndexedCorpus(interfaces.CorpusABC):
         >>> gensim.corpora.SvmLightCorpus.serialize('testfile.svmlight', corpus)
         >>> # load back as a document stream (*not* plain Python list)
         >>> corpus_with_random_access = gensim.corpora.SvmLightCorpus('tstfile.svmlight')
-        >>> print corpus_with_random_access[1]
+        >>> print(corpus_with_random_access[1])
         [(0, 1.0), (1, 2.0)]
 
         """
@@ -53,7 +53,7 @@ class IndexedCorpus(interfaces.CorpusABC):
 
 
     @classmethod
-    def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None, labels=None):
+    def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None, labels=None, metadata=False):
         """
         Iterate through the document stream `corpus`, saving the documents to `fname`
         and recording byte offset of each document. Save the resulting index
@@ -71,7 +71,7 @@ class IndexedCorpus(interfaces.CorpusABC):
 
         >>> MmCorpus.serialize('test.mm', corpus)
         >>> mm = MmCorpus('test.mm') # `mm` document stream now has random access
-        >>> print mm[42] # retrieve document no. 42, etc.
+        >>> print(mm[42]) # retrieve document no. 42, etc.
         """
         if getattr(corpus, 'fname', None) == fname:
             raise ValueError("identical input vs. output corpus filename, refusing to serialize: %s" % fname)
@@ -81,14 +81,14 @@ class IndexedCorpus(interfaces.CorpusABC):
 
         if progress_cnt is not None:
             if labels is not None:
-                offsets = serializer.save_corpus(fname, corpus, id2word, labels=labels, progress_cnt=progress_cnt)
+                offsets = serializer.save_corpus(fname, corpus, id2word, labels=labels, progress_cnt=progress_cnt, metadata=metadata)
             else:
-                offsets = serializer.save_corpus(fname, corpus, id2word, progress_cnt=progress_cnt)
+                offsets = serializer.save_corpus(fname, corpus, id2word, progress_cnt=progress_cnt, metadata=metadata)
         else:
             if labels is not None:
-                offsets = serializer.save_corpus(fname, corpus, id2word, labels=labels)
+                offsets = serializer.save_corpus(fname, corpus, id2word, labels=labels, metadata=metadata)
             else:
-                offsets = serializer.save_corpus(fname, corpus, id2word)
+                offsets = serializer.save_corpus(fname, corpus, id2word, metadata=metadata)
 
         if offsets is None:
             raise NotImplementedError("called serialize on class %s which doesn't support indexing!" %

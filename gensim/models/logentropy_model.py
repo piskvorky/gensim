@@ -39,7 +39,7 @@ class LogEntropyModel(interfaces.TransformationABC):
         log entropy normalized space.
 
     >>> log_ent = LogEntropyModel(corpus)
-    >>> print = log_ent[some_doc]
+    >>> print(log_ent[some_doc])
     >>> log_ent.save('/tmp/foo.log_ent_model')
 
     Model persistency is achieved via its load/save methods.

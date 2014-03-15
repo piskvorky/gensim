@@ -129,7 +129,7 @@ the corpus iterator with::
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
     >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output
 
-    >>> print mm
+    >>> print(mm)
     MmCorpus(3199665 documents, 100000 features, 495547400 non-zero entries)
 
 Now we're ready to run distributed LSA on the English Wikipedia::

@@ -47,7 +47,7 @@ as well as words that only appear once in the corpus:
 >>> texts = [[word for word in text if word not in tokens_once]
 >>>          for text in texts]
 >>>
->>> print texts
+>>> print(texts)
 [['human', 'interface', 'computer'],
  ['survey', 'user', 'computer', 'system', 'response', 'time'],
  ['eps', 'user', 'interface', 'system'],
@@ -82,7 +82,7 @@ between the questions and ids is called a dictionary:
 
 >>> dictionary = corpora.Dictionary(texts)
 >>> dictionary.save('/tmp/deerwester.dict') # store the dictionary, for future reference
->>> print dictionary
+>>> print(dictionary)
 Dictionary(12 unique tokens)
 
 Here we assigned a unique integer id to all words appearing in the corpus with the
@@ -91,7 +91,7 @@ and relevant statistics. In the end, we see there are twelve distinct words in t
 processed corpus, which means each document will be represented by twelve numbers (ie., by a 12-D vector).
 To see the mapping between words and their ids:
 
->>> print dictionary.token2id
+>>> print(dictionary.token2id)
 {'minors': 11, 'graph': 10, 'system': 5, 'trees': 9, 'eps': 8, 'computer': 0,
 'survey': 4, 'user': 7, 'human': 1, 'time': 6, 'interface': 2, 'response': 3}
 
@@ -99,7 +99,7 @@ To actually convert tokenized documents to vectors:
 
 >>> new_doc = "Human computer interaction"
 >>> new_vec = dictionary.doc2bow(new_doc.lower().split())
->>> print new_vec # the word "interaction" does not appear in the dictionary and is ignored
+>>> print(new_vec) # the word "interaction" does not appear in the dictionary and is ignored
 [(0, 1), (1, 1)]
 
 The function :func:`doc2bow` simply counts the number of occurences of
@@ -110,7 +110,7 @@ therefore reads: in the document `"Human computer interaction"`, the words `comp
 
     >>> corpus = [dictionary.doc2bow(text) for text in texts]
     >>> corpora.MmCorpus.serialize('/tmp/deerwester.mm', corpus) # store to disk, for later use
-    >>> print corpus
+    >>> print(corpus)
     [(0, 1), (1, 1), (2, 1)]
     [(0, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]
     [(2, 1), (5, 1), (7, 1), (8, 1)]
@@ -149,7 +149,7 @@ Just parse your input to retrieve a clean list of tokens in each document,
 then convert the tokens via a dictionary to their ids and yield the resulting sparse vector inside `__iter__`.
 
 >>> corpus_memory_friendly = MyCorpus() # doesn't load the corpus into memory!
->>> print corpus_memory_friendly
+>>> print(corpus_memory_friendly)
 <__main__.MyCorpus object at 0x10d5690>
 
 Corpus is now an object. We didn't define any way to print it, so `print` just outputs address
@@ -157,7 +157,7 @@ of the object in memory. Not very useful. To see the constituent vectors, let's
 iterate over the corpus and print each document vector (one at a time)::
 
     >>> for vector in corpus_memory_friendly: # load one vector into memory at a time
-    >>>     print vector
+    ...     print(vector)
     [(0, 1), (1, 1), (2, 1)]
     [(0, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]
     [(2, 1), (5, 1), (7, 1), (8, 1)]
@@ -182,7 +182,7 @@ Similarly, to construct the dictionary without loading all texts into memory::
     >>> once_ids = [tokenid for tokenid, docfreq in dictionary.dfs.iteritems() if docfreq == 1]
     >>> dictionary.filter_tokens(stop_ids + once_ids) # remove stop words and words that appear only once
     >>> dictionary.compactify() # remove gaps in id sequence after words that were removed
-    >>> print dictionary
+    >>> print(dictionary)
     Dictionary(12 unique tokens)
 
 And that is all there is to it! At least as far as bag-of-words representation is concerned.
@@ -228,20 +228,20 @@ Conversely, to load a corpus iterator from a Matrix Market file:
 
 Corpus objects are streams, so typically you won't be able to print them directly:
 
->>> print corpus
+>>> print(corpus)
 MmCorpus(2 documents, 2 features, 1 non-zero entries)
 
 Instead, to view the contents of a corpus:
 
 >>> # one way of printing a corpus: load it entirely into memory
->>> print list(corpus) # calling list() will convert any sequence to a plain Python list
+>>> print(list(corpus)) # calling list() will convert any sequence to a plain Python list
 [[(1, 0.5)], []]
 
 or
 
 >>> # another way of doing it: print one document at a time, making use of the streaming interface
 >>> for doc in corpus:
->>>     print doc
+...     print(doc)
 [(1, 0.5)]
 []
 

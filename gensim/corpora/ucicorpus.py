@@ -21,6 +21,8 @@ from gensim.corpora import Dictionary
 from gensim.corpora import IndexedCorpus
 from gensim.matutils import MmReader
 from gensim.matutils import MmWriter
+from gensim._six import iteritems, string_types
+from gensim._six.moves import xrange
 
 
 logger = logging.getLogger('gensim.corpora.ucicorpus')
@@ -39,13 +41,13 @@ class UciReader(MmReader):
 
         self.input = input
 
-        if isinstance(input, basestring):
+        if isinstance(input, string_types):
             input = open(input)
 
         self.num_docs = self.num_terms = self.num_nnz = 0
-        self.num_docs = int(input.next().strip())
-        self.num_terms = int(input.next().strip())
-        self.num_nnz = int(input.next().strip())
+        self.num_docs = int(next(input).strip())
+        self.num_terms = int(next(input).strip())
+        self.num_nnz = int(next(input).strip())
 
         logger.info('accepted corpus with %i documents, %i features, %i non-zero entries' %
             (self.num_docs, self.num_terms, self.num_nnz))
@@ -173,7 +175,7 @@ class UciCorpus(UciReader, IndexedCorpus):
         dictionary.dfs = defaultdict(int)
 
         dictionary.id2token = self.id2word
-        dictionary.token2id = dict((v, k) for k, v in self.id2word.iteritems())
+        dictionary.token2id = dict((v, k) for k, v in iteritems(self.id2word))
 
         dictionary.num_docs = self.num_docs
         dictionary.num_nnz = self.num_nnz
@@ -189,7 +191,7 @@ class UciCorpus(UciReader, IndexedCorpus):
         return dictionary
 
     @staticmethod
-    def save_corpus(fname, corpus, id2word=None, progress_cnt=10000):
+    def save_corpus(fname, corpus, id2word=None, progress_cnt=10000, metadata=False):
         """
         Save a corpus in the UCI Bag-of-Words format.
 
