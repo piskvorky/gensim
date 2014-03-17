@@ -3,9 +3,12 @@ gensim -- Python Framework for Topic Modelling
 ==============================================
 
 |Travis|_
+|Downloads|_
 
 .. |Travis| image:: https://api.travis-ci.org/piskvorky/gensim.png?branch=develop
+.. |Downloads| image:: https://pypip.in/d/gensim/badge.png
 .. _Travis: https://travis-ci.org/piskvorky/gensim
+.. _Downloads: https://pypi.python.org/pypi/gensim
 
 Gensim is a Python library for *topic modelling*, *document indexing* and *similarity retrieval* with large corpora.
 Target audience is the *natural language processing* (NLP) and *information retrieval* (IR) community.
