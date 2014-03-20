@@ -6,18 +6,23 @@
 
 
 """
-Python wrapper for Latent Dirichlet Allocation (LDA) from Mallet, the Java topic modelling
+Python wrapper for Latent Dirichlet Allocation (LDA) from MALLET, the Java topic modelling
 toolkit [1]_.
 
 This module allows both LDA model estimation from a training corpus and inference of topic
 distribution on new, unseen documents, using an (optimized version of) collapsed
-gibbs sampling from Mallet.
+gibbs sampling from MALLET.
 
-Mallet's LDA training requires O(#corpus_words) of memory, keeping the entire corpus in RAM.
+MALLET's LDA training requires O(#corpus_words) of memory, keeping the entire corpus in RAM.
 If you find yourself running out of memory, either decrease the `workers` constructor
 parameter, or use `LdaModel` which needs only O(1) memory.
 
-The model can NOT be updated with new documents for online training -- use gensim's `LdaModel` for that.
+The wrapped model can NOT be updated with new documents for online training -- use gensim's `LdaModel` for that.
+
+Example:
+
+>>> model = gensim.models.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet', corpus=my_corpus, num_topics=20, id2word=dictionary)
+>>> print model[my_vector]  # print LDA topics of a document
 
 .. [1] http://mallet.cs.umass.edu/
 
@@ -37,7 +42,7 @@ from gensim import utils
 
 def read_doctopics(fname, eps=1e-6):
     """
-    Yield document topic vectors from Mallet's "doc-topics" format, as sparse gensim vectors.
+    Yield document topic vectors from MALLET's "doc-topics" format, as sparse gensim vectors.
 
     """
     with utils.smart_open(fname) as fin:
@@ -54,19 +59,21 @@ def read_doctopics(fname, eps=1e-6):
 
 
 class LdaMallet(utils.SaveLoad):
+    """
+    Class for LDA training using MALLET. Communication between MALLET and Python
+    takes place by passing around data files on disk and calling Java with subprocess.call().
+
+    """
     def __init__(self, mallet_path, corpus=None, num_topics=100, id2word=None, workers=4, prefix=None,
                  optimize_interval=0, iterations=1000):
         """
-        Class for LDA training using Mallet. Communication between Mallet and Python
-        takes place by passing around data files on disk and calling Java with subprocess.call().
-
-        `mallet_path` is path to the mallet executable, e.g. `/home/kofola/mallet-2.0.7/bin/mallet`
-        `corpus` is a gensim corpus
-        `id2word` is a mapping between tokens ids and token
-        `workers` is the number of threads, for parallel training
-        `prefix` is the string prefix under which all data files will be stored; default: system temp + random filename prefix
-        `optimize_interval` optimize hyperparameters every N iterations (0 to switch off hyperparameter optimization)
-        `iterations` is the number of sampling iterations
+        `mallet_path` is path to the mallet executable, e.g. `/home/kofola/mallet-2.0.7/bin/mallet`.
+        `corpus` is a gensim corpus, aka a stream of sparse document vectors.
+        `id2word` is a mapping between tokens ids and token.
+        `workers` is the number of threads, for parallel training.
+        `prefix` is the string prefix under which all data files will be stored; default: system temp + random filename prefix.
+        `optimize_interval` optimize hyperparameters every N iterations (sometimes leads to Java exception; 0 to switch off hyperparameter optimization).
+        `iterations` is the number of sampling iterations.
 
         """
         self.mallet_path = mallet_path
@@ -109,11 +116,11 @@ class LdaMallet(utils.SaveLoad):
     def convert_input(self, corpus, infer=False):
         """
         Serialize documents (lists of unicode tokens) to a temporary text file,
-        then convert that text file to mallet format `outfile`.
+        then convert that text file to MALLET format `outfile`.
 
         """
         logger.info("serializing temporary corpus to %s" % self.fcorpustxt())
-        # write out the corpus in a file format that mallet understands: one document per line:
+        # write out the corpus in a file format that MALLET understands: one document per line:
         # document id[SPACE]label (not used)[SPACE]utf8-encoded tokens, whitespace delimited
         with utils.smart_open(self.fcorpustxt(), 'wb') as fout:
             for docno, doc in enumerate(corpus):
@@ -123,14 +130,14 @@ class LdaMallet(utils.SaveLoad):
                     tokens = sum(([str(tokenid)] * int(cnt) for tokenid, cnt in doc), [])
                 fout.write("%s 0 %s\n" % (docno, utils.to_utf8(' '.join(tokens))))
 
-        # convert the text file above into mallet's internal format
+        # convert the text file above into MALLET's internal format
         cmd = self.mallet_path + " import-file --keep-sequence --remove-stopwords --token-regex '\S+' --input %s --output %s"
         if infer:
             cmd += ' --use-pipe-from ' + self.fcorpusmallet()
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet() + '.infer')
         else:
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet())
-        logger.info("converting temporary corpus to mallet format with %s" % cmd)
+        logger.info("converting temporary corpus to MALLET format with %s" % cmd)
         call(cmd, shell=True)
 
 
@@ -142,7 +149,7 @@ class LdaMallet(utils.SaveLoad):
         cmd = cmd % (self.fcorpusmallet(), self.num_topics, self.optimize_interval, self.workers,
             self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations, self.finferencer())
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
-        logger.info("training Mallet LDA with %s" % cmd)
+        logger.info("training MALLET LDA with %s" % cmd)
         call(cmd, shell=True)
 
 
@@ -154,6 +161,6 @@ class LdaMallet(utils.SaveLoad):
         self.convert_input(bow, infer=True)
         cmd = self.mallet_path + " infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s"
         cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations)
-        logger.info("inferring with Mallet LDA with %s" % cmd)
+        logger.info("inferring with MALLET LDA with %s" % cmd)
         call(cmd, shell=True)
         return list(read_doctopics(self.fdoctopics() + '.infer'))
