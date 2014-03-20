@@ -25,8 +25,8 @@ Features
   * easy to plug in your own input corpus/datastream (trivial streaming API)
   * easy to extend with other Vector Space algorithms (trivial transformation API)
 
-* Efficient implementations of popular algorithms, such as online **Latent Semantic Analysis**,
-  **Latent Dirichlet Allocation**, **Random Projections** or **word2vec deep learning**.
+* Efficient implementations of popular algorithms, such as online **Latent Semantic Analysis (LSA/LSI)**,
+  **Latent Dirichlet Allocation (LDA)**, **Random Projections (RP)**, **Hierarchical Dirichlet Process (HDP)**  or **word2vec deep learning**.
 * **Distributed computing**: can run *Latent Semantic Analysis* and *Latent Dirichlet Allocation* on a cluster of computers, and *word2vec* on multiple cores.
 * Extensive `HTML documentation and tutorials <http://radimrehurek.com/gensim/>`_.
 
