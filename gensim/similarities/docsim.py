@@ -41,7 +41,7 @@ To see the speed-up on your machine, run ``python -m gensim.test.simspeed``
 (compare to my results `here <http://groups.google.com/group/gensim/msg/4f6f171a869e4fca?>`_).
 
 There is also a special syntax for when you need similarity of documents in the index
-to the index itself (i.e. query=index documents themselves). This special syntax
+to the index itself (i.e. queries=indexed documents themselves). This special syntax
 already uses the faster, batch queries internally:
 
 >>> for similarities in index: # return all similarities of the 1st index document, then 2nd...

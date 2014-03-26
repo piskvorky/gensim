@@ -1,5 +1,5 @@
 ==============================================
-gensim -- Python Framework for Topic Modelling
+gensim -- Topic Modelling in Python
 ==============================================
 
 |Travis|_

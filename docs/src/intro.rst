@@ -4,7 +4,7 @@
 Introduction
 ============
 
-Gensim is a :ref:`free <availability>` Python framework designed to automatically extract semantic
+Gensim is a :ref:`free <availability>` Python library designed to automatically extract semantic
 topics from documents, as efficiently (computer-wise) and painlessly (human-wise) as possible.
 
 
