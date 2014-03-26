@@ -27,8 +27,9 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 class LeeCorpus(object):
     def __iter__(self):
-        for line in open(datapath('lee_background.cor')):
-            yield utils.simple_preprocess(line)
+        with open(datapath('lee_background.cor')) as f:
+            for line in f:
+                yield utils.simple_preprocess(line)
 
 
 sentences = [
