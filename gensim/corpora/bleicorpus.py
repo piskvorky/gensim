@@ -119,7 +119,7 @@ class BleiCorpus(IndexedCorpus):
         # write out vocabulary, in a format compatible with Blei's topics.py script
         fname_vocab = fname + '.vocab'
         logger.info("saving vocabulary of %i words to %s" % (num_terms, fname_vocab))
-        with open(fname_vocab, 'w') as fout:
+        with open(fname_vocab, 'wb') as fout:
             for featureid in xrange(num_terms):
                 fout.write("%s\n" % utils.to_utf8(id2word.get(featureid, '---')))
 

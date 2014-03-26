@@ -399,7 +399,7 @@ class MmWriter(object):
 
     def __init__(self, fname):
         self.fname = fname
-        self.fout = open(self.fname, 'w+') # open for both reading and writing
+        self.fout = open(self.fname, 'wb+') # open for both reading and writing
         self.headers_written = False
 
 
