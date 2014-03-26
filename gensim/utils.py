@@ -589,7 +589,7 @@ else:
                 yield chunk
 
 
-def smart_open(fname, mode='rb'):
+def smart_open(fname, mode='r'):
     from contextlib import closing
     from os import path
 

@@ -121,8 +121,9 @@ class Projection(utils.SaveLoad):
             # base case decomposition: given a job `docs`, compute its decomposition,
             # *in-core*.
             if not use_svdlibc:
-                u, s = stochastic_svd(docs, k, chunksize=sys.maxint, num_terms=m,
-                    power_iters=self.power_iters, extra_dims=self.extra_dims)
+                u, s = stochastic_svd(docs, k, chunksize=sys.maxsize,
+                    num_terms=m, power_iters=self.power_iters,
+                    extra_dims=self.extra_dims)
             else:
                 try:
                     import sparsesvd

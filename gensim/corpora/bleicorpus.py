@@ -109,7 +109,7 @@ class BleiCorpus(IndexedCorpus):
             num_terms = 1 + max([-1] + id2word.keys())
 
         logger.info("storing corpus in Blei's LDA-C format into %s" % fname)
-        with utils.smart_open(fname, 'wb') as fout:
+        with utils.smart_open(fname, 'w') as fout:
             offsets = []
             for doc in corpus:
                 doc = list(doc)

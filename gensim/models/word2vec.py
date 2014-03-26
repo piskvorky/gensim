@@ -232,7 +232,7 @@ class Word2Vec(utils.SaveLoad):
         logger.info("constructing a huffman tree from %i words" % len(self.vocab))
 
         # build the huffman tree
-        heap = self.vocab.values()
+        heap = list(itervalues(self.vocab))
         heapq.heapify(heap)
         for i in xrange(len(self.vocab) - 1):
             min1, min2 = heapq.heappop(heap), heapq.heappop(heap)
@@ -378,12 +378,12 @@ class Word2Vec(utils.SaveLoad):
         """
         if fvocab is not None:
             logger.info("Storing vocabulary in %s" % (fvocab))
-            with utils.smart_open(fvocab, 'wb') as vout:
+            with utils.smart_open(fvocab, 'w') as vout:
                 for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
                     vout.write("%s %s\n" % (word, vocab.count))
         logger.info("storing %sx%s projection weights into %s" % (len(self.vocab), self.layer1_size, fname))
         assert (len(self.vocab), self.layer1_size) == self.syn0.shape
-        with utils.smart_open(fname, 'wb') as fout:
+        with utils.smart_open(fname, 'w') as fout:
             fout.write("%s %s\n" % self.syn0.shape)
             # store in sorted order: most frequent words at the top
             for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
@@ -438,7 +438,7 @@ class Word2Vec(utils.SaveLoad):
                             word.append(ch)
                     if counts is None:
                         result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
-                    elif counts.has_key(word):
+                    elif word in counts:
                         result.vocab[word] = Vocab(index=line_no, count=counts[word])
                     else:
                         logger.warning("vocabulary file is incomplete")
@@ -453,7 +453,7 @@ class Word2Vec(utils.SaveLoad):
                     word, weights = parts[0], map(REAL, parts[1:])
                     if counts is None:
                         result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
-                    elif counts.has_key(word):
+                    elif word in counts:
                         result.vocab[word] = Vocab(index=line_no, count=counts[word])
                     else:
                         logger.warning("vocabulary file is incomplete")

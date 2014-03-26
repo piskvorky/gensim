@@ -189,7 +189,8 @@ def sparse2full(doc, length):
     """
     result = numpy.zeros(length, dtype=numpy.float32) # fill with zeroes (default value)
     doc = dict(doc)
-    result[doc.keys()] = doc.values() # overwrite some of the zeroes with explicit values
+    # overwrite some of the zeroes with explicit values
+    result[list(doc)] = list(itervalues(doc))
     return result
 
 
@@ -201,7 +202,7 @@ def full2sparse(vec, eps=1e-9):
     """
     vec = numpy.asarray(vec, dtype=float)
     nnz = numpy.nonzero(abs(vec) > eps)[0]
-    return zip(nnz, vec.take(nnz))
+    return list(zip(nnz, vec.take(nnz)))
 
 dense2vec = full2sparse
 
@@ -217,7 +218,7 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
     vec = numpy.asarray(vec, dtype=float)
     nnz = numpy.nonzero(abs(vec) > eps)[0]
     biggest = nnz.take(argsort(vec.take(nnz), topn))
-    return zip(biggest, vec.take(biggest))
+    return list(zip(biggest, vec.take(biggest)))
 
 
 def corpus2dense(corpus, num_terms, num_docs=None, dtype=numpy.float32):
