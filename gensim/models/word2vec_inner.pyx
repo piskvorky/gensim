@@ -536,7 +536,7 @@ cdef void fast_sentence2_cbow_negs(
         else:
             count += ONEF
             for a in range(size):
-                neu1[a] += syn0[indexes[m] * size]
+                neu1[a] += syn0[indexes[m] * size + a]
     if count > (<REAL_t>0.5):
         for a in range(size):
             neu1[a] /= count
