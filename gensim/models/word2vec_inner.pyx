@@ -31,12 +31,12 @@ ctypedef double (*dsdot_ptr) (const int *N, const float *X, const int *incX, con
 ctypedef double (*snrm2_ptr) (const int *N, const float *X, const int *incX) nogil
 ctypedef void (*sscal_ptr) (const int *N, const float *alpha, const float *X, const int *incX) nogil
 
-ctypedef void (* fast_sentence_sg_hs_ptr) (
+ctypedef void (*fast_sentence_sg_hs_ptr) (
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work) nogil
 
-ctypedef void (* fast_sentence_sg_neg_ptr) (
+ctypedef void (*fast_sentence_sg_neg_ptr) (
     const int pos, const int negative, np.uint32_t *table,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work, 
@@ -48,7 +48,7 @@ ctypedef void (*fast_sentence_cbow_hs_ptr) (
     np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k) nogil
 
-ctypedef void fast_sentence_cbow_negs_ptr) (
+ctypedef void (*fast_sentence_cbow_negs_ptr) (
     int pos, const int negative, np.uint32_t *table,
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE], const REAL_t alpha, REAL_t *work,
