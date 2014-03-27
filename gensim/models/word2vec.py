@@ -283,6 +283,7 @@ class Word2Vec(utils.SaveLoad):
                 d1 += self.vocab[self.index2word[widx]].count**power / train_words_pow
             if widx >= vocab_size:
                 widx = vocab_size - 1
+        self.table = self.table.astype(uint32)
 
     def create_binary_tree(self):
         """
@@ -353,10 +354,6 @@ class Word2Vec(utils.SaveLoad):
         if self.negative:
             # build the table for drawing random words (for negative sampling)
             self.make_table()
-            if self.sg:
-                self.random_numbers = zeros((MAX_SENTENCE_LEN * 2 * self.window * self.negative), dtype=int)
-            else:
-                self.random_numbers = zeros((MAX_SENTENCE_LEN * self.negative), dtype=int)
         self.reset_weights()
 
 
@@ -435,8 +432,10 @@ class Word2Vec(utils.SaveLoad):
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
         for i in xrange(len(self.vocab)):
             self.syn0[i] = (random.rand(self.layer1_size) - 0.5) / self.layer1_size
-        self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
-        self.syn1neg = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
+        if self.hs:
+            self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
+        if self.negative:
+            self.syn1neg = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
         self.syn0norm = None
 
 
