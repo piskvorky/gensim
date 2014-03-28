@@ -336,6 +336,7 @@ class Dictionary(utils.SaveLoad, dict):
         # now make sure length(result) == get_max_id(corpus) + 1
         for i in xrange(max_id + 1):
             result.token2id[str(i)] = i
+            result.dfs[i] = result.dfs.get(i, 0)
 
         logger.info("built %s from %i documents (total %i corpus positions)" %
                      (result, result.num_docs, result.num_pos))
