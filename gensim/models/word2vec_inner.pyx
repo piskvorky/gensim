@@ -13,7 +13,6 @@ cimport numpy as np
 
 from libc.math cimport exp
 from libc.string cimport memset
-from libc.stdlib cimport rand
 
 cdef extern from "voidptr.h":
     void* PyCObject_AsVoidPtr(object obj)
@@ -37,10 +36,11 @@ ctypedef void (*fast_sentence_sg_hs_ptr) (
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work) nogil
 
-ctypedef void (*fast_sentence_sg_neg_ptr) (
-    const int negative, np.uint32_t *table,
+ctypedef unsigned long long (*fast_sentence_sg_neg_ptr) (
+    const int negative, np.uint32_t *table, unsigned long long table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
-    const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work) nogil
+    const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
+    unsigned long long next_random) nogil
 
 ctypedef void (*fast_sentence_cbow_hs_ptr) (
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
@@ -48,11 +48,11 @@ ctypedef void (*fast_sentence_cbow_hs_ptr) (
     np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k) nogil
 
-ctypedef void (*fast_sentence_cbow_neg_ptr) (
-    const int negative, np.uint32_t *table, int codelens[MAX_SENTENCE_LEN],
+ctypedef unsigned long long (*fast_sentence_cbow_neg_ptr) (
+    const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k) nogil
+    int i, int j, int k, unsigned long long next_random) nogil
 
 cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(fblas.scopy._cpointer)  # y = x
 cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(fblas.saxpy._cpointer)  # y += alpha * x
@@ -144,13 +144,15 @@ cdef void fast_sentence2_sg_hs(
     for a in range(size):
         syn0[row1 + a] += work[a]
 
-cdef void fast_sentence0_sg_neg(
-    const int negative, np.uint32_t *table,
+cdef unsigned long long fast_sentence0_sg_neg(
+    const int negative, np.uint32_t *table, unsigned long long table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
-    const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work) nogil:
+    const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
+    unsigned long long next_random) nogil:
 
     cdef long long a
-    cdef long long row1 = word2_index * size, row2, random_integer
+    cdef long long row1 = word2_index * size, row2
+    cdef unsigned long long modulo = 2**48 - 1
     cdef REAL_t f, g
     cdef int d
 
@@ -165,11 +167,11 @@ cdef void fast_sentence0_sg_neg(
             target_index = word_index
             label = ONEF
         else:
-            random_integer = 10000*(rand() % 10000) + (rand() % 10000)
-            target_index = table[random_integer]
+            target_index = table[(next_random >> 16) % table_len]
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
+            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
 
         row2 = target_index * size
         f = <REAL_t>dsdot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
@@ -182,13 +184,17 @@ cdef void fast_sentence0_sg_neg(
 
     saxpy(&size, &ONEF, work, &ONE, &syn0[row1], &ONE)
 
-cdef void fast_sentence1_sg_neg(
-    const int negative, np.uint32_t *table,
+    return next_random
+
+cdef unsigned long long fast_sentence1_sg_neg(
+    const int negative, np.uint32_t *table, unsigned long long table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
-    const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work) nogil:
+    const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
+    unsigned long long next_random) nogil:
 
     cdef long long a
-    cdef long long row1 = word2_index * size, row2, random_integer
+    cdef long long row1 = word2_index * size, row2
+    cdef unsigned long long modulo = 2**48 - 1
     cdef REAL_t f, g
     cdef int d
 
@@ -203,11 +209,11 @@ cdef void fast_sentence1_sg_neg(
             target_index = word_index
             label = ONEF
         else:
-            random_integer = 10000*(rand() % 10000) + (rand() % 10000)
-            target_index = table[random_integer]
+            target_index = table[(next_random >> 16) % table_len]
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
+            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
 
         row2 = target_index * size
         f = <REAL_t>sdot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
@@ -220,13 +226,17 @@ cdef void fast_sentence1_sg_neg(
 
     saxpy(&size, &ONEF, work, &ONE, &syn0[row1], &ONE)
 
-cdef void fast_sentence2_sg_neg(
-    const int negative, np.uint32_t *table,
+    return next_random
+
+cdef unsigned long long fast_sentence2_sg_neg(
+    const int negative, np.uint32_t *table, unsigned long long table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
-    const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work) nogil:
+    const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
+    unsigned long long next_random) nogil:
 
     cdef long long a
-    cdef long long row1 = word2_index * size, row2, random_integer
+    cdef long long row1 = word2_index * size, row2
+    cdef unsigned long long modulo = 2**48 - 1
     cdef REAL_t f, g
     cdef int d
 
@@ -242,11 +252,11 @@ cdef void fast_sentence2_sg_neg(
             target_index = word_index
             label = ONEF
         else:
-            random_integer = 10000*(rand() % 10000) + (rand() % 10000)
-            target_index = table[random_integer]
+            target_index = table[(next_random >> 16) % table_len]
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
+            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
 
         row2 = target_index * size
         f = <REAL_t>0.0
@@ -263,6 +273,8 @@ cdef void fast_sentence2_sg_neg(
 
     for a in range(size):
         syn0[row1 + a] += work[a]
+
+    return next_random
 
 cdef void fast_sentence0_cbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
@@ -392,14 +404,15 @@ cdef void fast_sentence2_cbow_hs(
             for a in range(size):
                 syn0[indexes[m] * size + a] += work[a]
 
-cdef void fast_sentence0_cbow_neg(
-    const int negative, np.uint32_t *table, int codelens[MAX_SENTENCE_LEN],
+cdef unsigned long long fast_sentence0_cbow_neg(
+    const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k) nogil:
+    int i, int j, int k, unsigned long long next_random) nogil:
 
     cdef long long a
-    cdef long long row2, random_integer
+    cdef long long row2
+    cdef unsigned long long modulo = 2**48 - 1
     cdef REAL_t f, g, count, inv_count
     cdef int m, d
 
@@ -427,11 +440,11 @@ cdef void fast_sentence0_cbow_neg(
             target_index = word_index
             label = ONEF
         else:
-            random_integer = 10000*(rand() % 10000) + (rand() % 10000)
-            target_index = table[random_integer]
+            target_index = table[(next_random >> 16) % table_len]
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
+            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
 
         row2 = target_index * size
         f = <REAL_t>dsdot(&size, neu1, &ONE, &syn1neg[row2], &ONE)
@@ -448,20 +461,24 @@ cdef void fast_sentence0_cbow_neg(
         else:
             saxpy(&size, &ONEF, work, &ONE, &syn0[indexes[m]*size], &ONE)
 
-cdef void fast_sentence1_cbow_neg(
-    const int negative, np.uint32_t *table, int codelens[MAX_SENTENCE_LEN],
+    return next_random
+
+cdef unsigned long long fast_sentence1_cbow_neg(
+    const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work, 
-    int i, int j, int k) nogil:
+    int i, int j, int k, unsigned long long next_random) nogil:
 
     cdef long long a
-    cdef long long row2, random_integer
+    cdef long long row2
+    cdef unsigned long long modulo = 2**48 - 1
     cdef REAL_t f, g, count, inv_count
     cdef int m, d
 
     cdef np.uint32_t target_index
     cdef REAL_t label
     cdef np.uint32_t word_index
+
     word_index = indexes[i]
 
     memset(neu1, 0, size * cython.sizeof(REAL_t))
@@ -483,11 +500,11 @@ cdef void fast_sentence1_cbow_neg(
             target_index = word_index
             label = ONEF
         else:
-            random_integer = 10000*(rand() % 10000) + (rand() % 10000)
-            target_index = table[random_integer]
+            target_index = table[(next_random >> 16) % table_len]
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
+            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
 
         row2 = target_index * size
         f = <REAL_t>sdot(&size, neu1, &ONE, &syn1neg[row2], &ONE)
@@ -504,14 +521,17 @@ cdef void fast_sentence1_cbow_neg(
         else:
             saxpy(&size, &ONEF, work, &ONE, &syn0[indexes[m]*size], &ONE)
 
-cdef void fast_sentence2_cbow_neg(
-    const int negative, np.uint32_t *table, int codelens[MAX_SENTENCE_LEN],
+    return next_random
+
+cdef unsigned long long fast_sentence2_cbow_neg(
+    const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k) nogil:
+    int i, int j, int k, unsigned long long next_random) nogil:
 
     cdef long long a
-    cdef long long row2, random_integer
+    cdef long long row2
+    cdef unsigned long long modulo = 2**48 - 1
     cdef REAL_t f, g, count, inv_count
     cdef int m, d
 
@@ -542,11 +562,11 @@ cdef void fast_sentence2_cbow_neg(
             target_index = word_index
             label = ONEF
         else:
-            random_integer = 10000*(rand() % 10000) + (rand() % 10000)
-            target_index = table[random_integer]
+            target_index = table[(next_random >> 16) % table_len]
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
+            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
 
         row2 = target_index * size
         f = <REAL_t>0.0
@@ -567,6 +587,9 @@ cdef void fast_sentence2_cbow_neg(
         else:
             for a in range(size):
                 syn0[indexes[m] * size + a] += work[a]
+
+
+    return next_random
 
 def train_sentence_sg(model, sentence, alpha, _work):
     cdef int hs = model.hs
@@ -593,7 +616,7 @@ def train_sentence_sg(model, sentence, alpha, _work):
 
     cdef REAL_t *syn1neg
     cdef np.uint32_t *table
-    cdef int table_size
+    cdef unsigned long long table_len, next_random
     cdef np.uint32_t word_index
 
     if hs:
@@ -601,8 +624,9 @@ def train_sentence_sg(model, sentence, alpha, _work):
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        table_size = len(model.table)
+        table_len = len(model.table)
         table = <np.uint32_t *>(np.PyArray_DATA(model.table))
+        next_random = (2**24)*np.random.randint(0,2**24) + np.random.randint(0,2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
@@ -640,7 +664,7 @@ def train_sentence_sg(model, sentence, alpha, _work):
                 if hs:
                     fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work)
                 if negative:
-                    fast_sentence_sg_neg(negative, table, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work)
+                    next_random = fast_sentence_sg_neg(negative, table, table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random)
 
     return result
 
@@ -671,7 +695,7 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
 
     cdef REAL_t *syn1neg
     cdef np.uint32_t *table
-    cdef int table_size
+    cdef unsigned long long table_len, next_random
     cdef np.uint32_t word_index
 
     if hs:
@@ -679,8 +703,9 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        table_size = len(model.table)
+        table_len = len(model.table)
         table = <np.uint32_t *>(np.PyArray_DATA(model.table))
+        next_random = (2**24)*np.random.randint(0,2**24) + np.random.randint(0,2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
@@ -715,7 +740,7 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
             if hs:
                 fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k)
             if negative:
-                fast_sentence_cbow_neg(negative, table, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k)
+                next_random = fast_sentence_cbow_neg(negative, table, table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, next_random)
 
     return result
 
