@@ -378,12 +378,12 @@ class Word2Vec(utils.SaveLoad):
         """
         if fvocab is not None:
             logger.info("Storing vocabulary in %s" % (fvocab))
-            with utils.smart_open(fvocab, 'w') as vout:
+            with utils.smart_open(fvocab, 'wb') as vout:
                 for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
                     vout.write("%s %s\n" % (word, vocab.count))
         logger.info("storing %sx%s projection weights into %s" % (len(self.vocab), self.layer1_size, fname))
         assert (len(self.vocab), self.layer1_size) == self.syn0.shape
-        with utils.smart_open(fname, 'w') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             fout.write("%s %s\n" % self.syn0.shape)
             # store in sorted order: most frequent words at the top
             for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
@@ -419,7 +419,7 @@ class Word2Vec(utils.SaveLoad):
                     counts[word] = int(count)
 
         logger.info("loading projection weights from %s" % (fname))
-        with utils.smart_open(fname) as fin:
+        with utils.smart_open(fname, 'rb') as fin:
             header = fin.readline()
             vocab_size, layer1_size = map(int, header.split())  # throws for invalid file format
             result = Word2Vec(size=layer1_size)
