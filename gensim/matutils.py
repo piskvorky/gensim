@@ -245,7 +245,7 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=numpy.float32):
 
 class Dense2Corpus(object):
     """
-    Treat dense numpy array as a sparse gensim corpus.
+    Treat dense numpy array as a sparse, streamed gensim corpus.
 
     No data copy is made (changes to the underlying matrix imply changes in the
     corpus).
@@ -337,6 +337,10 @@ def unitvec(vec):
 
 
 def cossim(vec1, vec2):
+    """
+    Return cosine similarity between two sparse vectors.
+    The similarity is a number between <-1.0, 1.0>, higher is more similar.
+    """
     vec1, vec2 = dict(vec1), dict(vec2)
     if not vec1 or not vec2:
         return 0.0
