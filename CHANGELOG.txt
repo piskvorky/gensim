@@ -1,6 +1,9 @@
 Changes
 =======
 
+0.9.1
+* MmCorpus fix for Windows
+
 0.9.0, 16/03/2014
 
 * save/load automatically single out large arrays + allow mmap
