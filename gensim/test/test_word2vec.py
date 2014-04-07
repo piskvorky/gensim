@@ -66,7 +66,7 @@ class TestWord2VecModel(unittest.TestCase):
         model.build_vocab(corpus)
         self.assertTrue(len(model.vocab) == 6981)
         # with min_count=1, we're not throwing away anything, so make sure the word counts add up to be the entire corpus
-        self.assertTrue(sum(v.count for v in model.vocab.itervalues()) == total_words)
+        self.assertTrue(sum(v.count for v in model.vocab.values()) == total_words)
         # make sure the binary codes are correct
         numpy.allclose(model.vocab['the'].code, [1, 1, 0, 0])
 
@@ -118,7 +118,7 @@ class TestWord2VecModel(unittest.TestCase):
             sims = model.most_similar('israeli')
             # the exact vectors and therefore similarities may differ, due to different thread collisions
             # so let's test only for top3
-            self.assertTrue('palestinian' in [sims[i][0] for i in xrange(3)])
+            self.assertTrue('palestinian' in [sims[i][0] for i in range(3)])
 
 
     def testRNG(self):
@@ -132,7 +132,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(len(model.vocab), len(model2.vocab))
         self.assertTrue(numpy.allclose(model.syn0, model2.syn0))
         self.assertTrue(numpy.allclose(model.syn1, model2.syn1))
-        most_common_word = max(model.vocab.iteritems(), key=lambda item: item[1].count)[0]
+        most_common_word = max(model.vocab.items(), key=lambda item: item[1].count)[0]
         self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
 #endclass TestWord2VecModel
 

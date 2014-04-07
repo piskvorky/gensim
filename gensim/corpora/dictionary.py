@@ -182,7 +182,7 @@ class Dictionary(utils.SaveLoad, dict):
         no_above_abs = int(no_above * self.num_docs) # convert fractional threshold to absolute threshold
 
         # determine which tokens to keep
-        good_ids = (v for v in self.token2id.itervalues() if no_below <= self.dfs[v] <= no_above_abs)
+        good_ids = (v for v in self.token2id.values() if no_below <= self.dfs[v] <= no_above_abs)
         good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
         if keep_n is not None:
             good_ids = good_ids[:keep_n]
@@ -231,12 +231,12 @@ class Dictionary(utils.SaveLoad, dict):
         logger.debug("rebuilding dictionary, shrinking gaps")
 
         # build mapping from old id -> new id
-        idmap = dict(itertools.izip(self.token2id.itervalues(), xrange(len(self.token2id))))
+        idmap = dict(zip(self.token2id.values(), range(len(self.token2id))))
 
         # reassign mappings to new ids
-        self.token2id = dict((token, idmap[tokenid]) for token, tokenid in self.token2id.iteritems())
+        self.token2id = dict((token, idmap[tokenid]) for token, tokenid in self.token2id.items())
         self.id2token = {}
-        self.dfs = dict((idmap[tokenid], freq) for tokenid, freq in self.dfs.iteritems())
+        self.dfs = dict((idmap[tokenid], freq) for tokenid, freq in self.dfs.items())
 
 
     def save_as_text(self, fname):
@@ -247,8 +247,8 @@ class Dictionary(utils.SaveLoad, dict):
         Note: use `save`/`load` to store in binary format instead (pickle).
         """
         logger.info("saving dictionary mapping to %s" % fname)
-        with utils.smart_open(fname, 'wb') as fout:
-            for token, tokenid in sorted(self.token2id.iteritems()):
+        with utils.smart_open(fname, 'w') as fout:
+            for token, tokenid in sorted(self.token2id.items()):
                 fout.write("%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0)))
 
 
@@ -305,7 +305,7 @@ class Dictionary(utils.SaveLoad, dict):
         Mirror function to `save_as_text`.
         """
         result = Dictionary()
-        with utils.smart_open(fname, 'rb') as f:
+        with utils.smart_open(fname, 'r') as f:
             for lineno, line in enumerate(f):
                 try:
                     wordid, word, docfreq = line[:-1].split('\t')
@@ -343,7 +343,7 @@ class Dictionary(utils.SaveLoad, dict):
                 result.num_pos += word_freq
                 result.dfs[wordid] = result.dfs.get(wordid, 0) + 1
         # now make sure length(result) == get_max_id(corpus) + 1
-        for i in xrange(max_id + 1):
+        for i in range(max_id + 1):
             result.token2id[str(i)] = i
 
         logger.info("built %s from %i documents (total %i corpus positions)" %

@@ -29,7 +29,7 @@ def precompute_idfs(wglobal, dfs, total_docs):
     """Precompute the inverse document frequency mapping for all terms."""
     # not strictly necessary and could be computed on the fly in TfidfModel__getitem__.
     # this method is here just to speed things up a little.
-    return dict((termid, wglobal(df, total_docs)) for termid, df in dfs.iteritems())
+    return dict((termid, wglobal(df, total_docs)) for termid, df in dfs.items())
 
 
 class TfidfModel(interfaces.TransformationABC):
@@ -126,7 +126,7 @@ class TfidfModel(interfaces.TransformationABC):
 
         # and finally compute the idf weights
         logger.info("calculating IDF weights for %i documents and %i features (%i matrix non-zeros)" %
-                     (self.num_docs, 1 + max([-1] + dfs.keys()), self.num_nnz))
+                     (self.num_docs, 1 + max([-1] + list(dfs.keys())), self.num_nnz))
         self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
 
 

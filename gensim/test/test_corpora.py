@@ -59,7 +59,7 @@ class CorpusTesterABC(object):
         self.assertEqual(corpus, list(corpus2))
 
         # make sure the indexing corpus[i] works
-        for i in xrange(len(corpus)):
+        for i in range(len(corpus)):
             self.assertEqual(corpus[i], corpus2[i])
 
         # delete the temporary file

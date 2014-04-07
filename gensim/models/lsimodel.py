@@ -119,7 +119,7 @@ class Projection(utils.SaveLoad):
             # base case decomposition: given a job `docs`, compute its decomposition,
             # *in-core*.
             if not use_svdlibc:
-                u, s = stochastic_svd(docs, k, chunksize=sys.maxint, num_terms=m,
+                u, s = stochastic_svd(docs, k, chunksize=sys.maxsize, num_terms=m,
                     power_iters=self.power_iters, extra_dims=self.extra_dims)
             else:
                 try:
@@ -210,7 +210,7 @@ class Projection(utils.SaveLoad):
 
         # make each column of U start with a non-negative number (to force canonical decomposition)
         if self.u.shape[0] > 0:
-            for i in xrange(self.u.shape[1]):
+            for i in range(self.u.shape[1]):
                 if self.u[0, i] < 0.0:
                     self.u[:, i] *= -1.0
 #        diff = numpy.dot(self.u.T, self.u) - numpy.eye(self.u.shape[1])
@@ -498,7 +498,7 @@ class LsiModel(interfaces.TransformationABC):
         shown = []
         if num_topics < 0:
             num_topics = self.num_topics
-        for i in xrange(min(num_topics, self.num_topics)):
+        for i in range(min(num_topics, self.num_topics)):
             if i < len(self.projection.s):
                 if formatted:
                     topic = self.print_topic(i, topn=num_words)
@@ -665,7 +665,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         q, _ = matutils.qr_destroy(y) # orthonormalize the range
 
         logger.debug("running %i power iterations" % power_iters)
-        for power_iter in xrange(power_iters):
+        for power_iter in range(power_iters):
             q = corpus.T * q
             q = [corpus * q]
             q, _ = matutils.qr_destroy(q) # orthonormalize the range after each power iteration step
@@ -689,7 +689,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         y = [y]
         q, _ = matutils.qr_destroy(y) # orthonormalize the range
 
-        for power_iter in xrange(power_iters):
+        for power_iter in range(power_iters):
             logger.info("running power iteration #%i" % (power_iter + 1))
             yold = q.copy()
             q[:] = 0.0

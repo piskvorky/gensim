@@ -309,7 +309,7 @@ class Similarity(interfaces.SimilarityABC):
         else:
             # serial processing, one shard after another
             pool = None
-            result = itertools.imap(query_shard, args)
+            result = map(query_shard, args)
         return pool, result
 
 
@@ -357,7 +357,7 @@ class Similarity(interfaces.SimilarityABC):
                     shard_result = [convert(doc, shard_no) for doc in result]
                     results.append(shard_result)
                 result = []
-                for parts in itertools.izip(*results):
+                for parts in zip(*results):
                     merged = heapq.nlargest(self.num_best, itertools.chain(*parts), key=lambda item: item[1])
                     result.append(merged)
         if pool:
@@ -431,7 +431,7 @@ class Similarity(interfaces.SimilarityABC):
 
         for shard in self.shards:
             query = shard.get_index().index
-            for chunk_start in xrange(0, query.shape[0], chunksize):
+            for chunk_start in range(0, query.shape[0], chunksize):
                 # scipy.sparse doesn't allow slicing beyond real size of the matrix
                 # (unlike numpy). so, clip the end of the chunk explicitly to make
                 # scipy.sparse happy

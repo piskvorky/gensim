@@ -178,9 +178,9 @@ class Word2Vec(utils.SaveLoad):
         logger.info("constructing a huffman tree from %i words" % len(self.vocab))
 
         # build the huffman tree
-        heap = self.vocab.values()
+        heap = list(self.vocab.values())
         heapq.heapify(heap)
-        for i in xrange(len(self.vocab) - 1):
+        for i in range(len(self.vocab) - 1):
             min1, min2 = heapq.heappop(heap), heapq.heappop(heap)
             heapq.heappush(heap, Vocab(count=min1.count + min2.count, index=i + len(self.vocab), left=min1, right=min2))
 
@@ -225,7 +225,7 @@ class Word2Vec(utils.SaveLoad):
 
         # assign a unique index to each word
         self.vocab, self.index2word = {}, []
-        for word, v in vocab.iteritems():
+        for word, v in vocab.items():
             if v.count >= self.min_count:
                 v.index = len(self.vocab)
                 self.index2word.append(word)
@@ -252,7 +252,7 @@ class Word2Vec(utils.SaveLoad):
             raise RuntimeError("you must first build vocabulary before training the model")
 
         start, next_report = time.time(), [1.0]
-        word_count, total_words = [word_count], total_words or sum(v.count for v in self.vocab.itervalues())
+        word_count, total_words = [word_count], total_words or sum(v.count for v in self.vocab.values())
         jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         lock = threading.Lock()  # for shared state (=number of words trained so far, log reports...)
 
@@ -276,7 +276,7 @@ class Word2Vec(utils.SaveLoad):
                             (100.0 * word_count[0] / total_words, alpha, word_count[0] / elapsed if elapsed else 0.0))
                         next_report[0] = elapsed + 1.0  # don't flood the log, wait at least a second between progress reports
 
-        workers = [threading.Thread(target=worker_train) for _ in xrange(self.workers)]
+        workers = [threading.Thread(target=worker_train) for _ in range(self.workers)]
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
@@ -287,7 +287,7 @@ class Word2Vec(utils.SaveLoad):
             logger.debug("putting job #%i in the queue, qsize=%i" % (job_no, jobs.qsize()))
             jobs.put(job)
         logger.info("reached the end of input; waiting to finish %i outstanding jobs" % jobs.qsize())
-        for _ in xrange(self.workers):
+        for _ in range(self.workers):
             jobs.put(None)  # give the workers heads up that they can finish -- no more work!
 
         for thread in workers:
@@ -347,7 +347,7 @@ class Word2Vec(utils.SaveLoad):
             result.syn0 = matutils.zeros_aligned((vocab_size, layer1_size), dtype=REAL)
             if binary:
                 binary_len = dtype(REAL).itemsize * layer1_size
-                for line_no in xrange(vocab_size):
+                for line_no in range(vocab_size):
                     # mixed text and binary: read text first, then binary
                     word = []
                     while True:
@@ -390,13 +390,13 @@ class Word2Vec(utils.SaveLoad):
         """
         self.init_sims()
 
-        if isinstance(positive, basestring) and not negative:
+        if isinstance(positive, str) and not negative:
             # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
             positive = [positive]
 
         # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
-        positive = [(word, 1.0) if isinstance(word, (basestring, ndarray)) else word for word in positive]
-        negative = [(word, -1.0) if isinstance(word, (basestring, ndarray)) else word for word in negative]
+        positive = [(word, 1.0) if isinstance(word, (str, ndarray)) else word for word in positive]
+        negative = [(word, -1.0) if isinstance(word, (str, ndarray)) else word for word in negative]
 
         # compute the weighted average of all words
         all_words, mean = set(), []

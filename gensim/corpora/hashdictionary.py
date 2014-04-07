@@ -81,7 +81,7 @@ class HashDictionary(utils.SaveLoad, dict):
         Calculate id of the given token. Also keep track of what words were mapped
         to what ids, for debugging reasons.
         """
-        h = self.myhash(token) % self.id_range
+        h = self.myhash(token.encode()) % self.id_range
         if self.debug:
             self.token2id[token] = h
             self.id2token.setdefault(h, set()).add(token)
@@ -157,11 +157,11 @@ class HashDictionary(utils.SaveLoad, dict):
             if self.debug:
                 # increment document count for each unique tokenid that appeared in the document
                 # done here, because several words may map to the same tokenid
-                for tokenid in result.iterkeys():
+                for tokenid in result.keys():
                     self.dfs[tokenid] = self.dfs.get(tokenid, 0) + 1
 
         # return tokenids, in ascending id order
-        result = sorted(result.iteritems())
+        result = sorted(result.items())
         if return_missing:
             return result, missing
         else:
@@ -184,13 +184,13 @@ class HashDictionary(utils.SaveLoad, dict):
         footprint.
         """
         no_above_abs = int(no_above * self.num_docs) # convert fractional threshold to absolute threshold
-        ok = [item for item in self.dfs_debug.iteritems() if no_below <= item[1] <= no_above_abs]
+        ok = [item for item in self.dfs_debug.items() if no_below <= item[1] <= no_above_abs]
         ok = frozenset(word for word, freq in sorted(ok, key=lambda item: -item[1])[:keep_n])
 
-        self.dfs_debug = dict((word, freq) for word, freq in self.dfs_debug.iteritems() if word in ok)
-        self.token2id = dict((token, tokenid) for token, tokenid in self.token2id.iteritems() if token in self.dfs_debug)
-        self.id2token = dict((tokenid, set(token for token in tokens if token in self.dfs_debug)) for tokenid, tokens in self.id2token.iteritems())
-        self.dfs = dict((tokenid, freq) for tokenid, freq in self.dfs.iteritems() if self.id2token.get(tokenid, set()))
+        self.dfs_debug = dict((word, freq) for word, freq in self.dfs_debug.items() if word in ok)
+        self.token2id = dict((token, tokenid) for token, tokenid in self.token2id.items() if token in self.dfs_debug)
+        self.id2token = dict((tokenid, set(token for token in tokens if token in self.dfs_debug)) for tokenid, tokens in self.id2token.items())
+        self.dfs = dict((tokenid, freq) for tokenid, freq in self.dfs.items() if self.id2token.get(tokenid, set()))
 
         # for word->document frequency
         logger.info("kept statistics for which were in no less than %i and no more than %i (=%.1f%%) documents" %
@@ -207,7 +207,7 @@ class HashDictionary(utils.SaveLoad, dict):
         Note: use `save`/`load` to store in binary format instead (pickle).
         """
         logger.info("saving HashDictionary mapping to %s" % fname)
-        with utils.smart_open(fname, 'wb') as fout:
+        with utils.smart_open(fname, 'w') as fout:
             for tokenid in self.keys():
                 words = sorted(self[tokenid])
                 if words:

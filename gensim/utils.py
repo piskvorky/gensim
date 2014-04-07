@@ -231,7 +231,7 @@ class FakeDict(object):
                          (val, self.num_terms))
 
     def iteritems(self):
-        for i in xrange(self.num_terms):
+        for i in range(self.num_terms):
             yield i, str(i)
 
     def keys(self):
@@ -378,15 +378,15 @@ def decode_htmlentities(text):
             # decoding by number
             if match.group(2) == '':
                 # number is in decimal
-                return unichr(int(ent))
+                return chr(int(ent))
             elif match.group(2) == 'x':
                 # number is in hex
-                return unichr(int('0x' + ent, 16))
+                return chr(int('0x' + ent, 16))
         else:
             # they were using a name
             cp = n2cp.get(ent)
             if cp:
-                return unichr(cp)
+                return chr(cp)
             else:
                 return match.group()
 
@@ -403,7 +403,7 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
     Return elements from the iterable in `chunksize`-ed lists. The last returned
     element may be smaller (if length of collection is not divisible by `chunksize`).
 
-    >>> print(list(grouper(xrange(10), 3)))
+    >>> print(list(grouper(range(10), 3)))
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
     """
     import numpy
@@ -484,7 +484,7 @@ else:
         If `maxsize==0`, don't fool around with parallelism and simply yield the chunksize
         via `chunkize_serial()` (no I/O optimizations).
 
-        >>> for chunk in chunkize(xrange(10), 4): print(chunk)
+        >>> for chunk in chunkize(range(10), 4): print(chunk)
         [0, 1, 2, 3]
         [4, 5, 6, 7]
         [8, 9]

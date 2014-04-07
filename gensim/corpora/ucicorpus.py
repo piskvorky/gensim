@@ -39,13 +39,13 @@ class UciReader(MmReader):
 
         self.input = input
 
-        if isinstance(input, basestring):
+        if isinstance(input, str):
             input = open(input)
 
         self.num_docs = self.num_terms = self.num_nnz = 0
-        self.num_docs = int(input.next().strip())
-        self.num_terms = int(input.next().strip())
-        self.num_nnz = int(input.next().strip())
+        self.num_docs = int(next(input).strip())
+        self.num_terms = int(next(input).strip())
+        self.num_nnz = int(next(input).strip())
 
         logger.info('accepted corpus with %i documents, %i features, %i non-zero entries' %
             (self.num_docs, self.num_terms, self.num_nnz))
@@ -210,7 +210,7 @@ class UciCorpus(UciReader, IndexedCorpus):
         fname_vocab = fname + '.vocab'
         logger.info("saving vocabulary of %i words to %s" % (num_terms, fname_vocab))
         with open(fname_vocab, 'w') as fout:
-            for featureid in xrange(num_terms):
+            for featureid in range(num_terms):
                 fout.write("%s\n" % utils.to_utf8(id2word.get(featureid, '---')))
 
         logger.info("storing corpus in UCI Bag-of-Words format: %s" % fname)

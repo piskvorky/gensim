@@ -76,11 +76,11 @@ class LowCorpus(IndexedCorpus):
             for doc in self:
                 all_terms.update(word for word, wordCnt in doc)
             all_terms = sorted(all_terms) # sort the list of all words; rank in that list = word's integer id
-            self.id2word = dict(itertools.izip(xrange(len(all_terms)), all_terms)) # build a mapping of word id(int) -> word (string)
+            self.id2word = dict(enumerate(all_terms)) # build a mapping of word id(int) -> word (string)
         else:
             logger.info("using provided word mapping (%i ids)" % len(id2word))
             self.id2word = id2word
-        self.word2id = dict((v, k) for k, v in self.id2word.iteritems())
+        self.word2id = dict((v, k) for k, v in self.id2word.items())
         self.num_terms = len(self.word2id)
         self.use_wordids = True # return documents as (wordIndex, wordCount) 2-tuples
 
@@ -97,7 +97,7 @@ class LowCorpus(IndexedCorpus):
 
         if self.use_wordids:
             # get all distinct terms in this document, ignore unknown words
-            uniq_words = set(words).intersection(self.word2id.iterkeys())
+            uniq_words = set(words).intersection(self.word2id.keys())
 
             # the following creates a unique list of words *in the same order*
             # as they were in the input. when iterating over the documents,
@@ -110,11 +110,11 @@ class LowCorpus(IndexedCorpus):
                     use_words.append(word)
                     marker.add(word)
             # construct a list of (wordIndex, wordFrequency) 2-tuples
-            doc = zip(map(self.word2id.get, use_words), map(words.count, use_words)) # using list.count is suboptimal but speed of this whole function is irrelevant
+            doc = list(zip(map(self.word2id.get, use_words), map(words.count, use_words))) # using list.count is suboptimal but speed of this whole function is irrelevant
         else:
             uniq_words = set(words)
             # construct a list of (word, wordFrequency) 2-tuples
-            doc = zip(uniq_words, map(words.count, uniq_words)) # using list.count is suboptimal but that's irrelevant at this point
+            doc = list(zip(uniq_words, map(words.count, uniq_words))) # using list.count is suboptimal but that's irrelevant at this point
 
         # return the document, then forget it and move on to the next one
         # note that this way, only one doc is stored in memory at a time, not the whole corpus

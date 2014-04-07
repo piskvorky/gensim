@@ -241,7 +241,7 @@ class SimilarityABC(utils.SaveLoad):
             # assumes `self.corpus` holds the index as a 2-d numpy array.
             # this is true for MatrixSimilarity and SparseMatrixSimilarity, but
             # may not be true for other (future) classes..?
-            for chunk_start in xrange(0, self.index.shape[0], self.chunksize):
+            for chunk_start in range(0, self.index.shape[0], self.chunksize):
                 # scipy.sparse doesn't allow slicing beyond real size of the matrix
                 # (unlike numpy). so, clip the end of the chunk explicitly to make
                 # scipy.sparse happy

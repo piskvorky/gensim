@@ -95,7 +95,7 @@ class PorterStemmer(object):
 
     def _vowelinstem(self):
         """True <=> 0,...j contains a vowel"""
-        return not all(self._cons(i) for i in xrange(self.j + 1))
+        return not all(self._cons(i) for i in range(self.j + 1))
 
     def _doublec(self, j):
         """True <=> j,(j-1) contain a double consonant."""

@@ -229,7 +229,7 @@ class LdaModel(interfaces.TransformationABC):
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
         else:
-            self.num_terms = 1 + max([-1] + self.id2word.keys())
+            self.num_terms = 1 + max([-1] + list(self.id2word.keys()))
 
         if self.num_terms == 0:
             raise ValueError("cannot compute LDA over an empty collection (no terms)")
@@ -247,13 +247,13 @@ class LdaModel(interfaces.TransformationABC):
         self.optimize_alpha = alpha == 'auto'
         if alpha == 'symmetric' or alpha is None:
             logger.info("using symmetric alpha at %s" % (1.0 / num_topics))
-            self.alpha = numpy.asarray([1.0 / num_topics for i in xrange(num_topics)])
+            self.alpha = numpy.asarray([1.0 / num_topics for i in range(num_topics)])
         elif alpha == 'asymmetric':
-            self.alpha = numpy.asarray([1.0 / (i + numpy.sqrt(num_topics)) for i in xrange(num_topics)])
+            self.alpha = numpy.asarray([1.0 / (i + numpy.sqrt(num_topics)) for i in range(num_topics)])
             self.alpha /= self.alpha.sum()
             logger.info("using asymmetric alpha %s" % list(self.alpha))
         elif alpha == 'auto':
-            self.alpha = numpy.asarray([1.0 / num_topics for i in xrange(num_topics)])
+            self.alpha = numpy.asarray([1.0 / num_topics for i in range(num_topics)])
             logger.info("using autotuned alpha, starting with %s" % list(self.alpha))
         else:
             # must be either float or an array of floats, of size num_topics
@@ -367,7 +367,7 @@ class LdaModel(interfaces.TransformationABC):
             phinorm = numpy.dot(expElogthetad, expElogbetad) + 1e-100 # TODO treat zeros explicitly, instead of adding eps?
 
             # Iterate between gamma and phi until convergence
-            for _ in xrange(self.VAR_MAXITER):
+            for _ in range(self.VAR_MAXITER):
                 lastgamma = gammad
                 # We represent phi implicitly to save memory and time.
                 # Substituting the value of the optimal phi back into
@@ -515,7 +515,7 @@ class LdaModel(interfaces.TransformationABC):
             logger.warning("too few updates, training might not converge; consider "
                            "increasing the number of passes to improve accuracy")
 
-        for iteration in xrange(passes):
+        for iteration in range(passes):
             if self.dispatcher:
                 logger.info('initializing %s workers' % self.numworkers)
                 self.dispatcher.reset(self.state)

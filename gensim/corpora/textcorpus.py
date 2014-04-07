@@ -43,7 +43,7 @@ def getstream(input):
     If input is a file-like object, reset it to the beginning with `input.seek(0)`.
     """
     assert input is not None
-    if isinstance(input, basestring):
+    if isinstance(input, str):
         # input was a filename: open as text file
         result = open(input)
     else:

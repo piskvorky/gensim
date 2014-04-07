@@ -13,13 +13,11 @@ from __future__ import with_statement
 
 import logging
 import math
-import os
-import itertools
 
 import numpy
 import scipy.sparse
 import scipy.linalg
-from scipy.linalg.lapack import get_lapack_funcs, find_best_lapack_type
+from scipy.linalg.lapack import get_lapack_funcs
 
 # scipy is not a stable package yet, locations change, so try to work
 # around differences (currently only concerns location of 'triu' in scipy 0.7 vs. 0.8)
@@ -186,7 +184,7 @@ def sparse2full(doc, length):
     """
     result = numpy.zeros(length, dtype=numpy.float32) # fill with zeroes (default value)
     doc = dict(doc)
-    result[doc.keys()] = doc.values() # overwrite some of the zeroes with explicit values
+    result[list(doc.keys())] = list(doc.values()) # overwrite some of the zeroes with explicit values
     return result
 
 
@@ -272,7 +270,7 @@ class Sparse2Corpus(object):
             self.sparse = sparse.tocsr().T # make sure shape[1]=number of docs (needed in len())
 
     def __iter__(self):
-        for indprev, indnow in itertools.izip(self.sparse.indptr, self.sparse.indptr[1:]):
+        for indprev, indnow in zip(self.sparse.indptr, self.sparse.indptr[1:]):
             yield zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow])
 
     def __len__(self):
@@ -317,7 +315,7 @@ def unitvec(vec):
             return vec
 
     try:
-        first = iter(vec).next() # is there at least one element?
+        first = next(iter(vec)) # is there at least one element?
     except:
         return vec
 
@@ -336,12 +334,12 @@ def cossim(vec1, vec2):
     vec1, vec2 = dict(vec1), dict(vec2)
     if not vec1 or not vec2:
         return 0.0
-    vec1len = 1.0 * math.sqrt(sum(val * val for val in vec1.itervalues()))
-    vec2len = 1.0 * math.sqrt(sum(val * val for val in vec2.itervalues()))
+    vec1len = 1.0 * math.sqrt(sum(val * val for val in vec1.values()))
+    vec2len = 1.0 * math.sqrt(sum(val * val for val in vec2.values()))
     assert vec1len > 0.0 and vec2len > 0.0, "sparse documents must not contain any explicit zero entries"
     if len(vec2) < len(vec1):
         vec1, vec2 = vec2, vec1 # swap references so that we iterate over the shorter vector
-    result = sum(value * vec2.get(index, 0.0) for index, value in vec1.iteritems())
+    result = sum(value * vec2.get(index, 0.0) for index, value in vec1.items())
     result /= vec1len * vec2len # rescale by vector lengths
     return result
 
@@ -397,7 +395,7 @@ class MmWriter(object):
         self.fname = fname
         tmp = open(self.fname, 'w') # reset/create the target file
         tmp.close()
-        self.fout = open(self.fname, 'rb+') # open for both reading and writing
+        self.fout = open(self.fname, 'r+') # open for both reading and writing
         self.headers_written = False
 
 
@@ -526,9 +524,9 @@ class MmReader(object):
         """
         logger.info("initializing corpus reader from %s" % input)
         self.input, self.transposed = input, transposed
-        if isinstance(input, basestring):
+        if isinstance(input, str):
             input = open(input)
-        header = input.next().strip()
+        header = next(input).strip()
         if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
             raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
                              (self.input, header))
@@ -568,7 +566,7 @@ class MmReader(object):
         yielded where appropriate, even if they are not explicitly stored in the
         Matrix Market file.
         """
-        if isinstance(self.input, basestring):
+        if isinstance(self.input, str):
             fin = open(self.input)
         else:
             fin = self.input
@@ -589,7 +587,7 @@ class MmReader(object):
 
                 # return implicit (empty) documents between previous id and new id
                 # too, to keep consistent document numbering and corpus length
-                for previd in xrange(previd + 1, docid):
+                for previd in range(previd + 1, docid):
                     yield previd, []
 
                 # from now on start adding fields to a new document, with a new id
@@ -604,7 +602,7 @@ class MmReader(object):
 
         # return empty documents between the last explicit document and the number
         # of documents as specified in the header
-        for previd in xrange(previd + 1, self.num_docs):
+        for previd in range(previd + 1, self.num_docs):
             yield previd, []
 
 
@@ -614,7 +612,7 @@ class MmReader(object):
         # them with a special offset, -1.
         if offset == -1:
             return []
-        if isinstance(self.input, basestring):
+        if isinstance(self.input, str):
             fin = open(self.input)
         else:
             fin = self.input
