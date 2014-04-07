@@ -144,7 +144,7 @@ def simple_preprocess(doc, deacc=False, min_len=2, max_len=15):
     This lowercases, tokenizes, stems, normalizes etc. -- the output are final,
     utf8 encoded strings that won't be processed any further.
     """
-    tokens = [token.encode('utf8') for token in tokenize(doc, lower=True, deacc=deacc, errors='ignore')
+    tokens = [token for token in tokenize(doc, lower=True, deacc=deacc, errors='ignore')
             if min_len <= len(token) <= max_len and not token.startswith('_')]
     return tokens
 
