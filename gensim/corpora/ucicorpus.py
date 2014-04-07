@@ -14,6 +14,7 @@ http://archive.ics.uci.edu/ml/datasets/Bag+of+Words
 from __future__ import with_statement
 
 import logging
+import os
 from collections import defaultdict
 
 from gensim import utils
@@ -93,7 +94,7 @@ class UciWriter(MmWriter):
                 raise ValueError('Invalid header: value too large!')
             self.fout.seek(offset)
             self.fout.write(value)
-            offset += UciWriter.MAX_HEADER_LENGTH + len('\n')
+            offset += UciWriter.MAX_HEADER_LENGTH + len(os.linesep)
 
     @staticmethod
     def write_corpus(fname, corpus, progress_cnt=1000, index=False):
@@ -173,7 +174,7 @@ class UciCorpus(UciReader, IndexedCorpus):
         dictionary.dfs = defaultdict(int)
 
         dictionary.id2token = self.id2word
-        dictionary.token2id = dict((v, k) for k, v in self.id2word.iteritems())
+        dictionary.token2id = dict((v, k) for k, v in self.id2word.items())
 
         dictionary.num_docs = self.num_docs
         dictionary.num_nnz = self.num_nnz
