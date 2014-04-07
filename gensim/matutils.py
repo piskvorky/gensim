@@ -212,7 +212,7 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
     vec = numpy.asarray(vec, dtype=float)
     nnz = numpy.nonzero(abs(vec) > eps)[0]
     biggest = nnz.take(argsort(vec.take(nnz), topn))
-    return zip(biggest, vec.take(biggest))
+    return list(zip(biggest, vec.take(biggest)))
 
 
 def corpus2dense(corpus, num_terms, num_docs=None, dtype=numpy.float32):

@@ -301,7 +301,7 @@ class Similarity(interfaces.SimilarityABC):
         If PARALLEL_SHARDS is set, the shards are queried in parallel, using
         the multiprocessing module.
         """
-        args = zip([query] * len(self.shards), self.shards)
+        args = list(zip([query] * len(self.shards), self.shards))
         if PARALLEL_SHARDS and PARALLEL_SHARDS > 1:
             logger.debug("spawning %i query processes" % PARALLEL_SHARDS)
             pool = multiprocessing.Pool(PARALLEL_SHARDS)
