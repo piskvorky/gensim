@@ -12,8 +12,8 @@ Automated tests for checking transformation algorithms (the models package).
 import logging
 import unittest
 import os
+import io
 import tempfile
-import itertools
 import bz2
 
 import numpy
@@ -147,10 +147,10 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
 
     def testLineSentenceWorksWithCompressedFile(self):
         """Does LineSentence work with a compressed file object argument?"""
-        with open(datapath('head500.noblanks.cor')) as orig:
+        with open(datapath('head500.noblanks.cor'), encoding='utf-8') as orig:
             sentences = word2vec.LineSentence(
-                bz2.BZ2File(
-                    datapath('head500.noblanks.cor.bz2')))
+                io.TextIOWrapper(bz2.BZ2File(
+                    datapath('head500.noblanks.cor.bz2')), encoding='utf-8'))
             for words in sentences:
                 self.assertEqual(words, orig.readline().split())
 
