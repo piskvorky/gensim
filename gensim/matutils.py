@@ -196,7 +196,7 @@ def full2sparse(vec, eps=1e-9):
     """
     vec = numpy.asarray(vec, dtype=float)
     nnz = numpy.nonzero(abs(vec) > eps)[0]
-    return zip(nnz, vec.take(nnz))
+    return list(zip(nnz, vec.take(nnz)))
 
 dense2vec = full2sparse
 
