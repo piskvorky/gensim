@@ -292,10 +292,10 @@ def is_corpus(obj):
             doc1 = obj.next()
             obj = itertools.chain([doc1], obj)
         else:
-            doc1 = iter(obj).next() # empty corpus is resolved to False here
+            doc1 = next(iter(obj)) # empty corpus is resolved to False here
         if len(doc1) == 0: # sparse documents must have a __len__ function (list, tuple...)
             return True, obj # the first document is empty=>assume this is a corpus
-        id1, val1 = iter(doc1).next() # if obj is a numpy array, it resolves to False here
+        id1, val1 = next(iter(doc1)) # if obj is a numpy array, it resolves to False here
         id1, val1 = int(id1), float(val1) # must be a 2-tuple (integer, float)
     except:
         return False, obj
