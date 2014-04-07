@@ -130,7 +130,7 @@ class Dictionary(utils.SaveLoad, dict):
         missing = {}
         if isinstance(document, basestring):
             raise TypeError("doc2bow expects an array of utf8 tokens on input, not a string")
-        document = sorted(utils.to_utf8(token) for token in document)
+        document = sorted(document)
         # construct (word, frequency) mapping. in python3 this is done simply
         # using Counter(), but here i use itertools.groupby() for the job
         for word_norm, group in itertools.groupby(document):

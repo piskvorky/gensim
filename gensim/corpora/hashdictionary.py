@@ -213,5 +213,5 @@ class HashDictionary(utils.SaveLoad, dict):
                 if words:
                     words_df = [(word, self.dfs_debug.get(word, 0)) for word in words]
                     words_df = ["%s(%i)" % item for item in sorted(words_df, key=lambda item: -item[1])]
-                    fout.write("%i\t%i\t%s\n" % (tokenid, self.dfs.get(tokenid, 0), '\t'.join(words_df)))
+                    fout.write(("%i\t%i\t%s\n" % (tokenid, self.dfs.get(tokenid, 0), '\t'.join(words_df))).encode('utf-8', 'ignore'))
 #endclass HashDictionary
