@@ -156,9 +156,9 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
 
     def testLineSentenceWorksWithNormalFile(self):
         """Does LineSentence work with a normal file object argument?"""
-        with open(datapath('head500.noblanks.cor')) as orig:
+        with open(datapath('head500.noblanks.cor'), encoding='utf-8') as orig:
             sentences = word2vec.LineSentence(
-                open(datapath('head500.noblanks.cor')))
+                open(datapath('head500.noblanks.cor'), encoding='utf-8'))
             for words in sentences:
                 self.assertEqual(words, orig.readline().split())
 #endclass TestWord2VecSentenceIterators
