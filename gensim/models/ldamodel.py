@@ -674,7 +674,7 @@ class LdaModel(interfaces.TransformationABC):
             sorted_topics = list(numpy.argsort(sort_alpha))
             chosen_topics = sorted_topics[ : topics/2] + sorted_topics[-topics/2 : ]
         shown = []
-        for i in chosen_topics[::-1]:
+        for i in chosen_topics:
             if formatted:
                 topic = self.print_topic(i, topn=topn)
             else:
