@@ -80,10 +80,8 @@ class LdaMallet(utils.SaveLoad):
         self.id2word = id2word
         self.num_topics = num_topics
         if prefix is None:
-            tmp_dir = tempfile.gettempdir()
             rand_prefix = hex(random.randint(0, 0xffffff))[2:] + '_'
-            prefix = os.path.join(tmp_dir, rand_prefix)
-        self.tmp_dir = tmp_dir
+            prefix = os.path.join(tempfile.gettempdir(), rand_prefix)
         self.prefix = prefix
         self.workers = workers
         self.optimize_interval = optimize_interval
