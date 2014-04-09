@@ -35,9 +35,11 @@ import tempfile
 import os
 from subprocess import call
 
-logger = logging.getLogger('gensim.models.ldamallet')
+import numpy
 
 from gensim import utils
+
+logger = logging.getLogger('gensim.models.ldamallet')
 
 
 def read_doctopics(fname, eps=1e-6):
@@ -78,6 +80,14 @@ class LdaMallet(utils.SaveLoad):
         """
         self.mallet_path = mallet_path
         self.id2word = id2word
+        if self.id2word is None:
+            logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
+            self.id2word = utils.dict_from_corpus(corpus)
+            self.num_terms = len(self.id2word)
+        else:
+            self.num_terms = 0 if not self.id2word else 1 + max(self.id2word.keys())
+        if self.num_terms == 0:
+            raise ValueError("cannot compute LDA over an empty collection (no terms)")
         self.num_topics = num_topics
         if prefix is None:
             rand_prefix = hex(random.randint(0, 0xffffff))[2:] + '_'
@@ -97,7 +107,7 @@ class LdaMallet(utils.SaveLoad):
         return self.prefix + 'topickeys.txt'
 
     def fstate(self):
-        return self.prefix + 'state.mallet'
+        return self.prefix + 'state.mallet.gz'
 
     def fdoctopics(self):
         return self.prefix + 'doctopics.txt'
@@ -149,6 +159,7 @@ class LdaMallet(utils.SaveLoad):
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
         logger.info("training MALLET LDA with %s" % cmd)
         call(cmd, shell=True)
+        self.word_topics = self.load_word_topics()
 
 
     def __getitem__(self, bow, iterations=100):
@@ -159,6 +170,66 @@ class LdaMallet(utils.SaveLoad):
         self.convert_input(bow, infer=True)
         cmd = self.mallet_path + " infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s"
         cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations)
-        logger.info("inferring with MALLET LDA with %s" % cmd)
+        logger.info("inferring topics with MALLET LDA '%s'" % cmd)
         call(cmd, shell=True)
         return list(read_doctopics(self.fdoctopics() + '.infer'))
+
+
+    def load_word_topics(self):
+        logger.info("loading assigned topics from %s" % self.fstate())
+        wordtopics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float32)
+        with utils.smart_open(self.fstate()) as fin:
+            _ = next(fin)  # header
+            self.alpha = numpy.array([float(val) for val in next(fin).split()[2:]])
+            assert len(self.alpha) == self.num_topics, "mismatch between MALLET vs. requested topics"
+            _ = next(fin)  # beta
+            for lineno, line in enumerate(fin):
+                doc, source, pos, typeindex, token, topic = line.split()
+                wordtopics[int(topic), self.id2word.token2id[token]] += 1
+        logger.info("loaded assigned topics for %i tokens" % wordtopics.sum())
+        self.wordtopics = wordtopics
+        self.print_topics(15)
+
+
+    def print_topics(self, topics=10, topn=10):
+        return self.show_topics(topics, topn, log=True)
+
+
+    def show_topics(self, topics=10, topn=10, log=False, formatted=True):
+        """
+        Print the `topN` most probable words for `topics` number of topics.
+        Set `topics=-1` to print all topics.
+
+        Set `formatted=True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
+
+        """
+        if topics < 0 or topics >= self.num_topics:
+            topics = self.num_topics
+            chosen_topics = range(topics)
+        else:
+            topics = min(topics, self.num_topics)
+            sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha)) # add a little random jitter, to randomize results around the same alpha
+            sorted_topics = list(numpy.argsort(sort_alpha))
+            chosen_topics = sorted_topics[ : topics/2] + sorted_topics[-topics/2 : ]
+        shown = []
+        for i in chosen_topics:
+            if formatted:
+                topic = self.print_topic(i, topn=topn)
+            else:
+                topic = self.show_topic(i, topn=topn)
+            shown.append(topic)
+            if log:
+                logger.info("topic #%i (%.3f): %s" % (i, self.alpha[i], topic))
+        return shown
+
+
+    def show_topic(self, topicid, topn=10):
+        topic = self.wordtopics[topicid]
+        topic = topic / topic.sum() # normalize to probability dist
+        bestn = numpy.argsort(topic)[::-1][:topn]
+        beststr = [(topic[id], self.id2word[id]) for id in bestn]
+        return beststr
+
+
+    def print_topic(self, topicid, topn=10):
+        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
