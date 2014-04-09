@@ -2,7 +2,12 @@ Changes
 =======
 
 0.9.1
+
 * MmCorpus fix for Windows
+* LdaMallet supports printing/showing topics
+* fix LdaMallet bug when user specified a prefix (Victor, #184)
+* more py3k fixes (Lars Buitinck)
+* change order of LDA topic printing (Fayimora Femi-Balogun, #188)
 
 0.9.0, 16/03/2014
 
