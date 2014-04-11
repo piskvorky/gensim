@@ -459,11 +459,23 @@ class HdpModel(interfaces.TransformationABC):
         self.m_status_up_to_date = True
 
     def print_topics(self, topics=20, topn=20):
+        """docstring for print_topics"""
+        return self.show_topics(topics, topn)
+        
+    def show_topics(self, topics=20, topn=20, log=False, formatted=True):
+        """
+        Print the `topN` most probable words for `topics` number of topics.
+        Set `topics=-1` to print all topics.
+
+        Set `formatted=True` to return the topics as a list of strings, or 
+        `False` as lists of (weight, word) pairs.
+
+        """        
         if not self.m_status_up_to_date:
             self.update_expectations()
         betas = self.m_lambda + self.m_eta
         hdp_formatter = HdpTopicFormatter(self.id2word, betas)
-        hdp_formatter.print_topics(topics, topn)
+        return hdp_formatter.show_topics(topics, topn, log, formatted)
 
     def save_topics(self, doc_count=None):
         """legacy method; use `self.save()` instead"""
