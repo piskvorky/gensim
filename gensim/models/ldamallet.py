@@ -172,7 +172,8 @@ class LdaMallet(utils.SaveLoad):
         cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations)
         logger.info("inferring topics with MALLET LDA '%s'" % cmd)
         call(cmd, shell=True)
-        return list(read_doctopics(self.fdoctopics() + '.infer'))
+        result = list(read_doctopics(self.fdoctopics() + '.infer'))
+        return result if is_corpus else result[0]
 
 
     def load_word_topics(self):
