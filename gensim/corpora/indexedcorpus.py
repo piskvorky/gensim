@@ -101,8 +101,8 @@ class IndexedCorpus(interfaces.CorpusABC):
 
     def __len__(self):
         """
-        Return cached corpus length if the corpus is indexed. Otherwise delegate
-        `len()` call to base class.
+        Return the index length if the corpus is indexed. Otherwise, make a pass
+        over self to calculate the corpus length and cache this number.
         """
         if self.index is not None:
             return len(self.index)

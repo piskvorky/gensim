@@ -129,7 +129,7 @@ class LdaMallet(utils.SaveLoad):
         """
         logger.info("serializing temporary corpus to %s" % self.fcorpustxt())
         # write out the corpus in a file format that MALLET understands: one document per line:
-        # document id[SPACE]label (not used)[SPACE]utf8-encoded tokens, whitespace delimited
+        # document id[SPACE]label (not used)[SPACE]whitespace delimited utf8-encoded tokens
         with utils.smart_open(self.fcorpustxt(), 'wb') as fout:
             for docno, doc in enumerate(corpus):
                 if self.id2word:
