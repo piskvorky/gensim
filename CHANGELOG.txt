@@ -1,11 +1,11 @@
 Changes
 =======
 
-0.9.1
+0.9.1, 12/04/2014
 
 * MmCorpus fix for Windows
-* LdaMallet supports printing/showing topics
-* fix LdaMallet bug when user specified a prefix (Victor, #184)
+* LdaMallet support for printing/showing topics
+* fix LdaMallet bug when user specified a file prefix (Victor, #184)
 * fix LdaMallet output when input is single vector (Suvir)
 * added LdaMallet unit tests
 * more py3k fixes (Lars Buitinck)
