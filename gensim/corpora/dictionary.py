@@ -17,12 +17,12 @@ with other dictionary (:func:`Dictionary.merge_with`) etc.
 
 from __future__ import with_statement
 
+from collections import Mapping
 import logging
 import itertools
-import UserDict
 
 from gensim import utils
-from gensim._six import iteritems, iterkeys, itervalues, string_types
+from gensim._six import PY3, iteritems, iterkeys, itervalues, string_types
 from gensim._six.moves import xrange
 from gensim._six.moves import zip as izip
 
@@ -30,7 +30,7 @@ from gensim._six.moves import zip as izip
 logger = logging.getLogger('gensim.corpora.dictionary')
 
 
-class Dictionary(utils.SaveLoad, UserDict.DictMixin):
+class Dictionary(utils.SaveLoad, Mapping):
     """
     Dictionary encapsulates the mapping between normalized words and their integer ids.
 
@@ -56,6 +56,21 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
             # recompute id->word accordingly
             self.id2token = dict((v, k) for k, v in iteritems(self.token2id))
         return self.id2token[tokenid] # will throw for non-existent ids
+
+
+    def __iter__(self):
+        return iter(self.keys())
+
+
+    if PY3:
+        # restore Py2-style dict API
+        iterkeys = __iter__
+
+        def iteritems(self):
+            return self.items()
+
+        def itervalues(self):
+            return self.values()
 
 
     def keys(self):
