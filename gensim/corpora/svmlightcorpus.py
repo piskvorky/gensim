@@ -95,7 +95,7 @@ class SvmLightCorpus(IndexedCorpus):
         logger.info("converting corpus to SVMlight format: %s" % fname)
 
         offsets = []
-        with utils.smart_open(fname, 'wb') as fout:
+        with utils.smart_open(fname, 'w') as fout:
             for docno, doc in enumerate(corpus):
                 label = labels[docno] if labels else 0 # target class is 0 by default
                 offsets.append(fout.tell())

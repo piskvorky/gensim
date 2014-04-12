@@ -55,6 +55,12 @@ class CorpusABC(utils.SaveLoad):
         raise NotImplementedError('cannot instantiate abstract base class')
 
 
+    def save(self, *args, **kwargs):
+        import warnings
+        warnings.warn("corpus.save() stores only the (tiny) iteration object; "
+            "to serialize the actual corpus content, use e.g. MmCorpus.serialize(corpus)")
+        super(CorpusABC, self).save(*args, **kwargs)
+
     def __len__(self):
         """
         Return the number of documents in the corpus.

@@ -229,8 +229,10 @@ class LdaModel(interfaces.TransformationABC):
             logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
+        elif len(self.id2word) > 0:
+            self.num_terms = 1 + max(self.id2word.keys())
         else:
-            self.num_terms = 1 + max([-1] + self.id2word.keys())
+            self.num_terms = 0
 
         if self.num_terms == 0:
             raise ValueError("cannot compute LDA over an empty collection (no terms)")
@@ -672,7 +674,7 @@ class LdaModel(interfaces.TransformationABC):
             sorted_topics = list(numpy.argsort(sort_alpha))
             chosen_topics = sorted_topics[ : topics/2] + sorted_topics[-topics/2 : ]
         shown = []
-        for i in chosen_topics[::-1]:
+        for i in chosen_topics:
             if formatted:
                 topic = self.print_topic(i, topn=topn)
             else:

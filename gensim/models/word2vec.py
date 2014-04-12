@@ -232,7 +232,7 @@ class Word2Vec(utils.SaveLoad):
         logger.info("constructing a huffman tree from %i words" % len(self.vocab))
 
         # build the huffman tree
-        heap = self.vocab.values()
+        heap = list(itervalues(self.vocab))
         heapq.heapify(heap)
         for i in xrange(len(self.vocab) - 1):
             min1, min2 = heapq.heappop(heap), heapq.heappop(heap)
@@ -404,8 +404,10 @@ class Word2Vec(utils.SaveLoad):
         so while you can query for word similarity etc., you cannot continue training
         with a model loaded this way.
 
-        `binary` is a boolean indicating whether the data is in binary word2vec format
-        `norm_only` is a boolean indicating whether to only store normalised word2vec vectors in memory
+        `binary` is a boolean indicating whether the data is in binary word2vec format.
+        `norm_only` is a boolean indicating whether to only store normalised word2vec vectors in memory.
+        Word counts are read from `fvocab` filename, if set (this is the file generated
+        by `-save-vocab` flag of the original C tool).
         """
         counts = None
         if fvocab is not None:
@@ -417,7 +419,7 @@ class Word2Vec(utils.SaveLoad):
                     counts[word] = int(count)
 
         logger.info("loading projection weights from %s" % (fname))
-        with utils.smart_open(fname) as fin:
+        with utils.smart_open(fname, 'rb') as fin:
             header = fin.readline()
             vocab_size, layer1_size = map(int, header.split())  # throws for invalid file format
             result = Word2Vec(size=layer1_size)
@@ -436,7 +438,7 @@ class Word2Vec(utils.SaveLoad):
                             word.append(ch)
                     if counts is None:
                         result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
-                    elif counts.has_key(word):
+                    elif word in counts:
                         result.vocab[word] = Vocab(index=line_no, count=counts[word])
                     else:
                         logger.warning("vocabulary file is incomplete")
@@ -451,7 +453,7 @@ class Word2Vec(utils.SaveLoad):
                     word, weights = parts[0], map(REAL, parts[1:])
                     if counts is None:
                         result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
-                    elif counts.has_key(word):
+                    elif word in counts:
                         result.vocab[word] = Vocab(index=line_no, count=counts[word])
                     else:
                         logger.warning("vocabulary file is incomplete")

@@ -27,7 +27,7 @@ def read(fname):
 
 setup(
     name = 'gensim',
-    version = '0.9.0',
+    version = '0.9.1',
     description = 'Python framework for fast Vector Space Modelling',
     long_description = read('README.rst'),
 
@@ -40,8 +40,8 @@ setup(
     url = 'http://radimrehurek.com/gensim',
     download_url = 'http://pypi.python.org/pypi/gensim',
 
-    keywords = 'Singular Value Decomposition, Latent Semantic Indexing, SVD, LSA, '
-    'LSI, LDA, Latent Dirichlet Allocation, VSM, Random Projections, TFIDF, word2vec',
+    keywords = 'Singular Value Decomposition, SVD, Latent Semantic Indexing, LSA, '
+    'LSI, Latent Dirichlet Allocation, LDA, Hierarchical Dirichlet Process, HDP, Random Projections, TFIDF, word2vec',
 
     license = 'LGPL',
     platforms = 'any',

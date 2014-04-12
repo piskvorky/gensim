@@ -1,8 +1,19 @@
 Changes
 =======
 
+0.9.1, 12/04/2014
+
+* MmCorpus fix for Windows
+* LdaMallet support for printing/showing topics
+* fix LdaMallet bug when user specified a file prefix (Victor, #184)
+* fix LdaMallet output when input is single vector (Suvir)
+* added LdaMallet unit tests
+* more py3k fixes (Lars Buitinck)
+* change order of LDA topic printing (Fayimora Femi-Balogun, #188)
+
 0.9.0, 16/03/2014
 
+* save/load automatically single out large arrays + allow mmap
 * allow .gz/.bz2 corpus filenames => transparently (de)compressed I/O
 * CBOW model for word2vec (Sébastien Jean, #176)
 * new API for storing corpus metadata (Joseph Chang, #169)
@@ -11,7 +22,6 @@ Changes
 * better Wikipedia article parsing (Joseph Chang, #170)
 * word2vec load_word2vec_format uses less memory (Yves Raimond, #164)
 * load/store vocabulary files for word2vec C format (Yves Raimond, #172)
-* save/load automatically single out large arrays + allow mmap
 * HDP estimation on new documents (Elliot Kulakow, #153)
 * store labels in SvmLight corpus (Ritesh, #152)
 * fix word2vec binary load on Windows (Stephanus van Schalkwyk)

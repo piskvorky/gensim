@@ -189,7 +189,8 @@ def sparse2full(doc, length):
     """
     result = numpy.zeros(length, dtype=numpy.float32) # fill with zeroes (default value)
     doc = dict(doc)
-    result[doc.keys()] = doc.values() # overwrite some of the zeroes with explicit values
+    # overwrite some of the zeroes with explicit values
+    result[list(doc)] = list(itervalues(doc))
     return result
 
 
@@ -201,7 +202,7 @@ def full2sparse(vec, eps=1e-9):
     """
     vec = numpy.asarray(vec, dtype=float)
     nnz = numpy.nonzero(abs(vec) > eps)[0]
-    return zip(nnz, vec.take(nnz))
+    return list(zip(nnz, vec.take(nnz)))
 
 dense2vec = full2sparse
 
@@ -217,7 +218,7 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
     vec = numpy.asarray(vec, dtype=float)
     nnz = numpy.nonzero(abs(vec) > eps)[0]
     biggest = nnz.take(argsort(vec.take(nnz), topn))
-    return zip(biggest, vec.take(biggest))
+    return list(zip(biggest, vec.take(biggest)))
 
 
 def corpus2dense(corpus, num_terms, num_docs=None, dtype=numpy.float32):
@@ -244,7 +245,7 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=numpy.float32):
 
 class Dense2Corpus(object):
     """
-    Treat dense numpy array as a sparse gensim corpus.
+    Treat dense numpy array as a sparse, streamed gensim corpus.
 
     No data copy is made (changes to the underlying matrix imply changes in the
     corpus).
@@ -336,6 +337,10 @@ def unitvec(vec):
 
 
 def cossim(vec1, vec2):
+    """
+    Return cosine similarity between two sparse vectors.
+    The similarity is a number between <-1.0, 1.0>, higher is more similar.
+    """
     vec1, vec2 = dict(vec1), dict(vec2)
     if not vec1 or not vec2:
         return 0.0
@@ -398,7 +403,7 @@ class MmWriter(object):
 
     def __init__(self, fname):
         self.fname = fname
-        self.fout = open(self.fname, 'w+') # open for both reading and writing
+        self.fout = open(self.fname, 'wb+') # open for both reading and writing
         self.headers_written = False
 
 

@@ -87,7 +87,7 @@ class HashDictionary(utils.SaveLoad, dict):
         Calculate id of the given token. Also keep track of what words were mapped
         to what ids, for debugging reasons.
         """
-        h = self.myhash(token) % self.id_range
+        h = self.myhash(utils.to_utf8(token)) % self.id_range
         if self.debug:
             self.token2id[token] = h
             self.id2token.setdefault(h, set()).add(token)
@@ -222,7 +222,7 @@ class HashDictionary(utils.SaveLoad, dict):
         Note: use `save`/`load` to store in binary format instead (pickle).
         """
         logger.info("saving HashDictionary mapping to %s" % fname)
-        with utils.smart_open(fname, 'wb') as fout:
+        with utils.smart_open(fname, 'w') as fout:
             for tokenid in self.keys():
                 words = sorted(self[tokenid])
                 if words:

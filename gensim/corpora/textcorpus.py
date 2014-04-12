@@ -33,7 +33,7 @@ import logging
 
 from gensim import interfaces, utils
 from gensim._six import string_types
-from dictionary import Dictionary
+from gensim.corpora.dictionary import Dictionary
 
 logger = logging.getLogger('gensim.corpora.textcorpus')
 

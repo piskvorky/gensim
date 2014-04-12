@@ -6,18 +6,23 @@
 
 
 """
-Python wrapper for Latent Dirichlet Allocation (LDA) from Mallet, the Java topic modelling
+Python wrapper for Latent Dirichlet Allocation (LDA) from MALLET, the Java topic modelling
 toolkit [1]_.
 
 This module allows both LDA model estimation from a training corpus and inference of topic
 distribution on new, unseen documents, using an (optimized version of) collapsed
-gibbs sampling from Mallet.
+gibbs sampling from MALLET.
 
-Mallet's LDA training requires O(#corpus_words) of memory, keeping the entire corpus in RAM.
+MALLET's LDA training requires O(#corpus_words) of memory, keeping the entire corpus in RAM.
 If you find yourself running out of memory, either decrease the `workers` constructor
 parameter, or use `LdaModel` which needs only O(1) memory.
 
-The model can NOT be updated with new documents for online training -- use gensim's `LdaModel` for that.
+The wrapped model can NOT be updated with new documents for online training -- use gensim's `LdaModel` for that.
+
+Example:
+
+>>> model = gensim.models.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet', corpus=my_corpus, num_topics=20, id2word=dictionary)
+>>> print model[my_vector]  # print LDA topics of a document
 
 .. [1] http://mallet.cs.umass.edu/
 
@@ -30,14 +35,16 @@ import tempfile
 import os
 from subprocess import call
 
-logger = logging.getLogger('gensim.models.ldamallet')
+import numpy
 
 from gensim import utils
+
+logger = logging.getLogger('gensim.models.ldamallet')
 
 
 def read_doctopics(fname, eps=1e-6):
     """
-    Yield document topic vectors from Mallet's "doc-topics" format, as sparse gensim vectors.
+    Yield document topic vectors from MALLET's "doc-topics" format, as sparse gensim vectors.
 
     """
     with utils.smart_open(fname) as fin:
@@ -54,29 +61,37 @@ def read_doctopics(fname, eps=1e-6):
 
 
 class LdaMallet(utils.SaveLoad):
+    """
+    Class for LDA training using MALLET. Communication between MALLET and Python
+    takes place by passing around data files on disk and calling Java with subprocess.call().
+
+    """
     def __init__(self, mallet_path, corpus=None, num_topics=100, id2word=None, workers=4, prefix=None,
                  optimize_interval=0, iterations=1000):
         """
-        Class for LDA training using Mallet. Communication between Mallet and Python
-        takes place by passing around data files on disk and calling Java with subprocess.call().
-
-        `mallet_path` is path to the mallet executable, e.g. `/home/kofola/mallet-2.0.7/bin/mallet`
-        `corpus` is a gensim corpus
-        `id2word` is a mapping between tokens ids and token
-        `workers` is the number of threads, for parallel training
-        `prefix` is the string prefix under which all data files will be stored; default: system temp + random filename prefix
-        `optimize_interval` optimize hyperparameters every N iterations (0 to switch off hyperparameter optimization)
-        `iterations` is the number of sampling iterations
+        `mallet_path` is path to the mallet executable, e.g. `/home/kofola/mallet-2.0.7/bin/mallet`.
+        `corpus` is a gensim corpus, aka a stream of sparse document vectors.
+        `id2word` is a mapping between tokens ids and token.
+        `workers` is the number of threads, for parallel training.
+        `prefix` is the string prefix under which all data files will be stored; default: system temp + random filename prefix.
+        `optimize_interval` optimize hyperparameters every N iterations (sometimes leads to Java exception; 0 to switch off hyperparameter optimization).
+        `iterations` is the number of sampling iterations.
 
         """
         self.mallet_path = mallet_path
         self.id2word = id2word
+        if self.id2word is None:
+            logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
+            self.id2word = utils.dict_from_corpus(corpus)
+            self.num_terms = len(self.id2word)
+        else:
+            self.num_terms = 0 if not self.id2word else 1 + max(self.id2word.keys())
+        if self.num_terms == 0:
+            raise ValueError("cannot compute LDA over an empty collection (no terms)")
         self.num_topics = num_topics
         if prefix is None:
-            tmp_dir = tempfile.gettempdir()
             rand_prefix = hex(random.randint(0, 0xffffff))[2:] + '_'
-            prefix = os.path.join(tmp_dir, rand_prefix)
-        self.tmp_dir = tmp_dir
+            prefix = os.path.join(tempfile.gettempdir(), rand_prefix)
         self.prefix = prefix
         self.workers = workers
         self.optimize_interval = optimize_interval
@@ -92,7 +107,7 @@ class LdaMallet(utils.SaveLoad):
         return self.prefix + 'topickeys.txt'
 
     def fstate(self):
-        return self.prefix + 'state.mallet'
+        return self.prefix + 'state.mallet.gz'
 
     def fdoctopics(self):
         return self.prefix + 'doctopics.txt'
@@ -109,12 +124,12 @@ class LdaMallet(utils.SaveLoad):
     def convert_input(self, corpus, infer=False):
         """
         Serialize documents (lists of unicode tokens) to a temporary text file,
-        then convert that text file to mallet format `outfile`.
+        then convert that text file to MALLET format `outfile`.
 
         """
         logger.info("serializing temporary corpus to %s" % self.fcorpustxt())
-        # write out the corpus in a file format that mallet understands: one document per line:
-        # document id[SPACE]label (not used)[SPACE]utf8-encoded tokens, whitespace delimited
+        # write out the corpus in a file format that MALLET understands: one document per line:
+        # document id[SPACE]label (not used)[SPACE]whitespace delimited utf8-encoded tokens
         with utils.smart_open(self.fcorpustxt(), 'wb') as fout:
             for docno, doc in enumerate(corpus):
                 if self.id2word:
@@ -123,14 +138,14 @@ class LdaMallet(utils.SaveLoad):
                     tokens = sum(([str(tokenid)] * int(cnt) for tokenid, cnt in doc), [])
                 fout.write("%s 0 %s\n" % (docno, utils.to_utf8(' '.join(tokens))))
 
-        # convert the text file above into mallet's internal format
+        # convert the text file above into MALLET's internal format
         cmd = self.mallet_path + " import-file --keep-sequence --remove-stopwords --token-regex '\S+' --input %s --output %s"
         if infer:
             cmd += ' --use-pipe-from ' + self.fcorpusmallet()
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet() + '.infer')
         else:
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet())
-        logger.info("converting temporary corpus to mallet format with %s" % cmd)
+        logger.info("converting temporary corpus to MALLET format with %s" % cmd)
         call(cmd, shell=True)
 
 
@@ -142,8 +157,9 @@ class LdaMallet(utils.SaveLoad):
         cmd = cmd % (self.fcorpusmallet(), self.num_topics, self.optimize_interval, self.workers,
             self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations, self.finferencer())
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
-        logger.info("training Mallet LDA with %s" % cmd)
+        logger.info("training MALLET LDA with %s" % cmd)
         call(cmd, shell=True)
+        self.word_topics = self.load_word_topics()
 
 
     def __getitem__(self, bow, iterations=100):
@@ -154,6 +170,68 @@ class LdaMallet(utils.SaveLoad):
         self.convert_input(bow, infer=True)
         cmd = self.mallet_path + " infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s"
         cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations)
-        logger.info("inferring with Mallet LDA with %s" % cmd)
+        logger.info("inferring topics with MALLET LDA '%s'" % cmd)
         call(cmd, shell=True)
-        return list(read_doctopics(self.fdoctopics() + '.infer'))
+        result = list(read_doctopics(self.fdoctopics() + '.infer'))
+        return result if is_corpus else result[0]
+
+
+    def load_word_topics(self):
+        logger.info("loading assigned topics from %s" % self.fstate())
+        wordtopics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float32)
+        with utils.smart_open(self.fstate()) as fin:
+            _ = next(fin)  # header
+            self.alpha = numpy.array([float(val) for val in next(fin).split()[2:]])
+            assert len(self.alpha) == self.num_topics, "mismatch between MALLET vs. requested topics"
+            _ = next(fin)  # beta
+            for lineno, line in enumerate(fin):
+                doc, source, pos, typeindex, token, topic = line.split()
+                tokenid = self.id2word.token2id[token] if hasattr(self.id2word, 'token2id') else int(token)
+                wordtopics[int(topic), tokenid] += 1
+        logger.info("loaded assigned topics for %i tokens" % wordtopics.sum())
+        self.wordtopics = wordtopics
+        self.print_topics(15)
+
+
+    def print_topics(self, topics=10, topn=10):
+        return self.show_topics(topics, topn, log=True)
+
+
+    def show_topics(self, topics=10, topn=10, log=False, formatted=True):
+        """
+        Print the `topN` most probable words for `topics` number of topics.
+        Set `topics=-1` to print all topics.
+
+        Set `formatted=True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
+
+        """
+        if topics < 0 or topics >= self.num_topics:
+            topics = self.num_topics
+            chosen_topics = range(topics)
+        else:
+            topics = min(topics, self.num_topics)
+            sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha)) # add a little random jitter, to randomize results around the same alpha
+            sorted_topics = list(numpy.argsort(sort_alpha))
+            chosen_topics = sorted_topics[ : topics/2] + sorted_topics[-topics/2 : ]
+        shown = []
+        for i in chosen_topics:
+            if formatted:
+                topic = self.print_topic(i, topn=topn)
+            else:
+                topic = self.show_topic(i, topn=topn)
+            shown.append(topic)
+            if log:
+                logger.info("topic #%i (%.3f): %s" % (i, self.alpha[i], topic))
+        return shown
+
+
+    def show_topic(self, topicid, topn=10):
+        topic = self.wordtopics[topicid]
+        topic = topic / topic.sum() # normalize to probability dist
+        bestn = numpy.argsort(topic)[::-1][:topn]
+        beststr = [(topic[id], self.id2word[id]) for id in bestn]
+        return beststr
+
+
+    def print_topic(self, topicid, topn=10):
+        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])

@@ -1,11 +1,17 @@
 ==============================================
-gensim -- Python Framework for Topic Modelling
+gensim -- Topic Modelling in Python
 ==============================================
 
 |Travis|_
+|Downloads|_
+|License|_
 
 .. |Travis| image:: https://api.travis-ci.org/piskvorky/gensim.png?branch=develop
+.. |Downloads| image:: https://pypip.in/d/gensim/badge.png
+.. |License| image:: https://pypip.in/license/gensim/badge.png
 .. _Travis: https://travis-ci.org/piskvorky/gensim
+.. _Downloads: https://pypi.python.org/pypi/gensim
+.. _License: http://radimrehurek.com/gensim/about.html
 
 Gensim is a Python library for *topic modelling*, *document indexing* and *similarity retrieval* with large corpora.
 Target audience is the *natural language processing* (NLP) and *information retrieval* (IR) community.
@@ -19,8 +25,8 @@ Features
   * easy to plug in your own input corpus/datastream (trivial streaming API)
   * easy to extend with other Vector Space algorithms (trivial transformation API)
 
-* Efficient implementations of popular algorithms, such as online **Latent Semantic Analysis**,
-  **Latent Dirichlet Allocation**, **Random Projections** or **word2vec deep learning**.
+* Efficient implementations of popular algorithms, such as online **Latent Semantic Analysis (LSA/LSI)**,
+  **Latent Dirichlet Allocation (LDA)**, **Random Projections (RP)**, **Hierarchical Dirichlet Process (HDP)**  or **word2vec deep learning**.
 * **Distributed computing**: can run *Latent Semantic Analysis* and *Latent Dirichlet Allocation* on a cluster of computers, and *word2vec* on multiple cores.
 * Extensive `HTML documentation and tutorials <http://radimrehurek.com/gensim/>`_.
 
@@ -35,7 +41,7 @@ Installation
 This software depends on `NumPy and Scipy <http://www.scipy.org/Download>`_, two Python packages for scientific computing.
 You must have them installed prior to installing `gensim`.
 
-It is also recommended you install a fast BLAS library prior to installing NumPy. This is optional, but using an optimized BLAS such as `ATLAS <http://math-atlas.sourceforge.net/>`_ or `OpenBLAS <http://xianyi.github.io/OpenBLAS/>`_ is known to improve performance by as much as an order of magnitude.
+It is also recommended you install a fast BLAS library before installing NumPy. This is optional, but using an optimized BLAS such as `ATLAS <http://math-atlas.sourceforge.net/>`_ or `OpenBLAS <http://xianyi.github.io/OpenBLAS/>`_ is known to improve performance by as much as an order of magnitude. On OS X, NumPy picks up the BLAS that comes with it automatically, so you don't need to do anything special.
 
 The simple way to install `gensim` is::
 

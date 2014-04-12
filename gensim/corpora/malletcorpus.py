@@ -89,7 +89,7 @@ class MalletCorpus(LowCorpus):
 
         truncated = 0
         offsets = []
-        with utils.smart_open(fname, 'wb') as fout:
+        with utils.smart_open(fname, 'w') as fout:
             for doc_id, doc in enumerate(corpus):
                 if metadata:
                     doc_id, doc_lang = doc[1]

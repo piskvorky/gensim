@@ -116,11 +116,12 @@ class LowCorpus(IndexedCorpus):
                     use_words.append(word)
                     marker.add(word)
             # construct a list of (wordIndex, wordFrequency) 2-tuples
-            doc = zip(map(self.word2id.get, use_words), map(words.count, use_words)) # using list.count is suboptimal but speed of this whole function is irrelevant
+            doc = list(zip(map(self.word2id.get, use_words),
+                      map(words.count, use_words)))
         else:
             uniq_words = set(words)
             # construct a list of (word, wordFrequency) 2-tuples
-            doc = zip(uniq_words, map(words.count, uniq_words)) # using list.count is suboptimal but that's irrelevant at this point
+            doc = list(zip(uniq_words, map(words.count, uniq_words)))
 
         # return the document, then forget it and move on to the next one
         # note that this way, only one doc is stored in memory at a time, not the whole corpus
@@ -152,7 +153,7 @@ class LowCorpus(IndexedCorpus):
         logger.info("storing corpus in List-Of-Words format into %s" % fname)
         truncated = 0
         offsets = []
-        with utils.smart_open(fname, 'wb') as fout:
+        with utils.smart_open(fname, 'w') as fout:
             fout.write('%i\n' % len(corpus))
             for doc in corpus:
                 words = []
