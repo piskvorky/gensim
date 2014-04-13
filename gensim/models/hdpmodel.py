@@ -459,8 +459,10 @@ class HdpModel(interfaces.TransformationABC):
         self.m_status_up_to_date = True
 
     def print_topics(self, topics=20, topn=20):
-        """docstring for print_topics"""
-        return self.show_topics(topics, topn)
+        """Alias for `show_topics()` that prints the `topn` most
+        probable words for `topics` number of topics to log.
+        Set `topics=-1` to print all topics."""
+        return self.show_topics(topics=topics, topn=topn, log=True)
         
     def show_topics(self, topics=20, topn=20, log=False, formatted=True):
         """
