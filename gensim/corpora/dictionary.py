@@ -19,6 +19,7 @@ from __future__ import with_statement
 
 import logging
 import itertools
+import UserDict
 
 from gensim import utils
 from gensim._six import iteritems, iterkeys, itervalues, string_types
@@ -29,7 +30,7 @@ from gensim._six.moves import zip as izip
 logger = logging.getLogger('gensim.corpora.dictionary')
 
 
-class Dictionary(utils.SaveLoad, dict):
+class Dictionary(utils.SaveLoad, UserDict.DictMixin):
     """
     Dictionary encapsulates the mapping between normalized words and their integer ids.
 

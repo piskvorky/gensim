@@ -462,6 +462,17 @@ class Similarity(interfaces.SimilarityABC):
         if fname is None:
             fname = self.output_prefix
         super(Similarity, self).save(fname, *args, **kwargs)
+
+    def destroy(self):
+        """
+        Delete all files under self.output_prefix. Object is not usable after calling
+        this method anymore. Use with care!
+
+        """
+        import glob
+        for fname in glob.glob(self.output_prefix + '*'):
+            logger.info("deleting %s" % fname)
+            os.remove(fname)
 #endclass Similarity
 
 

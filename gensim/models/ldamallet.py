@@ -129,7 +129,7 @@ class LdaMallet(utils.SaveLoad):
         """
         logger.info("serializing temporary corpus to %s" % self.fcorpustxt())
         # write out the corpus in a file format that MALLET understands: one document per line:
-        # document id[SPACE]label (not used)[SPACE]utf8-encoded tokens, whitespace delimited
+        # document id[SPACE]label (not used)[SPACE]whitespace delimited utf8-encoded tokens
         with utils.smart_open(self.fcorpustxt(), 'wb') as fout:
             for docno, doc in enumerate(corpus):
                 if self.id2word:
@@ -172,7 +172,8 @@ class LdaMallet(utils.SaveLoad):
         cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations)
         logger.info("inferring topics with MALLET LDA '%s'" % cmd)
         call(cmd, shell=True)
-        return list(read_doctopics(self.fdoctopics() + '.infer'))
+        result = list(read_doctopics(self.fdoctopics() + '.infer'))
+        return result if is_corpus else result[0]
 
 
     def load_word_topics(self):
@@ -185,7 +186,8 @@ class LdaMallet(utils.SaveLoad):
             _ = next(fin)  # beta
             for lineno, line in enumerate(fin):
                 doc, source, pos, typeindex, token, topic = line.split()
-                wordtopics[int(topic), self.id2word.token2id[token]] += 1
+                tokenid = self.id2word.token2id[token] if hasattr(self.id2word, 'token2id') else int(token)
+                wordtopics[int(topic), tokenid] += 1
         logger.info("loaded assigned topics for %i tokens" % wordtopics.sum())
         self.wordtopics = wordtopics
         self.print_topics(15)
