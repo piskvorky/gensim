@@ -166,7 +166,7 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(size=2, min_count=1, hs=0, negative=2)
         model.build_vocab(sentences)
         self.assertTrue(model.syn0.shape == (len(model.vocab), 2))
-        self.assertTrue(model.syn1.shape == (len(model.vocab), 2))
+        self.assertTrue(model.syn1neg.shape == (len(model.vocab), 2))
 
         model.train(sentences)
         sims = model.most_similar('graph', topn=10)
@@ -188,7 +188,7 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(size=2, min_count=1, sg=0, hs=0, negative=2)
         model.build_vocab(sentences)
         self.assertTrue(model.syn0.shape == (len(model.vocab), 2))
-        self.assertTrue(model.syn1.shape == (len(model.vocab), 2))
+        self.assertTrue(model.syn1neg.shape == (len(model.vocab), 2))
 
         model.train(sentences)
         sims = model.most_similar('graph', topn=10)
