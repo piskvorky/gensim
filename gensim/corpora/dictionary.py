@@ -19,7 +19,9 @@ from __future__ import with_statement
 
 import logging
 import itertools
+import operator
 import UserDict
+
 
 from gensim import utils
 from gensim._six import iteritems, iterkeys, itervalues, string_types
@@ -231,17 +233,23 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
                         for tokenid, freq in iteritems(self.dfs))
 
 
-    def save_as_text(self, fname):
+    def save_as_text(self, fname, sort_by_word=True):
         """
         Save this Dictionary to a text file, in format:
-        `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`.
+        `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`. Sorted by word,
+        or by decreasing word frequency.
 
-        Note: use `save`/`load` to store in binary format instead (pickle).
+        Note: text format should be use for corpus inspection. Use `save`/`load`
+        to store in binary format (pickle) for improved performance.
         """
         logger.info("saving dictionary mapping to %s" % fname)
         with utils.smart_open(fname, 'w') as fout:
-            for token, tokenid in sorted(iteritems(self.token2id)):
-                fout.write("%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0)))
+            if sort_by_word:
+                for token, tokenid in sorted(iteritems(self.token2id)):
+                    fout.write("%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0)))
+            else:
+                for tokenid, freq in sorted(iteritems(self.dfs), key=operator.itemgetter(1), reverse=True):
+                    fout.write("%i\t%s\t%i\n" % (tokenid, self.dic[tokenid], freq))
 
 
     def merge_with(self, other):
