@@ -81,10 +81,12 @@ def strip_multiple_whitespaces(s):
     return RE_WHITESPACE.sub(" ", s)
 
 
+RE_AL_NUM = re.compile(r"([a-z]+)([0-9]+)", flags=re.UNICODE)
+RE_NUM_AL = re.compile(r"([0-9]+)([a-z]+)", flags=re.UNICODE)
 def split_alphanum(s):
     s = utils.to_unicode(s)
-    s = re.sub(r"([a-z]+)([0-9]+)", r"\1 \2", s, flags=re.UNICODE)
-    return re.sub(r"([0-9]+)([a-z]+)", r"\1 \2", s, flags=re.UNICODE)
+    s = RE_AL_NUM.sub(r"\1 \2", s)
+    return RE_NUM_AL.sub(r"\1 \2", s)
 
 
 def stem_text(text):
