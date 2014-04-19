@@ -39,7 +39,7 @@ def remove_stopwords(s):
     return " ".join(w for w in s.split() if w not in STOPWORDS)
 
 
-RE_PUNCT = re.compile('([%s])+' % re.escape(string.punctuation))
+RE_PUNCT = re.compile('([%s])+' % re.escape(string.punctuation), re.UNICODE)
 def strip_punctuation(s):
     s = utils.to_unicode(s)
     return RE_PUNCT.sub(" ", s)
@@ -52,9 +52,10 @@ strip_punctuation2 = strip_punctuation
 #     return s.translate(None, string.punctuation)
 
 
+RE_TAGS = re.compile(r"<([^>]+)>", re.UNICODE)
 def strip_tags(s):
     s = utils.to_unicode(s)
-    return re.sub(r"<([^>]+)>", "", s)
+    return RE_TAGS.sub("",s)
 
 
 def strip_short(s, minsize=3):
@@ -62,25 +63,28 @@ def strip_short(s, minsize=3):
     return " ".join(e for e in s.split() if len(e) >= minsize)
 
 
+RE_NUMERIC = re.compile(r"[0-9]+", re.UNICODE)
 def strip_numeric(s):
     s = utils.to_unicode(s)
-    return re.sub(r"[0-9]+", "", s)
+    return RE_NUMERIC.sub("", s)
 
 
+RE_NONALPHA = re.compile(r"\W", re.UNICODE)
 def strip_non_alphanum(s):
     s = utils.to_unicode(s)
-    return re.sub(r"\W", " ", s)
+    return RE_NONALPHA.sub(" ", s)
 
 
+RE_WHITESPACE = re.compile(r"(\s)+", re.UNICODE)
 def strip_multiple_whitespaces(s):
     s = utils.to_unicode(s)
-    return re.sub(r"(\s|\\n|\\r|\\t)+", " ", s)
+    return RE_WHITESPACE.sub(" ", s)
 
 
 def split_alphanum(s):
     s = utils.to_unicode(s)
-    s = re.sub(r"([a-z]+)([0-9]+)", r"\1 \2", s)
-    return re.sub(r"([0-9]+)([a-z]+)", r"\1 \2", s)
+    s = re.sub(r"([a-z]+)([0-9]+)", r"\1 \2", s, flags=re.UNICODE)
+    return re.sub(r"([0-9]+)([a-z]+)", r"\1 \2", s, flags=re.UNICODE)
 
 
 def stem_text(text):
@@ -92,7 +96,7 @@ def stem_text(text):
     return ' '.join(p.stem(word) for word in text.split())
 stem = stem_text
 
-DEFAULT_FILTERS = [str.lower, strip_tags, strip_punctuation, strip_multiple_whitespaces,
+DEFAULT_FILTERS = [lambda x: x.lower(), strip_tags, strip_punctuation, strip_multiple_whitespaces,
                    strip_numeric, remove_stopwords, strip_short, stem_text]
 
 
