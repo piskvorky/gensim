@@ -120,6 +120,45 @@ except:
 
         return len([word for word in sentence if word is not None])
 
+    def train_sentence_sg_slow(model, sentence, alpha, work=None):
+        """
+        Update skip-gram hierarchical softmax model by training on a single sentence.
+
+        The sentence is a list of Vocab objects (or None, where the corresponding
+        word is not in the vocabulary. Called internally from `Word2Vec.train()`.
+
+        """
+        # don't use NumPy; a plain, naive, pure Python version
+        for pos, word in enumerate(sentence):
+            if word is None:
+                continue  # OOV word in the input sentence => skip
+            reduced_window = random.randint(model.window)  # `b` in the original word2vec code
+
+            # now go over all words from the (reduced) window, predicting each one in turn
+            start = max(0, pos - model.window + reduced_window)
+            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
+                if pos2 == pos or word2 is None:
+                    # don't train on OOV words and on the `word` itself
+                    continue
+
+                l1 = model.syn0[word2.index]
+                # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
+                neu1e = [0.0] * model.layer1_size
+                for d in range(len(word.point)):
+                    l2 = model.syn1[word.point[d]]
+                    f = sum(l1[x] * l2[x] for x in xrange(model.layer1_size))
+                    f = 1.0 / (1.0 + exp(-f))
+                    g = (1 - word.code[d] - f) * alpha
+                    for i in xrange(model.layer1_size):
+                        neu1e[i] += g * l2[i]
+                    for i in xrange(model.layer1_size):
+                        l2[i] += g * l1[i]
+                for i in xrange(model.layer1_size):
+                    l1[i] += neu1e[i]
+
+        return len([word for word in sentence if word is not None])
+
+
     def train_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
         """
         Update CBOW hierarchical softmax model by training on a single sentence.
