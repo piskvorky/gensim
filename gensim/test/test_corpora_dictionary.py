@@ -8,6 +8,7 @@ Unit tests for the `corpora.Dictionary` class.
 """
 
 
+from collections import Mapping
 import logging
 import tempfile
 import unittest
@@ -15,6 +16,8 @@ import os
 import os.path
 
 from gensim.corpora import Dictionary
+from gensim._six import PY3
+from gensim._six.moves import zip
 
 
 # sample data files are located in the same folder
@@ -160,6 +163,26 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(dictionary.num_docs, dictionary_from_corpus.num_docs)
         self.assertEqual(dictionary.num_pos, dictionary_from_corpus.num_pos)
         self.assertEqual(dictionary.num_nnz, dictionary_from_corpus.num_nnz)
+
+    def test_dict_interface(self):
+        """Test Python 2 dict-like interface in both Python 2 and 3."""
+        d = Dictionary(self.texts)
+
+        self.assertTrue(isinstance(d, Mapping))
+
+        self.assertEqual(list(zip(d.keys(), d.values())), list(d.items()))
+
+        # Even in Py3, we want the iter* members.
+        self.assertEqual(list(d.items()), list(d.iteritems()))
+        self.assertEqual(list(d.keys()), list(d.iterkeys()))
+        self.assertEqual(list(d.values()), list(d.itervalues()))
+
+        # XXX Do we want list results from the dict members in Py3 too?
+        if not PY3:
+            self.assertTrue(isinstance(d.items(), list))
+            self.assertTrue(isinstance(d.keys(), list))
+            self.assertTrue(isinstance(d.values(), list))
+
 #endclass TestDictionary
 
 
