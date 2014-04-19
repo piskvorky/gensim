@@ -30,7 +30,7 @@ import unittest
 
 import numpy as np
 
-from gensim import corpora, models, matutils
+from gensim import corpora, models, utils, matutils
 from gensim.parsing.preprocessing import preprocess_documents, preprocess_string, DEFAULT_FILTERS
 
 
@@ -50,14 +50,15 @@ class TestLeeTest(unittest.TestCase):
         sim_file = 'similarities0-1.txt'
 
         # read in the corpora
-        with open(os.path.join(pre_path, bg_corpus_file)) as f:
-            bg_corpus = preprocess_documents(f)
-        with open(os.path.join(pre_path, corpus_file)) as f:
-            corpus = preprocess_documents(f)
-        with open(os.path.join(pre_path, bg_corpus_file)) as f:
-            bg_corpus2 = [preprocess_string(s, filters=DEFAULT_FILTERS[:-1]) for s in f]
-        with open(os.path.join(pre_path, corpus_file)) as f:
-            corpus2 = [preprocess_string(s, filters=DEFAULT_FILTERS[:-1]) for s in f]
+        latin1 = lambda line: utils.to_unicode(line, encoding='latin1')
+        with utils.smart_open(os.path.join(pre_path, bg_corpus_file)) as f:
+            bg_corpus = preprocess_documents(latin1(line) for line in f)
+        with utils.smart_open(os.path.join(pre_path, corpus_file)) as f:
+            corpus = preprocess_documents(latin1(line) for line in f)
+        with utils.smart_open(os.path.join(pre_path, bg_corpus_file)) as f:
+            bg_corpus2 = [preprocess_string(latin1(s), filters=DEFAULT_FILTERS[:-1]) for s in f]
+        with utils.smart_open(os.path.join(pre_path, corpus_file)) as f:
+            corpus2 = [preprocess_string(latin1(s), filters=DEFAULT_FILTERS[:-1]) for s in f]
 
         # read the human similarity data
         sim_matrix = np.loadtxt(os.path.join(pre_path, sim_file))

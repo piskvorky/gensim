@@ -81,7 +81,7 @@ from gensim._six.moves import xrange
 try:
     # try to compile and use the faster cython version
     import pyximport
-    pyximport.install(setup_args={"include_dirs": get_include()})
+    pyximport.install(setup_args={"include_dirs": ['.', get_include()]})
     from word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
 except:
     # failed... fall back to plain numpy (20-80x slower training than the above)
@@ -188,7 +188,7 @@ class Word2Vec(utils.SaveLoad):
     def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1, min_alpha=0.0001, sg=1):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
-        list of words (utf8 strings) that will be used for training.
+        list of words (unicode strings) that will be used for training.
 
         The `sentences` iterable can be simply a list, but for larger corpora,
         consider an iterable that streams the sentences directly from disk/network.
@@ -259,7 +259,7 @@ class Word2Vec(utils.SaveLoad):
     def build_vocab(self, sentences):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
-        Each sentence must be a list of utf8 strings.
+        Each sentence must be a list of unicode strings.
 
         """
         logger.info("collecting all words and their counts")
@@ -295,7 +295,7 @@ class Word2Vec(utils.SaveLoad):
     def train(self, sentences, total_words=None, word_count=0, chunksize=100):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
-        Each sentence must be a list of utf8 strings.
+        Each sentence must be a list of unicode strings.
 
         """
         if FAST_VERSION < 0:
@@ -381,19 +381,18 @@ class Word2Vec(utils.SaveLoad):
             logger.info("Storing vocabulary in %s" % (fvocab))
             with utils.smart_open(fvocab, 'wb') as vout:
                 for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
-                    vout.write("%s %s\n" % (word, vocab.count))
+                    vout.write(utils.to_utf8("%s %s\n" % (word, vocab.count)))
         logger.info("storing %sx%s projection weights into %s" % (len(self.vocab), self.layer1_size, fname))
         assert (len(self.vocab), self.layer1_size) == self.syn0.shape
         with utils.smart_open(fname, 'wb') as fout:
-            fout.write("%s %s\n" % self.syn0.shape)
+            fout.write(utils.to_utf8("%s %s\n" % self.syn0.shape))
             # store in sorted order: most frequent words at the top
             for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
-                word = utils.to_utf8(word)  # always store in utf8
                 row = self.syn0[vocab.index]
                 if binary:
-                    fout.write("%s %s\n" % (word, row.tostring()))
+                    fout.write(utils.to_utf8(word) + b" " + row.tostring())
                 else:
-                    fout.write("%s %s\n" % (word, ' '.join("%f" % val for val in row)))
+                    fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
 
 
     @classmethod
@@ -416,12 +415,12 @@ class Word2Vec(utils.SaveLoad):
             counts = {}
             with utils.smart_open(fvocab) as fin:
                 for line in fin:
-                    word, count = line.strip().split()
+                    word, count = utils.to_unicode(line).strip().split()
                     counts[word] = int(count)
 
         logger.info("loading projection weights from %s" % (fname))
-        with utils.smart_open(fname, 'rb') as fin:
-            header = fin.readline()
+        with utils.smart_open(fname) as fin:
+            header = utils.to_unicode(fin.readline())
             vocab_size, layer1_size = map(int, header.split())  # throws for invalid file format
             result = Word2Vec(size=layer1_size)
             result.syn0 = zeros((vocab_size, layer1_size), dtype=REAL)
@@ -432,11 +431,11 @@ class Word2Vec(utils.SaveLoad):
                     word = []
                     while True:
                         ch = fin.read(1)
-                        if ch == ' ':
-                            word = ''.join(word)
+                        if ch == b' ':
                             break
-                        if ch != '\n':  # ignore newlines in front of words (some binary files have newline, some not)
+                        if ch != b'\n':  # ignore newlines in front of words (some binary files have newline, some don't)
                             word.append(ch)
+                    word = utils.to_unicode(b''.join(word))
                     if counts is None:
                         result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
                     elif word in counts:
@@ -621,8 +620,9 @@ class Word2Vec(utils.SaveLoad):
                     correct, correct + incorrect))
 
         sections, section = [], None
-        for line_no, line in enumerate(open(questions)):
+        for line_no, line in enumerate(utils.smart_open(questions)):
             # TODO: use level3 BLAS (=evaluate multiple questions at once), for speed
+            line = utils.to_unicode(line)
             if line.startswith(': '):
                 # a new section starts => store the old section
                 if section:
@@ -680,7 +680,8 @@ class BrownCorpus(object):
             fname = os.path.join(self.dirname, fname)
             if not os.path.isfile(fname):
                 continue
-            for line in open(fname):
+            for line in utils.smart_open(fname):
+                line = utils.to_unicode(line)
                 # each file line is a single sentence in the Brown corpus
                 # each token is WORD/POS_TAG
                 token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
@@ -709,7 +710,7 @@ class Text8Corpus(object):
                         yield sentence
                     break
                 last_token = text.rfind(' ')  # the last token may have been split in two... keep it for the next iteration
-                words, rest = (text[:last_token].split(), text[last_token:].strip()) if last_token >= 0 else ([], text)
+                words, rest = (utils.to_unicode(text[:last_token].split()), text[last_token:].strip()) if last_token >= 0 else ([], text)
                 sentence.extend(words)
                 while len(sentence) >= max_sentence_length:
                     yield sentence[:max_sentence_length]
@@ -739,12 +740,12 @@ class LineSentence(object):
             # Things that don't have seek will trigger an exception
             self.source.seek(0)
             for line in self.source:
-                yield line.split()
+                yield utils.to_unicode(line).split()
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
             with utils.smart_open(self.source) as fin:
                 for line in fin:
-                    yield line.split()
+                    yield utils.to_unicode(line).split()
 
 
 

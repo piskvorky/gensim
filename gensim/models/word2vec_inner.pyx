@@ -14,7 +14,9 @@ cimport numpy as np
 from libc.math cimport exp
 from libc.string cimport memset
 
-from cpython cimport PyCObject_AsVoidPtr
+cdef extern from "voidptr.h":
+    void* PyCObject_AsVoidPtr(object obj)
+
 from scipy.linalg.blas import fblas
 
 REAL = np.float32

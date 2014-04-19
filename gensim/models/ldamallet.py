@@ -48,7 +48,7 @@ def read_doctopics(fname, eps=1e-6):
 
     """
     with utils.smart_open(fname) as fin:
-        fin.next()  # skip the header line
+        next(fin)  # skip the header line
         for lineno, line in enumerate(fin):
             parts = line.split()[2:]  # skip "doc" and "source" columns
             if len(parts) % 2 != 0:
@@ -136,7 +136,7 @@ class LdaMallet(utils.SaveLoad):
                     tokens = sum(([self.id2word[tokenid]] * int(cnt) for tokenid, cnt in doc), [])
                 else:
                     tokens = sum(([str(tokenid)] * int(cnt) for tokenid, cnt in doc), [])
-                fout.write("%s 0 %s\n" % (docno, utils.to_utf8(' '.join(tokens))))
+                fout.write(utils.to_utf8("%s 0 %s\n" % (docno, ' '.join(tokens))))
 
         # convert the text file above into MALLET's internal format
         cmd = self.mallet_path + " import-file --keep-sequence --remove-stopwords --token-regex '\S+' --input %s --output %s"
@@ -186,6 +186,7 @@ class LdaMallet(utils.SaveLoad):
             assert len(self.alpha) == self.num_topics, "mismatch between MALLET vs. requested topics"
             _ = next(fin)  # beta
             for lineno, line in enumerate(fin):
+                line = utils.to_unicode(line)
                 doc, source, pos, typeindex, token, topic = line.split()
                 tokenid = self.id2word.token2id[token] if hasattr(self.id2word, 'token2id') else int(token)
                 wordtopics[int(topic), tokenid] += 1

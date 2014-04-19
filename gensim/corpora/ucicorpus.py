@@ -41,13 +41,11 @@ class UciReader(MmReader):
 
         self.input = input
 
-        if isinstance(input, string_types):
-            input = open(input)
-
-        self.num_docs = self.num_terms = self.num_nnz = 0
-        self.num_docs = int(next(input).strip())
-        self.num_terms = int(next(input).strip())
-        self.num_nnz = int(next(input).strip())
+        with utils.smart_open(self.input) as fin:
+            self.num_docs = self.num_terms = self.num_nnz = 0
+            self.num_docs = int(next(fin).strip())
+            self.num_terms = int(next(fin).strip())
+            self.num_nnz = int(next(fin).strip())
 
         logger.info('accepted corpus with %i documents, %i features, %i non-zero entries' %
             (self.num_docs, self.num_terms, self.num_nnz))
@@ -71,14 +69,15 @@ class UciWriter(MmWriter):
     This implementation is based on matutils.MmWriter, and works the same way.
 
     """
-    MAX_HEADER_LENGTH = 20
+    MAX_HEADER_LENGTH = 20  # reserve 20 bytes per header value
+    FAKE_HEADER = utils.to_utf8(' ' * MAX_HEADER_LENGTH + '\n')
 
     def write_headers(self):
         """
         Write blank header lines. Will be updated later, once corpus stats are known.
         """
         for _ in range(3):
-            self.fout.write(' ' * UciWriter.MAX_HEADER_LENGTH + '\n') # 20 digits per value
+            self.fout.write(self.FAKE_HEADER)
 
         self.last_docno = -1
         self.headers_written = True
@@ -88,14 +87,14 @@ class UciWriter(MmWriter):
         Update headers with actual values.
         """
         offset = 0
-        values = [str(n) for n in [num_docs, num_terms, num_nnz]]
+        values = [utils.to_utf8(str(n)) for n in [num_docs, num_terms, num_nnz]]
 
         for value in values:
-            if len(value) > UciWriter.MAX_HEADER_LENGTH:
+            if len(value) > len(self.FAKE_HEADER):
                 raise ValueError('Invalid header: value too large!')
             self.fout.seek(offset)
             self.fout.write(value)
-            offset += UciWriter.MAX_HEADER_LENGTH + len('\n')
+            offset += len(self.FAKE_HEADER)
 
     @staticmethod
     def write_corpus(fname, corpus, progress_cnt=1000, index=False):
@@ -106,7 +105,6 @@ class UciWriter(MmWriter):
         docno, poslast = -1, -1
         offsets = []
         for docno, bow in enumerate(corpus):
-
             if docno % progress_cnt == 0:
                 logger.info("PROGRESS: saving document #%i" % docno)
             if index:
@@ -150,7 +148,8 @@ class UciCorpus(UciReader, IndexedCorpus):
             fname_vocab = fname + '.vocab'
 
         self.fname = fname
-        words = [word.strip() for word in open(fname_vocab)]
+        with utils.smart_open(fname_vocab) as fin:
+            words = [word.strip() for word in fin]
         self.id2word = dict(enumerate(words))
 
         self.transposed = True
@@ -211,9 +210,9 @@ class UciCorpus(UciReader, IndexedCorpus):
         # write out vocabulary
         fname_vocab = fname + '.vocab'
         logger.info("saving vocabulary of %i words to %s" % (num_terms, fname_vocab))
-        with open(fname_vocab, 'wb') as fout:
+        with utils.smart_open(fname_vocab, 'wb') as fout:
             for featureid in xrange(num_terms):
-                fout.write("%s\n" % utils.to_utf8(id2word.get(featureid, '---')))
+                fout.write(utils.to_utf8("%s\n" % id2word.get(featureid, '---')))
 
         logger.info("storing corpus in UCI Bag-of-Words format: %s" % fname)
 

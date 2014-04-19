@@ -95,11 +95,11 @@ class SvmLightCorpus(IndexedCorpus):
         logger.info("converting corpus to SVMlight format: %s" % fname)
 
         offsets = []
-        with utils.smart_open(fname, 'w') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             for docno, doc in enumerate(corpus):
                 label = labels[docno] if labels else 0 # target class is 0 by default
                 offsets.append(fout.tell())
-                fout.write(SvmLightCorpus.doc2line(doc, label))
+                fout.write(utils.to_utf8(SvmLightCorpus.doc2line(doc, label)))
         return offsets
 
 
@@ -116,6 +116,7 @@ class SvmLightCorpus(IndexedCorpus):
         """
         Create a document from a single line (string) in SVMlight format
         """
+        line = utils.to_unicode(line)
         line = line[: line.find('#')].strip()
         if not line:
             return None # ignore comments and empty lines
@@ -133,5 +134,5 @@ class SvmLightCorpus(IndexedCorpus):
         Output the document in SVMlight format, as a string. Inverse function to `line2doc`.
         """
         pairs = ' '.join("%i:%s" % (termid + 1, termval) for termid, termval in doc) # +1 to convert 0-base to 1-base
-        return str(label) + " %s\n" % pairs
+        return "%s %s\n" % (label, pairs)
 #endclass SvmLightCorpus

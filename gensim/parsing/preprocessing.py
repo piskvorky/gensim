@@ -2,6 +2,7 @@ import re
 import string
 import glob
 
+from gensim import utils
 from gensim.parsing.porter import PorterStemmer
 
 
@@ -34,42 +35,50 @@ STOPWORDS = frozenset(w for w in STOPWORDS.split() if w)
 
 
 def remove_stopwords(s):
+    s = utils.to_unicode(s)
     return " ".join(w for w in s.split() if w not in STOPWORDS)
 
 
+RE_PUNCT = re.compile('([%s])+' % re.escape(string.punctuation))
 def strip_punctuation(s):
-    return re.sub("([%s]+)" % string.punctuation, " ", s)
+    s = utils.to_unicode(s)
+    return RE_PUNCT.sub(" ", s)
 
 
-def strip_punctuation2(s):
-    return s.translate(string.maketrans("", ""), string.punctuation)
+# unicode.translate cannot delete characters like str can
+strip_punctuation2 = strip_punctuation
+# def strip_punctuation2(s):
+#     s = utils.to_unicode(s)
+#     return s.translate(None, string.punctuation)
 
 
 def strip_tags(s):
-    # assumes s is already lowercase
+    s = utils.to_unicode(s)
     return re.sub(r"<([^>]+)>", "", s)
 
 
 def strip_short(s, minsize=3):
+    s = utils.to_unicode(s)
     return " ".join(e for e in s.split() if len(e) >= minsize)
 
 
 def strip_numeric(s):
+    s = utils.to_unicode(s)
     return re.sub(r"[0-9]+", "", s)
 
 
 def strip_non_alphanum(s):
-    # assumes s is already lowercase
-    # FIXME replace with unicode compatible regexp, without the assumption
-    return re.sub(r"[^a-z0-9\ ]", " ", s)
+    s = utils.to_unicode(s)
+    return re.sub(r"\W", " ", s)
 
 
 def strip_multiple_whitespaces(s):
+    s = utils.to_unicode(s)
     return re.sub(r"(\s|\\n|\\r|\\t)+", " ", s)
-    #return s
 
 
 def split_alphanum(s):
+    s = utils.to_unicode(s)
     s = re.sub(r"([a-z]+)([0-9]+)", r"\1 \2", s)
     return re.sub(r"([0-9]+)([a-z]+)", r"\1 \2", s)
 
@@ -78,6 +87,7 @@ def stem_text(text):
     """
     Return lowercase and (porter-)stemmed version of string `text`.
     """
+    text = utils.to_unicode(text)
     p = PorterStemmer()
     return ' '.join(p.stem(word) for word in text.split())
 stem = stem_text
@@ -87,6 +97,7 @@ DEFAULT_FILTERS = [str.lower, strip_tags, strip_punctuation, strip_multiple_whit
 
 
 def preprocess_string(s, filters=DEFAULT_FILTERS):
+    s = utils.to_unicode(s)
     for f in filters:
         s = f(s)
     return s.split()
@@ -97,7 +108,8 @@ def preprocess_documents(docs):
 
 
 def read_file(path):
-    return open(path).read()
+    with utils.smart_open(path) as fin:
+        return fin.read()
 
 
 def read_files(pattern):
