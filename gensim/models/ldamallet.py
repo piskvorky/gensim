@@ -165,6 +165,7 @@ class LdaMallet(utils.SaveLoad):
     def __getitem__(self, bow, iterations=100):
         is_corpus, corpus = utils.is_corpus(bow)
         if not is_corpus:
+            # query is a single document => make a corpus out of it
             bow = [bow]
 
         self.convert_input(bow, infer=True)

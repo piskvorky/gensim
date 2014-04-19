@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.9.2
+
+* add topic printing to HDP model (Tiepes, #190)
+
 0.9.1, 12/04/2014
 
 * MmCorpus fix for Windows
