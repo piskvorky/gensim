@@ -79,13 +79,16 @@ from six.moves import xrange
 
 
 try:
-    # try to compile and use the faster cython version
-    import pyximport
-    pyximport.install(setup_args={"include_dirs": [os.path.dirname(__file__), get_include()]})
-    from word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
-except:
-    # failed... fall back to plain numpy (20-80x slower training than the above)
-    FAST_VERSION = -1
+    from gensim_addons.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
+except ImportError:
+    try:
+        # try to compile and use the faster cython version
+        import pyximport
+        pyximport.install(setup_args={"include_dirs": [os.path.dirname(__file__), get_include()]})
+        from word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
+    except:
+        # failed... fall back to plain numpy (20-80x slower training than the above)
+        FAST_VERSION = -1
 
     def train_sentence_sg(model, sentence, alpha, work=None):
         """

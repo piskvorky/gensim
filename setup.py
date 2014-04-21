@@ -18,37 +18,26 @@ if sys.version_info[:2] < (2, 5):
 
 import ez_setup
 ez_setup.use_setuptools()
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
 
 
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+# Commonly used information
+pkg_name = 'gensim'
+pkg_ver = '0.9.1'
+pkg_desc = 'Python framework for fast Vector Space Modelling'
 
+# there is a bug in python2.5, preventing distutils from using any non-ascii characters :( http://bugs.python.org/issue2562
+pkg_author = 'Radim Rehurek', # u'Radim Řehůřek', # <- should really be this...
+pkg_author_email = 'radimrehurek@seznam.cz'
+pkg_url = 'http://radimrehurek.com/gensim'
+pkg_download_url = 'http://pypi.python.org/pypi/gensim'
 
-setup(
-    name = 'gensim',
-    version = '0.9.1',
-    description = 'Python framework for fast Vector Space Modelling',
-    long_description = read('README.rst'),
+pkg_keywords = 'Singular Value Decomposition, SVD, Latent Semantic Indexing, '
+'LSA, LSI, Latent Dirichlet Allocation, LDA, '
+'Hierarchical Dirichlet Process, HDP, Random Projections, '
+'TFIDF, word2vec'
 
-    packages = find_packages(),
-
-    # there is a bug in python2.5, preventing distutils from using any non-ascii characters :( http://bugs.python.org/issue2562
-    author = 'Radim Rehurek', # u'Radim Řehůřek', # <- should really be this...
-    author_email = 'radimrehurek@seznam.cz',
-
-    url = 'http://radimrehurek.com/gensim',
-    download_url = 'http://pypi.python.org/pypi/gensim',
-
-    keywords = 'Singular Value Decomposition, SVD, Latent Semantic Indexing, LSA, '
-    'LSI, Latent Dirichlet Allocation, LDA, Hierarchical Dirichlet Process, HDP, Random Projections, TFIDF, word2vec',
-
-    license = 'LGPL',
-    platforms = 'any',
-
-    zip_safe = False,
-
-    classifiers = [ # from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+pkg_classifiers = [ # from http://pypi.python.org/pypi?%3Aaction=list_classifiers
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
@@ -59,7 +48,37 @@ setup(
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Text Processing :: Linguistic',
-    ],
+]
+
+pkg_license = 'LGPL'
+
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+native_ext = False
+
+setup(
+    name = pkg_name,
+    version = pkg_ver,
+    description = pkg_desc,
+    long_description = read('README.rst'),
+
+    packages = find_packages(exclude=[ pkg_name + '_addons', pkg_name + '_addons.*']),
+
+    author = pkg_author,
+    author_email = pkg_author_email,
+
+    url = pkg_url,
+    download_url = pkg_download_url,
+
+    keywords = pkg_keywords,
+
+    license = pkg_license,
+    platforms = 'any',
+
+    zip_safe = False,
+
+    classifiers = pkg_classifiers,
 
     test_suite = "gensim.test",
 
@@ -85,3 +104,82 @@ setup(
 #    },
 
 )
+
+# Here comes the setup for cythonized native addon-extension.
+
+try:
+    from Cython.Distutils import build_ext
+    import numpy
+
+    ext_modules = [
+        Extension('gensim_addons.models.word2vec_inner',
+        ['gensim_addons/models/word2vec_inner.pyx'],
+        include_dirs = [numpy.get_include()])
+    ]
+
+    native_ext = True
+
+except ImportError:
+    sys.stderr.write('''
+=========================================================
+
+  Please install Cython (http://cython.org/), if you
+  want to use the highly optimized version of word2vec.
+
+  Usually you can install it using:
+
+  pip install -U cython
+
+    or
+
+  easy_install -U cython
+
+    or
+
+  the package-management of your distribution
+
+  If you install Cython after installing gensim, the
+  optimized version of word2vec is automatically
+  generated on the first call of the function.
+
+=========================================================
+''')
+
+if native_ext:
+
+    setup(
+
+        name = pkg_name + '_addons',
+        version = pkg_ver,
+        description = pkg_desc,
+        long_description = read('README.rst'),
+
+        packages = find_packages(exclude=[ pkg_name, pkg_name + '.*']),
+
+        author = pkg_author,
+        author_email = pkg_author_email,
+
+        url = pkg_url,
+        download_url = pkg_download_url,
+
+        keywords = pkg_keywords,
+
+        license = pkg_license,
+        platforms = 'any',
+
+        zip_safe = False,
+
+        classifiers = pkg_classifiers,
+
+        install_requires = [
+            'gensim == ' + pkg_ver,
+        ],
+
+        include_package_data = True,
+
+        cmdclass = {
+            'build_ext': build_ext
+        },
+
+        ext_modules = ext_modules,
+    )

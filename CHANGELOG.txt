@@ -4,6 +4,7 @@ Changes
 0.9.2
 
 * add topic printing to HDP model (Tiepes, #190)
+* build an optional gensim_addons-package, if Cython is present during installation (Björn Esser, #197)
 
 0.9.1, 12/04/2014
 
