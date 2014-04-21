@@ -16,8 +16,8 @@ import os
 import os.path
 
 from gensim.corpora import Dictionary
-from gensim._six import PY3
-from gensim._six.moves import zip
+from six import PY3
+from six.moves import zip
 
 
 # sample data files are located in the same folder

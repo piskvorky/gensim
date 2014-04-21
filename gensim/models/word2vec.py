@@ -74,8 +74,8 @@ logger = logging.getLogger("gensim.models.word2vec")
 
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from gensim._six import iteritems, itervalues, string_types
-from gensim._six.moves import xrange
+from six import iteritems, itervalues, string_types
+from six.moves import xrange
 
 
 try:

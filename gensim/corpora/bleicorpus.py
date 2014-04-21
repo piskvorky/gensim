@@ -16,7 +16,7 @@ import logging
 
 from gensim import interfaces, utils
 from gensim.corpora import IndexedCorpus
-from gensim._six.moves import xrange
+from six.moves import xrange
 
 
 logger = logging.getLogger('gensim.corpora.bleicorpus')

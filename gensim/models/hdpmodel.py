@@ -41,7 +41,7 @@ import numpy as np
 import scipy.special as sp
 
 from gensim import interfaces, utils
-from gensim._six.moves import xrange
+from six.moves import xrange
 
 logger = logging.getLogger(__name__)
 
