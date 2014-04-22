@@ -120,14 +120,14 @@ class TestDictionary(unittest.TestCase):
     def test_saveAsText_and_loadFromText(self):
         """`Dictionary` can be saved as textfile and loaded again from textfile. """
         tmpf = get_tmpfile('dict_test.txt')
-        d = Dictionary(self.texts)
-        d.save_as_text(tmpf)
-        # does the file exists
-        self.assertTrue(os.path.exists(tmpf))
+        for sort_by_word in [True, False]:
+            d = Dictionary(self.texts)
+            d.save_as_text(tmpf, sort_by_word=sort_by_word)
+            self.assertTrue(os.path.exists(tmpf))
 
-        d_loaded = Dictionary.load_from_text(get_tmpfile('dict_test.txt'))
-        self.assertNotEqual(d_loaded, None)
-        self.assertEqual(d_loaded.token2id, d.token2id)
+            d_loaded = Dictionary.load_from_text(tmpf)
+            self.assertNotEqual(d_loaded, None)
+            self.assertEqual(d_loaded.token2id, d.token2id)
 
     def test_from_corpus(self):
         """build `Dictionary` from an existing corpus"""
