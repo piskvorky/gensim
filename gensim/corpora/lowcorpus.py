@@ -15,8 +15,8 @@ import logging
 
 from gensim import utils
 from gensim.corpora import IndexedCorpus
-from gensim._six import iteritems, iterkeys
-from gensim._six.moves import xrange, zip as izip
+from six import iteritems, iterkeys
+from six.moves import xrange, zip as izip
 
 
 logger = logging.getLogger('gensim.corpora.lowcorpus')

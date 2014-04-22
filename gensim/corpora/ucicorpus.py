@@ -21,8 +21,8 @@ from gensim.corpora import Dictionary
 from gensim.corpora import IndexedCorpus
 from gensim.matutils import MmReader
 from gensim.matutils import MmWriter
-from gensim._six import iteritems, string_types
-from gensim._six.moves import xrange
+from six import iteritems, string_types
+from six.moves import xrange
 
 
 logger = logging.getLogger('gensim.corpora.ucicorpus')

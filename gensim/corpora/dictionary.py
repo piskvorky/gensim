@@ -22,9 +22,9 @@ import logging
 import itertools
 
 from gensim import utils
-from gensim._six import PY3, iteritems, iterkeys, itervalues, string_types
-from gensim._six.moves import xrange
-from gensim._six.moves import zip as izip
+from six import PY3, iteritems, iterkeys, itervalues, string_types
+from six.moves import xrange
+from six.moves import zip as izip
 
 
 logger = logging.getLogger('gensim.corpora.dictionary')

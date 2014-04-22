@@ -32,7 +32,7 @@ Optimizations and cleanup of the code by Lars Buitinck, July 2012.
 """
 
 
-from gensim._six.moves import xrange
+from six.moves import xrange
 
 
 class PorterStemmer(object):

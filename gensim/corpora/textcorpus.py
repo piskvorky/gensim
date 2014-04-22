@@ -32,7 +32,7 @@ from __future__ import with_statement
 import logging
 
 from gensim import interfaces, utils
-from gensim._six import string_types
+from six import string_types
 from gensim.corpora.dictionary import Dictionary
 
 logger = logging.getLogger('gensim.corpora.textcorpus')
