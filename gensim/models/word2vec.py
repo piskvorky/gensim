@@ -170,17 +170,17 @@ except ImportError:
 
                 if model.hs:
                     l2a = deepcopy(model.syn1[word.point]) #2d matrix, codelen x layer1_size
-                    fa = 1. / (1. + np.exp(-np.dot(l1, l2a.T))) # propagate hidden -> output
+                    fa = 1. / (1. + exp(-dot(l1, l2a.T))) # propagate hidden -> output
                     ga = (1. - word.code - fa) * alpha # vector of error gradients multiplied by the learning rate
-                    model.syn1[word.point] += np.outer(ga, l1) # learn hidden -> output
-                    neu1e += np.dot(ga, l2a) # learn input -> hidden, here for all words in the window separately
+                    model.syn1[word.point] += outer(ga, l1) # learn hidden -> output
+                    neu1e += dot(ga, l2a) # learn input -> hidden, here for all words in the window separately
 
                 if model.negative:
                     # use this word (label = 1) + k other random words not from this sentence (label = 0)
                     word_indices = [word.index]
                     while len(word_indices) < model.negative+1:
                         w = model.table[random.randint(model.table.shape[0])]
-                        if not w == word.index:
+                        if not (w == word.index or w in word2_indices):
                             word_indices.append(w)
                     l2b = deepcopy(model.syn1neg[word_indices]) # 2d matrix, k+1 x layer1_size
                     fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
