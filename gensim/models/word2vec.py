@@ -713,7 +713,7 @@ class Text8Corpus(object):
                         yield sentence
                     break
                 last_token = text.rfind(' ')  # the last token may have been split in two... keep it for the next iteration
-                words, rest = (utils.to_unicode(text[:last_token].split()), text[last_token:].strip()) if last_token >= 0 else ([], text)
+                words, rest = (utils.to_unicode(text[:last_token]).split(), text[last_token:].strip()) if last_token >= 0 else ([], text)
                 sentence.extend(words)
                 while len(sentence) >= max_sentence_length:
                     yield sentence[:max_sentence_length]
