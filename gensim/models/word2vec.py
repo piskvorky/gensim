@@ -166,6 +166,7 @@ except ImportError:
                 l1 = np_sum(model.syn0[word2_indices],axis=0) # 1xlayer1_size
                 if len(word2_indices) > 0:
                     l1 /= len(word2_indices)
+                neu1e = zeros(l1.shape)
 
                 if model.hs:
                     l2a = deepcopy(model.syn1[word.point]) #2d matrix, codelen x layer1_size
