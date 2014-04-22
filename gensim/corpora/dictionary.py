@@ -246,18 +246,25 @@ class Dictionary(utils.SaveLoad, Mapping):
                         for tokenid, freq in iteritems(self.dfs))
 
 
-    def save_as_text(self, fname):
+    def save_as_text(self, fname, sort_by_word=True):
         """
         Save this Dictionary to a text file, in format:
-        `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`.
+        `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`. Sorted by word,
+        or by decreasing word frequency.
 
-        Note: use `save`/`load` to store in binary format instead (pickle).
+        Note: text format should be use for corpus inspection. Use `save`/`load`
+        to store in binary format (pickle) for improved performance.
         """
         logger.info("saving dictionary mapping to %s" % fname)
         with utils.smart_open(fname, 'wb') as fout:
-            for token, tokenid in sorted(iteritems(self.token2id)):
-                line = "%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0))
-                fout.write(utils.to_utf8(line))
+            if sort_by_word:
+                for token, tokenid in sorted(iteritems(self.token2id)):
+                    line = "%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0))
+                    fout.write(utils.to_utf8(line))
+            else:
+                for tokenid, freq in sorted(iteritems(self.dfs), key=lambda item: -item[1]):
+                    line = "%i\t%s\t%i\n" % (tokenid, self[tokenid], freq)
+                    fout.write(utils.to_utf8(line))
 
 
     def merge_with(self, other):
