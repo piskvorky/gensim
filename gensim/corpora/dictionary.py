@@ -75,7 +75,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     def keys(self):
         """Return a list of all token ids."""
-        return self.token2id.values()
+        return list(self.token2id.values())
 
 
     def __len__(self):
@@ -132,8 +132,8 @@ class Dictionary(utils.SaveLoad, Mapping):
         result = {}
         missing = {}
         if isinstance(document, string_types):
-            raise TypeError("doc2bow expects an array of utf8 tokens on input, not a string")
-        document = sorted(utils.to_utf8(token) for token in document)
+            raise TypeError("doc2bow expects an array of unicode tokens on input, not a single string")
+        document = sorted(utils.to_unicode(token) for token in document)
         # construct (word, frequency) mapping. in python3 this is done simply
         # using Counter(), but here i use itertools.groupby() for the job
         for word_norm, group in itertools.groupby(document):
@@ -254,9 +254,10 @@ class Dictionary(utils.SaveLoad, Mapping):
         Note: use `save`/`load` to store in binary format instead (pickle).
         """
         logger.info("saving dictionary mapping to %s" % fname)
-        with utils.smart_open(fname, 'w') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             for token, tokenid in sorted(iteritems(self.token2id)):
-                fout.write("%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0)))
+                line = "%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0))
+                fout.write(utils.to_utf8(line))
 
 
     def merge_with(self, other):
@@ -312,8 +313,9 @@ class Dictionary(utils.SaveLoad, Mapping):
         Mirror function to `save_as_text`.
         """
         result = Dictionary()
-        with utils.smart_open(fname, 'rb') as f:
+        with utils.smart_open(fname) as f:
             for lineno, line in enumerate(f):
+                line = utils.to_unicode(line)
                 try:
                     wordid, word, docfreq = line[:-1].split('\t')
                 except Exception:

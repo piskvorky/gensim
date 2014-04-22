@@ -80,7 +80,7 @@ class CorpusTesterABC(object):
             corpus2 = self.corpus_class(fname)
             self.assertEqual(corpus, list(corpus2))
 
-            # make sure the indexing corpus[i] works
+            # make sure the indexing `corpus[i]` syntax works
             for i in range(len(corpus)):
                 self.assertEqual(corpus[i], corpus2[i])
 
@@ -93,6 +93,10 @@ class TestMmCorpus(unittest.TestCase, CorpusTesterABC):
     def setUp(self):
         self.corpus_class = mmcorpus.MmCorpus
         self.file_extension = '.mm'
+
+    def test_serialize_compressed(self):
+        # MmCorpus needs file write with seek => doesn't support compressed output (only input)
+        pass
 #endclass TestMmCorpus
 
 
@@ -125,6 +129,10 @@ class TestUciCorpus(unittest.TestCase, CorpusTesterABC):
     def setUp(self):
         self.corpus_class = ucicorpus.UciCorpus
         self.file_extension = '.uci'
+
+    def test_serialize_compressed(self):
+        # UciCorpus needs file write with seek => doesn't support compressed output (only input)
+        pass
 #endclass TestUciCorpus
 
 

@@ -55,7 +55,7 @@ class MalletCorpus(LowCorpus):
                 yield self.line2doc(line)
 
     def line2doc(self, line):
-        l = [word for word in line.strip().split(' ') if word]
+        l = [word for word in utils.to_unicode(line).strip().split(' ') if word]
         docid, doclang, words = l[0], l[1], l[2:]
 
         doc = super(MalletCorpus, self).line2doc(' '.join(words))
@@ -89,7 +89,7 @@ class MalletCorpus(LowCorpus):
 
         truncated = 0
         offsets = []
-        with utils.smart_open(fname, 'w') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             for doc_id, doc in enumerate(corpus):
                 if metadata:
                     doc_id, doc_lang = doc[1]
@@ -103,7 +103,7 @@ class MalletCorpus(LowCorpus):
                         truncated += 1
                     words.extend([str(id2word[wordid])] * int(value))
                 offsets.append(fout.tell())
-                fout.write('%s %s %s\n' % (doc_id, doc_lang, ' '.join(words)))
+                fout.write(utils.to_utf8('%s %s %s\n' % (doc_id, doc_lang, ' '.join(words))))
 
         if truncated:
             logger.warning("Mallet format can only save vectors with "

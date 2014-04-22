@@ -7,7 +7,9 @@
 This module replicates the miislita vector spaces from
 "A Linear Algebra Approach to the Vector Space Model -- A Fast Track Tutorial"
 by Dr. E. Garcia, admin@miislita.com
+
 See http://www.miislita.com for further details.
+
 """
 
 from __future__ import division  # always use floats
@@ -19,7 +21,7 @@ import unittest
 import bz2
 import os
 
-from gensim import corpora, models, similarities
+from gensim import utils, corpora, models, similarities
 
 # sample data files are located in the same folder
 module_path = os.path.dirname(__file__)
@@ -41,10 +43,12 @@ class CorpusMiislita(corpora.TextCorpus):
         each document and ignore some stopwords.
 
         .cor format: one document per line, words separated by whitespace.
+
         """
-        for doc in self.getstream():
-            yield [word for word in doc.lower().split()
-                    if word not in CorpusMiislita.stoplist]
+        with self.getstream() as stream:
+            for doc in stream:
+                yield [word for word in utils.to_unicode(doc).lower().split()
+                        if word not in CorpusMiislita.stoplist]
 
     def __len__(self):
         """Define this so we can use `len(corpus)`"""
@@ -56,10 +60,9 @@ class CorpusMiislita(corpora.TextCorpus):
 
 class TestMiislita(unittest.TestCase):
     def test_textcorpus(self):
-        """ Make sure TextCorpus can be serialized to disk. """
+        """Make sure TextCorpus can be serialized to disk. """
         # construct corpus from file
-        fname = datapath('head500.noblanks.cor.bz2')
-        miislita = CorpusMiislita(bz2.BZ2File(fname))
+        miislita = CorpusMiislita(datapath('head500.noblanks.cor.bz2'))
 
         # make sure serializing works
         ftmp = get_tmpfile('test_textcorpus.mm')
@@ -92,8 +95,7 @@ class TestMiislita(unittest.TestCase):
 
     def test_miislita_high_level(self):
         # construct corpus from file
-        corpusname = datapath('miIslita.cor')
-        miislita = CorpusMiislita(corpusname)
+        miislita = CorpusMiislita(datapath('miIslita.cor'))
 
         # initialize tfidf transformation and similarity index
         tfidf = models.TfidfModel(miislita, miislita.dictionary, normalize=False)
@@ -114,5 +116,5 @@ class TestMiislita(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=logging.DEBUG)
     unittest.main()

@@ -23,7 +23,7 @@ logger = logging.getLogger('gensim.corpora.lowcorpus')
 
 
 def split_on_space(s):
-    return [word for word in s.strip().split(' ') if word]
+    return [word for word in utils.to_unicode(s).strip().split(' ') if word]
 
 
 class LowCorpus(IndexedCorpus):
@@ -153,8 +153,8 @@ class LowCorpus(IndexedCorpus):
         logger.info("storing corpus in List-Of-Words format into %s" % fname)
         truncated = 0
         offsets = []
-        with utils.smart_open(fname, 'w') as fout:
-            fout.write('%i\n' % len(corpus))
+        with utils.smart_open(fname, 'wb') as fout:
+            fout.write(utils.to_utf8('%i\n' % len(corpus)))
             for doc in corpus:
                 words = []
                 for wordid, value in doc:
@@ -162,7 +162,7 @@ class LowCorpus(IndexedCorpus):
                         truncated += 1
                     words.extend([str(id2word[wordid])] * int(value))
                 offsets.append(fout.tell())
-                fout.write('%s\n' % ' '.join(words))
+                fout.write(utils.to_utf8('%s\n' % ' '.join(words)))
 
         if truncated:
             logger.warning("List-of-words format can only save vectors with "
