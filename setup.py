@@ -110,11 +110,12 @@ setup(
 try:
     from Cython.Distutils import build_ext
     import numpy
+    models_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
 
     ext_modules = [
         Extension('gensim_addons.models.word2vec_inner',
         ['gensim_addons/models/word2vec_inner.pyx'],
-        include_dirs = [numpy.get_include()])
+        include_dirs = [models_dir, numpy.get_include()])
     ]
 
     native_ext = True
@@ -126,7 +127,7 @@ except ImportError:
   Please install Cython (http://cython.org/), if you
   want to use the highly optimized version of word2vec.
 
-  Usually you can install it using:
+  Usually you can install it (optional) using:
 
   pip install -U cython
 
@@ -136,11 +137,11 @@ except ImportError:
 
     or
 
-  the package-management of your distribution
+  the package-management of your distribution.
 
-  If you install Cython after installing gensim, the
-  optimized version of word2vec is automatically
-  generated on the first call of the function.
+  If you install Cython *after* installing gensim, the
+  optimized version of word2vec will still be automatically
+  generated, on the first use of word2vec.
 
 =========================================================
 ''')
