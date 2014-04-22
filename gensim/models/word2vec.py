@@ -69,7 +69,7 @@ except ImportError:
     from Queue import Queue
 
 from numpy import exp, dot, zeros, outer, random, dtype, get_include, float32 as REAL,\
-    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis, ndarray, empty
+    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis, ndarray, empty, sum as np_sum
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -166,21 +166,20 @@ except ImportError:
                 l1 = np_sum(model.syn0[word2_indices],axis=0) # 1xlayer1_size
                 if len(word2_indices) > 0:
                     l1 /= len(word2_indices)
-                neu1e = zeros(l1.shape)
 
                 if model.hs:
                     l2a = deepcopy(model.syn1[word.point]) #2d matrix, codelen x layer1_size
-                    fa = 1. / (1. + exp(-dot(l1, l2a.T))) # propagate hidden -> output
+                    fa = 1. / (1. + np.exp(-np.dot(l1, l2a.T))) # propagate hidden -> output
                     ga = (1. - word.code - fa) * alpha # vector of error gradients multiplied by the learning rate
-                    model.syn1[word.point] += outer(ga, l1) # learn hidden -> output
-                    neu1e += dot(ga, l2a) # learn input -> hidden, here for all words in the window separately
+                    model.syn1[word.point] += np.outer(ga, l1) # learn hidden -> output
+                    neu1e += np.dot(ga, l2a) # learn input -> hidden, here for all words in the window separately
 
                 if model.negative:
                     # use this word (label = 1) + k other random words not from this sentence (label = 0)
                     word_indices = [word.index]
                     while len(word_indices) < model.negative+1:
                         w = model.table[random.randint(model.table.shape[0])]
-                        if not (w == word.index or w in word2_indices):
+                        if not w == word.index:
                             word_indices.append(w)
                     l2b = deepcopy(model.syn1neg[word_indices]) # 2d matrix, k+1 x layer1_size
                     fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
