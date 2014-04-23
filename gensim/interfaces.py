@@ -17,7 +17,7 @@ import logging
 import itertools
 
 from gensim import utils, matutils
-from gensim._six.moves import xrange
+from six.moves import xrange
 
 
 logger = logging.getLogger('gensim.interfaces')

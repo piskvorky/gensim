@@ -45,7 +45,7 @@ Thumbs.db
 docs/src/_build/
 docs/_static
 dedan_gensim.tmproj
-gensim.egg-info
+gensim*.egg-info
 *,cover
 .idea
 *.dict
@@ -61,3 +61,4 @@ data
 *.bin
 *.old
 *.model
+*~

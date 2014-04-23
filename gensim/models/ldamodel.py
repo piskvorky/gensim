@@ -50,7 +50,7 @@ except ImportError: # maxentropy has been removed for next release
 
 
 from gensim import interfaces, utils
-from gensim._six.moves import xrange
+from six.moves import xrange
 
 
 def dirichlet_expectation(alpha):

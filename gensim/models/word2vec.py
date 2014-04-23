@@ -74,93 +74,97 @@ logger = logging.getLogger("gensim.models.word2vec")
 
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from gensim._six import iteritems, itervalues, string_types
-from gensim._six.moves import xrange
+from six import iteritems, itervalues, string_types
+from six.moves import xrange
 
 
 try:
-    # try to compile and use the faster cython version
-    import pyximport
-    pyximport.install(setup_args={"include_dirs": [os.path.dirname(__file__), get_include()]})
-    from word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
-except:
-    # failed... fall back to plain numpy (20-80x slower training than the above)
-    FAST_VERSION = -1
+    from gensim_addons.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
+except ImportError:
+    try:
+        # try to compile and use the faster cython version
+        import pyximport
+        models_dir = os.path.dirname(__file__) or os.getcwd()
+        pyximport.install(setup_args={"include_dirs": [models_dir, get_include()]})
+        from word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
+    except:
+        # failed... fall back to plain numpy (20-80x slower training than the above)
+        FAST_VERSION = -1
 
-    def train_sentence_sg(model, sentence, alpha, work=None):
-        """
-        Update skip-gram hierarchical softmax model by training on a single sentence.
+        def train_sentence_sg(model, sentence, alpha, work=None):
+            """
+            Update skip-gram hierarchical softmax model by training on a single sentence.
 
-        The sentence is a list of Vocab objects (or None, where the corresponding
-        word is not in the vocabulary. Called internally from `Word2Vec.train()`.
+            The sentence is a list of Vocab objects (or None, where the corresponding
+            word is not in the vocabulary. Called internally from `Word2Vec.train()`.
 
-        """
-        for pos, word in enumerate(sentence):
-            if word is None:
-                continue  # OOV word in the input sentence => skip
-            reduced_window = random.randint(model.window)  # `b` in the original word2vec code
+            """
+            for pos, word in enumerate(sentence):
+                if word is None:
+                    continue  # OOV word in the input sentence => skip
+                reduced_window = random.randint(model.window)  # `b` in the original word2vec code
 
-            # now go over all words from the (reduced) window, predicting each one in turn
-            start = max(0, pos - model.window + reduced_window)
-            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
-                if pos2 == pos or word2 is None:
-                    # don't train on OOV words and on the `word` itself
-                    continue
+                # now go over all words from the (reduced) window, predicting each one in turn
+                start = max(0, pos - model.window + reduced_window)
+                for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
+                    if pos2 == pos or word2 is None:
+                        # don't train on OOV words and on the `word` itself
+                        continue
 
-                l1 = model.syn0[word2.index]
-                # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
+                    l1 = model.syn0[word2.index]
+                    # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
+                    l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
+                    fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
+                    ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
+                    model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
+
+                    # TODO add negative sampling?
+
+                    l1 += dot(ga, l2a)  # learn input -> hidden
+
+            return len([word for word in sentence if word is not None])
+
+
+        def train_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
+            """
+            Update CBOW hierarchical softmax model by training on a single sentence.
+
+            The sentence is a list of Vocab objects (or None, where the corresponding
+            word is not in the vocabulary. Called internally from `Word2Vec.train()`.
+
+            """
+
+            for pos, word in enumerate(sentence):
+                if word is None:
+                    continue  # OOV word in the input sentence => skip
+                reduced_window = random.randint(model.window)  # `b` in the original word2vec code
+
+                # Combine all context words into an appropriate input
+                start = max(0, pos - model.window + reduced_window)
+                l1 = matutils.zeros_aligned((model.layer1_size), dtype=REAL)
+                count = 0
+                for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
+                    if pos2 == pos or word2 is None:
+                        pass
+                    else:
+                        count += 1
+                        l1 += model.syn0[word2.index]
+
+                if count > 0:
+                    l1 = l1 / count
+
                 l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
                 fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
                 ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
                 model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
 
-                # TODO add negative sampling?
+                for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
+                    if pos2 == pos or word2 is None:
+                        pass
+                    else:
+                        model.syn0[word2.index] += dot(ga, l2a)
 
-                l1 += dot(ga, l2a)  # learn input -> hidden
-
-        return len([word for word in sentence if word is not None])
-
-
-    def train_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
-        """
-        Update CBOW hierarchical softmax model by training on a single sentence.
-
-        The sentence is a list of Vocab objects (or None, where the corresponding
-        word is not in the vocabulary. Called internally from `Word2Vec.train()`.
-
-        """
-
-        for pos, word in enumerate(sentence):
-            if word is None:
-                continue  # OOV word in the input sentence => skip
-            reduced_window = random.randint(model.window)  # `b` in the original word2vec code
-
-            # Combine all context words into an appropriate input
-            start = max(0, pos - model.window + reduced_window)
-            l1 = matutils.zeros_aligned((model.layer1_size), dtype=REAL)
-            count = 0
-            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
-                if pos2 == pos or word2 is None:
-                    pass
-                else:
-                    count += 1
-                    l1 += model.syn0[word2.index]
-
-            if count > 0:
-                l1 = l1 / count
-
-            l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
-            fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
-            ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
-            model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
-
-            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
-                if pos2 == pos or word2 is None:
-                    pass
-                else:
-                    model.syn0[word2.index] += dot(ga, l2a)
-
-        return len([word for word in sentence if word is not None])
+            return len([word for word in sentence if word is not None])
 
 
 class Vocab(object):
@@ -710,7 +714,7 @@ class Text8Corpus(object):
                         yield sentence
                     break
                 last_token = text.rfind(' ')  # the last token may have been split in two... keep it for the next iteration
-                words, rest = (utils.to_unicode(text[:last_token].split()), text[last_token:].strip()) if last_token >= 0 else ([], text)
+                words, rest = (utils.to_unicode(text[:last_token]).split(), text[last_token:].strip()) if last_token >= 0 else ([], text)
                 sentence.extend(words)
                 while len(sentence) >= max_sentence_length:
                     yield sentence[:max_sentence_length]

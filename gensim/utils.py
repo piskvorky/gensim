@@ -41,8 +41,8 @@ import scipy.sparse
 if sys.version_info[0] >= 3:
     unicode = str
 
-from gensim._six import iteritems, u, string_types
-from gensim._six.moves import xrange
+from six import iteritems, u, string_types
+from six.moves import xrange
 
 try:
     from pattern.en import parse
