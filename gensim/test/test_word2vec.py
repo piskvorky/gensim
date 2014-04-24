@@ -179,7 +179,7 @@ class TestWord2VecModel(unittest.TestCase):
 
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=0, negative=2)
-        self.models_negative_equal(model, model2)
+        self.models_equal(model, model2)
 
     def testTrainingCbowNegative(self):
         """Test CBOW (negative sampling) word2vec training."""
@@ -201,7 +201,7 @@ class TestWord2VecModel(unittest.TestCase):
 
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, sg=0, hs=0, negative=2)
-        self.models_negative_equal(model, model2)
+        self.models_equal(model, model2)
 
     def testParallel(self):
         """Test word2vec parallel training."""
@@ -226,14 +226,10 @@ class TestWord2VecModel(unittest.TestCase):
     def models_equal(self, model, model2):
         self.assertEqual(len(model.vocab), len(model2.vocab))
         self.assertTrue(numpy.allclose(model.syn0, model2.syn0))
-        self.assertTrue(numpy.allclose(model.syn1, model2.syn1))
-        most_common_word = max(model.vocab.items(), key=lambda item: item[1].count)[0]
-        self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
-
-    def models_negative_equal(self, model, model2):
-        self.assertEqual(len(model.vocab), len(model2.vocab))
-        self.assertTrue(numpy.allclose(model.syn0, model2.syn0))
-        self.assertTrue(numpy.allclose(model.syn1neg, model2.syn1neg))
+        if model.hs:
+            self.assertTrue(numpy.allclose(model.syn1, model2.syn1))
+        if model.negative:
+            self.assertTrue(numpy.allclose(model.syn1neg, model2.syn1neg))
         most_common_word = max(model.vocab.items(), key=lambda item: item[1].count)[0]
         self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
 #endclass TestWord2VecModel
