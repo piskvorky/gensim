@@ -159,7 +159,7 @@ except ImportError:
                 start = max(0, pos - model.window + reduced_window)
                 word2_indices = [word2.index for pos2, word2 in enumerate(sentence[start:pos+model.window+1-reduced_window], start) if (word2 and not (pos2 == pos))]
                 l1 = np_sum(model.syn0[word2_indices],axis=0) # 1xlayer1_size
-                if len(word2_indices) > 0:
+                if len(word2_indices) > 0 and model.cbow_mean:
                     l1 /= len(word2_indices)
                 neu1e = zeros(l1.shape)
 
@@ -210,7 +210,7 @@ class Word2Vec(utils.SaveLoad):
     compatible with the original word2vec implementation via `save_word2vec_format()` and `load_word2vec_format()`.
 
     """
-    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0):
+    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0, cbow_mean=0):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -233,6 +233,8 @@ class Word2Vec(utils.SaveLoad):
         `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0)
         `negative` = if > 0, negative sampling will be used, the int for negative
                 specifies how many "noise words" should be drawn (usually between 5-20)
+        `cbow_mean` = if 0 (default), use the sum of the context word vectors. If 1, use the mean.
+                Only applies when cbow is used.
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
@@ -249,6 +251,7 @@ class Word2Vec(utils.SaveLoad):
         self.min_alpha = min_alpha
         self.hs = hs
         self.negative = negative
+        self.cbow_mean = int(cbow_mean)
         if sentences is not None:
             self.build_vocab(sentences)
             self.train(sentences)

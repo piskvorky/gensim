@@ -46,13 +46,13 @@ ctypedef void (*fast_sentence_cbow_hs_ptr) (
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k) nogil
+    int i, int j, int k, int cbow_mean) nogil
 
 ctypedef unsigned long long (*fast_sentence_cbow_neg_ptr) (
     const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k, unsigned long long next_random) nogil
+    int i, int j, int k, int cbow_mean, unsigned long long next_random) nogil
 
 cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(fblas.scopy._cpointer)  # y = x
 cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(fblas.saxpy._cpointer)  # y += alpha * x
@@ -274,7 +274,7 @@ cdef void fast_sentence0_cbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k) nogil:
+    int i, int j, int k, int cbow_mean) nogil:
 
     cdef long long a, b
     cdef long long row2
@@ -289,7 +289,7 @@ cdef void fast_sentence0_cbow_hs(
         else:
             count += ONEF
             saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
-    if count > (<REAL_t>0.5):
+    if cbow_mean and count > (<REAL_t>0.5):
         inv_count = ONEF/count
         sscal(&size, &inv_count, neu1, &ONE)
 
@@ -314,7 +314,7 @@ cdef void fast_sentence1_cbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k) nogil:
+    int i, int j, int k, int cbow_mean) nogil:
 
     cdef long long a, b
     cdef long long row2
@@ -329,7 +329,7 @@ cdef void fast_sentence1_cbow_hs(
         else:
             count += ONEF
             saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
-    if count > (<REAL_t>0.5):
+    if cbow_mean and count > (<REAL_t>0.5):
         inv_count = ONEF/count
         sscal(&size, &inv_count , neu1, &ONE)
 
@@ -354,7 +354,7 @@ cdef void fast_sentence2_cbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k) nogil:
+    int i, int j, int k, int cbow_mean) nogil:
 
     cdef long long a, b
     cdef long long row2
@@ -371,7 +371,7 @@ cdef void fast_sentence2_cbow_hs(
             count += ONEF
             for a in range(size):
                 neu1[a] += syn0[indexes[m] * size + a]
-    if count > (<REAL_t>0.5):
+    if cbow_mean and count > (<REAL_t>0.5):
         for a in range(size):
             neu1[a] /= count
 
@@ -402,7 +402,7 @@ cdef unsigned long long fast_sentence0_cbow_neg(
     const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k, unsigned long long next_random) nogil:
+    int i, int j, int k, int cbow_mean, unsigned long long next_random) nogil:
 
     cdef long long a
     cdef long long row2
@@ -421,7 +421,7 @@ cdef unsigned long long fast_sentence0_cbow_neg(
         else:
             count += ONEF
             saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
-    if count > (<REAL_t>0.5):
+    if cbow_mean and count > (<REAL_t>0.5):
         inv_count = ONEF/count
         sscal(&size, &inv_count, neu1, &ONE)
 
@@ -459,7 +459,7 @@ cdef unsigned long long fast_sentence1_cbow_neg(
     const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k, unsigned long long next_random) nogil:
+    int i, int j, int k, int cbow_mean, unsigned long long next_random) nogil:
 
     cdef long long a
     cdef long long row2
@@ -478,7 +478,7 @@ cdef unsigned long long fast_sentence1_cbow_neg(
         else:
             count += ONEF
             saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
-    if count > (<REAL_t>0.5):
+    if cbow_mean and count > (<REAL_t>0.5):
         inv_count = ONEF/count
         sscal(&size, &inv_count, neu1, &ONE)
 
@@ -516,7 +516,7 @@ cdef unsigned long long fast_sentence2_cbow_neg(
     const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k, unsigned long long next_random) nogil:
+    int i, int j, int k, int cbow_mean, unsigned long long next_random) nogil:
 
     cdef long long a
     cdef long long row2
@@ -537,7 +537,7 @@ cdef unsigned long long fast_sentence2_cbow_neg(
             count += ONEF
             for a in range(size):
                 neu1[a] += syn0[indexes[m] * size + a]
-    if count > (<REAL_t>0.5):
+    if cbow_mean and count > (<REAL_t>0.5):
         for a in range(size):
             neu1[a] /= count
 
@@ -659,6 +659,7 @@ def train_sentence_sg(model, sentence, alpha, _work):
 def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
     cdef int hs = model.hs
     cdef int negative = model.negative
+    cdef int cbow_mean = model.cbow_mean
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
     cdef REAL_t *work
@@ -727,9 +728,9 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
             if k > sentence_len:
                 k = sentence_len
             if hs:
-                fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k)
+                fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean)
             if negative:
-                next_random = fast_sentence_cbow_neg(negative, table, table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, next_random)
+                next_random = fast_sentence_cbow_neg(negative, table, table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random)
 
     return result
 
