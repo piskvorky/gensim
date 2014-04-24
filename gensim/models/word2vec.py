@@ -6,14 +6,15 @@
 
 
 """
-Deep learning via word2vec's "hierarchical softmax skip-gram and CBOW models" [1]_.
+Deep learning via word2vec's "skip-gram and CBOW models", using either
+hierarchical softmax or negative sampling [1]_ [2]_.
 
-The training algorithm was originally ported from the C package https://code.google.com/p/word2vec/
+The training algorithms were originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality.
 
 For a blog tutorial on gensim word2vec, with an interactive web app trained on GoogleNews, visit http://radimrehurek.com/2014/02/word2vec-tutorial/
 
-**Install Cython with `pip install cython` to use optimized word2vec training** (70x speedup [2]_).
+**Install Cython with `pip install cython` to use optimized word2vec training** (70x speedup [3]_).
 
 Initialize a model with e.g.::
 
@@ -53,7 +54,9 @@ If you're finished training a model (=no more updates, only querying), you can d
 to trim unneeded model memory = use (much) less RAM.
 
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
-.. [2] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
+.. [2] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
+       In Proceedings of NIPS, 2013.
+.. [3] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
 """
 
 import logging
@@ -94,7 +97,7 @@ except ImportError:
 
         def train_sentence_sg(model, sentence, alpha, work=None):
             """
-            Update skip-gram hierarchical softmax model by training on a single sentence.
+            Update skip-gram model by training on a single sentence.
 
             The sentence is a list of Vocab objects (or None, where the corresponding
             word is not in the vocabulary. Called internally from `Word2Vec.train()`.
@@ -104,6 +107,7 @@ except ImportError:
                 # precompute negative labels
                 labels = zeros(model.negative+1)
                 labels[0] = 1.
+
             for pos, word in enumerate(sentence):
                 if word is None:
                     continue  # OOV word in the input sentence => skip
@@ -116,6 +120,7 @@ except ImportError:
                     if word2 and not (pos2 == pos):
                         l1 = model.syn0[word2.index]
                         neu1e = zeros(l1.shape)
+
                         if model.hs:
                             # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
                             l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
@@ -123,6 +128,7 @@ except ImportError:
                             ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
                             model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
                             neu1e += dot(ga, l2a) # save error
+
                         if model.negative:
                             # use this word (label = 1) + k other random words not from this sentence (label = 0)
                             word_indices = [word.index]
@@ -135,13 +141,14 @@ except ImportError:
                             gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
                             model.syn1neg[word_indices] += outer(gb, l1) # learn hidden -> output
                             neu1e += dot(gb, l2b) # save error
+
                         model.syn0[word2.index] += neu1e  # learn input -> hidden
 
             return len([word for word in sentence if word is not None])
 
         def train_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
             """
-            Update CBOW hierarchical softmax model by training on a single sentence.
+            Update CBOW model by training on a single sentence.
 
             The sentence is a list of Vocab objects (or None, where the corresponding
             word is not in the vocabulary. Called internally from `Word2Vec.train()`.
