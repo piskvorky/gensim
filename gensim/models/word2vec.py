@@ -128,18 +128,13 @@ except ImportError:
                             word_indices = [word.index]
                             while len(word_indices) < model.negative+1:
                                 w = model.table[random.randint(model.table.shape[0])]
-                                if not (w == word.index or w == word2.index):
+                                if w != word.index:
                                     word_indices.append(w)
-                            # 2d matrix, k+1 x layer1_size
-                            l2b = deepcopy(model.syn1neg[word_indices])
-                            # propagate hidden -> output
-                            fb = 1. / (1. + exp(-dot(l1, l2b.T)))
-                            # vector of error gradients multiplied by the learning rate
-                            gb = (labels - fb) * alpha
-                            # learn hidden -> output
-                            model.syn1neg[word_indices] += outer(gb, l1)
-                            # learn input -> hidden
-                            neu1e += dot(gb, l2b)
+                            l2b = deepcopy(model.syn1neg[word_indices]) # 2d matrix, k+1 x layer1_size
+                            fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
+                            gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
+                            model.syn1neg[word_indices] += outer(gb, l1) # learn hidden -> output
+                            neu1e += dot(gb, l2b) # save error
                         model.syn0[word2.index] += neu1e  # learn input -> hidden
 
             return len([word for word in sentence if word is not None])
@@ -173,22 +168,22 @@ except ImportError:
                     fa = 1. / (1. + exp(-dot(l1, l2a.T))) # propagate hidden -> output
                     ga = (1. - word.code - fa) * alpha # vector of error gradients multiplied by the learning rate
                     model.syn1[word.point] += outer(ga, l1) # learn hidden -> output
-                    neu1e += dot(ga, l2a) # learn input -> hidden, here for all words in the window separately
+                    neu1e += dot(ga, l2a) # save error
 
                 if model.negative:
                     # use this word (label = 1) + k other random words not from this sentence (label = 0)
                     word_indices = [word.index]
                     while len(word_indices) < model.negative+1:
                         w = model.table[random.randint(model.table.shape[0])]
-                        if not (w == word.index or w in word2_indices):
+                        if w != word.index:
                             word_indices.append(w)
                     l2b = deepcopy(model.syn1neg[word_indices]) # 2d matrix, k+1 x layer1_size
                     fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
                     gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
                     model.syn1neg[word_indices] += outer(gb, l1) # learn hidden -> output
-                    neu1e += dot(gb, l2b) # learn input -> hidden, here for all words in the window separately
+                    neu1e += dot(gb, l2b) # save error
 
-                model.syn0[word2_indices] += neu1e
+                model.syn0[word2_indices] += neu1e # learn input -> hidden, here for all words in the window separately
 
             return len([word for word in sentence if word is not None])
 
