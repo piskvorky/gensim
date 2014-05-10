@@ -655,14 +655,17 @@ class LdaModel(interfaces.TransformationABC):
 
     def show_topics(self, topics=10, topn=10, log=False, formatted=True):
         """
-        Print the `topN` most probable words for `topics` number of topics.
-        Set `topics=-1` to print all topics.
+        For `topics` number of topics, return `topn` most significant words
+        (10 words per topic, by default).
 
-        Unlike LSA, there is no ordering between the topics in LDA.
-        The printed `topics <= self.num_topics` subset of all topics is therefore
-        arbitrary and may change between two runs.
+        The topics are returned as a list -- a list of strings if `formatted` is
+        True, or a list of (probability, word) 2-tuples if False.
 
-        Set `formatted=True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
+        If `log` is True, also output this result to log.
+
+        Unlike LSA, there is no natural ordering between the topics in LDA.
+        The returned `topics <= self.num_topics` subset of all topics is therefore
+        arbitrary and may change between two LDA training runs.
 
         """
         if topics < 0 or topics >= self.num_topics:
