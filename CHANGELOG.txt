@@ -1,11 +1,14 @@
 Changes
 =======
 
-0.9.2
+0.10.0
 
+* full Python 3 support (targeting 3.3+, #196)
+* all internal methods now expect & store unicode, instead of utf8
 * allow by-frequency sort in Dictionary.save_as_text (Renaud Richardet, #192)
 * add topic printing to HDP model (Tiepes, #190)
-* build an optional gensim_addons-package, if Cython is present during installation (Björn Esser, #197)
+* new gensim_addons package = optional install-time Cython compilations (Björn Esser, #197)
+* updated Travis CI tests
 
 0.9.1, 12/04/2014
 
