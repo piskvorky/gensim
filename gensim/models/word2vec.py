@@ -116,7 +116,7 @@ except:
 
                 # TODO add negative sampling?
 
-                l1 += dot(ga, l2a)  # learn input -> hidden
+                model.syn0[word2.index] += dot(ga, l2a)  # learn input -> hidden
 
         return len([word for word in sentence if word is not None])
 
