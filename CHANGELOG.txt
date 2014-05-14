@@ -1,14 +1,16 @@
 Changes
 =======
 
-0.10.0
+0.10.0rc1
 
 * full Python 3 support (targeting 3.3+, #196)
 * all internal methods now expect & store unicode, instead of utf8
+* new optimized word2vec functionality: negative sampling, cbow (sebastien-j, #162)
 * allow by-frequency sort in Dictionary.save_as_text (Renaud Richardet, #192)
 * add topic printing to HDP model (Tiepes, #190)
 * new gensim_addons package = optional install-time Cython compilations (Björn Esser, #197)
-* updated Travis CI tests
+* added py3.3 and 3.4 to Travis CI tests
+* fix a cbow word2vec bug (Liang-Chi Hsieh)
 
 0.9.1, 12/04/2014
 
