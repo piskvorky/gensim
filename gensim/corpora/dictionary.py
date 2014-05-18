@@ -17,20 +17,20 @@ with other dictionary (:func:`Dictionary.merge_with`) etc.
 
 from __future__ import with_statement
 
+from collections import Mapping
 import logging
 import itertools
-import UserDict
 
 from gensim import utils
-from gensim._six import iteritems, iterkeys, itervalues, string_types
-from gensim._six.moves import xrange
-from gensim._six.moves import zip as izip
+from six import PY3, iteritems, iterkeys, itervalues, string_types
+from six.moves import xrange
+from six.moves import zip as izip
 
 
 logger = logging.getLogger('gensim.corpora.dictionary')
 
 
-class Dictionary(utils.SaveLoad, UserDict.DictMixin):
+class Dictionary(utils.SaveLoad, Mapping):
     """
     Dictionary encapsulates the mapping between normalized words and their integer ids.
 
@@ -58,9 +58,24 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         return self.id2token[tokenid] # will throw for non-existent ids
 
 
+    def __iter__(self):
+        return iter(self.keys())
+
+
+    if PY3:
+        # restore Py2-style dict API
+        iterkeys = __iter__
+
+        def iteritems(self):
+            return self.items()
+
+        def itervalues(self):
+            return self.values()
+
+
     def keys(self):
         """Return a list of all token ids."""
-        return self.token2id.values()
+        return list(self.token2id.values())
 
 
     def __len__(self):
@@ -117,8 +132,8 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         result = {}
         missing = {}
         if isinstance(document, string_types):
-            raise TypeError("doc2bow expects an array of utf8 tokens on input, not a string")
-        document = sorted(utils.to_utf8(token) for token in document)
+            raise TypeError("doc2bow expects an array of unicode tokens on input, not a single string")
+        document = sorted(utils.to_unicode(token) for token in document)
         # construct (word, frequency) mapping. in python3 this is done simply
         # using Counter(), but here i use itertools.groupby() for the job
         for word_norm, group in itertools.groupby(document):
@@ -231,17 +246,25 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
                         for tokenid, freq in iteritems(self.dfs))
 
 
-    def save_as_text(self, fname):
+    def save_as_text(self, fname, sort_by_word=True):
         """
         Save this Dictionary to a text file, in format:
-        `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`.
+        `id[TAB]word_utf8[TAB]document frequency[NEWLINE]`. Sorted by word,
+        or by decreasing word frequency.
 
-        Note: use `save`/`load` to store in binary format instead (pickle).
+        Note: text format should be use for corpus inspection. Use `save`/`load`
+        to store in binary format (pickle) for improved performance.
         """
         logger.info("saving dictionary mapping to %s" % fname)
-        with utils.smart_open(fname, 'w') as fout:
-            for token, tokenid in sorted(iteritems(self.token2id)):
-                fout.write("%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0)))
+        with utils.smart_open(fname, 'wb') as fout:
+            if sort_by_word:
+                for token, tokenid in sorted(iteritems(self.token2id)):
+                    line = "%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0))
+                    fout.write(utils.to_utf8(line))
+            else:
+                for tokenid, freq in sorted(iteritems(self.dfs), key=lambda item: -item[1]):
+                    line = "%i\t%s\t%i\n" % (tokenid, self[tokenid], freq)
+                    fout.write(utils.to_utf8(line))
 
 
     def merge_with(self, other):
@@ -297,8 +320,9 @@ class Dictionary(utils.SaveLoad, UserDict.DictMixin):
         Mirror function to `save_as_text`.
         """
         result = Dictionary()
-        with utils.smart_open(fname, 'rb') as f:
+        with utils.smart_open(fname) as f:
             for lineno, line in enumerate(f):
+                line = utils.to_unicode(line)
                 try:
                     wordid, word, docfreq = line[:-1].split('\t')
                 except Exception:

@@ -33,6 +33,7 @@ import multiprocessing
 import shutil
 import sys
 import traceback
+from contextlib import contextmanager
 
 import numpy
 import scipy.sparse
@@ -40,8 +41,8 @@ import scipy.sparse
 if sys.version_info[0] >= 3:
     unicode = str
 
-from gensim._six import iteritems, u
-from gensim._six.moves import xrange
+from six import iteritems, u, string_types
+from six.moves import xrange
 
 try:
     from pattern.en import parse
@@ -89,6 +90,22 @@ class NoCM(object):
 nocm = NoCM()
 
 
+@contextmanager
+def file_or_filename(input):
+    """
+    Return a file-like object ready to be read from the beginning. `input` is either
+    a filename (gz/bz2 also supported) or a file-like object supporting seek.
+
+    """
+    if isinstance(input, string_types):
+        # input was a filename: open as text file
+        with smart_open(input) as fin:
+            yield fin
+    else:
+        input.seek(0)
+        yield input
+
+
 def deaccent(text):
     """
     Remove accentuation from the given string. Input text is either a unicode string or utf8 encoded bytestring.
@@ -97,6 +114,7 @@ def deaccent(text):
 
     >>> deaccent("Šéf chomutovských komunistů dostal poštou bílý prášek")
     u'Sef chomutovskych komunistu dostal postou bily prasek'
+
     """
     if not isinstance(text, unicode):
         # assume utf8 for byte strings, use default (strict) error handling
@@ -131,10 +149,10 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
 
     >>> list(tokenize('Nic nemůže letět rychlostí vyšší, než 300 tisíc kilometrů za sekundu!', deacc = True))
     [u'Nic', u'nemuze', u'letet', u'rychlosti', u'vyssi', u'nez', u'tisic', u'kilometru', u'za', u'sekundu']
+
     """
     lowercase = lowercase or to_lower or lower
-    if not isinstance(text, unicode):
-        text = unicode(text, encoding='utf8', errors=errors)
+    text = to_unicode(text, errors=errors)
     if lowercase:
         text = text.lower()
     if deacc:
@@ -147,17 +165,17 @@ def simple_preprocess(doc, deacc=False, min_len=2, max_len=15):
     """
     Convert a document into a list of tokens.
 
-    This lowercases, tokenizes, stems, normalizes etc. -- the output are final,
-    utf8 encoded strings that won't be processed any further.
+    This lowercases, tokenizes, stems, normalizes etc. -- the output are final
+    tokens = unicode strings, that won't be processed any further.
+
     """
-    tokens = [token.encode('utf8') for token in tokenize(doc, lower=True, deacc=deacc, errors='ignore')
+    tokens = [token for token in tokenize(doc, lower=True, deacc=deacc, errors='ignore')
             if min_len <= len(token) <= max_len and not token.startswith('_')]
     return tokens
 
 
 def any2utf8(text, errors='strict', encoding='utf8'):
-    """Convert a string (unicode or bytestring in `encoding`), to bytestring in utf8.
-    """
+    """Convert a string (unicode or bytestring in `encoding`), to bytestring in utf8."""
     if isinstance(text, unicode):
         return text.encode('utf8')
     # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
@@ -180,6 +198,7 @@ class SaveLoad(object):
 
     This uses pickle for de/serializing, so objects must not contain
     unpicklable attributes, such as lambda functions etc.
+
     """
     @classmethod
     def load(cls, fname, mmap=None):
@@ -275,14 +294,16 @@ class SaveLoad(object):
 
 
 def identity(p):
+    """Identity fnc, for flows that don't accept lambda (picking etc)."""
     return p
 
 
 def get_max_id(corpus):
     """
-    Return highest feature id that appears in the corpus.
+    Return the highest feature id that appears in the corpus.
 
     For empty corpora (no features at all), return -1.
+
     """
     maxid = -1
     for document in corpus:
@@ -297,6 +318,7 @@ class FakeDict(object):
 
     This is meant to avoid allocating real dictionaries when `num_terms` is huge, which
     is a waste of memory.
+
     """
     def __init__(self, num_terms):
         self.num_terms = num_terms
@@ -322,7 +344,8 @@ class FakeDict(object):
         internal id of a corpus = the vocabulary dimensionality.
 
         HACK: To avoid materializing the whole `range(0, self.num_terms)`, this returns
-        `[self.num_terms - 1]` only.
+        the highest id = `[self.num_terms - 1]` only.
+
         """
         return [self.num_terms - 1]
 
@@ -343,6 +366,7 @@ def dict_from_corpus(corpus):
     This function is used whenever *words* need to be displayed (as opposed to just
     their ids) but no wordId->word mapping was provided. The resulting mapping
     only covers words actually used in the corpus, up to the highest wordId found.
+
     """
     num_terms = 1 + get_max_id(corpus)
     id2word = FakeDict(num_terms)
@@ -360,6 +384,7 @@ def is_corpus(obj):
 
     Note: An "empty" corpus (empty input sequence) is ambiguous, so in this case the
     result is forcefully defined as `is_corpus=False`.
+
     """
     try:
         if 'Corpus' in obj.__class__.__name__: # the most common case, quick hack
@@ -393,6 +418,7 @@ def get_my_ip():
     local misconfigurations, which often mess up hostname resolution.
 
     If all else fails, fall back to simple `socket.gethostbyname()` lookup.
+
     """
     import socket
     try:
@@ -487,6 +513,7 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
 
     >>> print(list(grouper(range(10), 3)))
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
+
     """
     import numpy
     it = iter(iterable)
@@ -589,17 +616,30 @@ else:
                 yield chunk
 
 
-def smart_open(fname, mode='r'):
-    from contextlib import closing
-    from os import path
+def make_closing(base, **attrs):
+    """
+    Add support for `with Base(attrs) as fout:` to the base class if it's missing.
+    The base class' `close()` method will be called on context exit, to always close the file properly.
 
-    _, ext = path.splitext(fname)
+    This is needed for gzip.GzipFile, bz2.BZ2File etc in older Pythons (<=2.6), which otherwise
+    raise "AttributeError: GzipFile instance has no attribute '__exit__'".
+
+    """
+    if not hasattr(base, '__enter__'):
+        attrs['__enter__'] = lambda self: self
+    if not hasattr(base, '__exit__'):
+        attrs['__exit__'] = lambda self, type, value, traceback: self.close()
+    return type('Closing' + base.__name__, (base, object), attrs)
+
+
+def smart_open(fname, mode='rb'):
+    _, ext = os.path.splitext(fname)
     if ext == '.bz2':
         from bz2 import BZ2File
-        return closing(BZ2File(fname, mode))
+        return make_closing(BZ2File)(fname, mode)
     if ext == '.gz':
-        import gzip
-        return closing(gzip.open(fname, mode))
+        from gzip import GzipFile
+        return make_closing(GzipFile)(fname, mode)
     return open(fname, mode)
 
 
@@ -611,7 +651,7 @@ def pickle(obj, fname, protocol=-1):
 
 def unpickle(fname):
     """Load pickled object from `fname`"""
-    with smart_open(fname, 'rb') as f:
+    with smart_open(fname) as f:
         return _pickle.load(f)
 
 
@@ -620,7 +660,9 @@ def revdict(d):
     Reverse a dictionary mapping.
 
     When two keys map to the same value, only one of them will be kept in the
-    result (which one is kept is arbitrary)."""
+    result (which one is kept is arbitrary).
+
+    """
     return dict((v, k) for (k, v) in iteritems(d))
 
 
@@ -633,6 +675,7 @@ def toptexts(query, texts, index, n=10):
     via `texts[docid]`, such as its fulltext or snippet.
 
     Return a list of 3-tuples (docid, doc's similarity to the query, texts[docid]).
+
     """
     sims = index[query] # perform a similarity query against the corpus
     sims = sorted(enumerate(sims), key=lambda item: -item[1])
@@ -655,6 +698,7 @@ def upload_chunked(server, docs, chunksize=1000, preprocess=None):
     Use this function to train or index large collections -- avoid sending the
     entire corpus over the wire as a single Pyro in-memory object. The documents
     will be sent in smaller chunks, of `chunksize` documents each.
+
     """
     start = 0
     for chunk in grouper(docs, chunksize):
@@ -675,6 +719,7 @@ def getNS():
     """
     Return a Pyro name server proxy. If there is no name server running,
     start one on 0.0.0.0 (all interfaces), as a background process.
+
     """
     import Pyro4
     try:
@@ -693,9 +738,12 @@ def getNS():
 
 
 def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
-    """Register object with name server (starting the name server if not running
+    """
+    Register object with name server (starting the name server if not running
     yet) and block until the daemon is terminated. The object is registered under
-    `name`, or `name`+ some random suffix if `random_suffix` is set."""
+    `name`, or `name`+ some random suffix if `random_suffix` is set.
+
+    """
     if random_suffix:
         name += '.' + hex(random.randint(0, 0xffffff))[2:]
     import Pyro4

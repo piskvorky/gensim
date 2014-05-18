@@ -8,6 +8,7 @@ Unit tests for the `corpora.Dictionary` class.
 """
 
 
+from collections import Mapping
 import logging
 import tempfile
 import unittest
@@ -15,6 +16,8 @@ import os
 import os.path
 
 from gensim.corpora import Dictionary
+from six import PY3
+from six.moves import zip
 
 
 # sample data files are located in the same folder
@@ -117,14 +120,14 @@ class TestDictionary(unittest.TestCase):
     def test_saveAsText_and_loadFromText(self):
         """`Dictionary` can be saved as textfile and loaded again from textfile. """
         tmpf = get_tmpfile('dict_test.txt')
-        d = Dictionary(self.texts)
-        d.save_as_text(tmpf)
-        # does the file exists
-        self.assertTrue(os.path.exists(tmpf))
+        for sort_by_word in [True, False]:
+            d = Dictionary(self.texts)
+            d.save_as_text(tmpf, sort_by_word=sort_by_word)
+            self.assertTrue(os.path.exists(tmpf))
 
-        d_loaded = Dictionary.load_from_text(get_tmpfile('dict_test.txt'))
-        self.assertNotEqual(d_loaded, None)
-        self.assertEqual(d_loaded.token2id, d.token2id)
+            d_loaded = Dictionary.load_from_text(tmpf)
+            self.assertNotEqual(d_loaded, None)
+            self.assertEqual(d_loaded.token2id, d.token2id)
 
     def test_from_corpus(self):
         """build `Dictionary` from an existing corpus"""
@@ -160,6 +163,26 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(dictionary.num_docs, dictionary_from_corpus.num_docs)
         self.assertEqual(dictionary.num_pos, dictionary_from_corpus.num_pos)
         self.assertEqual(dictionary.num_nnz, dictionary_from_corpus.num_nnz)
+
+    def test_dict_interface(self):
+        """Test Python 2 dict-like interface in both Python 2 and 3."""
+        d = Dictionary(self.texts)
+
+        self.assertTrue(isinstance(d, Mapping))
+
+        self.assertEqual(list(zip(d.keys(), d.values())), list(d.items()))
+
+        # Even in Py3, we want the iter* members.
+        self.assertEqual(list(d.items()), list(d.iteritems()))
+        self.assertEqual(list(d.keys()), list(d.iterkeys()))
+        self.assertEqual(list(d.values()), list(d.itervalues()))
+
+        # XXX Do we want list results from the dict members in Py3 too?
+        if not PY3:
+            self.assertTrue(isinstance(d.items(), list))
+            self.assertTrue(isinstance(d.keys(), list))
+            self.assertTrue(isinstance(d.values(), list))
+
 #endclass TestDictionary
 
 

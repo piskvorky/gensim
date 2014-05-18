@@ -2,6 +2,7 @@ import re
 import string
 import glob
 
+from gensim import utils
 from gensim.parsing.porter import PorterStemmer
 
 
@@ -34,59 +35,75 @@ STOPWORDS = frozenset(w for w in STOPWORDS.split() if w)
 
 
 def remove_stopwords(s):
+    s = utils.to_unicode(s)
     return " ".join(w for w in s.split() if w not in STOPWORDS)
 
 
+RE_PUNCT = re.compile('([%s])+' % re.escape(string.punctuation), re.UNICODE)
 def strip_punctuation(s):
-    return re.sub("([%s]+)" % string.punctuation, " ", s)
+    s = utils.to_unicode(s)
+    return RE_PUNCT.sub(" ", s)
 
 
-def strip_punctuation2(s):
-    return s.translate(string.maketrans("", ""), string.punctuation)
+# unicode.translate cannot delete characters like str can
+strip_punctuation2 = strip_punctuation
+# def strip_punctuation2(s):
+#     s = utils.to_unicode(s)
+#     return s.translate(None, string.punctuation)
 
 
+RE_TAGS = re.compile(r"<([^>]+)>", re.UNICODE)
 def strip_tags(s):
-    # assumes s is already lowercase
-    return re.sub(r"<([^>]+)>", "", s)
+    s = utils.to_unicode(s)
+    return RE_TAGS.sub("",s)
 
 
 def strip_short(s, minsize=3):
+    s = utils.to_unicode(s)
     return " ".join(e for e in s.split() if len(e) >= minsize)
 
 
+RE_NUMERIC = re.compile(r"[0-9]+", re.UNICODE)
 def strip_numeric(s):
-    return re.sub(r"[0-9]+", "", s)
+    s = utils.to_unicode(s)
+    return RE_NUMERIC.sub("", s)
 
 
+RE_NONALPHA = re.compile(r"\W", re.UNICODE)
 def strip_non_alphanum(s):
-    # assumes s is already lowercase
-    # FIXME replace with unicode compatible regexp, without the assumption
-    return re.sub(r"[^a-z0-9\ ]", " ", s)
+    s = utils.to_unicode(s)
+    return RE_NONALPHA.sub(" ", s)
 
 
+RE_WHITESPACE = re.compile(r"(\s)+", re.UNICODE)
 def strip_multiple_whitespaces(s):
-    return re.sub(r"(\s|\\n|\\r|\\t)+", " ", s)
-    #return s
+    s = utils.to_unicode(s)
+    return RE_WHITESPACE.sub(" ", s)
 
 
+RE_AL_NUM = re.compile(r"([a-z]+)([0-9]+)", flags=re.UNICODE)
+RE_NUM_AL = re.compile(r"([0-9]+)([a-z]+)", flags=re.UNICODE)
 def split_alphanum(s):
-    s = re.sub(r"([a-z]+)([0-9]+)", r"\1 \2", s)
-    return re.sub(r"([0-9]+)([a-z]+)", r"\1 \2", s)
+    s = utils.to_unicode(s)
+    s = RE_AL_NUM.sub(r"\1 \2", s)
+    return RE_NUM_AL.sub(r"\1 \2", s)
 
 
 def stem_text(text):
     """
     Return lowercase and (porter-)stemmed version of string `text`.
     """
+    text = utils.to_unicode(text)
     p = PorterStemmer()
     return ' '.join(p.stem(word) for word in text.split())
 stem = stem_text
 
-DEFAULT_FILTERS = [str.lower, strip_tags, strip_punctuation, strip_multiple_whitespaces,
+DEFAULT_FILTERS = [lambda x: x.lower(), strip_tags, strip_punctuation, strip_multiple_whitespaces,
                    strip_numeric, remove_stopwords, strip_short, stem_text]
 
 
 def preprocess_string(s, filters=DEFAULT_FILTERS):
+    s = utils.to_unicode(s)
     for f in filters:
         s = f(s)
     return s.split()
@@ -97,7 +114,8 @@ def preprocess_documents(docs):
 
 
 def read_file(path):
-    return open(path).read()
+    with utils.smart_open(path) as fin:
+        return fin.read()
 
 
 def read_files(pattern):

@@ -16,7 +16,7 @@ import logging
 
 from gensim import interfaces, utils
 from gensim.corpora import IndexedCorpus
-from gensim._six.moves import xrange
+from six.moves import xrange
 
 
 logger = logging.getLogger('gensim.corpora.bleicorpus')
@@ -63,7 +63,8 @@ class BleiCorpus(IndexedCorpus):
 
 
         self.fname = fname
-        words = [word.rstrip() for word in open(fname_vocab)]
+        with utils.smart_open(fname_vocab) as fin:
+            words = [utils.to_unicode(word).rstrip() for word in fin]
         self.id2word = dict(enumerate(words))
         self.length = None
 
@@ -81,10 +82,9 @@ class BleiCorpus(IndexedCorpus):
 
 
     def line2doc(self, line):
-        parts = line.split()
+        parts = utils.to_unicode(line).split()
         if int(parts[0]) != len(parts) - 1:
-            raise ValueError("invalid format in %s: %s" %
-                             (self.fname, repr(line)))
+            raise ValueError("invalid format in %s: %s" % (self.fname, repr(line)))
         doc = [part.rsplit(':', 1) for part in parts[1:]]
         doc = [(int(p1), float(p2)) for p1, p2 in doc]
         return doc
@@ -109,19 +109,20 @@ class BleiCorpus(IndexedCorpus):
             num_terms = 1 + max([-1] + id2word.keys())
 
         logger.info("storing corpus in Blei's LDA-C format into %s" % fname)
-        with utils.smart_open(fname, 'w') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             offsets = []
             for doc in corpus:
                 doc = list(doc)
                 offsets.append(fout.tell())
-                fout.write("%i %s\n" % (len(doc), ' '.join("%i:%s" % p for p in doc if abs(p[1]) > 1e-12)))
+                parts = ["%i:%s" % p for p in doc if abs(p[1]) > 1e-7]
+                fout.write(utils.to_utf8("%i %s\n" % (len(doc), ' '.join(parts))))
 
         # write out vocabulary, in a format compatible with Blei's topics.py script
         fname_vocab = fname + '.vocab'
         logger.info("saving vocabulary of %i words to %s" % (num_terms, fname_vocab))
-        with open(fname_vocab, 'wb') as fout:
+        with utils.smart_open(fname_vocab, 'wb') as fout:
             for featureid in xrange(num_terms):
-                fout.write("%s\n" % utils.to_utf8(id2word.get(featureid, '---')))
+                fout.write(utils.to_utf8("%s\n" % id2word.get(featureid, '---')))
 
         return offsets
 

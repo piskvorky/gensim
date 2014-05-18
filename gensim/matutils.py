@@ -21,8 +21,8 @@ import scipy.sparse
 import scipy.linalg
 from scipy.linalg.lapack import get_lapack_funcs
 
-from gensim._six import iteritems, itervalues, string_types
-from gensim._six.moves import xrange, zip as izip
+from six import iteritems, itervalues, string_types
+from six.moves import xrange, zip as izip
 
 # scipy is not a stable package yet, locations change, so try to work
 # around differences (currently only concerns location of 'triu' in scipy 0.7 vs. 0.8)
@@ -399,10 +399,12 @@ class MmWriter(object):
 
     """
 
-    HEADER_LINE = '%%MatrixMarket matrix coordinate real general\n' # the only supported MM format
+    HEADER_LINE = b'%%MatrixMarket matrix coordinate real general\n' # the only supported MM format
 
     def __init__(self, fname):
         self.fname = fname
+        if fname.endswith(".gz") or fname.endswith('.bz2'):
+            raise NotImplementedError("compressed output not supported with MmWriter")
         self.fout = open(self.fname, 'wb+') # open for both reading and writing
         self.headers_written = False
 
@@ -413,11 +415,11 @@ class MmWriter(object):
         if num_nnz < 0:
             # we don't know the matrix shape/density yet, so only log a general line
             logger.info("saving sparse matrix to %s" % self.fname)
-            self.fout.write(' ' * 50 + '\n') # 48 digits must be enough for everybody
+            self.fout.write(utils.to_utf8(' ' * 50 + '\n')) # 48 digits must be enough for everybody
         else:
             logger.info("saving sparse %sx%s matrix with %i non-zero entries to %s" %
                          (num_docs, num_terms, num_nnz, self.fname))
-            self.fout.write('%s %s %s\n' % (num_docs, num_terms, num_nnz))
+            self.fout.write(utils.to_utf8('%s %s %s\n' % (num_docs, num_terms, num_nnz)))
         self.last_docno = -1
         self.headers_written = True
 
@@ -427,7 +429,7 @@ class MmWriter(object):
         if len(stats) > 50:
             raise ValueError('Invalid stats: matrix too large!')
         self.fout.seek(len(MmWriter.HEADER_LINE))
-        self.fout.write(stats)
+        self.fout.write(utils.to_utf8(stats))
 
 
     def write_vector(self, docno, vector):
@@ -440,7 +442,7 @@ class MmWriter(object):
         assert self.last_docno < docno, "documents %i and %i not in sequential order!" % (self.last_docno, docno)
         vector = sorted((i, w) for i, w in vector if abs(w) > 1e-12) # ignore near-zero entries
         for termid, weight in vector: # write term ids in sorted order
-            self.fout.write("%i %i %s\n" % (docno + 1, termid + 1, weight)) # +1 because MM format starts counting from 1
+            self.fout.write(utils.to_utf8("%i %i %s\n" % (docno + 1, termid + 1, weight))) # +1 because MM format starts counting from 1
         self.last_docno = docno
         return (vector[-1][0], len(vector)) if vector else (-1, 0)
 
@@ -521,7 +523,8 @@ class MmWriter(object):
 
     def close(self):
         logger.debug("closing %s" % self.fname)
-        self.fout.close()
+        if hasattr(self, 'fout'):
+            self.fout.close()
 #endclass MmWriter
 
 
@@ -548,19 +551,20 @@ class MmReader(object):
         """
         logger.info("initializing corpus reader from %s" % input)
         self.input, self.transposed = input, transposed
-        if isinstance(input, string_types):
-            input = open(input)
-        header = next(input).strip()
-        if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
-            raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
-                             (self.input, header))
-        self.num_docs = self.num_terms = self.num_nnz = 0
-        for lineno, line in enumerate(input):
-            if not line.startswith('%'):
-                self.num_docs, self.num_terms, self.num_nnz = map(int, line.split())
-                if not self.transposed:
-                    self.num_docs, self.num_terms = self.num_terms, self.num_docs
-                break
+        with utils.file_or_filename(self.input) as lines:
+            header = utils.to_unicode(next(lines)).strip()
+            if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
+                raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
+                                 (self.input, header))
+            self.num_docs = self.num_terms = self.num_nnz = 0
+            for lineno, line in enumerate(lines):
+                line = utils.to_unicode(line)
+                if not line.startswith('%'):
+                    self.num_docs, self.num_terms, self.num_nnz = map(int, line.split())
+                    if not self.transposed:
+                        self.num_docs, self.num_terms = self.num_terms, self.num_docs
+                    break
+
         logger.info("accepted corpus with %i documents, %i features, %i non-zero entries" %
                      (self.num_docs, self.num_terms, self.num_nnz))
 
@@ -576,7 +580,7 @@ class MmReader(object):
         Skip file headers that appear before the first document.
         """
         for line in input_file:
-            if line.startswith('%'):
+            if line.startswith(b'%'):
                 continue
             break
 
@@ -590,35 +594,31 @@ class MmReader(object):
         yielded where appropriate, even if they are not explicitly stored in the
         Matrix Market file.
         """
-        if isinstance(self.input, string_types):
-            fin = open(self.input)
-        else:
-            fin = self.input
-            fin.seek(0)
-        self.skip_headers(fin)
+        with utils.file_or_filename(self.input) as lines:
+            self.skip_headers(lines)
 
-        previd = -1
-        for line in fin:
-            docid, termid, val = line.split()
-            if not self.transposed:
-                termid, docid = docid, termid
-            docid, termid, val = int(docid) - 1, int(termid) - 1, float(val) # -1 because matrix market indexes are 1-based => convert to 0-based
-            assert previd <= docid, "matrix columns must come in ascending order"
-            if docid != previd:
-                # change of document: return the document read so far (its id is prevId)
-                if previd >= 0:
-                    yield previd, document
+            previd = -1
+            for line in lines:
+                docid, termid, val = utils.to_unicode(line).split()  # needed for python3
+                if not self.transposed:
+                    termid, docid = docid, termid
+                docid, termid, val = int(docid) - 1, int(termid) - 1, float(val) # -1 because matrix market indexes are 1-based => convert to 0-based
+                assert previd <= docid, "matrix columns must come in ascending order"
+                if docid != previd:
+                    # change of document: return the document read so far (its id is prevId)
+                    if previd >= 0:
+                        yield previd, document
 
-                # return implicit (empty) documents between previous id and new id
-                # too, to keep consistent document numbering and corpus length
-                for previd in xrange(previd + 1, docid):
-                    yield previd, []
+                    # return implicit (empty) documents between previous id and new id
+                    # too, to keep consistent document numbering and corpus length
+                    for previd in xrange(previd + 1, docid):
+                        yield previd, []
 
-                # from now on start adding fields to a new document, with a new id
-                previd = docid
-                document = []
+                    # from now on start adding fields to a new document, with a new id
+                    previd = docid
+                    document = []
 
-            document.append((termid, val,)) # add another field to the current document
+                document.append((termid, val,)) # add another field to the current document
 
         # handle the last document, as a special case
         if previd >= 0:

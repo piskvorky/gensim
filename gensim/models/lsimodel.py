@@ -59,8 +59,8 @@ import scipy.sparse
 from scipy.sparse import sparsetools
 
 from gensim import interfaces, matutils, utils
-from gensim._six import iterkeys
-from gensim._six.moves import xrange
+from six import iterkeys
+from six.moves import xrange
 
 
 logger = logging.getLogger('gensim.models.lsimodel')
@@ -490,11 +490,11 @@ class LsiModel(interfaces.TransformationABC):
 
     def show_topics(self, num_topics=-1, num_words=10, log=False, formatted=True):
         """
-        Show `num_topics` most significant topics (show all by default).
-        For each topic, show `num_words` most significant words (10 words by defaults).
+        Return `num_topics` most significant topics (return all by default).
+        For each topic, show `num_words` most significant words (10 words by default).
 
-        Return the shown topics as a list -- a list of strings if `formatted` is
-        True, or a list of  (value, word) 2-tuples if it's False.
+        The topics are returned as a list -- a list of strings if `formatted` is
+        True, or a list of (weight, word) 2-tuples if False.
 
         If `log` is True, also output this result to log.
 

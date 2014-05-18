@@ -17,7 +17,7 @@ import logging
 import itertools
 
 from gensim import utils, matutils
-from gensim._six.moves import xrange
+from six.moves import xrange
 
 
 logger = logging.getLogger('gensim.interfaces')
@@ -97,10 +97,10 @@ class CorpusABC(utils.SaveLoad):
 
         # example code:
         logger.info("converting corpus to ??? format: %s" % fname)
-        with open(fname, 'w') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             for doc in corpus: # iterate over the document stream
                 fmt = str(doc) # format the document appropriately...
-                fout.write("%s\n" % fmt) # serialize the formatted document to disk
+                fout.write(utils.to_utf8("%s\n" % fmt)) # serialize the formatted document to disk
 #endclass CorpusABC
 
 

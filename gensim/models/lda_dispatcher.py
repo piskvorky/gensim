@@ -79,7 +79,7 @@ class Dispatcher(object):
                     logger.info("registering worker #%i at %s" % (workerid, uri))
                     worker.initialize(workerid, dispatcher=self.callback, **model_params)
                     self.workers[workerid] = worker
-                except Pyro4.errors.PyroError, err:
+                except Pyro4.errors.PyroError:
                     logger.warning("unresponsive worker at %s, deleting it from the name server" % uri)
                     ns.remove(name)
 

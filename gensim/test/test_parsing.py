@@ -47,33 +47,33 @@ classes = np.array([[1, 0], [1, 0], [0, 1], [0, 1]])
 class TestPreprocessing(unittest.TestCase):
 
     def testStripNumeric(self):
-        self.assertEquals(strip_numeric("salut les amis du 59"),
+        self.assertEqual(strip_numeric("salut les amis du 59"),
                           "salut les amis du ")
 
     def testStripShort(self):
-        self.assertEquals(strip_short("salut les amis du 59", 3),
+        self.assertEqual(strip_short("salut les amis du 59", 3),
                           "salut les amis")
 
     def testStripTags(self):
-        self.assertEquals(strip_tags("<i>Hello</i> <b>World</b>!"),
+        self.assertEqual(strip_tags("<i>Hello</i> <b>World</b>!"),
                           "Hello World!")
 
     def testStripMultipleWhitespaces(self):
-        self.assertEquals(strip_multiple_whitespaces("salut  les\r\nloulous!"),
+        self.assertEqual(strip_multiple_whitespaces("salut  les\r\nloulous!"),
                           "salut les loulous!")
 
     def testStripNonAlphanum(self):
-        self.assertEquals(strip_non_alphanum("toto nf-kappa titi"),
+        self.assertEqual(strip_non_alphanum("toto nf-kappa titi"),
                           "toto nf kappa titi")
 
     def testSplitAlphanum(self):
-        self.assertEquals(split_alphanum("toto diet1 titi"),
+        self.assertEqual(split_alphanum("toto diet1 titi"),
                           "toto diet 1 titi")
-        self.assertEquals(split_alphanum("toto 1diet titi"),
+        self.assertEqual(split_alphanum("toto 1diet titi"),
                           "toto 1 diet titi")
 
     def testStripStopwords(self):
-        self.assertEquals(remove_stopwords("the world is square"),
+        self.assertEqual(remove_stopwords("the world is square"),
                           "world square")
 
     def testStemText(self):
@@ -81,7 +81,7 @@ class TestPreprocessing(unittest.TestCase):
                 "collect of document almost instantli for a joint occurr " + \
                 "of a collect of exact words, for mani search purposes, " + \
                 "a littl fuzzi would help."
-        self.assertEquals(stem_text(doc5), target)
+        self.assertEqual(stem_text(doc5), target)
 
 
 if __name__ == "__main__":

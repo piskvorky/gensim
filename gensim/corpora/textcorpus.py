@@ -32,26 +32,10 @@ from __future__ import with_statement
 import logging
 
 from gensim import interfaces, utils
-from gensim._six import string_types
+from six import string_types
 from gensim.corpora.dictionary import Dictionary
 
 logger = logging.getLogger('gensim.corpora.textcorpus')
-
-
-def getstream(input):
-    """
-    If input is a filename (string), return `open(input)`.
-    If input is a file-like object, reset it to the beginning with `input.seek(0)`.
-    """
-    assert input is not None
-    if isinstance(input, string_types):
-        # input was a filename: open as text file
-        result = open(input)
-    else:
-        # input was a file-like object (BZ2, Gzip etc.); reset the stream to its beginning
-        result = input
-        result.seek(0)
-    return result
 
 
 class TextCorpus(interfaces.CorpusABC):
@@ -94,7 +78,7 @@ class TextCorpus(interfaces.CorpusABC):
 
 
     def getstream(self):
-        return getstream(self.input)
+        return utils.file_or_filename(self.input)
 
 
     def get_texts(self):
@@ -110,9 +94,10 @@ class TextCorpus(interfaces.CorpusABC):
         # assume documents are lines in a single file (one document per line).
         # Yield each document as a list of lowercase tokens, via `utils.tokenize`.
         length = 0
-        for lineno, line in enumerate(getstream(self.input)):
-            length += 1
-            yield utils.tokenize(line, lowercase=True)
+        with self.getstream() as lines:
+            for lineno, line in enumerate(lines):
+                length += 1
+                yield utils.tokenize(line, lowercase=True)
         self.length = length
 
 

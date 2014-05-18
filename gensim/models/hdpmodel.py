@@ -41,7 +41,7 @@ import numpy as np
 import scipy.special as sp
 
 from gensim import interfaces, utils
-from gensim._six.moves import xrange
+from six.moves import xrange
 
 logger = logging.getLogger(__name__)
 
@@ -459,11 +459,25 @@ class HdpModel(interfaces.TransformationABC):
         self.m_status_up_to_date = True
 
     def print_topics(self, topics=20, topn=20):
+        """Alias for `show_topics()` that prints the `topn` most
+        probable words for `topics` number of topics to log.
+        Set `topics=-1` to print all topics."""
+        return self.show_topics(topics=topics, topn=topn, log=True)
+        
+    def show_topics(self, topics=20, topn=20, log=False, formatted=True):
+        """
+        Print the `topN` most probable words for `topics` number of topics.
+        Set `topics=-1` to print all topics.
+
+        Set `formatted=True` to return the topics as a list of strings, or 
+        `False` as lists of (weight, word) pairs.
+
+        """        
         if not self.m_status_up_to_date:
             self.update_expectations()
         betas = self.m_lambda + self.m_eta
         hdp_formatter = HdpTopicFormatter(self.id2word, betas)
-        hdp_formatter.print_topics(topics, topn)
+        return hdp_formatter.show_topics(topics, topn, log, formatted)
 
     def save_topics(self, doc_count=None):
         """legacy method; use `self.save()` instead"""

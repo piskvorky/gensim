@@ -33,8 +33,8 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         Interpret a matrix in Matrix Market format as a streamed gensim corpus
         (yielding one document at a time).
         """
-        for docId, doc in super(MmCorpus, self).__iter__():
-            yield doc # get rid of docId, return the sparse vector only
+        for doc_id, doc in super(MmCorpus, self).__iter__():
+            yield doc # get rid of doc id, return the sparse vector only
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, progress_cnt=1000, metadata=False):

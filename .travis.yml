@@ -2,11 +2,13 @@ language: python
 python:
   - "2.6"
   - "2.7"
-virtualenv:
-    system_site_packages: true
+  - "3.3"
+  - "3.4"
 before_install:
     - sudo apt-get update -qq
-    - sudo apt-get install -qq python-numpy python-scipy libatlas-dev liblapack-dev gfortran
+    - sudo apt-get install -qq libatlas-dev liblapack-dev gfortran
+    - travis_wait pip install --quiet numpy
+    - travis_wait pip install --quiet scipy
 install:
     - python setup.py install
 script: python setup.py test
