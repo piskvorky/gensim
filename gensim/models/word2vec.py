@@ -102,11 +102,14 @@ except ImportError:
             The sentence is a list of Vocab objects (or None, where the corresponding
             word is not in the vocabulary. Called internally from `Word2Vec.train()`.
 
+            This is the non-optimized, Python version. If you have cython installed, gensim
+            will use the optimized version from word2vec_inner instead.
+
             """
             if model.negative:
                 # precompute negative labels
-                labels = zeros(model.negative+1)
-                labels[0] = 1.
+                labels = zeros(model.negative + 1)
+                labels[0] = 1.0
 
             for pos, word in enumerate(sentence):
                 if word is None:
@@ -130,13 +133,13 @@ except ImportError:
                             neu1e += dot(ga, l2a) # save error
 
                         if model.negative:
-                            # use this word (label = 1) + k other random words not from this sentence (label = 0)
+                            # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
                             word_indices = [word.index]
-                            while len(word_indices) < model.negative+1:
+                            while len(word_indices) < model.negative + 1:
                                 w = model.table[random.randint(model.table.shape[0])]
                                 if w != word.index:
                                     word_indices.append(w)
-                            l2b = deepcopy(model.syn1neg[word_indices]) # 2d matrix, k+1 x layer1_size
+                            l2b = model.syn1neg[word_indices] # 2d matrix, k+1 x layer1_size
                             fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
                             gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
                             model.syn1neg[word_indices] += outer(gb, l1) # learn hidden -> output
@@ -153,10 +156,13 @@ except ImportError:
             The sentence is a list of Vocab objects (or None, where the corresponding
             word is not in the vocabulary. Called internally from `Word2Vec.train()`.
 
+            This is the non-optimized, Python version. If you have cython installed, gensim
+            will use the optimized version from word2vec_inner instead.
+
             """
             if model.negative:
                 # precompute negative labels
-                labels = zeros(model.negative+1)
+                labels = zeros(model.negative + 1)
                 labels[0] = 1.
 
             for pos, word in enumerate(sentence):
@@ -164,27 +170,28 @@ except ImportError:
                     continue  # OOV word in the input sentence => skip
                 reduced_window = random.randint(model.window) # `b` in the original word2vec code
                 start = max(0, pos - model.window + reduced_window)
-                word2_indices = [word2.index for pos2, word2 in enumerate(sentence[start:pos+model.window+1-reduced_window], start) if (word2 and not (pos2 == pos))]
-                l1 = np_sum(model.syn0[word2_indices],axis=0) # 1xlayer1_size
-                if len(word2_indices) > 0 and model.cbow_mean:
+                window_pos = enumerate(sentence[start : pos + model.window + 1 - reduced_window], start)
+                word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
+                l1 = np_sum(model.syn0[word2_indices], axis=0) # 1 x layer1_size
+                if word2_indices and model.cbow_mean:
                     l1 /= len(word2_indices)
                 neu1e = zeros(l1.shape)
 
                 if model.hs:
-                    l2a = deepcopy(model.syn1[word.point]) #2d matrix, codelen x layer1_size
+                    l2a = model.syn1[word.point] # 2d matrix, codelen x layer1_size
                     fa = 1. / (1. + exp(-dot(l1, l2a.T))) # propagate hidden -> output
                     ga = (1. - word.code - fa) * alpha # vector of error gradients multiplied by the learning rate
                     model.syn1[word.point] += outer(ga, l1) # learn hidden -> output
                     neu1e += dot(ga, l2a) # save error
 
                 if model.negative:
-                    # use this word (label = 1) + k other random words not from this sentence (label = 0)
+                    # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
                     word_indices = [word.index]
-                    while len(word_indices) < model.negative+1:
+                    while len(word_indices) < model.negative + 1:
                         w = model.table[random.randint(model.table.shape[0])]
                         if w != word.index:
                             word_indices.append(w)
-                    l2b = deepcopy(model.syn1neg[word_indices]) # 2d matrix, k+1 x layer1_size
+                    l2b = model.syn1neg[word_indices] # 2d matrix, k+1 x layer1_size
                     fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
                     gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
                     model.syn1neg[word_indices] += outer(gb, l1) # learn hidden -> output
@@ -217,7 +224,8 @@ class Word2Vec(utils.SaveLoad):
     compatible with the original word2vec implementation via `save_word2vec_format()` and `load_word2vec_format()`.
 
     """
-    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5, seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0, cbow_mean=0):
+    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
+        seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0, cbow_mean=0):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -263,31 +271,36 @@ class Word2Vec(utils.SaveLoad):
             self.build_vocab(sentences)
             self.train(sentences)
 
-    def make_table(self, table_size=100000000., power=0.75):
+    def make_table(self, table_size=100000000, power=0.75):
         """
         Create a table using stored vocabulary word counts for drawing random words in the negative
         sampling training routines.
+
         Called internally from `build_vocab()`.
 
         """
         logger.info("constructing a table with noise distribution from %i words" % len(self.vocab))
         # table (= list of words) of noise distribution for negative sampling
         vocab_size = len(self.index2word)
-        self.table = zeros(table_size)
+        self.table = zeros(table_size, dtype=uint32)
+
+        if not vocab_size:
+            logger.warning("empty vocabulary in word2vec, is this intended?")
+            return
+
         # compute sum of all power (Z in paper)
         train_words_pow = float(sum([self.vocab[word].count**power for word in self.vocab]))
         # go through the whole table and fill it up with the word indexes proportional to a word's count**power
         widx = 0
         # normalize count^0.75 by Z
         d1 = self.vocab[self.index2word[widx]].count**power / train_words_pow
-        for tidx in range(int(table_size)):
+        for tidx in xrange(table_size):
             self.table[tidx] = widx
-            if tidx/table_size > d1:
+            if 1.0 * tidx / table_size > d1:
                 widx += 1
                 d1 += self.vocab[self.index2word[widx]].count**power / train_words_pow
             if widx >= vocab_size:
                 widx = vocab_size - 1
-        self.table = self.table.astype(uint32)
 
     def create_binary_tree(self):
         """
@@ -370,7 +383,9 @@ class Word2Vec(utils.SaveLoad):
         if FAST_VERSION < 0:
             import warnings
             warnings.warn("Cython compilation failed, training will be slow. Do you have Cython installed? `pip install cython`")
-        logger.info("training model with %i workers on %i vocabulary and %i features" % (self.workers, len(self.vocab), self.layer1_size))
+        logger.info("training model with %i workers on %i vocabulary and %i features, "
+            "using 'skipgram'=%s 'hierarchical softmax'=%s and 'negative sampling'=%s" %
+            (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.negative))
 
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
@@ -656,7 +671,7 @@ class Word2Vec(utils.SaveLoad):
         if getattr(self, 'syn0norm', None) is None or replace:
             logger.info("precomputing L2-norms of word weight vectors")
             if replace:
-                for i in range(self.syn0.shape[0]):
+                for i in xrange(self.syn0.shape[0]):
                     self.syn0[i, :] /= sqrt((self.syn0[i, :] ** 2).sum(-1))
                 self.syn0norm = self.syn0
                 if hasattr(self, 'syn1'):

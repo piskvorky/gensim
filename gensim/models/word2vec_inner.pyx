@@ -153,7 +153,7 @@ cdef unsigned long long fast_sentence0_sg_neg(
 
     cdef long long a
     cdef long long row1 = word2_index * size, row2
-    cdef unsigned long long modulo = 2**48 - 1
+    cdef unsigned long long modulo = 281474976710655ULL
     cdef REAL_t f, g, label
     cdef np.uint32_t target_index
     cdef int d
@@ -166,7 +166,7 @@ cdef unsigned long long fast_sentence0_sg_neg(
             label = ONEF
         else:
             target_index = table[(next_random >> 16) % table_len]
-            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
+            next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
@@ -192,7 +192,7 @@ cdef unsigned long long fast_sentence1_sg_neg(
 
     cdef long long a
     cdef long long row1 = word2_index * size, row2
-    cdef unsigned long long modulo = 2**48 - 1
+    cdef unsigned long long modulo = 281474976710655ULL
     cdef REAL_t f, g, label
     cdef np.uint32_t target_index
     cdef int d
@@ -206,7 +206,7 @@ cdef unsigned long long fast_sentence1_sg_neg(
             label = ONEF
         else:
             target_index = table[(next_random >> 16) % table_len]
-            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
+            next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
@@ -232,7 +232,7 @@ cdef unsigned long long fast_sentence2_sg_neg(
 
     cdef long long a
     cdef long long row1 = word2_index * size, row2
-    cdef unsigned long long modulo = 2**48 - 1
+    cdef unsigned long long modulo = 281474976710655ULL
     cdef REAL_t f, g, label
     cdef np.uint32_t target_index
     cdef int d
@@ -247,7 +247,7 @@ cdef unsigned long long fast_sentence2_sg_neg(
             label = ONEF
         else:
             target_index = table[(next_random >> 16) % table_len]
-            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
+            next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
@@ -406,7 +406,7 @@ cdef unsigned long long fast_sentence0_cbow_neg(
 
     cdef long long a
     cdef long long row2
-    cdef unsigned long long modulo = 2**48 - 1
+    cdef unsigned long long modulo = 281474976710655ULL
     cdef REAL_t f, g, count, inv_count, label
     cdef np.uint32_t target_index, word_index
     cdef int d, m
@@ -433,7 +433,7 @@ cdef unsigned long long fast_sentence0_cbow_neg(
             label = ONEF
         else:
             target_index = table[(next_random >> 16) % table_len]
-            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
+            next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
@@ -463,7 +463,7 @@ cdef unsigned long long fast_sentence1_cbow_neg(
 
     cdef long long a
     cdef long long row2
-    cdef unsigned long long modulo = 2**48 - 1
+    cdef unsigned long long modulo = 281474976710655ULL
     cdef REAL_t f, g, count, inv_count, label
     cdef np.uint32_t target_index, word_index
     cdef int d, m
@@ -490,7 +490,7 @@ cdef unsigned long long fast_sentence1_cbow_neg(
             label = ONEF
         else:
             target_index = table[(next_random >> 16) % table_len]
-            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
+            next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
@@ -520,7 +520,7 @@ cdef unsigned long long fast_sentence2_cbow_neg(
 
     cdef long long a
     cdef long long row2
-    cdef unsigned long long modulo = 2**48 - 1
+    cdef unsigned long long modulo = 281474976710655ULL
     cdef REAL_t f, g, count, inv_count, label
     cdef np.uint32_t target_index, word_index
     cdef int d, m
@@ -550,7 +550,7 @@ cdef unsigned long long fast_sentence2_cbow_neg(
             label = ONEF
         else:
             target_index = table[(next_random >> 16) % table_len]
-            next_random = (next_random * <unsigned long long>25214903917 + 11) & modulo
+            next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
