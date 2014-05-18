@@ -27,7 +27,7 @@ pkg_ver = '0.10.0rc1'
 pkg_desc = 'Python framework for fast Vector Space Modelling'
 
 # there is a bug in python2.5, preventing distutils from using any non-ascii characters :( http://bugs.python.org/issue2562
-pkg_author = 'Radim Rehurek', # u'Radim Řehůřek', # <- should really be this...
+pkg_author = 'Radim Rehurek' # u'Radim Řehůřek', # <- should really be this...
 pkg_author_email = 'radimrehurek@seznam.cz'
 pkg_url = 'http://radimrehurek.com/gensim'
 pkg_download_url = 'http://pypi.python.org/pypi/gensim'
