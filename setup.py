@@ -23,7 +23,7 @@ from setuptools import setup, find_packages, Extension
 
 # Commonly used information
 pkg_name = 'gensim'
-pkg_ver = '0.9.1'
+pkg_ver = '0.10.0rc1'
 pkg_desc = 'Python framework for fast Vector Space Modelling'
 
 # there is a bug in python2.5, preventing distutils from using any non-ascii characters :( http://bugs.python.org/issue2562
