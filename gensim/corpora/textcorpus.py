@@ -93,12 +93,14 @@ class TextCorpus(interfaces.CorpusABC):
         # Instead of raising NotImplementedError, let's provide a sample implementation:
         # assume documents are lines in a single file (one document per line).
         # Yield each document as a list of lowercase tokens, via `utils.tokenize`.
-        length = 0
+        self.length = 0
         with self.getstream() as lines:
             for lineno, line in enumerate(lines):
-                length += 1
-                yield utils.tokenize(line, lowercase=True)
-        self.length = length
+                if self.metadata:
+                    yield utils.tokenize(line, lowercase=True), (lineno,)
+                else:
+                    yield utils.tokenize(line, lowercase=True)
+            self.length = lineno + 1
 
 
     def __len__(self):
