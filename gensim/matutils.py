@@ -70,11 +70,16 @@ logger = logging.getLogger("gensim.matutils")
 
 def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_nnz=None, printprogress=0):
     """
-    Convert corpus into a sparse matrix, in scipy.sparse.csc_matrix format,
+    Convert a streamed corpus into a sparse matrix, in scipy.sparse.csc_matrix format,
     with documents as columns.
 
     If the number of terms, documents and non-zero elements is known, you can pass
     them here as parameters and a more memory efficient code path will be taken.
+
+    The input corpus may be a non-repeatable stream (generator).
+
+    This is the mirror function to `Sparse2Corpus`.
+
     """
     try:
         # if the input corpus has the `num_nnz`, `num_docs` and `num_terms` attributes
@@ -151,7 +156,7 @@ def ismatrix(m):
 
 
 def any2sparse(vec, eps=1e-9):
-    """Convert a numpy/scipy vector into gensim format (list of 2-tuples)."""
+    """Convert a numpy/scipy vector into gensim document format (=list of 2-tuples)."""
     if isinstance(vec, numpy.ndarray):
         return dense2vec(vec, eps)
     if scipy.sparse.issparse(vec):
@@ -160,15 +165,25 @@ def any2sparse(vec, eps=1e-9):
 
 
 def scipy2sparse(vec, eps=1e-9):
-    """Convert a scipy.sparse vector to gensim format (list of 2-tuples)."""
+    """Convert a scipy.sparse vector into gensim document format (=list of 2-tuples)."""
     vec = vec.tocsr()
     assert vec.shape[0] == 1
     return [(int(pos), float(val)) for pos, val in zip(vec.indices, vec.data) if numpy.abs(val) > eps]
 
 
 class Scipy2Corpus(object):
+    """
+    Convert a sequence of dense/sparse vectors into a streamed gensim corpus object.
+
+    This is the mirror function to `corpus2csc`.
+
+    """
     def __init__(self, vecs):
-        """Convert a sequence of dense/sparse vector to a gensim corpus object."""
+        """
+        `vecs` is a sequence of dense and/or sparse vectors, such as a 2d numpy array,
+        or a scipy.sparse.csc_matrix, or any sequence containing a mix of 1d numpy/scipy vectors.
+
+        """
         self.vecs = vecs
 
     def __iter__(self):
@@ -184,8 +199,11 @@ class Scipy2Corpus(object):
 
 def sparse2full(doc, length):
     """
-    Convert a document in sparse corpus format (sequence of 2-tuples) into a dense
+    Convert a document in sparse document format (=sequence of 2-tuples) into a dense
     numpy array (of size `length`).
+
+    This is the mirror function to `full2sparse`.
+
     """
     result = numpy.zeros(length, dtype=numpy.float32) # fill with zeroes (default value)
     doc = dict(doc)
@@ -196,9 +214,12 @@ def sparse2full(doc, length):
 
 def full2sparse(vec, eps=1e-9):
     """
-    Convert a dense numpy array into the sparse corpus format (sequence of 2-tuples).
+    Convert a dense numpy array into the sparse document format (sequence of 2-tuples).
 
     Values of magnitude < `eps` are treated as zero (ignored).
+
+    This is the mirror function to `sparse2full`.
+
     """
     vec = numpy.asarray(vec, dtype=float)
     nnz = numpy.nonzero(abs(vec) > eps)[0]
@@ -209,7 +230,8 @@ dense2vec = full2sparse
 
 def full2sparse_clipped(vec, topn, eps=1e-9):
     """
-    Like `full2sparse`, but only return the `topn` greatest elements (not all).
+    Like `full2sparse`, but only return the `topn` elements of the greatest magnitude (abs).
+
     """
     # use numpy.argsort and only form tuples that are actually returned.
     # this is about 40x faster than explicitly forming all 2-tuples to run sort() or heapq.nlargest() on.
@@ -225,10 +247,12 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=numpy.float32):
     """
     Convert corpus into a dense numpy array (documents will be columns). You
     must supply the number of features `num_terms`, because dimensionality
-    cannot be deduced from sparse vectors alone.
+    cannot be deduced from the sparse vectors alone.
 
     You can optionally supply `num_docs` (=the corpus length) as well, so that
-    a more memory efficient code path is taken.
+    a more memory-efficient code path is taken.
+
+    This is the mirror function to `Dense2Corpus`.
 
     """
     if num_docs is not None:
@@ -249,6 +273,9 @@ class Dense2Corpus(object):
 
     No data copy is made (changes to the underlying matrix imply changes in the
     corpus).
+
+    This is the mirror function to `corpus2dense`.
+
     """
     def __init__(self, dense, documents_columns=True):
         if documents_columns:
@@ -268,6 +295,9 @@ class Dense2Corpus(object):
 class Sparse2Corpus(object):
     """
     Convert a matrix in scipy.sparse format into a streaming gensim corpus.
+
+    This is the mirror function to `corpus2csc`.
+
     """
     def __init__(self, sparse, documents_columns=True):
         if documents_columns:
