@@ -12,6 +12,7 @@ from .tfidfmodel import TfidfModel
 from .rpmodel import RpModel
 from .logentropy_model import LogEntropyModel
 from .word2vec import Word2Vec
+from .dtminterface import DTMmodel
 
 from gensim import interfaces, utils
 
