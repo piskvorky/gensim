@@ -2,6 +2,7 @@ import gensim
 import os
 from gensim import corpora
 import cPickle as pickle
+from gensim import utils
 class DTMcorpus(corpora.textcorpus.TextCorpus):
 
         def get_texts(self):
@@ -9,11 +10,11 @@ class DTMcorpus(corpora.textcorpus.TextCorpus):
 
         def __len__(self):
             return len(self.input)
-corpus,time_seq=pickle.load(open('gensim/test/test_data/dtm_test'))
+corpus,time_seq = utils.unpickle('gensim/test/test_data/dtm_test')
 
 dtm_home = os.environ.get('DTM_HOME', "C:/Users/Artyom/SkyDrive/TopicModels/dtm-master/")
 dtm_path = os.path.join(dtm_home, 'bin', 'dtm') if dtm_home else None
 
 
-model=gensim.models.DTMmodel(dtm_path,corpus,time_seq,num_topics=2,id2word=corpus.dictionary)
-topics=model.show_topics(topics=2,times=2, topn=10)
+model = gensim.models.DTMmodel(dtm_path,corpus,time_seq,num_topics=2,id2word=corpus.dictionary)
+topics = model.show_topics(topics=2,times=2, topn=10)
