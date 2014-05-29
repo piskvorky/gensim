@@ -210,14 +210,13 @@ class DTMmodel(utils.SaveLoad):
         self.lambda_ = np.zeros(            (self.num_topics, self.num_terms * len(self.time_slices)))
         self.obs_ = np.zeros(
             (self.num_topics, self.num_terms * len(self.time_slices)))
-        try:
-            for t in range(self.num_topics):
+       
+        for t in range(self.num_topics):
                 topic = "%03d" % t
                 self.lambda_[t, :] = np.loadtxt(self.fout_prob().format(i=topic))
                 self.obs_[t, :] = np.loadtxt(
                     self.fout_observations().format(i=topic))
-        except Exception as ex:
-            print ex
+        
         self.lambda_.shape = (
             self.num_topics, self.num_terms, len(self.time_slices))
 
