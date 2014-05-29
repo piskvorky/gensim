@@ -7,14 +7,14 @@
 
 
 """
-Python wrapper for Dynamic Topic Models (DTM) and the Document Influence Model (DIM)  [1]_.
+Python wrapper for Dynamic Topic Models (DTM) and the Document Influence Model (DIM)  [1].
 
 This module allows for DTM and DIM model estimation from a training corpus.
 
 Example:
 
 >>> model = gensim.models.DTMmodel('dtm-win64.exe',
-    my_corpus, mt_timeslices, num_topics=20, id2word=dictionary)
+    my_corpus, my_timeslices, num_topics=20, id2word=dictionary)
 
 
    ntopics = 20 \
@@ -59,7 +59,7 @@ class DTMmodel(utils.SaveLoad):
 
     def __init__(
         self, dtm_path, corpus=None, time_slices=None, num_topics=100, id2word=None, prefix=None,
-            lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10,   alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=True):
+            lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10,   alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=False):
         """
         `dtm_path` is path to the dtm executable, e.g. `C:/dtm/dtm-win64.exe`.
         `corpus` is a gensim corpus, aka a stream of sparse document vectors.
