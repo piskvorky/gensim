@@ -391,8 +391,8 @@ class LdaModel(interfaces.TransformationABC):
                 sstats[:, ids] += numpy.outer(expElogthetad.T, cts / phinorm)
 
         if len(chunk) > 1:
-            logger.info("%i/%i documents converged within %i iterations" %
-                         (converged, len(chunk), self.iterations))
+            logger.debug("%i/%i documents converged within %i iterations" %
+                (converged, len(chunk), self.iterations))
 
         if collect_sstats:
             # This step finishes computing the sufficient statistics for the
@@ -518,7 +518,7 @@ class LdaModel(interfaces.TransformationABC):
         logger.info("running %s LDA training, %s topics, %i passes over "
                     "the supplied corpus of %i documents, updating model once "
                     "every %i documents, evaluating perplexity every %i documents, "
-                    "iterating %i with a convergence threshold of %i" %
+                    "iterating %ix with a convergence threshold of %f" %
                     (updatetype, self.num_topics, passes, lencorpus,
                         updateafter, evalafter, iterations,
                         gamma_threshold))
