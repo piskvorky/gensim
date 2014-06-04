@@ -225,7 +225,7 @@ class Word2Vec(utils.SaveLoad):
 
     """
     def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
-        seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0, cbow_mean=0):
+        sample=0, seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0, cbow_mean=0):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -244,6 +244,8 @@ class Word2Vec(utils.SaveLoad):
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
         `seed` = for the random number generator.
         `min_count` = ignore all words with total frequency lower than this.
+        `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
+                default is 0 (off), useful value is 1e-5.
         `workers` = use this many worker threads to train the model (=faster training with multicore machines)
         `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0)
         `negative` = if > 0, negative sampling will be used, the int for negative
@@ -262,6 +264,7 @@ class Word2Vec(utils.SaveLoad):
         self.window = int(window)
         self.seed = seed
         self.min_count = min_count
+        self.sample = sample
         self.workers = workers
         self.min_alpha = min_alpha
         self.hs = hs
@@ -334,6 +337,16 @@ class Word2Vec(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i" % max_depth)
 
+    def precalc_sampling(self):
+        """Precalculate each vocabulary item's threshold for sampling"""
+        logger.info("frequent-word downsampling, threshold %g; progress tallies will be approximate" % (self.sample))
+        total_words = sum(v.count for v in itervalues(self.vocab))
+        threshold_count = self.sample * total_words
+        for v in itervalues(self.vocab):
+            prob = (sqrt(v.count / threshold_count) + 1) * (threshold_count / v.count)
+            if prob < 1:
+                v.sample_probability = prob
+
     def build_vocab(self, sentences):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
@@ -371,6 +384,9 @@ class Word2Vec(utils.SaveLoad):
         if self.negative:
             # build the table for drawing random words (for negative sampling)
             self.make_table()
+        if self.sample:
+            # precalculate downsampling thresholds
+            self.precalc_sampling()
         self.reset_weights()
 
 
@@ -391,7 +407,8 @@ class Word2Vec(utils.SaveLoad):
             raise RuntimeError("you must first build vocabulary before training the model")
 
         start, next_report = time.time(), [1.0]
-        word_count, total_words = [word_count], total_words or sum(v.count for v in itervalues(self.vocab))
+        word_count = [word_count]
+        total_words = total_words or sum((int)(v.count * getattr(v,'sample_probability',1)) for v in itervalues(self.vocab))
         jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         lock = threading.Lock()  # for shared state (=number of words trained so far, log reports...)
 
@@ -424,8 +441,16 @@ class Word2Vec(utils.SaveLoad):
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
 
-        # convert input strings to Vocab objects (or None for OOV words), and start filling the jobs queue
-        no_oov = ([self.vocab.get(word, None) for word in sentence] for sentence in sentences)
+        def sample(v):
+            if v is None:
+                return False
+            if self.sample == 0:
+                return True
+            prob = getattr(v,'sample_probability',1)
+            return prob >= 1 or v.sample_probability > random.random_sample()
+
+        # convert input strings to Vocab objects (eliding OOV/downsampled words), and start filling the jobs queue
+        no_oov = ([v for v in (self.vocab.get(word, None) for word in sentence) if sample(v)] for sentence in sentences)
         for job_no, job in enumerate(utils.grouper(no_oov, chunksize)):
             logger.debug("putting job #%i in the queue, qsize=%i" % (job_no, jobs.qsize()))
             jobs.put(job)
