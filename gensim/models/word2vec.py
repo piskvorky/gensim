@@ -339,13 +339,13 @@ class Word2Vec(utils.SaveLoad):
 
     def precalc_sampling(self):
         """Precalculate each vocabulary item's threshold for sampling"""
-        logger.info("frequent-word downsampling, threshold %g; progress tallies will be approximate" % (self.sample))
-        total_words = sum(v.count for v in itervalues(self.vocab))
-        threshold_count = self.sample * total_words
+        if self.sample:
+            logger.info("frequent-word downsampling, threshold %g; progress tallies will be approximate" % (self.sample))
+            total_words = sum(v.count for v in itervalues(self.vocab))
+            threshold_count = float(self.sample) * total_words
         for v in itervalues(self.vocab):
-            prob = (sqrt(v.count / threshold_count) + 1) * (threshold_count / v.count)
-            if prob < 1:
-                v.sample_probability = prob
+            prob = (sqrt(v.count / threshold_count) + 1) * (threshold_count / v.count) if self.sample else 1.0
+            v.sample_probability = min(prob, 1.0)
 
     def build_vocab(self, sentences):
         """
@@ -384,9 +384,8 @@ class Word2Vec(utils.SaveLoad):
         if self.negative:
             # build the table for drawing random words (for negative sampling)
             self.make_table()
-        if self.sample:
-            # precalculate downsampling thresholds
-            self.precalc_sampling()
+        # precalculate downsampling thresholds
+        self.precalc_sampling()
         self.reset_weights()
 
 
@@ -400,15 +399,15 @@ class Word2Vec(utils.SaveLoad):
             import warnings
             warnings.warn("Cython compilation failed, training will be slow. Do you have Cython installed? `pip install cython`")
         logger.info("training model with %i workers on %i vocabulary and %i features, "
-            "using 'skipgram'=%s 'hierarchical softmax'=%s and 'negative sampling'=%s" %
-            (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.negative))
+            "using 'skipgram'=%s 'hierarchical softmax'=%s 'subsample'=%s and 'negative sampling'=%s" %
+            (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative))
 
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
 
         start, next_report = time.time(), [1.0]
         word_count = [word_count]
-        total_words = total_words or sum((int)(v.count * getattr(v,'sample_probability',1)) for v in itervalues(self.vocab))
+        total_words = total_words or int(sum(v.count * v.sample_probability for v in itervalues(self.vocab)))
         jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         lock = threading.Lock()  # for shared state (=number of words trained so far, log reports...)
 
@@ -441,17 +440,14 @@ class Word2Vec(utils.SaveLoad):
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
 
-        def sample(v):
-            if v is None:
-                return False
-            if self.sample == 0:
-                return True
-            prob = getattr(v,'sample_probability',1)
-            return prob >= 1 or v.sample_probability > random.random_sample()
+        def prepare_sentences():
+            for sentence in sentences:
+                sampled = [self.vocab[word] for word in sentence
+                    if word in self.vocab and self.vocab[word].sample_probability >= random.random_sample()]
+                yield sampled
 
         # convert input strings to Vocab objects (eliding OOV/downsampled words), and start filling the jobs queue
-        no_oov = ([v for v in (self.vocab.get(word, None) for word in sentence) if sample(v)] for sentence in sentences)
-        for job_no, job in enumerate(utils.grouper(no_oov, chunksize)):
+        for job_no, job in enumerate(utils.grouper(prepare_sentences(), chunksize)):
             logger.debug("putting job #%i in the queue, qsize=%i" % (job_no, jobs.qsize()))
             jobs.put(job)
         logger.info("reached the end of input; waiting to finish %i outstanding jobs" % jobs.qsize())
@@ -812,7 +808,7 @@ class Text8Corpus(object):
     def __iter__(self):
         # the entire corpus is one gigantic line -- there are no sentence marks at all
         # so just split the sequence of tokens arbitrarily: 1 sentence = 1000 tokens
-        sentence, rest, max_sentence_length = [], '', 1000
+        sentence, rest, max_sentence_length = [], b'', 1000
         with utils.smart_open(self.fname) as fin:
             while True:
                 text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
@@ -821,7 +817,7 @@ class Text8Corpus(object):
                     if sentence:
                         yield sentence
                     break
-                last_token = text.rfind(' ')  # the last token may have been split in two... keep it for the next iteration
+                last_token = text.rfind(b' ')  # the last token may have been split in two... keep it for the next iteration
                 words, rest = (utils.to_unicode(text[:last_token]).split(), text[last_token:].strip()) if last_token >= 0 else ([], text)
                 sentence.extend(words)
                 while len(sentence) >= max_sentence_length:
