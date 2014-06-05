@@ -442,8 +442,9 @@ class Word2Vec(utils.SaveLoad):
 
         def prepare_sentences():
             for sentence in sentences:
+                # avoid calling random_sample() where prob >= 1, to speed things up a little:
                 sampled = [self.vocab[word] for word in sentence
-                    if word in self.vocab and self.vocab[word].sample_probability >= random.random_sample()]
+                    if word in self.vocab and (self.vocab[word].sample_probability >= 1.0 or self.vocab[word].sample_probability >= random.random_sample())]
                 yield sampled
 
         # convert input strings to Vocab objects (eliding OOV/downsampled words), and start filling the jobs queue
