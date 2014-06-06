@@ -225,7 +225,7 @@ class Word2Vec(utils.SaveLoad):
 
     """
     def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
-        seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0, cbow_mean=0):
+        sample=0, seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0, cbow_mean=0):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -244,6 +244,8 @@ class Word2Vec(utils.SaveLoad):
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
         `seed` = for the random number generator.
         `min_count` = ignore all words with total frequency lower than this.
+        `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
+                default is 0 (off), useful value is 1e-5.
         `workers` = use this many worker threads to train the model (=faster training with multicore machines)
         `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0)
         `negative` = if > 0, negative sampling will be used, the int for negative
@@ -262,6 +264,7 @@ class Word2Vec(utils.SaveLoad):
         self.window = int(window)
         self.seed = seed
         self.min_count = min_count
+        self.sample = sample
         self.workers = workers
         self.min_alpha = min_alpha
         self.hs = hs
@@ -334,6 +337,16 @@ class Word2Vec(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i" % max_depth)
 
+    def precalc_sampling(self):
+        """Precalculate each vocabulary item's threshold for sampling"""
+        if self.sample:
+            logger.info("frequent-word downsampling, threshold %g; progress tallies will be approximate" % (self.sample))
+            total_words = sum(v.count for v in itervalues(self.vocab))
+            threshold_count = float(self.sample) * total_words
+        for v in itervalues(self.vocab):
+            prob = (sqrt(v.count / threshold_count) + 1) * (threshold_count / v.count) if self.sample else 1.0
+            v.sample_probability = min(prob, 1.0)
+
     def build_vocab(self, sentences):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
@@ -371,6 +384,8 @@ class Word2Vec(utils.SaveLoad):
         if self.negative:
             # build the table for drawing random words (for negative sampling)
             self.make_table()
+        # precalculate downsampling thresholds
+        self.precalc_sampling()
         self.reset_weights()
 
 
@@ -384,14 +399,15 @@ class Word2Vec(utils.SaveLoad):
             import warnings
             warnings.warn("Cython compilation failed, training will be slow. Do you have Cython installed? `pip install cython`")
         logger.info("training model with %i workers on %i vocabulary and %i features, "
-            "using 'skipgram'=%s 'hierarchical softmax'=%s and 'negative sampling'=%s" %
-            (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.negative))
+            "using 'skipgram'=%s 'hierarchical softmax'=%s 'subsample'=%s and 'negative sampling'=%s" %
+            (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative))
 
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
 
         start, next_report = time.time(), [1.0]
-        word_count, total_words = [word_count], total_words or sum(v.count for v in itervalues(self.vocab))
+        word_count = [word_count]
+        total_words = total_words or int(sum(v.count * v.sample_probability for v in itervalues(self.vocab)))
         jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         lock = threading.Lock()  # for shared state (=number of words trained so far, log reports...)
 
@@ -424,9 +440,15 @@ class Word2Vec(utils.SaveLoad):
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
 
-        # convert input strings to Vocab objects (or None for OOV words), and start filling the jobs queue
-        no_oov = ([self.vocab.get(word, None) for word in sentence] for sentence in sentences)
-        for job_no, job in enumerate(utils.grouper(no_oov, chunksize)):
+        def prepare_sentences():
+            for sentence in sentences:
+                # avoid calling random_sample() where prob >= 1, to speed things up a little:
+                sampled = [self.vocab[word] for word in sentence
+                    if word in self.vocab and (self.vocab[word].sample_probability >= 1.0 or self.vocab[word].sample_probability >= random.random_sample())]
+                yield sampled
+
+        # convert input strings to Vocab objects (eliding OOV/downsampled words), and start filling the jobs queue
+        for job_no, job in enumerate(utils.grouper(prepare_sentences(), chunksize)):
             logger.debug("putting job #%i in the queue, qsize=%i" % (job_no, jobs.qsize()))
             jobs.put(job)
         logger.info("reached the end of input; waiting to finish %i outstanding jobs" % jobs.qsize())
@@ -787,7 +809,7 @@ class Text8Corpus(object):
     def __iter__(self):
         # the entire corpus is one gigantic line -- there are no sentence marks at all
         # so just split the sequence of tokens arbitrarily: 1 sentence = 1000 tokens
-        sentence, rest, max_sentence_length = [], '', 1000
+        sentence, rest, max_sentence_length = [], b'', 1000
         with utils.smart_open(self.fname) as fin:
             while True:
                 text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
@@ -796,7 +818,7 @@ class Text8Corpus(object):
                     if sentence:
                         yield sentence
                     break
-                last_token = text.rfind(' ')  # the last token may have been split in two... keep it for the next iteration
+                last_token = text.rfind(b' ')  # the last token may have been split in two... keep it for the next iteration
                 words, rest = (utils.to_unicode(text[:last_token]).split(), text[last_token:].strip()) if last_token >= 0 else ([], text)
                 sentence.extend(words)
                 while len(sentence) >= max_sentence_length:
