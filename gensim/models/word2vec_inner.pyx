@@ -22,7 +22,7 @@ from scipy.linalg.blas import fblas
 REAL = np.float32
 ctypedef np.float32_t REAL_t
 
-DEF MAX_SENTENCE_LEN = 1000
+DEF MAX_SENTENCE_LEN = 10000
 
 ctypedef void (*scopy_ptr) (const int *N, const float *X, const int *incX, float *Y, const int *incY) nogil
 ctypedef void (*saxpy_ptr) (const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil
