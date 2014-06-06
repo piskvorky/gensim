@@ -1,7 +1,12 @@
 Changes
 =======
 
-0.10.0rc1
+0.10.1
+
+* make LDA print/show topics parameters consistent with LSI (Bram Vandekerckhove, #201)
+* add option for word2vec subsampling (Gordon Mohr, #206)
+
+0.10.0, 04/06/2014
 
 * full Python 3 support (targeting 3.3+, #196)
 * all internal methods now expect & store unicode, instead of utf8
