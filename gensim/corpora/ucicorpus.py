@@ -43,9 +43,13 @@ class UciReader(MmReader):
 
         with utils.smart_open(self.input) as fin:
             self.num_docs = self.num_terms = self.num_nnz = 0
-            self.num_docs = int(next(fin).strip())
-            self.num_terms = int(next(fin).strip())
-            self.num_nnz = int(next(fin).strip())
+            try:
+                self.num_docs = int(next(fin).strip())
+                self.num_terms = int(next(fin).strip())
+                self.num_nnz = int(next(fin).strip())
+            except StopIteration:
+                #raise ValueError("Invalid corpus header for file %s" % self.input)
+                pass
 
         logger.info('accepted corpus with %i documents, %i features, %i non-zero entries' %
             (self.num_docs, self.num_terms, self.num_nnz))

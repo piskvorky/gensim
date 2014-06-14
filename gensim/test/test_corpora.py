@@ -37,6 +37,20 @@ class CorpusTesterABC(object):
         corpus = self.corpus_class(fname)
         docs = list(corpus)
         self.assertEqual(len(docs), 9) # the deerwester corpus always has nine documents, no matter what format
+    def test_empty_input(self):
+        fname = testfile() + '.empty'
+        with open(fname, 'w') as f:
+            f.write('')
+
+        # a couple of the subclasses rely on vocab files existing.
+        with open(fname + '.vocab', 'w') as f:
+            f.write('')
+
+        corpus = self.corpus_class(fname)
+        self.assertEqual(len(corpus), 0)
+
+        docs = list(corpus)
+        self.assertEqual(len(docs), 0)
 
     def test_save(self):
         corpus = self.TEST_CORPUS

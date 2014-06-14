@@ -91,7 +91,10 @@ class LowCorpus(IndexedCorpus):
     def _calculate_num_docs(self):
         # the first line in input data is the number of documents (integer). throws exception on bad input.
         with utils.smart_open(self.fname) as fin:
-            result = int(fin.readline())
+            try:
+                result = int(next(fin))
+            except StopIteration:
+                result = 0
         return result
 
     def __len__(self):

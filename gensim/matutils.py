@@ -582,10 +582,15 @@ class MmReader(object):
         logger.info("initializing corpus reader from %s" % input)
         self.input, self.transposed = input, transposed
         with utils.file_or_filename(self.input) as lines:
-            header = utils.to_unicode(next(lines)).strip()
-            if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
-                raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
-                                 (self.input, header))
+            try:
+                header = utils.to_unicode(next(lines)).strip()
+                if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
+                    raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
+                                    (self.input, header))
+            except StopIteration:
+                #raise ValueError("File %s is empty" % self.input)
+                pass
+
             self.num_docs = self.num_terms = self.num_nnz = 0
             for lineno, line in enumerate(lines):
                 line = utils.to_unicode(line)
