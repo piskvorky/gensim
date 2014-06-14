@@ -51,7 +51,6 @@ class IndexedCorpus(interfaces.CorpusABC):
             self.index = None
         self.length = None
 
-
     @classmethod
     def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None, labels=None, metadata=False):
         """
@@ -98,7 +97,6 @@ class IndexedCorpus(interfaces.CorpusABC):
         logger.info("saving %s index to %s" % (serializer.__name__, index_fname))
         utils.pickle(offsets, index_fname)
 
-
     def __len__(self):
         """
         Return the index length if the corpus is indexed. Otherwise, make a pass
@@ -111,9 +109,9 @@ class IndexedCorpus(interfaces.CorpusABC):
             self.length = sum(1 for doc in self)
         return self.length
 
-
     def __getitem__(self, docno):
         if self.index is None:
             raise RuntimeError("cannot call corpus[docid] without an index")
         return self.docbyoffset(self.index[docno])
-#endclass IndexedCorpus
+
+# endclass IndexedCorpus

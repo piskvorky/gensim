@@ -127,7 +127,7 @@ def remove_template(s):
         if in_template:
             if c == '{':
                 n_open += 1
-            elif  c == '}':
+            elif c == '}':
                 n_close += 1
             if n_open == n_close:
                 ends.append(i)
@@ -240,7 +240,6 @@ def process_article(args):
     return result, title, pageid
 
 
-
 class WikiCorpus(TextCorpus):
     """
     Treat a wikipedia articles dump (\*articles.xml.bz2) as a (read-only) corpus.
@@ -273,7 +272,6 @@ class WikiCorpus(TextCorpus):
             self.dictionary = Dictionary(self.get_texts())
         else:
             self.dictionary = dictionary
-
 
     def get_texts(self):
         """
@@ -312,4 +310,5 @@ class WikiCorpus(TextCorpus):
             " (total %i articles, %i positions before pruning articles shorter than %i words)" %
             (articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS))
         self.length = articles # cache corpus length
-#endclass WikiCorpus
+
+# endclass WikiCorpus

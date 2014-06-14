@@ -28,6 +28,7 @@ def testfile():
 
 class CorpusTesterABC(object):
     TEST_CORPUS = [[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]
+
     def __init__(self):
         raise NotImplementedError("cannot instantiate Abstract Base Class")
         self.corpus_class = None # to be overridden with a particular class
@@ -38,6 +39,21 @@ class CorpusTesterABC(object):
         corpus = self.corpus_class(fname)
         docs = list(corpus)
         self.assertEqual(len(docs), 9) # the deerwester corpus always has nine documents, no matter what format
+
+    def test_empty_input(self):
+        fname = testfile() + '.empty'
+        with open(fname, 'w') as f:
+            f.write('')
+
+        # a couple of the subclasses rely on vocab files existing.
+        with open(fname + '.vocab', 'w') as f:
+            f.write('')
+
+        corpus = self.corpus_class(fname)
+        self.assertEqual(len(corpus), 0)
+
+        docs = list(corpus)
+        self.assertEqual(len(docs), 0)
 
     def test_save(self):
         corpus = self.TEST_CORPUS
@@ -87,7 +103,8 @@ class CorpusTesterABC(object):
 
             # delete the temporary file
             os.remove(fname)
-#endclass CorpusTesterABC
+
+# endclass CorpusTesterABC
 
 
 class TestMmCorpus(unittest.TestCase, CorpusTesterABC):
@@ -98,21 +115,24 @@ class TestMmCorpus(unittest.TestCase, CorpusTesterABC):
     def test_serialize_compressed(self):
         # MmCorpus needs file write with seek => doesn't support compressed output (only input)
         pass
-#endclass TestMmCorpus
+
+# endclass TestMmCorpus
 
 
 class TestSvmLightCorpus(unittest.TestCase, CorpusTesterABC):
     def setUp(self):
         self.corpus_class = svmlightcorpus.SvmLightCorpus
         self.file_extension = '.svmlight'
-#endclass TestSvmLightCorpus
+
+# endclass TestSvmLightCorpus
 
 
 class TestBleiCorpus(unittest.TestCase, CorpusTesterABC):
     def setUp(self):
         self.corpus_class = bleicorpus.BleiCorpus
         self.file_extension = '.blei'
-#endclass TestBleiCorpus
+
+# endclass TestBleiCorpus
 
 
 class TestLowCorpus(unittest.TestCase, CorpusTesterABC):
@@ -121,7 +141,8 @@ class TestLowCorpus(unittest.TestCase, CorpusTesterABC):
     def setUp(self):
         self.corpus_class = lowcorpus.LowCorpus
         self.file_extension = '.low'
-#endclass TestLowCorpus
+
+# endclass TestLowCorpus
 
 
 class TestUciCorpus(unittest.TestCase, CorpusTesterABC):
@@ -134,7 +155,8 @@ class TestUciCorpus(unittest.TestCase, CorpusTesterABC):
     def test_serialize_compressed(self):
         # UciCorpus needs file write with seek => doesn't support compressed output (only input)
         pass
-#endclass TestUciCorpus
+
+# endclass TestUciCorpus
 
 
 class TestMalletCorpus(unittest.TestCase, CorpusTesterABC):
@@ -155,7 +177,8 @@ class TestMalletCorpus(unittest.TestCase, CorpusTesterABC):
 
             self.assertEqual(metadata[0], str(i + 1))
             self.assertEqual(metadata[1], 'en')
-#endclass TestMalletCorpus
+
+# endclass TestMalletCorpus
 
 
 class TestTextCorpus(unittest.TestCase):

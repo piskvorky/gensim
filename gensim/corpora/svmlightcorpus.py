@@ -63,23 +63,20 @@ class SvmLightCorpus(IndexedCorpus):
         self.store_labels = store_labels
         self.labels = []
 
-
     def __iter__(self):
         """
         Iterate over the corpus, returning one sparse vector at a time.
         """
-        length = 0
+        lineno = -1
         self.labels = []
         with utils.smart_open(self.fname) as fin:
-            for lineNo, line in enumerate(fin):
+            for lineno, line in enumerate(fin):
                 doc = self.line2doc(line)
                 if doc is not None:
                     if self.store_labels:
                         self.labels.append(doc[1])
-                    length += 1
                     yield doc[0]
-        self.length = length
-
+        self.length = lineno + 1
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, labels=False, metadata=False):
@@ -102,7 +99,6 @@ class SvmLightCorpus(IndexedCorpus):
                 fout.write(utils.to_utf8(SvmLightCorpus.doc2line(doc, label)))
         return offsets
 
-
     def docbyoffset(self, offset):
         """
         Return the document stored at file position `offset`.
@@ -110,7 +106,6 @@ class SvmLightCorpus(IndexedCorpus):
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())[0]
-
 
     def line2doc(self, line):
         """
@@ -127,7 +122,6 @@ class SvmLightCorpus(IndexedCorpus):
         doc = [(int(p1) - 1, float(p2)) for p1, p2 in fields if p1 != 'qid'] # ignore 'qid' features, convert 1-based feature ids to 0-based
         return doc, target
 
-
     @staticmethod
     def doc2line(doc, label=0):
         """
@@ -135,4 +129,5 @@ class SvmLightCorpus(IndexedCorpus):
         """
         pairs = ' '.join("%i:%s" % (termid + 1, termval) for termid, termval in doc) # +1 to convert 0-base to 1-base
         return "%s %s\n" % (label, pairs)
-#endclass SvmLightCorpus
+
+# endclass SvmLightCorpus

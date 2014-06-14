@@ -43,9 +43,12 @@ class UciReader(MmReader):
 
         with utils.smart_open(self.input) as fin:
             self.num_docs = self.num_terms = self.num_nnz = 0
-            self.num_docs = int(next(fin).strip())
-            self.num_terms = int(next(fin).strip())
-            self.num_nnz = int(next(fin).strip())
+            try:
+                self.num_docs = int(next(fin).strip())
+                self.num_terms = int(next(fin).strip())
+                self.num_nnz = int(next(fin).strip())
+            except StopIteration:
+                pass
 
         logger.info('accepted corpus with %i documents, %i features, %i non-zero entries' %
             (self.num_docs, self.num_terms, self.num_nnz))
@@ -54,7 +57,8 @@ class UciReader(MmReader):
         for lineno, _ in enumerate(input_file):
             if lineno == 2:
                 break
-#endclass UciReader
+
+# endclass UciReader
 
 
 class UciWriter(MmWriter):
@@ -133,7 +137,8 @@ class UciWriter(MmWriter):
         writer.close()
         if index:
             return offsets
-#endclass UciWriter
+
+# endclass UciWriter
 
 
 class UciCorpus(UciReader, IndexedCorpus):
@@ -217,4 +222,5 @@ class UciCorpus(UciReader, IndexedCorpus):
         logger.info("storing corpus in UCI Bag-of-Words format: %s" % fname)
 
         return UciWriter.write_corpus(fname, corpus, index=True, progress_cnt=progress_cnt)
-#endclass UciCorpus
+
+# endclass UciCorpus
