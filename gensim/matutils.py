@@ -588,7 +588,6 @@ class MmReader(object):
                     raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
                                     (self.input, header))
             except StopIteration:
-                #raise ValueError("File %s is empty" % self.input)
                 pass
 
             self.num_docs = self.num_terms = self.num_nnz = 0

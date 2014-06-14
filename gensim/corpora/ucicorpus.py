@@ -48,7 +48,6 @@ class UciReader(MmReader):
                 self.num_terms = int(next(fin).strip())
                 self.num_nnz = int(next(fin).strip())
             except StopIteration:
-                #raise ValueError("Invalid corpus header for file %s" % self.input)
                 pass
 
         logger.info('accepted corpus with %i documents, %i features, %i non-zero entries' %
