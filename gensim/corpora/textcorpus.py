@@ -72,7 +72,7 @@ class TextCorpus(interfaces.CorpusABC):
         """
         for text in self.get_texts():
             if self.metadata:
-                yield (self.dictionary.doc2bow(text[0], allow_update=False), text[1])
+                yield self.dictionary.doc2bow(text[0], allow_update=False), text[1]
             else:
                 yield self.dictionary.doc2bow(text, allow_update=False)
 
@@ -93,14 +93,14 @@ class TextCorpus(interfaces.CorpusABC):
         # Instead of raising NotImplementedError, let's provide a sample implementation:
         # assume documents are lines in a single file (one document per line).
         # Yield each document as a list of lowercase tokens, via `utils.tokenize`.
-        self.length = 0
+        lineno = -1
         with self.getstream() as lines:
             for lineno, line in enumerate(lines):
                 if self.metadata:
                     yield utils.tokenize(line, lowercase=True), (lineno,)
                 else:
                     yield utils.tokenize(line, lowercase=True)
-            self.length = lineno + 1
+            self.length = lineno + 1 # will be 0 if loop never executes
 
 
     def __len__(self):

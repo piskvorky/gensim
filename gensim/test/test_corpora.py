@@ -164,6 +164,15 @@ class TestTextCorpus(unittest.TestCase):
         self.corpus_class = textcorpus.TextCorpus
         self.file_extension = '.txt'
 
+    def test_empty_input(self):
+        fname = testfile()
+        with open(fname, 'w') as f:
+            f.write('')
+        corpus = self.corpus_class(fname)
+        docs = list(corpus)
+        self.assertEqual(len(docs), 0)
+        self.assertEqual(len(corpus), 0)
+
     def test_load_with_metadata(self):
         fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
         corpus = self.corpus_class(fname)
