@@ -13,7 +13,8 @@ import os.path
 import unittest
 import tempfile
 
-from gensim.corpora import bleicorpus, mmcorpus, lowcorpus, svmlightcorpus, ucicorpus, malletcorpus
+from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
+                            ucicorpus, malletcorpus, textcorpus)
 
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
@@ -155,6 +156,40 @@ class TestMalletCorpus(unittest.TestCase, CorpusTesterABC):
             self.assertEqual(metadata[0], str(i + 1))
             self.assertEqual(metadata[1], 'en')
 #endclass TestMalletCorpus
+
+
+class TestTextCorpus(unittest.TestCase):
+
+    def setUp(self):
+        self.corpus_class = textcorpus.TextCorpus
+        self.file_extension = '.txt'
+
+    def test_empty_input(self):
+        fname = testfile()
+        with open(fname, 'w') as f:
+            f.write('')
+        corpus = self.corpus_class(fname)
+        docs = list(corpus)
+        self.assertEqual(len(docs), 0)
+        self.assertEqual(len(corpus), 0)
+
+    def test_load_with_metadata(self):
+        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        corpus = self.corpus_class(fname)
+        corpus.metadata = True
+        docs = list(corpus)
+        self.assertEqual(len(docs), 9) # the deerwester corpus always has nine documents, no matter what format
+        for i, docmeta in enumerate(docs):
+            doc, metadata = docmeta
+
+            self.assertEqual(metadata[0], i)
+
+    def test_load(self):
+        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        corpus = self.corpus_class(fname)
+        docs = list(corpus)
+        self.assertEqual(len(docs), 9) # the deerwester corpus always has nine documents, no matter what format
+#endclass TestTextCorpus
 
 
 if __name__ == '__main__':
