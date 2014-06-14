@@ -57,7 +57,8 @@ class UciReader(MmReader):
         for lineno, _ in enumerate(input_file):
             if lineno == 2:
                 break
-#endclass UciReader
+
+# endclass UciReader
 
 
 class UciWriter(MmWriter):
@@ -136,7 +137,8 @@ class UciWriter(MmWriter):
         writer.close()
         if index:
             return offsets
-#endclass UciWriter
+
+# endclass UciWriter
 
 
 class UciCorpus(UciReader, IndexedCorpus):
@@ -220,4 +222,5 @@ class UciCorpus(UciReader, IndexedCorpus):
         logger.info("storing corpus in UCI Bag-of-Words format: %s" % fname)
 
         return UciWriter.write_corpus(fname, corpus, index=True, progress_cnt=progress_cnt)
-#endclass UciCorpus
+
+# endclass UciCorpus

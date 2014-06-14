@@ -63,7 +63,6 @@ class TextCorpus(interfaces.CorpusABC):
             logger.warning("No input document stream provided; assuming "
                            "dictionary will be initialized some other way.")
 
-
     def __iter__(self):
         """
         The function that defines a corpus.
@@ -76,10 +75,8 @@ class TextCorpus(interfaces.CorpusABC):
             else:
                 yield self.dictionary.doc2bow(text, allow_update=False)
 
-
     def getstream(self):
         return utils.file_or_filename(self.input)
-
 
     def get_texts(self):
         """
@@ -100,6 +97,7 @@ class TextCorpus(interfaces.CorpusABC):
                 yield utils.tokenize(line, lowercase=True)
         self.length = length
 
-
     def __len__(self):
-        return self.length # will throw if corpus not initialized
+        return self.length  # will throw if corpus not initialized
+
+# endclass TextCorpus

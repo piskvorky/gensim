@@ -95,11 +95,11 @@ class LowCorpus(IndexedCorpus):
                 result = int(next(fin))
             except StopIteration:
                 result = 0
+
         return result
 
     def __len__(self):
         return self.num_docs
-
 
     def line2doc(self, line):
         words = self.line2words(line)
@@ -130,7 +130,6 @@ class LowCorpus(IndexedCorpus):
         # note that this way, only one doc is stored in memory at a time, not the whole corpus
         return doc
 
-
     def __iter__(self):
         """
         Iterate over the corpus, returning one bag-of-words vector at a time.
@@ -139,7 +138,6 @@ class LowCorpus(IndexedCorpus):
             for lineno, line in enumerate(fin):
                 if lineno > 0: # ignore the first line = number of documents
                     yield self.line2doc(line)
-
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, metadata=False):
@@ -173,7 +171,6 @@ class LowCorpus(IndexedCorpus):
                             truncated)
         return offsets
 
-
     def docbyoffset(self, offset):
         """
         Return the document stored at file position `offset`.
@@ -181,4 +178,5 @@ class LowCorpus(IndexedCorpus):
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())
-#endclass LowCorpus
+
+# endclass LowCorpus
