@@ -101,7 +101,7 @@ class MalletCorpus(LowCorpus):
                 for wordid, value in doc:
                     if abs(int(value) - value) > 1e-6:
                         truncated += 1
-                    words.extend([str(id2word[wordid])] * int(value))
+                    words.extend([utils.to_unicode(id2word[wordid])] * int(value))
                 offsets.append(fout.tell())
                 fout.write(utils.to_utf8('%s %s %s\n' % (doc_id, doc_lang, ' '.join(words))))
 
