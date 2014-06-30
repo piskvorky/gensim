@@ -337,7 +337,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
 
     @staticmethod
-    def from_corpus(corpus, tokens=None):
+    def from_corpus(corpus, id2word=None):
         """
         Create Dictionary from an existing corpus. This can be useful if you only
         have a term-document BOW matrix (represented by `corpus`), but not the
@@ -345,10 +345,10 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         This will scan the term-document count matrix for all word ids that
         appear in it, then construct and return Dictionary which maps each
-        `word_id -> tokens[word_id]`.
+        `word_id -> id2word[word_id]`.
 
-        `tokens` is an optional iterator there maps the `word_id` to the token. In
-        case tokens isn't specifed the mapping `tokens[world_id] = str(word_id)`
+        `id2word` is an optional dictionary that maps the `word_id` to a token. In
+        case `id2word` isn't specified the mapping `id2word[word_id] = str(word_id)`
         will be used.
         """
 
@@ -365,10 +365,9 @@ class Dictionary(utils.SaveLoad, Mapping):
                 result.dfs[wordid] = result.dfs.get(wordid, 0) + 1
 
         # now make sure length(result) == get_max_id(corpus) + 1
-        if (tokens is None): tokens = map(str, xrange(max_id + 1))
-        tokens_iter = iter(tokens)
+        if (id2word is None): id2word = list(map(str, xrange(max_id + 1)))
         for i in xrange(max_id + 1):
-            result.token2id[next(tokens_iter)] = i
+            result.token2id[id2word[i]] = i
             result.dfs[i] = result.dfs.get(i, 0)
 
         logger.info("built %s from %i documents (total %i corpus positions)" %

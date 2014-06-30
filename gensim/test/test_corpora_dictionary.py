@@ -155,7 +155,7 @@ class TestDictionary(unittest.TestCase):
         corpus = [dictionary.doc2bow(text) for text in texts]
         token_map = [ dictionary[i] for i in sorted(dictionary.keys()) ]
 
-        # Greate dictionary from corpus without a token map
+        # Create dictionary from corpus without a token map
         dictionary_from_corpus = Dictionary.from_corpus(corpus)
 
         #we have to compare values, because in creating dictionary from corpus
@@ -168,8 +168,8 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(dictionary.num_pos, dictionary_from_corpus.num_pos)
         self.assertEqual(dictionary.num_nnz, dictionary_from_corpus.num_nnz)
 
-        # Greate dictionary from corpus with a token map
-        dictionary_from_corpus_2 = Dictionary.from_corpus(corpus, tokens=token_map)
+        # Create dictionary from corpus with a token map
+        dictionary_from_corpus_2 = Dictionary.from_corpus(corpus, id2word=token_map)
 
         #we have to compare values, because in creating dictionary from corpus
         #informations about words are lost
