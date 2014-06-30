@@ -150,8 +150,12 @@ class TestDictionary(unittest.TestCase):
         tokens_once = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
         texts = [[word for word in text if word not in tokens_once]
                 for text in texts]
+
         dictionary = Dictionary(texts)
         corpus = [dictionary.doc2bow(text) for text in texts]
+        token_map = [ dictionary[i] for i in sorted(dictionary.keys()) ]
+
+        # Greate dictionary from corpus without a token map
         dictionary_from_corpus = Dictionary.from_corpus(corpus)
 
         #we have to compare values, because in creating dictionary from corpus
@@ -163,6 +167,18 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(dictionary.num_docs, dictionary_from_corpus.num_docs)
         self.assertEqual(dictionary.num_pos, dictionary_from_corpus.num_pos)
         self.assertEqual(dictionary.num_nnz, dictionary_from_corpus.num_nnz)
+
+        # Greate dictionary from corpus with a token map
+        dictionary_from_corpus_2 = Dictionary.from_corpus(corpus, tokens=token_map)
+
+        #we have to compare values, because in creating dictionary from corpus
+        #informations about words are lost
+        self.assertEqual(dictionary.token2id, dictionary_from_corpus_2.token2id)
+        self.assertEqual(dictionary.dfs, dictionary_from_corpus_2.dfs)
+        self.assertEqual(dictionary.num_docs, dictionary_from_corpus_2.num_docs)
+        self.assertEqual(dictionary.num_pos, dictionary_from_corpus_2.num_pos)
+        self.assertEqual(dictionary.num_nnz, dictionary_from_corpus_2.num_nnz)
+
 
     def test_dict_interface(self):
         """Test Python 2 dict-like interface in both Python 2 and 3."""
