@@ -118,7 +118,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         """
         Convert `document` (a list of words) into the bag-of-words format = list
         of `(token_id, token_count)` 2-tuples. Each word is assumed to be a
-        **tokenized and normalized** utf-8 encoded string. No further preprocessing
+        **tokenized and normalized** string (either unicode or utf8-encoded). No further preprocessing
         is done on the words in `document`; apply tokenization, stemming etc. before
         calling this method.
 
