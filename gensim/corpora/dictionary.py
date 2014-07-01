@@ -18,10 +18,15 @@ with other dictionary (:func:`Dictionary.merge_with`) etc.
 from __future__ import with_statement
 
 from collections import Mapping
+import sys
 import logging
 import itertools
 
 from gensim import utils
+
+if sys.version_info[0] >= 3:
+    unicode = str
+
 from six import PY3, iteritems, iterkeys, itervalues, string_types
 from six.moves import xrange
 from six.moves import zip as izip
