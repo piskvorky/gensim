@@ -13,9 +13,8 @@ This module allows for DTM and DIM model estimation from a training corpus.
 
 Example:
 
->>> model = gensim.models.DTMmodel('dtm-win64.exe',
+>>> model = gensim.models.DtmModel('dtm-win64.exe',
     my_corpus, my_timeslices, num_topics=20, id2word=dictionary)
-
 
    ntopics = 20 \
    mode = fit \
@@ -28,7 +27,6 @@ Example:
    lda_sequence_min_iter = 6 \
    lda_sequence_max_iter = 20 \
    lda_max_em_iter = 10
-
 
 
 .. [1] https://code.google.com/p/princeton-statistical-learning/downloads/detail?name=dtm_release-0.8.tgz
@@ -49,8 +47,7 @@ from gensim import utils, corpora
 logger = logging.getLogger('gensim.models.dtmmodel')
 
 
-class DTMmodel(utils.SaveLoad):
-
+class DtmModel(utils.SaveLoad):
     """
     Class for DTM training using DTM binary. Communication between DTM and Python
     takes place by passing around data files on disk and executing the DTM binary as a subprocess.
@@ -59,7 +56,7 @@ class DTMmodel(utils.SaveLoad):
 
     def __init__(
         self, dtm_path, corpus=None, time_slices=None, num_topics=100, id2word=None, prefix=None,
-            lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10,   alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=False):
+            lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10, alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=False):
         """
         `dtm_path` is path to the dtm executable, e.g. `C:/dtm/dtm-win64.exe`.
         `corpus` is a gensim corpus, aka a stream of sparse document vectors.
@@ -76,23 +73,19 @@ class DTMmodel(utils.SaveLoad):
         self.dtm_path = dtm_path
         self.id2word = id2word
         if self.id2word is None:
-            logger.warning(
-                "no word id mapping provided; initializing from corpus, assuming identity")
+            logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
         else:
-            self.num_terms = 0 if not self.id2word else 1 + \
-                max(self.id2word.keys())
+            self.num_terms = 0 if not self.id2word else 1 + max(self.id2word.keys())
         if self.num_terms == 0:
-            raise ValueError(
-                "cannot compute DTM over an empty collection (no terms)")
+            raise ValueError("cannot compute DTM over an empty collection (no terms)")
         self.num_topics = num_topics
 
         try:
             lencorpus = len(corpus)
         except:
-            logger.warning(
-                "input corpus stream has no len(); counting documents")
+            logger.warning("input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
             raise ValueError("cannot compute DTM over an empty corpus")
@@ -122,7 +115,7 @@ class DTMmodel(utils.SaveLoad):
         self.init_beta = None
         self.init_ss = None
         self.em_steps = []
-        self.influnces_time = []
+        self.influences_time = []
 
         if corpus is not None:
             self.train(corpus, time_slices)
@@ -134,15 +127,12 @@ class DTMmodel(utils.SaveLoad):
         return self.prefix + 'train_out/lda-seq/' + 'gam.dat'
 
     def fout_prob(self):
-
         return self.prefix + 'train_out/lda-seq/' + 'topic-{i}-var-e-log-prob.dat'
 
     def fout_observations(self):
-
         return self.prefix + 'train_out/lda-seq/' + 'topic-{i}-var-obs.dat'
 
     def fout_influence(self):
-
         return self.prefix + 'train_out/lda-seq/' + 'influence_time-{i}'
 
     def foutname(self):
@@ -203,8 +193,7 @@ class DTMmodel(utils.SaveLoad):
         arguments = arguments + " " + params
         logger.info("training DTM with args %s" % arguments)
         try:
-            p = Popen([self.dtm_path] + arguments.split(),
-                      stdout=PIPE, stderr=PIPE)
+            p = Popen([self.dtm_path] + arguments.split(), stdout=PIPE, stderr=PIPE)
             p.communicate()
         except KeyboardInterrupt:
             p.terminate()
@@ -223,39 +212,33 @@ class DTMmodel(utils.SaveLoad):
         # normalize proportions
         self.gamma_ /= self.gamma_.sum(axis=1)[:, np.newaxis]
 
-        self.lambda_ = np.zeros(
-            (self.num_topics, self.num_terms * len(self.time_slices)))
-        self.obs_ = np.zeros(
-            (self.num_topics, self.num_terms * len(self.time_slices)))
+        self.lambda_ = np.zeros((self.num_topics, self.num_terms * len(self.time_slices)))
+        self.obs_ = np.zeros((self.num_topics, self.num_terms * len(self.time_slices)))
 
         for t in range(self.num_topics):
                 topic = "%03d" % t
-                self.lambda_[t, :] = np.loadtxt(
-                    self.fout_prob().format(i=topic))
-                self.obs_[t, :] = np.loadtxt(
-                    self.fout_observations().format(i=topic))
-        # cast to correct shape, lambda[5,10,0] is the proprtion of the 10th
+                self.lambda_[t, :] = np.loadtxt(self.fout_prob().format(i=topic))
+                self.obs_[t, :] = np.loadtxt(self.fout_observations().format(i=topic))
+        # cast to correct shape, lambda[5,10,0] is the proportion of the 10th
         # topic in doc 5 at time 0
-        self.lambda_.shape = (
-            self.num_topics, self.num_terms, len(self.time_slices))
-        self.obs_.shape = (self.num_topics, self.num_terms,
-                           len(self.time_slices))
+        self.lambda_.shape = (self.num_topics, self.num_terms, len(self.time_slices))
+        self.obs_.shape = (self.num_topics, self.num_terms, len(self.time_slices))
         # extract document influence on topics for each time slice
-        # influnces_time[0] , influences at time 0
-        if model is 'fixed':
+        # influences_time[0] , influences at time 0
+        if model == 'fixed':
             for k, t in enumerate(self.time_slices):
                 stamp = "%03d" % k
                 influence = np.loadtxt(self.fout_influence().format(i=stamp))
                 influence.shape = (t, self.num_topics)
                 # influence[2,5] influence of document 2 on topic 5
-                self.influnces_time.append(influence)
+                self.influences_time.append(influence)
 
     def print_topics(self, topics=10, times=5, topn=10):
         return self.show_topics(topics, times, topn, log=True)
 
     def show_topics(self, topics=10, times=5, topn=10, log=False, formatted=True):
         """
-        Print the `topN` most probable words for `topics` number of topics at 'times' time slices.
+        Print the `topn` most probable words for `topics` number of topics at 'times' time slices.
         Set `topics=-1` to print all topics.
 
         Set `formatted=True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
@@ -296,7 +279,11 @@ class DTMmodel(utils.SaveLoad):
         return shown
 
     def show_topic(self, topicid, time, topn=50):
+        """
+        Return `topn` most probable words for the given `topicid`, as a list of
+        `(word_probability, word)` 2-tuples.
 
+        """
         topics = self.lambda_[:, :, time]
         topic = topics[topicid]
         # liklihood to probability
@@ -309,4 +296,5 @@ class DTMmodel(utils.SaveLoad):
         return beststr
 
     def print_topic(self, topicid, time, topn=10):
+        """Return the given topic, formatted as a string."""
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, topn)])
