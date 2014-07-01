@@ -186,7 +186,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         # determine which tokens to keep
         good_ids = (v for v in itervalues(self.token2id)
-                      if no_below <= self.dfs[v] <= no_above_abs)
+                      if no_below <= self.dfs.get(v, 0) <= no_above_abs)
         good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
         if keep_n is not None:
             good_ids = good_ids[:keep_n]
@@ -235,15 +235,12 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.debug("rebuilding dictionary, shrinking gaps")
 
         # build mapping from old id -> new id
-        idmap = dict(izip(itervalues(self.token2id),
-                     xrange(len(self.token2id))))
+        idmap = dict(izip(itervalues(self.token2id), xrange(len(self.token2id))))
 
         # reassign mappings to new ids
-        self.token2id = dict((token, idmap[tokenid])
-                             for token, tokenid in iteritems(self.token2id))
+        self.token2id = dict((token, idmap[tokenid]) for token, tokenid in iteritems(self.token2id))
         self.id2token = {}
-        self.dfs = dict((idmap[tokenid], freq)
-                        for tokenid, freq in iteritems(self.dfs))
+        self.dfs = dict((idmap[tokenid], freq) for tokenid, freq in iteritems(self.dfs))
 
 
     def save_as_text(self, fname, sort_by_word=True):
@@ -364,11 +361,15 @@ class Dictionary(utils.SaveLoad, Mapping):
                 result.num_pos += word_freq
                 result.dfs[wordid] = result.dfs.get(wordid, 0) + 1
 
-        # now make sure length(result) == get_max_id(corpus) + 1
-        if (id2word is None): id2word = list(map(str, xrange(max_id + 1)))
-        for i in xrange(max_id + 1):
-            result.token2id[id2word[i]] = i
-            result.dfs[i] = result.dfs.get(i, 0)
+        if id2word is None:
+            # make sure length(result) == get_max_id(corpus) + 1
+            result.token2id = dict((unicode(i), i) for i in xrange(max_id + 1))
+        else:
+            # id=>word mapping given: simply copy it
+            result.token2id = dict((utils.to_unicode(token), id) for id, token in iteritems(id2word))
+        for id in itervalues(result.token2id):
+            # make sure all token ids have a valid `dfs` entry
+            result.dfs[id] = result.dfs.get(id, 0)
 
         logger.info("built %s from %i documents (total %i corpus positions)" %
                      (result, result.num_docs, result.num_pos))
