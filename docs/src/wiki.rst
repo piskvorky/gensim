@@ -72,7 +72,7 @@ Now we're ready to compute LSA of the English Wikipedia::
     topic #8(109.907): 0.385*"album" + 0.224*"song" + 0.209*"chart" + 0.204*"band" + 0.169*"released" + 0.151*"music" + 0.142*"diff" + 0.141*"vocals" + 0.138*"she" + 0.132*"guitar"
     topic #9(102.599): -0.237*"league" + -0.214*"he" + -0.180*"season" + -0.174*"football" + -0.166*"team" + 0.159*"station" + -0.137*"played" + -0.131*"cup" + 0.131*"she" + -0.128*"utc"
 
-Creating the LSI model of Wikipedia takes about 4 hours and 9 minutes on my laptop [1]_.
+Creating the LSA model of Wikipedia takes about 4 hours and 9 minutes on my laptop [1]_.
 That's about **16,000 documents per minute, including all I/O**.
 
 .. note::
