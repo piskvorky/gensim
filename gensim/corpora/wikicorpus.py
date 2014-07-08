@@ -293,11 +293,13 @@ class WikiCorpus(TextCorpus):
         pool = multiprocessing.Pool(self.processes)
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
         # is dumb and would load the entire input into RAM at once...
+        ignore_namespaces = 'Wikipedia Category File Portal Template MediaWiki User Help Book Draft'.split()
         for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
             for tokens, title, pageid in pool.imap(process_article, group): # chunksize=10):
                 articles_all += 1
                 positions_all += len(tokens)
-                if len(tokens) > ARTICLE_MIN_WORDS: # article redirects and short stubs are pruned here
+                # article redirects and short stubs are pruned here
+                if len(tokens) > ARTICLE_MIN_WORDS or any(title.startswith(ignore + ':') for ignore in ignore_namespaces):
                     articles += 1
                     positions += len(tokens)
                     if self.metadata:
@@ -310,5 +312,4 @@ class WikiCorpus(TextCorpus):
             " (total %i articles, %i positions before pruning articles shorter than %i words)" %
             (articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS))
         self.length = articles # cache corpus length
-
 # endclass WikiCorpus
