@@ -4,11 +4,18 @@ Changes
 0.10.1
 
 * make LDA print/show topics parameters consistent with LSI (Bram Vandekerckhove, #201)
-* add option for word2vec subsampling (Gordon Mohr, #206)
-* fix length calculation for corpora on empty files (Christopher Corley,
-#209)
+* add option for efficient word2vec subsampling (Gordon Mohr, #206)
+* fix length calculation for corpora on empty files (Christopher Corley, #209)
+* improve file cleanup of unit tests (Christopher Corley)
+* more unit tests
+* unicode now stored everywhere in gensim internally; accepted input stays either utf8 or unicode
+* various fixes to the py3k ported code
+* allow any dict-like input in Dictionary.from_corpus (Andreas Madsen)
+* error checking improvements to the MALLET wrapper
+* ignore non-articles during wiki parsig
+* utils.lemmatize now (optionally) ignores stopwords
 
-0.10.0, 04/06/2014
+0.10.0 (aka "PY3K port"), 04/06/2014
 
 * full Python 3 support (targeting 3.3+, #196)
 * all internal methods now expect & store unicode, instead of utf8
