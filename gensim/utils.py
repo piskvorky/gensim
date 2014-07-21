@@ -776,7 +776,7 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
 
 
 if HAS_PATTERN:
-    def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False):
+    def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False, stopwords=frozenset()):
         """
         This function is only available when the optional 'pattern' package is installed.
 
@@ -810,7 +810,7 @@ if HAS_PATTERN:
         result = []
         for sentence in parsed:
             for token, tag, _, _, lemma in sentence:
-                if 2 <= len(lemma) <= 15 and not lemma.startswith('_'):
+                if 2 <= len(lemma) <= 15 and not lemma.startswith('_') and lemma not in stopwords:
                     if allowed_tags.match(tag):
                         lemma += "/" + tag[:2]
                         result.append(lemma.encode('utf8'))
