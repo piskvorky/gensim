@@ -170,7 +170,7 @@ def tokenize(content):
             if 2 <= len(token) <= 15 and not token.startswith('_')]
 
 
-def _get_namespace(tag):
+def get_namespace(tag):
     """Returns the namespace of tag."""
     m = re.match("^{(.*?)}", tag)
     namespace = m.group(1) if m else ""
@@ -178,9 +178,9 @@ def _get_namespace(tag):
         raise ValueError("%s not recognized as MediaWiki dump namespace"
                          % namespace)
     return namespace
+_get_namespace = get_namespace
 
-
-def _extract_pages(f, filter_namespaces=False):
+def extract_pages(f, filter_namespaces=False):
     """
     Extract pages from MediaWiki database dump.
 
@@ -196,7 +196,7 @@ def _extract_pages(f, filter_namespaces=False):
     # those from the first element we find, which will be part of the metadata,
     # and construct element paths.
     elem = next(elems)
-    namespace = _get_namespace(elem.tag)
+    namespace = get_namespace(elem.tag)
     ns_mapping = {"ns": namespace}
     page_tag = "{%(ns)s}page" % ns_mapping
     text_path = "./{%(ns)s}revision/{%(ns)s}text" % ns_mapping
@@ -224,7 +224,7 @@ def _extract_pages(f, filter_namespaces=False):
             # ./revision/text element. The pages comprise the bulk of the
             # file, so in practice we prune away enough.
             elem.clear()
-
+_extract_pages = extract_pages  # for backward compatibility
 
 def process_article(args):
     """
@@ -289,7 +289,7 @@ class WikiCorpus(TextCorpus):
         """
         articles, articles_all = 0, 0
         positions, positions_all = 0, 0
-        texts = ((text, self.lemmatize, title, pageid) for title, text, pageid in _extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces))
+        texts = ((text, self.lemmatize, title, pageid) for title, text, pageid in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces))
         pool = multiprocessing.Pool(self.processes)
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
         # is dumb and would load the entire input into RAM at once...
@@ -299,13 +299,14 @@ class WikiCorpus(TextCorpus):
                 articles_all += 1
                 positions_all += len(tokens)
                 # article redirects and short stubs are pruned here
-                if len(tokens) > ARTICLE_MIN_WORDS or any(title.startswith(ignore + ':') for ignore in ignore_namespaces):
-                    articles += 1
-                    positions += len(tokens)
-                    if self.metadata:
-                        yield (tokens, (pageid, title))
-                    else:
-                        yield tokens
+                if len(tokens) < ARTICLE_MIN_WORDS or any(title.startswith(ignore + ':') for ignore in ignore_namespaces):
+                    continue
+                articles += 1
+                positions += len(tokens)
+                if self.metadata:
+                    yield (tokens, (pageid, title))
+                else:
+                    yield tokens
         pool.terminate()
 
         logger.info("finished iterating over Wikipedia corpus of %i documents with %i positions"
