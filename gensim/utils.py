@@ -464,6 +464,24 @@ class RepeatCorpus(SaveLoad):
     def __iter__(self):
         return itertools.islice(itertools.cycle(self.corpus), self.reps)
 
+class ClippedCorpus(SaveLoad):
+    def __init__(self, corpus, max_docs=None):
+        """
+        Return a corpus that is the "head" of input iterable `corpus`.
+
+        Any documents after `max_docs` are ignored. This effectively limits the
+        length of the returned corpus to <= `max_docs`. Set `max_docs=None` for
+        "no limit", effectively wrapping the entire input corpus.
+
+        """
+        self.corpus = corpus
+        self.max_docs = max_docs
+
+    def __iter__(self):
+        return itertools.islice(self.corpus, self.max_docs)
+
+    def __len__(self):
+        return min(self.max_docs, len(self.corpus))
 
 def decode_htmlentities(text):
     """
