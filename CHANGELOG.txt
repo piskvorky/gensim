@@ -3,6 +3,7 @@ Changes
 
 0.10.1
 
+* word2vec: new n_similarity method for comparing two sets of words (François Scharffe, #219)
 * make LDA print/show topics parameters consistent with LSI (Bram Vandekerckhove, #201)
 * add option for efficient word2vec subsampling (Gordon Mohr, #206)
 * fix length calculation for corpora on empty files (Christopher Corley, #209)
