@@ -172,7 +172,9 @@ class LdaMallet(utils.SaveLoad):
         cmd = self.mallet_path + " infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s"
         cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations)
         logger.info("inferring topics with MALLET LDA '%s'" % cmd)
-        call(cmd, shell=True)
+        retval = call(cmd, shell=True)
+        if retval != 0:
+            raise RuntimeError("MALLET failed with error %s on return" % retval)
         result = list(read_doctopics(self.fdoctopics() + '.infer'))
         return result if is_corpus else result[0]
 

@@ -150,12 +150,13 @@ class TestDictionary(unittest.TestCase):
         tokens_once = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
         texts = [[word for word in text if word not in tokens_once]
                 for text in texts]
+
         dictionary = Dictionary(texts)
         corpus = [dictionary.doc2bow(text) for text in texts]
+
+        # Create dictionary from corpus without a token map
         dictionary_from_corpus = Dictionary.from_corpus(corpus)
 
-        #we have to compare values, because in creating dictionary from corpus
-        #informations about words are lost
         dict_token2id_vals = sorted(dictionary.token2id.values())
         dict_from_corpus_vals = sorted(dictionary_from_corpus.token2id.values())
         self.assertEqual(dict_token2id_vals, dict_from_corpus_vals)
@@ -163,6 +164,16 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(dictionary.num_docs, dictionary_from_corpus.num_docs)
         self.assertEqual(dictionary.num_pos, dictionary_from_corpus.num_pos)
         self.assertEqual(dictionary.num_nnz, dictionary_from_corpus.num_nnz)
+
+        # Create dictionary from corpus with an id=>token map
+        dictionary_from_corpus_2 = Dictionary.from_corpus(corpus, id2word=dictionary)
+
+        self.assertEqual(dictionary.token2id, dictionary_from_corpus_2.token2id)
+        self.assertEqual(dictionary.dfs, dictionary_from_corpus_2.dfs)
+        self.assertEqual(dictionary.num_docs, dictionary_from_corpus_2.num_docs)
+        self.assertEqual(dictionary.num_pos, dictionary_from_corpus_2.num_pos)
+        self.assertEqual(dictionary.num_nnz, dictionary_from_corpus_2.num_nnz)
+
 
     def test_dict_interface(self):
         """Test Python 2 dict-like interface in both Python 2 and 3."""

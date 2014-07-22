@@ -17,6 +17,7 @@ from gensim.corpora import LowCorpus
 
 logger = logging.getLogger('gensim.corpora.malletcorpus')
 
+
 class MalletCorpus(LowCorpus):
     """
     Quoting http://mallet.cs.umass.edu/import.php:
@@ -65,7 +66,6 @@ class MalletCorpus(LowCorpus):
         else:
             return doc
 
-
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, metadata=False):
         """
@@ -101,7 +101,7 @@ class MalletCorpus(LowCorpus):
                 for wordid, value in doc:
                     if abs(int(value) - value) > 1e-6:
                         truncated += 1
-                    words.extend([str(id2word[wordid])] * int(value))
+                    words.extend([utils.to_unicode(id2word[wordid])] * int(value))
                 offsets.append(fout.tell())
                 fout.write(utils.to_utf8('%s %s %s\n' % (doc_id, doc_lang, ' '.join(words))))
 
@@ -112,7 +112,6 @@ class MalletCorpus(LowCorpus):
 
         return offsets
 
-
     def docbyoffset(self, offset):
         """
         Return the document stored at file position `offset`.
@@ -120,3 +119,5 @@ class MalletCorpus(LowCorpus):
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())
+
+# endclass MalletCorpus

@@ -333,7 +333,7 @@ class LdaModel(interfaces.TransformationABC):
         If `collect_sstats` is True, also collect sufficient statistics needed
         to update the model's topic-word distributions, and return a 2-tuple
         `(gamma, sstats)`. Otherwise, return `(gamma, None)`. `gamma` is of shape
-        `len(chunk) x topics`.
+        `len(chunk) x self.num_topics`.
 
         """
         try:
@@ -650,12 +650,12 @@ class LdaModel(interfaces.TransformationABC):
         return score
 
 
-    def print_topics(self, topics=10, topn=10):
-        return self.show_topics(topics, topn, log=True)
+    def print_topics(self, num_topics=10, num_words=10):
+        return self.show_topics(num_topics, num_words, log=True)
 
-    def show_topics(self, topics=10, topn=10, log=False, formatted=True):
+    def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         """
-        For `topics` number of topics, return `topn` most significant words
+        For `num_topics` number of topics, return `num_words` most significant words
         (10 words per topic, by default).
 
         The topics are returned as a list -- a list of strings if `formatted` is
@@ -664,24 +664,24 @@ class LdaModel(interfaces.TransformationABC):
         If `log` is True, also output this result to log.
 
         Unlike LSA, there is no natural ordering between the topics in LDA.
-        The returned `topics <= self.num_topics` subset of all topics is therefore
+        The returned `num_topics <= self.num_topics` subset of all topics is therefore
         arbitrary and may change between two LDA training runs.
 
         """
-        if topics < 0 or topics >= self.num_topics:
-            topics = self.num_topics
-            chosen_topics = range(topics)
+        if num_topics < 0 or num_topics >= self.num_topics:
+            num_topics = self.num_topics
+            chosen_topics = range(num_topics)
         else:
-            topics = min(topics, self.num_topics)
+            num_topics = min(num_topics, self.num_topics)
             sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha)) # add a little random jitter, to randomize results around the same alpha
             sorted_topics = list(numpy.argsort(sort_alpha))
-            chosen_topics = sorted_topics[ : topics/2] + sorted_topics[-topics/2 : ]
+            chosen_topics = sorted_topics[:num_topics//2] + sorted_topics[-num_topics//2:]
         shown = []
         for i in chosen_topics:
             if formatted:
-                topic = self.print_topic(i, topn=topn)
+                topic = self.print_topic(i, topn=num_words)
             else:
-                topic = self.show_topic(i, topn=topn)
+                topic = self.show_topic(i, topn=num_words)
             shown.append(topic)
             if log:
                 logger.info("topic #%i (%.3f): %s" % (i, self.alpha[i], topic))

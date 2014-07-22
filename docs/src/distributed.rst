@@ -30,7 +30,7 @@ much communication going on), so the network is allowed to be of relatively high
 
   To see what BLAS and LAPACK you are using, type into your shell::
 
-    python -c 'import numpy; numpy.show_config()'
+    python -c 'import scipy; scipy.show_config()'
 
 Prerequisites
 -----------------

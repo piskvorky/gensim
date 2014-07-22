@@ -63,7 +63,6 @@ class TextCorpus(interfaces.CorpusABC):
             logger.warning("No input document stream provided; assuming "
                            "dictionary will be initialized some other way.")
 
-
     def __iter__(self):
         """
         The function that defines a corpus.
@@ -72,14 +71,12 @@ class TextCorpus(interfaces.CorpusABC):
         """
         for text in self.get_texts():
             if self.metadata:
-                yield (self.dictionary.doc2bow(text[0], allow_update=False), text[1])
+                yield self.dictionary.doc2bow(text[0], allow_update=False), text[1]
             else:
                 yield self.dictionary.doc2bow(text, allow_update=False)
 
-
     def getstream(self):
         return utils.file_or_filename(self.input)
-
 
     def get_texts(self):
         """
@@ -93,13 +90,16 @@ class TextCorpus(interfaces.CorpusABC):
         # Instead of raising NotImplementedError, let's provide a sample implementation:
         # assume documents are lines in a single file (one document per line).
         # Yield each document as a list of lowercase tokens, via `utils.tokenize`.
-        length = 0
+        lineno = -1
         with self.getstream() as lines:
             for lineno, line in enumerate(lines):
-                length += 1
-                yield utils.tokenize(line, lowercase=True)
-        self.length = length
-
+                if self.metadata:
+                    yield utils.tokenize(line, lowercase=True), (lineno,)
+                else:
+                    yield utils.tokenize(line, lowercase=True)
+            self.length = lineno + 1 # will be 0 if loop never executes
 
     def __len__(self):
-        return self.length # will throw if corpus not initialized
+        return self.length  # will throw if corpus not initialized
+
+# endclass TextCorpus

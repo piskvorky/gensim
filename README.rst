@@ -57,7 +57,14 @@ you'll need to run::
 For alternative modes of installation (without root privileges, development
 installation, optional install features), see the `documentation <http://radimrehurek.com/gensim/install.html>`_.
 
-This version has been tested under Python 2.6, 2.7 and 3.3.
+This version has been tested under Python 2.6, 2.7 and 3.3. Gensim's github repo is hooked to `Travis CI for automated testing <https://travis-ci.org/piskvorky/gensim>`_ on every commit push and pull request.
+
+How come gensim is so fast and memory efficient? Isn't it pure Python, and isn't Python slow and greedy?
+--------------------------------------------------------------------------------------------------------
+
+Many scientific algorithms can be expressed in terms of large matrix operations (see the BLAS note above). Gensim taps into these low-level BLAS libraries, by means of its dependency on NumPy. So while gensim-the-top-level-code is pure Python, it actually executes highly optimized Fortran/C under the hood, including multithreading (if your BLAS is so configured).
+
+Memory-wise, gensim makes heavy use of Python's built-in generators and iterators for streamed data processing. Memory efficiency was one of gensim's `design goals <http://radimrehurek.com/gensim/about.html>`_, and is a central feature of gensim, rather than something bolted on as an afterthought.
 
 Documentation
 -------------
@@ -69,4 +76,4 @@ It is also included in the source distribution package.
 ----------------
 
 Gensim is open source software released under the `GNU LGPL license <http://www.gnu.org/licenses/lgpl.html>`_.
-Copyright (c) 2009-2014 Radim Rehurek
+Copyright (c) 2009-now Radim Rehurek

@@ -466,13 +466,13 @@ class LsiModel(interfaces.TransformationABC):
     def show_topic(self, topicno, topn=10):
         """
         Return a specified topic (=left singular vector), 0 <= `topicno` < `self.num_topics`,
-        as string.
+        as a string.
 
         Return only the `topn` words which contribute the most to the direction
         of the topic (both negative and positive).
 
-        >>> lsimodel.print_topic(10, topn=5)
-        '-0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + -0.174 * "functor" + -0.168 * "operator"'
+        >>> lsimodel.show_topic(10, topn=5)
+        [(-0.340, "category"), (0.298, "$M$"), (0.183, "algebra"), (-0.174, "functor"), (-0.168, "operator")]
 
         """
         # size of the projection matrix can actually be smaller than `self.num_topics`,
@@ -486,6 +486,13 @@ class LsiModel(interfaces.TransformationABC):
         return [(1.0 * c[val] / norm, self.id2word[val]) for val in most]
 
     def print_topic(self, topicno, topn=10):
+        """
+        Return a single topic as a formatted string. See `show_topic()` for parameters.
+
+        >>> lsimodel.print_topic(10, topn=5)
+        '-0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + -0.174 * "functor" + -0.168 * "operator"'
+
+        """
         return ' + '.join(['%.3f*"%s"' % v for v in self.show_topic(topicno, topn)])
 
     def show_topics(self, num_topics=-1, num_words=10, log=False, formatted=True):
