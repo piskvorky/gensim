@@ -107,80 +107,80 @@ setup(
 
 # Here comes the setup for cythonized native addon-extension.
 
-try:
-    from Cython.Distutils import build_ext
-    import numpy
-    models_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
+# try:
+#     from Cython.Distutils import build_ext
+#     import numpy
+#     models_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
 
-    ext_modules = [
-        Extension('gensim_addons.models.word2vec_inner',
-        ['gensim_addons/models/word2vec_inner.pyx'],
-        include_dirs = [models_dir, numpy.get_include()])
-    ]
+#     ext_modules = [
+#         Extension('gensim_addons.models.word2vec_inner',
+#         ['gensim_addons/models/word2vec_inner.pyx'],
+#         include_dirs = [models_dir, numpy.get_include()])
+#     ]
 
-    native_ext = True
+#     native_ext = True
 
-except ImportError:
-    sys.stderr.write('''
-=========================================================
+# except ImportError:
+#     sys.stderr.write('''
+# =========================================================
 
-  Please install Cython (http://cython.org/), if you
-  want to use the highly optimized version of word2vec.
+#   Please install Cython (http://cython.org/), if you
+#   want to use the highly optimized version of word2vec.
 
-  Usually you can install it (optional) using:
+#   Usually you can install it (optional) using:
 
-  pip install -U cython
+#   pip install -U cython
 
-    or
+#     or
 
-  easy_install -U cython
+#   easy_install -U cython
 
-    or
+#     or
 
-  the package-management of your distribution.
+#   the package-management of your distribution.
 
-  If you install Cython *after* installing gensim, the
-  optimized version of word2vec will still be automatically
-  generated, on the first use of word2vec.
+#   If you install Cython *after* installing gensim, the
+#   optimized version of word2vec will still be automatically
+#   generated, on the first use of word2vec.
 
-=========================================================
-''')
+# =========================================================
+# ''')
 
-if native_ext:
+# if native_ext:
 
-    setup(
+#     setup(
 
-        name = pkg_name + '_addons',
-        version = pkg_ver,
-        description = pkg_desc,
-        long_description = read('README.rst'),
+#         name = pkg_name + '_addons',
+#         version = pkg_ver,
+#         description = pkg_desc,
+#         long_description = read('README.rst'),
 
-        packages = find_packages(exclude=[ pkg_name, pkg_name + '.*']),
+#         packages = find_packages(exclude=[ pkg_name, pkg_name + '.*']),
 
-        author = pkg_author,
-        author_email = pkg_author_email,
+#         author = pkg_author,
+#         author_email = pkg_author_email,
 
-        url = pkg_url,
-        download_url = pkg_download_url,
+#         url = pkg_url,
+#         download_url = pkg_download_url,
 
-        keywords = pkg_keywords,
+#         keywords = pkg_keywords,
 
-        license = pkg_license,
-        platforms = 'any',
+#         license = pkg_license,
+#         platforms = 'any',
 
-        zip_safe = False,
+#         zip_safe = False,
 
-        classifiers = pkg_classifiers,
+#         classifiers = pkg_classifiers,
 
-        install_requires = [
-            'gensim == ' + pkg_ver,
-        ],
+#         install_requires = [
+#             'gensim == ' + pkg_ver,
+#         ],
 
-        include_package_data = True,
+#         include_package_data = True,
 
-        cmdclass = {
-            'build_ext': build_ext
-        },
+#         cmdclass = {
+#             'build_ext': build_ext
+#         },
 
-        ext_modules = ext_modules,
-    )
+#         ext_modules = ext_modules,
+#     )

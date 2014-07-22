@@ -83,6 +83,7 @@ from six.moves import xrange
 
 
 try:
+    raise ImportError  # ignore for now
     from gensim_addons.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
 except ImportError:
     try:
