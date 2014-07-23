@@ -216,7 +216,7 @@ class LdaMallet(utils.SaveLoad):
             topics = min(topics, self.num_topics)
             sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha)) # add a little random jitter, to randomize results around the same alpha
             sorted_topics = list(numpy.argsort(sort_alpha))
-            chosen_topics = sorted_topics[ : topics/2] + sorted_topics[-topics/2 : ]
+            chosen_topics = sorted_topics[ : topics//2] + sorted_topics[-topics//2 : ]
         shown = []
         for i in chosen_topics:
             if formatted:
