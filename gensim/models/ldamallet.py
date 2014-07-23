@@ -139,7 +139,7 @@ class LdaMallet(utils.SaveLoad):
                 fout.write(utils.to_utf8("%s 0 %s\n" % (docno, ' '.join(tokens))))
 
         # convert the text file above into MALLET's internal format
-        cmd = self.mallet_path + " import-file --keep-sequence --remove-stopwords --token-regex '\S+' --input %s --output %s"
+        cmd = self.mallet_path + " import-file --preserve-case --keep-sequence --remove-stopwords --token-regex '\S+' --input %s --output %s"
         if infer:
             cmd += ' --use-pipe-from ' + self.fcorpusmallet()
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet() + '.infer')
