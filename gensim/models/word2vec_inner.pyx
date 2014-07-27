@@ -613,7 +613,7 @@ def train_sentence_sg(model, sentence, alpha, _work):
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
         table = <np.uint32_t *>(np.PyArray_DATA(model.table))
         table_len = len(model.table)
-        next_random = (2**24)*np.random.randint(0,2**24) + np.random.randint(0,2**24)
+        next_random = (2**24) * np.random.randint(0, 2**24) + np.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
@@ -694,7 +694,7 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
         table = <np.uint32_t *>(np.PyArray_DATA(model.table))
         table_len = len(model.table)
-        next_random = (2**24)*np.random.randint(0,2**24) + np.random.randint(0,2**24)
+        next_random = (2**24) * np.random.randint(0, 2**24) + np.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)

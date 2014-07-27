@@ -678,8 +678,8 @@ class Word2Vec(utils.SaveLoad):
 
         """
         return dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
-    
-    
+
+
     def n_similarity(self, ws1, ws2):
         """
         Compute cosine similarity between two sets of words.
@@ -691,7 +691,7 @@ class Word2Vec(utils.SaveLoad):
 
           >>> trained_model.n_similarity(['restaurant', 'japanese'], ['japanese', 'restaurant'])
           1.0000000000000004
-          
+
           >>> trained_model.n_similarity(['sushi'], ['restaurant']) == trained_model.similarity('sushi', 'restaurant')
           True
 
