@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.10.2
+
+* preserve case in MALLET wrapper (mcburton, #222)
+
 0.10.1
 
 * word2vec: new n_similarity method for comparing two sets of words (François Scharffe, #219)
