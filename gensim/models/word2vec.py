@@ -655,7 +655,7 @@ class Word2Vec(utils.SaveLoad):
         all_words = set()
 
         def word_vec(word):
-            if isinstance(word,ndarray):
+            if isinstance(word, ndarray):
                 return word
             elif word in self.vocab:
                 all_words.add(self.vocab[word].index)
@@ -670,9 +670,9 @@ class Word2Vec(utils.SaveLoad):
 
         # equation (4) of Levy & Goldberg "Linguistic Regularities...",
         # with distances shifted to [0,1] per footnote (7)
-        pos_dists = [((1+dot(self.syn0norm, term))/2) for term in positive]
-        neg_dists = [((1+dot(self.syn0norm, term))/2) for term in negative]
-        dists = prod(pos_dists,axis=0) / (prod(neg_dists,axis=0) + 0.000001)
+        pos_dists = [((1 + dot(self.syn0norm, term)) / 2) for term in positive]
+        neg_dists = [((1 + dot(self.syn0norm, term)) / 2) for term in negative]
+        dists = prod(pos_dists, axis=0) / (prod(neg_dists, axis=0) + 0.000001)
 
         if not topn:
             return dists
