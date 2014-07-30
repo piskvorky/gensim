@@ -83,6 +83,7 @@ setup(
     test_suite = "gensim.test",
 
     install_requires = [
+        'cython >= 0.20',
         'scipy >= 0.7.0',
         'six >= 1.2.0',
     ],
