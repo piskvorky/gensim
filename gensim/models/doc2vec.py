@@ -286,6 +286,7 @@ class DocSet(object):
     def __init__(self,
                  doc_folder,
                  pattern,
+                 incl_doc=False,
                  #doc_probability=0.0,
                  id_lookup_file=None,
                  separators=[],
@@ -302,23 +303,31 @@ class DocSet(object):
         self.doc_uid = 'DOC'
         self.doc_counter = 0
         self.counters = list(zeros(len(separators), dtype=int))
+        self.first_time_through_iter = True
+        self.incl_doc = incl_doc
 
     """
     returns an iterator of LabeledText elements.
     """
     def __iter__(self):
+        self.doc_counter = 0
+        self.counters = list(zeros(len(self.separators), dtype=int))
         for root, dirs, files in os.walk(self.doc_folder):
             for filename in fnmatch.filter(files, self.pattern):
 
-                key = self.doc_uid+'\000'+str(self.doc_counter)
-                self.doc_counter += 1
                 filepath = os.path.join(root, filename)
-                self.__write_id(key, filepath)
+                lbls = []
+                if self.incl_doc:
+                    key = self.doc_uid+'\000'+str(self.doc_counter)
+                    self.doc_counter += 1
+                    self.__write_id(key, filepath)
+                    lbls.append(key)
 
                 with open(filepath) as filehandle:
-                    filetext = LabeledText(text='\n'.join([line for line in filehandle]), labels=[key])
+                    filetext = LabeledText(text='\n'.join([line for line in filehandle]), labels=lbls)
                     for item in flatten(self.__split_iter(filetext)):
                         yield item
+        self.first_time_through_iter = False
 
     def __split_iter(self, labeled_text, level=0):
         if len(self.separators) > level:
@@ -331,12 +340,10 @@ class DocSet(object):
             return LabeledText(text=labeled_text.text.split(), labels=labeled_text.labels)
 
     def __write_id(self, key, value):
-        if self.id_lookup_file is not None:
-            with open(self.id_lookup_file, 'a') as out:
-                out.write(key+'\t'+' '.join(value.split())+'\n')
+        self.__write_ids([key], [value])
 
     def __write_ids(self, keys, values):
-        if self.id_lookup_file is not None:
+        if self.id_lookup_file is not None and self.first_time_through_iter:
             with open(self.id_lookup_file, 'a') as out:
                 for key, value in zip(keys, values):
                     out.write(key+'\t'+' '.join(value.split())+'\n')
@@ -591,9 +598,9 @@ class Doc2Vec(utils.SaveLoad):
                 # avoid calling random_sample() where prob >= 1, to speed things up a little:
                 sampled = [self.vocab[word] for word in sentence.text
                     if word in self.vocab and (self.vocab[word].sample_probability >= 1.0 or self.vocab[word].sample_probability >= random.random_sample())]
-                yield (sampled, [word for word in sentence.labels if word in self.vocab])
+                yield (sampled, [self.vocab[word] for word in sentence.labels if word in self.vocab])
 
-        # convert input strings to Vocab objects (eliding OOV/downsampled words), and start filling the jobs queue
+        # convert input strings to Vocab objects (sliding OOV/downsampled words), and start filling the jobs queue
         for job_no, job in enumerate(utils.grouper(prepare_sentences(), chunksize)):
             logger.debug("putting job #%i in the queue, qsize=%i" % (job_no, jobs.qsize()))
             jobs.put(job)

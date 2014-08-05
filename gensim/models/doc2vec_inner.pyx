@@ -746,6 +746,7 @@ def train_sentence_cbow(model, sentence, lbls, alpha, _work, _neu1):
     cdef np.uint32_t lbl_indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
     cdef int sentence_len
+    cdef int lbl_length
     cdef int window = model.window
 
     cdef int i, j, k
