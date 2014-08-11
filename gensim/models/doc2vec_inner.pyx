@@ -660,9 +660,12 @@ def train_sentence_sg(model, sentence, lbls, alpha, _work):
     cdef int size = model.layer1_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
+    cdef int lbl_codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t lbl_indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
     cdef int sentence_len
+    cdef int lbl_length
     cdef int window = model.window
 
     cdef int i, j, k
@@ -670,8 +673,8 @@ def train_sentence_sg(model, sentence, lbls, alpha, _work):
 
     # For hierarchical softmax
     cdef REAL_t *syn1
-    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
-    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t *lbl_points[MAX_SENTENCE_LEN]
+    cdef np.uint8_t *lbl_codes[MAX_SENTENCE_LEN]
 
     # For negative sampling
     cdef REAL_t *syn1neg
@@ -691,6 +694,7 @@ def train_sentence_sg(model, sentence, lbls, alpha, _work):
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
     sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
+    lbl_length = <int>min(MAX_SENTENCE_LEN, len(lbls))
 
     for i in range(sentence_len):
         word = sentence[i]
@@ -698,19 +702,33 @@ def train_sentence_sg(model, sentence, lbls, alpha, _work):
             codelens[i] = 0
         else:
             indexes[i] = word.index
+            # reduced_windows[i] = np.random.randint(window)
+            # if hs:
+                # codelens[i] = <int>len(word.code)
+                # codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                # points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+            # else:
+                # codelens[i] = 1
+            result += 1
+    for i in range(lbl_length):
+        word = lbls[i]
+        if word is None:
+            lbl_codelens[i] = 0
+        else:
+            lbl_indexes[i] = word.index
             reduced_windows[i] = np.random.randint(window)
             if hs:
-                codelens[i] = <int>len(word.code)
-                codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+                lbl_codelens[i] = <int>len(word.code)
+                lbl_codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                lbl_points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
             else:
-                codelens[i] = 1
+                lbl_codelens[i] = 1
             result += 1
 
     # release GIL & train on the sentence
     with nogil:
-        for i in range(sentence_len):
-            if codelens[i] == 0:
+        for i in range(lbl_length):
+            if lbl_codelens[i] == 0:
                 continue
             j = i - window + reduced_windows[i]
             if j < 0:
@@ -719,12 +737,12 @@ def train_sentence_sg(model, sentence, lbls, alpha, _work):
             if k > sentence_len:
                 k = sentence_len
             for j in range(j, k):
-                if j == i or codelens[j] == 0:
+                if codelens[j] == 0:
                     continue
                 if hs:
-                    fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work)
+                    fast_sentence_sg_hs(lbl_points[i], lbl_codes[i], lbl_codelens[i], syn0, syn1, size, indexes[j], _alpha, work)
                 if negative:
-                    next_random = fast_sentence_sg_neg(negative, table, table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random)
+                    next_random = fast_sentence_sg_neg(negative, table, table_len, syn0, syn1neg, size, lbl_indexes[i], indexes[j], _alpha, work, next_random)
 
     return result
 
@@ -804,8 +822,6 @@ def train_sentence_cbow(model, sentence, lbls, alpha, _work, _neu1):
             reduced_windows[i] = np.random.randint(window)
             if hs:
                 lbl_codelens[i] = <int>len(word.code)
-                lbl_codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                lbl_points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
             else:
                 lbl_codelens[i] = 1
             result += 1
