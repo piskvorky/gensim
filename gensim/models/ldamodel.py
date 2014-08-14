@@ -341,6 +341,9 @@ class LdaModel(interfaces.TransformationABC):
         to update the model's topic-word distributions, and return a 2-tuple
         `(gamma, sstats)`. Otherwise, return `(gamma, None)`. `gamma` is of shape
         `len(chunk) x self.num_topics`.
+        
+        Avoids computing the `phi` variational parameter directly using the
+        optimization presented in **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
 
         """
         try:
@@ -429,7 +432,7 @@ class LdaModel(interfaces.TransformationABC):
         Update parameters for the Dirichlet prior on the per-document
         topic weights `alpha` given the last `gammat`.
 
-        Uses Newton's method: http://www.stanford.edu/~jhuang11/research/dirichlet/dirichlet.pdf
+        Uses Newton's method, described in **Huang: Maximum Likelihood Estimation of Dirichlet Distribution Parameters.** (http://www.stanford.edu/~jhuang11/research/dirichlet/dirichlet.pdf)
 
         """
         N = float(len(gammat))
