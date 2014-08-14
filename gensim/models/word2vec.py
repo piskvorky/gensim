@@ -92,7 +92,7 @@ except ImportError:
         import pyximport
         models_dir = os.path.dirname(__file__) or os.getcwd()
         pyximport.install(setup_args={"include_dirs": [models_dir, get_include()]})
-        from word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
+        from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
     except:
         # failed... fall back to plain numpy (20-80x slower training than the above)
         FAST_VERSION = -1
@@ -627,16 +627,16 @@ class Word2Vec(utils.SaveLoad):
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         """
-        Find the top-N most similar words, using the multiplicative combination objective 
-        proposed by Omer Levy and Yoav Goldberg in [1]_. Positive words still contribute 
-        positively towards the similarity, negative words negatively, but with less 
+        Find the top-N most similar words, using the multiplicative combination objective
+        proposed by Omer Levy and Yoav Goldberg in [1]_. Positive words still contribute
+        positively towards the similarity, negative words negatively, but with less
         susceptibility to one large distance dominating the calculation.
 
-        In the common analogy-solving case, of two positive and one negative examples, 
+        In the common analogy-solving case, of two positive and one negative examples,
         this method is equivalent to the "3CosMul" objective (equation (4)) of Levy and Goldberg.
 
         Additional positive or negative examples contribute to the numerator or denominator,
-        respectively – a potentially sensible but untested extension of the method. (With 
+        respectively – a potentially sensible but untested extension of the method. (With
         a single positive example, rankings will be the same as in the default most_similar.)
 
         Example::
