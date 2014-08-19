@@ -45,19 +45,19 @@ It is also recommended you install a fast BLAS library before installing NumPy. 
 
 The simple way to install `gensim` is::
 
-    sudo easy_install gensim
+    pip install -U gensim
 
 Or, if you have instead downloaded and unzipped the `source tar.gz <http://pypi.python.org/pypi/gensim>`_ package,
 you'll need to run::
 
     python setup.py test
-    sudo python setup.py install
+    python setup.py install
 
 
 For alternative modes of installation (without root privileges, development
 installation, optional install features), see the `documentation <http://radimrehurek.com/gensim/install.html>`_.
 
-This version has been tested under Python 2.6, 2.7 and 3.3. Gensim's github repo is hooked to `Travis CI for automated testing <https://travis-ci.org/piskvorky/gensim>`_ on every commit push and pull request.
+This version has been tested under Python 2.6, 2.7, 3.3 and 3.4 (support for Python 2.5 was dropped in gensim 0.10.0; install gensim 0.9.1 if you *must* use Python 2.5). Gensim's github repo is hooked to `Travis CI for automated testing <https://travis-ci.org/piskvorky/gensim>`_ on every commit push and pull request.
 
 How come gensim is so fast and memory efficient? Isn't it pure Python, and isn't Python slow and greedy?
 --------------------------------------------------------------------------------------------------------
