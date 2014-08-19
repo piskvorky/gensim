@@ -182,7 +182,7 @@ class LdaModel(interfaces.TransformationABC):
     """
     def __init__(self, corpus=None, num_topics=100, id2word=None, distributed=False,
                  chunksize=2000, passes=1, update_every=1, alpha='symmetric', eta=None, decay=0.5,
-                 eval_every=10, iterations=50, gamma_threshold=0.001):
+                 eval_every=10, iterations=50, gamma_threshold=0.001, given_topics=None):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -306,6 +306,12 @@ class LdaModel(interfaces.TransformationABC):
         # Initialize the variational distribution q(beta|lambda)
         self.state = LdaState(self.eta, (self.num_topics, self.num_terms))
         self.state.sstats = numpy.random.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
+
+        if given_topics is not None:
+            for idx, topic in enumerate(given_topics):
+                for pos, count in id2word.doc2bow(topic):
+                    self.state.sstats[idx, pos] += count
+
         self.sync_state()
 
         # if a training corpus was provided, start estimating the model right away
