@@ -337,7 +337,7 @@ class DocSet(object):
             labels = map(lambda x: labeled_text.labels + [x], new_labels)
             return [self.__split_iter(LabeledText(txt, lbl), level+1) for txt, lbl in zip(texts, labels)]
         else:
-            return LabeledText(text=labeled_text.text.split(), labels=labeled_text.labels)
+            return [LabeledText(text=labeled_text.text.split(), labels=labeled_text.labels)]
 
     def __write_id(self, key, value):
         self.__write_ids([key], [value])
