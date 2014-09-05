@@ -5,7 +5,7 @@ Changes
 
 * preserve case in MALLET wrapper (mcburton, #222)
 
-0.10.1
+0.10.1, 22/07/2014
 
 * word2vec: new n_similarity method for comparing two sets of words (François Scharffe, #219)
 * make LDA print/show topics parameters consistent with LSI (Bram Vandekerckhove, #201)
