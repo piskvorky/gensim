@@ -417,6 +417,9 @@ class LsiModel(interfaces.TransformationABC):
         Return latent representation, as a list of (topic_id, topic_value) 2-tuples.
 
         This is done by folding input document into the latent topic space.
+
+        If `scaled` is set, scale topics by the inverse of singular values (default: no scaling).
+
         """
         assert self.projection.u is not None, "decomposition not initialized yet"
 
@@ -449,6 +452,10 @@ class LsiModel(interfaces.TransformationABC):
         #     indices, data = zip(*vec) if vec else ([], [])
         #     topic_dist[:, vecno] = numpy.dot(u.take(indices, axis=0).T, numpy.array(data, dtype=u.dtype))
 
+        if not is_corpus:
+            # convert back from matrix into a 1d vec
+            topic_dist = topic_dist.reshape(-1)
+
         if scaled:
             topic_dist = (1.0 / self.projection.s[:self.num_topics]) * topic_dist # s^-1 * u^-1 * x
 
@@ -456,7 +463,7 @@ class LsiModel(interfaces.TransformationABC):
         # with no zero weights.
         if not is_corpus:
             # lsi[single_document]
-            result = matutils.full2sparse(topic_dist.flat)
+            result = matutils.full2sparse(topic_dist)
         else:
             # lsi[chunk of documents]
             result = matutils.Dense2Corpus(topic_dist)

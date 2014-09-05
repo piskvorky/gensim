@@ -198,10 +198,17 @@ class LdaModel(interfaces.TransformationABC):
         (theta) and topic-word (lambda) distributions. Both default to a symmetric
         1.0/num_topics prior.
 
-        `alpha` can be also set to an explicit array = prior of your choice. It also
+        `alpha` can be set to an explicit array = prior of your choice. It also
         support special values of 'asymmetric' and 'auto': the former uses a fixed
         normalized asymmetric 1.0/topicno prior, the latter learns an asymmetric
         prior directly from your data.
+
+        `eta' can be a scalar for a symmetric prior over topic/word
+        distributions, or a matrix of shape num_topics x num_words,
+        which can be used to impose asymmetric priors over the word
+        distribution on a per-topic basis. This may be useful if you
+        want to seed certain topics with particular words by boosting
+        the priors for those words.
 
         Turn on `distributed` to force distributed computing (see the `web tutorial <http://radimrehurek.com/gensim/distributed.html>`_
         on how to set up a cluster of machines for gensim).
@@ -334,6 +341,9 @@ class LdaModel(interfaces.TransformationABC):
         to update the model's topic-word distributions, and return a 2-tuple
         `(gamma, sstats)`. Otherwise, return `(gamma, None)`. `gamma` is of shape
         `len(chunk) x self.num_topics`.
+        
+        Avoids computing the `phi` variational parameter directly using the
+        optimization presented in **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
 
         """
         try:
@@ -422,7 +432,7 @@ class LdaModel(interfaces.TransformationABC):
         Update parameters for the Dirichlet prior on the per-document
         topic weights `alpha` given the last `gammat`.
 
-        Uses Newton's method: http://www.stanford.edu/~jhuang11/research/dirichlet/dirichlet.pdf
+        Uses Newton's method, described in **Huang: Maximum Likelihood Estimation of Dirichlet Distribution Parameters.** (http://www.stanford.edu/~jhuang11/research/dirichlet/dirichlet.pdf)
 
         """
         N = float(len(gammat))
@@ -646,7 +656,13 @@ class LdaModel(interfaces.TransformationABC):
         # E[log p(beta | eta) - log q (beta | lambda)]; assumes eta is a scalar
         score += numpy.sum((self.eta - _lambda) * Elogbeta)
         score += numpy.sum(gammaln(_lambda) - gammaln(self.eta))
-        score += numpy.sum(gammaln(self.eta * self.num_terms) - gammaln(numpy.sum(_lambda, 1)))
+
+        if numpy.ndim(self.eta) == 0:
+            sum_eta = self.eta * self.num_terms
+        else:
+            sum_eta = numpy.sum(self.eta, 1)
+
+        score += numpy.sum(gammaln(sum_eta) - gammaln(numpy.sum(_lambda, 1)))
         return score
 
 

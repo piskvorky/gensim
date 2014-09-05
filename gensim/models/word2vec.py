@@ -72,7 +72,8 @@ except ImportError:
     from Queue import Queue
 
 from numpy import exp, dot, zeros, outer, random, dtype, get_include, float32 as REAL,\
-    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis, ndarray, empty, sum as np_sum
+    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis, ndarray, empty, sum as np_sum,\
+    prod
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -91,7 +92,7 @@ except ImportError:
         import pyximport
         models_dir = os.path.dirname(__file__) or os.getcwd()
         pyximport.install(setup_args={"include_dirs": [models_dir, get_include()]})
-        from word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
+        from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
     except:
         # failed... fall back to plain numpy (20-80x slower training than the above)
         FAST_VERSION = -1
@@ -624,6 +625,62 @@ class Word2Vec(utils.SaveLoad):
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
+    def most_similar_cosmul(self, positive=[], negative=[], topn=10):
+        """
+        Find the top-N most similar words, using the multiplicative combination objective
+        proposed by Omer Levy and Yoav Goldberg in [1]_. Positive words still contribute
+        positively towards the similarity, negative words negatively, but with less
+        susceptibility to one large distance dominating the calculation.
+
+        In the common analogy-solving case, of two positive and one negative examples,
+        this method is equivalent to the "3CosMul" objective (equation (4)) of Levy and Goldberg.
+
+        Additional positive or negative examples contribute to the numerator or denominator,
+        respectively – a potentially sensible but untested extension of the method. (With
+        a single positive example, rankings will be the same as in the default most_similar.)
+
+        Example::
+
+          >>> trained_model.most_similar_cosmul(positive=['baghdad','england'],negative=['london'])
+          [(u'iraq', 0.8488819003105164), ...]
+
+        .. [1] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
+        """
+        self.init_sims()
+
+        if isinstance(positive, string_types) and not negative:
+            # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
+            positive = [positive]
+
+        all_words = set()
+
+        def word_vec(word):
+            if isinstance(word, ndarray):
+                return word
+            elif word in self.vocab:
+                all_words.add(self.vocab[word].index)
+                return self.syn0norm[self.vocab[word].index]
+            else:
+                raise KeyError("word '%s' not in vocabulary" % word)
+
+        positive = [word_vec(word) for word in positive]
+        negative = [word_vec(word) for word in negative]
+        if not positive:
+            raise ValueError("cannot compute similarity with no input")
+
+        # equation (4) of Levy & Goldberg "Linguistic Regularities...",
+        # with distances shifted to [0,1] per footnote (7)
+        pos_dists = [((1 + dot(self.syn0norm, term)) / 2) for term in positive]
+        neg_dists = [((1 + dot(self.syn0norm, term)) / 2) for term in negative]
+        dists = prod(pos_dists, axis=0) / (prod(neg_dists, axis=0) + 0.000001)
+
+        if not topn:
+            return dists
+        best = argsort(dists)[::-1][:topn + len(all_words)]
+        # ignore (don't return) words from the input
+        result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
+        return result[:topn]
+
 
     def doesnt_match(self, words):
         """
@@ -724,7 +781,7 @@ class Word2Vec(utils.SaveLoad):
                 self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
 
-    def accuracy(self, questions, restrict_vocab=30000):
+    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
@@ -774,7 +831,7 @@ class Word2Vec(utils.SaveLoad):
                 ignore = set(self.vocab[v].index for v in [a, b, c])  # indexes of words to ignore
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
-                for index in argsort(self.most_similar(positive=[b, c], negative=[a], topn=False))[::-1]:
+                for index in argsort(most_similar(self,positive=[b, c], negative=[a], topn=False))[::-1]:
                     if index in ok_index and index not in ignore:
                         predicted = self.index2word[index]
                         if predicted != expected:
