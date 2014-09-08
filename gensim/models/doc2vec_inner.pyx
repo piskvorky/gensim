@@ -31,24 +31,24 @@ ctypedef double (*dsdot_ptr) (const int *N, const float *X, const int *incX, con
 ctypedef double (*snrm2_ptr) (const int *N, const float *X, const int *incX) nogil
 ctypedef void (*sscal_ptr) (const int *N, const float *alpha, const float *X, const int *incX) nogil
 
-ctypedef void (*fast_sentence_sg_hs_ptr) (
+ctypedef void (*fast_sentence_dbow_hs_ptr) (
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work) nogil
 
-ctypedef unsigned long long (*fast_sentence_sg_neg_ptr) (
+ctypedef unsigned long long (*fast_sentence_dbow_neg_ptr) (
     const int negative, np.uint32_t *table, unsigned long long table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random) nogil
 
-ctypedef void (*fast_sentence_cbow_hs_ptr) (
+ctypedef void (*fast_sentence_dm_hs_ptr) (
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], const REAL_t alpha, 
     REAL_t *work, int i, int j, int k, int cbow_mean, int lbl_length) nogil
 
-ctypedef unsigned long long (*fast_sentence_cbow_neg_ptr) (
+ctypedef unsigned long long (*fast_sentence_dm_neg_ptr) (
     const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN], 
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
@@ -60,10 +60,10 @@ cdef sdot_ptr sdot=<sdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # float 
 cdef dsdot_ptr dsdot=<dsdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # double = dot(x, y)
 cdef snrm2_ptr snrm2=<snrm2_ptr>PyCObject_AsVoidPtr(fblas.snrm2._cpointer)  # sqrt(x^2)
 cdef sscal_ptr sscal=<sscal_ptr>PyCObject_AsVoidPtr(fblas.sscal._cpointer) # x = alpha * x
-cdef fast_sentence_sg_hs_ptr fast_sentence_sg_hs
-cdef fast_sentence_sg_neg_ptr fast_sentence_sg_neg
-cdef fast_sentence_cbow_hs_ptr fast_sentence_cbow_hs
-cdef fast_sentence_cbow_neg_ptr fast_sentence_cbow_neg
+cdef fast_sentence_dbow_hs_ptr fast_sentence_dbow_hs
+cdef fast_sentence_dbow_neg_ptr fast_sentence_dbow_neg
+cdef fast_sentence_dm_hs_ptr fast_sentence_dm_hs
+cdef fast_sentence_dm_neg_ptr fast_sentence_dm_neg
 
 DEF EXP_TABLE_SIZE = 1000
 DEF MAX_EXP = 6
@@ -73,7 +73,7 @@ cdef REAL_t[EXP_TABLE_SIZE] EXP_TABLE
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
-cdef void fast_sentence0_sg_hs(
+cdef void fast_sentence0_dbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work) nogil:
@@ -95,7 +95,7 @@ cdef void fast_sentence0_sg_hs(
     saxpy(&size, &ONEF, work, &ONE, &syn0[row1], &ONE)
 
 
-cdef void fast_sentence1_sg_hs(
+cdef void fast_sentence1_dbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work) nogil:
@@ -117,7 +117,7 @@ cdef void fast_sentence1_sg_hs(
     saxpy(&size, &ONEF, work, &ONE, &syn0[row1], &ONE)
 
 
-cdef void fast_sentence2_sg_hs(
+cdef void fast_sentence2_dbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work) nogil:
@@ -145,7 +145,7 @@ cdef void fast_sentence2_sg_hs(
         syn0[row1 + a] += work[a]
 
 
-cdef unsigned long long fast_sentence0_sg_neg(
+cdef unsigned long long fast_sentence0_dbow_neg(
     const int negative, np.uint32_t *table, unsigned long long table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
@@ -184,7 +184,7 @@ cdef unsigned long long fast_sentence0_sg_neg(
 
     return next_random
 
-cdef unsigned long long fast_sentence1_sg_neg(
+cdef unsigned long long fast_sentence1_dbow_neg(
     const int negative, np.uint32_t *table, unsigned long long table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
@@ -224,7 +224,7 @@ cdef unsigned long long fast_sentence1_sg_neg(
 
     return next_random
 
-cdef unsigned long long fast_sentence2_sg_neg(
+cdef unsigned long long fast_sentence2_dbow_neg(
     const int negative, np.uint32_t *table, unsigned long long table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
@@ -270,7 +270,7 @@ cdef unsigned long long fast_sentence2_sg_neg(
 
     return next_random
 
-cdef void fast_sentence0_cbow_hs(
+cdef void fast_sentence0_dm_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN], 
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], 
@@ -322,7 +322,7 @@ cdef void fast_sentence0_cbow_hs(
         else:
             saxpy(&size, &ONEF, work, &ONE, &syn0[lbl_indexes[m]*size], &ONE)
 
-cdef void fast_sentence1_cbow_hs(
+cdef void fast_sentence1_dm_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN], 
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], 
@@ -374,7 +374,7 @@ cdef void fast_sentence1_cbow_hs(
         else:
             saxpy(&size, &ONEF, work, &ONE, &syn0[lbl_indexes[m]*size], &ONE)
 
-cdef void fast_sentence2_cbow_hs(
+cdef void fast_sentence2_dm_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN], 
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], 
@@ -436,7 +436,7 @@ cdef void fast_sentence2_cbow_hs(
             for a in range(size):
                 syn0[lbl_indexes[m] * size + a] += work[a]
 
-cdef unsigned long long fast_sentence0_cbow_neg(
+cdef unsigned long long fast_sentence0_dm_neg(
     const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN], 
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
@@ -504,7 +504,7 @@ cdef unsigned long long fast_sentence0_cbow_neg(
 
     return next_random
 
-cdef unsigned long long fast_sentence1_cbow_neg(
+cdef unsigned long long fast_sentence1_dm_neg(
     const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN], 
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
@@ -572,7 +572,7 @@ cdef unsigned long long fast_sentence1_cbow_neg(
 
     return next_random
 
-cdef unsigned long long fast_sentence2_cbow_neg(
+cdef unsigned long long fast_sentence2_dm_neg(
     const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN], 
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
@@ -650,7 +650,7 @@ cdef unsigned long long fast_sentence2_cbow_neg(
 
     return next_random
 
-def train_sentence_sg(model, sentence, lbls, alpha, _work):
+def train_sentence_dbow(model, sentence, lbls, alpha, _work):
     cdef int hs = model.hs
     cdef int negative = model.negative
 
@@ -740,14 +740,14 @@ def train_sentence_sg(model, sentence, lbls, alpha, _work):
                 if codelens[j] == 0:
                     continue
                 if hs:
-                    fast_sentence_sg_hs(lbl_points[i], lbl_codes[i], lbl_codelens[i], syn0, syn1, size, indexes[j], _alpha, work)
+                    fast_sentence_dbow_hs(lbl_points[i], lbl_codes[i], lbl_codelens[i], syn0, syn1, size, indexes[j], _alpha, work)
                 if negative:
-                    next_random = fast_sentence_sg_neg(negative, table, table_len, syn0, syn1neg, size, lbl_indexes[i], indexes[j], _alpha, work, next_random)
+                    next_random = fast_sentence_dbow_neg(negative, table, table_len, syn0, syn1neg, size, lbl_indexes[i], indexes[j], _alpha, work, next_random)
 
     return result
 
 
-def train_sentence_cbow(model, sentence, lbls, alpha, _work, _neu1):
+def train_sentence_dm(model, sentence, lbls, alpha, _work, _neu1):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int cbow_mean = model.cbow_mean
@@ -838,9 +838,9 @@ def train_sentence_cbow(model, sentence, lbls, alpha, _work, _neu1):
             if k > sentence_len:
                 k = sentence_len
             if hs:
-                fast_sentence_cbow_hs(points[i], codes[i], codelens, lbl_codelens, neu1, syn0, syn1, size, indexes, lbl_indexes, _alpha, work, i, j, k, cbow_mean, lbl_length)
+                fast_sentence_dm_hs(points[i], codes[i], codelens, lbl_codelens, neu1, syn0, syn1, size, indexes, lbl_indexes, _alpha, work, i, j, k, cbow_mean, lbl_length)
             if negative:
-                next_random = fast_sentence_cbow_neg(negative, table, table_len, codelens, lbl_codelens, neu1, syn0, syn1neg, size, indexes, lbl_indexes, _alpha, work, i, j, k, cbow_mean, next_random, lbl_length)
+                next_random = fast_sentence_dm_neg(negative, table, table_len, codelens, lbl_codelens, neu1, syn0, syn1neg, size, indexes, lbl_indexes, _alpha, work, i, j, k, cbow_mean, next_random, lbl_length)
 
     return result
 
@@ -851,10 +851,10 @@ def init():
     into table EXP_TABLE.
 
     """
-    global fast_sentence_sg_hs
-    global fast_sentence_sg_neg
-    global fast_sentence_cbow_hs
-    global fast_sentence_cbow_neg
+    global fast_sentence_dbow_hs
+    global fast_sentence_dbow_neg
+    global fast_sentence_dm_hs
+    global fast_sentence_dm_neg
 
     cdef int i
     cdef float *x = [<float>10.0]
@@ -873,24 +873,24 @@ def init():
     d_res = dsdot(&size, x, &ONE, y, &ONE)
     p_res = <float *>&d_res
     if (abs(d_res - expected) < 0.0001):
-        fast_sentence_sg_hs = fast_sentence0_sg_hs
-        fast_sentence_sg_neg = fast_sentence0_sg_neg
-        fast_sentence_cbow_hs = fast_sentence0_cbow_hs
-        fast_sentence_cbow_neg = fast_sentence0_cbow_neg
+        fast_sentence_dbow_hs = fast_sentence0_dbow_hs
+        fast_sentence_dbow_neg = fast_sentence0_dbow_neg
+        fast_sentence_dm_hs = fast_sentence0_dm_hs
+        fast_sentence_dm_neg = fast_sentence0_dm_neg
         return 0  # double
     elif (abs(p_res[0] - expected) < 0.0001):
-        fast_sentence_sg_hs = fast_sentence1_sg_hs
-        fast_sentence_sg_neg = fast_sentence1_sg_neg
-        fast_sentence_cbow_hs = fast_sentence1_cbow_hs
-        fast_sentence_cbow_neg = fast_sentence1_cbow_neg
+        fast_sentence_dbow_hs = fast_sentence1_dbow_hs
+        fast_sentence_dbow_neg = fast_sentence1_dbow_neg
+        fast_sentence_dm_hs = fast_sentence1_dm_hs
+        fast_sentence_dm_neg = fast_sentence1_dm_neg
         return 1  # float
     else:
         # neither => use cython loops, no BLAS
         # actually, the BLAS is so messed up we'll probably have segfaulted above and never even reach here
-        fast_sentence_sg_hs = fast_sentence2_sg_hs
-        fast_sentence_sg_neg = fast_sentence2_sg_neg
-        fast_sentence_cbow_hs = fast_sentence2_cbow_hs
-        fast_sentence_cbow_neg = fast_sentence2_cbow_neg
+        fast_sentence_dbow_hs = fast_sentence2_dbow_hs
+        fast_sentence_dbow_neg = fast_sentence2_dbow_neg
+        fast_sentence_dm_hs = fast_sentence2_dm_hs
+        fast_sentence_dm_neg = fast_sentence2_dm_neg
         return 2
 
 FAST_VERSION = init()  # initialize the module
