@@ -20,33 +20,10 @@ Persist a model to disk with::
 >>> model.save(fname)
 >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
-The model can also be instantiated from an existing file on disk in the doc2vec C format::
+The model can also be instantiated from an existing file on disk in the word2vec C format::
 
-  >>> model = Doc2Vec.load_doc2vec_format('/tmp/vectors.txt', binary=False)  # C text format
-  >>> model = Doc2Vec.load_doc2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
-
-You can perform various syntactic/semantic NLP word tasks with the model. Some of them
-are already built-in::
-
-  >>> model.most_similar(positive=['woman', 'king'], negative=['man'])
-  [('queen', 0.50882536), ...]
-
-  >>> model.doesnt_match("breakfast cereal dinner lunch".split())
-  'cereal'
-
-  >>> model.similarity('woman', 'man')
-  0.73723527
-
-  >>> model['computer']  # raw numpy vector of a word
-  array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
-
-and so on.
-
-If you're finished training a model (=no more updates, only querying), you can do
-
-  >>> model.init_sims(replace=True)
-
-to trim unneeded model memory = use (much) less RAM.
+  >>> model = Doc2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
+  >>> model = Doc2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
 
 .. [1] Quoc Le and Tomas Mikolov. Distributed Representations of Sentences and Documents. http://arxiv.org/pdf/1405.4053v2.pdf
 .. [2] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
@@ -57,7 +34,6 @@ to trim unneeded model memory = use (much) less RAM.
 """
 
 import logging
-import sys
 import os
 
 try:
@@ -65,13 +41,11 @@ try:
 except ImportError:
     from Queue import Queue
 
-from numpy import zeros, random, dtype, get_include, float32 as REAL, \
-    seterr, fromstring, empty, sum as np_sum
+from numpy import zeros, random, get_include, sum as np_sum
 
 logger = logging.getLogger("gensim.models.doc2vec")
 
 from gensim import utils  # utility fnc for pickling, common scipy operations etc
-from six.moves import xrange
 from word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair
 
 
@@ -164,16 +138,10 @@ class LabeledText(object):
 
 
 class Doc2Vec(Word2Vec):
-    """
-    Class for training, using and evaluating neural networks described in https://code.google.com/p/doc2vec/
-
-    The model can be stored/loaded via its `save()` and `load()` methods, or stored/loaded in a format
-    compatible with the original doc2vec implementation via `save_doc2vec_format()` and `load_doc2vec_format()`.
-
-    """
+    """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
     def __init__(self, sentences=None, size=300, alpha=0.025, window=8, min_count=5,
                  sample=0, seed=1, workers=1, min_alpha=0.0001, dm=1, hs=1, negative=0,
-                 dm_mean=0, initial=None):
+                 dm_mean=0):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of LabeledText objects that will be used for training.
@@ -203,7 +171,6 @@ class Doc2Vec(Word2Vec):
         Word2Vec.__init__(self, size=size, alpha=alpha, window=window, min_count=min_count,
                           sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
                           sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean)
-        self.initial = initial
         if sentences is not None:
             self.build_vocab(sentences)
             self.train(sentences)
@@ -247,115 +214,6 @@ class Doc2Vec(Word2Vec):
         else:
             return sum(train_sentence_dm(self, sentence, lbls, alpha, work, neu1) for sentence, lbls in job)
 
-    def reset_weights(self):
-        """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
-        logger.info("resetting layer weights")
-        random.seed(self.seed)
-        self.syn0 = empty((len(self.vocab), self.layer1_size), dtype=REAL)
-        # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
-        for i in xrange(len(self.vocab)):
-            self.syn0[i] = (random.rand(self.layer1_size) - 0.5) / self.layer1_size
-        if self.initial is not None:
-            _, _, stream = self.load_word2vec_stream(self.initial, None)
-            i = 0
-            for _, word, _, weights in stream():
-                if word.lower() in self.vocab:
-                    i += 1
-                    self.syn0[self.vocab[word.lower()].index] = weights
-            logger.info("initialized %d weights from %s" % (i, self.initial))
-        if self.hs:
-            self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
-        if self.negative:
-            self.syn1neg = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
-        self.syn0norm = None
-
-    @classmethod
-    def load_word2vec_stream(cls, fname, counts, binary=True):
-        logger.info("loading projection weights from %s" % (fname))
-        with utils.smart_open(fname) as fin:
-            header = utils.to_unicode(fin.readline())
-            vocab_size, layer1_size = map(int, header.split())  # throws for invalid file format
-
-        def stream():
-            with utils.smart_open(fname) as fin:
-                header = utils.to_unicode(fin.readline())
-                vocab_size, layer1_size = map(int, header.split())  # throws for invalid file format
-                if binary:
-                    binary_len = dtype(REAL).itemsize * layer1_size
-                    for line_no in xrange(vocab_size):
-                        # mixed text and binary: read text first, then binary
-                        word = []
-                        while True:
-                            ch = fin.read(1)
-                            if ch == b' ':
-                                break
-                            if ch != b'\n':  # ignore newlines in front of words (some binary files have newline, some don't)
-                                word.append(ch)
-                        word = utils.to_unicode(b''.join(word))
-                        if counts is None:
-                            vocab = Vocab(index=line_no, count=vocab_size - line_no)
-                        elif word in counts:
-                            vocab = Vocab(index=line_no, count=counts[word])
-                        else:
-                            logger.warning("vocabulary file is incomplete")
-                            vocab = Vocab(index=line_no, count=None)
-                        yield(line_no, word, vocab, fromstring(fin.read(binary_len), dtype=REAL))
-                else:
-                    for line_no, line in enumerate(fin):
-                        parts = utils.to_unicode(line).split()
-                        if len(parts) != layer1_size + 1:
-                            raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
-                        word, weights = parts[0], map(REAL, parts[1:])
-                        if counts is None:
-                            vocab = Vocab(index=line_no, count=vocab_size - line_no)
-                        elif word in counts:
-                            vocab = Vocab(index=line_no, count=counts[word])
-                        else:
-                            logger.warning("vocabulary file is incomplete")
-                            vocab = Vocab(index=line_no, count=None)
-                        yield(line_no, word, vocab, weights)
-        return vocab_size, layer1_size, stream
-
-    @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, norm_only=True):
-        """
-        Load the input-hidden weight matrix from the original C word2vec-tool format.
-
-        Note that the information stored in the file is incomplete (the binary tree is missing),
-        so while you can query for word similarity etc., you cannot continue training
-        with a model loaded this way.
-
-        `binary` is a boolean indicating whether the data is in binary doc2vec format.
-        `norm_only` is a boolean indicating whether to only store normalised doc2vec vectors in memory.
-        Word counts are read from `fvocab` filename, if set (this is the file generated
-        by `-save-vocab` flag of the original C tool).
-        """
-        counts = None
-        if fvocab is not None:
-            logger.info("loading word counts from %s" % (fvocab))
-            counts = {}
-            with utils.smart_open(fvocab) as fin:
-                for line in fin:
-                    word, count = utils.to_unicode(line).strip().split()
-                    counts[word] = int(count)
-    
-        vocab_size, layer1_size, stream = cls.load_word2vec_stream(fname, counts, binary=binary)
-        result = Doc2Vec(size=layer1_size)
-        result.syn0 = zeros((vocab_size, layer1_size), dtype=REAL)
-        for line_no, word, vocab, weights in stream():
-            result.vocab[word] = vocab
-            result.index2word.append(word)
-            result.syn0[line_no] = weights
-        logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
-        result.init_sims(norm_only)
-        return result
-
-    def load_doc2vec_format(self, fname, fvocab=None, binary=False):
-        self.load_word2vec_format(fname, fvocab, binary)
-
-    def save_doc2vec_format(self, fname, fvocab=None, binary=False):
-        self.save_word2vec_format(fname, fvocab, binary)
-
     def __str__(self):
         return "Doc2Vec(vocab=%s, size=%s, alpha=%s)" % (len(self.index2word), self.layer1_size, self.alpha)
 
@@ -364,7 +222,7 @@ class Doc2Vec(Word2Vec):
         super(Doc2Vec, self).save(*args, **kwargs)
 
 
-class BrownCorpus(object):
+class LabeledBrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
     def __init__(self, dirname):
         self.dirname = dirname
@@ -386,7 +244,7 @@ class BrownCorpus(object):
                 yield LabeledText(words, [fname+'_SENT_'+str(item_no)])
 
 
-class LineSentence(object):
+class LabeledLineSentence(object):
     """Simple format: one sentence = one line; words already preprocessed and separated by whitespace."""
     def __init__(self, source):
         """
@@ -417,35 +275,4 @@ class LineSentence(object):
             with utils.smart_open(self.source) as fin:
                 for item_no, line in enumerate(fin):
                     yield LabeledText(utils.to_unicode(line).split(), ['SENT_'+str(item_no)])
-
-
-# Example: ./doc2vec.py ~/workspace/doc2vec/textfile ~/workspace/doc2vec/questions-words.txt ./textfile
-if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logging.info("running %s" % " ".join(sys.argv))
-    logging.info("using optimization %s" % FAST_VERSION)
-
-    # check and process cmdline input
-    program = os.path.basename(sys.argv[0])
-    if len(sys.argv) < 2:
-        print(globals()['__doc__'] % locals())
-        sys.exit(1)
-    infile = sys.argv[1]
-    from gensim.models.doc2vec import Doc2Vec  # avoid referencing __main__ in pickle
-
-    seterr(all='raise')  # don't ignore numpy errors
-
-    model = Doc2Vec(LineSentence(infile), size=200, min_count=5, workers=4)
-
-    if len(sys.argv) > 3:
-        outfile = sys.argv[3]
-        model.save(outfile + '.model')
-        model.save_doc2vec_format(outfile + '.model.bin', binary=True)
-        model.save_doc2vec_format(outfile + '.model.txt', binary=False)
-
-    if len(sys.argv) > 2:
-        questions_file = sys.argv[2]
-        model.accuracy(sys.argv[2])
-
-    logging.info("finished running %s" % program)
 
