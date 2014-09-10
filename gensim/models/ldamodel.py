@@ -548,7 +548,7 @@ class LdaModel(interfaces.TransformationABC):
             performing E-step and upating variables for each process
             """
             while True:
-                worker_lda = copy.deepcopy(self)
+                worker_lda = copy.deepcopy(self)        # XXX might possibly be slow solution, but every worker needs reseted LDA model for every iteration
                 item = data.get(True)
                 worker_lda.do_estep(item)
                 result = worker_lda.state
@@ -573,7 +573,8 @@ class LdaModel(interfaces.TransformationABC):
 
 
         for pass_ in xrange(passes):
-            val.value = 0
+            if n_jobs > 1:
+                val.value = 0
             other = LdaState(self.eta, self.state.sstats.shape)
             dirty = False
 
