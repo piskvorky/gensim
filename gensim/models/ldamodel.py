@@ -33,6 +33,8 @@ The algorithm:
 
 import logging
 import itertools
+import time
+import copy
 
 logger = logging.getLogger('gensim.models.ldamodel')
 
@@ -51,6 +53,8 @@ except ImportError: # maxentropy has been removed for next release
 
 from gensim import interfaces, utils
 from six.moves import xrange
+
+from multiprocessing import Pool, Queue, cpu_count, Lock, Value
 
 
 def dirichlet_expectation(alpha):
@@ -182,7 +186,7 @@ class LdaModel(interfaces.TransformationABC):
     """
     def __init__(self, corpus=None, num_topics=100, id2word=None, distributed=False,
                  chunksize=2000, passes=1, update_every=1, alpha='symmetric', eta=None, decay=0.5,
-                 eval_every=10, iterations=50, gamma_threshold=0.001):
+                 eval_every=10, iterations=50, gamma_threshold=0.001, n_jobs=1):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -310,7 +314,7 @@ class LdaModel(interfaces.TransformationABC):
 
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
-            self.update(corpus)
+            self.update(corpus, n_jobs=n_jobs)
 
 
     def __str__(self):
@@ -341,7 +345,7 @@ class LdaModel(interfaces.TransformationABC):
         to update the model's topic-word distributions, and return a 2-tuple
         `(gamma, sstats)`. Otherwise, return `(gamma, None)`. `gamma` is of shape
         `len(chunk) x self.num_topics`.
-        
+
         Avoids computing the `phi` variational parameter directly using the
         optimization presented in **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
 
@@ -468,7 +472,7 @@ class LdaModel(interfaces.TransformationABC):
 
 
     def update(self, corpus, chunksize=None, decay=None, passes=None, update_every=None, eval_every=None,
-            iterations=None, gamma_threshold=None):
+            iterations=None, gamma_threshold=None, n_jobs=1):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -537,12 +541,40 @@ class LdaModel(interfaces.TransformationABC):
             logger.warning("too few updates, training might not converge; consider "
                            "increasing the number of passes or iterations to improve accuracy")
 
+
+
+        def worker_e_step(data, result_queue, lock, val):
+            """
+            performing E-step and upating variables for each process
+            """
+            while True:
+                worker_lda = copy.deepcopy(self)
+                item = data.get(True)
+                worker_lda.do_estep(item)
+                result = worker_lda.state
+                del worker_lda  # free up some memory
+                result_queue.put(result)
+                with lock:
+                    val.value += 1
+
+
+
+        # -1 is used for creating cpu_count() processes, which is default when Pool is created without specified processes number
+        if n_jobs == -1:
+            n_jobs = cpu_count()
+
+        if n_jobs > 1:
+            logger.info("training LDA model using %i processes" % n_jobs)
+            job_queue = Queue(maxsize=1000)      # TODO figure out the apropriate size
+            result_queue = Queue()
+            lock = Lock()
+            val = Value('i', 0)
+            pool = Pool(n_jobs, worker_e_step, (job_queue, result_queue, lock, val,))
+
+
         for pass_ in xrange(passes):
-            if self.dispatcher:
-                logger.info('initializing %s workers' % self.numworkers)
-                self.dispatcher.reset(self.state)
-            else:
-                other = LdaState(self.eta, self.state.sstats.shape)
+            val.value = 0
+            other = LdaState(self.eta, self.state.sstats.shape)
             dirty = False
 
             reallen = 0
@@ -552,12 +584,13 @@ class LdaModel(interfaces.TransformationABC):
                 if eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % (eval_every * self.numworkers) == 0)):
                     self.log_perplexity(chunk, total_docs=lencorpus)
 
-                if self.dispatcher:
-                    # add the chunk to dispatcher's job queue, so workers can munch on it
+                if n_jobs > 1:
                     logger.info('PROGRESS: pass %i, dispatching documents up to #%i/%i' %
                                 (pass_, chunk_no * chunksize + len(chunk), lencorpus))
-                    # this will eventually block until some jobs finish, because the queue has a small finite length
-                    self.dispatcher.putjob(chunk)
+                    # Do the distributed E step
+                    job_queue.put(chunk)
+
+                    # solve what to do in case when self.optimize_alpha ???
                 else:
                     logger.info('PROGRESS: pass %i, at document #%i/%i' %
                                 (pass_, chunk_no * chunksize + len(chunk), lencorpus))
@@ -568,21 +601,21 @@ class LdaModel(interfaces.TransformationABC):
 
                 dirty = True
                 del chunk
-
                 # perform an M step. determine when based on update_every, don't do this after every chunk
                 if update_every and (chunk_no + 1) % (update_every * self.numworkers) == 0:
-                    if self.dispatcher:
-                        # distributed mode: wait for all workers to finish
-                        logger.info("reached the end of input; now waiting for all remaining jobs to finish")
-                        other = self.dispatcher.getstate()
+                    if n_jobs > 1:
+                        # wait for all the processes to finish
+                        logger.info("reached the end of input; now waiting for all the remaining processes to finish")
+                        while val.value != chunk_no + 1:    # unfortunately queue length is not relaiable so it was needed to use Value
+                            time.sleep(0.5) # checking that if every result was recorded to the result queue every half a second
+                        # possible TODO instead of this implement online merging of the result?
+                        other = result_queue.get()
+                        while not result_queue.empty():
+                            other.merge(result_queue.get())
                     self.do_mstep(rho(), other)
                     del other # free up some mem
 
-                    if self.dispatcher:
-                        logger.info('initializing workers')
-                        self.dispatcher.reset(self.state)
-                    else:
-                        other = LdaState(self.eta, self.state.sstats.shape)
+                    other = LdaState(self.eta, self.state.sstats.shape)
                     dirty = False
             #endfor single corpus iteration
             if reallen != lencorpus:
@@ -590,10 +623,14 @@ class LdaModel(interfaces.TransformationABC):
 
             if dirty:
                 # finish any remaining updates
-                if self.dispatcher:
-                    # distributed mode: wait for all workers to finish
-                    logger.info("reached the end of input; now waiting for all remaining jobs to finish")
-                    other = self.dispatcher.getstate()
+                if n_jobs > 1:
+                    # wait for all the processes to finish
+                    logger.info("reached the end of input; now waiting for all the remaining processes to finish")
+                    while val.value != chunk_no:
+                        time.sleep(0.5) # checking that if every result was recorded to the result queue every half a second
+                    other = result_queue.get()
+                    while not result_queue.empty():
+                        other.merge(result_queue.get())
                 self.do_mstep(rho(), other)
                 del other
                 dirty = False
