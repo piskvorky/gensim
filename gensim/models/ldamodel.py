@@ -528,6 +528,8 @@ class LdaModel(interfaces.TransformationABC):
         for pass_ in xrange(self.passes):
             queue_size, reallen = 0, 0
 
+            # setting other to None for case of the batch version
+            other = None
             chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=True)
             for chunk_no, chunk in enumerate(chunk_stream):
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
@@ -544,6 +546,8 @@ class LdaModel(interfaces.TransformationABC):
 
                 # FIXME solve what to do in case when self.optimize_alpha?
 
+                # TODO for batch version we can: possibly perform merge at every cycle (if it's possible) and increment counter, before M step just wait for remaining workers
+
                 # perform an M step. determine when based on update_every, don't do this after every chunk
                 if reallen == lencorpus or (self.update_every and (chunk_no + 1) % self.update_every == 0):
                     logger.info("%i chunks dispatched, waiting for M step", queue_size)
@@ -555,6 +559,16 @@ class LdaModel(interfaces.TransformationABC):
                     del other # free up some mem
 
                     queue_size = 0
+                # in case of batch mode perform merging once the queue has 2 * workers length to be safe with memory
+                elif not self.update_every and (self.workers * 2) % queue_size == 0:
+                    if not other:
+                        other = LdaState(self.eta, self.state.sstats.shape)
+                    while not result_queue.empty():
+                        state = result_queue.get()
+                        other.merge(state)
+                        queue_size -= 1
+
+
             #endfor single corpus pass
             if reallen != lencorpus:
                 raise RuntimeError("input corpus size changed during training (don't use generators as input)")
