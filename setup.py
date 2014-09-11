@@ -14,8 +14,8 @@ import os
 import sys
 import warnings
 
-if sys.version_info[:2] < (2, 5):
-    raise Exception('This version of gensim needs Python 2.5 or later. ')
+if sys.version_info[:2] < (2, 6):
+    raise Exception('This version of gensim needs Python 2.6 or later. ')
 
 import ez_setup
 ez_setup.use_setuptools()
@@ -95,6 +95,7 @@ http://api.mongodb.org/python/current/installation.html#osx
 def readfile(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+model_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
 
 setup(
     name='gensim',
@@ -104,8 +105,8 @@ setup(
 
     ext_modules=[
         Extension('gensim.models.word2vec_inner',
-            sources=['gensim/models/word2vec_inner.c'],
-            include_dirs=[os.path.join(os.path.dirname(__file__), 'gensim', 'models')])
+            sources=[os.path.join(model_dir, 'word2vec_inner.c')],
+            include_dirs=[model_dir])
     ],
     cmdclass={'build_ext': custom_build_ext},
     packages=find_packages(),
