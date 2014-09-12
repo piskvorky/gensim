@@ -307,7 +307,7 @@ class Sparse2Corpus(object):
 
     def __iter__(self):
         for indprev, indnow in izip(self.sparse.indptr, self.sparse.indptr[1:]):
-            yield zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow])
+            yield list(zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow]))
 
     def __len__(self):
         return self.sparse.shape[1]
