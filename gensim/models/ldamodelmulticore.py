@@ -82,8 +82,8 @@ class LdaModelMulticore(LdaModel):
             logger.info("worker process entering E-step loop")
             while True:
                 logger.debug("getting a new job")
-                worker_lda, chunk = input_queue.get()
-                logger.info("got a job, processing a chunk of %i documents", len(chunk))
+                chunk_no, worker_lda, chunk = input_queue.get()
+                logger.info("processing chunk #%i of %i documents", chunk_no, len(chunk))
                 worker_lda.state.reset()
                 worker_lda.do_estep(chunk)
                 del chunk
@@ -109,10 +109,9 @@ class LdaModelMulticore(LdaModel):
                     other.merge(result_queue.get())
                     logger.info("document merged, current numdocs = %i", other.numdocs)
                     queue_size[0] -= 1
-                if force or (other.numdocs > self.chunksize * self.workers):
+                if force or (other.numdocs >= self.chunksize * self.workers):
                     self.do_mstep(rho(), other)
                     other.reset()
-
 
             # setting other to None for case of the batch version
             chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=True)
@@ -126,11 +125,11 @@ class LdaModelMulticore(LdaModel):
                 chunk_put = False
                 while not chunk_put:
                     try:
-                        job_queue.put((self, chunk), block=False, timeout=0.1)
+                        job_queue.put((chunk_no, self, chunk), block=False, timeout=0.1)
                         chunk_put = True
                         queue_size[0] += 1
-                        logger.info('PROGRESS: pass %i, dispatched documents up to #%i/%i',
-                            pass_, chunk_no * self.chunksize + len(chunk), lencorpus)
+                        logger.info('PROGRESS: pass %i, dispatched chunk #%i = documents up to #%i/%i',
+                            pass_, chunk_no, chunk_no * self.chunksize + len(chunk), lencorpus)
                         del chunk
                     except Full:
                         process_result_queue()
