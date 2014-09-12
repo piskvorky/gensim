@@ -546,8 +546,6 @@ class LdaModel(interfaces.TransformationABC):
 
                 # FIXME solve what to do in case when self.optimize_alpha?
 
-                # TODO for batch version we can: possibly perform merge at every cycle (if it's possible) and increment counter, before M step just wait for remaining workers
-
                 # perform an M step. determine when based on update_every, don't do this after every chunk
                 if reallen == lencorpus or (self.update_every and (chunk_no + 1) % self.update_every == 0):
                     logger.info("%i chunks dispatched, waiting for M step", queue_size)
@@ -561,6 +559,7 @@ class LdaModel(interfaces.TransformationABC):
                     queue_size = 0
                 # in case of batch mode perform merging once the queue has 2 * workers length to be safe with memory
                 elif not self.update_every and (self.workers * 2) % queue_size == 0:
+                    logger.info("Merging full result queue of the length %i", queue_size)
                     if not other:
                         other = LdaState(self.eta, self.state.sstats.shape)
                     while not result_queue.empty():
