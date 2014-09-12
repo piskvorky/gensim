@@ -30,9 +30,8 @@ The algorithm:
 
 """
 
-import os
 import logging
-import itertools
+import copy
 
 logger = logging.getLogger('gensim.models.ldamodel')
 
@@ -40,8 +39,7 @@ logger = logging.getLogger('gensim.models.ldamodel')
 import numpy # for arrays, array broadcasting etc.
 #numpy.seterr(divide='ignore') # ignore 0*log(0) errors
 
-from scipy.special import gammaln, digamma, psi # gamma function utils
-from scipy.special import gamma as gammafunc
+from scipy.special import gammaln, psi # gamma function utils
 from scipy.special import polygamma
 try:
     from scipy.maxentropy import logsumexp # log(sum(exp(x))) that tries to avoid overflow
@@ -52,6 +50,7 @@ except ImportError: # maxentropy has been removed for next release
 from gensim import interfaces, utils
 from six.moves import xrange
 
+from Queue import Full
 from multiprocessing import Pool, Queue, cpu_count
 
 
@@ -466,7 +465,7 @@ class LdaModel(interfaces.TransformationABC):
         """
 
         # rho is the "speed" of updating; TODO try other fncs
-        rho = lambda: pow(1.0 + self.num_updates, -self.decay)
+        rho = lambda: pow(1.0 + self.num_updates / self.chunksize, -self.decay)
 
         try:
             lencorpus = len(corpus)
@@ -515,10 +514,11 @@ class LdaModel(interfaces.TransformationABC):
                 worker_lda.state.reset()
                 worker_lda.do_estep(chunk)
                 del chunk
-                logger.debug("processed chunk, queuing the result")
+                logger.info("processed chunk, queuing the result")
                 result_queue.put(worker_lda.state)
                 del worker_lda  # free up some memory
-                logger.debug("result put")
+                logger.info("result put")
+
 
         logger.info("training LDA model using %i processes", self.workers)
         job_queue = Queue(maxsize=2 * self.workers)
@@ -526,10 +526,22 @@ class LdaModel(interfaces.TransformationABC):
         pool = Pool(self.workers, worker_e_step, (job_queue, result_queue,))
 
         for pass_ in xrange(self.passes):
-            queue_size, reallen = 0, 0
+            queue_size, reallen = [0], 0
+
+
+            def process_result_queue():
+                """
+                """
+                other = LdaState(self.eta, self.state.sstats.shape)     #TODO optimization do not create zero matrix
+                while not result_queue.empty():
+                    other.merge(result_queue.get())
+                    logger.info("document merged, current numdocs = %i", other.numdocs)
+                    queue_size[0] -= 1
+                if other.numdocs > 0:
+                    self.do_mstep(rho(), other)
+
 
             # setting other to None for case of the batch version
-            other = None
             chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=True)
             for chunk_no, chunk in enumerate(chunk_stream):
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
@@ -538,35 +550,24 @@ class LdaModel(interfaces.TransformationABC):
                     self.log_perplexity(chunk, total_docs=lencorpus)
 
                 # Add the data to the queue for the E step
-                job_queue.put((self, chunk))
-                logger.info('PROGRESS: pass %i, dispatched documents up to #%i/%i',
-                    pass_, chunk_no * self.chunksize + len(chunk), lencorpus)
-                del chunk
-                queue_size += 1
+                chunk_put = False
+                while not chunk_put:
+                    try:
+                        job_queue.put((self, chunk), block=False, timeout=0.1)
+                        chunk_put = True
+                        queue_size[0] += 1
+                        logger.info('PROGRESS: pass %i, dispatched documents up to #%i/%i',
+                            pass_, chunk_no * self.chunksize + len(chunk), lencorpus)
+                        del chunk
+                    except Full:
+                        process_result_queue()
+
+                process_result_queue()
+
+            while queue_size[0] > 0:
+                process_result_queue()
 
                 # FIXME solve what to do in case when self.optimize_alpha?
-
-                # perform an M step. determine when based on update_every, don't do this after every chunk
-                if reallen == lencorpus or (self.update_every and (chunk_no + 1) % self.update_every == 0):
-                    logger.info("%i chunks dispatched, waiting for M step", queue_size)
-                    other = LdaState(self.eta, self.state.sstats.shape)
-                    for _ in range(queue_size):
-                        state = result_queue.get()
-                        other.merge(state)
-                    self.do_mstep(rho(), other)
-                    del other # free up some mem
-
-                    queue_size = 0
-                # in case of batch mode perform merging once the queue has 2 * workers length to be safe with memory
-                elif not self.update_every and (self.workers * 2) % queue_size == 0:
-                    logger.info("Merging full result queue of the length %i", queue_size)
-                    if not other:
-                        other = LdaState(self.eta, self.state.sstats.shape)
-                    while not result_queue.empty():
-                        state = result_queue.get()
-                        other.merge(state)
-                        queue_size -= 1
-
 
             #endfor single corpus pass
             if reallen != lencorpus:
@@ -587,12 +588,11 @@ class LdaModel(interfaces.TransformationABC):
         # the topics change through this update, to assess convergence
         diff = numpy.log(self.expElogbeta)
         self.state.blend(rho, other)
-        del other
         diff -= self.state.get_Elogbeta()
         self.sync_state()
         self.print_topics(15) # print out some debug info at the end of each EM iteration
         logger.info("topic diff=%f, rho=%f" % (numpy.mean(numpy.abs(diff)), rho))
-        self.num_updates += 1
+        self.num_updates += other.numdocs
 
 
     def bound(self, corpus, gamma=None, subsample_ratio=1.0):
