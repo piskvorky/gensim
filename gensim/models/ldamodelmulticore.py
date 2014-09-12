@@ -14,7 +14,26 @@ class LdaModelMulticore(LdaModel):
 
 
     def __init__(self, *args, **kwargs):
-        self.workers = kwargs.pop("workers", cpu_count())
+        """
+        If given, start training from the iterable `corpus` straight away. If not given,
+        the model is left untrained (presumably because you want to call `update()` manually).
+
+        `workers` is the number of processes used for the E-step. Default is max(1, multiprocessing.cpu_count() - 1)
+
+        `update_every` if update_every is an integer thet M-stem is performed once every workers
+        if update_every is None then is performed batch version. Default is integer
+
+        `*args` see models.LdaModel
+
+        Example:
+
+        >>> lda = LdaModelMulticore(corpus, num_topics=100)  # train model
+        >>> print(lda[doc_bow]) # get topic probability distribution for a document
+        >>> lda.update(corpus2) # update the LDA model with additional documents
+        >>> print(lda[doc_bow])
+
+        """
+        self.workers = kwargs.pop("workers", max(1, cpu_count() - 1))
         super(LdaModelMulticore, self).__init__(*args, **kwargs)
 
 
@@ -24,7 +43,7 @@ class LdaModelMulticore(LdaModel):
         the topics converge (or until the maximum number of allowed iterations
         is reached). `corpus` must be an iterable (repeatable stream of documents),
 
-        In distributed mode, the E step is distributed over a cluster of machines.
+        The E step is distributed into the several processes.
 
         This update also supports updating an already trained model (`self`)
         with new documents from `corpus`; the two models are then merged in
@@ -46,32 +65,31 @@ class LdaModelMulticore(LdaModel):
             logger.warning("input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
-            logger.warning("LdaModel.update() called with an empty corpus")
+            logger.warning("LdaModelMulticore.update() called with an empty corpus")
             return
 
         self.state.numdocs += lencorpus
 
         if self.update_every:
             updatetype = "online"
-            updateafter = min(lencorpus, self.update_every * self.chunksize)
+            updateafter = self.chunksize * self.workers
         else:
             updatetype = "batch"
             updateafter = lencorpus
-        evalafter = min(lencorpus, (self.eval_every or 0) * self.chunksize)
+        evalafter = min(lencorpus, (self.eval_every or 0))
 
         updates_per_pass = max(1, lencorpus / updateafter)
         logger.info("running %s LDA training, %s topics, %i passes over "
-                    "the supplied corpus of %i documents, updating model once "
-                    "every %i documents, evaluating perplexity every %i documents, "
+                    "the supplied corpus of %i documents,  "
+                    "evaluating perplexity every %i documents, "
                     "iterating %ix with a convergence threshold of %f",
                     updatetype, self.num_topics, self.passes, lencorpus,
-                    updateafter, evalafter, self.iterations,
+                    evalafter, self.iterations,
                     self.gamma_threshold)
 
         if updates_per_pass * self.passes < 10:
             logger.warning("too few updates, training might not converge; consider "
                            "increasing the number of passes or iterations to improve accuracy")
-
 
         def worker_e_step(input_queue, result_queue):
             """
@@ -87,40 +105,43 @@ class LdaModelMulticore(LdaModel):
                 worker_lda.state.reset()
                 worker_lda.do_estep(chunk)
                 del chunk
-                logger.info("processed chunk, queuing the result")
+                logger.debug("processed chunk, queuing the result")
                 result_queue.put(worker_lda.state)
                 del worker_lda  # free up some memory
-                logger.info("result put")
+                logger.debug("result put")
 
 
-        logger.info("training LDA model using %i processes", self.workers)
+
         job_queue = Queue(maxsize=2 * self.workers)
         result_queue = Queue()
         pool = Pool(self.workers, worker_e_step, (job_queue, result_queue,))
 
+        logger.info("training LDA model using %i processes", self.workers)
+
         for pass_ in xrange(self.passes):
             queue_size, reallen = [0], 0
-            other = LdaState(self.eta, self.state.sstats.shape)     #TODO optimization do not create zero matrix
+            other = LdaState(self.eta, self.state.sstats.shape)
 
             def process_result_queue(force=False):
                 """
+                Merging results from the E-step processes and performing M-step workes time
                 """
+                merged_new = False
                 while not result_queue.empty():
                     other.merge(result_queue.get())
                     logger.info("document merged, current numdocs = %i", other.numdocs)
                     queue_size[0] -= 1
-                if force or (other.numdocs > self.chunksize * self.workers):
+                    merged_new = True
+                if (force and merged_new) or (self.update_every != None and (other.numdocs >= self.chunksize * self.workers)):
                     self.do_mstep(rho(), other)
                     other.reset()
+
 
 
             # setting other to None for case of the batch version
             chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=True)
             for chunk_no, chunk in enumerate(chunk_stream):
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
-
-                if self.eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % self.eval_every == 0)):
-                    self.log_perplexity(chunk, total_docs=lencorpus)
 
                 # Add the data to the queue for the E step
                 chunk_put = False
@@ -134,6 +155,8 @@ class LdaModelMulticore(LdaModel):
                         del chunk
                     except Full:
                         process_result_queue()
+                        if self.eval_every and self.num_updates / (self.workers * self.chunksize) % self.eval_every == 0:
+                            self.log_perplexity(chunk, total_docs=lencorpus)
 
                 process_result_queue()
 

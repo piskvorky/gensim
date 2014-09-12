@@ -501,7 +501,7 @@ class LdaModel(interfaces.TransformationABC):
             gamma_threshold = self.gamma_threshold
 
         # rho is the "speed" of updating; TODO try other fncs
-        rho = lambda: pow(1.0 + self.num_updates, -decay)
+        rho = lambda: pow(1.0 + self.num_updates / self.chunksize, -decay)
 
         try:
             lencorpus = len(corpus)
@@ -609,12 +609,11 @@ class LdaModel(interfaces.TransformationABC):
         # the topics change through this update, to assess convergence
         diff = numpy.log(self.expElogbeta)
         self.state.blend(rho, other)
-        del other
         diff -= self.state.get_Elogbeta()
         self.sync_state()
         self.print_topics(15) # print out some debug info at the end of each EM iteration
         logger.info("topic diff=%f, rho=%f" % (numpy.mean(numpy.abs(diff)), rho))
-        self.num_updates += 1
+        self.num_updates += other.numdocs
 
 
     def bound(self, corpus, gamma=None, subsample_ratio=1.0):
