@@ -130,8 +130,7 @@ class LdaModelMulticore(LdaModel):
                 if (force and merged_new) or (self.update_every and (other.numdocs >= updateafter)):
                     self.do_mstep(rho(), other)
                     other.reset()
-                    # FIXME: doesn't work well
-                    if self.eval_every and (force or (self.num_updates / updateafter) % self.eval_every == 0):
+                    if self.eval_every is not None and self.eval_every != 0 and ((force and queue_size[0] == 0) or (self.num_updates / updateafter) % self.eval_every == 0):
                         self.log_perplexity(chunk, total_docs=lencorpus)
 
             chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=True)
