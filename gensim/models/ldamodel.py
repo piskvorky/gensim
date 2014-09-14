@@ -201,7 +201,7 @@ class LdaModel(interfaces.TransformationABC):
         normalized asymmetric 1.0/topicno prior, the latter learns an asymmetric
         prior directly from your data.
 
-        `eta' can be a scalar for a symmetric prior over topic/word
+        `eta` can be a scalar for a symmetric prior over topic/word
         distributions, or a matrix of shape num_topics x num_words,
         which can be used to impose asymmetric priors over the word
         distribution on a per-topic basis. This may be useful if you
