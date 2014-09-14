@@ -89,7 +89,7 @@ class LdaModelMulticore(LdaModel):
         normalized asymmetric 1.0/topicno prior, the latter learns an asymmetric
         prior directly from your data.
 
-        `eta' can be a scalar for a symmetric prior over topic/word
+        `eta` can be a scalar for a symmetric prior over topic/word
         distributions, or a matrix of shape num_topics x num_words,
         which can be used to impose asymmetric priors over the word
         distribution on a per-topic basis. This may be useful if you
@@ -174,7 +174,7 @@ class LdaModelMulticore(LdaModel):
             input queue, placing the resulting state into the result queue.
 
             """
-            logger.info("worker process entering E-step loop")
+            logger.debug("worker process entering E-step loop")
             while True:
                 logger.debug("getting a new job")
                 chunk_no, chunk, worker_lda = input_queue.get()
