@@ -274,7 +274,7 @@ class TestLdaModel(unittest.TestCase):
 #endclass TestLdaModel
 
 
-class TestLdaModelMulticore(unittest.TestCase):
+class TestLdaMulticore(unittest.TestCase):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
 
@@ -285,7 +285,7 @@ class TestLdaModelMulticore(unittest.TestCase):
         # better random initialization
         for i in range(5): # restart at most 5 times
             # create the transformation model
-            model = ldamodelmulticore.LdaModelMulticore(id2word=dictionary, num_topics=2, passes=100)
+            model = ldamodelmulticore.LdaMulticore(id2word=dictionary, num_topics=2, passes=100)
             model.update(corpus)
 
             # transform one document
@@ -316,7 +316,7 @@ class TestLdaModelMulticore(unittest.TestCase):
                 # two topics, 10 times higher than the other words
                 eta[topic, system] *= 10
 
-                model = ldamodelmulticore.LdaModelMulticore(id2word=dictionary, num_topics=2, passes=200, eta=eta)
+                model = ldamodelmulticore.LdaMulticore(id2word=dictionary, num_topics=2, passes=200, eta=eta)
                 model.update(corpus)
 
                 topics = [dict((word, p) for p, word in model.show_topic(j)) for j in range(2)]
@@ -336,21 +336,21 @@ class TestLdaModelMulticore(unittest.TestCase):
             self.assertTrue(passed)
 
     def testPersistence(self):
-        model = ldamodelmulticore.LdaModelMulticore(self.corpus, num_topics=2)
+        model = ldamodelmulticore.LdaMulticore(self.corpus, num_topics=2)
         model.save(testfile())
-        model2 = ldamodelmulticore.LdaModelMulticore.load(testfile())
+        model2 = ldamodelmulticore.LdaMulticore.load(testfile())
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
     def testLargeMmap(self):
-        model = ldamodelmulticore.LdaModelMulticore(self.corpus, num_topics=2)
+        model = ldamodelmulticore.LdaMulticore(self.corpus, num_topics=2)
 
         # simulate storing large arrays separately
         model.save(testfile(), sep_limit=0)
 
-        model2 = ldamodelmulticore.LdaModelMulticore.load(testfile())
+        model2 = ldamodelmulticore.LdaMulticore.load(testfile())
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
@@ -362,7 +362,7 @@ class TestLdaModelMulticore(unittest.TestCase):
         self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
-#endclass TestLdaModelMulticore
+#endclass TestLdaMulticore
 
 
 class TestLdaMallet(unittest.TestCase):

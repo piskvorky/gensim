@@ -41,12 +41,12 @@ from multiprocessing import Pool, Queue, cpu_count
 logger = logging.getLogger(__name__)
 
 
-class LdaModelMulticore(LdaModel):
+class LdaMulticore(LdaModel):
     """
     The constructor estimates Latent Dirichlet Allocation model parameters based
     on a training corpus:
 
-    >>> lda = LdaModelMulticore(corpus, num_topics=10)
+    >>> lda = LdaMulticore(corpus, num_topics=10)
 
     You can then infer topic distributions on new, unseen documents, with
 
@@ -101,7 +101,7 @@ class LdaModelMulticore(LdaModel):
 
         Example:
 
-        >>> lda = LdaModelMulticore(corpus, id2word=id2word, num_topics=100)  # train model
+        >>> lda = LdaMulticore(corpus, id2word=id2word, num_topics=100)  # train model
         >>> print(lda[doc_bow]) # get topic probability distribution for a document
         >>> lda.update(corpus2) # update the LDA model with additional documents
         >>> print(lda[doc_bow])
@@ -111,7 +111,7 @@ class LdaModelMulticore(LdaModel):
         self.batch = batch
         if alpha == 'auto':
             raise NotImplementedError("auto-tuning alpha not implemented in multicore LDA; use plain LdaModel.")
-        super(LdaModelMulticore, self).__init__(corpus=corpus, num_topics=num_topics,
+        super(LdaMulticore, self).__init__(corpus=corpus, num_topics=num_topics,
             id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
             decay=decay, eval_every=eval_every, iterations=iterations,
             gamma_threshold=gamma_threshold)
@@ -144,7 +144,7 @@ class LdaModelMulticore(LdaModel):
             logger.warning("input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
-            logger.warning("LdaModelMulticore.update() called with an empty corpus")
+            logger.warning("LdaMulticore.update() called with an empty corpus")
             return
 
         self.state.numdocs += lencorpus
@@ -207,7 +207,7 @@ class LdaModelMulticore(LdaModel):
                     other.merge(result_queue.get())
                     queue_size[0] -= 1
                     merged_new = True
-                if (force and merged_new) or (not self.batch and (other.numdocs >= updateafter)):
+                if (force and merged_new and queue_size[0] == 0) or (not self.batch and (other.numdocs >= updateafter)):
                     self.do_mstep(rho(), other)
                     other.reset()
                     if self.eval_every is not None and self.eval_every != 0 and ((force and queue_size[0] == 0) or (self.num_updates / updateafter) % self.eval_every == 0):
