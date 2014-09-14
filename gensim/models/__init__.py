@@ -12,7 +12,7 @@ from .tfidfmodel import TfidfModel
 from .rpmodel import RpModel
 from .logentropy_model import LogEntropyModel
 from .word2vec import Word2Vec
-from .ldamodelmulticore import LdaMulticore
+from .ldamulticore import LdaMulticore
 
 from gensim import interfaces, utils
 
