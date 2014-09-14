@@ -1,5 +1,35 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
+"""
+Latent Dirichlet Allocation (LDA) in Python, using all cores to parallelize and
+speed up model training.
+
+The parallelization uses multiprocessing; in case this doesn't work for you for
+some reason, try `LdaModel` which is an equivalent, but more straightforward and
+single-core implementation.
+
+FIXME wiki timings
+
+This module allows both LDA model estimation from a training corpus and inference of topic
+distribution on new, unseen documents. The model can also be updated with new documents
+for online training.
+
+The core estimation code is based on the `onlineldavb.py` script by M. Hoffman [1]_, see
+**Hoffman, Blei, Bach: Online Learning for Latent Dirichlet Allocation, NIPS 2010.**
+
+The algorithm:
+
+* is **streamed**: training documents may come in sequentially, no random access required,
+* runs in **constant memory** w.r.t. the number of documents: size of the
+  training corpus does not affect memory footprint, can process corpora larger than RAM, and
+* is **distributed**: makes use of a cluster of machines, if available, to
+  speed up model estimation.
+
+.. [1] http://www.cs.princeton.edu/~mdhoffma
+"""
 
 import logging
 
@@ -12,17 +42,62 @@ logger = logging.getLogger(__name__)
 
 
 class LdaModelMulticore(LdaModel):
-    def __init__(self, *args, **kwargs):
+    """
+    The constructor estimates Latent Dirichlet Allocation model parameters based
+    on a training corpus:
+
+    >>> lda = LdaModelMulticore(corpus, num_topics=10)
+
+    You can then infer topic distributions on new, unseen documents, with
+
+    >>> doc_lda = lda[doc_bow]
+
+    The model can be updated (trained) with new documents via
+
+    >>> lda.update(other_corpus)
+
+    Model persistency is achieved through its `load`/`save` methods.
+
+    """
+    def __init__(self, corpus=None, num_topics=100, id2word=None, workers=max(1, cpu_count() - 1),
+                 chunksize=2000, passes=1, batch=False, alpha='symmetric', eta=None, decay=0.5,
+                 eval_every=10, iterations=50, gamma_threshold=0.001):
         """
-        `workers` is the number of extra processes used for parallelization. Default
-        is `max(1, multiprocessing.cpu_count() - 1)`.
+        If given, start training from the iterable `corpus` straight away. If not given,
+        the model is left untrained (presumably because you want to call `update()` manually).
 
-        if `update_every` is set, perform M-step once every `workers * chunksize`
-        documents. Otherwise, run batch LDA, updating model only once at the end
-        of each full corpus pass.
+        `num_topics` is the number of requested latent topics to be extracted from
+        the training corpus.
 
-        For all other arguments, see LdaModel. `distributed` and `alpha='auto'` are
-        not supported.
+        `id2word` is a mapping from word ids (integers) to words (strings). It is
+        used to determine the vocabulary size, as well as for debugging and topic
+        printing.
+
+        `workers` is the number of extra processes to use for parallelization. Use
+        all available cores by default.
+
+        If `batch` is not set, perform online training by updating the model once
+        every `workers * chunksize` documents (online training). Otherwise,
+        run batch LDA, updating model only once at the end of each full corpus pass.
+
+        `alpha` and `eta` are hyperparameters that affect sparsity of the document-topic
+        (theta) and topic-word (lambda) distributions. Both default to a symmetric
+        1.0/num_topics prior.
+
+        `alpha` can be set to an explicit array = prior of your choice. It also
+        support special values of 'asymmetric' and 'auto': the former uses a fixed
+        normalized asymmetric 1.0/topicno prior, the latter learns an asymmetric
+        prior directly from your data.
+
+        `eta` can be a scalar for a symmetric prior over topic/word
+        distributions, or a matrix of shape num_topics x num_words,
+        which can be used to impose asymmetric priors over the word
+        distribution on a per-topic basis. This may be useful if you
+        want to seed certain topics with particular words by boosting
+        the priors for those words.
+
+        Calculate and log perplexity estimate from the latest mini-batch once every
+        `eval_every` documents. Set to None to disable perplexity estimation (faster).
 
         Example:
 
@@ -32,9 +107,14 @@ class LdaModelMulticore(LdaModel):
         >>> print(lda[doc_bow])
 
         """
-        # TODO: full explicit init params, incl. defaults
-        self.workers = kwargs.pop("workers", max(1, cpu_count() - 1))
-        super(LdaModelMulticore, self).__init__(*args, **kwargs)
+        self.workers = workers
+        self.batch = batch
+        if alpha == 'auto':
+            raise NotImplementedError("auto-tuning alpha not implemented in multicore LDA; use plain LdaModel.")
+        super(LdaModelMulticore, self).__init__(corpus=corpus, num_topics=num_topics,
+            id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
+            decay=decay, eval_every=eval_every, iterations=iterations,
+            gamma_threshold=gamma_threshold)
 
 
     def update(self, corpus):
@@ -69,7 +149,7 @@ class LdaModelMulticore(LdaModel):
 
         self.state.numdocs += lencorpus
 
-        if self.update_every:
+        if not self.batch:
             updatetype = "online"
             updateafter = self.chunksize * self.workers
         else:
@@ -80,7 +160,7 @@ class LdaModelMulticore(LdaModel):
         updates_per_pass = max(1, lencorpus / updateafter)
         logger.info("running %s LDA training, %s topics, %i passes over the"
             " supplied corpus of %i documents, updating every %i documents,"
-            " evaluating every %i documents, iterating %ix with a convergence threshold of %f",
+            " evaluating every ~%i documents, iterating %ix with a convergence threshold of %f",
             updatetype, self.num_topics, self.passes, lencorpus, updateafter, evalafter,
             self.iterations, self.gamma_threshold)
 
@@ -94,7 +174,7 @@ class LdaModelMulticore(LdaModel):
             input queue, placing the resulting state into the result queue.
 
             """
-            logger.info("worker process entering E-step loop")
+            logger.debug("worker process entering E-step loop")
             while True:
                 logger.debug("getting a new job")
                 chunk_no, chunk, worker_lda = input_queue.get()
@@ -127,7 +207,7 @@ class LdaModelMulticore(LdaModel):
                     other.merge(result_queue.get())
                     queue_size[0] -= 1
                     merged_new = True
-                if (force and merged_new) or (self.update_every and (other.numdocs >= updateafter)):
+                if (force and merged_new) or (not self.batch and (other.numdocs >= updateafter)):
                     self.do_mstep(rho(), other)
                     other.reset()
                     if self.eval_every is not None and self.eval_every != 0 and ((force and queue_size[0] == 0) or (self.num_updates / updateafter) % self.eval_every == 0):
@@ -137,7 +217,7 @@ class LdaModelMulticore(LdaModel):
             for chunk_no, chunk in enumerate(chunk_stream):
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
 
-                # add chunk to the workers' job queue
+                # put the chunk into the workers' input job queue
                 chunk_put = False
                 while not chunk_put:
                     try:
@@ -148,17 +228,19 @@ class LdaModelMulticore(LdaModel):
                             'documents up to #%i/%i, outstanding queue size %i',
                             pass_, chunk_no, chunk_no * self.chunksize + len(chunk), lencorpus, queue_size[0])
                     except Full:
-                        # in case the job queue is full, check the result queue to make sure we don't deadlock
+                        # in case the input job queue is full, keep clearing the
+                        # result queue, to make sure we don't deadlock
                         process_result_queue()
 
                 process_result_queue()
+            #endfor single corpus pass
 
+            # wait for all outstanding jobs to finish
             while queue_size[0] > 0:
                 process_result_queue(force=True)
-            #endfor single corpus pass
 
             if reallen != lencorpus:
                 raise RuntimeError("input corpus size changed during training (don't use generators as input)")
-        #endfor entire corpus update
+        #endfor entire update
 
         pool.close()
