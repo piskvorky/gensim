@@ -1,7 +1,7 @@
-:mod:`models.ldamodelmulticore` -- Latent Dirichlet Allocation
+:mod:`models.ldamulticore` -- Latent Dirichlet Allocation
 ==============================================================
 
-.. automodule:: gensim.models.ldamodelmulticore
+.. automodule:: gensim.models.ldamulticore
     :synopsis: Latent Dirichlet Allocation
     :members:
     :inherited-members:
