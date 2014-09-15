@@ -91,7 +91,7 @@ except ImportError:
         import pyximport
         models_dir = os.path.dirname(__file__) or os.getcwd()
         pyximport.install(setup_args={"include_dirs": [models_dir, get_include()]})
-        from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
+        from gensimdevelop.gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
     except:
         # failed... fall back to plain numpy (20-80x slower training than the above)
         FAST_VERSION = -1
@@ -159,7 +159,7 @@ except ImportError:
             return len([word for word in sentence if word is not None])
 
 
-def train_sg_pair(model, word, word2, alpha, labels):
+def train_sg_pair(model, word, word2, alpha, labels, train_w1=True, train_w2=True):
     l1 = model.syn0[word2.index]
     neu1e = zeros(l1.shape)
 
@@ -168,7 +168,8 @@ def train_sg_pair(model, word, word2, alpha, labels):
         l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
         fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  # propagate hidden -> output
         ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
-        model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
+        if train_w1:
+            model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
         neu1e += dot(ga, l2a)  # save error
 
     if model.negative:
@@ -181,21 +182,23 @@ def train_sg_pair(model, word, word2, alpha, labels):
         l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
         fb = 1. / (1. + exp(-dot(l1, l2b.T)))  # propagate hidden -> output
         gb = (labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
-        model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
+        if train_w1:
+            model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
-
-    model.syn0[word2.index] += neu1e  # learn input -> hidden
+    if train_w2:
+        model.syn0[word2.index] += neu1e  # learn input -> hidden
     return neu1e
 
 
-def train_cbow_pair(model, word, word2_indices, l1, alpha, labels):
+def train_cbow_pair(model, word, word2_indices, l1, alpha, labels, train_w1=True, train_w2=True):
     neu1e = zeros(l1.shape)
 
     if model.hs:
         l2a = model.syn1[word.point] # 2d matrix, codelen x layer1_size
         fa = 1. / (1. + exp(-dot(l1, l2a.T))) # propagate hidden -> output
         ga = (1. - word.code - fa) * alpha # vector of error gradients multiplied by the learning rate
-        model.syn1[word.point] += outer(ga, l1) # learn hidden -> output
+        if train_w1:
+            model.syn1[word.point] += outer(ga, l1) # learn hidden -> output
         neu1e += dot(ga, l2a) # save error
 
     if model.negative:
@@ -208,9 +211,11 @@ def train_cbow_pair(model, word, word2_indices, l1, alpha, labels):
         l2b = model.syn1neg[word_indices] # 2d matrix, k+1 x layer1_size
         fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
         gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
-        model.syn1neg[word_indices] += outer(gb, l1) # learn hidden -> output
+        if train_w1:
+            model.syn1neg[word_indices] += outer(gb, l1) # learn hidden -> output
         neu1e += dot(gb, l2b) # save error
-    model.syn0[word2_indices] += neu1e # learn input -> hidden, here for all words in the window separately
+    if train_w2:
+        model.syn0[word2_indices] += neu1e # learn input -> hidden, here for all words in the window separately
     return neu1e
 
 
@@ -479,9 +484,8 @@ class Word2Vec(utils.SaveLoad):
         elapsed = time.time() - start
         logger.info("training on %i words took %.1fs, %.0f words/s" %
             (word_count[0], elapsed, word_count[0] / elapsed if elapsed else 0.0))
-
+        self.syn0norm = None
         return word_count[0]
-
 
     def reset_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""

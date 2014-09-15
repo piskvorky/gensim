@@ -62,7 +62,7 @@ except ImportError:
         # failed... fall back to plain numpy (20-80x slower training than the above)
         FAST_VERSION = -1
 
-        def train_sentence_dbow(model, sentence, lbls, alpha, work=None):
+        def train_sentence_dbow(model, sentence, lbls, alpha, work=None, train_words=True, train_lbls=True):
             """
             Update distributed bag of words model by training on a single sentence.
 
@@ -87,11 +87,11 @@ except ImportError:
                 for word2 in sentence:
                     # don't train on OOV words
                     if word2:
-                        train_sg_pair(model, word, word2, alpha, neg_labels)
+                        train_sg_pair(model, word, word2, alpha, neg_labels, train_lbls, train_words)
 
             return len([word for word in sentence if word is not None])
 
-        def train_sentence_dm(model, sentence, lbls, alpha, work=None, neu1=None):
+        def train_sentence_dm(model, sentence, lbls, alpha, work=None, neu1=None, train_words=True, train_lbls=True):
             """
             Update distributed memory model by training on a single sentence.
 
@@ -121,8 +121,9 @@ except ImportError:
                 l1 = np_sum(model.syn0[word2_indices], axis=0) + lbl_sum  # 1 x layer1_size
                 if word2_indices and model.cbow_mean:
                     l1 /= (len(word2_indices) + lbl_len)
-                neu1e = train_cbow_pair(model, word, word2_indices, l1, alpha, neg_labels)
-                model.syn0[lbl_indices] += neu1e
+                neu1e = train_cbow_pair(model, word, word2_indices, l1, alpha, neg_labels, train_words, train_words)
+                if train_lbls:
+                    model.syn0[lbl_indices] += neu1e
 
             return len([word for word in sentence if word is not None])
 
@@ -141,7 +142,7 @@ class Doc2Vec(Word2Vec):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
     def __init__(self, sentences=None, size=300, alpha=0.025, window=8, min_count=5,
                  sample=0, seed=1, workers=1, min_alpha=0.0001, dm=1, hs=1, negative=0,
-                 dm_mean=0):
+                 dm_mean=0, train_words=True, train_lbls=True):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of LabeledText objects that will be used for training.
@@ -171,6 +172,8 @@ class Doc2Vec(Word2Vec):
         Word2Vec.__init__(self, size=size, alpha=alpha, window=window, min_count=min_count,
                           sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
                           sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean)
+        self.train_words = train_words
+        self.train_lbls = train_lbls
         if sentences is not None:
             self.build_vocab(sentences)
             self.train(sentences)
@@ -210,9 +213,9 @@ class Doc2Vec(Word2Vec):
 
     def _get_job_words(self, alpha, work, job, neu1):
         if self.sg:
-            return sum(train_sentence_dbow(self, sentence, lbls, alpha, work) for sentence, lbls in job)
+            return sum(train_sentence_dbow(self, sentence, lbls, alpha, work, self.train_words, self.train_lbls) for sentence, lbls in job)
         else:
-            return sum(train_sentence_dm(self, sentence, lbls, alpha, work, neu1) for sentence, lbls in job)
+            return sum(train_sentence_dm(self, sentence, lbls, alpha, work, neu1, self.train_words, self.train_lbls) for sentence, lbls in job)
 
     def __str__(self):
         return "Doc2Vec(vocab=%s, size=%s, alpha=%s)" % (len(self.index2word), self.layer1_size, self.alpha)
