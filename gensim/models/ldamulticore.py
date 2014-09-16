@@ -36,6 +36,7 @@ import logging
 from gensim import utils
 from gensim.models.ldamodel import LdaModel, LdaState
 from six.moves.queue import Full
+from six.moves import xrange
 from multiprocessing import Pool, Queue, cpu_count
 
 logger = logging.getLogger(__name__)
