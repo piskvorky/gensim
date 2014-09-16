@@ -4,6 +4,7 @@ Changes
 0.10.2
 
 * preserve case in MALLET wrapper (mcburton, #222)
+* parallelized, multiprocessing LDA implementation (Jan Zikes, #232)
 
 0.10.1, 22/07/2014
 

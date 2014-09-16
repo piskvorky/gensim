@@ -11,6 +11,8 @@
 """
 Latent Dirichlet Allocation (LDA) in Python.
 
+**Note**: For a faster implementation (parallelized for multicore machines), see the :class:`gensim.models.ldamulticore.LdaMulticore` class.
+
 This module allows both LDA model estimation from a training corpus and inference of topic
 distribution on new, unseen documents. The model can also be updated with new documents
 for online training.

@@ -1,5 +1,5 @@
-:mod:`models.ldamulticore` -- Latent Dirichlet Allocation
-==============================================================
+:mod:`models.ldamulticore` -- parallelized Latent Dirichlet Allocation
+======================================================================
 
 .. automodule:: gensim.models.ldamulticore
     :synopsis: Latent Dirichlet Allocation

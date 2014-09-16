@@ -11,7 +11,23 @@ The parallelization uses multiprocessing; in case this doesn't work for you for
 some reason, try `LdaModel` which is an equivalent, but more straightforward and
 single-core implementation.
 
-FIXME wiki timings
+Wall-clock `performance on the English Wikipedia <http://radimrehurek.com/gensim/wiki.html>`_
+(2G corpus positions, 3.5M documents, 100K features, 0.54G non-zero entries in the final
+bag-of-words matrix), requesting 100 topics:
+
+
+====================================================== ==============
+ algorithm                                             training time
+====================================================== ==============
+ MulticoreLda(workers=1)                               2h30m
+ MulticoreLda(workers=2)                               1h24m
+ MulticoreLda(workers=3)                               1h6m
+ old LdaModel()                                        3h44m
+ simply iterating over input corpus = I/O overhead     20m
+====================================================== ==============
+
+(Measured on `this i7 server <http://www.hetzner.de/en/hosting/produkte_rootserver/ex40ssd>`_
+with 4 physical cores, so that optimal `workers=3`, one less the number of cores.)
 
 This module allows both LDA model estimation from a training corpus and inference of topic
 distribution on new, unseen documents. The model can also be updated with new documents
@@ -24,9 +40,7 @@ The algorithm:
 
 * is **streamed**: training documents may come in sequentially, no random access required,
 * runs in **constant memory** w.r.t. the number of documents: size of the
-  training corpus does not affect memory footprint, can process corpora larger than RAM, and
-* is **distributed**: makes use of a cluster of machines, if available, to
-  speed up model estimation.
+  training corpus does not affect memory footprint, can process corpora larger than RAM
 
 .. [1] http://www.cs.princeton.edu/~mdhoffma
 """
@@ -60,7 +74,7 @@ class LdaMulticore(LdaModel):
     Model persistency is achieved through its `load`/`save` methods.
 
     """
-    def __init__(self, corpus=None, num_topics=100, id2word=None, workers=max(1, cpu_count() - 1),
+    def __init__(self, corpus=None, num_topics=100, id2word=None, workers=None,
                  chunksize=2000, passes=1, batch=False, alpha='symmetric', eta=None, decay=0.5,
                  eval_every=10, iterations=50, gamma_threshold=0.001):
         """
@@ -74,10 +88,11 @@ class LdaMulticore(LdaModel):
         used to determine the vocabulary size, as well as for debugging and topic
         printing.
 
-        `workers` is the number of extra processes to use for parallelization. Use
-        all available cores by default.
-        WARNING: for best time performance use number of actual cores, cpu_count() returns
-        number of cores inclusive hyperthreading.
+        `workers` is the number of extra processes to use for parallelization. Uses
+        all available cores by default: `workers=cpu_count()-1`. **Note**: for
+        hyper-threaded CPUs, `cpu_count()` returns a useless number -- set `workers`
+        directly to the number of your **real** cores (not hyperthreads) minus one,
+        for optimal performance.
 
         If `batch` is not set, perform online training by updating the model once
         every `workers * chunksize` documents (online training). Otherwise,
@@ -100,7 +115,8 @@ class LdaMulticore(LdaModel):
         the priors for those words.
 
         Calculate and log perplexity estimate from the latest mini-batch once every
-        `eval_every` documents. Set to None to disable perplexity estimation (faster).
+        `eval_every` documents. Set to `None` to disable perplexity estimation (faster),
+        or to `0` to only evaluate perplexity once, at the end of each corpus pass.
 
         Example:
 
@@ -110,7 +126,7 @@ class LdaMulticore(LdaModel):
         >>> print(lda[doc_bow])
 
         """
-        self.workers = workers
+        self.workers = max(1, cpu_count() - 1) if workers is None else workers
         self.batch = batch
         if alpha == 'auto':
             raise NotImplementedError("auto-tuning alpha not implemented in multicore LDA; use plain LdaModel.")
