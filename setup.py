@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2012 Radim Rehurek <radimrehurek@seznam.cz>
+# Copyright (C) 2014 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
@@ -99,7 +99,7 @@ model_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
 
 setup(
     name='gensim',
-    version='0.10.1',
+    version='0.10.2',
     description='Python framework for fast Vector Space Modelling',
     long_description=readfile('README.rst'),
 
@@ -135,7 +135,7 @@ setup(
         'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Text Processing :: Linguistic',

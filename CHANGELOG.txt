@@ -3,8 +3,13 @@ Changes
 
 0.10.2
 
+* new parallelized, LdaMulticore implementation (Jan Zikes, #232)
+* word2vec compiled from bundled C file at install time: no more pyximport (#233)
+* standardize show_/print_topics in LdaMallet (Benjamin Bray, #223)
+* add new word2vec multiplicative objective (3CosMul) of Levy & Goldberg (Gordon Mohr, #224)
 * preserve case in MALLET wrapper (mcburton, #222)
-* parallelized, multiprocessing LDA implementation (Jan Zikes, #232)
+* support for matrix-valued topic/word prior eta in LdaModel (mjwillson, #208)
+* py3k fix to SparseCorpus (Andreas Madsen, #234)
 
 0.10.1, 22/07/2014
 
