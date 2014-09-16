@@ -75,6 +75,8 @@ class LdaMulticore(LdaModel):
 
         `workers` is the number of extra processes to use for parallelization. Use
         all available cores by default.
+        WARNING: for best time performance use number of actual cores, cpu_count() returns
+        number of cores inclusive hyperthreading.
 
         If `batch` is not set, perform online training by updating the model once
         every `workers * chunksize` documents (online training). Otherwise,
