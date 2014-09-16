@@ -80,15 +80,19 @@ except ImportError:
                 neg_labels = zeros(model.negative + 1)
                 neg_labels[0] = 1.0
 
-            for word in lbls:
+            for label in lbls:
                 if word is None:
                     continue  # OOV word in the input sentence => skip
+                for pos, word in enumerate(sentence):
+                    if word is None:
+                        continue  # OOV word in the input sentence => skip
 
-                # now go over all words from the sentence, predicting each one in turn
-                for word2 in sentence:
-                    # don't train on OOV words
-                    if word2:
-                        train_sg_pair(model, word, word2, alpha, neg_labels, train_lbls, train_words)
+                    # now go over all words from the (reduced) window, predicting each one in turn
+                    start = max(0, pos - model.window + reduced_window)
+                    for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
+                        # don't train on OOV words and on the `word` itself
+                        if word2 and not (pos2 == pos):
+                            train_sg_pair(model, word2, label, alpha, neg_labels, train_words, train_lbls)
 
             return len([word for word in sentence if word is not None])
 

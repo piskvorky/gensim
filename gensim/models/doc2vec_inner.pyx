@@ -91,9 +91,9 @@ cdef void fast_sentence0_dbow_hs(
         f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (1 - word_code[b] - f) * alpha
         saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
-        if tl:
+        if tw:
             saxpy(&size, &g, &syn0[row1], &ONE, &syn1[row2], &ONE)
-    if tw:
+    if tl:
         saxpy(&size, &ONEF, work, &ONE, &syn0[row1], &ONE)
 
 
@@ -115,9 +115,9 @@ cdef void fast_sentence1_dbow_hs(
         f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (1 - word_code[b] - f) * alpha
         saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
-        if tl:
+        if tw:
             saxpy(&size, &g, &syn0[row1], &ONE, &syn1[row2], &ONE)
-    if tw:
+    if tl:
         saxpy(&size, &ONEF, work, &ONE, &syn0[row1], &ONE)
 
 
@@ -143,10 +143,10 @@ cdef void fast_sentence2_dbow_hs(
         g = (1 - word_code[b] - f) * alpha
         for a in range(size):
             work[a] += g * syn1[row2 + a]
-        if tl:
+        if tw:
             for a in range(size):
                 syn1[row2 + a] += g * syn0[row1 + a]
-    if tw:
+    if tl:
         for a in range(size):
             syn0[row1 + a] += work[a]
 
@@ -184,9 +184,9 @@ cdef unsigned long long fast_sentence0_dbow_neg(
         f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (label - f) * alpha
         saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
-        if tl:
+        if tw:
             saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
-    if tw:
+    if tl:
         saxpy(&size, &ONEF, work, &ONE, &syn0[row1], &ONE)
 
     return next_random
@@ -225,9 +225,9 @@ cdef unsigned long long fast_sentence1_dbow_neg(
         f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (label - f) * alpha
         saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
-        if tl:
+        if tw:
             saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
-    if tw:
+    if tl:
         saxpy(&size, &ONEF, work, &ONE, &syn0[row1], &ONE)
 
     return next_random
@@ -270,10 +270,10 @@ cdef unsigned long long fast_sentence2_dbow_neg(
         g = (label - f) * alpha
         for a in range(size):
             work[a] += g * syn1neg[row2 + a]
-        if tl:
+        if tw:
             for a in range(size):
                 syn1neg[row2 + a] += g * syn0[row1 + a]
-    if tw:
+    if tl:
         for a in range(size):
             syn0[row1 + a] += work[a]
 
@@ -692,13 +692,13 @@ def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_
     cdef int lbl_length
     cdef int window = model.window
 
-    cdef int i, j, k
+    cdef int i, j, k, l
     cdef long result = 0
 
     # For hierarchical softmax
     cdef REAL_t *syn1
-    cdef np.uint32_t *lbl_points[MAX_SENTENCE_LEN]
-    cdef np.uint8_t *lbl_codes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
+    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
 
     # For negative sampling
     cdef REAL_t *syn1neg
@@ -713,7 +713,7 @@ def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
         table = <np.uint32_t *>(np.PyArray_DATA(model.table))
         table_len = len(model.table)
-        next_random = (2**24)*np.random.randint(0,2**24) + np.random.randint(0,2**24)
+        next_random = (2**24) * np.random.randint(0, 2**24) + np.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
@@ -726,13 +726,13 @@ def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_
             codelens[i] = 0
         else:
             indexes[i] = word.index
-            # reduced_windows[i] = np.random.randint(window)
-            # if hs:
-                # codelens[i] = <int>len(word.code)
-                # codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                # points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
-            # else:
-                # codelens[i] = 1
+            reduced_windows[i] = np.random.randint(window)
+            if hs:
+                codelens[i] = <int>len(word.code)
+                codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+            else:
+                codelens[i] = 1
             result += 1
     for i in range(lbl_length):
         word = lbls[i]
@@ -740,35 +740,33 @@ def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_
             lbl_codelens[i] = 0
         else:
             lbl_indexes[i] = word.index
-            reduced_windows[i] = np.random.randint(window)
             if hs:
                 lbl_codelens[i] = <int>len(word.code)
-                lbl_codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                lbl_points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
             else:
                 lbl_codelens[i] = 1
             result += 1
 
     # release GIL & train on the sentence
     with nogil:
-        for i in range(lbl_length):
-            if lbl_codelens[i] == 0:
+        for l in range(lbl_length):
+            if lbl_codelens[l] == 0:
                 continue
-            j = i - window + reduced_windows[i]
-            if j < 0:
-                j = 0
-            k = i + window + 1 - reduced_windows[i]
-            if k > sentence_len:
-                k = sentence_len
-            for j in range(j, k):
-                if codelens[j] == 0:
+            for i in range(sentence_len):
+                if codelens[i] == 0:
                     continue
-                if hs:
-                    fast_sentence_dbow_hs(lbl_points[i], lbl_codes[i], lbl_codelens[i], syn0, syn1, size, indexes[j],
-                                          _alpha, work, tw, tl)
-                if negative:
-                    next_random = fast_sentence_dbow_neg(negative, table, table_len, syn0, syn1neg, size,
-                                                         lbl_indexes[i], indexes[j], _alpha, work, next_random, tw, tl)
+                j = i - window + reduced_windows[i]
+                if j < 0:
+                    j = 0
+                k = i + window + 1 - reduced_windows[i]
+                if k > sentence_len:
+                    k = sentence_len
+                for j in range(j, k):
+                    if codelens[j] == 0:
+                        continue
+                    if hs:
+                        fast_sentence_dbow_hs(points[j], codes[j], codelens[j], syn0, syn1, size, lbl_indexes[l], _alpha, work, tw, tl)
+                    if negative:
+                        next_random = fast_sentence_dbow_neg(negative, table, table_len, syn0, syn1neg, size, indexes[j], lbl_indexes[l], _alpha, work, next_random, tw, tl)
 
     return result
 
