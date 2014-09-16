@@ -726,13 +726,13 @@ def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_
             codelens[i] = 0
         else:
             indexes[i] = word.index
-            # reduced_windows[i] = np.random.randint(window)
-            # if hs:
-                # codelens[i] = <int>len(word.code)
-                # codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                # points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
-            # else:
-                # codelens[i] = 1
+            reduced_windows[i] = np.random.randint(window)
+            if hs:
+                codelens[i] = <int>len(word.code)
+                codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+            else:
+                codelens[i] = 1
             result += 1
     for i in range(lbl_length):
         word = lbls[i]

@@ -50,6 +50,7 @@ from word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair
 
 
 try:
+    raise ImportError
     from gensim_addons.models.doc2vec_inner import train_sentence_dbow, train_sentence_dm, FAST_VERSION
 except ImportError:
     try:
