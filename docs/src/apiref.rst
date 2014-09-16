@@ -22,6 +22,7 @@ Modules:
     corpora/ucicorpus
     corpora/indexedcorpus
     models/ldamodel
+    models/ldamulticore
     models/ldamallet
     models/lsimodel
     models/tfidfmodel

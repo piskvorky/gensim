@@ -32,7 +32,6 @@ The algorithm:
 
 
 import logging
-import itertools
 
 logger = logging.getLogger('gensim.models.ldamodel')
 
@@ -40,8 +39,7 @@ logger = logging.getLogger('gensim.models.ldamodel')
 import numpy # for arrays, array broadcasting etc.
 #numpy.seterr(divide='ignore') # ignore 0*log(0) errors
 
-from scipy.special import gammaln, digamma, psi # gamma function utils
-from scipy.special import gamma as gammafunc
+from scipy.special import gammaln, psi # gamma function utils
 from scipy.special import polygamma
 try:
     from scipy.maxentropy import logsumexp # log(sum(exp(x))) that tries to avoid overflow
@@ -203,7 +201,7 @@ class LdaModel(interfaces.TransformationABC):
         normalized asymmetric 1.0/topicno prior, the latter learns an asymmetric
         prior directly from your data.
 
-        `eta' can be a scalar for a symmetric prior over topic/word
+        `eta` can be a scalar for a symmetric prior over topic/word
         distributions, or a matrix of shape num_topics x num_words,
         which can be used to impose asymmetric priors over the word
         distribution on a per-topic basis. This may be useful if you
@@ -341,7 +339,7 @@ class LdaModel(interfaces.TransformationABC):
         to update the model's topic-word distributions, and return a 2-tuple
         `(gamma, sstats)`. Otherwise, return `(gamma, None)`. `gamma` is of shape
         `len(chunk) x self.num_topics`.
-        
+
         Avoids computing the `phi` variational parameter directly using the
         optimization presented in **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
 
@@ -503,7 +501,7 @@ class LdaModel(interfaces.TransformationABC):
             gamma_threshold = self.gamma_threshold
 
         # rho is the "speed" of updating; TODO try other fncs
-        rho = lambda: pow(1.0 + self.num_updates, -decay)
+        rho = lambda: pow(1.0 + self.num_updates / self.chunksize, -decay)
 
         try:
             lencorpus = len(corpus)
@@ -611,12 +609,11 @@ class LdaModel(interfaces.TransformationABC):
         # the topics change through this update, to assess convergence
         diff = numpy.log(self.expElogbeta)
         self.state.blend(rho, other)
-        del other
         diff -= self.state.get_Elogbeta()
         self.sync_state()
         self.print_topics(15) # print out some debug info at the end of each EM iteration
         logger.info("topic diff=%f, rho=%f" % (numpy.mean(numpy.abs(diff)), rho))
-        self.num_updates += 1
+        self.num_updates += other.numdocs
 
 
     def bound(self, corpus, gamma=None, subsample_ratio=1.0):
