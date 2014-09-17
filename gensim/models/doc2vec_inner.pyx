@@ -692,7 +692,7 @@ def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_
     cdef int lbl_length
     cdef int window = model.window
 
-    cdef int i, j, k, l
+    cdef int i, j
     cdef long result = 0
 
     # For hierarchical softmax
@@ -754,19 +754,10 @@ def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_
             for i in range(sentence_len):
                 if codelens[i] == 0:
                     continue
-                j = i - window + reduced_windows[i]
-                if j < 0:
-                    j = 0
-                k = i + window + 1 - reduced_windows[i]
-                if k > sentence_len:
-                    k = sentence_len
-                for j in range(j, k):
-                    if codelens[j] == 0:
-                        continue
-                    if hs:
-                        fast_sentence_dbow_hs(points[j], codes[j], codelens[j], syn0, syn1, size, lbl_indexes[l], _alpha, work, tw, tl)
-                    if negative:
-                        next_random = fast_sentence_dbow_neg(negative, table, table_len, syn0, syn1neg, size, indexes[j], lbl_indexes[l], _alpha, work, next_random, tw, tl)
+                if hs:
+                    fast_sentence_dbow_hs(points[i], codes[i], codelens[i], syn0, syn1, size, lbl_indexes[j], _alpha, work, tw, tl)
+                if negative:
+                    next_random = fast_sentence_dbow_neg(negative, table, table_len, syn0, syn1neg, size, indexes[i], lbl_indexes[j], _alpha, work, next_random, tw, tl)
 
     return result
 
