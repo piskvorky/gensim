@@ -15,6 +15,8 @@ import unittest
 import os
 import os.path
 
+import scipy
+import gensim
 from gensim.corpora import Dictionary
 from six import PY3
 from six.moves import zip
@@ -174,6 +176,10 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(dictionary.num_pos, dictionary_from_corpus_2.num_pos)
         self.assertEqual(dictionary.num_nnz, dictionary_from_corpus_2.num_nnz)
 
+        # Ensure Sparse2Corpus is compatible with from_corpus
+        bow = gensim.matutils.Sparse2Corpus(scipy.sparse.rand(10, 100))
+        dictionary = Dictionary.from_corpus(bow)
+        self.assertEqual(dictionary.num_docs, 100)
 
     def test_dict_interface(self):
         """Test Python 2 dict-like interface in both Python 2 and 3."""
