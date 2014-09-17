@@ -184,10 +184,8 @@ def extract_pages(f, filter_namespaces=False):
     """
     Extract pages from MediaWiki database dump.
 
-    Returns
-    -------
-    pages : iterable over (str, str)
-        Generates (title, content) pairs.
+    Return an iterable over (str, str) which generates (title, content) pairs.
+
     """
     elems = (elem for _, elem in iterparse(f, events=("end",)))
 

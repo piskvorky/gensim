@@ -4,6 +4,7 @@ Changes
 0.10.2
 
 * new parallelized, LdaMulticore implementation (Jan Zikes, #232)
+* Dynamic Topic Models (DTM) wrapper (Arttii, #205)
 * word2vec compiled from bundled C file at install time: no more pyximport (#233)
 * standardize show_/print_topics in LdaMallet (Benjamin Bray, #223)
 * add new word2vec multiplicative objective (3CosMul) of Levy & Goldberg (Gordon Mohr, #224)

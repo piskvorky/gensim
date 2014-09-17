@@ -13,21 +13,7 @@ This module allows for DTM and DIM model estimation from a training corpus.
 
 Example:
 
->>> model = gensim.models.DtmModel('dtm-win64.exe',
-    my_corpus, my_timeslices, num_topics=20, id2word=dictionary)
-
-   ntopics = 20 \
-   mode = fit \
-   rng_seed = 0 \
-   initialize_lda = true \
-   corpus_prefix = example/test \
-   outname = example/model_run \
-   top_chain_var = 0.005 \
-   alpha = 0.01 \
-   lda_sequence_min_iter = 6 \
-   lda_sequence_max_iter = 20 \
-   lda_max_em_iter = 10
-
+>>> model = gensim.models.DtmModel('dtm-win64.exe', my_corpus, my_timeslices, num_topics=20, id2word=dictionary)
 
 .. [1] https://code.google.com/p/princeton-statistical-learning/downloads/detail?name=dtm_release-0.8.tgz
 
@@ -44,7 +30,7 @@ import numpy as np
 
 from gensim import utils, corpora
 
-logger = logging.getLogger('gensim.models.dtmmodel')
+logger = logging.getLogger(__name__)
 
 
 class DtmModel(utils.SaveLoad):
@@ -59,15 +45,24 @@ class DtmModel(utils.SaveLoad):
             lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10, alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=False):
         """
         `dtm_path` is path to the dtm executable, e.g. `C:/dtm/dtm-win64.exe`.
+
         `corpus` is a gensim corpus, aka a stream of sparse document vectors.
+
         `id2word` is a mapping between tokens ids and token.
-        'lda_sequence_min_iter' min iteration of LDA
-        'lda_sequence_max_iter' max iteration of LDA
-        'lda_max_em_iter' max em optiimzatiion iterations in LDA
-        `alpha`  is a hyperparameter that affects sparsity of the document-topics for the LDA models in each timeslice
-        'top_chain_var' is a hyperparameter that affects
-        'rng_seed' is the random seed
-        'initialize_lda' initialize DTM with LDA
+
+        `lda_sequence_min_iter` min iteration of LDA.
+
+        `lda_sequence_max_iter` max iteration of LDA.
+
+        `lda_max_em_iter` max em optiimzatiion iterations in LDA.
+
+        `alpha` is a hyperparameter that affects sparsity of the document-topics for the LDA models in each timeslice.
+
+        `top_chain_var` is a hyperparameter that affects.
+
+        `rng_seed` is the random seed.
+
+        `initialize_lda` initialize DTM with LDA.
 
         """
         self.dtm_path = dtm_path
@@ -177,9 +172,10 @@ class DtmModel(utils.SaveLoad):
         """
         Train DTM model using specified corpus and time slices.
 
-        'mode' controls the mode of the mode.'fit' is for training. 'time' for analyzing documents through time according to a DTM, basically held out set
+        'mode' controls the mode of the mode: 'fit' is for training, 'time' for
+        analyzing documents through time according to a DTM, basically a held out set.
 
-        'model' controls the coice of model. 'fixed' is for DIM and 'dtm' for dtm
+        'model' controls the coice of model. 'fixed' is for DIM and 'dtm' for DTM.
 
         """
         self.convert_input(corpus, time_slices)

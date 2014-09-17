@@ -234,19 +234,30 @@ class Word2Vec(utils.SaveLoad):
         you plan to initialize it in some other way.
 
         `sg` defines the training algorithm. By default (`sg=1`), skip-gram is used. Otherwise, `cbow` is employed.
+
         `size` is the dimensionality of the feature vectors.
+
         `window` is the maximum distance between the current and predicted word within a sentence.
+
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
+
         `seed` = for the random number generator.
+
         `min_count` = ignore all words with total frequency lower than this.
+
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
-                default is 0 (off), useful value is 1e-5.
-        `workers` = use this many worker threads to train the model (=faster training with multicore machines)
-        `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0)
+            default is 0 (off), useful value is 1e-5.
+
+        `workers` = use this many worker threads to train the model (=faster training with multicore machines).
+
+        `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0).
+
         `negative` = if > 0, negative sampling will be used, the int for negative
-                specifies how many "noise words" should be drawn (usually between 5-20)
+        specifies how many "noise words" should be drawn (usually between 5-20).
+
         `cbow_mean` = if 0 (default), use the sum of the context word vectors. If 1, use the mean.
-                Only applies when cbow is used.
+        Only applies when cbow is used.
+
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
@@ -621,7 +632,7 @@ class Word2Vec(utils.SaveLoad):
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         """
         Find the top-N most similar words, using the multiplicative combination objective
-        proposed by Omer Levy and Yoav Goldberg in [1]_. Positive words still contribute
+        proposed by Omer Levy and Yoav Goldberg in [4]_. Positive words still contribute
         positively towards the similarity, negative words negatively, but with less
         susceptibility to one large distance dominating the calculation.
 
@@ -637,7 +648,8 @@ class Word2Vec(utils.SaveLoad):
           >>> trained_model.most_similar_cosmul(positive=['baghdad','england'],negative=['london'])
           [(u'iraq', 0.8488819003105164), ...]
 
-        .. [1] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
+        .. [4] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
+
         """
         self.init_sims()
 
