@@ -14,6 +14,7 @@ import unittest
 import tempfile
 import itertools
 
+from gensim.utils import to_unicode
 from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
                             ucicorpus, malletcorpus, textcorpus)
 
@@ -109,9 +110,7 @@ class CorpusTestCase(unittest.TestCase):
         corpus = self.corpus_class(fname)
         if hasattr(corpus, 'id2word'):
             firstdoc = next(iter(corpus))
-            testdoc = set((corpus.id2word[x], y) for x, y in firstdoc)
-            if isinstance(corpus.id2word[0], bytes):
-                testdoc = set((x.decode('utf-8'), y) for x, y in testdoc)
+            testdoc = set((to_unicode(corpus.id2word[x]), y) for x, y in firstdoc)
 
             self.assertEqual(testdoc, set([('computer', 1), ('human', 1), ('interface', 1)]))
 
@@ -120,9 +119,7 @@ class CorpusTestCase(unittest.TestCase):
             corpus.id2word = d
 
             firstdoc2 = next(iter(corpus))
-            testdoc2 = set((corpus.id2word[x], y) for x, y in firstdoc2)
-            if isinstance(corpus.id2word[0], bytes):
-                testdoc2 = set((x.decode('utf-8'), y) for x, y in testdoc2)
+            testdoc2 = set((to_unicode(corpus.id2word[x]), y) for x, y in firstdoc2)
             self.assertEqual(testdoc2, set([('computer', 1), ('human', 1), ('interface', 1)]))
 
 
