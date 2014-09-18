@@ -8,8 +8,8 @@ Latent Dirichlet Allocation (LDA) in Python, using all cores to parallelize and
 speed up model training.
 
 The parallelization uses multiprocessing; in case this doesn't work for you for
-some reason, try `LdaModel` which is an equivalent, but more straightforward and
-single-core implementation.
+some reason, try the :class:`gensim.models.ldamodel.LdaModel` class which is an
+equivalent, but more straightforward and single-core implementation.
 
 Wall-clock `performance on the English Wikipedia <http://radimrehurek.com/gensim/wiki.html>`_
 (2G corpus positions, 3.5M documents, 100K features, 0.54G non-zero entries in the final
@@ -27,7 +27,7 @@ bag-of-words matrix), requesting 100 topics:
 ====================================================== ==============
 
 (Measured on `this i7 server <http://www.hetzner.de/en/hosting/produkte_rootserver/ex40ssd>`_
-with 4 physical cores, so that optimal `workers=3`, one less the number of cores.)
+with 4 physical cores, so that optimal `workers=3`, one less than the number of cores.)
 
 This module allows both LDA model estimation from a training corpus and inference of topic
 distribution on new, unseen documents. The model can also be updated with new documents

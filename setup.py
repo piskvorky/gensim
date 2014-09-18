@@ -105,7 +105,7 @@ setup(
 
     ext_modules=[
         Extension('gensim.models.word2vec_inner',
-            sources=[os.path.join(model_dir, 'word2vec_inner.c')],
+            sources=['./gensim/models/word2vec_inner.c'],
             include_dirs=[model_dir])
     ],
     cmdclass={'build_ext': custom_build_ext},
