@@ -54,7 +54,6 @@ try:
     from gensim_addons.models.doc2vec_inner import train_sentence_dbow, train_sentence_dm, FAST_VERSION
 except ImportError:
     try:
-        raise ImportError
         # try to compile and use the faster cython version
         import pyximport
         models_dir = os.path.dirname(__file__) or os.getcwd()
