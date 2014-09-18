@@ -139,7 +139,7 @@ class LdaMallet(utils.SaveLoad):
                 fout.write(utils.to_utf8("%s 0 %s\n" % (docno, ' '.join(tokens))))
 
         # convert the text file above into MALLET's internal format
-        cmd = self.mallet_path + " import-file --keep-sequence --remove-stopwords --token-regex '\S+' --input %s --output %s"
+        cmd = self.mallet_path + " import-file --preserve-case --keep-sequence --remove-stopwords --token-regex '\S+' --input %s --output %s"
         if infer:
             cmd += ' --use-pipe-from ' + self.fcorpusmallet()
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet() + '.infer')
@@ -197,32 +197,32 @@ class LdaMallet(utils.SaveLoad):
         self.print_topics(15)
 
 
-    def print_topics(self, topics=10, topn=10):
-        return self.show_topics(topics, topn, log=True)
+    def print_topics(self, num_topics=10, num_words=10):
+        return self.show_topics(num_topics, num_words, log=True)
 
 
-    def show_topics(self, topics=10, topn=10, log=False, formatted=True):
+    def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         """
-        Print the `topN` most probable words for `topics` number of topics.
-        Set `topics=-1` to print all topics.
+        Print the `num_words` most probable words for `num_topics` number of topics.
+        Set `num_topics=-1` to print all topics.
 
         Set `formatted=True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
 
         """
-        if topics < 0 or topics >= self.num_topics:
-            topics = self.num_topics
-            chosen_topics = range(topics)
+        if num_topics < 0 or num_topics >= self.num_topics:
+            num_topics = self.num_topics
+            chosen_topics = range(num_topics)
         else:
-            topics = min(topics, self.num_topics)
+            num_topics = min(num_topics, self.num_topics)
             sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha)) # add a little random jitter, to randomize results around the same alpha
             sorted_topics = list(numpy.argsort(sort_alpha))
-            chosen_topics = sorted_topics[ : topics/2] + sorted_topics[-topics/2 : ]
+            chosen_topics = sorted_topics[ : num_topics//2] + sorted_topics[-num_topics//2 : ]
         shown = []
         for i in chosen_topics:
             if formatted:
-                topic = self.print_topic(i, topn=topn)
+                topic = self.print_topic(i, topn=num_words)
             else:
-                topic = self.show_topic(i, topn=topn)
+                topic = self.show_topic(i, topn=num_words)
             shown.append(topic)
             if log:
                 logger.info("topic #%i (%.3f): %s" % (i, self.alpha[i], topic))

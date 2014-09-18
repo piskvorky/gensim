@@ -202,6 +202,16 @@ class TestWord2VecModel(unittest.TestCase):
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, sg=0, hs=0, negative=2)
         self.models_equal(model, model2)
+        
+    def testSimilarities(self):
+        """Test similarity and n_similarity methods."""
+        # The model is trained using CBOW
+        model = word2vec.Word2Vec(size=2, min_count=1, sg=0, hs=0, negative=2)
+        model.build_vocab(sentences)     
+        model.train(sentences)
+        
+        self.assertTrue(model.n_similarity(['graph', 'trees'], ['trees', 'graph']))     
+        self.assertTrue(model.n_similarity(['graph'], ['trees']) == model.similarity('graph', 'trees')) 
 
     def testParallel(self):
         """Test word2vec parallel training."""

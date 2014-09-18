@@ -71,8 +71,9 @@ try:
 except ImportError:
     from Queue import Queue
 
-from numpy import exp, dot, zeros, outer, random, dtype, get_include, float32 as REAL,\
-    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis, ndarray, empty, sum as np_sum
+from numpy import exp, dot, zeros, outer, random, dtype, float32 as REAL,\
+    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis,\
+    ndarray, empty, sum as np_sum, prod
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -83,123 +84,117 @@ from six.moves import xrange
 
 
 try:
-    from gensim_addons.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
+    from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
 except ImportError:
-    try:
-        # try to compile and use the faster cython version
-        import pyximport
-        models_dir = os.path.dirname(__file__) or os.getcwd()
-        pyximport.install(setup_args={"include_dirs": [models_dir, get_include()]})
-        from word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
-    except:
-        # failed... fall back to plain numpy (20-80x slower training than the above)
-        FAST_VERSION = -1
+    # failed... fall back to plain numpy (20-80x slower training than the above)
+    FAST_VERSION = -1
 
-        def train_sentence_sg(model, sentence, alpha, work=None):
-            """
-            Update skip-gram model by training on a single sentence.
+    def train_sentence_sg(model, sentence, alpha, work=None):
+        """
+        Update skip-gram model by training on a single sentence.
 
-            The sentence is a list of Vocab objects (or None, where the corresponding
-            word is not in the vocabulary. Called internally from `Word2Vec.train()`.
+        The sentence is a list of Vocab objects (or None, where the corresponding
+        word is not in the vocabulary. Called internally from `Word2Vec.train()`.
 
-            This is the non-optimized, Python version. If you have cython installed, gensim
-            will use the optimized version from word2vec_inner instead.
+        This is the non-optimized, Python version. If you have cython installed, gensim
+        will use the optimized version from word2vec_inner instead.
 
-            """
+        """
+        if model.negative:
+            # precompute negative labels
+            labels = zeros(model.negative + 1)
+            labels[0] = 1.0
+
+        for pos, word in enumerate(sentence):
+            if word is None:
+                continue  # OOV word in the input sentence => skip
+            reduced_window = random.randint(model.window)  # `b` in the original word2vec code
+
+            # now go over all words from the (reduced) window, predicting each one in turn
+            start = max(0, pos - model.window + reduced_window)
+            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
+                # don't train on OOV words and on the `word` itself
+                if word2 and not (pos2 == pos):
+                    l1 = model.syn0[word2.index]
+                    neu1e = zeros(l1.shape)
+
+                    if model.hs:
+                        # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
+                        l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
+                        fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
+                        ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
+                        model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
+                        neu1e += dot(ga, l2a) # save error
+
+                    if model.negative:
+                        # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
+                        word_indices = [word.index]
+                        while len(word_indices) < model.negative + 1:
+                            w = model.table[random.randint(model.table.shape[0])]
+                            if w != word.index:
+                                word_indices.append(w)
+                        l2b = model.syn1neg[word_indices] # 2d matrix, k+1 x layer1_size
+                        fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
+                        gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
+                        model.syn1neg[word_indices] += outer(gb, l1) # learn hidden -> output
+                        neu1e += dot(gb, l2b) # save error
+
+                    model.syn0[word2.index] += neu1e  # learn input -> hidden
+
+        return len([word for word in sentence if word is not None])
+
+    def train_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
+        """
+        Update CBOW model by training on a single sentence.
+
+        The sentence is a list of Vocab objects (or None, where the corresponding
+        word is not in the vocabulary. Called internally from `Word2Vec.train()`.
+
+        This is the non-optimized, Python version. If you have cython installed, gensim
+        will use the optimized version from word2vec_inner instead.
+
+        """
+        if model.negative:
+            # precompute negative labels
+            labels = zeros(model.negative + 1)
+            labels[0] = 1.
+
+        for pos, word in enumerate(sentence):
+            if word is None:
+                continue  # OOV word in the input sentence => skip
+            reduced_window = random.randint(model.window) # `b` in the original word2vec code
+            start = max(0, pos - model.window + reduced_window)
+            window_pos = enumerate(sentence[start : pos + model.window + 1 - reduced_window], start)
+            word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
+            l1 = np_sum(model.syn0[word2_indices], axis=0) # 1 x layer1_size
+            if word2_indices and model.cbow_mean:
+                l1 /= len(word2_indices)
+            neu1e = zeros(l1.shape)
+
+            if model.hs:
+                l2a = model.syn1[word.point] # 2d matrix, codelen x layer1_size
+                fa = 1. / (1. + exp(-dot(l1, l2a.T))) # propagate hidden -> output
+                ga = (1. - word.code - fa) * alpha # vector of error gradients multiplied by the learning rate
+                model.syn1[word.point] += outer(ga, l1) # learn hidden -> output
+                neu1e += dot(ga, l2a) # save error
+
             if model.negative:
-                # precompute negative labels
-                labels = zeros(model.negative + 1)
-                labels[0] = 1.0
+                # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
+                word_indices = [word.index]
+                while len(word_indices) < model.negative + 1:
+                    w = model.table[random.randint(model.table.shape[0])]
+                    if w != word.index:
+                        word_indices.append(w)
+                l2b = model.syn1neg[word_indices] # 2d matrix, k+1 x layer1_size
+                fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
+                gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
+                model.syn1neg[word_indices] += outer(gb, l1) # learn hidden -> output
+                neu1e += dot(gb, l2b) # save error
 
-            for pos, word in enumerate(sentence):
-                if word is None:
-                    continue  # OOV word in the input sentence => skip
-                reduced_window = random.randint(model.window)  # `b` in the original word2vec code
+            model.syn0[word2_indices] += neu1e # learn input -> hidden, here for all words in the window separately
 
-                # now go over all words from the (reduced) window, predicting each one in turn
-                start = max(0, pos - model.window + reduced_window)
-                for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
-                    # don't train on OOV words and on the `word` itself
-                    if word2 and not (pos2 == pos):
-                        l1 = model.syn0[word2.index]
-                        neu1e = zeros(l1.shape)
-
-                        if model.hs:
-                            # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
-                            l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
-                            fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  #  propagate hidden -> output
-                            ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
-                            model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
-                            neu1e += dot(ga, l2a) # save error
-
-                        if model.negative:
-                            # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
-                            word_indices = [word.index]
-                            while len(word_indices) < model.negative + 1:
-                                w = model.table[random.randint(model.table.shape[0])]
-                                if w != word.index:
-                                    word_indices.append(w)
-                            l2b = model.syn1neg[word_indices] # 2d matrix, k+1 x layer1_size
-                            fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
-                            gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
-                            model.syn1neg[word_indices] += outer(gb, l1) # learn hidden -> output
-                            neu1e += dot(gb, l2b) # save error
-
-                        model.syn0[word2.index] += neu1e  # learn input -> hidden
-
-            return len([word for word in sentence if word is not None])
-
-        def train_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
-            """
-            Update CBOW model by training on a single sentence.
-
-            The sentence is a list of Vocab objects (or None, where the corresponding
-            word is not in the vocabulary. Called internally from `Word2Vec.train()`.
-
-            This is the non-optimized, Python version. If you have cython installed, gensim
-            will use the optimized version from word2vec_inner instead.
-
-            """
-            if model.negative:
-                # precompute negative labels
-                labels = zeros(model.negative + 1)
-                labels[0] = 1.
-
-            for pos, word in enumerate(sentence):
-                if word is None:
-                    continue  # OOV word in the input sentence => skip
-                reduced_window = random.randint(model.window) # `b` in the original word2vec code
-                start = max(0, pos - model.window + reduced_window)
-                window_pos = enumerate(sentence[start : pos + model.window + 1 - reduced_window], start)
-                word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
-                l1 = np_sum(model.syn0[word2_indices], axis=0) # 1 x layer1_size
-                if word2_indices and model.cbow_mean:
-                    l1 /= len(word2_indices)
-                neu1e = zeros(l1.shape)
-
-                if model.hs:
-                    l2a = model.syn1[word.point] # 2d matrix, codelen x layer1_size
-                    fa = 1. / (1. + exp(-dot(l1, l2a.T))) # propagate hidden -> output
-                    ga = (1. - word.code - fa) * alpha # vector of error gradients multiplied by the learning rate
-                    model.syn1[word.point] += outer(ga, l1) # learn hidden -> output
-                    neu1e += dot(ga, l2a) # save error
-
-                if model.negative:
-                    # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
-                    word_indices = [word.index]
-                    while len(word_indices) < model.negative + 1:
-                        w = model.table[random.randint(model.table.shape[0])]
-                        if w != word.index:
-                            word_indices.append(w)
-                    l2b = model.syn1neg[word_indices] # 2d matrix, k+1 x layer1_size
-                    fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
-                    gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
-                    model.syn1neg[word_indices] += outer(gb, l1) # learn hidden -> output
-                    neu1e += dot(gb, l2b) # save error
-
-                model.syn0[word2_indices] += neu1e # learn input -> hidden, here for all words in the window separately
-
-            return len([word for word in sentence if word is not None])
+        return len([word for word in sentence if word is not None])
+    # end of plain numpy implementation
 
 
 class Vocab(object):
@@ -239,19 +234,30 @@ class Word2Vec(utils.SaveLoad):
         you plan to initialize it in some other way.
 
         `sg` defines the training algorithm. By default (`sg=1`), skip-gram is used. Otherwise, `cbow` is employed.
+
         `size` is the dimensionality of the feature vectors.
+
         `window` is the maximum distance between the current and predicted word within a sentence.
+
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
+
         `seed` = for the random number generator.
+
         `min_count` = ignore all words with total frequency lower than this.
+
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
-                default is 0 (off), useful value is 1e-5.
-        `workers` = use this many worker threads to train the model (=faster training with multicore machines)
-        `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0)
+            default is 0 (off), useful value is 1e-5.
+
+        `workers` = use this many worker threads to train the model (=faster training with multicore machines).
+
+        `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0).
+
         `negative` = if > 0, negative sampling will be used, the int for negative
-                specifies how many "noise words" should be drawn (usually between 5-20)
+        specifies how many "noise words" should be drawn (usually between 5-20).
+
         `cbow_mean` = if 0 (default), use the sum of the context word vectors. If 1, use the mean.
-                Only applies when cbow is used.
+        Only applies when cbow is used.
+
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
@@ -623,6 +629,63 @@ class Word2Vec(utils.SaveLoad):
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
+    def most_similar_cosmul(self, positive=[], negative=[], topn=10):
+        """
+        Find the top-N most similar words, using the multiplicative combination objective
+        proposed by Omer Levy and Yoav Goldberg in [4]_. Positive words still contribute
+        positively towards the similarity, negative words negatively, but with less
+        susceptibility to one large distance dominating the calculation.
+
+        In the common analogy-solving case, of two positive and one negative examples,
+        this method is equivalent to the "3CosMul" objective (equation (4)) of Levy and Goldberg.
+
+        Additional positive or negative examples contribute to the numerator or denominator,
+        respectively – a potentially sensible but untested extension of the method. (With
+        a single positive example, rankings will be the same as in the default most_similar.)
+
+        Example::
+
+          >>> trained_model.most_similar_cosmul(positive=['baghdad','england'],negative=['london'])
+          [(u'iraq', 0.8488819003105164), ...]
+
+        .. [4] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
+
+        """
+        self.init_sims()
+
+        if isinstance(positive, string_types) and not negative:
+            # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
+            positive = [positive]
+
+        all_words = set()
+
+        def word_vec(word):
+            if isinstance(word, ndarray):
+                return word
+            elif word in self.vocab:
+                all_words.add(self.vocab[word].index)
+                return self.syn0norm[self.vocab[word].index]
+            else:
+                raise KeyError("word '%s' not in vocabulary" % word)
+
+        positive = [word_vec(word) for word in positive]
+        negative = [word_vec(word) for word in negative]
+        if not positive:
+            raise ValueError("cannot compute similarity with no input")
+
+        # equation (4) of Levy & Goldberg "Linguistic Regularities...",
+        # with distances shifted to [0,1] per footnote (7)
+        pos_dists = [((1 + dot(self.syn0norm, term)) / 2) for term in positive]
+        neg_dists = [((1 + dot(self.syn0norm, term)) / 2) for term in negative]
+        dists = prod(pos_dists, axis=0) / (prod(neg_dists, axis=0) + 0.000001)
+
+        if not topn:
+            return dists
+        best = argsort(dists)[::-1][:topn + len(all_words)]
+        # ignore (don't return) words from the input
+        result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
+        return result[:topn]
+
 
     def doesnt_match(self, words):
         """
@@ -679,6 +742,27 @@ class Word2Vec(utils.SaveLoad):
         return dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
 
 
+    def n_similarity(self, ws1, ws2):
+        """
+        Compute cosine similarity between two sets of words.
+
+        Example::
+
+          >>> trained_model.n_similarity(['sushi', 'shop'], ['japanese', 'restaurant'])
+          0.61540466561049689
+
+          >>> trained_model.n_similarity(['restaurant', 'japanese'], ['japanese', 'restaurant'])
+          1.0000000000000004
+
+          >>> trained_model.n_similarity(['sushi'], ['restaurant']) == trained_model.similarity('sushi', 'restaurant')
+          True
+
+        """
+        v1 = [self[word] for word in ws1]
+        v2 = [self[word] for word in ws2]
+        return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
+
+
     def init_sims(self, replace=False):
         """
         Precompute L2-normalized vectors.
@@ -702,7 +786,7 @@ class Word2Vec(utils.SaveLoad):
                 self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
 
-    def accuracy(self, questions, restrict_vocab=30000):
+    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
@@ -752,7 +836,7 @@ class Word2Vec(utils.SaveLoad):
                 ignore = set(self.vocab[v].index for v in [a, b, c])  # indexes of words to ignore
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
-                for index in argsort(self.most_similar(positive=[b, c], negative=[a], topn=False))[::-1]:
+                for index in argsort(most_similar(self,positive=[b, c], negative=[a], topn=False))[::-1]:
                     if index in ok_index and index not in ignore:
                         predicted = self.index2word[index]
                         if predicted != expected:
