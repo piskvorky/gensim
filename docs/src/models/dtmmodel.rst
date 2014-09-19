@@ -5,3 +5,5 @@
     :synopsis: Dynamic Topic Models
     :members:
     :inherited-members:
+    :undoc-members:
+    :show-inheritance:

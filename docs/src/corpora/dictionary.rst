@@ -5,4 +5,5 @@
     :synopsis: Construct word<->id mappings
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:

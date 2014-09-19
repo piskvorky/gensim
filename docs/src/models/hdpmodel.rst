@@ -5,4 +5,5 @@
     :synopsis: Hierarchical Dirichlet Process
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:

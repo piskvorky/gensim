@@ -5,4 +5,5 @@
     :synopsis: Construct word<->id mappings on the fly (the "hashing trick")
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:

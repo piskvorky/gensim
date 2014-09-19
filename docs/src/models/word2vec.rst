@@ -5,4 +5,5 @@
     :synopsis: Deep learning with word2vec
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:
