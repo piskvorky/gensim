@@ -280,7 +280,6 @@ class Word2Vec(utils.SaveLoad):
         self.negative = negative
         self.cbow_mean = int(cbow_mean)
         self.deterministic = deterministic  # If True, seed each initial vector using hash of corresponding word
-
         if sentences is not None:
             self.build_vocab(sentences)
             self.train(sentences)
@@ -483,9 +482,9 @@ class Word2Vec(utils.SaveLoad):
         self.syn0 = empty((len(self.vocab), self.layer1_size), dtype=REAL)
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
         for i in xrange(len(self.vocab)):
-            if self.deterministic:                                                   # KCL
-                # construct deterministic seed from word AND seed argument           # KCL
-                random.seed(uint32(hash(self.index2word[i] + str(self.seed))))  # KCL
+            if self.deterministic:
+                # construct deterministic seed from word AND seed argument
+                random.seed(uint32(hash(self.index2word[i] + str(self.seed))))
             self.syn0[i] = (random.rand(self.layer1_size) - 0.5) / self.layer1_size
         if self.hs:
             self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
