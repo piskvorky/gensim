@@ -82,6 +82,7 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 
+import mmh3     # KCL
 
 try:
     from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
@@ -220,7 +221,7 @@ class Word2Vec(utils.SaveLoad):
 
     """
     def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
-        sample=0, seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0, cbow_mean=0):
+        sample=0, seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0, cbow_mean=0, deterministic=False):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -258,6 +259,10 @@ class Word2Vec(utils.SaveLoad):
         `cbow_mean` = if 0 (default), use the sum of the context word vectors. If 1, use the mean.
         Only applies when cbow is used.
 
+        'deterministic' = if true, use hash of each word (concatenated with
+        declared seed argument) to generate corresponding initial word vector.
+        Allows comparison of models trained on separate corpora.
+
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
@@ -276,6 +281,8 @@ class Word2Vec(utils.SaveLoad):
         self.hs = hs
         self.negative = negative
         self.cbow_mean = int(cbow_mean)
+        self.deterministic = deterministic  # If True, seed each initial vector using hash of corresponding word
+
         if sentences is not None:
             self.build_vocab(sentences)
             self.train(sentences)
@@ -478,6 +485,9 @@ class Word2Vec(utils.SaveLoad):
         self.syn0 = empty((len(self.vocab), self.layer1_size), dtype=REAL)
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
         for i in xrange(len(self.vocab)):
+            if self.deterministic:                                                   # KCL
+                # construct deterministic seed from word AND seed argument           # KCL
+                random.seed(uint32(mmh3.hash(self.index2word[i] + str(self.seed))))  # KCL
             self.syn0[i] = (random.rand(self.layer1_size) - 0.5) / self.layer1_size
         if self.hs:
             self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
