@@ -82,6 +82,7 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 
+
 try:
     from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
 except ImportError:
