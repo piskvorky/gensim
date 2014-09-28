@@ -82,8 +82,6 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 
-import mmh3     # KCL
-
 try:
     from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
 except ImportError:
@@ -487,7 +485,7 @@ class Word2Vec(utils.SaveLoad):
         for i in xrange(len(self.vocab)):
             if self.deterministic:                                                   # KCL
                 # construct deterministic seed from word AND seed argument           # KCL
-                random.seed(uint32(mmh3.hash(self.index2word[i] + str(self.seed))))  # KCL
+                random.seed(uint32(hash(self.index2word[i] + str(self.seed))))  # KCL
             self.syn0[i] = (random.rand(self.layer1_size) - 0.5) / self.layer1_size
         if self.hs:
             self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
