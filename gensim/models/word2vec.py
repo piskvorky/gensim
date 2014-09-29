@@ -220,7 +220,7 @@ class Word2Vec(utils.SaveLoad):
 
     """
     def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
-        sample=0, seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0, cbow_mean=0, deterministic=False):
+        sample=0, seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0, cbow_mean=0):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -242,7 +242,7 @@ class Word2Vec(utils.SaveLoad):
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
 
         `seed` = for the random number generator. Initial vectors for each
-        token are seeded with a hash of the concatenation of token + str(seed).
+        word are seeded with a hash of the concatenation of word + str(seed).
 
         `min_count` = ignore all words with total frequency lower than this.
 
