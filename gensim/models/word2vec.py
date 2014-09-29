@@ -260,7 +260,7 @@ class Word2Vec(utils.SaveLoad):
         Only applies when cbow is used.
 
         'hashfxn' = hash function to use to initialize vectors. Default is
-        Python's built in hash function, which is attrocious.
+        Python's rudimentary built in hash function.
 
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
@@ -483,8 +483,7 @@ class Word2Vec(utils.SaveLoad):
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
         for i in xrange(len(self.vocab)):
             # construct deterministic seed from word AND seed argument
-            # Note: Python's built in hash function can vary across versions of
-            # Python, but is probably always terrible
+            # Note: Python's built in hash function can vary across versions of Python
             random.seed(uint32(self.hashfxn(self.index2word[i] + str(self.seed))))
             self.syn0[i] = (random.rand(self.layer1_size) - 0.5) / self.layer1_size
         if self.hs:
