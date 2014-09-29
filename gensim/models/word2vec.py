@@ -241,7 +241,8 @@ class Word2Vec(utils.SaveLoad):
 
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
 
-        `seed` = for the random number generator.
+        `seed` = for the random number generator. Initial vectors for each
+        token are seeded with a hash of the concatenation of token + str(seed).
 
         `min_count` = ignore all words with total frequency lower than this.
 
@@ -257,10 +258,6 @@ class Word2Vec(utils.SaveLoad):
 
         `cbow_mean` = if 0 (default), use the sum of the context word vectors. If 1, use the mean.
         Only applies when cbow is used.
-
-        'deterministic' = if true, use hash of each word (concatenated with
-        declared seed argument) to generate corresponding initial word vector.
-        Allows comparison of models trained on separate corpora.
 
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
@@ -280,7 +277,6 @@ class Word2Vec(utils.SaveLoad):
         self.hs = hs
         self.negative = negative
         self.cbow_mean = int(cbow_mean)
-        self.deterministic = deterministic  # If True, seed each initial vector using hash of corresponding word
         if sentences is not None:
             self.build_vocab(sentences)
             self.train(sentences)
@@ -479,13 +475,12 @@ class Word2Vec(utils.SaveLoad):
     def reset_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
         logger.info("resetting layer weights")
-        random.seed(self.seed)
         self.syn0 = empty((len(self.vocab), self.layer1_size), dtype=REAL)
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
         for i in xrange(len(self.vocab)):
-            if self.deterministic:
-                # construct deterministic seed from word AND seed argument
-                random.seed(uint32(hash(self.index2word[i] + str(self.seed))))
+            # construct deterministic seed from word AND seed argument
+            # Note: Python's built in hash function can vary across versions of Python
+            random.seed(uint32(hash(self.index2word[i] + str(self.seed))))
             self.syn0[i] = (random.rand(self.layer1_size) - 0.5) / self.layer1_size
         if self.hs:
             self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
