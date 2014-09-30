@@ -5,4 +5,5 @@
     :synopsis: Corpus in Blei's LDA-C format
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:

@@ -5,4 +5,5 @@
     :synopsis: Corpus in SVMlight format
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:
