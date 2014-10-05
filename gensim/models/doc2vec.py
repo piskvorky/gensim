@@ -9,7 +9,8 @@
 Deep learning via the distributed memory and distributed bag of words models from
 [1]_, using either hierarchical softmax or negative sampling [2]_ [3]_.
 
-**Install Cython with `pip install cython` to use optimized doc2vec training** (70x speedup [4]_).
+**Install Cython with `pip install cython` before installing gensim, to use optimized
+doc2vec training** (70x speedup [blog]_).
 
 Initialize a model with e.g.::
 
@@ -29,7 +30,7 @@ The model can also be instantiated from an existing file on disk in the word2vec
 .. [2] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
 .. [3] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
        In Proceedings of NIPS, 2013.
-.. [4] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
+.. [blog] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
 
 """
 

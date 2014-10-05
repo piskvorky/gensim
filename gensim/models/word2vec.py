@@ -14,7 +14,8 @@ and extended with additional functionality.
 
 For a blog tutorial on gensim word2vec, with an interactive web app trained on GoogleNews, visit http://radimrehurek.com/2014/02/word2vec-tutorial/
 
-**Install Cython with `pip install cython` to use optimized word2vec training** (70x speedup [3]_).
+**Install Cython with `pip install cython` before installing gensim, to use optimized
+word2vec training** (70x speedup [3]_).
 
 Initialize a model with e.g.::
 
