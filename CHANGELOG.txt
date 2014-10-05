@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.10.3
+
+* initialize word2vec deterministacally, for increased reproducibility (KCzar, #240)
+
 0.10.2, 18/09/2014
 
 * new parallelized, LdaMulticore implementation (Jan Zikes, #232)
