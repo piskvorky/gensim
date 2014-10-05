@@ -16,7 +16,7 @@ function (adler32 by default). Using HashDictionary, new words can be represente
 without an extra pass through the corpus to collect all the ids first. This is another
 advantage: HashDictionary can be used with non-repeatable (once-only) streams of documents.
 
-A disadvantage of HashDictionary is that, unline plain :class:`Dictionary`, several words may map
+A disadvantage of HashDictionary is that, unlike plain :class:`Dictionary`, several words may map
 to the same id, causing hash collisions. The word<->id mapping is no longer a bijection.
 
 """
