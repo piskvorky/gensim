@@ -47,7 +47,7 @@ from numpy import zeros, random, sum as np_sum
 logger = logging.getLogger(__name__)
 
 from gensim import utils  # utility fnc for pickling, common scipy operations etc
-from word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair
+from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair
 
 try:
     from gensim.models.doc2vec_inner import train_sentence_dbow, train_sentence_dm, FAST_VERSION
