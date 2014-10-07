@@ -294,7 +294,7 @@ class Word2Vec(utils.SaveLoad):
         total_words = self.iter * int(sum(v.count * v.sample_probability for v in itervalues(self.vocab)))
         for i in xrange(self.iter):
             logger.info("iteration : %d", i)
-            word_count = self.train(sentences, total_words = total_words, word_count = word_count)        
+            word_count = self.train(sentences, total_words = total_words, word_count = word_count)
 
     def make_table(self, table_size=100000000, power=0.75):
         """
