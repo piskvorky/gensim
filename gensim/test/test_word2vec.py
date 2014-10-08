@@ -224,8 +224,8 @@ class TestWord2VecModel(unittest.TestCase):
             model = word2vec.Word2Vec(corpus, workers=workers)
             sims = model.most_similar('israeli')
             # the exact vectors and therefore similarities may differ, due to different thread collisions/randomization
-            # so let's test only for top5
-            self.assertTrue('palestinian' in [sims[i][0] for i in range(5)])
+            # so let's test only for top3
+            self.assertTrue('palestinian' in [sims[i][0] for i in range(3)])
 
     def testRNG(self):
         """Test word2vec results identical with identical RNG seed."""
