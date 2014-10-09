@@ -284,10 +284,9 @@ class Word2Vec(utils.SaveLoad):
         self.negative = negative
         self.cbow_mean = int(cbow_mean)
         self.hashfxn = hashfxn
-        self.iter = iter
         if sentences is not None:
             self.build_vocab(sentences)
-            sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
+            sentences = utils.RepeatCorpusNTimes(sentences, iter)
             self.train(sentences)
 
     def make_table(self, table_size=100000000, power=0.75):
