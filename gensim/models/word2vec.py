@@ -14,7 +14,8 @@ and extended with additional functionality.
 
 For a blog tutorial on gensim word2vec, with an interactive web app trained on GoogleNews, visit http://radimrehurek.com/2014/02/word2vec-tutorial/
 
-**Install Cython with `pip install cython` to use optimized word2vec training** (70x speedup [3]_).
+**Install Cython with `pip install cython` before installing gensim, to use optimized
+word2vec training** (70x speedup [3]_).
 
 Initialize a model with e.g.::
 
@@ -235,7 +236,8 @@ class Word2Vec(utils.SaveLoad):
 
     """
     def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
-        sample=0, seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0, cbow_mean=0):
+        sample=0, seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0,
+        cbow_mean=0, hashfxn=hash):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -256,7 +258,8 @@ class Word2Vec(utils.SaveLoad):
 
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
 
-        `seed` = for the random number generator.
+        `seed` = for the random number generator. Initial vectors for each
+        word are seeded with a hash of the concatenation of word + str(seed).
 
         `min_count` = ignore all words with total frequency lower than this.
 
@@ -272,6 +275,9 @@ class Word2Vec(utils.SaveLoad):
 
         `cbow_mean` = if 0 (default), use the sum of the context word vectors. If 1, use the mean.
         Only applies when cbow is used.
+
+        `hashfxn` = hash function to use to randomly initialize weights, for increased
+        training reproducibility. Default is Python's rudimentary built in hash function.
 
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
@@ -291,6 +297,7 @@ class Word2Vec(utils.SaveLoad):
         self.hs = hs
         self.negative = negative
         self.cbow_mean = int(cbow_mean)
+        self.hashfxn = hashfxn
         if sentences is not None:
             self.build_vocab(sentences)
             self.train(sentences)
@@ -495,10 +502,12 @@ class Word2Vec(utils.SaveLoad):
     def reset_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
         logger.info("resetting layer weights")
-        random.seed(self.seed)
         self.syn0 = empty((len(self.vocab), self.layer1_size), dtype=REAL)
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
         for i in xrange(len(self.vocab)):
+            # construct deterministic seed from word AND seed argument
+            # Note: Python's built in hash function can vary across versions of Python
+            random.seed(uint32(self.hashfxn(self.index2word[i] + str(self.seed))))
             self.syn0[i] = (random.rand(self.layer1_size) - 0.5) / self.layer1_size
         if self.hs:
             self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)

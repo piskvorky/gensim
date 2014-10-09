@@ -1,15 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
+# Author: Jan Zikes, Radim Rehurek
+# Copyright (C) 2014 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Latent Dirichlet Allocation (LDA) in Python, using all cores to parallelize and
+Latent Dirichlet Allocation (LDA) in Python, using all CPU cores to parallelize and
 speed up model training.
 
 The parallelization uses multiprocessing; in case this doesn't work for you for
 some reason, try the :class:`gensim.models.ldamodel.LdaModel` class which is an
 equivalent, but more straightforward and single-core implementation.
+
+The training algorithm:
+
+* is **streamed**: training documents may come in sequentially, no random access required,
+* runs in **constant memory** w.r.t. the number of documents: size of the
+  training corpus does not affect memory footprint, can process corpora larger than RAM
 
 Wall-clock `performance on the English Wikipedia <http://radimrehurek.com/gensim/wiki.html>`_
 (2G corpus positions, 3.5M documents, 100K features, 0.54G non-zero entries in the final
@@ -19,9 +27,9 @@ bag-of-words matrix), requesting 100 topics:
 ====================================================== ==============
  algorithm                                             training time
 ====================================================== ==============
- MulticoreLda(workers=1)                               2h30m
- MulticoreLda(workers=2)                               1h24m
- MulticoreLda(workers=3)                               1h6m
+ LdaMulticore(workers=1)                               2h30m
+ LdaMulticore(workers=2)                               1h24m
+ LdaMulticore(workers=3)                               1h6m
  old LdaModel()                                        3h44m
  simply iterating over input corpus = I/O overhead     20m
 ====================================================== ==============
@@ -35,12 +43,6 @@ for online training.
 
 The core estimation code is based on the `onlineldavb.py` script by M. Hoffman [1]_, see
 **Hoffman, Blei, Bach: Online Learning for Latent Dirichlet Allocation, NIPS 2010.**
-
-The algorithm:
-
-* is **streamed**: training documents may come in sequentially, no random access required,
-* runs in **constant memory** w.r.t. the number of documents: size of the
-  training corpus does not affect memory footprint, can process corpora larger than RAM
 
 .. [1] http://www.cs.princeton.edu/~mdhoffma
 """
