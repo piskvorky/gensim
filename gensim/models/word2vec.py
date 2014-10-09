@@ -287,14 +287,8 @@ class Word2Vec(utils.SaveLoad):
         self.iter = iter
         if sentences is not None:
             self.build_vocab(sentences)
-            self.train_multiple_iter(sentences)
-
-    def train_multiple_iter(self, sentences):
-        word_count = 0
-        total_words = self.iter * int(sum(v.count * v.sample_probability for v in itervalues(self.vocab)))
-        for i in xrange(self.iter):
-            logger.info("iteration : %d", i)
-            word_count = self.train(sentences, total_words = total_words, word_count = word_count)
+            sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
+            self.train(sentences)
 
     def make_table(self, table_size=100000000, power=0.75):
         """
@@ -428,7 +422,7 @@ class Word2Vec(utils.SaveLoad):
             raise RuntimeError("you must first build vocabulary before training the model")
 
         start, next_report = time.time(), [1.0]
-        word_count = [word_count, word_count]
+        word_count = [word_count]
         total_words = total_words or int(sum(v.count * v.sample_probability for v in itervalues(self.vocab)))
         jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         lock = threading.Lock()  # for shared state (=number of words trained so far, log reports...)
@@ -454,7 +448,7 @@ class Word2Vec(utils.SaveLoad):
                     elapsed = time.time() - start
                     if elapsed >= next_report[0]:
                         logger.info("PROGRESS: at %.2f%% words, alpha %.05f, %.0f words/s" %
-                            (100.0 * word_count[0] / total_words, alpha, (word_count[0] - word_count[1]) / elapsed if elapsed else 0.0))
+                            (100.0 * word_count[0] / total_words, alpha, word_count[0] / elapsed if elapsed else 0.0))
                         next_report[0] = elapsed + 1.0  # don't flood the log, wait at least a second between progress reports
 
         workers = [threading.Thread(target=worker_train) for _ in xrange(self.workers)]
@@ -482,7 +476,7 @@ class Word2Vec(utils.SaveLoad):
 
         elapsed = time.time() - start
         logger.info("training on %i words took %.1fs, %.0f words/s" %
-            (word_count[0]-word_count[1], elapsed, (word_count[0]-word_count[1]) / elapsed if elapsed else 0.0))
+            (word_count[0], elapsed, word_count[0] / elapsed if elapsed else 0.0))
 
         return word_count[0]
 
