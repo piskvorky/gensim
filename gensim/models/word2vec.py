@@ -284,6 +284,7 @@ class Word2Vec(utils.SaveLoad):
         self.negative = negative
         self.cbow_mean = int(cbow_mean)
         self.hashfxn = hashfxn
+        self.iter = iter
         if sentences is not None:
             self.build_vocab(sentences)
             sentences = utils.RepeatCorpusNTimes(sentences, iter)
@@ -422,7 +423,7 @@ class Word2Vec(utils.SaveLoad):
 
         start, next_report = time.time(), [1.0]
         word_count = [word_count]
-        total_words = total_words or int(sum(v.count * v.sample_probability for v in itervalues(self.vocab)))
+        total_words = total_words or int(sum(v.count * v.sample_probability for v in itervalues(self.vocab)) * self.iter)
         jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         lock = threading.Lock()  # for shared state (=number of words trained so far, log reports...)
 
