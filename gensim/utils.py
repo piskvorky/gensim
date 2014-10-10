@@ -478,7 +478,9 @@ class RepeatCorpusNTimes(SaveLoad):
         self.n = n
 
     def __iter__(self):
-        return itertools.chain.from_iterable(itertools.repeat(tuple(self.corpus), self.n))
+        for _ in xrange(self.n):
+            for document in self.corpus:
+                yield document
 
 class ClippedCorpus(SaveLoad):
     def __init__(self, corpus, max_docs=None):
