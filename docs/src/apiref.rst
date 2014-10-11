@@ -34,6 +34,7 @@ Modules:
     models/lda_dispatcher
     models/lda_worker
     models/word2vec
+    models/doc2vec
     models/dtmmodel
     similarities/docsim
     similarities/simserver
