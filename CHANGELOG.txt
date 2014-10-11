@@ -3,7 +3,8 @@ Changes
 
 0.10.3
 
-* initialize word2vec deterministacally, for increased reproducibility (KCzar, #240)
+* added doc2vec (=paragraph2vec = extension of word2vec) model (Timothy Emerick, #240)
+* initialize word2vec deterministically, for increased experiment reproducibility (KCzar, #240)
 
 0.10.2, 18/09/2014
 
