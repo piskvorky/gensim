@@ -206,8 +206,10 @@ class Dictionary(utils.SaveLoad, Mapping):
         good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
         if keep_n is not None:
             good_ids = good_ids[:keep_n]
-        logger.info("discarding %i tokens, keeping %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents",
-                     len(self) - len(good_ids), len(good_ids), no_below, no_above_abs, 100.0 * no_above)
+        bad_words = [(self[id], self.dfs.get(id, 0)) for id in set(self).difference(good_ids)]
+        logger.info("discarding %i tokens: %s...", len(self) - len(good_ids), bad_words[:10])
+        logger.info("keeping %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents",
+            len(good_ids), no_below, no_above_abs, 100.0 * no_above)
 
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
         self.filter_tokens(good_ids=good_ids)
