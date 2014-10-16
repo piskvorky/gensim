@@ -112,6 +112,12 @@ class IndexedCorpus(interfaces.CorpusABC):
     def __getitem__(self, docno):
         if self.index is None:
             raise RuntimeError("cannot call corpus[docid] without an index")
+
+        if isinstance(docno, slice):
+            return utils.SlicedCorpus(self, docno)
+
         return self.docbyoffset(self.index[docno])
+
+
 
 # endclass IndexedCorpus
