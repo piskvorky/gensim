@@ -180,8 +180,9 @@ class LdaModel(interfaces.TransformationABC):
 
     Model persistency is achieved through its `load`/`save` methods.
     """
-    def __init__(self, corpus=None, num_topics=100, id2word=None, distributed=False,
-                 chunksize=2000, passes=1, update_every=1, alpha='symmetric', eta=None, decay=0.5,
+    def __init__(self, corpus=None, num_topics=100, id2word=None,
+                 distributed=False, chunksize=2000, passes=1, update_every=1,
+                 alpha='symmetric', eta=None, decay=0.5, downweighting=1.0,
                  eval_every=10, iterations=50, gamma_threshold=0.001):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
@@ -217,6 +218,9 @@ class LdaModel(interfaces.TransformationABC):
         `eval_every` model updates (setting this to 1 slows down training ~2x;
         default is 10 for better performance). Set to None to disable perplexity estimation.
 
+        `decay` and `downweighting` parameters are the same as Tau_0 and Kappa
+        in Hoffman et al.
+
         Example:
 
         >>> lda = LdaModel(corpus, num_topics=100)  # train model
@@ -248,6 +252,7 @@ class LdaModel(interfaces.TransformationABC):
         self.num_topics = int(num_topics)
         self.chunksize = chunksize
         self.decay = decay
+        self.downweighting = downweighting
         self.num_updates = 0
 
         self.passes = passes
@@ -467,8 +472,9 @@ class LdaModel(interfaces.TransformationABC):
         return perwordbound
 
 
-    def update(self, corpus, chunksize=None, decay=None, passes=None, update_every=None, eval_every=None,
-            iterations=None, gamma_threshold=None):
+    def update(self, corpus, chunksize=None, decay=None, downweighting=None,
+               passes=None, update_every=None, eval_every=None, iterations=None,
+               gamma_threshold=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -483,7 +489,9 @@ class LdaModel(interfaces.TransformationABC):
 
         For stationary input (no topic drift in new documents), on the other hand,
         this equals the online update of Hoffman et al. and is guaranteed to
-        converge for any `decay` in (0.5, 1.0>.
+        converge for any `decay` in (0.5, 1.0>. Additionally, for smaller
+        `corpus` sizes, an increasing `downweighting` may be beneficial (see
+        Table 1 in Hoffman et al.)
 
         """
         # use parameters given in constructor, unless user explicitly overrode them
@@ -491,6 +499,8 @@ class LdaModel(interfaces.TransformationABC):
             chunksize = self.chunksize
         if decay is None:
             decay = self.decay
+        if downweighting is None:
+            downweighting = self.downweighting
         if passes is None:
             passes = self.passes
         if update_every is None:
@@ -503,7 +513,7 @@ class LdaModel(interfaces.TransformationABC):
             gamma_threshold = self.gamma_threshold
 
         # rho is the "speed" of updating; TODO try other fncs
-        rho = lambda: pow(1.0 + self.num_updates / self.chunksize, -decay)
+        rho = lambda: pow(downweighting + self.num_updates / self.chunksize, -decay)
 
         try:
             lencorpus = len(corpus)
