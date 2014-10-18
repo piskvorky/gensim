@@ -740,7 +740,7 @@ class LdaModel(interfaces.TransformationABC):
 
         """
         if self.state is not None:
-            self.state.save(fname + '.state', *args, **kwargs)
+            self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
         super(LdaModel, self).save(fname, *args, ignore=['state', 'dispatcher'], **kwargs)
 
 
@@ -754,9 +754,10 @@ class LdaModel(interfaces.TransformationABC):
         """
         kwargs['mmap'] = kwargs.get('mmap', 'r')
         result = super(LdaModel, cls).load(fname, *args, **kwargs)
+        state_fname = utils.smart_extension(fname, '.state')
         try:
-            result.state = super(LdaModel, cls).load(fname + '.state', *args, **kwargs)
+            result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
         except Exception as e:
-            logging.warning("failed to load state from %s: %s" % (fname + '.state', e))
+            logging.warning("failed to load state from %s: %s" % (state_fname, e))
         return result
 #endclass LdaModel

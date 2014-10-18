@@ -555,7 +555,7 @@ class LsiModel(interfaces.TransformationABC):
 
         """
         if self.projection is not None:
-            self.projection.save(fname + '.projection', *args, **kwargs)
+            self.projection.save(utils.smart_extension(fname, '.projection'), *args, **kwargs)
         super(LsiModel, self).save(fname, *args, ignore=['projection', 'dispatcher'], **kwargs)
 
 
@@ -569,10 +569,11 @@ class LsiModel(interfaces.TransformationABC):
         """
         kwargs['mmap'] = kwargs.get('mmap', 'r')
         result = super(LsiModel, cls).load(fname, *args, **kwargs)
+        projection_fname = utils.smart_extension(fname, '.projection')
         try:
-            result.projection = super(LsiModel, cls).load(fname + '.projection', *args, **kwargs)
+            result.projection = super(LsiModel, cls).load(projection_fname, *args, **kwargs)
         except Exception as e:
-            logging.warning("failed to load projection from %s: %s" % (fname + '.state', e))
+            logging.warning("failed to load projection from %s: %s" % (projection_fname, e))
         return result
 #endclass LsiModel
 
