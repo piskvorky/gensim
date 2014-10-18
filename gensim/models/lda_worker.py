@@ -20,8 +20,10 @@ from __future__ import with_statement
 import os, sys, logging
 import threading
 import tempfile
-import Queue
-
+try:
+    import Queue
+except ImportError:
+    import queue as Queue
 from gensim.models import ldamodel
 from gensim import utils
 
