@@ -16,7 +16,7 @@ import itertools
 
 from gensim.utils import to_unicode
 from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
-                            ucicorpus, malletcorpus, textcorpus)
+                            ucicorpus, malletcorpus, textcorpus, indexedcorpus)
 
 # needed because sample data files are located in the same folder
 module_path = os.path.dirname(__file__)
@@ -122,6 +122,28 @@ class CorpusTestCase(unittest.TestCase):
             testdoc2 = set((to_unicode(corpus.id2word[x]), y) for x, y in firstdoc2)
             self.assertEqual(testdoc2, set([('computer', 1), ('human', 1), ('interface', 1)]))
 
+    def test_indexing(self):
+        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        corpus = self.corpus_class(fname)
+        docs = list(corpus)
+
+        for idx, doc in enumerate(docs):
+            self.assertEqual(doc, corpus[idx])
+
+        self.assertEqual(docs, list(corpus[:]))
+        self.assertEqual(docs[0:], list(corpus[0:]))
+        self.assertEqual(docs[0:-1], list(corpus[0:-1]))
+        self.assertEqual(docs[2:4], list(corpus[2:4]))
+        self.assertEqual(docs[::2], list(corpus[::2]))
+        self.assertEqual(docs[::-1], list(corpus[::-1]))
+
+        # make sure sliced corpora can be iterated over multiple times
+        c = corpus[:]
+        self.assertEqual(docs, list(c))
+        self.assertEqual(docs, list(c))
+        self.assertEqual(len(docs), len(corpus))
+        self.assertEqual(len(docs), len(corpus[:]))
+        self.assertEqual(len(docs[::2]), len(corpus[::2]))
 
 # endclass CorpusTestCase
 
@@ -228,6 +250,9 @@ class TestTextCorpus(CorpusTestCase):
         pass
 
     def test_serialize_compressed(self):
+        pass
+
+    def test_indexing(self):
         pass
 
 # endclass TestTextCorpus

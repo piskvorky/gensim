@@ -16,8 +16,10 @@ Example: python -m gensim.models.lsi_dispatcher
 
 from __future__ import with_statement
 import os, sys, logging, threading, time
-from Queue import Queue
-
+try:
+    from Queue import Queue
+except ImportError:
+    from queue import Queue
 from gensim import utils
 
 
