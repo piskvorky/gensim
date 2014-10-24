@@ -237,7 +237,7 @@ class Word2Vec(utils.SaveLoad):
     """
     def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
         sample=0, seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0,
-        cbow_mean=0, hashfxn=hash):
+        cbow_mean=0, hashfxn=hash, iter=1):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -279,6 +279,8 @@ class Word2Vec(utils.SaveLoad):
         `hashfxn` = hash function to use to randomly initialize weights, for increased
         training reproducibility. Default is Python's rudimentary built in hash function.
 
+        `iter` = number of iterations (epochs) over the corpus.
+
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
@@ -298,8 +300,10 @@ class Word2Vec(utils.SaveLoad):
         self.negative = negative
         self.cbow_mean = int(cbow_mean)
         self.hashfxn = hashfxn
+        self.iter = iter
         if sentences is not None:
             self.build_vocab(sentences)
+            sentences = utils.RepeatCorpusNTimes(sentences, iter)
             self.train(sentences)
 
     def make_table(self, table_size=100000000, power=0.75):
@@ -452,7 +456,7 @@ class Word2Vec(utils.SaveLoad):
 
         start, next_report = time.time(), [1.0]
         word_count = [word_count]
-        total_words = total_words or int(sum(v.count * v.sample_probability for v in itervalues(self.vocab)))
+        total_words = total_words or int(sum(v.count * v.sample_probability for v in itervalues(self.vocab)) * self.iter)
         jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         lock = threading.Lock()  # for shared state (=number of words trained so far, log reports...)
 
