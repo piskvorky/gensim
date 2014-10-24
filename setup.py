@@ -145,7 +145,9 @@ setup(
     ],
 
     test_suite="gensim.test",
-
+    setup_requires = [
+        'numpy >= 1.3'
+    ],
     install_requires=[
         'numpy >= 1.3',
         'scipy >= 0.7.0',
