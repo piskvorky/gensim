@@ -20,6 +20,7 @@ try:
     from Queue import Queue
 except ImportError:
     from queue import Queue
+import Pyro4
 from gensim import utils
 
 
@@ -70,14 +71,11 @@ class Dispatcher(object):
         import Pyro4
         with utils.getNS() as ns:
             self.callback = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher') # = self
-            self.callback._pyroOneway.add("jobdone") # make sure workers transfer control back to dispatcher asynchronously
             for name, uri in ns.list(prefix='gensim.lda_worker').iteritems():
                 try:
                     worker = Pyro4.Proxy(uri)
                     workerid = len(self.workers)
                     # make time consuming methods work asynchronously
-                    worker._pyroOneway.add("requestjob")
-                    worker._pyroOneway.add("exit")
                     logger.info("registering worker #%i at %s" % (workerid, uri))
                     worker.initialize(workerid, dispatcher=self.callback, **model_params)
                     self.workers[workerid] = worker
@@ -140,6 +138,7 @@ class Dispatcher(object):
         self._jobsreceived = 0
 
 
+    @Pyro4.oneway
     @utils.synchronous('lock_update')
     def jobdone(self, workerid):
         """
@@ -159,6 +158,7 @@ class Dispatcher(object):
         return self._jobsdone
 
 
+    @Pyro4.oneway
     def exit(self):
         """
         Terminate all registered workers and then the dispatcher.
