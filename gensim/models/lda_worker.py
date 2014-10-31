@@ -24,6 +24,7 @@ try:
     import Queue
 except ImportError:
     import queue as Queue
+import Pyro4
 from gensim.models import ldamodel
 from gensim import utils
 
@@ -50,6 +51,7 @@ class Worker(object):
         self.model = ldamodel.LdaModel(**model_params)
 
 
+    @Pyro4.oneway
     def requestjob(self):
         """
         Request jobs from the dispatcher, in a perpetual loop until `getstate()` is called.
@@ -104,6 +106,7 @@ class Worker(object):
         self.finished = False
 
 
+    @Pyro4.oneway
     def exit(self):
         logger.info("terminating worker #%i" % self.myid)
         os._exit(0)

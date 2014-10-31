@@ -155,7 +155,7 @@ setup(
     ],
 
     extras_require={
-        'distributed': ['Pyro4 >= 4.8'],
+        'distributed': ['Pyro4 >= 4.27'],
     },
 
     include_package_data=True,
