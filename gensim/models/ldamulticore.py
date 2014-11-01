@@ -268,4 +268,4 @@ class LdaMulticore(LdaModel):
                 raise RuntimeError("input corpus size changed during training (don't use generators as input)")
         #endfor entire update
 
-        pool.close()
+        pool.terminate()
