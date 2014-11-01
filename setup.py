@@ -29,7 +29,7 @@ from setuptools.command.build_ext import build_ext
 class custom_build_ext(build_ext):
     """Allow C extension building to fail.
 
-    The C extension speeds up websocket masking, but is not essential.
+    The C extension speeds up word2vec training, but is not essential.
     """
 
     warning_message = """
