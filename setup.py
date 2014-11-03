@@ -29,7 +29,7 @@ from setuptools.command.build_ext import build_ext
 class custom_build_ext(build_ext):
     """Allow C extension building to fail.
 
-    The C extension speeds up websocket masking, but is not essential.
+    The C extension speeds up word2vec training, but is not essential.
     """
 
     warning_message = """
@@ -145,14 +145,17 @@ setup(
     ],
 
     test_suite="gensim.test",
-
+    setup_requires = [
+        'numpy >= 1.3'
+    ],
     install_requires=[
+        'numpy >= 1.3',
         'scipy >= 0.7.0',
         'six >= 1.2.0',
     ],
 
     extras_require={
-        'distributed': ['Pyro4 >= 4.8'],
+        'distributed': ['Pyro4 >= 4.27'],
     },
 
     include_package_data=True,
