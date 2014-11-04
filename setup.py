@@ -151,7 +151,7 @@ setup(
     install_requires=[
         'numpy >= 1.3',
         'scipy >= 0.7.0',
-        'six >= 1.2.0',
+        'six >= 1.6.0',
     ],
 
     extras_require={
