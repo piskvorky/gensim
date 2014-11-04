@@ -14,8 +14,8 @@ and extended with additional functionality.
 
 For a blog tutorial on gensim word2vec, with an interactive web app trained on GoogleNews, visit http://radimrehurek.com/2014/02/word2vec-tutorial/
 
-**Install Cython with `pip install cython` before installing gensim, to use optimized
-word2vec training** (70x speedup [3]_).
+**Make sure you have a C compiler before installing gensim, to use optimized (compiled) word2vec training**
+(70x speedup compared to plain NumPy implemenation [3]_).
 
 Initialize a model with e.g.::
 
@@ -446,7 +446,7 @@ class Word2Vec(utils.SaveLoad):
         """
         if FAST_VERSION < 0:
             import warnings
-            warnings.warn("Cython compilation failed, training will be slow. Do you have Cython installed? `pip install cython`")
+            warnings.warn("C extension compilation failed, training will be slow. Install a C compiler and reinstall gensim for fast training.")
         logger.info("training model with %i workers on %i vocabulary and %i features, "
             "using 'skipgram'=%s 'hierarchical softmax'=%s 'subsample'=%s and 'negative sampling'=%s" %
             (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative))
@@ -864,13 +864,13 @@ class Word2Vec(utils.SaveLoad):
                 except:
                     logger.info("skipping invalid line #%i in %s" % (line_no, questions))
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
-                    logger.debug("skipping line #%i with OOV words: %s" % (line_no, line))
+                    logger.debug("skipping line #%i with OOV words: %s" % (line_no, line.strip()))
                     continue
 
                 ignore = set(self.vocab[v].index for v in [a, b, c])  # indexes of words to ignore
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
-                for index in argsort(most_similar(self,positive=[b, c], negative=[a], topn=False))[::-1]:
+                for index in argsort(most_similar(self, positive=[b, c], negative=[a], topn=False))[::-1]:
                     if index in ok_index and index not in ignore:
                         predicted = self.index2word[index]
                         if predicted != expected:
@@ -922,13 +922,14 @@ class BrownCorpus(object):
 
 class Text8Corpus(object):
     """Iterate over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip ."""
-    def __init__(self, fname):
+    def __init__(self, fname, max_sentence_length=1000):
         self.fname = fname
+        self.max_sentence_length = max_sentence_length
 
     def __iter__(self):
         # the entire corpus is one gigantic line -- there are no sentence marks at all
         # so just split the sequence of tokens arbitrarily: 1 sentence = 1000 tokens
-        sentence, rest, max_sentence_length = [], b'', 1000
+        sentence, rest = [], b''
         with utils.smart_open(self.fname) as fin:
             while True:
                 text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
@@ -940,9 +941,9 @@ class Text8Corpus(object):
                 last_token = text.rfind(b' ')  # the last token may have been split in two... keep it for the next iteration
                 words, rest = (utils.to_unicode(text[:last_token]).split(), text[last_token:].strip()) if last_token >= 0 else ([], text)
                 sentence.extend(words)
-                while len(sentence) >= max_sentence_length:
-                    yield sentence[:max_sentence_length]
-                    sentence = sentence[max_sentence_length:]
+                while len(sentence) >= self.max_sentence_length:
+                    yield sentence[:self.max_sentence_length]
+                    sentence = sentence[self.max_sentence_length:]
 
 
 class LineSentence(object):
