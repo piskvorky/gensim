@@ -47,6 +47,7 @@ class Phrases(object):
         total_words = 0
         logging.info("collecting all words and their counts")
         vocab = defaultdict(int)
+        min_reduce = 1
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % 10000 == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
@@ -64,7 +65,13 @@ class Phrases(object):
                 vocab[word] += 1
 
             if len(vocab) > max_vocab_size * 0.7:
-                vocab = dict(sorted(vocab.iteritems(), key=lambda item: -item[1])[:max_vocab_size * 0.7])
+                to_delete = []
+                for w in vocab.iterkeys():
+                    if vocab[w] <= min_reduce:
+                        to_delete.append(w)
+                for w in to_delete:
+                    del vocab[w]
+                min_reduce += 1
 
         logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
                     (len(vocab), total_words, sentence_no + 1))
