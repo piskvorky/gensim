@@ -87,7 +87,12 @@ http://api.mongodb.org/python/current/installation.html#osx
     def finalize_options(self):
             build_ext.finalize_options(self)
             # Prevent numpy from thinking it is still in its setup process:
-            __builtins__.__NUMPY_SETUP__ = False
+            # https://docs.python.org/2/library/__builtin__.html#module-__builtin__
+            if isinstance(__builtins__, dict):
+                __builtins__["__NUMPY_SETUP__"] = False
+            else:
+                __builtins__.__NUMPY_SETUP__ = False
+
             import numpy
             self.include_dirs.append(numpy.get_include())
 
