@@ -145,4 +145,4 @@ if __name__ == '__main__':
     # test_doc = LineSentence('test/test_data/testcorpus.txt')
     bigram = Phrases(sentences, min_count=5, threshold=100)
     for s in bigram[sentences]:
-        print ' '.join(s)
+        print(' '.join(s))
