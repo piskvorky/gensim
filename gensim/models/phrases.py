@@ -4,6 +4,7 @@
 
 import logging
 from collections import defaultdict
+from gensim.utils import any2utf8
 
 logger = logging.getLogger("gensim.models.phrases")
 
@@ -17,7 +18,7 @@ class Phrases(object):
 
     """
     def __init__(self, sentences, min_count=5, threshold=100,
-                 max_vocab_size=500000000):
+                 max_vocab_size=100000000):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is
 		a list of words (unicode strings) that will be used for training.
@@ -31,9 +32,15 @@ class Phrases(object):
 
         `threshold` represents a threshold for forming the phrases (higher means less phrases). By default (`threshold`=100).
         `max_vocab_size`is the maximum size of the vocabulary. Used to control the pruning of less common words.
-        By default 500 million words).
+        By default 100 million words).
 
         """
+        if min_count <= 0:
+            raise ValueError("min_count should be at least 1")
+
+        if threshold <= 0:
+            raise ValueError("threshold should be positive")
+
         self.min_count = min_count
         self.threshold = threshold
         self.max_vocab_size = max_vocab_size
@@ -52,7 +59,7 @@ class Phrases(object):
             if sentence_no % 10000 == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                             (sentence_no, total_words, len(vocab)))
-
+                sentence = map(lambda x: any2utf8(x), sentence)
             for bigram in zip(sentence, sentence[1:]):
                 word = bigram[0]
                 bigram_word = "%s_%s" % bigram
@@ -64,7 +71,7 @@ class Phrases(object):
                 word = sentence[-1]
                 vocab[word] += 1
 
-            if len(vocab) > max_vocab_size * 0.7:
+            if len(vocab) > max_vocab_size:
                 to_delete = []
                 for w in vocab.iterkeys():
                     if vocab[w] <= min_reduce:
