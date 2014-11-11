@@ -59,7 +59,7 @@ class Phrases(object):
             if sentence_no % 10000 == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                             (sentence_no, total_words, len(vocab)))
-                sentence = map(lambda x: any2utf8(x), sentence)
+                sentence = [any2utf8(s) for s in  sentence]
             for bigram in zip(sentence, sentence[1:]):
                 word = bigram[0]
                 bigram_word = "%s_%s" % bigram
