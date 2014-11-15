@@ -11,9 +11,13 @@ Automated tests for checking transformation algorithms (the models package).
 import logging
 import unittest
 import os
+import sys
 
 from gensim import utils
 from gensim.models.phrases import Phrases
+
+if sys.version_info[0] >= 3:
+    unicode = str
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -81,6 +85,11 @@ class TestPhrasesModel(unittest.TestCase):
 
         transformed = ' '.join(bigram_utf8[sentences[1]])
         self.assertTrue(isinstance(transformed, unicode))
+
+    def testPruning(self):
+        """Test that max_vocab_size parameter is respected."""
+        bigram = Phrases(sentences, max_vocab_size=5)
+        self.assertTrue(len(bigram.vocab) <= 5)
 #endclass TestPhrasesModel
 
 

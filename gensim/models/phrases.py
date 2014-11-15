@@ -76,8 +76,7 @@ class Phrases(interfaces.TransformationABC):
     and `phrases[corpus]` syntax.
 
     """
-    def __init__(self, sentences=None, min_count=5, threshold=100,
-                 max_vocab_size=20000000):
+    def __init__(self, sentences=None, min_count=5, threshold=100, max_vocab_size=20000000):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -240,9 +239,12 @@ def prune_vocab(vocab, min_reduce):
     Modifies `vocab` in place.
 
     """
+    old_len = len(vocab)
     for w in list(vocab):  # make a copy of dict's keys
         if vocab[w] <= min_reduce:
             del vocab[w]
+    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)" %
+        (old_len - len(vocab), min_reduce, old_len, len(vocab)))
 
 
 if __name__ == '__main__':
