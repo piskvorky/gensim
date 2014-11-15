@@ -36,6 +36,7 @@ Modules:
     models/word2vec
     models/doc2vec
     models/dtmmodel
+    models/phrases
     similarities/docsim
     similarities/simserver
 
