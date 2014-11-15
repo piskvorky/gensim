@@ -135,7 +135,7 @@ class Phrases(interfaces.TransformationABC):
             sentence = [utils.any2utf8(s) for s in sentence]
             for bigram in zip(sentence, sentence[1:]):
                 word = bigram[0]
-                bigram_word = "%s_%s" % bigram
+                bigram_word = b'_'.join(bigram)
                 total_words += 1
                 vocab[word] += 1
                 vocab[bigram_word] += 1
@@ -208,7 +208,7 @@ class Phrases(interfaces.TransformationABC):
         last_bigram = False
         for bigram in zip(s, s[1:]):
             if all(uni in self.vocab for uni in bigram):
-                bigram_word = "%s_%s" % bigram
+                bigram_word = b'_'.join(bigram)
                 if bigram_word in self.vocab and not last_bigram:
                     pa = float(self.vocab[bigram[0]])
                     pb = float(self.vocab[bigram[1]])
