@@ -3,14 +3,14 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Automatically detect common phrases (multiword expressions) from a stream of documents.
+Automatically detect common phrases (multiword expressions) from a stream of sentences.
 
 The phrases are collocations (frequently co-occurring tokens). See [1]_ for the
 exact formula.
 
 For example, if your input stream (=an iterable, with each value a list of token strings) looks like:
 
->>> print(list(document_stream))
+>>> print(list(sentence_stream))
 [[u'the', u'mayor', u'of', u'new', u'york', u'was', u'there'],
  [u'machine', u'learning', u'can', u'be', u'useful', u'sometimes'],
  ...,
@@ -18,26 +18,26 @@ For example, if your input stream (=an iterable, with each value a list of token
 
 you'd train the detector with:
 
->>> bigram = Phrases(document_stream)
+>>> bigram = Phrases(sentence_stream)
 
-and then transform any document (list of token strings) using the standard gensim syntax:
+and then transform any sentence (list of token strings) using the standard gensim syntax:
 
->>> doc = [u'the', u'mayor', u'of', u'new', u'york', u'was', u'there']
->>> print(bigram[doc])
+>>> sent = [u'the', u'mayor', u'of', u'new', u'york', u'was', u'there']
+>>> print(bigram[sent])
 [u'the', u'mayor', u'of', u'new_york', u'was', u'there']
 
 (note `new_york` became a single token). As usual, you can also transform an entire
-document stream using:
+sentence stream using:
 
->>> print(list(bigram[any_document_stream]))
+>>> print(list(bigram[any_sentence_stream]))
 [[u'the', u'mayor', u'of', u'new_york', u'was', u'there'],
  [u'machine_learning', u'can', u'be', u'useful', u'sometimes'],
  ...,
 ]
 
-You can also continue updating the collocation counts with new documents, by:
+You can also continue updating the collocation counts with new sentences, by:
 
->>> bigram.add_vocab(new_document_stream)
+>>> bigram.add_vocab(new_sentence_stream)
 
 These **phrase streams are meant to be used during text preprocessing, before
 converting the resulting tokens into vectors using `Dictionary`**. See the
@@ -46,9 +46,9 @@ converting the resulting tokens into vectors using `Dictionary`**. See the
 The detection can also be **run repeatedly**, to get phrases longer than
 two tokens (e.g. `new_york_times`):
 
->>> trigram = Phrases(bigram[document_stream])
->>> doc = [u'the', u'new', u'york', u'times', u'is', u'a', u'newspaper']
->>> print(trigram[bigram[doc]])
+>>> trigram = Phrases(bigram[sentence_stream])
+>>> sent = [u'the', u'new', u'york', u'times', u'is', u'a', u'newspaper']
+>>> print(trigram[bigram[sent]])
 [u'the', u'new_york_times', u'is', u'a', u'newspaper']
 
 .. [1] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean.
@@ -72,7 +72,7 @@ class Phrases(interfaces.TransformationABC):
     Detect phrases, based on collected collocation counts. Adjacent words that appear
     together more frequently than expected are joined together with the `_` character.
 
-    It can be used to generate phrases on the fly, using the `phrases[document]`
+    It can be used to generate phrases on the fly, using the `phrases[sentence]`
     and `phrases[corpus]` syntax.
 
     """
@@ -175,14 +175,14 @@ class Phrases(interfaces.TransformationABC):
         logger.info("merged %s" % self)
 
 
-    def __getitem__(self, doc):
+    def __getitem__(self, sentence):
         """
-        Convert the input token stream `doc` (=list of unicode tokens) into
-        a phrase stream (=list of unicode tokens, with detected phrases are joined by u'_').
+        Convert the input tokens `sentence` (=list of unicode strings) into phrase
+        tokens (=list of unicode strings, where detected phrases are joined by u'_').
 
-        If `doc` is an entire corpus (documents iterable) instead of a single
-        document, return an iterable that converts each of the corpus' documents,
-        one after another.
+        If `sentence` is an entire corpus (iterable of sentences rather than a single
+        sentence), return an iterable that converts each of the corpus' sentences
+        into phrases on the fly, one after another.
 
         Example::
 
@@ -195,15 +195,15 @@ class Phrases(interfaces.TransformationABC):
 
         """
         try:
-            is_doc = not doc or isinstance(doc[0], string_types)
+            is_single = not sentence or isinstance(sentence[0], string_types)
         except:
-            is_doc = False
-        if not is_doc:
-            # if the input is an entire corpus (rather than a single document),
+            is_single = False
+        if not is_single:
+            # if the input is an entire corpus (rather than a single sentence),
             # return an iterable stream.
-            return self._apply(doc)
+            return self._apply(sentence)
 
-        s, new_s = [utils.any2utf8(w) for w in doc], []
+        s, new_s = [utils.any2utf8(w) for w in sentence], []
         last_bigram = False
         for bigram in zip(s, s[1:]):
             if all(uni in self.vocab for uni in bigram):
