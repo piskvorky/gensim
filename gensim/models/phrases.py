@@ -60,7 +60,7 @@ two tokens (e.g. `new_york_times`):
 import logging
 from collections import defaultdict
 
-from six import iteritems, itervalues, string_types
+from six import iteritems, string_types
 
 from gensim import utils, interfaces
 
@@ -76,7 +76,7 @@ class Phrases(interfaces.TransformationABC):
     and `phrases[corpus]` syntax.
 
     """
-    def __init__(self, sentences=None, min_count=5, threshold=100, max_vocab_size=20000000):
+    def __init__(self, sentences=None, min_count=5, threshold=100, max_vocab_size=40000000):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -93,7 +93,9 @@ class Phrases(interfaces.TransformationABC):
         fewer phrases).
 
         `max_vocab_size` is the maximum size of the vocabulary. Used to control
-        pruning of less common words, to keep memory under control.
+        pruning of less common words, to keep memory under control. The default
+        of 40M needs about 3.6GB of RAM; increase/decrease `max_vocab_size` depending
+        on how much available memory you have.
 
         """
         if min_count <= 0:
