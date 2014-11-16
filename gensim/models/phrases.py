@@ -101,6 +101,8 @@ class Phrases(interfaces.TransformationABC):
         of 40M needs about 3.6GB of RAM; increase/decrease `max_vocab_size` depending
         on how much available memory you have.
 
+        `delimiter` is the glue character used to join collocation tokens.
+
         """
         if min_count <= 0:
             raise ValueError("min_count should be at least 1")
@@ -113,6 +115,7 @@ class Phrases(interfaces.TransformationABC):
         self.max_vocab_size = max_vocab_size
         self.vocab = defaultdict(int)  # mapping between utf8 token => its count
         self.min_reduce = 1  # ignore any tokens with count smaller than this
+        self.delimiter = delimiter
 
         if sentences is not None:
             self.add_vocab(sentences)
@@ -126,7 +129,7 @@ class Phrases(interfaces.TransformationABC):
 
 
     @staticmethod
-    def learn_vocab(sentences, max_vocab_size):
+    def learn_vocab(sentences, max_vocab_size, delimiter=b'_'):
         """Collect unigram/bigram counts from the `sentences` iterable."""
         sentence_no = -1
         total_words = 0
@@ -166,7 +169,7 @@ class Phrases(interfaces.TransformationABC):
         # directly, but gives the new sentences a fighting chance to collect
         # sufficient counts, before being pruned out by the (large) accummulated
         # counts collected in previous learn_vocab runs.
-        min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size)
+        min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter)
 
         logger.info("merging %i counts into %s" % (len(vocab), self))
         self.min_reduce = max(self.min_reduce, min_reduce)
@@ -211,7 +214,7 @@ class Phrases(interfaces.TransformationABC):
         last_bigram = False
         for bigram in zip(s, s[1:]):
             if all(uni in self.vocab for uni in bigram):
-                bigram_word = b'_'.join(bigram)
+                bigram_word = self.delimiter.join(bigram)
                 if bigram_word in self.vocab and not last_bigram:
                     pa = float(self.vocab[bigram[0]])
                     pb = float(self.vocab[bigram[1]])
