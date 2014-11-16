@@ -76,7 +76,8 @@ class Phrases(interfaces.TransformationABC):
     and `phrases[corpus]` syntax.
 
     """
-    def __init__(self, sentences=None, min_count=5, threshold=100, max_vocab_size=40000000):
+    def __init__(self, sentences=None, min_count=5, threshold=10.0,
+            max_vocab_size=40000000, delimiter=b'_'):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -87,10 +88,13 @@ class Phrases(interfaces.TransformationABC):
         :class:`Text8Corpus` or :class:`LineSentence` in the :mod:`gensim.models.word2vec`
         module for such examples.
 
-        `min_count` ignore all words with total collected count lower than this.
+        `min_count` ignore all words and bigrams with total collected count lower
+        than this.
 
         `threshold` represents a threshold for forming the phrases (higher means
-        fewer phrases).
+        fewer phrases). A phrase of words `a` and `b` is accepted if
+        `(cnt(a, b) - min_count) * N / (cnt(a) * cnt(b)) > threshold`, where `N` is the
+        total vocabulary size.
 
         `max_vocab_size` is the maximum size of the vocabulary. Used to control
         pruning of less common words, to keep memory under control. The default
@@ -133,13 +137,11 @@ class Phrases(interfaces.TransformationABC):
             if sentence_no % 10000 == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                             (sentence_no, total_words, len(vocab)))
-            sentence = [utils.any2utf8(s) for s in sentence]
+            sentence = [utils.any2utf8(w) for w in sentence]
             for bigram in zip(sentence, sentence[1:]):
-                word = bigram[0]
-                bigram_word = b'_'.join(bigram)
+                vocab[bigram[0]] += 1
+                vocab[delimiter.join(bigram)] += 1
                 total_words += 1
-                vocab[word] += 1
-                vocab[bigram_word] += 1
 
             if sentence:    # add last word skipped by previous loop
                 word = sentence[-1]
@@ -217,7 +219,6 @@ class Phrases(interfaces.TransformationABC):
                     score = (pab - self.min_count) / pa / pb * len(self.vocab)
                     # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
                     #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
-
                     if score > self.threshold:
                         new_s.append(bigram_word)
                         last_bigram = True
@@ -261,6 +262,7 @@ if __name__ == '__main__':
         sys.exit(1)
     infile = sys.argv[1]
 
+    from gensim.models import Phrases  # for pickle
     from gensim.models.word2vec import Text8Corpus
     sentences = Text8Corpus(infile)
 
