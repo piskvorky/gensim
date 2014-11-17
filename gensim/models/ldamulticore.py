@@ -1,15 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
+# Author: Jan Zikes, Radim Rehurek
+# Copyright (C) 2014 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Latent Dirichlet Allocation (LDA) in Python, using all cores to parallelize and
+Latent Dirichlet Allocation (LDA) in Python, using all CPU cores to parallelize and
 speed up model training.
 
 The parallelization uses multiprocessing; in case this doesn't work for you for
-some reason, try `LdaModel` which is an equivalent, but more straightforward and
-single-core implementation.
+some reason, try the :class:`gensim.models.ldamodel.LdaModel` class which is an
+equivalent, but more straightforward and single-core implementation.
+
+The training algorithm:
+
+* is **streamed**: training documents may come in sequentially, no random access required,
+* runs in **constant memory** w.r.t. the number of documents: size of the
+  training corpus does not affect memory footprint, can process corpora larger than RAM
 
 Wall-clock `performance on the English Wikipedia <http://radimrehurek.com/gensim/wiki.html>`_
 (2G corpus positions, 3.5M documents, 100K features, 0.54G non-zero entries in the final
@@ -19,15 +27,15 @@ bag-of-words matrix), requesting 100 topics:
 ====================================================== ==============
  algorithm                                             training time
 ====================================================== ==============
- MulticoreLda(workers=1)                               2h30m
- MulticoreLda(workers=2)                               1h24m
- MulticoreLda(workers=3)                               1h6m
+ LdaMulticore(workers=1)                               2h30m
+ LdaMulticore(workers=2)                               1h24m
+ LdaMulticore(workers=3)                               1h6m
  old LdaModel()                                        3h44m
  simply iterating over input corpus = I/O overhead     20m
 ====================================================== ==============
 
 (Measured on `this i7 server <http://www.hetzner.de/en/hosting/produkte_rootserver/ex40ssd>`_
-with 4 physical cores, so that optimal `workers=3`, one less the number of cores.)
+with 4 physical cores, so that optimal `workers=3`, one less than the number of cores.)
 
 This module allows both LDA model estimation from a training corpus and inference of topic
 distribution on new, unseen documents. The model can also be updated with new documents
@@ -36,12 +44,6 @@ for online training.
 The core estimation code is based on the `onlineldavb.py` script by M. Hoffman [1]_, see
 **Hoffman, Blei, Bach: Online Learning for Latent Dirichlet Allocation, NIPS 2010.**
 
-The algorithm:
-
-* is **streamed**: training documents may come in sequentially, no random access required,
-* runs in **constant memory** w.r.t. the number of documents: size of the
-  training corpus does not affect memory footprint, can process corpora larger than RAM
-
 .. [1] http://www.cs.princeton.edu/~mdhoffma
 """
 
@@ -49,8 +51,7 @@ import logging
 
 from gensim import utils
 from gensim.models.ldamodel import LdaModel, LdaState
-from six.moves.queue import Full
-from six.moves import xrange
+from six.moves import queue, xrange
 from multiprocessing import Pool, Queue, cpu_count
 
 logger = logging.getLogger(__name__)
@@ -75,8 +76,9 @@ class LdaMulticore(LdaModel):
 
     """
     def __init__(self, corpus=None, num_topics=100, id2word=None, workers=None,
-                 chunksize=2000, passes=1, batch=False, alpha='symmetric', eta=None, decay=0.5,
-                 eval_every=10, iterations=50, gamma_threshold=0.001):
+                 chunksize=2000, passes=1, batch=False, alpha='symmetric',
+                 eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50,
+                 gamma_threshold=0.001):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -118,6 +120,9 @@ class LdaMulticore(LdaModel):
         `eval_every` documents. Set to `None` to disable perplexity estimation (faster),
         or to `0` to only evaluate perplexity once, at the end of each corpus pass.
 
+        `decay` and `offset` parameters are the same as Kappa and Tau_0 in
+        Hoffman et al, respectively.
+
         Example:
 
         >>> lda = LdaMulticore(corpus, id2word=id2word, num_topics=100)  # train model
@@ -132,7 +137,7 @@ class LdaMulticore(LdaModel):
             raise NotImplementedError("auto-tuning alpha not implemented in multicore LDA; use plain LdaModel.")
         super(LdaMulticore, self).__init__(corpus=corpus, num_topics=num_topics,
             id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
-            decay=decay, eval_every=eval_every, iterations=iterations,
+            decay=decay, offset=offset, eval_every=eval_every, iterations=iterations,
             gamma_threshold=gamma_threshold)
 
 
@@ -155,7 +160,7 @@ class LdaMulticore(LdaModel):
 
         """
         # rho is the "speed" of updating, decelerating over time
-        rho = lambda: pow(1.0 + self.num_updates / self.chunksize, -self.decay)
+        rho = lambda: pow(self.offset + self.num_updates / self.chunksize, -self.decay)
 
         try:
             lencorpus = len(corpus)
@@ -246,7 +251,7 @@ class LdaMulticore(LdaModel):
                         logger.info('PROGRESS: pass %i, dispatched chunk #%i = '
                             'documents up to #%i/%i, outstanding queue size %i',
                             pass_, chunk_no, chunk_no * self.chunksize + len(chunk), lencorpus, queue_size[0])
-                    except Full:
+                    except queue.Full:
                         # in case the input job queue is full, keep clearing the
                         # result queue, to make sure we don't deadlock
                         process_result_queue()
@@ -262,4 +267,4 @@ class LdaMulticore(LdaModel):
                 raise RuntimeError("input corpus size changed during training (don't use generators as input)")
         #endfor entire update
 
-        pool.close()
+        pool.terminate()

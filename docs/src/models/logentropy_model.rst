@@ -5,4 +5,5 @@
     :synopsis: LogEntropy model
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:

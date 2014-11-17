@@ -464,6 +464,24 @@ class RepeatCorpus(SaveLoad):
     def __iter__(self):
         return itertools.islice(itertools.cycle(self.corpus), self.reps)
 
+class RepeatCorpusNTimes(SaveLoad):
+
+    def __init__(self, corpus, n):
+        """
+        Repeat a `corpus` `n` times.
+
+        >>> corpus = [[(1, 0.5)], []]
+        >>> list(RepeatCorpusNTimes(corpus, 3)) # repeat 3 times
+        [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)], []]
+        """
+        self.corpus = corpus
+        self.n = n
+
+    def __iter__(self):
+        for _ in xrange(self.n):
+            for document in self.corpus:
+                yield document
+
 class ClippedCorpus(SaveLoad):
     def __init__(self, corpus, max_docs=None):
         """
@@ -482,6 +500,34 @@ class ClippedCorpus(SaveLoad):
 
     def __len__(self):
         return min(self.max_docs, len(self.corpus))
+
+class SlicedCorpus(SaveLoad):
+    def __init__(self, corpus, slice_):
+        """
+        Return a corpus that is the slice of input iterable `corpus`.
+
+        Negative slicing can only be used if the corpus is indexable.
+        Otherwise, the corpus will be iterated over.
+
+        """
+        self.corpus = corpus
+        self.slice_ = slice_
+        self.length = None
+
+    def __iter__(self):
+        if hasattr(self.corpus, 'index') and self.corpus.index:
+            return (self.corpus.docbyoffset(i) for i in
+                    self.corpus.index[self.slice_])
+        else:
+            return itertools.islice(self.corpus, self.slice_.start,
+                                    self.slice_.stop, self.slice_.step)
+
+    def __len__(self):
+        # check cached length, calculate if needed
+        if self.length is None:
+            self.length = sum(1 for x in self)
+
+        return self.length
 
 def decode_htmlentities(text):
     """

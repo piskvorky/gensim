@@ -5,3 +5,5 @@
     :synopsis: Various utility functions
     :members:
     :inherited-members:
+    :undoc-members:
+    :show-inheritance:

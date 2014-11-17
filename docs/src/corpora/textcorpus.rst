@@ -5,4 +5,5 @@
     :synopsis: Building corpora with dictionaries
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:

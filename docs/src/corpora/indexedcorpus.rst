@@ -5,8 +5,12 @@
     :synopsis: Random access to corpus documents
     :members:
     :inherited-members:
+    :undoc-members:
+    :show-inheritance:
 
 
 .. autoclass:: IndexedCorpus
     :members:
     :inherited-members:
+    :undoc-members:
+    :show-inheritance:

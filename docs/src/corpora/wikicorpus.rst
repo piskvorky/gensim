@@ -5,4 +5,5 @@
     :synopsis: Corpus from a Wikipedia dump
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:

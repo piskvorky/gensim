@@ -5,4 +5,5 @@
     :synopsis: Latent Semantic Indexing
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:

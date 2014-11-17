@@ -5,4 +5,5 @@
     :synopsis: Latent Dirichlet Allocation via Mallet
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:
