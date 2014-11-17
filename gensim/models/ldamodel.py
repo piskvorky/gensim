@@ -461,6 +461,12 @@ class LdaModel(interfaces.TransformationABC):
 
 
     def log_perplexity(self, chunk, total_docs=None):
+        """
+        Calculate and return per-word likelihood bound, using the `chunk` of
+        documents as evaluation corpus. Also output the calculated statistics. incl.
+        perplexity=2^(-bound), to log at INFO level.
+
+        """
         if total_docs is None:
             total_docs = len(chunk)
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
@@ -712,6 +718,13 @@ class LdaModel(interfaces.TransformationABC):
         return shown
 
     def show_topic(self, topicid, topn=10):
+        """
+        Return a list of `(words_probability, word)` 2-tuples for the most probable
+        words in topic `topicid`.
+
+        Only return 2-tuples for the topn most probable words (ignore the rest).
+
+        """
         topic = self.state.get_lambda()[topicid]
         topic = topic / topic.sum() # normalize to probability dist
         bestn = numpy.argsort(topic)[::-1][:topn]
@@ -719,6 +732,7 @@ class LdaModel(interfaces.TransformationABC):
         return beststr
 
     def print_topic(self, topicid, topn=10):
+        """Return the result of `show_topic`, but formatted as a single string."""
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
 
 
