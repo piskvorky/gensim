@@ -145,8 +145,6 @@ class CorpusTestCase(unittest.TestCase):
         self.assertEqual(len(docs), len(corpus[:]))
         self.assertEqual(len(docs[::2]), len(corpus[::2]))
 
-# endclass CorpusTestCase
-
 
 class TestMmCorpus(CorpusTestCase):
     def setUp(self):
@@ -157,23 +155,17 @@ class TestMmCorpus(CorpusTestCase):
         # MmCorpus needs file write with seek => doesn't support compressed output (only input)
         pass
 
-# endclass TestMmCorpus
-
 
 class TestSvmLightCorpus(CorpusTestCase):
     def setUp(self):
         self.corpus_class = svmlightcorpus.SvmLightCorpus
         self.file_extension = '.svmlight'
 
-# endclass TestSvmLightCorpus
-
 
 class TestBleiCorpus(CorpusTestCase):
     def setUp(self):
         self.corpus_class = bleicorpus.BleiCorpus
         self.file_extension = '.blei'
-
-# endclass TestBleiCorpus
 
 
 class TestLowCorpus(CorpusTestCase):
@@ -182,8 +174,6 @@ class TestLowCorpus(CorpusTestCase):
     def setUp(self):
         self.corpus_class = lowcorpus.LowCorpus
         self.file_extension = '.low'
-
-# endclass TestLowCorpus
 
 
 class TestUciCorpus(CorpusTestCase):
@@ -196,8 +186,6 @@ class TestUciCorpus(CorpusTestCase):
     def test_serialize_compressed(self):
         # UciCorpus needs file write with seek => doesn't support compressed output (only input)
         pass
-
-# endclass TestUciCorpus
 
 
 class TestMalletCorpus(CorpusTestCase):
@@ -220,8 +208,6 @@ class TestMalletCorpus(CorpusTestCase):
             doc, metadata = docmeta
             self.assertEqual(metadata[0], str(i + 1))
             self.assertEqual(metadata[1], 'en')
-
-# endclass TestMalletCorpus
 
 
 class TestTextCorpus(CorpusTestCase):
@@ -254,8 +240,6 @@ class TestTextCorpus(CorpusTestCase):
 
     def test_indexing(self):
         pass
-
-# endclass TestTextCorpus
 
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@ Changes
 * all indexed corpora now allow full Python slicing syntax (Chris Corley, #246)
 * update distributed code for new Pyro4 API and py3k (Michael Brooks, Marco Bonzanini, #255, #249)
 * fixes to six module version (Lars Buitinck, #259)
-* fix to setup.py (Maxim Avanov and Chris Corley, #260, #251)
+* fixes to setup.py (Maxim Avanov and Chris Corley, #260, #251)
 * ...and lots of minor fixes & updates all around
 
 0.10.2, 18/09/2014
