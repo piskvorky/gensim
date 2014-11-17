@@ -1,7 +1,11 @@
 Changes
 =======
 
-0.10.3
+0.10.4
+
+* make utils.decode_htmlentities more robust and reliable on narrow Python builds
+
+0.10.3, 17/11/2014
 
 * added streamed phrases = collocation detection (Miguel Cabrera, #258)
 * added param for multiple word2vec epochs (sebastienj, #243)
