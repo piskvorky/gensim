@@ -826,6 +826,13 @@ class Word2Vec(utils.SaveLoad):
             else:
                 self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
+    @staticmethod
+    def log_accuracy(section):
+        correct, incorrect = len(section['correct']), len(section['incorrect'])
+        if correct + incorrect > 0:
+            logger.info("%s: %.1f%% (%i/%i)" %
+                (section['section'], 100.0 * correct / (correct + incorrect),
+                correct, correct + incorrect))
 
     def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar):
         """
@@ -846,13 +853,6 @@ class Word2Vec(utils.SaveLoad):
                                key=lambda item: -item[1].count)[:restrict_vocab])
         ok_index = set(v.index for v in itervalues(ok_vocab))
 
-        def log_accuracy(section):
-            correct, incorrect = section['correct'], section['incorrect']
-            if correct + incorrect > 0:
-                logger.info("%s: %.1f%% (%i/%i)" %
-                    (section['section'], 100.0 * correct / (correct + incorrect),
-                    correct, correct + incorrect))
-
         sections, section = [], None
         for line_no, line in enumerate(utils.smart_open(questions)):
             # TODO: use level3 BLAS (=evaluate multiple questions at once), for speed
@@ -861,8 +861,8 @@ class Word2Vec(utils.SaveLoad):
                 # a new section starts => store the old section
                 if section:
                     sections.append(section)
-                    log_accuracy(section)
-                section = {'section': line.lstrip(': ').strip(), 'correct': 0, 'incorrect': 0}
+                    self.log_accuracy(section)
+                section = {'section': line.lstrip(': ').strip(), 'correct': [], 'incorrect': []}
             else:
                 if not section:
                     raise ValueError("missing section header before line #%i in %s" % (line_no, questions))
@@ -883,14 +883,21 @@ class Word2Vec(utils.SaveLoad):
                         if predicted != expected:
                             logger.debug("%s: expected %s, predicted %s" % (line.strip(), expected, predicted))
                         break
-                section['correct' if predicted == expected else 'incorrect'] += 1
+                if predicted == expected:
+                    section['correct'].append((a, b, c, expected))
+                else:
+                    section['incorrect'].append((a, b, c, expected))
         if section:
             # store the last section, too
             sections.append(section)
-            log_accuracy(section)
+            self.log_accuracy(section)
 
-        total = {'section': 'total', 'correct': sum(s['correct'] for s in sections), 'incorrect': sum(s['incorrect'] for s in sections)}
-        log_accuracy(total)
+        total = {
+            'section': 'total',
+            'correct': sum(len(s['correct']) for s in sections),
+            'incorrect': sum(len(s['incorrect']) for s in sections)
+        }
+        self.log_accuracy(total)
         sections.append(total)
         return sections
 
