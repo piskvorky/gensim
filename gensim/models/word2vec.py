@@ -54,6 +54,13 @@ If you're finished training a model (=no more updates, only querying), you can d
 
 to trim unneeded model memory = use (much) less RAM.
 
+Note that there is a :mod:`gensim.models.phrases` module which lets you automatically
+detect phrases longer than one word. Using phrases, you can learn a word2vec model
+where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
+
+>>> bigram_transformer = gensim.models.Phrases(sentences)
+>>> model = Word2Vec(bigram_transformed[sentences], size=100, ...)
+
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
 .. [2] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
        In Proceedings of NIPS, 2013.
