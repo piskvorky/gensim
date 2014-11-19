@@ -894,8 +894,8 @@ class Word2Vec(utils.SaveLoad):
 
         total = {
             'section': 'total',
-            'correct': sum(len(s['correct']) for s in sections),
-            'incorrect': sum(len(s['incorrect']) for s in sections)
+            'correct': sum((s['correct'] for s in sections), []),
+            'incorrect': sum((s['incorrect'] for s in sections), []),
         }
         self.log_accuracy(total)
         sections.append(total)
