@@ -67,6 +67,150 @@ from gensim import utils, interfaces
 logger = logging.getLogger(__name__)
 
 
+
+import random
+import numpy as np
+import heapq
+import sys
+
+_PRIME =  66405897020462343733
+
+
+class CountMinSketch(object):
+    def __init__(self, delta=10**-7, epsilon=0.005, k=4000000):
+        """
+        """
+        if delta <= 0 or delta >= 1:
+            raise ValueError("delta must be between 0 and 1, exclusive")
+        if epsilon <= 0 or epsilon >= 1:
+            raise ValueError("epsilon must be between 0 and 1, exclusive")
+        if k < 1:
+            raise ValueError("k must be a positive integer")
+
+        self.w = int(np.ceil(np.exp(1) / epsilon))
+        self.d = int(np.ceil(np.log(1 / delta)))
+        logging.info("Creating a Count Min-Sketch with dimension {}x{}".format(self.d, self.w))
+
+        self.k = k
+        self.hash_functions = [self.__generate_hash_function() for i in range(self.d)]
+        self.count = np.zeros((self.d, self.w), dtype='int32')
+        self.heap, self.top_k = [], {} # top_k => [estimate, key] pairs
+
+    def __setitem__(self, key, increment):
+        """
+        Updates the sketch for the item with name of key by the amount
+        specified in increment
+        Parameters
+        ----------
+        key : string
+            The item to update the value of in the sketch
+        increment : integer
+            The amount to update the sketch by for the given key
+
+        Examples
+        --------
+        >>> s = Sketch(10**-7, 0.005, 40)
+        >>> s.update('http://www.cnn.com/', 1)
+
+        """
+        logging.info("Incrementing key '{}' by {}".format(key, increment))
+        for row, hash_function in enumerate(self.hash_functions):
+            column = hash_function(abs(hash(key)))
+            self.count[row, column] += increment
+
+        #self.update_heap(key)
+
+    def update_heap(self, key):
+        """
+        Updates the class's heap that keeps track of the top k items for a
+        given key
+
+        For the given key, it checks whether the key is present in the heap,
+        updating accordingly if so, and adding it to the heap if it is
+        absent
+
+        Parameters
+        ----------
+        key : string
+            The item to check against the heap
+
+        """
+        estimate = self[key]
+
+        if not self.heap or estimate >= self.heap[0][0]:
+            if key in self.top_k:
+                old_pair = self.top_k.get(key)
+                old_pair[0] = estimate
+                heapq.heapify(self.heap)
+            else:
+                if len(self.top_k) < self.k:
+                    heapq.heappush(self.heap, [estimate, key])
+                    self.top_k[key] = [estimate, key]
+                else:
+                    new_pair = [estimate, key]
+                    old_pair = heapq.heappushpop(self.heap, new_pair)
+                    del self.top_k[old_pair[1]]
+                    self.top_k[key] = new_pair
+
+    def __getitem__(self, key):
+        """
+        Fetches the sketch estimate for the given key
+
+        Parameters
+        ----------
+        key : string
+            The item to produce an estimate for
+
+        Returns
+        -------
+        estimate : int
+            The best estimate of the count for the given key based on the
+            sketch
+
+        Examples
+        --------
+        >>> s = Sketch(10**-7, 0.005, 40)
+        >>> s.update('http://www.cnn.com/', 1)
+        >>> s.get('http://www.cnn.com/')
+        1
+
+        """
+        value = sys.maxint
+        for row, hash_function in enumerate(self.hash_functions):
+            column = hash_function(abs(hash(key)))
+            value = min(self.count[row, column], value)
+
+        return value
+
+    def __delitem__(self, item):
+        pass
+
+    def __len__(self):
+        return len(self.top_k)
+
+    def __iter__(self):
+        self.top_k.__iter__()
+    #    for i in self.top_k
+
+    # def iterkeys(self):
+    #     return self.top_k.__iter__()
+
+    # def iteritems(self):
+    #     return self.top_k.iteritems()
+
+    def __generate_hash_function(self):
+        """
+        Returns a hash function from a family of pairwise-independent hash
+        functions
+
+        """
+        a, b = random.randrange(0, _PRIME - 1),  random.randrange(0, _PRIME - 1)
+        return lambda x: (a * x + b) % _PRIME % self.w
+
+
+
+
+
 class Phrases(interfaces.TransformationABC):
     """
     Detect phrases, based on collected collocation counts. Adjacent words that appear
@@ -77,7 +221,7 @@ class Phrases(interfaces.TransformationABC):
 
     """
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
-            max_vocab_size=40000000, delimiter=b'_'):
+            max_vocab_size=40000000, delimiter=b'_', exact_count=False):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -103,6 +247,8 @@ class Phrases(interfaces.TransformationABC):
 
         `delimiter` is the glue character used to join collocation tokens.
 
+        `count`  whether to use exact counting (memory intensive) 'exact' or use approximating counting ('approx').
+
         """
         if min_count <= 0:
             raise ValueError("min_count should be at least 1")
@@ -113,12 +259,20 @@ class Phrases(interfaces.TransformationABC):
         self.min_count = min_count
         self.threshold = threshold
         self.max_vocab_size = max_vocab_size
-        self.vocab = defaultdict(int)  # mapping between utf8 token => its count
+        self.exact_count = exact_count
+        self.vocab = Phrases._get_counter_instance(exact_count, max_vocab_size)
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
 
         if sentences is not None:
             self.add_vocab(sentences)
+
+    @staticmethod
+    def _get_counter_instance(exact_count, max_vocab_size):
+        if exact_count :
+            return  defaultdict(int)  # mapping between utf8 token => its count
+        else:
+            return CountMinSketch(k=max_vocab_size)
 
 
     def __str__(self):
@@ -129,12 +283,13 @@ class Phrases(interfaces.TransformationABC):
 
 
     @staticmethod
-    def learn_vocab(sentences, max_vocab_size, delimiter=b'_'):
+    def learn_vocab(sentences, max_vocab_size, delimiter=b'_', exact_count=False):
         """Collect unigram/bigram counts from the `sentences` iterable."""
         sentence_no = -1
         total_words = 0
         logger.info("collecting all words and their counts")
-        vocab = defaultdict(int)
+        vocab = Phrases._get_counter_instance(exact_count, max_vocab_size)
+        #defaultdict(int)
         min_reduce = 1
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % 10000 == 0:
@@ -150,12 +305,14 @@ class Phrases(interfaces.TransformationABC):
                 word = sentence[-1]
                 vocab[word] += 1
 
-            if len(vocab) > max_vocab_size:
-                prune_vocab(vocab, min_reduce)
+            if  len(vocab) > max_vocab_size:
+                if exact_count:
+                    prune_vocab(vocab, min_reduce)
                 min_reduce += 1
 
         logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
                     (len(vocab), total_words, sentence_no + 1))
+        print(vocab)
         return min_reduce, vocab
 
 
@@ -175,6 +332,7 @@ class Phrases(interfaces.TransformationABC):
         self.min_reduce = max(self.min_reduce, min_reduce)
         for word, count in iteritems(vocab):
             self.vocab[word] += count
+            #logger.info("{} : {}".format(word, count))
         if len(self.vocab) > self.max_vocab_size:
             prune_vocab(self.vocab, self.min_reduce)
             self.min_reduce += 1
@@ -213,13 +371,16 @@ class Phrases(interfaces.TransformationABC):
         s, new_s = [utils.any2utf8(w) for w in sentence], []
         last_bigram = False
         for bigram in zip(s, s[1:]):
-            if all(uni in self.vocab for uni in bigram):
+            if (not self.exact_count) or all(uni in self.vocab for uni in bigram):
                 bigram_word = self.delimiter.join(bigram)
-                if bigram_word in self.vocab and not last_bigram:
+                if ( (not self.exact_count) or bigram_word in self.vocab ) and not last_bigram:
                     pa = float(self.vocab[bigram[0]])
                     pb = float(self.vocab[bigram[1]])
                     pab = float(self.vocab[bigram_word])
-                    score = (pab - self.min_count) / pa / pb * len(self.vocab)
+                    score = 0
+                    if pa > 0 and pb > 0:
+                        score = (pab - self.min_count) / pa / pb * len(self.vocab)
+
                     # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
                     #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
                     if score > self.threshold:
@@ -265,11 +426,11 @@ if __name__ == '__main__':
         sys.exit(1)
     infile = sys.argv[1]
 
-    from gensim.models import Phrases  # for pickle
+    #from gensim.models import Phrases  # for pickle
     from gensim.models.word2vec import Text8Corpus
     sentences = Text8Corpus(infile)
 
     # test_doc = LineSentence('test/test_data/testcorpus.txt')
-    bigram = Phrases(sentences, min_count=5, threshold=100)
+    bigram = Phrases(sentences, min_count=5, threshold=100, exact_count=False)
     for s in bigram[sentences]:
         print(utils.to_utf8(u' '.join(s)))
