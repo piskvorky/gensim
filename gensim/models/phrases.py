@@ -70,111 +70,58 @@ logger = logging.getLogger(__name__)
 
 import random
 import numpy as np
-import heapq
 import sys
 
 _PRIME =  66405897020462343733
 
+class DictWordCounter(defaultdict):
+    def __init__(self):
+        defaultdict.__init__(self, int)
+    def update_counts(self, key, increment ):
+        self[key] += increment
 
-class CountMinSketch(object):
-    def __init__(self, delta=10**-7, epsilon=0.005, k=4000000):
+
+class CMSketchCounter(object):
+    def __init__(self, delta=10**-2, epsilon=5E-8, conservative=True):
         """
         """
         if delta <= 0 or delta >= 1:
             raise ValueError("delta must be between 0 and 1, exclusive")
         if epsilon <= 0 or epsilon >= 1:
             raise ValueError("epsilon must be between 0 and 1, exclusive")
-        if k < 1:
-            raise ValueError("k must be a positive integer")
+        self.conservative = True
 
-        self.w = int(np.ceil(np.exp(1) / epsilon))
+        self.w = int(np.ceil(2 / epsilon))
         self.d = int(np.ceil(np.log(1 / delta)))
         logging.info("Creating a Count Min-Sketch with dimension {}x{}".format(self.d, self.w))
 
-        self.k = k
         self.hash_functions = [self.__generate_hash_function() for i in range(self.d)]
         self.count = np.zeros((self.d, self.w), dtype='int32')
-        self.heap, self.top_k = [], {} # top_k => [estimate, key] pairs
 
-    def __setitem__(self, key, increment):
-        """
-        Updates the sketch for the item with name of key by the amount
-        specified in increment
-        Parameters
-        ----------
-        key : string
-            The item to update the value of in the sketch
-        increment : integer
-            The amount to update the sketch by for the given key
 
-        Examples
-        --------
-        >>> s = Sketch(10**-7, 0.005, 40)
-        >>> s.update('http://www.cnn.com/', 1)
+    def update_counts(self, key, c):
+        """ Modified version of update, as the increment is done in a dict-like manner
 
         """
-        logging.info("Incrementing key '{}' by {}".format(key, increment))
+
+        #logging.info("Incrementing key '{}' by {}".format(key, increment))
+        chat = self["key"]
+
         for row, hash_function in enumerate(self.hash_functions):
             column = hash_function(abs(hash(key)))
-            self.count[row, column] += increment
-
-        #self.update_heap(key)
-
-    def update_heap(self, key):
-        """
-        Updates the class's heap that keeps track of the top k items for a
-        given key
-
-        For the given key, it checks whether the key is present in the heap,
-        updating accordingly if so, and adding it to the heap if it is
-        absent
-
-        Parameters
-        ----------
-        key : string
-            The item to check against the heap
-
-        """
-        estimate = self[key]
-
-        if not self.heap or estimate >= self.heap[0][0]:
-            if key in self.top_k:
-                old_pair = self.top_k.get(key)
-                old_pair[0] = estimate
-                heapq.heapify(self.heap)
+            if self.conservative:
+                self.count[row, column] = max(self.count[row, column], c + chat)
             else:
-                if len(self.top_k) < self.k:
-                    heapq.heappush(self.heap, [estimate, key])
-                    self.top_k[key] = [estimate, key]
-                else:
-                    new_pair = [estimate, key]
-                    old_pair = heapq.heappushpop(self.heap, new_pair)
-                    del self.top_k[old_pair[1]]
-                    self.top_k[key] = new_pair
+                self.count[row, column]  =  self.count[row, column] +  c
+
+    def __setitem__(self, key, value):
+        for row, hash_function in enumerate(self.hash_functions):
+            column = hash_function(abs(hash(key)))
+            self.count[row, column]  = value
+
 
     def __getitem__(self, key):
-        """
-        Fetches the sketch estimate for the given key
 
-        Parameters
-        ----------
-        key : string
-            The item to produce an estimate for
-
-        Returns
-        -------
-        estimate : int
-            The best estimate of the count for the given key based on the
-            sketch
-
-        Examples
-        --------
-        >>> s = Sketch(10**-7, 0.005, 40)
-        >>> s.update('http://www.cnn.com/', 1)
-        >>> s.get('http://www.cnn.com/')
-        1
-
-        """
         value = sys.maxint
         for row, hash_function in enumerate(self.hash_functions):
             column = hash_function(abs(hash(key)))
@@ -186,17 +133,7 @@ class CountMinSketch(object):
         pass
 
     def __len__(self):
-        return len(self.top_k)
-
-    def __iter__(self):
-        self.top_k.__iter__()
-    #    for i in self.top_k
-
-    # def iterkeys(self):
-    #     return self.top_k.__iter__()
-
-    # def iteritems(self):
-    #     return self.top_k.iteritems()
+        return 0
 
     def __generate_hash_function(self):
         """
@@ -247,7 +184,8 @@ class Phrases(interfaces.TransformationABC):
 
         `delimiter` is the glue character used to join collocation tokens.
 
-        `count`  whether to use exact counting (memory intensive) 'exact' or use approximating counting ('approx').
+        `exact_count`  whether to use exact counting (memory intensive)  or use approximating counting.
+
 
         """
         if min_count <= 0:
@@ -260,19 +198,24 @@ class Phrases(interfaces.TransformationABC):
         self.threshold = threshold
         self.max_vocab_size = max_vocab_size
         self.exact_count = exact_count
-        self.vocab = Phrases._get_counter_instance(exact_count, max_vocab_size)
+        self.vocab = Phrases._get_counter_instance(self.exact_count, max_vocab_size)
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
+
+        # if not self.exact_count: # TODO: Delete ME!
+        #     self.min_count = self.min_count*2*0.00025
+        #     self.threshold = self.threshold*0.0075
+
 
         if sentences is not None:
             self.add_vocab(sentences)
 
     @staticmethod
-    def _get_counter_instance(exact_count, max_vocab_size):
-        if exact_count :
-            return  defaultdict(int)  # mapping between utf8 token => its count
+    def _get_counter_instance(exact_count, max_vocab_size): #TODO: add parameters
+        if exact_count:
+            return  DictWordCounter()  # mapping between utf8 token => its count
         else:
-            return CountMinSketch(k=max_vocab_size)
+            return  CMSketchCounter()
 
 
     def __str__(self):
@@ -283,13 +226,14 @@ class Phrases(interfaces.TransformationABC):
 
 
     @staticmethod
-    def learn_vocab(sentences, max_vocab_size, delimiter=b'_', exact_count=False):
+    def learn_vocab(sentences, max_vocab_size, delimiter=b'_', exact_count=True):
         """Collect unigram/bigram counts from the `sentences` iterable."""
+
         sentence_no = -1
         total_words = 0
         logger.info("collecting all words and their counts")
         vocab = Phrases._get_counter_instance(exact_count, max_vocab_size)
-        #defaultdict(int)
+
         min_reduce = 1
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % 10000 == 0:
@@ -297,13 +241,13 @@ class Phrases(interfaces.TransformationABC):
                             (sentence_no, total_words, len(vocab)))
             sentence = [utils.any2utf8(w) for w in sentence]
             for bigram in zip(sentence, sentence[1:]):
-                vocab[bigram[0]] += 1
-                vocab[delimiter.join(bigram)] += 1
+                vocab.update_counts(bigram[0], 1)
+                vocab.update_counts(delimiter.join(bigram), 1)
                 total_words += 1
 
             if sentence:    # add last word skipped by previous loop
                 word = sentence[-1]
-                vocab[word] += 1
+                vocab.update_counts(word, 1)
 
             if  len(vocab) > max_vocab_size:
                 if exact_count:
@@ -312,7 +256,7 @@ class Phrases(interfaces.TransformationABC):
 
         logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
                     (len(vocab), total_words, sentence_no + 1))
-        print(vocab)
+        #print(vocab)
         return min_reduce, vocab
 
 
@@ -326,18 +270,20 @@ class Phrases(interfaces.TransformationABC):
         # directly, but gives the new sentences a fighting chance to collect
         # sufficient counts, before being pruned out by the (large) accummulated
         # counts collected in previous learn_vocab runs.
-        min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter)
+        min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter, self.exact_count)
+        if self.exact_count:
+            logger.info("merging %i counts into %s" % (len(vocab), self))
+            self.min_reduce = max(self.min_reduce, min_reduce)
+            for word, count in iteritems(vocab):
+                self.vocab.update_counts(word, count)
+                #logger.info("{} : {}".format(word, count))
+            if len(self.vocab) > self.max_vocab_size:
+                prune_vocab(self.vocab, self.min_reduce)
+                self.min_reduce += 1
 
-        logger.info("merging %i counts into %s" % (len(vocab), self))
-        self.min_reduce = max(self.min_reduce, min_reduce)
-        for word, count in iteritems(vocab):
-            self.vocab[word] += count
-            #logger.info("{} : {}".format(word, count))
-        if len(self.vocab) > self.max_vocab_size:
-            prune_vocab(self.vocab, self.min_reduce)
-            self.min_reduce += 1
-
-        logger.info("merged %s" % self)
+            logger.info("merged %s" % self)
+        else:
+            self.vocab.count += vocab.count # Linearity property of CM Sketch
 
 
     def __getitem__(self, sentence):
@@ -379,9 +325,10 @@ class Phrases(interfaces.TransformationABC):
                     pab = float(self.vocab[bigram_word])
                     score = 0
                     if pa > 0 and pb > 0:
-                        score = (pab - self.min_count) / pa / pb * len(self.vocab)
+                        score = (pab - self.min_count) / pa / pb * self.threshold * len(self.vocab)
+                        # Vocab is always 0 when using approximate counts.
 
-                    # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
+                    #logger.info("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
                     #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
                     if score > self.threshold:
                         new_s.append(bigram_word)
@@ -394,7 +341,7 @@ class Phrases(interfaces.TransformationABC):
 
         if s:  # add last word skipped by previous loop
             last_token = s[-1]
-            if last_token in self.vocab and not last_bigram:
+            if (not self.exact_count  ) or ( last_token in self.vocab and not last_bigram):
                 new_s.append(last_token)
 
         return [utils.to_unicode(w) for w in new_s]
