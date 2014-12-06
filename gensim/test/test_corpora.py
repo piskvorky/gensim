@@ -48,9 +48,25 @@ class CorpusTestCase(unittest.TestCase):
     def test_load(self):
         fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
         corpus = self.corpus_class(fname)
+
         docs = list(corpus)
         # the deerwester corpus always has nine documents
         self.assertEqual(len(docs), 9)
+
+    def test_len(self):
+        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        corpus = self.corpus_class(fname)
+
+        # make sure corpus.index works, too
+        corpus = self.corpus_class(fname)
+        self.assertEqual(len(corpus), 9)
+
+        # for subclasses of IndexedCorpus, we need to nuke this so we don't
+        # test length on the index, but just testcorpus contents
+        if hasattr(corpus, 'index'):
+            corpus.index = None
+
+        self.assertEqual(len(corpus), 9)
 
     def test_empty_input(self):
         with open(testfile(), 'w') as f:
@@ -144,7 +160,6 @@ class CorpusTestCase(unittest.TestCase):
         self.assertEqual(len(docs), len(corpus))
         self.assertEqual(len(docs), len(corpus[:]))
         self.assertEqual(len(docs[::2]), len(corpus[::2]))
-
 
 class TestMmCorpus(CorpusTestCase):
     def setUp(self):
