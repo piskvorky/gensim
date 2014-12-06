@@ -65,7 +65,6 @@ class BleiCorpus(IndexedCorpus):
         with utils.smart_open(fname_vocab) as fin:
             words = [utils.to_unicode(word).rstrip() for word in fin]
         self.id2word = dict(enumerate(words))
-        self.length = 0
 
     def __iter__(self):
         """
