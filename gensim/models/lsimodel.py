@@ -8,17 +8,17 @@
 """
 Module for Latent Semantic Analysis (aka Latent Semantic Indexing) in Python.
 
-Implements scalable truncated Singular Value Decomposition in Python. The SVD
-decomposition can be updated with new observations at any time (online, incremental,
-memory-efficient training).
+Implements fast truncated SVD (Singular Value Decomposition). The SVD
+decomposition can be updated with new observations at any time, for an online,
+incremental, memory-efficient training.
 
 This module actually contains several algorithms for decomposition of large corpora, a
 combination of which effectively and transparently allows building LSI models for:
 
 * corpora much larger than RAM: only constant memory is needed, independent of
-  the corpus size (though still dependent on the feature set size)
+  the corpus size
 * corpora that are streamed: documents are only accessed sequentially, no
-  random-access
+  random access
 * corpora that cannot be even temporarily stored: each document can only be
   seen once and must be processed immediately (one-pass algorithm)
 * distributed computing for very large corpora, making use of a cluster of

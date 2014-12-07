@@ -735,7 +735,6 @@ class LdaModel(interfaces.TransformationABC):
         """Return the result of `show_topic`, but formatted as a single string."""
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
 
-
     def __getitem__(self, bow, eps=0.01):
         """
         Return topic distribution for the given document `bow`, as a list of
