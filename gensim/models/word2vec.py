@@ -606,7 +606,7 @@ class Word2Vec(utils.SaveLoad):
                     parts = utils.to_unicode(line).split()
                     if len(parts) != layer1_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
-                    word, weights = parts[0], map(REAL, parts[1:])
+                    word, weights = parts[0], list(map(REAL, parts[1:]))
                     if counts is None:
                         result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
                     elif word in counts:
