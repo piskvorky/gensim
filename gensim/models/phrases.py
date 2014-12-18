@@ -82,14 +82,18 @@ class DictWordCounter(defaultdict):
 
 
 class CMSketchCounter(object):
-    def __init__(self, delta=10**-2, epsilon=5E-8, conservative=True):
+    def __init__(self, delta=10**-2, epsilon=5E-6, conservative=True, logcount=False):
         """
+        `epsilon`: controls the  amount of torelable error in the returned error count.
+        `delta`: cobntrols the probability  with which the returned count is not within the accepted error.
+        These two variables control the depth and the width of the sketch.
         """
         if delta <= 0 or delta >= 1:
             raise ValueError("delta must be between 0 and 1, exclusive")
         if epsilon <= 0 or epsilon >= 1:
             raise ValueError("epsilon must be between 0 and 1, exclusive")
-        self.conservative = True
+        self.conservative = conservative
+        self.logcount = logcount # Not used yet
 
         self.w = int(np.ceil(2 / epsilon))
         self.d = int(np.ceil(np.log(1 / delta)))
@@ -97,13 +101,12 @@ class CMSketchCounter(object):
 
         self.hash_functions = [self.__generate_hash_function() for i in range(self.d)]
         self.count = np.zeros((self.d, self.w), dtype='int32')
-
+        self.no_updates = 0 # to approximate the #words !
 
     def update_counts(self, key, c):
         """ Modified version of update, as the increment is done in a dict-like manner
 
         """
-
         #logging.info("Incrementing key '{}' by {}".format(key, increment))
         chat = self["key"]
 
@@ -133,7 +136,7 @@ class CMSketchCounter(object):
         pass
 
     def __len__(self):
-        return 0
+        return 1
 
     def __generate_hash_function(self):
         """
@@ -143,9 +146,6 @@ class CMSketchCounter(object):
         """
         a, b = random.randrange(0, _PRIME - 1),  random.randrange(0, _PRIME - 1)
         return lambda x: (a * x + b) % _PRIME % self.w
-
-
-
 
 
 class Phrases(interfaces.TransformationABC):
@@ -203,9 +203,8 @@ class Phrases(interfaces.TransformationABC):
         self.delimiter = delimiter
 
         # if not self.exact_count: # TODO: Delete ME!
-        #     self.min_count = self.min_count*2*0.00025
-        #     self.threshold = self.threshold*0.0075
-
+        #      self.min_count = self.min_count*0.0001
+        #      self.threshold = self.threshold*0.0001
 
         if sentences is not None:
             self.add_vocab(sentences)
@@ -263,7 +262,6 @@ class Phrases(interfaces.TransformationABC):
     def add_vocab(self, sentences):
         """
         Merge the collected counts `vocab` into this phrase detector.
-
         """
         # uses a separate vocab to collect the token counts from `sentences`.
         # this consumes more RAM than merging new sentences into `self.vocab`
@@ -284,7 +282,6 @@ class Phrases(interfaces.TransformationABC):
             logger.info("merged %s" % self)
         else:
             self.vocab.count += vocab.count # Linearity property of CM Sketch
-
 
     def __getitem__(self, sentence):
         """
@@ -325,11 +322,13 @@ class Phrases(interfaces.TransformationABC):
                     pab = float(self.vocab[bigram_word])
                     score = 0
                     if pa > 0 and pb > 0:
-                        score = (pab - self.min_count) / pa / pb * self.threshold * len(self.vocab)
-                        # Vocab is always 0 when using approximate counts.
+                            score = (pab - self.min_count) / pa / pb * len(self.vocab)
+                            # FIXME (Better way)
+                            # Vocab is fixed to 1 when using approximate counts
+                            # So scores are way off how to fix this?
 
-                    #logger.info("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
-                    #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
+                    logger.info("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
+                                bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
                     if score > self.threshold:
                         new_s.append(bigram_word)
                         last_bigram = True
