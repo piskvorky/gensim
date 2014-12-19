@@ -158,7 +158,7 @@ class Phrases(interfaces.TransformationABC):
 
     """
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
-            max_vocab_size=40000000, delimiter=b'_', exact_count=False):
+            max_vocab_size=40000000, delimiter=b'_', exact_count=True):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
