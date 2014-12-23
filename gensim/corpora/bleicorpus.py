@@ -108,7 +108,7 @@ class BleiCorpus(IndexedCorpus):
             for doc in corpus:
                 doc = list(doc)
                 offsets.append(fout.tell())
-                parts = ["%i:%s" % p for p in doc if abs(p[1]) > 1e-7]
+                parts = ["%i:%g" % p for p in doc if abs(p[1]) > 1e-7]
                 fout.write(utils.to_utf8("%i %s\n" % (len(doc), ' '.join(parts))))
 
         # write out vocabulary, in a format compatible with Blei's topics.py script
