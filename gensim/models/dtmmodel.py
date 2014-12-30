@@ -254,11 +254,11 @@ class DtmModel(utils.SaveLoad):
             # chosen_topics = sorted_topics[: topics / 2] + \
             #     sorted_topics[-topics / 2:]
 
-        if times < 0 or times >= self.time_slices:
-            times = self.time_slices
+        if times < 0 or times >= len(self.time_slices):
+            times = len(self.time_slices)
             chosen_times = range(times)
         else:
-            times = min(times, self.time_slices)
+            times = min(times, len(self.time_slices))
             chosen_times = range(times)
 
         shown = []
