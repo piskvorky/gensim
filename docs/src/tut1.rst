@@ -264,7 +264,7 @@ Gensim also contains `efficient utility functions <http://radimrehurek.com/gensi
 to help converting from/to numpy matrices::
 
 >>> corpus = gensim.matutils.Dense2Corpus(numpy_matrix)
->>> numpy_matrix = gensim.matutils.corpus2dense(corpus)
+>>> numpy_matrix = gensim.matutils.corpus2dense(corpus, num_terms=number_of_corpus_features)
 
 and from/to `scipy.sparse` matrices::
 
