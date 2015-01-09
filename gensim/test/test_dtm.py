@@ -9,6 +9,7 @@ Automated tests for DTM/DIM model
 import logging
 import gensim
 import os
+import sys
 import unittest
 from gensim import corpora
 
@@ -27,15 +28,20 @@ class TestDtmModel(unittest.TestCase):
         # first you need to setup the environment variable $DTM_PATH for the dtm executable file
         self.dtm_path = os.environ.get('DTM_PATH', None)
         if self.dtm_path is None:
-            self.skipTest("$DTM_PATH is not properly set up.")
+            if sys.version_info >= (2, 7, 0):
+                self.skipTest("$DTM_PATH is not properly set up.")
+            else:
+                logging.warning("$DTM_PATH is not properly set up.")
 
     def testDtm(self):
-        model = gensim.models.DtmModel(self.dtm_path, self.corpus, self.time_slices, num_topics=2, id2word=self.id2word, model='dtm', initialize_lda=True)
-        topics = model.show_topics(topics=2, times=2, topn=10)
+        if self.dtm_path is not None:
+            model = gensim.models.DtmModel(self.dtm_path, self.corpus, self.time_slices, num_topics=2, id2word=self.id2word, model='dtm', initialize_lda=True)
+            topics = model.show_topics(topics=2, times=2, topn=10)
 
     def testDim(self):
-        model = gensim.models.DtmModel(self.dtm_path, self.corpus, self.time_slices, num_topics=2, id2word=self.id2word, model='fixed', initialize_lda=True)
-        topics = model.show_topics(topics=2, times=2, topn=10)
+        if self.dtm_path is not None:
+            model = gensim.models.DtmModel(self.dtm_path, self.corpus, self.time_slices, num_topics=2, id2word=self.id2word, model='fixed', initialize_lda=True)
+            topics = model.show_topics(topics=2, times=2, topn=10)
 
 
 if __name__ == '__main__':
