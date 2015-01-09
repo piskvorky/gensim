@@ -50,10 +50,10 @@ class DtmModel(utils.SaveLoad):
 
         `id2word` is a mapping between tokens ids and token.
 
-        'mode' controls the mode of the mode: 'fit' is for training, 'time' for
+        `mode` controls the mode of the mode: 'fit' is for training, 'time' for
         analyzing documents through time according to a DTM, basically a held out set.
 
-        'model' controls the choice of model. 'fixed' is for DIM and 'dtm' for DTM.
+        `model` controls the choice of model. 'fixed' is for DIM and 'dtm' for DTM.
 
         `lda_sequence_min_iter` min iteration of LDA.
 
