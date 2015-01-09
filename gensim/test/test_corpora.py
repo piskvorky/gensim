@@ -182,6 +182,24 @@ class TestBleiCorpus(CorpusTestCase):
         self.corpus_class = bleicorpus.BleiCorpus
         self.file_extension = '.blei'
 
+    def test_save_format_for_dtm(self):
+        corpus = [[(1, 1.0)], [], [(0, 5.0), (2, 1.0)], []]
+        test_file = testfile()
+        self.corpus_class.save_corpus(test_file, corpus)
+        with open(test_file) as f:
+            for line in f:
+                # unique_word_count index1:count1 index2:count2 ... indexn:counnt
+                tokens = line.split()
+                words_len = int(tokens[0])
+                if words_len > 0:
+                    tokens = tokens[1:]
+                else:
+                    tokens = []
+                self.assertEqual(words_len, len(tokens))
+                for token in tokens:
+                    word, count = token.split(':')
+                    self.assertEqual(count, str(int(count)))
+
 
 class TestLowCorpus(CorpusTestCase):
     TEST_CORPUS = [[(1, 1)], [], [(0, 2), (2, 1)], []]
