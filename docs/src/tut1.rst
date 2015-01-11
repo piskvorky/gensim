@@ -36,16 +36,22 @@ This is a tiny corpus of nine documents, each consisting of only a single senten
 First, let's tokenize the documents, remove common words (using a toy stoplist)
 as well as words that only appear once in the corpus:
 
->>> # remove common words and tokenize
->>> stoplist = set('for a of the and to in'.split())
->>> texts = [[word for word in document.lower().split() if word not in stoplist]
->>>          for document in documents]
+>>> # tokenize the individual documents globally
+>>> words = [val for subl in documents for val in subl.lower().split()]
 >>>
->>> # remove words that appear only once
->>> all_tokens = sum(texts, [])
->>> tokens_once = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
->>> texts = [[word for word in text if word not in tokens_once]
->>>          for text in texts]
+>>> # create a set of all globally unique words
+>>> from collections import defaultdict
+>>> word_dict = defaultdict(int)
+>>> for word in words:
+>>>     word_dict[word] += 1
+>>> one_dict = {word for word in word_dict if word_dict[word] == 1}
+>>>
+>>> # create our toy stopword list
+>>> stoplist = set('for a of the and to in'.split())
+>>>
+>>> # tokenize each individual document, filtering out stopwords and globally unique words
+>>> texts = [[word for word in document if word not in one_dict and word not in stoplist]
+>>>               for document in [subl.lower().split() for subl in documents]]
 >>>
 >>> print(texts)
 [['human', 'interface', 'computer'],
