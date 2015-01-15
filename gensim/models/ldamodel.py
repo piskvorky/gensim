@@ -180,8 +180,9 @@ class LdaModel(interfaces.TransformationABC):
 
     Model persistency is achieved through its `load`/`save` methods.
     """
-    def __init__(self, corpus=None, num_topics=100, id2word=None, distributed=False,
-                 chunksize=2000, passes=1, update_every=1, alpha='symmetric', eta=None, decay=0.5,
+    def __init__(self, corpus=None, num_topics=100, id2word=None,
+                 distributed=False, chunksize=2000, passes=1, update_every=1,
+                 alpha='symmetric', eta=None, decay=0.5, offset=1.0,
                  eval_every=10, iterations=50, gamma_threshold=0.001):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
@@ -217,6 +218,9 @@ class LdaModel(interfaces.TransformationABC):
         `eval_every` model updates (setting this to 1 slows down training ~2x;
         default is 10 for better performance). Set to None to disable perplexity estimation.
 
+        `decay` and `offset` parameters are the same as Kappa and Tau_0 in
+        Hoffman et al, respectively.
+
         Example:
 
         >>> lda = LdaModel(corpus, num_topics=100)  # train model
@@ -248,6 +252,7 @@ class LdaModel(interfaces.TransformationABC):
         self.num_topics = int(num_topics)
         self.chunksize = chunksize
         self.decay = decay
+        self.offset = offset
         self.num_updates = 0
 
         self.passes = passes
@@ -292,7 +297,6 @@ class LdaModel(interfaces.TransformationABC):
             try:
                 import Pyro4
                 dispatcher = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher')
-                dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word=self.id2word, num_topics=num_topics,
                                       chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
@@ -457,6 +461,12 @@ class LdaModel(interfaces.TransformationABC):
 
 
     def log_perplexity(self, chunk, total_docs=None):
+        """
+        Calculate and return per-word likelihood bound, using the `chunk` of
+        documents as evaluation corpus. Also output the calculated statistics. incl.
+        perplexity=2^(-bound), to log at INFO level.
+
+        """
         if total_docs is None:
             total_docs = len(chunk)
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
@@ -467,8 +477,9 @@ class LdaModel(interfaces.TransformationABC):
         return perwordbound
 
 
-    def update(self, corpus, chunksize=None, decay=None, passes=None, update_every=None, eval_every=None,
-            iterations=None, gamma_threshold=None):
+    def update(self, corpus, chunksize=None, decay=None, offset=None,
+               passes=None, update_every=None, eval_every=None, iterations=None,
+               gamma_threshold=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -483,7 +494,9 @@ class LdaModel(interfaces.TransformationABC):
 
         For stationary input (no topic drift in new documents), on the other hand,
         this equals the online update of Hoffman et al. and is guaranteed to
-        converge for any `decay` in (0.5, 1.0>.
+        converge for any `decay` in (0.5, 1.0>. Additionally, for smaller
+        `corpus` sizes, an increasing `offset` may be beneficial (see
+        Table 1 in Hoffman et al.)
 
         """
         # use parameters given in constructor, unless user explicitly overrode them
@@ -491,6 +504,8 @@ class LdaModel(interfaces.TransformationABC):
             chunksize = self.chunksize
         if decay is None:
             decay = self.decay
+        if offset is None:
+            offset = self.offset
         if passes is None:
             passes = self.passes
         if update_every is None:
@@ -503,7 +518,7 @@ class LdaModel(interfaces.TransformationABC):
             gamma_threshold = self.gamma_threshold
 
         # rho is the "speed" of updating; TODO try other fncs
-        rho = lambda: pow(1.0 + self.num_updates / self.chunksize, -decay)
+        rho = lambda: pow(offset + self.num_updates / self.chunksize, -decay)
 
         try:
             lencorpus = len(corpus)
@@ -703,6 +718,13 @@ class LdaModel(interfaces.TransformationABC):
         return shown
 
     def show_topic(self, topicid, topn=10):
+        """
+        Return a list of `(words_probability, word)` 2-tuples for the most probable
+        words in topic `topicid`.
+
+        Only return 2-tuples for the topn most probable words (ignore the rest).
+
+        """
         topic = self.state.get_lambda()[topicid]
         topic = topic / topic.sum() # normalize to probability dist
         bestn = numpy.argsort(topic)[::-1][:topn]
@@ -710,8 +732,8 @@ class LdaModel(interfaces.TransformationABC):
         return beststr
 
     def print_topic(self, topicid, topn=10):
+        """Return the result of `show_topic`, but formatted as a single string."""
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
-
 
     def __getitem__(self, bow, eps=0.01):
         """

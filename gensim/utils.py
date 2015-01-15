@@ -41,7 +41,7 @@ import scipy.sparse
 if sys.version_info[0] >= 3:
     unicode = str
 
-from six import iteritems, u, string_types
+from six import iteritems, u, string_types, unichr
 from six.moves import xrange
 
 try:
@@ -53,7 +53,7 @@ except ImportError:
 
 
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
-RE_HTML_ENTITY = re.compile(r'&(#?)(x?)(\w+);', re.UNICODE)
+RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
 
@@ -464,6 +464,24 @@ class RepeatCorpus(SaveLoad):
     def __iter__(self):
         return itertools.islice(itertools.cycle(self.corpus), self.reps)
 
+class RepeatCorpusNTimes(SaveLoad):
+
+    def __init__(self, corpus, n):
+        """
+        Repeat a `corpus` `n` times.
+
+        >>> corpus = [[(1, 0.5)], []]
+        >>> list(RepeatCorpusNTimes(corpus, 3)) # repeat 3 times
+        [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)], []]
+        """
+        self.corpus = corpus
+        self.n = n
+
+    def __iter__(self):
+        for _ in xrange(self.n):
+            for document in self.corpus:
+                yield document
+
 class ClippedCorpus(SaveLoad):
     def __init__(self, corpus, max_docs=None):
         """
@@ -483,6 +501,43 @@ class ClippedCorpus(SaveLoad):
     def __len__(self):
         return min(self.max_docs, len(self.corpus))
 
+class SlicedCorpus(SaveLoad):
+    def __init__(self, corpus, slice_):
+        """
+        Return a corpus that is the slice of input iterable `corpus`.
+
+        Negative slicing can only be used if the corpus is indexable.
+        Otherwise, the corpus will be iterated over.
+
+        """
+        self.corpus = corpus
+        self.slice_ = slice_
+        self.length = None
+
+    def __iter__(self):
+        if hasattr(self.corpus, 'index') and self.corpus.index:
+            return (self.corpus.docbyoffset(i) for i in
+                    self.corpus.index[self.slice_])
+        else:
+            return itertools.islice(self.corpus, self.slice_.start,
+                                    self.slice_.stop, self.slice_.step)
+
+    def __len__(self):
+        # check cached length, calculate if needed
+        if self.length is None:
+            self.length = sum(1 for x in self)
+
+        return self.length
+
+def safe_unichr(intval):
+    try:
+        return unichr(intval)
+    except ValueError:
+        # ValueError: unichr() arg not in range(0x10000) (narrow Python build)
+        s = "\\U%08x" % intval
+        # return UTF16 surrogate pair
+        return s.decode('unicode-escape')
+
 def decode_htmlentities(text):
     """
     Decode HTML entities in text, coded as hex, decimal or named.
@@ -499,29 +554,28 @@ def decode_htmlentities(text):
 
     """
     def substitute_entity(match):
-        ent = match.group(3)
-        if match.group(1) == "#":
-            # decoding by number
-            if match.group(2) == '':
-                # number is in decimal
-                return unichr(int(ent))
-            elif match.group(2) == 'x':
-                # number is in hex
-                return unichr(int('0x' + ent, 16))
-        else:
-            # they were using a name
-            cp = n2cp.get(ent)
-            if cp:
-                return unichr(cp)
+        try:
+            ent = match.group(3)
+            if match.group(1) == "#":
+                # decoding by number
+                if match.group(2) == '':
+                    # number is in decimal
+                    return safe_unichr(int(ent))
+                elif match.group(2) in ['x', 'X']:
+                    # number is in hex
+                    return safe_unichr(int(ent, 16))
             else:
-                return match.group()
+                # they were using a name
+                cp = n2cp.get(ent)
+                if cp:
+                    return safe_unichr(cp)
+                else:
+                    return match.group()
+        except:
+            # in case of errors, return original input
+            return match.group()
 
-    try:
-        return RE_HTML_ENTITY.sub(substitute_entity, text)
-    except:
-        # in case of errors, return input
-        # e.g., ValueError: unichr() arg not in range(0x10000) (narrow Python build)
-        return text
+    return RE_HTML_ENTITY.sub(substitute_entity, text)
 
 
 def chunkize_serial(iterable, chunksize, as_numpy=False):

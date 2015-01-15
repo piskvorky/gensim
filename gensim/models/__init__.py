@@ -15,6 +15,7 @@ from .word2vec import Word2Vec
 from .doc2vec import Doc2Vec
 from .ldamulticore import LdaMulticore
 from .dtmmodel import DtmModel
+from .phrases import Phrases
 
 from gensim import interfaces, utils
 

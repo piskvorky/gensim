@@ -29,7 +29,7 @@ from setuptools.command.build_ext import build_ext
 class custom_build_ext(build_ext):
     """Allow C extension building to fail.
 
-    The C extension speeds up websocket masking, but is not essential.
+    The C extension speeds up word2vec training, but is not essential.
     """
 
     warning_message = """
@@ -87,7 +87,12 @@ http://api.mongodb.org/python/current/installation.html#osx
     def finalize_options(self):
             build_ext.finalize_options(self)
             # Prevent numpy from thinking it is still in its setup process:
-            __builtins__.__NUMPY_SETUP__ = False
+            # https://docs.python.org/2/library/__builtin__.html#module-__builtin__
+            if isinstance(__builtins__, dict):
+                __builtins__["__NUMPY_SETUP__"] = False
+            else:
+                __builtins__.__NUMPY_SETUP__ = False
+
             import numpy
             self.include_dirs.append(numpy.get_include())
 
@@ -99,7 +104,7 @@ model_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
 
 setup(
     name='gensim',
-    version='0.10.2',
+    version='0.10.3',
     description='Python framework for fast Vector Space Modelling',
     long_description=readfile('README.rst'),
 
@@ -145,14 +150,17 @@ setup(
     ],
 
     test_suite="gensim.test",
-
+    setup_requires = [
+        'numpy >= 1.3'
+    ],
     install_requires=[
+        'numpy >= 1.3',
         'scipy >= 0.7.0',
         'six >= 1.2.0',
     ],
 
     extras_require={
-        'distributed': ['Pyro4 >= 4.8'],
+        'distributed': ['Pyro4 >= 4.27'],
     },
 
     include_package_data=True,
