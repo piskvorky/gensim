@@ -89,15 +89,15 @@ class TestShardedCorpus(unittest.TestCase):
 
         item = corpus[3]
         self.assertIsInstance(item, numpy.ndarray)
-        self.assertEqual(item.shape, (corpus.n_out,))
+        self.assertEqual(item.shape, (corpus.dim,))
 
         dslice = corpus[2:6]
         self.assertIsInstance(dslice, numpy.ndarray)
-        self.assertEqual(dslice.shape, (4, corpus.n_out))
+        self.assertEqual(dslice.shape, (4, corpus.dim))
 
         ilist = corpus[[2, 3, 4, 5]]
         self.assertIsInstance(ilist, numpy.ndarray)
-        self.assertEqual(ilist.shape, (4, corpus.n_out))
+        self.assertEqual(ilist.shape, (4, corpus.dim))
 
         self.assertEqual(ilist.all(), dslice.all())
 
@@ -109,15 +109,15 @@ class TestShardedCorpus(unittest.TestCase):
 
         item = corpus[3]
         self.assertIsInstance(item, sparse.csr_matrix)
-        self.assertEqual(item.shape, (1, corpus.n_out))
+        self.assertEqual(item.shape, (1, corpus.dim))
 
         dslice = corpus[2:6]
         self.assertIsInstance(dslice, sparse.csr_matrix)
-        self.assertEqual(dslice.shape, (4, corpus.n_out))
+        self.assertEqual(dslice.shape, (4, corpus.dim))
 
         ilist = corpus[[2, 3, 4, 5]]
         self.assertIsInstance(ilist, sparse.csr_matrix)
-        self.assertEqual(ilist.shape, (4, corpus.n_out))
+        self.assertEqual(ilist.shape, (4, corpus.dim))
 
         self.assertEqual((ilist != dslice).getnnz(), 0)
 
@@ -134,18 +134,18 @@ class TestShardedCorpus(unittest.TestCase):
 
         item = corpus[3]
         self.assertIsInstance(item, sparse.csr_matrix)
-        self.assertEqual(item.shape, (1, corpus.n_out))
+        self.assertEqual(item.shape, (1, corpus.dim))
 
         dslice = corpus[2:6]
         self.assertIsInstance(dslice, sparse.csr_matrix)
-        self.assertEqual(dslice.shape, (4, corpus.n_out))
+        self.assertEqual(dslice.shape, (4, corpus.dim))
 
         expected_nnz = sum([len(self.data[i]) for i in range(2, 6)])
         self.assertEqual(dslice.getnnz(), expected_nnz)
 
         ilist = corpus[[2, 3, 4, 5]]
         self.assertIsInstance(ilist, sparse.csr_matrix)
-        self.assertEqual(ilist.shape, (4, corpus.n_out))
+        self.assertEqual(ilist.shape, (4, corpus.dim))
 
         # Also compare with what the dense dataset is giving us
         d_dslice = dense_corpus[2:6]
@@ -164,15 +164,15 @@ class TestShardedCorpus(unittest.TestCase):
 
         item = corpus[3]
         self.assertIsInstance(item, numpy.ndarray)
-        self.assertEqual(item.shape, (1, corpus.n_out))
+        self.assertEqual(item.shape, (1, corpus.dim))
 
         dslice = corpus[2:6]
         self.assertIsInstance(dslice, numpy.ndarray)
-        self.assertEqual(dslice.shape, (4, corpus.n_out))
+        self.assertEqual(dslice.shape, (4, corpus.dim))
 
         ilist = corpus[[2, 3, 4, 5]]
         self.assertIsInstance(ilist, numpy.ndarray)
-        self.assertEqual(ilist.shape, (4, corpus.n_out))
+        self.assertEqual(ilist.shape, (4, corpus.dim))
 
         # Also compare with what the dense dataset is giving us
         d_dslice = dense_corpus[2:6]

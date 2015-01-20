@@ -76,12 +76,59 @@ class ShardedCorpus(IndexedCorpus):
     given. (A new object is "cloned" from the one saved to ``output_prefix``
     previously.)
 
+    To retrieve data, you can load the corpus and use it like a list:
+
+    >>> sh_corpus = ShardedCorpus.load(output_prefix)
+    >>> batch = sh_corpus[100:150]
+
+    This will retrieve a numpy 2-dimensional array of 50 rows and 1000
+    columns (1000 was the dimension of the data we supplied to the corpus).
+    To retrieve gensim-style sparse vectors, set the ``gensim`` property:
+
+    >>> sh_corpus.gensim = True
+    >>> batch = sh_corpus[100:150]
+
+    The batch now will be a generator of gensim vectors.
+
+    Since the corpus needs the data serialized in order to be able to operate,
+    it will serialize data right away on initialization. Instead of calling
+    ``ShardedCorpus.serialize()``, you can just initialize and use the corpus
+    right away:
+
+    >>> corpus = ShardedCorpus(output_prefix, corpus, dim=1000)
+    >>> batch = corpus[100:150]
+
+    ShardedCorpus also supports working with scipy sparse matrices, both
+    during retrieval and during serialization. If you want to serialize your
+    data as sparse matrices, set the ``sparse_serialization`` flag. For
+    retrieving your data as sparse matrices, use the ``sparse_retrieval``
+    flag. (You can also retrieve densely serialized data as sparse matrices,
+    for the sake of completeness, and vice versa.) By default, the corpus
+    will retrieve numpy ndarrays even if it was serialized into sparse
+    matrices.
+
+    >>> sparse_prefix = 'mydata.sparse.shdat'
+    >>> ShardedCorpus.serialize(sparse_prefix, corpus, dim=1000, sparse_serialization=True)
+    >>> sparse_corpus = ShardedCorpus.load(sparse_prefix)
+    >>> batch = sparse_corpus[100:150]
+    >>> type(batch)
+    <type 'numpy.ndarray'>
+    >>> sparse_corpus.sparse_retrieval = True
+    >>> batch = sparse_corpus[100:150]
+    <class 'scipy.sparse.csr.csr_matrix'>
+
+    While you *can* touch the ``sparse_retrieval`` attribute during the life
+    of a ShardedCorpus object, you should definitely not touch `
+    `sharded_serialization``! Changing the attribute will not miraculously
+    re-serialize the data in the requested format.
+
+    The CSR format is used for sparse data throughout.
+
     Internally, to retrieve data, the dataset keeps track of which shard is
     currently open and on a ``__getitem__`` request, either returns an item from
     the current shard, or opens a new one. The shard size is constant, except
     for the last shard.
     """
-
     def __init__(self, output_prefix, corpus, dim=None,
                  shardsize=4096, overwrite=False, sparse_serialization=False,
                  sparse_retrieval=False, gensim=False):
@@ -193,10 +240,6 @@ class ShardedCorpus(IndexedCorpus):
         else:
             logging.info('Cloning existing...')
             self.init_by_clone()
-
-        # Both methods of initialization initialize self.dim
-        self.n_in = self.dim
-        self.n_out = self.dim
 
     def init_shards(self, output_prefix, corpus, shardsize=4096,
                     dtype=_default_dtype):
@@ -676,13 +719,15 @@ class ShardedCorpus(IndexedCorpus):
     def _getitem_sparse2gensim(self, result):
         """Change given sparse result matrix to gensim sparse vectors.
 
-        Uses the insides of the sparse matrix to make this fast.
+        Uses the internals of the sparse matrix to make this fast.
         """
-        output = [[] for _ in xrange(result.shape[0])]
-        for row_idx in xrange(result.shape[0]):
-            indices = result.indices[result.indptr[row_idx]:result.indptr[row_idx+1]]
-            g_row = [(col_idx, result[row_idx, col_idx]) for col_idx in indices]
-            output[row_idx] = g_row
+        def row_sparse2gensim(row_idx, csr_matrix):
+            indices = csr_matrix.indices[csr_matrix.indptr[row_idx]:csr_matrix.indptr[row_idx+1]]
+            g_row = [(col_idx, csr_matrix[row_idx, col_idx]) for col_idx in indices]
+            return g_row
+
+        output = (row_sparse2gensim(i, result) for i in xrange(result.shape[0]))
+
         return output
 
     def _getitem_dense2gensim(self, result):
