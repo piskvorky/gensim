@@ -7,8 +7,8 @@ gensim -- Topic Modelling in Python
 |License|_
 
 .. |Travis| image:: https://api.travis-ci.org/piskvorky/gensim.png?branch=develop
-.. |Downloads| image:: https://pypip.in/d/gensim/badge.png
-.. |License| image:: https://pypip.in/license/gensim/badge.png
+.. |Downloads| image:: https://pypip.in/d/gensim/badge.png?style=flat
+.. |License| image:: https://pypip.in/license/gensim/badge.png?style=flat
 .. _Travis: https://travis-ci.org/piskvorky/gensim
 .. _Downloads: https://pypi.python.org/pypi/gensim
 .. _License: http://radimrehurek.com/gensim/about.html
