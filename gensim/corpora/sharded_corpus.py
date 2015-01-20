@@ -35,12 +35,12 @@ __author__ = 'Jan Hajic jr.'
 
 
 class ShardedCorpus(IndexedCorpus):
-    """This class is designed for situations where you need to train a model
-    on matrices, with a large number of iterations. It should be faster than
-    gensim's other IndexedCorpus implementations; check the
-    ``benchmark_datasets.py`` script.
+    """This corpus is designed for situations where you need to train a model
+    on matrices, with a large number of iterations. (It should be faster than
+    gensim's other IndexedCorpus implementations for this use case; check the
+    ``benchmark_datasets.py`` script. It should also serialize faster.)
 
-    The dataset stores its data in separate files called
+    The corpus stores its data in separate files called
     "shards". This is a compromise between speed (keeping the whole dataset
     in memory) and memory footprint (keeping the data on disk and reading from
     it on demand). All saving/loading is done using the cPickle mechanism.
@@ -51,22 +51,30 @@ class ShardedCorpus(IndexedCorpus):
       class, which works similarly - no way of adding documents to the dataset
       (for now).
 
-    On initialization, will read from a corpus and build the dataset. This only
-    needs to be done once (and it may take quite a long time):
+    You can use ShardedCorpus to serialize your data just like any other gensim
+    corpus that implements serialization. However, because the data is saved
+    as numpy 2-dimensional ndarrays (or scipy sparse matrices), you need to
+    supply the dimension of your data to the corpus. (The dimension of word
+    frequency vectors will typically be the size of the vocabulary, etc.)
 
-    >>> icorp = data_loader.load_image_corpus()
-    >>> sdata = ShardedCorpus(output_prefix, icorp)
+    >>> corpus = gensim.utils.mock_data()
+    >>> output_prefix = 'mydata.shdat'
+    >>> ShardedCorpus.serialize(output_prefix, corpus, dim=1000)
 
-    The ``output_prefix`` gives the path to the dataset file. The individual
-    shards are saved as ``output_prefix.0``, ``output_prefix.1``, etc.
+    The ``output_prefix`` tells the ShardedCorpus where to put the data.
+    Shards are saved as ``output_prefix.0``, ``output_prefix.1``, etc.
     All shards must be of the same size. The shards can be re-sized (which
     is essentially a re-serialization into new-size shards), but note that
     this operation will temporarily take twice as much disk space, because
     the old shards are not deleted until the new shards are safely in place.
 
-    On further initialization with the same ``output_prefix`` (more precisely:
-    the output prefix leading to the same file), will load the already built
-    dataset unless the ``overwrite`` option is given.
+    After serializing the data, the corpus will then save itself to the file
+    ``output_prefix``.
+
+    On further initialization with the same ``output_prefix``, the corpus
+    will load the already built dataset unless the ``overwrite`` option is
+    given. (A new object is "cloned" from the one saved to ``output_prefix``
+    previously.)
 
     Internally, to retrieve data, the dataset keeps track of which shard is
     currently open and on a ``__getitem__`` request, either returns an item from
@@ -74,7 +82,6 @@ class ShardedCorpus(IndexedCorpus):
     for the last shard.
     """
 
-    #@profile
     def __init__(self, output_prefix, corpus, dim=None,
                  shardsize=4096, overwrite=False, sparse_serialization=False,
                  sparse_retrieval=False, gensim=False):
@@ -86,7 +93,20 @@ class ShardedCorpus(IndexedCorpus):
             filenames should be derived. The individual shards will be saved
             as ``output_prefix.0``, ``output_prefix.1``, etc.
 
-            The `output_prefix` path
+            The ``output_prefix`` path then works as the filename to which
+            the ShardedCorpus object itself will be automatically saved.
+            Normally, gensim corpora do not do this, but ShardedCorpus needs
+            to remember several serialization settings: namely the shard
+            size and whether it was serialized in dense or sparse format. By
+            saving automatically, any new ShardedCorpus with the same
+            ``output_prefix`` will be able to find the information about the
+            data serialized with the given prefix.
+
+            If you want to *overwrite* your data serialized with some output
+            prefix, set the ``overwrite`` flag to True.
+
+            Of course, you can save your corpus separately as well using
+            the ``save()`` method.
 
         :type corpus: gensim.interfaces.CorpusABC
         :param corpus: The source corpus from which to build the dataset.
@@ -267,7 +287,6 @@ class ShardedCorpus(IndexedCorpus):
             self.n_docs += shard.shape[0]
             self.n_shards += 1
 
-    #@profile
     def load_shard(self, n):
         """Loads (unpickles) the n-th shard as the "live" part of the dataset
         into the Dataset object."""
@@ -463,7 +482,6 @@ class ShardedCorpus(IndexedCorpus):
     def __len__(self):
         return self.n_docs
 
-    #@profile
     def _ensure_shard(self, offset):
         # No shard loaded
         if self.current_shard is None:
@@ -483,7 +501,6 @@ class ShardedCorpus(IndexedCorpus):
         result = self.current_shard[offset - self.current_offset]
         return result
 
-    #@profile
     def __getitem__(self, offset):
         """Retrieves the given row of the dataset.
 
