@@ -99,8 +99,7 @@ def file_or_filename(input):
     """
     if isinstance(input, string_types):
         # input was a filename: open as text file
-        with smart_open(input) as fin:
-            yield fin
+        yield smart_open(input)
     else:
         input.seek(0)
         yield input
