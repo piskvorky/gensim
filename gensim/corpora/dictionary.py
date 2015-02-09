@@ -22,6 +22,11 @@ import sys
 import logging
 import itertools
 
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
 from gensim import utils
 
 if sys.version_info[0] >= 3:
@@ -392,4 +397,21 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.info("built %s from %i documents (total %i corpus positions)" %
                      (result, result.num_docs, result.num_pos))
         return result
+
+    def save(self, fname_or_handle):
+        """
+        Save the object to file (also see `load`).
+
+        `fname_or_handle` is either a string specifying the file name to
+        save to, or an open file-like object which can be written to.
+
+        """
+        logger.info("saving %s object" % self.__class__.__name__)
+        try:
+            pickle.dump(self, fname_or_handle)
+        except TypeError:  # `fname_or_handle` does not have write attribute
+            with open(fname_or_handle, 'wb') as fd:
+                pickle.dump(self, fd)
+
+
 #endclass Dictionary
