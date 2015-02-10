@@ -228,19 +228,22 @@ class SaveLoad(object):
             setattr(obj, attrib, None)
         return obj
 
-    def save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset()):
+    def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset()):
         """
         Save the object to file (also see `load`).
 
-        If `separately` is None, automatically detect large numpy/scipy.sparse arrays
-        in the object being stored, and store them into separate files. This avoids
-        pickle memory errors and allows mmap'ing large arrays back on load efficiently.
+        If `separately` is None, automatically detect large
+        numpy/scipy.sparse arrays in the object being stored, and store
+        them into separate files. This avoids pickle memory errors and
+        allows mmap'ing large arrays back on load efficiently.
 
-        You can also set `separately` manually, in which case it must be a list of attribute
-        names to be stored in separate files. The automatic check is not performed in this case.
+        You can also set `separately` manually, in which case it must be
+        a list of attribute names to be stored in separate files. The
+        automatic check is not performed in this case.
 
-        `ignore` is a set of attribute names to *not* serialize (file handles, caches etc). On
-        subsequent load() these attributes will be set to None.
+        `ignore` is a set of attribute names to *not* serialize (file
+        handles, caches etc). On subsequent load() these attributes will
+        be set to None.
 
         """
         logger.info("saving %s object under %s, separately %s" % (self.__class__.__name__, fname, separately))
@@ -290,6 +293,35 @@ class SaveLoad(object):
             # restore the attributes
             for attrib, val in iteritems(tmp):
                 setattr(self, attrib, val)
+
+    def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2, ignore=frozenset()):
+        """
+        Save the object to file (also see `load`).
+
+        `fname_or_handle` is either a string specifying the file name to
+        save to, or an open file-like object which can be written to. If
+        the object is a file handle, no special array handling will be
+        performed; all attributes will be saved to the same file.
+
+        If `separately` is None, automatically detect large
+        numpy/scipy.sparse arrays in the object being stored, and store
+        them into separate files. This avoids pickle memory errors and
+        allows mmap'ing large arrays back on load efficiently.
+
+        You can also set `separately` manually, in which case it must be
+        a list of attribute names to be stored in separate files. The
+        automatic check is not performed in this case.
+
+        `ignore` is a set of attribute names to *not* serialize (file
+        handles, caches etc). On subsequent load() these attributes will
+        be set to None.
+
+        """
+        try:
+            pickle.dump(self, fname_or_handle, protocol=_pickle.HIGHEST_PROTOCOL)
+            logger.info("saved %s object" % self.__class__.__name__)
+        except TypeError:  # `fname_or_handle` does not have write attribute
+            self._smart_save(fname_or_handle, separately, sep_limit, ignore)
 #endclass SaveLoad
 
 
@@ -715,7 +747,7 @@ def smart_open(fname, mode='rb'):
     return open(fname, mode)
 
 
-def pickle(obj, fname, protocol=-1):
+def pickle(obj, fname, protocol=_pickle.HIGHEST_PROTOCOL):
     """Pickle object `obj` to file `fname`."""
     with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
         _pickle.dump(obj, fout, protocol=protocol)
