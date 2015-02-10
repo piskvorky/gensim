@@ -18,9 +18,9 @@ try:
 except ImportError:
     from htmlentitydefs import name2codepoint as n2cp
 try:
-    import cPickle as _pickle
+    import cPickle as pickle
 except ImportError:
-    import pickle as _pickle
+    import pickle as pickle
 
 import re
 import unicodedata
@@ -212,13 +212,13 @@ class SaveLoad(object):
         """
         logger.info("loading %s object from %s" % (cls.__name__, fname))
         subname = lambda suffix: fname + '.' + suffix + '.npy'
-        obj = unpickle(fname)
+        obj = smart_unpickle(fname)
         for attrib in getattr(obj, '__numpys', []):
             logger.info("loading %s from %s with mmap=%s" % (attrib, subname(attrib), mmap))
             setattr(obj, attrib, numpy.load(subname(attrib), mmap_mode=mmap))
         for attrib in getattr(obj, '__scipys', []):
             logger.info("loading %s from %s with mmap=%s" % (attrib, subname(attrib), mmap))
-            sparse = unpickle(subname(attrib))
+            sparse = smart_unpickle(subname(attrib))
             sparse.data = numpy.load(subname(attrib) + '.data.npy', mmap_mode=mmap)
             sparse.indptr = numpy.load(subname(attrib) + '.indptr.npy', mmap_mode=mmap)
             sparse.indices = numpy.load(subname(attrib) + '.indices.npy', mmap_mode=mmap)
@@ -279,7 +279,7 @@ class SaveLoad(object):
                     data, indptr, indices = val.data, val.indptr, val.indices
                     val.data, val.indptr, val.indices = None, None, None
                     try:
-                        pickle(val, subname(attrib)) # store array-less object
+                        smart_pickle(val, subname(attrib)) # store array-less object
                     finally:
                         val.data, val.indptr, val.indices = data, indptr, indices
                 else:
@@ -288,7 +288,7 @@ class SaveLoad(object):
             self.__dict__['__numpys'] = numpys
             self.__dict__['__scipys'] = scipys
             self.__dict__['__ignoreds'] = ignoreds
-            pickle(self, fname)
+            smart_pickle(self, fname)
         finally:
             # restore the attributes
             for attrib, val in iteritems(tmp):
@@ -318,7 +318,7 @@ class SaveLoad(object):
 
         """
         try:
-            pickle.dump(self, fname_or_handle, protocol=_pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self, fname_or_handle, protocol=pickle.HIGHEST_PROTOCOL)
             logger.info("saved %s object" % self.__class__.__name__)
         except TypeError:  # `fname_or_handle` does not have write attribute
             self._smart_save(fname_or_handle, separately, sep_limit, ignore)
@@ -747,16 +747,16 @@ def smart_open(fname, mode='rb'):
     return open(fname, mode)
 
 
-def pickle(obj, fname, protocol=_pickle.HIGHEST_PROTOCOL):
+def smart_pickle(obj, fname, protocol=pickle.HIGHEST_PROTOCOL):
     """Pickle object `obj` to file `fname`."""
     with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
-        _pickle.dump(obj, fout, protocol=protocol)
+        pickle.dump(obj, fout, protocol=protocol)
 
 
-def unpickle(fname):
+def smart_unpickle(fname):
     """Load pickled object from `fname`"""
     with smart_open(fname) as f:
-        return _pickle.load(f)
+        return pickle.load(f)
 
 
 def revdict(d):
