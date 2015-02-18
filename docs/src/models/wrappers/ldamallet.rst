@@ -1,7 +1,7 @@
-:mod:`models.ldamallet` -- Latent Dirichlet Allocation via Mallet
+:mod:`models.wrappers.ldamallet` -- Latent Dirichlet Allocation via Mallet
 =================================================================
 
-.. automodule:: gensim.models.ldamallet
+.. automodule:: gensim.models.wrappers.ldamallet
     :synopsis: Latent Dirichlet Allocation via Mallet
     :members:
     :inherited-members:
