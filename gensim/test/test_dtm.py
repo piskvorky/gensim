@@ -35,12 +35,12 @@ class TestDtmModel(unittest.TestCase):
 
     def testDtm(self):
         if self.dtm_path is not None:
-            model = gensim.models.DtmModel(self.dtm_path, self.corpus, self.time_slices, num_topics=2, id2word=self.id2word, model='dtm', initialize_lda=True)
+            model = gensim.models.wrappers.DtmModel(self.dtm_path, self.corpus, self.time_slices, num_topics=2, id2word=self.id2word, model='dtm', initialize_lda=True)
             topics = model.show_topics(topics=2, times=2, topn=10)
 
     def testDim(self):
         if self.dtm_path is not None:
-            model = gensim.models.DtmModel(self.dtm_path, self.corpus, self.time_slices, num_topics=2, id2word=self.id2word, model='fixed', initialize_lda=True)
+            model = gensim.models.wrappers.DtmModel(self.dtm_path, self.corpus, self.time_slices, num_topics=2, id2word=self.id2word, model='fixed', initialize_lda=True)
             topics = model.show_topics(topics=2, times=2, topn=10)
 
 
