@@ -98,10 +98,10 @@ def file_or_filename(input):
 
     """
     if isinstance(input, string_types):
-        # input was a filename: open as text file
-        with smart_open(input) as fin:
-            yield fin
+        # input was a filename: open as file
+        yield smart_open(input)
     else:
+        # input already a file-like object; just reset to the beginning
         input.seek(0)
         yield input
 
@@ -834,7 +834,7 @@ if HAS_PATTERN:
         """
         This function is only available when the optional 'pattern' package is installed.
 
-        Use the English lemmatizer from `pattern` to extract tokens in
+        Use the English lemmatizer from `pattern` to extract UTF8-encoded tokens in
         their base form=lemma, e.g. "are, is, being" -> "be" etc.
         This is a smarter version of stemming, taking word context into account.
 
