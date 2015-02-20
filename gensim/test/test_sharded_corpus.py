@@ -110,15 +110,15 @@ class TestShardedCorpus(unittest.TestCase):
                                sparse_retrieval=False)
 
         item = corpus[3]
-        self.assertIsInstance(item, numpy.ndarray)
+        self.assertTrue(isinstance(item, numpy.ndarray))
         self.assertEqual(item.shape, (corpus.dim,))
 
         dslice = corpus[2:6]
-        self.assertIsInstance(dslice, numpy.ndarray)
+        self.assertTrue(isinstance(dslice, numpy.ndarray))
         self.assertEqual(dslice.shape, (4, corpus.dim))
 
         ilist = corpus[[2, 3, 4, 5]]
-        self.assertIsInstance(ilist, numpy.ndarray)
+        self.assertTrue(isinstance(ilist, numpy.ndarray))
         self.assertEqual(ilist.shape, (4, corpus.dim))
 
         self.assertEqual(ilist.all(), dslice.all())
@@ -130,15 +130,15 @@ class TestShardedCorpus(unittest.TestCase):
                                sparse_retrieval=True)
 
         item = corpus[3]
-        self.assertIsInstance(item, sparse.csr_matrix)
+        self.assertTrue(isinstance(item, sparse.csr_matrix))
         self.assertEqual(item.shape, (1, corpus.dim))
 
         dslice = corpus[2:6]
-        self.assertIsInstance(dslice, sparse.csr_matrix)
+        self.assertTrue(isinstance(dslice, sparse.csr_matrix))
         self.assertEqual(dslice.shape, (4, corpus.dim))
 
         ilist = corpus[[2, 3, 4, 5]]
-        self.assertIsInstance(ilist, sparse.csr_matrix)
+        self.assertTrue(isinstance(ilist, sparse.csr_matrix))
         self.assertEqual(ilist.shape, (4, corpus.dim))
 
         self.assertEqual((ilist != dslice).getnnz(), 0)
@@ -155,18 +155,18 @@ class TestShardedCorpus(unittest.TestCase):
                                      sparse_retrieval=True)
 
         item = corpus[3]
-        self.assertIsInstance(item, sparse.csr_matrix)
+        self.assertTrue(isinstance(item, sparse.csr_matrix))
         self.assertEqual(item.shape, (1, corpus.dim))
 
         dslice = corpus[2:6]
-        self.assertIsInstance(dslice, sparse.csr_matrix)
+        self.assertTrue(isinstance(dslice, sparse.csr_matrix))
         self.assertEqual(dslice.shape, (4, corpus.dim))
 
         expected_nnz = sum([len(self.data[i]) for i in range(2, 6)])
         self.assertEqual(dslice.getnnz(), expected_nnz)
 
         ilist = corpus[[2, 3, 4, 5]]
-        self.assertIsInstance(ilist, sparse.csr_matrix)
+        self.assertTrue(isinstance(ilist, sparse.csr_matrix))
         self.assertEqual(ilist.shape, (4, corpus.dim))
 
         # Also compare with what the dense dataset is giving us
@@ -185,15 +185,15 @@ class TestShardedCorpus(unittest.TestCase):
                                      sparse_retrieval=False)
 
         item = corpus[3]
-        self.assertIsInstance(item, numpy.ndarray)
+        self.assertTrue(isinstance(item, numpy.ndarray))
         self.assertEqual(item.shape, (1, corpus.dim))
 
         dslice = corpus[2:6]
-        self.assertIsInstance(dslice, numpy.ndarray)
+        self.assertTrue(isinstance(dslice, numpy.ndarray))
         self.assertEqual(dslice.shape, (4, corpus.dim))
 
         ilist = corpus[[2, 3, 4, 5]]
-        self.assertIsInstance(ilist, numpy.ndarray)
+        self.assertTrue(isinstance(ilist, numpy.ndarray))
         self.assertEqual(ilist.shape, (4, corpus.dim))
 
         # Also compare with what the dense dataset is giving us
@@ -208,15 +208,15 @@ class TestShardedCorpus(unittest.TestCase):
                                gensim=True)
 
         item = corpus[3]
-        self.assertIsInstance(item, list)
-        self.assertIsInstance(item[0], tuple)
+        self.assertTrue(isinstance(item, list))
+        self.assertTrue(isinstance(item[0], tuple))
 
         dslice = corpus[2:6]
         self.assertTrue(hasattr(dslice, 'next'))
         dslice = list(dslice)
-        self.assertIsInstance(dslice, list)
-        self.assertIsInstance(dslice[0], list)
-        self.assertIsInstance(dslice[0][0], tuple)
+        self.assertTrue(isinstance(dslice, list))
+        self.assertTrue(isinstance(dslice[0], list))
+        self.assertTrue(isinstance(dslice[0][0], tuple))
 
         iscorp, _ = is_corpus(dslice)
         self.assertTrue(iscorp, "Is the object returned by slice notation "
@@ -225,9 +225,9 @@ class TestShardedCorpus(unittest.TestCase):
         ilist = corpus[[2, 3, 4, 5]]
         self.assertTrue(hasattr(ilist, 'next'))
         ilist = list(ilist)
-        self.assertIsInstance(ilist, list)
-        self.assertIsInstance(ilist[0], list)
-        self.assertIsInstance(ilist[0][0], tuple)
+        self.assertTrue(isinstance(ilist, list))
+        self.assertTrue(isinstance(ilist[0], list))
+        self.assertTrue(isinstance(ilist[0][0], tuple))
 
         # From generators to lists
 
