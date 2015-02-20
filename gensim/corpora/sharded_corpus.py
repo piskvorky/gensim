@@ -8,6 +8,8 @@ The corpus is intended for situations where you need to use your data
 as numpy arrays for some iterative processing (like training something
 using SGD, which usually involves heavy matrix multiplication).
 """
+from __future__ import print_function
+
 import logging
 import os
 import cPickle
@@ -26,7 +28,6 @@ except ImportError:
     pass
 
 import time
-
 import gensim
 from gensim.corpora import IndexedCorpus
 from gensim.interfaces import TransformedCorpus
@@ -461,7 +462,7 @@ class ShardedCorpus(IndexedCorpus):
                     os.rename(new_shard_name, self._shard_name(shard_n))
             # If something happens when we're in this stage, we're screwed.
             except Exception as e:
-                print e
+                print(e)
                 raise RuntimeError('Resizing completely failed for some reason.'
                                    ' Sorry, dataset is probably ruined...')
             finally:
@@ -506,10 +507,10 @@ class ShardedCorpus(IndexedCorpus):
                 return self._guess_n_features(corpus.corpus)
         else:
             if not self.dim:
-                print self.dim
                 raise TypeError('Couldn\'t find number of features, '
-                                 'refusing to guess.'
-                                 '(Type of corpus: {0}'.format(type(corpus)))
+                                 'refusing to guess (dimension set to {0},'
+                                 'type of corpus: {1}).'.format(self.dim,
+                                                                type(corpus)))
             else:
                 logging.warn('Couldn\'t find number of features, trusting '
                              'supplied dimension ({0})'.format(self.dim))
