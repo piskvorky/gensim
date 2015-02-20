@@ -23,7 +23,6 @@ from gensim.utils import mock_data
 
 #############################################################################
 
-data = mock_data(dim=1000)
 
 
 class TestShardedCorpus(unittest.TestCase):
@@ -54,12 +53,13 @@ class TestShardedCorpus(unittest.TestCase):
 
         self.tmp_fname = os.path.join(self.tmp_dir,
                                       'shcorp.' + self.random_string + '.tmp')
-        self.corpus = ShardedCorpus(self.tmp_fname, data, dim=self.dim,
+        self.data = mock_data(dim=1000)
+        self.corpus = ShardedCorpus(self.tmp_fname, self.data, dim=self.dim,
                                     shardsize=100)
 
     def tearDown(self):
 
-        shutil.rmtree(self.tmp_fname)
+        shutil.rmtree(self.tmp_dir)
 
     def test_init(self):
 
