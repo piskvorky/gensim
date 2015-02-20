@@ -4,11 +4,12 @@ Testing the test sharded corpus.
 import os
 
 # For backwards compatibility with setUpClass and tearDownClass:
-import sys
-if sys.version_info[0] == 2 and sys.version_info[1] <= 6:
-    import unittest2 as unittest
-else:
-    import unittest
+# import sys
+# if sys.version_info[0] == 2 and sys.version_info[1] <= 6:
+#     import unittest2 as unittest
+# else:
+#     import unittest
+import unittest
 
 import random
 import numpy
@@ -22,29 +23,43 @@ from gensim.utils import mock_data
 
 #############################################################################
 
+data = mock_data(dim=1000)
+
 
 class TestShardedCorpus(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.dim = 1000
-        cls.data = mock_data(dim=cls.dim)
 
-        random_string = ''.join([random.choice('1234567890') for _ in xrange(8)])
+    # @classmethod
+    # def setUpClass(cls):
+    #     cls.dim = 1000
+    #     cls.data = mock_data(dim=cls.dim)
+    #
+    #     random_string = ''.join([random.choice('1234567890') for _ in xrange(8)])
+    #
+    #     cls.tmp_dir = 'test-temp-' + random_string
+    #     os.makedirs(cls.tmp_dir)
+    #
+    #     cls.tmp_fname = os.path.join(cls.tmp_dir,
+    #                                  'shcorp.' + random_string + '.tmp')
 
-        cls.tmp_dir = 'test-temp-' + random_string
-        os.makedirs(cls.tmp_dir)
-
-        cls.tmp_fname = os.path.join(cls.tmp_dir,
-                                     'shcorp.' + random_string + '.tmp')
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.tmp_dir)
+    # @classmethod
+    # def tearDownClass(cls):
+    #     shutil.rmtree(cls.tmp_dir)
 
     def setUp(self):
-        self.corpus = ShardedCorpus(self.tmp_fname, self.data, dim=self.dim,
+        self.dim = 1000
+        self.random_string = ''.join([random.choice('1234567890') for _ in xrange(8)])
+        self.tmp_dir = 'test-temp-' + self.random_string
+        os.makedirs(self.tmp_dir)
+
+        self.tmp_fname = os.path.join(self.tmp_dir,
+                                      'shcorp.' + self.random_string + '.tmp')
+        self.corpus = ShardedCorpus(self.tmp_fname, data, dim=self.dim,
                                     shardsize=100)
+
+    def tearDown(self):
+
+        shutil.rmtree(self.tmp_fname)
 
     def test_init(self):
 
