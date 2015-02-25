@@ -22,7 +22,7 @@ Modules:
     corpora/ucicorpus
     corpora/indexedcorpus
     models/ldamodel
-    models/ldamallet
+    models/ldamulticore
     models/lsimodel
     models/tfidfmodel
     models/rpmodel
@@ -33,6 +33,10 @@ Modules:
     models/lda_dispatcher
     models/lda_worker
     models/word2vec
+    models/doc2vec
+    models/phrases
+    models/wrappers/ldamallet
+    models/wrappers/dtmmodel
     similarities/docsim
     similarities/simserver
 

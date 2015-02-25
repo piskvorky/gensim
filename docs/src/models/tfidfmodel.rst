@@ -5,4 +5,5 @@
     :synopsis: TF-IDF model
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:

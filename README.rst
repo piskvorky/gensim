@@ -6,9 +6,9 @@ gensim -- Topic Modelling in Python
 |Downloads|_
 |License|_
 
-.. |Travis| image:: https://api.travis-ci.org/piskvorky/gensim.png?branch=develop
-.. |Downloads| image:: https://pypip.in/d/gensim/badge.png
-.. |License| image:: https://pypip.in/license/gensim/badge.png
+.. |Travis| image:: https://img.shields.io/travis/piskvorky/gensim/develop.svg
+.. |Downloads| image:: https://img.shields.io/pypi/dm/gensim.svg
+.. |License| image:: https://img.shields.io/pypi/l/gensim.svg
 .. _Travis: https://travis-ci.org/piskvorky/gensim
 .. _Downloads: https://pypi.python.org/pypi/gensim
 .. _License: http://radimrehurek.com/gensim/about.html
@@ -25,9 +25,9 @@ Features
   * easy to plug in your own input corpus/datastream (trivial streaming API)
   * easy to extend with other Vector Space algorithms (trivial transformation API)
 
-* Efficient implementations of popular algorithms, such as online **Latent Semantic Analysis (LSA/LSI)**,
+* Efficient multicore implementations of popular algorithms, such as online **Latent Semantic Analysis (LSA/LSI/SVD)**,
   **Latent Dirichlet Allocation (LDA)**, **Random Projections (RP)**, **Hierarchical Dirichlet Process (HDP)**  or **word2vec deep learning**.
-* **Distributed computing**: can run *Latent Semantic Analysis* and *Latent Dirichlet Allocation* on a cluster of computers, and *word2vec* on multiple cores.
+* **Distributed computing**: can run *Latent Semantic Analysis* and *Latent Dirichlet Allocation* on a cluster of computers.
 * Extensive `HTML documentation and tutorials <http://radimrehurek.com/gensim/>`_.
 
 
@@ -45,19 +45,19 @@ It is also recommended you install a fast BLAS library before installing NumPy. 
 
 The simple way to install `gensim` is::
 
-    sudo easy_install gensim
+    pip install -U gensim
 
 Or, if you have instead downloaded and unzipped the `source tar.gz <http://pypi.python.org/pypi/gensim>`_ package,
 you'll need to run::
 
     python setup.py test
-    sudo python setup.py install
+    python setup.py install
 
 
 For alternative modes of installation (without root privileges, development
 installation, optional install features), see the `documentation <http://radimrehurek.com/gensim/install.html>`_.
 
-This version has been tested under Python 2.6, 2.7 and 3.3. Gensim's github repo is hooked to `Travis CI for automated testing <https://travis-ci.org/piskvorky/gensim>`_ on every commit push and pull request.
+This version has been tested under Python 2.6, 2.7, 3.3 and 3.4 (support for Python 2.5 was dropped in gensim 0.10.0; install gensim 0.9.1 if you *must* use Python 2.5). Gensim's github repo is hooked to `Travis CI for automated testing <https://travis-ci.org/piskvorky/gensim>`_ on every commit push and pull request.
 
 How come gensim is so fast and memory efficient? Isn't it pure Python, and isn't Python slow and greedy?
 --------------------------------------------------------------------------------------------------------

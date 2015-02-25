@@ -42,7 +42,10 @@ class Dictionary(utils.SaveLoad, Mapping):
     The main function is `doc2bow`, which converts a collection of words to its
     bag-of-words representation: a list of (word_id, word_frequency) 2-tuples.
     """
-    def __init__(self, documents=None):
+    def __init__(self, documents=None, prune_at=2000000):
+        """
+        If `documents` are given, use them to initialize Dictionary (see `add_documents()`).
+        """
         self.token2id = {} # token -> tokenId
         self.id2token = {} # reverse mapping for token2id; only formed on request, to save memory
         self.dfs = {} # document frequencies: tokenId -> in how many documents this token appeared
@@ -52,7 +55,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         self.num_nnz = 0 # total number of non-zeroes in the BOW matrix
 
         if documents is not None:
-            self.add_documents(documents)
+            self.add_documents(documents, prune_at=prune_at)
 
 
     def __getitem__(self, tokenid):
@@ -100,23 +103,31 @@ class Dictionary(utils.SaveLoad, Mapping):
         return Dictionary(documents=documents)
 
 
-    def add_documents(self, documents):
+    def add_documents(self, documents, prune_at=2000000):
         """
-        Build dictionary from a collection of documents. Each document is a list
-        of tokens = **tokenized and normalized** utf-8 encoded strings.
+        Update dictionary from a collection of documents. Each document is a list
+        of tokens = **tokenized and normalized** strings (either utf8 or unicode).
 
-        This is only a convenience wrapper for calling `doc2bow` on each document
-        with `allow_update=True`.
+        This is a convenience wrapper for calling `doc2bow` on each document
+        with `allow_update=True`, which also prunes infrequent words, keeping the
+        total number of unique words <= `prune_at`. This is to save memory on very
+        large inputs. To disable this pruning, set `prune_at=None`.
 
         >>> print(Dictionary(["máma mele maso".split(), "ema má máma".split()]))
         Dictionary(5 unique tokens)
         """
         for docno, document in enumerate(documents):
+            # log progress & run a regular check for pruning, once every 10k docs
             if docno % 10000 == 0:
-                logger.info("adding document #%i to %s" % (docno, self))
+                if prune_at is not None and len(self) > prune_at:
+                    self.filter_extremes(no_below=0, no_above=1.0, keep_n=prune_at)
+                logger.info("adding document #%i to %s", docno, self)
+
+            # update Dictionary with the document
             _ = self.doc2bow(document, allow_update=True) # ignore the result, here we only care about updating token ids
-        logger.info("built %s from %i documents (total %i corpus positions)" %
-                     (self, self.num_docs, self.num_pos))
+
+        logger.info("built %s from %i documents (total %i corpus positions)",
+                     self, self.num_docs, self.num_pos)
 
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
@@ -195,8 +206,10 @@ class Dictionary(utils.SaveLoad, Mapping):
         good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
         if keep_n is not None:
             good_ids = good_ids[:keep_n]
-        logger.info("keeping %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents" %
-                     (len(good_ids), no_below, no_above_abs, 100.0 * no_above))
+        bad_words = [(self[id], self.dfs.get(id, 0)) for id in set(self).difference(good_ids)]
+        logger.info("discarding %i tokens: %s...", len(self) - len(good_ids), bad_words[:10])
+        logger.info("keeping %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents",
+            len(good_ids), no_below, no_above_abs, 100.0 * no_above)
 
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
         self.filter_tokens(good_ids=good_ids)

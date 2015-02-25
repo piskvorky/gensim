@@ -1,11 +1,36 @@
 Changes
 =======
 
-0.10.2
+0.10.4
 
+* make utils.decode_htmlentities more robust and reliable on narrow Python builds
+* Move wrappers for external modeling programs into a submodule (Christopher Corley, #295)
+
+0.10.3, 17/11/2014
+
+* added streamed phrases = collocation detection (Miguel Cabrera, #258)
+* added param for multiple word2vec epochs (sebastienj, #243)
+* added doc2vec (=paragraph2vec = extension of word2vec) model (Timothy Emerick, #231)
+* initialize word2vec deterministically, for increased experiment reproducibility (KCzar, #240)
+* all indexed corpora now allow full Python slicing syntax (Christopher Corley, #246)
+* update distributed code for new Pyro4 API and py3k (Michael Brooks, Marco Bonzanini, #255, #249)
+* fixes to six module version (Lars Buitinck, #259)
+* fixes to setup.py (Maxim Avanov and Christopher Corley, #260, #251)
+* ...and lots of minor fixes & updates all around
+
+0.10.2, 18/09/2014
+
+* new parallelized, LdaMulticore implementation (Jan Zikes, #232)
+* Dynamic Topic Models (DTM) wrapper (Arttii, #205)
+* word2vec compiled from bundled C file at install time: no more pyximport (#233)
+* standardize show_/print_topics in LdaMallet (Benjamin Bray, #223)
+* add new word2vec multiplicative objective (3CosMul) of Levy & Goldberg (Gordon Mohr, #224)
 * preserve case in MALLET wrapper (mcburton, #222)
+* support for matrix-valued topic/word prior eta in LdaModel (mjwillson, #208)
+* py3k fix to SparseCorpus (Andreas Madsen, #234)
+* fix to LowCorpus when switching dictionaries (Christopher Corley, #237)
 
-0.10.1
+0.10.1, 22/07/2014
 
 * word2vec: new n_similarity method for comparing two sets of words (François Scharffe, #219)
 * make LDA print/show topics parameters consistent with LSI (Bram Vandekerckhove, #201)

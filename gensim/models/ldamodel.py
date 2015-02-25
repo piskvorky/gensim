@@ -9,6 +9,8 @@
 
 
 """
+**For a faster implementation of LDA (parallelized for multicore machines), see** :mod:`gensim.models.ldamulticore`.
+
 Latent Dirichlet Allocation (LDA) in Python.
 
 This module allows both LDA model estimation from a training corpus and inference of topic
@@ -32,7 +34,6 @@ The algorithm:
 
 
 import logging
-import itertools
 
 logger = logging.getLogger('gensim.models.ldamodel')
 
@@ -40,8 +41,7 @@ logger = logging.getLogger('gensim.models.ldamodel')
 import numpy # for arrays, array broadcasting etc.
 #numpy.seterr(divide='ignore') # ignore 0*log(0) errors
 
-from scipy.special import gammaln, digamma, psi # gamma function utils
-from scipy.special import gamma as gammafunc
+from scipy.special import gammaln, psi # gamma function utils
 from scipy.special import polygamma
 try:
     from scipy.maxentropy import logsumexp # log(sum(exp(x))) that tries to avoid overflow
@@ -180,8 +180,9 @@ class LdaModel(interfaces.TransformationABC):
 
     Model persistency is achieved through its `load`/`save` methods.
     """
-    def __init__(self, corpus=None, num_topics=100, id2word=None, distributed=False,
-                 chunksize=2000, passes=1, update_every=1, alpha='symmetric', eta=None, decay=0.5,
+    def __init__(self, corpus=None, num_topics=100, id2word=None,
+                 distributed=False, chunksize=2000, passes=1, update_every=1,
+                 alpha='symmetric', eta=None, decay=0.5, offset=1.0,
                  eval_every=10, iterations=50, gamma_threshold=0.001):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
@@ -198,10 +199,17 @@ class LdaModel(interfaces.TransformationABC):
         (theta) and topic-word (lambda) distributions. Both default to a symmetric
         1.0/num_topics prior.
 
-        `alpha` can be also set to an explicit array = prior of your choice. It also
+        `alpha` can be set to an explicit array = prior of your choice. It also
         support special values of 'asymmetric' and 'auto': the former uses a fixed
         normalized asymmetric 1.0/topicno prior, the latter learns an asymmetric
         prior directly from your data.
+
+        `eta` can be a scalar for a symmetric prior over topic/word
+        distributions, or a matrix of shape num_topics x num_words,
+        which can be used to impose asymmetric priors over the word
+        distribution on a per-topic basis. This may be useful if you
+        want to seed certain topics with particular words by boosting
+        the priors for those words.
 
         Turn on `distributed` to force distributed computing (see the `web tutorial <http://radimrehurek.com/gensim/distributed.html>`_
         on how to set up a cluster of machines for gensim).
@@ -209,6 +217,9 @@ class LdaModel(interfaces.TransformationABC):
         Calculate and log perplexity estimate from the latest mini-batch every
         `eval_every` model updates (setting this to 1 slows down training ~2x;
         default is 10 for better performance). Set to None to disable perplexity estimation.
+
+        `decay` and `offset` parameters are the same as Kappa and Tau_0 in
+        Hoffman et al, respectively.
 
         Example:
 
@@ -241,6 +252,7 @@ class LdaModel(interfaces.TransformationABC):
         self.num_topics = int(num_topics)
         self.chunksize = chunksize
         self.decay = decay
+        self.offset = offset
         self.num_updates = 0
 
         self.passes = passes
@@ -285,7 +297,6 @@ class LdaModel(interfaces.TransformationABC):
             try:
                 import Pyro4
                 dispatcher = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher')
-                dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word=self.id2word, num_topics=num_topics,
                                       chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
@@ -334,6 +345,9 @@ class LdaModel(interfaces.TransformationABC):
         to update the model's topic-word distributions, and return a 2-tuple
         `(gamma, sstats)`. Otherwise, return `(gamma, None)`. `gamma` is of shape
         `len(chunk) x self.num_topics`.
+
+        Avoids computing the `phi` variational parameter directly using the
+        optimization presented in **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
 
         """
         try:
@@ -422,7 +436,7 @@ class LdaModel(interfaces.TransformationABC):
         Update parameters for the Dirichlet prior on the per-document
         topic weights `alpha` given the last `gammat`.
 
-        Uses Newton's method: http://www.stanford.edu/~jhuang11/research/dirichlet/dirichlet.pdf
+        Uses Newton's method, described in **Huang: Maximum Likelihood Estimation of Dirichlet Distribution Parameters.** (http://www.stanford.edu/~jhuang11/research/dirichlet/dirichlet.pdf)
 
         """
         N = float(len(gammat))
@@ -447,6 +461,12 @@ class LdaModel(interfaces.TransformationABC):
 
 
     def log_perplexity(self, chunk, total_docs=None):
+        """
+        Calculate and return per-word likelihood bound, using the `chunk` of
+        documents as evaluation corpus. Also output the calculated statistics. incl.
+        perplexity=2^(-bound), to log at INFO level.
+
+        """
         if total_docs is None:
             total_docs = len(chunk)
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
@@ -457,8 +477,9 @@ class LdaModel(interfaces.TransformationABC):
         return perwordbound
 
 
-    def update(self, corpus, chunksize=None, decay=None, passes=None, update_every=None, eval_every=None,
-            iterations=None, gamma_threshold=None):
+    def update(self, corpus, chunksize=None, decay=None, offset=None,
+               passes=None, update_every=None, eval_every=None, iterations=None,
+               gamma_threshold=None):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -473,7 +494,9 @@ class LdaModel(interfaces.TransformationABC):
 
         For stationary input (no topic drift in new documents), on the other hand,
         this equals the online update of Hoffman et al. and is guaranteed to
-        converge for any `decay` in (0.5, 1.0>.
+        converge for any `decay` in (0.5, 1.0>. Additionally, for smaller
+        `corpus` sizes, an increasing `offset` may be beneficial (see
+        Table 1 in Hoffman et al.)
 
         """
         # use parameters given in constructor, unless user explicitly overrode them
@@ -481,6 +504,8 @@ class LdaModel(interfaces.TransformationABC):
             chunksize = self.chunksize
         if decay is None:
             decay = self.decay
+        if offset is None:
+            offset = self.offset
         if passes is None:
             passes = self.passes
         if update_every is None:
@@ -493,7 +518,7 @@ class LdaModel(interfaces.TransformationABC):
             gamma_threshold = self.gamma_threshold
 
         # rho is the "speed" of updating; TODO try other fncs
-        rho = lambda: pow(1.0 + self.num_updates, -decay)
+        rho = lambda: pow(offset + self.num_updates / self.chunksize, -decay)
 
         try:
             lencorpus = len(corpus)
@@ -601,12 +626,11 @@ class LdaModel(interfaces.TransformationABC):
         # the topics change through this update, to assess convergence
         diff = numpy.log(self.expElogbeta)
         self.state.blend(rho, other)
-        del other
         diff -= self.state.get_Elogbeta()
         self.sync_state()
         self.print_topics(15) # print out some debug info at the end of each EM iteration
         logger.info("topic diff=%f, rho=%f" % (numpy.mean(numpy.abs(diff)), rho))
-        self.num_updates += 1
+        self.num_updates += other.numdocs
 
 
     def bound(self, corpus, gamma=None, subsample_ratio=1.0):
@@ -646,7 +670,13 @@ class LdaModel(interfaces.TransformationABC):
         # E[log p(beta | eta) - log q (beta | lambda)]; assumes eta is a scalar
         score += numpy.sum((self.eta - _lambda) * Elogbeta)
         score += numpy.sum(gammaln(_lambda) - gammaln(self.eta))
-        score += numpy.sum(gammaln(self.eta * self.num_terms) - gammaln(numpy.sum(_lambda, 1)))
+
+        if numpy.ndim(self.eta) == 0:
+            sum_eta = self.eta * self.num_terms
+        else:
+            sum_eta = numpy.sum(self.eta, 1)
+
+        score += numpy.sum(gammaln(sum_eta) - gammaln(numpy.sum(_lambda, 1)))
         return score
 
 
@@ -688,6 +718,13 @@ class LdaModel(interfaces.TransformationABC):
         return shown
 
     def show_topic(self, topicid, topn=10):
+        """
+        Return a list of `(words_probability, word)` 2-tuples for the most probable
+        words in topic `topicid`.
+
+        Only return 2-tuples for the topn most probable words (ignore the rest).
+
+        """
         topic = self.state.get_lambda()[topicid]
         topic = topic / topic.sum() # normalize to probability dist
         bestn = numpy.argsort(topic)[::-1][:topn]
@@ -695,8 +732,8 @@ class LdaModel(interfaces.TransformationABC):
         return beststr
 
     def print_topic(self, topicid, topn=10):
+        """Return the result of `show_topic`, but formatted as a single string."""
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
-
 
     def __getitem__(self, bow, eps=0.01):
         """

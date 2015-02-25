@@ -8,17 +8,17 @@
 """
 Module for Latent Semantic Analysis (aka Latent Semantic Indexing) in Python.
 
-Implements scalable truncated Singular Value Decomposition in Python. The SVD
-decomposition can be updated with new observations at any time (online, incremental,
-memory-efficient training).
+Implements fast truncated SVD (Singular Value Decomposition). The SVD
+decomposition can be updated with new observations at any time, for an online,
+incremental, memory-efficient training.
 
 This module actually contains several algorithms for decomposition of large corpora, a
 combination of which effectively and transparently allows building LSI models for:
 
 * corpora much larger than RAM: only constant memory is needed, independent of
-  the corpus size (though still dependent on the feature set size)
+  the corpus size
 * corpora that are streamed: documents are only accessed sequentially, no
-  random-access
+  random access
 * corpora that cannot be even temporarily stored: each document can only be
   seen once and must be processed immediately (one-pass algorithm)
 * distributed computing for very large corpora, making use of a cluster of
@@ -314,7 +314,6 @@ class LsiModel(interfaces.TransformationABC):
             try:
                 import Pyro4
                 dispatcher = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher')
-                dispatcher._pyroOneway.add("exit")
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
                 dispatcher.initialize(id2word=self.id2word, num_topics=num_topics,
                                       chunksize=chunksize, decay=decay,
@@ -417,6 +416,9 @@ class LsiModel(interfaces.TransformationABC):
         Return latent representation, as a list of (topic_id, topic_value) 2-tuples.
 
         This is done by folding input document into the latent topic space.
+
+        If `scaled` is set, scale topics by the inverse of singular values (default: no scaling).
+
         """
         assert self.projection.u is not None, "decomposition not initialized yet"
 
@@ -449,6 +451,10 @@ class LsiModel(interfaces.TransformationABC):
         #     indices, data = zip(*vec) if vec else ([], [])
         #     topic_dist[:, vecno] = numpy.dot(u.take(indices, axis=0).T, numpy.array(data, dtype=u.dtype))
 
+        if not is_corpus:
+            # convert back from matrix into a 1d vec
+            topic_dist = topic_dist.reshape(-1)
+
         if scaled:
             topic_dist = (1.0 / self.projection.s[:self.num_topics]) * topic_dist # s^-1 * u^-1 * x
 
@@ -456,7 +462,7 @@ class LsiModel(interfaces.TransformationABC):
         # with no zero weights.
         if not is_corpus:
             # lsi[single_document]
-            result = matutils.full2sparse(topic_dist.flat)
+            result = matutils.full2sparse(topic_dist)
         else:
             # lsi[chunk of documents]
             result = matutils.Dense2Corpus(topic_dist)

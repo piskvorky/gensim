@@ -81,7 +81,6 @@ class LowCorpus(IndexedCorpus):
         else:
             logger.info("using provided word mapping (%i ids)" % len(id2word))
             self.id2word = id2word
-        self.word2id = dict((v, k) for k, v in iteritems(self.id2word))
         self.num_terms = len(self.word2id)
         self.use_wordids = True # return documents as (wordIndex, wordCount) 2-tuples
 
@@ -178,5 +177,14 @@ class LowCorpus(IndexedCorpus):
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())
+
+    @property
+    def id2word(self):
+        return self._id2word
+
+    @id2word.setter
+    def id2word(self, val):
+        self._id2word = val
+        self.word2id = dict((v, k) for k, v in iteritems(val))
 
 # endclass LowCorpus
