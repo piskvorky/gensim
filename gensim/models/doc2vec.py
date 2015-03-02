@@ -82,6 +82,7 @@ except:
 
         return len([word for word in sentence if word is not None])
 
+
     def train_sentence_dm(model, sentence, lbls, alpha, work=None, neu1=None, train_words=True, train_lbls=True):
         """
         Update distributed memory model by training on a single sentence.
@@ -117,6 +118,69 @@ except:
                 model.syn0[lbl_indices] += neu1e
 
         return len([word for word in sentence if word is not None])
+
+def infer_vector_dbow(model, document, alpha=0.025, min_alpha=0.0001, steps=50):
+    """
+    Infer a vector for given post-bulk training document, in the 'dbow' model.
+
+    Document should be a list of tokens. 
+
+    No cythonized alternative yet.
+    """
+    neg_labels = []
+    if model.negative:
+        # precompute negative labels
+        neg_labels = zeros(model.negative + 1)
+        neg_labels[0] = 1.0
+
+    vector = model.seeded_vector(' '.join(document))
+    sentence = next(model._prepare_sentences([LabeledSentence(document,[])]))[0]
+
+    for i in range(steps):
+        for word in sentence:
+            if word is None:
+                continue  # OOV word in the input sentence => skip
+            neu1e = train_sg_pair(model, word, vector, alpha, neg_labels, False, False)
+            vector += neu1e
+        alpha = ((alpha - min_alpha) / (steps - i)) + min_alpha
+
+    return vector
+
+def infer_vector_dm(model, document, alpha=0.025, min_alpha=0.0001, steps=50):
+    """
+    Infer a vector representation for the given post-training document, in the 'dm' model.
+
+    Document should be a list of tokens.
+
+    No cythonized alternative yet.
+    """
+    neg_labels = []
+    if model.negative:
+        # precompute negative labels
+        neg_labels = zeros(model.negative + 1)
+        neg_labels[0] = 1.
+
+    vector = model.seeded_vector(' '.join(document))
+    sentence = next(model._prepare_sentences([LabeledSentence(document,[])]))[0]
+
+    for i in range(steps):
+            
+        for pos, word in enumerate(sentence):
+            if word is None:
+                continue  # OOV word in the input sentence => skip
+            reduced_window = random.randint(model.window)  # `b` in the original doc2vec code
+            start = max(0, pos - model.window + reduced_window)
+            window_pos = enumerate(sentence[start : pos + model.window + 1 - reduced_window], start)
+            word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
+            l1 = np_sum(model.syn0[word2_indices], axis=0) + vector  # 1 x layer1_size
+            if word2_indices and model.cbow_mean:
+                l1 /= (len(word2_indices) + 1)
+            neu1e = train_cbow_pair(model, word, None, l1, alpha, neg_labels, False, False) 
+            vector += neu1e # learn input -> hidden
+
+        alpha = ((alpha - min_alpha) / (steps - i)) + min_alpha
+
+    return vector
 
 
 class LabeledSentence(object):

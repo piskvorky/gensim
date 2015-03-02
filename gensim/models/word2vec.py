@@ -161,7 +161,10 @@ except ImportError:
 
 
 def train_sg_pair(model, word, word2, alpha, labels, train_w1=True, train_w2=True):
-    l1 = model.syn0[word2.index]
+    if isinstance(word2, Vocab):
+        l1 = model.syn0[word2.index]
+    else:
+        l1 = word2  # passed-in candidate vector
     neu1e = zeros(l1.shape)
 
     if model.hs:
@@ -187,7 +190,7 @@ def train_sg_pair(model, word, word2, alpha, labels, train_w1=True, train_w2=Tru
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
     if train_w2:
-        model.syn0[word2.index] += neu1e  # learn input -> hidden
+        l1 += neu1e  # learn input -> hidden (changes model.syn0[word2.index] if l1 is that)
     return neu1e
 
 
@@ -517,15 +520,18 @@ class Word2Vec(utils.SaveLoad):
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
         for i in xrange(len(self.vocab)):
             # construct deterministic seed from word AND seed argument
-            # Note: Python's built in hash function can vary across versions of Python
-            random.seed(uint32(self.hashfxn(self.index2word[i] + str(self.seed))))
-            self.syn0[i] = (random.rand(self.layer1_size) - 0.5) / self.layer1_size
+            self.syn0[i] = self.seeded_vector(self.index2word[i] + str(self.seed))
         if self.hs:
             self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
         if self.negative:
             self.syn1neg = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
         self.syn0norm = None
 
+    def seeded_vector(self, seed_string):
+        """Create one 'random' vector (but deterministic by seed_string)"""
+        # Note: Python's built in hash function can vary across versions of Python
+        random.seed(uint32(self.hashfxn(seed_string)))
+        return (random.rand(self.layer1_size) - 0.5) / self.layer1_size
 
     def save_word2vec_format(self, fname, fvocab=None, binary=False):
         """
