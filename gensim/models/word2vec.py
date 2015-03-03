@@ -120,7 +120,7 @@ def score_sg_pair(model, word, word2, labels):
     if model.hs:
         # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
         l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
-        sgn = 2*(1-word.code.astype(float))-1.0  # ch function
+        sgn = -1.0**word.code # ch function, 0-> 1, 1 -> -1
         lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
 
     if model.negative:
@@ -131,7 +131,7 @@ def score_sg_pair(model, word, word2, labels):
             if w != word.index:
                 word_indices.append(w)
         l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
-        sgn = 2*labels.astype(float)-1.0 
+        sgn = -1.0**(labels-1) 
         lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
 
     return sum(lprob) 
