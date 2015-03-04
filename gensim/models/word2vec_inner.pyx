@@ -73,30 +73,6 @@ cdef REAL_t[EXP_TABLE_SIZE] EXP_TABLE
 
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
-
-
-cdef void fastscore_sentence_sg_hs(
-    const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
-    REAL_t *syn0, REAL_t *syn1, const int size,
-    const np.uint32_t word2_index, REAL_t *work) nogil:
-
-    cdef long long a, b
-    cdef long long row1 = word2_index * size, row2, sgn
-    cdef REAL_t f, g
-
-    memset(work, 0, size * cython.sizeof(REAL_t))
-    for b in range(codelen):
-        row2 = word_point[b] * size
-        f = <REAL_t>dsdot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
-        if word_code[b]: 
-            sgn = 1 # ch function, 0-> 1, 1 -> -1
-        else: 
-            sgn = -1
-        f = sgn*f
-        if f <= -MAX_EXP or f >= MAX_EXP:
-            continue
-        f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-        work[0] += log(f)
         
 
 cdef void fast_sentence0_sg_hs(
@@ -650,7 +626,6 @@ def score_sentence_sg(model, sentence, _work):
             codelens[i] = 0
         else:
             indexes[i] = word.index
-            reduced_windows[i] = np.random.randint(window)
             if hs:
                 codelens[i] = <int>len(word.code)
                 codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
@@ -661,25 +636,49 @@ def score_sentence_sg(model, sentence, _work):
 
     # release GIL & train on the sentence
     work[0] = 0.0
+
     with nogil:
         for i in range(sentence_len):
             if codelens[i] == 0:
                 continue
-            j = i - window + reduced_windows[i]
+            j = i - window 
             if j < 0:
                 j = 0
-            k = i + window + 1 - reduced_windows[i]
+            k = i + window + 1 
             if k > sentence_len:
                 k = sentence_len
             for j in range(j, k):
                 if j == i or codelens[j] == 0:
                     continue
                 if hs:
-                    fastscore_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], work)
+                    score_pair_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], work)
                 # if negative:
                 #     next_random = fast_sentence_sg_neg(negative, table, table_len, syn0, syn1neg, size, indexes[i], indexes[j], work, next_random)
 
     return work[0]
+
+
+cdef void score_pair_sg_hs(
+    const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
+    REAL_t *syn0, REAL_t *syn1, const int size,
+    const np.uint32_t word2_index, REAL_t *work) nogil:
+
+    cdef long long a, b
+    cdef long long row1 = word2_index * size, row2, sgn
+    cdef REAL_t f, g
+
+    for b in range(codelen):
+        row2 = word_point[b] * size
+        f = <REAL_t>dsdot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
+        if word_code[b]: 
+            sgn = 1 # ch function, 0-> 1, 1 -> -1
+        else: 
+            sgn = -1
+        f = sgn*f
+        if f <= -MAX_EXP or f >= MAX_EXP:
+            continue
+        f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        work[0] += log(f)
 
 def train_sentence_sg(model, sentence, alpha, _work):
     cdef int hs = model.hs
