@@ -105,11 +105,10 @@ except ImportError:
         for pos, word in enumerate(sentence):
             if word is None:
                 continue  # OOV word in the input sentence => skip
-            reduced_window = random.randint(model.window)  # `b` in the original word2vec code
 
             # now go over all words from the (reduced) window, predicting each one in turn
-            start = max(0, pos - model.window + reduced_window)
-            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
+            start = max(0, pos - model.window)
+            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1], start):
                 # don't train on OOV words and on the `word` itself
                 if word2 and not (pos2 == pos):
                     log_prob_sentence += score_sg_pair(model, word, word2, labels)
@@ -575,6 +574,9 @@ class Word2Vec(utils.SaveLoad):
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before scoring new data")
 
+        if not self.hs or not self.sg:
+            raise RuntimeError("we have only written score for hs and sg")
+
         start, next_report = time.time(), [1.0]
         jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         lock = threading.Lock()  # for shared state (scores, log reports...)
@@ -584,7 +586,7 @@ class Word2Vec(utils.SaveLoad):
 
         def worker_score():
             """score the enumerated sentences, lifting lists of sentences from the jobs queue."""
-            work = zeros(self.layer1_size, dtype=REAL)  # each thread must have its own work memory
+            work = zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
             while True:
                 job = jobs.get()
