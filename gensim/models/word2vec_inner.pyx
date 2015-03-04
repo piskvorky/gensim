@@ -12,6 +12,7 @@ import numpy as np
 cimport numpy as np
 
 from libc.math cimport exp
+from libc.math cimport log
 from libc.string cimport memset
 
 cdef extern from "voidptr.h":
@@ -72,6 +73,31 @@ cdef REAL_t[EXP_TABLE_SIZE] EXP_TABLE
 
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
+
+
+cdef void fastscore_sentence_sg_hs(
+    const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
+    REAL_t *syn0, REAL_t *syn1, const int size,
+    const np.uint32_t word2_index, REAL_t *work) nogil:
+
+    cdef long long a, b
+    cdef long long row1 = word2_index * size, row2, sgn
+    cdef REAL_t f, g
+
+    memset(work, 0, size * cython.sizeof(REAL_t))
+    for b in range(codelen):
+        row2 = word_point[b] * size
+        f = <REAL_t>dsdot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
+        if word_code[b]: 
+            sgn = 1 # ch function, 0-> 1, 1 -> -1
+        else: 
+            sgn = -1
+        f = sgn*f
+        if f <= -MAX_EXP or f >= MAX_EXP:
+            continue
+        f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        work[0] += log(f)
+        
 
 cdef void fast_sentence0_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
@@ -576,6 +602,84 @@ cdef unsigned long long fast_sentence2_cbow_neg(
                 syn0[indexes[m] * size + a] += work[a]
 
     return next_random
+
+def score_sentence_sg(model, sentence, _work):
+    cdef int hs = model.hs
+    cdef int negative = model.negative
+
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *work
+    cdef int size = model.layer1_size
+
+    cdef int codelens[MAX_SENTENCE_LEN]
+    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
+    cdef int sentence_len
+    cdef int window = model.window
+
+    cdef int i, j, k
+    cdef long result = 0
+
+    # For hierarchical softmax
+    cdef REAL_t *syn1
+    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
+    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
+
+    # For negative sampling
+    cdef REAL_t *syn1neg
+    cdef np.uint32_t *table
+    cdef unsigned long long table_len
+    cdef unsigned long long next_random
+
+    if hs:
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+
+    if negative:
+        syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
+        table = <np.uint32_t *>(np.PyArray_DATA(model.table))
+        table_len = len(model.table)
+        next_random = (2**24) * np.random.randint(0, 2**24) + np.random.randint(0, 2**24)
+
+    # convert Python structures to primitive types, so we can release the GIL
+    work = <REAL_t *>np.PyArray_DATA(_work)
+    sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
+    
+    for i in range(sentence_len):
+        word = sentence[i]
+        if word is None:
+            codelens[i] = 0
+        else:
+            indexes[i] = word.index
+            reduced_windows[i] = np.random.randint(window)
+            if hs:
+                codelens[i] = <int>len(word.code)
+                codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+            else:
+                codelens[i] = 1
+            result += 1
+
+    # release GIL & train on the sentence
+    work[0] = 0.0
+    with nogil:
+        for i in range(sentence_len):
+            if codelens[i] == 0:
+                continue
+            j = i - window + reduced_windows[i]
+            if j < 0:
+                j = 0
+            k = i + window + 1 - reduced_windows[i]
+            if k > sentence_len:
+                k = sentence_len
+            for j in range(j, k):
+                if j == i or codelens[j] == 0:
+                    continue
+                if hs:
+                    fastscore_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], work)
+                # if negative:
+                #     next_random = fast_sentence_sg_neg(negative, table, table_len, syn0, syn1neg, size, indexes[i], indexes[j], work, next_random)
+
+    return work[0]
 
 def train_sentence_sg(model, sentence, alpha, _work):
     cdef int hs = model.hs

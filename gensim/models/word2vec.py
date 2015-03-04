@@ -90,7 +90,11 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 
-def score_sentence_sg(model, sentence, work=None):
+try:
+    from gensim.models.word2vec_inner import score_sentence_sg
+except ImportError:
+    def score_sentence_sg(model, sentence, work=None):
+        print("using slowness")
         labels = []
         log_prob_sentence = 0.0
         if model.negative:
@@ -111,7 +115,6 @@ def score_sentence_sg(model, sentence, work=None):
                     log_prob_sentence += score_sg_pair(model, word, word2, labels)
 
         return log_prob_sentence
-
 
 def score_sg_pair(model, word, word2, labels):
     l1 = model.syn0[word2.index]
@@ -583,7 +586,6 @@ class Word2Vec(utils.SaveLoad):
             """score the enumerated sentences, lifting lists of sentences from the jobs queue."""
             work = zeros(self.layer1_size, dtype=REAL)  # each thread must have its own work memory
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
-
             while True:
                 job = jobs.get()
                 if job is None:  # data finished, exit
