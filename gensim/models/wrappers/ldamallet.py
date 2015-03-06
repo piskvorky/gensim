@@ -189,7 +189,7 @@ class LdaMallet(utils.SaveLoad):
             _ = next(fin)  # beta
             for lineno, line in enumerate(fin):
                 line = utils.to_unicode(line)
-                doc, source, pos, typeindex, token, topic = line.split()
+                doc, source, pos, typeindex, token, topic = line.split(" ")
                 tokenid = self.id2word.token2id[token] if hasattr(self.id2word, 'token2id') else int(token)
                 wordtopics[int(topic), tokenid] += 1
         logger.info("loaded assigned topics for %i tokens" % wordtopics.sum())
