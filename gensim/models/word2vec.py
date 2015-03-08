@@ -85,7 +85,6 @@ from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
 
 logger = logging.getLogger("gensim.models.word2vec")
 
-
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
@@ -95,49 +94,26 @@ try:
 except ImportError:
     def score_sentence_sg(model, sentence, work=None):
         print("using slowness")
-        labels = []
         log_prob_sentence = 0.0
         if model.negative:
-            # precompute negative labels
-            labels = zeros(model.negative + 1)
-            labels[0] = 1.0
+            raise RuntimeError("scoring is only available for HS=True with skipgrams")
 
         for pos, word in enumerate(sentence):
             if word is None:
                 continue  # OOV word in the input sentence => skip
 
-            # now go over all words from the (reduced) window, predicting each one in turn
+            # now go over all words from the window, predicting each one in turn
             start = max(0, pos - model.window)
             for pos2, word2 in enumerate(sentence[start : pos + model.window + 1], start):
                 # don't train on OOV words and on the `word` itself
                 if word2 and not (pos2 == pos):
-                    log_prob_sentence += score_sg_pair(model, word, word2, labels)
+                    l1 = model.syn0[word2.index]
+                    l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
+                    sgn = -1.0**word.code # ch function, 0-> 1, 1 -> -1
+                    lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
+                    log_prob_sentence += sum(lprob)
 
         return log_prob_sentence
-
-def score_sg_pair(model, word, word2, labels):
-    l1 = model.syn0[word2.index]
-    lprob = zeros(l1.shape)
-
-    if model.hs:
-        # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
-        l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
-        sgn = -1.0**word.code # ch function, 0-> 1, 1 -> -1
-        lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
-
-    if model.negative:
-        # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
-        word_indices = [word.index]
-        while len(word_indices) < model.negative + 1:
-            w = model.table[random.randint(model.table.shape[0])]
-            if w != word.index:
-                word_indices.append(w)
-        l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
-        sgn = -1.0**(labels-1) 
-        lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
-
-    return sum(lprob) 
-
 
 
 try:
@@ -557,6 +533,7 @@ class Word2Vec(utils.SaveLoad):
         self.syn0norm = None
         return word_count[0]
 
+    # basics copied from the train() function
     def score(self, sentences, total_sentences=None, chunksize=100):
         """
         Score the log probability for a sequence of sentences (can be a once-only generator stream).
@@ -575,7 +552,7 @@ class Word2Vec(utils.SaveLoad):
             raise RuntimeError("you must first build vocabulary before scoring new data")
 
         if not self.hs or not self.sg:
-            raise RuntimeError("we have only written score for hs and sg")
+            raise RuntimeError("we have only implemented score for hs and sg")
 
         start, next_report = time.time(), [1.0]
         jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
@@ -594,10 +571,7 @@ class Word2Vec(utils.SaveLoad):
                     break
                 ns = 0
                 for (id,sentence) in job:
-                	if self.sg:
-                		sentence_scores[id] = score_sentence_sg(self, sentence, work)
-                	else:
-                		sentence_scores[id] = score_sentence_cbow(self, sentence, work, neu1)
+                	sentence_scores[id] = score_sentence_sg(self, sentence, work)
                 	ns += 1
 
                 with lock:
