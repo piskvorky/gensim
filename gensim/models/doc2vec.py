@@ -42,7 +42,7 @@ try:
 except ImportError:
     from Queue import Queue
 
-from numpy import zeros, random, sum as np_sum
+from numpy import zeros, random, sum as np_sum, add as np_add, concatenate
 
 logger = logging.getLogger(__name__)
 
@@ -66,22 +66,15 @@ except:
         will use the optimized version from doc2vec_inner instead.
 
         """
-        neg_labels = []
-        if model.negative:
-            # precompute negative labels
-            neg_labels = zeros(model.negative + 1)
-            neg_labels[0] = 1.0
-
         for label in lbls:
             if label is None:
                 continue  # OOV word in the input sentence => skip
             for word in sentence:
                 if word is None:
                     continue  # OOV word in the input sentence => skip
-                train_sg_pair(model, word, label, alpha, neg_labels, train_words, train_lbls)
+                train_sg_pair(model, word, label, alpha, train_words, train_lbls)
 
         return len([word for word in sentence if word is not None])
-
 
     def train_sentence_dm(model, sentence, lbls, alpha, work=None, neu1=None, train_words=True, train_lbls=True):
         """
@@ -97,11 +90,6 @@ except:
         lbl_indices = [lbl.index for lbl in lbls if lbl is not None]
         lbl_sum = np_sum(model.syn0[lbl_indices], axis=0)
         lbl_len = len(lbl_indices)
-        neg_labels = []
-        if model.negative:
-            # precompute negative labels
-            neg_labels = zeros(model.negative + 1)
-            neg_labels[0] = 1.
 
         for pos, word in enumerate(sentence):
             if word is None:
@@ -113,38 +101,86 @@ except:
             l1 = np_sum(model.syn0[word2_indices], axis=0) + lbl_sum  # 1 x layer1_size
             if word2_indices and model.cbow_mean:
                 l1 /= (len(word2_indices) + lbl_len)
-            neu1e = train_cbow_pair(model, word, word2_indices, l1, alpha, neg_labels, train_words, train_words)
+            neu1e = train_cbow_pair(model, word, word2_indices, l1, alpha, train_words, train_words)
             if train_lbls:
                 model.syn0[lbl_indices] += neu1e
 
         return len([word for word in sentence if word is not None])
 
+
+def train_sentence_dm_concat(model, sentence, lbls, alpha, work=None, neu1=None, train_words=True, train_lbls=True):
+        """
+        Update distributed memory model by training on a single sentence.
+
+        The sentence is a list of Vocab objects (or None, where the corresponding
+        word is not in the vocabulary. Called internally from `Doc2Vec.train()`.
+
+        This is the non-optimized, Python version. If you have a C compiler, gensim
+        will use the optimized version from doc2vec_inner instead.
+
+        """
+        lbl_indices = [lbl.index for lbl in lbls if lbl is not None]
+        if len(lbl_indices) != model.dm_lbl_count:
+            return  # skip doc without expected lbl(s)
+
+        null_word = model.vocab['\0']
+        pre_pad_count = int((model.window + 1) / 2)
+        post_pad_count = int(model.window / 2)
+        padded_sentence_indices = (
+            (pre_pad_count * [null_word.index])  # pre-padding
+            + [word.index for word in sentence if word is not None]  # elide out-of-Vocabulary words
+            + (post_pad_count * [null_word.index])  # post-padding
+        )
+
+        for pos in range(pre_pad_count, len(padded_sentence_indices) - post_pad_count):
+            l1_indices = (
+                lbl_indices  # doc vector(s)
+                + padded_sentence_indices[pos - pre_pad_count : pos]  # preceding words
+                + padded_sentence_indices[pos + 1 : pos + 1 + post_pad_count]  # following words
+            )
+            word = model.vocab[model.index2word[padded_sentence_indices[pos]]]
+            l1 = model.syn0[l1_indices].ravel()  # numpy advanced-indexing: copy; flatten to 1d
+            neu1e = train_cbow_pair(model, word, None, l1, alpha, True, False)
+
+            if not train_lbls:
+                # trim lbl indices/errors
+                l1_indices = l1_indices[len(lbl_indices):] 
+                neu1e = neu1e[len(lbl_indices) * model.vector_size:]
+            if not train_words:
+                # trim word-vector indices/errors
+                l1_indices = l1_indices[:-model.window]
+                neu1e = neu1e[:-model.window * model.vector_size]
+            if l1_indices:
+                # if indices left to train, do so
+                np_add.at(model.syn0, l1_indices, neu1e.reshape(len(l1_indices), model.vector_size))
+
+        return len(padded_sentence_indices) - pre_pad_count - post_pad_count
+
+
 def infer_vector_dbow(model, document, alpha=0.025, min_alpha=0.0001, steps=50):
     """
     Infer a vector for given post-bulk training document, in the 'dbow' model.
 
-    Document should be a list of tokens. 
+    Document should be a list of tokens.
 
     No cythonized alternative yet.
     """
-    neg_labels = []
-    if model.negative:
-        # precompute negative labels
-        neg_labels = zeros(model.negative + 1)
-        neg_labels[0] = 1.0
+    if not hasattr(model, 'neg_labels'):
+        model.pretrain()
 
     vector = model.seeded_vector(' '.join(document))
-    sentence = next(model._prepare_sentences([LabeledSentence(document,[])]))[0]
+    sentence = next(model._prepare_sentences([LabeledSentence(document, [])]))[0]
 
     for i in range(steps):
         for word in sentence:
             if word is None:
                 continue  # OOV word in the input sentence => skip
-            neu1e = train_sg_pair(model, word, vector, alpha, neg_labels, False, False)
+            neu1e = train_sg_pair(model, word, vector, alpha, False, False)
             vector += neu1e
         alpha = ((alpha - min_alpha) / (steps - i)) + min_alpha
 
     return vector
+
 
 def infer_vector_dm(model, document, alpha=0.025, min_alpha=0.0001, steps=50):
     """
@@ -154,17 +190,14 @@ def infer_vector_dm(model, document, alpha=0.025, min_alpha=0.0001, steps=50):
 
     No cythonized alternative yet.
     """
-    neg_labels = []
-    if model.negative:
-        # precompute negative labels
-        neg_labels = zeros(model.negative + 1)
-        neg_labels[0] = 1.
+    if not hasattr(model, 'neg_labels'):
+        model.pretrain()
 
     vector = model.seeded_vector(' '.join(document))
-    sentence = next(model._prepare_sentences([LabeledSentence(document,[])]))[0]
+    sentence = next(model._prepare_sentences([LabeledSentence(document, [])]))[0]
 
     for i in range(steps):
-            
+
         for pos, word in enumerate(sentence):
             if word is None:
                 continue  # OOV word in the input sentence => skip
@@ -175,8 +208,50 @@ def infer_vector_dm(model, document, alpha=0.025, min_alpha=0.0001, steps=50):
             l1 = np_sum(model.syn0[word2_indices], axis=0) + vector  # 1 x layer1_size
             if word2_indices and model.cbow_mean:
                 l1 /= (len(word2_indices) + 1)
-            neu1e = train_cbow_pair(model, word, None, l1, alpha, neg_labels, False, False) 
-            vector += neu1e # learn input -> hidden
+            neu1e = train_cbow_pair(model, word, None, l1, alpha, False, False)
+            vector += neu1e  # learn input -> hidden
+
+        alpha = ((alpha - min_alpha) / (steps - i)) + min_alpha
+
+    return vector
+
+
+def infer_vector_dm_concat(model, document, alpha=0.025, min_alpha=0.0001, steps=50):
+    """
+    Infer a vector representation for the given post-training document, in the 'dm_concat' model.
+
+    Document should be a list of tokens.
+
+    No cythonized alternative yet.
+    """
+    if not hasattr(model, 'neg_labels'):
+        model.pretrain()
+
+    vector = model.seeded_vector(' '.join(document))
+    sentence = next(model._prepare_sentences([LabeledSentence(document, [])]))[0]
+
+    null_word = model.vocab['\0']
+    pre_pad_count = int((model.window + 1) / 2)
+    post_pad_count = int(model.window / 2)
+    padded_sentence_indices = (
+        (pre_pad_count * [null_word.index])  # pre-padding
+        + [word.index for word in sentence if word is not None]  # elide out-of-Vocabulary words
+        + (post_pad_count * [null_word.index])  # post-padding
+    )
+
+    for i in range(steps):
+
+        for pos in range(pre_pad_count, len(padded_sentence_indices)-post_pad_count):
+            word = model.vocab[model.index2word[padded_sentence_indices[pos]]]
+            l1 = concatenate([
+                    [vector],  # doc vector-in-training
+                    model.syn0[padded_sentence_indices[pos - pre_pad_count : pos]],  # preceding words
+                    model.syn0[padded_sentence_indices[pos + 1 : pos + 1 + post_pad_count]],  # following words
+            ]).ravel()
+
+            neu1e = train_cbow_pair(model, word, None, l1, alpha, False, False)
+
+            vector += neu1e[:model.vector_size]  # train doc vector only
 
         alpha = ((alpha - min_alpha) / (steps - i)) + min_alpha
 
@@ -206,7 +281,7 @@ class Doc2Vec(Word2Vec):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
     def __init__(self, sentences=None, size=300, alpha=0.025, window=8, min_count=5,
                  sample=0, seed=1, workers=1, min_alpha=0.0001, dm=1, hs=1, negative=0,
-                 dm_mean=0, train_words=True, train_lbls=True, **kwargs):
+                 dm_mean=0, dm_concat=0, dm_lbl_count=1, train_words=True, train_lbls=True, **kwargs):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         LabeledSentence object that will be used for training.
@@ -243,15 +318,31 @@ class Doc2Vec(Word2Vec):
         `dm_mean` = if 0 (default), use the sum of the context word vectors. If 1, use the mean.
         Only applies when dm is used.
 
+        `dm_concat` = if 1, use concatenation of context vectors rather than sum/average;
+        default is 0 (off).
+
+        `dm_lbl_count` = expected constant number of sentence lbls per sentence, when using
+        dm_concat mode; default is 1.
+
         """
         Word2Vec.__init__(self, size=size, alpha=alpha, window=window, min_count=min_count,
                           sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
-                          sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean, **kwargs)
+                          sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean, 
+                          null_word=dm_concat, **kwargs)
         self.train_words = train_words
         self.train_lbls = train_lbls
+        self.dm_concat = dm_concat
+        self.dm_lbl_count = dm_lbl_count
         if sentences is not None:
             self.build_vocab(sentences)
             self.train(sentences)
+
+    def reset_weights(self):
+        if self.dm_concat:
+            # expand l1 size to match concatenated lbls+words length
+            self.layer1_size = (self.dm_lbl_count + self.window) * self.vector_size
+            logger.info("using concatenative %d-dimensional layer1"% (self.layer1_size))
+        Word2Vec.reset_weights(self)
 
     @staticmethod
     def _vocab_from(sentences):
@@ -267,7 +358,7 @@ class Doc2Vec(Word2Vec):
                 if label in vocab:
                     vocab[label].count += sentence_length
                 else:
-                    vocab[label] = Vocab(count=sentence_length)
+                    vocab[label] = Vocab(count=sentence_length)  # FIXME: doc-labels for short docs can be culled by min_count
             for word in sentence.words:
                 total_words += 1
                 if word in vocab:
@@ -289,6 +380,8 @@ class Doc2Vec(Word2Vec):
     def _get_job_words(self, alpha, work, job, neu1):
         if self.sg:
             return sum(train_sentence_dbow(self, sentence, lbls, alpha, work, self.train_words, self.train_lbls) for sentence, lbls in job)
+        elif self.dm_concat:
+            return sum(train_sentence_dm_concat(self, sentence, lbls, alpha, work, neu1, self.train_words, self.train_lbls) for sentence, lbls in job)
         else:
             return sum(train_sentence_dm(self, sentence, lbls, alpha, work, neu1, self.train_words, self.train_lbls) for sentence, lbls in job)
 
