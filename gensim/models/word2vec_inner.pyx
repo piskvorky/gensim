@@ -671,9 +671,9 @@ cdef void score_pair_sg_hs(
         row2 = word_point[b] * size
         f = <REAL_t>dsdot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
         if word_code[b]: 
-            sgn = 1 # ch function, 0-> 1, 1 -> -1
+            sgn = -1 # ch function, 0-> 1, 1 -> -1
         else: 
-            sgn = -1
+            sgn = 1
         f = sgn*f
         if f <= -MAX_EXP or f >= MAX_EXP:
             continue

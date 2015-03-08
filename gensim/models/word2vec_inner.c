@@ -5938,7 +5938,7 @@ static void __pyx_f_6gensim_6gensim_6models_14word2vec_inner_score_pair_sg_hs(__
  *         row2 = word_point[b] * size
  *         f = <REAL_t>dsdot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)             # <<<<<<<<<<<<<<
  *         if word_code[b]:
- *             sgn = 1 # ch function, 0-> 1, 1 -> -1
+ *             sgn = -1 # ch function, 0-> 1, 1 -> -1
  */
     __pyx_v_f = ((__pyx_t_6gensim_6gensim_6models_14word2vec_inner_REAL_t)__pyx_v_6gensim_6gensim_6models_14word2vec_inner_dsdot((&__pyx_v_size), (&(__pyx_v_syn0[__pyx_v_row1])), (&__pyx_v_6gensim_6gensim_6models_14word2vec_inner_ONE), (&(__pyx_v_syn1[__pyx_v_row2])), (&__pyx_v_6gensim_6gensim_6models_14word2vec_inner_ONE)));
 
@@ -5946,7 +5946,7 @@ static void __pyx_f_6gensim_6gensim_6models_14word2vec_inner_score_pair_sg_hs(__
  *         row2 = word_point[b] * size
  *         f = <REAL_t>dsdot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
  *         if word_code[b]:             # <<<<<<<<<<<<<<
- *             sgn = 1 # ch function, 0-> 1, 1 -> -1
+ *             sgn = -1 # ch function, 0-> 1, 1 -> -1
  *         else:
  */
     __pyx_t_3 = ((__pyx_v_word_code[__pyx_v_b]) != 0);
@@ -5955,29 +5955,29 @@ static void __pyx_f_6gensim_6gensim_6models_14word2vec_inner_score_pair_sg_hs(__
       /* "gensim/gensim/models/word2vec_inner.pyx":674
  *         f = <REAL_t>dsdot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
  *         if word_code[b]:
- *             sgn = 1 # ch function, 0-> 1, 1 -> -1             # <<<<<<<<<<<<<<
+ *             sgn = -1 # ch function, 0-> 1, 1 -> -1             # <<<<<<<<<<<<<<
  *         else:
- *             sgn = -1
+ *             sgn = 1
  */
-      __pyx_v_sgn = 1;
+      __pyx_v_sgn = -1;
       goto __pyx_L5;
     }
     /*else*/ {
 
       /* "gensim/gensim/models/word2vec_inner.pyx":676
- *             sgn = 1 # ch function, 0-> 1, 1 -> -1
+ *             sgn = -1 # ch function, 0-> 1, 1 -> -1
  *         else:
- *             sgn = -1             # <<<<<<<<<<<<<<
+ *             sgn = 1             # <<<<<<<<<<<<<<
  *         f = sgn*f
  *         if f <= -MAX_EXP or f >= MAX_EXP:
  */
-      __pyx_v_sgn = -1;
+      __pyx_v_sgn = 1;
     }
     __pyx_L5:;
 
     /* "gensim/gensim/models/word2vec_inner.pyx":677
  *         else:
- *             sgn = -1
+ *             sgn = 1
  *         f = sgn*f             # <<<<<<<<<<<<<<
  *         if f <= -MAX_EXP or f >= MAX_EXP:
  *             continue
@@ -5985,7 +5985,7 @@ static void __pyx_f_6gensim_6gensim_6models_14word2vec_inner_score_pair_sg_hs(__
     __pyx_v_f = (__pyx_v_sgn * __pyx_v_f);
 
     /* "gensim/gensim/models/word2vec_inner.pyx":678
- *             sgn = -1
+ *             sgn = 1
  *         f = sgn*f
  *         if f <= -MAX_EXP or f >= MAX_EXP:             # <<<<<<<<<<<<<<
  *             continue
