@@ -13,7 +13,7 @@ This module allows for DTM and DIM model estimation from a training corpus.
 
 Example:
 
->>> model = gensim.models.DtmModel('dtm-win64.exe', my_corpus, my_timeslices, num_topics=20, id2word=dictionary)
+>>> model = gensim.models.wrappers.DtmModel('dtm-win64.exe', my_corpus, my_timeslices, num_topics=20, id2word=dictionary)
 
 .. [1] https://code.google.com/p/princeton-statistical-learning/downloads/detail?name=dtm_release-0.8.tgz
 
@@ -41,7 +41,7 @@ class DtmModel(utils.SaveLoad):
     """
 
     def __init__(
-        self, dtm_path, corpus=None, time_slices=None, num_topics=100, id2word=None, prefix=None,
+            self, dtm_path, corpus=None, time_slices=None, mode='fit', model='dtm', num_topics=100, id2word=None, prefix=None,
             lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10, alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=False):
         """
         `dtm_path` is path to the dtm executable, e.g. `C:/dtm/dtm-win64.exe`.
@@ -49,6 +49,11 @@ class DtmModel(utils.SaveLoad):
         `corpus` is a gensim corpus, aka a stream of sparse document vectors.
 
         `id2word` is a mapping between tokens ids and token.
+
+        `mode` controls the mode of the mode: 'fit' is for training, 'time' for
+        analyzing documents through time according to a DTM, basically a held out set.
+
+        `model` controls the choice of model. 'fixed' is for DIM and 'dtm' for DTM.
 
         `lda_sequence_min_iter` min iteration of LDA.
 
@@ -113,7 +118,7 @@ class DtmModel(utils.SaveLoad):
         self.influences_time = []
 
         if corpus is not None:
-            self.train(corpus, time_slices)
+            self.train(corpus, time_slices, mode, model)
 
     def fout_liklihoods(self):
         return self.prefix + 'train_out/lda-seq/' + 'lhoods.dat'
@@ -168,14 +173,9 @@ class DtmModel(utils.SaveLoad):
             for sl in time_slices:
                 fout.write(str(sl) + "\n")
 
-    def train(self, corpus, time_slices, mode='fit', model='fixed'):
+    def train(self, corpus, time_slices, mode, model):
         """
         Train DTM model using specified corpus and time slices.
-
-        'mode' controls the mode of the mode: 'fit' is for training, 'time' for
-        analyzing documents through time according to a DTM, basically a held out set.
-
-        'model' controls the coice of model. 'fixed' is for DIM and 'dtm' for DTM.
 
         """
         self.convert_input(corpus, time_slices)
@@ -254,11 +254,11 @@ class DtmModel(utils.SaveLoad):
             # chosen_topics = sorted_topics[: topics / 2] + \
             #     sorted_topics[-topics / 2:]
 
-        if times < 0 or times >= self.time_slices:
-            times = self.time_slices
+        if times < 0 or times >= len(self.time_slices):
+            times = len(self.time_slices)
             chosen_times = range(times)
         else:
-            times = min(times, self.time_slices)
+            times = min(times, len(self.time_slices))
             chosen_times = range(times)
 
         shown = []

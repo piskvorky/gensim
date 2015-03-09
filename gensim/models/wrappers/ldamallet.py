@@ -21,7 +21,7 @@ The wrapped model can NOT be updated with new documents for online training -- u
 
 Example:
 
->>> model = gensim.models.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet', corpus=my_corpus, num_topics=20, id2word=dictionary)
+>>> model = gensim.models.wrappers.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet', corpus=my_corpus, num_topics=20, id2word=dictionary)
 >>> print model[my_vector]  # print LDA topics of a document
 
 .. [1] http://mallet.cs.umass.edu/
@@ -39,7 +39,7 @@ import numpy
 
 from gensim import utils
 
-logger = logging.getLogger('gensim.models.ldamallet')
+logger = logging.getLogger('gensim.models.wrappers.ldamallet')
 
 
 def read_doctopics(fname, eps=1e-6):

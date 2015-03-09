@@ -79,16 +79,41 @@ try:
 except ImportError:
     from Queue import Queue
 
-from numpy import exp, dot, zeros, outer, random, dtype, float32 as REAL,\
+from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis,\
     ndarray, empty, sum as np_sum, prod
 
 logger = logging.getLogger("gensim.models.word2vec")
 
-
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
+
+try:
+    from gensim.models.word2vec_inner import score_sentence_sg
+except ImportError:
+    def score_sentence_sg(model, sentence, work=None):
+        print("using slowness")
+        log_prob_sentence = 0.0
+        if model.negative:
+            raise RuntimeError("scoring is only available for HS=True with skipgrams")
+
+        for pos, word in enumerate(sentence):
+            if word is None:
+                continue  # OOV word in the input sentence => skip
+
+            # now go over all words from the window, predicting each one in turn
+            start = max(0, pos - model.window)
+            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1], start):
+                # don't train on OOV words and on the `word` itself
+                if word2 and not (pos2 == pos):
+                    l1 = model.syn0[word2.index]
+                    l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
+                    sgn = -1.0**word.code # ch function, 0-> 1, 1 -> -1
+                    lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
+                    log_prob_sentence += sum(lprob)
+
+        return log_prob_sentence
 
 
 try:
@@ -159,7 +184,6 @@ except ImportError:
 
         return len([word for word in sentence if word is not None])
 
-
 def train_sg_pair(model, word, word2, alpha, labels, train_w1=True, train_w2=True):
     l1 = model.syn0[word2.index]
     neu1e = zeros(l1.shape)
@@ -218,7 +242,6 @@ def train_cbow_pair(model, word, word2_indices, l1, alpha, labels, train_w1=True
     if train_w2:
         model.syn0[word2_indices] += neu1e # learn input -> hidden, here for all words in the window separately
     return neu1e
-
 
 class Vocab(object):
     """A single vocabulary item, used internally for constructing binary trees (incl. both word leaves and inner nodes)."""
@@ -510,6 +533,77 @@ class Word2Vec(utils.SaveLoad):
         self.syn0norm = None
         return word_count[0]
 
+    # basics copied from the train() function
+    def score(self, sentences, total_sentences=None, chunksize=100):
+        """
+        Score the log probability for a sequence of sentences (can be a once-only generator stream).
+        Each sentence must be a list of unicode strings.
+        This does not chance the fitted model in any way (see Word2Vec.train() for that)
+
+        """
+        if FAST_VERSION < 0:
+            import warnings
+            warnings.warn("C extension compilation failed, scoring will be slow. Install a C compiler and reinstall gensim for fast scoring.")
+        logger.info("scoring sentences with %i workers on %i vocabulary and %i features, "
+            "using 'skipgram'=%s 'hierarchical softmax'=%s 'subsample'=%s and 'negative sampling'=%s" %
+            (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative))
+
+        if not self.vocab:
+            raise RuntimeError("you must first build vocabulary before scoring new data")
+
+        if not self.hs or not self.sg:
+            raise RuntimeError("we have only implemented score for hs and sg")
+
+        start, next_report = time.time(), [1.0]
+        jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
+        lock = threading.Lock()  # for shared state (scores, log reports...)
+        total_sentences = total_sentences or int(1e9)
+        sentence_scores = matutils.zeros_aligned(total_sentences, dtype=REAL)
+        sentence_count = [0] 
+
+        def worker_score():
+            """score the enumerated sentences, lifting lists of sentences from the jobs queue."""
+            work = zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
+            neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
+            while True:
+                job = jobs.get()
+                if job is None:  # data finished, exit
+                    break
+                ns = 0
+                for (id,sentence) in job:
+                	sentence_scores[id] = score_sentence_sg(self, sentence, work)
+                	ns += 1
+
+                with lock:
+                    sentence_count[0] += ns
+                    elapsed = time.time() - start
+                    if elapsed >= next_report[0]:
+                        logger.info("PROGRESS: at %i sentences,  %.0f sentences/s" %
+                            (sentence_count[0], sentence_count[0] / elapsed if elapsed else 0.0))
+                        next_report[0] = elapsed + 1.0  # don't flood the log, wait at least a second between progress reports
+
+        workers = [threading.Thread(target=worker_score) for _ in xrange(self.workers)]
+        for thread in workers:
+            thread.daemon = True  # make interrupting the process with ctrl+c easier
+            thread.start()
+
+        # convert input strings to Vocab objects (eliding OOV/downsampled words), and start filling the jobs queue
+        for job_no, job in enumerate(utils.grouper(enumerate(self._prepare_sentences(sentences)), chunksize)):
+            logger.debug("putting job #%i in the queue, qsize=%i" % (job_no, jobs.qsize()))
+            jobs.put(job)
+        logger.info("reached the end of input; waiting to finish %i outstanding jobs" % jobs.qsize())
+        for _ in xrange(self.workers):
+            jobs.put(None)  # give the workers heads up that they can finish -- no more work!
+
+        for thread in workers:
+            thread.join()
+
+        elapsed = time.time() - start
+        logger.info("scoring %i sentences took %.1fs, %.0f sentences/s" %
+            (sentence_count[0], elapsed, sentence_count[0] / elapsed if elapsed else 0.0))
+        self.syn0norm = None
+        return sentence_scores[:sentence_count[0]]
+
     def reset_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
         logger.info("resetting layer weights")
@@ -606,7 +700,7 @@ class Word2Vec(utils.SaveLoad):
                     parts = utils.to_unicode(line).split()
                     if len(parts) != layer1_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
-                    word, weights = parts[0], map(REAL, parts[1:])
+                    word, weights = parts[0], list(map(REAL, parts[1:]))
                     if counts is None:
                         result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
                     elif word in counts:
@@ -894,8 +988,8 @@ class Word2Vec(utils.SaveLoad):
 
         total = {
             'section': 'total',
-            'correct': sum(len(s['correct']) for s in sections),
-            'incorrect': sum(len(s['incorrect']) for s in sections)
+            'correct': sum((s['correct'] for s in sections), []),
+            'incorrect': sum((s['incorrect'] for s in sections), []),
         }
         self.log_accuracy(total)
         sections.append(total)

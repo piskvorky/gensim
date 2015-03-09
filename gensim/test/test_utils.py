@@ -15,7 +15,6 @@ from gensim import utils
 
 
 class TestIsCorpus(unittest.TestCase):
-
     def test_None(self):
         # test None
         result = utils.is_corpus(None)
@@ -73,6 +72,14 @@ class TestIsCorpus(unittest.TestCase):
             result = utils.is_corpus(noCorpus)
             expected = (False, noCorpus)
             self.assertEqual(expected, result)
+
+
+class TestUtils(unittest.TestCase):
+    def test_decode_entities(self):
+        # create a string that fails to decode with unichr on narrow python builds
+        body = u'It&#146;s the Year of the Horse. YES VIN DIESEL &#128588; &#128175;'
+        expected = u'It\x92s the Year of the Horse. YES VIN DIESEL \U0001f64c \U0001f4af'
+        self.assertEquals(utils.decode_htmlentities(body), expected)
 
 
 if __name__ == '__main__':

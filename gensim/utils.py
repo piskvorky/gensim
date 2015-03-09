@@ -41,7 +41,7 @@ import scipy.sparse
 if sys.version_info[0] >= 3:
     unicode = str
 
-from six import iteritems, u, string_types
+from six import iteritems, u, string_types, unichr
 from six.moves import xrange
 
 try:
@@ -53,7 +53,7 @@ except ImportError:
 
 
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
-RE_HTML_ENTITY = re.compile(r'&(#?)(x?)(\w+);', re.UNICODE)
+RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
 
@@ -98,10 +98,10 @@ def file_or_filename(input):
 
     """
     if isinstance(input, string_types):
-        # input was a filename: open as text file
-        with smart_open(input) as fin:
-            yield fin
+        # input was a filename: open as file
+        yield smart_open(input)
     else:
+        # input already a file-like object; just reset to the beginning
         input.seek(0)
         yield input
 
@@ -529,6 +529,15 @@ class SlicedCorpus(SaveLoad):
 
         return self.length
 
+def safe_unichr(intval):
+    try:
+        return unichr(intval)
+    except ValueError:
+        # ValueError: unichr() arg not in range(0x10000) (narrow Python build)
+        s = "\\U%08x" % intval
+        # return UTF16 surrogate pair
+        return s.decode('unicode-escape')
+
 def decode_htmlentities(text):
     """
     Decode HTML entities in text, coded as hex, decimal or named.
@@ -545,29 +554,28 @@ def decode_htmlentities(text):
 
     """
     def substitute_entity(match):
-        ent = match.group(3)
-        if match.group(1) == "#":
-            # decoding by number
-            if match.group(2) == '':
-                # number is in decimal
-                return unichr(int(ent))
-            elif match.group(2) == 'x':
-                # number is in hex
-                return unichr(int('0x' + ent, 16))
-        else:
-            # they were using a name
-            cp = n2cp.get(ent)
-            if cp:
-                return unichr(cp)
+        try:
+            ent = match.group(3)
+            if match.group(1) == "#":
+                # decoding by number
+                if match.group(2) == '':
+                    # number is in decimal
+                    return safe_unichr(int(ent))
+                elif match.group(2) in ['x', 'X']:
+                    # number is in hex
+                    return safe_unichr(int(ent, 16))
             else:
-                return match.group()
+                # they were using a name
+                cp = n2cp.get(ent)
+                if cp:
+                    return safe_unichr(cp)
+                else:
+                    return match.group()
+        except:
+            # in case of errors, return original input
+            return match.group()
 
-    try:
-        return RE_HTML_ENTITY.sub(substitute_entity, text)
-    except:
-        # in case of errors, return input
-        # e.g., ValueError: unichr() arg not in range(0x10000) (narrow Python build)
-        return text
+    return RE_HTML_ENTITY.sub(substitute_entity, text)
 
 
 def chunkize_serial(iterable, chunksize, as_numpy=False):
@@ -826,7 +834,7 @@ if HAS_PATTERN:
         """
         This function is only available when the optional 'pattern' package is installed.
 
-        Use the English lemmatizer from `pattern` to extract tokens in
+        Use the English lemmatizer from `pattern` to extract UTF8-encoded tokens in
         their base form=lemma, e.g. "are, is, being" -> "be" etc.
         This is a smarter version of stemming, taking word context into account.
 
