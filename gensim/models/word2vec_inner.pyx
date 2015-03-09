@@ -74,7 +74,7 @@ cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
 
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
-        
+
 # Only implemented for hierarchical softmax
 def score_sentence_sg(model, sentence, _work):
 
@@ -144,14 +144,14 @@ cdef void score_pair_sg_hs(
     for b in range(codelen):
         row2 = word_point[b] * size
         # check if sdot returns double (or rather, trust gensim's existing choice)
-        if fast_sentence_sg_hs == fast_sentence0_sg_hs:
+        if fast_sentence_sg_hs is fast_sentence0_sg_hs:
             f = <REAL_t>dsdot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
-        else: 
+        else:
             f = <REAL_t>sdot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
-        sgn = -1**word_code[b]
+        sgn = (-1)**word_code[b] # ch function: 0-> 1, 1 -> -1
         f = sgn*f
         if f <= -MAX_EXP or f >= MAX_EXP:
-             continue
+            continue
         f = LOG_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         work[0] += f
 
@@ -842,11 +842,7 @@ def init():
     for i in range(EXP_TABLE_SIZE):
         EXP_TABLE[i] = <REAL_t>exp((i / <REAL_t>EXP_TABLE_SIZE * 2 - 1) * MAX_EXP)
         EXP_TABLE[i] = <REAL_t>(EXP_TABLE[i] / (EXP_TABLE[i] + 1))
-
-    # build the log sigmoid table
-    for i in range(EXP_TABLE_SIZE):
-        LOG_TABLE[i] = <REAL_t>exp((i / <REAL_t>EXP_TABLE_SIZE * 2 - 1) * MAX_EXP)
-        LOG_TABLE[i] = <REAL_t>( log(LOG_TABLE[i]) - log(LOG_TABLE[i] + 1.0) )
+        LOG_TABLE[i] = <REAL_t>log( EXP_TABLE[i] )
 
     # check whether sdot returns double or float
     d_res = dsdot(&size, x, &ONE, y, &ONE)
