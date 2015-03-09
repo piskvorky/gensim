@@ -179,7 +179,7 @@ class LdaMulticore(LdaModel):
         else:
             updatetype = "batch"
             updateafter = lencorpus
-        evalafter = min(lencorpus, (self.eval_every * updateafter or 0))
+        evalafter = min(lencorpus, (self.eval_every or 0) * updateafter)
 
         updates_per_pass = max(1, lencorpus / updateafter)
         logger.info("running %s LDA training, %s topics, %i passes over the"

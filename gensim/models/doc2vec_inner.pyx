@@ -748,8 +748,8 @@ def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_
 
     # release GIL & train on the sentence
     with nogil:
-        for l in range(lbl_length):
-            if lbl_codelens[l] == 0:
+        for j in range(lbl_length):
+            if lbl_codelens[j] == 0:
                 continue
             for i in range(sentence_len):
                 if codelens[i] == 0:

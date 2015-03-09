@@ -1,7 +1,7 @@
-:mod:`models.dtmmodel` -- Dynamic Topic Models (DTM) and Dynamic Influence Models (DIM)
+:mod:`models.wrappers.dtmmodel` -- Dynamic Topic Models (DTM) and Dynamic Influence Models (DIM)
 =======================================================================================
 
-.. automodule:: gensim.models.dtmmodel
+.. automodule:: gensim.models.wrappers.dtmmodel
     :synopsis: Dynamic Topic Models
     :members:
     :inherited-members:
