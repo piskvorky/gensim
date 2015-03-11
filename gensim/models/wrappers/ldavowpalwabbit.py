@@ -128,7 +128,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
         used by this wrapper. Setting to False can be useful for debugging,
         or for re-using Vowpal Wabbit files elsewhere.
 
-        `prefix` used to prefix temporary working directory name.
+        `tmp_prefix` used to prefix temporary working directory name.
         """
         # default parameters are taken from Vowpal Wabbit's defaults, and
         # parameter names changed to match Gensim's LdaModel where possible
@@ -270,6 +270,9 @@ class LdaVowpalWabbit(utils.SaveLoad):
     def save(self, fname, *args, **kwargs):
         """Serialise this model to file with given name."""
         if os.path.exists(self._model_filename):
+            # Vowpal Wabbit uses its own binary model file, read this into
+            # variable before serialising this object - keeps all data
+            # self contained within a single serialised file
             LOG.debug("Reading model bytes from '%s'", self._model_filename)
             with open(self._model_filename, 'rb') as fhandle:
                 self._model = fhandle.read()
@@ -283,6 +286,8 @@ class LdaVowpalWabbit(utils.SaveLoad):
         lda_vw._init_temp_dir(prefix=lda_vw.tmp_prefix)
 
         if lda_vw._model:
+            # Vowpal Wabbit operates on its own binary model file - deserialise
+            # to file at load time, making it immediately ready for use
             LOG.debug("Writing model bytes to '%s'", lda_vw._model_filename)
             with open(lda_vw._model_filename, 'wb') as fhandle:
                 fhandle.write(lda_vw._model)
@@ -531,7 +536,7 @@ def _run_vw_command(cmd):
     return output
 
 
-# if python2.6 support is ever dropped, can change to using int.bin_length()
+# if python2.6 support is ever dropped, can change to using int.bit_length()
 def _bit_length(num):
     """Return number of bits needed to encode given number."""
     return len(bin(num).lstrip('-0b'))
