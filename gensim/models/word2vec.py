@@ -161,7 +161,7 @@ def train_sg_pair(model, word, word2, alpha, learn_weights=True, learn_vectors=T
         l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
         fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  # propagate hidden -> output
         ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
-        if train_w1:
+        if learn_weights:
             model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
         neu1e += dot(ga, l2a)  # save error
 
