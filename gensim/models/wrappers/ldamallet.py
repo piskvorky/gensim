@@ -200,6 +200,12 @@ class LdaMallet(utils.SaveLoad):
     def print_topics(self, num_topics=10, num_words=10):
         return self.show_topics(num_topics, num_words, log=True)
 
+    def load_document_topics(self):
+        """
+        Returns an iterator over the topic distribution of training corpus by reading the doctopics.txt generated during training
+        """
+        return read_doctopics(self.fdoctopics())
+
 
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         """
