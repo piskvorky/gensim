@@ -385,8 +385,21 @@ class Doc2Vec(Word2Vec):
         else:
             return sum(train_sentence_dm(self, sentence, lbls, alpha, work, neu1, self.train_words, self.train_lbls) for sentence, lbls in job)
 
+    def infer_vector(self, document, alpha=0.025, min_alpha=0.0001, steps=50):
+        """
+        Infer a vector for given post-bulk training document.
+
+        Document should be a list of tokens.
+        """
+        if self.sg:
+            return infer_vector_dbow(self, document, alpha, min_alpha, steps)
+        elif self.dm_concat:
+            return infer_vector_dm_concat(self, document, alpha, min_alpha, steps)
+        else:
+            return infer_vector_dm(self, document, alpha, min_alpha, steps)
+
     def __str__(self):
-        return "Doc2Vec(vocab=%s, size=%s, alpha=%s)" % (len(self.index2word), self.layer1_size, self.alpha)
+        return "Doc2Vec(%id, sg=%i, hs=%i, negative=%i, dm_concat=%i)" % (self.vector_size, self.sg, self.hs, self.negative, self.dm_concat)
 
     def save(self, *args, **kwargs):
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])  # don't bother storing the cached normalized vectors
