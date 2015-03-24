@@ -172,7 +172,10 @@ class LdaVowpalWabbit(utils.SaveLoad):
         self._init_temp_dir(tmp_prefix)
 
         # used for saving/loading this model's state
-        self._model = None
+        self._model_data = None
+        self._topics_data = None
+
+        # cache loaded topics as numpy array
         self._topics = None
 
         if corpus is not None:
@@ -184,7 +187,6 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
         # reset any existing offset, model, or topics generated
         self.offset = self._initial_offset
-        self._model = None
         self._topics = None
 
         corpus_size = write_corpus_as_vw(corpus, self._corpus_filename)
@@ -275,11 +277,15 @@ class LdaVowpalWabbit(utils.SaveLoad):
             # self contained within a single serialised file
             LOG.debug("Reading model bytes from '%s'", self._model_filename)
             with open(self._model_filename, 'rb') as fhandle:
-                self._model = fhandle.read()
+                self._model_data = fhandle.read()
 
-        if not self._topics and os.path.exists(self._topics_filename):
-            # ensure topics are read from file before serialisation
-            self._load_vw_topics()
+        if os.path.exists(self._topics_filename):
+            LOG.debug("Reading topic bytes from '%s'", self._topics_filename)
+            with open(self._topics_filename, 'rb') as fhandle:
+                self._topics_data = fhandle.read()
+
+        if 'ignore' not in kwargs:
+            kwargs['ignore'] = frozenset(['_topics', 'tmp_dir'])
 
         super(LdaVowpalWabbit, self).save(fname, *args, **kwargs)
 
@@ -289,12 +295,19 @@ class LdaVowpalWabbit(utils.SaveLoad):
         lda_vw = super(LdaVowpalWabbit, cls).load(fname, *args, **kwargs)
         lda_vw._init_temp_dir(prefix=lda_vw.tmp_prefix)
 
-        if lda_vw._model:
+        if lda_vw._model_data:
             # Vowpal Wabbit operates on its own binary model file - deserialise
             # to file at load time, making it immediately ready for use
             LOG.debug("Writing model bytes to '%s'", lda_vw._model_filename)
             with open(lda_vw._model_filename, 'wb') as fhandle:
-                fhandle.write(lda_vw._model)
+                fhandle.write(lda_vw._model_data)
+            lda_vw._model_data = None # no need to keep in memory after this
+
+        if lda_vw._topics_data:
+            LOG.debug("Writing topic bytes to '%s'", lda_vw._topics_filename)
+            with open(lda_vw._topics_filename, 'wb') as fhandle:
+                fhandle.write(lda_vw._topics_data)
+            lda_vw._topics_data = None
 
         return lda_vw
 
