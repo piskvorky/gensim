@@ -277,6 +277,10 @@ class LdaVowpalWabbit(utils.SaveLoad):
             with open(self._model_filename, 'rb') as fhandle:
                 self._model = fhandle.read()
 
+        if not self._topics and os.path.exists(self._topics_filename):
+            # ensure topics are read from file before serialisation
+            self._load_vw_topics()
+
         super(LdaVowpalWabbit, self).save(fname, *args, **kwargs)
 
     @classmethod
