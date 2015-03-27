@@ -66,8 +66,8 @@ http://api.mongodb.org/python/current/installation.html#osx
         except Exception:
             e = sys.exc_info()[1]
             sys.stdout.write('%s\n' % str(e))
-            warnings.warn(self.warning_message,
-                "Extension modules",
+            warnings.warn(self.warning_message +
+                "Extension modules" +
                 "There was an issue with your platform configuration - see above.")
 
     def build_extension(self, ext):
@@ -77,8 +77,8 @@ http://api.mongodb.org/python/current/installation.html#osx
         except Exception:
             e = sys.exc_info()[1]
             sys.stdout.write('%s\n' % str(e))
-            warnings.warn(self.warning_message,
-                "The %s extension module" % (name,),
+            warnings.warn(self.warning_message +
+                "The %s extension module" % (name,) +
                 "The output above this warning shows how the compilation failed.")
 
     # the following is needed to be able to add numpy's include dirs... without
