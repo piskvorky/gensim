@@ -195,6 +195,7 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
             result += 1
 
     # release GIL & train on the sentence
+    work[0] = 0.0
     with nogil:
         for i in range(sentence_len):
             if codelens[i] == 0:
