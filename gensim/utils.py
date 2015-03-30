@@ -18,9 +18,9 @@ try:
 except ImportError:
     from htmlentitydefs import name2codepoint as n2cp
 try:
-    import cPickle as pickle
+    import cPickle as _pickle
 except ImportError:
-    import pickle
+    import _pickle
 
 import re
 import unicodedata
@@ -212,23 +212,28 @@ class SaveLoad(object):
         """
         logger.info("loading %s object from %s" % (cls.__name__, fname))
         subname = lambda suffix: fname + '.' + suffix + '.npy'
-        obj = smart_unpickle(fname)
+        obj = unpickle(fname)
         for attrib in getattr(obj, '__numpys', []):
-            logger.info("loading %s from %s with mmap=%s" % (attrib, subname(attrib), mmap))
+            logger.info("loading %s from %s with mmap=%s" % (
+                attrib, subname(attrib), mmap))
             setattr(obj, attrib, numpy.load(subname(attrib), mmap_mode=mmap))
+
         for attrib in getattr(obj, '__scipys', []):
-            logger.info("loading %s from %s with mmap=%s" % (attrib, subname(attrib), mmap))
-            sparse = smart_unpickle(subname(attrib))
+            logger.info("loading %s from %s with mmap=%s" % (
+                attrib, subname(attrib), mmap))
+            sparse = unpickle(subname(attrib))
             sparse.data = numpy.load(subname(attrib) + '.data.npy', mmap_mode=mmap)
             sparse.indptr = numpy.load(subname(attrib) + '.indptr.npy', mmap_mode=mmap)
             sparse.indices = numpy.load(subname(attrib) + '.indices.npy', mmap_mode=mmap)
             setattr(obj, attrib, sparse)
+
         for attrib in getattr(obj, '__ignoreds', []):
             logger.info("setting ignored attribute %s to None" % (attrib))
             setattr(obj, attrib, None)
         return obj
 
-    def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset()):
+    def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2,
+                    ignore=frozenset()):
         """
         Save the object to file (also see `load`).
 
@@ -246,18 +251,21 @@ class SaveLoad(object):
         be set to None.
 
         """
-        logger.info("saving %s object under %s, separately %s" % (self.__class__.__name__, fname, separately))
+        logger.info(
+            "saving %s object under %s, separately %s" % (
+                self.__class__.__name__, fname, separately))
         subname = lambda suffix: fname + '.' + suffix + '.npy'
         tmp = {}
+        sparse_matrices = (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)
         if separately is None:
             separately = []
             for attrib, val in iteritems(self.__dict__):
                 if isinstance(val, numpy.ndarray) and val.size >= sep_limit:
                     separately.append(attrib)
-                elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and val.nnz >= sep_limit:
+                elif isinstance(val, sparse_matrices) and val.nnz >= sep_limit:
                     separately.append(attrib)
 
-        # whatever's in `separately` or `ignore` at this point won't get pickled anymore
+        # whatever's in `separately` or `ignore` at this point won't get pickled
         for attrib in separately + list(ignore):
             if hasattr(self, attrib):
                 tmp[attrib] = getattr(self, attrib)
@@ -268,33 +276,38 @@ class SaveLoad(object):
             for attrib, val in iteritems(tmp):
                 if isinstance(val, numpy.ndarray) and attrib not in ignore:
                     numpys.append(attrib)
-                    logger.info("storing numpy array '%s' to %s" % (attrib, subname(attrib)))
+                    logger.info("storing numpy array '%s' to %s" % (
+                        attrib, subname(attrib)))
                     numpy.save(subname(attrib), numpy.ascontiguousarray(val))
-                elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and attrib not in ignore:
+                elif isinstance(val, sparse_matrices) and attrib not in ignore:
                     scipys.append(attrib)
-                    logger.info("storing scipy.sparse array '%s' under %s" % (attrib, subname(attrib)))
+                    logger.info("storing scipy.sparse array '%s' under %s" % (
+                        attrib, subname(attrib)))
                     numpy.save(subname(attrib) + '.data.npy', val.data)
                     numpy.save(subname(attrib) + '.indptr.npy', val.indptr)
                     numpy.save(subname(attrib) + '.indices.npy', val.indices)
                     data, indptr, indices = val.data, val.indptr, val.indices
                     val.data, val.indptr, val.indices = None, None, None
+
                     try:
-                        smart_pickle(val, subname(attrib)) # store array-less object
+                        pickle(val, subname(attrib)) # store array-less object
                     finally:
                         val.data, val.indptr, val.indices = data, indptr, indices
                 else:
                     logger.info("not storing attribute %s" % (attrib))
                     ignoreds.append(attrib)
+
             self.__dict__['__numpys'] = numpys
             self.__dict__['__scipys'] = scipys
             self.__dict__['__ignoreds'] = ignoreds
-            smart_pickle(self, fname)
+            pickle(self, fname)
         finally:
             # restore the attributes
             for attrib, val in iteritems(tmp):
                 setattr(self, attrib, val)
 
-    def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2, ignore=frozenset()):
+    def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2,
+             ignore=frozenset()):
         """
         Save the object to file (also see `load`).
 
@@ -318,7 +331,7 @@ class SaveLoad(object):
 
         """
         try:
-            pickle.dump(self, fname_or_handle, protocol=pickle.HIGHEST_PROTOCOL)
+            _pickle.dump(self, fname_or_handle, protocol=_pickle.HIGHEST_PROTOCOL)
             logger.info("saved %s object" % self.__class__.__name__)
         except TypeError:  # `fname_or_handle` does not have write attribute
             self._smart_save(fname_or_handle, separately, sep_limit, ignore)
@@ -326,7 +339,7 @@ class SaveLoad(object):
 
 
 def identity(p):
-    """Identity fnc, for flows that don't accept lambda (picking etc)."""
+    """Identity fnc, for flows that don't accept lambda (pickling etc)."""
     return p
 
 
@@ -747,16 +760,16 @@ def smart_open(fname, mode='rb'):
     return open(fname, mode)
 
 
-def smart_pickle(obj, fname, protocol=pickle.HIGHEST_PROTOCOL):
+def pickle(obj, fname, protocol=_pickle.HIGHEST_PROTOCOL):
     """Pickle object `obj` to file `fname`."""
     with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
-        pickle.dump(obj, fout, protocol=protocol)
+        _pickle.dump(obj, fout, protocol=protocol)
 
 
-def smart_unpickle(fname):
+def unpickle(fname):
     """Load pickled object from `fname`"""
     with smart_open(fname) as f:
-        return pickle.load(f)
+        return _pickle.load(f)
 
 
 def revdict(d):
