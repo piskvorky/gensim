@@ -92,8 +92,8 @@ from six.moves import xrange
 try:
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
 except ImportError:
+    print("using slowness in w2v")
     def score_sentence_sg(model, sentence, work=None):
-        print("using slowness")
         log_prob_sentence = 0.0
         if model.negative:
             raise RuntimeError("scoring is only available for HS=True")
@@ -107,16 +107,11 @@ except ImportError:
             for pos2, word2 in enumerate(sentence[start : pos + model.window + 1], start):
                 # don't train on OOV words and on the `word` itself
                 if word2 and not (pos2 == pos):
-                    l1 = model.syn0[word2.index]
-                    l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
-                    sgn = -1.0**word.code # ch function, 0-> 1, 1 -> -1
-                    lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
-                    log_prob_sentence += sum(lprob)
+                  log_prob_sentence += score_sg_pair(model, word, word2)
 
         return log_prob_sentence
 
     def score_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
-        print("using slowness")
         log_prob_sentence = 0.0
         if model.negative:
             raise RuntimeError("scoring is only available for HS=True")
@@ -131,13 +126,22 @@ except ImportError:
             l1 = np_sum(model.syn0[word2_indices], axis=0) # 1 x layer1_size
             if word2_indices and model.cbow_mean:
                 l1 /= len(word2_indices)
-            l2a = model.syn1[word.point] # 2d matrix, codelen x layer1_size
-            sgn = -1.0**word.code # ch function, 0-> 1, 1 -> -1
-            lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
-            log_prob_sentence += sum(lprob)
+            log_prob_sentence += score_cbow_pair(model, word, word2_indices, l1)
 
         return log_prob_sentence
 
+def score_sg_pair(model, word, word2):
+    l1 = model.syn0[word2.index]
+    l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
+    sgn = -1.0**word.code # ch function, 0-> 1, 1 -> -1
+    lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
+    return sum(lprob)
+
+def score_cbow_pair(model, word, word2_indices, l1):
+    l2a = model.syn1[word.point] # 2d matrix, codelen x layer1_size
+    sgn = -1.0**word.code # ch function, 0-> 1, 1 -> -1
+    lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
+    return sum(lprob)
 
 try:
     from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION

@@ -48,11 +48,49 @@ logger = logging.getLogger(__name__)
 
 from gensim import utils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair
+from gensim.models.word2vec import score_cbow_pair, score_sg_pair
 
 try:
 	from gensim.models.doc2vec_inner import score_sentence_dbow, score_sentence_dm
 except:
-	print(" no fast version ")
+    print("using slowness in d2v")
+    def score_sentence_dbow(model, sentence, lbls, work=None):
+        log_prob_sentence = 0.0
+        if model.negative:
+            raise RuntimeError("scoring is only available for HS=True")
+
+        for label in lbls:
+            if label is None:
+                continue  # OOV word in the input sentence => skip
+            for word in sentence:
+                if word is None:
+                    continue  # OOV word in the input sentence => skip
+                log_prob_sentence += score_sg_pair(model, word, label)
+
+        return log_prob_sentence
+
+    def score_sentence_dm(model, sentence, lbls, work=None, neu1=None, train_words=True, train_lbls=True):
+        log_prob_sentence = 0.0
+        if model.negative:
+            raise RuntimeError("scoring is only available for HS=True")
+
+        lbl_indices = [lbl.index for lbl in lbls if lbl is not None]
+        lbl_sum = np_sum(model.syn0[lbl_indices], axis=0)
+        lbl_len = len(lbl_indices)
+
+        for pos, word in enumerate(sentence):
+            if word is None:
+                continue  # OOV word in the input sentence => skip
+            start = max(0, pos - model.window )
+            window_pos = enumerate(sentence[start : pos + model.window + 1], start)
+            word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
+            l1 = np_sum(model.syn0[word2_indices], axis=0) + lbl_sum  # 1 x layer1_size
+            if word2_indices and model.cbow_mean:
+                l1 /= (len(word2_indices) + lbl_len)
+            log_prob_sentence += score_cbow_pair(model, word, word2_indices, l1)
+
+        return log_prob_sentence
+	
 
 try:
     from gensim.models.doc2vec_inner import train_sentence_dbow, train_sentence_dm, FAST_VERSION
@@ -226,6 +264,12 @@ class Doc2Vec(Word2Vec):
                        if word in self.vocab and (self.vocab[word].sample_probability >= 1.0 or
                                                   self.vocab[word].sample_probability >= random.random_sample())]
             yield (sampled, [self.vocab[word] for word in sentence.labels if word in self.vocab])
+
+    def _score_job_words(self, sentence, work, neu1):
+        if self.sg:
+            return score_sentence_dbow(self, sentence[0], sentence[1], work) 
+        else:
+            return score_sentence_dm(self, sentence[0], sentence[1], work, neu1) 
 
     def _get_job_words(self, alpha, work, job, neu1):
         if self.sg:
