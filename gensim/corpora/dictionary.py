@@ -392,4 +392,5 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.info("built %s from %i documents (total %i corpus positions)" %
                      (result, result.num_docs, result.num_pos))
         return result
+
 #endclass Dictionary
