@@ -20,7 +20,7 @@ except ImportError:
 try:
     import cPickle as _pickle
 except ImportError:
-    import _pickle
+    import pickle as _pickle
 
 import re
 import unicodedata
