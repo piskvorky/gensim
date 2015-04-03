@@ -751,12 +751,16 @@ class LdaModel(interfaces.TransformationABC):
         if not is_corpus:
             logger.warning("LdaModel.top_topics() called with an empty corpus")
             return
+
         coherence_scores = []
-        str_topics = self.show_topics(num_topics=self.num_topics,
-                num_words=num_words,formatted=False)
-        topics = ( [x[1] for x in topic] for topic in str_topics)
-        topics = (self.id2word.doc2bow(topic) for topic in topics)
-        topics = [[x[0] for x in topic] for topic in topics]
+        topics = []
+        str_topics = []
+        for topic in self.state.get_lambda():
+            topic = topic / topic.sum() # normalize to probability dist
+            bestn = np.argsort(topic)[::-1][:num_words]
+            topics.append(bestn)
+            beststr = [(topic[id], self.id2word[id]) for id in bestn]
+            str_topics.append(beststr)
         top_id = chain.from_iterable(topics)
         top_id = list(set(top_id))
 
