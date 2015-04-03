@@ -754,19 +754,22 @@ class LdaModel(interfaces.TransformationABC):
         coherence_scores = []
         str_topics = self.show_topics(num_topics=self.num_topics,
                 num_words=num_words,formatted=False)
-        topics = [ [x[1] for x in topic] for topic in str_topics]
-        topics = [self.id2word.doc2bow(topic) for topic in topics]
+        topics = ( [x[1] for x in topic] for topic in str_topics)
+        topics = (self.id2word.doc2bow(topic) for topic in topics)
         topics = [[x[0] for x in topic] for topic in topics]
         top_id = chain.from_iterable(topics)
         top_id = list(set(top_id))
 
         doc_word_list = {}
-        binary_corpus = [ [word[0] for word in document] for document in corpus]
         for id in top_id:
-            doc_word_list[id] = [document for document in range(len(corpus))
-                                if id in binary_corpus[document]]
+            id_list = []
+            for document in range(len(corpus)):
+                if len(list(ifilter(lambda x: x[0] == id,corpus[document]))) > 0: 
+                    id_list.append(document)
+            if len(id_list) > 0:
+                doc_word_list[id] = id_list
 
-        for topic in xrange(len(topics)):
+        for topic in xrange(len(topics)):   
             topic_coherence_sum = 0.0
             for word_m in topics[topic][1:]:
                 doc_frequency_m = len(doc_word_list[word_m])
