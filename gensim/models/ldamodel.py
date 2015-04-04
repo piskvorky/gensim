@@ -40,7 +40,7 @@ logger = logging.getLogger('gensim.models.ldamodel')
 
 import numpy # for arrays, array broadcasting etc.
 #numpy.seterr(divide='ignore') # ignore 0*log(0) errors
-
+from itertools import chain
 from scipy.special import gammaln, psi # gamma function utils
 from scipy.special import polygamma
 try:
@@ -734,6 +734,62 @@ class LdaModel(interfaces.TransformationABC):
     def print_topic(self, topicid, topn=10):
         """Return the result of `show_topic`, but formatted as a single string."""
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
+
+    def top_topics(self,corpus, num_topics=5, num_words=20):
+        """
+        Calculate the Umass topic coherence for each topic and return
+        the top num_topics. Algorithm from
+        **Mimno, Wallach, Talley, Leenders, McCallum: Optimizing Semantic Coherence in Topic Models, CEMNLP 2011.**
+        """
+        if num_topics < 0 or num_topics >= self.num_topics:
+            if self.num_topics >= 5:
+                num_topics = 5
+            else:
+                num_topics = self.num_topics
+            logger.warning("num_topics out of range - setting to default of 5")
+        is_corpus, corpus = utils.is_corpus(corpus)
+        if not is_corpus:
+            logger.warning("LdaModel.top_topics() called with an empty corpus")
+            return
+
+        coherence_scores = []
+        topics = []
+        str_topics = []
+        for topic in self.state.get_lambda():
+            topic = topic / topic.sum() # normalize to probability dist
+            bestn = np.argsort(topic)[::-1][:num_words]
+            topics.append(bestn)
+            beststr = [(topic[id], self.id2word[id]) for id in bestn]
+            str_topics.append(beststr)
+        top_id = chain.from_iterable(topics)
+        top_id = list(set(top_id))
+
+        doc_word_list = {}
+        for id in top_id:
+            id_list = []
+            for document in range(len(corpus)):
+                if len(list(ifilter(lambda x: x[0] == id,corpus[document]))) > 0: 
+                    id_list.append(document)
+            if len(id_list) > 0:
+                doc_word_list[id] = id_list
+
+        for topic in xrange(len(topics)):   
+            topic_coherence_sum = 0.0
+            for word_m in topics[topic][1:]:
+                doc_frequency_m = len(doc_word_list[word_m])
+                m_set = set(doc_word_list[word_m])
+                for word_l in topics[topic][:-1]:
+                    l_set = set(doc_word_list[word_l])
+                    co_doc_frequency = len(m_set.intersection(l_set))
+                    topic_coherence_sum += numpy.log(
+                        ( co_doc_frequency + 1.0 ) /
+                            doc_frequency_m )
+            coherence_scores.append((str_topics[topic],topic_coherence_sum))
+
+        top_topics = sorted(coherence_scores,key=lambda tup: tup[1],
+                reverse=True)[0:num_topics-1]
+        return top_topics
+
 
     def __getitem__(self, bow, eps=0.01):
         """
