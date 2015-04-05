@@ -202,7 +202,8 @@ class LdaMallet(utils.SaveLoad):
 
     def load_document_topics(self):
         """
-        Returns an iterator over the topic distribution of training corpus by reading the doctopics.txt generated during training
+        Return an iterator over the topic distribution of training corpus, by reading
+        the doctopics.txt generated during training.
         """
         return read_doctopics(self.fdoctopics())
 
