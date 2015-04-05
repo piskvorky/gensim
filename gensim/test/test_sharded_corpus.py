@@ -212,7 +212,7 @@ class TestShardedCorpus(unittest.TestCase):
         self.assertTrue(isinstance(item[0], tuple))
 
         dslice = corpus[2:6]
-        self.assertTrue(hasattr(dslice, 'next'))
+        self.assertTrue(next(dslice) == corpus[2])
         dslice = list(dslice)
         self.assertTrue(isinstance(dslice, list))
         self.assertTrue(isinstance(dslice[0], list))
@@ -223,7 +223,7 @@ class TestShardedCorpus(unittest.TestCase):
                                 "a gensim corpus?")
 
         ilist = corpus[[2, 3, 4, 5]]
-        self.assertTrue(hasattr(ilist, 'next'))
+        self.assertTrue(next(ilist) == corpus[2])
         ilist = list(ilist)
         self.assertTrue(isinstance(ilist, list))
         self.assertTrue(isinstance(ilist[0], list))
