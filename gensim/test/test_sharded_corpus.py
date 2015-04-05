@@ -19,7 +19,7 @@ from scipy import sparse
 from gensim.utils import is_corpus
 
 from gensim.corpora.sharded_corpus import ShardedCorpus
-from gensim.utils import mock_data
+from gensim.utils import mock_data, xrange
 
 #############################################################################
 

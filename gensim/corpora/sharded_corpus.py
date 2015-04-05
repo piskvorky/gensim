@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
+# Original author: Jan Hajic jr.
+# Copyright (C) 2015 Radim Rehurek and gensim team.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
@@ -22,6 +24,7 @@ import os
 import math
 import numpy
 import scipy.sparse as sparse
+import time
 
 #: Specifies which dtype should be used for serializing the shards.
 _default_dtype = float
@@ -33,12 +36,12 @@ except ImportError:
                  'for default ShardedCorpus dtype.')
     pass
 
-import time
+
+from six.moves import xrange
+
 import gensim
 from gensim.corpora import IndexedCorpus
 from gensim.interfaces import TransformedCorpus
-
-__author__ = 'Jan Hajic jr.'
 
 
 class ShardedCorpus(IndexedCorpus):
@@ -273,12 +276,10 @@ class ShardedCorpus(IndexedCorpus):
 
         logging.info('Running init from corpus.')
 
-        for n, doc_chunk in enumerate(gensim.utils.grouper(corpus,
-                                                           chunksize=shardsize)):
+        for n, doc_chunk in enumerate(gensim.utils.grouper(corpus, chunksize=shardsize)):
             logging.info('Chunk no. {0} at {1} s'.format(n, time.clock() - start_time))
 
-            current_shard = numpy.zeros((len(doc_chunk), self.dim),
-                                        dtype=dtype)
+            current_shard = numpy.zeros((len(doc_chunk), self.dim), dtype=dtype)
             logging.debug('Current chunk dimension: '
                           '{0} x {1}'.format(len(doc_chunk), self.dim))
 
@@ -293,8 +294,7 @@ class ShardedCorpus(IndexedCorpus):
             self.save_shard(current_shard)
 
         end_time = time.clock()
-        logging.info('Built {0} shards in {1} s.'.format(self.n_shards,
-                                                         end_time - start_time))
+        logging.info('Built {0} shards in {1} s.'.format(self.n_shards, end_time - start_time))
 
     def init_by_clone(self):
         """
@@ -313,8 +313,7 @@ class ShardedCorpus(IndexedCorpus):
             else:
                 logging.warn('Loaded dataset dimension differs from init arg '
                              'dimension, using loaded dim. '
-                             '(loaded {0}, init {1})'.format(temp.dim,
-                                                             self.dim))
+                             '(loaded {0}, init {1})'.format(temp.dim, self.dim))
 
         self.dim = temp.dim  # To be consistent with the loaded data!
 
@@ -404,7 +403,7 @@ class ShardedCorpus(IndexedCorpus):
 
         """
         return (self.current_offset <= offset) \
-                and (offset < self.offsets[self.current_shard_n+1])
+                and (offset < self.offsets[self.current_shard_n + 1])
 
     def in_next(self, offset):
         """
@@ -416,8 +415,8 @@ class ShardedCorpus(IndexedCorpus):
         """
         if self.current_shard_n == self.n_shards:
             return False # There's no next shard.
-        return (self.offsets[self.current_shard_n+1] <= offset) \
-               and (offset < self.offsets[self.current_shard_n+2])
+        return (self.offsets[self.current_shard_n + 1] <= offset) \
+               and (offset < self.offsets[self.current_shard_n + 2])
 
     def resize_shards(self, shardsize):
         """
@@ -448,8 +447,7 @@ class ShardedCorpus(IndexedCorpus):
                 assert new_shard_idx == n_new_shards - 1, \
                     'Shard no. {0} that ends at {1} over last document' \
                     ' ({2}) is not the last projected shard ({3})???' \
-                    ''.format(new_shard_idx, new_stop,
-                              self.n_docs, n_new_shards)
+                    ''.format(new_shard_idx, new_stop, self.n_docs, n_new_shards)
                 new_stop = self.n_docs
 
             new_shard = self[new_start:new_stop]
@@ -532,8 +530,7 @@ class ShardedCorpus(IndexedCorpus):
             if not self.dim:
                 raise TypeError('Couldn\'t find number of features, '
                                  'refusing to guess (dimension set to {0},'
-                                 'type of corpus: {1}).'.format(self.dim,
-                                                                type(corpus)))
+                                 'type of corpus: {1}).'.format(self.dim, type(corpus)))
             else:
                 logging.warn('Couldn\'t find number of features, trusting '
                              'supplied dimension ({0})'.format(self.dim))
