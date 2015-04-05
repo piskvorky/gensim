@@ -7,12 +7,13 @@ on demand).
 The corpus is intended for situations where you need to use your data
 as numpy arrays for some iterative processing (like training something
 using SGD, which usually involves heavy matrix multiplication).
+
 """
+
 from __future__ import print_function
 
 import logging
 import os
-import cPickle
 import math
 import numpy
 import scipy.sparse as sparse
@@ -215,7 +216,6 @@ class ShardedCorpus(IndexedCorpus):
         self.dim = dim  # This number may change during initialization/loading.
 
         # Sparse vs. dense serialization and retrieval.
-        self._pickle_protocol = -1
         self.sparse_serialization = sparse_serialization
         self.sparse_retrieval = sparse_retrieval
         self.gensim = gensim
@@ -323,8 +323,7 @@ class ShardedCorpus(IndexedCorpus):
 
         if not filename:
             filename = self._shard_name(n)
-        with open(filename, 'wb') as pickle_handle:
-            cPickle.dump(shard, pickle_handle, protocol=self._pickle_protocol)
+        gensim.utils.pickle(shard, filename)
 
         if new_shard:
             self.offsets.append(self.offsets[-1] + shard.shape[0])

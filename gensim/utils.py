@@ -32,7 +32,6 @@ from functools import wraps  # for `synchronous` function lock
 import multiprocessing
 import shutil
 import sys
-import traceback
 from contextlib import contextmanager
 
 import numpy
