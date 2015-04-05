@@ -28,11 +28,10 @@ import os
 import random
 import itertools
 import tempfile
-from functools import wraps # for `synchronous` function lock
+from functools import wraps  # for `synchronous` function lock
 import multiprocessing
 import shutil
 import sys
-import traceback
 from contextlib import contextmanager
 
 import numpy
@@ -406,7 +405,7 @@ class FakeDict(object):
 def dict_from_corpus(corpus):
     """
     Scan corpus for all word ids that appear in it, then construct and return a mapping
-    which maps each ``wordId -> str(wordId)``.
+    which maps each `wordId -> str(wordId)`.
 
     This function is used whenever *words* need to be displayed (as opposed to just
     their ids) but no wordId->word mapping was provided. The resulting mapping
@@ -915,3 +914,27 @@ if HAS_PATTERN:
                         result.append(lemma.encode('utf8'))
         return result
 #endif HAS_PATTERN
+
+
+def mock_data_row(dim=1000, prob_nnz=0.5, lam=1.0):
+    """
+    Create a random gensim sparse vector. Each coordinate is nonzero with
+    probability `prob_nnz`, each non-zero coordinate value is drawn from
+    a Poisson distribution with parameter lambda equal to `lam`.
+
+    """
+    nnz = numpy.random.uniform(size=(dim,))
+    data = [(i, float(numpy.random.poisson(lam=lam) + 1.0))
+            for i in xrange(dim) if nnz[i] < prob_nnz]
+    return data
+
+
+def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
+    """
+    Create a random gensim-style corpus, as a list of lists of (int, float) tuples,
+    to be used as a mock corpus.
+
+    """
+    data = [mock_data_row(dim=dim, prob_nnz=prob_nnz, lam=lam)
+            for _ in xrange(n_items)]
+    return data
