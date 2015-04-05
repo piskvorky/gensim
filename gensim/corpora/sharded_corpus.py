@@ -353,8 +353,7 @@ class ShardedCorpus(IndexedCorpus):
 
         filename = self._shard_name(n)
         if not os.path.isfile(filename):
-            raise ValueError('Attempting to load nonexistent shard '
-                             'no. {0}'.format(n))
+            raise ValueError('Attempting to load nonexistent shard no. {0}'.format(n))
         shard = gensim.utils.unpickle(filename)
 
         self.current_shard = shard
@@ -379,7 +378,7 @@ class ShardedCorpus(IndexedCorpus):
         Assumes that all shards have the same size.
 
         """
-        k = offset / self.shardsize
+        k = int(offset / self.shardsize)
         if offset >= self.n_docs:
             raise ValueError('Too high offset specified ({0}), available '
                              'docs: {1}'.format(offset, self.n_docs))
