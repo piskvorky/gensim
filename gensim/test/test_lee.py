@@ -118,7 +118,7 @@ class TestLeeTest(unittest.TestCase):
     #     corpus = [dictionary.doc2bow(text) for text in corpus2]
 
     #     # initialize an LDA transformation from background corpus
-    #     lda = models.LdaMallet('/Users/kofola/Downloads/mallet-2.0.7/bin/mallet',
+    #     lda = models.wrappers.LdaMallet('/Users/kofola/Downloads/mallet-2.0.7/bin/mallet',
     #         corpus=bg_corpus, id2word=dictionary, num_topics=200, optimize_interval=10)
     #     corpus_lda = lda[corpus]
 

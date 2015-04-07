@@ -19,7 +19,8 @@ import numpy
 import scipy.linalg
 
 from gensim.corpora import mmcorpus, Dictionary
-from gensim.models import lsimodel, ldamodel, tfidfmodel, rpmodel, logentropy_model, ldamallet, ldamulticore
+from gensim.models import lsimodel, ldamodel, tfidfmodel, rpmodel, logentropy_model, ldamulticore
+from gensim.models.wrappers import ldamallet
 from gensim import matutils
 
 

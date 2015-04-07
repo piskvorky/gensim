@@ -1,10 +1,23 @@
 Changes
 =======
 
-0.10.3
+0.10.4
 
+* make utils.decode_htmlentities more robust and reliable on narrow Python builds
+* Move wrappers for external modeling programs into a submodule (Christopher Corley, #295)
+* Compress secondary NumPy state files (Christopher Corley, #248)
+
+0.10.3, 17/11/2014
+
+* added streamed phrases = collocation detection (Miguel Cabrera, #258)
+* added param for multiple word2vec epochs (sebastienj, #243)
 * added doc2vec (=paragraph2vec = extension of word2vec) model (Timothy Emerick, #231)
 * initialize word2vec deterministically, for increased experiment reproducibility (KCzar, #240)
+* all indexed corpora now allow full Python slicing syntax (Christopher Corley, #246)
+* update distributed code for new Pyro4 API and py3k (Michael Brooks, Marco Bonzanini, #255, #249)
+* fixes to six module version (Lars Buitinck, #259)
+* fixes to setup.py (Maxim Avanov and Christopher Corley, #260, #251)
+* ...and lots of minor fixes & updates all around
 
 0.10.2, 18/09/2014
 

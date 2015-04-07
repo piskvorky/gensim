@@ -42,12 +42,17 @@ as well as words that only appear once in the corpus:
 >>>          for document in documents]
 >>>
 >>> # remove words that appear only once
->>> all_tokens = sum(texts, [])
->>> tokens_once = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
->>> texts = [[word for word in text if word not in tokens_once]
+>>> from collections import defaultdict
+>>> frequency = defaultdict(int)
+>>> for text in texts:
+>>>     for token in text:
+>>>         frequency[token] += 1
+>>>
+>>> texts = [[token for token in text if frequency[token] > 1]
 >>>          for text in texts]
 >>>
->>> print(texts)
+>>> from pprint import pprint   # pretty-printer
+>>> pprint(texts)
 [['human', 'interface', 'computer'],
  ['survey', 'user', 'computer', 'system', 'response', 'time'],
  ['eps', 'user', 'interface', 'system'],
@@ -264,7 +269,7 @@ Gensim also contains `efficient utility functions <http://radimrehurek.com/gensi
 to help converting from/to numpy matrices::
 
 >>> corpus = gensim.matutils.Dense2Corpus(numpy_matrix)
->>> numpy_matrix = gensim.matutils.corpus2dense(corpus)
+>>> numpy_matrix = gensim.matutils.corpus2dense(corpus, num_terms=number_of_corpus_features)
 
 and from/to `scipy.sparse` matrices::
 

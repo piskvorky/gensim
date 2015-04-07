@@ -9,7 +9,7 @@
 Deep learning via the distributed memory and distributed bag of words models from
 [1]_, using either hierarchical softmax or negative sampling [2]_ [3]_.
 
-**Install Cython with `pip install cython` before installing gensim, to use optimized
+**Make sure you have a C compiler before installing gensim, to use optimized (compiled)
 doc2vec training** (70x speedup [blog]_).
 
 Initialize a model with e.g.::
@@ -89,7 +89,7 @@ except:
         The sentence is a list of Vocab objects (or None, where the corresponding
         word is not in the vocabulary. Called internally from `Doc2Vec.train()`.
 
-        This is the non-optimized, Python version. If you have cython installed, gensim
+        This is the non-optimized, Python version. If you have a C compiler, gensim
         will use the optimized version from doc2vec_inner instead.
 
         """
@@ -266,7 +266,7 @@ class LabeledLineSentence(object):
     labels are constructed automatically from the sentence line number."""
     def __init__(self, source):
         """
-        `source` can be either a string or a file object.
+        `source` can be either a string (filename) or a file object.
 
         Example::
 

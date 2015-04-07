@@ -48,9 +48,25 @@ class CorpusTestCase(unittest.TestCase):
     def test_load(self):
         fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
         corpus = self.corpus_class(fname)
+
         docs = list(corpus)
         # the deerwester corpus always has nine documents
         self.assertEqual(len(docs), 9)
+
+    def test_len(self):
+        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        corpus = self.corpus_class(fname)
+
+        # make sure corpus.index works, too
+        corpus = self.corpus_class(fname)
+        self.assertEqual(len(corpus), 9)
+
+        # for subclasses of IndexedCorpus, we need to nuke this so we don't
+        # test length on the index, but just testcorpus contents
+        if hasattr(corpus, 'index'):
+            corpus.index = None
+
+        self.assertEqual(len(corpus), 9)
 
     def test_empty_input(self):
         with open(testfile(), 'w') as f:
@@ -145,9 +161,6 @@ class CorpusTestCase(unittest.TestCase):
         self.assertEqual(len(docs), len(corpus[:]))
         self.assertEqual(len(docs[::2]), len(corpus[::2]))
 
-# endclass CorpusTestCase
-
-
 class TestMmCorpus(CorpusTestCase):
     def setUp(self):
         self.corpus_class = mmcorpus.MmCorpus
@@ -157,15 +170,11 @@ class TestMmCorpus(CorpusTestCase):
         # MmCorpus needs file write with seek => doesn't support compressed output (only input)
         pass
 
-# endclass TestMmCorpus
-
 
 class TestSvmLightCorpus(CorpusTestCase):
     def setUp(self):
         self.corpus_class = svmlightcorpus.SvmLightCorpus
         self.file_extension = '.svmlight'
-
-# endclass TestSvmLightCorpus
 
 
 class TestBleiCorpus(CorpusTestCase):
@@ -173,7 +182,23 @@ class TestBleiCorpus(CorpusTestCase):
         self.corpus_class = bleicorpus.BleiCorpus
         self.file_extension = '.blei'
 
-# endclass TestBleiCorpus
+    def test_save_format_for_dtm(self):
+        corpus = [[(1, 1.0)], [], [(0, 5.0), (2, 1.0)], []]
+        test_file = testfile()
+        self.corpus_class.save_corpus(test_file, corpus)
+        with open(test_file) as f:
+            for line in f:
+                # unique_word_count index1:count1 index2:count2 ... indexn:counnt
+                tokens = line.split()
+                words_len = int(tokens[0])
+                if words_len > 0:
+                    tokens = tokens[1:]
+                else:
+                    tokens = []
+                self.assertEqual(words_len, len(tokens))
+                for token in tokens:
+                    word, count = token.split(':')
+                    self.assertEqual(count, str(int(count)))
 
 
 class TestLowCorpus(CorpusTestCase):
@@ -182,8 +207,6 @@ class TestLowCorpus(CorpusTestCase):
     def setUp(self):
         self.corpus_class = lowcorpus.LowCorpus
         self.file_extension = '.low'
-
-# endclass TestLowCorpus
 
 
 class TestUciCorpus(CorpusTestCase):
@@ -196,8 +219,6 @@ class TestUciCorpus(CorpusTestCase):
     def test_serialize_compressed(self):
         # UciCorpus needs file write with seek => doesn't support compressed output (only input)
         pass
-
-# endclass TestUciCorpus
 
 
 class TestMalletCorpus(CorpusTestCase):
@@ -220,8 +241,6 @@ class TestMalletCorpus(CorpusTestCase):
             doc, metadata = docmeta
             self.assertEqual(metadata[0], str(i + 1))
             self.assertEqual(metadata[1], 'en')
-
-# endclass TestMalletCorpus
 
 
 class TestTextCorpus(CorpusTestCase):
@@ -254,8 +273,6 @@ class TestTextCorpus(CorpusTestCase):
 
     def test_indexing(self):
         pass
-
-# endclass TestTextCorpus
 
 
 if __name__ == '__main__':

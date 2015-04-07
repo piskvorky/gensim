@@ -14,8 +14,8 @@ and extended with additional functionality.
 
 For a blog tutorial on gensim word2vec, with an interactive web app trained on GoogleNews, visit http://radimrehurek.com/2014/02/word2vec-tutorial/
 
-**Install Cython with `pip install cython` before installing gensim, to use optimized
-word2vec training** (70x speedup [3]_).
+**Make sure you have a C compiler before installing gensim, to use optimized (compiled) word2vec training**
+(70x speedup compared to plain NumPy implemenation [3]_).
 
 Initialize a model with e.g.::
 
@@ -53,6 +53,13 @@ If you're finished training a model (=no more updates, only querying), you can d
   >>> model.init_sims(replace=True)
 
 to trim unneeded model memory = use (much) less RAM.
+
+Note that there is a :mod:`gensim.models.phrases` module which lets you automatically
+detect phrases longer than one word. Using phrases, you can learn a word2vec model
+where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
+
+>>> bigram_transformer = gensim.models.Phrases(sentences)
+>>> model = Word2Vec(bigram_transformed[sentences], size=100, ...)
 
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
 .. [2] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
@@ -237,7 +244,7 @@ class Word2Vec(utils.SaveLoad):
     """
     def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
         sample=0, seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0,
-        cbow_mean=0, hashfxn=hash):
+        cbow_mean=0, hashfxn=hash, iter=1):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -279,6 +286,8 @@ class Word2Vec(utils.SaveLoad):
         `hashfxn` = hash function to use to randomly initialize weights, for increased
         training reproducibility. Default is Python's rudimentary built in hash function.
 
+        `iter` = number of iterations (epochs) over the corpus.
+
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
@@ -298,8 +307,10 @@ class Word2Vec(utils.SaveLoad):
         self.negative = negative
         self.cbow_mean = int(cbow_mean)
         self.hashfxn = hashfxn
+        self.iter = iter
         if sentences is not None:
             self.build_vocab(sentences)
+            sentences = utils.RepeatCorpusNTimes(sentences, iter)
             self.train(sentences)
 
     def make_table(self, table_size=100000000, power=0.75):
@@ -442,7 +453,7 @@ class Word2Vec(utils.SaveLoad):
         """
         if FAST_VERSION < 0:
             import warnings
-            warnings.warn("Cython compilation failed, training will be slow. Do you have Cython installed? `pip install cython`")
+            warnings.warn("C extension compilation failed, training will be slow. Install a C compiler and reinstall gensim for fast training.")
         logger.info("training model with %i workers on %i vocabulary and %i features, "
             "using 'skipgram'=%s 'hierarchical softmax'=%s 'subsample'=%s and 'negative sampling'=%s" %
             (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative))
@@ -452,7 +463,7 @@ class Word2Vec(utils.SaveLoad):
 
         start, next_report = time.time(), [1.0]
         word_count = [word_count]
-        total_words = total_words or int(sum(v.count * v.sample_probability for v in itervalues(self.vocab)))
+        total_words = total_words or int(sum(v.count * v.sample_probability for v in itervalues(self.vocab)) * self.iter)
         jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         lock = threading.Lock()  # for shared state (=number of words trained so far, log reports...)
 
@@ -595,7 +606,7 @@ class Word2Vec(utils.SaveLoad):
                     parts = utils.to_unicode(line).split()
                     if len(parts) != layer1_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
-                    word, weights = parts[0], map(REAL, parts[1:])
+                    word, weights = parts[0], list(map(REAL, parts[1:]))
                     if counts is None:
                         result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
                     elif word in counts:
@@ -815,6 +826,13 @@ class Word2Vec(utils.SaveLoad):
             else:
                 self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
+    @staticmethod
+    def log_accuracy(section):
+        correct, incorrect = len(section['correct']), len(section['incorrect'])
+        if correct + incorrect > 0:
+            logger.info("%s: %.1f%% (%i/%i)" %
+                (section['section'], 100.0 * correct / (correct + incorrect),
+                correct, correct + incorrect))
 
     def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar):
         """
@@ -835,13 +853,6 @@ class Word2Vec(utils.SaveLoad):
                                key=lambda item: -item[1].count)[:restrict_vocab])
         ok_index = set(v.index for v in itervalues(ok_vocab))
 
-        def log_accuracy(section):
-            correct, incorrect = section['correct'], section['incorrect']
-            if correct + incorrect > 0:
-                logger.info("%s: %.1f%% (%i/%i)" %
-                    (section['section'], 100.0 * correct / (correct + incorrect),
-                    correct, correct + incorrect))
-
         sections, section = [], None
         for line_no, line in enumerate(utils.smart_open(questions)):
             # TODO: use level3 BLAS (=evaluate multiple questions at once), for speed
@@ -850,8 +861,8 @@ class Word2Vec(utils.SaveLoad):
                 # a new section starts => store the old section
                 if section:
                     sections.append(section)
-                    log_accuracy(section)
-                section = {'section': line.lstrip(': ').strip(), 'correct': 0, 'incorrect': 0}
+                    self.log_accuracy(section)
+                section = {'section': line.lstrip(': ').strip(), 'correct': [], 'incorrect': []}
             else:
                 if not section:
                     raise ValueError("missing section header before line #%i in %s" % (line_no, questions))
@@ -860,26 +871,33 @@ class Word2Vec(utils.SaveLoad):
                 except:
                     logger.info("skipping invalid line #%i in %s" % (line_no, questions))
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
-                    logger.debug("skipping line #%i with OOV words: %s" % (line_no, line))
+                    logger.debug("skipping line #%i with OOV words: %s" % (line_no, line.strip()))
                     continue
 
                 ignore = set(self.vocab[v].index for v in [a, b, c])  # indexes of words to ignore
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
-                for index in argsort(most_similar(self,positive=[b, c], negative=[a], topn=False))[::-1]:
+                for index in argsort(most_similar(self, positive=[b, c], negative=[a], topn=False))[::-1]:
                     if index in ok_index and index not in ignore:
                         predicted = self.index2word[index]
                         if predicted != expected:
                             logger.debug("%s: expected %s, predicted %s" % (line.strip(), expected, predicted))
                         break
-                section['correct' if predicted == expected else 'incorrect'] += 1
+                if predicted == expected:
+                    section['correct'].append((a, b, c, expected))
+                else:
+                    section['incorrect'].append((a, b, c, expected))
         if section:
             # store the last section, too
             sections.append(section)
-            log_accuracy(section)
+            self.log_accuracy(section)
 
-        total = {'section': 'total', 'correct': sum(s['correct'] for s in sections), 'incorrect': sum(s['incorrect'] for s in sections)}
-        log_accuracy(total)
+        total = {
+            'section': 'total',
+            'correct': sum((s['correct'] for s in sections), []),
+            'incorrect': sum((s['incorrect'] for s in sections), []),
+        }
+        self.log_accuracy(total)
         sections.append(total)
         return sections
 
@@ -918,13 +936,14 @@ class BrownCorpus(object):
 
 class Text8Corpus(object):
     """Iterate over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip ."""
-    def __init__(self, fname):
+    def __init__(self, fname, max_sentence_length=1000):
         self.fname = fname
+        self.max_sentence_length = max_sentence_length
 
     def __iter__(self):
         # the entire corpus is one gigantic line -- there are no sentence marks at all
         # so just split the sequence of tokens arbitrarily: 1 sentence = 1000 tokens
-        sentence, rest, max_sentence_length = [], b'', 1000
+        sentence, rest = [], b''
         with utils.smart_open(self.fname) as fin:
             while True:
                 text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
@@ -936,9 +955,9 @@ class Text8Corpus(object):
                 last_token = text.rfind(b' ')  # the last token may have been split in two... keep it for the next iteration
                 words, rest = (utils.to_unicode(text[:last_token]).split(), text[last_token:].strip()) if last_token >= 0 else ([], text)
                 sentence.extend(words)
-                while len(sentence) >= max_sentence_length:
-                    yield sentence[:max_sentence_length]
-                    sentence = sentence[max_sentence_length:]
+                while len(sentence) >= self.max_sentence_length:
+                    yield sentence[:self.max_sentence_length]
+                    sentence = sentence[self.max_sentence_length:]
 
 
 class LineSentence(object):
