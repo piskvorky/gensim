@@ -768,12 +768,12 @@ class LdaModel(interfaces.TransformationABC):
         for id in top_id:
             id_list = []
             for document in range(len(corpus)):
-                if len(list(ifilter(lambda x: x[0] == id,corpus[document]))) > 0: 
+                if len(list(ifilter(lambda x: x[0] == id,corpus[document]))) > 0:
                     id_list.append(document)
             if len(id_list) > 0:
                 doc_word_list[id] = id_list
 
-        for topic in xrange(len(topics)):   
+        for topic in xrange(len(topics)):
             topic_coherence_sum = 0.0
             for word_m in topics[topic][1:]:
                 doc_frequency_m = len(doc_word_list[word_m])
@@ -816,9 +816,11 @@ class LdaModel(interfaces.TransformationABC):
 
         Large internal arrays may be stored into separate files, with `fname` as prefix.
 
+        Note: do not save as a compressed file if you intend to load the file back with `mmap`.
+
         """
         if self.state is not None:
-            self.state.save(fname + '.state', *args, **kwargs)
+            self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
         super(LdaModel, self).save(fname, *args, ignore=['state', 'dispatcher'], **kwargs)
 
 
@@ -827,14 +829,17 @@ class LdaModel(interfaces.TransformationABC):
         """
         Load a previously saved object from file (also see `save`).
 
-        Large arrays are mmap'ed back as read-only (shared memory).
+        Large arrays can be memmap'ed back as read-only (shared memory) by setting `mmap='r'`:
+
+            >>> LdaModel.load(fname, mmap='r')
 
         """
-        kwargs['mmap'] = kwargs.get('mmap', 'r')
+        kwargs['mmap'] = kwargs.get('mmap', None)
         result = super(LdaModel, cls).load(fname, *args, **kwargs)
+        state_fname = utils.smart_extension(fname, '.state')
         try:
-            result.state = super(LdaModel, cls).load(fname + '.state', *args, **kwargs)
+            result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
         except Exception as e:
-            logging.warning("failed to load state from %s: %s" % (fname + '.state', e))
+            logging.warning("failed to load state from %s: %s" % (state_fname, e))
         return result
 #endclass LdaModel

@@ -208,22 +208,57 @@ class SaveLoad(object):
         these arrays via mmap (shared memory) using `mmap='r'`. Default: don't use
         mmap, load large arrays as normal objects.
 
+        If the file being loaded is compressed (either '.gz' or '.bz2'), then
+        `mmap=None` must be set.  Load will raise an `IOError` if this condition
+        is encountered.
+
         """
         logger.info("loading %s object from %s" % (cls.__name__, fname))
-        subname = lambda suffix: fname + '.' + suffix + '.npy'
+
+        if fname.endswith('.gz') or fname.endswith('.bz2'):
+            compress = True
+            subname = lambda *args: '.'.join([fname] + list(args) + ['npz'])
+        else:
+            compress = False
+            subname = lambda *args: '.'.join([fname] + list(args) + ['npy'])
+
+
+        mmap_error = lambda x, y: IOError(
+            'Cannot mmap compressed object %s in file %s. ' % (x, y) +
+            'Use `load(fname, mmap=None)` or uncompress files manually.')
+
         obj = unpickle(fname)
         for attrib in getattr(obj, '__numpys', []):
             logger.info("loading %s from %s with mmap=%s" % (
                 attrib, subname(attrib), mmap))
-            setattr(obj, attrib, numpy.load(subname(attrib), mmap_mode=mmap))
+
+            if compress:
+                if mmap:
+                    raise mmap_error(attrib, subname(attrib))
+
+                val = numpy.load(subname(attrib))['val']
+            else:
+                val = numpy.load(subname(attrib), mmap_mode=mmap)
+
+            setattr(obj, attrib, val)
 
         for attrib in getattr(obj, '__scipys', []):
             logger.info("loading %s from %s with mmap=%s" % (
                 attrib, subname(attrib), mmap))
             sparse = unpickle(subname(attrib))
-            sparse.data = numpy.load(subname(attrib) + '.data.npy', mmap_mode=mmap)
-            sparse.indptr = numpy.load(subname(attrib) + '.indptr.npy', mmap_mode=mmap)
-            sparse.indices = numpy.load(subname(attrib) + '.indices.npy', mmap_mode=mmap)
+            if compress:
+                if mmap:
+                    raise mmap_error(attrib, subname(attrib))
+
+                with numpy.load(subname(attrib, 'sparse')) as f:
+                    sparse.data = f['data']
+                    sparse.indptr = f['indptr']
+                    sparse.indices = f['indices']
+            else:
+                sparse.data = numpy.load(subname(attrib, 'data'), mmap_mode=mmap)
+                sparse.indptr = numpy.load(subname(attrib, 'indptr'), mmap_mode=mmap)
+                sparse.indices = numpy.load(subname(attrib, 'indices'), mmap_mode=mmap)
+
             setattr(obj, attrib, sparse)
 
         for attrib in getattr(obj, '__ignoreds', []):
@@ -253,7 +288,14 @@ class SaveLoad(object):
         logger.info(
             "saving %s object under %s, separately %s" % (
                 self.__class__.__name__, fname, separately))
-        subname = lambda suffix: fname + '.' + suffix + '.npy'
+
+        if fname.endswith('.gz') or fname.endswith('.bz2'):
+            compress = True
+            subname = lambda *args: '.'.join([fname] + list(args) + ['npz'])
+        else:
+            compress = False
+            subname = lambda *args: '.'.join([fname] + list(args) + ['npy'])
+
         tmp = {}
         sparse_matrices = (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)
         if separately is None:
@@ -277,14 +319,27 @@ class SaveLoad(object):
                     numpys.append(attrib)
                     logger.info("storing numpy array '%s' to %s" % (
                         attrib, subname(attrib)))
-                    numpy.save(subname(attrib), numpy.ascontiguousarray(val))
-                elif isinstance(val, sparse_matrices) and attrib not in ignore:
+
+                    if compress:
+                        numpy.savez_compressed(subname(attrib), val=numpy.ascontiguousarray(val))
+                    else:
+                        numpy.save(subname(attrib), numpy.ascontiguousarray(val))
+
+                elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and attrib not in ignore:
                     scipys.append(attrib)
                     logger.info("storing scipy.sparse array '%s' under %s" % (
                         attrib, subname(attrib)))
-                    numpy.save(subname(attrib) + '.data.npy', val.data)
-                    numpy.save(subname(attrib) + '.indptr.npy', val.indptr)
-                    numpy.save(subname(attrib) + '.indices.npy', val.indices)
+
+                    if compress:
+                        numpy.savez_compressed(subname(attrib, 'sparse'),
+                                               data=val.data,
+                                               indptr=val.indptr,
+                                               indices=val.indices)
+                    else:
+                        numpy.save(subname(attrib, 'data'), val.data)
+                        numpy.save(subname(attrib, 'indptr'), val.indptr)
+                        numpy.save(subname(attrib, 'indices'), val.indices)
+
                     data, indptr, indices = val.data, val.indptr, val.indices
                     val.data, val.indptr, val.indices = None, None, None
 
@@ -757,6 +812,18 @@ def smart_open(fname, mode='rb'):
         from gzip import GzipFile
         return make_closing(GzipFile)(fname, mode)
     return open(fname, mode)
+
+
+def smart_extension(fname, ext):
+    fname, oext = os.path.splitext(fname)
+    if oext.endswith('.bz2'):
+        fname = fname + oext[:-4] + ext + '.bz2'
+    elif oext.endswith('.gz'):
+        fname = fname + oext[:-3] + ext + '.gz'
+    else:
+        fname = fname + oext + ext
+
+    return fname
 
 
 def pickle(obj, fname, protocol=_pickle.HIGHEST_PROTOCOL):

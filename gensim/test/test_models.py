@@ -122,9 +122,21 @@ class TestLsiModel(unittest.TestCase):
 
 
     def testPersistence(self):
+        fname = testfile()
         model = lsimodel.LsiModel(self.corpus, num_topics=2)
-        model.save(testfile())
-        model2 = lsimodel.LsiModel.load(testfile())
+        model.save(fname)
+        model2 = lsimodel.LsiModel.load(fname)
+        self.assertEqual(model.num_topics, model2.num_topics)
+        self.assertTrue(numpy.allclose(model.projection.u, model2.projection.u))
+        self.assertTrue(numpy.allclose(model.projection.s, model2.projection.s))
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+
+    def testPersistenceCompressed(self):
+        fname = testfile() + '.gz'
+        model = lsimodel.LsiModel(self.corpus, num_topics=2)
+        model.save(fname)
+        model2 = lsimodel.LsiModel.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(numpy.allclose(model.projection.u, model2.projection.u))
         self.assertTrue(numpy.allclose(model.projection.s, model2.projection.s))
@@ -132,25 +144,36 @@ class TestLsiModel(unittest.TestCase):
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
     def testLargeMmap(self):
+        fname = testfile()
         model = lsimodel.LsiModel(self.corpus, num_topics=2)
 
         # test storing the internal arrays into separate files
-        model.save(testfile(), sep_limit=0)
-
-        model2 = lsimodel.LsiModel.load(testfile())
-        self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.projection.u, model2.projection.u))
-        self.assertTrue(numpy.allclose(model.projection.s, model2.projection.s))
-        tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        model.save(fname, sep_limit=0)
 
         # now load the external arrays via mmap
-        model2 = lsimodel.LsiModel.load(testfile(), mmap='r')
+        model2 = lsimodel.LsiModel.load(fname, mmap='r')
         self.assertEqual(model.num_topics, model2.num_topics)
+        self.assertTrue(isinstance(model2.projection.u, numpy.memmap))
+        self.assertTrue(isinstance(model2.projection.s, numpy.memmap))
         self.assertTrue(numpy.allclose(model.projection.u, model2.projection.u))
         self.assertTrue(numpy.allclose(model.projection.s, model2.projection.s))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+
+    def testLargeMmapCompressed(self):
+        fname = testfile() + '.gz'
+        model = lsimodel.LsiModel(self.corpus, num_topics=2)
+
+        # test storing the internal arrays into separate files
+        model.save(fname, sep_limit=0)
+
+        # now load the external arrays via mmap
+        return
+
+        # turns out this test doesn't exercise this because there are no arrays
+        # to be mmaped!
+        self.assertRaises(IOError, lsimodel.LsiModel.load, fname, mmap='r')
+
 #endclass TestLsiModel
 
 
@@ -173,9 +196,20 @@ class TestRpModel(unittest.TestCase):
 
 
     def testPersistence(self):
+        fname = testfile()
         model = rpmodel.RpModel(self.corpus, num_topics=2)
-        model.save(testfile())
-        model2 = rpmodel.RpModel.load(testfile())
+        model.save(fname)
+        model2 = rpmodel.RpModel.load(fname)
+        self.assertEqual(model.num_topics, model2.num_topics)
+        self.assertTrue(numpy.allclose(model.projection, model2.projection))
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+
+    def testPersistenceCompressed(self):
+        fname = testfile() + '.gz'
+        model = rpmodel.RpModel(self.corpus, num_topics=2)
+        model.save(fname)
+        model2 = rpmodel.RpModel.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(numpy.allclose(model.projection, model2.projection))
         tstvec = []
@@ -246,32 +280,49 @@ class TestLdaModel(unittest.TestCase):
             self.assertTrue(passed)
 
     def testPersistence(self):
+        fname = testfile()
         model = ldamodel.LdaModel(self.corpus, num_topics=2)
-        model.save(testfile())
-        model2 = ldamodel.LdaModel.load(testfile())
+        model.save(fname)
+        model2 = ldamodel.LdaModel.load(fname)
+        self.assertEqual(model.num_topics, model2.num_topics)
+        self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+
+    def testPersistenceCompressed(self):
+        fname = testfile() + '.gz'
+        model = ldamodel.LdaModel(self.corpus, num_topics=2)
+        model.save(fname)
+        model2 = ldamodel.LdaModel.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
     def testLargeMmap(self):
+        fname = testfile()
         model = ldamodel.LdaModel(self.corpus, num_topics=2)
 
         # simulate storing large arrays separately
         model.save(testfile(), sep_limit=0)
 
-        model2 = ldamodel.LdaModel.load(testfile())
+        # test loading the large model arrays with mmap
+        model2 = ldamodel.LdaModel.load(testfile(), mmap='r')
         self.assertEqual(model.num_topics, model2.num_topics)
+        self.assertTrue(isinstance(model2.expElogbeta, numpy.memmap))
         self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
+    def testLargeMmapCompressed(self):
+        fname = testfile() + '.gz'
+        model = ldamodel.LdaModel(self.corpus, num_topics=2)
+
+        # simulate storing large arrays separately
+        model.save(fname, sep_limit=0)
+
         # test loading the large model arrays with mmap
-        model2 = ldamodel.LdaModel.load(testfile(), mmap='r')
-        self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
-        tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertRaises(IOError, ldamodel.LdaModel.load, fname, mmap='r')
 #endclass TestLdaModel
 
 
@@ -337,32 +388,49 @@ class TestLdaMulticore(unittest.TestCase):
             self.assertTrue(passed)
 
     def testPersistence(self):
+        fname = testfile()
         model = ldamulticore.LdaMulticore(self.corpus, num_topics=2)
-        model.save(testfile())
-        model2 = ldamulticore.LdaMulticore.load(testfile())
+        model.save(fname)
+        model2 = ldamulticore.LdaMulticore.load(fname)
+        self.assertEqual(model.num_topics, model2.num_topics)
+        self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+
+    def testPersistenceCompressed(self):
+        fname = testfile() + '.gz'
+        model = ldamulticore.LdaMulticore(self.corpus, num_topics=2)
+        model.save(fname)
+        model2 = ldamulticore.LdaMulticore.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
     def testLargeMmap(self):
+        fname = testfile()
         model = ldamulticore.LdaMulticore(self.corpus, num_topics=2)
 
         # simulate storing large arrays separately
         model.save(testfile(), sep_limit=0)
 
-        model2 = ldamulticore.LdaMulticore.load(testfile())
+        # test loading the large model arrays with mmap
+        model2 = ldamulticore.LdaModel.load(testfile(), mmap='r')
         self.assertEqual(model.num_topics, model2.num_topics)
+        self.assertTrue(isinstance(model2.expElogbeta, numpy.memmap))
         self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
+    def testLargeMmapCompressed(self):
+        fname = testfile() + '.gz'
+        model = ldamulticore.LdaMulticore(self.corpus, num_topics=2)
+
+        # simulate storing large arrays separately
+        model.save(fname, sep_limit=0)
+
         # test loading the large model arrays with mmap
-        model2 = ldamulticore.LdaModel.load(testfile(), mmap='r')
-        self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.expElogbeta, model2.expElogbeta))
-        tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertRaises(IOError, ldamulticore.LdaModel.load, fname, mmap='r')
 #endclass TestLdaMulticore
 
 
@@ -397,9 +465,22 @@ class TestLdaMallet(unittest.TestCase):
     def testPersistence(self):
         if not self.mallet_path:
             return
+        fname = testfile()
         model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100)
-        model.save(testfile())
-        model2 = ldamallet.LdaMallet.load(testfile())
+        model.save(fname)
+        model2 = ldamallet.LdaMallet.load(fname)
+        self.assertEqual(model.num_topics, model2.num_topics)
+        self.assertTrue(numpy.allclose(model.wordtopics, model2.wordtopics))
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+
+    def testPersistenceCompressed(self):
+        if not self.mallet_path:
+            return
+        fname = testfile() + '.gz'
+        model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100)
+        model.save(fname)
+        model2 = ldamallet.LdaMallet.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(numpy.allclose(model.wordtopics, model2.wordtopics))
         tstvec = []
@@ -408,23 +489,31 @@ class TestLdaMallet(unittest.TestCase):
     def testLargeMmap(self):
         if not self.mallet_path:
             return
+        fname = testfile()
         model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100)
 
         # simulate storing large arrays separately
         model.save(testfile(), sep_limit=0)
 
-        model2 = ldamodel.LdaModel.load(testfile())
+        # test loading the large model arrays with mmap
+        model2 = ldamodel.LdaModel.load(testfile(), mmap='r')
         self.assertEqual(model.num_topics, model2.num_topics)
+        self.assertTrue(isinstance(model2.wordtopics, numpy.memmap))
         self.assertTrue(numpy.allclose(model.wordtopics, model2.wordtopics))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
+    def testLargeMmapCompressed(self):
+        if not self.mallet_path:
+            return
+        fname = testfile() + '.gz'
+        model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100)
+
+        # simulate storing large arrays separately
+        model.save(fname, sep_limit=0)
+
         # test loading the large model arrays with mmap
-        model2 = ldamodel.LdaModel.load(testfile(), mmap='r')
-        self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.wordtopics, model2.wordtopics))
-        tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertRaises(IOError, ldamodel.LdaModel.load, fname, mmap=None)
 #endclass TestLdaMallet
 
 
@@ -460,9 +549,19 @@ class TestTfidfModel(unittest.TestCase):
 
 
     def testPersistence(self):
+        fname = testfile()
         model = tfidfmodel.TfidfModel(self.corpus, normalize=True)
-        model.save(testfile())
-        model2 = tfidfmodel.TfidfModel.load(testfile())
+        model.save(fname)
+        model2 = tfidfmodel.TfidfModel.load(fname)
+        self.assertTrue(model.idfs == model2.idfs)
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+
+    def testPersistenceCompressed(self):
+        fname = testfile() + '.gz'
+        model = tfidfmodel.TfidfModel(self.corpus, normalize=True)
+        model.save(fname)
+        model2 = tfidfmodel.TfidfModel.load(fname, mmap=None)
         self.assertTrue(model.idfs == model2.idfs)
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
@@ -490,9 +589,19 @@ class TestLogEntropyModel(unittest.TestCase):
 
 
     def testPersistence(self):
+        fname = testfile()
         model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=True)
-        model.save(testfile())
-        model2 = logentropy_model.LogEntropyModel.load(testfile())
+        model.save(fname)
+        model2 = logentropy_model.LogEntropyModel.load(fname)
+        self.assertTrue(model.entr == model2.entr)
+        tstvec = []
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec]))
+
+    def testPersistenceCompressed(self):
+        fname = testfile() + '.gz'
+        model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=True)
+        model.save(fname)
+        model2 = logentropy_model.LogEntropyModel.load(fname, mmap=None)
         self.assertTrue(model.entr == model2.entr)
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec]))

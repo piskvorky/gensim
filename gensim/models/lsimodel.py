@@ -552,9 +552,11 @@ class LsiModel(interfaces.TransformationABC):
 
         Large internal arrays may be stored into separate files, with `fname` as prefix.
 
+        Note: do not save as a compressed file if you intend to load the file back with `mmap`.
+
         """
         if self.projection is not None:
-            self.projection.save(fname + '.projection', *args, **kwargs)
+            self.projection.save(utils.smart_extension(fname, '.projection'), *args, **kwargs)
         super(LsiModel, self).save(fname, *args, ignore=['projection', 'dispatcher'], **kwargs)
 
 
@@ -563,15 +565,18 @@ class LsiModel(interfaces.TransformationABC):
         """
         Load a previously saved object from file (also see `save`).
 
-        Large arrays are mmap'ed back as read-only (shared memory).
+        Large arrays can be memmap'ed back as read-only (shared memory) by setting `mmap='r'`:
+
+            >>> LsiModel.load(fname, mmap='r')
 
         """
-        kwargs['mmap'] = kwargs.get('mmap', 'r')
+        kwargs['mmap'] = kwargs.get('mmap', None)
         result = super(LsiModel, cls).load(fname, *args, **kwargs)
+        projection_fname = utils.smart_extension(fname, '.projection')
         try:
-            result.projection = super(LsiModel, cls).load(fname + '.projection', *args, **kwargs)
+            result.projection = super(LsiModel, cls).load(projection_fname, *args, **kwargs)
         except Exception as e:
-            logging.warning("failed to load projection from %s: %s" % (fname + '.state', e))
+            logging.warning("failed to load projection from %s: %s" % (projection_fname, e))
         return result
 #endclass LsiModel
 

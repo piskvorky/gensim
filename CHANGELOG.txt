@@ -5,6 +5,7 @@ Changes
 
 * make utils.decode_htmlentities more robust and reliable on narrow Python builds
 * Move wrappers for external modeling programs into a submodule (Christopher Corley, #295)
+* Compress secondary NumPy state files (Christopher Corley, #248)
 
 0.10.3, 17/11/2014
 
