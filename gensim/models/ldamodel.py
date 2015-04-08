@@ -826,7 +826,7 @@ class LdaModel(interfaces.TransformationABC):
         # someone sets the ignore list themselves
         if 'ignore' in kwargs:
             ignore = kwargs['ignore']
-            if isinstance(ignore, basestring):
+            if isinstance(ignore, six.string_types):
                 ignore = [ignore]
             kwargs['ignore'] = list(set(['state', 'dispatcher']) | set(ignore))
         else:
