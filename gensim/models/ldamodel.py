@@ -850,6 +850,9 @@ class LdaModel(interfaces.TransformationABC):
         """
         if self.state is not None:
             self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
+        
+        # make sure 'state' and 'dispatcher' are ignored from the pickled object, even if
+        # someone sets the ignore list themselves
         if 'ignore' in kwargs:
             ignore = kwargs['ignore']
             if isinstance(ignore, basestring):
