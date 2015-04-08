@@ -276,12 +276,12 @@ class LdaVowpalWabbit(utils.SaveLoad):
             # variable before serialising this object - keeps all data
             # self contained within a single serialised file
             LOG.debug("Reading model bytes from '%s'", self._model_filename)
-            with open(self._model_filename, 'rb') as fhandle:
+            with utils.smart_open(self._model_filename, 'rb') as fhandle:
                 self._model_data = fhandle.read()
 
         if os.path.exists(self._topics_filename):
             LOG.debug("Reading topic bytes from '%s'", self._topics_filename)
-            with open(self._topics_filename, 'rb') as fhandle:
+            with utils.smart_open(self._topics_filename, 'rb') as fhandle:
                 self._topics_data = fhandle.read()
 
         if 'ignore' not in kwargs:
@@ -299,13 +299,13 @@ class LdaVowpalWabbit(utils.SaveLoad):
             # Vowpal Wabbit operates on its own binary model file - deserialise
             # to file at load time, making it immediately ready for use
             LOG.debug("Writing model bytes to '%s'", lda_vw._model_filename)
-            with open(lda_vw._model_filename, 'wb') as fhandle:
+            with utils.smart_open(lda_vw._model_filename, 'wb') as fhandle:
                 fhandle.write(lda_vw._model_data)
             lda_vw._model_data = None # no need to keep in memory after this
 
         if lda_vw._topics_data:
             LOG.debug("Writing topic bytes to '%s'", lda_vw._topics_filename)
-            with open(lda_vw._topics_filename, 'wb') as fhandle:
+            with utils.smart_open(lda_vw._topics_filename, 'wb') as fhandle:
                 fhandle.write(lda_vw._topics_data)
             lda_vw._topics_data = None
 
@@ -385,7 +385,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
         topics = numpy.zeros((self.num_topics, self.num_terms),
                              dtype=numpy.float32)
 
-        with open(self._topics_filename) as topics_file:
+        with utils.smart_open(self._topics_filename) as topics_file:
             found_options = False
 
             for line in topics_file:
@@ -427,7 +427,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
         predictions = numpy.zeros((corpus_size, self.num_topics),
                                   dtype=numpy.float32)
 
-        with open(self._predict_filename) as fhandle:
+        with utils.smart_open(self._predict_filename) as fhandle:
             for i, line in enumerate(fhandle):
                 predictions[i, :] = line.split()
 
@@ -514,7 +514,7 @@ def write_corpus_as_vw(corpus, filename):
     LOG.debug("Writing corpus to: %s", filename)
 
     corpus_size = 0
-    with open(filename, 'w') as corpus_file:
+    with utils.smart_open(filename, 'wb') as corpus_file:
         for line in corpus_to_vw(corpus):
             print(line, file=corpus_file)
             corpus_size += 1

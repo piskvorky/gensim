@@ -160,6 +160,7 @@ setup(
     ],
 
     extras_require={
+        'smart_open': ['smart_open >= 1.1.0'],
         'distributed': ['Pyro4 >= 4.27'],
     },
 
