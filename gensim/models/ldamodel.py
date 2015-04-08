@@ -821,7 +821,11 @@ class LdaModel(interfaces.TransformationABC):
         """
         if self.state is not None:
             self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
-        super(LdaModel, self).save(fname, *args, ignore=['state', 'dispatcher'], **kwargs)
+        if 'ignore' in kwargs:
+            kwargs['ignore'] = list(set(['state', 'dispatcher']) | set(kwargs['ignore']))
+        else:
+            kwargs['ignore'] = ['state', 'dispatcher']
+        super(LdaModel, self).save(fname, *args, **kwargs)
 
 
     @classmethod
