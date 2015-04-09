@@ -77,7 +77,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(numpy.allclose(model['human'], text_model['human'], atol=1e-6))
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=False, norm_only=True)
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human'], atol=1e-6))
-        
+
         self.assertTrue(numpy.allclose(model.syn0norm[model.vocab['human'].index], norm_only_model['human'], atol=1e-4))
 
     def testPersistenceWord2VecFormatWithVocab(self):
@@ -256,6 +256,13 @@ class TestWord2VecModel(unittest.TestCase):
         most_common_word = max(model.vocab.items(), key=lambda item: item[1].count)[0]
         self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
 #endclass TestWord2VecModel
+
+    def test_sentences_should_not_be_a_generator(self):
+        """
+        Is sentences a generator object?
+        """
+        gen = (s for s in sentences)
+        self.assertRaises(TypeError, word2vec.Word2Vec(gen))
 
 
 class TestWord2VecSentenceIterators(unittest.TestCase):

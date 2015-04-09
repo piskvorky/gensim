@@ -89,6 +89,7 @@ logger = logging.getLogger("gensim.models.word2vec")
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
+from types import GeneratorType
 
 
 try:
@@ -309,6 +310,8 @@ class Word2Vec(utils.SaveLoad):
         self.hashfxn = hashfxn
         self.iter = iter
         if sentences is not None:
+            if isinstance(sentences, GeneratorType):
+                raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences)
             sentences = utils.RepeatCorpusNTimes(sentences, iter)
             self.train(sentences)
