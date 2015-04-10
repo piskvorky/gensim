@@ -179,7 +179,7 @@ class LdaMulticore(LdaModel):
         else:
             updatetype = "batch"
             updateafter = lencorpus
-        evalafter = min(lencorpus, (self.eval_every * updateafter or 0))
+        evalafter = min(lencorpus, (self.eval_every or 0) * updateafter)
 
         updates_per_pass = max(1, lencorpus / updateafter)
         logger.info("running %s LDA training, %s topics, %i passes over the"
@@ -191,25 +191,6 @@ class LdaMulticore(LdaModel):
         if updates_per_pass * self.passes < 10:
             logger.warning("too few updates, training might not converge; consider "
                 "increasing the number of passes or iterations to improve accuracy")
-
-        def worker_e_step(input_queue, result_queue):
-            """
-            Perform E-step for each (chunk_no, chunk, model) 3-tuple from the
-            input queue, placing the resulting state into the result queue.
-
-            """
-            logger.debug("worker process entering E-step loop")
-            while True:
-                logger.debug("getting a new job")
-                chunk_no, chunk, worker_lda = input_queue.get()
-                logger.debug("processing chunk #%i of %i documents", chunk_no, len(chunk))
-                worker_lda.state.reset()
-                worker_lda.do_estep(chunk)  # TODO: auto-tune alpha?
-                del chunk
-                logger.debug("processed chunk, queuing the result")
-                result_queue.put(worker_lda.state)
-                del worker_lda  # free up some memory
-                logger.debug("result put")
 
         job_queue = Queue(maxsize=2 * self.workers)
         result_queue = Queue()
@@ -268,3 +249,23 @@ class LdaMulticore(LdaModel):
         #endfor entire update
 
         pool.terminate()
+
+
+def worker_e_step(input_queue, result_queue):
+    """
+    Perform E-step for each (chunk_no, chunk, model) 3-tuple from the
+    input queue, placing the resulting state into the result queue.
+
+    """
+    logger.debug("worker process entering E-step loop")
+    while True:
+        logger.debug("getting a new job")
+        chunk_no, chunk, worker_lda = input_queue.get()
+        logger.debug("processing chunk #%i of %i documents", chunk_no, len(chunk))
+        worker_lda.state.reset()
+        worker_lda.do_estep(chunk)  # TODO: auto-tune alpha?
+        del chunk
+        logger.debug("processed chunk, queuing the result")
+        result_queue.put(worker_lda.state)
+        del worker_lda  # free up some memory
+        logger.debug("result put")

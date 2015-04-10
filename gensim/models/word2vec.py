@@ -89,6 +89,7 @@ logger = logging.getLogger("gensim.models.word2vec")
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
+from types import GeneratorType
 
 
 try:
@@ -309,6 +310,8 @@ class Word2Vec(utils.SaveLoad):
         self.hashfxn = hashfxn
         self.iter = iter
         if sentences is not None:
+            if isinstance(sentences, GeneratorType):
+                raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences)
             sentences = utils.RepeatCorpusNTimes(sentences, iter)
             self.train(sentences)
@@ -606,7 +609,7 @@ class Word2Vec(utils.SaveLoad):
                     parts = utils.to_unicode(line).split()
                     if len(parts) != layer1_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
-                    word, weights = parts[0], map(REAL, parts[1:])
+                    word, weights = parts[0], list(map(REAL, parts[1:]))
                     if counts is None:
                         result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
                     elif word in counts:
@@ -894,8 +897,8 @@ class Word2Vec(utils.SaveLoad):
 
         total = {
             'section': 'total',
-            'correct': sum(len(s['correct']) for s in sections),
-            'incorrect': sum(len(s['incorrect']) for s in sections)
+            'correct': sum((s['correct'] for s in sections), []),
+            'incorrect': sum((s['incorrect'] for s in sections), []),
         }
         self.log_accuracy(total)
         sections.append(total)

@@ -152,6 +152,25 @@ class _TestSimilarityABC(object):
             self.assertTrue(numpy.allclose(index.index, index2.index))
             self.assertEqual(index.num_best, index2.num_best)
 
+    def testPersistencyCompressed(self):
+        fname = testfile() + '.gz'
+        if self.cls == similarities.Similarity:
+            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        else:
+            index = self.cls(corpus, num_features=len(dictionary))
+        index.save(fname)
+        index2 = self.cls.load(fname)
+        if self.cls == similarities.Similarity:
+            # for Similarity, only do a basic check
+            self.assertTrue(len(index.shards) == len(index2.shards))
+            index.destroy()
+        else:
+            if isinstance(index, similarities.SparseMatrixSimilarity):
+                # hack SparseMatrixSim indexes so they're easy to compare
+                index.index = index.index.todense()
+                index2.index = index2.index.todense()
+            self.assertTrue(numpy.allclose(index.index, index2.index))
+            self.assertEqual(index.num_best, index2.num_best)
 
     def testLarge(self):
         fname = testfile()
@@ -163,6 +182,28 @@ class _TestSimilarityABC(object):
         index.save(fname, sep_limit=0)
 
         index2 = self.cls.load(fname)
+        if self.cls == similarities.Similarity:
+            # for Similarity, only do a basic check
+            self.assertTrue(len(index.shards) == len(index2.shards))
+            index.destroy()
+        else:
+            if isinstance(index, similarities.SparseMatrixSimilarity):
+                # hack SparseMatrixSim indexes so they're easy to compare
+                index.index = index.index.todense()
+                index2.index = index2.index.todense()
+            self.assertTrue(numpy.allclose(index.index, index2.index))
+            self.assertEqual(index.num_best, index2.num_best)
+
+    def testLargeCompressed(self):
+        fname = testfile() + '.gz'
+        if self.cls == similarities.Similarity:
+            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        else:
+            index = self.cls(corpus, num_features=len(dictionary))
+        # store all arrays separately
+        index.save(fname, sep_limit=0)
+
+        index2 = self.cls.load(fname, mmap=None)
         if self.cls == similarities.Similarity:
             # for Similarity, only do a basic check
             self.assertTrue(len(index.shards) == len(index2.shards))
@@ -199,6 +240,17 @@ class _TestSimilarityABC(object):
             self.assertTrue(numpy.allclose(index.index, index2.index))
             self.assertEqual(index.num_best, index2.num_best)
 
+    def testMmapCompressed(self):
+        fname = testfile() + '.gz'
+        if self.cls == similarities.Similarity:
+            index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        else:
+            index = self.cls(corpus, num_features=len(dictionary))
+        # store all arrays separately
+        index.save(fname, sep_limit=0)
+
+        # same thing, but use mmap to load arrays
+        self.assertRaises(IOError, self.cls.load, fname, mmap='r')
 
 class TestMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
@@ -231,6 +283,10 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
         self.assertTrue(numpy.allclose(expected, sims))
         index.destroy()
 
+    def testMmapCompressed(self):
+        pass
+        # turns out this test doesn't exercise this because there are no arrays
+        # to be mmaped!
 
 
 if __name__ == '__main__':

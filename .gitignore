@@ -41,7 +41,9 @@ Thumbs.db
 #########
 .project
 .pydevproject
+.ropeproject
 .settings/
+.eggs
 docs/src/_build/
 docs/_static
 dedan_gensim.tmproj

@@ -1,16 +1,29 @@
 Changes
 =======
 
-0.10.3
+0.11.0, 10/04/2015
+
+* added "topic ranking" to sort topics in LdaModel (jtmcmc, #311)
+* new fast ShardedCorpus out-of-core corpus (Jan Hajic jr., #284)
+* utils.smart_open now uses the smart_open package (#316)
+* new wrapper for Vowpal Wabbit (Dave Challis, #304)
+* improvements to the DtmModel wrapper (Yang Han, #272, #277)
+* move wrappers for external modeling programs into a submodule (Christopher Corley, #295)
+* allow transparent compression of NumPy files in save/load (Christopher Corley, #248)
+* save/load methods now accept file handles, in addition to file names (macks22, #292)
+* fixes to LdaMulticore on Windows (Feng Mai, #305)
+* lots of small fixes & py3k compatibility improvements (Chyi-Kwei Yau, Daniel Nouri, Timothy Emerick, Juarez Bochi, Christopher Corley, Chirag Nagpal, Jan Hajic jr., Flávio Codeço Coelho)
+
+0.10.3, 17/11/2014
 
 * added streamed phrases = collocation detection (Miguel Cabrera, #258)
 * added param for multiple word2vec epochs (sebastienj, #243)
 * added doc2vec (=paragraph2vec = extension of word2vec) model (Timothy Emerick, #231)
 * initialize word2vec deterministically, for increased experiment reproducibility (KCzar, #240)
-* all indexed corpora now allow full Python slicing syntax (Chris Corley, #246)
+* all indexed corpora now allow full Python slicing syntax (Christopher Corley, #246)
 * update distributed code for new Pyro4 API and py3k (Michael Brooks, Marco Bonzanini, #255, #249)
 * fixes to six module version (Lars Buitinck, #259)
-* fixes to setup.py (Maxim Avanov and Chris Corley, #260, #251)
+* fixes to setup.py (Maxim Avanov and Christopher Corley, #260, #251)
 * ...and lots of minor fixes & updates all around
 
 0.10.2, 18/09/2014

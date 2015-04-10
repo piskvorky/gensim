@@ -21,7 +21,7 @@ The wrapped model can NOT be updated with new documents for online training -- u
 
 Example:
 
->>> model = gensim.models.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet', corpus=my_corpus, num_topics=20, id2word=dictionary)
+>>> model = gensim.models.wrappers.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet', corpus=my_corpus, num_topics=20, id2word=dictionary)
 >>> print model[my_vector]  # print LDA topics of a document
 
 .. [1] http://mallet.cs.umass.edu/
@@ -39,7 +39,7 @@ import numpy
 
 from gensim import utils
 
-logger = logging.getLogger('gensim.models.ldamallet')
+logger = logging.getLogger('gensim.models.wrappers.ldamallet')
 
 
 def read_doctopics(fname, eps=1e-6):
@@ -189,7 +189,7 @@ class LdaMallet(utils.SaveLoad):
             _ = next(fin)  # beta
             for lineno, line in enumerate(fin):
                 line = utils.to_unicode(line)
-                doc, source, pos, typeindex, token, topic = line.split()
+                doc, source, pos, typeindex, token, topic = line.split(" ")
                 tokenid = self.id2word.token2id[token] if hasattr(self.id2word, 'token2id') else int(token)
                 wordtopics[int(topic), tokenid] += 1
         logger.info("loaded assigned topics for %i tokens" % wordtopics.sum())
@@ -199,6 +199,13 @@ class LdaMallet(utils.SaveLoad):
 
     def print_topics(self, num_topics=10, num_words=10):
         return self.show_topics(num_topics, num_words, log=True)
+
+    def load_document_topics(self):
+        """
+        Return an iterator over the topic distribution of training corpus, by reading
+        the doctopics.txt generated during training.
+        """
+        return read_doctopics(self.fdoctopics())
 
 
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):

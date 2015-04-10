@@ -28,11 +28,10 @@ import os
 import random
 import itertools
 import tempfile
-from functools import wraps # for `synchronous` function lock
+from functools import wraps  # for `synchronous` function lock
 import multiprocessing
 import shutil
 import sys
-import traceback
 from contextlib import contextmanager
 
 import numpy
@@ -41,8 +40,39 @@ import scipy.sparse
 if sys.version_info[0] >= 3:
     unicode = str
 
-from six import iteritems, u, string_types
+from six import iteritems, u, string_types, unichr
 from six.moves import xrange
+
+try:
+    from smart_open import smart_open
+except ImportError:
+    logger.info("smart_open library not found; falling back to local-filesystem-only")
+
+    def make_closing(base, **attrs):
+        """
+        Add support for `with Base(attrs) as fout:` to the base class if it's missing.
+        The base class' `close()` method will be called on context exit, to always close the file properly.
+
+        This is needed for gzip.GzipFile, bz2.BZ2File etc in older Pythons (<=2.6), which otherwise
+        raise "AttributeError: GzipFile instance has no attribute '__exit__'".
+
+        """
+        if not hasattr(base, '__enter__'):
+            attrs['__enter__'] = lambda self: self
+        if not hasattr(base, '__exit__'):
+            attrs['__exit__'] = lambda self, type, value, traceback: self.close()
+        return type('Closing' + base.__name__, (base, object), attrs)
+
+    def smart_open(fname, mode='rb'):
+        _, ext = os.path.splitext(fname)
+        if ext == '.bz2':
+            from bz2 import BZ2File
+            return make_closing(BZ2File)(fname, mode)
+        if ext == '.gz':
+            from gzip import GzipFile
+            return make_closing(GzipFile)(fname, mode)
+        return open(fname, mode)
+
 
 try:
     from pattern.en import parse
@@ -53,7 +83,7 @@ except ImportError:
 
 
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
-RE_HTML_ENTITY = re.compile(r'&(#?)(x?)(\w+);', re.UNICODE)
+RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
 
@@ -98,10 +128,10 @@ def file_or_filename(input):
 
     """
     if isinstance(input, string_types):
-        # input was a filename: open as text file
-        with smart_open(input) as fin:
-            yield fin
+        # input was a filename: open as file
+        yield smart_open(input)
     else:
+        # input already a file-like object; just reset to the beginning
         input.seek(0)
         yield input
 
@@ -209,52 +239,105 @@ class SaveLoad(object):
         these arrays via mmap (shared memory) using `mmap='r'`. Default: don't use
         mmap, load large arrays as normal objects.
 
+        If the file being loaded is compressed (either '.gz' or '.bz2'), then
+        `mmap=None` must be set.  Load will raise an `IOError` if this condition
+        is encountered.
+
         """
         logger.info("loading %s object from %s" % (cls.__name__, fname))
-        subname = lambda suffix: fname + '.' + suffix + '.npy'
+
+        if fname.endswith('.gz') or fname.endswith('.bz2'):
+            compress = True
+            subname = lambda *args: '.'.join([fname] + list(args) + ['npz'])
+        else:
+            compress = False
+            subname = lambda *args: '.'.join([fname] + list(args) + ['npy'])
+
+
+        mmap_error = lambda x, y: IOError(
+            'Cannot mmap compressed object %s in file %s. ' % (x, y) +
+            'Use `load(fname, mmap=None)` or uncompress files manually.')
+
         obj = unpickle(fname)
         for attrib in getattr(obj, '__numpys', []):
-            logger.info("loading %s from %s with mmap=%s" % (attrib, subname(attrib), mmap))
-            setattr(obj, attrib, numpy.load(subname(attrib), mmap_mode=mmap))
+            logger.info("loading %s from %s with mmap=%s" % (
+                attrib, subname(attrib), mmap))
+
+            if compress:
+                if mmap:
+                    raise mmap_error(attrib, subname(attrib))
+
+                val = numpy.load(subname(attrib))['val']
+            else:
+                val = numpy.load(subname(attrib), mmap_mode=mmap)
+
+            setattr(obj, attrib, val)
+
         for attrib in getattr(obj, '__scipys', []):
-            logger.info("loading %s from %s with mmap=%s" % (attrib, subname(attrib), mmap))
+            logger.info("loading %s from %s with mmap=%s" % (
+                attrib, subname(attrib), mmap))
             sparse = unpickle(subname(attrib))
-            sparse.data = numpy.load(subname(attrib) + '.data.npy', mmap_mode=mmap)
-            sparse.indptr = numpy.load(subname(attrib) + '.indptr.npy', mmap_mode=mmap)
-            sparse.indices = numpy.load(subname(attrib) + '.indices.npy', mmap_mode=mmap)
+            if compress:
+                if mmap:
+                    raise mmap_error(attrib, subname(attrib))
+
+                with numpy.load(subname(attrib, 'sparse')) as f:
+                    sparse.data = f['data']
+                    sparse.indptr = f['indptr']
+                    sparse.indices = f['indices']
+            else:
+                sparse.data = numpy.load(subname(attrib, 'data'), mmap_mode=mmap)
+                sparse.indptr = numpy.load(subname(attrib, 'indptr'), mmap_mode=mmap)
+                sparse.indices = numpy.load(subname(attrib, 'indices'), mmap_mode=mmap)
+
             setattr(obj, attrib, sparse)
+
         for attrib in getattr(obj, '__ignoreds', []):
             logger.info("setting ignored attribute %s to None" % (attrib))
             setattr(obj, attrib, None)
         return obj
 
-    def save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset()):
+    def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2,
+                    ignore=frozenset()):
         """
         Save the object to file (also see `load`).
 
-        If `separately` is None, automatically detect large numpy/scipy.sparse arrays
-        in the object being stored, and store them into separate files. This avoids
-        pickle memory errors and allows mmap'ing large arrays back on load efficiently.
+        If `separately` is None, automatically detect large
+        numpy/scipy.sparse arrays in the object being stored, and store
+        them into separate files. This avoids pickle memory errors and
+        allows mmap'ing large arrays back on load efficiently.
 
-        You can also set `separately` manually, in which case it must be a list of attribute
-        names to be stored in separate files. The automatic check is not performed in this case.
+        You can also set `separately` manually, in which case it must be
+        a list of attribute names to be stored in separate files. The
+        automatic check is not performed in this case.
 
-        `ignore` is a set of attribute names to *not* serialize (file handles, caches etc). On
-        subsequent load() these attributes will be set to None.
+        `ignore` is a set of attribute names to *not* serialize (file
+        handles, caches etc). On subsequent load() these attributes will
+        be set to None.
 
         """
-        logger.info("saving %s object under %s, separately %s" % (self.__class__.__name__, fname, separately))
-        subname = lambda suffix: fname + '.' + suffix + '.npy'
+        logger.info(
+            "saving %s object under %s, separately %s" % (
+                self.__class__.__name__, fname, separately))
+
+        if fname.endswith('.gz') or fname.endswith('.bz2'):
+            compress = True
+            subname = lambda *args: '.'.join([fname] + list(args) + ['npz'])
+        else:
+            compress = False
+            subname = lambda *args: '.'.join([fname] + list(args) + ['npy'])
+
         tmp = {}
+        sparse_matrices = (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)
         if separately is None:
             separately = []
             for attrib, val in iteritems(self.__dict__):
                 if isinstance(val, numpy.ndarray) and val.size >= sep_limit:
                     separately.append(attrib)
-                elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and val.nnz >= sep_limit:
+                elif isinstance(val, sparse_matrices) and val.nnz >= sep_limit:
                     separately.append(attrib)
 
-        # whatever's in `separately` or `ignore` at this point won't get pickled anymore
+        # whatever's in `separately` or `ignore` at this point won't get pickled
         for attrib in separately + list(ignore):
             if hasattr(self, attrib):
                 tmp[attrib] = getattr(self, attrib)
@@ -265,16 +348,32 @@ class SaveLoad(object):
             for attrib, val in iteritems(tmp):
                 if isinstance(val, numpy.ndarray) and attrib not in ignore:
                     numpys.append(attrib)
-                    logger.info("storing numpy array '%s' to %s" % (attrib, subname(attrib)))
-                    numpy.save(subname(attrib), numpy.ascontiguousarray(val))
+                    logger.info("storing numpy array '%s' to %s" % (
+                        attrib, subname(attrib)))
+
+                    if compress:
+                        numpy.savez_compressed(subname(attrib), val=numpy.ascontiguousarray(val))
+                    else:
+                        numpy.save(subname(attrib), numpy.ascontiguousarray(val))
+
                 elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and attrib not in ignore:
                     scipys.append(attrib)
-                    logger.info("storing scipy.sparse array '%s' under %s" % (attrib, subname(attrib)))
-                    numpy.save(subname(attrib) + '.data.npy', val.data)
-                    numpy.save(subname(attrib) + '.indptr.npy', val.indptr)
-                    numpy.save(subname(attrib) + '.indices.npy', val.indices)
+                    logger.info("storing scipy.sparse array '%s' under %s" % (
+                        attrib, subname(attrib)))
+
+                    if compress:
+                        numpy.savez_compressed(subname(attrib, 'sparse'),
+                                               data=val.data,
+                                               indptr=val.indptr,
+                                               indices=val.indices)
+                    else:
+                        numpy.save(subname(attrib, 'data'), val.data)
+                        numpy.save(subname(attrib, 'indptr'), val.indptr)
+                        numpy.save(subname(attrib, 'indices'), val.indices)
+
                     data, indptr, indices = val.data, val.indptr, val.indices
                     val.data, val.indptr, val.indices = None, None, None
+
                     try:
                         pickle(val, subname(attrib)) # store array-less object
                     finally:
@@ -282,6 +381,7 @@ class SaveLoad(object):
                 else:
                     logger.info("not storing attribute %s" % (attrib))
                     ignoreds.append(attrib)
+
             self.__dict__['__numpys'] = numpys
             self.__dict__['__scipys'] = scipys
             self.__dict__['__ignoreds'] = ignoreds
@@ -290,11 +390,41 @@ class SaveLoad(object):
             # restore the attributes
             for attrib, val in iteritems(tmp):
                 setattr(self, attrib, val)
+
+    def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2,
+             ignore=frozenset()):
+        """
+        Save the object to file (also see `load`).
+
+        `fname_or_handle` is either a string specifying the file name to
+        save to, or an open file-like object which can be written to. If
+        the object is a file handle, no special array handling will be
+        performed; all attributes will be saved to the same file.
+
+        If `separately` is None, automatically detect large
+        numpy/scipy.sparse arrays in the object being stored, and store
+        them into separate files. This avoids pickle memory errors and
+        allows mmap'ing large arrays back on load efficiently.
+
+        You can also set `separately` manually, in which case it must be
+        a list of attribute names to be stored in separate files. The
+        automatic check is not performed in this case.
+
+        `ignore` is a set of attribute names to *not* serialize (file
+        handles, caches etc). On subsequent load() these attributes will
+        be set to None.
+
+        """
+        try:
+            _pickle.dump(self, fname_or_handle, protocol=_pickle.HIGHEST_PROTOCOL)
+            logger.info("saved %s object" % self.__class__.__name__)
+        except TypeError:  # `fname_or_handle` does not have write attribute
+            self._smart_save(fname_or_handle, separately, sep_limit, ignore)
 #endclass SaveLoad
 
 
 def identity(p):
-    """Identity fnc, for flows that don't accept lambda (picking etc)."""
+    """Identity fnc, for flows that don't accept lambda (pickling etc)."""
     return p
 
 
@@ -361,7 +491,7 @@ class FakeDict(object):
 def dict_from_corpus(corpus):
     """
     Scan corpus for all word ids that appear in it, then construct and return a mapping
-    which maps each ``wordId -> str(wordId)``.
+    which maps each `wordId -> str(wordId)`.
 
     This function is used whenever *words* need to be displayed (as opposed to just
     their ids) but no wordId->word mapping was provided. The resulting mapping
@@ -529,6 +659,15 @@ class SlicedCorpus(SaveLoad):
 
         return self.length
 
+def safe_unichr(intval):
+    try:
+        return unichr(intval)
+    except ValueError:
+        # ValueError: unichr() arg not in range(0x10000) (narrow Python build)
+        s = "\\U%08x" % intval
+        # return UTF16 surrogate pair
+        return s.decode('unicode-escape')
+
 def decode_htmlentities(text):
     """
     Decode HTML entities in text, coded as hex, decimal or named.
@@ -545,29 +684,28 @@ def decode_htmlentities(text):
 
     """
     def substitute_entity(match):
-        ent = match.group(3)
-        if match.group(1) == "#":
-            # decoding by number
-            if match.group(2) == '':
-                # number is in decimal
-                return unichr(int(ent))
-            elif match.group(2) == 'x':
-                # number is in hex
-                return unichr(int('0x' + ent, 16))
-        else:
-            # they were using a name
-            cp = n2cp.get(ent)
-            if cp:
-                return unichr(cp)
+        try:
+            ent = match.group(3)
+            if match.group(1) == "#":
+                # decoding by number
+                if match.group(2) == '':
+                    # number is in decimal
+                    return safe_unichr(int(ent))
+                elif match.group(2) in ['x', 'X']:
+                    # number is in hex
+                    return safe_unichr(int(ent, 16))
             else:
-                return match.group()
+                # they were using a name
+                cp = n2cp.get(ent)
+                if cp:
+                    return safe_unichr(cp)
+                else:
+                    return match.group()
+        except:
+            # in case of errors, return original input
+            return match.group()
 
-    try:
-        return RE_HTML_ENTITY.sub(substitute_entity, text)
-    except:
-        # in case of errors, return input
-        # e.g., ValueError: unichr() arg not in range(0x10000) (narrow Python build)
-        return text
+    return RE_HTML_ENTITY.sub(substitute_entity, text)
 
 
 def chunkize_serial(iterable, chunksize, as_numpy=False):
@@ -680,34 +818,19 @@ else:
                 yield chunk
 
 
-def make_closing(base, **attrs):
-    """
-    Add support for `with Base(attrs) as fout:` to the base class if it's missing.
-    The base class' `close()` method will be called on context exit, to always close the file properly.
+def smart_extension(fname, ext):
+    fname, oext = os.path.splitext(fname)
+    if oext.endswith('.bz2'):
+        fname = fname + oext[:-4] + ext + '.bz2'
+    elif oext.endswith('.gz'):
+        fname = fname + oext[:-3] + ext + '.gz'
+    else:
+        fname = fname + oext + ext
 
-    This is needed for gzip.GzipFile, bz2.BZ2File etc in older Pythons (<=2.6), which otherwise
-    raise "AttributeError: GzipFile instance has no attribute '__exit__'".
-
-    """
-    if not hasattr(base, '__enter__'):
-        attrs['__enter__'] = lambda self: self
-    if not hasattr(base, '__exit__'):
-        attrs['__exit__'] = lambda self, type, value, traceback: self.close()
-    return type('Closing' + base.__name__, (base, object), attrs)
+    return fname
 
 
-def smart_open(fname, mode='rb'):
-    _, ext = os.path.splitext(fname)
-    if ext == '.bz2':
-        from bz2 import BZ2File
-        return make_closing(BZ2File)(fname, mode)
-    if ext == '.gz':
-        from gzip import GzipFile
-        return make_closing(GzipFile)(fname, mode)
-    return open(fname, mode)
-
-
-def pickle(obj, fname, protocol=-1):
+def pickle(obj, fname, protocol=_pickle.HIGHEST_PROTOCOL):
     """Pickle object `obj` to file `fname`."""
     with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
         _pickle.dump(obj, fout, protocol=protocol)
@@ -826,7 +949,7 @@ if HAS_PATTERN:
         """
         This function is only available when the optional 'pattern' package is installed.
 
-        Use the English lemmatizer from `pattern` to extract tokens in
+        Use the English lemmatizer from `pattern` to extract UTF8-encoded tokens in
         their base form=lemma, e.g. "are, is, being" -> "be" etc.
         This is a smarter version of stemming, taking word context into account.
 
@@ -862,3 +985,27 @@ if HAS_PATTERN:
                         result.append(lemma.encode('utf8'))
         return result
 #endif HAS_PATTERN
+
+
+def mock_data_row(dim=1000, prob_nnz=0.5, lam=1.0):
+    """
+    Create a random gensim sparse vector. Each coordinate is nonzero with
+    probability `prob_nnz`, each non-zero coordinate value is drawn from
+    a Poisson distribution with parameter lambda equal to `lam`.
+
+    """
+    nnz = numpy.random.uniform(size=(dim,))
+    data = [(i, float(numpy.random.poisson(lam=lam) + 1.0))
+            for i in xrange(dim) if nnz[i] < prob_nnz]
+    return data
+
+
+def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
+    """
+    Create a random gensim-style corpus, as a list of lists of (int, float) tuples,
+    to be used as a mock corpus.
+
+    """
+    data = [mock_data_row(dim=dim, prob_nnz=prob_nnz, lam=lam)
+            for _ in xrange(n_items)]
+    return data
