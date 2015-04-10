@@ -513,7 +513,7 @@ class TestLdaMallet(unittest.TestCase):
         model.save(fname, sep_limit=0)
 
         # test loading the large model arrays with mmap
-        self.assertRaises(IOError, ldamodel.LdaModel.load, fname, mmap=None)
+        self.assertRaises(IOError, ldamodel.LdaModel.load, fname, mmap='r')
 #endclass TestLdaMallet
 
 
@@ -529,7 +529,7 @@ class TestTfidfModel(unittest.TestCase):
         doc = list(self.corpus)[0]
         transformed = model[doc]
 
-        expected =  [(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
+        expected = [(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
         self.assertTrue(numpy.allclose(transformed, expected))
 
 
