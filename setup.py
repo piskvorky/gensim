@@ -157,7 +157,7 @@ setup(
         'numpy >= 1.3',
         'scipy >= 0.7.0',
         'six >= 1.2.0',
-        'smart_open >= 1.2.0',
+        'smart_open >= 1.2.1',
     ],
 
     extras_require={
