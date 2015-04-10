@@ -262,7 +262,7 @@ class TestWord2VecModel(unittest.TestCase):
         Is sentences a generator object?
         """
         gen = (s for s in sentences)
-        self.assertRaises(TypeError, word2vec.Word2Vec(gen))
+        self.assertRaises(TypeError, word2vec.Word2Vec, (gen,))
 
 
 class TestWord2VecSentenceIterators(unittest.TestCase):
