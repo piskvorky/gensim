@@ -104,7 +104,7 @@ model_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
 
 setup(
     name='gensim',
-    version='0.10.3',
+    version='0.11.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=readfile('README.rst'),
 
