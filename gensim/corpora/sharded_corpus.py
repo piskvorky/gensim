@@ -794,7 +794,7 @@ class ShardedCorpus(IndexedCorpus):
         super(ShardedCorpus, self).save(*args, **kwargs)
         #
         # self.reset()
-        # with open(self.output_prefix, 'wb') as pickle_handle:
+        # with smart_open(self.output_prefix, 'wb') as pickle_handle:
         #     cPickle.dump(self, pickle_handle)
 
     @classmethod

@@ -44,6 +44,37 @@ from six import iteritems, u, string_types, unichr
 from six.moves import xrange
 
 try:
+    from smart_open import smart_open
+except ImportError:
+    logger.info("smart_open library not found; falling back to local-filesystem-only")
+
+    def make_closing(base, **attrs):
+        """
+        Add support for `with Base(attrs) as fout:` to the base class if it's missing.
+        The base class' `close()` method will be called on context exit, to always close the file properly.
+
+        This is needed for gzip.GzipFile, bz2.BZ2File etc in older Pythons (<=2.6), which otherwise
+        raise "AttributeError: GzipFile instance has no attribute '__exit__'".
+
+        """
+        if not hasattr(base, '__enter__'):
+            attrs['__enter__'] = lambda self: self
+        if not hasattr(base, '__exit__'):
+            attrs['__exit__'] = lambda self, type, value, traceback: self.close()
+        return type('Closing' + base.__name__, (base, object), attrs)
+
+    def smart_open(fname, mode='rb'):
+        _, ext = os.path.splitext(fname)
+        if ext == '.bz2':
+            from bz2 import BZ2File
+            return make_closing(BZ2File)(fname, mode)
+        if ext == '.gz':
+            from gzip import GzipFile
+            return make_closing(GzipFile)(fname, mode)
+        return open(fname, mode)
+
+
+try:
     from pattern.en import parse
     logger.info("'pattern' package found; utils.lemmatize() is available for English")
     HAS_PATTERN = True
@@ -785,33 +816,6 @@ else:
         else:
             for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
                 yield chunk
-
-
-def make_closing(base, **attrs):
-    """
-    Add support for `with Base(attrs) as fout:` to the base class if it's missing.
-    The base class' `close()` method will be called on context exit, to always close the file properly.
-
-    This is needed for gzip.GzipFile, bz2.BZ2File etc in older Pythons (<=2.6), which otherwise
-    raise "AttributeError: GzipFile instance has no attribute '__exit__'".
-
-    """
-    if not hasattr(base, '__enter__'):
-        attrs['__enter__'] = lambda self: self
-    if not hasattr(base, '__exit__'):
-        attrs['__exit__'] = lambda self, type, value, traceback: self.close()
-    return type('Closing' + base.__name__, (base, object), attrs)
-
-
-def smart_open(fname, mode='rb'):
-    _, ext = os.path.splitext(fname)
-    if ext == '.bz2':
-        from bz2 import BZ2File
-        return make_closing(BZ2File)(fname, mode)
-    if ext == '.gz':
-        from gzip import GzipFile
-        return make_closing(GzipFile)(fname, mode)
-    return open(fname, mode)
 
 
 def smart_extension(fname, ext):
