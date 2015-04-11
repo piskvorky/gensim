@@ -1,7 +1,7 @@
 Changes
 =======
 
-0.11.0 = 0.11.1, 10/04/2015
+0.11.0 = 0.11.1 = 0.11.1-1, 10/04/2015
 
 * added "topic ranking" to sort topics in LdaModel (jtmcmc, #311)
 * new fast ShardedCorpus out-of-core corpus (Jan Hajic jr., #284)
@@ -13,7 +13,7 @@ Changes
 * save/load methods now accept file handles, in addition to file names (macks22, #292)
 * fixes to LdaMulticore on Windows (Feng Mai, #305)
 * lots of small fixes & py3k compatibility improvements (Chyi-Kwei Yau, Daniel Nouri, Timothy Emerick, Juarez Bochi, Christopher Corley, Chirag Nagpal, Jan Hajic jr., Flávio Codeço Coelho)
-* 0.11.0 had a packaging bug (and PyPI doesn't allow re-upload) => 0.11.1 is an identical re-release
+* re-released as 0.11.1 and 0.11.1-1 because of a packaging bug
 
 0.10.3, 17/11/2014
 
