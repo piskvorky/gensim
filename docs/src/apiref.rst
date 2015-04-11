@@ -37,6 +37,7 @@ Modules:
     models/phrases
     models/wrappers/ldamallet
     models/wrappers/dtmmodel
+    models/wrappers/ldavowpalwabbit.rst
     similarities/docsim
     similarities/simserver
 

@@ -3,7 +3,7 @@ Changes
 
 0.11.0 = 0.11.1 = 0.11.1-1, 10/04/2015
 
-* added "topic ranking" to sort topics in LdaModel (jtmcmc, #311)
+* added "topic ranking" to sort topics by coherence in LdaModel (jtmcmc, #311)
 * new fast ShardedCorpus out-of-core corpus (Jan Hajic jr., #284)
 * utils.smart_open now uses the smart_open package (#316)
 * new wrapper for Vowpal Wabbit (Dave Challis, #304)
