@@ -1,7 +1,9 @@
 
-import logging
 from gensim.utils import tokenize
 from gensim.parsing.preprocessing import preprocess_documents
+from gensim.summarization.syntactic_unit import SyntacticUnit
+import re  # http://regex101.com/#python to test regex
+import logging
 logger = logging.getLogger('summa.preprocessing.cleaner')
 
 try:
@@ -12,8 +14,6 @@ except ImportError:
     logger.info("'pattern' package not found; tag filters are not available for English")
     HAS_PATTERN = False
 
-import re  # http://regex101.com/#python to test regex
-from gensim.summarization.syntactic_unit import SyntacticUnit
 
 SEPARATOR = r"@"
 RE_SENTENCE = re.compile('(\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)')  # backup (\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)
