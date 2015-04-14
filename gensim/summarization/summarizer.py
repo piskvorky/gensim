@@ -26,7 +26,10 @@ def _get_similarity(doc1, doc2, vec1, vec2):
     numerator = vec1.dot(vec2.transpose()).toarray()[0][0]
     length_1 = _get_doc_length(doc1)
     length_2 = _get_doc_length(doc2)
-    return numerator / (_log10(length_1) + _log10(length_2))
+
+    denominator = _log10(length_1) + _log10(length_2)
+
+    return numerator if denominator != 0 else 0
 
 
 def _set_graph_edge_weights(graph, num_features):
