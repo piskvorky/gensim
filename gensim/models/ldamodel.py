@@ -735,24 +735,16 @@ class LdaModel(interfaces.TransformationABC):
         """Return the result of `show_topic`, but formatted as a single string."""
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
 
-    def top_topics(self, corpus, num_topics=5, num_words=20):
+    def top_topics(self, corpus, num_words=20):
         """
-        Calculate the Umass topic coherence for each topic and return
-        the top num_topics. Algorithm from
+        Calculate the Umass topic coherence for each topic. Algorithm from
         **Mimno, Wallach, Talley, Leenders, McCallum: Optimizing Semantic Coherence in Topic Models, CEMNLP 2011.**
         """
-        if num_topics < 0 or num_topics >= self.num_topics:
-            if self.num_topics >= 5:
-                num_topics = 5
-            else:
-                num_topics = self.num_topics
-            logger.warning("num_topics out of range - setting to default of 5")
         is_corpus, corpus = utils.is_corpus(corpus)
         if not is_corpus:
             logger.warning("LdaModel.top_topics() called with an empty corpus")
             return
 
-        coherence_scores = []
         topics = []
         str_topics = []
         for topic in self.state.get_lambda():
@@ -761,33 +753,45 @@ class LdaModel(interfaces.TransformationABC):
             topics.append(bestn)
             beststr = [(topic[id], self.id2word[id]) for id in bestn]
             str_topics.append(beststr)
-        top_id = chain.from_iterable(topics)
-        top_id = list(set(top_id))
 
+        # top_ids are limited to every topics top words. should not exceed the
+        # vocabulary size.
+        top_ids = set(chain.from_iterable(topics))
+
+        # create a document occurence sparse matrix for each word
         doc_word_list = {}
-        for id in top_id:
-            id_list = []
-            for document in range(len(corpus)):
-                if len(list(filter(lambda x: x[0] == id,corpus[document]))) > 0:
-                    id_list.append(document)
-            if len(id_list) > 0:
-                doc_word_list[id] = id_list
+        for id in top_ids:
+            id_list = set()
+            for n, document in enumerate(corpus):
+                if id in frozenset(x[0] for x in document):
+                    id_list.add(n)
 
-        for topic in xrange(len(topics)):
-            topic_coherence_sum = 0.0
-            for word_m in topics[topic][1:]:
-                doc_frequency_m = len(doc_word_list[word_m])
-                m_set = set(doc_word_list[word_m])
-                for word_l in topics[topic][:-1]:
-                    l_set = set(doc_word_list[word_l])
-                    co_doc_frequency = len(m_set.intersection(l_set))
-                    topic_coherence_sum += numpy.log(
-                        ( co_doc_frequency + 1.0 ) /
-                            doc_frequency_m )
-            coherence_scores.append((str_topics[topic],topic_coherence_sum))
+            doc_word_list[id] = id_list
 
-        top_topics = sorted(coherence_scores,key=lambda tup: tup[1],
-                reverse=True)[0:num_topics-1]
+        coherence_scores = []
+        for t, top_words in enumerate(topics):
+            # Calculate each coherence score C(t, top_words)
+            coherence = 0.0
+            # Sum of top words m=2..M
+            for m in top_words[1:]:
+                # m_docs is v_m^(t)
+                m_docs = doc_word_list[m]
+
+                # Sum of top words l=1..m-1
+                # i.e., all words ranked higher than the current word m
+                for l in top_words[:m-1]:
+                    # l_docs is v_l^(t)
+                    l_docs = doc_word_list[l]
+
+                    # co_doc_frequency is D(v_m^(t), v_l^(t))
+                    co_doc_frequency = len(m_docs.intersection(l_docs))
+
+                    # add to the coherence sum for these two words m, l
+                    coherence += numpy.log((co_doc_frequency + 1.0) / len(l_docs))
+
+            coherence_scores.append((str_topics[t], coherence))
+
+        top_topics = sorted(coherence_scores, key=lambda t: t[1], reverse=True)
         return top_topics
 
 

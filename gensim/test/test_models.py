@@ -244,6 +244,13 @@ class TestLdaModel(unittest.TestCase):
                             (i, sorted(vec), sorted(expected)))
         self.assertTrue(passed)
 
+    def testTopTopics(self):
+        # create the transformation model
+        model = ldamodel.LdaModel(id2word=dictionary, num_topics=2, passes=100)
+        model.update(corpus)
+
+        model.top_topics(corpus)
+
     def testTopicSeeding(self):
         passed = False
         for topic in range(2):
