@@ -40,7 +40,7 @@ logger = logging.getLogger('gensim.models.ldamodel')
 
 import numpy # for arrays, array broadcasting etc.
 #numpy.seterr(divide='ignore') # ignore 0*log(0) errors
-from itertools import chain, ifilter
+from itertools import chain
 from scipy.special import gammaln, psi # gamma function utils
 from scipy.special import polygamma
 try:
@@ -50,7 +50,7 @@ except ImportError: # maxentropy has been removed for next release
 
 
 from gensim import interfaces, utils
-from six.moves import xrange
+from six.moves import xrange, filter
 
 
 def dirichlet_expectation(alpha):
@@ -768,7 +768,7 @@ class LdaModel(interfaces.TransformationABC):
         for id in top_id:
             id_list = []
             for document in range(len(corpus)):
-                if len(list(ifilter(lambda x: x[0] == id,corpus[document]))) > 0:
+                if len(list(filter(lambda x: x[0] == id,corpus[document]))) > 0:
                     id_list.append(document)
             if len(id_list) > 0:
                 doc_word_list[id] = id_list
