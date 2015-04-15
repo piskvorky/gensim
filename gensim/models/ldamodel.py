@@ -40,7 +40,7 @@ logger = logging.getLogger('gensim.models.ldamodel')
 
 import numpy # for arrays, array broadcasting etc.
 #numpy.seterr(divide='ignore') # ignore 0*log(0) errors
-from itertools import chain
+from itertools import chain, ifilter
 from scipy.special import gammaln, psi # gamma function utils
 from scipy.special import polygamma
 try:
@@ -735,7 +735,7 @@ class LdaModel(interfaces.TransformationABC):
         """Return the result of `show_topic`, but formatted as a single string."""
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
 
-    def top_topics(self,corpus, num_topics=5, num_words=20):
+    def top_topics(self, corpus, num_topics=5, num_words=20):
         """
         Calculate the Umass topic coherence for each topic and return
         the top num_topics. Algorithm from
@@ -757,7 +757,7 @@ class LdaModel(interfaces.TransformationABC):
         str_topics = []
         for topic in self.state.get_lambda():
             topic = topic / topic.sum() # normalize to probability dist
-            bestn = np.argsort(topic)[::-1][:num_words]
+            bestn = numpy.argsort(topic)[::-1][:num_words]
             topics.append(bestn)
             beststr = [(topic[id], self.id2word[id]) for id in bestn]
             str_topics.append(beststr)
