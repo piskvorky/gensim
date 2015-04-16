@@ -1,9 +1,10 @@
 
 from abc import ABCMeta, abstractmethod
 
+
 class IGraph:
-    """
-    Represents the interface or contract that the graph for TextRank should implement
+    """ Represents the interface or contract that the graph for TextRank
+    should implement.
     """
     __metaclass__ = ABCMeta
 
@@ -61,14 +62,16 @@ class IGraph:
         """
         Add given node to the graph.
 
-        @attention: While nodes can be of any type, it's strongly recommended to use only
-        numbers and single-line strings as node identifiers if you intend to use write().
+        @attention: While nodes can be of any type, it's strongly recommended
+        to use only numbers and single-line strings as node identifiers if you
+        intend to use write().
 
         @type  node: node
         @param node: Node identifier.
 
         @type  attrs: list
-        @param attrs: List of node attributes specified as (attribute, value) tuples.
+        @param attrs: List of node attributes specified as (attribute, value)
+        tuples.
         """
         pass
 
@@ -90,7 +93,8 @@ class IGraph:
         @param label: Edge label.
 
         @type  attrs: list
-        @param attrs: List of node attributes specified as (attribute, value) tuples.
+        @param attrs: List of node attributes specified as (attribute, value)
+        tuples.
         """
         pass
 
@@ -147,18 +151,23 @@ class Graph(IGraph):
 
     def __init__(self):
         # Metadata about edges
-        self.edge_properties = {}    # Mapping: Edge -> Dict mapping, lablel-> str, wt->num
-        self.edge_attr = {}          # Key value pairs: (Edge -> Attributes)
+        # Mapping: Edge -> Dict mapping, lablel-> str, wt->num
+        self.edge_properties = {}
+        # Key value pairs: (Edge -> Attributes)
+        self.edge_attr = {}
+
         # Metadata about nodes
-        self.node_attr = {}          # Pairing: Node -> Attributes
-        self.node_neighbors = {}     # Pairing: Node -> Neighbors
+        # Pairing: Node -> Attributes
+        self.node_attr = {}
+        # Pairing: Node -> Neighbors
+        self.node_neighbors = {}
 
     def has_edge(self, edge):
-        u,v = edge
-        return (u,v) in self.edge_properties and (v,u) in self.edge_properties
+        u, v = edge
+        return (u, v) in self.edge_properties and (v, u) in self.edge_properties
 
     def edge_weight(self, edge):
-        return self.get_edge_properties( edge ).setdefault( self.WEIGHT_ATTRIBUTE_NAME, self.DEFAULT_WEIGHT )
+        return self.get_edge_properties(edge).setdefault(self.WEIGHT_ATTRIBUTE_NAME, self.DEFAULT_WEIGHT)
 
     def neighbors(self, node):
         return self.node_neighbors[node]
@@ -168,12 +177,12 @@ class Graph(IGraph):
 
     def add_edge(self, edge, wt=1, label='', attrs=[]):
         u, v = edge
-        if (v not in self.node_neighbors[u] and u not in self.node_neighbors[v]):
+        if v not in self.node_neighbors[u] and u not in self.node_neighbors[v]:
             self.node_neighbors[u].append(v)
-            if (u != v):
+            if u != v:
                 self.node_neighbors[v].append(u)
 
-            self.add_edge_attributes((u,v), attrs)
+            self.add_edge_attributes((u, v), attrs)
             self.set_edge_properties((u, v), label=label, weight=wt)
         else:
             raise ValueError("Edge (%s, %s) already in graph" % (u, v))
@@ -181,7 +190,7 @@ class Graph(IGraph):
     def add_node(self, node, attrs=None):
         if attrs is None:
             attrs = []
-        if (not node in self.node_neighbors):
+        if node not in self.node_neighbors:
             self.node_neighbors[node] = []
             self.node_attr[node] = attrs
         else:
@@ -191,18 +200,18 @@ class Graph(IGraph):
         return list(self.node_neighbors.keys())
 
     def edges(self):
-        return [ a for a in self.edge_properties.keys() ]
+        return [a for a in self.edge_properties.keys()]
 
     def del_node(self, node):
         for each in list(self.neighbors(node)):
-            if (each != node):
+            if each != node:
                 self.del_edge((each, node))
-        del(self.node_neighbors[node])
-        del(self.node_attr[node])
+        del self.node_neighbors[node]
+        del self.node_attr[node]
 
     # Helper methods
     def get_edge_properties(self, edge):
-        return self.edge_properties.setdefault( edge, {} )
+        return self.edge_properties.setdefault(edge, {})
 
     def add_edge_attributes(self, edge, attrs):
         for attr in attrs:
@@ -211,8 +220,8 @@ class Graph(IGraph):
     def add_edge_attribute(self, edge, attr):
         self.edge_attr[edge] = self.edge_attributes(edge) + [attr]
 
-        if (edge[0] != edge[1]):
-            self.edge_attr[(edge[1],edge[0])] = self.edge_attributes((edge[1], edge[0])) + [attr]
+        if edge[0] != edge[1]:
+            self.edge_attr[(edge[1], edge[0])] = self.edge_attributes((edge[1], edge[0])) + [attr]
 
     def edge_attributes(self, edge):
         try:
@@ -220,26 +229,26 @@ class Graph(IGraph):
         except KeyError:
             return []
 
-    def set_edge_properties(self, edge, **properties ):
-        self.edge_properties.setdefault( edge, {} ).update( properties )
-        if (edge[0] != edge[1]):
-            self.edge_properties.setdefault((edge[1], edge[0]), {}).update( properties )
+    def set_edge_properties(self, edge, **properties):
+        self.edge_properties.setdefault(edge, {}).update(properties)
+        if edge[0] != edge[1]:
+            self.edge_properties.setdefault((edge[1], edge[0]), {}).update(properties)
 
     def del_edge(self, edge):
         u, v = edge
         self.node_neighbors[u].remove(v)
         self.del_edge_labeling((u, v))
-        if (u != v):
+        if u != v:
             self.node_neighbors[v].remove(u)
-            self.del_edge_labeling((v, u)) # TODO: This is redundant
+            self.del_edge_labeling((v, u))
 
-    def del_edge_labeling( self, edge ):
+    def del_edge_labeling(self, edge):
         keys = [edge]
         keys.append(edge[::-1])
 
         for key in keys:
-            for mapping in [self.edge_properties, self.edge_attr ]:
+            for mapping in [self.edge_properties, self.edge_attr]:
                 try:
-                    del ( mapping[key] )
+                    del mapping[key]
                 except KeyError:
                     pass

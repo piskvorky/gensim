@@ -127,8 +127,6 @@ def _get_keywords_with_score(extracted_lemmas, lemma_to_word):
         for keyword in keyword_list:
             keywords[keyword] = score
     return keywords
-    # return {keyword:score for score, lemma in extracted_lemmas for keyword in lemma_to_word[lemma]}
-    # if you dare
 
 
 def _strip_word(word):
@@ -149,13 +147,15 @@ def _get_combined_keywords(_keywords, split_text):
         word = _strip_word(split_text[i])
         if word in _keywords:
             combined_word = [word]
-            if i + 1 == len_text: result.append(word)   # appends last word if keyword and doesn't iterate
+            if i + 1 == len_text:
+                result.append(word)   # appends last word if keyword and doesn't iterate
             for j in xrange(i + 1, len_text):
                 other_word = _strip_word(split_text[j])
                 if other_word in _keywords and other_word == split_text[j].decode("utf-8"):
                     combined_word.append(other_word)
                 else:
-                    for keyword in combined_word: _keywords.pop(keyword)
+                    for keyword in combined_word:
+                        _keywords.pop(keyword)
                     result.append(" ".join(combined_word))
                     break
     return result
@@ -192,7 +192,7 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False):
     # Creates the graph and adds the edges
     graph = _build_graph(_get_words_for_graph(tokens))
     _set_graph_edges(graph, tokens, split_text)
-    del split_text # It's no longer used
+    del split_text  # It's no longer used
 
     _remove_unreachable_nodes(graph)
 

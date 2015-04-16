@@ -16,7 +16,8 @@ CONVERGENCE_THRESHOLD = 0.0001
 
 def pagerank_weighted(graph, initial_value=None, damping=0.85):
     """Calculates PageRank for an undirected graph"""
-    if initial_value == None: initial_value = 1.0 / len(graph.nodes())
+    if initial_value is None:
+        initial_value = 1.0 / len(graph.nodes())
     scores = dict.fromkeys(graph.nodes(), initial_value)
 
     iteration_quantity = 0
@@ -66,12 +67,12 @@ def build_adjacency_matrix(graph):
                 col.append(j)
                 data.append(edge_weight / neighbors_sum)
 
-    return csr_matrix((data,(row,col)), shape=(length,length))
+    return csr_matrix((data, (row, col)), shape=(length, length))
 
 
 def build_probability_matrix(graph):
     dimension = len(graph.nodes())
-    matrix = empty_matrix((dimension,dimension))
+    matrix = empty_matrix((dimension, dimension))
 
     probability = 1 / float(dimension)
     matrix.fill(probability)

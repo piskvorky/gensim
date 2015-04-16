@@ -90,7 +90,7 @@ def clean_text_by_word(text):
     else:
         tags = None
     units = merge_syntactic_units(original_words, filtered_words, tags)
-    return { unit.text : unit for unit in units }
+    return {unit.text: unit for unit in units}
 
 
 def tokenize_by_word(text):

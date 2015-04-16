@@ -4,7 +4,7 @@ class SyntacticUnit(object):
     def __init__(self, text, token=None, tag=None):
         self.text = text
         self.token = token
-        self.tag = tag[:2] if tag else None # just first two letters of tag
+        self.tag = tag[:2] if tag else None     # Just first two letters of tag
         self.index = -1
         self.score = -1
 

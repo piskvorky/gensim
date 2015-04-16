@@ -1,5 +1,4 @@
 from math import log10 as _log10
-
 from pagerank_weighted import pagerank_weighted_scipy as _pagerank
 from gensim.summarization.textcleaner import clean_text_by_sentences as _clean_text_by_sentences
 from gensim.corpora import Dictionary
@@ -7,13 +6,14 @@ from commons import build_graph as _build_graph
 from commons import remove_unreachable_nodes as _remove_unreachable_nodes
 from scipy.sparse import csr_matrix
 
+
 def _build_sparse_vectors(docs, num_features):
     vectors = []
     for doc in docs:
         freq = [1 for item in doc]
         id = [item[0] for item in doc]
         zeros = [0 for i in doc]
-        vector = csr_matrix((freq, (zeros, id)), shape=(1,num_features))
+        vector = csr_matrix((freq, (zeros, id)), shape=(1, num_features))
         vectors.append(vector)
     return vectors
 
@@ -38,7 +38,8 @@ def _set_graph_edge_weights(graph, num_features):
 
     for i in xrange(len(nodes)):
         for j in xrange(len(nodes)):
-            if i == j: continue
+            if i == j:
+                continue
 
             edge = (nodes[i], nodes[j])
             if not graph.has_edge(edge):
@@ -56,7 +57,7 @@ def _build_dictionary_and_corpus(sentences):
 
 def _get_important_sentences(sentences, corpus, important_docs):
     hashable_corpus = _build_hashable_corpus(corpus)
-    sentences_by_corpus = {hashable_corpus[i]:sentences[i] for i in xrange(len(sentences))}
+    sentences_by_corpus = {hashable_corpus[i]: sentences[i] for i in xrange(len(sentences))}
     return [sentences_by_corpus[tuple(important_doc)] for important_doc in important_docs]
 
 
@@ -65,6 +66,7 @@ def _get_sentences_with_word_count(sentences, words):
     total word count similar to the word count provided."""
     word_count = 0
     selected_sentences = []
+
     # Loops until the word count is reached.
     for sentence in sentences:
         words_in_sentence = len(sentence.text.split())
@@ -107,7 +109,7 @@ def textrank_from_corpus(corpus, num_features, ratio=0.2):
 
     pagerank_scores = _pagerank(graph)
 
-    hashable_corpus.sort(key=lambda doc:pagerank_scores.get(doc, 0), reverse=True)
+    hashable_corpus.sort(key=lambda doc: pagerank_scores.get(doc, 0), reverse=True)
 
     return [list(doc) for doc in hashable_corpus[:int(len(corpus) * ratio)]]
 

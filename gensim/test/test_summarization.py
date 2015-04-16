@@ -35,4 +35,3 @@ class TestSummarizationTest(unittest.TestCase):
             summary = f.read()
 
         self.assertEquals(generated_summary, summary)
-
