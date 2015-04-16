@@ -84,7 +84,7 @@ def clean_text_by_word(text):
     Returns a dict of word -> syntacticUnit. """
     text_without_acronyms = replace_with_separator(text, "", [AB_ACRONYM_LETTERS])
     original_words = list(tokenize(text_without_acronyms, to_lower=True, deacc=True))
-    filtered_words = [word_list[0] for word_list in preprocess_documents(original_words) if word_list]
+    filtered_words = [join_words(word_list, "") for word_list in preprocess_documents(original_words)]
     if HAS_PATTERN:
         tags = tag(join_words(original_words)) # tag needs the context of the words in the text
     else:
