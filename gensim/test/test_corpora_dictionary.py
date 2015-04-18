@@ -101,11 +101,37 @@ class TestDictionary(unittest.TestCase):
                 'system': 5, 'time': 6, 'trees': 9, 'user': 7}
         self.assertEqual(d.token2id, expected)
 
+    def testMerge(self):
+        d = Dictionary(self.texts)
+        f = Dictionary(self.texts[:3])
+        g = Dictionary(self.texts[3:])
+
+        f.merge_with(g)
+        self.assertEqual(sorted(d.token2id.keys()), sorted(f.token2id.keys()))
+
     def testFilter(self):
         d = Dictionary(self.texts)
         d.filter_extremes(no_below=2, no_above=1.0, keep_n=4)
         expected = {0: 3, 1: 3, 2: 3, 3: 3}
         self.assertEqual(d.dfs, expected)
+
+    def testFilterTokens(self):
+        self.maxDiff = 10000
+        d = Dictionary(self.texts)
+
+        removed_word = d[0]
+        d.filter_tokens([0])
+
+        expected = {'computer': 0, 'eps': 8, 'graph': 10, 'human': 1,
+                'interface': 2, 'minors': 11, 'response': 3, 'survey': 4,
+                'system': 5, 'time': 6, 'trees': 9, 'user': 7}
+        del expected[removed_word]
+        self.assertEqual(sorted(d.token2id.keys()), sorted(expected.keys()))
+
+        expected[removed_word] = len(expected)
+        d.add_documents([[removed_word]])
+        self.assertEqual(sorted(d.token2id.keys()), sorted(expected.keys()))
+
 
     def test_doc2bow(self):
         d = Dictionary([["žluťoučký"], ["žluťoučký"]])
