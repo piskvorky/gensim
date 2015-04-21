@@ -297,7 +297,7 @@ class WikiCorpus(TextCorpus):
                 articles_all += 1
                 positions_all += len(tokens)
                 # article redirects and short stubs are pruned here
-                if len(tokens) < ARTICLE_MIN_WORDS or any(title.startswith(ignore + ':') for ignore in ignore_namespaces):
+                if len(tokens) < ARTICLE_MIN_WORDS or any([title.startswith(ignore + ':') for ignore in ignore_namespaces]):
                     continue
                 articles += 1
                 positions += len(tokens)
