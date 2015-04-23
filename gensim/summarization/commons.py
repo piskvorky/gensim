@@ -1,5 +1,5 @@
 
-from graph import Graph
+from gensim.summarization.graph import Graph
 
 
 def build_graph(sequence):

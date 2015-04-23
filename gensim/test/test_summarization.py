@@ -15,7 +15,8 @@ in this test.
 import os.path
 import unittest
 
-from gensim import utils, summarization
+from gensim import utils
+from gensim.summarization import summarize
 
 TEXT_FILENAME = "mihalcea_tarau.txt"
 SUMMARY_FILENAME = "mihalcea_tarau.summ.txt"
@@ -26,12 +27,12 @@ class TestSummarizationTest(unittest.TestCase):
     def test_summarization(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
-        with utils.smart_open(os.path.join(pre_path, TEXT_FILENAME)) as f:
+        with utils.smart_open(os.path.join(pre_path, TEXT_FILENAME), mode="r") as f:
             text = f.read()
 
-        generated_summary = summarization.summarize(text)
+        generated_summary = summarize(text)
 
-        with utils.smart_open(os.path.join(pre_path, SUMMARY_FILENAME)) as f:
+        with utils.smart_open(os.path.join(pre_path, SUMMARY_FILENAME), mode="r") as f:
             summary = f.read()
 
         self.assertEquals(generated_summary, summary)

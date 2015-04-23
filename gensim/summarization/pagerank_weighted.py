@@ -2,6 +2,7 @@
 from scipy.sparse import csr_matrix
 from scipy.linalg import eig
 from numpy import empty as empty_matrix
+from six.moves import xrange
 
 try:
     from numpy import VisibleDeprecationWarning

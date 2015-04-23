@@ -2,8 +2,10 @@
 from gensim.utils import tokenize
 from gensim.parsing.preprocessing import preprocess_documents
 from gensim.summarization.syntactic_unit import SyntacticUnit
-import re  # http://regex101.com/#python to test regex
+from six.moves import xrange
+import re
 import logging
+
 logger = logging.getLogger('summa.preprocessing.cleaner')
 
 try:
@@ -16,12 +18,13 @@ except ImportError:
 
 
 SEPARATOR = r"@"
-RE_SENTENCE = re.compile('(\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)')  # backup (\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)
-AB_SENIOR = re.compile("([A-Z][a-z]{1,2}\.)\s(\w)")
-AB_ACRONYM = re.compile("(\.[a-zA-Z]\.)\s(\w)")
-AB_ACRONYM_LETTERS = re.compile("([a-zA-Z])\.([a-zA-Z])\.")
-UNDO_AB_SENIOR = re.compile("([A-Z][a-z]{1,2}\.)" + SEPARATOR + "(\w)")
-UNDO_AB_ACRONYM = re.compile("(\.[a-zA-Z]\.)" + SEPARATOR + "(\w)")
+RE_SENTENCE = re.compile('(\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)', re.UNICODE)  # backup (\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)
+AB_SENIOR = re.compile("([A-Z][a-z]{1,2}\.)\s(\w)", re.UNICODE)
+AB_ACRONYM = re.compile("(\.[a-zA-Z]\.)\s(\w)", re.UNICODE)
+AB_ACRONYM_LETTERS = re.compile("([a-zA-Z])\.([a-zA-Z])\.", re.UNICODE)
+UNDO_AB_SENIOR = re.compile("([A-Z][a-z]{1,2}\.)" + SEPARATOR + "(\w)", re.UNICODE)
+UNDO_AB_ACRONYM = re.compile("(\.[a-zA-Z]\.)" + SEPARATOR + "(\w)", re.UNICODE)
+
 
 def split_sentences(text):
     processed = replace_abbreviations(text)
