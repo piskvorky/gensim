@@ -82,6 +82,15 @@ def clean_text_by_sentences(text):
     return merge_syntactic_units(original_sentences, filtered_sentences)
 
 
+def _create_syntactic_unit_dict(syntactic_units):
+    """ Returns a dict of text-units -> syntacticUnit.
+    """
+    dictionary = {}
+    for syntactic_unit in syntactic_units:
+        dictionary[syntactic_unit.text] = syntactic_unit
+    return dictionary
+
+
 def clean_text_by_word(text):
     """ Tokenizes a given text into words, applying filters and lemmatizing them.
     Returns a dict of word -> syntacticUnit. """
@@ -93,7 +102,7 @@ def clean_text_by_word(text):
     else:
         tags = None
     units = merge_syntactic_units(original_words, filtered_words, tags)
-    return {unit.text: unit for unit in units}
+    return _create_syntactic_unit_dict(units)
 
 
 def tokenize_by_word(text):
