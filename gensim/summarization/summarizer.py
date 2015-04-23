@@ -1,12 +1,12 @@
 
-from math import log10 as _log10
-from scipy.sparse import csr_matrix
-from six.moves import xrange
-from gensim.corpora import Dictionary
 from gensim.summarization.pagerank_weighted import pagerank_weighted_scipy as _pagerank
 from gensim.summarization.textcleaner import clean_text_by_sentences as _clean_text_by_sentences
 from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
+from gensim.corpora import Dictionary
+from scipy.sparse import csr_matrix
+from math import log10 as _log10
+from six.moves import xrange
 
 
 def _build_sparse_vectors(docs, num_features):

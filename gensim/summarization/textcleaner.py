@@ -1,7 +1,7 @@
 
-from gensim.utils import tokenize
-from gensim.parsing.preprocessing import preprocess_documents
 from gensim.summarization.syntactic_unit import SyntacticUnit
+from gensim.parsing.preprocessing import preprocess_documents
+from gensim.utils import tokenize
 from six.moves import xrange
 import re
 import logging
