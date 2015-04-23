@@ -59,7 +59,7 @@ def _build_dictionary_and_corpus(sentences):
 
 def _get_important_sentences(sentences, corpus, important_docs):
     hashable_corpus = _build_hashable_corpus(corpus)
-    sentences_by_corpus = {hashable_corpus[i]: sentences[i] for i in xrange(len(sentences))}
+    sentences_by_corpus = dict(zip(hashable_corpus, sentences))
     return [sentences_by_corpus[tuple(important_doc)] for important_doc in important_docs]
 
 
