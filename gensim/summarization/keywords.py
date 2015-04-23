@@ -5,7 +5,7 @@ from gensim.summarization.textcleaner import tokenize_by_word as _tokenize_by_wo
 from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
 from itertools import combinations as _combinations
-from six.moves import queue as _Queue
+from six.moves.queue import Queue as _Queue
 from six.moves import xrange
 
 
