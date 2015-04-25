@@ -451,8 +451,8 @@ class LdaModel(interfaces.TransformationABC):
 
         dalpha = -(gradf - b) / q
 
-        if all(rho() * dalpha + self.alpha > 0):
-            self.alpha += rho() * dalpha
+        if all(rho * dalpha + self.alpha > 0):
+            self.alpha += rho * dalpha
         else:
             logger.warning("updated alpha not positive")
         logger.info("optimized alpha %s" % list(self.alpha))
@@ -500,8 +500,6 @@ class LdaModel(interfaces.TransformationABC):
 
         """
         # use parameters given in constructor, unless user explicitly overrode them
-        if chunksize is None:
-            chunksize = self.chunksize
         if decay is None:
             decay = self.decay
         if offset is None:
@@ -517,9 +515,6 @@ class LdaModel(interfaces.TransformationABC):
         if gamma_threshold is None:
             gamma_threshold = self.gamma_threshold
 
-        # rho is the "speed" of updating; TODO try other fncs
-        rho = lambda: pow(offset + self.num_updates / self.chunksize, -decay)
-
         try:
             lencorpus = len(corpus)
         except:
@@ -528,6 +523,9 @@ class LdaModel(interfaces.TransformationABC):
         if lencorpus == 0:
             logger.warning("LdaModel.update() called with an empty corpus")
             return
+
+        if chunksize is None:
+            chunksize = min(lencorpus, self.chunksize)
 
         self.state.numdocs += lencorpus
 
@@ -551,6 +549,12 @@ class LdaModel(interfaces.TransformationABC):
         if updates_per_pass * passes < 10:
             logger.warning("too few updates, training might not converge; consider "
                            "increasing the number of passes or iterations to improve accuracy")
+
+        # rho is the "speed" of updating; TODO try other fncs
+        # pass_ + num_updates handles increasing the starting t for each pass,
+        # while allowing it to "reset" on the first pass of each update
+        def rho():
+            return pow(offset + pass_ + (self.num_updates / chunksize), -decay)
 
         for pass_ in xrange(passes):
             if self.dispatcher:
@@ -579,7 +583,7 @@ class LdaModel(interfaces.TransformationABC):
                     gammat = self.do_estep(chunk, other)
 
                     if self.optimize_alpha:
-                        self.update_alpha(gammat, rho)
+                        self.update_alpha(gammat, rho())
 
                 dirty = True
                 del chunk
@@ -590,8 +594,8 @@ class LdaModel(interfaces.TransformationABC):
                         # distributed mode: wait for all workers to finish
                         logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                         other = self.dispatcher.getstate()
-                    self.do_mstep(rho(), other)
-                    del other # free up some mem
+                    self.do_mstep(rho(), other, pass_ > 0)
+                    del other  # frees up memory
 
                     if self.dispatcher:
                         logger.info('initializing workers')
@@ -609,13 +613,13 @@ class LdaModel(interfaces.TransformationABC):
                     # distributed mode: wait for all workers to finish
                     logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                     other = self.dispatcher.getstate()
-                self.do_mstep(rho(), other)
+                self.do_mstep(rho(), other, pass_ > 0)
                 del other
                 dirty = False
         #endfor entire corpus update
 
 
-    def do_mstep(self, rho, other):
+    def do_mstep(self, rho, other, extra_pass=False):
         """
         M step: use linear interpolation between the existing topics and
         collected sufficient statistics in `other` to update the topics.
@@ -628,9 +632,14 @@ class LdaModel(interfaces.TransformationABC):
         self.state.blend(rho, other)
         diff -= self.state.get_Elogbeta()
         self.sync_state()
-        self.print_topics(15) # print out some debug info at the end of each EM iteration
+
+        # print out some debug info at the end of each EM iteration
+        self.print_topics(5)
         logger.info("topic diff=%f, rho=%f" % (numpy.mean(numpy.abs(diff)), rho))
-        self.num_updates += other.numdocs
+
+        if not extra_pass:
+            # only update if this isn't an additional pass
+            self.num_updates += other.numdocs
 
 
     def bound(self, corpus, gamma=None, subsample_ratio=1.0):
