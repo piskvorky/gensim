@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 from gensim.summarization.syntactic_unit import SyntacticUnit
 from gensim.parsing.preprocessing import preprocess_documents
@@ -98,7 +102,7 @@ def clean_text_by_word(text):
     original_words = list(tokenize(text_without_acronyms, to_lower=True, deacc=True))
     filtered_words = [join_words(word_list, "") for word_list in preprocess_documents(original_words)]
     if HAS_PATTERN:
-        tags = tag(join_words(original_words)) # tag needs the context of the words in the text
+        tags = tag(join_words(original_words))  # tag needs the context of the words in the text
     else:
         tags = None
     units = merge_syntactic_units(original_words, filtered_words, tags)
