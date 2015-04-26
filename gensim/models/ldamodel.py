@@ -176,7 +176,8 @@ class LdaModel(interfaces.TransformationABC):
     def __init__(self, corpus=None, num_topics=100, id2word=None,
                  distributed=False, chunksize=2000, passes=1, update_every=1,
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0,
-                 eval_every=10, iterations=50, gamma_threshold=0.001):
+                 eval_every=10, iterations=50, gamma_threshold=0.001,
+                 minimum_probability=0.01):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -214,6 +215,8 @@ class LdaModel(interfaces.TransformationABC):
         `decay` and `offset` parameters are the same as Kappa and Tau_0 in
         Hoffman et al, respectively.
 
+        `minimum_probability` controls filtering the topics returned for a document (bow).
+
         Example:
 
         >>> lda = LdaModel(corpus, num_topics=100)  # train model
@@ -246,6 +249,7 @@ class LdaModel(interfaces.TransformationABC):
         self.chunksize = chunksize
         self.decay = decay
         self.offset = offset
+        self.minimum_probability = minimum_probability
         self.num_updates = 0
 
         self.passes = passes
@@ -371,7 +375,7 @@ class LdaModel(interfaces.TransformationABC):
 
             # The optimal phi_{dwk} is proportional to expElogthetad_k * expElogbetad_w.
             # phinorm is the normalizer.
-            # TODO treat zeros explicitly, instead of adding eps (1e-100)?
+            # TODO treat zeros explicitly, instead of adding 1e-100?
             phinorm = numpy.dot(expElogthetad, expElogbetad) + 1e-100
 
             # Iterate between gamma and phi until convergence
@@ -793,7 +797,29 @@ class LdaModel(interfaces.TransformationABC):
         top_topics = sorted(coherence_scores, key=lambda t: t[1], reverse=True)
         return top_topics
 
-    def __getitem__(self, bow, eps=0.01):
+    def get_document_topics(self, bow, minimum_probability=None):
+        """
+        Return topic distribution for the given document `bow`, as a list of
+        (topic_id, topic_probability) 2-tuples.
+
+        Ignore topics with very low probability (below `minimum_probability`).
+
+        """
+        # if the input vector is a corpus, return a transformed corpus
+
+        if minimum_probability is None:
+            minimum_probability = self.minimum_probability
+
+        is_corpus, corpus = utils.is_corpus(bow)
+        if is_corpus:
+            return self._apply(corpus)
+
+        gamma, _ = self.inference([bow])
+        topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
+        return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
+                if topicvalue >= minimum_probability]
+
+    def __getitem__(self, bow, eps=None):
         """
         Return topic distribution for the given document `bow`, as a list of
         (topic_id, topic_probability) 2-tuples.
@@ -801,15 +827,7 @@ class LdaModel(interfaces.TransformationABC):
         Ignore topics with very low probability (below `eps`).
 
         """
-        # if the input vector is in fact a corpus, return a transformed corpus as result
-        is_corpus, corpus = utils.is_corpus(bow)
-        if is_corpus:
-            return self._apply(corpus)
-
-        gamma, _ = self.inference([bow])
-        topic_dist = gamma[0] / sum(gamma[0])  # normalize to proper distribution
-        return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
-                if topicvalue >= eps]  # ignore document's topics that have prob < eps
+        return self.get_document_topics(bow, eps)
 
     def save(self, fname, *args, **kwargs):
         """
