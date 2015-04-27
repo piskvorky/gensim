@@ -97,12 +97,12 @@ def synchronous(tlockname):
         @wraps(func)
         def _synchronizer(self, *args, **kwargs):
             tlock = getattr(self, tlockname)
-            logger.debug("acquiring lock %r for %s" % (tlockname, func.func_name))
+            logger.debug("acquiring lock %r for %s" % (tlockname, func.__name__))
 
             with tlock: # use lock as a context manager to perform safe acquire/release pairs
-                logger.debug("acquired lock %r for %s" % (tlockname, func.func_name))
+                logger.debug("acquired lock %r for %s" % (tlockname, func.__name__))
                 result = func(self, *args, **kwargs)
-                logger.debug("releasing lock %r for %s" % (tlockname, func.func_name))
+                logger.debug("releasing lock %r for %s" % (tlockname, func.__name__))
                 return result
         return _synchronizer
     return _synched

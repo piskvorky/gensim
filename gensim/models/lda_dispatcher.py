@@ -16,6 +16,7 @@ Example: python -m gensim.models.lda_dispatcher
 
 from __future__ import with_statement
 import os, sys, logging, threading, time
+from six import iteritems, itervalues
 try:
     from Queue import Queue
 except ImportError:
@@ -71,7 +72,7 @@ class Dispatcher(object):
         import Pyro4
         with utils.getNS() as ns:
             self.callback = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher') # = self
-            for name, uri in ns.list(prefix='gensim.lda_worker').iteritems():
+            for name, uri in iteritems(ns.list(prefix='gensim.lda_worker')):
                 try:
                     worker = Pyro4.Proxy(uri)
                     workerid = len(self.workers)
@@ -91,7 +92,7 @@ class Dispatcher(object):
         """
         Return pyro URIs of all registered workers.
         """
-        return [worker._pyroUri for worker in self.workers.itervalues()]
+        return [worker._pyroUri for worker in itervalues(self.workers)]
 
 
     def getjob(self, worker_id):
@@ -117,7 +118,7 @@ class Dispatcher(object):
             time.sleep(0.5) # check every half a second
 
         logger.info("merging states from %i workers" % len(self.workers))
-        workers = self.workers.values()
+        workers = list(self.workers.values())
         result = workers[0].getstate()
         for worker in workers[1:]:
             result.merge(worker.getstate())
@@ -130,7 +131,7 @@ class Dispatcher(object):
         """
         Initialize all workers for a new EM iterations.
         """
-        for workerid, worker in self.workers.iteritems():
+        for workerid, worker in iteritems(self.workers):
             logger.info("resetting worker %s" % workerid)
             worker.reset(state)
             worker.requestjob()
@@ -163,7 +164,7 @@ class Dispatcher(object):
         """
         Terminate all registered workers and then the dispatcher.
         """
-        for workerid, worker in self.workers.iteritems():
+        for workerid, worker in iteritems(self.workers):
             logger.info("terminating worker %s" % workerid)
             worker.exit()
         logger.info("terminating dispatcher")

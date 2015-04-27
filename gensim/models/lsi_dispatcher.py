@@ -16,6 +16,7 @@ Example: python -m gensim.models.lsi_dispatcher
 
 from __future__ import with_statement
 import os, sys, logging, threading, time
+from six import iteritems, itervalues
 try:
     from Queue import Queue
 except ImportError:
@@ -91,7 +92,7 @@ class Dispatcher(object):
         """
         Return pyro URIs of all registered workers.
         """
-        return [worker._pyroUri for worker in self.workers.itervalues()]
+        return [worker._pyroUri for worker in itervalues(self.workers)]
 
 
     def getjob(self, worker_id):
@@ -134,7 +135,7 @@ class Dispatcher(object):
         """
         Initialize all workers for a new decomposition.
         """
-        for workerid, worker in self.workers.iteritems():
+        for workerid, worker in iteritems(self.workers):
             logger.info("resetting worker %s" % workerid)
             worker.reset()
             worker.requestjob()
@@ -167,7 +168,7 @@ class Dispatcher(object):
         """
         Terminate all registered workers and then the dispatcher.
         """
-        for workerid, worker in self.workers.iteritems():
+        for workerid, worker in iteritems(self.workers):
             logger.info("terminating worker %s" % workerid)
             worker.exit()
         logger.info("terminating dispatcher")
