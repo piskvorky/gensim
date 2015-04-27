@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 from gensim.summarization.pagerank_weighted import pagerank_weighted_scipy as _pagerank
 from gensim.summarization.textcleaner import clean_text_by_sentences as _clean_text_by_sentences

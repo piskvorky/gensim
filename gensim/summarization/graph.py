@@ -1,8 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 from abc import ABCMeta, abstractmethod
 
 
-class IGraph:
+class IGraph(object):
     """ Represents the interface or contract that the graph for TextRank
     should implement.
     """
@@ -17,7 +21,6 @@ class IGraph:
         @return: Node list.
         """
         pass
-
 
     @abstractmethod
     def edges(self):
@@ -42,7 +45,6 @@ class IGraph:
         """
         pass
 
-
     @abstractmethod
     def has_node(self, node):
         """
@@ -55,7 +57,6 @@ class IGraph:
         @return: Truth-value for node existence.
         """
         pass
-
 
     @abstractmethod
     def add_node(self, node, attrs=None):
@@ -74,7 +75,6 @@ class IGraph:
         tuples.
         """
         pass
-
 
     @abstractmethod
     def add_edge(self, edge, wt=1, label='', attrs=[]):
@@ -98,7 +98,6 @@ class IGraph:
         """
         pass
 
-
     @abstractmethod
     def has_edge(self, edge):
         """
@@ -112,7 +111,6 @@ class IGraph:
         """
         pass
 
-
     @abstractmethod
     def edge_weight(self, edge):
         """
@@ -125,7 +123,6 @@ class IGraph:
         @return: Edge weight.
         """
         pass
-
 
     @abstractmethod
     def del_node(self, node):
