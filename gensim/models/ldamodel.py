@@ -821,7 +821,17 @@ class LdaModel(interfaces.TransformationABC):
         Large internal arrays may be stored into separate files, with `fname` as prefix.
 
         Note: do not save as a compressed file if you intend to load the file back with `mmap`.
-
+        
+        Note: If you intend to use models across Python 2/3 versions there are a few things to
+        keep in mind:
+        
+        1. The pickled Python dictionaries will not work across Python versions
+        2. The `save` method does not automatically save all NumPy arrays using NumPy, only
+        those ones that exceed `sep_limit` set in `gensim.utils.SaveLoad.save`. The main
+        concern here is the `alpha` array if for instance using `alpha='auto'`.
+        
+        Please refer to the wiki recipes section (https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ#q9-how-do-i-load-a-model-in-python-3-that-was-trained-and-saved-using-python-2)
+        for an example on how to work around these issues.
         """
         if self.state is not None:
             self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
