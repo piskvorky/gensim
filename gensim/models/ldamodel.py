@@ -826,8 +826,8 @@ class LdaModel(interfaces.TransformationABC):
         those ones that exceed `sep_limit` set in `gensim.utils.SaveLoad.save`. The main
         concern here is the `alpha` array if for instance using `alpha='auto'`.
         
-        Please refer to the wiki recipes section (https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ)
-        for examples on how to work around these issues.
+        Please refer to the wiki recipes section (https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ#q9-how-do-i-load-a-model-in-python-3-that-was-trained-and-saved-using-python-2)
+        for an example on how to work around these issues.
         """
         if self.state is not None:
             self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
