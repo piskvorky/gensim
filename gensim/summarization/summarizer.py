@@ -7,16 +7,16 @@ from gensim.summarization.pagerank_weighted import pagerank_weighted as _pageran
 from gensim.summarization.textcleaner import clean_text_by_sentences as _clean_text_by_sentences
 from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
-from gensim.summarization.bm25 import bm25_weights as _bm25_weights
+from gensim.summarization.bm25 import get_bm25_weights as _bm25_weights
 from gensim.corpora import Dictionary
 from scipy.sparse import csr_matrix
 from math import log10 as _log10
 from six.moves import xrange
 
 
-def _set_graph_edge_weights(graph, dictionary):
+def _set_graph_edge_weights(graph):
     documents = graph.nodes()
-    weights = _bm25_weights(documents, dictionary)
+    weights = _bm25_weights(documents)
 
     for i in xrange(len(documents)):
         for j in xrange(len(documents)):
@@ -35,11 +35,10 @@ def _set_graph_edge_weights(graph, dictionary):
                 graph.add_edge(edge_2, weights[j][i])
 
 
-def _build_dictionary_and_corpus(sentences):
+def _build_corpus(sentences):
     split_tokens = [sentence.token.split() for sentence in sentences]
     dictionary = Dictionary(split_tokens)
-    corpus = [dictionary.doc2bow(token) for token in split_tokens]
-    return dictionary, corpus
+    return [dictionary.doc2bow(token) for token in split_tokens]
 
 
 def _get_important_sentences(sentences, corpus, important_docs):
@@ -87,11 +86,11 @@ def _build_hashable_corpus(corpus):
     return [tuple(doc) for doc in corpus]
 
 
-def textrank_from_corpus(corpus, dictionary=None, ratio=0.2):
+def textrank_from_corpus(corpus, ratio=0.2):
     hashable_corpus = _build_hashable_corpus(corpus)
 
     graph = _build_graph(hashable_corpus)
-    _set_graph_edge_weights(graph, dictionary)
+    _set_graph_edge_weights(graph)
     _remove_unreachable_nodes(graph)
 
     pagerank_scores = _pagerank(graph)
@@ -104,9 +103,9 @@ def textrank_from_corpus(corpus, dictionary=None, ratio=0.2):
 def summarize(text, ratio=0.2, words=None, split=False):
     # Gets a list of processed sentences.
     sentences = _clean_text_by_sentences(text)
-    dictionary, corpus = _build_dictionary_and_corpus(sentences)
+    corpus = _build_corpus(sentences)
 
-    most_important_docs = textrank_from_corpus(corpus, dictionary=dictionary, ratio=ratio)
+    most_important_docs = textrank_from_corpus(corpus, ratio=ratio)
 
     # Extracts the most important sentences with the selected criterion.
     extracted_sentences = _extract_important_sentences(sentences, corpus, most_important_docs, words)

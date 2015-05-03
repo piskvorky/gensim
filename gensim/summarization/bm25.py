@@ -1,60 +1,68 @@
 
 import math
-import gensim.corpora
+from six import iteritems
+from six.moves import xrange
+
+
+# BM25 parameters.
+PARAM_K1 = 1.5
+PARAM_B = 0.75
+EPSILON = 0.25
 
 
 class BM25(object):
 
-    def __init__(self, corpus, dictionary):
-        self.D = len(corpus)
-        self.avgdl = sum(map(lambda x: float(len(x)), corpus)) / self.D
-        self.docs = corpus
+    def __init__(self, corpus):
+        self.corpus_size = len(corpus)
+        self.avgdl = sum(map(lambda x: float(len(x)), corpus)) / self.corpus_size
+        self.corpus = corpus
         self.f = []
         self.df = {}
         self.idf = {}
-        self.k1 = 1.5
-        self.b = 0.75
-        self.init()
+        self.initialize()
 
-    def init(self):
-        for doc in self.docs:
-            tmp = {}
-            for word in doc:
-                if not word in tmp:
-                    tmp[word] = 0
-                tmp[word] += 1
-            self.f.append(tmp)
-            for k, v in tmp.items():
-                if k not in self.df:
-                    self.df[k] = 0
-                self.df[k] += 1
-        for k, v in self.df.items():
-            self.idf[k] = math.log(self.D-v+0.5)-math.log(v+0.5)
+    def initialize(self):
+        for document in self.corpus:
+            frequencies = {}
+            for word in document:
+                if word not in frequencies:
+                    frequencies[word] = 0
+                frequencies[word] += 1
+            self.f.append(frequencies)
 
-    def sim(self, doc, index, average_idf):
-        EPSILON = 0.05 * average_idf
+            for word, freq in iteritems(frequencies):
+                if word not in self.df:
+                    self.df[word] = 0
+                self.df[word] += 1
+
+        for word, freq in iteritems(self.df):
+            self.idf[word] = math.log(self.corpus_size-freq+0.5) - math.log(freq+0.5)
+
+    def get_score(self, document, index, average_idf):
         score = 0
-        for word in doc:
+        for word in document:
             if word not in self.f[index]:
                 continue
-            idf = self.idf[word] if self.idf[word] >= 0 else EPSILON
-            score += (idf*self.f[index][word]*(self.k1+1)
-                      / (self.f[index][word]+self.k1*(1-self.b+self.b*self.D
-                                                  / self.avgdl)))
+            idf = self.idf[word] if self.idf[word] >= 0 else EPSILON * average_idf
+            score += (idf*self.f[index][word]*(PARAM_K1+1)
+                      / (self.f[index][word] + PARAM_K1*(1 - PARAM_B+PARAM_B*self.corpus_size / self.avgdl)))
         return score
 
-    def simall(self, doc, average_idf):
+    def get_scores(self, document, average_idf):
         scores = []
-        for index in xrange(self.D):
-            score = self.sim(doc, index, average_idf)
+        for index in xrange(self.corpus_size):
+            score = self.get_score(document, index, average_idf)
             scores.append(score)
         return scores
 
-def bm25_weights(corpus, dictionary):
-    bm25 = BM25(corpus, dictionary)
-    average_idf = sum(map(lambda k: bm25.idf[k] + 0.00 ,bm25.idf.keys())) / len(bm25.idf.keys())
+
+def get_bm25_weights(corpus):
+    bm25 = BM25(corpus)
+    average_idf = sum(map(lambda k: float(bm25.idf[k]), bm25.idf.keys())) / len(bm25.idf.keys())
+
     weights = []
     for doc in corpus:
-        scores = bm25.simall(doc, average_idf)
+        scores = bm25.get_scores(doc, average_idf)
         weights.append(scores)
+
     return weights
