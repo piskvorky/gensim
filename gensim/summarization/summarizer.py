@@ -3,55 +3,36 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-from gensim.summarization.pagerank_weighted import pagerank_weighted_scipy as _pagerank
+from gensim.summarization.pagerank_weighted import pagerank_weighted as _pagerank
 from gensim.summarization.textcleaner import clean_text_by_sentences as _clean_text_by_sentences
 from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
+from gensim.summarization.bm25 import bm25_weights as _bm25_weights
 from gensim.corpora import Dictionary
 from scipy.sparse import csr_matrix
 from math import log10 as _log10
 from six.moves import xrange
 
 
-def _build_sparse_vectors(docs, num_features):
-    vectors = []
-    for doc in docs:
-        freq = [1 for item in doc]
-        id = [item[0] for item in doc]
-        zeros = [0 for i in doc]
-        vector = csr_matrix((freq, (zeros, id)), shape=(1, num_features))
-        vectors.append(vector)
-    return vectors
+def _set_graph_edge_weights(graph, dictionary):
+    documents = graph.nodes()
+    weights = _bm25_weights(documents, dictionary)
 
-
-def _get_doc_length(doc):
-    return sum([item[1] for item in doc])
-
-
-def _get_similarity(doc1, doc2, vec1, vec2):
-    numerator = vec1.dot(vec2.transpose()).toarray()[0][0]
-    length_1 = _get_doc_length(doc1)
-    length_2 = _get_doc_length(doc2)
-
-    denominator = _log10(length_1) + _log10(length_2) if length_1 > 0 and length_2 > 0 else 0
-
-    return numerator / denominator if denominator != 0 else 0
-
-
-def _set_graph_edge_weights(graph, num_features):
-    nodes = graph.nodes()
-    sparse_vectors = _build_sparse_vectors(nodes, num_features)
-
-    for i in xrange(len(nodes)):
-        for j in xrange(len(nodes)):
+    for i in xrange(len(documents)):
+        for j in xrange(len(documents)):
             if i == j:
                 continue
 
-            edge = (nodes[i], nodes[j])
-            if not graph.has_edge(edge):
-                similarity = _get_similarity(nodes[i], nodes[j], sparse_vectors[i], sparse_vectors[j])
-                if similarity != 0:
-                    graph.add_edge(edge, similarity)
+            sentence_1 = documents[i]
+            sentence_2 = documents[j]
+
+            edge_1 = (sentence_1, sentence_2)
+            edge_2 = (sentence_2, sentence_1)
+
+            if not graph.has_edge(edge_1):
+                graph.add_edge(edge_1, weights[i][j])
+            if not graph.has_edge(edge_2):
+                graph.add_edge(edge_2, weights[j][i])
 
 
 def _build_dictionary_and_corpus(sentences):
@@ -106,11 +87,11 @@ def _build_hashable_corpus(corpus):
     return [tuple(doc) for doc in corpus]
 
 
-def textrank_from_corpus(corpus, num_features, ratio=0.2):
+def textrank_from_corpus(corpus, dictionary=None, ratio=0.2):
     hashable_corpus = _build_hashable_corpus(corpus)
 
     graph = _build_graph(hashable_corpus)
-    _set_graph_edge_weights(graph, num_features)
+    _set_graph_edge_weights(graph, dictionary)
     _remove_unreachable_nodes(graph)
 
     pagerank_scores = _pagerank(graph)
@@ -125,7 +106,7 @@ def summarize(text, ratio=0.2, words=None, split=False):
     sentences = _clean_text_by_sentences(text)
     dictionary, corpus = _build_dictionary_and_corpus(sentences)
 
-    most_important_docs = textrank_from_corpus(corpus, len(dictionary.token2id), ratio)
+    most_important_docs = textrank_from_corpus(corpus, dictionary=dictionary, ratio=ratio)
 
     # Extracts the most important sentences with the selected criterion.
     extracted_sentences = _extract_important_sentences(sentences, corpus, most_important_docs, words)

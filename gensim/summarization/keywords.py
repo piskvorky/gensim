@@ -3,7 +3,7 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-from gensim.summarization.pagerank_weighted import pagerank_weighted_scipy as _pagerank
+from gensim.summarization.pagerank_weighted import pagerank_weighted as _pagerank
 from gensim.summarization.textcleaner import clean_text_by_word as _clean_text_by_word
 from gensim.summarization.textcleaner import tokenize_by_word as _tokenize_by_word
 from gensim.summarization.commons import build_graph as _build_graph
