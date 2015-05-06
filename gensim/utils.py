@@ -169,8 +169,9 @@ def copytree_hardlink(source, dest):
 
 def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False, lower=False):
     """
-    Iteratively yield tokens as unicode strings, optionally also lowercasing them
-    and removing accent marks.
+    Iteratively yield tokens as unicode strings, removing accent marks
+    and optionally lowercasing the unidoce string by assigning True 
+    to one of the parameters, lowercase, to_lower, or lower.
 
     Input text may be either unicode or utf8-encoded byte string.
 
@@ -195,7 +196,7 @@ def simple_preprocess(doc, deacc=False, min_len=2, max_len=15):
     """
     Convert a document into a list of tokens.
 
-    This lowercases, tokenizes, stems, normalizes etc. -- the output are final
+    This lowercases, tokenizes, de-accents (optional). -- the output are final
     tokens = unicode strings, that won't be processed any further.
 
     """
