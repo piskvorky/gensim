@@ -124,7 +124,7 @@ class StanfordSentimentCorpus():
         """Return phrase as LabeledSentence that Doc2Vec expects"""
         phrase = self.phrases[phraseno]
         words = phrase.text.split()
-        return LabeledSentence(words, ['PHR_%s' % phrase.id])
+        return LabeledSentence(words, ['_*%s' % phrase.id])
 
 
 # endclass StanfordSentimentCorpus
