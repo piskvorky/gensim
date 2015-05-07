@@ -229,7 +229,7 @@ class TestLdaModel(unittest.TestCase):
         for i in range(5): # restart at most 5 times
             # create the transformation model
             model = ldamodel.LdaModel(id2word=dictionary, num_topics=2, passes=100)
-            model.update(corpus)
+            model.update(self.corpus)
 
             # transform one document
             doc = list(corpus)[0]
@@ -247,9 +247,36 @@ class TestLdaModel(unittest.TestCase):
     def testTopTopics(self):
         # create the transformation model
         model = ldamodel.LdaModel(id2word=dictionary, num_topics=2, passes=100)
-        model.update(corpus)
+        model.update(self.corpus)
 
-        model.top_topics(corpus)
+        model.top_topics(self.corpus)
+
+    def testPasses(self):
+        # long message includes the original error message with a custom one
+        self.longMessage = True
+
+        # construct what we expect when passes aren't involved
+        test_rhots = list()
+        model = ldamodel.LdaModel(id2word=dictionary, chunksize=1, num_topics=2)
+        final_rhot = lambda: pow(model.offset + (1 * model.num_updates) / model.chunksize, -model.decay)
+
+        # generate 5 updates to test rhot on
+        for x in range(5):
+            model.update(self.corpus)
+            test_rhots.append(final_rhot())
+
+        for passes in [1, 5, 10, 50, 100]:
+            model = ldamodel.LdaModel(id2word=dictionary, chunksize=1, num_topics=2, passes=passes)
+            self.assertEqual(final_rhot(), 1.0)
+            # make sure the rhot matches the test after each update
+            for test_rhot in test_rhots:
+                model.update(self.corpus)
+
+                msg = ", ".join(map(str, [passes, model.num_updates, model.state.numdocs]))
+                self.assertAlmostEqual(final_rhot(), test_rhot, msg=msg)
+
+            self.assertEqual(model.state.numdocs, len(corpus) * len(test_rhots))
+            self.assertEqual(model.num_updates, len(corpus) * len(test_rhots))
 
     def testTopicSeeding(self):
         passed = False
@@ -268,7 +295,7 @@ class TestLdaModel(unittest.TestCase):
                 eta[topic, system] *= 10
 
                 model = ldamodel.LdaModel(id2word=dictionary, num_topics=2, passes=200, eta=eta)
-                model.update(corpus)
+                model.update(self.corpus)
 
                 topics = [dict((word, p) for p, word in model.show_topic(j)) for j in range(2)]
 
