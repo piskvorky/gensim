@@ -391,7 +391,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
             for line in topics_file:
                 if not found_options:
-                    if line.startswith('options:'):
+                    if line.startswith(b'options:'):
                         found_options = True
                     continue
 
@@ -517,7 +517,7 @@ def write_corpus_as_vw(corpus, filename):
     corpus_size = 0
     with utils.smart_open(filename, 'wb') as corpus_file:
         for line in corpus_to_vw(corpus):
-            print(line, file=corpus_file)
+            corpus_file.write(line.encode('utf-8') + b'\n')
             corpus_size += 1
 
     return corpus_size
