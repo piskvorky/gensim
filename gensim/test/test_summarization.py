@@ -36,3 +36,17 @@ class TestSummarizationTest(unittest.TestCase):
             summary = f.read()
 
         self.assertEquals(generated_summary, summary)
+
+    def test_summary_from_unrelated_sentences(self):
+        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
+
+        with utils.smart_open(os.path.join(pre_path, "testsummarization_unrelated.txt"), mode="r") as f:
+            text = f.read()
+
+        generated_summary = summarize(text)
+
+        self.assertIsNotNone(generated_summary)
+
+
+
+
