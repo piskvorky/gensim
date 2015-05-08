@@ -42,37 +42,44 @@ try:
 except ImportError:
     from Queue import Queue
 
-from numpy import zeros, random, sum as np_sum, add as np_add, concatenate
+from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, repeat as np_repeat
 
 logger = logging.getLogger(__name__)
 
 from gensim import utils  # utility fnc for pickling, common scipy operations etc
-from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair
+from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_sentence_sg
 
 try:
-    from gensim.models.doc2vec_inner import train_sentence_dbow, train_sentence_dm, FAST_VERSION
+    from gensim.models.doc2vec_inner import train_sentence_dbow, train_sentence_dm, train_sentence_dm_concat, FAST_VERSION
 except:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
 
-    def train_sentence_dbow(model, sentence, lbls, alpha, work=None, train_words=True, train_lbls=True):
+    def train_sentence_dbow(model, sentence, lbls, alpha, work=None, train_words=False, train_lbls=True):
         """
         Update distributed bag of words model by training on a single sentence.
 
         The sentence is a list of Vocab objects (or None, where the corresponding
         word is not in the vocabulary. Called internally from `Doc2Vec.train()`.
 
+        If train_words is True, simultaneously train word-to-word (not just doc-to-word)
+        examples, exactly as per Word2Vec skip-gram training. (Without this option,
+        word vectors are neither consulted nor updated during DBOW doc vector training.)
+
         This is the non-optimized, Python version. If you have cython installed, gensim
         will use the optimized version from doc2vec_inner instead.
 
         """
-        for label in lbls:
-            if label is None:
-                continue  # OOV word in the input sentence => skip
-            for word in sentence:
-                if word is None:
+        if train_words:
+            train_sentence_sg(model, sentence, alpha, work)
+        if train_lbls:
+            for label in lbls:
+                if label is None:
                     continue  # OOV word in the input sentence => skip
-                train_sg_pair(model, word, label, alpha, train_words, train_lbls)
+                for word in sentence:
+                    if word is None:
+                        continue  # OOV word in the input sentence => skip
+                    train_sg_pair(model, word, label, alpha)
 
         return len([word for word in sentence if word is not None])
 
@@ -103,12 +110,12 @@ except:
                 l1 /= (len(word2_indices) + lbl_len)
             neu1e = train_cbow_pair(model, word, word2_indices, l1, alpha, train_words, train_words)
             if train_lbls:
-                model.syn0[lbl_indices] += neu1e
+                model.syn0[lbl_indices] += neu1e * model.syn0locks[lbl_indices]
 
         return len([word for word in sentence if word is not None])
 
 
-def train_sentence_dm_concat(model, sentence, lbls, alpha, work=None, neu1=None, train_words=True, train_lbls=True):
+    def train_sentence_dm_concat(model, sentence, lbls, alpha, work=None, neu1=None, train_words=True, train_lbls=True):
         """
         Update distributed memory model by training on a single sentence.
 
@@ -121,11 +128,11 @@ def train_sentence_dm_concat(model, sentence, lbls, alpha, work=None, neu1=None,
         """
         lbl_indices = [lbl.index for lbl in lbls if lbl is not None]
         if len(lbl_indices) != model.dm_lbl_count:
-            return  # skip doc without expected lbl(s)
+            return 0 # skip doc without expected lbl(s)
 
         null_word = model.vocab['\0']
-        pre_pad_count = int((model.window + 1) / 2)
-        post_pad_count = int(model.window / 2)
+        pre_pad_count = model.window
+        post_pad_count = model.window
         padded_sentence_indices = (
             (pre_pad_count * [null_word.index])  # pre-padding
             + [word.index for word in sentence if word is not None]  # elide out-of-Vocabulary words
@@ -142,6 +149,8 @@ def train_sentence_dm_concat(model, sentence, lbls, alpha, work=None, neu1=None,
             l1 = model.syn0[l1_indices].ravel()  # numpy advanced-indexing: copy; flatten to 1d
             neu1e = train_cbow_pair(model, word, None, l1, alpha, True, False)
 
+            neu1e = neu1e * np_repeat(model.syn0locks[l1_indices], model.vector_size)  # respect any locks
+
             if not train_lbls:
                 # trim lbl indices/errors
                 l1_indices = l1_indices[len(lbl_indices):] 
@@ -157,7 +166,7 @@ def train_sentence_dm_concat(model, sentence, lbls, alpha, work=None, neu1=None,
         return len(padded_sentence_indices) - pre_pad_count - post_pad_count
 
 
-def infer_vector_dbow(model, document, alpha=0.025, min_alpha=0.0001, steps=50):
+def infer_vector_dbow(model, document, alpha=0.1, min_alpha=0.0001, steps=5):
     """
     Infer a vector for given post-bulk training document, in the 'dbow' model.
 
@@ -182,7 +191,7 @@ def infer_vector_dbow(model, document, alpha=0.025, min_alpha=0.0001, steps=50):
     return vector
 
 
-def infer_vector_dm(model, document, alpha=0.025, min_alpha=0.0001, steps=50):
+def infer_vector_dm(model, document, alpha=0.1, min_alpha=0.0001, steps=5):
     """
     Infer a vector representation for the given post-training document, in the 'dm' model.
 
@@ -216,7 +225,7 @@ def infer_vector_dm(model, document, alpha=0.025, min_alpha=0.0001, steps=50):
     return vector
 
 
-def infer_vector_dm_concat(model, document, alpha=0.025, min_alpha=0.0001, steps=50):
+def infer_vector_dm_concat(model, document, alpha=0.1, min_alpha=0.0001, steps=5):
     """
     Infer a vector representation for the given post-training document, in the 'dm_concat' model.
 
@@ -231,8 +240,8 @@ def infer_vector_dm_concat(model, document, alpha=0.025, min_alpha=0.0001, steps
     sentence = next(model._prepare_sentences([LabeledSentence(document, [])]))[0]
 
     null_word = model.vocab['\0']
-    pre_pad_count = int((model.window + 1) / 2)
-    post_pad_count = int(model.window / 2)
+    pre_pad_count = model.window
+    post_pad_count = model.window
     padded_sentence_indices = (
         (pre_pad_count * [null_word.index])  # pre-padding
         + [word.index for word in sentence if word is not None]  # elide out-of-Vocabulary words
@@ -281,7 +290,7 @@ class Doc2Vec(Word2Vec):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
     def __init__(self, sentences=None, size=300, alpha=0.025, window=8, min_count=5,
                  sample=0, seed=1, workers=1, min_alpha=0.0001, dm=1, hs=1, negative=0,
-                 dm_mean=0, dm_concat=0, dm_lbl_count=1, train_words=True, train_lbls=True, **kwargs):
+                 dbow_words=0, dm_mean=0, dm_concat=0, dm_lbl_count=1, **kwargs):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         LabeledSentence object that will be used for training.
@@ -292,8 +301,8 @@ class Doc2Vec(Word2Vec):
         If you don't supply `sentences`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
 
-        `dm` defines the training algorithm. By default (`dm=1`), distributed memory is used.
-        Otherwise, `dbow` is employed.
+        `dm` defines the training algorithm. By default (`dm=1`), 'distributed memory' (PV-DM) is used.
+        Otherwise, `distributed bag of words` (PV-DBOW) is employed.
 
         `size` is the dimensionality of the feature vectors.
 
@@ -301,7 +310,8 @@ class Doc2Vec(Word2Vec):
 
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
 
-        `seed` = for the random number generator.
+        `seed` = for the random number generator. Only runs with a single worker will be
+        deterministically reproducible because of the ordering randomness in multi-threaded runs.
 
         `min_count` = ignore all words with total frequency lower than this.
 
@@ -316,21 +326,25 @@ class Doc2Vec(Word2Vec):
         specifies how many "noise words" should be drawn (usually between 5-20).
 
         `dm_mean` = if 0 (default), use the sum of the context word vectors. If 1, use the mean.
-        Only applies when dm is used.
+        Only applies when dm is used in non-concatenative mode.
 
         `dm_concat` = if 1, use concatenation of context vectors rather than sum/average;
-        default is 0 (off).
+        default is 0 (off). Note concatenation results in a much-larger model, as the input
+        is no longer the size of one (sampled or arithmatically combined) word vector, but the
+        size of the label(s) and all words in the context strung together.
 
         `dm_lbl_count` = expected constant number of sentence lbls per sentence, when using
         dm_concat mode; default is 1.
+
+        `dbow_words` if set to 1 trains word-vectors (in skip-gram fashion) simultaneous with DBOW
+        doc-vector training; default is 0 (faster training of doc-vectors only.
 
         """
         Word2Vec.__init__(self, size=size, alpha=alpha, window=window, min_count=min_count,
                           sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
                           sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean, 
                           null_word=dm_concat, **kwargs)
-        self.train_words = train_words
-        self.train_lbls = train_lbls
+        self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_lbl_count = dm_lbl_count
         if sentences is not None:
@@ -340,7 +354,7 @@ class Doc2Vec(Word2Vec):
     def reset_weights(self):
         if self.dm_concat:
             # expand l1 size to match concatenated lbls+words length
-            self.layer1_size = (self.dm_lbl_count + self.window) * self.vector_size
+            self.layer1_size = (self.dm_lbl_count + (2 * self.window)) * self.vector_size
             logger.info("using concatenative %d-dimensional layer1"% (self.layer1_size))
         Word2Vec.reset_weights(self)
 
@@ -379,11 +393,11 @@ class Doc2Vec(Word2Vec):
 
     def _get_job_words(self, alpha, work, job, neu1):
         if self.sg:
-            return sum(train_sentence_dbow(self, sentence, lbls, alpha, work, self.train_words, self.train_lbls) for sentence, lbls in job)
+            return sum(train_sentence_dbow(self, sentence, lbls, alpha, work, self.dbow_words, True) for sentence, lbls in job)
         elif self.dm_concat:
-            return sum(train_sentence_dm_concat(self, sentence, lbls, alpha, work, neu1, self.train_words, self.train_lbls) for sentence, lbls in job)
+            return sum(train_sentence_dm_concat(self, sentence, lbls, alpha, work, neu1, True, True) for sentence, lbls in job)
         else:
-            return sum(train_sentence_dm(self, sentence, lbls, alpha, work, neu1, self.train_words, self.train_lbls) for sentence, lbls in job)
+            return sum(train_sentence_dm(self, sentence, lbls, alpha, work, neu1, True, True) for sentence, lbls in job)
 
     def infer_vector(self, document, alpha=0.025, min_alpha=0.0001, steps=50):
         """
