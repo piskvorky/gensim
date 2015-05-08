@@ -26,6 +26,22 @@ def _build_sparse_vectors(docs, num_features):
     return vectors
 
 
+def _create_valid_graph(graph):
+    nodes = graph.nodes()
+
+    for i in xrange(len(nodes)):
+        for j in xrange(len(nodes)):
+            if i == j:
+                continue
+
+            edge = (nodes[i], nodes[j])
+
+            if graph.has_edge(edge):
+                continue
+
+            graph.add_edge(edge, 1)
+
+
 def _get_doc_length(doc):
     return sum([item[1] for item in doc])
 
@@ -50,10 +66,17 @@ def _set_graph_edge_weights(graph, num_features):
                 continue
 
             edge = (nodes[i], nodes[j])
-            if not graph.has_edge(edge):
-                similarity = _get_similarity(nodes[i], nodes[j], sparse_vectors[i], sparse_vectors[j])
-                if similarity != 0:
-                    graph.add_edge(edge, similarity)
+            if graph.has_edge(edge):
+                continue
+
+            similarity = _get_similarity(nodes[i], nodes[j], sparse_vectors[i], sparse_vectors[j])
+            if similarity != 0:
+                graph.add_edge(edge, similarity)
+
+    # Handles the case in which all similarities are zero.
+    # The resultant summary will consist of random sentences.
+    if len(graph.edges()) == 0:
+        _create_valid_graph(graph)
 
 
 def _build_dictionary_and_corpus(sentences):
