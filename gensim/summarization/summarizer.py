@@ -135,7 +135,7 @@ def textrank_from_corpus(corpus, num_features, ratio=0.2):
     hashable_corpus = _build_hasheable_corpus(corpus)
 
     if len(corpus) < INPUT_MIN_LENGTH:
-        raise RuntimeError("Input corpus must have at least", INPUT_MIN_LENGTH, "documents")
+        raise RuntimeError("Input corpus must have at least " + str(INPUT_MIN_LENGTH) + " documents.")
 
     graph = _build_graph(hashable_corpus)
     _set_graph_edge_weights(graph, num_features)
@@ -153,7 +153,7 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
     sentences = _clean_text_by_sentences(text)
 
     if len(sentences) < INPUT_MIN_LENGTH:
-        raise RuntimeError("Input text must have at least", INPUT_MIN_LENGTH, "sentences")
+        raise RuntimeError("Input text must have at least " + str(INPUT_MIN_LENGTH) + " sentences.")
 
     dictionary, corpus = _build_dictionary_and_corpus(sentences)
 

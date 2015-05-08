@@ -18,21 +18,18 @@ import unittest
 from gensim import utils
 from gensim.summarization import summarize
 
-TEXT_FILENAME = "mihalcea_tarau.txt"
-SUMMARY_FILENAME = "mihalcea_tarau.summ.txt"
-
 
 class TestSummarizationTest(unittest.TestCase):
 
     def test_summarization(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
-        with utils.smart_open(os.path.join(pre_path, TEXT_FILENAME), mode="r") as f:
+        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
             text = f.read()
 
         generated_summary = summarize(text)
 
-        with utils.smart_open(os.path.join(pre_path, SUMMARY_FILENAME), mode="r") as f:
+        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.summ.txt"), mode="r") as f:
             summary = f.read()
 
         self.assertEquals(generated_summary, summary)
@@ -47,6 +44,14 @@ class TestSummarizationTest(unittest.TestCase):
 
         self.assertIsNotNone(generated_summary)
 
+    def test_raises_exception_on_short_input_text(self):
+        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
+        with utils.smart_open(os.path.join(pre_path, "testsummarization_unrelated.txt"), mode="r") as f:
+            text = f.read()
 
+        # Keeps the first 8 sentences to make the text shorter.
+        text = "\n".join(text.split('\n')[:8])
 
+        with self.assertRaises(RuntimeError):
+            summarize(text)
