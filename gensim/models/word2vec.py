@@ -81,7 +81,7 @@ except ImportError:
 
 from numpy import exp, dot, zeros, outer, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod
+    ndarray, empty, sum as np_sum, prod, ones, repeat as np_repeat
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -151,8 +151,10 @@ except ImportError:
 def train_sg_pair(model, word, word2, alpha, learn_hidden=True, learn_vectors=True):
     if isinstance(word2, Vocab):
         l1 = model.syn0[word2.index]
+        lock_factor = model.syn0locks[word2.index]
     else:
         l1 = word2  # passed-in candidate vector
+        lock_factor = 1.0
     neu1e = zeros(l1.shape)
 
     if model.hs:
@@ -178,7 +180,7 @@ def train_sg_pair(model, word, word2, alpha, learn_hidden=True, learn_vectors=Tr
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
     if learn_vectors:
-        l1 += neu1e  # learn input -> hidden (changes model.syn0[word2.index], if that is l1)
+        l1 += neu1e * lock_factor  # learn input -> hidden (changes model.syn0[word2.index], if that is l1)
     return neu1e
 
 
@@ -207,7 +209,9 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_hidden=Tru
             model.syn1neg[word_indices] += outer(gb, l1) # learn hidden -> output
         neu1e += dot(gb, l2b) # save error
     if learn_vectors:
-        model.syn0[input_word_indices] += neu1e # learn input -> hidden, here for all words in the window separately
+        # learn input -> hidden, here for all words in the window separately
+        l = len(input_word_indices)
+        model.syn0[input_word_indices] += np_repeat(neu1e,l).reshape(l,model.vector_size) * model.syn0locks[input_word_indices][:,None] 
     return neu1e
 
 
@@ -325,7 +329,7 @@ class Word2Vec(utils.SaveLoad):
 
         # compute sum of all power (Z in paper)
         train_words_pow = float(sum([self.vocab[word].count**power for word in self.vocab]))
-        # go through the whole table and fill it up with the word indexes proportional to a word's count**power
+        # go through the whole table and fill it up with the word indices proportional to a word's count**power
         widx = 0
         # normalize count^0.75 by Z
         d1 = self.vocab[self.index2word[widx]].count**power / train_words_pow
@@ -536,6 +540,8 @@ class Word2Vec(utils.SaveLoad):
             self.syn1neg = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
         self.syn0norm = None
 
+        self.syn0locks = ones(len(self.vocab), dtype=REAL)  # zeros suppress training vectors
+
     def seeded_vector(self, seed_string):
         """Create one 'random' vector (but deterministic by seed_string)"""
         # Note: Python's built in hash function can vary across versions of Python
@@ -634,6 +640,51 @@ class Word2Vec(utils.SaveLoad):
         logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
         result.init_sims(norm_only)
         return result
+
+    def merge_word2vec_format(self, fname, binary=False):
+        """
+        Merge the input-hidden weight matrix from the original C word2vec-tool format,
+        where it overlaps with the current vocabulary.
+
+        `binary` is a boolean indicating whether the data is in binary word2vec format.
+        """
+        counts = None
+        overlap_count = 0
+        logger.info("loading projection weights from %s" % (fname))
+        with utils.smart_open(fname) as fin:
+            header = utils.to_unicode(fin.readline())
+            vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
+            if not vector_size == self.vector_size:
+                logger.error("incompatible vector sizes")
+                # TOCONSIDER: maybe truncation/smaller vectors still useful enough to merge?
+                return # TODO raise ValueError()?
+            if binary:
+                binary_len = dtype(REAL).itemsize * vector_size
+                for line_no in xrange(vocab_size):
+                    # mixed text and binary: read text first, then binary
+                    word = []
+                    while True:
+                        ch = fin.read(1)
+                        if ch == b' ':
+                            break
+                        if ch != b'\n':  # ignore newlines in front of words (some binary files have newline, some don't)
+                            word.append(ch)
+                    word = utils.to_unicode(b''.join(word))
+                    weights = fromstring(fin.read(binary_len), dtype=REAL)
+                    if word in self.vocab:
+                        overlap_count += 1
+                        self.syn0[self.vocab[word].index] = weights
+                        self.syn0locks[self.vocab[word].index] = 0.0 # lock it
+            else:
+                for line_no, line in enumerate(fin):
+                    parts = utils.to_unicode(line).split()
+                    if len(parts) != vector_size + 1:
+                        raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
+                    word, weights = parts[0], list(map(REAL, parts[1:]))
+                    if word in self.vocab:
+                        overlap_count += 1
+                        self.syn0[self.vocab[word].index] = weights
+        logger.info("merged %d vectors into  %s matrix from %s" % (overlap_count, self.syn0.shape, fname))
 
 
     def most_similar(self, positive=[], negative=[], topn=10):
