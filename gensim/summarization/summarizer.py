@@ -38,7 +38,7 @@ def _set_graph_edge_weights(graph):
 
     # Handles the case in which all similarities are zero.
     # The resultant summary will consist of random sentences.
-    if len(graph.edges()) == 0:
+    if all(graph.edge_weight(edge) == 0 for edge in graph.edges()):
         _create_valid_graph(graph)
 
 
@@ -53,7 +53,7 @@ def _create_valid_graph(graph):
             edge = (nodes[i], nodes[j])
 
             if graph.has_edge(edge):
-                continue
+                graph.del_edge(edge)
 
             graph.add_edge(edge, 1)
 
