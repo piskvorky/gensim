@@ -9,6 +9,7 @@
 
 import cython
 import numpy as np
+from numpy import zeros, float32 as REAL
 cimport numpy as np
 
 from libc.math cimport exp
@@ -80,37 +81,37 @@ cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, con
 
 cdef void fast_sentence_dbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
-    REAL_t *syn0, REAL_t *syn1, const int size,
-    const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work, int train_hidden, int train_inputs,
-    REAL_t *syn0locks) nogil:
+    REAL_t *context_vectors, REAL_t *syn1, const int size,
+    const np.uint32_t context_index, const REAL_t alpha, REAL_t *work, int learn_context, int learn_hidden, 
+    REAL_t *context_locks) nogil:
 
     cdef long long a, b
-    cdef long long row1 = word2_index * size, row2
+    cdef long long row1 = context_index * size, row2
     cdef REAL_t f, g
 
     memset(work, 0, size * cython.sizeof(REAL_t))
     for b in range(codelen):
         row2 = word_point[b] * size
-        f = our_dot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
+        f = our_dot(&size, &context_vectors[row1], &ONE, &syn1[row2], &ONE)
         if f <= -MAX_EXP or f >= MAX_EXP:
             continue
         f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (1 - word_code[b] - f) * alpha
         our_saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
-        if train_hidden:
-            our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1[row2], &ONE)
-    if train_inputs:
-        our_saxpy(&size, &syn0locks[word2_index], work, &ONE, &syn0[row1], &ONE)
+        if learn_hidden:
+            our_saxpy(&size, &g, &context_vectors[row1], &ONE, &syn1[row2], &ONE)
+    if learn_context:
+        our_saxpy(&size, &context_locks[context_index], work, &ONE, &context_vectors[row1], &ONE)
 
 
 cdef unsigned long long fast_sentence_dbow_neg(
     const int negative, np.uint32_t *table, unsigned long long table_len,
-    REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
-    const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
-    unsigned long long next_random, int train_hidden, int train_inputs, REAL_t *syn0locks) nogil:
+    REAL_t *context_vectors, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
+    const np.uint32_t context_index, const REAL_t alpha, REAL_t *work,
+    unsigned long long next_random, int learn_context, int learn_hidden, REAL_t *context_locks) nogil:
 
     cdef long long a
-    cdef long long row1 = word2_index * size, row2
+    cdef long long row1 = context_index * size, row2
     cdef unsigned long long modulo = 281474976710655ULL
     cdef REAL_t f, g, label
     cdef np.uint32_t target_index
@@ -128,37 +129,33 @@ cdef unsigned long long fast_sentence_dbow_neg(
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
-
         row2 = target_index * size
-        f = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
+        f = our_dot(&size, &context_vectors[row1], &ONE, &syn1neg[row2], &ONE)
         if f <= -MAX_EXP or f >= MAX_EXP:
             continue
         f = EXP_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (label - f) * alpha
         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
-        if train_hidden:
-            our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
-    if train_inputs:
-        our_saxpy(&size, &syn0locks[word2_index], work, &ONE, &syn0[row1], &ONE)
+        if learn_hidden:
+            our_saxpy(&size, &g, &context_vectors[row1], &ONE, &syn1neg[row2], &ONE)
+    if learn_context:
+        our_saxpy(&size, &context_locks[context_index], work, &ONE, &context_vectors[row1], &ONE)
 
     return next_random
 
 
 cdef void fast_sentence_dm_hs(
-    const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN], 
-    int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
-    const np.uint32_t indexes[MAX_SENTENCE_LEN], const np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], 
-    const REAL_t alpha, REAL_t *work, int i, int j, int k, int lbl_length, int learn_hidden,
-    int learn_lbls, int learn_words, REAL_t *syn0locks) nogil:
+    const np.uint32_t *word_point, const np.uint8_t *word_code, int word_code_len,
+    REAL_t *neu1, REAL_t *syn1, const REAL_t alpha, REAL_t *work,
+    const int size, int learn_hidden) nogil:
 
-    cdef long long a, b
+    cdef long long b
     cdef long long row2
-    cdef REAL_t f, g, count, inv_count
-    cdef int m
+    cdef REAL_t f, g
 
     # l1 already composed by caller, passed in as neu1
-    memset(work, 0, size * cython.sizeof(REAL_t))  # work accumulates net l1 error
-    for b in range(codelens[i]):
+    # work (also passed in)  will accumulate l1 error
+    for b in range(word_code_len):
         row2 = word_point[b] * size
         f = our_dot(&size, neu1, &ONE, &syn1[row2], &ONE)
         if f <= -MAX_EXP or f >= MAX_EXP:
@@ -168,45 +165,29 @@ cdef void fast_sentence_dm_hs(
         our_saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
         if learn_hidden:
             our_saxpy(&size, &g, neu1, &ONE, &syn1[row2], &ONE)
-    if learn_words:
-        for m in range(j, k):
-            if m == i or codelens[m] == 0:
-                continue
-            else:
-                our_saxpy(&size, &syn0locks[indexes[m]], work, &ONE, &syn0[indexes[m] * size], &ONE)
-    if learn_lbls:
-        for m in range(lbl_length):
-            if lbl_codelens[m] == 0:
-                continue
-            else:
-                our_saxpy(&size, &syn0locks[lbl_indexes[m]], work, &ONE, &syn0[lbl_indexes[m]*size], &ONE)
 
 
 cdef unsigned long long fast_sentence_dm_neg(
-    const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN], 
-    int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
-    np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k, unsigned long long next_random, int lbl_length, int learn_hidden, int learn_lbls,
-    int learn_words, REAL_t *syn0locks) nogil:
+    const int negative, np.uint32_t *table, unsigned long long table_len, unsigned long long next_random,
+    REAL_t *neu1, REAL_t *syn1neg, const int predict_word_index, const REAL_t alpha, REAL_t *work,
+    const int size, int learn_hidden) nogil:
 
-    cdef long long a
     cdef long long row2
     cdef unsigned long long modulo = 281474976710655ULL
-    cdef REAL_t f, g, count, inv_count, label
-    cdef np.uint32_t target_index, word_index
-    cdef int d, m
+    cdef REAL_t f, g, label
+    cdef np.uint32_t target_index
+    cdef int d
 
     # l1 already composed by caller, passed in as neu1
-    memset(work, 0, size * cython.sizeof(REAL_t))  # work accumulates net l1 error
-    word_index = indexes[i]
+    # work (also passsed in) will accumulate l1 error for outside application
     for d in range(negative+1):
         if d == 0:
-            target_index = word_index
+            target_index = predict_word_index
             label = ONEF
         else:
             target_index = table[(next_random >> 16) % table_len]
             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
-            if target_index == word_index:
+            if target_index == predict_word_index:
                 continue
             label = <REAL_t>0.0
 
@@ -219,27 +200,13 @@ cdef unsigned long long fast_sentence_dm_neg(
         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         if learn_hidden:
             our_saxpy(&size, &g, neu1, &ONE, &syn1neg[row2], &ONE)
-    if learn_words:
-        for m in range(j,k):
-            if m == i or codelens[m] == 0:
-                continue
-            else:
-                our_saxpy(&size, &syn0locks[indexes[m]], work, &ONE, &syn0[indexes[m]*size], &ONE)
-    if learn_lbls:
-        for m in range(lbl_length):
-            if lbl_codelens[m] == 0:
-                continue
-            else:
-                our_saxpy(&size, &syn0locks[lbl_indexes[m]], work, &ONE, &syn0[lbl_indexes[m]*size], &ONE)
 
     return next_random
 
 cdef void fast_sentence_dmc_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int word_code_len,
-    REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int layer1_size, const int vector_size,
-    const np.uint32_t window_indexes[MAX_SENTENCE_LEN],
-    const REAL_t alpha, REAL_t *work, const int lbl_length, const int window,
-    int learn_hidden, int learn_lbls, int learn_words, REAL_t *syn0locks) nogil:
+    REAL_t *neu1, REAL_t *syn1, const REAL_t alpha, REAL_t *work, 
+    const int layer1_size, const int vector_size, int learn_hidden) nogil:
 
     cdef long long a, b
     cdef long long row2
@@ -247,7 +214,7 @@ cdef void fast_sentence_dmc_hs(
     cdef int m
 
     # l1 already composed by caller, passed in as neu1
-    memset(work, 0, layer1_size * cython.sizeof(REAL_t))  # work accumulates net l1 error
+    # work accumulates net l1 error; eventually applied by caller
     for b in range(word_code_len):
         row2 = word_point[b] * layer1_size
         f = our_dot(&layer1_size, neu1, &ONE, &syn1[row2], &ONE)
@@ -258,23 +225,12 @@ cdef void fast_sentence_dmc_hs(
         our_saxpy(&layer1_size, &g, &syn1[row2], &ONE, work, &ONE)
         if learn_hidden:
             our_saxpy(&layer1_size, &g, neu1, &ONE, &syn1[row2], &ONE)
-    if learn_lbls:
-        for m in range(lbl_length):
-            our_saxpy(&vector_size, &syn0locks[window_indexes[m]], &work[m * vector_size], &ONE,
-                      &syn0[window_indexes[m] * vector_size], &ONE)
-    if learn_words:
-        for m in range(lbl_length, lbl_length + (2 * window)):
-            our_saxpy(&vector_size, &syn0locks[window_indexes[m]], &work[m*vector_size], &ONE,
-                      &syn0[window_indexes[m] * vector_size], &ONE)
 
 
 cdef unsigned long long fast_sentence_dmc_neg(
-    const int negative, np.uint32_t *table, unsigned long long table_len,
-    REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int layer1_size, const int vector_size,
-    np.uint32_t window_indexes[MAX_SENTENCE_LEN],
-    const REAL_t alpha, REAL_t *work, const int predict_word_index,
-    const int lbl_length, const int window, unsigned long long next_random,
-    int learn_hidden, int learn_lbls, int learn_words, REAL_t *syn0locks) nogil:
+    const int negative, np.uint32_t *table, unsigned long long table_len, unsigned long long next_random,
+    REAL_t *neu1, REAL_t *syn1neg, const int predict_word_index, const REAL_t alpha, REAL_t *work, 
+    const int layer1_size, const int vector_size, int learn_hidden) nogil:
 
     cdef long long a
     cdef long long row2
@@ -284,7 +240,7 @@ cdef unsigned long long fast_sentence_dmc_neg(
     cdef int d, m
 
     # l1 already composed by caller, passed in as neu1
-    memset(work, 0, layer1_size * cython.sizeof(REAL_t))  # work accumulates net l1 error
+    # work accumulates net l1 error; eventually applied by caller    
     for d in range(negative+1):
         if d == 0:
             target_index = predict_word_index
@@ -305,36 +261,34 @@ cdef unsigned long long fast_sentence_dmc_neg(
         our_saxpy(&layer1_size, &g, &syn1neg[row2], &ONE, work, &ONE)
         if learn_hidden:
             our_saxpy(&layer1_size, &g, neu1, &ONE, &syn1neg[row2], &ONE)
-    if learn_lbls:
-        for m in range(lbl_length):
-            our_saxpy(&vector_size, &syn0locks[window_indexes[m]], &work[m * vector_size], &ONE,
-                      &syn0[window_indexes[m] * vector_size], &ONE)
-    if learn_words:
-        for m in range(lbl_length, lbl_length + (2 * window)):
-            our_saxpy(&vector_size, &syn0locks[window_indexes[m]], &work[m*vector_size], &ONE,
-                      &syn0[window_indexes[m] * vector_size], &ONE)
 
     return next_random
 
 
-def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_lbls):
+def train_sentence_dbow(model, word_vocabs, doclbl_vocabs, alpha, work=None,
+                        train_words=False, learn_doclbls=True, learn_words=True, learn_hidden=True,
+                        word_vectors=None, word_locks=None, doclbl_vectors=None, doclbl_locks=None):
     cdef int hs = model.hs
     cdef int negative = model.negative
-    cdef int tw = train_words
-    cdef int tl = train_lbls
+    cdef int _train_words = train_words
+    cdef int _learn_words = learn_words
+    cdef int _learn_hidden = learn_hidden
+    cdef int _learn_doclbls = learn_doclbls
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
-    cdef REAL_t *work
+    cdef REAL_t *_word_vectors
+    cdef REAL_t *_doclbl_vectors
+    cdef REAL_t *_word_locks
+    cdef REAL_t *_doclbl_locks
+    cdef REAL_t *_work
     cdef REAL_t _alpha = alpha
     cdef int size = model.layer1_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
-    cdef int lbl_codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t lbl_indexes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t doclbl_indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
     cdef int sentence_len
-    cdef int lbl_length
+    cdef int doclbl_len
     cdef int window = model.window
 
     cdef int i, j
@@ -351,8 +305,21 @@ def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_
     cdef unsigned long long table_len
     cdef unsigned long long next_random
 
-    # lock some of syn0 against training
-    cdef REAL_t *syn0locks
+    if word_vectors is None:
+       word_vectors = model.syn0
+    _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
+
+    if doclbl_vectors is None:
+       doclbl_vectors = model.syn0
+    _doclbl_vectors = <REAL_t *>(np.PyArray_DATA(doclbl_vectors))
+
+    if word_locks is None:
+       word_locks = model.syn0locks
+    _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
+
+    if doclbl_locks is None:
+       doclbl_locks = model.syn0locks
+    _doclbl_locks = <REAL_t *>(np.PyArray_DATA(doclbl_locks))
 
     if hs:
         syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
@@ -364,44 +331,37 @@ def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_
         next_random = (2**24) * np.random.randint(0, 2**24) + np.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
-    work = <REAL_t *>np.PyArray_DATA(_work)
-    sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
-    lbl_length = <int>min(MAX_SENTENCE_LEN, len(lbls))
-
-    syn0locks = <REAL_t *>np.PyArray_DATA(model.syn0locks)
+    if work is None:
+       work = zeros(model.layer1_size, dtype=REAL)
+    _work = <REAL_t *>np.PyArray_DATA(work)
+    sentence_len = <int>min(MAX_SENTENCE_LEN, len(word_vocabs))
+    doclbl_len = <int>min(MAX_SENTENCE_LEN, len(doclbl_vocabs))
 
     for i in range(sentence_len):
-        word = sentence[i]
-        if word is None:
+        predict_word = word_vocabs[i]
+        if predict_word is None:
             codelens[i] = 0
         else:
-            indexes[i] = word.index
+            indexes[i] = predict_word.index
             reduced_windows[i] = np.random.randint(window)
             if hs:
-                codelens[i] = <int>len(word.code)
-                codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+                codelens[i] = <int>len(predict_word.code)
+                codes[i] = <np.uint8_t *>np.PyArray_DATA(predict_word.code)
+                points[i] = <np.uint32_t *>np.PyArray_DATA(predict_word.point)
             else:
                 codelens[i] = 1
             result += 1
-    for i in range(lbl_length):
-        word = lbls[i]
-        if word is None:
-            lbl_codelens[i] = 0
-        else:
-            lbl_indexes[i] = word.index
-            if hs:
-                lbl_codelens[i] = <int>len(word.code)
-            else:
-                lbl_codelens[i] = 1
-            result += 1
+    for i in range(doclbl_len):
+        context_token = doclbl_vocabs[i]
+        doclbl_indexes[i] = context_token.index
+        result += 1
 
     # release GIL & train on the sentence
     with nogil:
         for i in range(sentence_len):
             if codelens[i] == 0:
                 continue
-            if tw:  # simultaneous skip-gram wordvec-training
+            if _train_words:  # simultaneous skip-gram wordvec-training
                 j = i - window + reduced_windows[i]
                 if j < 0:
                     j = 0
@@ -413,51 +373,53 @@ def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_
                         continue
                     if hs:
                         # we reuse the DBOW function, as it is equivalent to skip-gram for this purpose
-                        fast_sentence_dbow_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j],
-                                              _alpha, work, 1, 1, syn0locks)
+                        fast_sentence_dbow_hs(points[i], codes[i], codelens[i], _word_vectors, syn1, size, indexes[j],
+                                              _alpha, _work, _learn_words, _learn_hidden, _word_locks)
                     if negative:
                         # we reuse the DBOW function, as it is equivalent to skip-gram for this purpose
-                        next_random = fast_sentence_dbow_neg(negative, table, table_len, syn0, syn1neg, size,
-                                                             indexes[i], indexes[j], _alpha, work, next_random,
-                                                             1, 1, syn0locks)
+                        next_random = fast_sentence_dbow_neg(negative, table, table_len, _word_vectors, syn1neg, size,
+                                                             indexes[i], indexes[j], _alpha, _work, next_random,
+                                                             _learn_words, _learn_hidden, _word_locks)
 
-            if tl:  # docvec-training
-                for j in range(lbl_length):
-                    if lbl_codelens[j] == 0:
-                        continue
-                    if hs:
-                        fast_sentence_dbow_hs(points[i], codes[i], codelens[i], syn0, syn1, size, lbl_indexes[j],
-                                              _alpha, work, 1, 1, syn0locks)
-                    if negative:
-                        next_random = fast_sentence_dbow_neg(negative, table, table_len, syn0, syn1neg, size,
-                                                             indexes[i], lbl_indexes[j], _alpha, work, next_random,
-                                                             1, 1, syn0locks)
+            # docvec-training
+            for j in range(doclbl_len):
+                if hs:
+                    fast_sentence_dbow_hs(points[i], codes[i], codelens[i], _doclbl_vectors, syn1, size, doclbl_indexes[j],
+                                          _alpha, _work, _learn_doclbls, _learn_hidden, _doclbl_locks)
+                if negative:
+                    next_random = fast_sentence_dbow_neg(negative, table, table_len, _doclbl_vectors, syn1neg, size,
+                                                             indexes[i], doclbl_indexes[j], _alpha, _work, next_random,
+                                                             _learn_doclbls, _learn_hidden, _doclbl_locks)
 
     return result
 
 
-def train_sentence_dm(model, sentence, lbls, alpha, _work, _neu1, _train_words, _train_lbls):
+def train_sentence_dm(model, word_vocabs, doclbl_vocabs, alpha, work=None, neu1=None,
+                      learn_doclbls=True, learn_words=True, learn_hidden=True,
+                      word_vectors=None, word_locks=None, doclbl_vectors=None, doclbl_locks=None):
     cdef int hs = model.hs
     cdef int negative = model.negative
-    cdef int learn_words = _train_words
-    cdef int learn_lbls = _train_lbls
-    cdef int learn_hidden = True
+    cdef int _learn_doclbls = learn_doclbls
+    cdef int _learn_words = learn_words
+    cdef int _learn_hidden = learn_hidden
     cdef int cbow_mean = model.cbow_mean
     cdef REAL_t count, inv_count
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
-    cdef REAL_t *work
-    cdef REAL_t *neu1
+    cdef REAL_t *_word_vectors
+    cdef REAL_t *_doclbl_vectors
+    cdef REAL_t *_word_locks
+    cdef REAL_t *_doclbl_locks
+    cdef REAL_t *_work
+    cdef REAL_t *_neu1
     cdef REAL_t _alpha = alpha
     cdef int size = model.layer1_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
-    cdef int lbl_codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t lbl_indexes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t doclbl_indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
     cdef int sentence_len
-    cdef int lbl_length
+    cdef int doclbl_len
     cdef int window = model.window
 
     cdef int i, j, k, m
@@ -467,14 +429,26 @@ def train_sentence_dm(model, sentence, lbls, alpha, _work, _neu1, _train_words, 
     cdef REAL_t *syn1
     cdef np.uint32_t *points[MAX_SENTENCE_LEN]
     cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t *lbl_points[MAX_SENTENCE_LEN]
-    cdef np.uint8_t *lbl_codes[MAX_SENTENCE_LEN]
 
     # For negative sampling
     cdef REAL_t *syn1neg
     cdef np.uint32_t *table
     cdef unsigned long long table_len
     cdef unsigned long long next_random
+
+    # default vectors, locks from syn0
+    if word_vectors is None:
+       word_vectors = model.syn0
+    _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
+    if doclbl_vectors is None:
+       doclbl_vectors = model.syn0
+    _doclbl_vectors = <REAL_t *>(np.PyArray_DATA(doclbl_vectors))
+    if word_locks is None:
+       word_locks = model.syn0locks
+    _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
+    if doclbl_locks is None:
+       doclbl_locks = model.syn0locks
+    _doclbl_locks = <REAL_t *>(np.PyArray_DATA(doclbl_locks))
 
     if hs:
         syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
@@ -486,46 +460,46 @@ def train_sentence_dm(model, sentence, lbls, alpha, _work, _neu1, _train_words, 
         next_random = (2**24)*np.random.randint(0,2**24) + np.random.randint(0,2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
-    work = <REAL_t *>np.PyArray_DATA(_work)
-    neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
-    sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
+    if work is None:
+       work = zeros(model.layer1_size, dtype=REAL)
+    _work = <REAL_t *>np.PyArray_DATA(work)
+    if neu1 is None:
+       neu1 = zeros(model.layer1_size, dtype=REAL)
+    _neu1 = <REAL_t *>np.PyArray_DATA(neu1)
 
-    syn0locks = <REAL_t *>np.PyArray_DATA(model.syn0locks)
-
+    sentence_len = <int>min(MAX_SENTENCE_LEN, len(word_vocabs))
+    j = 0
     for i in range(sentence_len):
-        word = sentence[i]
+        word = word_vocabs[i]
         if word is None:
-            codelens[i] = 0
+            # shrink sentence to leave out word
+            sentence_len = sentence_len - 1
+            continue  # leaving j unchanged
         else:
-            indexes[i] = word.index
-            reduced_windows[i] = np.random.randint(window)
+            indexes[j] = word.index
+            reduced_windows[j] = np.random.randint(window)
             if hs:
-                codelens[i] = <int>len(word.code)
-                codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
-            else:
-                codelens[i] = 1
+                codelens[j] = <int>len(word.code)
+                codes[j] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                points[j] = <np.uint32_t *>np.PyArray_DATA(word.point)
             result += 1
+            j = j + 1
 
-    lbl_length = <int>min(MAX_SENTENCE_LEN, len(lbls))
-    for i in range(lbl_length):
-        word = lbls[i]
-        if word is None:
-            lbl_codelens[i] = 0
+    doclbl_len = <int>min(MAX_SENTENCE_LEN, len(doclbl_vocabs))
+    j = 0
+    for i in range(doclbl_len):
+        token = doclbl_vocabs[i]
+        if token is None:
+           doclbl_len = doclbl_len - 1
+           continue  # leaving j unchanged
         else:
-            lbl_indexes[i] = word.index
-            reduced_windows[i] = np.random.randint(window)
-            if hs:
-                lbl_codelens[i] = <int>len(word.code)
-            else:
-                lbl_codelens[i] = 1
+            doclbl_indexes[j] = token.index
             result += 1
+            j = j + 1
 
     # release GIL & train on the sentence
     with nogil:
         for i in range(sentence_len):
-            if codelens[i] == 0:
-                continue
             j = i - window + reduced_windows[i]
             if j < 0:
                 j = 0
@@ -533,59 +507,75 @@ def train_sentence_dm(model, sentence, lbls, alpha, _work, _neu1, _train_words, 
             if k > sentence_len:
                 k = sentence_len
 
-            # compose l1 (in neu1)
-            memset(neu1, 0, size * cython.sizeof(REAL_t))
+            # compose l1 (in _neu1) & clear _work
+            memset(_neu1, 0, size * cython.sizeof(REAL_t))
             count = <REAL_t>0.0
             for m in range(j, k):
-                if m == i or codelens[m] == 0:
+                if m == i:
                     continue
                 else:
                     count += ONEF
-                    our_saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
-            for m in range(lbl_length):
-                if lbl_codelens[m] == 0:
-                    continue
-                else:
-                    count += ONEF
-                    our_saxpy(&size, &ONEF, &syn0[lbl_indexes[m] * size], &ONE, neu1, &ONE)
+                    our_saxpy(&size, &ONEF, &_word_vectors[indexes[m] * size], &ONE, _neu1, &ONE)
+            for m in range(doclbl_len):
+                count += ONEF
+                our_saxpy(&size, &ONEF, &_doclbl_vectors[doclbl_indexes[m] * size], &ONE, _neu1, &ONE)
             if cbow_mean and count > (<REAL_t>0.5):
                 inv_count = ONEF/count
-                sscal(&size, &inv_count, neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
-
+                sscal(&size, &inv_count, _neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
+            memset(_work, 0, size * cython.sizeof(REAL_t))  # work to accumulate l1 error
+            
             if hs:
-                fast_sentence_dm_hs(points[i], codes[i], codelens, lbl_codelens, neu1, syn0, syn1,
-                                    size, indexes, lbl_indexes, _alpha, work, i, j, k, lbl_length,
-                                    learn_hidden, learn_lbls, learn_words, syn0locks)
+                fast_sentence_dm_hs(points[i], codes[i], codelens[i],
+                                    _neu1, syn1, _alpha, _work,
+                                    size, _learn_hidden)
             if negative:
-                next_random = fast_sentence_dm_neg(negative, table, table_len, codelens, lbl_codelens, neu1, syn0,
-                                                   syn1neg, size, indexes, lbl_indexes, _alpha, work, i, j, k,
-                                                   next_random, lbl_length, learn_hidden, learn_lbls, learn_words, syn0locks)
+                next_random = fast_sentence_dm_neg(negative, table, table_len, next_random,
+                                                   _neu1, syn1neg, indexes[i], _alpha, _work,
+                                                   size, _learn_hidden)
+            
+            # apply accumulated error in work
+            if _learn_doclbls:
+                for m in range(doclbl_len):
+                    our_saxpy(&size, &_doclbl_locks[doclbl_indexes[m]], _work,
+                              &ONE, &_doclbl_vectors[doclbl_indexes[m] * size], &ONE)
+            if _learn_words:
+                for m in range(j, k):
+                    if m == i:
+                        continue
+                    else:
+                         our_saxpy(&size, &_word_locks[indexes[m]], _work, &ONE,
+                                   &_word_vectors[indexes[m] * size], &ONE)
 
     return result
 
 
-def train_sentence_dm_concat(model, sentence, lbls, alpha, _work, _neu1, _learn_words, _learn_lbls):
+def train_sentence_dm_concat(model, word_vocabs, doclbl_vocabs, alpha, work=None, neu1=None,
+                             learn_doclbls=True, learn_words=True, learn_hidden=True,
+                             word_vectors=None, word_locks=None, doclbl_vectors=None, doclbl_locks=None):
     cdef int hs = model.hs
     cdef int negative = model.negative
-    cdef int learn_hidden = True
-    cdef int learn_lbls = _learn_lbls
-    cdef int learn_words = _learn_words
+    cdef int _learn_doclbls = learn_doclbls
+    cdef int _learn_words = learn_words
+    cdef int _learn_hidden = learn_hidden
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
-    cdef REAL_t *work
-    cdef REAL_t *neu1
+    cdef REAL_t *_word_vectors
+    cdef REAL_t *_doclbl_vectors
+    cdef REAL_t *_word_locks
+    cdef REAL_t *_doclbl_locks
+    cdef REAL_t *_work
+    cdef REAL_t *_neu1
     cdef REAL_t _alpha = alpha
     cdef int layer1_size = model.layer1_size
     cdef int vector_size = model.vector_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
-    cdef int lbl_codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t window_indexes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t doclbl_indexes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t window_indexes[MAX_SENTENCE_LEN] 
     cdef int sentence_len
-    cdef int lbl_length
+    cdef int doclbl_len
     cdef int window = model.window
-    cdef int expected_lbl_length = model.dm_lbl_count
+    cdef int expected_doclbl_len = model.dm_lbl_count
 
     cdef int i, j, k, m, n
     cdef long result = 0
@@ -595,8 +585,6 @@ def train_sentence_dm_concat(model, sentence, lbls, alpha, _work, _neu1, _learn_
     cdef REAL_t *syn1
     cdef np.uint32_t *points[MAX_SENTENCE_LEN]
     cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t *lbl_points[MAX_SENTENCE_LEN]
-    cdef np.uint8_t *lbl_codes[MAX_SENTENCE_LEN]
 
     # For negative sampling
     cdef REAL_t *syn1neg
@@ -604,9 +592,23 @@ def train_sentence_dm_concat(model, sentence, lbls, alpha, _work, _neu1, _learn_
     cdef unsigned long long table_len
     cdef unsigned long long next_random
 
-    lbl_length = <int>min(MAX_SENTENCE_LEN, len(lbls))
-    if lbl_length != expected_lbl_length:
+    doclbl_len = <int>min(MAX_SENTENCE_LEN, len(doclbl_vocabs))
+    if doclbl_len != expected_doclbl_len:
         return 0  # skip doc without expected nmber of lbls
+
+    # default vectors, locks from syn0
+    if word_vectors is None:
+       word_vectors = model.syn0
+    _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
+    if doclbl_vectors is None:
+       doclbl_vectors = model.syn0
+    _doclbl_vectors = <REAL_t *>(np.PyArray_DATA(doclbl_vectors))
+    if word_locks is None:
+       word_locks = model.syn0locks
+    _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
+    if doclbl_locks is None:
+       doclbl_locks = model.syn0locks
+    _doclbl_locks = <REAL_t *>(np.PyArray_DATA(doclbl_locks))
 
     if hs:
         syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
@@ -618,16 +620,17 @@ def train_sentence_dm_concat(model, sentence, lbls, alpha, _work, _neu1, _learn_
         next_random = (2**24)*np.random.randint(0,2**24) + np.random.randint(0,2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
-    work = <REAL_t *>np.PyArray_DATA(_work)
-    neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
+    if work is None:
+       work = zeros(model.layer1_size, dtype=REAL)
+    _work = <REAL_t *>np.PyArray_DATA(work)
+    if neu1 is None:
+       neu1 = zeros(model.layer1_size, dtype=REAL)
+    _neu1 = <REAL_t *>np.PyArray_DATA(neu1)
 
-    # optional locking of some vactors against backprop-learnind
-    syn0locks = <REAL_t *>np.PyArray_DATA(model.syn0locks)
-
-    sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
+    sentence_len = <int>min(MAX_SENTENCE_LEN, len(word_vocabs))
     j = 0
     for i in range(sentence_len):
-        word = sentence[i]
+        word = word_vocabs[i]
         if word is None:
             # shrink sentence to leave out word
             sentence_len = sentence_len - 1
@@ -643,13 +646,13 @@ def train_sentence_dm_concat(model, sentence, lbls, alpha, _work, _neu1, _learn_
             result += 1
             j = j + 1
 
-    for i in range(lbl_length):
-        word = lbls[i]
-        if word is None:
-            # no support for missing lbls where expected; skip sentence
+    for i in range(doclbl_len):
+        token = doclbl_vocabs[i]
+        if token is None:
+            # no current support for missing doclbls where expected; skip sentence
             return 0
         else:
-            window_indexes[i] = word.index
+            doclbl_indexes[i] = token.index
             result += 1
 
     # release GIL & train on the sentence
@@ -659,8 +662,13 @@ def train_sentence_dm_concat(model, sentence, lbls, alpha, _work, _neu1, _learn_
             k = i + window + 1  # past sentence end OK: will pad with null word
 
             # compose l1 & clear work
-            n = lbl_length
+            for m in range(doclbl_len):
+                # doc vector(s)
+                memcpy(&_neu1[m * vector_size], &_doclbl_vectors[doclbl_indexes[m] * vector_size],
+                       vector_size * cython.sizeof(REAL_t))
+            n = 0
             for m in range(j, k):
+                # word vectors in window
                 if m == i:
                     continue
                 if m < 0 or m >= sentence_len:
@@ -668,20 +676,28 @@ def train_sentence_dm_concat(model, sentence, lbls, alpha, _work, _neu1, _learn_
                 else:
                     window_indexes[n] = indexes[m]
                 n = n + 1
-            for m in range(lbl_length + (2 * window)):
-                memcpy(&neu1[m * vector_size], &syn0[window_indexes[m] * vector_size], vector_size * cython.sizeof(REAL_t))
-            memset(work, 0, layer1_size * cython.sizeof(REAL_t))
+            for m in range(2 * window):
+                memcpy(&_neu1[(doclbl_len + m) * vector_size], &_word_vectors[window_indexes[m] * vector_size],
+                       vector_size * cython.sizeof(REAL_t))
+            memset(_work, 0, layer1_size * cython.sizeof(REAL_t))  # work to accumulate l1 error
 
             if hs:
-                fast_sentence_dmc_hs(points[i], codes[i], codelens[i], neu1, syn0, syn1,
-                                     layer1_size, vector_size, window_indexes, _alpha,
-                                     work, lbl_length, window,
-                                     learn_hidden, learn_lbls, learn_words, syn0locks)
+                fast_sentence_dmc_hs(points[i], codes[i], codelens[i],
+                                     _neu1, syn1, _alpha, _work,
+                                     layer1_size, vector_size, _learn_hidden)
             if negative:
-                next_random = fast_sentence_dmc_neg(negative, table, table_len, neu1, syn0, syn1neg,
-                                                   layer1_size, vector_size, window_indexes, _alpha,
-                                                   work, indexes[i], lbl_length, window,
-                                                   next_random, learn_hidden, learn_lbls, learn_words, syn0locks)
+                next_random = fast_sentence_dmc_neg(negative, table, table_len, next_random,
+                                                    _neu1, syn1neg, indexes[i], _alpha, _work, 
+                                                   layer1_size, vector_size, _learn_hidden)
+
+            if _learn_doclbls:
+                for m in range(doclbl_len):
+                    our_saxpy(&vector_size, &_doclbl_locks[doclbl_indexes[m]], &_work[m * vector_size],
+                              &ONE, &_doclbl_vectors[doclbl_indexes[m] * vector_size], &ONE)
+            if _learn_words:
+                for m in range(2 * window):
+                    our_saxpy(&vector_size, &_word_locks[window_indexes[m]], &_work[(doclbl_len + m) * vector_size],
+                              &ONE, &_word_vectors[window_indexes[m] * vector_size], &ONE)
 
     return result
 
