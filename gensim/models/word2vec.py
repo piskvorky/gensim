@@ -148,30 +148,33 @@ except ImportError:
         return len([word for word in sentence if word is not None])
 
 
-def train_sg_pair(model, word, word2, alpha, learn_hidden=True, learn_vectors=True):
-    if isinstance(word2, Vocab):
-        l1 = model.syn0[word2.index]
-        lock_factor = model.syn0locks[word2.index]
-    else:
-        l1 = word2  # passed-in candidate vector
-        lock_factor = 1.0
+def train_sg_pair(model, predict_word, context_token, alpha, learn_vectors=True, learn_hidden=True,
+                  context_vectors=None, context_locks=None):
+    if context_vectors is None:
+        context_vectors = model.syn0
+    if context_locks is None:
+        context_locks = model.syn0locks
+
+    l1 = context_vectors[context_token.index]
+    lock_factor = context_locks[context_token.index]
+
     neu1e = zeros(l1.shape)
 
     if model.hs:
         # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
-        l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
+        l2a = deepcopy(model.syn1[predict_word.point])  # 2d matrix, codelen x layer1_size
         fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  # propagate hidden -> output
-        ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
+        ga = (1 - predict_word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
-            model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
+            model.syn1[predict_word.point] += outer(ga, l1)  # learn hidden -> output
         neu1e += dot(ga, l2a)  # save error
 
     if model.negative:
         # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
-        word_indices = [word.index]
+        word_indices = [predict_word.index]
         while len(word_indices) < model.negative + 1:
             w = model.table[random.randint(model.table.shape[0])]
-            if w != word.index:
+            if w != predict_word.index:
                 word_indices.append(w)
         l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
         fb = 1. / (1. + exp(-dot(l1, l2b.T)))  # propagate hidden -> output
@@ -180,11 +183,11 @@ def train_sg_pair(model, word, word2, alpha, learn_hidden=True, learn_vectors=Tr
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
     if learn_vectors:
-        l1 += neu1e * lock_factor  # learn input -> hidden (changes model.syn0[word2.index], if that is l1)
+        l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.syn0[word2.index], if that is l1)
     return neu1e
 
 
-def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_hidden=True, learn_vectors=True):
+def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
     neu1e = zeros(l1.shape)
 
     if model.hs:
