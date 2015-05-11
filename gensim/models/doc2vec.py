@@ -135,7 +135,7 @@ class LabeledSentence(object):
 
         """
         if isinstance(labels, string_types):
-          self.labels = (labels,)
+          labels = (labels,)
         self.words = words
         self.labels = labels
 
