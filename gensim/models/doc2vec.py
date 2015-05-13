@@ -37,6 +37,8 @@ The model can also be instantiated from an existing file on disk in the word2vec
 import logging
 import os
 
+from six import string_types
+
 try:
     from queue import Queue
 except ImportError:
@@ -127,10 +129,13 @@ class LabeledSentence(object):
     """
     def __init__(self, words, labels):
         """
-        `words` is a list of tokens (unicode strings), `labels` a
-        list of text labels associated with this text.
+        `words` is a list of tokens (unicode strings), 
+        `labels` a list of text labels associated with this text,
+        or a single string label.
 
         """
+        if isinstance(labels, string_types):
+          labels = (labels,)
         self.words = words
         self.labels = labels
 
