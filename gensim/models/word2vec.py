@@ -81,7 +81,7 @@ except ImportError:
 
 from numpy import exp, dot, zeros, outer, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, inf, argmax
+    ndarray, empty, sum as np_sum, prod, inf, argmax, log, tanh
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -854,17 +854,23 @@ class Word2Vec(utils.SaveLoad):
                 syn0norm[i] = self.syn0norm[old_w2i[word]]
             self.syn0norm = syn0norm
 
-        if self.hs:
-            syn1 = empty(self.syn1.shape, dtype=REAL)
+        try:
+            self.syn1
+            syn1 = numpy.empty(self.syn1.shape, dtype=REAL)
             for i, word in enumerate(i2w):
                 syn1[i] = self.syn1[old_w2i[word]]
             self.syn1 = syn1
+        except AttributeError:
+            pass
 
-        if self.negative:
-            syn1neg = empty(self.syn1neg.shape, dtype=REAL)
+        try:
+            self.syn1neg
+            syn1neg = numpy.empty(self.syn1neg.shape, dtype=REAL)
             for i, word in enumerate(i2w):
                 syn1neg[i] = self.syn1neg[old_w2i[word]]
             self.syn1neg = syn1neg
+        except AttributeError:
+            pass
 
         self.index2word = i2w
 
