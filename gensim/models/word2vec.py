@@ -1021,9 +1021,12 @@ class Word2Vec(utils.SaveLoad):
             'incorrect': sum(s['incorrect'] for s in sections),
         }
 
-        logger.info("%s: %.1f%% (%i/%i)" %
-            ('total', 100 * float(total['correct']) / (total['correct'] + total['incorrect']),
-            total['correct'], (total['correct'] + total['incorrect'])))
+        if total['correct'] + total['incorrect']:
+            logger.info("%s: %.1f%% (%i/%i)" %
+                ('total', 100 * float(total['correct']) / (total['correct'] + total['incorrect']),
+                total['correct'], (total['correct'] + total['incorrect'])))
+        else:
+            logger.info("No valid questions")
 
         sections.append(total)
         return sections
