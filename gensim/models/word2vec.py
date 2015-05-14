@@ -843,12 +843,16 @@ class Word2Vec(utils.SaveLoad):
             old_w2i[word] = self.vocab[word].index
             self.vocab[word].index = i
 
+        replaced = self.syn0 is self.syn0norm
+
         syn0 = empty(self.syn0.shape, dtype=REAL)
         for i, word in enumerate(i2w):
             syn0[i] = self.syn0[old_w2i[word]]
         self.syn0 = syn0
 
-        if self.syn0norm is not None:
+        if replaced:
+            self.syn0norm = self.syn0
+        elif self.syn0norm is not None:
             syn0norm = empty(self.syn0norm.shape, dtype=REAL)
             for i, word in enumerate(i2w):
                 syn0norm[i] = self.syn0norm[old_w2i[word]]
