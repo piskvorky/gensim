@@ -81,7 +81,7 @@ except ImportError:
 
 from numpy import exp, dot, zeros, outer, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, inf, argmax, log, tanh
+    ndarray, empty, sum as np_sum, prod, inf, argmax, tanh
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -880,7 +880,7 @@ class Word2Vec(utils.SaveLoad):
 
         self.indexed_by_count = True
 
-    def accuracy(self, questions, restrict_vocab=30000, batchsize=200, non_lin=None):
+    def accuracy(self, questions, restrict_vocab=30000, batchsize=2000, non_lin=None):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
@@ -896,7 +896,7 @@ class Word2Vec(utils.SaveLoad):
 
         `non_lin` is a function applied after computing the cosine similarities.
         Use `None` for the usual additive combination.
-        Use `'log'` for the 3CosMul objective proposed in [4]_.
+        Use `'mul'` for the 3CosMul objective proposed in [4]_.
         Use `'tanh'` for (possibly) marginally better results.
         You may also define any Python function with one real input and output.
 
@@ -970,19 +970,15 @@ class Word2Vec(utils.SaveLoad):
 
                     sims = dot(vecs, restrict_syn0norm)
 
-                elif non_lin == 'log':
+                elif non_lin == 'mul':
                     """
-                    Equivalent to 3cosmul
-                    No need to divide by 2
-                    For usual vectors trained with Word2Vec, the odds that two vectors have cosine
-                    similarity -1 are extremely small. If ever that happens, you may define a
-                    custom non-linearity.
+                    3CosMul (no need to divide by 2)
                     """
-                    sim_a = log(dot(self.syn0norm[batch_a], restrict_syn0norm) + 1.)
-                    sim_b = log(dot(self.syn0norm[batch_b], restrict_syn0norm) + 1.)
-                    sim_c = log(dot(self.syn0norm[batch_c], restrict_syn0norm) + 1.)
+                    sim_a = dot(self.syn0norm[batch_a], restrict_syn0norm) + 1.
+                    sim_b = dot(self.syn0norm[batch_b], restrict_syn0norm) + 1.
+                    sim_c = dot(self.syn0norm[batch_c], restrict_syn0norm) + 1.002
 
-                    sims = sim_b + sim_c - sim_a
+                    sims = sim_b * sim_c / sim_a
 
                 elif non_lin == 'tanh':
                     sim_a = tanh(dot(self.syn0norm[batch_a], restrict_syn0norm))
