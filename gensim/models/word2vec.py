@@ -856,7 +856,7 @@ class Word2Vec(utils.SaveLoad):
 
         try:
             self.syn1
-            syn1 = numpy.empty(self.syn1.shape, dtype=REAL)
+            syn1 = empty(self.syn1.shape, dtype=REAL)
             for i, word in enumerate(i2w):
                 syn1[i] = self.syn1[old_w2i[word]]
             self.syn1 = syn1
@@ -865,7 +865,7 @@ class Word2Vec(utils.SaveLoad):
 
         try:
             self.syn1neg
-            syn1neg = numpy.empty(self.syn1neg.shape, dtype=REAL)
+            syn1neg = empty(self.syn1neg.shape, dtype=REAL)
             for i, word in enumerate(i2w):
                 syn1neg[i] = self.syn1neg[old_w2i[word]]
             self.syn1neg = syn1neg
