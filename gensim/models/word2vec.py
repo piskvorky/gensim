@@ -154,7 +154,7 @@ def train_sg_pair(model, predict_word, context_token, alpha, learn_vectors=True,
     if context_vectors is None:
         context_vectors = model.syn0
     if context_locks is None:
-        context_locks = model.syn0locks
+        context_locks = model.syn0_lockf
 
     l1 = context_vectors[context_token.index]
     lock_factor = context_locks[context_token.index]
@@ -215,7 +215,7 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
     if learn_vectors:
         # learn input -> hidden, here for all words in the window separately
         l = len(input_word_indices)
-        model.syn0[input_word_indices] += np_repeat(neu1e,l).reshape(l,model.vector_size) * model.syn0locks[input_word_indices][:,None] 
+        model.syn0[input_word_indices] += np_repeat(neu1e,l).reshape(l,model.vector_size) * model.syn0_lockf[input_word_indices][:,None] 
     return neu1e
 
 
@@ -423,8 +423,7 @@ class Word2Vec(utils.SaveLoad):
         self.reset_weights()
         sys.stderr.flush()
 
-    @staticmethod
-    def _vocab_from(sentences):
+    def _vocab_from(self, sentences):
         sentence_no, vocab = -1, {}
         total_words = 0
         for sentence_no, sentence in enumerate(sentences):
@@ -544,7 +543,7 @@ class Word2Vec(utils.SaveLoad):
             self.syn1neg = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
         self.syn0norm = None
 
-        self.syn0locks = ones(len(self.vocab), dtype=REAL)  # zeros suppress training vectors
+        self.syn0_lockf = ones(len(self.vocab), dtype=REAL)  # zeros suppress learning
 
     def seeded_vector(self, seed_string):
         """Create one 'random' vector (but deterministic by seed_string)"""
@@ -680,7 +679,7 @@ class Word2Vec(utils.SaveLoad):
                     if word in self.vocab:
                         overlap_count += 1
                         self.syn0[self.vocab[word].index] = weights
-                        self.syn0locks[self.vocab[word].index] = 0.0 # lock it
+                        self.syn0_lockf[self.vocab[word].index] = 0.0 # lock it
             else:
                 for line_no, line in enumerate(fin):
                     parts = utils.to_unicode(line).split()

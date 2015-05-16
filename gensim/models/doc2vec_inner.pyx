@@ -305,20 +305,18 @@ def train_sentence_dbow(model, word_vocabs, doclbl_vocabs, alpha, work=None,
     cdef unsigned long long table_len
     cdef unsigned long long next_random
 
+    # default vectors, locks from syn0/doclbl_syn0
     if word_vectors is None:
        word_vectors = model.syn0
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
-
     if doclbl_vectors is None:
-       doclbl_vectors = model.syn0
+       doclbl_vectors = model.doclbl_syn0
     _doclbl_vectors = <REAL_t *>(np.PyArray_DATA(doclbl_vectors))
-
     if word_locks is None:
-       word_locks = model.syn0locks
+       word_locks = model.syn0_lockf
     _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
-
     if doclbl_locks is None:
-       doclbl_locks = model.syn0locks
+       doclbl_locks = model.doclbl_syn0_lockf
     _doclbl_locks = <REAL_t *>(np.PyArray_DATA(doclbl_locks))
 
     if hs:
@@ -439,18 +437,18 @@ def train_sentence_dm(model, word_vocabs, doclbl_vocabs, alpha, work=None, neu1=
     cdef unsigned long long table_len
     cdef unsigned long long next_random
 
-    # default vectors, locks from syn0
+    # default vectors, locks from syn0/doclbl_syn0
     if word_vectors is None:
        word_vectors = model.syn0
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doclbl_vectors is None:
-       doclbl_vectors = model.syn0
+       doclbl_vectors = model.doclbl_syn0
     _doclbl_vectors = <REAL_t *>(np.PyArray_DATA(doclbl_vectors))
     if word_locks is None:
-       word_locks = model.syn0locks
+       word_locks = model.syn0_lockf
     _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
     if doclbl_locks is None:
-       doclbl_locks = model.syn0locks
+       doclbl_locks = model.doclbl_syn0_lockf
     _doclbl_locks = <REAL_t *>(np.PyArray_DATA(doclbl_locks))
 
     if hs:
@@ -604,18 +602,18 @@ def train_sentence_dm_concat(model, word_vocabs, doclbl_vocabs, alpha, work=None
     if doclbl_len != expected_doclbl_len:
         return 0  # skip doc without expected nmber of lbls
 
-    # default vectors, locks from syn0
+    # default vectors, locks from syn0/doclbl_syn0
     if word_vectors is None:
        word_vectors = model.syn0
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
     if doclbl_vectors is None:
-       doclbl_vectors = model.syn0
+       doclbl_vectors = model.doclbl_syn0
     _doclbl_vectors = <REAL_t *>(np.PyArray_DATA(doclbl_vectors))
     if word_locks is None:
-       word_locks = model.syn0locks
+       word_locks = model.syn0_lockf
     _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
     if doclbl_locks is None:
-       doclbl_locks = model.syn0locks
+       doclbl_locks = model.doclbl_syn0_lockf
     _doclbl_locks = <REAL_t *>(np.PyArray_DATA(doclbl_locks))
 
     if hs:
