@@ -455,14 +455,6 @@ class Word2Vec(utils.SaveLoad):
         else:
             return sum(train_sentence_cbow(self, sentence, alpha, work, neu1) for sentence in job)
 
-    def pretrain(self):
-#        if FAST_VERSION < 0:
-            self.neg_labels = []
-            if self.negative > 0:
-                # precompute negative labels optimization for pure-python training
-                self.neg_labels = zeros(self.negative + 1)
-                self.neg_labels[0] = 1.
-
     def train(self, sentences, total_words=None, word_count=0, chunksize=100):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
@@ -472,8 +464,12 @@ class Word2Vec(utils.SaveLoad):
         if FAST_VERSION < 0:
             import warnings
             warnings.warn("C extension compilation failed, training will be slow. Install a C compiler and reinstall gensim for fast training.")
+            self.neg_labels = []
+            if self.negative > 0:
+                # precompute negative labels optimization for pure-python training
+                self.neg_labels = zeros(self.negative + 1)
+                self.neg_labels[0] = 1.
 
-        self.pretrain()
         logger.info("training model with %i workers on %i vocabulary and %i features, "
             "using 'skipgram'=%s 'hierarchical softmax'=%s 'subsample'=%s and 'negative sampling'=%s" %
             (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative))
