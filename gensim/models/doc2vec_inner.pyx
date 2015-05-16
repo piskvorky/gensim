@@ -406,7 +406,7 @@ def train_sentence_dm(model, word_vocabs, doclbl_vocabs, alpha, work=None, neu1=
     cdef int _learn_words = learn_words
     cdef int _learn_hidden = learn_hidden
     cdef int cbow_mean = model.cbow_mean
-    cdef REAL_t count, inv_count
+    cdef REAL_t count, inv_count = 1.0
 
     cdef REAL_t *_word_vectors
     cdef REAL_t *_doclbl_vectors
@@ -524,8 +524,9 @@ def train_sentence_dm(model, word_vocabs, doclbl_vocabs, alpha, work=None, neu1=
             for m in range(doclbl_len):
                 count += ONEF
                 our_saxpy(&size, &ONEF, &_doclbl_vectors[doclbl_indexes[m] * size], &ONE, _neu1, &ONE)
-            if cbow_mean and count > (<REAL_t>0.5):
+            if count > (<REAL_t>0.5):
                 inv_count = ONEF/count
+            if cbow_mean:
                 sscal(&size, &inv_count, _neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
             memset(_work, 0, size * cython.sizeof(REAL_t))  # work to accumulate l1 error
             
@@ -537,7 +538,9 @@ def train_sentence_dm(model, word_vocabs, doclbl_vocabs, alpha, work=None, neu1=
                 next_random = fast_sentence_dm_neg(negative, table, table_len, next_random,
                                                    _neu1, syn1neg, indexes[i], _alpha, _work,
                                                    size, _learn_hidden)
-            
+
+            if not cbow_mean:
+                sscal(&size, &inv_count, _work, &ONE)  # (does this need BLAS-variants like saxpy?)
             # apply accumulated error in work
             if _learn_doclbls:
                 for m in range(doclbl_len):

@@ -130,6 +130,8 @@ except:
             if word2_indices and model.cbow_mean:
                 l1 /= (len(word2_indices) + doclbl_len)
             neu1e = train_cbow_pair(model, word, word2_indices, l1, alpha, learn_vectors=False, learn_hidden=True)
+            if word2_indices and not model.cbow_mean:
+                neu1e /= (len(word2_indices) + doclbl_len)
             if learn_doclbls:
                 doclbl_vectors[doclbl_indices] += \
                     neu1e * np_repeat(doclbl_locks[doclbl_indices],model.vector_size).reshape(-1,model.vector_size)
