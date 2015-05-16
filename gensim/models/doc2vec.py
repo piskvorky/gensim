@@ -42,6 +42,8 @@ try:
 except ImportError:
     from Queue import Queue
 
+from collections import namedtuple
+
 from numpy import zeros, random, sum as np_sum, add as np_add, concatenate,\
     repeat as np_repeat, array, float32 as REAL, empty, ones
 
@@ -49,6 +51,7 @@ logger = logging.getLogger(__name__)
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_sentence_sg
+from six.moves import xrange
 
 try:
     from gensim.models.doc2vec_inner import train_sentence_dbow, train_sentence_dm, train_sentence_dm_concat,\
@@ -78,8 +81,13 @@ except:
         will use the optimized version from doc2vec_inner instead.
 
         """
+        if doclbl_vectors is None:
+            doclbl_vectors = model.doclbl_syn0
+        if doclbl_locks is None:
+            doclbl_locks = model.doclbl_syn0_lockf
+
         if train_words and learn_words:
-            train_sentence_sg(model, word_vocabs, alpha, work)
+            train_sentence_sg(model, word_vocabs, alpha, work)  # TODO: adapt for word_vectors/word_locks
         for doclbl in doclbl_vocabs:
             if doclbl is None:
                 continue  # OOV token => skip
@@ -108,11 +116,11 @@ except:
         if word_vectors is None:
             word_vectors = model.syn0
         if word_locks is None:
-            word_locks = model.syn0locks
+            word_locks = model.syn0_lockf
         if doclbl_vectors is None:
-            doclbl_vectors = model.syn0
+            doclbl_vectors = model.doclbl_syn0
         if doclbl_locks is None:
-            doclbl_locks = model.syn0locks
+            doclbl_locks = model.doclbl_syn0_lockf
 
         doclbl_indices = [doclbl.index for doclbl in doclbl_vocabs if doclbl is not None]
         doclbl_sum = np_sum(doclbl_vectors[doclbl_indices], axis=0)
@@ -158,11 +166,11 @@ except:
         if word_vectors is None:
             word_vectors = model.syn0
         if word_locks is None:
-            word_locks = model.syn0locks
+            word_locks = model.syn0_lockf
         if doclbl_vectors is None:
-            doclbl_vectors = model.syn0
+            doclbl_vectors = model.doclbl_syn0
         if doclbl_locks is None:
-            doclbl_locks = model.syn0locks
+            doclbl_locks = model.doclbl_syn0_lockf
 
         doclbl_indices = [doclbl.index for doclbl in doclbl_vocabs if doclbl is not None]
         doclbl_len = len(doclbl_indices)
@@ -219,6 +227,13 @@ class LabeledSentence(object):
 
     def __str__(self):
         return '%s(%s, %s)' % (self.__class__.__name__, self.words, self.labels)
+
+class Doclbl(namedtuple('Doclbl', 'index, word_count, doc_count')):
+    """A document label discovered during the initial vocabulary
+    scan. (The document-vector equivalent of a Vocab object.)"""
+    __slots__ = ()
+    def repeat(self, word_count):
+        return self._replace(word_count=self.word_count + word_count, doc_count=self.doc_count + 1)
 
 
 class Doc2Vec(Word2Vec):
@@ -279,6 +294,8 @@ class Doc2Vec(Word2Vec):
                           sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
                           sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean, 
                           null_word=dm_concat, **kwargs)
+        self.doclbls = {}  # mapping from doclbl (string) to Doclbl object
+        self.index2doclbl = []  # map from doclbl's int index to string
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_lbl_count = dm_lbl_count
@@ -292,9 +309,13 @@ class Doc2Vec(Word2Vec):
             self.layer1_size = (self.dm_lbl_count + (2 * self.window)) * self.vector_size
             logger.info("using concatenative %d-dimensional layer1"% (self.layer1_size))
         Word2Vec.reset_weights(self)
+        self.doclbl_syn0 = empty((len(self.doclbls), self.vector_size), dtype=REAL)
+        for i in xrange(len(self.doclbls)):
+            # construct deterministic seed from word AND seed argument
+            self.doclbl_syn0[i] = self.seeded_vector(self.index2doclbl[i] + str(self.seed))        
+        self.doclbl_syn0_lockf = ones(len(self.doclbls), dtype=REAL)  # zeros suppress learning
 
-    @staticmethod
-    def _vocab_from(sentences):
+    def _vocab_from(self, sentences):
         sentence_no, vocab = -1, {}
         total_words = 0
         for sentence_no, sentence in enumerate(sentences):
@@ -304,10 +325,11 @@ class Doc2Vec(Word2Vec):
             sentence_length = len(sentence.words)
             for label in sentence.labels:
                 total_words += 1
-                if label in vocab:
-                    vocab[label].count += sentence_length
+                if label in self.doclbls:
+                    self.doclbls[label] = Doclbl[label].repeat(sentence_length)
                 else:
-                    vocab[label] = Vocab(count=sentence_length)  # FIXME: doc-labels for short docs can be culled by min_count
+                    self.doclbls[label] = Doclbl(sentence_no, sentence_length, 1)
+                    self.index2doclbl.append(label)
             for word in sentence.words:
                 total_words += 1
                 if word in vocab:
@@ -321,7 +343,8 @@ class Doc2Vec(Word2Vec):
     def _prepare_sentences(self, sentences):
         for sentence in sentences:
             # avoid calling random_sample() where prob >= 1, to speed things up a little:
-            yield (self._tokens_to_vocabs(sentence.words), self._tokens_to_vocabs(sentence.labels, sample=False))
+            yield (self._tokens_to_vocabs(sentence.words),
+                   self._tokens_to_vocabs(sentence.labels, sample=False, source_dict=self.doclbls))
 
     def _tokens_to_vocabs(self, tokens, sample=True, source_dict=None):
         if source_dict is None:
@@ -351,7 +374,7 @@ class Doc2Vec(Word2Vec):
         doclbl_vectors = empty((1, self.vector_size), dtype=REAL)
         doclbl_vectors[0] = self.seeded_vector(' '.join(document))
         doclbl_locks = ones(1, dtype=REAL)
-        doclbl_vocabs = [Vocab(index=0) for doclbl in doclbl_vectors]
+        doclbl_vocabs = [Doclbl(0,0,0) for doclbl in doclbl_vectors]
         word_vocabs = self._tokens_to_vocabs(document)
 
         work = zeros(self.layer1_size, dtype=REAL)
@@ -374,6 +397,18 @@ class Doc2Vec(Word2Vec):
             alpha = ((alpha - min_alpha) / (steps - i)) + min_alpha
 
         return doclbl_vectors[0]
+
+    def get_docvec(self, doclbl):
+        return self.doclbl_syn0[self.doclbls[doclbl].index]
+
+    @property
+    def docs(self):
+        class DocsView(object):
+            def __init__(self, doc2vec):
+                self.model = doc2vec
+            def __getitem__(self, doclbl):
+                return self.model.get_docvec(doclbl)
+        return DocsView(self)
 
     def __str__(self):
         return "Doc2Vec(%id, sg=%i, hs=%i, negative=%i, dm_concat=%i)" % (self.vector_size, self.sg, self.hs, self.negative, self.dm_concat)
@@ -410,7 +445,7 @@ class Doc2Vec(Word2Vec):
 
     def save(self, *args, **kwargs):
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])  # don't bother storing the cached normalized vectors
-        super(Doc2Vec, self).save(*args, **kwargs)
+        super(Doc2Vec, self).save(*args, **kwargs)  ### TODO: save doclbl fields
 
 
 class LabeledBrownCorpus(object):
