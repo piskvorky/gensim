@@ -376,6 +376,36 @@ class Doc2Vec(Word2Vec):
     def __str__(self):
         return "Doc2Vec(%id, sg=%i, hs=%i, negative=%i, dm_concat=%i)" % (self.vector_size, self.sg, self.hs, self.negative, self.dm_concat)
 
+    @property
+    def compact_name(self):
+        segments = []
+        if self.sg:
+            segments.append('dbow')  # PV-DBOW (skip-gram-style)
+            if self.dbow_words:
+                segments.append('w')  # also training words
+        else:
+            segments.append('dm')  # PV-DM...
+            if self.dm_concat:
+                segments.append('c')  # ...with concatenative context layer
+            else:
+                if self.cbow_mean:
+                    segments.append('m')
+                else:
+                    segments.append('s')
+        segments.append('_')
+        segments.append('d%d' % self.vector_size)  # dimensions
+        if self.negative:
+            segments.append('n%d' % self.negative)  # negative samples
+        if self.hs:
+            segments.append('hs')
+        if not self.sg or (self.sg and self.dbow_words):
+            segments.append('w%d' % self.window)  # window size, when relevant
+        if self.min_count > 1:
+            segments.append('mc%d' % self.min_count)
+        if self.sample > 0:
+            segments.append('s%d' % self.sample)
+        return ''.join(segments)
+
     def save(self, *args, **kwargs):
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])  # don't bother storing the cached normalized vectors
         super(Doc2Vec, self).save(*args, **kwargs)
