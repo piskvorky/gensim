@@ -644,10 +644,12 @@ class Word2Vec(utils.SaveLoad):
         result.init_sims(norm_only)
         return result
 
-    def merge_word2vec_format(self, fname, binary=False):
+    def intersect_word2vec_format(self, fname, binary=False):
         """
-        Merge the input-hidden weight matrix from the original C word2vec-tool format,
-        where it overlaps with the current vocabulary.
+        Merge the input-hidden weight matrix from the original C word2vec-tool format
+        given, where it intersects with the current vocabulary. (No words are added to the
+        existing vocabulary, but intersecting words adopt the file's weights, and 
+        non-intersecting words are left alone.)
 
         `binary` is a boolean indicating whether the data is in binary word2vec format.
         """
