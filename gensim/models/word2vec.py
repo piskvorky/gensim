@@ -118,7 +118,7 @@ except ImportError:
             for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
                 # don't train on OOV words and on the `word` itself
                 if word2 and not (pos2 == pos):
-                    train_sg_pair(model, word, word2, alpha)
+                    train_sg_pair(model, word, word2.index, alpha)
 
         return len([word for word in sentence if word is not None])
 
@@ -148,15 +148,15 @@ except ImportError:
         return len([word for word in sentence if word is not None])
 
 
-def train_sg_pair(model, predict_word, context_token, alpha, learn_vectors=True, learn_hidden=True,
+def train_sg_pair(model, predict_word, context_index, alpha, learn_vectors=True, learn_hidden=True,
                   context_vectors=None, context_locks=None):
     if context_vectors is None:
         context_vectors = model.syn0
     if context_locks is None:
         context_locks = model.syn0_lockf
 
-    l1 = context_vectors[context_token.index]
-    lock_factor = context_locks[context_token.index]
+    l1 = context_vectors[context_index]
+    lock_factor = context_locks[context_index]
 
     neu1e = zeros(l1.shape)
 
