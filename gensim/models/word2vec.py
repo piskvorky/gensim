@@ -606,7 +606,7 @@ class Word2Vec(utils.SaveLoad):
                     result.syn0[line_no] = fromstring(fin.read(binary_len), dtype=REAL)
             else:
                 for line_no, line in enumerate(fin):
-                    parts = utils.to_unicode(line).split()
+                    parts = utils.to_unicode(line.rstrip()).split(" ")
                     if len(parts) != layer1_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
                     word, weights = parts[0], list(map(REAL, parts[1:]))
