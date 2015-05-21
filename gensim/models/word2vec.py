@@ -953,7 +953,7 @@ class Word2Vec(utils.SaveLoad):
         for i in xrange(len(all_a)):
             correct = 0
             num_questions = len(all_a[i])
-            num_batches = num_questions/batchsize + bool(num_questions%batchsize)
+            num_batches = num_questions//batchsize + bool(num_questions%batchsize)
 
             for j in xrange(num_batches):
                 batch_a = all_a[i][j*batchsize:(j+1)*batchsize]
