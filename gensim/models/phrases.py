@@ -101,7 +101,8 @@ class Phrases(interfaces.TransformationABC):
         of 40M needs about 3.6GB of RAM; increase/decrease `max_vocab_size` depending
         on how much available memory you have.
 
-        `delimiter` is the glue character used to join collocation tokens.
+        `delimiter` is the glue character used to join collocation tokens, and
+        should be a byte string (e.g. b'_').
 
         """
         if min_count <= 0:
