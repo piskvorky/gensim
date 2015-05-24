@@ -6,7 +6,7 @@ Changes
 * added "topic ranking" to sort topics by coherence in LdaModel (jtmcmc, #311)
 * new fast ShardedCorpus out-of-core corpus (Jan Hajic jr., #284)
 * utils.smart_open now uses the smart_open package (#316)
-* new wrapper for Vowpal Wabbit (Dave Challis, #304)
+* new wrapper for LDA in Vowpal Wabbit (Dave Challis, #304)
 * improvements to the DtmModel wrapper (Yang Han, #272, #277)
 * move wrappers for external modeling programs into a submodule (Christopher Corley, #295)
 * allow transparent compression of NumPy files in save/load (Christopher Corley, #248)
