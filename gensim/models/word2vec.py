@@ -313,7 +313,6 @@ class Word2Vec(utils.SaveLoad):
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences)
-            sentences = utils.RepeatCorpusNTimes(sentences, iter)
             self.train(sentences)
 
     def make_table(self, table_size=100000000, power=0.75):
@@ -463,6 +462,9 @@ class Word2Vec(utils.SaveLoad):
 
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
+
+        if self.iter > 1:
+            sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
 
         start, next_report = time.time(), [1.0]
         word_count = [word_count]
