@@ -159,9 +159,6 @@ class LdaMulticore(LdaModel):
         converge for any `decay` in (0.5, 1.0>.
 
         """
-        # rho is the "speed" of updating, decelerating over time
-        rho = lambda: pow(self.offset + self.num_updates / self.chunksize, -self.decay)
-
         try:
             lencorpus = len(corpus)
         except:
@@ -195,6 +192,12 @@ class LdaMulticore(LdaModel):
         job_queue = Queue(maxsize=2 * self.workers)
         result_queue = Queue()
 
+        # rho is the "speed" of updating; TODO try other fncs
+        # pass_ + num_updates handles increasing the starting t for each pass,
+        # while allowing it to "reset" on the first pass of each update
+        def rho():
+            return pow(self.offset + pass_ + (self.num_updates / self.chunksize), -self.decay)
+
         logger.info("training LDA model using %i processes", self.workers)
         pool = Pool(self.workers, worker_e_step, (job_queue, result_queue,))
         for pass_ in xrange(self.passes):
@@ -213,7 +216,7 @@ class LdaMulticore(LdaModel):
                     queue_size[0] -= 1
                     merged_new = True
                 if (force and merged_new and queue_size[0] == 0) or (not self.batch and (other.numdocs >= updateafter)):
-                    self.do_mstep(rho(), other)
+                    self.do_mstep(rho(), other, pass_ > 0)
                     other.reset()
                     if self.eval_every is not None and ((force and queue_size[0] == 0) or (self.eval_every != 0 and (self.num_updates / updateafter) % self.eval_every == 0)):
                         self.log_perplexity(chunk, total_docs=lencorpus)
