@@ -255,6 +255,13 @@ class TestWord2VecModel(unittest.TestCase):
             self.assertTrue(numpy.allclose(model.syn1neg, model2.syn1neg))
         most_common_word = max(model.vocab.items(), key=lambda item: item[1].count)[0]
         self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
+    
+    def test_analogies(self):
+        model = word2vec.Word2Vec.load(datapath('small_w2v_model'))
+        acc = model.accuracy(datapath('questions-words.txt'), restrict_vocab=5000)
+        assert acc[-1]['correct'] == 281
+        assert acc[-1]['incorrect'] == 2071
+
 #endclass TestWord2VecModel
 
     def test_sentences_should_not_be_a_generator(self):
