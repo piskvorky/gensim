@@ -213,28 +213,32 @@ class Phrases(interfaces.TransformationABC):
 
         s, new_s = [utils.any2utf8(w) for w in sentence], []
         last_bigram = False
-        for bigram in zip(s, s[1:]):
-            if all(uni in self.vocab for uni in bigram):
-                bigram_word = self.delimiter.join(bigram)
-                if bigram_word in self.vocab and not last_bigram:
-                    pa = float(self.vocab[bigram[0]])
-                    pb = float(self.vocab[bigram[1]])
-                    pab = float(self.vocab[bigram_word])
-                    score = (pab - self.min_count) / pa / pb * len(self.vocab)
+        vocab = self.vocab
+        threshold = self.threshold
+        delimiter = self.delimiter
+        min_count = self.min_count
+        for word_a, word_b in zip(s, s[1:]):
+            if word_a in vocab and word_b in vocab:
+                bigram_word = delimiter.join((word_a, word_b))
+                if bigram_word in vocab and not last_bigram:
+                    pa = float(vocab[word_a])
+                    pb = float(vocab[word_b])
+                    pab = float(vocab[bigram_word])
+                    score = (pab - min_count) / pa / pb * len(vocab)
                     # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
                     #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
-                    if score > self.threshold:
+                    if score > threshold:
                         new_s.append(bigram_word)
                         last_bigram = True
                         continue
 
             if not last_bigram:
-                new_s.append(bigram[0])
+                new_s.append(word_a)
             last_bigram = False
 
         if s:  # add last word skipped by previous loop
             last_token = s[-1]
-            if last_token in self.vocab and not last_bigram:
+            if last_token in vocab and not last_bigram:
                 new_s.append(last_token)
 
         return [utils.to_unicode(w) for w in new_s]
