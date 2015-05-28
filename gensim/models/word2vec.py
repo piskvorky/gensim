@@ -81,7 +81,7 @@ except ImportError:
 
 from numpy import exp, dot, zeros, outer, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod
+    ndarray, empty, sum as np_sum, prod, argpartition, argmax
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -634,7 +634,7 @@ class Word2Vec(utils.SaveLoad):
         This method computes cosine similarity between a simple mean of the projection
         weight vectors of the given words and the vectors for each word in the model. The method corresponds to the `word-analogy` and
         `distance` scripts in the original word2vec implementation.
-        
+
         If topn is False, most_similar returns the vector of similarity scores.
 
         Example::
@@ -907,6 +907,144 @@ class Word2Vec(utils.SaveLoad):
         self.log_accuracy(total)
         sections.append(total)
         return sections
+
+
+    def argTopNSorted_nda(self, inArray_nda, topn=1):
+        """
+        Returns an array containing the indexes to produce the topn largest
+        items in sorted order. Runs in n*log(k) time where n is inArray_nda
+        size and k is topn.
+
+        inArray_nda must contain numbers.
+        """
+        if topn == 1:
+            return argmax(inArray_nda)
+        unsortedTopNIdxs_nda = argpartition(-inArray_nda, topn)[:topn]
+        subIdxs_nda = argsort(-inArray_nda[unsortedTopNIdxs_nda])
+        sortedTopNIdxs_nda = unsortedTopNIdxs_nda[subIdxs_nda]
+        return sortedTopNIdxs_nda
+
+
+    def most_similar_v2(self, positive=[], negative=[], topn=10, restrictedIdxs_nda=[]):
+        """
+        Find the top-N most similar words. Positive words contribute positively towards the
+        similarity, negative words negatively.
+
+        This method computes cosine similarity between a simple mean of the projection
+        weight vectors of the given words and the vectors for each word in the model. The method corresponds to the `word-analogy` and
+        `distance` scripts in the original word2vec implementation.
+
+        If restrictedIdxs_nda is an ndarray with positive length, most_similar will only
+        search for similar vectors among the specified indices.  Useful for accuracy function (see below).
+
+        Example::
+
+          >>> trained_model.most_similar(positive=['woman', 'king'], negative=['man'])
+          [('queen', 0.50882536), ...]
+
+        """
+        self.init_sims()
+
+        if isinstance(positive, string_types) and not negative:
+            # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
+            positive = [positive]
+
+        # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
+        positive = [(word, 1.0) if isinstance(word, string_types + (ndarray,))
+                                else word for word in positive]
+        negative = [(word, -1.0) if isinstance(word, string_types + (ndarray,))
+                                 else word for word in negative]
+
+        # compute the weighted average of all words
+        all_words, mean = set(), []
+        for word, weight in positive + negative:
+            if isinstance(word, ndarray):
+                mean.append(weight * word)
+            elif word in self.vocab:
+                mean.append(weight * self.syn0norm[self.vocab[word].index])
+                all_words.add(self.vocab[word].index)
+            else:
+                raise KeyError("word '%s' not in vocabulary" % word)
+        if not mean:
+            raise ValueError("cannot compute similarity with no input")
+        mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
+
+        if len(restrictedIdxs_nda) > 0:
+            dists = dot(self.syn0norm[restrictedIdxs_nda], mean)
+            sortedTopNSubIdxs_nda = self.argTopNSorted_nda(dists, topn + len(all_words))
+            sortedTopNIdxs_nda = restrictedIdxs_nda[sortedTopNSubIdxs_nda]
+        else:
+            dists = dot(self.syn0norm, mean)
+            sortedTopNIdxs_nda = self.argTopNSorted_nda(dists, topn + len(all_words))
+
+        # best = argsort(dists)[::-1][:topn + len(all_words)]
+        # ignore (don't return) words from the input
+        result = [(self.index2word[sim], float(dists[sim])) for sim in sortedTopNIdxs_nda if sim not in all_words]
+        return result[:topn]
+
+
+    def accuracy_v2(self, questions, restrict_vocab=30000, most_similar=most_similar_v2):
+        """
+        Compute accuracy of the model. `questions` is a filename where lines are
+        4-tuples of words, split into sections by ": SECTION NAME" lines.
+        See https://code.google.com/p/word2vec/source/browse/trunk/questions-words.txt for an example.
+
+        The accuracy is reported (=printed to log and returned as a list) for each
+        section separately, plus there's one aggregate summary at the end.
+
+        Use `restrict_vocab` to ignore all questions containing a word whose frequency
+        is not in the top-N most frequent words (default top 30,000).
+
+        This method corresponds to the `compute-accuracy` script of the original C word2vec.
+
+        """
+        ok_vocab = dict(sorted(iteritems(self.vocab),
+                               key=lambda item: -item[1].count)[:restrict_vocab])
+
+        restrictedIdxs_nda = array([v.index for v in itervalues(ok_vocab)])
+
+        sections, section = [], None
+        for line_no, line in enumerate(utils.smart_open(questions)):
+            # TODO: use level3 BLAS (=evaluate multiple questions at once), for speed
+            line = utils.to_unicode(line)
+            if line.startswith(': '):
+                # a new section starts => store the old section
+                if section:
+                    sections.append(section)
+                    self.log_accuracy(section)
+                section = {'section': line.lstrip(': ').strip(), 'correct': [], 'incorrect': []}
+            else:
+                if not section:
+                    raise ValueError("missing section header before line #%i in %s" % (line_no, questions))
+                try:
+                    a, b, c, expected = [word.lower() for word in line.split()]  # TODO assumes vocabulary preprocessing uses lowercase, too...
+                except:
+                    logger.info("skipping invalid line #%i in %s" % (line_no, questions))
+                if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
+                    logger.debug("skipping line #%i with OOV words: %s" % (line_no, line.strip()))
+                    continue
+
+                # find the most likely prediction, ignoring OOV words and input words
+                predicted = most_similar(self, positive=[b, c], negative=[a], topn=1, restrictedIdxs_nda=restrictedIdxs_nda)[0][0]
+
+                if predicted == expected:
+                    section['correct'].append((a, b, c, expected))
+                else:
+                    section['incorrect'].append((a, b, c, expected))
+        if section:
+            # store the last section, too
+            sections.append(section)
+            self.log_accuracy(section)
+
+        total = {
+            'section': 'total',
+            'correct': sum((s['correct'] for s in sections), []),
+            'incorrect': sum((s['incorrect'] for s in sections), []),
+        }
+        self.log_accuracy(total)
+        sections.append(total)
+        return sections
+
 
 
     def __str__(self):
