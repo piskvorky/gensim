@@ -726,7 +726,6 @@ def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_
             codelens[i] = 0
         else:
             indexes[i] = word.index
-            reduced_windows[i] = np.random.randint(window)
             if hs:
                 codelens[i] = <int>len(word.code)
                 codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
@@ -734,6 +733,9 @@ def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_
             else:
                 codelens[i] = 1
             result += 1
+    # single randint() call avoids a big thread-sync slowdown
+    for i, item in enumerate(np.random.randint(0, window, sentence_len)):
+        reduced_windows[i] = item
     for i in range(lbl_length):
         word = lbls[i]
         if word is None:
@@ -820,7 +822,6 @@ def train_sentence_dm(model, sentence, lbls, alpha, _work, _neu1, train_words, t
             codelens[i] = 0
         else:
             indexes[i] = word.index
-            reduced_windows[i] = np.random.randint(window)
             if hs:
                 codelens[i] = <int>len(word.code)
                 codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
@@ -828,6 +829,9 @@ def train_sentence_dm(model, sentence, lbls, alpha, _work, _neu1, train_words, t
             else:
                 codelens[i] = 1
             result += 1
+    # single randint() call avoids a big thread-sync slowdown
+    for i, item in enumerate(np.random.randint(0, window, sentence_len)):
+        reduced_windows[i] = item
 
     lbl_length = <int>min(MAX_SENTENCE_LEN, len(lbls))
     for i in range(lbl_length):
@@ -836,7 +840,6 @@ def train_sentence_dm(model, sentence, lbls, alpha, _work, _neu1, train_words, t
             lbl_codelens[i] = 0
         else:
             lbl_indexes[i] = word.index
-            reduced_windows[i] = np.random.randint(window)
             if hs:
                 lbl_codelens[i] = <int>len(word.code)
             else:
