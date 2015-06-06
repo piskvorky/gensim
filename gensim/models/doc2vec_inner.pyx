@@ -341,7 +341,6 @@ def train_sentence_dbow(model, word_vocabs, doclbl_indexes, alpha, work=None,
             codelens[i] = 0
         else:
             indexes[i] = predict_word.index
-            reduced_windows[i] = np.random.randint(window)
             if hs:
                 codelens[i] = <int>len(predict_word.code)
                 codes[i] = <np.uint8_t *>np.PyArray_DATA(predict_word.code)
@@ -349,9 +348,10 @@ def train_sentence_dbow(model, word_vocabs, doclbl_indexes, alpha, work=None,
             else:
                 codelens[i] = 1
             result += 1
-    # single randint() call avoids a big thread-sync slowdown
-    for i, item in enumerate(np.random.randint(0, window, sentence_len)):
-        reduced_windows[i] = item
+    if _train_words:
+        # single randint() call avoids a big thread-synchronization slowdown
+        for i, item in enumerate(np.random.randint(0, window, sentence_len)):
+            reduced_windows[i] = item
     for i in range(doclbl_len):
         _doclbl_indexes[i] = doclbl_indexes[i]
         result += 1
