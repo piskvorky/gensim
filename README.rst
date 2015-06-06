@@ -48,7 +48,7 @@ The simple way to install `gensim` is::
     pip install -U gensim
 
 Or, if you have instead downloaded and unzipped the `source tar.gz <http://pypi.python.org/pypi/gensim>`_ package,
-you'll need to run::
+you'd run::
 
     python setup.py test
     python setup.py install

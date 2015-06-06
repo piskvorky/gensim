@@ -463,16 +463,16 @@ class HdpModel(interfaces.TransformationABC):
         probable words for `topics` number of topics to log.
         Set `topics=-1` to print all topics."""
         return self.show_topics(topics=topics, topn=topn, log=True)
-        
+
     def show_topics(self, topics=20, topn=20, log=False, formatted=True):
         """
         Print the `topN` most probable words for `topics` number of topics.
         Set `topics=-1` to print all topics.
 
-        Set `formatted=True` to return the topics as a list of strings, or 
+        Set `formatted=True` to return the topics as a list of strings, or
         `False` as lists of (weight, word) pairs.
 
-        """        
+        """
         if not self.m_status_up_to_date:
             self.update_expectations()
         betas = self.m_lambda + self.m_eta
@@ -499,7 +499,7 @@ class HdpModel(interfaces.TransformationABC):
             logger.error("cannot store options without having specified an output directory")
             return
         fname = '%s/options.dat' % self.outputdir
-        with open(fname, 'wb') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             fout.write('tau: %s\n' % str(self.m_tau - 1))
             fout.write('chunksize: %s\n' % str(self.chunksize))
             fout.write('var_converge: %s\n' % str(self.m_var_converge))

@@ -150,7 +150,7 @@ class UciCorpus(UciReader, IndexedCorpus):
         UciReader.__init__(self, fname)
 
         if fname_vocab is None:
-            fname_vocab = fname + '.vocab'
+            fname_vocab = utils.smart_extension(fname, '.vocab')
 
         self.fname = fname
         with utils.smart_open(fname_vocab) as fin:
@@ -213,7 +213,7 @@ class UciCorpus(UciReader, IndexedCorpus):
             num_terms = 1 + max([-1] + id2word.keys())
 
         # write out vocabulary
-        fname_vocab = fname + '.vocab'
+        fname_vocab = utils.smart_extension(fname, '.vocab')
         logger.info("saving vocabulary of %i words to %s" % (num_terms, fname_vocab))
         with utils.smart_open(fname_vocab, 'wb') as fout:
             for featureid in xrange(num_terms):

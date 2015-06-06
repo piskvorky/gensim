@@ -51,10 +51,10 @@ class BleiCorpus(IndexedCorpus):
             fname_base, _ = path.splitext(fname)
             fname_dir = path.dirname(fname)
             for fname_vocab in [
-                        fname + '.vocab',
-                        fname + '/vocab.txt',
-                        fname_base + '.vocab',
-                        fname_dir + '/vocab.txt',
+                        utils.smart_extension(fname, '.vocab'),
+                        utils.smart_extension(fname, '/vocab.txt'),
+                        utils.smart_extension(fname_base, '.vocab'),
+                        utils.smart_extension(fname_dir, '/vocab.txt'),
                         ]:
                 if path.exists(fname_vocab):
                     break
@@ -112,7 +112,7 @@ class BleiCorpus(IndexedCorpus):
                 fout.write(utils.to_utf8("%i %s\n" % (len(doc), ' '.join(parts))))
 
         # write out vocabulary, in a format compatible with Blei's topics.py script
-        fname_vocab = fname + '.vocab'
+        fname_vocab = utils.smart_extension(fname, '.vocab')
         logger.info("saving vocabulary of %i words to %s" % (num_terms, fname_vocab))
         with utils.smart_open(fname_vocab, 'wb') as fout:
             for featureid in xrange(num_terms):

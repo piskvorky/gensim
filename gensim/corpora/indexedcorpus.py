@@ -44,7 +44,7 @@ class IndexedCorpus(interfaces.CorpusABC):
         """
         try:
             if index_fname is None:
-                index_fname = fname + '.index'
+                index_fname = utils.smart_extension(fname, '.index')
             self.index = utils.unpickle(index_fname)
             logger.info("loaded corpus index from %s" % index_fname)
         except:
@@ -76,7 +76,7 @@ class IndexedCorpus(interfaces.CorpusABC):
             raise ValueError("identical input vs. output corpus filename, refusing to serialize: %s" % fname)
 
         if index_fname is None:
-            index_fname = fname + '.index'
+            index_fname = utils.smart_extension(fname, '.index')
 
         if progress_cnt is not None:
             if labels is not None:

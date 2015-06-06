@@ -43,6 +43,7 @@ except ImportError:
     from Queue import Queue
 
 from numpy import zeros, random, sum as np_sum
+from six import string_types
 
 logger = logging.getLogger(__name__)
 
@@ -127,10 +128,13 @@ class LabeledSentence(object):
     """
     def __init__(self, words, labels):
         """
-        `words` is a list of tokens (unicode strings), `labels` a
-        list of text labels associated with this text.
+        `words` is a list of tokens (unicode strings), 
+        `labels` a list of text labels associated with this text
+        or a single string label.
 
         """
+        if isinstance(labels, string_types):
+          labels = (labels,)
         self.words = words
         self.labels = labels
 
