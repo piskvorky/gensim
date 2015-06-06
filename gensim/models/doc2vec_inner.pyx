@@ -286,7 +286,7 @@ def train_sentence_dbow(model, word_vocabs, doclbl_indexes, alpha, work=None,
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t _doclbl_indexes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
+    cdef np.uint32_t *reduced_windows
     cdef int sentence_len
     cdef int doclbl_len
     cdef int window = model.window
@@ -335,23 +335,25 @@ def train_sentence_dbow(model, word_vocabs, doclbl_indexes, alpha, work=None,
     sentence_len = <int>min(MAX_SENTENCE_LEN, len(word_vocabs))
     doclbl_len = <int>min(MAX_SENTENCE_LEN, len(doclbl_indexes))
 
+    j = 0 
     for i in range(sentence_len):
-        predict_word = word_vocabs[i]
+        predict_word = word_vocabs[j]
         if predict_word is None:
-            codelens[i] = 0
+            continue  # leaving j unchanged
         else:
-            indexes[i] = predict_word.index
+            indexes[j] = predict_word.index
             if hs:
-                codelens[i] = <int>len(predict_word.code)
-                codes[i] = <np.uint8_t *>np.PyArray_DATA(predict_word.code)
-                points[i] = <np.uint32_t *>np.PyArray_DATA(predict_word.point)
+                codelens[j] = <int>len(predict_word.code)
+                codes[j] = <np.uint8_t *>np.PyArray_DATA(predict_word.code)
+                points[j] = <np.uint32_t *>np.PyArray_DATA(predict_word.point)
             else:
-                codelens[i] = 1
+                codelens[j] = 1
             result += 1
+            j = j + 1
     if _train_words:
         # single randint() call avoids a big thread-synchronization slowdown
-        for i, item in enumerate(np.random.randint(0, window, sentence_len)):
-            reduced_windows[i] = item
+        reduced_windows = <np.uint32_t *>(np.PyArray_DATA(np.random.randint(0, window, j)))
+
     for i in range(doclbl_len):
         _doclbl_indexes[i] = doclbl_indexes[i]
         result += 1
@@ -359,8 +361,6 @@ def train_sentence_dbow(model, word_vocabs, doclbl_indexes, alpha, work=None,
     # release GIL & train on the sentence
     with nogil:
         for i in range(sentence_len):
-            if codelens[i] == 0:
-                continue
             if _train_words:  # simultaneous skip-gram wordvec-training
                 j = i - window + reduced_windows[i]
                 if j < 0:
@@ -369,7 +369,7 @@ def train_sentence_dbow(model, word_vocabs, doclbl_indexes, alpha, work=None,
                 if k > sentence_len:
                     k = sentence_len
                 for j in range(j, k):
-                    if j == i or codelens[j] == 0:
+                    if j == i:
                         continue
                     if hs:
                         # we reuse the DBOW function, as it is equivalent to skip-gram for this purpose
@@ -417,7 +417,7 @@ def train_sentence_dm(model, word_vocabs, doclbl_indexes, alpha, work=None, neu1
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t _doclbl_indexes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
+    cdef np.uint32_t *reduced_windows
     cdef int sentence_len
     cdef int doclbl_len
     cdef int window = model.window
@@ -484,8 +484,7 @@ def train_sentence_dm(model, word_vocabs, doclbl_indexes, alpha, work=None, neu1
             result += 1
             j = j + 1
     # single randint() call avoids a big thread-synchronization slowdown
-    for i, item in enumerate(np.random.randint(0, window, sentence_len)):
-        reduced_windows[i] = item
+    reduced_windows = <np.uint32_t *>(np.PyArray_DATA(np.random.randint(0, window, j)))
 
     doclbl_len = <int>min(MAX_SENTENCE_LEN, len(doclbl_indexes))
     for i in range(doclbl_len):
