@@ -625,7 +625,6 @@ def train_sentence_sg(model, sentence, alpha, _work):
             codelens[i] = 0
         else:
             indexes[i] = word.index
-            reduced_windows[i] = np.random.randint(window)
             if hs:
                 codelens[i] = <int>len(word.code)
                 codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
@@ -633,6 +632,9 @@ def train_sentence_sg(model, sentence, alpha, _work):
             else:
                 codelens[i] = 1
             result += 1
+    # single randint() call avoids a big thread-synchronization slowdown
+    for i, item in enumerate(np.random.randint(0, window, sentence_len)):
+        reduced_windows[i] = item
 
     # release GIL & train on the sentence
     with nogil:
@@ -707,7 +709,6 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
             codelens[i] = 0
         else:
             indexes[i] = word.index
-            reduced_windows[i] = np.random.randint(window)
             if hs:
                 codelens[i] = <int>len(word.code)
                 codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
@@ -715,6 +716,9 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
             else:
                 codelens[i] = 1
             result += 1
+    # single randint() call avoids a big thread-synchronization slowdown
+    for i, item in enumerate(np.random.randint(0, window, sentence_len)):
+        reduced_windows[i] = item
 
     # release GIL & train on the sentence
     with nogil:
