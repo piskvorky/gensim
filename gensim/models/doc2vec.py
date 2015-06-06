@@ -279,12 +279,10 @@ class DocvecsInArray(object):
     def reset_weights(self, model):
         length = max(len(self.doclbls),self.max_index)
         if self.mapfile_path:
-            print(length)
             self.doclbl_syn0 = np_memmap(self.mapfile_path+'.doclbl_syn0',dtype=REAL,mode='w+',shape=(length,model.vector_size))
             self.doclbl_syn0_lockf = np_memmap(self.mapfile_path+'.doclbl_syn0_lockf',dtype=REAL,mode='w+',shape=(length,))
             self.doclbl_syn0_lockf.fill(1.0)
         else:
-            print(length)
             self.doclbl_syn0 = empty((length, model.vector_size), dtype=REAL)
             self.doclbl_syn0_lockf = ones((length,), dtype=REAL)  # zeros suppress learning
 
@@ -495,6 +493,8 @@ class Doc2Vec(Word2Vec):
             segments.append('mc%d' % self.min_count)
         if self.sample > 0:
             segments.append('s%d' % self.sample)
+        if self.workers > 1:
+            segments.append('t%d' % self.workers)
         return ''.join(segments)
 
     def save(self, *args, **kwargs):
