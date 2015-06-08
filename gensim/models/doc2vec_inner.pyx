@@ -286,7 +286,7 @@ def train_sentence_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t _doctag_indexes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t *reduced_windows
+    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
     cdef int sentence_len
     cdef int doctag_len
     cdef int window = model.window
@@ -352,7 +352,8 @@ def train_sentence_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
             j = j + 1
     if _train_words:
         # single randint() call avoids a big thread-synchronization slowdown
-        reduced_windows = <np.uint32_t *>(np.PyArray_DATA(np.random.randint(0, window, j)))
+        for i, item in enumerate(np.random.randint(0, window, j)):
+            reduced_windows[i] = item
 
     for i in range(doctag_len):
         _doctag_indexes[i] = doctag_indexes[i]
@@ -417,7 +418,7 @@ def train_sentence_dm(model, word_vocabs, doctag_indexes, alpha, work=None, neu1
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t _doctag_indexes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t *reduced_windows
+    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
     cdef int sentence_len
     cdef int doctag_len
     cdef int window = model.window
@@ -484,7 +485,8 @@ def train_sentence_dm(model, word_vocabs, doctag_indexes, alpha, work=None, neu1
             result += 1
             j = j + 1
     # single randint() call avoids a big thread-synchronization slowdown
-    reduced_windows = <np.uint32_t *>(np.PyArray_DATA(np.random.randint(0, window, j)))
+    for i, item in enumerate(np.random.randint(0, window, j)):
+        reduced_windows[i] = item
 
     doctag_len = <int>min(MAX_SENTENCE_LEN, len(doctag_indexes))
     for i in range(doctag_len):

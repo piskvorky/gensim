@@ -588,7 +588,7 @@ def train_sentence_sg(model, sentence, alpha, _work):
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t *reduced_windows
+    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
     cdef int sentence_len
     cdef int window = model.window
 
@@ -633,7 +633,8 @@ def train_sentence_sg(model, sentence, alpha, _work):
                 codelens[i] = 1
             result += 1
     # single randint() call avoids a big thread-synchronization slowdown
-    reduced_windows = <np.uint32_t *>(np.PyArray_DATA(np.random.randint(0, window, sentence_len)))
+    for i, item in enumerate(np.random.randint(0, window, sentence_len)):
+        reduced_windows[i] = item
 
     # release GIL & train on the sentence
     with nogil:
@@ -670,7 +671,7 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t *reduced_windows
+    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
     cdef int sentence_len
     cdef int window = model.window
 
@@ -716,7 +717,8 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
                 codelens[i] = 1
             result += 1
     # single randint() call avoids a big thread-synchronization slowdown
-    reduced_windows = <np.uint32_t *>(np.PyArray_DATA(np.random.randint(0, window, sentence_len)))
+    for i, item in enumerate(np.random.randint(0, window, sentence_len)):
+        reduced_windows[i] = item
 
     # release GIL & train on the sentence
     with nogil:
