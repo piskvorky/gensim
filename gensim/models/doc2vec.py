@@ -268,6 +268,11 @@ class DocvecsArray(object):
     def __getitem__(self, index):
         return self.doctag_syn0[self._int_index(index)]
 
+    def borrow_from(self, other_docvecs):
+        self.max_index = other_docvecs.max_index
+        self.doctags = other_docvecs.doctags
+        self.index2doctag = other_docvecs.index2doctag
+
     def reset_weights(self, model):
         length = max(len(self.doctags),self.max_index)
         if self.mapfile_path:
@@ -368,6 +373,11 @@ class Doc2Vec(Word2Vec):
             logger.info("using concatenative %d-dimensional layer1"% (self.layer1_size))
         Word2Vec.reset_weights(self)
         self.docvecs.reset_weights(self)
+
+    def reset_from(self, other_model):
+        """Reuse shareable structures from other_model."""
+        self.docvecs.borrow_from(other_model.docvecs)
+        Word2Vec.reset_from(self, other_model)
 
     def _vocab_from(self, sentences):
         sentence_no, vocab = -1, {}
