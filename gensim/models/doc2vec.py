@@ -60,9 +60,9 @@ except:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
 
-    def train_sentence_dbow(model, word_vocabs, doclbl_indices, alpha, work=None,
-                            train_words=False, learn_doclbls=True, learn_words=True, learn_hidden=True,
-                            word_vectors=None, word_locks=None, doclbl_vectors=None, doclbl_locks=None):
+    def train_sentence_dbow(model, word_vocabs, doctag_indices, alpha, work=None,
+                            train_words=False, learn_doctags=True, learn_words=True, learn_hidden=True,
+                            word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
         """
         Update distributed bag of words model by training on a single sentence.
 
@@ -81,26 +81,26 @@ except:
         will use the optimized version from doc2vec_inner instead.
 
         """
-        if doclbl_vectors is None:
-            doclbl_vectors = model.docvecs.doclbl_syn0
-        if doclbl_locks is None:
-            doclbl_locks = model.docvecs.doclbl_syn0_lockf
+        if doctag_vectors is None:
+            doctag_vectors = model.docvecs.doctag_syn0
+        if doctag_locks is None:
+            doctag_locks = model.docvecs.doctag_syn0_lockf
 
         if train_words and learn_words:
             train_sentence_sg(model, word_vocabs, alpha, work)  # TODO: adapt for word_vectors/word_locks
-        for doclbl_index in doclbl_indices:
+        for doctag_index in doctag_indices:
             for word in word_vocabs:
                 if word is None:
                     continue  # OOV word in the input sentence => skip
-                train_sg_pair(model, word, doclbl_index, alpha, learn_vectors=learn_doclbls,
-                              learn_hidden=learn_hidden, context_vectors=doclbl_vectors,
-                              context_locks=doclbl_locks)
+                train_sg_pair(model, word, doctag_index, alpha, learn_vectors=learn_doctags,
+                              learn_hidden=learn_hidden, context_vectors=doctag_vectors,
+                              context_locks=doctag_locks)
 
         return len([word for word in word_vocabs if word is not None])
 
-    def train_sentence_dm(model, word_vocabs, doclbl_indices, alpha, work=None, neu1=None,
-                          learn_doclbls=True, learn_words=True, learn_hidden=True,
-                          word_vectors=None, word_locks=None, doclbl_vectors=None, doclbl_locks=None):
+    def train_sentence_dm(model, word_vocabs, doctag_indices, alpha, work=None, neu1=None,
+                          learn_doctags=True, learn_words=True, learn_hidden=True,
+                          word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
         """
         Update distributed memory model by training on a single sentence.
 
@@ -115,13 +115,13 @@ except:
             word_vectors = model.syn0
         if word_locks is None:
             word_locks = model.syn0_lockf
-        if doclbl_vectors is None:
-            doclbl_vectors = model.docvecs.doclbl_syn0
-        if doclbl_locks is None:
-            doclbl_locks = model.docvecs.doclbl_syn0_lockf
+        if doctag_vectors is None:
+            doctag_vectors = model.docvecs.doctag_syn0
+        if doctag_locks is None:
+            doctag_locks = model.docvecs.doctag_syn0_lockf
 
-        doclbl_sum = np_sum(doclbl_vectors[doclbl_indices], axis=0)
-        doclbl_len = len(doclbl_indices)
+        doctag_sum = np_sum(doctag_vectors[doctag_indices], axis=0)
+        doctag_len = len(doctag_indices)
 
         for pos, word in enumerate(word_vocabs):
             if word is None:
@@ -130,15 +130,15 @@ except:
             start = max(0, pos - model.window + reduced_window)
             window_pos = enumerate(word_vocabs[start : pos + model.window + 1 - reduced_window], start)
             word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
-            l1 = np_sum(word_vectors[word2_indices], axis=0) + doclbl_sum  # 1 x layer1_size
+            l1 = np_sum(word_vectors[word2_indices], axis=0) + doctag_sum  # 1 x layer1_size
             if word2_indices and model.cbow_mean:
-                l1 /= (len(word2_indices) + doclbl_len)
+                l1 /= (len(word2_indices) + doctag_len)
             neu1e = train_cbow_pair(model, word, word2_indices, l1, alpha, learn_vectors=False, learn_hidden=True)
             if word2_indices and not model.cbow_mean:
-                neu1e /= (len(word2_indices) + doclbl_len)
-            if learn_doclbls:
-                doclbl_vectors[doclbl_indices] += \
-                    neu1e * np_repeat(doclbl_locks[doclbl_indices],model.vector_size).reshape(-1,model.vector_size)
+                neu1e /= (len(word2_indices) + doctag_len)
+            if learn_doctags:
+                doctag_vectors[doctag_indices] += \
+                    neu1e * np_repeat(doctag_locks[doctag_indices],model.vector_size).reshape(-1,model.vector_size)
             if learn_words:
                 word_vectors[word2_indices] += \
                     neu1e * np_repeat(word_locks[word2_indices],model.vector_size).reshape(-1,model.vector_size)
@@ -146,9 +146,9 @@ except:
         return len([word for word in word_vocabs if word is not None])
 
 
-    def train_sentence_dm_concat(model, word_vocabs, doclbl_indices, alpha, work=None, neu1=None,
-                                 learn_doclbls=True, learn_words=True, learn_hidden=True,
-                                 word_vectors=None, word_locks=None, doclbl_vectors=None, doclbl_locks=None):
+    def train_sentence_dm_concat(model, word_vocabs, doctag_indices, alpha, work=None, neu1=None,
+                                 learn_doctags=True, learn_words=True, learn_hidden=True,
+                                 word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
         """
         Update distributed memory model by training on a single sentence, using a
         concatenation of the context window word vectors (rather than a sum or average).
@@ -164,14 +164,14 @@ except:
             word_vectors = model.syn0
         if word_locks is None:
             word_locks = model.syn0_lockf
-        if doclbl_vectors is None:
-            doclbl_vectors = model.docvecs.doclbl_syn0
-        if doclbl_locks is None:
-            doclbl_locks = model.docvecs.doclbl_syn0_lockf
+        if doctag_vectors is None:
+            doctag_vectors = model.docvecs.doctag_syn0
+        if doctag_locks is None:
+            doctag_locks = model.docvecs.doctag_syn0_lockf
 
-        doclbl_len = len(doclbl_indices)
-        if doclbl_len != model.dm_lbl_count:
-            return 0 # skip doc without expected doclbl(s)
+        doctag_len = len(doctag_indices)
+        if doctag_len != model.dm_tag_count:
+            return 0 # skip doc without expected doctag(s)
 
         null_word = model.vocab['\0']
         pre_pad_count = model.window
@@ -190,47 +190,42 @@ except:
             word_context_len = len(word_context_indices)
             predict_word = model.vocab[model.index2word[padded_sentence_indices[pos]]]
             # numpy advanced-indexing copies; concatenate, flatten to 1d
-            l1 = concatenate((doclbl_vectors[doclbl_indices], word_vectors[word_context_indices])).ravel()
+            l1 = concatenate((doctag_vectors[doctag_indices], word_vectors[word_context_indices])).ravel()
             neu1e = train_cbow_pair(model, predict_word, None, l1, alpha, learn_hidden=learn_hidden, learn_vectors=False)
 
             # filter by locks and shape for addition to source vectors
-            e_locks = concatenate((doclbl_locks[doclbl_indices], word_locks[word_context_indices]))
+            e_locks = concatenate((doctag_locks[doctag_indices], word_locks[word_context_indices]))
             neu1e_r = (neu1e.reshape(-1,model.vector_size)
                        * np_repeat(e_locks,model.vector_size).reshape(-1,model.vector_size))
 
-            if learn_doclbls:
-                np_add.at(doclbl_vectors, doclbl_indices, neu1e_r[:doclbl_len])
+            if learn_doctags:
+                np_add.at(doctag_vectors, doctag_indices, neu1e_r[:doctag_len])
             if learn_words:
-                np_add.at(word_vectors, word_context_indices, neu1e_r[doclbl_len:])
+                np_add.at(word_vectors, word_context_indices, neu1e_r[doctag_len:])
 
         return len(padded_sentence_indices) - pre_pad_count - post_pad_count
 
 
-class LabeledSentence(object):
+class TaggedDocument(namedtuple('TaggedDocument','words tags')):
     """
-    A single labeled sentence = text item.
+    A single document, made up of `words` (a list of unicode string tokens)
+    and `tags` (a list of tokens). Tags may also be one or more unicode string 
+    tokens, but typical practice (which will also be most memory-efficient) is 
+    for the tags list to include a unique integer id as the only tag.
+
     Replaces "sentence as a list of words" from Word2Vec.
 
     """
-    def __init__(self, words, labels):
-        """
-        `words` is a list of tokens (unicode strings), `labels` a
-        list of text labels associated with this text.
-
-        """
-        self.words = words
-        self.labels = labels
-
     def __str__(self):
-        return '%s(%s, %s)' % (self.__class__.__name__, self.words, self.labels)
+        return '%s(%s, %s)' % (self.__class__.__name__, self.words, self.tags)
 
 
-class DocvecsInArray(object):
+class DocvecsArray(object):
     """
     Default storage of docvecs during training, in a numpy array.
 
-    Maintains dict mapping string doclbl -> int mapping if necessary.
-    (If all LabeledSentences use only int doclbls, this overhead is
+    Maintains dict mapping string doctag -> int mapping if necessary.
+    (If all TaggedSentences use only int doctags, this overhead is
     avoided.) Supplying a mapfile_path at construction will use a
     pair of memory-mapped files as the array backing for syn0/syn0_lockf
     values.
@@ -240,24 +235,24 @@ class DocvecsInArray(object):
     """
 
     def __init__(self, mapfile_path=None):
-        self.doclbls = {}  # string -> Doclbl (if necessary)
-        self.index2doclbl = []  # int index -> String (if necessary)
+        self.doctags = {}  # string -> Doctag (if necessary)
+        self.index2doctag = []  # int index -> String (if necessary)
         self.max_index = -1
         self.mapfile_path = mapfile_path
 
-    def note_doclbl(self, key, sentence_no, sentence_length):
+    def note_doctag(self, key, sentence_no, sentence_length):
         if isinstance(key, int):
             self.max_index = max(self.max_index, key)
         else:
-            if key in self.doclbls:
-                self.doclbls[key] = self.doclbls[key].repeat(sentence_length)
+            if key in self.doctags:
+                self.doctags[key] = self.doctags[key].repeat(sentence_length)
             else:
-                self.doclbls[key] = Doclbl(sentence_no, sentence_length, 1)
-                self.index2doclbl.append(key)
+                self.doctags[key] = Doctag(sentence_no, sentence_length, 1)
+                self.index2doctag.append(key)
 
-    def indexed_doclbls(self, doclbl_tokens):
-        return ([i for i in [self._int_index(index,-1) for index in doclbl_tokens] if i > -1],
-                self.doclbl_syn0, doclbl_tokens)
+    def indexed_doctags(self, doctag_tokens):
+        return ([i for i in [self._int_index(index,-1) for index in doctag_tokens] if i > -1],
+                self.doctag_syn0, doctag_tokens)
 
     def trained_items(self, indexed_tuples):
         """Persist any changes to the given indices; a no-op for this implementation"""
@@ -267,29 +262,29 @@ class DocvecsInArray(object):
         if isinstance(index, int):
             return index
         else:
-            return self.doclbls[index].index if index in self.doclbls else missing
+            return self.doctags[index].index if index in self.doctags else missing
 
     def __getitem__(self, index):
-        return self.doclbl_syn0[self._int_index(index)]
+        return self.doctag_syn0[self._int_index(index)]
 
     def reset_weights(self, model):
-        length = max(len(self.doclbls),self.max_index)
+        length = max(len(self.doctags),self.max_index)
         if self.mapfile_path:
-            self.doclbl_syn0 = np_memmap(self.mapfile_path+'.doclbl_syn0',dtype=REAL,mode='w+',shape=(length,model.vector_size))
-            self.doclbl_syn0_lockf = np_memmap(self.mapfile_path+'.doclbl_syn0_lockf',dtype=REAL,mode='w+',shape=(length,))
-            self.doclbl_syn0_lockf.fill(1.0)
+            self.doctag_syn0 = np_memmap(self.mapfile_path+'.doctag_syn0',dtype=REAL,mode='w+',shape=(length,model.vector_size))
+            self.doctag_syn0_lockf = np_memmap(self.mapfile_path+'.doctag_syn0_lockf',dtype=REAL,mode='w+',shape=(length,))
+            self.doctag_syn0_lockf.fill(1.0)
         else:
-            self.doclbl_syn0 = empty((length, model.vector_size), dtype=REAL)
-            self.doclbl_syn0_lockf = ones((length,), dtype=REAL)  # zeros suppress learning
+            self.doctag_syn0 = empty((length, model.vector_size), dtype=REAL)
+            self.doctag_syn0_lockf = ones((length,), dtype=REAL)  # zeros suppress learning
 
         for i in xrange(length):
             # construct deterministic seed from index AND model seed
-            seed = "%d %s" % (model.seed, self.index2doclbl[i] if len(self.index2doclbl)>0 else str(i))
-            self.doclbl_syn0[i] = model.seeded_vector(seed)
+            seed = "%d %s" % (model.seed, self.index2doctag[i] if len(self.index2doctag)>0 else str(i))
+            self.doctag_syn0[i] = model.seeded_vector(seed)
 
 
-class Doclbl(namedtuple('Doclbl', 'index, word_count, doc_count')):
-    """A document label discovered during the initial vocabulary
+class Doctag(namedtuple('Doctag', 'index, word_count, doc_count')):
+    """A string document tag discovered during the initial vocabulary
     scan. (The document-vector equivalent of a Vocab object.)"""
     __slots__ = ()
     def repeat(self, word_count):
@@ -300,13 +295,13 @@ class Doc2Vec(Word2Vec):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
     def __init__(self, sentences=None, size=300, alpha=0.025, window=8, min_count=5,
                  sample=0, seed=1, workers=1, min_alpha=0.0001, dm=1, hs=1, negative=0,
-                 dbow_words=0, dm_mean=0, dm_concat=0, dm_lbl_count=1,
+                 dbow_words=0, dm_mean=0, dm_concat=0, dm_tag_count=1,
                  docvecs=None, docvecs_mapfile=None, **kwargs):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
-        LabeledSentence object that will be used for training.
+        TaggedSentence object that will be used for training.
 
-        The `sentences` iterable can be simply a list of LabeledSentence elements, but for larger corpora,
+        The `sentences` iterable can be simply a list of TaggedSentence elements, but for larger corpora,
         consider an iterable that streams the sentences directly from disk/network.
 
         If you don't supply `sentences`, the model is left uninitialized -- use if
@@ -342,9 +337,9 @@ class Doc2Vec(Word2Vec):
         `dm_concat` = if 1, use concatenation of context vectors rather than sum/average;
         default is 0 (off). Note concatenation results in a much-larger model, as the input
         is no longer the size of one (sampled or arithmatically combined) word vector, but the
-        size of the label(s) and all words in the context strung together.
+        size of the tag(s) and all words in the context strung together.
 
-        `dm_lbl_count` = expected constant number of sentence lbls per sentence, when using
+        `dm_tag_count` = expected constant number of sentence tags per sentence, when using
         dm_concat mode; default is 1.
 
         `dbow_words` if set to 1 trains word-vectors (in skip-gram fashion) simultaneous with DBOW
@@ -357,18 +352,18 @@ class Doc2Vec(Word2Vec):
                           null_word=dm_concat, **kwargs)
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
-        self.dm_lbl_count = dm_lbl_count
+        self.dm_tag_count = dm_tag_count
         self.docvecs = docvecs
         if not self.docvecs:
-            self.docvecs = DocvecsInArray(docvecs_mapfile)
+            self.docvecs = DocvecsArray(docvecs_mapfile)
         if sentences is not None:
             self.build_vocab(sentences)
             self.train(sentences)
 
     def reset_weights(self):
         if self.dm_concat:
-            # expand l1 size to match concatenated lbls+words length
-            self.layer1_size = (self.dm_lbl_count + (2 * self.window)) * self.vector_size
+            # expand l1 size to match concatenated tags+words length
+            self.layer1_size = (self.dm_tag_count + (2 * self.window)) * self.vector_size
             logger.info("using concatenative %d-dimensional layer1"% (self.layer1_size))
         Word2Vec.reset_weights(self)
         self.docvecs.reset_weights(self)
@@ -381,8 +376,8 @@ class Doc2Vec(Word2Vec):
                 logger.info("PROGRESS: at item #%i, processed %i words and %i word types" %
                             (sentence_no, total_words, len(vocab)))
             sentence_length = len(sentence.words)
-            for label in sentence.labels:
-                self.docvecs.note_doclbl(label, sentence_no, sentence_length)
+            for tag in sentence.tags:
+                self.docvecs.note_doctag(tag, sentence_no, sentence_length)
             for word in sentence.words:
                 total_words += 1
                 if word in vocab:
@@ -397,7 +392,7 @@ class Doc2Vec(Word2Vec):
         for sentence in sentences:
             # avoid calling random_sample() where prob >= 1, to speed things up a little:
             yield (self._tokens_to_vocabs(sentence.words),
-                   self.docvecs.indexed_doclbls(sentence.labels))
+                   self.docvecs.indexed_doctags(sentence.tags))
 
     def _tokens_to_vocabs(self, tokens, sample=True, source_dict=None):
         if source_dict is None:
@@ -411,17 +406,17 @@ class Doc2Vec(Word2Vec):
 
     def _get_job_words(self, alpha, work, job, neu1):
         if self.sg:
-            tally = sum(train_sentence_dbow(self, sentence, doclbl_indices, alpha, work, train_words=self.dbow_words,
-                                           doclbl_vectors=doclbl_vectors)
-                       for sentence, (doclbl_indices, doclbl_vectors, ignored) in job)
+            tally = sum(train_sentence_dbow(self, sentence, doctag_indices, alpha, work, train_words=self.dbow_words,
+                                           doctag_vectors=doctag_vectors)
+                       for sentence, (doctag_indices, doctag_vectors, ignored) in job)
         elif self.dm_concat:
-            tally = sum(train_sentence_dm_concat(self, sentence, doclbl_indices, alpha, work, neu1,
-                                                doclbl_vectors=doclbl_vectors)
-                       for sentence, (doclbl_indices, doclbl_vectors, ignored) in job)
+            tally = sum(train_sentence_dm_concat(self, sentence, doctag_indices, alpha, work, neu1,
+                                                doctag_vectors=doctag_vectors)
+                       for sentence, (doctag_indices, doctag_vectors, ignored) in job)
         else:
-            tally = sum(train_sentence_dm(self, sentence, doclbl_indices, alpha, work, neu1,
-                                         doclbl_vectors=doclbl_vectors)
-                       for sentence, (doclbl_indices, doclbl_vectors, ignored) in job)
+            tally = sum(train_sentence_dm(self, sentence, doctag_indices, alpha, work, neu1,
+                                         doctag_vectors=doctag_vectors)
+                       for sentence, (doctag_indices, doctag_vectors, ignored) in job)
         self.docvecs.trained_items(item for s, item in job)
         return tally
 
@@ -431,10 +426,10 @@ class Doc2Vec(Word2Vec):
 
         Document should be a list of (word) tokens.
         """
-        doclbl_vectors = empty((1, self.vector_size), dtype=REAL)
-        doclbl_vectors[0] = self.seeded_vector(' '.join(document))
-        doclbl_locks = ones(1, dtype=REAL)
-        doclbl_indices = [0]
+        doctag_vectors = empty((1, self.vector_size), dtype=REAL)
+        doctag_vectors[0] = self.seeded_vector(' '.join(document))
+        doctag_locks = ones(1, dtype=REAL)
+        doctag_indices = [0]
         word_vocabs = self._tokens_to_vocabs(document)
 
         work = zeros(self.layer1_size, dtype=REAL)
@@ -443,20 +438,20 @@ class Doc2Vec(Word2Vec):
 
         for i in range(steps):
             if self.sg:
-                train_sentence_dbow(self, word_vocabs, doclbl_indices, alpha, work,
+                train_sentence_dbow(self, word_vocabs, doctag_indices, alpha, work,
                                     learn_words=False, learn_hidden=False,
-                                    doclbl_vectors=doclbl_vectors, doclbl_locks=doclbl_locks)
+                                    doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
             elif self.dm_concat:
-                train_sentence_dm_concat(self, word_vocabs, doclbl_indices, alpha, work, neu1,
+                train_sentence_dm_concat(self, word_vocabs, doctag_indices, alpha, work, neu1,
                                          learn_words=False, learn_hidden=False,
-                                         doclbl_vectors=doclbl_vectors, doclbl_locks=doclbl_locks)
+                                         doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
             else:
-                train_sentence_dm(self, word_vocabs, doclbl_indices, alpha, work, neu1,
+                train_sentence_dm(self, word_vocabs, doctag_indices, alpha, work, neu1,
                                   learn_words=False, learn_hidden=False,
-                                  doclbl_vectors=doclbl_vectors, doclbl_locks=doclbl_locks)
+                                  doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
             alpha = ((alpha - min_alpha) / (steps - i)) + min_alpha
 
-        return doclbl_vectors[0]
+        return doctag_vectors[0]
 
     def __str__(self):
         return "Doc2Vec(%id, sg=%i, hs=%i, negative=%i, dm_concat=%i)" % (self.vector_size, self.sg, self.hs, self.negative, self.dm_concat)
@@ -495,12 +490,12 @@ class Doc2Vec(Word2Vec):
 
     def save(self, *args, **kwargs):
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])  # don't bother storing the cached normalized vectors
-        super(Doc2Vec, self).save(*args, **kwargs)  ### TODO: save doclbl fields
+        super(Doc2Vec, self).save(*args, **kwargs)  ### TODO: save doctag fields
 
 
-class LabeledBrownCorpus(object):
+class TaggedBrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data), yielding
-    each sentence out as a LabeledSentence object."""
+    each sentence out as a TaggedSentence object."""
     def __init__(self, dirname):
         self.dirname = dirname
 
@@ -518,26 +513,26 @@ class LabeledBrownCorpus(object):
                 words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
                 if not words:  # don't bother sending out empty sentences
                     continue
-                yield LabeledSentence(words, ['%s_SENT_%s' % (fname, item_no)])
+                yield TaggedSentence(words, ['%s_SENT_%s' % (fname, item_no)])
 
 
-class LabeledLineSentence(object):
-    """Simple format: one sentence = one line = one LabeledSentence object.
+class TaggedLineSentence(object):
+    """Simple format: one sentence = one line = one TaggedDocument object.
 
     Words are expected to be already preprocessed and separated by whitespace,
-    labels are constructed automatically from the sentence line number."""
+    tags are constructed automatically from the sentence line number."""
     def __init__(self, source):
         """
         `source` can be either a string (filename) or a file object.
 
         Example::
 
-            sentences = LineSentence('myfile.txt')
+            sentences = TaggedLineSentence('myfile.txt')
 
         Or for compressed files::
 
-            sentences = LineSentence('compressed_text.txt.bz2')
-            sentences = LineSentence('compressed_text.txt.gz')
+            sentences = TaggedLineSentence('compressed_text.txt.bz2')
+            sentences = TaggedLineSentence('compressed_text.txt.gz')
 
         """
         self.source = source
@@ -549,9 +544,9 @@ class LabeledLineSentence(object):
             # Things that don't have seek will trigger an exception
             self.source.seek(0)
             for item_no, line in enumerate(self.source):
-                yield LabeledSentence(utils.to_unicode(line).split(), ['SENT_%s' % item_no])
+                yield TaggedDocument(utils.to_unicode(line).split(), [item_no])
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
             with utils.smart_open(self.source) as fin:
                 for item_no, line in enumerate(fin):
-                    yield LabeledSentence(utils.to_unicode(line).split(), ['SENT_%s' % item_no])
+                    yield TaggedDocument(utils.to_unicode(line).split(), [item_no])
