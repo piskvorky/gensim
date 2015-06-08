@@ -474,6 +474,9 @@ class Word2Vec(utils.SaveLoad):
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
 
+        if self.iter > 1:
+            sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
+
         start, next_report = time.time(), [1.0]
         word_count = [word_count]
         total_words = total_words or int(sum(v.count * v.sample_probability for v in itervalues(self.vocab)) * self.iter)
