@@ -265,30 +265,30 @@ cdef unsigned long long fast_sentence_dmc_neg(
     return next_random
 
 
-def train_sentence_dbow(model, word_vocabs, doclbl_indexes, alpha, work=None,
-                        train_words=False, learn_doclbls=True, learn_words=True, learn_hidden=True,
-                        word_vectors=None, word_locks=None, doclbl_vectors=None, doclbl_locks=None):
+def train_sentence_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
+                        train_words=False, learn_doctags=True, learn_words=True, learn_hidden=True,
+                        word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int _train_words = train_words
     cdef int _learn_words = learn_words
     cdef int _learn_hidden = learn_hidden
-    cdef int _learn_doclbls = learn_doclbls
+    cdef int _learn_doctags = learn_doctags
 
     cdef REAL_t *_word_vectors
-    cdef REAL_t *_doclbl_vectors
+    cdef REAL_t *_doctag_vectors
     cdef REAL_t *_word_locks
-    cdef REAL_t *_doclbl_locks
+    cdef REAL_t *_doctag_locks
     cdef REAL_t *_work
     cdef REAL_t _alpha = alpha
     cdef int size = model.layer1_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t _doclbl_indexes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t _doctag_indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
     cdef int sentence_len
-    cdef int doclbl_len
+    cdef int doctag_len
     cdef int window = model.window
 
     cdef int i, j
@@ -305,19 +305,19 @@ def train_sentence_dbow(model, word_vocabs, doclbl_indexes, alpha, work=None,
     cdef unsigned long long table_len
     cdef unsigned long long next_random
 
-    # default vectors, locks from syn0/doclbl_syn0
+    # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
        word_vectors = model.syn0
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
-    if doclbl_vectors is None:
-       doclbl_vectors = model.docvecs.doclbl_syn0
-    _doclbl_vectors = <REAL_t *>(np.PyArray_DATA(doclbl_vectors))
+    if doctag_vectors is None:
+       doctag_vectors = model.docvecs.doctag_syn0
+    _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
     if word_locks is None:
        word_locks = model.syn0_lockf
     _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
-    if doclbl_locks is None:
-       doclbl_locks = model.docvecs.doclbl_syn0_lockf
-    _doclbl_locks = <REAL_t *>(np.PyArray_DATA(doclbl_locks))
+    if doctag_locks is None:
+       doctag_locks = model.docvecs.doctag_syn0_lockf
+    _doctag_locks = <REAL_t *>(np.PyArray_DATA(doctag_locks))
 
     if hs:
         syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
@@ -333,7 +333,7 @@ def train_sentence_dbow(model, word_vocabs, doclbl_indexes, alpha, work=None,
        work = zeros(model.layer1_size, dtype=REAL)
     _work = <REAL_t *>np.PyArray_DATA(work)
     sentence_len = <int>min(MAX_SENTENCE_LEN, len(word_vocabs))
-    doclbl_len = <int>min(MAX_SENTENCE_LEN, len(doclbl_indexes))
+    doctag_len = <int>min(MAX_SENTENCE_LEN, len(doctag_indexes))
 
     for i in range(sentence_len):
         predict_word = word_vocabs[i]
@@ -352,8 +352,8 @@ def train_sentence_dbow(model, word_vocabs, doclbl_indexes, alpha, work=None,
         # single randint() call avoids a big thread-synchronization slowdown
         for i, item in enumerate(np.random.randint(0, window, sentence_len)):
             reduced_windows[i] = item
-    for i in range(doclbl_len):
-        _doclbl_indexes[i] = doclbl_indexes[i]
+    for i in range(doctag_len):
+        _doctag_indexes[i] = doctag_indexes[i]
         result += 1
 
     # release GIL & train on the sentence
@@ -382,33 +382,33 @@ def train_sentence_dbow(model, word_vocabs, doclbl_indexes, alpha, work=None,
                                                              _learn_words, _learn_hidden, _word_locks)
 
             # docvec-training
-            for j in range(doclbl_len):
+            for j in range(doctag_len):
                 if hs:
-                    fast_sentence_dbow_hs(points[i], codes[i], codelens[i], _doclbl_vectors, syn1, size, _doclbl_indexes[j],
-                                          _alpha, _work, _learn_doclbls, _learn_hidden, _doclbl_locks)
+                    fast_sentence_dbow_hs(points[i], codes[i], codelens[i], _doctag_vectors, syn1, size, _doctag_indexes[j],
+                                          _alpha, _work, _learn_doctags, _learn_hidden, _doctag_locks)
                 if negative:
-                    next_random = fast_sentence_dbow_neg(negative, table, table_len, _doclbl_vectors, syn1neg, size,
-                                                             indexes[i], _doclbl_indexes[j], _alpha, _work, next_random,
-                                                             _learn_doclbls, _learn_hidden, _doclbl_locks)
+                    next_random = fast_sentence_dbow_neg(negative, table, table_len, _doctag_vectors, syn1neg, size,
+                                                             indexes[i], _doctag_indexes[j], _alpha, _work, next_random,
+                                                             _learn_doctags, _learn_hidden, _doctag_locks)
 
     return result
 
 
-def train_sentence_dm(model, word_vocabs, doclbl_indexes, alpha, work=None, neu1=None,
-                      learn_doclbls=True, learn_words=True, learn_hidden=True,
-                      word_vectors=None, word_locks=None, doclbl_vectors=None, doclbl_locks=None):
+def train_sentence_dm(model, word_vocabs, doctag_indexes, alpha, work=None, neu1=None,
+                      learn_doctags=True, learn_words=True, learn_hidden=True,
+                      word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
     cdef int hs = model.hs
     cdef int negative = model.negative
-    cdef int _learn_doclbls = learn_doclbls
+    cdef int _learn_doctags = learn_doctags
     cdef int _learn_words = learn_words
     cdef int _learn_hidden = learn_hidden
     cdef int cbow_mean = model.cbow_mean
     cdef REAL_t count, inv_count = 1.0
 
     cdef REAL_t *_word_vectors
-    cdef REAL_t *_doclbl_vectors
+    cdef REAL_t *_doctag_vectors
     cdef REAL_t *_word_locks
-    cdef REAL_t *_doclbl_locks
+    cdef REAL_t *_doctag_locks
     cdef REAL_t *_work
     cdef REAL_t *_neu1
     cdef REAL_t _alpha = alpha
@@ -416,10 +416,10 @@ def train_sentence_dm(model, word_vocabs, doclbl_indexes, alpha, work=None, neu1
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t _doclbl_indexes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t _doctag_indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
     cdef int sentence_len
-    cdef int doclbl_len
+    cdef int doctag_len
     cdef int window = model.window
 
     cdef int i, j, k, m
@@ -436,19 +436,19 @@ def train_sentence_dm(model, word_vocabs, doclbl_indexes, alpha, work=None, neu1
     cdef unsigned long long table_len
     cdef unsigned long long next_random
 
-    # default vectors, locks from syn0/doclbl_syn0
+    # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
        word_vectors = model.syn0
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
-    if doclbl_vectors is None:
-       doclbl_vectors = model.docvecs.doclbl_syn0
-    _doclbl_vectors = <REAL_t *>(np.PyArray_DATA(doclbl_vectors))
+    if doctag_vectors is None:
+       doctag_vectors = model.docvecs.doctag_syn0
+    _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
     if word_locks is None:
        word_locks = model.syn0_lockf
     _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
-    if doclbl_locks is None:
-       doclbl_locks = model.docvecs.doclbl_syn0_lockf
-    _doclbl_locks = <REAL_t *>(np.PyArray_DATA(doclbl_locks))
+    if doctag_locks is None:
+       doctag_locks = model.docvecs.doctag_syn0_lockf
+    _doctag_locks = <REAL_t *>(np.PyArray_DATA(doctag_locks))
 
     if hs:
         syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
@@ -487,9 +487,9 @@ def train_sentence_dm(model, word_vocabs, doclbl_indexes, alpha, work=None, neu1
     for i, item in enumerate(np.random.randint(0, window, sentence_len)):
         reduced_windows[i] = item
 
-    doclbl_len = <int>min(MAX_SENTENCE_LEN, len(doclbl_indexes))
-    for i in range(doclbl_len):
-        _doclbl_indexes[i] = doclbl_indexes[i]
+    doctag_len = <int>min(MAX_SENTENCE_LEN, len(doctag_indexes))
+    for i in range(doctag_len):
+        _doctag_indexes[i] = doctag_indexes[i]
         result += 1
 
     # release GIL & train on the sentence
@@ -511,9 +511,9 @@ def train_sentence_dm(model, word_vocabs, doclbl_indexes, alpha, work=None, neu1
                 else:
                     count += ONEF
                     our_saxpy(&size, &ONEF, &_word_vectors[indexes[m] * size], &ONE, _neu1, &ONE)
-            for m in range(doclbl_len):
+            for m in range(doctag_len):
                 count += ONEF
-                our_saxpy(&size, &ONEF, &_doclbl_vectors[_doclbl_indexes[m] * size], &ONE, _neu1, &ONE)
+                our_saxpy(&size, &ONEF, &_doctag_vectors[_doctag_indexes[m] * size], &ONE, _neu1, &ONE)
             if count > (<REAL_t>0.5):
                 inv_count = ONEF/count
             if cbow_mean:
@@ -532,10 +532,10 @@ def train_sentence_dm(model, word_vocabs, doclbl_indexes, alpha, work=None, neu1
             if not cbow_mean:
                 sscal(&size, &inv_count, _work, &ONE)  # (does this need BLAS-variants like saxpy?)
             # apply accumulated error in work
-            if _learn_doclbls:
-                for m in range(doclbl_len):
-                    our_saxpy(&size, &_doclbl_locks[_doclbl_indexes[m]], _work,
-                              &ONE, &_doclbl_vectors[_doclbl_indexes[m] * size], &ONE)
+            if _learn_doctags:
+                for m in range(doctag_len):
+                    our_saxpy(&size, &_doctag_locks[_doctag_indexes[m]], _work,
+                              &ONE, &_doctag_vectors[_doctag_indexes[m] * size], &ONE)
             if _learn_words:
                 for m in range(j, k):
                     if m == i:
@@ -547,19 +547,19 @@ def train_sentence_dm(model, word_vocabs, doclbl_indexes, alpha, work=None, neu1
     return result
 
 
-def train_sentence_dm_concat(model, word_vocabs, doclbl_indexes, alpha, work=None, neu1=None,
-                             learn_doclbls=True, learn_words=True, learn_hidden=True,
-                             word_vectors=None, word_locks=None, doclbl_vectors=None, doclbl_locks=None):
+def train_sentence_dm_concat(model, word_vocabs, doctag_indexes, alpha, work=None, neu1=None,
+                             learn_doctags=True, learn_words=True, learn_hidden=True,
+                             word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
     cdef int hs = model.hs
     cdef int negative = model.negative
-    cdef int _learn_doclbls = learn_doclbls
+    cdef int _learn_doctags = learn_doctags
     cdef int _learn_words = learn_words
     cdef int _learn_hidden = learn_hidden
 
     cdef REAL_t *_word_vectors
-    cdef REAL_t *_doclbl_vectors
+    cdef REAL_t *_doctag_vectors
     cdef REAL_t *_word_locks
-    cdef REAL_t *_doclbl_locks
+    cdef REAL_t *_doctag_locks
     cdef REAL_t *_work
     cdef REAL_t *_neu1
     cdef REAL_t _alpha = alpha
@@ -568,12 +568,12 @@ def train_sentence_dm_concat(model, word_vocabs, doclbl_indexes, alpha, work=Non
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
-    cdef np.uint32_t _doclbl_indexes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t _doctag_indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t window_indexes[MAX_SENTENCE_LEN] 
     cdef int sentence_len
-    cdef int doclbl_len
+    cdef int doctag_len
     cdef int window = model.window
-    cdef int expected_doclbl_len = model.dm_lbl_count
+    cdef int expected_doctag_len = model.dm_tag_count
 
     cdef int i, j, k, m, n
     cdef long result = 0
@@ -590,23 +590,23 @@ def train_sentence_dm_concat(model, word_vocabs, doclbl_indexes, alpha, work=Non
     cdef unsigned long long table_len
     cdef unsigned long long next_random
 
-    doclbl_len = <int>min(MAX_SENTENCE_LEN, len(doclbl_indexes))
-    if doclbl_len != expected_doclbl_len:
-        return 0  # skip doc without expected nmber of lbls
+    doctag_len = <int>min(MAX_SENTENCE_LEN, len(doctag_indexes))
+    if doctag_len != expected_doctag_len:
+        return 0  # skip doc without expected nmber of tags
 
-    # default vectors, locks from syn0/doclbl_syn0
+    # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
        word_vectors = model.syn0
     _word_vectors = <REAL_t *>(np.PyArray_DATA(word_vectors))
-    if doclbl_vectors is None:
-       doclbl_vectors = model.docvecs.doclbl_syn0
-    _doclbl_vectors = <REAL_t *>(np.PyArray_DATA(doclbl_vectors))
+    if doctag_vectors is None:
+       doctag_vectors = model.docvecs.doctag_syn0
+    _doctag_vectors = <REAL_t *>(np.PyArray_DATA(doctag_vectors))
     if word_locks is None:
        word_locks = model.syn0_lockf
     _word_locks = <REAL_t *>(np.PyArray_DATA(word_locks))
-    if doclbl_locks is None:
-       doclbl_locks = model.docvecs.doclbl_syn0_lockf
-    _doclbl_locks = <REAL_t *>(np.PyArray_DATA(doclbl_locks))
+    if doctag_locks is None:
+       doctag_locks = model.docvecs.doctag_syn0_lockf
+    _doctag_locks = <REAL_t *>(np.PyArray_DATA(doctag_locks))
 
     if hs:
         syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
@@ -644,8 +644,8 @@ def train_sentence_dm_concat(model, word_vocabs, doclbl_indexes, alpha, work=Non
             result += 1
             j = j + 1
 
-    for i in range(doclbl_len):
-        _doclbl_indexes[i] = doclbl_indexes[i]
+    for i in range(doctag_len):
+        _doctag_indexes[i] = doctag_indexes[i]
         result += 1
 
     # release GIL & train on the sentence
@@ -655,9 +655,9 @@ def train_sentence_dm_concat(model, word_vocabs, doclbl_indexes, alpha, work=Non
             k = i + window + 1  # past sentence end OK: will pad with null word
 
             # compose l1 & clear work
-            for m in range(doclbl_len):
+            for m in range(doctag_len):
                 # doc vector(s)
-                memcpy(&_neu1[m * vector_size], &_doclbl_vectors[_doclbl_indexes[m] * vector_size],
+                memcpy(&_neu1[m * vector_size], &_doctag_vectors[_doctag_indexes[m] * vector_size],
                        vector_size * cython.sizeof(REAL_t))
             n = 0
             for m in range(j, k):
@@ -670,7 +670,7 @@ def train_sentence_dm_concat(model, word_vocabs, doclbl_indexes, alpha, work=Non
                     window_indexes[n] = indexes[m]
                 n = n + 1
             for m in range(2 * window):
-                memcpy(&_neu1[(doclbl_len + m) * vector_size], &_word_vectors[window_indexes[m] * vector_size],
+                memcpy(&_neu1[(doctag_len + m) * vector_size], &_word_vectors[window_indexes[m] * vector_size],
                        vector_size * cython.sizeof(REAL_t))
             memset(_work, 0, layer1_size * cython.sizeof(REAL_t))  # work to accumulate l1 error
 
@@ -683,13 +683,13 @@ def train_sentence_dm_concat(model, word_vocabs, doclbl_indexes, alpha, work=Non
                                                     _neu1, syn1neg, indexes[i], _alpha, _work, 
                                                    layer1_size, vector_size, _learn_hidden)
 
-            if _learn_doclbls:
-                for m in range(doclbl_len):
-                    our_saxpy(&vector_size, &_doclbl_locks[_doclbl_indexes[m]], &_work[m * vector_size],
-                              &ONE, &_doclbl_vectors[_doclbl_indexes[m] * vector_size], &ONE)
+            if _learn_doctags:
+                for m in range(doctag_len):
+                    our_saxpy(&vector_size, &_doctag_locks[_doctag_indexes[m]], &_work[m * vector_size],
+                              &ONE, &_doctag_vectors[_doctag_indexes[m] * vector_size], &ONE)
             if _learn_words:
                 for m in range(2 * window):
-                    our_saxpy(&vector_size, &_word_locks[window_indexes[m]], &_work[(doclbl_len + m) * vector_size],
+                    our_saxpy(&vector_size, &_word_locks[window_indexes[m]], &_work[(doctag_len + m) * vector_size],
                               &ONE, &_word_vectors[window_indexes[m] * vector_size], &ONE)
 
     return result
