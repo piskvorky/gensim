@@ -438,6 +438,16 @@ class Word2Vec(utils.SaveLoad):
                     (len(vocab), total_words, sentence_no + 1))
         return vocab
 
+    def reset_from(self, other_model):
+        """
+        Borrow shareable pre-built structures (like vocab) from the other_model. Useful
+        if testing multiple models in parallel on the same corpus.
+        """
+        self.vocab = other_model.vocab
+        self.index2word = other_model.index2word
+        self.table = other_model.table
+        self.reset_weights()
+
     def _prepare_sentences(self, sentences):
         for sentence in sentences:
             # avoid calling random_sample() where prob >= 1, to speed things up a little:
