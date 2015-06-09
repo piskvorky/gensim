@@ -339,6 +339,8 @@ def train_sentence_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
     for i in range(sentence_len):
         predict_word = word_vocabs[j]
         if predict_word is None:
+            # shrink sentence to leave out word
+            sentence_len = sentence_len - 1
             continue  # leaving j unchanged
         else:
             indexes[j] = predict_word.index
@@ -352,7 +354,7 @@ def train_sentence_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
             j = j + 1
     if _train_words:
         # single randint() call avoids a big thread-synchronization slowdown
-        for i, item in enumerate(np.random.randint(0, window, j)):
+        for i, item in enumerate(np.random.randint(0, window, sentence_len)):
             reduced_windows[i] = item
 
     for i in range(doctag_len):
@@ -485,7 +487,7 @@ def train_sentence_dm(model, word_vocabs, doctag_indexes, alpha, work=None, neu1
             result += 1
             j = j + 1
     # single randint() call avoids a big thread-synchronization slowdown
-    for i, item in enumerate(np.random.randint(0, window, j)):
+    for i, item in enumerate(np.random.randint(0, window, sentence_len)):
         reduced_windows[i] = item
 
     doctag_len = <int>min(MAX_SENTENCE_LEN, len(doctag_indexes))
@@ -520,7 +522,6 @@ def train_sentence_dm(model, word_vocabs, doctag_indexes, alpha, work=None, neu1
             if cbow_mean:
                 sscal(&size, &inv_count, _neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
             memset(_work, 0, size * cython.sizeof(REAL_t))  # work to accumulate l1 error
-            
             if hs:
                 fast_sentence_dm_hs(points[i], codes[i], codelens[i],
                                     _neu1, syn1, _alpha, _work,
