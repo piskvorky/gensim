@@ -534,8 +534,11 @@ class Word2Vec(utils.SaveLoad):
         elapsed = time.time() - start
         logger.info("training on %i words took %.1fs, %.0f words/s" %
             (word_count[0], elapsed, word_count[0] / elapsed if elapsed else 0.0))
-        self.syn0norm = None
+        self.clear_sims()
         return word_count[0]
+
+    def clear_sims(self):
+        self.syn0norm = None
 
     def reset_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
