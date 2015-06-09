@@ -44,15 +44,16 @@ except ImportError:
 
 from collections import namedtuple
 
-from numpy import zeros, random, sum as np_sum, add as np_add, concatenate,\
-    repeat as np_repeat, array, float32 as REAL, empty, ones, memmap as np_memmap
-from six import string_types
+from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
+    repeat as np_repeat, array, float32 as REAL, empty, ones, memmap as np_memmap, \
+    sqrt, newaxis, ndarray, dot, argsort, vstack
 
 logger = logging.getLogger(__name__)
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_sentence_sg
 from six.moves import xrange
+from six import string_types, integer_types
 
 try:
     from gensim.models.doc2vec_inner import train_sentence_dbow, train_sentence_dm, train_sentence_dm_concat,\
@@ -250,6 +251,7 @@ class DocvecsArray(object):
             else:
                 self.doctags[key] = Doctag(sentence_no, sentence_length, 1)
                 self.index2doctag.append(key)
+                self.max_index = max(self.max_index, len(self.index2doctag))
 
     def indexed_doctags(self, doctag_tokens):
         return ([i for i in [self._int_index(index,-1) for index in doctag_tokens] if i > -1],
@@ -265,13 +267,28 @@ class DocvecsArray(object):
         else:
             return self.doctags[index].index if index in self.doctags else missing
 
+    def _key_index(self, i_index, missing=None):
+        if i_index < len(self.index2doctag):
+            return self.index2doctag[i_index]
+        else:
+            return i_index
+
     def __getitem__(self, index):
         return self.doctag_syn0[self._int_index(index)]
+
+    def __contains__(self, index):
+        if isinstance(index, int):
+            return index < self.max_index
+        else:
+            return index in self.doctags
 
     def borrow_from(self, other_docvecs):
         self.max_index = other_docvecs.max_index
         self.doctags = other_docvecs.doctags
         self.index2doctag = other_docvecs.index2doctag
+
+    def clear_sims(self):
+        self.doctag_syn0norm = None
 
     def reset_weights(self, model):
         length = max(len(self.doctags),self.max_index)
@@ -287,6 +304,106 @@ class DocvecsArray(object):
             # construct deterministic seed from index AND model seed
             seed = "%d %s" % (model.seed, self.index2doctag[i] if len(self.index2doctag)>0 else str(i))
             self.doctag_syn0[i] = model.seeded_vector(seed)
+
+    def init_sims(self, replace=False):
+        """
+        Precompute L2-normalized vectors.
+
+        If `replace` is set, forget the original vectors and only keep the normalized
+        ones = saves lots of memory!
+
+        Note that you **cannot continue training** after doing a replace. The model becomes
+        effectively read-only = you can call `most_similar`, `similarity` etc., but not `train`.
+
+        """
+        if getattr(self, 'doctag_syn0norm', None) is None or replace:
+            logger.info("precomputing L2-norms of doc weight vectors")
+            if replace:
+                for i in xrange(self.doctag_syn0.shape[0]):
+                    self.doctag_syn0[i, :] /= sqrt((self.doctag_syn0[i, :] ** 2).sum(-1))
+                self.doctag_syn0norm = self.doctag_syn0
+            else:
+                self.doctag_syn0norm = (self.doctag_syn0 / sqrt((self.doctag_syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
+
+    def most_similar(self, positive=[], negative=[], topn=10):
+        """
+        Find the top-N most similar docvecs known from training. Positive docs contribute
+        positively towards the similarity, negative docs negatively.
+
+        This method computes cosine similarity between a simple mean of the projection
+        weight vectors of the given docs. Docs may be specified as vectors, integer indexes
+        of trained docvecs, or if the documents were originally presented with string tags,
+        by the corresponding tags.
+        """
+        self.init_sims()
+
+        if isinstance(positive, string_types + integer_types) and not negative:
+            # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
+            positive = [positive]
+
+        # add weights for each doc, if not already present; default to 1.0 for positive and -1.0 for negative docs
+        positive = [(doc, 1.0) if isinstance(doc, string_types + (ndarray,) + integer_types)
+                                else doc for doc in positive]
+        negative = [(doc, -1.0) if isinstance(doc, string_types + (ndarray,) + integer_types)
+                                 else doc for doc in negative]
+
+        # compute the weighted average of all docs
+        all_docs, mean = set(), []
+        for doc, weight in positive + negative:
+            if isinstance(doc, ndarray):
+                mean.append(weight * doc)
+            elif doc in self.doctags or doc < self.max_index:
+                mean.append(weight * self.doctag_syn0norm[self._int_index(doc)])
+                all_docs.add(self._int_index(doc))
+            else:
+                raise KeyError("doc '%s' not in trained set" % doc)
+        if not mean:
+            raise ValueError("cannot compute similarity with no input")
+        mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
+
+        dists = dot(self.doctag_syn0norm, mean)
+        if not topn:
+            return dists
+        best = argsort(dists)[::-1][:topn + len(all_docs)]
+        # ignore (don't return) docs from the input
+        result = [(self._key_index(sim), float(dists[sim])) for sim in best if sim not in all_docs]
+        return result[:topn]
+
+    def doesnt_match(self, docs):
+        """
+        Which doc from the given list doesn't go with the others?
+
+        (TODO: Accept vectors of out-of-training-set docs, as if from inference.)
+
+        """
+        self.init_sims()
+
+        docs = [doc for doc in docs if doc in self.doctags or 0 <= doc < self.max_index]  # filter out unknowns
+        logger.debug("using docs %s" % docs)
+        if not docs:
+            raise ValueError("cannot select a doc from an empty list")
+        vectors = vstack(self.doctag_syn0norm[self._int_index(doc)] for doc in docs).astype(REAL)
+        mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
+        dists = dot(vectors, mean)
+        return sorted(zip(dists, docs))[0][1]
+
+    def similarity(self, d1, d2):
+        """
+        Compute cosine similarity between two docvecs in the trained set, specified by int index or
+        string tag. (TODO: Accept vectors of out-of-training-set docs, as if from inference.)
+
+        """
+        return dot(matutils.unitvec(self[d1]), matutils.unitvec(self[d2]))
+
+    def n_similarity(self, ds1, ds2):
+        """
+        Compute cosine similarity between two sets of docvecs from the trained set, specified by int
+        index or string tag. (TODO: Accept vectors of out-of-training-set docs, as if from inference.)
+
+        """
+        v1 = [self[doc] for doc in ds1]
+        v2 = [self[doc] for doc in ds2]
+        return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
 
 
 class Doctag(namedtuple('Doctag', 'index, word_count, doc_count')):
@@ -365,6 +482,10 @@ class Doc2Vec(Word2Vec):
         if sentences is not None:
             self.build_vocab(sentences)
             self.train(sentences)
+
+    def clear_sims(self):
+        Word2Vec.reset_weights(self)
+        self.docvecs.clear_sims()
 
     def reset_weights(self):
         if self.dm_concat:
