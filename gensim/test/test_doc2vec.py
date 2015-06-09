@@ -127,14 +127,14 @@ class TestDoc2VecModel(unittest.TestCase):
         tennis1 = 6  # doc 6 tennis
 
         sims = model.docvecs.most_similar(fire1,topn=20)
-        sims = [(idx, round(dist,5)) for idx, dist in sims]
+        sims = [(idx, round(dist,4)) for idx, dist in sims]
         if fire2 not in [match[0] for match in sims]:
             print(sims)
         self.assertTrue(fire2 in [match[0] for match in sims])
 
         doc0_vec = model.docvecs[fire1]
         sims2 = model.docvecs.most_similar(positive=[doc0_vec], topn=21)
-        sims2 = [(idx, round(dist,5)) for idx, dist in sims2]
+        sims2 = [(idx, round(dist,4)) for idx, dist in sims2]
         self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is doc itself
 
         self.assertEqual(model.docvecs.doesnt_match([fire1, tennis1, fire2]), tennis1) 
