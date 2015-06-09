@@ -239,19 +239,19 @@ class DocvecsArray(object):
     def __init__(self, mapfile_path=None):
         self.doctags = {}  # string -> Doctag (if necessary)
         self.index2doctag = []  # int index -> String (if necessary)
-        self.max_index = -1
+        self.count = -1
         self.mapfile_path = mapfile_path
 
     def note_doctag(self, key, sentence_no, sentence_length):
         if isinstance(key, int):
-            self.max_index = max(self.max_index, key)
+            self.count = max(self.count, key+1)
         else:
             if key in self.doctags:
                 self.doctags[key] = self.doctags[key].repeat(sentence_length)
             else:
                 self.doctags[key] = Doctag(sentence_no, sentence_length, 1)
                 self.index2doctag.append(key)
-                self.max_index = max(self.max_index, len(self.index2doctag))
+                self.count = max(self.count, len(self.index2doctag))
 
     def indexed_doctags(self, doctag_tokens):
         return ([i for i in [self._int_index(index,-1) for index in doctag_tokens] if i > -1],
@@ -278,12 +278,12 @@ class DocvecsArray(object):
 
     def __contains__(self, index):
         if isinstance(index, int):
-            return index < self.max_index
+            return index < self.count
         else:
             return index in self.doctags
 
     def borrow_from(self, other_docvecs):
-        self.max_index = other_docvecs.max_index
+        self.count = other_docvecs.count
         self.doctags = other_docvecs.doctags
         self.index2doctag = other_docvecs.index2doctag
 
@@ -291,7 +291,7 @@ class DocvecsArray(object):
         self.doctag_syn0norm = None
 
     def reset_weights(self, model):
-        length = max(len(self.doctags),self.max_index)
+        length = max(len(self.doctags),self.count)
         if self.mapfile_path:
             self.doctag_syn0 = np_memmap(self.mapfile_path+'.doctag_syn0',dtype=REAL,mode='w+',shape=(length,model.vector_size))
             self.doctag_syn0_lockf = np_memmap(self.mapfile_path+'.doctag_syn0_lockf',dtype=REAL,mode='w+',shape=(length,))
@@ -352,7 +352,7 @@ class DocvecsArray(object):
         for doc, weight in positive + negative:
             if isinstance(doc, ndarray):
                 mean.append(weight * doc)
-            elif doc in self.doctags or doc < self.max_index:
+            elif doc in self.doctags or doc < self.count:
                 mean.append(weight * self.doctag_syn0norm[self._int_index(doc)])
                 all_docs.add(self._int_index(doc))
             else:
@@ -378,7 +378,7 @@ class DocvecsArray(object):
         """
         self.init_sims()
 
-        docs = [doc for doc in docs if doc in self.doctags or 0 <= doc < self.max_index]  # filter out unknowns
+        docs = [doc for doc in docs if doc in self.doctags or 0 <= doc < self.count]  # filter out unknowns
         logger.debug("using docs %s" % docs)
         if not docs:
             raise ValueError("cannot select a doc from an empty list")
