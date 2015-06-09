@@ -1,0 +1,348 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
+"""
+Automated tests for checking transformation algorithms (the models package).
+"""
+
+from __future__ import with_statement
+
+import logging
+import unittest
+import os
+import tempfile
+import itertools
+import bz2
+from six import iteritems, iterkeys
+from six.moves import xrange, zip as izip
+from collections import namedtuple, Counter
+
+import numpy as np
+
+from gensim import utils, matutils
+from gensim.models import doc2vec
+from gensim.models import word2vec
+from gensim.models.doc2vec import TaggedDocument
+
+module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+
+logger = logging.getLogger('gensim.test.test_doc2vec')
+
+
+class LeeCorpus(object):
+    def __iter__(self):
+        with open(datapath('lee_background.cor')) as f:
+            for line in f:
+                yield utils.simple_preprocess(line)
+
+class DocsLeeCorpus(object):
+    def __init__(self, string_tags=False):
+        self.string_tags = string_tags
+
+    def _tag(self, i):
+        return i if not self.string_tags else '_*%d' % i
+
+    def __iter__(self):
+        with open(datapath('lee_background.cor')) as f:
+            for i, line in enumerate(f):
+                yield TaggedDocument(utils.simple_preprocess(line),[self._tag(i)])
+
+
+sentences = [
+        ['human', 'interface', 'computer'],
+        ['survey', 'user', 'computer', 'system', 'response', 'time'],
+        ['eps', 'user', 'interface', 'system'],
+        ['system', 'human', 'system', 'eps'],
+        ['user', 'response', 'time'],
+        ['trees'],
+        ['graph', 'trees'],
+        ['graph', 'minors', 'trees'],
+        ['graph', 'minors', 'survey']
+    ]
+
+sentences = [TaggedDocument(words,[i]) for i, words in enumerate(sentences)]
+
+
+def testfile():
+    # temporary data will be stored to this file
+    return os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.tst')
+
+
+class TestDoc2VecModel(unittest.TestCase):
+    def test_persistence(self):
+        """Test storing/loading the entire model."""
+        model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
+        model.save(testfile())
+        self.models_equal(model, doc2vec.Doc2Vec.load(testfile()))
+
+    def test_load_mmap(self):
+        """Test storing/loading the entire model."""
+        model = doc2vec.Doc2Vec(sentences, min_count=1)
+
+        # test storing the internal arrays into separate files
+        model.save(testfile(), sep_limit=0)
+        self.models_equal(model, doc2vec.Doc2Vec.load(testfile()))
+
+        # make sure mmaping the arrays back works, too
+        self.models_equal(model, doc2vec.Doc2Vec.load(testfile(), mmap='r'))
+
+    def test_int_doctags(self):
+        """Test doc2vec doctag alternatives"""
+        corpus = DocsLeeCorpus()
+
+        model = doc2vec.Doc2Vec(min_count=1)
+        model.build_vocab(corpus)
+        self.assertEqual(len(model.docvecs.doctag_syn0),299)
+        self.assertEqual(model.docvecs[0].shape,(300,))
+        self.assertRaises(KeyError,model.__getitem__,'_*0')
+
+    def test_string_doctags(self):
+        """Test doc2vec doctag alternatives"""
+        corpus = DocsLeeCorpus(True)
+
+        model = doc2vec.Doc2Vec(min_count=1)
+        model.build_vocab(corpus)
+        self.assertEqual(len(model.docvecs.doctag_syn0),299)
+        self.assertEqual(model.docvecs[0].shape,(300,))
+        self.assertEqual(model.docvecs['_*0'].shape,(300,))
+        self.assertEqual(model.docvecs['_*0'],model.docvecs[0])
+
+    def test_empty_errors(self):
+        corpus = DocsLeeCorpus()
+
+        # no input => "RuntimeError: you must first build vocabulary before training the model"
+        self.assertRaises(RuntimeError, doc2vec.Doc2Vec, [])
+
+        # input not empty, but rather completely filtered out
+        self.assertRaises(RuntimeError, doc2vec.Doc2Vec, corpus, min_count=10000)
+
+    def model_sanity(self, model):
+        """Any non-trivial model on DocsLeeCorpus can pass these sanity checks"""
+        fire1 = 0  # doc 0 sydney fires
+        fire2 = 8  # doc 8 sydney fires
+        tennis1 = 6  # doc 6 tennis
+
+        sims = model.docvecs.most_similar(fire1)
+        sims = [(idx, round(dist,5)) for idx, dist in sims]  
+        self.assertTrue(fire2 in [match[0] for match in sims])
+
+        doc0_vec = model.docvecs[fire1]
+        sims2 = model.docvecs.most_similar(positive=[doc0_vec], topn=11)
+        sims2 = [(idx, round(dist,5)) for idx, dist in sims2]
+        self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is doc itself
+
+        self.assertEqual(model.docvecs.doesnt_match([fire1, tennis1, fire2]), tennis1) 
+
+        self.assertTrue(model.docvecs.similarity(fire1,fire2) > model.docvecs.similarity(fire1,tennis1))
+
+        
+    def test_training(self):
+        """Test doc2vec training."""
+
+        corpus = DocsLeeCorpus()
+        model = doc2vec.Doc2Vec(size=100, min_count=2, iter=20)
+        model.build_vocab(corpus)
+        self.assertEquals(model.docvecs.doctag_syn0.shape, (299, 100))
+        model.train(corpus)
+
+        self.model_sanity(model)
+
+        # build vocab and train in one step; must be the same as above
+        model2 = doc2vec.Doc2Vec(corpus, size=100, min_count=2, iter=20)
+        self.models_equal(model, model2)
+
+
+    def test_dbow_hs(self):
+        """Test DBOW doc2vec training."""
+        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=0, hs=1, negative=0, min_count=2, iter=20)
+        self.model_sanity(model)
+
+    def test_dmm_hs(self): 
+        """Test DM/mean doc2vec training."""
+        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_mean=1, hs=1, negative=0, min_count=2, iter=20)
+        self.model_sanity(model)
+
+    def test_dms_hs(self): 
+        """Test DM/sum doc2vec training."""
+        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_mean=0, hs=1, negative=0, min_count=2, iter=20)
+        self.model_sanity(model)
+
+    def test_dmc_hs(self): 
+        """Test DM/concatenate doc2vec training."""
+        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_concat=1, size=48, hs=1, negative=0, min_count=2, iter=20)
+        self.model_sanity(model)
+
+    def test_dbow_neg(self):
+        """Test DBOW doc2vec training."""
+        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=0, hs=0, negative=10, min_count=2, iter=20)
+        self.model_sanity(model)
+
+    def test_dmm_neg(self): 
+        """Test DM/mean doc2vec training."""
+        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_mean=1, hs=0, negative=10, min_count=2, iter=20)
+        self.model_sanity(model)
+
+    def test_dms_neg(self): 
+        """Test DM/sum doc2vec training."""
+        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_mean=0, hs=0, negative=10, min_count=2, iter=20)
+        self.model_sanity(model)
+
+    def test_dmc_neg(self): 
+        """Test DM/concatenate doc2vec training."""
+        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_concat=1, size=48, hs=0, negative=10, min_count=2, iter=20)
+        self.model_sanity(model)        
+        
+    def test_parallel(self):
+        """Test doc2vec parallel training."""
+        if doc2vec.FAST_VERSION < 0:  # don't test the plain NumPy version for parallelism (too slow)
+            return
+
+        corpus = utils.RepeatCorpus(DocsLeeCorpus(), 10000)
+
+        for workers in [2, 4]:
+            model = doc2vec.Doc2Vec(corpus, workers=workers)
+            self.model_sanity(model)
+
+    def testRNG(self):
+        """Test doc2vec results identical with identical RNG seed."""
+        model = doc2vec.Doc2Vec(sentences, hs=0, negative=15, min_count=2, seed=42, workers=1)
+        model2 = doc2vec.Doc2Vec(sentences, hs=0, negative=15,  min_count=2, seed=42, workers=1)
+        self.models_equal(model, model2)
+
+    def models_equal(self, model, model2):
+        # check words/hidden-weights
+        self.assertEqual(len(model.vocab), len(model2.vocab))
+        self.assertTrue(np.allclose(model.syn0, model2.syn0))
+        if model.hs:
+            self.assertTrue(np.allclose(model.syn1, model2.syn1))
+        if model.negative:
+            self.assertTrue(np.allclose(model.syn1neg, model2.syn1neg))
+        # check docvecs
+        self.assertEqual(len(model.docvecs.doctags), len(model2.docvecs.doctags))
+        self.assertEqual(len(model.docvecs.index2doctag), len(model2.docvecs.index2doctag))
+        self.assertTrue(np.allclose(model.docvecs.doctag_syn0, model2.docvecs.doctag_syn0))
+
+#endclass TestWord2VecModel
+
+# following code is useful for reproducing paragraph-vectors paper sentiment experiments
+
+class ConcatenatedDoc2Vec(object):
+    """
+    Concatenation of multiple models for reproducing the Paragraph Vectors paper.
+    Models must have exactly-matching vocabulary and document IDs. (Models should 
+    be trained separately; this wrapper just returns concatenated results.)
+    """
+    def __init__(self, models):
+        self.models = models
+        if hasattr(models[0],'docvecs'): 
+            self.docvecs = ConcatenatedDocvecs([model.docvecs for model in models])
+
+    def __getitem__(self, token):
+        return np.concatenate([model[token] for model in self.models])
+
+    def infer_vector(self, document, alpha=0.1, min_alpha=0.0001, steps=5):
+        return np.concatenate([model.infer_vector(document,alpha,min_alpha,steps) for model in self.models])
+
+    def train(self, ignored):
+        pass
+
+class ConcatenatedDocvecs(object):
+    def __init__(self, models):
+        self.models = models
+    
+    def __getitem__(self, token):
+        return np.concatenate([model[token] for model in self.models])        
+
+    
+SentimentDocument = namedtuple('SentimentDocument','words tags split sentiment')
+
+
+def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
+    """
+    Read and return documents from the Stanford Sentiment Treebank 
+    corpus (Rotten Tomatoes reviews), from http://nlp.Stanford.edu/sentiment/
+
+    Initialize the corpus from a given directory, where
+    http://nlp.stanford.edu/~socherr/stanfordSentimentTreebank.zip
+    has been expanded. It's not too big, so compose entirely into memory.
+    """
+    logger.info("loading corpus from %s" % dirname)
+
+    # many mangled chars in sentences (datasetSentences.txt)
+    chars_sst_mangled = ['à', 'á', 'â', 'ã', 'æ', 'ç', 'è', 'é', 'í',
+                         'í', 'ï', 'ñ', 'ó', 'ô', 'ö', 'û', 'ü']
+    sentence_fixups = [(char.encode('utf-8').decode('latin1'), char) for char in chars_sst_mangled]
+    # more junk, and the replace necessary for sentence-phrase consistency
+    sentence_fixups.extend([
+        ('Â', ''),
+        ('\xa0', ' '),
+        ('-LRB-', '('),
+        ('-RRB-', ')'),
+    ])
+    # only this junk in phrases (dictionary.txt)
+    phrase_fixups = [('\xa0', ' ')]
+
+    # sentence_id and split are only positive for the full sentences
+
+    # read sentences to temp {sentence -> (id,split) dict, to correlate with dictionary.txt
+    info_by_sentence = {}
+    with open(os.path.join(dirname, 'datasetSentences.txt'), 'r') as sentences, \
+         open(os.path.join(dirname, 'datasetSplit.txt'), 'r') as splits:
+        next(sentences)  # legend
+        next(splits)     # legend
+        for sentence_line, split_line in izip(sentences, splits):
+            (id, text) = sentence_line.split('\t')
+            id = int(id)
+            text = text.rstrip()
+            for junk, fix in sentence_fixups:
+                text = text.replace(junk, fix)
+            (id2, split_i) = split_line.split(',')
+            assert id == int(id2)
+            if text not in info_by_sentence:    # discard duplicates
+                info_by_sentence[text] = (id, int(split_i))
+
+    # read all phrase text
+    phrases = [None] * 239232  # known size of phrases
+    with open(os.path.join(dirname, 'dictionary.txt'), 'r') as phrase_lines:
+        for line in phrase_lines:
+            (text, id) = line.split('|')
+            for junk, fix in phrase_fixups:
+                text = text.replace(junk, fix)
+            phrases[int(id)] = text.rstrip()  # for 1st pass just string
+
+    SentimentPhrase = namedtuple('SentimentPhrase', SentimentDocument._fields + ('sentence_id',))
+    # add sentiment labels, correlate with sentences
+    with open(os.path.join(dirname, 'sentiment_labels.txt'), 'r') as sentiments:
+        next(sentiments)  # legend
+        for line in sentiments:
+            (id, sentiment) = line.split('|')
+            id = int(id)
+            sentiment = float(sentiment)
+            text = phrases[id]
+            words = text.split()
+            if lowercase:
+                words = [word.lower() for word in words]
+            (sentence_id, split_i) = info_by_sentence.get(text, (None, 0))
+            split = [None,'train','test','dev'][split_i]
+            phrases[id] = SentimentPhrase(words, [id], split, sentiment, sentence_id)
+
+    assert len([phrase for phrase in phrases if phrase.sentence_id is not None]) == len(info_by_sentence)  # all
+    # counts don't match 8544, 2210, 1101 because 13 TRAIN and 1 DEV sentences are duplicates
+    assert len([phrase for phrase in phrases if phrase.split == 'train']) == 8531  # 'train'
+    assert len([phrase for phrase in phrases if phrase.split == 'test']) == 2210  # 'test'
+    assert len([phrase for phrase in phrases if phrase.split == 'dev']) == 1100  # 'dev'
+
+    logger.info("loaded corpus with %i sentences and %i phrases from %s"
+                % (len(info_by_sentence), len(phrases), dirname))
+
+    return phrases
+
+
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.info("using optimization %s" % doc2vec.FAST_VERSION)
+    unittest.main()
