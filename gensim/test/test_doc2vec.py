@@ -206,15 +206,25 @@ class TestDoc2VecModel(unittest.TestCase):
             model = doc2vec.Doc2Vec(corpus, workers=workers)
             self.model_sanity(model)
 
-    def test_deterministic_seeding(self):
+    def test_deterministic_hs(self):
         """Test doc2vec results identical with identical RNG seed."""
         # hs
         model = doc2vec.Doc2Vec(DocsLeeCorpus(), seed=42, workers=1)
         model2 = doc2vec.Doc2Vec(DocsLeeCorpus(), seed=42, workers=1)
         self.models_equal(model, model2)
+
+    def test_deterministic_neg(self):
+        """Test doc2vec results identical with identical RNG seed."""
         # neg
         model = doc2vec.Doc2Vec(DocsLeeCorpus(), hs=0, negative=3, seed=42, workers=1)
         model2 = doc2vec.Doc2Vec(DocsLeeCorpus(), hs=0, negative=3, seed=42, workers=1)
+        self.models_equal(model, model2)
+
+    def test_deterministic_dmc(self):
+        """Test doc2vec results identical with identical RNG seed."""
+        # bigger, dmc
+        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_concat=1, size=24, window=4, hs=1, negative=3, seed=42, workers=1)
+        model2 = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_concat=1, size=24, window=4, hs=1, negative=3, seed=42, workers=1)
         self.models_equal(model, model2)
 
     def models_equal(self, model, model2):
