@@ -33,12 +33,6 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 logger = logging.getLogger('gensim.test.test_doc2vec')
 
 
-class LeeCorpus(object):
-    def __iter__(self):
-        with open(datapath('lee_background.cor')) as f:
-            for line in f:
-                yield utils.simple_preprocess(line)
-
 class DocsLeeCorpus(object):
     def __init__(self, string_tags=False):
         self.string_tags = string_tags
@@ -51,6 +45,7 @@ class DocsLeeCorpus(object):
             for i, line in enumerate(f):
                 yield TaggedDocument(utils.simple_preprocess(line),[self._tag(i)])
 
+list_corpus = list(DocsLeeCorpus())
 
 sentences = [
         ['human', 'interface', 'computer'],
@@ -112,13 +107,11 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(all(model.docvecs['_*0']==model.docvecs[0]))
 
     def test_empty_errors(self):
-        corpus = DocsLeeCorpus()
-
         # no input => "RuntimeError: you must first build vocabulary before training the model"
         self.assertRaises(RuntimeError, doc2vec.Doc2Vec, [])
 
         # input not empty, but rather completely filtered out
-        self.assertRaises(RuntimeError, doc2vec.Doc2Vec, corpus, min_count=10000)
+        self.assertRaises(RuntimeError, doc2vec.Doc2Vec, list_corpus, min_count=10000)
 
     def model_sanity(self, model):
         """Any non-trivial model on DocsLeeCorpus can pass these sanity checks"""
@@ -126,19 +119,26 @@ class TestDoc2VecModel(unittest.TestCase):
         fire2 = 8  # doc 8 sydney fires
         tennis1 = 6  # doc 6 tennis
 
+        # inferred vector should be top10 close to bulk-trained one
+        doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
+        sims_to_infer = model.docvecs.most_similar([doc0_inferred])
+        self.assertTrue(fire1 in [match[0] for match in sims_to_infer])
+
+        # fire8 should be top20 close to fire1
         sims = model.docvecs.most_similar(fire1,topn=20)
         sims = [(idx, round(dist,4)) for idx, dist in sims]
-        if fire2 not in [match[0] for match in sims]:
-            print(sims)
         self.assertTrue(fire2 in [match[0] for match in sims])
 
+        # same sims should appear in lookup by vec as by index
         doc0_vec = model.docvecs[fire1]
         sims2 = model.docvecs.most_similar(positive=[doc0_vec], topn=21)
         sims2 = [(idx, round(dist,4)) for idx, dist in sims2]
         self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is doc itself
 
+        # tennis doc should be out-of-place among fire news
         self.assertEqual(model.docvecs.doesnt_match([fire1, tennis1, fire2]), tennis1) 
 
+        # fire docs should be closer than fire-tennis
         self.assertTrue(model.docvecs.similarity(fire1,fire2) > model.docvecs.similarity(fire1,tennis1))
 
     def test_training(self):
@@ -157,42 +157,48 @@ class TestDoc2VecModel(unittest.TestCase):
 
     def test_dbow_hs(self):
         """Test DBOW doc2vec training."""
-        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=0, hs=1, negative=0, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=1, negative=0, min_count=2, iter=20)
         self.model_sanity(model)
 
     def test_dmm_hs(self): 
         """Test DM/mean doc2vec training."""
-        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_mean=1, size=24, window=4, hs=1, negative=0, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=1, negative=0,
+                                min_count=2, iter=20)
         self.model_sanity(model)
 
     def test_dms_hs(self): 
         """Test DM/sum doc2vec training."""
-        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_mean=0, size=24, window=4, hs=1, negative=0, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=1, negative=0,
+                                min_count=2, iter=20)
         self.model_sanity(model)
 
     def test_dmc_hs(self): 
         """Test DM/concatenate doc2vec training."""
-        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_concat=1, size=24, window=4, hs=1, negative=0, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_concat=1, size=24, window=4, hs=1, negative=0,
+                                min_count=2, iter=20)
         self.model_sanity(model)
 
     def test_dbow_neg(self):
         """Test DBOW doc2vec training."""
-        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=0, hs=0, negative=10, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=0, negative=10, min_count=2, iter=20)
         self.model_sanity(model)
 
     def test_dmm_neg(self): 
         """Test DM/mean doc2vec training."""
-        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_mean=1, size=24, window=4, hs=0, negative=10, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=0, negative=10,
+                                min_count=2, iter=20)
         self.model_sanity(model)
 
     def test_dms_neg(self): 
         """Test DM/sum doc2vec training."""
-        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_mean=0, size=24, window=4, hs=0, negative=10, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=0, negative=10,
+                                min_count=2, iter=20)
         self.model_sanity(model)
 
     def test_dmc_neg(self): 
         """Test DM/concatenate doc2vec training."""
-        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_concat=1, size=24, window=4, hs=0, negative=10, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_concat=1, size=24, window=4, hs=0, negative=10,
+                                min_count=2, iter=20)
         self.model_sanity(model)        
         
     def test_parallel(self):
@@ -223,8 +229,10 @@ class TestDoc2VecModel(unittest.TestCase):
     def test_deterministic_dmc(self):
         """Test doc2vec results identical with identical RNG seed."""
         # bigger, dmc
-        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_concat=1, size=24, window=4, hs=1, negative=3, seed=42, workers=1)
-        model2 = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_concat=1, size=24, window=4, hs=1, negative=3, seed=42, workers=1)
+        model = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_concat=1, size=24, window=4, hs=1, negative=3,
+                                seed=42, workers=1)
+        model2 = doc2vec.Doc2Vec(DocsLeeCorpus(), dm=1, dm_concat=1, size=24, window=4, hs=1, negative=3,
+                                 seed=42, workers=1)
         self.models_equal(model, model2)
 
     def models_equal(self, model, model2):
