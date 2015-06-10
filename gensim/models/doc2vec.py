@@ -504,7 +504,7 @@ class Doc2Vec(Word2Vec):
             self.train(documents)
 
     def clear_sims(self):
-        Word2Vec.reset_weights(self)
+        Word2Vec.clear_sims(self)
         self.docvecs.clear_sims()
 
     def reset_weights(self):
