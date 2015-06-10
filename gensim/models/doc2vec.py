@@ -211,8 +211,8 @@ except:
 class TaggedDocument(namedtuple('TaggedDocument','words tags')):
     """
     A single document, made up of `words` (a list of unicode string tokens)
-    and `tags` (a list of tokens). Tags may also be one or more unicode string 
-    tokens, but typical practice (which will also be most memory-efficient) is 
+    and `tags` (a list of tokens). Tags may be one or more unicode string
+    tokens, but typical practice (which will also be most memory-efficient) is
     for the tags list to include a unique integer id as the only tag.
 
     Replaces "sentence as a list of words" from Word2Vec.
@@ -224,25 +224,37 @@ class TaggedDocument(namedtuple('TaggedDocument','words tags')):
 
 class DocvecsArray(object):
     """
-    Default storage of docvecs during training, in a numpy array.
+    Default storage of doc vectors during/after training, in a numpy array.
 
-    Maintains dict mapping string doctag -> int mapping if necessary.
-    (If all TaggedSentences use only int doctags, this overhead is
-    avoided.) Supplying a mapfile_path at construction will use a
-    pair of memory-mapped files as the array backing for syn0/syn0_lockf
-    values.
+    As the 'docvecs' property of a Doc2Vec model, allows access and
+    comparison of document vectors.
 
-    (A future alternative implementation, based on another persistence
-    mechanism like LMDB, LevelDB, or SQLite, should also be possible.)
+    >>> docvec = d2v_model.docvecs[99]
+    >>> docvec = d2v_model.docvecs['SENT_99']  # if string tag used in training
+    >>> sims = d2v_model.docvecs.most_similar(99)
+    >>> sims = d2v_model.docvecs.most_similar('SENT_99'))
+    >>> sims = d2v_model.docvecs.most_similar(docvec))
+
+    If only plain int tags are presented during training, the dict (of
+    string tag -> index) and list (of index -> string tag) stay empty,
+    saving memory.
+
+    Supplying a mapfile_path (as by initializing a Doc2Vec model with a
+    'docvecs_mapfile' value) will use a pair of memory-mapped
+    files as the array backing for doctag_syn0/doctag_syn0_lockf values.
+
+    The Doc2Vec model automatically uses this class, but a future alternative
+    implementation, based on another persistence mechanism like LMDB, LevelDB,
+    or SQLite, should also be possible.
     """
-
     def __init__(self, mapfile_path=None):
-        self.doctags = {}  # string -> Doctag (if necessary)
-        self.index2doctag = []  # int index -> String (if necessary)
+        self.doctags = {}  # string -> Doctag (only filled if necessary)
+        self.index2doctag = []  # int index -> String (only filled if necessary)
         self.count = -1
         self.mapfile_path = mapfile_path
 
     def note_doctag(self, key, sentence_no, sentence_length):
+        """Note a document tag during initial corpus scan, for structure sizing."""
         if isinstance(key, int):
             self.count = max(self.count, key+1)
         else:
@@ -254,20 +266,24 @@ class DocvecsArray(object):
                 self.count = max(self.count, len(self.index2doctag))
 
     def indexed_doctags(self, doctag_tokens):
+        """Return indexes and backing-arrays used in training examples."""
         return ([i for i in [self._int_index(index,-1) for index in doctag_tokens] if i > -1],
-                self.doctag_syn0, doctag_tokens)
+                self.doctag_syn0, self.doctag_syn0_lockf, doctag_tokens)
 
     def trained_items(self, indexed_tuples):
-        """Persist any changes to the given indices; a no-op for this implementation"""
+        """Persist any changes made to the given indices (matching tuple previously 
+        returned by indexed_doctags()); a no-op for this implementation"""
         pass
 
     def _int_index(self, index, missing=None):
+        """Return int index for either string or int index"""
         if isinstance(index, int):
             return index
         else:
             return self.doctags[index].index if index in self.doctags else missing
 
     def _key_index(self, i_index, missing=None):
+        """Return string index for given int index, if available"""
         if i_index < len(self.index2doctag):
             return self.index2doctag[i_index]
         else:
@@ -408,7 +424,10 @@ class DocvecsArray(object):
 
 class Doctag(namedtuple('Doctag', 'index, word_count, doc_count')):
     """A string document tag discovered during the initial vocabulary
-    scan. (The document-vector equivalent of a Vocab object.)"""
+    scan. (The document-vector equivalent of a Vocab object.)
+
+    Will not be used if all presented document tags are ints.
+    """
     __slots__ = ()
     def repeat(self, word_count):
         return self._replace(word_count=self.word_count + word_count, doc_count=self.doc_count + 1)
@@ -416,18 +435,18 @@ class Doctag(namedtuple('Doctag', 'index, word_count, doc_count')):
 
 class Doc2Vec(Word2Vec):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
-    def __init__(self, sentences=None, size=300, alpha=0.025, window=8, min_count=5,
+    def __init__(self, documents=None, size=300, alpha=0.025, window=8, min_count=5,
                  sample=0, seed=1, workers=1, min_alpha=0.0001, dm=1, hs=1, negative=0,
                  dbow_words=0, dm_mean=0, dm_concat=0, dm_tag_count=1,
                  docvecs=None, docvecs_mapfile=None, **kwargs):
         """
-        Initialize the model from an iterable of `sentences`. Each sentence is a
-        TaggedSentence object that will be used for training.
+        Initialize the model from an iterable of `documents`. Each sentence is a
+        TaggedDocument object that will be used for training.
 
-        The `sentences` iterable can be simply a list of TaggedSentence elements, but for larger corpora,
-        consider an iterable that streams the sentences directly from disk/network.
+        The `documents` iterable can be simply a list of TaggedDocument elements, but for larger corpora,
+        consider an iterable that streams the documents directly from disk/network.
 
-        If you don't supply `sentences`, the model is left uninitialized -- use if
+        If you don't supply `documents`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
 
         `dm` defines the training algorithm. By default (`dm=1`), 'distributed memory' (PV-DM) is used.
@@ -435,7 +454,8 @@ class Doc2Vec(Word2Vec):
 
         `size` is the dimensionality of the feature vectors.
 
-        `window` is the maximum distance between the current and predicted word within a sentence.
+        `window` is the maximum distance between the predicted word and context words used for prediction
+        within a document.
 
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
 
@@ -466,7 +486,7 @@ class Doc2Vec(Word2Vec):
         dm_concat mode; default is 1.
 
         `dbow_words` if set to 1 trains word-vectors (in skip-gram fashion) simultaneous with DBOW
-        doc-vector training; default is 0 (faster training of doc-vectors only.
+        doc-vector training; default is 0 (faster training of doc-vectors only).
 
         """
         Word2Vec.__init__(self, size=size, alpha=alpha, window=window, min_count=min_count,
@@ -479,9 +499,9 @@ class Doc2Vec(Word2Vec):
         self.docvecs = docvecs
         if not self.docvecs:
             self.docvecs = DocvecsArray(docvecs_mapfile)
-        if sentences is not None:
-            self.build_vocab(sentences)
-            self.train(sentences)
+        if documents is not None:
+            self.build_vocab(documents)
+            self.train(documents)
 
     def clear_sims(self):
         Word2Vec.reset_weights(self)
@@ -522,11 +542,11 @@ class Doc2Vec(Word2Vec):
 
     def _prepare_sentences(self, sentences):
         for sentence in sentences:
-            # avoid calling random_sample() where prob >= 1, to speed things up a little:
             yield (self._tokens_to_vocabs(sentence.words),
                    self.docvecs.indexed_doctags(sentence.tags))
 
     def _tokens_to_vocabs(self, tokens, sample=True, source_dict=None):
+        """Convert list of tokens to items (Vocabs) from source_dict."""
         if source_dict is None:
             source_dict = self.vocab
         if sample:
@@ -539,16 +559,16 @@ class Doc2Vec(Word2Vec):
     def _get_job_words(self, alpha, work, job, neu1):
         if self.sg:
             tally = sum(train_sentence_dbow(self, sentence, doctag_indices, alpha, work, train_words=self.dbow_words,
-                                           doctag_vectors=doctag_vectors)
-                       for sentence, (doctag_indices, doctag_vectors, ignored) in job)
+                                            doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+                       for sentence, (doctag_indices, doctag_vectors, doctag_locks, ignored) in job)
         elif self.dm_concat:
             tally = sum(train_sentence_dm_concat(self, sentence, doctag_indices, alpha, work, neu1,
-                                                doctag_vectors=doctag_vectors)
-                       for sentence, (doctag_indices, doctag_vectors, ignored) in job)
+                                                doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+                       for sentence, (doctag_indices, doctag_vectors, doctag_locks, ignored) in job)
         else:
             tally = sum(train_sentence_dm(self, sentence, doctag_indices, alpha, work, neu1,
-                                         doctag_vectors=doctag_vectors)
-                       for sentence, (doctag_indices, doctag_vectors, ignored) in job)
+                                         doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+                       for sentence, (doctag_indices, doctag_vectors, doctag_locks, ignored) in job)
         self.docvecs.trained_items(item for s, item in job)
         return tally
 
@@ -568,6 +588,7 @@ class Doc2Vec(Word2Vec):
         if not self.sg:
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
 
+        print('docv: %f %f ...' % (doctag_vectors[0][0], doctag_vectors[0][1]))
         for i in range(steps):
             if self.sg:
                 train_sentence_dbow(self, word_vocabs, doctag_indices, alpha, work,
@@ -582,6 +603,7 @@ class Doc2Vec(Word2Vec):
                                   learn_words=False, learn_hidden=False,
                                   doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
             alpha = ((alpha - min_alpha) / (steps - i)) + min_alpha
+            print('docv= %f %f ...' % (doctag_vectors[0][0], doctag_vectors[0][1]))
 
         return doctag_vectors[0]
 
@@ -590,6 +612,7 @@ class Doc2Vec(Word2Vec):
 
     @property
     def compact_name(self):
+        """Abbreviated name reflecting major configuration paramaters."""
         segments = []
         if self.sg:
             segments.append('dbow')  # PV-DBOW (skip-gram-style)
@@ -622,7 +645,7 @@ class Doc2Vec(Word2Vec):
 
     def save(self, *args, **kwargs):
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])  # don't bother storing the cached normalized vectors
-        super(Doc2Vec, self).save(*args, **kwargs)  ### TODO: save doctag fields
+        super(Doc2Vec, self).save(*args, **kwargs)  ### TODO: save docvecs in same separate-numpy-file style
 
 
 class TaggedBrownCorpus(object):
