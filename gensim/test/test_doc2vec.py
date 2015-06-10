@@ -126,14 +126,14 @@ class TestDoc2VecModel(unittest.TestCase):
 
         # fire8 should be top20 close to fire1
         sims = model.docvecs.most_similar(fire1,topn=20)
-        sims = [(idx, round(dist,4)) for idx, dist in sims]
         self.assertTrue(fire2 in [match[0] for match in sims])
 
         # same sims should appear in lookup by vec as by index
         doc0_vec = model.docvecs[fire1]
         sims2 = model.docvecs.most_similar(positive=[doc0_vec], topn=21)
-        sims2 = [(idx, round(dist,4)) for idx, dist in sims2]
-        self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is doc itself
+        sims2 = sims2[1:] # ignore first element of sims2, which is doc itself
+        self.assertEqual(list(zip(*sims))[0], list(zip(*sims2))[0])  # same doc ids
+        self.assertTrue(np.allclose(list(zip(*sims))[1], list(zip(*sims2))[1]))  # close-enough dists
 
         # tennis doc should be out-of-place among fire news
         self.assertEqual(model.docvecs.doesnt_match([fire1, tennis1, fire2]), tennis1) 
