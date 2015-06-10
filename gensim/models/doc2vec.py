@@ -588,7 +588,6 @@ class Doc2Vec(Word2Vec):
         if not self.sg:
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
 
-        print('docv: %f %f ...' % (doctag_vectors[0][0], doctag_vectors[0][1]))
         for i in range(steps):
             if self.sg:
                 train_sentence_dbow(self, word_vocabs, doctag_indices, alpha, work,
@@ -603,7 +602,6 @@ class Doc2Vec(Word2Vec):
                                   learn_words=False, learn_hidden=False,
                                   doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
             alpha = ((alpha - min_alpha) / (steps - i)) + min_alpha
-            print('docv= %f %f ...' % (doctag_vectors[0][0], doctag_vectors[0][1]))
 
         return doctag_vectors[0]
 
