@@ -24,13 +24,9 @@ import numpy as np
 
 from gensim import utils, matutils
 from gensim.models import doc2vec
-from gensim.models import word2vec
-from gensim.models.doc2vec import TaggedDocument
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
-
-logger = logging.getLogger('gensim.test.test_doc2vec')
 
 
 class DocsLeeCorpus(object):
@@ -43,7 +39,7 @@ class DocsLeeCorpus(object):
     def __iter__(self):
         with open(datapath('lee_background.cor')) as f:
             for i, line in enumerate(f):
-                yield TaggedDocument(utils.simple_preprocess(line),[self._tag(i)])
+                yield doc2vec.TaggedDocument(utils.simple_preprocess(line),[self._tag(i)])
 
 list_corpus = list(DocsLeeCorpus())
 
@@ -59,7 +55,7 @@ sentences = [
         ['graph', 'minors', 'survey']
     ]
 
-sentences = [TaggedDocument(words,[i]) for i, words in enumerate(sentences)]
+sentences = [doc2vec.TaggedDocument(words,[i]) for i, words in enumerate(sentences)]
 
 
 def testfile():
@@ -248,7 +244,7 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(len(model.docvecs.index2doctag), len(model2.docvecs.index2doctag))
         self.assertTrue(np.allclose(model.docvecs.doctag_syn0, model2.docvecs.doctag_syn0))
 
-#endclass TestWord2VecModel
+#endclass TestDoc2VecModel
 
 # following code is useful for reproducing paragraph-vectors paper sentiment experiments
 
@@ -292,7 +288,7 @@ def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
     http://nlp.stanford.edu/~socherr/stanfordSentimentTreebank.zip
     has been expanded. It's not too big, so compose entirely into memory.
     """
-    logger.info("loading corpus from %s" % dirname)
+    logging.info("loading corpus from %s" % dirname)
 
     # many mangled chars in sentences (datasetSentences.txt)
     chars_sst_mangled = ['à', 'á', 'â', 'ã', 'æ', 'ç', 'è', 'é', 'í',
@@ -358,7 +354,7 @@ def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
     assert len([phrase for phrase in phrases if phrase.split == 'test']) == 2210  # 'test'
     assert len([phrase for phrase in phrases if phrase.split == 'dev']) == 1100  # 'dev'
 
-    logger.info("loaded corpus with %i sentences and %i phrases from %s"
+    logging.info("loaded corpus with %i sentences and %i phrases from %s"
                 % (len(info_by_sentence), len(phrases), dirname))
 
     return phrases
