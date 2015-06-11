@@ -312,20 +312,20 @@ def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
 
     # read sentences to temp {sentence -> (id,split) dict, to correlate with dictionary.txt
     info_by_sentence = {}
-    with open(os.path.join(dirname, 'datasetSentences.txt'), 'r') as sentences, \
-         open(os.path.join(dirname, 'datasetSplit.txt'), 'r') as splits:
-        next(sentences)  # legend
-        next(splits)     # legend
-        for sentence_line, split_line in izip(sentences, splits):
-            (id, text) = sentence_line.split('\t')
-            id = int(id)
-            text = text.rstrip()
-            for junk, fix in sentence_fixups:
-                text = text.replace(junk, fix)
-            (id2, split_i) = split_line.split(',')
-            assert id == int(id2)
-            if text not in info_by_sentence:    # discard duplicates
-                info_by_sentence[text] = (id, int(split_i))
+    with open(os.path.join(dirname, 'datasetSentences.txt'), 'r') as sentences:
+        with open(os.path.join(dirname, 'datasetSplit.txt'), 'r') as splits:
+            next(sentences)  # legend
+            next(splits)     # legend
+            for sentence_line, split_line in izip(sentences, splits):
+                (id, text) = sentence_line.split('\t')
+                id = int(id)
+                text = text.rstrip()
+                for junk, fix in sentence_fixups:
+                    text = text.replace(junk, fix)
+                (id2, split_i) = split_line.split(',')
+                assert id == int(id2)
+                if text not in info_by_sentence:    # discard duplicates
+                    info_by_sentence[text] = (id, int(split_i))
 
     # read all phrase text
     phrases = [None] * 239232  # known size of phrases
