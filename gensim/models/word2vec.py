@@ -15,7 +15,7 @@ and extended with additional functionality.
 For a blog tutorial on gensim word2vec, with an interactive web app trained on GoogleNews, visit http://radimrehurek.com/2014/02/word2vec-tutorial/
 
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled) word2vec training**
-(70x speedup compared to plain NumPy implemenation [3]_).
+(70x speedup compared to plain NumPy implementation [3]_).
 
 Initialize a model with e.g.::
 
@@ -88,6 +88,7 @@ logger = logging.getLogger("gensim.models.word2vec")
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
+from types import GeneratorType
 
 try:
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
@@ -359,8 +360,9 @@ class Word2Vec(utils.SaveLoad):
         self.hashfxn = hashfxn
         self.iter = iter
         if sentences is not None:
+            if isinstance(sentences, GeneratorType):
+                raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences)
-            sentences = utils.RepeatCorpusNTimes(sentences, iter)
             self.train(sentences)
 
     def make_table(self, table_size=100000000, power=0.75):
@@ -510,6 +512,9 @@ class Word2Vec(utils.SaveLoad):
 
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
+
+        if self.iter > 1:
+            sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
 
         start, next_report = time.time(), [1.0]
         word_count = [word_count]
@@ -754,8 +759,10 @@ class Word2Vec(utils.SaveLoad):
         similarity, negative words negatively.
 
         This method computes cosine similarity between a simple mean of the projection
-        weight vectors of the given words, and corresponds to the `word-analogy` and
+        weight vectors of the given words and the vectors for each word in the model. The method corresponds to the `word-analogy` and
         `distance` scripts in the original word2vec implementation.
+        
+        If topn is False, most_similar returns the vector of similarity scores.
 
         Example::
 

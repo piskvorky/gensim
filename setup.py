@@ -66,8 +66,8 @@ http://api.mongodb.org/python/current/installation.html#osx
         except Exception:
             e = sys.exc_info()[1]
             sys.stdout.write('%s\n' % str(e))
-            warnings.warn(self.warning_message,
-                "Extension modules",
+            warnings.warn(self.warning_message +
+                "Extension modules" +
                 "There was an issue with your platform configuration - see above.")
 
     def build_extension(self, ext):
@@ -77,8 +77,8 @@ http://api.mongodb.org/python/current/installation.html#osx
         except Exception:
             e = sys.exc_info()[1]
             sys.stdout.write('%s\n' % str(e))
-            warnings.warn(self.warning_message,
-                "The %s extension module" % (name,),
+            warnings.warn(self.warning_message +
+                "The %s extension module" % (name,) +
                 "The output above this warning shows how the compilation failed.")
 
     # the following is needed to be able to add numpy's include dirs... without
@@ -104,7 +104,7 @@ model_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
 
 setup(
     name='gensim',
-    version='0.10.3',
+    version='0.11.1-1',
     description='Python framework for fast Vector Space Modelling',
     long_description=readfile('README.rst'),
 
@@ -157,6 +157,7 @@ setup(
         'numpy >= 1.3',
         'scipy >= 0.7.0',
         'six >= 1.2.0',
+        'smart_open >= 1.2.1',
     ],
 
     extras_require={

@@ -45,11 +45,11 @@ ctypedef unsigned long long (*fast_sentence_dbow_neg_ptr) (
 ctypedef void (*fast_sentence_dm_hs_ptr) (
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1, const int size,
-    np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], const REAL_t alpha, 
+    np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], const REAL_t alpha,
     REAL_t *work, int i, int j, int k, int cbow_mean, int lbl_length, int tw, int tl) nogil
 
 ctypedef unsigned long long (*fast_sentence_dm_neg_ptr) (
-    const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN], 
+    const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN],
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, unsigned long long next_random, int lbl_length, int tw, int tl) nogil
@@ -280,9 +280,9 @@ cdef unsigned long long fast_sentence2_dbow_neg(
     return next_random
 
 cdef void fast_sentence0_dm_hs(
-    const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN], 
+    const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
-    const np.uint32_t indexes[MAX_SENTENCE_LEN], const np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], 
+    const np.uint32_t indexes[MAX_SENTENCE_LEN], const np.uint32_t lbl_indexes[MAX_SENTENCE_LEN],
     const REAL_t alpha, REAL_t *work, int i, int j, int k, int cbow_mean, int lbl_length, int tw, int tl) nogil:
 
     cdef long long a, b
@@ -304,7 +304,7 @@ cdef void fast_sentence0_dm_hs(
         else:
             count += ONEF
             saxpy(&size, &ONEF, &syn0[lbl_indexes[m] * size], &ONE, neu1, &ONE)
-    
+
     if cbow_mean and count > (<REAL_t>0.5):
         inv_count = ONEF/count
         sscal(&size, &inv_count, neu1, &ONE)
@@ -334,9 +334,9 @@ cdef void fast_sentence0_dm_hs(
                 saxpy(&size, &ONEF, work, &ONE, &syn0[lbl_indexes[m]*size], &ONE)
 
 cdef void fast_sentence1_dm_hs(
-    const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN], 
+    const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
-    const np.uint32_t indexes[MAX_SENTENCE_LEN], const np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], 
+    const np.uint32_t indexes[MAX_SENTENCE_LEN], const np.uint32_t lbl_indexes[MAX_SENTENCE_LEN],
     const REAL_t alpha, REAL_t *work, int i, int j, int k, int cbow_mean, int lbl_length, int tw, int tl) nogil:
 
     cdef long long a, b
@@ -358,7 +358,7 @@ cdef void fast_sentence1_dm_hs(
         else:
             count += ONEF
             saxpy(&size, &ONEF, &syn0[lbl_indexes[m] * size], &ONE, neu1, &ONE)
-    
+
     if cbow_mean and count > (<REAL_t>0.5):
         inv_count = ONEF/count
         sscal(&size, &inv_count , neu1, &ONE)
@@ -388,9 +388,9 @@ cdef void fast_sentence1_dm_hs(
                 saxpy(&size, &ONEF, work, &ONE, &syn0[lbl_indexes[m]*size], &ONE)
 
 cdef void fast_sentence2_dm_hs(
-    const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN], 
+    const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
-    const np.uint32_t indexes[MAX_SENTENCE_LEN], const np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], 
+    const np.uint32_t indexes[MAX_SENTENCE_LEN], const np.uint32_t lbl_indexes[MAX_SENTENCE_LEN],
     const REAL_t alpha, REAL_t *work, int i, int j, int k, int cbow_mean, int lbl_length, int tw, int tl) nogil:
 
     cdef long long a, b
@@ -415,7 +415,7 @@ cdef void fast_sentence2_dm_hs(
             count += ONEF
             for a in range(size):
                 neu1[a] += syn0[lbl_indexes[m] * size + a]
-    
+
     if cbow_mean and count > (<REAL_t>0.5):
         for a in range(size):
             neu1[a] /= count
@@ -452,7 +452,7 @@ cdef void fast_sentence2_dm_hs(
                     syn0[lbl_indexes[m] * size + a] += work[a]
 
 cdef unsigned long long fast_sentence0_dm_neg(
-    const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN], 
+    const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN],
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, unsigned long long next_random, int lbl_length, int tw, int tl) nogil:
@@ -522,7 +522,7 @@ cdef unsigned long long fast_sentence0_dm_neg(
     return next_random
 
 cdef unsigned long long fast_sentence1_dm_neg(
-    const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN], 
+    const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN],
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, unsigned long long next_random, int lbl_length, int tw, int tl) nogil:
@@ -592,7 +592,7 @@ cdef unsigned long long fast_sentence1_dm_neg(
     return next_random
 
 cdef unsigned long long fast_sentence2_dm_neg(
-    const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN], 
+    const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN],
     int lbl_codelens[MAX_SENTENCE_LEN], REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     np.uint32_t indexes[MAX_SENTENCE_LEN], np.uint32_t lbl_indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, unsigned long long next_random, int lbl_length, int tw, int tl) nogil:
@@ -726,7 +726,6 @@ def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_
             codelens[i] = 0
         else:
             indexes[i] = word.index
-            reduced_windows[i] = np.random.randint(window)
             if hs:
                 codelens[i] = <int>len(word.code)
                 codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
@@ -734,6 +733,9 @@ def train_sentence_dbow(model, sentence, lbls, alpha, _work, train_words, train_
             else:
                 codelens[i] = 1
             result += 1
+    # single randint() call avoids a big thread-sync slowdown
+    for i, item in enumerate(np.random.randint(0, window, sentence_len)):
+        reduced_windows[i] = item
     for i in range(lbl_length):
         word = lbls[i]
         if word is None:
@@ -820,7 +822,6 @@ def train_sentence_dm(model, sentence, lbls, alpha, _work, _neu1, train_words, t
             codelens[i] = 0
         else:
             indexes[i] = word.index
-            reduced_windows[i] = np.random.randint(window)
             if hs:
                 codelens[i] = <int>len(word.code)
                 codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
@@ -828,7 +829,10 @@ def train_sentence_dm(model, sentence, lbls, alpha, _work, _neu1, train_words, t
             else:
                 codelens[i] = 1
             result += 1
-    
+    # single randint() call avoids a big thread-sync slowdown
+    for i, item in enumerate(np.random.randint(0, window, sentence_len)):
+        reduced_windows[i] = item
+
     lbl_length = <int>min(MAX_SENTENCE_LEN, len(lbls))
     for i in range(lbl_length):
         word = lbls[i]
@@ -836,7 +840,6 @@ def train_sentence_dm(model, sentence, lbls, alpha, _work, _neu1, train_words, t
             lbl_codelens[i] = 0
         else:
             lbl_indexes[i] = word.index
-            reduced_windows[i] = np.random.randint(window)
             if hs:
                 lbl_codelens[i] = <int>len(word.code)
             else:

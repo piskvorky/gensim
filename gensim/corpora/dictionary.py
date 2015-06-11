@@ -213,7 +213,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
         self.filter_tokens(good_ids=good_ids)
-        self.compactify()
         logger.info("resulting dictionary: %s" % self)
 
 
@@ -240,6 +239,7 @@ class Dictionary(utils.SaveLoad, Mapping):
             self.dfs = dict((tokenid, freq)
                             for tokenid, freq in iteritems(self.dfs)
                             if tokenid in good_ids)
+        self.compactify()
 
 
     def compactify(self):
@@ -392,4 +392,5 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.info("built %s from %i documents (total %i corpus positions)" %
                      (result, result.num_docs, result.num_pos))
         return result
+
 #endclass Dictionary

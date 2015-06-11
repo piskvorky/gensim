@@ -14,7 +14,7 @@ import unittest
 import tempfile
 import itertools
 
-from gensim.utils import to_unicode
+from gensim.utils import to_unicode, smart_extension
 from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
                             ucicorpus, malletcorpus, textcorpus, indexedcorpus)
 
