@@ -634,7 +634,7 @@ class Word2Vec(utils.SaveLoad):
         This method computes cosine similarity between a simple mean of the projection
         weight vectors of the given words and the vectors for each word in the model. The method corresponds to the `word-analogy` and
         `distance` scripts in the original word2vec implementation.
-        
+
         If topn is False, most_similar returns the vector of similarity scores.
 
         Example::
