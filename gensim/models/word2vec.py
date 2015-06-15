@@ -290,6 +290,7 @@ class Word2Vec(utils.SaveLoad):
         `iter` = number of iterations (epochs) over the corpus.
 
         """
+
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
         self.sg = int(sg)
@@ -976,7 +977,7 @@ class Sentences(object):
         self.filename = filename
 
     def __iter__(self):
-        for line in utils.smart_open(fname):
+        for line in utils.smart_open(self.filename):
             line = utils.to_unicode(line)
             token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
             # ignore words with non-alphabetic tags like ",", "!" etc punctuation, weird stuff)
