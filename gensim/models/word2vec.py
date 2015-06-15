@@ -388,26 +388,26 @@ class Word2Vec(utils.SaveLoad):
             prob = (sqrt(v.count / threshold_count) + 1) * (threshold_count / v.count) if self.sample else 1.0
             v.sample_probability = min(prob, 1.0)
 
-+    def update_vocab(self, sentences):
-+        logger.info("Adding new words and their counts")
-+        vocab = self._vocab_from(sentences)
-+        # add new words to the vocabulary
-+        for word, v in iteritems(vocab):
-+            if v.count >= self.min_count and word not in self.vocab:
-+                v.index = len(self.vocab)
-+                self.index2word.append(word)
-+                self.vocab[word] = v
-+        logger.info("total %i word types after removing those with count<%s" % (len(self.vocab), self.min_count))
-+
-+        if self.hs:
-+            # add info about each word's Huffman encoding
-+            self.create_binary_tree()
-+        if self.negative:
-+            # build the table for drawing random words (for negative sampling)
-+            self.make_table()
-+        self.precalc_sampling()
-+        self.update_weights()
-+
+    def update_vocab(self, sentences):
+        logger.info("Adding new words and their counts")
+        vocab = self._vocab_from(sentences)
+        # add new words to the vocabulary
+        for word, v in iteritems(vocab):
+            if v.count >= self.min_count and word not in self.vocab:
+                v.index = len(self.vocab)
+                self.index2word.append(word)
+                self.vocab[word] = v
+        logger.info("total %i word types after removing those with count<%s" % (len(self.vocab), self.min_count))
+
+        if self.hs:
+            # add info about each word's Huffman encoding
+            self.create_binary_tree()
+        if self.negative:
+            # build the table for drawing random words (for negative sampling)
+            self.make_table()
+        self.precalc_sampling()
+        self.update_weights()
+
 
     def build_vocab(self, sentences):
         """
