@@ -388,6 +388,27 @@ class Word2Vec(utils.SaveLoad):
             prob = (sqrt(v.count / threshold_count) + 1) * (threshold_count / v.count) if self.sample else 1.0
             v.sample_probability = min(prob, 1.0)
 
++    def update_vocab(self, sentences):
++        logger.info("Adding new words and their counts")
++        vocab = self._vocab_from(sentences)
++        # add new words to the vocabulary
++        for word, v in iteritems(vocab):
++            if v.count >= self.min_count and word not in self.vocab:
++                v.index = len(self.vocab)
++                self.index2word.append(word)
++                self.vocab[word] = v
++        logger.info("total %i word types after removing those with count<%s" % (len(self.vocab), self.min_count))
++
++        if self.hs:
++            # add info about each word's Huffman encoding
++            self.create_binary_tree()
++        if self.negative:
++            # build the table for drawing random words (for negative sampling)
++            self.make_table()
++        self.precalc_sampling()
++        self.update_weights()
++
+
     def build_vocab(self, sentences):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
@@ -514,6 +535,38 @@ class Word2Vec(utils.SaveLoad):
             (word_count[0], elapsed, word_count[0] / elapsed if elapsed else 0.0))
         self.syn0norm = None
         return word_count[0]
+
+    def update_weights(self):
+        """
+        Reset the weight of the new vocab, and leave the old vocab
+        weights the same
+        """
+        logger.info("resetting new vocab weights")
+        newsyn0 = empty((len(self.vocab), self.layer1_size), dtype=REAL)
+
+        # copy the weights that are already learned
+        for i in xrange(0, len(self.syn0)):
+            newsyn0[i] = self.syn0[i]
+
+        # randomize the remaining words
+        for i in xrange(len(self.syn0),len(newsyn0)):
+            random.seed(uint32(self.hashfxn(self.index2word[i] + str(self.seed))))
+            newsyn0[i] = (random.rand(self.layer1_size) - 0.5) / self.layer1_size
+
+        self.syn0 = newsyn0
+
+        # is the following correct?
+        if self.hs:
+            oldsyn1 = self.syn1
+            self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
+            for i in xrange(0, len(oldsyn1)):
+                self.syn1[i] = oldsyn1[i]
+        if self.negative:
+            oldneg = self.syn1neg
+            self.syn1neg = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
+            for i in xrange(0, len(oldneg)):
+                self.syn1neg[i] = oldneg[i]
+        self.syn0norm = None
 
     def reset_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
@@ -918,6 +971,19 @@ class Word2Vec(utils.SaveLoad):
         super(Word2Vec, self).save(*args, **kwargs)
     save.__doc__ = utils.SaveLoad.save.__doc__
 
+class Sentences(object):
+    def __init__(self, filename):
+        self.filename = filename
+
+    def __iter__(self):
+        for line in utils.smart_open(fname):
+            line = utils.to_unicode(line)
+            token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
+            # ignore words with non-alphabetic tags like ",", "!" etc punctuation, weird stuff)
+            words = [token.lower() for token in line.split(" ")]
+            if not words:  # don't bother sending out empty sentences
+                continue
+            yield words
 
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
