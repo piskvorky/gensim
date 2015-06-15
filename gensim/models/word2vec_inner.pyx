@@ -917,7 +917,7 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
 def init():
     """
     Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized
-    into table EXP_TABLE.
+    into table EXP_TABLE.  Also calculate log(sigmoid(x)) into LOG_TABLE.
 
     """
     global fast_sentence_sg_hs

@@ -93,8 +93,19 @@ from types import GeneratorType
 try:
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
 except ImportError:
-    print("using slowness in w2v")
+    print("Using slowness in w2v scoring; no compiled-c options")
     def score_sentence_sg(model, sentence, work=None):
+        """
+        Obtain likelihood score for a single sentence in a fitted skip-gram representaion.
+
+        The sentence is a list of Vocab objects (or None, where the corresponding
+        word is not in the vocabulary. Called internally from `Word2Vec.score()`.
+
+        This is the non-optimized, Python version. If you have cython installed, gensim
+        will use the optimized version from word2vec_inner instead.
+
+        """
+
         log_prob_sentence = 0.0
         if model.negative:
             raise RuntimeError("scoring is only available for HS=True")
@@ -113,6 +124,17 @@ except ImportError:
         return log_prob_sentence
 
     def score_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
+        """
+        Obtain likelihood score for a single sentence in a fitted CBOW representaion.
+
+        The sentence is a list of Vocab objects (or None, where the corresponding
+        word is not in the vocabulary. Called internally from `Word2Vec.score()`.
+
+        This is the non-optimized, Python version. If you have cython installed, gensim
+        will use the optimized version from word2vec_inner instead.
+
+        """
+
         log_prob_sentence = 0.0
         if model.negative:
             raise RuntimeError("scoring is only available for HS=True")
@@ -576,7 +598,11 @@ class Word2Vec(utils.SaveLoad):
         """
         Score the log probability for a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
-        This does not chance the fitted model in any way (see Word2Vec.train() for that)
+        This does not change the fitted model in any way (see Word2Vec.train() for that)
+
+        See the article by Taddy [1] for examples of how to use such scores in document classification.
+
+        .. [1] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
 
         """
         if FAST_VERSION < 0:
@@ -625,7 +651,7 @@ class Word2Vec(utils.SaveLoad):
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
 
-        # convert input strings to Vocab objects (eliding OOV/downsampled words), and start filling the jobs queue
+        # convert input strings to Vocab objects and start filling the jobs queue
         for job_no, job in enumerate(utils.grouper(enumerate(self._prepare_sentences(sentences)), chunksize)):
             logger.debug("putting job #%i in the queue, qsize=%i" % (job_no, jobs.qsize()))
             jobs.put(job)

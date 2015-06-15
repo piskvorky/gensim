@@ -51,11 +51,6 @@ from gensim import utils  # utility fnc for pickling, common scipy operations et
 from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair
 
 try:
-	from gensim.models.doc2vec_inner import score_sentence_dbow, score_sentence_dm
-except:
-	print(" no fast version ")
-
-try:
     from gensim.models.doc2vec_inner import train_sentence_dbow, train_sentence_dm, FAST_VERSION
 except:
     # failed... fall back to plain numpy (20-80x slower training than the above)
