@@ -164,12 +164,39 @@ except ImportError:
 def train_sg_pair(model, word, word2, alpha, labels, train_w1=True, train_w2=True):
     l1 = model.syn0[word2.index]
     neu1e = zeros(l1.shape)
-
+    # print str(word.index)+ " - "+ str(word2.index)
     if model.hs:
         # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
         l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
         fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  # propagate hidden -> output
         ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
+        if train_w1:
+            model.syn1[word.point] += outer(ga, l1) # learn hidden -> output
+        neu1e += dot(ga, l2a) # save error
+
+    if model.negative:
+        # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
+        word_indices = [word.index]
+        while len(word_indices) < model.negative + 1:
+            w = model.table[random.randint(model.table.shape[0])]
+            if w != word.index:
+                word_indices.append(w)
+        l2b = model.syn1neg[word_indices] # 2d matrix, k+1 x layer1_size
+        fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
+        gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
+        if train_w1:
+            neu1e += dot(gb, l2b) # save error
+    if train_w2 and model.syn0lock[word2.index] == 1:
+        model.syn0[word2.index] += neu1e # learn input -> hidden
+    return neu1e
+
+
+def train_cbow_pair(model, word, word2_indices, l1, alpha, labels, train_w1=True, train_w2=True):
+    neu1e = zeros(l1.shape)
+    if model.hs:
+        l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
+        fa = 1. / (1. + exp(-dot(l1, l2a.T)))  # propagate hidden -> output
+        ga = (1. - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
         if train_w1:
             model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
         neu1e += dot(ga, l2a)  # save error
@@ -188,36 +215,7 @@ def train_sg_pair(model, word, word2, alpha, labels, train_w1=True, train_w2=Tru
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
     if train_w2:
-        model.syn0[word2.index] += neu1e  # learn input -> hidden
-    return neu1e
-
-
-def train_cbow_pair(model, word, word2_indices, l1, alpha, labels, train_w1=True, train_w2=True):
-    neu1e = zeros(l1.shape)
-
-    if model.hs:
-        l2a = model.syn1[word.point] # 2d matrix, codelen x layer1_size
-        fa = 1. / (1. + exp(-dot(l1, l2a.T))) # propagate hidden -> output
-        ga = (1. - word.code - fa) * alpha # vector of error gradients multiplied by the learning rate
-        if train_w1:
-            model.syn1[word.point] += outer(ga, l1) # learn hidden -> output
-        neu1e += dot(ga, l2a) # save error
-
-    if model.negative:
-        # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
-        word_indices = [word.index]
-        while len(word_indices) < model.negative + 1:
-            w = model.table[random.randint(model.table.shape[0])]
-            if w != word.index:
-                word_indices.append(w)
-        l2b = model.syn1neg[word_indices] # 2d matrix, k+1 x layer1_size
-        fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
-        gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
-        if train_w1:
-            model.syn1neg[word_indices] += outer(gb, l1) # learn hidden -> output
-        neu1e += dot(gb, l2b) # save error
-    if train_w2:
-        model.syn0[word2_indices] += neu1e # learn input -> hidden, here for all words in the window separately
+        model.syn0[word2_indices] += neu1e  # learn input -> hidden, here for all words in the window separately
     return neu1e
 
 
@@ -290,7 +288,7 @@ class Word2Vec(utils.SaveLoad):
         `iter` = number of iterations (epochs) over the corpus.
 
         """
-
+        self.syn0lock = []
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
         self.sg = int(sg)
@@ -392,12 +390,18 @@ class Word2Vec(utils.SaveLoad):
     def update_vocab(self, sentences):
         logger.info("Adding new words and their counts")
         vocab = self._vocab_from(sentences)
+
+        # set all the previous weights to 0 -> freeze them
+        for id in xrange(0, len(self.index2word)):
+            self.syn0lock[id] = 0
+
         # add new words to the vocabulary
         for word, v in iteritems(vocab):
             if v.count >= self.min_count and word not in self.vocab:
                 v.index = len(self.vocab)
                 self.index2word.append(word)
                 self.vocab[word] = v
+                self.syn0lock.append(1)
         logger.info("total %i word types after removing those with count<%s" % (len(self.vocab), self.min_count))
 
         if self.hs:
@@ -425,6 +429,8 @@ class Word2Vec(utils.SaveLoad):
                 v.index = len(self.vocab)
                 self.index2word.append(word)
                 self.vocab[word] = v
+                # All the words are unlocked for initial training
+                self.syn0lock.append(1)
         logger.info("total %i word types after removing those with count<%s" % (len(self.vocab), self.min_count))
 
         if self.hs:
