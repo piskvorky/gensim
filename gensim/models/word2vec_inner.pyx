@@ -75,177 +75,6 @@ cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
-# Only implemented for hierarchical softmax
-def score_sentence_sg(model, sentence, _work):
-
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
-    cdef REAL_t *work
-    cdef int size = model.layer1_size
-
-    cdef int codelens[MAX_SENTENCE_LEN]
-    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
-    cdef int sentence_len
-    cdef int window = model.window
-
-    cdef int i, j, k
-    cdef long result = 0
-
-    cdef REAL_t *syn1
-    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
-    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
-
-    syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
-
-    # convert Python structures to primitive types, so we can release the GIL
-    work = <REAL_t *>np.PyArray_DATA(_work)
-    sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
-    
-    for i in range(sentence_len):
-        word = sentence[i]
-        if word is None:
-            codelens[i] = 0
-        else:
-            indexes[i] = word.index
-            codelens[i] = <int>len(word.code)
-            codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-            points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
-            result += 1
-
-    # release GIL & train on the sentence
-    work[0] = 0.0
-
-    with nogil:
-        for i in range(sentence_len):
-            if codelens[i] == 0:
-                continue
-            j = i - window 
-            if j < 0:
-                j = 0
-            k = i + window + 1 
-            if k > sentence_len:
-                k = sentence_len
-            for j in range(j, k):
-                if j == i or codelens[j] == 0:
-                    continue
-                score_pair_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], work)
-
-    return work[0]
-
-cdef void score_pair_sg_hs(
-    const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
-    REAL_t *syn0, REAL_t *syn1, const int size,
-    const np.uint32_t word2_index, REAL_t *work) nogil:
-
-    cdef long long b
-    cdef long long row1 = word2_index * size, row2, sgn
-    cdef REAL_t f
-
-    for b in range(codelen):
-        row2 = word_point[b] * size
-        # check if sdot returns double (or rather, trust gensim's existing choice)
-        if fast_sentence_sg_hs is fast_sentence0_sg_hs:
-            f = <REAL_t>dsdot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
-        else:
-            f = <REAL_t>sdot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
-        sgn = (-1)**word_code[b] # ch function: 0-> 1, 1 -> -1
-        f = sgn*f
-        if f <= -MAX_EXP or f >= MAX_EXP:
-            continue
-        f = LOG_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-        work[0] += f
-
-def score_sentence_cbow(model, sentence, _work, _neu1):
-
-    cdef int cbow_mean = model.cbow_mean
-
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
-    cdef REAL_t *work
-    cdef REAL_t *neu1
-    cdef int size = model.layer1_size
-
-    cdef int codelens[MAX_SENTENCE_LEN]
-    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
-    cdef int sentence_len
-    cdef int window = model.window
-
-    cdef int i, j, k
-    cdef long result = 0
-
-    # For hierarchical softmax
-    cdef REAL_t *syn1
-    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
-    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
-
-    syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
-
-    # convert Python structures to primitive types, so we can release the GIL
-    work = <REAL_t *>np.PyArray_DATA(_work)
-    neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
-    sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
-
-    for i in range(sentence_len):
-        word = sentence[i]
-        if word is None:
-            codelens[i] = 0
-        else:
-            indexes[i] = word.index
-            codelens[i] = <int>len(word.code)
-            codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-            points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
-            result += 1
-
-    # release GIL & train on the sentence
-    work[0] = 0.0
-    with nogil:
-        for i in range(sentence_len):
-            if codelens[i] == 0:
-                continue
-            j = i - window 
-            if j < 0:
-                j = 0
-            k = i + window + 1
-            if k > sentence_len:
-                k = sentence_len
-            score_pair_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, work, i, j, k, cbow_mean)
-
-    return work[0]
-
-cdef void score_pair_cbow_hs(
-    const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
-    REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
-    const np.uint32_t indexes[MAX_SENTENCE_LEN], REAL_t *work,
-    int i, int j, int k, int cbow_mean) nogil:
-
-    cdef long long a, b
-    cdef long long row2
-    cdef REAL_t f, g, count, inv_count, sgn
-    cdef int m
-
-    memset(neu1, 0, size * cython.sizeof(REAL_t))
-    count = <REAL_t>0.0
-    for m in range(j, k):
-        if m == i or codelens[m] == 0:
-            continue
-        else:
-            count += ONEF
-            saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
-    if cbow_mean and count > (<REAL_t>0.5):
-        inv_count = ONEF/count
-        sscal(&size, &inv_count, neu1, &ONE)
-
-    for b in range(codelens[i]):
-        row2 = word_point[b] * size
-        # check if sdot returns double (or rather, trust gensim's existing choice)
-        if fast_sentence_cbow_hs is fast_sentence0_cbow_hs:
-            f = <REAL_t>dsdot(&size, neu1, &ONE, &syn1[row2], &ONE)
-        else:
-            f = <REAL_t>sdot(&size, neu1, &ONE, &syn1[row2], &ONE)
-        sgn = (-1)**word_code[b] # ch function: 0-> 1, 1 -> -1
-        f = sgn*f
-        if f <= -MAX_EXP or f >= MAX_EXP:
-            continue
-        f = LOG_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-        work[0] += f
 
 cdef void fast_sentence0_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
@@ -912,6 +741,179 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
                 next_random = fast_sentence_cbow_neg(negative, table, table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random)
 
     return result
+
+
+# Score is only implemented for hierarchical softmax
+def score_sentence_sg(model, sentence, _work):
+
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *work
+    cdef int size = model.layer1_size
+
+    cdef int codelens[MAX_SENTENCE_LEN]
+    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
+    cdef int sentence_len
+    cdef int window = model.window
+
+    cdef int i, j, k
+    cdef long result = 0
+
+    cdef REAL_t *syn1
+    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
+    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
+
+    syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+
+    # convert Python structures to primitive types, so we can release the GIL
+    work = <REAL_t *>np.PyArray_DATA(_work)
+    sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
+    
+    for i in range(sentence_len):
+        word = sentence[i]
+        if word is None:
+            codelens[i] = 0
+        else:
+            indexes[i] = word.index
+            codelens[i] = <int>len(word.code)
+            codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+            points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+            result += 1
+
+    # release GIL & train on the sentence
+    work[0] = 0.0
+
+    with nogil:
+        for i in range(sentence_len):
+            if codelens[i] == 0:
+                continue
+            j = i - window 
+            if j < 0:
+                j = 0
+            k = i + window + 1 
+            if k > sentence_len:
+                k = sentence_len
+            for j in range(j, k):
+                if j == i or codelens[j] == 0:
+                    continue
+                score_pair_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], work)
+
+    return work[0]
+
+cdef void score_pair_sg_hs(
+    const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
+    REAL_t *syn0, REAL_t *syn1, const int size,
+    const np.uint32_t word2_index, REAL_t *work) nogil:
+
+    cdef long long b
+    cdef long long row1 = word2_index * size, row2, sgn
+    cdef REAL_t f
+
+    for b in range(codelen):
+        row2 = word_point[b] * size
+        # check if sdot returns double (or rather, trust gensim's existing choice)
+        if fast_sentence_sg_hs is fast_sentence0_sg_hs:
+            f = <REAL_t>dsdot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
+        else:
+            f = <REAL_t>sdot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
+        sgn = (-1)**word_code[b] # ch function: 0-> 1, 1 -> -1
+        f = sgn*f
+        if f <= -MAX_EXP or f >= MAX_EXP:
+            continue
+        f = LOG_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        work[0] += f
+
+def score_sentence_cbow(model, sentence, _work, _neu1):
+
+    cdef int cbow_mean = model.cbow_mean
+
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *work
+    cdef REAL_t *neu1
+    cdef int size = model.layer1_size
+
+    cdef int codelens[MAX_SENTENCE_LEN]
+    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
+    cdef int sentence_len
+    cdef int window = model.window
+
+    cdef int i, j, k
+    cdef long result = 0
+
+    # For hierarchical softmax
+    cdef REAL_t *syn1
+    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
+    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
+
+    syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+
+    # convert Python structures to primitive types, so we can release the GIL
+    work = <REAL_t *>np.PyArray_DATA(_work)
+    neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
+    sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
+
+    for i in range(sentence_len):
+        word = sentence[i]
+        if word is None:
+            codelens[i] = 0
+        else:
+            indexes[i] = word.index
+            codelens[i] = <int>len(word.code)
+            codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+            points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+            result += 1
+
+    # release GIL & train on the sentence
+    work[0] = 0.0
+    with nogil:
+        for i in range(sentence_len):
+            if codelens[i] == 0:
+                continue
+            j = i - window 
+            if j < 0:
+                j = 0
+            k = i + window + 1
+            if k > sentence_len:
+                k = sentence_len
+            score_pair_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, work, i, j, k, cbow_mean)
+
+    return work[0]
+
+cdef void score_pair_cbow_hs(
+    const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
+    REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
+    const np.uint32_t indexes[MAX_SENTENCE_LEN], REAL_t *work,
+    int i, int j, int k, int cbow_mean) nogil:
+
+    cdef long long a, b
+    cdef long long row2
+    cdef REAL_t f, g, count, inv_count, sgn
+    cdef int m
+
+    memset(neu1, 0, size * cython.sizeof(REAL_t))
+    count = <REAL_t>0.0
+    for m in range(j, k):
+        if m == i or codelens[m] == 0:
+            continue
+        else:
+            count += ONEF
+            saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
+    if cbow_mean and count > (<REAL_t>0.5):
+        inv_count = ONEF/count
+        sscal(&size, &inv_count, neu1, &ONE)
+
+    for b in range(codelens[i]):
+        row2 = word_point[b] * size
+        # check if sdot returns double (or rather, trust gensim's existing choice)
+        if fast_sentence_cbow_hs is fast_sentence0_cbow_hs:
+            f = <REAL_t>dsdot(&size, neu1, &ONE, &syn1[row2], &ONE)
+        else:
+            f = <REAL_t>sdot(&size, neu1, &ONE, &syn1[row2], &ONE)
+        sgn = (-1)**word_code[b] # ch function: 0-> 1, 1 -> -1
+        f = sgn*f
+        if f <= -MAX_EXP or f >= MAX_EXP:
+            continue
+        f = LOG_TABLE[<int>((f + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        work[0] += f
 
 
 def init():
