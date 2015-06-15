@@ -93,13 +93,12 @@ from types import GeneratorType
 try:
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
 except ImportError:
-    print("Using slowness in w2v scoring; no compiled-c options")
     def score_sentence_sg(model, sentence, work=None):
         """
         Obtain likelihood score for a single sentence in a fitted skip-gram representaion.
 
-        The sentence is a list of Vocab objects (or None, where the corresponding
-        word is not in the vocabulary. Called internally from `Word2Vec.score()`.
+        The sentence is a list of Vocab objects (or None, when the corresponding
+        word is not in the vocabulary). Called internally from `Word2Vec.score()`.
 
         This is the non-optimized, Python version. If you have cython installed, gensim
         will use the optimized version from word2vec_inner instead.
