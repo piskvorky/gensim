@@ -60,9 +60,17 @@ try:
 except ImportError:
     # no bottleneck => fall back to numpy
     def argsort(x, topn=None):
+        """Return indices of the `topn` greatest elements in numpy array `x`, in order."""
         if topn is None:
             topn = x.size
-        return numpy.argsort(x)[::-1][:topn]
+        if topn <= 0:
+            return []
+        x = -x  # swap greatest / least
+        if topn >= x.size or not hasattr(numpy, 'argpartition'):
+            return numpy.argsort(x)[:topn]
+        # numpy >= 1.8 has a fast partial argsort, use that!
+        biggest = numpy.argpartition(x, topn)[:topn]
+        return biggest.take(numpy.argsort(x.take(biggest)))  # resort topn into order
 
 
 logger = logging.getLogger("gensim.matutils")
@@ -233,7 +241,7 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
     Like `full2sparse`, but only return the `topn` elements of the greatest magnitude (abs).
 
     """
-    # use numpy.argsort and only form tuples that are actually returned.
+    # use numpy.argpartition/argsort and only form tuples that are actually returned.
     # this is about 40x faster than explicitly forming all 2-tuples to run sort() or heapq.nlargest() on.
     if topn <= 0:
         return []
