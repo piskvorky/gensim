@@ -450,8 +450,8 @@ class Word2Vec(utils.SaveLoad):
         self.table = other_model.table
         self.reset_weights()
 
-    def _prepare_sentences(self, sentences):
-        for sentence in sentences:
+    def _prepare_items(self, items):
+        for sentence in items:
             # avoid calling random_sample() where prob >= 1, to speed things up a little:
             sampled = [self.vocab[word] for word in sentence
                        if word in self.vocab and (self.vocab[word].sample_probability >= 1.0 or
@@ -523,7 +523,7 @@ class Word2Vec(utils.SaveLoad):
             thread.start()
 
         # convert input strings to Vocab objects (eliding OOV/downsampled words), and start filling the jobs queue
-        for job_no, job in enumerate(utils.grouper(self._prepare_sentences(sentences), chunksize)):
+        for job_no, job in enumerate(utils.grouper(self._prepare_items(sentences), chunksize)):
             logger.debug("putting job #%i in the queue, qsize=%i" % (job_no, jobs.qsize()))
             jobs.put(job)
         logger.info("reached the end of input; waiting to finish %i outstanding jobs" % jobs.qsize())
