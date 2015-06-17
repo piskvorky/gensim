@@ -214,7 +214,7 @@ def train_cbow_pair(model, word, word2_indices, l1, alpha, labels, train_w1=True
         if train_w1:
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
-    if train_w2:
+    if train_w2 and model.syn0lock[word2.index] == 1:
         model.syn0[word2_indices] += neu1e  # learn input -> hidden, here for all words in the window separately
     return neu1e
 
@@ -556,7 +556,7 @@ class Word2Vec(utils.SaveLoad):
             newsyn0[i] = self.syn0[i]
 
         # randomize the remaining words
-        for i in xrange(len(self.syn0),len(newsyn0)):
+        for i in xrange(len(self.syn0), len(newsyn0)):
             random.seed(uint32(self.hashfxn(self.index2word[i] + str(self.seed))))
             newsyn0[i] = (random.rand(self.layer1_size) - 0.5) / self.layer1_size
 
