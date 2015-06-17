@@ -164,7 +164,6 @@ except ImportError:
 def train_sg_pair(model, word, word2, alpha, labels, train_w1=True, train_w2=True):
     l1 = model.syn0[word2.index]
     neu1e = zeros(l1.shape)
-    # print str(word.index)+ " - "+ str(word2.index)
     if model.hs:
         # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
         l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
