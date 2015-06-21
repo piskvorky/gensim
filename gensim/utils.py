@@ -831,8 +831,13 @@ def smart_extension(fname, ext):
     return fname
 
 
-def pickle(obj, fname, protocol=_pickle.HIGHEST_PROTOCOL):
-    """Pickle object `obj` to file `fname`."""
+def pickle(obj, fname, protocol=2):
+    """Pickle object `obj` to file `fname`.
+
+    `protocol` defaults to 2 so pickled objects are compatible across
+    Python 2.x and 3.x.
+
+    """
     with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
         _pickle.dump(obj, fout, protocol=protocol)
 
