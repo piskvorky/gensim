@@ -180,11 +180,11 @@ def train_sg_pair(model, word, word2, alpha, labels, train_w1=True, train_w2=Tru
             w = model.table[random.randint(model.table.shape[0])]
             if w != word.index:
                 word_indices.append(w)
-        l2b = model.syn1neg[word_indices] # 2d matrix, k+1 x layer1_size
-        fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
-        gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
+        l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
+        fb = 1. / (1. + exp(-dot(l1, l2b.T)))  # propagate hidden -> output
+        gb = (labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
         if train_w1:
-            neu1e += dot(gb, l2b) # save error
+            neu1e += dot(gb, l2b)  # save error
     if train_w2 and model.syn0lock[word2.index] == 1:
         model.syn0[word2.index] += neu1e # learn input -> hidden
     return neu1e
@@ -291,7 +291,7 @@ class Word2Vec(utils.SaveLoad):
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
         self.sg = int(sg)
-        self.table = None # for negative sampling --> this needs a lot of RAM! consider setting back to None before saving
+        self.table = None  # for negative sampling --> this needs a lot of RAM! consider setting back to None before saving
         self.layer1_size = int(size)
         if size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
@@ -984,8 +984,7 @@ class Sentences(object):
     def __iter__(self):
         for line in utils.smart_open(self.filename):
             line = utils.to_unicode(line)
-            token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
-            # ignore words with non-alphabetic tags like ",", "!" etc punctuation, weird stuff)
+            line = line.strip()
             words = [token.lower() for token in line.split(" ")]
             if not words:  # don't bother sending out empty sentences
                 continue
