@@ -164,12 +164,38 @@ except ImportError:
 def train_sg_pair(model, word, word2, alpha, labels, train_w1=True, train_w2=True):
     l1 = model.syn0[word2.index]
     neu1e = zeros(l1.shape)
-
     if model.hs:
         # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
         l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
         fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  # propagate hidden -> output
         ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
+        if train_w1:
+            model.syn1[word.point] += outer(ga, l1) # learn hidden -> output
+        neu1e += dot(ga, l2a) # save error
+
+    if model.negative:
+        # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
+        word_indices = [word.index]
+        while len(word_indices) < model.negative + 1:
+            w = model.table[random.randint(model.table.shape[0])]
+            if w != word.index:
+                word_indices.append(w)
+        l2b = model.syn1neg[word_indices] # 2d matrix, k+1 x layer1_size
+        fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
+        gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
+        if train_w1:
+            neu1e += dot(gb, l2b) # save error
+    if train_w2 and model.syn0lock[word2.index] == 1:
+        model.syn0[word2.index] += neu1e # learn input -> hidden
+    return neu1e
+
+
+def train_cbow_pair(model, word, word2_indices, l1, alpha, labels, train_w1=True, train_w2=True):
+    neu1e = zeros(l1.shape)
+    if model.hs:
+        l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
+        fa = 1. / (1. + exp(-dot(l1, l2a.T)))  # propagate hidden -> output
+        ga = (1. - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
         if train_w1:
             model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
         neu1e += dot(ga, l2a)  # save error
@@ -187,37 +213,8 @@ def train_sg_pair(model, word, word2, alpha, labels, train_w1=True, train_w2=Tru
         if train_w1:
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
-    if train_w2:
-        model.syn0[word2.index] += neu1e  # learn input -> hidden
-    return neu1e
-
-
-def train_cbow_pair(model, word, word2_indices, l1, alpha, labels, train_w1=True, train_w2=True):
-    neu1e = zeros(l1.shape)
-
-    if model.hs:
-        l2a = model.syn1[word.point] # 2d matrix, codelen x layer1_size
-        fa = 1. / (1. + exp(-dot(l1, l2a.T))) # propagate hidden -> output
-        ga = (1. - word.code - fa) * alpha # vector of error gradients multiplied by the learning rate
-        if train_w1:
-            model.syn1[word.point] += outer(ga, l1) # learn hidden -> output
-        neu1e += dot(ga, l2a) # save error
-
-    if model.negative:
-        # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
-        word_indices = [word.index]
-        while len(word_indices) < model.negative + 1:
-            w = model.table[random.randint(model.table.shape[0])]
-            if w != word.index:
-                word_indices.append(w)
-        l2b = model.syn1neg[word_indices] # 2d matrix, k+1 x layer1_size
-        fb = 1. / (1. + exp(-dot(l1, l2b.T))) # propagate hidden -> output
-        gb = (labels - fb) * alpha # vector of error gradients multiplied by the learning rate
-        if train_w1:
-            model.syn1neg[word_indices] += outer(gb, l1) # learn hidden -> output
-        neu1e += dot(gb, l2b) # save error
-    if train_w2:
-        model.syn0[word2_indices] += neu1e # learn input -> hidden, here for all words in the window separately
+    if train_w2 and model.syn0lock[word2.index] == 1:
+        model.syn0[word2_indices] += neu1e  # learn input -> hidden, here for all words in the window separately
     return neu1e
 
 
@@ -290,6 +287,7 @@ class Word2Vec(utils.SaveLoad):
         `iter` = number of iterations (epochs) over the corpus.
 
         """
+        self.syn0lock = []
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
         self.sg = int(sg)
@@ -388,6 +386,33 @@ class Word2Vec(utils.SaveLoad):
             prob = (sqrt(v.count / threshold_count) + 1) * (threshold_count / v.count) if self.sample else 1.0
             v.sample_probability = min(prob, 1.0)
 
+    def update_vocab(self, sentences):
+        logger.info("Adding new words and their counts")
+        vocab = self._vocab_from(sentences)
+
+        # set all the previous weights to 0 -> freeze them
+        for id in xrange(0, len(self.index2word)):
+            self.syn0lock[id] = 0
+
+        # add new words to the vocabulary
+        for word, v in iteritems(vocab):
+            if v.count >= self.min_count and word not in self.vocab:
+                v.index = len(self.vocab)
+                self.index2word.append(word)
+                self.vocab[word] = v
+                self.syn0lock.append(1)
+        logger.info("total %i word types after removing those with count<%s" % (len(self.vocab), self.min_count))
+
+        if self.hs:
+            # add info about each word's Huffman encoding
+            self.create_binary_tree()
+        if self.negative:
+            # build the table for drawing random words (for negative sampling)
+            self.make_table()
+        self.precalc_sampling()
+        self.update_weights()
+
+
     def build_vocab(self, sentences):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
@@ -403,6 +428,8 @@ class Word2Vec(utils.SaveLoad):
                 v.index = len(self.vocab)
                 self.index2word.append(word)
                 self.vocab[word] = v
+                # All the words are unlocked for initial training
+                self.syn0lock.append(1)
         logger.info("total %i word types after removing those with count<%s" % (len(self.vocab), self.min_count))
 
         if self.hs:
@@ -514,6 +541,38 @@ class Word2Vec(utils.SaveLoad):
             (word_count[0], elapsed, word_count[0] / elapsed if elapsed else 0.0))
         self.syn0norm = None
         return word_count[0]
+
+    def update_weights(self):
+        """
+        Reset the weight of the new vocab, and leave the old vocab
+        weights the same
+        """
+        logger.info("resetting new vocab weights")
+        newsyn0 = empty((len(self.vocab), self.layer1_size), dtype=REAL)
+
+        # copy the weights that are already learned
+        for i in xrange(0, len(self.syn0)):
+            newsyn0[i] = self.syn0[i]
+
+        # randomize the remaining words
+        for i in xrange(len(self.syn0), len(newsyn0)):
+            random.seed(uint32(self.hashfxn(self.index2word[i] + str(self.seed))))
+            newsyn0[i] = (random.rand(self.layer1_size) - 0.5) / self.layer1_size
+
+        self.syn0 = newsyn0
+
+        # is the following correct?
+        if self.hs:
+            oldsyn1 = self.syn1
+            self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
+            for i in xrange(0, len(oldsyn1)):
+                self.syn1[i] = oldsyn1[i]
+        if self.negative:
+            oldneg = self.syn1neg
+            self.syn1neg = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
+            for i in xrange(0, len(oldneg)):
+                self.syn1neg[i] = oldneg[i]
+        self.syn0norm = None
 
     def reset_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
@@ -634,7 +693,7 @@ class Word2Vec(utils.SaveLoad):
         This method computes cosine similarity between a simple mean of the projection
         weight vectors of the given words and the vectors for each word in the model. The method corresponds to the `word-analogy` and
         `distance` scripts in the original word2vec implementation.
-        
+
         If topn is False, most_similar returns the vector of similarity scores.
 
         Example::
@@ -918,6 +977,19 @@ class Word2Vec(utils.SaveLoad):
         super(Word2Vec, self).save(*args, **kwargs)
     save.__doc__ = utils.SaveLoad.save.__doc__
 
+class Sentences(object):
+    def __init__(self, filename):
+        self.filename = filename
+
+    def __iter__(self):
+        for line in utils.smart_open(self.filename):
+            line = utils.to_unicode(line)
+            token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
+            # ignore words with non-alphabetic tags like ",", "!" etc punctuation, weird stuff)
+            words = [token.lower() for token in line.split(" ")]
+            if not words:  # don't bother sending out empty sentences
+                continue
+            yield words
 
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
