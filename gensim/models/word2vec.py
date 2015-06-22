@@ -187,6 +187,7 @@ def train_sg_pair(model, word, word2, alpha, labels, train_w1=True, train_w2=Tru
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
     if train_w2:
+        neu1e += dot(gb, l2b)  # save error
         model.syn0[word2.index] += neu1e  # learn input -> hidden
     return neu1e
 
