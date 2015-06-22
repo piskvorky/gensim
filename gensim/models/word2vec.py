@@ -170,8 +170,8 @@ def train_sg_pair(model, word, word2, alpha, labels, train_w1=True, train_w2=Tru
         fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  # propagate hidden -> output
         ga = (1 - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
         if train_w1:
-            model.syn1[word.point] += outer(ga, l1) # learn hidden -> output
-        neu1e += dot(ga, l2a) # save error
+            model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
+        neu1e += dot(ga, l2a)  # save error
 
     if model.negative:
         # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
@@ -186,7 +186,7 @@ def train_sg_pair(model, word, word2, alpha, labels, train_w1=True, train_w2=Tru
         if train_w1:
             neu1e += dot(gb, l2b)  # save error
     if train_w2 and model.syn0lock[word2.index] == 1:
-        model.syn0[word2.index] += neu1e # learn input -> hidden
+        model.syn0[word2.index] += neu1e  # learn input -> hidden
     return neu1e
 
 
