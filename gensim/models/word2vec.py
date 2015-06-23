@@ -184,8 +184,9 @@ def train_sg_pair(model, word, word2, alpha, labels, train_w1=True, train_w2=Tru
         fb = 1. / (1. + exp(-dot(l1, l2b.T)))  # propagate hidden -> output
         gb = (labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
         if train_w1:
+            model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
             neu1e += dot(gb, l2b)  # save error
-    if train_w2 and model.syn0lock[word2.index] == 1:
+    if train_w2:
         model.syn0[word2.index] += neu1e  # learn input -> hidden
     return neu1e
 
@@ -213,7 +214,7 @@ def train_cbow_pair(model, word, word2_indices, l1, alpha, labels, train_w1=True
         if train_w1:
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
-    if train_w2 and model.syn0lock[word2.index] == 1:
+    if train_w2:
         model.syn0[word2_indices] += neu1e  # learn input -> hidden, here for all words in the window separately
     return neu1e
 
