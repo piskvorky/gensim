@@ -148,7 +148,7 @@ cdef void fast_sentence_cbow_hs(
 
     cdef long long a, b
     cdef long long row2
-    cdef REAL_t f, g, count, inv_count
+    cdef REAL_t f, g, count, inv_count = 1.0
     cdef int m
 
     memset(neu1, 0, size * cython.sizeof(REAL_t))
@@ -159,8 +159,9 @@ cdef void fast_sentence_cbow_hs(
         else:
             count += ONEF
             our_saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
-    if cbow_mean and count > (<REAL_t>0.5):
+    if count > (<REAL_t>0.5):
         inv_count = ONEF/count
+    if cbow_mean and count > (<REAL_t>0.5):
         sscal(&size, &inv_count, neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
 
     memset(work, 0, size * cython.sizeof(REAL_t))
@@ -173,6 +174,9 @@ cdef void fast_sentence_cbow_hs(
         g = (1 - word_code[b] - f) * alpha
         our_saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, neu1, &ONE, &syn1[row2], &ONE)
+
+    if not cbow_mean:  # divide error over summed window vectors
+        sscal(&size, &inv_count, work, &ONE)  # (does this need BLAS-variants like saxpy?)
 
     for m in range(j, k):
         if m == i or codelens[m] == 0:
@@ -190,7 +194,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
     cdef long long a
     cdef long long row2
     cdef unsigned long long modulo = 281474976710655ULL
-    cdef REAL_t f, g, count, inv_count, label
+    cdef REAL_t f, g, count, inv_count = 1.0, label
     cdef np.uint32_t target_index, word_index
     cdef int d, m
 
@@ -204,8 +208,9 @@ cdef unsigned long long fast_sentence_cbow_neg(
         else:
             count += ONEF
             our_saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
-    if cbow_mean and count > (<REAL_t>0.5):
+    if count > (<REAL_t>0.5):
         inv_count = ONEF/count
+    if cbow_mean:
         sscal(&size, &inv_count, neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
 
     memset(work, 0, size * cython.sizeof(REAL_t))
@@ -229,6 +234,9 @@ cdef unsigned long long fast_sentence_cbow_neg(
         g = (label - f) * alpha
         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, neu1, &ONE, &syn1neg[row2], &ONE)
+
+    if not cbow_mean:  # divide error over summed window vectors
+        sscal(&size, &inv_count, work, &ONE)  # (does this need BLAS-variants like saxpy?)
 
     for m in range(j,k):
         if m == i or codelens[m] == 0:
