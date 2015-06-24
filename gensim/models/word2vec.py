@@ -998,14 +998,15 @@ class Word2Vec(utils.SaveLoad):
         super(Word2Vec, self).save(*args, **kwargs)
     save.__doc__ = utils.SaveLoad.save.__doc__
 
+    
     @classmethod
     def load(cls, *args, **kwargs):
         model = super(Word2Vec, cls).load(*args, **kwargs)
         if model.negative and not model.table:
             model.make_table()  # rebuild table if missing
         return model
-    load.__doc__ = utils.SaveLoad.load.__doc__
 
+    
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
     def __init__(self, dirname):
