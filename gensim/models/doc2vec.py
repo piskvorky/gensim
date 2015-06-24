@@ -243,7 +243,7 @@ class TaggedDocument(namedtuple('TaggedDocument','words tags')):
         return '%s(%s, %s)' % (self.__class__.__name__, self.words, self.tags)
 
 
-class DocvecsArray(object):
+class DocvecsArray(utils.SaveLoad):
     """
     Default storage of doc vectors during/after training, in a numpy array.
 
@@ -660,10 +660,6 @@ class Doc2Vec(Word2Vec):
         if self.workers > 1:
             segments.append('t%d' % self.workers)
         return 'Doc2Vec(%s)' % ','.join(segments)
-
-    def save(self, *args, **kwargs):
-        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])  # don't bother storing the cached normalized vectors
-        super(Doc2Vec, self).save(*args, **kwargs)  ### TODO: save docvecs in same separate-numpy-file style
 
 
 class TaggedBrownCorpus(object):

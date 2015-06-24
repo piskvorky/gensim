@@ -247,56 +247,78 @@ class SaveLoad(object):
         """
         logger.info("loading %s object from %s" % (cls.__name__, fname))
 
-        if fname.endswith('.gz') or fname.endswith('.bz2'):
-            compress = True
-            subname = lambda *args: '.'.join([fname] + list(args) + ['npz'])
-        else:
-            compress = False
-            subname = lambda *args: '.'.join([fname] + list(args) + ['npy'])
-
+        compress, subname = SaveLoad._adapt_by_suffix(fname)
 
         mmap_error = lambda x, y: IOError(
             'Cannot mmap compressed object %s in file %s. ' % (x, y) +
             'Use `load(fname, mmap=None)` or uncompress files manually.')
 
         obj = unpickle(fname)
-        for attrib in getattr(obj, '__numpys', []):
+        obj._load_specials(fname, mmap, compress, subname)
+        return obj
+
+
+    def _load_specials(self, fname, mmap, compress, subname):
+        """
+        Loads any attributes that were stored specially, and gives the same
+        opportunity to recursively included SaveLoad instances.
+
+        """
+        for attrib in getattr(self, '__recursive_saveloads', []):
+            cfname = '.'.join((fname, attrib))
+            logger.info("loading %s recursively from %s.* with mmap=%s" % (
+                attrib, cfname, mmap))
+            getattr(self, attrib)._load_specials(cfname, mmap, compress, subname)
+
+        for attrib in getattr(self, '__numpys', []):
             logger.info("loading %s from %s with mmap=%s" % (
-                attrib, subname(attrib), mmap))
+                attrib, subname(fname, attrib), mmap))
 
             if compress:
                 if mmap:
-                    raise mmap_error(attrib, subname(attrib))
+                    raise mmap_error(attrib, subname(fname, attrib))
 
-                val = numpy.load(subname(attrib))['val']
+                val = numpy.load(subname(fname, attrib))['val']
             else:
-                val = numpy.load(subname(attrib), mmap_mode=mmap)
+                val = numpy.load(subname(fname, attrib), mmap_mode=mmap)
 
-            setattr(obj, attrib, val)
+            setattr(self, attrib, val)
 
-        for attrib in getattr(obj, '__scipys', []):
+        for attrib in getattr(self, '__scipys', []):
             logger.info("loading %s from %s with mmap=%s" % (
-                attrib, subname(attrib), mmap))
-            sparse = unpickle(subname(attrib))
+                attrib, subname(fname, attrib), mmap))
+            sparse = unpickle(subname(fname, attrib))
             if compress:
                 if mmap:
-                    raise mmap_error(attrib, subname(attrib))
+                    raise mmap_error(fname, attrib, subname(fname, attrib))
 
-                with numpy.load(subname(attrib, 'sparse')) as f:
+                with numpy.load(subname(fname, attrib, 'sparse')) as f:
                     sparse.data = f['data']
                     sparse.indptr = f['indptr']
                     sparse.indices = f['indices']
             else:
-                sparse.data = numpy.load(subname(attrib, 'data'), mmap_mode=mmap)
-                sparse.indptr = numpy.load(subname(attrib, 'indptr'), mmap_mode=mmap)
-                sparse.indices = numpy.load(subname(attrib, 'indices'), mmap_mode=mmap)
+                sparse.data = numpy.load(subname(fname, attrib, 'data'), mmap_mode=mmap)
+                sparse.indptr = numpy.load(subname(fname, attrib, 'indptr'), mmap_mode=mmap)
+                sparse.indices = numpy.load(subname(fname, attrib, 'indices'), mmap_mode=mmap)
 
-            setattr(obj, attrib, sparse)
+            setattr(self, attrib, sparse)
 
-        for attrib in getattr(obj, '__ignoreds', []):
+        for attrib in getattr(self, '__ignoreds', []):
             logger.info("setting ignored attribute %s to None" % (attrib))
-            setattr(obj, attrib, None)
-        return obj
+            setattr(self, attrib, None)
+
+
+    @staticmethod
+    def _adapt_by_suffix(fname):
+        """Give appropriate compress setting and filename formula"""
+        if fname.endswith('.gz') or fname.endswith('.bz2'):
+            compress = True
+            subname = lambda *args: '.'.join(list(args) + ['npz'])
+        else:
+            compress = False
+            subname = lambda *args: '.'.join(list(args) + ['npy'])
+        return (compress, subname)
+
 
     def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2,
                     ignore=frozenset(), pickle_protocol=2):
@@ -324,14 +346,39 @@ class SaveLoad(object):
             "saving %s object under %s, separately %s" % (
                 self.__class__.__name__, fname, separately))
 
-        if fname.endswith('.gz') or fname.endswith('.bz2'):
-            compress = True
-            subname = lambda *args: '.'.join([fname] + list(args) + ['npz'])
-        else:
-            compress = False
-            subname = lambda *args: '.'.join([fname] + list(args) + ['npy'])
+        compress, subname = SaveLoad._adapt_by_suffix(fname)
 
-        tmp = {}
+        restores = self._save_specials(fname, separately, sep_limit, ignore, pickle_protocol,
+                                       compress, subname)
+        try:
+            pickle(self, fname, protocol=pickle_protocol)
+        finally:
+            # restore attribs handled specially
+            for obj, asides in restores:
+                for attrib, val in iteritems(asides):
+                    setattr(obj, attrib, val)
+
+
+    def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
+        """
+        Save aside any attributes that need to be handled separately, including
+        by recursion any attributes that are themselves SaveLoad instances. 
+
+        Returns a list of (obj, {attrib: value, ...}) settings that the caller 
+        should use to restore each object's attributes that were set aside 
+        during the default pickle().
+
+        """
+        asides = {}
+        recursive_saveloads = []
+        restores = []
+        for attrib, val in iteritems(self.__dict__):
+            if isinstance(val, SaveLoad):
+                recursive_saveloads.append(attrib)
+                cfname = '.'.join((fname,attrib))
+                restores.extend(val._save_specials(cfname, separately, sep_limit, ignore,
+                                                   pickle_protocol,compress, subname))
+
         sparse_matrices = (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)
         if separately is None:
             separately = []
@@ -344,43 +391,43 @@ class SaveLoad(object):
         # whatever's in `separately` or `ignore` at this point won't get pickled
         for attrib in separately + list(ignore):
             if hasattr(self, attrib):
-                tmp[attrib] = getattr(self, attrib)
+                asides[attrib] = getattr(self, attrib)
                 delattr(self, attrib)
 
         try:
             numpys, scipys, ignoreds = [], [], []
-            for attrib, val in iteritems(tmp):
+            for attrib, val in iteritems(asides):
                 if isinstance(val, numpy.ndarray) and attrib not in ignore:
                     numpys.append(attrib)
                     logger.info("storing numpy array '%s' to %s" % (
-                        attrib, subname(attrib)))
+                        attrib, subname(fname, attrib)))
 
                     if compress:
-                        numpy.savez_compressed(subname(attrib), val=numpy.ascontiguousarray(val))
+                        numpy.savez_compressed(subname(fname, attrib), val=numpy.ascontiguousarray(val))
                     else:
-                        numpy.save(subname(attrib), numpy.ascontiguousarray(val))
+                        numpy.save(subname(fname, attrib), numpy.ascontiguousarray(val))
 
                 elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and attrib not in ignore:
                     scipys.append(attrib)
                     logger.info("storing scipy.sparse array '%s' under %s" % (
-                        attrib, subname(attrib)))
+                        attrib, subname(fname, attrib)))
 
                     if compress:
-                        numpy.savez_compressed(subname(attrib, 'sparse'),
+                        numpy.savez_compressed(subname(fname, attrib, 'sparse'),
                                                data=val.data,
                                                indptr=val.indptr,
                                                indices=val.indices)
                     else:
-                        numpy.save(subname(attrib, 'data'), val.data)
-                        numpy.save(subname(attrib, 'indptr'), val.indptr)
-                        numpy.save(subname(attrib, 'indices'), val.indices)
+                        numpy.save(subname(fname, attrib, 'data'), val.data)
+                        numpy.save(subname(fname, attrib, 'indptr'), val.indptr)
+                        numpy.save(subname(fname, attrib, 'indices'), val.indices)
 
                     data, indptr, indices = val.data, val.indptr, val.indices
                     val.data, val.indptr, val.indices = None, None, None
 
                     try:
                         # store array-less object
-                        pickle(val, subname(attrib), protocol=pickle_protocol)
+                        pickle(val, subname(fname, attrib), protocol=pickle_protocol)
                     finally:
                         val.data, val.indptr, val.indices = data, indptr, indices
                 else:
@@ -390,11 +437,14 @@ class SaveLoad(object):
             self.__dict__['__numpys'] = numpys
             self.__dict__['__scipys'] = scipys
             self.__dict__['__ignoreds'] = ignoreds
-            pickle(self, fname, protocol=pickle_protocol)
-        finally:
-            # restore the attributes
-            for attrib, val in iteritems(tmp):
+            self.__dict__['__recursive_saveloads'] = recursive_saveloads
+        except:
+            # restore the attributes if exception-interrupted
+            for attrib, val in iteritems(asides):
                 setattr(self, attrib, val)
+            raise
+        return restores + [(self, asides)]
+
 
     def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2,
              ignore=frozenset(), pickle_protocol=2):
