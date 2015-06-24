@@ -81,7 +81,7 @@ cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, con
 cdef void fast_sentence_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
-    const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work) nogil:
+    const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work, REAL_t *word_locks) nogil:
 
     cdef long long a, b
     cdef long long row1 = word2_index * size, row2
@@ -97,14 +97,14 @@ cdef void fast_sentence_sg_hs(
         g = (1 - word_code[b] - f) * alpha
         our_saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1[row2], &ONE)
-    our_saxpy(&size, &ONEF, work, &ONE, &syn0[row1], &ONE)
+    our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)
 
 
 cdef unsigned long long fast_sentence_sg_neg(
     const int negative, np.uint32_t *table, unsigned long long table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
-    unsigned long long next_random) nogil:
+    unsigned long long next_random, REAL_t *word_locks) nogil:
 
     cdef long long a
     cdef long long row1 = word2_index * size, row2
@@ -135,7 +135,7 @@ cdef unsigned long long fast_sentence_sg_neg(
         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
 
-    our_saxpy(&size, &ONEF, work, &ONE, &syn0[row1], &ONE)
+    our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)
 
     return next_random
 
@@ -144,7 +144,7 @@ cdef void fast_sentence_cbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k, int cbow_mean) nogil:
+    int i, int j, int k, int cbow_mean, REAL_t *word_locks) nogil:
 
     cdef long long a, b
     cdef long long row2
@@ -182,14 +182,14 @@ cdef void fast_sentence_cbow_hs(
         if m == i or codelens[m] == 0:
             continue
         else:
-            our_saxpy(&size, &ONEF, work, &ONE, &syn0[indexes[m] * size], &ONE)
+            our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[m] * size], &ONE)
 
 
 cdef unsigned long long fast_sentence_cbow_neg(
     const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
-    int i, int j, int k, int cbow_mean, unsigned long long next_random) nogil:
+    int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks) nogil:
 
     cdef long long a
     cdef long long row2
@@ -242,7 +242,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
         if m == i or codelens[m] == 0:
             continue
         else:
-            our_saxpy(&size, &ONEF, work, &ONE, &syn0[indexes[m]*size], &ONE)
+            our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[m]*size], &ONE)
 
     return next_random
 
@@ -252,6 +252,7 @@ def train_sentence_sg(model, sentence, alpha, _work):
     cdef int negative = model.negative
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
     cdef REAL_t *work
     cdef REAL_t _alpha = alpha
     cdef int size = model.layer1_size
@@ -321,9 +322,9 @@ def train_sentence_sg(model, sentence, alpha, _work):
                 if j == i or codelens[j] == 0:
                     continue
                 if hs:
-                    fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work)
+                    fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks)
                 if negative:
-                    next_random = fast_sentence_sg_neg(negative, table, table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random)
+                    next_random = fast_sentence_sg_neg(negative, table, table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
 
     return result
 
@@ -334,6 +335,7 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
     cdef int cbow_mean = model.cbow_mean
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
     cdef REAL_t *work
     cdef REAL_t *neu1
     cdef REAL_t _alpha = alpha
@@ -402,9 +404,9 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
             if k > sentence_len:
                 k = sentence_len
             if hs:
-                fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean)
+                fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks)
             if negative:
-                next_random = fast_sentence_cbow_neg(negative, table, table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random)
+                next_random = fast_sentence_cbow_neg(negative, table, table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks)
 
     return result
 
