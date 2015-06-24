@@ -299,7 +299,7 @@ class SaveLoad(object):
         return obj
 
     def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2,
-                    ignore=frozenset()):
+                    ignore=frozenset(), pickle_protocol=2):
         """
         Save the object to file (also see `load`).
 
@@ -315,6 +315,9 @@ class SaveLoad(object):
         `ignore` is a set of attribute names to *not* serialize (file
         handles, caches etc). On subsequent load() these attributes will
         be set to None.
+
+        `pickle_protocol` defaults to 2 so the pickled object can be imported
+        in both Python 2 and 3.
 
         """
         logger.info(
@@ -376,7 +379,8 @@ class SaveLoad(object):
                     val.data, val.indptr, val.indices = None, None, None
 
                     try:
-                        pickle(val, subname(attrib)) # store array-less object
+                        # store array-less object
+                        pickle(val, subname(attrib), protocol=pickle_protocol)
                     finally:
                         val.data, val.indptr, val.indices = data, indptr, indices
                 else:
@@ -386,14 +390,14 @@ class SaveLoad(object):
             self.__dict__['__numpys'] = numpys
             self.__dict__['__scipys'] = scipys
             self.__dict__['__ignoreds'] = ignoreds
-            pickle(self, fname)
+            pickle(self, fname, protocol=pickle_protocol)
         finally:
             # restore the attributes
             for attrib, val in iteritems(tmp):
                 setattr(self, attrib, val)
 
     def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2,
-             ignore=frozenset()):
+             ignore=frozenset(), pickle_protocol=2):
         """
         Save the object to file (also see `load`).
 
@@ -415,12 +419,16 @@ class SaveLoad(object):
         handles, caches etc). On subsequent load() these attributes will
         be set to None.
 
+        `pickle_protocol` defaults to 2 so the pickled object can be imported
+        in both Python 2 and 3.
+
         """
         try:
-            _pickle.dump(self, fname_or_handle, protocol=_pickle.HIGHEST_PROTOCOL)
+            _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object" % self.__class__.__name__)
         except TypeError:  # `fname_or_handle` does not have write attribute
-            self._smart_save(fname_or_handle, separately, sep_limit, ignore)
+            self._smart_save(fname_or_handle, separately, sep_limit, ignore,
+                             pickle_protocol=pickle_protocol)
 #endclass SaveLoad
 
 
@@ -831,8 +839,13 @@ def smart_extension(fname, ext):
     return fname
 
 
-def pickle(obj, fname, protocol=_pickle.HIGHEST_PROTOCOL):
-    """Pickle object `obj` to file `fname`."""
+def pickle(obj, fname, protocol=2):
+    """Pickle object `obj` to file `fname`.
+
+    `protocol` defaults to 2 so pickled objects are compatible across
+    Python 2.x and 3.x.
+
+    """
     with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
         _pickle.dump(obj, fout, protocol=protocol)
 
