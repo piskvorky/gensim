@@ -249,10 +249,6 @@ class SaveLoad(object):
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
-        mmap_error = lambda x, y: IOError(
-            'Cannot mmap compressed object %s in file %s. ' % (x, y) +
-            'Use `load(fname, mmap=None)` or uncompress files manually.')
-
         obj = unpickle(fname)
         obj._load_specials(fname, mmap, compress, subname)
         return obj
@@ -264,6 +260,11 @@ class SaveLoad(object):
         opportunity to recursively included SaveLoad instances.
 
         """
+
+        mmap_error = lambda x, y: IOError(
+            'Cannot mmap compressed object %s in file %s. ' % (x, y) +
+            'Use `load(fname, mmap=None)` or uncompress files manually.')
+
         for attrib in getattr(self, '__recursive_saveloads', []):
             cfname = '.'.join((fname, attrib))
             logger.info("loading %s recursively from %s.* with mmap=%s" % (
@@ -290,7 +291,7 @@ class SaveLoad(object):
             sparse = unpickle(subname(fname, attrib))
             if compress:
                 if mmap:
-                    raise mmap_error(fname, attrib, subname(fname, attrib))
+                    raise mmap_error(attrib, subname(fname, attrib))
 
                 with numpy.load(subname(fname, attrib, 'sparse')) as f:
                     sparse.data = f['data']
@@ -370,15 +371,6 @@ class SaveLoad(object):
 
         """
         asides = {}
-        recursive_saveloads = []
-        restores = []
-        for attrib, val in iteritems(self.__dict__):
-            if isinstance(val, SaveLoad):
-                recursive_saveloads.append(attrib)
-                cfname = '.'.join((fname,attrib))
-                restores.extend(val._save_specials(cfname, separately, sep_limit, ignore,
-                                                   pickle_protocol,compress, subname))
-
         sparse_matrices = (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)
         if separately is None:
             separately = []
@@ -393,6 +385,15 @@ class SaveLoad(object):
             if hasattr(self, attrib):
                 asides[attrib] = getattr(self, attrib)
                 delattr(self, attrib)
+
+        recursive_saveloads = []
+        restores = []
+        for attrib, val in iteritems(self.__dict__):
+            if isinstance(val, SaveLoad):
+                recursive_saveloads.append(attrib)
+                cfname = '.'.join((fname,attrib))
+                restores.extend(val._save_specials(cfname, separately, sep_limit, ignore,
+                                                   pickle_protocol,compress, subname))
 
         try:
             numpys, scipys, ignoreds = [], [], []
