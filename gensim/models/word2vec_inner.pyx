@@ -82,8 +82,20 @@ cdef void fast_sentence_sg_hs(
     our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)
 
 
+# to support random draws from negative-sampling cum_table
+cdef inline unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsigned long long lo, unsigned long long hi) nogil:
+    cdef unsigned long long mid
+    while hi > lo:
+        mid = (lo + hi) >> 1
+        if a[mid] >= x:
+            hi = mid
+        else:
+            lo = mid + 1
+    return lo
+
+
 cdef unsigned long long fast_sentence_sg_neg(
-    const int negative, np.uint32_t *table, unsigned long long table_len,
+    const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, REAL_t *word_locks) nogil:
@@ -102,7 +114,7 @@ cdef unsigned long long fast_sentence_sg_neg(
             target_index = word_index
             label = ONEF
         else:
-            target_index = table[(next_random >> 16) % table_len]
+            target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == word_index:
                 continue
@@ -168,7 +180,7 @@ cdef void fast_sentence_cbow_hs(
 
 
 cdef unsigned long long fast_sentence_cbow_neg(
-    const int negative, np.uint32_t *table, unsigned long long table_len, int codelens[MAX_SENTENCE_LEN],
+    const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *word_locks) nogil:
@@ -202,7 +214,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
             target_index = word_index
             label = ONEF
         else:
-            target_index = table[(next_random >> 16) % table_len]
+            target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == word_index:
                 continue
@@ -255,8 +267,8 @@ def train_sentence_sg(model, sentence, alpha, _work):
 
     # For negative sampling
     cdef REAL_t *syn1neg
-    cdef np.uint32_t *table
-    cdef unsigned long long table_len
+    cdef np.uint32_t *cum_table
+    cdef unsigned long long cum_table_len
     cdef unsigned long long next_random
 
     if hs:
@@ -264,9 +276,9 @@ def train_sentence_sg(model, sentence, alpha, _work):
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        table = <np.uint32_t *>(np.PyArray_DATA(model.table))
-        table_len = len(model.table)
-        next_random = (2**24) * np.random.randint(0, 2**24) + np.random.randint(0, 2**24)
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
+        cum_table_len = len(model.cum_table)
+        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
@@ -286,7 +298,7 @@ def train_sentence_sg(model, sentence, alpha, _work):
                 codelens[i] = 1
             result += 1
     # single randint() call avoids a big thread-sync slowdown
-    for i, item in enumerate(np.random.randint(0, window, sentence_len)):
+    for i, item in enumerate(model.random.randint(0, window, sentence_len)):
         reduced_windows[i] = item
 
     # release GIL & train on the sentence
@@ -306,7 +318,7 @@ def train_sentence_sg(model, sentence, alpha, _work):
                 if hs:
                     fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks)
                 if negative:
-                    next_random = fast_sentence_sg_neg(negative, table, table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
+                    next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
 
     return result
 
@@ -339,8 +351,8 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
 
     # For negative sampling
     cdef REAL_t *syn1neg
-    cdef np.uint32_t *table
-    cdef unsigned long long table_len
+    cdef np.uint32_t *cum_table
+    cdef unsigned long long cum_table_len
     cdef unsigned long long next_random
 
     if hs:
@@ -348,9 +360,9 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        table = <np.uint32_t *>(np.PyArray_DATA(model.table))
-        table_len = len(model.table)
-        next_random = (2**24) * np.random.randint(0, 2**24) + np.random.randint(0, 2**24)
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
+        cum_table_len = len(model.cum_table)
+        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
@@ -371,7 +383,7 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
                 codelens[i] = 1
             result += 1
     # single randint() call avoids a big thread-sync slowdown
-    for i, item in enumerate(np.random.randint(0, window, sentence_len)):
+    for i, item in enumerate(model.random.randint(0, window, sentence_len)):
         reduced_windows[i] = item
 
     # release GIL & train on the sentence
@@ -388,7 +400,7 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
             if hs:
                 fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks)
             if negative:
-                next_random = fast_sentence_cbow_neg(negative, table, table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks)
+                next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks)
 
     return result
 

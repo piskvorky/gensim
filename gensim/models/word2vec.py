@@ -112,7 +112,7 @@ except ImportError:
         for pos, word in enumerate(sentence):
             if word is None:
                 continue  # OOV word in the input sentence => skip
-            reduced_window = random.randint(model.window)  # `b` in the original word2vec code
+            reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
 
             # now go over all words from the (reduced) window, predicting each one in turn
             start = max(0, pos - model.window + reduced_window)
@@ -137,7 +137,7 @@ except ImportError:
         for pos, word in enumerate(sentence):
             if word is None:
                 continue  # OOV word in the input sentence => skip
-            reduced_window = random.randint(model.window) # `b` in the original word2vec code
+            reduced_window = model.random.randint(model.window) # `b` in the original word2vec code
             start = max(0, pos - model.window + reduced_window)
             window_pos = enumerate(sentence[start : pos + model.window + 1 - reduced_window], start)
             word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
@@ -174,7 +174,7 @@ def train_sg_pair(model, predict_word, context_index, alpha, learn_vectors=True,
         # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
         word_indices = [predict_word.index]
         while len(word_indices) < model.negative + 1:
-            w = model.table[random.randint(model.table.shape[0])]
+            w = model.cum_table.searchsorted(model.random.randint(model.cum_table[-1]))
             if w != predict_word.index:
                 word_indices.append(w)
         l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
@@ -203,7 +203,7 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
         # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
         word_indices = [word.index]
         while len(word_indices) < model.negative + 1:
-            w = model.table[random.randint(model.table.shape[0])]
+            w = model.cum_table.searchsorted(model.random.randint(model.cum_table[-1]))
             if w != word.index:
                 word_indices.append(w)
         l2b = model.syn1neg[word_indices] # 2d matrix, k+1 x layer1_size
@@ -291,7 +291,7 @@ class Word2Vec(utils.SaveLoad):
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
         self.sg = int(sg)
-        self.table = None # for negative sampling --> this needs a lot of RAM! consider setting back to None before saving
+        self.cum_table = None # for negative sampling
         self.vector_size = int(size)
         self.layer1_size = int(size)
         if size % 4 != 0:
@@ -299,6 +299,7 @@ class Word2Vec(utils.SaveLoad):
         self.alpha = float(alpha)
         self.window = int(window)
         self.seed = seed
+        self.random = random.RandomState(seed)
         self.min_count = min_count
         self.sample = sample
         self.workers = workers
@@ -315,36 +316,29 @@ class Word2Vec(utils.SaveLoad):
             self.build_vocab(sentences)
             self.train(sentences)
 
-    def make_table(self, table_size=100000000, power=0.75):
-        """
-        Create a table using stored vocabulary word counts for drawing random words in the negative
-        sampling training routines.
 
-        Called internally from `build_vocab()`.
-
+    def make_cum_table(self, power=0.75, domain=2**31 - 1):
         """
-        logger.info("constructing a table with noise distribution from %i words" % len(self.vocab))
-        # table (= list of words) of noise distribution for negative sampling
+        Create a cumulative-distribution table using stored vocabulary word counts for
+        drawing random words in the negative-sampling training routines.
+
+        To draw a word index, choose a random integer up to the maximum value in the
+        table (cum_table[-1]), then finding that integer's sorted insertion point
+        (as if by bisect_left or ndarray.searchsorted()). That insertion point is the
+        drawn index, coming up in proportion equal to the increment at that slot.
+
+        Called internally from 'build_vocab()'.
+        """
         vocab_size = len(self.index2word)
-        self.table = zeros(table_size, dtype=uint32)
-
-        if not vocab_size:
-            logger.warning("empty vocabulary in word2vec, is this intended?")
-            return
-
+        self.cum_table = zeros(vocab_size, dtype=uint32)
         # compute sum of all power (Z in paper)
         train_words_pow = float(sum([self.vocab[word].count**power for word in self.vocab]))
-        # go through the whole table and fill it up with the word indices proportional to a word's count**power
-        widx = 0
-        # normalize count^0.75 by Z
-        d1 = self.vocab[self.index2word[widx]].count**power / train_words_pow
-        for tidx in xrange(table_size):
-            self.table[tidx] = widx
-            if 1.0 * tidx / table_size > d1:
-                widx += 1
-                d1 += self.vocab[self.index2word[widx]].count**power / train_words_pow
-            if widx >= vocab_size:
-                widx = vocab_size - 1
+        cumulative = 0.0
+        for word_index in range(vocab_size):
+            cumulative += self.vocab[self.index2word[word_index]].count**power / train_words_pow
+            self.cum_table[word_index] = round(cumulative * domain)
+        assert self.cum_table[-1] == domain
+
 
     def create_binary_tree(self):
         """
@@ -417,7 +411,7 @@ class Word2Vec(utils.SaveLoad):
             self.create_binary_tree()
         if self.negative:
             # build the table for drawing random words (for negative sampling)
-            self.make_table()
+            self.make_cum_table()
         # precalculate downsampling thresholds
         self.precalc_sampling()
         self.reset_weights()
@@ -447,7 +441,7 @@ class Word2Vec(utils.SaveLoad):
         """
         self.vocab = other_model.vocab
         self.index2word = other_model.index2word
-        self.table = other_model.table
+        self.cum_table = other_model.cum_table
         self.reset_weights()
 
     def _prepare_items(self, items):
@@ -560,9 +554,9 @@ class Word2Vec(utils.SaveLoad):
 
     def seeded_vector(self, seed_string):
         """Create one 'random' vector (but deterministic by seed_string)"""
-        # Note: Python's built in hash function can vary across versions of Python
-        random.seed(uint32(self.hashfxn(seed_string)))
-        return (random.rand(self.vector_size) - 0.5) / self.vector_size
+        # Note: built-in hash() may vary by Python version or even (in Py3.x) per launch
+        once = random.RandomState(uint32(self.hashfxn(seed_string)))
+        return (once.rand(self.vector_size) - 0.5) / self.vector_size
 
     def save_word2vec_format(self, fname, fvocab=None, binary=False):
         """
@@ -994,16 +988,19 @@ class Word2Vec(utils.SaveLoad):
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors, recalculable table
-        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm','table'])
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm','table','cum_table'])
         super(Word2Vec, self).save(*args, **kwargs)
+
     save.__doc__ = utils.SaveLoad.save.__doc__
 
     
     @classmethod
     def load(cls, *args, **kwargs):
         model = super(Word2Vec, cls).load(*args, **kwargs)
-        if model.negative and not model.table:
-            model.make_table()  # rebuild table if missing
+        if hasattr(model,'table'):
+            delattr(model,'table')  # discard in favor of cum_table
+        if model.negative:
+            model.make_cum_table()  # rebuild cum_table from vocabulary
         return model
 
     

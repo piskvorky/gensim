@@ -8,6 +8,7 @@
 cdef extern from "voidptr.h":
     void* PyCObject_AsVoidPtr(object obj)
 
+cimport numpy as np
 ctypedef np.float32_t REAL_t
 
 # BLAS routine signatures
@@ -46,3 +47,6 @@ cdef REAL_t our_dot_float(const int *N, const float *X, const int *incX, const f
 # for when no blas available
 cdef REAL_t our_dot_noblas(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
 cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil
+
+# to support random draws from negative-sampling cum_table
+cdef inline unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsigned long long lo, unsigned long long hi) nogil

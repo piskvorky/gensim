@@ -59,7 +59,7 @@ cdef void fast_document_dbow_hs(
 
 
 cdef unsigned long long fast_document_dbow_neg(
-    const int negative, np.uint32_t *table, unsigned long long table_len,
+    const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *context_vectors, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t context_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, int learn_context, int learn_hidden, REAL_t *context_locks) nogil:
@@ -78,7 +78,7 @@ cdef unsigned long long fast_document_dbow_neg(
             target_index = word_index
             label = ONEF
         else:
-            target_index = table[(next_random >> 16) % table_len]
+            target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == word_index:
                 continue
@@ -122,7 +122,7 @@ cdef void fast_document_dm_hs(
 
 
 cdef unsigned long long fast_document_dm_neg(
-    const int negative, np.uint32_t *table, unsigned long long table_len, unsigned long long next_random,
+    const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, unsigned long long next_random,
     REAL_t *neu1, REAL_t *syn1neg, const int predict_word_index, const REAL_t alpha, REAL_t *work,
     const int size, int learn_hidden) nogil:
 
@@ -139,7 +139,7 @@ cdef unsigned long long fast_document_dm_neg(
             target_index = predict_word_index
             label = ONEF
         else:
-            target_index = table[(next_random >> 16) % table_len]
+            target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == predict_word_index:
                 continue
@@ -182,7 +182,7 @@ cdef void fast_document_dmc_hs(
 
 
 cdef unsigned long long fast_document_dmc_neg(
-    const int negative, np.uint32_t *table, unsigned long long table_len, unsigned long long next_random,
+    const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, unsigned long long next_random,
     REAL_t *neu1, REAL_t *syn1neg, const int predict_word_index, const REAL_t alpha, REAL_t *work, 
     const int layer1_size, const int vector_size, int learn_hidden) nogil:
 
@@ -200,7 +200,7 @@ cdef unsigned long long fast_document_dmc_neg(
             target_index = predict_word_index
             label = ONEF
         else:
-            target_index = table[(next_random >> 16) % table_len]
+            target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == predict_word_index:
                 continue
@@ -255,8 +255,8 @@ def train_document_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
 
     # For negative sampling
     cdef REAL_t *syn1neg
-    cdef np.uint32_t *table
-    cdef unsigned long long table_len
+    cdef np.uint32_t *cum_table
+    cdef unsigned long long cum_table_len
     cdef unsigned long long next_random
 
     # default vectors, locks from syn0/doctag_syn0
@@ -278,9 +278,9 @@ def train_document_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        table = <np.uint32_t *>(np.PyArray_DATA(model.table))
-        table_len = len(model.table)
-        next_random = (2**24) * np.random.randint(0, 2**24) + np.random.randint(0, 2**24)
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
+        cum_table_len = len(model.cum_table)
+        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     if work is None:
@@ -304,10 +304,12 @@ def train_document_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
             else:
                 codelens[i] = 1
             result += 1
+
     if _train_words:
         # single randint() call avoids a big thread-synchronization slowdown
-        for i, item in enumerate(np.random.randint(0, window, document_len)):
+        for i, item in enumerate(model.random.randint(0, window, document_len)):
             reduced_windows[i] = item
+
     for i in range(doctag_len):
         _doctag_indexes[i] = doctag_indexes[i]
         result += 1
@@ -333,7 +335,7 @@ def train_document_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
                                               _alpha, _work, _learn_words, _learn_hidden, _word_locks)
                     if negative:
                         # we reuse the DBOW function, as it is equivalent to skip-gram for this purpose
-                        next_random = fast_document_dbow_neg(negative, table, table_len, _word_vectors, syn1neg, size,
+                        next_random = fast_document_dbow_neg(negative, cum_table, cum_table_len, _word_vectors, syn1neg, size,
                                                              indexes[i], indexes[j], _alpha, _work, next_random,
                                                              _learn_words, _learn_hidden, _word_locks)
 
@@ -343,7 +345,7 @@ def train_document_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
                     fast_document_dbow_hs(points[i], codes[i], codelens[i], _doctag_vectors, syn1, size, _doctag_indexes[j],
                                           _alpha, _work, _learn_doctags, _learn_hidden, _doctag_locks)
                 if negative:
-                    next_random = fast_document_dbow_neg(negative, table, table_len, _doctag_vectors, syn1neg, size,
+                    next_random = fast_document_dbow_neg(negative, cum_table, cum_table_len, _doctag_vectors, syn1neg, size,
                                                              indexes[i], _doctag_indexes[j], _alpha, _work, next_random,
                                                              _learn_doctags, _learn_hidden, _doctag_locks)
 
@@ -388,8 +390,8 @@ def train_document_dm(model, word_vocabs, doctag_indexes, alpha, work=None, neu1
 
     # For negative sampling
     cdef REAL_t *syn1neg
-    cdef np.uint32_t *table
-    cdef unsigned long long table_len
+    cdef np.uint32_t *cum_table
+    cdef unsigned long long cum_table_len
     cdef unsigned long long next_random
 
     # default vectors, locks from syn0/doctag_syn0
@@ -411,9 +413,9 @@ def train_document_dm(model, word_vocabs, doctag_indexes, alpha, work=None, neu1
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        table = <np.uint32_t *>(np.PyArray_DATA(model.table))
-        table_len = len(model.table)
-        next_random = (2**24)*np.random.randint(0,2**24) + np.random.randint(0,2**24)
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
+        cum_table_len = len(model.cum_table)
+        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     if work is None:
@@ -440,7 +442,7 @@ def train_document_dm(model, word_vocabs, doctag_indexes, alpha, work=None, neu1
             result += 1
             j = j + 1
     # single randint() call avoids a big thread-sync slowdown
-    for i, item in enumerate(np.random.randint(0, window, document_len)):
+    for i, item in enumerate(model.random.randint(0, window, document_len)):
         reduced_windows[i] = item
 
     doctag_len = <int>min(MAX_DOCUMENT_LEN, len(doctag_indexes))
@@ -480,7 +482,7 @@ def train_document_dm(model, word_vocabs, doctag_indexes, alpha, work=None, neu1
                                     _neu1, syn1, _alpha, _work,
                                     size, _learn_hidden)
             if negative:
-                next_random = fast_document_dm_neg(negative, table, table_len, next_random,
+                next_random = fast_document_dm_neg(negative, cum_table, cum_table_len, next_random,
                                                    _neu1, syn1neg, indexes[i], _alpha, _work,
                                                    size, _learn_hidden)
 
@@ -541,8 +543,8 @@ def train_document_dm_concat(model, word_vocabs, doctag_indexes, alpha, work=Non
 
     # For negative sampling
     cdef REAL_t *syn1neg
-    cdef np.uint32_t *table
-    cdef unsigned long long table_len
+    cdef np.uint32_t *cum_table
+    cdef unsigned long long cum_table_len
     cdef unsigned long long next_random
 
     doctag_len = <int>min(MAX_DOCUMENT_LEN, len(doctag_indexes))
@@ -568,9 +570,9 @@ def train_document_dm_concat(model, word_vocabs, doctag_indexes, alpha, work=Non
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        table = <np.uint32_t *>(np.PyArray_DATA(model.table))
-        table_len = len(model.table)
-        next_random = (2**24)*np.random.randint(0,2**24) + np.random.randint(0,2**24)
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
+        cum_table_len = len(model.cum_table)
+        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     if work is None:
@@ -634,7 +636,7 @@ def train_document_dm_concat(model, word_vocabs, doctag_indexes, alpha, work=Non
                                      _neu1, syn1, _alpha, _work,
                                      layer1_size, vector_size, _learn_hidden)
             if negative:
-                next_random = fast_document_dmc_neg(negative, table, table_len, next_random,
+                next_random = fast_document_dmc_neg(negative, cum_table, cum_table_len, next_random,
                                                     _neu1, syn1neg, indexes[i], _alpha, _work, 
                                                    layer1_size, vector_size, _learn_hidden)
 
