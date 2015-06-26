@@ -15,69 +15,23 @@ cimport numpy as np
 from libc.math cimport exp
 from libc.string cimport memset, memcpy
 
-cdef extern from "voidptr.h":
-    void* PyCObject_AsVoidPtr(object obj)
-
 from scipy.linalg.blas import fblas
 
-REAL = np.float32
-ctypedef np.float32_t REAL_t
+from word2vec_inner cimport bisect_left, \
+     scopy, saxpy, sdot, dsdot, snrm2, sscal, \
+     REAL_t, EXP_TABLE, \
+     our_dot, our_saxpy, \
+     our_dot_double, our_dot_float, our_dot_noblas, our_saxpy_noblas
+
+from word2vec import FAST_VERSION
 
 DEF MAX_DOCUMENT_LEN = 10000
-
-ctypedef void (*scopy_ptr) (const int *N, const float *X, const int *incX, float *Y, const int *incY) nogil
-ctypedef void (*saxpy_ptr) (const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil
-ctypedef float (*sdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
-ctypedef double (*dsdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
-ctypedef double (*snrm2_ptr) (const int *N, const float *X, const int *incX) nogil
-ctypedef void (*sscal_ptr) (const int *N, const float *alpha, const float *X, const int *incX) nogil
-
-cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(fblas.scopy._cpointer)  # y = x
-cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(fblas.saxpy._cpointer)  # y += alpha * x
-cdef sdot_ptr sdot=<sdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # float = dot(x, y)
-cdef dsdot_ptr dsdot=<dsdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # double = dot(x, y)
-cdef snrm2_ptr snrm2=<snrm2_ptr>PyCObject_AsVoidPtr(fblas.snrm2._cpointer)  # sqrt(x^2)
-cdef sscal_ptr sscal=<sscal_ptr>PyCObject_AsVoidPtr(fblas.sscal._cpointer) # x = alpha * x
-
-DEF EXP_TABLE_SIZE = 1000
-DEF MAX_EXP = 6
-
-cdef REAL_t[EXP_TABLE_SIZE] EXP_TABLE
 
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
-# function implementations swapped based on BLAS detected
-ctypedef REAL_t (*our_dot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
-ctypedef void (*our_saxpy_ptr) (const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil
-
-cdef our_dot_ptr our_dot
-cdef our_saxpy_ptr our_saxpy
-
-# for when fblas.sdot returns a double
-cdef REAL_t our_dot_double(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil:
-    return <REAL_t>dsdot(N, X, incX, Y, incY)
-
-# for when fblas.sdot returns a float
-cdef REAL_t our_dot_float(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil:
-    return <REAL_t>sdot(N, X, incX, Y, incY)
-
-# for when no blas available
-cdef REAL_t our_dot_noblas(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil:
-    # not a true full dot()-implementation: just enough for our cases
-    cdef int i
-    cdef REAL_t a
-    a = <REAL_t>0.0
-    for i from 0 <= i < N[0] by 1:
-        a += X[i] * Y[i]
-    return a
-
-# for when no blas available
-cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil:
-    cdef int i
-    for i from 0 <= i < N[0] by 1:
-        Y[i * (incY[0])] = (alpha[0]) * X[i * (incX[0])] + Y[i * (incY[0])]
-
+DEF EXP_TABLE_SIZE = 1000
+DEF MAX_EXP = 6
 
 cdef void fast_document_dbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
@@ -694,46 +648,3 @@ def train_document_dm_concat(model, word_vocabs, doctag_indexes, alpha, work=Non
                               &ONE, &_word_vectors[window_indexes[m] * vector_size], &ONE)
 
     return result
-
-
-def init():
-    """
-    Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized
-    into table EXP_TABLE.
-
-    """
-    global our_dot
-    global our_saxpy
-
-    cdef int i
-    cdef float *x = [<float>10.0]
-    cdef float *y = [<float>0.01]
-    cdef float expected = <float>0.1
-    cdef int size = 1
-    cdef double d_res
-    cdef float *p_res
-
-    # build the sigmoid table
-    for i in range(EXP_TABLE_SIZE):
-        EXP_TABLE[i] = <REAL_t>exp((i / <REAL_t>EXP_TABLE_SIZE * 2 - 1) * MAX_EXP)
-        EXP_TABLE[i] = <REAL_t>(EXP_TABLE[i] / (EXP_TABLE[i] + 1))
-
-    # check whether sdot returns double or float
-    d_res = dsdot(&size, x, &ONE, y, &ONE)
-    p_res = <float *>&d_res
-    if (abs(d_res - expected) < 0.0001):
-        our_dot = our_dot_double
-        our_saxpy = saxpy
-        return 0  # double
-    elif (abs(p_res[0] - expected) < 0.0001):
-        our_dot = our_dot_float
-        our_saxpy = saxpy 
-        return 1  # float
-    else:
-        # neither => use cython loops, no BLAS
-        # actually, the BLAS is so messed up we'll probably have segfaulted above and never even reach here
-        our_dot = our_dot_noblas
-        our_saxpy = our_saxpy_noblas
-        return 2
-
-FAST_VERSION = init()  # initialize the module

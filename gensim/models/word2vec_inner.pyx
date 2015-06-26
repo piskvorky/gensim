@@ -14,22 +14,11 @@ cimport numpy as np
 from libc.math cimport exp
 from libc.string cimport memset
 
-cdef extern from "voidptr.h":
-    void* PyCObject_AsVoidPtr(object obj)
-
 from scipy.linalg.blas import fblas
 
 REAL = np.float32
-ctypedef np.float32_t REAL_t
 
 DEF MAX_SENTENCE_LEN = 10000
-
-ctypedef void (*scopy_ptr) (const int *N, const float *X, const int *incX, float *Y, const int *incY) nogil
-ctypedef void (*saxpy_ptr) (const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil
-ctypedef float (*sdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
-ctypedef double (*dsdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
-ctypedef double (*snrm2_ptr) (const int *N, const float *X, const int *incX) nogil
-ctypedef void (*sscal_ptr) (const int *N, const float *alpha, const float *X, const int *incX) nogil
 
 cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(fblas.scopy._cpointer)  # y = x
 cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(fblas.saxpy._cpointer)  # y += alpha * x
@@ -45,13 +34,6 @@ cdef REAL_t[EXP_TABLE_SIZE] EXP_TABLE
 
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
-
-# function implementations swapped based on BLAS detected
-ctypedef REAL_t (*our_dot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
-ctypedef void (*our_saxpy_ptr) (const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil
-
-cdef our_dot_ptr our_dot
-cdef our_saxpy_ptr our_saxpy
 
 # for when fblas.sdot returns a double
 cdef REAL_t our_dot_double(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil:
@@ -161,7 +143,7 @@ cdef void fast_sentence_cbow_hs(
             our_saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
     if count > (<REAL_t>0.5):
         inv_count = ONEF/count
-    if cbow_mean and count > (<REAL_t>0.5):
+    if cbow_mean:
         sscal(&size, &inv_count, neu1, &ONE)  # (does this need BLAS-variants like saxpy?)
 
     memset(work, 0, size * cython.sizeof(REAL_t))

@@ -56,8 +56,8 @@ from six.moves import xrange
 from six import string_types, integer_types
 
 try:
-    from gensim.models.doc2vec_inner import train_document_dbow, train_document_dm, train_document_dm_concat,\
-                                            FAST_VERSION
+    from gensim.models.doc2vec_inner import train_document_dbow, train_document_dm, train_document_dm_concat
+    from gensim.models.word2vec_inner import FAST_VERSION  # blas-adaptation shared from word2vec
 except:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
