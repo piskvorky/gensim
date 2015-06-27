@@ -1,0 +1,47 @@
+fish	0.7453916072845459
+flathead_catfish	0.7256894111633301
+crappie	0.7223235368728638
+trout	0.7158737182617188
+largemouth_bass	0.7123392820358276
+channel_catfish	0.7081607580184937
+shrimp	0.6975064277648926
+crawfish	0.6840320229530334
+Catfish	0.6801955699920654
+largemouth	0.6785601377487183
+
+10 runs in 9.077223539352417 seconds
+
+
+
+         321 function calls in 9.043 seconds
+
+   Ordered by: cumulative time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       10    0.001    0.000    9.043    0.904 word2vec.py:629(most_similar)
+       10    5.971    0.597    5.971    0.597 {built-in method dot}
+       10    0.000    0.000    3.069    0.307 fromnumeric.py:803(argsort)
+       10    3.069    0.307    3.069    0.307 {method 'argsort' of 'numpy.ndarray' objects}
+       10    0.000    0.000    0.001    0.000 {method 'mean' of 'numpy.ndarray' objects}
+       10    0.000    0.000    0.001    0.000 _methods.py:53(_mean)
+       10    0.000    0.000    0.000    0.000 word2vec.py:677(<listcomp>)
+       10    0.000    0.000    0.000    0.000 matutils.py:329(unitvec)
+       30    0.000    0.000    0.000    0.000 {built-in method array}
+       10    0.000    0.000    0.000    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+       70    0.000    0.000    0.000    0.000 {built-in method isinstance}
+       10    0.000    0.000    0.000    0.000 numeric.py:464(asanyarray)
+       10    0.000    0.000    0.000    0.000 numeric.py:394(asarray)
+       10    0.000    0.000    0.000    0.000 _methods.py:43(_count_reduce_items)
+       10    0.000    0.000    0.000    0.000 word2vec.py:814(init_sims)
+       10    0.000    0.000    0.000    0.000 word2vec.py:653(<listcomp>)
+       10    0.000    0.000    0.000    0.000 base.py:865(isspmatrix)
+       10    0.000    0.000    0.000    0.000 {method 'astype' of 'numpy.ndarray' objects}
+       10    0.000    0.000    0.000    0.000 {built-in method issubclass}
+       10    0.000    0.000    0.000    0.000 {built-in method getattr}
+       10    0.000    0.000    0.000    0.000 {built-in method len}
+       10    0.000    0.000    0.000    0.000 {method 'add' of 'set' objects}
+       10    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+       10    0.000    0.000    0.000    0.000 word2vec.py:655(<listcomp>)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+
