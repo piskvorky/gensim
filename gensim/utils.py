@@ -531,7 +531,7 @@ def is_corpus(obj):
     except:
         pass
     try:
-        if hasattr(obj, 'next'):
+        if hasattr(obj, 'next') or hasattr(obj, '__next__'):
             # the input is an iterator object, meaning once we call next()
             # that element could be gone forever. we must be careful to put
             # whatever we retrieve back again
