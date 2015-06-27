@@ -557,7 +557,7 @@ class Word2Vec(utils.SaveLoad):
 
 
     @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, norm_only=True):
+    def load_word2vec_format(cls, fname, fvocab=None, binary=False, norm_only=True,errors="strict"):
         """
         Load the input-hidden weight matrix from the original C word2vec-tool format.
 
@@ -608,7 +608,7 @@ class Word2Vec(utils.SaveLoad):
                     result.syn0[line_no] = fromstring(fin.read(binary_len), dtype=REAL)
             else:
                 for line_no, line in enumerate(fin):
-                    parts = utils.to_unicode(line).split()
+                    parts = utils.to_unicode(line.rstrip(),errors=errors).split(" ")
                     if len(parts) != layer1_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
                     word, weights = parts[0], list(map(REAL, parts[1:]))
