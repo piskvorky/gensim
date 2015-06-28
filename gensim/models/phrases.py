@@ -238,7 +238,7 @@ class Phrases(interfaces.TransformationABC):
 
         if s:  # add last word skipped by previous loop
             last_token = s[-1]
-            if last_token in vocab and not last_bigram:
+            if not last_bigram:
                 new_s.append(last_token)
 
         return [utils.to_unicode(w) for w in new_s]
