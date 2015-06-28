@@ -91,7 +91,6 @@ from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
 
-import gc
 
 try:
     from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
@@ -408,7 +407,6 @@ class Word2Vec(utils.SaveLoad):
 
         # right away, delete the part of the vocab we no longer need
         del vocab
-        gc.collect()
 
         if self.hs:
             # add info about each word's Huffman encoding
