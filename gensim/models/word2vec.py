@@ -91,6 +91,7 @@ from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
 
+import gc
 
 try:
     from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
@@ -404,6 +405,10 @@ class Word2Vec(utils.SaveLoad):
                 self.index2word.append(word)
                 self.vocab[word] = v
         logger.info("total %i word types after removing those with count<%s" % (len(self.vocab), self.min_count))
+
+        # right away, delete the part of the vocab we no longer need
+        del vocab
+        gc.collect()
 
         if self.hs:
             # add info about each word's Huffman encoding
