@@ -49,4 +49,4 @@ cdef REAL_t our_dot_noblas(const int *N, const float *X, const int *incX, const 
 cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil
 
 # to support random draws from negative-sampling cum_table
-cdef inline unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsigned long long lo, unsigned long long hi) nogil
+cdef unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsigned long long lo, unsigned long long hi) nogil
