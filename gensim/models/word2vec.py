@@ -667,9 +667,8 @@ class Word2Vec(utils.SaveLoad):
             header = utils.to_unicode(fin.readline())
             vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
             if not vector_size == self.vector_size:
-                logger.error("incompatible vector sizes")
-                # TOCONSIDER: maybe truncation/smaller vectors still useful enough to merge?
-                return # TODO raise ValueError()?
+                raise ValueError("incompatible vector size %d in file %s" % (vector_size, fname))
+                # TOCONSIDER: maybe mismatched vectors still useful enough to merge (truncating/padding)?
             if binary:
                 binary_len = dtype(REAL).itemsize * vector_size
                 for line_no in xrange(vocab_size):

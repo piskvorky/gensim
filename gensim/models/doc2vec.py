@@ -36,6 +36,7 @@ The model can also be instantiated from an existing file on disk in the word2vec
 
 import logging
 import os
+import warnings
 
 try:
     from queue import Queue
@@ -241,6 +242,11 @@ class TaggedDocument(namedtuple('TaggedDocument','words tags')):
     """
     def __str__(self):
         return '%s(%s, %s)' % (self.__class__.__name__, self.words, self.tags)
+
+# for compatibility
+class LabeledSentence(TaggedDocument):
+    def __init__(self, *args, **kwargs):
+        warnings.warn('LabeledSentence has been replaced by TaggedDocument', DeprecationWarning)
 
 
 class DocvecsArray(utils.SaveLoad):
@@ -510,7 +516,7 @@ class Doc2Vec(Word2Vec):
         doc-vector training; default is 0 (faster training of doc-vectors only).
 
         """
-        Word2Vec.__init__(self, size=size, alpha=alpha, window=window, min_count=min_count,
+        super(Doc2Vec, self).__init__(size=size, alpha=alpha, window=window, min_count=min_count,
                           sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
                           sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean, 
                           null_word=dm_concat, **kwargs)
@@ -526,7 +532,7 @@ class Doc2Vec(Word2Vec):
             self.train(documents)
 
     def clear_sims(self):
-        Word2Vec.clear_sims(self)
+        super(Doc2Vec,self).clear_sims()
         self.docvecs.clear_sims()
 
     def reset_weights(self):
@@ -534,13 +540,13 @@ class Doc2Vec(Word2Vec):
             # expand l1 size to match concatenated tags+words length
             self.layer1_size = (self.dm_tag_count + (2 * self.window)) * self.vector_size
             logger.info("using concatenative %d-dimensional layer1"% (self.layer1_size))
-        Word2Vec.reset_weights(self)
+        super(Doc2Vec,self).reset_weights()
         self.docvecs.reset_weights(self)
 
     def reset_from(self, other_model):
         """Reuse shareable structures from other_model."""
         self.docvecs.borrow_from(other_model.docvecs)
-        Word2Vec.reset_from(self, other_model)
+        super(Doc2Vec,self).reset_from(other_model)
 
     def _vocab_from(self, documents):
         document_no, vocab = -1, {}
