@@ -29,6 +29,7 @@
 *.pkl
 *.bak
 *.npy
+*.npz
 
 # OS generated files #
 ######################
