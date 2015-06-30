@@ -310,6 +310,8 @@ class Word2Vec(utils.SaveLoad):
         self.hashfxn = hashfxn
         self.iter = iter
         self.null_word = null_word
+        self.train_count = 0
+        self.total_train_time = 0
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -554,6 +556,8 @@ class Word2Vec(utils.SaveLoad):
         elapsed = default_timer() - start
         logger.info("training on %i words took %.1fs, %.0f words/s" %
             (word_count, elapsed, word_count / elapsed if elapsed else 0.0))
+        self.train_count += 1
+        self.total_train_time += elapsed
         self.clear_sims()
         return word_count
 
