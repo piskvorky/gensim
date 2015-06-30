@@ -566,12 +566,9 @@ class Doc2Vec(Word2Vec):
                     vocab[word] = Vocab(count=1)
         logger.info("collected %i word types from a corpus of %i words and %i documents" %
                     (len(vocab), total_words, document_no + 1))
+        self.corpus_count = document_no + 1
         return vocab
 
-    def _prepare_items(self, documents):
-        for document in documents:
-            yield (self._tokens_to_vocabs(document.words),
-                   self.docvecs.indexed_doctags(document.tags))
 
     def _tokens_to_vocabs(self, tokens, sample=True, source_dict=None):
         """Convert list of tokens to items (Vocabs) from source_dict."""
@@ -584,21 +581,25 @@ class Doc2Vec(Word2Vec):
         else:
             return [source_dict[token] for token in tokens if token in source_dict]
 
-    def _get_job_words(self, alpha, work, job, neu1):
-        if self.sg:
-            tally = sum(train_document_dbow(self, word_vocabs, doctag_indexes, alpha, work, train_words=self.dbow_words,
-                                            doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
-                       for word_vocabs, (doctag_indexes, doctag_vectors, doctag_locks, ignored) in job)
-        elif self.dm_concat:
-            tally = sum(train_document_dm_concat(self, word_vocabs, doctag_indexes, alpha, work, neu1,
-                                                doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
-                       for word_vocabs, (doctag_indexes, doctag_vectors, doctag_locks, ignored) in job)
-        else:
-            tally = sum(train_document_dm(self, word_vocabs, doctag_indexes, alpha, work, neu1,
-                                         doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
-                       for word_vocabs, (doctag_indexes, doctag_vectors, doctag_locks, ignored) in job)
-        self.docvecs.trained_items(item for s, item in job)
+
+    def _do_train_job(self, job, alpha, inits):
+        work, neu1 = inits
+        tally = 0
+        for doc in job:
+            word_vocabs = self._tokens_to_vocabs(doc.words)
+            doctag_indexes, doctag_vectors, doctag_locks, ignored = self.docvecs.indexed_doctags(doc.tags)
+            if self.sg:
+                tally += train_document_dbow(self, word_vocabs, doctag_indexes, alpha, work, train_words=self.dbow_words,
+                                             doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+            elif self.dm_concat:
+                tally += train_document_dm_concat(self, word_vocabs, doctag_indexes, alpha, work, neu1,
+                                                  doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+            else:
+                tally += train_document_dm(self, word_vocabs, doctag_indexes, alpha, work, neu1,
+                                               doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+        self.docvecs.trained_items([]) ### FIXME
         return tally
+
 
     def infer_vector(self, document, alpha=0.1, min_alpha=0.0001, steps=5):
         """

@@ -71,13 +71,13 @@ import logging
 import sys
 import os
 import heapq
-import time
+from timeit import default_timer
 from copy import deepcopy
 import threading
 try:
-    from queue import Queue
+    from queue import Queue, Empty
 except ImportError:
-    from Queue import Queue
+    from Queue import Queue, Empty
 
 from numpy import exp, dot, zeros, outer, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
@@ -372,6 +372,7 @@ class Word2Vec(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i" % max_depth)
 
+
     def precalc_sampling(self):
         """Precalculate each vocabulary item's threshold for sampling"""
         if self.sample:
@@ -432,6 +433,7 @@ class Word2Vec(utils.SaveLoad):
                     vocab[word] = Vocab(count=1)
         logger.info("collected %i word types from a corpus of %i words and %i sentences" %
                     (len(vocab), total_words, sentence_no + 1))
+        self.corpus_count = sentence_no + 1
         return vocab
 
     def reset_from(self, other_model):
@@ -442,23 +444,24 @@ class Word2Vec(utils.SaveLoad):
         self.vocab = other_model.vocab
         self.index2word = other_model.index2word
         self.cum_table = other_model.cum_table
+        self.corpus_count = other_model.corpus_count
         self.reset_weights()
 
-    def _prepare_items(self, items):
-        for sentence in items:
-            # avoid calling random_sample() where prob >= 1, to speed things up a little:
-            sampled = [self.vocab[word] for word in sentence
-                       if word in self.vocab and (self.vocab[word].sample_probability >= 1.0 or
-                                                  self.vocab[word].sample_probability >= random.random_sample())]
-            yield sampled
+    def _do_train_job(self, job, alpha, inits):
+        work, neu1 = inits
+        tally = 0
+        for sentence in job:
+            # get Vocabs that are known and pass sampling; avoid calling random_sample() when not needed
+            word_vocabs = [self.vocab[word] for word in sentence
+                           if word in self.vocab and (self.vocab[word].sample_probability >= 1.0 or
+                                                      self.vocab[word].sample_probability >= self.random.random_sample())]
+            if self.sg:
+                tally += train_sentence_sg(self, word_vocabs, alpha, work)
+            else:
+                tally += train_sentence_cbow(self, word_vocabs, alpha, work, neu1)
+        return tally
 
-    def _get_job_words(self, alpha, work, job, neu1):
-        if self.sg:
-            return sum(train_sentence_sg(self, sentence, alpha, work) for sentence in job)
-        else:
-            return sum(train_sentence_cbow(self, sentence, alpha, work, neu1) for sentence in job)
-
-    def train(self, sentences, total_words=None, word_count=0, chunksize=100):
+    def train(self, sentences, total_words=None, word_count=0, chunksize=100, queue_factor=2):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
@@ -466,7 +469,7 @@ class Word2Vec(utils.SaveLoad):
         """
         if FAST_VERSION < 0:
             import warnings
-            warnings.warn("C extension compilation failed, training will be slow. Install a C compiler and reinstall gensim for fast training.")
+            warnings.warn("C extension not loaded for Word2Vec, training will be slow. Install a C compiler and reinstall gensim for fast training.")
             self.neg_labels = []
             if self.negative > 0:
                 # precompute negative labels optimization for pure-python training
@@ -483,55 +486,76 @@ class Word2Vec(utils.SaveLoad):
         if self.iter > 1:
             sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
 
-        start, next_report = time.time(), [1.0]
-        word_count = [word_count]
-        total_words = total_words or int(sum(v.count * v.sample_probability for v in itervalues(self.vocab)) * self.iter)
-        jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
-        lock = threading.Lock()  # for shared state (=number of words trained so far, log reports...)
-
-        def worker_train():
-            """Train the model, lifting lists of sentences from the jobs queue."""
-            work = zeros(self.layer1_size, dtype=REAL)  # each thread must have its own work memory
+        def worker_init():
+            work = matutils.zeros_aligned(self.layer1_size, dtype=REAL)  # each thread must have its own work memory
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
-
+            return (work, neu1)
+        def worker_one_job(job, inits):
+            items, alpha = job
+            if items is None:  # signal to finish
+                return False
+            # train & return tally
+            job_words = self._do_train_job(items, alpha, inits)
+            progress_queue.put(job_words)  # report progress
+            return True
+        def worker_loop():
+            """Train the model, lifting lists of sentences from the jobs queue."""
+            init = worker_init()
             while True:
-                job = jobs.get()
-                if job is None:  # data finished, exit
+                job = job_queue.get()
+                if not worker_one_job(job, init):
                     break
-                # update the learning rate before every job
-                alpha = max(self.min_alpha, self.alpha * (1 - 1.0 * word_count[0] / total_words))
-                # how many words did we train on? out-of-vocabulary (unknown) words do not count
-                job_words = self._get_job_words(alpha, work, job, neu1)
-                with lock:
-                    word_count[0] += job_words
-                    elapsed = time.time() - start
-                    if elapsed >= next_report[0]:
-                        logger.info("PROGRESS: at %.2f%% words, alpha %.05f, %.0f words/s" %
-                            (100.0 * word_count[0] / total_words, alpha, word_count[0] / elapsed if elapsed else 0.0))
-                        next_report[0] = elapsed + 1.0  # don't flood the log, wait at least a second between progress reports
-                        sys.stderr.flush()
 
-        workers = [threading.Thread(target=worker_train) for _ in xrange(self.workers)]
+        start, next_report = default_timer(), 1.0
+        total_words = total_words or int(sum(v.count * v.sample_probability for v in itervalues(self.vocab)) * self.iter)
+        # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
+        if self.workers > 0:
+            job_queue = Queue(maxsize=queue_factor * self.workers)
+        else:
+            job_queue = FakeJobQueue(worker_init, worker_one_job)
+        progress_queue = Queue(maxsize= (queue_factor + 1) * self.workers)
+
+        workers = [threading.Thread(target=worker_loop) for _ in xrange(self.workers)]
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
 
-        # convert input strings to Vocab objects (eliding OOV/downsampled words), and start filling the jobs queue
-        for job_no, job in enumerate(utils.grouper(self._prepare_items(sentences), chunksize)):
-            logger.debug("putting job #%i in the queue, qsize=%i" % (job_no, jobs.qsize()))
-            jobs.put(job)
-        logger.info("reached the end of input; waiting to finish %i outstanding jobs" % jobs.qsize())
+        pushed_words = 0
+        done_jobs = 0
+        next_alpha = self.alpha
+        # fill jobs queue with (sentence, alpha) job tuples
+        for job_no, items in enumerate(utils.grouper(sentences, chunksize)):
+            logger.debug("putting job #%i in the queue", job_no)
+            job_queue.put((items,next_alpha))
+            # update the learning rate before every job
+            pushed_words += round((chunksize/self.corpus_count)/total_words)
+            next_alpha = max(self.min_alpha, self.alpha * (1 - 1.0 * pushed_words / total_words))
+            try:
+                while True:
+                    word_count += progress_queue.get(False)
+                    done_jobs += 1
+            except Empty:
+                pass  # already broken loop
+            elapsed = default_timer() - start
+            if elapsed >= next_report:
+                logger.info("PROGRESS: at %.2f%% words, alpha %.05f, %.0f words/s",
+                            100.0 * word_count / total_words, next_alpha, word_count / elapsed if elapsed else 0.0)
+                next_report = elapsed + 1.0  # don't flood the log, wait at least a second between progress reports
+                sys.stderr.flush()
+
+        logger.info("reached the end of input; waiting to finish %i outstanding jobs" % (job_no-done_jobs+1))
         for _ in xrange(self.workers):
-            jobs.put(None)  # give the workers heads up that they can finish -- no more work!
+            job_queue.put((None,0))  # give the workers heads up that they can finish -- no more work!
 
-        for thread in workers:
-            thread.join()
+        while done_jobs < (job_no+1):
+            word_count += progress_queue.get()
+            done_jobs += 1
 
-        elapsed = time.time() - start
+        elapsed = default_timer() - start
         logger.info("training on %i words took %.1fs, %.0f words/s" %
-            (word_count[0], elapsed, word_count[0] / elapsed if elapsed else 0.0))
+            (word_count, elapsed, word_count / elapsed if elapsed else 0.0))
         self.clear_sims()
-        return word_count[0]
+        return word_count
 
     def clear_sims(self):
         self.syn0norm = None
@@ -1006,6 +1030,15 @@ class Word2Vec(utils.SaveLoad):
         if model.negative:
             model.make_cum_table()  # rebuild cum_table from vocabulary
         return model
+
+
+class FakeJobQueue(object):
+    """Pretends to be a Queue; does equivalent of work_loop in calling thread."""
+    def __init__(self, init_fn, job_fn):
+        self.inits = init_fn()
+        self.job_fn = job_fn
+    def put(self, job):
+        self.job_fn(job, self.inits)
 
 
 class BrownCorpus(object):

@@ -89,6 +89,11 @@ class TestWord2VecModel(unittest.TestCase):
         binary_model_with_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), testvocab, binary=True)
         self.assertEqual(model.vocab['human'].count, binary_model_with_vocab.vocab['human'].count)
 
+    def test_zero_workers_mode(self):
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model0 = word2vec.Word2Vec(sentences, min_count=1, workers=0)
+        self.models_equal(model,model0)
+
     def testLargeMmap(self):
         """Test storing/loading the entire model."""
         model = word2vec.Word2Vec(sentences, min_count=1)
