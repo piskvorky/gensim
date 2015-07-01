@@ -216,7 +216,8 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
         model.syn0[input_word_indices] += np_repeat(neu1e, l).reshape(l, model.vector_size) * model.syn0_lockf[input_word_indices][:, None]
     return neu1e
 
-
+# could move this import up to where train_* is imported, 
+# but for now just do it separately incase there are unforseen bugs in score_
 try:
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
 except ImportError:
@@ -627,7 +628,8 @@ class Word2Vec(utils.SaveLoad):
         """
         if FAST_VERSION < 0:
             import warnings
-            warnings.warn("C extension compilation failed, scoring will be slow. Install a C compiler and reinstall gensim for fast scoring.")
+            warnings.warn("C extension compilation failed, scoring will be slow. Install a C compiler and reinstall gensim for fastness.")
+
         logger.info("scoring sentences with %i workers on %i vocabulary and %i features, "
             "using 'skipgram'=%s 'hierarchical softmax'=%s 'subsample'=%s and 'negative sampling'=%s" %
             (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative))
@@ -649,6 +651,7 @@ class Word2Vec(utils.SaveLoad):
             """score the enumerated sentences, lifting lists of sentences from the jobs queue."""
             work = zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
+
             while True:
                 job = jobs.get()
                 if job is None:  # data finished, exit
@@ -672,7 +675,7 @@ class Word2Vec(utils.SaveLoad):
             thread.start()
 
         # convert input strings to Vocab objects and start filling the jobs queue
-        for job_no, job in enumerate(utils.grouper(enumerate(self._prepare_sentences(sentences)), chunksize)):
+        for job_no, job in enumerate(utils.grouper(enumerate(self._prepare_items(sentences)), chunksize)):
             logger.debug("putting job #%i in the queue, qsize=%i" % (job_no, jobs.qsize()))
             jobs.put(job)
         logger.info("reached the end of input; waiting to finish %i outstanding jobs" % jobs.qsize())
