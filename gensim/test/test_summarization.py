@@ -42,7 +42,7 @@ class TestSummarizationTest(unittest.TestCase):
 
         generated_summary = summarize(text)
 
-        self.assertIsNotNone(generated_summary)
+        self.assertNotEqual(generated_summary, None)
 
     def test_raises_exception_on_short_input_text(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -53,5 +53,5 @@ class TestSummarizationTest(unittest.TestCase):
         # Keeps the first 8 sentences to make the text shorter.
         text = "\n".join(text.split('\n')[:8])
 
-        with self.assertRaises(RuntimeError):
-            summarize(text)
+        self.assertRaises(RuntimeError, summarize, text)
+        
