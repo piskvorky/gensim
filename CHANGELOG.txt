@@ -1,6 +1,11 @@
 Changes
 =======
 
+0.11.2
+
+* speed up top-N similarity queries
+
+
 0.11.0 = 0.11.1 = 0.11.1-1, 10/04/2015
 
 * added "topic ranking" to sort topics by coherence in LdaModel (jtmcmc, #311)
