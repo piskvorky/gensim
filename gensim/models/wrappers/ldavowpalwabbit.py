@@ -20,26 +20,27 @@ Tested with python 2.6, 2.7, and 3.4.
 
 Example:
 
-    Train model:
+    >>> # train model
     >>> lda = gensim.models.wrappers.LdaVowpalWabbit('/usr/local/bin/vw',
                                                      corpus=corpus,
                                                      num_topics=20,
                                                      id2word=dictionary)
 
-    Update existing model:
+    >>> # update an existing model
     >>> lda.update(another_corpus)
 
-    Get topic probability distributions for a document:
+    >>> # get topic probability distributions for a document
     >>> print(lda[doc_bow])
 
-    Print 10 topics:
+    >>> # print 10 topics
     >>> print(lda.print_topics())
 
-    Save/load the trained model:
+    >>> # save/load the trained model:
+
     >>> lda.save('vw_lda.model')
     >>> lda = gensim.models.wrappers.LdaVowpalWabbit.load('vw_lda.model')
 
-    Get bound on log perplexity for given test set:
+    >>> # get bound on log perplexity for given test set
     >>> print(lda.log_perpexity(test_corpus))
 
 Vowpal Wabbit works on files, so this wrapper maintains a temporary directory
@@ -390,7 +391,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
 
             for line in topics_file:
                 if not found_options:
-                    if line.startswith('options:'):
+                    if line.startswith(b'options:'):
                         found_options = True
                     continue
 
@@ -516,7 +517,7 @@ def write_corpus_as_vw(corpus, filename):
     corpus_size = 0
     with utils.smart_open(filename, 'wb') as corpus_file:
         for line in corpus_to_vw(corpus):
-            print(line, file=corpus_file)
+            corpus_file.write(line.encode('utf-8') + b'\n')
             corpus_size += 1
 
     return corpus_size
