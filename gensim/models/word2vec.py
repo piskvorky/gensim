@@ -215,7 +215,7 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
     if learn_vectors:
         # learn input -> hidden, here for all words in the window separately
         l = len(input_word_indices)
-        model.syn0[input_word_indices] += np_repeat(neu1e,l).reshape(l,model.vector_size) * model.syn0_lockf[input_word_indices][:,None] 
+        model.syn0[input_word_indices] += np_repeat(neu1e, l).reshape(l, model.vector_size) * model.syn0_lockf[input_word_indices][:, None]
     return neu1e
 
 
@@ -583,7 +583,7 @@ class Word2Vec(utils.SaveLoad):
 
 
     @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, norm_only=True):
+    def load_word2vec_format(cls, fname, fvocab=None, binary=False, norm_only=True, encoding='utf8'):
         """
         Load the input-hidden weight matrix from the original C word2vec-tool format.
 
@@ -595,6 +595,10 @@ class Word2Vec(utils.SaveLoad):
         `norm_only` is a boolean indicating whether to only store normalised word2vec vectors in memory.
         Word counts are read from `fvocab` filename, if set (this is the file generated
         by `-save-vocab` flag of the original C tool).
+
+        If you trained the C model using non-utf8 encoding for words, specify that
+        encoding in `encoding`.
+
         """
         counts = None
         if fvocab is not None:
@@ -607,7 +611,7 @@ class Word2Vec(utils.SaveLoad):
 
         logger.info("loading projection weights from %s" % (fname))
         with utils.smart_open(fname) as fin:
-            header = utils.to_unicode(fin.readline())
+            header = utils.to_unicode(fin.readline(), encoding=encoding)
             vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
             result = Word2Vec(size=vector_size)
             result.syn0 = zeros((vocab_size, vector_size), dtype=REAL)
@@ -622,7 +626,7 @@ class Word2Vec(utils.SaveLoad):
                             break
                         if ch != b'\n':  # ignore newlines in front of words (some binary files have newline, some don't)
                             word.append(ch)
-                    word = utils.to_unicode(b''.join(word))
+                    word = utils.to_unicode(b''.join(word), encoding=encoding)
                     if counts is None:
                         result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
                     elif word in counts:
@@ -634,7 +638,7 @@ class Word2Vec(utils.SaveLoad):
                     result.syn0[line_no] = fromstring(fin.read(binary_len), dtype=REAL)
             else:
                 for line_no, line in enumerate(fin):
-                    parts = utils.to_unicode(line).split()
+                    parts = utils.to_unicode(line[:-1], encoding=encoding).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
                     word, weights = parts[0], list(map(REAL, parts[1:]))
@@ -651,11 +655,11 @@ class Word2Vec(utils.SaveLoad):
         result.init_sims(norm_only)
         return result
 
-    def intersect_word2vec_format(self, fname, binary=False):
+    def intersect_word2vec_format(self, fname, binary=False, encoding='utf8'):
         """
         Merge the input-hidden weight matrix from the original C word2vec-tool format
         given, where it intersects with the current vocabulary. (No words are added to the
-        existing vocabulary, but intersecting words adopt the file's weights, and 
+        existing vocabulary, but intersecting words adopt the file's weights, and
         non-intersecting words are left alone.)
 
         `binary` is a boolean indicating whether the data is in binary word2vec format.
@@ -664,7 +668,7 @@ class Word2Vec(utils.SaveLoad):
         overlap_count = 0
         logger.info("loading projection weights from %s" % (fname))
         with utils.smart_open(fname) as fin:
-            header = utils.to_unicode(fin.readline())
+            header = utils.to_unicode(fin.readline(), encoding=encoding)
             vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
             if not vector_size == self.vector_size:
                 raise ValueError("incompatible vector size %d in file %s" % (vector_size, fname))
@@ -680,7 +684,7 @@ class Word2Vec(utils.SaveLoad):
                             break
                         if ch != b'\n':  # ignore newlines in front of words (some binary files have newline, some don't)
                             word.append(ch)
-                    word = utils.to_unicode(b''.join(word))
+                    word = utils.to_unicode(b''.join(word), encoding=encoding)
                     weights = fromstring(fin.read(binary_len), dtype=REAL)
                     if word in self.vocab:
                         overlap_count += 1
@@ -688,14 +692,14 @@ class Word2Vec(utils.SaveLoad):
                         self.syn0_lockf[self.vocab[word].index] = 0.0 # lock it
             else:
                 for line_no, line in enumerate(fin):
-                    parts = utils.to_unicode(line).split()
+                    parts = utils.to_unicode(line[:-1], encoding=encoding).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
                     word, weights = parts[0], list(map(REAL, parts[1:]))
                     if word in self.vocab:
                         overlap_count += 1
                         self.syn0[self.vocab[word].index] = weights
-        logger.info("merged %d vectors into  %s matrix from %s" % (overlap_count, self.syn0.shape, fname))
+        logger.info("merged %d vectors into %s matrix from %s" % (overlap_count, self.syn0.shape, fname))
 
 
     def most_similar(self, positive=[], negative=[], topn=10):
@@ -706,7 +710,7 @@ class Word2Vec(utils.SaveLoad):
         This method computes cosine similarity between a simple mean of the projection
         weight vectors of the given words and the vectors for each word in the model. The method corresponds to the `word-analogy` and
         `distance` scripts in the original word2vec implementation.
-        
+
         If topn is False, most_similar returns the vector of similarity scores.
 
         Example::
@@ -992,7 +996,7 @@ class Word2Vec(utils.SaveLoad):
 
     save.__doc__ = utils.SaveLoad.save.__doc__
 
-    
+
     @classmethod
     def load(cls, *args, **kwargs):
         model = super(Word2Vec, cls).load(*args, **kwargs)
@@ -1002,7 +1006,7 @@ class Word2Vec(utils.SaveLoad):
             model.make_cum_table()  # rebuild cum_table from vocabulary
         return model
 
-    
+
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
     def __init__(self, dirname):
