@@ -66,6 +66,7 @@ where "words" are actually multiword expressions, such as `new_york_times` or `f
        In Proceedings of NIPS, 2013.
 .. [3] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
 """
+from __future__ import division  # py3 "true division"
 
 import logging
 import sys
@@ -85,7 +86,6 @@ from numpy import exp, dot, zeros, outer, random, dtype, float32 as REAL,\
 
 logger = logging.getLogger("gensim.models.word2vec")
 
-
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
@@ -102,61 +102,65 @@ except ImportError:
         """
         Update skip-gram model by training on a single sentence.
 
-        The sentence is a list of Vocab objects (or None, where the corresponding
-        word is not in the vocabulary. Called internally from `Word2Vec.train()`.
+        The sentence is a list of string tokens, which are looked up in the model's
+        vocab dictionary. Called internally from `Word2Vec.train()`.
 
         This is the non-optimized, Python version. If you have cython installed, gensim
         will use the optimized version from word2vec_inner instead.
 
         """
+        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab
+                       and model.vocab[w].sample_int > model.random.randint(2**32)]
         for pos, word in enumerate(sentence):
-            if word is None:
-                continue  # OOV word in the input sentence => skip
             reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
 
             # now go over all words from the (reduced) window, predicting each one in turn
             start = max(0, pos - model.window + reduced_window)
-            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1 - reduced_window], start):
+            for pos2, word2_vocab in enumerate(word_vocabs[start : pos + model.window + 1 - reduced_window], start):
                 # don't train on OOV words and on the `word` itself
-                if word2 and not (pos2 == pos):
-                    train_sg_pair(model, word, word2.index, alpha)
+                if (pos2 == pos):
+                    train_sg_pair(model, word, word2_vocab.index, alpha)
 
-        return len([word for word in sentence if word is not None])
+        return len(word_vocabs)
 
     def train_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
         """
         Update CBOW model by training on a single sentence.
 
-        The sentence is a list of Vocab objects (or None, where the corresponding
-        word is not in the vocabulary. Called internally from `Word2Vec.train()`.
+        The sentence is a list of string tokens, which are looked up in the model's
+        vocab dictionary. Called internally from `Word2Vec.train()`.
 
         This is the non-optimized, Python version. If you have cython installed, gensim
         will use the optimized version from word2vec_inner instead.
 
         """
-        for pos, word in enumerate(sentence):
-            if word is None:
-                continue  # OOV word in the input sentence => skip
+        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab
+                       and model.vocab[w].sample_int > model.random.randint(2**32)]
+        for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window) # `b` in the original word2vec code
             start = max(0, pos - model.window + reduced_window)
-            window_pos = enumerate(sentence[start : pos + model.window + 1 - reduced_window], start)
+            window_pos = enumerate(word_vocabs[start : pos + model.window + 1 - reduced_window], start)
             word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
             l1 = np_sum(model.syn0[word2_indices], axis=0) # 1 x vector_size
             if word2_indices and model.cbow_mean:
                 l1 /= len(word2_indices)
             train_cbow_pair(model, word, word2_indices, l1, alpha)
 
-        return len([word for word in sentence if word is not None])
+        return len(word_vocabs)
 
 
-def train_sg_pair(model, predict_word, context_index, alpha, learn_vectors=True, learn_hidden=True,
+def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
                   context_vectors=None, context_locks=None):
     if context_vectors is None:
         context_vectors = model.syn0
     if context_locks is None:
         context_locks = model.syn0_lockf
 
-    l1 = context_vectors[context_index]
+    if word not in model.vocab:
+        return
+    predict_word = model.vocab[word]  # target word (NN output)
+
+    l1 = context_vectors[context_index]  # input word (NN input/projection layer)
     lock_factor = context_locks[context_index]
 
     neu1e = zeros(l1.shape)
@@ -383,7 +387,7 @@ class Word2Vec(utils.SaveLoad):
             threshold_count = float(self.sample) * total_words
         for v in itervalues(self.vocab):
             prob = (sqrt(v.count / threshold_count) + 1) * (threshold_count / v.count) if self.sample else 1.0
-            v.sample_probability = min(prob, 1.0)
+            v.sample_int = int(round(min(prob, 1.0)* 2**32))
 
     def build_vocab(self, sentences):
         """
@@ -453,14 +457,10 @@ class Word2Vec(utils.SaveLoad):
         work, neu1 = inits
         tally = 0
         for sentence in job:
-            # get Vocabs that are known and pass sampling; avoid calling random_sample() when not needed
-            word_vocabs = [self.vocab[word] for word in sentence
-                           if word in self.vocab and (self.vocab[word].sample_probability >= 1.0 or
-                                                      self.vocab[word].sample_probability >= self.random.random_sample())]
             if self.sg:
-                tally += train_sentence_sg(self, word_vocabs, alpha, work)
+                tally += train_sentence_sg(self, sentence, alpha, work)
             else:
-                tally += train_sentence_cbow(self, word_vocabs, alpha, work, neu1)
+                tally += train_sentence_cbow(self, sentence, alpha, work, neu1)
         return tally
 
     def train(self, sentences, total_words=None, word_count=0, chunksize=100, queue_factor=2):
@@ -509,7 +509,7 @@ class Word2Vec(utils.SaveLoad):
                     break
 
         start, next_report = default_timer(), 1.0
-        total_words = total_words or int(sum(v.count * v.sample_probability for v in itervalues(self.vocab)) * self.iter)
+        total_words = total_words or int(sum(v.count * (v.sample_int/2**32) for v in itervalues(self.vocab)) * self.iter)
         # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         if self.workers > 0:
             job_queue = Queue(maxsize=queue_factor * self.workers)
