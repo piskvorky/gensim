@@ -70,7 +70,7 @@ except ImportError:
             return numpy.argsort(x)[:topn]
         # numpy >= 1.8 has a fast partial argsort, use that!
         biggest = numpy.argpartition(x, topn)[:topn]
-        return biggest.take(numpy.argsort(x.take(biggest)))  # resort topn into order
+        return biggest.take(numpy.argsort(x.take(biggest))[::-1])  # resort topn into order
 
 
 logger = logging.getLogger("gensim.matutils")
