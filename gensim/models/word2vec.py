@@ -538,7 +538,7 @@ class Word2Vec(utils.SaveLoad):
                 tally += train_sentence_cbow(self, sentence, alpha, work, neu1)
         return tally
 
-    def train(self, sentences, total_words=None, word_count=0, chunksize=100, queue_factor=2):
+    def train(self, sentences, total_words=None, word_count=0, chunksize=100, queue_factor=2, report_delay=1):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
@@ -600,35 +600,40 @@ class Word2Vec(utils.SaveLoad):
             thread.start()
 
         pushed_words = 0
+        push_done = False
         done_jobs = 0
         next_alpha = self.alpha
+        jobs_source = enumerate(utils.grouper(sentences, chunksize))
         # fill jobs queue with (sentence, alpha) job tuples
-        for job_no, items in enumerate(utils.grouper(sentences, chunksize)):
-            logger.debug("putting job #%i in the queue", job_no)
-            job_queue.put((items,next_alpha))
-            # update the learning rate before every job
-            pushed_words += round((chunksize/self.corpus_count)/total_words)
-            next_alpha = max(self.min_alpha, self.alpha * (1 - 1.0 * pushed_words / total_words))
+        while True:
             try:
-                while True:
-                    word_count += progress_queue.get(False)
+                job_no, items = next(jobs_source)
+                logger.debug("putting job #%i in the queue", job_no)
+                job_queue.put((items,next_alpha))
+                # update the learning rate before every job
+                pushed_words += round((chunksize/self.corpus_count)/total_words)
+                next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
+            except StopIteration:
+                logger.info("reached end of input; waiting to finish %i outstanding jobs" % (job_no-done_jobs+1))
+                for _ in xrange(self.workers):
+                    job_queue.put((None,0))  # give the workers heads up that they can finish -- no more work!
+                push_done = True
+            try:
+                while done_jobs < (job_no+1):
+                    word_count += progress_queue.get(push_done)  # only block after all jobs pushed
                     done_jobs += 1
+                    elapsed = default_timer() - start
+                    if elapsed >= next_report:
+                        est_alpha = self.alpha - (self.alpha - self.min_alpha) * (word_count / total_words)
+                        logger.info("PROGRESS: at %.2f%% words, alpha %.05f, %.0f words/s",
+                                    100.0 * word_count / total_words, est_alpha, word_count / elapsed)
+                        next_report = elapsed + report_delay  # don't flood log, wait report_delay seconds
+                        sys.stderr.flush()
+                else:
+                    # loop ended by job count; really done
+                    break
             except Empty:
-                pass  # already broken loop
-            elapsed = default_timer() - start
-            if elapsed >= next_report:
-                logger.info("PROGRESS: at %.2f%% words, alpha %.05f, %.0f words/s",
-                            100.0 * word_count / total_words, next_alpha, word_count / elapsed if elapsed else 0.0)
-                next_report = elapsed + 1.0  # don't flood the log, wait at least a second between progress reports
-                sys.stderr.flush()
-
-        logger.info("reached the end of input; waiting to finish %i outstanding jobs" % (job_no-done_jobs+1))
-        for _ in xrange(self.workers):
-            job_queue.put((None,0))  # give the workers heads up that they can finish -- no more work!
-
-        while done_jobs < (job_no+1):
-            word_count += progress_queue.get()
-            done_jobs += 1
+                pass  # already out of loop; continue to next push
 
         elapsed = default_timer() - start
         logger.info("training on %i words took %.1fs, %.0f words/s" %
