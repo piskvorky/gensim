@@ -168,7 +168,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         if allow_update:
             self.num_docs += 1
-            self.num_pos += len(document)
+            self.num_pos += sum(itervalues(counter))
             self.num_nnz += len(result)
             # increase document count for each unique token that appeared in the document
             dfs = self.dfs
