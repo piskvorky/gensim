@@ -79,7 +79,7 @@ try:
 except ImportError:
     from Queue import Queue
 
-from numpy import exp, dot, zeros, outer, random, dtype, float32 as REAL,\
+from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
     ndarray, empty, sum as np_sum, prod, ones, repeat as np_repeat
 
