@@ -36,7 +36,7 @@ The algorithm:
 import logging
 import numpy  # for arrays, array broadcasting etc.
 
-from gensim import interfaces, utils
+from gensim import interfaces, utils, matutils
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
@@ -704,7 +704,7 @@ class LdaModel(interfaces.TransformationABC):
             # add a little random jitter, to randomize results around the same alpha
             sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha))
 
-            sorted_topics = list(numpy.argsort(sort_alpha))
+            sorted_topics = list(matutils.argsort(sort_alpha))
             chosen_topics = sorted_topics[:num_topics // 2] + sorted_topics[-num_topics // 2:]
 
         shown = []
@@ -730,7 +730,7 @@ class LdaModel(interfaces.TransformationABC):
         """
         topic = self.state.get_lambda()[topicid]
         topic = topic / topic.sum()  # normalize to probability distribution
-        bestn = numpy.argsort(topic)[::-1][:topn]
+        bestn = matutils.argsort(topic, topn, reverse=True)
         beststr = [(topic[id], self.id2word[id]) for id in bestn]
         return beststr
 
@@ -752,7 +752,7 @@ class LdaModel(interfaces.TransformationABC):
         str_topics = []
         for topic in self.state.get_lambda():
             topic = topic / topic.sum()  # normalize to probability distribution
-            bestn = numpy.argsort(topic)[::-1][:num_words]
+            bestn = matutils.argsort(topic, topn=num_words, reverse=True)
             topics.append(bestn)
             beststr = [(topic[id], self.id2word[id]) for id in bestn]
             str_topics.append(beststr)
@@ -836,15 +836,15 @@ class LdaModel(interfaces.TransformationABC):
         Large internal arrays may be stored into separate files, with `fname` as prefix.
 
         Note: do not save as a compressed file if you intend to load the file back with `mmap`.
-        
+
         Note: If you intend to use models across Python 2/3 versions there are a few things to
         keep in mind:
-        
+
         1. The pickled Python dictionaries will not work across Python versions
         2. The `save` method does not automatically save all NumPy arrays using NumPy, only
         those ones that exceed `sep_limit` set in `gensim.utils.SaveLoad.save`. The main
         concern here is the `alpha` array if for instance using `alpha='auto'`.
-        
+
         Please refer to the wiki recipes section (https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ#q9-how-do-i-load-a-model-in-python-3-that-was-trained-and-saved-using-python-2)
         for an example on how to work around these issues.
         """

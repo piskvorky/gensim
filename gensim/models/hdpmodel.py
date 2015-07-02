@@ -40,7 +40,7 @@ import logging, time
 import numpy as np
 import scipy.special as sp
 
-from gensim import interfaces, utils
+from gensim import interfaces, utils, matutils
 from six.moves import xrange
 
 logger = logging.getLogger(__name__)
@@ -435,7 +435,7 @@ class HdpModel(interfaces.TransformationABC):
         """
         ordering the topics
         """
-        idx = np.argsort(self.m_lambda_sum)[::-1]
+        idx = matutils.argsort(self.m_lambda_sum, reverse=True)
         self.m_varphi_ss = self.m_varphi_ss[idx]
         self.m_lambda = self.m_lambda[idx, :]
         self.m_lambda_sum = self.m_lambda_sum[idx]
@@ -570,7 +570,7 @@ class HdpTopicFormatter(object):
 
         # sort topics
         topics_sums = np.sum(topics, axis=1)
-        idx = np.argsort(topics_sums)[::-1]
+        idx = matutils.argsort(topics_sums, reverse=True)
         self.data = topics[idx]
 
         self.dictionary = dictionary

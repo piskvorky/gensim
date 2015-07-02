@@ -80,7 +80,7 @@ except ImportError:
     from Queue import Queue
 
 from numpy import exp, dot, zeros, outer, random, dtype, float32 as REAL,\
-    uint32, seterr, array, uint8, vstack, argsort, fromstring, sqrt, newaxis,\
+    uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
     ndarray, empty, sum as np_sum, prod, ones, repeat as np_repeat
 
 logger = logging.getLogger("gensim.models.word2vec")
@@ -748,7 +748,7 @@ class Word2Vec(utils.SaveLoad):
         dists = dot(self.syn0norm, mean)
         if not topn:
             return dists
-        best = argsort(dists)[::-1][:topn + len(all_words)]
+        best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
@@ -805,7 +805,7 @@ class Word2Vec(utils.SaveLoad):
 
         if not topn:
             return dists
-        best = argsort(dists)[::-1][:topn + len(all_words)]
+        best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
@@ -960,7 +960,8 @@ class Word2Vec(utils.SaveLoad):
                 ignore = set(self.vocab[v].index for v in [a, b, c])  # indexes of words to ignore
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
-                for index in argsort(most_similar(self, positive=[b, c], negative=[a], topn=False))[::-1]:
+                sims = most_similar(self, positive=[b, c], negative=[a], topn=False)
+                for index in matutils.argsort(sims, reverse=True):
                     if index in ok_index and index not in ignore:
                         predicted = self.index2word[index]
                         if predicted != expected:

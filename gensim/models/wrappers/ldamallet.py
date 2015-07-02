@@ -37,7 +37,7 @@ from subprocess import call
 
 import numpy
 
-from gensim import utils
+from gensim import utils, matutils
 
 logger = logging.getLogger('gensim.models.wrappers.ldamallet')
 
@@ -222,7 +222,7 @@ class LdaMallet(utils.SaveLoad):
         else:
             num_topics = min(num_topics, self.num_topics)
             sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha)) # add a little random jitter, to randomize results around the same alpha
-            sorted_topics = list(numpy.argsort(sort_alpha))
+            sorted_topics = list(matutils.argsort(sort_alpha))
             chosen_topics = sorted_topics[ : num_topics//2] + sorted_topics[-num_topics//2 : ]
         shown = []
         for i in chosen_topics:
@@ -238,8 +238,8 @@ class LdaMallet(utils.SaveLoad):
 
     def show_topic(self, topicid, topn=10):
         topic = self.wordtopics[topicid]
-        topic = topic / topic.sum() # normalize to probability dist
-        bestn = numpy.argsort(topic)[::-1][:topn]
+        topic = topic / topic.sum()  # normalize to probability dist
+        bestn = matutils.argsort(topic, topn, reverse=True)
         beststr = [(topic[id], self.id2word[id]) for id in bestn]
         return beststr
 
