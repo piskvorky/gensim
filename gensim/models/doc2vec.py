@@ -297,7 +297,7 @@ class DocvecsArray(utils.SaveLoad):
         return ([i for i in [self._int_index(index,-1) for index in doctag_tokens] if i > -1],
                 self.doctag_syn0, self.doctag_syn0_lockf, doctag_tokens)
 
-    def trained_items(self, indexed_tuples):
+    def trained_item(self, indexed_tuple):
         """Persist any changes made to the given indexes (matching tuple previously
         returned by indexed_doctags()); a no-op for this implementation"""
         pass
@@ -588,7 +588,8 @@ class Doc2Vec(Word2Vec):
         work, neu1 = inits
         tally = 0
         for doc in job:
-            doctag_indexes, doctag_vectors, doctag_locks, ignored = self.docvecs.indexed_doctags(doc.tags)
+            indexed_doctags = self.docvecs.indexed_doctags(doc.tags)
+            doctag_indexes, doctag_vectors, doctag_locks, ignored = indexed_doctags
             if self.sg:
                 tally += train_document_dbow(self, doc.words, doctag_indexes, alpha, work, train_words=self.dbow_words,
                                              doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
@@ -598,7 +599,7 @@ class Doc2Vec(Word2Vec):
             else:
                 tally += train_document_dm(self, doc.words, doctag_indexes, alpha, work, neu1,
                                                doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
-        self.docvecs.trained_items([]) ### FIXME
+            self.docvecs.trained_item(indexed_doctags)
         return tally
 
 
