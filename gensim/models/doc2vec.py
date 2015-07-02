@@ -333,6 +333,10 @@ class DocvecsArray(utils.SaveLoad):
     def clear_sims(self):
         self.doctag_syn0norm = None
 
+    def estimated_lookup_memory(self):
+        """Estimated memory for tag lookup; 0 if using pure int tags."""
+        return 60 * len(self.index2doctag) + 140 * len(self.doctags)
+
     def reset_weights(self, model):
         length = max(len(self.doctags),self.count)
         if self.mapfile_path:
@@ -523,20 +527,30 @@ class Doc2Vec(Word2Vec):
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
-        self.docvecs = docvecs
-        if not self.docvecs:
-            self.docvecs = DocvecsArray(docvecs_mapfile)
+        if self.dm and self.dm_concat:
+            self.layer1_size = (self.dm_tag_count + (2 * self.window)) * self.vector_size
+        else:
+            self.layer1_size = size
+        self.docvecs = docvecs or DocvecsArray(docvecs_mapfile)
         self.comment = comment
         if documents is not None:
             self.build_vocab(documents)
             self.train(documents)
+
+    @property
+    def dm(self):
+        return not self.sg  # opposite of SG
+
+    @property
+    def dbow(self):
+        return self.sg  # same as SG
 
     def clear_sims(self):
         super(Doc2Vec,self).clear_sims()
         self.docvecs.clear_sims()
 
     def reset_weights(self):
-        if self.dm_concat:
+        if self.dm and self.dm_concat:
             # expand l1 size to match concatenated tags+words length
             self.layer1_size = (self.dm_tag_count + (2 * self.window)) * self.vector_size
             logger.info("using concatenative %d-dimensional layer1"% (self.layer1_size))
@@ -620,6 +634,14 @@ class Doc2Vec(Word2Vec):
 
         return doctag_vectors[0]
 
+
+    def estimate_memory(self, vocab_size=None):
+        report = super(Doc2Vec,self).estimate_memory(vocab_size)
+        report['doctag_lookup'] = self.docvecs.estimated_lookup_memory()
+        report['doctag_syn0'] = self.docvecs.count * self.vector_size * 4
+        return report
+
+
     def __str__(self):
         """Abbreviated name reflecting major configuration paramaters."""
         segments = []
@@ -649,7 +671,7 @@ class Doc2Vec(Word2Vec):
         if self.min_count > 1:
             segments.append('mc%d' % self.min_count)
         if self.sample > 0:
-            segments.append('s%E' % self.sample)
+            segments.append('s%g' % self.sample)
         if self.workers > 1:
             segments.append('t%d' % self.workers)
         return 'Doc2Vec(%s)' % ','.join(segments)

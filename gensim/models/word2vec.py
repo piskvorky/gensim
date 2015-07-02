@@ -379,50 +379,22 @@ class Word2Vec(utils.SaveLoad):
             logger.info("built huffman tree with maximum node depth %i" % max_depth)
 
 
-    def precalc_sampling(self):
-        """Precalculate each vocabulary item's threshold for sampling"""
-        if self.sample:
-            logger.info("frequent-word downsampling, threshold %g; progress tallies will be approximate" % (self.sample))
-            total_words = sum(v.count for v in itervalues(self.vocab))
-            threshold_count = float(self.sample) * total_words
-        for v in itervalues(self.vocab):
-            prob = (sqrt(v.count / threshold_count) + 1) * (threshold_count / v.count) if self.sample else 1.0
-            v.sample_int = int(round(min(prob, 1.0)* 2**32))
-
     def build_vocab(self, sentences):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
 
         """
-        logger.info("collecting all words and their counts")
-        vocab = self._vocab_from(sentences)
-        # assign a unique index to each word
-        self.vocab, self.index2word = {}, []
-        for word, v in iteritems(vocab):
-            if v.count >= self.min_count:
-                v.index = len(self.vocab)
-                self.index2word.append(word)
-                self.vocab[word] = v
-        logger.info("total %i word types after removing those with count<%s" % (len(self.vocab), self.min_count))
+        self.scan_vocab(sentences)  # initial survey
+        self.scale_vocab()  # trim by min_count & precalculate downsampling
+        self.finalize_vocab()  # build tables & arrays
 
-        if self.null_word:
-            # create null pseudo-word for padding when using concatenative L1 (run-of-words)
-            # this word is only ever input – never predicted – so count, huffman-point doesn't matter
-            word, v = '\0', Vocab(count=1)
-            v.index = len(self.vocab)
-            self.index2word.append(word)
-            self.vocab[word] = v
-        if self.hs:
-            # add info about each word's Huffman encoding
-            self.create_binary_tree()
-        if self.negative:
-            # build the table for drawing random words (for negative sampling)
-            self.make_cum_table()
-        # precalculate downsampling thresholds
-        self.precalc_sampling()
-        self.reset_weights()
-        sys.stderr.flush()
+
+    def scan_vocab(self, sentences):
+        """Do an initial scan of all words appearing in sentences."""
+        logger.info("collecting all words and their counts")
+        self.vocab = self._vocab_from(sentences)
+
 
     def _vocab_from(self, sentences):
         sentence_no, vocab = -1, {}
@@ -441,6 +413,109 @@ class Word2Vec(utils.SaveLoad):
                     (len(vocab), total_words, sentence_no + 1))
         self.corpus_count = sentence_no + 1
         return vocab
+
+
+    def scale_vocab(self, min_count=None, sample=None, dry_run=False):
+        """
+        Apply vocabulary settings for `min_count` (discarding less-frequent words)
+        and `sample` (controlling the downsampling of more-frequent words).
+
+        Calling with `dry_run=True` will only simulate the provided settings and
+        report the size of the retained vocabulary, effective corpus length, and
+        estimated memory requirements. Results are both printed via logging and
+        returned as a dict.
+
+        """
+        min_count = min_count or self.min_count
+        sample = sample or self.sample
+
+        # Discard words less-frequent than min_count
+        if not dry_run:
+            self.index2word = []
+            # make stored settings match these applied settings
+            self.min_count = min_count
+            self.sample = sample
+        drop_unique, drop_total, retain_total, original_total = 0, 0, 0, 0
+        retain_words = []
+        for word, v in iteritems(self.vocab):
+            if v.count >= min_count:
+                retain_words.append(word)
+                retain_total += v.count
+                original_total += v.count
+            else:
+                drop_unique += 1
+                drop_total += v.count
+                original_total += v.count
+        logger.info("min_count=%d retains %i unique words (drops %i)"
+                    % (min_count, len(retain_words), drop_unique))
+        logger.info("min_count leaves %i word corpus (%i%% of original %i)"
+                    % (retain_total, retain_total*100/max(original_total,1), original_total))
+
+        # Precalculate each vocabulary item's threshold for sampling
+        if not sample:
+            # no words downsampled
+            threshold_count = retain_total
+        elif sample < 1.0:
+            # traditional meaning: set parameter as proportion of total
+            threshold_count = sample * retain_total
+        else:
+            # new shorthand: sample >= 1 means downsample all words with higher count than sample
+            threshold_count = int(sample * (3 + sqrt(5)) / 2)
+        downsample_total, downsample_unique = 0, 0
+        for w in retain_words:
+            v = self.vocab[w]
+            word_probability = (sqrt(v.count / threshold_count) + 1) * (threshold_count / v.count)
+            if word_probability < 1.0:
+                downsample_unique += 1
+                downsample_total += word_probability * v.count
+            else:
+                word_probability = 1.0
+                downsample_total += v.count
+            if not dry_run:
+                v.sample_int = int(round(word_probability * 2**32))
+        logger.info("sample=%g downsamples %i most-common words" % (sample, downsample_unique))
+        logger.info("downsampling leaves estimated %i word corpus (%i%% of prior %i)"
+                    % (downsample_total, round(downsample_total*100/max(retain_total,1)), retain_total))
+
+        # return from each step: words-affected, resulting-corpus-size
+        report_values = {'drop_unique': drop_unique, 'retain_total': retain_total,
+                         'downsample_unique': downsample_unique, 'downsample_total': int(downsample_total)}
+
+        # print extra memory estimates
+        report_values['memory'] = self.estimate_memory(vocab_size=len(retain_words))
+
+        if not dry_run:
+            new_vocab = {}
+            for w in retain_words:
+                new_vocab[w] = self.vocab[w]
+                new_vocab[w].index = len(self.index2word)
+                self.index2word.append(w)
+            self.vocab = new_vocab
+            logger.info("vocabulary min_count & sample applied, and indexes assigned")
+        return report_values
+
+
+    def finalize_vocab(self):
+        """Build tables and model weights based on final vocabulary settings."""
+        if not self.index2word:
+            self.scale_vocab()
+        if self.hs:
+            # add info about each word's Huffman encoding
+            self.create_binary_tree()
+        if self.negative:
+            # build the table for drawing random words (for negative sampling)
+            self.make_cum_table()
+        if self.null_word:
+            # create null pseudo-word for padding when using concatenative L1 (run-of-words)
+            # this word is only ever input – never predicted – so count, huffman-point, etc doesn't matter
+            word, v = '\0', Vocab(count=1, sample_int=0)
+            v.index = len(self.vocab)
+            self.index2word.append(word)
+            self.vocab[word] = v
+        # set initial input/projection and hidden weights
+        self.reset_weights()
+        sys.stderr.flush()
+
 
     def reset_from(self, other_model):
         """
@@ -484,6 +559,8 @@ class Word2Vec(utils.SaveLoad):
 
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
+        if not hasattr(self,'syn0'):
+            raise RuntimeError("you must first finalize vocabulary before training the model")
 
         if self.iter > 1:
             sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
@@ -936,6 +1013,22 @@ class Word2Vec(utils.SaveLoad):
                     del self.syn1
             else:
                 self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
+
+
+    def estimate_memory(self, vocab_size=None):
+        vocab_size = vocab_size or len(self.vocab)
+        report = {}
+        report['vocab'] = vocab_size * (700 if self.hs else 500)
+        report['syn0'] = vocab_size * self.vector_size * 4
+        if self.hs:
+            report['syn1'] = vocab_size * self.layer1_size * 4
+        if self.negative:
+            report['syn1neg'] = vocab_size * self.layer1_size * 4
+        report['total'] = sum(report.values())
+        logger.info("estimated required memory for %i words and %i dimensions: %i bytes"
+                    % (vocab_size, self.vector_size, report['total']))
+        return report
+
 
     @staticmethod
     def log_accuracy(section):
