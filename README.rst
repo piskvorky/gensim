@@ -77,3 +77,8 @@ It is also included in the source distribution package.
 
 Gensim is open source software released under the `GNU LGPL license <http://www.gnu.org/licenses/lgpl.html>`_.
 Copyright (c) 2009-now Radim Rehurek
+
+|Analytics|_
+
+.. |Analytics| image:: https://ga-beacon.appspot.com/UA-24066335-5/your-repo/page-name
+.. _Analytics: https://github.com/igrigorik/ga-beacon

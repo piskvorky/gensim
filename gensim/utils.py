@@ -11,7 +11,7 @@ This module contains various general utility functions.
 from __future__ import with_statement
 
 import logging
-logger = logging.getLogger('gensim.utils')
+logger = logging.getLogger(__name__)
 
 try:
     from html.entities import name2codepoint as n2cp
@@ -170,7 +170,7 @@ def copytree_hardlink(source, dest):
 def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False, lower=False):
     """
     Iteratively yield tokens as unicode strings, removing accent marks
-    and optionally lowercasing the unidoce string by assigning True 
+    and optionally lowercasing the unidoce string by assigning True
     to one of the parameters, lowercase, to_lower, or lower.
 
     Input text may be either unicode or utf8-encoded byte string.
@@ -363,10 +363,10 @@ class SaveLoad(object):
     def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
         """
         Save aside any attributes that need to be handled separately, including
-        by recursion any attributes that are themselves SaveLoad instances. 
+        by recursion any attributes that are themselves SaveLoad instances.
 
-        Returns a list of (obj, {attrib: value, ...}) settings that the caller 
-        should use to restore each object's attributes that were set aside 
+        Returns a list of (obj, {attrib: value, ...}) settings that the caller
+        should use to restore each object's attributes that were set aside
         during the default pickle().
 
         """

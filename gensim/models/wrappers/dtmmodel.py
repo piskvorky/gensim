@@ -28,7 +28,7 @@ from subprocess import Popen, PIPE
 
 import numpy as np
 
-from gensim import utils, corpora
+from gensim import utils, corpora, matutils
 
 logger = logging.getLogger(__name__)
 
@@ -287,7 +287,7 @@ class DtmModel(utils.SaveLoad):
         # normalize to probability dist
         topic = topic / topic.sum()
         # sort according to prob
-        bestn = np.argsort(topic)[::-1][:topn]
+        bestn = matutils.argsort(topic, topn, reverse=True)
         beststr = [(topic[id], self.id2word[id]) for id in bestn]
         return beststr
 

@@ -47,7 +47,7 @@ from collections import namedtuple
 
 from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
     repeat as np_repeat, array, float32 as REAL, empty, ones, memmap as np_memmap, \
-    sqrt, newaxis, ndarray, dot, argsort, vstack
+    sqrt, newaxis, ndarray, dot, vstack
 
 logger = logging.getLogger(__name__)
 
@@ -407,7 +407,7 @@ class DocvecsArray(utils.SaveLoad):
         dists = dot(self.doctag_syn0norm, mean)
         if not topn:
             return dists
-        best = argsort(dists)[::-1][:topn + len(all_docs)]
+        best = matutils.argsort(dists, topn=topn + len(all_docs), reverse=True)
         # ignore (don't return) docs from the input
         result = [(self._key_index(sim), float(dists[sim])) for sim in best if sim not in all_docs]
         return result[:topn]
@@ -518,7 +518,7 @@ class Doc2Vec(Word2Vec):
         """
         super(Doc2Vec, self).__init__(size=size, alpha=alpha, window=window, min_count=min_count,
                           sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
-                          sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean, 
+                          sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean,
                           null_word=dm_concat, **kwargs)
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
