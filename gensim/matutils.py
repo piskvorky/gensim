@@ -47,11 +47,12 @@ logger = logging.getLogger(__name__)
 
 def argsort(x, topn=None, reverse=False):
     """
-    Return indices of the `topn` smallest elements in numpy array `x`, in ascending order.
+    Return indices of the `topn` smallest elements in array `x`, in ascending order.
 
     If reverse is True, return the greatest elements instead, in descending order.
 
     """
+    x = numpy.asarray(x)  # unify code path for when `x` is not a numpy array (list, tuple...)
     if topn is None:
         topn = x.size
     if topn <= 0:
