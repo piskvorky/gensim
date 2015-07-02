@@ -748,7 +748,7 @@ class Word2Vec(utils.SaveLoad):
         dists = dot(self.syn0norm, mean)
         if not topn:
             return dists
-        best = argsort(dists)[::-1][:topn + len(all_words)]
+        best = matutils.argsort(dists, topn + len(all_words))[::-1][:topn + len(all_words)]
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
@@ -805,7 +805,7 @@ class Word2Vec(utils.SaveLoad):
 
         if not topn:
             return dists
-        best = argsort(dists)[::-1][:topn + len(all_words)]
+        best = matutils.argsort(dists, topn + len(all_words))[::-1][:topn + len(all_words)]
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
