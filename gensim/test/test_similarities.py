@@ -64,7 +64,8 @@ class _TestSimilarityABC(object):
                 [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.57735026, 0.57735026, 0.57735026],
                 [0.0, 0.0, 0.0, 0.0, 0.0, 0.57735026, 0.0, 0.0, 0.0, 0.0, 0.57735026, 0.57735026],
                 ], dtype=numpy.float32)
-            self.assertTrue(numpy.allclose(expected, index.index))
+            # HACK: dictionary can be in different order, so compare in sorted order
+            self.assertTrue(numpy.allclose(sorted(expected.flat), sorted(index.index.flat)))
         index.num_best = num_best
         query = corpus[0]
         sims = index[query]
