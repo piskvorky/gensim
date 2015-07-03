@@ -285,7 +285,7 @@ class TestLdaModel(unittest.TestCase):
             # try seeding it both ways round, check you get the same
             # topics out but with which way round they are depending
             # on the way round they're seeded
-            for i in range(5): # restart at most 5 times
+            for i in range(10):  # restart at most this many times, to mitigate randomness
 
                 eta = numpy.ones((2, len(dictionary))) * 0.5
                 system = dictionary.token2id[u'system']
@@ -293,7 +293,7 @@ class TestLdaModel(unittest.TestCase):
 
                 # aggressively seed the word 'system', in one of the
                 # two topics, 10 times higher than the other words
-                eta[topic, system] *= 10
+                eta[topic, system] *= 10.0
 
                 model = self.class_(id2word=dictionary, num_topics=2, passes=200, eta=eta)
                 model.update(self.corpus)
@@ -303,15 +303,16 @@ class TestLdaModel(unittest.TestCase):
                 # check that the word system in the topic we seeded, got a high weight,
                 # and the word 'trees' (the main word in the other topic) a low weight --
                 # and vice versa for the other topic (which we didn't seed with 'system')
-                result = [[topics[topic].get(u'system',0), topics[topic].get(u'trees',0)],
-                          [topics[1-topic].get(u'system',0), topics[1-topic].get(u'trees',0)]]
+                result = [[topics[topic].get(u'system', 0), topics[topic].get(u'trees', 0)],
+                          [topics[1 - topic].get(u'system', 0), topics[1 - topic].get(u'trees', 0)]]
                 expected = [[0.385, 0.022],
                             [0.025, 0.157]]
                 passed = numpy.allclose(result, expected, atol=1e-2)
                 if passed:
                     break
-                logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)" %
-                                (i, result, expected))
+                logging.warning(
+                    "LDA failed to converge on attempt %i (got %s, expected %s)",
+                    i, result, expected)
             self.assertTrue(passed)
 
     def testPersistence(self):
