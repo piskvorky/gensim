@@ -288,7 +288,7 @@ class DocvecsArray(utils.SaveLoad):
             if key in self.doctags:
                 self.doctags[key] = self.doctags[key].repeat(document_length)
             else:
-                self.doctags[key] = Doctag(document_no, document_length, 1)
+                self.doctags[key] = Doctag(len(self.index2doctag), document_length, 1)
                 self.index2doctag.append(key)
                 self.count = max(self.count, len(self.index2doctag))
 
