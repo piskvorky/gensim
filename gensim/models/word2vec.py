@@ -343,7 +343,8 @@ class Word2Vec(utils.SaveLoad):
         for word_index in range(vocab_size):
             cumulative += self.vocab[self.index2word[word_index]].count**power / train_words_pow
             self.cum_table[word_index] = round(cumulative * domain)
-        assert self.cum_table[-1] == domain
+        if len(self.cum_table) > 0:
+            assert self.cum_table[-1] == domain
 
 
     def create_binary_tree(self):
@@ -390,17 +391,17 @@ class Word2Vec(utils.SaveLoad):
         self.finalize_vocab()  # build tables & arrays
 
 
-    def scan_vocab(self, sentences):
+    def scan_vocab(self, sentences, progress_per=10000):
         """Do an initial scan of all words appearing in sentences."""
         logger.info("collecting all words and their counts")
-        self.vocab = self._vocab_from(sentences)
+        self.vocab = self._vocab_from(sentences, progress_per=progress_per)
 
 
-    def _vocab_from(self, sentences):
+    def _vocab_from(self, sentences, progress_per=10000):
         sentence_no, vocab = -1, {}
         total_words = 0
         for sentence_no, sentence in enumerate(sentences):
-            if sentence_no % 10000 == 0:
+            if sentence_no % progress_per == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                             (sentence_no, total_words, len(vocab)))
             for word in sentence:
@@ -1091,7 +1092,7 @@ class Word2Vec(utils.SaveLoad):
                     if index in ok_index and index not in ignore:
                         predicted = self.index2word[index]
                         if predicted != expected:
-                            logger.debug("%s: expected %s, predicted %s" % (line.strip(), expected, predicted))
+                            logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
                         break
                 if predicted == expected:
                     section['correct'].append((a, b, c, expected))

@@ -562,11 +562,11 @@ class Doc2Vec(Word2Vec):
         self.docvecs.borrow_from(other_model.docvecs)
         super(Doc2Vec,self).reset_from(other_model)
 
-    def _vocab_from(self, documents):
+    def _vocab_from(self, documents, progress_per=10000):
         document_no, vocab = -1, {}
         total_words = 0
         for document_no, document in enumerate(documents):
-            if document_no % 10000 == 0:
+            if document_no % progress_per == 0:
                 logger.info("PROGRESS: at document #%i, processed %i words and %i word types" %
                             (document_no, total_words, len(vocab)))
             document_length = len(document.words)
