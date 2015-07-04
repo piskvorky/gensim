@@ -108,7 +108,7 @@ def _get_sentences_with_word_count(sentences, word_count):
 def _extract_important_sentences(sentences, corpus, important_docs, word_count):
     important_sentences = _get_important_sentences(sentences, corpus, important_docs)
 
-    # If no "words" option is selected, the number of sentences is
+    # If no "word_count" option is provided, the number of sentences is
     # reduced by the provided ratio. Else, the ratio is ignored.
     return important_sentences if word_count is None else _get_sentences_with_word_count(important_sentences, word_count)
 
@@ -124,6 +124,17 @@ def _build_hasheable_corpus(corpus):
 
 
 def summarize_corpus(corpus, ratio=0.2):
+    """
+    Returns a list of the most important documents of a corpus using a
+    variation of the TextRank algorithm.
+    The input must have at least INPUT_MIN_LENGTH documents for the
+    summary to make sense.
+
+    The length of the output can be specified using the ratio parameter,
+    which determines how many documents will be chosen for the summary
+    (defaults at 20% of the number of documents of the corpus).
+
+    """
     hashable_corpus = _build_hasheable_corpus(corpus)
 
     if len(corpus) < INPUT_MIN_LENGTH:
@@ -141,6 +152,25 @@ def summarize_corpus(corpus, ratio=0.2):
 
 
 def summarize(text, ratio=0.2, word_count=None, split=False):
+    """
+    Returns a summarized version of the given text using a variation of
+    the TextRank algorithm.
+    The input must be longer than INPUT_MIN_LENGTH sentences for the
+    summary to make sense and must be given as a string.
+
+    The output summary will consist of the most representative sentences
+    and will also be returned as a string, divided by newlines. If the
+    split parameter is set to True, a list of sentences will be
+    returned.
+
+    The length of the output can be specified using the ratio and
+    word_count parameters:
+        ratio should be a number between 0 and 1 that determines the
+    percentage of the number of sentences of the original text to be
+    chosen for the summary (defaults at 0.2).
+        word_count determines how many words will the output contain.
+    If both parameters are provided, the ratio will be ignored.
+    """
     # Gets a list of processed sentences.
     sentences = _clean_text_by_sentences(text)
 
@@ -149,7 +179,7 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
 
     corpus = _build_corpus(sentences)
 
-    most_important_docs = textrank_from_corpus(corpus, ratio=ratio)
+    most_important_docs = summarize_corpus(corpus, ratio=ratio if word_count is None else 1)
 
     # Extracts the most important sentences with the selected criterion.
     extracted_sentences = _extract_important_sentences(sentences, corpus, most_important_docs, word_count)
