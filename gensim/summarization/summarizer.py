@@ -123,7 +123,7 @@ def _build_hasheable_corpus(corpus):
     return [tuple(doc) for doc in corpus]
 
 
-def textrank_from_corpus(corpus, ratio=0.2):
+def summarize_corpus(corpus, ratio=0.2):
     hashable_corpus = _build_hasheable_corpus(corpus)
 
     if len(corpus) < INPUT_MIN_LENGTH:
@@ -143,7 +143,6 @@ def textrank_from_corpus(corpus, ratio=0.2):
 def summarize(text, ratio=0.2, word_count=None, split=False):
     # Gets a list of processed sentences.
     sentences = _clean_text_by_sentences(text)
-    corpus = _build_corpus(sentences)
 
     if len(sentences) < INPUT_MIN_LENGTH:
         raise RuntimeError("Input text must have at least " + str(INPUT_MIN_LENGTH) + " sentences.")
