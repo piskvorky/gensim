@@ -464,10 +464,12 @@ class Word2Vec(utils.SaveLoad):
 
         """
         logger.info("collecting all words and their counts")
-        vocab = self._vocab_from(sentences)
+
         # assign a unique index to each word
         self.vocab, self.index2word = {}, []
-        for word, v in iteritems(vocab):
+        vocab = list(self._vocab_from(sentences).items())
+        while vocab:
+            word, v = vocab.pop()
             if v.count >= self.min_count:
                 v.index = len(self.vocab)
                 self.index2word.append(word)
@@ -481,6 +483,7 @@ class Word2Vec(utils.SaveLoad):
             v.index = len(self.vocab)
             self.index2word.append(word)
             self.vocab[word] = v
+
         if self.hs:
             # add info about each word's Huffman encoding
             self.create_binary_tree()
