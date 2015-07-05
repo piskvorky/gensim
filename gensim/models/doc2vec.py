@@ -44,6 +44,7 @@ except ImportError:
     from Queue import Queue
 
 from collections import namedtuple
+from timeit import default_timer
 
 from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
     repeat as np_repeat, array, float32 as REAL, empty, ones, memmap as np_memmap, \
@@ -574,10 +575,15 @@ class Doc2Vec(Word2Vec):
     def _vocab_from(self, documents, progress_per=10000):
         document_no, vocab = -1, {}
         total_words = 0
+        interval_start = default_timer()
+        interval_count = 0
         for document_no, document in enumerate(documents):
             if document_no % progress_per == 0:
-                logger.info("PROGRESS: at document #%i, processed %i words and %i word types" %
-                            (document_no, total_words, len(vocab)))
+                interval_rate = (total_words - interval_count) / (default_timer() - interval_start)
+                logger.info("PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags" %
+                            (document_no, total_words, interval_rate, len(vocab), len(self.docvecs)))
+                interval_start = default_timer()
+                interval_count = total_words
             document_length = len(document.words)
             for tag in document.tags:
                 self.docvecs.note_doctag(tag, document_no, document_length)
@@ -587,8 +593,8 @@ class Doc2Vec(Word2Vec):
                     vocab[word].count += 1
                 else:
                     vocab[word] = Vocab(count=1)
-        logger.info("collected %i word types from a corpus of %i words and %i documents" %
-                    (len(vocab), total_words, document_no + 1))
+        logger.info("collected %i word types and %i unique tags from a corpus of %i examples and %i words" %
+                    (len(vocab), len(self.docvecs), document_no + 1, total_words))
         self.corpus_count = document_no + 1
         return vocab
 
