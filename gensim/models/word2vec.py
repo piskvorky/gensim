@@ -74,6 +74,7 @@ import os
 import heapq
 from timeit import default_timer
 from copy import deepcopy
+from collections import defaultdict
 import threading
 try:
     from queue import Queue, Empty
@@ -316,7 +317,7 @@ class Vocab(object):
 
     def __str__(self):
         vals = ['%s:%r' % (key, self.__dict__[key]) for key in sorted(self.__dict__) if not key.startswith('_')]
-        return "<" + ', '.join(vals) + ">"
+        return "%s(%s)" % (self.__class__.__name__, ', '.join(vals))
 
 
 class Word2Vec(utils.SaveLoad):
@@ -327,9 +328,10 @@ class Word2Vec(utils.SaveLoad):
     compatible with the original word2vec implementation via `save_word2vec_format()` and `load_word2vec_format()`.
 
     """
-    def __init__(self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
-                 sample=0, seed=1, workers=1, min_alpha=0.0001, sg=1, hs=1, negative=0,
-                 cbow_mean=0, hashfxn=hash, iter=1, null_word=0):
+    def __init__(
+            self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
+            max_vocab_size=10000000, sample=0, seed=1, workers=1, min_alpha=0.0001,
+            sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -355,6 +357,9 @@ class Word2Vec(utils.SaveLoad):
         word are seeded with a hash of the concatenation of word + str(seed).
 
         `min_count` = ignore all words with total frequency lower than this.
+
+        `max_vocab_size` = limit RAM during vocabulary building; if there are more unique
+        words than this, then prune the infrequent ones. Set to `None` for no limit.
 
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
             default is 0 (off), useful value is 1e-5.
@@ -385,6 +390,7 @@ class Word2Vec(utils.SaveLoad):
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
         self.alpha = float(alpha)
         self.window = int(window)
+        self.max_vocab_size = max_vocab_size
         self.seed = seed
         self.random = random.RandomState(seed)
         self.min_count = min_count
@@ -473,25 +479,27 @@ class Word2Vec(utils.SaveLoad):
     def scan_vocab(self, sentences, progress_per=10000):
         """Do an initial scan of all words appearing in sentences."""
         logger.info("collecting all words and their counts")
-        self.vocab = self._vocab_from(sentences, progress_per=progress_per)
-
-    def _vocab_from(self, sentences, progress_per=10000):
-        sentence_no, vocab = -1, {}
+        sentence_no = -1
         total_words = 0
+        min_reduce = 1
+        vocab = defaultdict(int)
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % progress_per == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                             (sentence_no, total_words, len(vocab)))
             for word in sentence:
-                total_words += 1
-                if word in vocab:
-                    vocab[word].count += 1
-                else:
-                    vocab[word] = Vocab(count=1)
+                vocab[word] += 1
+
+            if self.max_vocab_size and len(vocab) > self.max_vocab_size:
+                total_words += utils.prune_vocab(vocab, min_reduce)
+                min_reduce += 1
+
+        total_words += sum(itervalues(vocab))
+
         logger.info("collected %i word types from a corpus of %i words and %i sentences" %
                     (len(vocab), total_words, sentence_no + 1))
         self.corpus_count = sentence_no + 1
-        return vocab
+        self.raw_vocab = vocab
 
     def scale_vocab(self, min_count=None, sample=None, dry_run=False):
         """
@@ -513,17 +521,21 @@ class Word2Vec(utils.SaveLoad):
             # make stored settings match these applied settings
             self.min_count = min_count
             self.sample = sample
+            self.vocab = {}
         drop_unique, drop_total, retain_total, original_total = 0, 0, 0, 0
         retain_words = []
-        for word, v in iteritems(self.vocab):
-            if v.count >= min_count:
+        for word, v in iteritems(self.raw_vocab):
+            if v >= min_count:
                 retain_words.append(word)
-                retain_total += v.count
-                original_total += v.count
+                retain_total += v
+                original_total += v
+                if not dry_run:
+                    self.vocab[word] = Vocab(count=v, index=len(self.index2word))
+                    self.index2word.append(word)
             else:
                 drop_unique += 1
-                drop_total += v.count
-                original_total += v.count
+                drop_total += v
+                original_total += v
         logger.info("min_count=%d retains %i unique words (drops %i)"
                     % (min_count, len(retain_words), drop_unique))
         logger.info("min_count leaves %i word corpus (%i%% of original %i)"
@@ -541,19 +553,19 @@ class Word2Vec(utils.SaveLoad):
             threshold_count = int(sample * (3 + sqrt(5)) / 2)
         downsample_total, downsample_unique = 0, 0
         for w in retain_words:
-            v = self.vocab[w]
-            word_probability = (sqrt(v.count / threshold_count) + 1) * (threshold_count / v.count)
+            v = self.raw_vocab[w]
+            word_probability = (sqrt(v / threshold_count) + 1) * (threshold_count / v)
             if word_probability < 1.0:
                 downsample_unique += 1
-                downsample_total += word_probability * v.count
+                downsample_total += word_probability * v
             else:
                 word_probability = 1.0
-                downsample_total += v.count
+                downsample_total += v
             if not dry_run:
-                v.sample_int = int(round(word_probability * 2**32))
-        logger.info("sample=%g downsamples %i most-common words" % (sample, downsample_unique))
-        logger.info("downsampling leaves estimated %i word corpus (%i%% of prior %i)"
-                    % (downsample_total, round(downsample_total * 100 / max(retain_total, 1)), retain_total))
+                self.vocab[w].sample_int = int(round(word_probability * 2**32))
+        logger.info("sample=%g downsamples %i most-common words", sample, downsample_unique)
+        logger.info("downsampling leaves estimated %i word corpus (%.1f%% of prior %i)",
+                    downsample_total, downsample_total * 100.0 / max(retain_total, 1), retain_total)
 
         # return from each step: words-affected, resulting-corpus-size
         report_values = {'drop_unique': drop_unique, 'retain_total': retain_total,
@@ -562,14 +574,6 @@ class Word2Vec(utils.SaveLoad):
         # print extra memory estimates
         report_values['memory'] = self.estimate_memory(vocab_size=len(retain_words))
 
-        if not dry_run:
-            new_vocab = {}
-            for w in retain_words:
-                new_vocab[w] = self.vocab[w]
-                new_vocab[w].index = len(self.index2word)
-                self.index2word.append(w)
-            self.vocab = new_vocab
-            logger.info("vocabulary min_count & sample applied, and indexes assigned")
         return report_values
 
     def finalize_vocab(self):
@@ -591,7 +595,6 @@ class Word2Vec(utils.SaveLoad):
             self.vocab[word] = v
         # set initial input/projection and hidden weights
         self.reset_weights()
-        sys.stderr.flush()
 
     def reset_from(self, other_model):
         """
@@ -646,6 +649,7 @@ class Word2Vec(utils.SaveLoad):
             work = matutils.zeros_aligned(self.layer1_size, dtype=REAL)  # per-thread private work memory
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
             return (work, neu1)
+
         def worker_one_job(job, inits):
             items, alpha = job
             if items is None:  # signal to finish
@@ -654,6 +658,7 @@ class Word2Vec(utils.SaveLoad):
             job_words = self._do_train_job(items, alpha, inits)
             progress_queue.put(job_words)  # report progress
             return True
+
         def worker_loop():
             """Train the model, lifting lists of sentences from the jobs queue."""
             init = worker_init()
@@ -663,7 +668,7 @@ class Word2Vec(utils.SaveLoad):
                     break
 
         start, next_report = default_timer(), 1.0
-        total_words = total_words or int(sum(v.count * (v.sample_int/2**32) for v in itervalues(self.vocab)) * 
+        total_words = total_words or int(sum(v.count * (v.sample_int/2**32) for v in itervalues(self.vocab)) *
                                          self.iter)
         # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         if self.workers > 0:
@@ -706,7 +711,6 @@ class Word2Vec(utils.SaveLoad):
                         logger.info("PROGRESS: at %.2f%% words, alpha %.05f, %.0f words/s",
                                     100.0 * word_count / total_words, est_alpha, word_count / elapsed)
                         next_report = elapsed + report_delay  # don't flood log, wait report_delay seconds
-                        sys.stderr.flush()
                 else:
                     # loop ended by job count; really done
                     break
@@ -1042,7 +1046,7 @@ class Word2Vec(utils.SaveLoad):
 
         Example::
 
-          >>> trained_model.most_similar_cosmul(positive=['baghdad','england'],negative=['london'])
+          >>> trained_model.most_similar_cosmul(positive=['baghdad', 'england'], negative=['london'])
           [(u'iraq', 0.8488819003105164), ...]
 
         .. [4] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
@@ -1181,14 +1185,14 @@ class Word2Vec(utils.SaveLoad):
         vocab_size = vocab_size or len(self.vocab)
         report = {}
         report['vocab'] = vocab_size * (700 if self.hs else 500)
-        report['syn0'] = vocab_size * self.vector_size * 4
+        report['syn0'] = vocab_size * self.vector_size * dtype(REAL).itemsize
         if self.hs:
-            report['syn1'] = vocab_size * self.layer1_size * 4
+            report['syn1'] = vocab_size * self.layer1_size * dtype(REAL).itemsize
         if self.negative:
-            report['syn1neg'] = vocab_size * self.layer1_size * 4
+            report['syn1neg'] = vocab_size * self.layer1_size * dtype(REAL).itemsize
         report['total'] = sum(report.values())
-        logger.info("estimated required memory for %i words and %i dimensions: %i bytes"
-                    % (vocab_size, self.vector_size, report['total']))
+        logger.info("estimated required memory for %i words and %i dimensions: %i bytes",
+                    vocab_size, self.vector_size, report['total'])
         return report
 
     @staticmethod
@@ -1268,7 +1272,7 @@ class Word2Vec(utils.SaveLoad):
         return sections
 
     def __str__(self):
-        return "Word2Vec(vocab=%s, size=%s, alpha=%s)" % (len(self.index2word), self.vector_size, self.alpha)
+        return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.index2word), self.vector_size, self.alpha)
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors, recalculable table
