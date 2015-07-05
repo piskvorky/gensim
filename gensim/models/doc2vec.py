@@ -688,7 +688,7 @@ class Doc2Vec(Word2Vec):
             segments.append('s%g' % self.sample)
         if self.workers > 1:
             segments.append('t%d' % self.workers)
-        return 'Doc2Vec(%s)' % ','.join(segments)
+        return '%s(%s)' % (self.__class__.__name__, ','.join(segments))
 
 
 class TaggedBrownCorpus(object):
