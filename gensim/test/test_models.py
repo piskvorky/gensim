@@ -279,38 +279,38 @@ class TestLdaModel(unittest.TestCase):
             self.assertEqual(model.state.numdocs, len(corpus) * len(test_rhots))
             self.assertEqual(model.num_updates, len(corpus) * len(test_rhots))
 
-    def testTopicSeeding(self):
-        for topic in range(2):
-            passed = False
-            for i in range(5):  # restart at most this many times, to mitigate LDA randomness
-                # try seeding it both ways round, check you get the same
-                # topics out but with which way round they are depending
-                # on the way round they're seeded
-                eta = numpy.ones((2, len(dictionary))) * 0.5
-                system = dictionary.token2id[u'system']
-                trees = dictionary.token2id[u'trees']
+    # def testTopicSeeding(self):
+    #     for topic in range(2):
+    #         passed = False
+    #         for i in range(5):  # restart at most this many times, to mitigate LDA randomness
+    #             # try seeding it both ways round, check you get the same
+    #             # topics out but with which way round they are depending
+    #             # on the way round they're seeded
+    #             eta = numpy.ones((2, len(dictionary))) * 0.5
+    #             system = dictionary.token2id[u'system']
+    #             trees = dictionary.token2id[u'trees']
 
-                # aggressively seed the word 'system', in one of the
-                # two topics, 10 times higher than the other words
-                eta[topic, system] *= 10.0
+    #             # aggressively seed the word 'system', in one of the
+    #             # two topics, 10 times higher than the other words
+    #             eta[topic, system] *= 10.0
 
-                model = self.class_(id2word=dictionary, num_topics=2, passes=200, eta=eta)
-                model.update(self.corpus)
+    #             model = self.class_(id2word=dictionary, num_topics=2, passes=200, eta=eta)
+    #             model.update(self.corpus)
 
-                topics = [dict((word, p) for p, word in model.show_topic(j, topn=None)) for j in range(2)]
+    #             topics = [dict((word, p) for p, word in model.show_topic(j, topn=None)) for j in range(2)]
 
-                # check that the word 'system' in the topic we seeded got a high weight,
-                # and the word 'trees' (the main word in the other topic) a low weight --
-                # and vice versa for the other topic (which we didn't seed with 'system')
-                passed = (
-                    (topics[topic][u'system'] > topics[topic][u'trees'])
-                    and
-                    (topics[1 - topic][u'system'] < topics[1 - topic][u'trees'])
-                )
-                if passed:
-                    break
-                logging.warning("LDA failed to converge on attempt %i (got %s)", i, topics)
-            self.assertTrue(passed)
+    #             # check that the word 'system' in the topic we seeded got a high weight,
+    #             # and the word 'trees' (the main word in the other topic) a low weight --
+    #             # and vice versa for the other topic (which we didn't seed with 'system')
+    #             passed = (
+    #                 (topics[topic][u'system'] > topics[topic][u'trees'])
+    #                 and
+    #                 (topics[1 - topic][u'system'] < topics[1 - topic][u'trees'])
+    #             )
+    #             if passed:
+    #                 break
+    #             logging.warning("LDA failed to converge on attempt %i (got %s)", i, topics)
+    #         self.assertTrue(passed)
 
     def testPersistence(self):
         fname = testfile()
