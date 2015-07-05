@@ -14,10 +14,8 @@ import logging
 import unittest
 import os
 import tempfile
-import itertools
-import bz2
-from six import iteritems, iterkeys
-from six.moves import xrange, zip as izip
+
+from six.moves import zip as izip
 from collections import namedtuple
 
 import numpy as np
@@ -25,7 +23,7 @@ import numpy as np
 from gensim import utils, matutils
 from gensim.models import doc2vec
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
@@ -39,7 +37,7 @@ class DocsLeeCorpus(object):
     def __iter__(self):
         with open(datapath('lee_background.cor')) as f:
             for i, line in enumerate(f):
-                yield doc2vec.TaggedDocument(utils.simple_preprocess(line),[self._tag(i)])
+                yield doc2vec.TaggedDocument(utils.simple_preprocess(line), [self._tag(i)])
 
 list_corpus = list(DocsLeeCorpus())
 
@@ -55,7 +53,7 @@ sentences = [
         ['graph', 'minors', 'survey']
     ]
 
-sentences = [doc2vec.TaggedDocument(words,[i]) for i, words in enumerate(sentences)]
+sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(sentences)]
 
 
 def testfile():
@@ -87,9 +85,9 @@ class TestDoc2VecModel(unittest.TestCase):
 
         model = doc2vec.Doc2Vec(min_count=1)
         model.build_vocab(corpus)
-        self.assertEqual(len(model.docvecs.doctag_syn0),300)
-        self.assertEqual(model.docvecs[0].shape,(300,))
-        self.assertRaises(KeyError,model.__getitem__,'_*0')
+        self.assertEqual(len(model.docvecs.doctag_syn0), 300)
+        self.assertEqual(model.docvecs[0].shape, (300,))
+        self.assertRaises(KeyError, model.__getitem__, '_*0')
 
     def test_string_doctags(self):
         """Test doc2vec doctag alternatives"""
@@ -99,10 +97,10 @@ class TestDoc2VecModel(unittest.TestCase):
 
         model = doc2vec.Doc2Vec(min_count=1)
         model.build_vocab(corpus)
-        self.assertEqual(len(model.docvecs.doctag_syn0),300)
-        self.assertEqual(model.docvecs[0].shape,(300,))
-        self.assertEqual(model.docvecs['_*0'].shape,(300,))
-        self.assertTrue(all(model.docvecs['_*0']==model.docvecs[0]))
+        self.assertEqual(len(model.docvecs.doctag_syn0), 300)
+        self.assertEqual(model.docvecs[0].shape, (300,))
+        self.assertEqual(model.docvecs['_*0'].shape, (300,))
+        self.assertTrue(all(model.docvecs['_*0'] == model.docvecs[0]))
         self.assertTrue(max(d.index for d in model.docvecs.doctags.values()) < len(model.docvecs.doctag_syn0))
 
     def test_empty_errors(self):
@@ -124,7 +122,7 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(fire1 in [match[0] for match in sims_to_infer])
 
         # fire8 should be top20 close to fire1
-        sims = model.docvecs.most_similar(fire1,topn=20)
+        sims = model.docvecs.most_similar(fire1, topn=20)
         self.assertTrue(fire2 in [match[0] for match in sims])
 
         # same sims should appear in lookup by vec as by index
@@ -135,10 +133,10 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(np.allclose(list(zip(*sims))[1], list(zip(*sims2))[1]))  # close-enough dists
 
         # tennis doc should be out-of-place among fire news
-        self.assertEqual(model.docvecs.doesnt_match([fire1, tennis1, fire2]), tennis1) 
+        self.assertEqual(model.docvecs.doesnt_match([fire1, tennis1, fire2]), tennis1)
 
         # fire docs should be closer than fire-tennis
-        self.assertTrue(model.docvecs.similarity(fire1,fire2) > model.docvecs.similarity(fire1,tennis1))
+        self.assertTrue(model.docvecs.similarity(fire1, fire2) > model.docvecs.similarity(fire1, tennis1))
 
     def test_training(self):
         """Test doc2vec training."""
@@ -159,19 +157,19 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=1, negative=0, min_count=2, iter=20)
         self.model_sanity(model)
 
-    def test_dmm_hs(self): 
+    def test_dmm_hs(self):
         """Test DM/mean doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=1, negative=0,
                                 min_count=2, iter=20)
         self.model_sanity(model)
 
-    def test_dms_hs(self): 
+    def test_dms_hs(self):
         """Test DM/sum doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=1, negative=0,
                                 min_count=2, iter=20)
         self.model_sanity(model)
 
-    def test_dmc_hs(self): 
+    def test_dmc_hs(self):
         """Test DM/concatenate doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_concat=1, size=24, window=4, hs=1, negative=0,
                                 min_count=2, iter=20)
@@ -182,24 +180,24 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec(list_corpus, dm=0, hs=0, negative=10, min_count=2, iter=20)
         self.model_sanity(model)
 
-    def test_dmm_neg(self): 
+    def test_dmm_neg(self):
         """Test DM/mean doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=0, negative=10,
                                 min_count=2, iter=20)
         self.model_sanity(model)
 
-    def test_dms_neg(self): 
+    def test_dms_neg(self):
         """Test DM/sum doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=0, negative=10,
                                 min_count=2, iter=20)
         self.model_sanity(model)
 
-    def test_dmc_neg(self): 
+    def test_dmc_neg(self):
         """Test DM/concatenate doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_concat=1, size=24, window=4, hs=0, negative=10,
                                 min_count=2, iter=20)
-        self.model_sanity(model)        
-        
+        self.model_sanity(model)
+
     def test_parallel(self):
         """Test doc2vec parallel training."""
         if doc2vec.FAST_VERSION < 0:  # don't test the plain NumPy version for parallelism (too slow)
@@ -254,19 +252,19 @@ class TestDoc2VecModel(unittest.TestCase):
 class ConcatenatedDoc2Vec(object):
     """
     Concatenation of multiple models for reproducing the Paragraph Vectors paper.
-    Models must have exactly-matching vocabulary and document IDs. (Models should 
+    Models must have exactly-matching vocabulary and document IDs. (Models should
     be trained separately; this wrapper just returns concatenated results.)
     """
     def __init__(self, models):
         self.models = models
-        if hasattr(models[0],'docvecs'): 
+        if hasattr(models[0], 'docvecs'):
             self.docvecs = ConcatenatedDocvecs([model.docvecs for model in models])
 
     def __getitem__(self, token):
         return np.concatenate([model[token] for model in self.models])
 
     def infer_vector(self, document, alpha=0.1, min_alpha=0.0001, steps=5):
-        return np.concatenate([model.infer_vector(document,alpha,min_alpha,steps) for model in self.models])
+        return np.concatenate([model.infer_vector(document, alpha, min_alpha, steps) for model in self.models])
 
     def train(self, ignored):
         pass  # train subcomponents individually
@@ -274,17 +272,17 @@ class ConcatenatedDoc2Vec(object):
 class ConcatenatedDocvecs(object):
     def __init__(self, models):
         self.models = models
-    
-    def __getitem__(self, token):
-        return np.concatenate([model[token] for model in self.models])        
 
-    
-SentimentDocument = namedtuple('SentimentDocument','words tags split sentiment')
+    def __getitem__(self, token):
+        return np.concatenate([model[token] for model in self.models])
+
+
+SentimentDocument = namedtuple('SentimentDocument', 'words tags split sentiment')
 
 
 def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
     """
-    Read and return documents from the Stanford Sentiment Treebank 
+    Read and return documents from the Stanford Sentiment Treebank
     corpus (Rotten Tomatoes reviews), from http://nlp.Stanford.edu/sentiment/
 
     Initialize the corpus from a given directory, where
@@ -348,7 +346,7 @@ def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
             if lowercase:
                 words = [word.lower() for word in words]
             (sentence_id, split_i) = info_by_sentence.get(text, (None, 0))
-            split = [None,'train','test','dev'][split_i]
+            split = [None, 'train', 'test', 'dev'][split_i]
             phrases[id] = SentimentPhrase(words, [id], split, sentiment, sentence_id)
 
     assert len([phrase for phrase in phrases if phrase.sentence_id is not None]) == len(info_by_sentence)  # all
