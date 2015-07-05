@@ -45,6 +45,7 @@ Thumbs.db
 .ropeproject
 .settings/
 .eggs
+cython_debug
 docs/src/_build/
 docs/_static
 dedan_gensim.tmproj
