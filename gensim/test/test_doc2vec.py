@@ -93,7 +93,9 @@ class TestDoc2VecModel(unittest.TestCase):
 
     def test_string_doctags(self):
         """Test doc2vec doctag alternatives"""
-        corpus = DocsLeeCorpus(True)
+        corpus = list(DocsLeeCorpus(True))
+        # force duplicated tags
+        corpus = corpus[0:10] + corpus
 
         model = doc2vec.Doc2Vec(min_count=1)
         model.build_vocab(corpus)
@@ -101,6 +103,7 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(model.docvecs[0].shape,(300,))
         self.assertEqual(model.docvecs['_*0'].shape,(300,))
         self.assertTrue(all(model.docvecs['_*0']==model.docvecs[0]))
+        self.assertTrue(max(d.index for d in model.docvecs.doctags.values()) < len(model.docvecs.doctag_syn0))
 
     def test_empty_errors(self):
         # no input => "RuntimeError: you must first build vocabulary before training the model"

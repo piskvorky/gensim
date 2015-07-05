@@ -95,6 +95,12 @@ cdef inline unsigned long long bisect_left(np.uint32_t *a, unsigned long long x,
             lo = mid + 1
     return lo
 
+# this quick & dirty RNG apparently matches Java's (non-Secure)Random
+# note this function side-effects next_random to set up the next number
+cdef inline unsigned long long random_int32(unsigned long long *next_random) nogil:
+    cdef unsigned long long this_random = next_random[0] >> 16
+    next_random[0] = (next_random[0] * <unsigned long long>25214903917ULL + 11) & 281474976710655ULL
+    return this_random
 
 cdef unsigned long long fast_sentence_sg_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
@@ -247,6 +253,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
 def train_sentence_sg(model, sentence, alpha, _work):
     cdef int hs = model.hs
     cdef int negative = model.negative
+    cdef int sample = (model.sample != 0)
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
@@ -272,6 +279,7 @@ def train_sentence_sg(model, sentence, alpha, _work):
     cdef REAL_t *syn1neg
     cdef np.uint32_t *cum_table
     cdef unsigned long long cum_table_len
+    # for sampling (negative and frequent-word downsampling)
     cdef unsigned long long next_random
 
     if hs:
@@ -281,25 +289,31 @@ def train_sentence_sg(model, sentence, alpha, _work):
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
         cum_table_len = len(model.cum_table)
+    if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
-    sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
 
-    for i in range(sentence_len):
-        word = sentence[i]
+    vlookup = model.vocab
+    i = 0
+    for token in sentence:
+        word = vlookup[token] if token in vlookup else None
         if word is None:
-            codelens[i] = 0
-        else:
-            indexes[i] = word.index
-            if hs:
-                codelens[i] = <int>len(word.code)
-                codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
-            else:
-                codelens[i] = 1
-            result += 1
+            continue  # leaving i unchanged/shortening sentence
+        if sample and word.sample_int < random_int32(&next_random):
+            continue
+        indexes[i] = word.index
+        if hs:
+            codelens[i] = <int>len(word.code)
+            codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+            points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+        result += 1
+        i += 1
+        if i == MAX_SENTENCE_LEN:
+            break  # TODO: log warning, tally overflow?
+    sentence_len = i
+
     # single randint() call avoids a big thread-sync slowdown
     for i, item in enumerate(model.random.randint(0, window, sentence_len)):
         reduced_windows[i] = item
@@ -307,8 +321,6 @@ def train_sentence_sg(model, sentence, alpha, _work):
     # release GIL & train on the sentence
     with nogil:
         for i in range(sentence_len):
-            if codelens[i] == 0:
-                continue
             j = i - window + reduced_windows[i]
             if j < 0:
                 j = 0
@@ -316,7 +328,7 @@ def train_sentence_sg(model, sentence, alpha, _work):
             if k > sentence_len:
                 k = sentence_len
             for j in range(j, k):
-                if j == i or codelens[j] == 0:
+                if j == i:
                     continue
                 if hs:
                     fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks)
@@ -329,6 +341,7 @@ def train_sentence_sg(model, sentence, alpha, _work):
 def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
     cdef int hs = model.hs
     cdef int negative = model.negative
+    cdef int sample = (model.sample != 0)
     cdef int cbow_mean = model.cbow_mean
 
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
@@ -356,6 +369,7 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
     cdef REAL_t *syn1neg
     cdef np.uint32_t *cum_table
     cdef unsigned long long cum_table_len
+    # for sampling (negative or frequent-word downsampling)
     cdef unsigned long long next_random
 
     if hs:
@@ -365,26 +379,32 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
         cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
         cum_table_len = len(model.cum_table)
+    if negative or sample:
         next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
     neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
-    sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
 
-    for i in range(sentence_len):
-        word = sentence[i]
+    vlookup = model.vocab
+    i = 0
+    for token in sentence:
+        word = vlookup[token] if token in vlookup else None
         if word is None:
-            codelens[i] = 0
-        else:
-            indexes[i] = word.index
-            if hs:
-                codelens[i] = <int>len(word.code)
-                codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
-            else:
-                codelens[i] = 1
-            result += 1
+            continue  # leaving i unchanged/shortening sentence
+        if sample and word.sample_int < random_int32(&next_random):
+            continue
+        indexes[i] = word.index
+        if hs:
+            codelens[i] = <int>len(word.code)
+            codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+            points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+        result += 1
+        i += 1
+        if i == MAX_SENTENCE_LEN:
+            break  # TODO: log warning, tally overflow?
+    sentence_len = i
+
     # single randint() call avoids a big thread-sync slowdown
     for i, item in enumerate(model.random.randint(0, window, sentence_len)):
         reduced_windows[i] = item
