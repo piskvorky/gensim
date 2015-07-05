@@ -477,8 +477,8 @@ class Doctag(namedtuple('Doctag', 'index, word_count, doc_count')):
 class Doc2Vec(Word2Vec):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
     def __init__(self, documents=None, size=300, alpha=0.025, window=8, min_count=5,
-                 sample=0, seed=1, workers=1, min_alpha=0.0001, dm=1, hs=1, negative=0,
-                 dbow_words=0, dm_mean=0, dm_concat=0, dm_tag_count=1,
+                 max_vocab_size=10000000, sample=0, seed=1, workers=1, min_alpha=0.0001,
+                 dm=1, hs=1, negative=0, dbow_words=0, dm_mean=0, dm_concat=0, dm_tag_count=1,
                  docvecs=None, docvecs_mapfile=None, comment=None, **kwargs):
         """
         Initialize the model from an iterable of `documents`. Each document is a
@@ -505,6 +505,9 @@ class Doc2Vec(Word2Vec):
 
         `min_count` = ignore all words with total frequency lower than this.
 
+        `max_vocab_size` = limit RAM during vocabulary building; if there are more unique
+        words than this, then prune the infrequent ones. Set to `None` for no limit.
+
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
                 default is 0 (off), useful value is 1e-5.
 
@@ -530,10 +533,11 @@ class Doc2Vec(Word2Vec):
         doc-vector training; default is 0 (faster training of doc-vectors only).
 
         """
-        super(Doc2Vec, self).__init__(size=size, alpha=alpha, window=window, min_count=min_count,
-                                      sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
-                                      sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean,
-                                      null_word=dm_concat, **kwargs)
+        super(Doc2Vec, self).__init__(
+            size=size, alpha=alpha, window=window, min_count=min_count, max_vocab_size=max_vocab_size,
+            sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
+            sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean,
+            null_word=dm_concat, **kwargs)
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
