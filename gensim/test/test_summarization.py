@@ -66,6 +66,7 @@ class TestSummarizationTest(unittest.TestCase):
             self.assertTrue(any(all(word in sentence for word in words)) for sentence in summary)
 
     def test_summary_from_unrelated_sentences(self):
+        # Tests that the summarization of a text with unrelated sentences does not raise an exception.
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
         with utils.smart_open(os.path.join(pre_path, "testsummarization_unrelated.txt"), mode="r") as f:
@@ -75,7 +76,7 @@ class TestSummarizationTest(unittest.TestCase):
 
         self.assertNotEqual(generated_summary, None)
 
-    def test_raises_exception_on_short_input_text(self):
+    def test_text_summarization_raises_exception_on_short_input_text(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
         with utils.smart_open(os.path.join(pre_path, "testsummarization_unrelated.txt"), mode="r") as f:
@@ -85,3 +86,39 @@ class TestSummarizationTest(unittest.TestCase):
         text = "\n".join(text.split('\n')[:8])
 
         self.assertRaises(RuntimeError, summarize, text)
+
+    def test_corpus_summarization_raises_exception_on_short_input_text(self):
+        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
+
+        with utils.smart_open(os.path.join(pre_path, "testsummarization_unrelated.txt"), mode="r") as f:
+            text = f.read()
+
+        # Keeps the first 8 sentences to make the text shorter.
+        sentences = text.split('\n')[:8]
+
+        # Generate the corpus.
+        tokens = [sentence.split() for sentence in sentences]
+        dictionary = Dictionary(tokens)
+        corpus = [dictionary.doc2bow(sentence_tokens) for sentence_tokens in tokens]
+
+        self.assertRaises(RuntimeError, summarize_corpus, corpus)
+
+    def test_corpus_summarization_ratio(self):
+        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
+
+        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
+            text = f.read()
+
+        # Generate the corpus.
+        sentences = text.split('\n')
+        tokens = [sentence.split() for sentence in sentences]
+        dictionary = Dictionary(tokens)
+        corpus = [dictionary.doc2bow(sentence_tokens) for sentence_tokens in tokens]
+
+        # Makes summaries of the text using different ratio parameters.
+        for x in range(1, 10):
+            ratio = x / float(10)
+            selected_docs = summarize_corpus(corpus, ratio=ratio)
+            expected_summary_length = int(len(corpus) * ratio)
+
+            self.assertEqual(len(selected_docs), expected_summary_length)
