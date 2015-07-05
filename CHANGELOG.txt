@@ -3,8 +3,12 @@ Changes
 
 0.11.2, 05/07/2015
 
-* complete overhaul of doc2vec (Gordon Mohr, #356)
-  - changes to doc2vec API, performance, cythonization, memory
+* complete API, performance, memory overhaul of doc2vec (Gordon Mohr, #356, #373, #380, #384)
+  - fast infer_vector(); optional memory-mapped doc vectors; memory savings with int doc IDs
+  - 'dbow_words' for combined DBOW & word skip-gram training; new 'dm_concat' mode
+  - multithreading & negative-sampling optimizations (also benefitting word2vec)
+  - API NOTE: doc vectors must now be accessed/compared through model's 'docvecs' field 
+    (eg: "model.docvecs['my_ID']" or "model.docvecs.most_similar('my_ID')") 
   - https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/doc2vec-IMDB.ipynb
 * new "text summarization" module (PR #324: Federico Lopez, Federico Barrios)
   - https://github.com/summanlp/docs/raw/master/articulo/articulo-en.pdf
@@ -23,7 +27,6 @@ Changes
 * changes to multipass LDA training (Christopher Corley, #298)
 * various doc improvements and fixes (Matti Lyra #331, Hongjoo Lee #334)
 * fixes and improvements to LDA (Christopher Corley #323)
-* lots of improvements, fixes, optimizations to word2vec and doc2vec (Gordon Mohr #384, #380, #373)
 
 0.11.0 = 0.11.1 = 0.11.1-1, 10/04/2015
 
