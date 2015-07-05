@@ -495,7 +495,6 @@ class Word2Vec(utils.SaveLoad):
                 min_reduce += 1
 
         total_words += sum(itervalues(vocab))
-
         logger.info("collected %i word types from a corpus of %i words and %i sentences" %
                     (len(vocab), total_words, sentence_no + 1))
         self.corpus_count = sentence_no + 1

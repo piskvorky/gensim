@@ -43,7 +43,7 @@ try:
 except ImportError:
     from Queue import Queue
 
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from timeit import default_timer
 
 from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
@@ -53,7 +53,7 @@ from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_sentence_sg
 from six.moves import xrange, zip
-from six import string_types, integer_types
+from six import string_types, integer_types, itervalues
 
 logger = logging.getLogger(__name__)
 
@@ -572,11 +572,14 @@ class Doc2Vec(Word2Vec):
         self.docvecs.borrow_from(other_model.docvecs)
         super(Doc2Vec, self).reset_from(other_model)
 
-    def _vocab_from(self, documents, progress_per=10000):
-        document_no, vocab = -1, {}
+    def scan_vocab(self, documents, progress_per=10000):
+        logger.info("collecting all words and their counts")
+        document_no = -1
         total_words = 0
+        min_reduce = 1
         interval_start = default_timer()
         interval_count = 0
+        vocab = defaultdict(int)
         for document_no, document in enumerate(documents):
             if document_no % progress_per == 0:
                 interval_rate = (total_words - interval_count) / (default_timer() - interval_start)
@@ -585,18 +588,22 @@ class Doc2Vec(Word2Vec):
                 interval_start = default_timer()
                 interval_count = total_words
             document_length = len(document.words)
+
             for tag in document.tags:
                 self.docvecs.note_doctag(tag, document_no, document_length)
+
             for word in document.words:
-                total_words += 1
-                if word in vocab:
-                    vocab[word].count += 1
-                else:
-                    vocab[word] = Vocab(count=1)
+                vocab[word] += 1
+
+            if self.max_vocab_size and len(vocab) > self.max_vocab_size:
+                total_words += utils.prune_vocab(vocab, min_reduce)
+                min_reduce += 1
+
+        total_words += sum(itervalues(vocab))
         logger.info("collected %i word types and %i unique tags from a corpus of %i examples and %i words" %
                     (len(vocab), len(self.docvecs), document_no + 1, total_words))
         self.corpus_count = document_no + 1
-        return vocab
+        self.raw_vocab = vocab
 
     def _do_train_job(self, job, alpha, inits):
         work, neu1 = inits
