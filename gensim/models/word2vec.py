@@ -80,7 +80,7 @@ try:
 except ImportError:
     from Queue import Queue, Empty
 
-from numpy import exp, dot, zeros, outer, random, dtype, float32 as REAL,\
+from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
     ndarray, empty, sum as np_sum, prod, ones, repeat as np_repeat
 
@@ -90,7 +90,6 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
-
 
 try:
     from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
@@ -221,6 +220,83 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
         l = len(input_word_indices)
         model.syn0[input_word_indices] += np_repeat(neu1e, l).reshape(l, model.vector_size) * model.syn0_lockf[input_word_indices][:, None]
     return neu1e
+
+# could move this import up to where train_* is imported, 
+# but for now just do it separately incase there are unforseen bugs in score_
+try:
+    from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
+except ImportError:
+    def score_sentence_sg(model, sentence, work=None):
+        """
+        Obtain likelihood score for a single sentence in a fitted skip-gram representaion.
+
+        The sentence is a list of Vocab objects (or None, when the corresponding
+        word is not in the vocabulary). Called internally from `Word2Vec.score()`.
+
+        This is the non-optimized, Python version. If you have cython installed, gensim
+        will use the optimized version from word2vec_inner instead.
+
+        """
+
+        log_prob_sentence = 0.0
+        if model.negative:
+            raise RuntimeError("scoring is only available for HS=True")
+
+        for pos, word in enumerate(sentence):
+            if word is None:
+                continue  # OOV word in the input sentence => skip
+
+            # now go over all words from the window, predicting each one in turn
+            start = max(0, pos - model.window)
+            for pos2, word2 in enumerate(sentence[start : pos + model.window + 1], start):
+                # don't train on OOV words and on the `word` itself
+                if word2 and not (pos2 == pos):
+                  log_prob_sentence += score_sg_pair(model, word, word2)
+
+        return log_prob_sentence
+
+    def score_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
+        """
+        Obtain likelihood score for a single sentence in a fitted CBOW representaion.
+
+        The sentence is a list of Vocab objects (or None, where the corresponding
+        word is not in the vocabulary. Called internally from `Word2Vec.score()`.
+
+        This is the non-optimized, Python version. If you have cython installed, gensim
+        will use the optimized version from word2vec_inner instead.
+
+        """
+
+        log_prob_sentence = 0.0
+        if model.negative:
+            raise RuntimeError("scoring is only available for HS=True")
+
+        for pos, word in enumerate(sentence):
+            if word is None:
+                continue  # OOV word in the input sentence => skip
+
+            start = max(0, pos - model.window)
+            window_pos = enumerate(sentence[start : pos + model.window + 1], start)
+            word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
+            l1 = np_sum(model.syn0[word2_indices], axis=0) # 1 x layer1_size
+            if word2_indices and model.cbow_mean:
+                l1 /= len(word2_indices)
+            log_prob_sentence += score_cbow_pair(model, word, word2_indices, l1)
+
+        return log_prob_sentence
+
+def score_sg_pair(model, word, word2):
+    l1 = model.syn0[word2.index]
+    l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
+    sgn = -1.0**word.code # ch function, 0-> 1, 1 -> -1
+    lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
+    return sum(lprob)
+
+def score_cbow_pair(model, word, word2_indices, l1):
+    l2a = model.syn1[word.point] # 2d matrix, codelen x layer1_size
+    sgn = -1.0**word.code # ch function, 0-> 1, 1 -> -1
+    lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
+    return sum(lprob)
 
 
 class Vocab(object):
@@ -643,6 +719,89 @@ class Word2Vec(utils.SaveLoad):
         self.total_train_time += elapsed
         self.clear_sims()
         return word_count
+
+    def _score_job_words(self, sentence, work, neu1):
+        if self.sg:
+            return score_sentence_sg(self, sentence, work) 
+        else:
+            return score_sentence_cbow(self, sentence, work, neu1) 
+
+    # basics copied from the train() function
+    def score(self, sentences, total_sentences=None, chunksize=100):
+        """
+        Score the log probability for a sequence of sentences (can be a once-only generator stream).
+        Each sentence must be a list of unicode strings.
+        This does not change the fitted model in any way (see Word2Vec.train() for that)
+
+        See the article by Taddy [1] for examples of how to use such scores in document classification.
+
+        .. [1] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
+
+        """
+        if FAST_VERSION < 0:
+            import warnings
+            warnings.warn("C extension compilation failed, scoring will be slow. Install a C compiler and reinstall gensim for fastness.")
+
+        logger.info("scoring sentences with %i workers on %i vocabulary and %i features, "
+            "using 'skipgram'=%s 'hierarchical softmax'=%s 'subsample'=%s and 'negative sampling'=%s" %
+            (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative))
+
+        if not self.vocab:
+            raise RuntimeError("you must first build vocabulary before scoring new data")
+
+        if not self.hs:
+            raise RuntimeError("we have only implemented score for hs")
+
+        start, next_report = time.time(), [1.0]
+        jobs = Queue(maxsize=2 * self.workers)  # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
+        lock = threading.Lock()  # for shared state (scores, log reports...)
+        total_sentences = total_sentences or int(1e9)
+        sentence_scores = matutils.zeros_aligned(total_sentences, dtype=REAL)
+        sentence_count = [0] 
+
+        def worker_score():
+            """score the enumerated sentences, lifting lists of sentences from the jobs queue."""
+            work = zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
+            neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
+
+            while True:
+                job = jobs.get()
+                if job is None:  # data finished, exit
+                    break
+                ns = 0
+                for (id,sentence) in job:
+                	sentence_scores[id] = self._score_job_words(sentence, work, neu1)
+                	ns += 1
+
+                with lock:
+                    sentence_count[0] += ns
+                    elapsed = time.time() - start
+                    if elapsed >= next_report[0]:
+                        logger.info("PROGRESS: at %i sentences,  %.0f sentences/s" %
+                            (sentence_count[0], sentence_count[0] / elapsed if elapsed else 0.0))
+                        next_report[0] = elapsed + 1.0  # don't flood the log, wait at least a second between progress reports
+
+        workers = [threading.Thread(target=worker_score) for _ in xrange(self.workers)]
+        for thread in workers:
+            thread.daemon = True  # make interrupting the process with ctrl+c easier
+            thread.start()
+
+        # convert input strings to Vocab objects and start filling the jobs queue
+        for job_no, job in enumerate(utils.grouper(enumerate(self._prepare_items(sentences)), chunksize)):
+            logger.debug("putting job #%i in the queue, qsize=%i" % (job_no, jobs.qsize()))
+            jobs.put(job)
+        logger.info("reached the end of input; waiting to finish %i outstanding jobs" % jobs.qsize())
+        for _ in xrange(self.workers):
+            jobs.put(None)  # give the workers heads up that they can finish -- no more work!
+
+        for thread in workers:
+            thread.join()
+
+        elapsed = time.time() - start
+        logger.info("scoring %i sentences took %.1fs, %.0f sentences/s" %
+            (sentence_count[0], elapsed, sentence_count[0] / elapsed if elapsed else 0.0))
+        self.syn0norm = None
+        return sentence_scores[:sentence_count[0]]
 
     def clear_sims(self):
         self.syn0norm = None
