@@ -1,11 +1,29 @@
 Changes
 =======
 
-0.11.2
+0.11.2, 05/07/2015
 
+* complete overhaul of doc2vec (Gordon Mohr, #356)
+  - changes to doc2vec API, performance, cythonization, memory
+  - https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/doc2vec-IMDB.ipynb
+* new "text summarization" module (PR #324: Federico Lopez, Federico Barrios)
+  - https://github.com/summanlp/docs/raw/master/articulo/articulo-en.pdf
 * new matutils.argsort with partial sort
-  - massive speedups to all similarity queries (word2vec, Similarity classes...)
-* word2vec supports "encoding" parameter when loading from C format
+  - performance speedups to all similarity queries (word2vec, Similarity classes...)
+* word2vec can compute likelihood scores for classification (Mat Addy, #358)
+  - http://arxiv.org/abs/1504.07295
+  - http://nbviewer.ipython.org/github/taddylab/deepir/blob/master/w2v-inversion.ipynb
+* word2vec supports "encoding" parameter when loading from C format, for non-utf8 models
+* fixes to Python3 compatibility (Pavel Kalaidin #330, S-Eugene #369)
+* enhancements to save/load format (Liang Bo Wang #363, Gordon Mohr #356)
+  - pickle defaults to protocol=2 for better py3 compatibility
+* fixes and improvements to wiki parsing (Lukas Elmer #357, Excellent5 #333)
+* fix to phrases scoring (Ikuya Yamada, #353)
+* speed up of phrases generation (Dave Challis, #349)
+* changes to multipass LDA training (Christopher Corley, #298)
+* various doc improvements and fixes (Matti Lyra #331, Hongjoo Lee #334)
+* fixes and improvements to LDA (Christopher Corley #323)
+* lots of improvements, fixes, optimizations to word2vec and doc2vec (Gordon Mohr #384, #380, #373)
 
 0.11.0 = 0.11.1 = 0.11.1-1, 10/04/2015
 
