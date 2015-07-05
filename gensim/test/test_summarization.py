@@ -16,23 +16,54 @@ import os.path
 import unittest
 
 from gensim import utils
-from gensim.summarization import summarize
+from gensim.corpora import Dictionary
+from gensim.summarization import summarize, summarize_corpus
 
 
 class TestSummarizationTest(unittest.TestCase):
 
-    def test_summarization(self):
+    def test_text_summarization(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
         with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
             text = f.read()
 
+        # Makes a summary of the text.
         generated_summary = summarize(text)
 
+        # To be compared to the method reference.
         with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.summ.txt"), mode="r") as f:
             summary = f.read()
 
         self.assertEquals(generated_summary, summary)
+
+    def test_corpus_summarization(self):
+        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
+
+        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
+            text = f.read()
+
+        # Generate the corpus.
+        sentences = text.split("\n")
+        tokens = [sentence.split() for sentence in sentences]
+        dictionary = Dictionary(tokens)
+        corpus = [dictionary.doc2bow(sentence_tokens) for sentence_tokens in tokens]
+
+        # Extract the most important documents.
+        selected_documents = summarize_corpus(corpus)
+
+        # They are compared to the method reference.
+        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.summ.txt"), mode="r") as f:
+            summary = f.read()
+            summary = summary.split('\n')
+
+        # Each sentence in the document selection has to be in the model summary.
+        for doc_number, document in enumerate(selected_documents):
+            # Retrieves all words from the document.
+            words = [dictionary[token_id] for (token_id, count) in document]
+
+            # Asserts that all of them are in a sentence from the model reference.
+            self.assertTrue(any(all(word in sentence for word in words)) for sentence in summary)
 
     def test_summary_from_unrelated_sentences(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -54,4 +85,3 @@ class TestSummarizationTest(unittest.TestCase):
         text = "\n".join(text.split('\n')[:8])
 
         self.assertRaises(RuntimeError, summarize, text)
-        

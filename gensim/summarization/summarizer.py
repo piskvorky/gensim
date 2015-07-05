@@ -134,6 +134,9 @@ def summarize_corpus(corpus, ratio=0.2):
     which determines how many documents will be chosen for the summary
     (defaults at 20% of the number of documents of the corpus).
 
+    The most important documents are returned as a list sorted by the
+    document score, highest first.
+
     """
     hashable_corpus = _build_hasheable_corpus(corpus)
 
