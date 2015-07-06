@@ -115,8 +115,7 @@ class TestWord2VecModel(unittest.TestCase):
         model.build_vocab(corpus)
         self.assertTrue(len(model.vocab) == 6981)
         # with min_count=1, we're not throwing away anything, so make sure the word counts add up to be the entire corpus
-        self.assertEqual(sum(v.count for v in model.vocab.values()),
-                         total_words)
+        self.assertEqual(sum(v.count for v in model.vocab.values()), total_words)
         # make sure the binary codes are correct
         numpy.allclose(model.vocab['the'].code, [1, 1, 0, 0])
 

@@ -1075,3 +1075,21 @@ def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
     data = [mock_data_row(dim=dim, prob_nnz=prob_nnz, lam=lam)
             for _ in xrange(n_items)]
     return data
+
+
+def prune_vocab(vocab, min_reduce):
+    """
+    Remove all entries from the `vocab` dictionary with count smaller than `min_reduce`.
+
+    Modifies `vocab` in place, returns the sum of all counts that were pruned.
+
+    """
+    result = 0
+    old_len = len(vocab)
+    for w in list(vocab):  # make a copy of dict's keys
+        if vocab[w] <= min_reduce:
+            result += vocab[w]
+            del vocab[w]
+    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)",
+                old_len - len(vocab), min_reduce, old_len, len(vocab))
+    return result

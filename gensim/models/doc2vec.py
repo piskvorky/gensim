@@ -43,7 +43,7 @@ try:
 except ImportError:
     from Queue import Queue
 
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from timeit import default_timer
 
 from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
@@ -53,7 +53,7 @@ from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_sentence_sg
 from six.moves import xrange, zip
-from six import string_types, integer_types
+from six import string_types, integer_types, itervalues
 
 logger = logging.getLogger(__name__)
 
@@ -477,8 +477,8 @@ class Doctag(namedtuple('Doctag', 'index, word_count, doc_count')):
 class Doc2Vec(Word2Vec):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
     def __init__(self, documents=None, size=300, alpha=0.025, window=8, min_count=5,
-                 sample=0, seed=1, workers=1, min_alpha=0.0001, dm=1, hs=1, negative=0,
-                 dbow_words=0, dm_mean=0, dm_concat=0, dm_tag_count=1,
+                 max_vocab_size=10000000, sample=0, seed=1, workers=1, min_alpha=0.0001,
+                 dm=1, hs=1, negative=0, dbow_words=0, dm_mean=0, dm_concat=0, dm_tag_count=1,
                  docvecs=None, docvecs_mapfile=None, comment=None, **kwargs):
         """
         Initialize the model from an iterable of `documents`. Each document is a
@@ -505,6 +505,9 @@ class Doc2Vec(Word2Vec):
 
         `min_count` = ignore all words with total frequency lower than this.
 
+        `max_vocab_size` = limit RAM during vocabulary building; if there are more unique
+        words than this, then prune the infrequent ones. Set to `None` for no limit.
+
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
                 default is 0 (off), useful value is 1e-5.
 
@@ -530,10 +533,11 @@ class Doc2Vec(Word2Vec):
         doc-vector training; default is 0 (faster training of doc-vectors only).
 
         """
-        super(Doc2Vec, self).__init__(size=size, alpha=alpha, window=window, min_count=min_count,
-                                      sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
-                                      sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean,
-                                      null_word=dm_concat, **kwargs)
+        super(Doc2Vec, self).__init__(
+            size=size, alpha=alpha, window=window, min_count=min_count, max_vocab_size=max_vocab_size,
+            sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
+            sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean,
+            null_word=dm_concat, **kwargs)
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
@@ -572,31 +576,38 @@ class Doc2Vec(Word2Vec):
         self.docvecs.borrow_from(other_model.docvecs)
         super(Doc2Vec, self).reset_from(other_model)
 
-    def _vocab_from(self, documents, progress_per=10000):
-        document_no, vocab = -1, {}
+    def scan_vocab(self, documents, progress_per=10000):
+        logger.info("collecting all words and their counts")
+        document_no = -1
         total_words = 0
+        min_reduce = 1
         interval_start = default_timer()
         interval_count = 0
+        vocab = defaultdict(int)
         for document_no, document in enumerate(documents):
             if document_no % progress_per == 0:
                 interval_rate = (total_words - interval_count) / (default_timer() - interval_start)
-                logger.info("PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags" %
-                            (document_no, total_words, interval_rate, len(vocab), len(self.docvecs)))
+                logger.info("PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags",
+                            document_no, sum(itervalues(vocab)) + total_words, interval_rate, len(vocab), len(self.docvecs))
                 interval_start = default_timer()
                 interval_count = total_words
             document_length = len(document.words)
+
             for tag in document.tags:
                 self.docvecs.note_doctag(tag, document_no, document_length)
+
             for word in document.words:
-                total_words += 1
-                if word in vocab:
-                    vocab[word].count += 1
-                else:
-                    vocab[word] = Vocab(count=1)
-        logger.info("collected %i word types and %i unique tags from a corpus of %i examples and %i words" %
-                    (len(vocab), len(self.docvecs), document_no + 1, total_words))
+                vocab[word] += 1
+
+            if self.max_vocab_size and len(vocab) > self.max_vocab_size:
+                total_words += utils.prune_vocab(vocab, min_reduce)
+                min_reduce += 1
+
+        total_words += sum(itervalues(vocab))
+        logger.info("collected %i word types and %i unique tags from a corpus of %i examples and %i words",
+                    len(vocab), len(self.docvecs), document_no + 1, total_words)
         self.corpus_count = document_no + 1
-        return vocab
+        self.raw_vocab = vocab
 
     def _do_train_job(self, job, alpha, inits):
         work, neu1 = inits
@@ -688,7 +699,7 @@ class Doc2Vec(Word2Vec):
             segments.append('s%g' % self.sample)
         if self.workers > 1:
             segments.append('t%d' % self.workers)
-        return 'Doc2Vec(%s)' % ','.join(segments)
+        return '%s(%s)' % (self.__class__.__name__, ','.join(segments))
 
 
 class TaggedBrownCorpus(object):
