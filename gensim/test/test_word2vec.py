@@ -148,7 +148,8 @@ class TestWord2VecModel(unittest.TestCase):
         # test querying for "most similar" by vector
         graph_vector = model.syn0norm[model.vocab['graph'].index]
         sims2 = model.most_similar(positive=[graph_vector], topn=11)
-        self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is 'graph' itself
+        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+        self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1)
@@ -189,7 +190,8 @@ class TestWord2VecModel(unittest.TestCase):
         # test querying for "most similar" by vector
         graph_vector = model.syn0norm[model.vocab['graph'].index]
         sims2 = model.most_similar(positive=[graph_vector], topn=11)
-        self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is 'graph' itself
+        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+        self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, sg=0)
@@ -211,7 +213,8 @@ class TestWord2VecModel(unittest.TestCase):
         # test querying for "most similar" by vector
         graph_vector = model.syn0norm[model.vocab['graph'].index]
         sims2 = model.most_similar(positive=[graph_vector], topn=11)
-        self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is 'graph' itself
+        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+        self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=0, negative=2)
@@ -233,7 +236,8 @@ class TestWord2VecModel(unittest.TestCase):
         # test querying for "most similar" by vector
         graph_vector = model.syn0norm[model.vocab['graph'].index]
         sims2 = model.most_similar(positive=[graph_vector], topn=11)
-        self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is 'graph' itself
+        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+        self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, sg=0, hs=0, negative=2)
