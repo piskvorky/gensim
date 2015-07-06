@@ -119,11 +119,11 @@ class TestDoc2VecModel(unittest.TestCase):
         # inferred vector should be top10 close to bulk-trained one
         doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
         sims_to_infer = model.docvecs.most_similar([doc0_inferred])
-        self.assertTrue(fire1 in [match[0] for match in sims_to_infer])
+        self.assertTrue(fire1 in [docid for docid, sim in sims_to_infer])
 
         # fire8 should be top20 close to fire1
         sims = model.docvecs.most_similar(fire1, topn=20)
-        self.assertTrue(fire2 in [match[0] for match in sims])
+        self.assertTrue(fire2 in [docid for docid, sim in sims])
 
         # same sims should appear in lookup by vec as by index
         doc0_vec = model.docvecs[fire1]
