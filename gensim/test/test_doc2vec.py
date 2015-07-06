@@ -355,13 +355,13 @@ def read_su_sentiment_rotten_tomatoes(dirname, lowercase=True):
     assert len([phrase for phrase in phrases if phrase.split == 'test']) == 2210  # 'test'
     assert len([phrase for phrase in phrases if phrase.split == 'dev']) == 1100  # 'dev'
 
-    logging.info("loaded corpus with %i sentences and %i phrases from %s"
-                % (len(info_by_sentence), len(phrases), dirname))
+    logging.info("loaded corpus with %i sentences and %i phrases from %s",
+                 len(info_by_sentence), len(phrases), dirname)
 
     return phrases
 
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
-    logging.info("using optimization %s" % doc2vec.FAST_VERSION)
+    logging.info("using optimization %s", doc2vec.FAST_VERSION)
     unittest.main()
