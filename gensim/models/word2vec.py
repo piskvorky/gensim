@@ -485,8 +485,8 @@ class Word2Vec(utils.SaveLoad):
         vocab = defaultdict(int)
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % progress_per == 0:
-                logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
-                            (sentence_no, total_words, len(vocab)))
+                logger.info("PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
+                            sentence_no, sum(itervalues(vocab)) + total_words, len(vocab))
             for word in sentence:
                 vocab[word] += 1
 
@@ -495,8 +495,8 @@ class Word2Vec(utils.SaveLoad):
                 min_reduce += 1
 
         total_words += sum(itervalues(vocab))
-        logger.info("collected %i word types from a corpus of %i words and %i sentences" %
-                    (len(vocab), total_words, sentence_no + 1))
+        logger.info("collected %i word types from a corpus of %i words and %i sentences",
+                    len(vocab), total_words, sentence_no + 1)
         self.corpus_count = sentence_no + 1
         self.raw_vocab = vocab
 
