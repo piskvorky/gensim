@@ -89,6 +89,11 @@ class TestWord2VecModel(unittest.TestCase):
         binary_model_with_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), testvocab, binary=True)
         self.assertEqual(model.vocab['human'].count, binary_model_with_vocab.vocab['human'].count)
 
+    def test_zero_workers_mode(self):
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model0 = word2vec.Word2Vec(sentences, min_count=1, workers=0)
+        self.models_equal(model,model0)
+
     def testLargeMmap(self):
         """Test storing/loading the entire model."""
         model = word2vec.Word2Vec(sentences, min_count=1)
@@ -148,6 +153,25 @@ class TestWord2VecModel(unittest.TestCase):
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1)
         self.models_equal(model, model2)
+
+
+    def testLocking(self):
+        """Test word2vec training doesn't change locked vectors."""
+        corpus = LeeCorpus()
+        # build vocabulary, don't train yet
+        for sg in range(2):  # test both cbow and sg
+            model = word2vec.Word2Vec(size=4, hs=1, negative=5, min_count=1, sg=sg, window=5)
+            model.build_vocab(corpus)
+
+            # remember two vectors
+            locked0 = numpy.copy(model.syn0[0])
+            unlocked1 = numpy.copy(model.syn0[1])
+            # lock the vector in slot 0 against change
+            model.syn0_lockf[0] = 0.0
+
+            model.train(corpus)
+            self.assertFalse((unlocked1==model.syn0[1]).all())  # unlocked vector should vary
+            self.assertTrue((locked0==model.syn0[0]).all())     # locked vector should not vary
 
     def testTrainingCbow(self):
         """Test CBOW word2vec training."""

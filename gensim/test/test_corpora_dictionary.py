@@ -92,20 +92,52 @@ class TestDictionary(unittest.TestCase):
 
     def testBuild(self):
         d = Dictionary(self.texts)
-        expected = {0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 5: 3, 6: 2, 7: 3, 8: 2,
-                9: 3, 10: 3, 11: 2}
-        self.assertEqual(d.dfs, expected)
 
-        expected = {'computer': 0, 'eps': 8, 'graph': 10, 'human': 1,
-                'interface': 2, 'minors': 11, 'response': 3, 'survey': 4,
-                'system': 5, 'time': 6, 'trees': 9, 'user': 7}
-        self.assertEqual(d.token2id, expected)
+        # Since we don't specify the order in which dictionaries are built,
+        # we cannot reliably test for the mapping; only the keys and values.
+        expected_keys = list(range(12))
+        expected_values = [2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3]
+        self.assertEqual(sorted(d.dfs.keys()), expected_keys)
+        self.assertEqual(sorted(d.dfs.values()), expected_values)
+
+        expected_keys = sorted(['computer', 'eps', 'graph', 'human',
+                                'interface', 'minors', 'response', 'survey',
+                                'system', 'time', 'trees', 'user'])
+        expected_values = list(range(12))
+        self.assertEqual(sorted(d.token2id.keys()), expected_keys)
+        self.assertEqual(sorted(d.token2id.values()), expected_values)
+
+    def testMerge(self):
+        d = Dictionary(self.texts)
+        f = Dictionary(self.texts[:3])
+        g = Dictionary(self.texts[3:])
+
+        f.merge_with(g)
+        self.assertEqual(sorted(d.token2id.keys()), sorted(f.token2id.keys()))
 
     def testFilter(self):
         d = Dictionary(self.texts)
         d.filter_extremes(no_below=2, no_above=1.0, keep_n=4)
         expected = {0: 3, 1: 3, 2: 3, 3: 3}
         self.assertEqual(d.dfs, expected)
+
+    def testFilterTokens(self):
+        self.maxDiff = 10000
+        d = Dictionary(self.texts)
+
+        removed_word = d[0]
+        d.filter_tokens([0])
+
+        expected = {'computer': 0, 'eps': 8, 'graph': 10, 'human': 1,
+                'interface': 2, 'minors': 11, 'response': 3, 'survey': 4,
+                'system': 5, 'time': 6, 'trees': 9, 'user': 7}
+        del expected[removed_word]
+        self.assertEqual(sorted(d.token2id.keys()), sorted(expected.keys()))
+
+        expected[removed_word] = len(expected)
+        d.add_documents([[removed_word]])
+        self.assertEqual(sorted(d.token2id.keys()), sorted(expected.keys()))
+
 
     def test_doc2bow(self):
         d = Dictionary([["žluťoučký"], ["žluťoučký"]])
