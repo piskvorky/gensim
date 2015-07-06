@@ -477,7 +477,7 @@ class Doctag(namedtuple('Doctag', 'index, word_count, doc_count')):
 class Doc2Vec(Word2Vec):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
     def __init__(self, documents=None, size=300, alpha=0.025, window=8, min_count=5,
-                 max_vocab_size=10000000, sample=0, seed=1, workers=1, min_alpha=0.0001,
+                 max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
                  dm=1, hs=1, negative=0, dbow_words=0, dm_mean=0, dm_concat=0, dm_tag_count=1,
                  docvecs=None, docvecs_mapfile=None, comment=None, **kwargs):
         """
@@ -506,7 +506,8 @@ class Doc2Vec(Word2Vec):
         `min_count` = ignore all words with total frequency lower than this.
 
         `max_vocab_size` = limit RAM during vocabulary building; if there are more unique
-        words than this, then prune the infrequent ones. Set to `None` for no limit.
+        words than this, then prune the infrequent ones. Every 10 million word types
+        need about 1GB of RAM. Set to `None` for no limit (default).
 
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
                 default is 0 (off), useful value is 1e-5.

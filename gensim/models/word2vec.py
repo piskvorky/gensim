@@ -330,7 +330,7 @@ class Word2Vec(utils.SaveLoad):
     """
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
-            max_vocab_size=10000000, sample=0, seed=1, workers=1, min_alpha=0.0001,
+            max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
             sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
@@ -359,7 +359,8 @@ class Word2Vec(utils.SaveLoad):
         `min_count` = ignore all words with total frequency lower than this.
 
         `max_vocab_size` = limit RAM during vocabulary building; if there are more unique
-        words than this, then prune the infrequent ones. Set to `None` for no limit.
+        words than this, then prune the infrequent ones. Every 10 million word types
+        need about 1GB of RAM. Set to `None` for no limit (default).
 
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
             default is 0 (off), useful value is 1e-5.
@@ -466,14 +467,14 @@ class Word2Vec(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i" % max_depth)
 
-    def build_vocab(self, sentences):
+    def build_vocab(self, sentences, keep_raw_vocab=False):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
 
         """
         self.scan_vocab(sentences)  # initial survey
-        self.scale_vocab()  # trim by min_count & precalculate downsampling
+        self.scale_vocab(keep_raw_vocab)  # trim by min_count & precalculate downsampling
         self.finalize_vocab()  # build tables & arrays
 
     def scan_vocab(self, sentences, progress_per=10000):
@@ -500,7 +501,7 @@ class Word2Vec(utils.SaveLoad):
         self.corpus_count = sentence_no + 1
         self.raw_vocab = vocab
 
-    def scale_vocab(self, min_count=None, sample=None, dry_run=False):
+    def scale_vocab(self, min_count=None, sample=None, dry_run=False, keep_raw_vocab=False):
         """
         Apply vocabulary settings for `min_count` (discarding less-frequent words)
         and `sample` (controlling the downsampling of more-frequent words).
@@ -509,6 +510,9 @@ class Word2Vec(utils.SaveLoad):
         report the size of the retained vocabulary, effective corpus length, and
         estimated memory requirements. Results are both printed via logging and
         returned as a dict.
+
+        Delete the raw vocabulary after the scaling is done to free up RAM,
+        unless `keep_raw_vocab` is set.
 
         """
         min_count = min_count or self.min_count
@@ -562,6 +566,11 @@ class Word2Vec(utils.SaveLoad):
                 downsample_total += v
             if not dry_run:
                 self.vocab[w].sample_int = int(round(word_probability * 2**32))
+
+        if not dry_run and not keep_raw_vocab:
+            logger.info("deleting the raw counts dictionary of %i items", len(self.raw_vocab))
+            self.raw_vocab = defaultdict(int)
+
         logger.info("sample=%g downsamples %i most-common words", sample, downsample_unique)
         logger.info("downsampling leaves estimated %i word corpus (%.1f%% of prior %i)",
                     downsample_total, downsample_total * 100.0 / max(retain_total, 1), retain_total)
