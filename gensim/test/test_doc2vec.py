@@ -128,7 +128,7 @@ class TestDoc2VecModel(unittest.TestCase):
         # same sims should appear in lookup by vec as by index
         doc0_vec = model.docvecs[fire1]
         sims2 = model.docvecs.most_similar(positive=[doc0_vec], topn=21)
-        sims2 = sims2[1:] # ignore first element of sims2, which is doc itself
+        sims2 = [(id, sim) for id, sim in sims2 if id != fire1]  # ignore the doc itself
         self.assertEqual(list(zip(*sims))[0], list(zip(*sims2))[0])  # same doc ids
         self.assertTrue(np.allclose(list(zip(*sims))[1], list(zip(*sims2))[1]))  # close-enough dists
 
