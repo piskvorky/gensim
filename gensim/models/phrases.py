@@ -152,7 +152,7 @@ class Phrases(interfaces.TransformationABC):
                 vocab[word] += 1
 
             if len(vocab) > max_vocab_size:
-                prune_vocab(vocab, min_reduce)
+                utils.prune_vocab(vocab, min_reduce)
                 min_reduce += 1
 
         logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
@@ -242,20 +242,6 @@ class Phrases(interfaces.TransformationABC):
                 new_s.append(last_token)
 
         return [utils.to_unicode(w) for w in new_s]
-
-
-def prune_vocab(vocab, min_reduce):
-    """
-    Remove all entries from the `vocab` dictionary with count smaller than `min_reduce`.
-    Modifies `vocab` in place.
-
-    """
-    old_len = len(vocab)
-    for w in list(vocab):  # make a copy of dict's keys
-        if vocab[w] <= min_reduce:
-            del vocab[w]
-    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)" %
-        (old_len - len(vocab), min_reduce, old_len, len(vocab)))
 
 
 if __name__ == '__main__':
