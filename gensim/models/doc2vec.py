@@ -587,8 +587,8 @@ class Doc2Vec(Word2Vec):
         for document_no, document in enumerate(documents):
             if document_no % progress_per == 0:
                 interval_rate = (total_words - interval_count) / (default_timer() - interval_start)
-                logger.info("PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags" %
-                            (document_no, total_words, interval_rate, len(vocab), len(self.docvecs)))
+                logger.info("PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags",
+                            document_no, sum(itervalues(vocab)) + total_words, interval_rate, len(vocab), len(self.docvecs))
                 interval_start = default_timer()
                 interval_count = total_words
             document_length = len(document.words)
@@ -604,8 +604,8 @@ class Doc2Vec(Word2Vec):
                 min_reduce += 1
 
         total_words += sum(itervalues(vocab))
-        logger.info("collected %i word types and %i unique tags from a corpus of %i examples and %i words" %
-                    (len(vocab), len(self.docvecs), document_no + 1, total_words))
+        logger.info("collected %i word types and %i unique tags from a corpus of %i examples and %i words",
+                    len(vocab), len(self.docvecs), document_no + 1, total_words)
         self.corpus_count = document_no + 1
         self.raw_vocab = vocab
 
