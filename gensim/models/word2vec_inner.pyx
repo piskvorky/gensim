@@ -576,8 +576,9 @@ cdef void score_pair_cbow_hs(
         else:
             count += ONEF
             our_saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
-    if cbow_mean and count > (<REAL_t>0.5):
+    if count > (<REAL_t>0.5):
         inv_count = ONEF/count
+    if cbow_mean:
         sscal(&size, &inv_count, neu1, &ONE)
 
     for b in range(codelens[i]):
