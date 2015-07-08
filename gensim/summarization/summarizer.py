@@ -19,6 +19,7 @@ INPUT_MIN_LENGTH = 10
 
 logger = logging.getLogger(__name__)
 
+
 def _set_graph_edge_weights(graph):
     documents = graph.nodes()
     weights = _bm25_weights(documents)
@@ -147,6 +148,10 @@ def summarize_corpus(corpus, ratio=0.2):
     if len(corpus) < INPUT_MIN_LENGTH:
         logger.warning("Input corpus is expected to have at least " + str(INPUT_MIN_LENGTH) + " documents.")
 
+    # If the corpus is empty, the function ends.
+    if len(corpus) == 0:
+        return
+
     graph = _build_graph(hashable_corpus)
     _set_graph_edge_weights(graph)
     _remove_unreachable_nodes(graph)
@@ -184,6 +189,10 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
     # Warns if the text is too short.
     if len(sentences) < INPUT_MIN_LENGTH:
         logger.warning("Input text is expected to have at least " + str(INPUT_MIN_LENGTH) + " sentences.")
+
+    # If no sentence could be identified, the function ends.
+    if len(sentences) == 0:
+        return
 
     corpus = _build_corpus(sentences)
 

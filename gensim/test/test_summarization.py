@@ -103,6 +103,12 @@ class TestSummarizationTest(unittest.TestCase):
 
         self.assertIsNotNone(summarize_corpus(corpus))
 
+    def test_empty_text_summarization_none(self):
+        self.assertIsNone(summarize(""))
+
+    def test_empty_corpus_summarization_is_none(self):
+        self.assertIsNone(summarize_corpus([]))
+
     def test_corpus_summarization_ratio(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
