@@ -35,7 +35,7 @@ class TestSummarizationTest(unittest.TestCase):
         with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.summ.txt"), mode="r") as f:
             summary = f.read()
 
-        self.assertEquals(generated_summary, summary)
+        self.assertEqual(generated_summary, summary)
 
     def test_corpus_summarization(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
