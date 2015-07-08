@@ -85,7 +85,7 @@ class TestSummarizationTest(unittest.TestCase):
         # Keeps the first 8 sentences to make the text shorter.
         text = "\n".join(text.split('\n')[:8])
 
-        self.assertRaises(RuntimeError, summarize, text)
+        self.assertIsNotNone(summarize(text))
 
     def test_corpus_summarization_raises_exception_on_short_input_text(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -101,7 +101,7 @@ class TestSummarizationTest(unittest.TestCase):
         dictionary = Dictionary(tokens)
         corpus = [dictionary.doc2bow(sentence_tokens) for sentence_tokens in tokens]
 
-        self.assertRaises(RuntimeError, summarize_corpus, corpus)
+        self.assertIsNotNone(summarize_corpus(corpus))
 
     def test_corpus_summarization_ratio(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
