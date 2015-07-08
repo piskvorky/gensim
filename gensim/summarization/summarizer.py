@@ -144,13 +144,14 @@ def summarize_corpus(corpus, ratio=0.2):
     """
     hashable_corpus = _build_hasheable_corpus(corpus)
 
+    # If the corpus is empty, the function ends.
+    if len(corpus) == 0:
+        logger.warning("Input corpus is empty.")
+        return
+
     # Warns the user if there are too few documents.
     if len(corpus) < INPUT_MIN_LENGTH:
         logger.warning("Input corpus is expected to have at least " + str(INPUT_MIN_LENGTH) + " documents.")
-
-    # If the corpus is empty, the function ends.
-    if len(corpus) == 0:
-        return
 
     graph = _build_graph(hashable_corpus)
     _set_graph_edge_weights(graph)
@@ -186,13 +187,14 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
     # Gets a list of processed sentences.
     sentences = _clean_text_by_sentences(text)
 
+    # If no sentence could be identified, the function ends.
+    if len(sentences) == 0:
+        logger.warning("Input text is empty.")
+        return
+
     # Warns if the text is too short.
     if len(sentences) < INPUT_MIN_LENGTH:
         logger.warning("Input text is expected to have at least " + str(INPUT_MIN_LENGTH) + " sentences.")
-
-    # If no sentence could be identified, the function ends.
-    if len(sentences) == 0:
-        return
 
     corpus = _build_corpus(sentences)
 
