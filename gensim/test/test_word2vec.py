@@ -182,31 +182,34 @@ class TestWord2VecModel(unittest.TestCase):
             orig0 = numpy.copy(model.syn0[0])
             model.train(list_corpus)
             self.assertFalse((orig0==model.syn0[1]).all())  # vector should vary after training
-        sims = model.most_similar('war', topn=500)
-        self.assertTrue('attacks' in [word for word, score in sims])
+        sims = model.most_similar('war', topn=50)
+        # in >200 calibration runs w/ calling parameters, 'terrorism' in 50-most_sim for 'war'
+        self.assertTrue('terrorism' in [word for word, score in sims])
         war_vec = model['war']
-        sims2 = model.most_similar([war_vec], topn=501)
+        sims2 = model.most_similar([war_vec], topn=51)
         self.assertTrue('war' in [word for word, score in sims2])
-        self.assertTrue('attacks' in [word for word, score in sims2])
+        self.assertTrue('terrorism' in [word for word, score in sims2])
 
     def test_sg_hs(self):
         """Test skipgram w/ hierarchical softmax"""
-        model = word2vec.Word2Vec(sg=1, window=4, hs=1, negative=0, min_count=1, iter=20)
+        model = word2vec.Word2Vec(sg=1, window=4, hs=1, negative=0, min_count=5, iter=10, workers=2)
         self.model_sanity(model)
 
     def test_sg_neg(self):
         """Test skipgram w/ negative sampling"""
-        model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=5, min_count=1, iter=20)
+        model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=15, min_count=5, iter=10, workers=2)
         self.model_sanity(model)
 
     def test_cbow_hs(self):
         """Test CBOW w/ hierarchical softmax"""
-        model = word2vec.Word2Vec(sg=0, window=4, hs=1, negative=0, min_count=1, iter=20)
+        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
+                                  min_count=5, iter=10, workers=2)
         self.model_sanity(model)
 
     def test_cbow_neg(self):
         """Test CBOW w/ negative sampling"""
-        model = word2vec.Word2Vec(sg=0, window=4, hs=0, negative=5, min_count=1, iter=20)
+        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
+                                  min_count=5, iter=10, workers=2)
         self.model_sanity(model)
 
     def testTrainingCbow(self):
