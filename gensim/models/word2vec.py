@@ -702,7 +702,7 @@ class Word2Vec(utils.SaveLoad):
                 logger.debug("putting job #%i in the queue", job_no)
                 job_queue.put((items, next_alpha))
                 # update the learning rate before every job
-                pushed_words += round((chunksize/self.corpus_count)/total_words)
+                pushed_words += round((chunksize / (self.corpus_count * self.iter)) * total_words)
                 next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
             except StopIteration:
                 logger.info("reached end of input; waiting to finish %i outstanding jobs" % (job_no-done_jobs+1))
