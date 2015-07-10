@@ -156,7 +156,7 @@ cdef void fast_sentence_cbow_hs(
     memset(neu1, 0, size * cython.sizeof(REAL_t))
     count = <REAL_t>0.0
     for m in range(j, k):
-        if m == i or codelens[m] == 0:
+        if m == i:
             continue
         else:
             count += ONEF
@@ -181,7 +181,7 @@ cdef void fast_sentence_cbow_hs(
         sscal(&size, &inv_count, work, &ONE)  # (does this need BLAS-variants like saxpy?)
 
     for m in range(j, k):
-        if m == i or codelens[m] == 0:
+        if m == i:
             continue
         else:
             our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[m] * size], &ONE)
@@ -205,7 +205,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
     memset(neu1, 0, size * cython.sizeof(REAL_t))
     count = <REAL_t>0.0
     for m in range(j, k):
-        if m == i or codelens[m] == 0:
+        if m == i:
             continue
         else:
             count += ONEF
@@ -241,7 +241,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
         sscal(&size, &inv_count, work, &ONE)  # (does this need BLAS-variants like saxpy?)
 
     for m in range(j,k):
-        if m == i or codelens[m] == 0:
+        if m == i:
             continue
         else:
             our_saxpy(&size, &word_locks[indexes[m]], work, &ONE, &syn0[indexes[m]*size], &ONE)
@@ -412,8 +412,6 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
     # release GIL & train on the sentence
     with nogil:
         for i in range(sentence_len):
-            if codelens[i] == 0:
-                continue
             j = i - window + reduced_windows[i]
             if j < 0:
                 j = 0
@@ -578,8 +576,9 @@ cdef void score_pair_cbow_hs(
         else:
             count += ONEF
             our_saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
-    if cbow_mean and count > (<REAL_t>0.5):
+    if count > (<REAL_t>0.5):
         inv_count = ONEF/count
+    if cbow_mean:
         sscal(&size, &inv_count, neu1, &ONE)
 
     for b in range(codelens[i]):

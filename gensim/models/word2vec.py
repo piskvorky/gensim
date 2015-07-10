@@ -702,7 +702,7 @@ class Word2Vec(utils.SaveLoad):
                 logger.debug("putting job #%i in the queue", job_no)
                 job_queue.put((items, next_alpha))
                 # update the learning rate before every job
-                pushed_words += round((chunksize/self.corpus_count)/total_words)
+                pushed_words += round((chunksize / (self.corpus_count * self.iter)) * total_words)
                 next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
             except StopIteration:
                 logger.info("reached end of input; waiting to finish %i outstanding jobs" % (job_no-done_jobs+1))
@@ -1360,7 +1360,7 @@ class Text8Corpus(object):
 
 class LineSentence(object):
     """Simple format: one sentence = one line; words already preprocessed and separated by whitespace."""
-    def __init__(self, source):
+    def __init__(self, source, max_sentence_length=10000):
         """
         `source` can be either a string or a file object.
 
@@ -1375,6 +1375,7 @@ class LineSentence(object):
 
         """
         self.source = source
+        self.max_sentence_length = max_sentence_length
 
     def __iter__(self):
         """Iterate through the lines in the source."""
@@ -1383,12 +1384,20 @@ class LineSentence(object):
             # Things that don't have seek will trigger an exception
             self.source.seek(0)
             for line in self.source:
-                yield utils.to_unicode(line).split()
+                line = utils.to_unicode(line).split()
+                i = 0
+                while i < len(line):
+                    yield line[i:(i + self.max_sentence_length)]
+                    i += self.max_sentence_length
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
             with utils.smart_open(self.source) as fin:
                 for line in fin:
-                    yield utils.to_unicode(line).split()
+                    line = utils.to_unicode(line).split()
+                    i = 0
+                    while i < len(line):
+                        yield line[i:(i + self.max_sentence_length)]
+                        i += self.max_sentence_length
 
 
 # Example: ./word2vec.py ~/workspace/word2vec/text8 ~/workspace/word2vec/questions-words.txt ./text8
