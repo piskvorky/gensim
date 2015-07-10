@@ -314,8 +314,8 @@ class LdaModel(interfaces.TransformationABC):
             self.update(corpus)
 
     def __str__(self):
-        return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s, alpha=%s)" % \
-            (self.num_terms, self.num_topics, self.decay, self.chunksize, self.alpha)
+        return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % \
+            (self.num_terms, self.num_topics, self.decay, self.chunksize)
 
     def sync_state(self):
         self.expElogbeta = numpy.exp(self.state.get_Elogbeta())
