@@ -35,7 +35,7 @@ class TestSummarizationTest(unittest.TestCase):
         with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.summ.txt"), mode="r") as f:
             summary = f.read()
 
-        self.assertEquals(generated_summary, summary)
+        self.assertEqual(generated_summary, summary)
 
     def test_corpus_summarization(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -85,7 +85,7 @@ class TestSummarizationTest(unittest.TestCase):
         # Keeps the first 8 sentences to make the text shorter.
         text = "\n".join(text.split('\n')[:8])
 
-        self.assertRaises(RuntimeError, summarize, text)
+        self.assertTrue(summarize(text) is not None)
 
     def test_corpus_summarization_raises_exception_on_short_input_text(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -101,7 +101,13 @@ class TestSummarizationTest(unittest.TestCase):
         dictionary = Dictionary(tokens)
         corpus = [dictionary.doc2bow(sentence_tokens) for sentence_tokens in tokens]
 
-        self.assertRaises(RuntimeError, summarize_corpus, corpus)
+        self.assertTrue(summarize_corpus(corpus) is not None)
+
+    def test_empty_text_summarization_none(self):
+        self.assertTrue(summarize("") is None)
+
+    def test_empty_corpus_summarization_is_none(self):
+        self.assertTrue(summarize_corpus([]) is None)
 
     def test_corpus_summarization_ratio(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')

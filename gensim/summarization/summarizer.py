@@ -3,6 +3,7 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+import logging
 from gensim.summarization.pagerank_weighted import pagerank_weighted as _pagerank
 from gensim.summarization.textcleaner import clean_text_by_sentences as _clean_text_by_sentences
 from gensim.summarization.commons import build_graph as _build_graph
@@ -13,7 +14,10 @@ from scipy.sparse import csr_matrix
 from math import log10 as _log10
 from six.moves import xrange
 
+
 INPUT_MIN_LENGTH = 10
+
+logger = logging.getLogger(__name__)
 
 
 def _set_graph_edge_weights(graph):
@@ -140,8 +144,14 @@ def summarize_corpus(corpus, ratio=0.2):
     """
     hashable_corpus = _build_hasheable_corpus(corpus)
 
+    # If the corpus is empty, the function ends.
+    if len(corpus) == 0:
+        logger.warning("Input corpus is empty.")
+        return
+
+    # Warns the user if there are too few documents.
     if len(corpus) < INPUT_MIN_LENGTH:
-        raise RuntimeError("Input corpus must have at least " + str(INPUT_MIN_LENGTH) + " documents.")
+        logger.warning("Input corpus is expected to have at least " + str(INPUT_MIN_LENGTH) + " documents.")
 
     graph = _build_graph(hashable_corpus)
     _set_graph_edge_weights(graph)
@@ -177,8 +187,14 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
     # Gets a list of processed sentences.
     sentences = _clean_text_by_sentences(text)
 
+    # If no sentence could be identified, the function ends.
+    if len(sentences) == 0:
+        logger.warning("Input text is empty.")
+        return
+
+    # Warns if the text is too short.
     if len(sentences) < INPUT_MIN_LENGTH:
-        raise RuntimeError("Input text must have at least " + str(INPUT_MIN_LENGTH) + " sentences.")
+        logger.warning("Input text is expected to have at least " + str(INPUT_MIN_LENGTH) + " sentences.")
 
     corpus = _build_corpus(sentences)
 
