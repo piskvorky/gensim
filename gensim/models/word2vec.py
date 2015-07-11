@@ -116,7 +116,7 @@ except ImportError:
 
             # now go over all words from the (reduced) window, predicting each one in turn
             start = max(0, pos - model.window + reduced_window)
-        for pos2, word2_vocab in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
+            for pos2, word2_vocab in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
                 # don't train on OOV words and on the `word` itself
                 if (pos2 == pos):
                     train_sg_pair(model, word, word2_vocab.index, alpha)
