@@ -1126,7 +1126,17 @@ class Word2Vec(utils.SaveLoad):
           array([ -1.40128313e-02, ...]
 
         """
-        return self.syn0[self.vocab[word].index]
+        if len(word.split()) > 1:
+            mean = []
+            for w in word.split():
+                if w in self.vocab:
+                    mean.append(self.syn0norm[self.vocab[w].index])
+                else:
+                    raise KeyError("word '%s' not in vocabulary" % w)
+            mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
+            return mean
+        else:
+            return self.syn0[self.vocab[word].index]
 
     def __contains__(self, word):
         return word in self.vocab
