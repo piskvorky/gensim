@@ -83,7 +83,7 @@ except ImportError:
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, repeat as np_repeat
+    ndarray, empty, sum as np_sum, prod, ones, repeat as np_repeat, add as np_add
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from six import iteritems, itervalues, string_types
@@ -117,8 +117,8 @@ except ImportError:
             # now go over all words from the (reduced) window, predicting each one in turn
             start = max(0, pos - model.window + reduced_window)
             for pos2, word2_vocab in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
-                # don't train on OOV words and on the `word` itself
-                if (pos2 == pos):
+                # don't train on the `word` itself
+                if pos2 != pos:
                     train_sg_pair(model, word, word2_vocab.index, alpha)
 
         return len(word_vocabs)
@@ -187,6 +187,7 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         if learn_hidden:
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
+
     if learn_vectors:
         l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.syn0[word2.index], if that is l1)
     return neu1e
@@ -216,11 +217,14 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
         if learn_hidden:
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
+
     if learn_vectors:
         # learn input -> hidden, here for all words in the window separately
-        l = len(input_word_indices)
-        model.syn0[input_word_indices] += np_repeat(neu1e, l).reshape(l, model.vector_size) * \
-                                          model.syn0_lockf[input_word_indices][:, None]
+        if not model.cbow_mean and input_word_indices:
+            neu1e /= len(input_word_indices)
+        for i in input_word_indices:
+            model.syn0[i] += neu1e * model.syn0_lockf[i]
+
     return neu1e
 
 # could move this import up to where train_* is imported,
@@ -554,6 +558,7 @@ class Word2Vec(utils.SaveLoad):
         else:
             # new shorthand: sample >= 1 means downsample all words with higher count than sample
             threshold_count = int(sample * (3 + sqrt(5)) / 2)
+
         downsample_total, downsample_unique = 0, 0
         for w in retain_words:
             v = self.raw_vocab[w]
@@ -699,7 +704,7 @@ class Word2Vec(utils.SaveLoad):
         while True:
             try:
                 job_no, items = next(jobs_source)
-                logger.debug("putting job #%i in the queue", job_no)
+                logger.debug("putting job #%i in the queue at alpha %.05f", job_no, next_alpha)
                 job_queue.put((items, next_alpha))
                 # update the learning rate before every job
                 pushed_words += round((chunksize / (self.corpus_count * self.iter)) * total_words)
@@ -716,7 +721,7 @@ class Word2Vec(utils.SaveLoad):
                     elapsed = default_timer() - start
                     if elapsed >= next_report:
                         est_alpha = self.alpha - (self.alpha - self.min_alpha) * (word_count / total_words)
-                        logger.info("PROGRESS: at %.2f%% words, alpha %.05f, %.0f words/s",
+                        logger.info("PROGRESS: at %.2f%% words, alpha estimate %.05f, %.0f words/s",
                                     100.0 * word_count / total_words, est_alpha, word_count / elapsed)
                         next_report = elapsed + report_delay  # don't flood log, wait report_delay seconds
                 else:
@@ -1188,10 +1193,10 @@ class Word2Vec(utils.SaveLoad):
             else:
                 self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
-    def estimate_memory(self, vocab_size=None):
+    def estimate_memory(self, vocab_size=None, report=None):
         """Estimate required memory for a model using current settings and provided vocabulary size."""
         vocab_size = vocab_size or len(self.vocab)
-        report = {}
+        report = report or {}
         report['vocab'] = vocab_size * (700 if self.hs else 500)
         report['syn0'] = vocab_size * self.vector_size * dtype(REAL).itemsize
         if self.hs:
