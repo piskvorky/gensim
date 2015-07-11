@@ -118,17 +118,20 @@ class TestDoc2VecModel(unittest.TestCase):
 
         # inferred vector should be top10 close to bulk-trained one
         doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
-        sims_to_infer = model.docvecs.most_similar([doc0_inferred])
-        self.assertTrue(fire1 in [docid for docid, sim in sims_to_infer])
+        sims_to_infer = model.docvecs.most_similar([doc0_inferred],topn=len(model.docvecs))
+        f_rank = [docid for docid, sim in sims_to_infer].index(fire1)
+        self.assertLess(fire1, 10, msg="inferred & bulk-trained fire1 vectors not close")
 
         # fire8 should be top20 close to fire1
-        sims = model.docvecs.most_similar(fire1, topn=20)
-        self.assertTrue(fire2 in [docid for docid, sim in sims])
+        sims = model.docvecs.most_similar(fire1, topn=len(model.docvecs))
+        f2_rank = [docid for docid, sim in sims_to_infer].index(fire2)
+        self.assertLess(f2_rank, 20, msg="fire2 doc not close to fire1")
 
         # same sims should appear in lookup by vec as by index
         doc0_vec = model.docvecs[fire1]
         sims2 = model.docvecs.most_similar(positive=[doc0_vec], topn=21)
         sims2 = [(id, sim) for id, sim in sims2 if id != fire1]  # ignore the doc itself
+        sims = sims[:20]
         self.assertEqual(list(zip(*sims))[0], list(zip(*sims2))[0])  # same doc ids
         self.assertTrue(np.allclose(list(zip(*sims))[1], list(zip(*sims2))[1]))  # close-enough dists
 

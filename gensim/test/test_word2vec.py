@@ -182,9 +182,10 @@ class TestWord2VecModel(unittest.TestCase):
             orig0 = numpy.copy(model.syn0[0])
             model.train(list_corpus)
             self.assertFalse((orig0==model.syn0[1]).all())  # vector should vary after training
-        sims = model.most_similar('war', topn=50)
+        sims = model.most_similar('war', topn=len(model.index2word))
+        t_rank = [word for word, score in sims].index('terrorism')
         # in >200 calibration runs w/ calling parameters, 'terrorism' in 50-most_sim for 'war'
-        self.assertTrue('terrorism' in [word for word, score in sims])
+        self.assertLess(t_rank, 50, msg="'terrorism' not close to 'war'")
         war_vec = model['war']
         sims2 = model.most_similar([war_vec], topn=51)
         self.assertTrue('war' in [word for word, score in sims2])
