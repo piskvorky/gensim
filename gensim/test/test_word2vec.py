@@ -359,7 +359,7 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
 if not hasattr(TestWord2VecModel, 'assertLess'):
     # workaround for python 2.6
     def assertLess(self, a, b, msg=None):
-        self.assertTrue(a < b, msg=msg)
+        self.assertTrue(a < b, msg="%s is not less than %s" % (a, b))
 
     setattr(TestWord2VecModel, 'assertLess', assertLess)
 

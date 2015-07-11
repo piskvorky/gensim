@@ -122,10 +122,10 @@ class TestDoc2VecModel(unittest.TestCase):
         f_rank = [docid for docid, sim in sims_to_infer].index(fire1)
         self.assertLess(fire1, 10)
 
-        # fire8 should be top20 close to fire1
+        # fire8 should be top30 close to fire1
         sims = model.docvecs.most_similar(fire1, topn=len(model.docvecs))
         f2_rank = [docid for docid, sim in sims_to_infer].index(fire2)
-        self.assertLess(f2_rank, 20)
+        self.assertLess(f2_rank, 30)
 
         # same sims should appear in lookup by vec as by index
         doc0_vec = model.docvecs[fire1]
@@ -163,19 +163,19 @@ class TestDoc2VecModel(unittest.TestCase):
     def test_dmm_hs(self):
         """Test DM/mean doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=1, negative=0,
-                                min_count=2, iter=20)
+                                alpha=0.05, min_count=2, iter=20)
         self.model_sanity(model)
 
     def test_dms_hs(self):
         """Test DM/sum doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=1, negative=0,
-                                min_count=2, iter=20)
+                                alpha=0.05, min_count=2, iter=20)
         self.model_sanity(model)
 
     def test_dmc_hs(self):
         """Test DM/concatenate doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_concat=1, size=24, window=4, hs=1, negative=0,
-                                min_count=2, iter=20)
+                                alpha=0.05, min_count=2, iter=20)
         self.model_sanity(model)
 
     def test_dbow_neg(self):
@@ -186,19 +186,19 @@ class TestDoc2VecModel(unittest.TestCase):
     def test_dmm_neg(self):
         """Test DM/mean doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=0, negative=10,
-                                min_count=2, iter=20)
+                                alpha=0.05, min_count=2, iter=20)
         self.model_sanity(model)
 
     def test_dms_neg(self):
         """Test DM/sum doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=0, size=24, window=4, hs=0, negative=10,
-                                min_count=2, iter=20)
+                                alpha=0.05, min_count=2, iter=20)
         self.model_sanity(model)
 
     def test_dmc_neg(self):
         """Test DM/concatenate doc2vec training."""
         model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_concat=1, size=24, window=4, hs=0, negative=10,
-                                min_count=2, iter=20)
+                                alpha=0.05, min_count=2, iter=20)
         self.model_sanity(model)
 
     def test_parallel(self):
@@ -254,7 +254,7 @@ class TestDoc2VecModel(unittest.TestCase):
 if not hasattr(TestDoc2VecModel, 'assertLess'):
     # workaround for python 2.6
     def assertLess(self, a, b, msg=None):
-        self.assertTrue(a < b, msg=msg)
+        self.assertTrue(a < b, msg="%s is not less than %s" % (a, b))
 
     setattr(TestDoc2VecModel, 'assertLess', assertLess)
 
