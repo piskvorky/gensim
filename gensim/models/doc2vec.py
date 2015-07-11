@@ -137,7 +137,7 @@ except:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
         word_vocabs = [model.vocab[w] for w in doc_words if w in model.vocab and
-                       model.vocab[w].sample_int > model.random.randint(2**32)]
+                       model.vocab[w].sample_int > model.random.rand() * 2**32]
         doctag_sum = np_sum(doctag_vectors[doctag_indexes], axis=0)
         doctag_len = len(doctag_indexes)
 
@@ -193,7 +193,7 @@ except:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
         word_vocabs = [model.vocab[w] for w in doc_words if w in model.vocab and
-                       model.vocab[w].sample_int > model.random.randint(2**32)]
+                       model.vocab[w].sample_int > model.random.rand() * 2**32]
         doctag_len = len(doctag_indexes)
         if doctag_len != model.dm_tag_count:
             return 0  # skip doc without expected number of doctag(s) (TODO: warn/pad?)

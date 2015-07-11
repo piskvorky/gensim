@@ -110,7 +110,7 @@ except ImportError:
 
         """
         word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab and
-                       model.vocab[w].sample_int > model.random.randint(2**32)]
+                       model.vocab[w].sample_int > model.random.rand() * 2**32]
         for pos, word in enumerate(sentence):
             reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
 
@@ -135,7 +135,7 @@ except ImportError:
 
         """
         word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab and
-                       model.vocab[w].sample_int > model.random.randint(2**32)]
+                       model.vocab[w].sample_int > model.random.rand() * 2**32]
         for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
             start = max(0, pos - model.window + reduced_window)
