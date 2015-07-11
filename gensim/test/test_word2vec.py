@@ -185,7 +185,7 @@ class TestWord2VecModel(unittest.TestCase):
         sims = model.most_similar('war', topn=len(model.index2word))
         t_rank = [word for word, score in sims].index('terrorism')
         # in >200 calibration runs w/ calling parameters, 'terrorism' in 50-most_sim for 'war'
-        self.assertLess(t_rank, 50, msg="'terrorism' not close to 'war'")
+        self.assertLess(t_rank, 50)
         war_vec = model['war']
         sims2 = model.most_similar([war_vec], topn=51)
         self.assertTrue('war' in [word for word, score in sims2])
@@ -356,6 +356,12 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
                     self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 #endclass TestWord2VecSentenceIterators
 
+if not hasattr(TestWord2VecModel, 'assertLess'):
+    # workaround for python 2.6
+    def assertLess(self, a, b, msg=None):
+        self.assertTrue(a < b, msg=msg)
+
+    setattr(TestWord2VecModel, 'assertLess', assertLess)
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

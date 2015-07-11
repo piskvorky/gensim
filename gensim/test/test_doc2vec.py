@@ -120,12 +120,12 @@ class TestDoc2VecModel(unittest.TestCase):
         doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
         sims_to_infer = model.docvecs.most_similar([doc0_inferred],topn=len(model.docvecs))
         f_rank = [docid for docid, sim in sims_to_infer].index(fire1)
-        self.assertLess(fire1, 10, msg="inferred & bulk-trained fire1 vectors not close")
+        self.assertLess(fire1, 10)
 
         # fire8 should be top20 close to fire1
         sims = model.docvecs.most_similar(fire1, topn=len(model.docvecs))
         f2_rank = [docid for docid, sim in sims_to_infer].index(fire2)
-        self.assertLess(f2_rank, 20, msg="fire2 doc not close to fire1")
+        self.assertLess(f2_rank, 20)
 
         # same sims should appear in lookup by vec as by index
         doc0_vec = model.docvecs[fire1]
@@ -249,6 +249,15 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(np.allclose(model.docvecs.doctag_syn0, model2.docvecs.doctag_syn0))
 
 #endclass TestDoc2VecModel
+
+
+if not hasattr(TestDoc2VecModel, 'assertLess'):
+    # workaround for python 2.6
+    def assertLess(self, a, b, msg=None):
+        self.assertTrue(a < b, msg=msg)
+
+    setattr(TestDoc2VecModel, 'assertLess', assertLess)
+
 
 # following code is useful for reproducing paragraph-vectors paper sentiment experiments
 
