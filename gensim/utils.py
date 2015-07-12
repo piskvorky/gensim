@@ -392,7 +392,7 @@ class SaveLoad(object):
             if isinstance(val, SaveLoad):
                 recursive_saveloads.append(attrib)
                 cfname = '.'.join((fname,attrib))
-                restores.extend(val._save_specials(cfname, separately, sep_limit, ignore,
+                restores.extend(val._save_specials(cfname, None, sep_limit, ignore,
                                                    pickle_protocol,compress, subname))
 
         try:
