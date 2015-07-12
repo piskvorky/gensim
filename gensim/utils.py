@@ -389,11 +389,11 @@ class SaveLoad(object):
         recursive_saveloads = []
         restores = []
         for attrib, val in iteritems(self.__dict__):
-            if isinstance(val, SaveLoad):
+            if hasattr(val, '_save_specials'):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
                 recursive_saveloads.append(attrib)
                 cfname = '.'.join((fname,attrib))
                 restores.extend(val._save_specials(cfname, None, sep_limit, ignore,
-                                                   pickle_protocol,compress, subname))
+                                                   pickle_protocol, compress, subname))
 
         try:
             numpys, scipys, ignoreds = [], [], []
