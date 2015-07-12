@@ -262,8 +262,8 @@ class DocvecsArray(utils.SaveLoad):
     >>> docvec = d2v_model.docvecs[99]
     >>> docvec = d2v_model.docvecs['SENT_99']  # if string tag used in training
     >>> sims = d2v_model.docvecs.most_similar(99)
-    >>> sims = d2v_model.docvecs.most_similar('SENT_99'))
-    >>> sims = d2v_model.docvecs.most_similar(docvec))
+    >>> sims = d2v_model.docvecs.most_similar('SENT_99')
+    >>> sims = d2v_model.docvecs.most_similar(docvec)
 
     If only plain int tags are presented during training, the dict (of
     string tag -> index) and list (of index -> string tag) stay empty,
