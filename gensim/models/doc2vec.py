@@ -48,7 +48,7 @@ from timeit import default_timer
 
 from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
     repeat as np_repeat, array, float32 as REAL, empty, ones, memmap as np_memmap, \
-    sqrt, newaxis, ndarray, dot, vstack, dtype
+    sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_sentence_sg
@@ -377,10 +377,14 @@ class DocvecsArray(utils.SaveLoad):
                     self.doctag_syn0[i, :] /= sqrt((self.doctag_syn0[i, :] ** 2).sum(-1))
                 self.doctag_syn0norm = self.doctag_syn0
             else:
-                self.doctag_syn0norm = (self.doctag_syn0 /
-                                        sqrt((self.doctag_syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
+                if self.mapfile_path:
+                    self.doctag_syn0norm = np_memmap(self.mapfile_path+'.doctag_syn0norm', dtype=REAL,
+                                                     mode='w+', shape=self.doctag_syn0.shape)
+                else:
+                    self.doctag_syn0norm = empty(self.doctag_syn0.shape, dtype=REAL)
+                np_divide(self.doctag_syn0, sqrt((self.doctag_syn0 ** 2).sum(-1))[..., newaxis], self.doctag_syn0norm)
 
-    def most_similar(self, positive=[], negative=[], topn=10):
+    def most_similar(self, positive=[], negative=[], topn=10, clip_start=0, clip_end=None):
         """
         Find the top-N most similar docvecs known from training. Positive docs contribute
         positively towards the similarity, negative docs negatively.
@@ -389,8 +393,13 @@ class DocvecsArray(utils.SaveLoad):
         weight vectors of the given docs. Docs may be specified as vectors, integer indexes
         of trained docvecs, or if the documents were originally presented with string tags,
         by the corresponding tags.
+
+        The 'clip_start' and 'clip_end' allow limiting results to a particular contiguous
+        range of the underlying doctag_syn0norm vectors. (This may be useful if the ordering
+        there was chosen to be significant, such as more popular tag IDs in lower indexes.)
         """
         self.init_sims()
+        clip_end = clip_end or len(self.doctag_syn0norm)
 
         if isinstance(positive, string_types + integer_types) and not negative:
             # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
@@ -416,7 +425,7 @@ class DocvecsArray(utils.SaveLoad):
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
 
-        dists = dot(self.doctag_syn0norm, mean)
+        dists = dot(self.doctag_syn0norm[clip_start:clip_end], mean)
         if not topn:
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_docs), reverse=True)
@@ -534,6 +543,7 @@ class Doc2Vec(Word2Vec):
 
         """
         super(Doc2Vec, self).__init__(
+#        super(self.__class__, self).__init__(
             size=size, alpha=alpha, window=window, min_count=min_count, max_vocab_size=max_vocab_size,
             sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
             sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean,
