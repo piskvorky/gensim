@@ -1140,6 +1140,10 @@ class Word2Vec(utils.SaveLoad):
           array([ -1.40128313e-02, ...]
 
         """
+        if isinstance(words, string_types):
+            # allow calls like trained_model['office'], as a shorthand for trained_model[['dog']]
+            return self.syn0[self.vocab[words].index]
+            
         return array([self.syn0[self.vocab[word].index] for word in words])
 
 
