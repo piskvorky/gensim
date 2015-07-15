@@ -1116,35 +1116,24 @@ class Word2Vec(utils.SaveLoad):
         dists = dot(vectors, mean)
         return sorted(zip(dists, words))[0][1]
 
-    @classmethod
-    def sum(self, vecs):
-        '''
-        To compute the mean of N vectors
-        Example:
-        >>> sum(trained_model['office','products']
-          array([ -1.40128313e-02, ...]
-
-        '''
-        if len(vecs) > 1:
-            return matutils.unitvec(array(vecs).mean(axis=0)).astype(REAL)
-        else:
-            return vecs[0]
-
     def __getitem__(self, words):
-        """
-        Return a list of N word representations in vector space, as a N D numpy array.
 
-        Example::
+      """
+      Return a numpy array of N word representations in vector space, as a N X VEC_LENGTH 2D numpy array.
 
-          >>> trained_model['office','products']
-          array([ -1.40128313e-02, ...]
+      Example::
 
-        """
-        if isinstance(words, string_types):
-            # allow calls like trained_model['office'], as a shorthand for trained_model[['dog']]
-            return self.syn0[self.vocab[words].index]
-            
-        return array([self.syn0[self.vocab[word].index] for word in words])
+      >>> trained_model[['office','products']]
+        array([ -1.40128313e-02, ...]
+              [ -1.70425311e-03, ...]
+              ...)
+
+      """
+      if isinstance(words, string_types):
+          # allow calls like trained_model['office'], as a shorthand for trained_model[['dog']]
+          return self.syn0[self.vocab[words].index]
+
+      return vstack([self.syn0[self.vocab[word].index] for word in words])
 
 
     def __contains__(self, word):
