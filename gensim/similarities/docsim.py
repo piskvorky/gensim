@@ -476,7 +476,6 @@ class Similarity(interfaces.SimilarityABC):
 #endclass Similarity
 
 
-
 class MatrixSimilarity(interfaces.SimilarityABC):
     """
     Compute similarity against a corpus of documents by storing the index matrix
@@ -530,10 +529,8 @@ class MatrixSimilarity(interfaces.SimilarityABC):
                     vector = matutils.unitvec(matutils.sparse2full(vector, num_features))
                 self.index[docno] = vector
 
-
     def __len__(self):
         return self.index.shape[0]
-
 
     def get_similarities(self, query):
         """
@@ -549,11 +546,12 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         """
         is_corpus, query = utils.is_corpus(query)
         if is_corpus:
-            query = numpy.asarray([matutils.sparse2full(vec, self.num_features) for vec in query],
-                                  dtype=self.index.dtype)
+            query = numpy.asarray(
+                [matutils.sparse2full(vec, self.num_features) for vec in query],
+                dtype=self.index.dtype)
         else:
             if scipy.sparse.issparse(query):
-                query = query.toarray() # convert sparse to dense
+                query = query.toarray()  # convert sparse to dense
             elif isinstance(query, numpy.ndarray):
                 pass
             else:
@@ -563,9 +561,8 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
         # do a little transposition dance to stop numpy from making a copy of
         # self.index internally in numpy.dot (very slow).
-        result = numpy.dot(self.index, query.T).T # return #queries x #index
-        return result # XXX: removed casting the result from array to list; does anyone care?
-#endclass MatrixSimilarity
+        result = numpy.dot(self.index, query.T).T  # return #queries x #index
+        return result  # XXX: removed casting the result from array to list; does anyone care?
 
 
 
