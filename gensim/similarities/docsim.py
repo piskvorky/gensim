@@ -565,6 +565,9 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         result = numpy.dot(self.index, query.T).T  # return #queries x #index
         return result  # XXX: removed casting the result from array to list; does anyone care?
 
+    def __str__(self):
+        return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.index.shape[1])
+#endclass MatrixSimilarity
 
 
 class SparseMatrixSimilarity(interfaces.SimilarityABC):
