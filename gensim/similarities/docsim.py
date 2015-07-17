@@ -490,7 +490,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
     See also `Similarity` and `SparseMatrixSimilarity` in this module.
 
     """
-    def __init__(self, corpus, num_best=None, dtype=numpy.float32, num_features=None, chunksize=256):
+    def __init__(self, corpus, num_best=None, dtype=numpy.float32, num_features=None, chunksize=256, corpus_len=None):
         """
         `num_features` is the number of features in the corpus (will be determined
         automatically by scanning the corpus if not specified). See `Similarity`
@@ -505,18 +505,19 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         self.num_best = num_best
         self.normalize = True
         self.chunksize = chunksize
+        if corpus_len is None:
+            corpus_len = len(corpus)
 
         if corpus is not None:
             if self.num_features <= 0:
                 raise ValueError("cannot index a corpus with zero features (you must specify either `num_features` or a non-empty corpus in the constructor)")
-            logger.info("creating matrix for %s documents and %i features" %
-                         (len(corpus), num_features))
-            self.index = numpy.empty(shape=(len(corpus), num_features), dtype=dtype)
+            logger.info("creating matrix with %i documents and %i features", corpus_len, num_features)
+            self.index = numpy.empty(shape=(corpus_len, num_features), dtype=dtype)
             # iterate over corpus, populating the numpy index matrix with (normalized)
             # document vectors
             for docno, vector in enumerate(corpus):
                 if docno % 1000 == 0:
-                    logger.debug("PROGRESS: at document #%i/%i" % (docno, len(corpus)))
+                    logger.debug("PROGRESS: at document #%i/%i", docno, corpus_len)
                 # individual documents in fact may be in numpy.scipy.sparse format as well.
                 # it's not documented because other it's not fully supported throughout.
                 # the user better know what he's doing (no normalization, must
