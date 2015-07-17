@@ -48,7 +48,7 @@ from timeit import default_timer
 
 from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
     repeat as np_repeat, array, float32 as REAL, empty, ones, memmap as np_memmap, \
-    sqrt, newaxis, ndarray, dot, vstack
+    sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_sentence_sg
@@ -112,8 +112,8 @@ except:
         Called internally from `Doc2Vec.train()` and `Doc2Vec.infer_vector()`. This
         method implements the DM model with a projection (input) layer that is
         either the sum or mean of the context vectors, depending on the model's
-        `dm_mean` configuration field.  See `train_dm_concat()` for the DM model
-        with a concatenated input layer.
+        `dm_mean` configuration field.  See `train_document_dm_concat()` for the DM
+        model with a concatenated input layer.
 
         The document is provided as `doc_words`, a list of word tokens which are looked up
         in the model's vocab dictionary, and `doctag_indexes`, which provide indexes
@@ -137,28 +137,27 @@ except:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
         word_vocabs = [model.vocab[w] for w in doc_words if w in model.vocab and
-                       model.vocab[w].sample_int > model.random.randint(2**32)]
-        doctag_sum = np_sum(doctag_vectors[doctag_indexes], axis=0)
-        doctag_len = len(doctag_indexes)
+                       model.vocab[w].sample_int > model.random.rand() * 2**32]
 
         for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)  # `b` in the original doc2vec code
             start = max(0, pos - model.window + reduced_window)
             window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
-            word2_indexes = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
-            l1 = np_sum(word_vectors[word2_indexes], axis=0) + doctag_sum  # 1 x layer1_size
-            if word2_indexes and model.cbow_mean:
-                l1 /= (len(word2_indexes) + doctag_len)
+            word2_indexes = [word2.index for pos2, word2 in window_pos if pos2 != pos]
+            l1 = np_sum(word_vectors[word2_indexes], axis=0) + np_sum(doctag_vectors[doctag_indexes], axis=0)
+            count = len(word2_indexes) + len(doctag_indexes)
+            if model.cbow_mean and count > 1 :
+                l1 /= count
             neu1e = train_cbow_pair(model, word, word2_indexes, l1, alpha,
                                     learn_vectors=False, learn_hidden=learn_hidden)
-            if word2_indexes and not model.cbow_mean:
-                neu1e /= (len(word2_indexes) + doctag_len)
+            if not model.cbow_mean and count > 1:
+                neu1e /= count
             if learn_doctags:
-                doctag_vectors[doctag_indexes] += neu1e * \
-                    np_repeat(doctag_locks[doctag_indexes], model.vector_size).reshape(-1, model.vector_size)
+                for i in doctag_indexes:
+                    doctag_vectors[i] += neu1e * doctag_locks[i]
             if learn_words:
-                word_vectors[word2_indexes] += neu1e * \
-                    np_repeat(word_locks[word2_indexes], model.vector_size).reshape(-1, model.vector_size)
+                for i in word2_indexes:
+                    word_vectors[i] += neu1e * word_locks[i]
 
         return len(word_vocabs)
 
@@ -193,7 +192,7 @@ except:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
         word_vocabs = [model.vocab[w] for w in doc_words if w in model.vocab and
-                       model.vocab[w].sample_int > model.random.randint(2**32)]
+                       model.vocab[w].sample_int > model.random.rand() * 2**32]
         doctag_len = len(doctag_indexes)
         if doctag_len != model.dm_tag_count:
             return 0  # skip doc without expected number of doctag(s) (TODO: warn/pad?)
@@ -378,10 +377,14 @@ class DocvecsArray(utils.SaveLoad):
                     self.doctag_syn0[i, :] /= sqrt((self.doctag_syn0[i, :] ** 2).sum(-1))
                 self.doctag_syn0norm = self.doctag_syn0
             else:
-                self.doctag_syn0norm = (self.doctag_syn0 /
-                                        sqrt((self.doctag_syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
+                if self.mapfile_path:
+                    self.doctag_syn0norm = np_memmap(self.mapfile_path+'.doctag_syn0norm', dtype=REAL,
+                                                     mode='w+', shape=self.doctag_syn0.shape)
+                else:
+                    self.doctag_syn0norm = empty(self.doctag_syn0.shape, dtype=REAL)
+                np_divide(self.doctag_syn0, sqrt((self.doctag_syn0 ** 2).sum(-1))[..., newaxis], self.doctag_syn0norm)
 
-    def most_similar(self, positive=[], negative=[], topn=10):
+    def most_similar(self, positive=[], negative=[], topn=10, clip_start=0, clip_end=None):
         """
         Find the top-N most similar docvecs known from training. Positive docs contribute
         positively towards the similarity, negative docs negatively.
@@ -390,8 +393,13 @@ class DocvecsArray(utils.SaveLoad):
         weight vectors of the given docs. Docs may be specified as vectors, integer indexes
         of trained docvecs, or if the documents were originally presented with string tags,
         by the corresponding tags.
+
+        The 'clip_start' and 'clip_end' allow limiting results to a particular contiguous
+        range of the underlying doctag_syn0norm vectors. (This may be useful if the ordering
+        there was chosen to be significant, such as more popular tag IDs in lower indexes.)
         """
         self.init_sims()
+        clip_end = clip_end or len(self.doctag_syn0norm)
 
         if isinstance(positive, string_types + integer_types) and not negative:
             # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
@@ -417,7 +425,7 @@ class DocvecsArray(utils.SaveLoad):
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
 
-        dists = dot(self.doctag_syn0norm, mean)
+        dists = dot(self.doctag_syn0norm[clip_start:clip_end], mean)
         if not topn:
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_docs), reverse=True)
@@ -535,6 +543,7 @@ class Doc2Vec(Word2Vec):
 
         """
         super(Doc2Vec, self).__init__(
+#        super(self.__class__, self).__init__(
             size=size, alpha=alpha, window=window, min_count=min_count, max_vocab_size=max_vocab_size,
             sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
             sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean,
@@ -589,7 +598,7 @@ class Doc2Vec(Word2Vec):
             if document_no % progress_per == 0:
                 interval_rate = (total_words - interval_count) / (default_timer() - interval_start)
                 logger.info("PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags",
-                            document_no, sum(itervalues(vocab)) + total_words, interval_rate, len(vocab), len(self.docvecs))
+                            document_no, total_words, interval_rate, len(vocab), len(self.docvecs))
                 interval_start = default_timer()
                 interval_count = total_words
             document_length = len(document.words)
@@ -599,12 +608,12 @@ class Doc2Vec(Word2Vec):
 
             for word in document.words:
                 vocab[word] += 1
+            total_words += len(document.words)
 
             if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                total_words += utils.prune_vocab(vocab, min_reduce)
+                utils.prune_vocab(vocab, min_reduce)
                 min_reduce += 1
 
-        total_words += sum(itervalues(vocab))
         logger.info("collected %i word types and %i unique tags from a corpus of %i examples and %i words",
                     len(vocab), len(self.docvecs), document_no + 1, total_words)
         self.corpus_count = document_no + 1
@@ -661,12 +670,12 @@ class Doc2Vec(Word2Vec):
 
         return doctag_vectors[0]
 
-    def estimate_memory(self, vocab_size=None):
+    def estimate_memory(self, vocab_size=None, report=None):
         """Estimate required memory for a model using current settings."""
-        report = super(Doc2Vec, self).estimate_memory(vocab_size)
+        report = report or {}
         report['doctag_lookup'] = self.docvecs.estimated_lookup_memory()
-        report['doctag_syn0'] = self.docvecs.count * self.vector_size * 4
-        return report
+        report['doctag_syn0'] = self.docvecs.count * self.vector_size * dtype(REAL).itemsize
+        return super(Doc2Vec, self).estimate_memory(vocab_size, report=report)
 
     def __str__(self):
         """Abbreviated name reflecting major configuration paramaters."""
