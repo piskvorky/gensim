@@ -1116,17 +1116,33 @@ class Word2Vec(utils.SaveLoad):
         dists = dot(vectors, mean)
         return sorted(zip(dists, words))[0][1]
 
-    def __getitem__(self, word):
+    def __getitem__(self, words):
+
         """
-        Return a word's representations in vector space, as a 1D numpy array.
+        Accepts a single word (or) a list of words as input. 
+
+        Returns a word's representations in vector space, as a 1 X VEC_LENGTH 1D numpy array, IF a word is passed as an argument (or)
+        Returns N word's representations in vector space, as a N X VEC_LENGTH 2D numpy array, IF a list of words are passed as an argument.
+
+        This is a common usecase of the __getitem__() method to support a list of words too.
 
         Example::
 
-          >>> trained_model['woman']
-          array([ -1.40128313e-02, ...]
+        >>> trained_model['office']
+        array([ -1.40128313e-02, ...])
+
+        >>> trained_model[['office','products']]
+        array([ -1.40128313e-02, ...]
+              [ -1.70425311e-03, ...]
+               ...)
 
         """
-        return self.syn0[self.vocab[word].index]
+        if isinstance(words, string_types):
+            # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
+            return self.syn0[self.vocab[words].index]
+
+        return vstack([self.syn0[self.vocab[word].index] for word in words])
+
 
     def __contains__(self, word):
         return word in self.vocab
