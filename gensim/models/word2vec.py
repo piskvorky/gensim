@@ -111,15 +111,15 @@ except ImportError:
         """
         word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab and
                        model.vocab[w].sample_int > model.random.rand() * 2**32]
-        for pos, word in enumerate(sentence):
+        for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
 
             # now go over all words from the (reduced) window, predicting each one in turn
             start = max(0, pos - model.window + reduced_window)
-            for pos2, word2_vocab in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
+            for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
                 # don't train on the `word` itself
                 if pos2 != pos:
-                    train_sg_pair(model, word, word2_vocab.index, alpha)
+                    train_sg_pair(model, model.index2word[word.index], word2.index, alpha)
 
         return len(word_vocabs)
 
