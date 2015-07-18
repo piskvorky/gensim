@@ -715,7 +715,7 @@ class Word2Vec(utils.SaveLoad):
                     job_queue.put((None, 0))  # give the workers heads up that they can finish -- no more work!
                 push_done = True
             try:
-                while done_jobs < (job_no+1):
+                while done_jobs < (job_no+1) or not push_done:
                     word_count += progress_queue.get(push_done)  # only block after all jobs pushed
                     done_jobs += 1
                     elapsed = default_timer() - start
