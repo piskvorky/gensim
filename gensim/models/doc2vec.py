@@ -319,7 +319,19 @@ class DocvecsArray(utils.SaveLoad):
             return i_index
 
     def __getitem__(self, index):
-        return self.doctag_syn0[self._int_index(index)]
+        """
+        Accept a single key (int or string tag) or list of keys as input.
+
+        If a single string or int, return designated tag's vector
+        representation, as a 1D numpy array.
+
+        If a list, return designated tags' vector representations as a
+        2D numpy array: #tags x #vector_size.
+        """
+        if isinstance(index, string_types + (int,)):
+            return self.doctag_syn0[self._int_index(index)]
+
+        return vstack([self[i] for i in index])
 
     def __len__(self):
         return self.count
