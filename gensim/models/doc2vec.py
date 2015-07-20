@@ -319,7 +319,19 @@ class DocvecsArray(utils.SaveLoad):
             return i_index
 
     def __getitem__(self, index):
-        return self.doctag_syn0[self._int_index(index)]
+        """
+        Accept a single key (int or string tag) or list of keys as input.
+
+        If a single string or int, return designated tag's vector
+        representation, as a 1D numpy array.
+
+        If a list, return designated tags' vector representations as a
+        2D numpy array: #tags x #vector_size.
+        """
+        if isinstance(index, string_types + (int,)):
+            return self.doctag_syn0[self._int_index(index)]
+
+        return vstack([self[i] for i in index])
 
     def __len__(self):
         return self.count
@@ -543,7 +555,6 @@ class Doc2Vec(Word2Vec):
 
         """
         super(Doc2Vec, self).__init__(
-#        super(self.__class__, self).__init__(
             size=size, alpha=alpha, window=window, min_count=min_count, max_vocab_size=max_vocab_size,
             sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
             sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean,
@@ -622,6 +633,7 @@ class Doc2Vec(Word2Vec):
     def _do_train_job(self, job, alpha, inits):
         work, neu1 = inits
         tally = 0
+        raw_tally = 0
         for doc in job:
             indexed_doctags = self.docvecs.indexed_doctags(doc.tags)
             doctag_indexes, doctag_vectors, doctag_locks, ignored = indexed_doctags
@@ -635,8 +647,12 @@ class Doc2Vec(Word2Vec):
             else:
                 tally += train_document_dm(self, doc.words, doctag_indexes, alpha, work, neu1,
                                            doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+            raw_tally += len(doc.words)
             self.docvecs.trained_item(indexed_doctags)
-        return tally
+        return (tally, raw_tally)
+
+    def _raw_word_count(self, items):
+        return sum(len(item.words) for item in items)
 
     def infer_vector(self, doc_words, alpha=0.1, min_alpha=0.0001, steps=5):
         """

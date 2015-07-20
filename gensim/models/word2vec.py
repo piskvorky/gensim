@@ -111,15 +111,15 @@ except ImportError:
         """
         word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab and
                        model.vocab[w].sample_int > model.random.rand() * 2**32]
-        for pos, word in enumerate(sentence):
+        for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
 
             # now go over all words from the (reduced) window, predicting each one in turn
             start = max(0, pos - model.window + reduced_window)
-            for pos2, word2_vocab in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
+            for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
                 # don't train on the `word` itself
                 if pos2 != pos:
-                    train_sg_pair(model, word, word2_vocab.index, alpha)
+                    train_sg_pair(model, model.index2word[word.index], word2.index, alpha)
 
         return len(word_vocabs)
 
@@ -500,7 +500,7 @@ class Word2Vec(utils.SaveLoad):
                 min_reduce += 1
 
         total_words += sum(itervalues(vocab))
-        logger.info("collected %i word types from a corpus of %i words and %i sentences",
+        logger.info("collected %i word types from a corpus of %i raw words and %i sentences",
                     len(vocab), total_words, sentence_no + 1)
         self.corpus_count = sentence_no + 1
         self.raw_vocab = vocab
@@ -623,17 +623,26 @@ class Word2Vec(utils.SaveLoad):
     def _do_train_job(self, job, alpha, inits):
         work, neu1 = inits
         tally = 0
+        raw_tally = 0
         for sentence in job:
             if self.sg:
                 tally += train_sentence_sg(self, sentence, alpha, work)
             else:
                 tally += train_sentence_cbow(self, sentence, alpha, work, neu1)
-        return tally
+            raw_tally += len(sentence)
+        return (tally, raw_tally)
 
-    def train(self, sentences, total_words=None, word_count=0, chunksize=100, queue_factor=2, report_delay=1):
+    def _raw_word_count(self, items):
+        return sum(len(item) for item in items)
+
+    def train(self, sentences, total_words=None, word_count=0, chunksize=100, total_examples=None, queue_factor=2, report_delay=1):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
-        Each sentence must be a list of unicode strings.
+        For Word2Vec, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
+
+        To support linear learning-rate decay from (initial) alpha to min_alpha, either total_examples
+        (count of sentences) or total_words (count of raw words in sentences) should be provided, unless the
+        sentences are the same as those that were used to initially build the vocabulary.
 
         """
         if FAST_VERSION < 0:
@@ -657,8 +666,17 @@ class Word2Vec(utils.SaveLoad):
         if not hasattr(self, 'syn0'):
             raise RuntimeError("you must first finalize vocabulary before training the model")
 
+        if total_words is None and total_examples is None:
+            if self.corpus_count:
+                total_examples = self.corpus_count
+                logger.info("expecting %i examples, matching count from corpus used for vocabulary survey", total_examples)
+            else:
+                raise ValueError("you must provide either total_words or total_examples, to enable alpha and progress calculations")
+
         if self.iter > 1:
             sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
+            total_words = total_words and total_words * self.iter
+            total_examples = total_examples and total_examples * self.iter
 
         def worker_init():
             work = matutils.zeros_aligned(self.layer1_size, dtype=REAL)  # per-thread private work memory
@@ -670,8 +688,8 @@ class Word2Vec(utils.SaveLoad):
             if items is None:  # signal to finish
                 return False
             # train & return tally
-            job_words = self._do_train_job(items, alpha, inits)
-            progress_queue.put(job_words)  # report progress
+            tally, raw_tally = self._do_train_job(items, alpha, inits)
+            progress_queue.put((len(items), tally, raw_tally))  # report progress
             return True
 
         def worker_loop():
@@ -683,8 +701,7 @@ class Word2Vec(utils.SaveLoad):
                     break
 
         start, next_report = default_timer(), 1.0
-        total_words = total_words or int(sum(v.count * (v.sample_int/2**32) for v in itervalues(self.vocab)) *
-                                         self.iter)
+
         # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         if self.workers > 0:
             job_queue = Queue(maxsize=queue_factor * self.workers)
@@ -698,6 +715,10 @@ class Word2Vec(utils.SaveLoad):
             thread.start()
 
         pushed_words = 0
+        pushed_examples = 0
+        example_count = 0
+        trained_word_count = 0
+        raw_word_count = word_count
         push_done = False
         done_jobs = 0
         next_alpha = self.alpha
@@ -708,9 +729,17 @@ class Word2Vec(utils.SaveLoad):
                 job_no, items = next(jobs_source)
                 logger.debug("putting job #%i in the queue at alpha %.05f", job_no, next_alpha)
                 job_queue.put((items, next_alpha))
-                # update the learning rate before every job
-                pushed_words += round((chunksize / (self.corpus_count * self.iter)) * total_words)
-                next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
+                # update the learning rate before every next job
+                if self.min_alpha < next_alpha:
+                    if total_examples:
+                        # examples-based decay
+                        pushed_examples += len(items)
+                        next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_examples / total_examples)
+                    else:
+                        # words-based decay
+                        pushed_words += self._raw_word_count(items)
+                        next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
+                    next_alpha = max(next_alpha, self.min_alpha)
             except StopIteration:
                 logger.info(
                     "reached end of input; waiting to finish %i outstanding jobs",
@@ -719,14 +748,22 @@ class Word2Vec(utils.SaveLoad):
                     job_queue.put((None, 0))  # give the workers heads up that they can finish -- no more work!
                 push_done = True
             try:
-                while done_jobs < (job_no+1):
-                    word_count += progress_queue.get(push_done)  # only block after all jobs pushed
+                while done_jobs < (job_no+1) or not push_done:
+                    examples, trained_words, raw_words = progress_queue.get(push_done)  # only block after all jobs pushed
+                    example_count += examples
+                    trained_word_count += trained_words  # only words in vocab & sampled
+                    raw_word_count += raw_words
                     done_jobs += 1
                     elapsed = default_timer() - start
                     if elapsed >= next_report:
-                        est_alpha = self.alpha - (self.alpha - self.min_alpha) * (word_count / total_words)
-                        logger.info("PROGRESS: at %.2f%% words, alpha estimate %.05f, %.0f words/s",
-                                    100.0 * word_count / total_words, est_alpha, word_count / elapsed)
+                        if total_examples:
+                            # examples-based progress %
+                            logger.info("PROGRESS: at %.2f%% examples, %.0f words/s",
+                                    100.0 * example_count / total_examples, trained_word_count / elapsed)
+                        else:
+                            # words-based progress %
+                            logger.info("PROGRESS: at %.2f%% words, %.0f words/s",
+                                    100.0 * raw_word_count / total_words, trained_word_count / elapsed)
                         next_report = elapsed + report_delay  # don't flood log, wait report_delay seconds
                 else:
                     # loop ended by job count; really done
@@ -736,12 +773,18 @@ class Word2Vec(utils.SaveLoad):
 
         elapsed = default_timer() - start
         logger.info(
-            "training on %i words took %.1fs, %.0f words/s",
-            word_count, elapsed, word_count / elapsed if elapsed else 0.0)
-        self.train_count += 1
+            "training on %i raw words took %.1fs, %.0f trained words/s",
+            raw_word_count, elapsed, trained_word_count / elapsed if elapsed else 0.0)
+
+        if total_examples and total_examples != example_count:
+            logger.warn("supplied example count (%i) did not equal expected count (%i)", example_count, total_examples)
+        if total_words and total_words != raw_word_count:
+            logger.warn("supplied raw word count (%i) did not equal expected count (%i)", raw_word_count, total_words)
+
+        self.train_count += 1  # number of times train() has been called
         self.total_train_time += elapsed
         self.clear_sims()
-        return word_count
+        return trained_word_count
 
     def _score_job_words(self, sentence, work, neu1):
         if self.sg:
@@ -1320,10 +1363,26 @@ class Word2Vec(utils.SaveLoad):
     @classmethod
     def load(cls, *args, **kwargs):
         model = super(Word2Vec, cls).load(*args, **kwargs)
+        # update older models
         if hasattr(model, 'table'):
             delattr(model, 'table')  # discard in favor of cum_table
         if model.negative:
             model.make_cum_table()  # rebuild cum_table from vocabulary
+        if not hasattr(model, 'corpus_count'):
+            model.corpus_count = None
+        for v in model.vocab.values():
+            if hasattr(v, 'sample_int'):
+                break  # already 0.12.0+ style int probabilities
+            else:
+                v.sample_int = int(round(v.sample_probability * 2**32))
+                del v.sample_probability
+        if not hasattr(model, 'syn0_lockf'):
+            model.syn0_lockf = ones(len(model.syn0), dtype=REAL)
+        if not hasattr(model, 'random'):
+            model.random = random.RandomState(model.seed)
+        if not hasattr(model, 'train_count'):
+            model.train_count = 0
+            model.total_train_time = 0
         return model
 
 
