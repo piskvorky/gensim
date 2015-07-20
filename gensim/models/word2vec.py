@@ -76,6 +76,7 @@ from timeit import default_timer
 from copy import deepcopy
 from collections import defaultdict
 import threading
+import time
 try:
     from queue import Queue, Empty
 except ImportError:
@@ -83,7 +84,7 @@ except ImportError:
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, repeat as np_repeat, add as np_add
+    ndarray, empty, sum as np_sum, prod, ones
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from six import iteritems, itervalues, string_types
@@ -758,12 +759,14 @@ class Word2Vec(utils.SaveLoad):
                     if elapsed >= next_report:
                         if total_examples:
                             # examples-based progress %
-                            logger.info("PROGRESS: at %.2f%% examples, %.0f words/s",
-                                    100.0 * example_count / total_examples, trained_word_count / elapsed)
+                            logger.info(
+                                "PROGRESS: at %.2f%% examples, %.0f words/s",
+                                100.0 * example_count / total_examples, trained_word_count / elapsed)
                         else:
                             # words-based progress %
-                            logger.info("PROGRESS: at %.2f%% words, %.0f words/s",
-                                    100.0 * raw_word_count / total_words, trained_word_count / elapsed)
+                            logger.info(
+                                "PROGRESS: at %.2f%% words, %.0f words/s",
+                                100.0 * raw_word_count / total_words, trained_word_count / elapsed)
                         next_report = elapsed + report_delay  # don't flood log, wait report_delay seconds
                 else:
                     # loop ended by job count; really done
@@ -799,9 +802,9 @@ class Word2Vec(utils.SaveLoad):
         Each sentence must be a list of unicode strings.
         This does not change the fitted model in any way (see Word2Vec.train() for that)
 
-        See the article by Taddy [1] for examples of how to use such scores in document classification.
+        See the article by Taddy [taddy] for examples of how to use such scores in document classification.
 
-        .. [1] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
+        .. [taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
 
         """
         if FAST_VERSION < 0:
@@ -811,8 +814,8 @@ class Word2Vec(utils.SaveLoad):
 
         logger.info(
             "scoring sentences with %i workers on %i vocabulary and %i features, "
-            "using sg=%s hs=%s sample=%s and negative=%s"
-                    % (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative))
+            "using sg=%s hs=%s sample=%s and negative=%s",
+            self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative)
 
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before scoring new data")
@@ -1003,7 +1006,6 @@ class Word2Vec(utils.SaveLoad):
 
         `binary` is a boolean indicating whether the data is in binary word2vec format.
         """
-        counts = None
         overlap_count = 0
         logger.info("loading projection weights from %s" % (fname))
         with utils.smart_open(fname) as fin:
@@ -1065,10 +1067,14 @@ class Word2Vec(utils.SaveLoad):
             positive = [positive]
 
         # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
-        positive = [(word, 1.0) if isinstance(word, string_types + (ndarray,))
-                                else word for word in positive]
-        negative = [(word, -1.0) if isinstance(word, string_types + (ndarray,))
-                                 else word for word in negative]
+        positive = [
+            (word, 1.0) if isinstance(word, string_types + (ndarray,)) else word
+            for word in positive
+        ]
+        negative = [
+            (word, -1.0) if isinstance(word, string_types + (ndarray,)) else word
+            for word in negative
+        ]
 
         # compute the weighted average of all words
         all_words, mean = set(), []
