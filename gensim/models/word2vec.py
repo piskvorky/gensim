@@ -445,7 +445,7 @@ class Word2Vec(utils.SaveLoad):
         will have shorter binary codes. Called internally from `build_vocab()`.
 
         """
-        logger.info("constructing a huffman tree from %i words" % len(self.vocab))
+        logger.info("constructing a huffman tree from %i words", len(self.vocab))
 
         # build the huffman tree
         heap = list(itervalues(self.vocab))
@@ -469,7 +469,7 @@ class Word2Vec(utils.SaveLoad):
                     stack.append((node.left, array(list(codes) + [0], dtype=uint8), points))
                     stack.append((node.right, array(list(codes) + [1], dtype=uint8), points))
 
-            logger.info("built huffman tree with maximum node depth %i" % max_depth)
+            logger.info("built huffman tree with maximum node depth %i", max_depth)
 
     def build_vocab(self, sentences, keep_raw_vocab=False):
         """
@@ -543,10 +543,10 @@ class Word2Vec(utils.SaveLoad):
                 drop_unique += 1
                 drop_total += v
                 original_total += v
-        logger.info("min_count=%d retains %i unique words (drops %i)"
-                    % (min_count, len(retain_words), drop_unique))
-        logger.info("min_count leaves %i word corpus (%i%% of original %i)"
-                    % (retain_total, retain_total * 100 / max(original_total, 1), original_total))
+        logger.info("min_count=%d retains %i unique words (drops %i)",
+                    min_count, len(retain_words), drop_unique)
+        logger.info("min_count leaves %i word corpus (%i%% of original %i)",
+                    retain_total, retain_total * 100 / max(original_total, 1), original_total)
 
         # Precalculate each vocabulary item's threshold for sampling
         if not sample:
@@ -646,9 +646,11 @@ class Word2Vec(utils.SaveLoad):
                 self.neg_labels = zeros(self.negative + 1)
                 self.neg_labels[0] = 1.
 
-        logger.info("training model with %i workers on %i vocabulary and %i features, "
-                    "using sg=%s hs=%s sample=%s and negative=%s"
-                    % (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative))
+        logger.info(
+            "training model with %i workers on %i vocabulary and %i features, "
+            "using sg=%s hs=%s sample=%s and negative=%s",
+            self.workers, len(self.vocab), self.layer1_size, self.sg,
+            self.hs, self.sample, self.negative)
 
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
@@ -710,7 +712,9 @@ class Word2Vec(utils.SaveLoad):
                 pushed_words += round((chunksize / (self.corpus_count * self.iter)) * total_words)
                 next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
             except StopIteration:
-                logger.info("reached end of input; waiting to finish %i outstanding jobs" % (job_no-done_jobs+1))
+                logger.info(
+                    "reached end of input; waiting to finish %i outstanding jobs",
+                    job_no - done_jobs + 1)
                 for _ in xrange(self.workers):
                     job_queue.put((None, 0))  # give the workers heads up that they can finish -- no more work!
                 push_done = True
@@ -731,8 +735,9 @@ class Word2Vec(utils.SaveLoad):
                 pass  # already out of loop; continue to next push
 
         elapsed = default_timer() - start
-        logger.info("training on %i words took %.1fs, %.0f words/s" %
-                    (word_count, elapsed, word_count / elapsed if elapsed else 0.0))
+        logger.info(
+            "training on %i words took %.1fs, %.0f words/s",
+            word_count, elapsed, word_count / elapsed if elapsed else 0.0)
         self.train_count += 1
         self.total_train_time += elapsed
         self.clear_sims()
@@ -761,8 +766,9 @@ class Word2Vec(utils.SaveLoad):
             warnings.warn("C extension compilation failed, scoring will be slow. "
                           "Install a C compiler and reinstall gensim for fastness.")
 
-        logger.info("scoring sentences with %i workers on %i vocabulary and %i features, "
-                    "using sg=%s hs=%s sample=%s and negative=%s"
+        logger.info(
+            "scoring sentences with %i workers on %i vocabulary and %i features, "
+            "using sg=%s hs=%s sample=%s and negative=%s"
                     % (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative))
 
         if not self.vocab:
@@ -1424,9 +1430,11 @@ class LineSentence(object):
 
 # Example: ./word2vec.py ~/workspace/word2vec/text8 ~/workspace/word2vec/questions-words.txt ./text8
 if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logging.info("running %s" % " ".join(sys.argv))
-    logging.info("using optimization %s" % FAST_VERSION)
+    logging.basicConfig(
+        format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
+        level=logging.INFO)
+    logging.info("running %s", " ".join(sys.argv))
+    logging.info("using optimization %s", FAST_VERSION)
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
@@ -1451,4 +1459,4 @@ if __name__ == "__main__":
         questions_file = sys.argv[2]
         model.accuracy(sys.argv[2])
 
-    logging.info("finished running %s" % program)
+    logging.info("finished running %s", program)
