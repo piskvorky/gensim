@@ -802,7 +802,7 @@ class Word2Vec(utils.SaveLoad):
         Each sentence must be a list of unicode strings.
         This does not change the fitted model in any way (see Word2Vec.train() for that)
 
-        See the article by Taddy [taddy] for examples of how to use such scores in document classification.
+        See the article by Taddy [taddy]_ for examples of how to use such scores in document classification.
 
         .. [taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
 

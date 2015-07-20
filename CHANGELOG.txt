@@ -1,6 +1,15 @@
 Changes
 =======
 
+0.12.1, 20/07/2015
+
+* improvements to testing, switch to Travis CI containers
+* support for loading old word2vec models (<=0.11.1) in 0.12+ (Gordon Mohr, #405)
+* various bug fixes to word2vec, doc2vec (Gordon Mohr, #393, #386, #404)
+* TextSummatization support for very short texts (Federico Barrios, #390)
+* support for word2vec[['word1', 'word2'...]] convenience API calls (Satish Palaniappan, #395)
+* MatrixSimilarity supports indexing generator corpora (single pass)
+
 0.12.0, 06/07/2015
 
 * complete API, performance, memory overhaul of doc2vec (Gordon Mohr, #356, #373, #380, #384)
