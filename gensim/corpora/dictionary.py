@@ -155,16 +155,14 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         token2id = self.token2id
         if allow_update or return_missing:
-            missing = dict((w, freq) for w, freq in iteritems(counter)
-                               if w not in token2id)
+            missing = dict((w, freq) for w, freq in iteritems(counter) if w not in token2id)
             if allow_update:
                 for w in missing:
                     # new id = number of ids made so far;
                     # NOTE this assumes there are no gaps in the id sequence!
                     token2id[w] = len(token2id)
 
-        result = dict((token2id[w], freq) for w, freq in iteritems(counter)
-                  if w in token2id)
+        result = dict((token2id[w], freq) for w, freq in iteritems(counter) if w in token2id)
 
         if allow_update:
             self.num_docs += 1

@@ -22,6 +22,7 @@ ez_setup.use_setuptools()
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
+
 # the following code is adapted from tornado's setup.py:
 # https://github.com/tornadoweb/tornado/blob/master/setup.py
 # to support installing without the extension on platforms where
@@ -66,7 +67,8 @@ http://api.mongodb.org/python/current/installation.html#osx
         except Exception:
             e = sys.exc_info()[1]
             sys.stdout.write('%s\n' % str(e))
-            warnings.warn(self.warning_message +
+            warnings.warn(
+                self.warning_message +
                 "Extension modules" +
                 "There was an issue with your platform configuration - see above.")
 
@@ -77,7 +79,8 @@ http://api.mongodb.org/python/current/installation.html#osx
         except Exception:
             e = sys.exc_info()[1]
             sys.stdout.write('%s\n' % str(e))
-            warnings.warn(self.warning_message +
+            warnings.warn(
+                self.warning_message +
                 "The %s extension module" % (name,) +
                 "The output above this warning shows how the compilation failed.")
 
@@ -104,7 +107,7 @@ model_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
 
 setup(
     name='gensim',
-    version='0.12.0',
+    version='0.12.1rc1',
     description='Python framework for fast Vector Space Modelling',
     long_description=readfile('README.rst'),
 

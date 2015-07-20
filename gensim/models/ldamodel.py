@@ -314,8 +314,8 @@ class LdaModel(interfaces.TransformationABC):
             self.update(corpus)
 
     def __str__(self):
-        return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s, alpha=%s)" % \
-            (self.num_terms, self.num_topics, self.decay, self.chunksize, self.alpha)
+        return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % \
+            (self.num_terms, self.num_topics, self.decay, self.chunksize)
 
     def sync_state(self):
         self.expElogbeta = numpy.exp(self.state.get_Elogbeta())
@@ -840,10 +840,10 @@ class LdaModel(interfaces.TransformationABC):
         Note: If you intend to use models across Python 2/3 versions there are a few things to
         keep in mind:
 
-        1. The pickled Python dictionaries will not work across Python versions
-        2. The `save` method does not automatically save all NumPy arrays using NumPy, only
-        those ones that exceed `sep_limit` set in `gensim.utils.SaveLoad.save`. The main
-        concern here is the `alpha` array if for instance using `alpha='auto'`.
+          1. The pickled Python dictionaries will not work across Python versions
+          2. The `save` method does not automatically save all NumPy arrays using NumPy, only
+             those ones that exceed `sep_limit` set in `gensim.utils.SaveLoad.save`. The main
+             concern here is the `alpha` array if for instance using `alpha='auto'`.
 
         Please refer to the wiki recipes section (https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ#q9-how-do-i-load-a-model-in-python-3-that-was-trained-and-saved-using-python-2)
         for an example on how to work around these issues.

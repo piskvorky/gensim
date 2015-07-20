@@ -76,6 +76,7 @@ from timeit import default_timer
 from copy import deepcopy
 from collections import defaultdict
 import threading
+import time
 try:
     from queue import Queue, Empty
 except ImportError:
@@ -83,7 +84,7 @@ except ImportError:
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, repeat as np_repeat
+    ndarray, empty, sum as np_sum, prod, ones
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from six import iteritems, itervalues, string_types
@@ -110,16 +111,16 @@ except ImportError:
 
         """
         word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab and
-                       model.vocab[w].sample_int > model.random.randint(2**32)]
-        for pos, word in enumerate(sentence):
+                       model.vocab[w].sample_int > model.random.rand() * 2**32]
+        for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
 
             # now go over all words from the (reduced) window, predicting each one in turn
             start = max(0, pos - model.window + reduced_window)
-        for pos2, word2_vocab in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
-                # don't train on OOV words and on the `word` itself
-                if (pos2 == pos):
-                    train_sg_pair(model, word, word2_vocab.index, alpha)
+            for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
+                # don't train on the `word` itself
+                if pos2 != pos:
+                    train_sg_pair(model, model.index2word[word.index], word2.index, alpha)
 
         return len(word_vocabs)
 
@@ -135,7 +136,7 @@ except ImportError:
 
         """
         word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab and
-                       model.vocab[w].sample_int > model.random.randint(2**32)]
+                       model.vocab[w].sample_int > model.random.rand() * 2**32]
         for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
             start = max(0, pos - model.window + reduced_window)
@@ -187,6 +188,7 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         if learn_hidden:
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
+
     if learn_vectors:
         l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.syn0[word2.index], if that is l1)
     return neu1e
@@ -216,11 +218,14 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
         if learn_hidden:
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
+
     if learn_vectors:
         # learn input -> hidden, here for all words in the window separately
-        l = len(input_word_indices)
-        model.syn0[input_word_indices] += np_repeat(neu1e, l).reshape(l, model.vector_size) * \
-                                          model.syn0_lockf[input_word_indices][:, None]
+        if not model.cbow_mean and input_word_indices:
+            neu1e /= len(input_word_indices)
+        for i in input_word_indices:
+            model.syn0[i] += neu1e * model.syn0_lockf[i]
+
     return neu1e
 
 # could move this import up to where train_* is imported,
@@ -441,7 +446,7 @@ class Word2Vec(utils.SaveLoad):
         will have shorter binary codes. Called internally from `build_vocab()`.
 
         """
-        logger.info("constructing a huffman tree from %i words" % len(self.vocab))
+        logger.info("constructing a huffman tree from %i words", len(self.vocab))
 
         # build the huffman tree
         heap = list(itervalues(self.vocab))
@@ -465,7 +470,7 @@ class Word2Vec(utils.SaveLoad):
                     stack.append((node.left, array(list(codes) + [0], dtype=uint8), points))
                     stack.append((node.right, array(list(codes) + [1], dtype=uint8), points))
 
-            logger.info("built huffman tree with maximum node depth %i" % max_depth)
+            logger.info("built huffman tree with maximum node depth %i", max_depth)
 
     def build_vocab(self, sentences, keep_raw_vocab=False):
         """
@@ -496,7 +501,7 @@ class Word2Vec(utils.SaveLoad):
                 min_reduce += 1
 
         total_words += sum(itervalues(vocab))
-        logger.info("collected %i word types from a corpus of %i words and %i sentences",
+        logger.info("collected %i word types from a corpus of %i raw words and %i sentences",
                     len(vocab), total_words, sentence_no + 1)
         self.corpus_count = sentence_no + 1
         self.raw_vocab = vocab
@@ -539,10 +544,10 @@ class Word2Vec(utils.SaveLoad):
                 drop_unique += 1
                 drop_total += v
                 original_total += v
-        logger.info("min_count=%d retains %i unique words (drops %i)"
-                    % (min_count, len(retain_words), drop_unique))
-        logger.info("min_count leaves %i word corpus (%i%% of original %i)"
-                    % (retain_total, retain_total * 100 / max(original_total, 1), original_total))
+        logger.info("min_count=%d retains %i unique words (drops %i)",
+                    min_count, len(retain_words), drop_unique)
+        logger.info("min_count leaves %i word corpus (%i%% of original %i)",
+                    retain_total, retain_total * 100 / max(original_total, 1), original_total)
 
         # Precalculate each vocabulary item's threshold for sampling
         if not sample:
@@ -554,6 +559,7 @@ class Word2Vec(utils.SaveLoad):
         else:
             # new shorthand: sample >= 1 means downsample all words with higher count than sample
             threshold_count = int(sample * (3 + sqrt(5)) / 2)
+
         downsample_total, downsample_unique = 0, 0
         for w in retain_words:
             v = self.raw_vocab[w]
@@ -618,17 +624,26 @@ class Word2Vec(utils.SaveLoad):
     def _do_train_job(self, job, alpha, inits):
         work, neu1 = inits
         tally = 0
+        raw_tally = 0
         for sentence in job:
             if self.sg:
                 tally += train_sentence_sg(self, sentence, alpha, work)
             else:
                 tally += train_sentence_cbow(self, sentence, alpha, work, neu1)
-        return tally
+            raw_tally += len(sentence)
+        return (tally, raw_tally)
 
-    def train(self, sentences, total_words=None, word_count=0, chunksize=100, queue_factor=2, report_delay=1):
+    def _raw_word_count(self, items):
+        return sum(len(item) for item in items)
+
+    def train(self, sentences, total_words=None, word_count=0, chunksize=100, total_examples=None, queue_factor=2, report_delay=1):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
-        Each sentence must be a list of unicode strings.
+        For Word2Vec, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
+
+        To support linear learning-rate decay from (initial) alpha to min_alpha, either total_examples
+        (count of sentences) or total_words (count of raw words in sentences) should be provided, unless the
+        sentences are the same as those that were used to initially build the vocabulary.
 
         """
         if FAST_VERSION < 0:
@@ -641,17 +656,28 @@ class Word2Vec(utils.SaveLoad):
                 self.neg_labels = zeros(self.negative + 1)
                 self.neg_labels[0] = 1.
 
-        logger.info("training model with %i workers on %i vocabulary and %i features, "
-                    "using sg=%s hs=%s sample=%s and negative=%s"
-                    % (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative))
+        logger.info(
+            "training model with %i workers on %i vocabulary and %i features, "
+            "using sg=%s hs=%s sample=%s and negative=%s",
+            self.workers, len(self.vocab), self.layer1_size, self.sg,
+            self.hs, self.sample, self.negative)
 
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
         if not hasattr(self, 'syn0'):
             raise RuntimeError("you must first finalize vocabulary before training the model")
 
+        if total_words is None and total_examples is None:
+            if self.corpus_count:
+                total_examples = self.corpus_count
+                logger.info("expecting %i examples, matching count from corpus used for vocabulary survey", total_examples)
+            else:
+                raise ValueError("you must provide either total_words or total_examples, to enable alpha and progress calculations")
+
         if self.iter > 1:
             sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
+            total_words = total_words and total_words * self.iter
+            total_examples = total_examples and total_examples * self.iter
 
         def worker_init():
             work = matutils.zeros_aligned(self.layer1_size, dtype=REAL)  # per-thread private work memory
@@ -663,8 +689,8 @@ class Word2Vec(utils.SaveLoad):
             if items is None:  # signal to finish
                 return False
             # train & return tally
-            job_words = self._do_train_job(items, alpha, inits)
-            progress_queue.put(job_words)  # report progress
+            tally, raw_tally = self._do_train_job(items, alpha, inits)
+            progress_queue.put((len(items), tally, raw_tally))  # report progress
             return True
 
         def worker_loop():
@@ -676,8 +702,7 @@ class Word2Vec(utils.SaveLoad):
                     break
 
         start, next_report = default_timer(), 1.0
-        total_words = total_words or int(sum(v.count * (v.sample_int/2**32) for v in itervalues(self.vocab)) *
-                                         self.iter)
+
         # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         if self.workers > 0:
             job_queue = Queue(maxsize=queue_factor * self.workers)
@@ -691,6 +716,10 @@ class Word2Vec(utils.SaveLoad):
             thread.start()
 
         pushed_words = 0
+        pushed_examples = 0
+        example_count = 0
+        trained_word_count = 0
+        raw_word_count = word_count
         push_done = False
         done_jobs = 0
         next_alpha = self.alpha
@@ -699,25 +728,45 @@ class Word2Vec(utils.SaveLoad):
         while True:
             try:
                 job_no, items = next(jobs_source)
-                logger.debug("putting job #%i in the queue", job_no)
+                logger.debug("putting job #%i in the queue at alpha %.05f", job_no, next_alpha)
                 job_queue.put((items, next_alpha))
-                # update the learning rate before every job
-                pushed_words += round((chunksize/self.corpus_count)/total_words)
-                next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
+                # update the learning rate before every next job
+                if self.min_alpha < next_alpha:
+                    if total_examples:
+                        # examples-based decay
+                        pushed_examples += len(items)
+                        next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_examples / total_examples)
+                    else:
+                        # words-based decay
+                        pushed_words += self._raw_word_count(items)
+                        next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
+                    next_alpha = max(next_alpha, self.min_alpha)
             except StopIteration:
-                logger.info("reached end of input; waiting to finish %i outstanding jobs" % (job_no-done_jobs+1))
+                logger.info(
+                    "reached end of input; waiting to finish %i outstanding jobs",
+                    job_no - done_jobs + 1)
                 for _ in xrange(self.workers):
                     job_queue.put((None, 0))  # give the workers heads up that they can finish -- no more work!
                 push_done = True
             try:
-                while done_jobs < (job_no+1):
-                    word_count += progress_queue.get(push_done)  # only block after all jobs pushed
+                while done_jobs < (job_no+1) or not push_done:
+                    examples, trained_words, raw_words = progress_queue.get(push_done)  # only block after all jobs pushed
+                    example_count += examples
+                    trained_word_count += trained_words  # only words in vocab & sampled
+                    raw_word_count += raw_words
                     done_jobs += 1
                     elapsed = default_timer() - start
                     if elapsed >= next_report:
-                        est_alpha = self.alpha - (self.alpha - self.min_alpha) * (word_count / total_words)
-                        logger.info("PROGRESS: at %.2f%% words, alpha %.05f, %.0f words/s",
-                                    100.0 * word_count / total_words, est_alpha, word_count / elapsed)
+                        if total_examples:
+                            # examples-based progress %
+                            logger.info(
+                                "PROGRESS: at %.2f%% examples, %.0f words/s",
+                                100.0 * example_count / total_examples, trained_word_count / elapsed)
+                        else:
+                            # words-based progress %
+                            logger.info(
+                                "PROGRESS: at %.2f%% words, %.0f words/s",
+                                100.0 * raw_word_count / total_words, trained_word_count / elapsed)
                         next_report = elapsed + report_delay  # don't flood log, wait report_delay seconds
                 else:
                     # loop ended by job count; really done
@@ -726,12 +775,19 @@ class Word2Vec(utils.SaveLoad):
                 pass  # already out of loop; continue to next push
 
         elapsed = default_timer() - start
-        logger.info("training on %i words took %.1fs, %.0f words/s" %
-                    (word_count, elapsed, word_count / elapsed if elapsed else 0.0))
-        self.train_count += 1
+        logger.info(
+            "training on %i raw words took %.1fs, %.0f trained words/s",
+            raw_word_count, elapsed, trained_word_count / elapsed if elapsed else 0.0)
+
+        if total_examples and total_examples != example_count:
+            logger.warn("supplied example count (%i) did not equal expected count (%i)", example_count, total_examples)
+        if total_words and total_words != raw_word_count:
+            logger.warn("supplied raw word count (%i) did not equal expected count (%i)", raw_word_count, total_words)
+
+        self.train_count += 1  # number of times train() has been called
         self.total_train_time += elapsed
         self.clear_sims()
-        return word_count
+        return trained_word_count
 
     def _score_job_words(self, sentence, work, neu1):
         if self.sg:
@@ -746,9 +802,9 @@ class Word2Vec(utils.SaveLoad):
         Each sentence must be a list of unicode strings.
         This does not change the fitted model in any way (see Word2Vec.train() for that)
 
-        See the article by Taddy [1] for examples of how to use such scores in document classification.
+        See the article by Taddy [taddy]_ for examples of how to use such scores in document classification.
 
-        .. [1] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
+        .. [taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
 
         """
         if FAST_VERSION < 0:
@@ -756,9 +812,10 @@ class Word2Vec(utils.SaveLoad):
             warnings.warn("C extension compilation failed, scoring will be slow. "
                           "Install a C compiler and reinstall gensim for fastness.")
 
-        logger.info("scoring sentences with %i workers on %i vocabulary and %i features, "
-                    "using sg=%s hs=%s sample=%s and negative=%s"
-                    % (self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative))
+        logger.info(
+            "scoring sentences with %i workers on %i vocabulary and %i features, "
+            "using sg=%s hs=%s sample=%s and negative=%s",
+            self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative)
 
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before scoring new data")
@@ -923,7 +980,7 @@ class Word2Vec(utils.SaveLoad):
                     result.syn0[line_no] = fromstring(fin.read(binary_len), dtype=REAL)
             else:
                 for line_no, line in enumerate(fin):
-                    parts = utils.to_unicode(line[:-1], encoding=encoding).split(" ")
+                    parts = utils.to_unicode(line.rstrip(), encoding=encoding).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
                     word, weights = parts[0], list(map(REAL, parts[1:]))
@@ -949,7 +1006,6 @@ class Word2Vec(utils.SaveLoad):
 
         `binary` is a boolean indicating whether the data is in binary word2vec format.
         """
-        counts = None
         overlap_count = 0
         logger.info("loading projection weights from %s" % (fname))
         with utils.smart_open(fname) as fin:
@@ -977,7 +1033,7 @@ class Word2Vec(utils.SaveLoad):
                         self.syn0_lockf[self.vocab[word].index] = 0.0  # lock it
             else:
                 for line_no, line in enumerate(fin):
-                    parts = utils.to_unicode(line[:-1], encoding=encoding).split(" ")
+                    parts = utils.to_unicode(line.rstrip(), encoding=encoding).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
                     word, weights = parts[0], list(map(REAL, parts[1:]))
@@ -1011,10 +1067,14 @@ class Word2Vec(utils.SaveLoad):
             positive = [positive]
 
         # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
-        positive = [(word, 1.0) if isinstance(word, string_types + (ndarray,))
-                                else word for word in positive]
-        negative = [(word, -1.0) if isinstance(word, string_types + (ndarray,))
-                                 else word for word in negative]
+        positive = [
+            (word, 1.0) if isinstance(word, string_types + (ndarray,)) else word
+            for word in positive
+        ]
+        negative = [
+            (word, -1.0) if isinstance(word, string_types + (ndarray,)) else word
+            for word in negative
+        ]
 
         # compute the weighted average of all words
         all_words, mean = set(), []
@@ -1116,17 +1176,34 @@ class Word2Vec(utils.SaveLoad):
         dists = dot(vectors, mean)
         return sorted(zip(dists, words))[0][1]
 
-    def __getitem__(self, word):
+    def __getitem__(self, words):
+
         """
-        Return a word's representations in vector space, as a 1D numpy array.
+        Accept a single word or a list of words as input.
+
+        If a single word: returns the word's representations in vector space, as
+        a 1D numpy array.
+
+        Multiple words: return the words' representations in vector space, as a
+        2d numpy array: #words x #vector_size. Matrix rows are in the same order
+        as in input.
 
         Example::
 
-          >>> trained_model['woman']
+          >>> trained_model['office']
+          array([ -1.40128313e-02, ...])
+
+          >>> trained_model[['office', 'products']]
           array([ -1.40128313e-02, ...]
+                [ -1.70425311e-03, ...]
+                 ...)
 
         """
-        return self.syn0[self.vocab[word].index]
+        if isinstance(words, string_types):
+            # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
+            return self.syn0[self.vocab[words].index]
+
+        return vstack([self.syn0[self.vocab[word].index] for word in words])
 
     def __contains__(self, word):
         return word in self.vocab
@@ -1188,10 +1265,10 @@ class Word2Vec(utils.SaveLoad):
             else:
                 self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
-    def estimate_memory(self, vocab_size=None):
+    def estimate_memory(self, vocab_size=None, report=None):
         """Estimate required memory for a model using current settings and provided vocabulary size."""
         vocab_size = vocab_size or len(self.vocab)
-        report = {}
+        report = report or {}
         report['vocab'] = vocab_size * (700 if self.hs else 500)
         report['syn0'] = vocab_size * self.vector_size * dtype(REAL).itemsize
         if self.hs:
@@ -1292,10 +1369,26 @@ class Word2Vec(utils.SaveLoad):
     @classmethod
     def load(cls, *args, **kwargs):
         model = super(Word2Vec, cls).load(*args, **kwargs)
+        # update older models
         if hasattr(model, 'table'):
             delattr(model, 'table')  # discard in favor of cum_table
         if model.negative:
             model.make_cum_table()  # rebuild cum_table from vocabulary
+        if not hasattr(model, 'corpus_count'):
+            model.corpus_count = None
+        for v in model.vocab.values():
+            if hasattr(v, 'sample_int'):
+                break  # already 0.12.0+ style int probabilities
+            else:
+                v.sample_int = int(round(v.sample_probability * 2**32))
+                del v.sample_probability
+        if not hasattr(model, 'syn0_lockf'):
+            model.syn0_lockf = ones(len(model.syn0), dtype=REAL)
+        if not hasattr(model, 'random'):
+            model.random = random.RandomState(model.seed)
+        if not hasattr(model, 'train_count'):
+            model.train_count = 0
+            model.total_train_time = 0
         return model
 
 
@@ -1360,7 +1453,7 @@ class Text8Corpus(object):
 
 class LineSentence(object):
     """Simple format: one sentence = one line; words already preprocessed and separated by whitespace."""
-    def __init__(self, source):
+    def __init__(self, source, max_sentence_length=10000):
         """
         `source` can be either a string or a file object.
 
@@ -1375,6 +1468,7 @@ class LineSentence(object):
 
         """
         self.source = source
+        self.max_sentence_length = max_sentence_length
 
     def __iter__(self):
         """Iterate through the lines in the source."""
@@ -1383,19 +1477,29 @@ class LineSentence(object):
             # Things that don't have seek will trigger an exception
             self.source.seek(0)
             for line in self.source:
-                yield utils.to_unicode(line).split()
+                line = utils.to_unicode(line).split()
+                i = 0
+                while i < len(line):
+                    yield line[i:(i + self.max_sentence_length)]
+                    i += self.max_sentence_length
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
             with utils.smart_open(self.source) as fin:
                 for line in fin:
-                    yield utils.to_unicode(line).split()
+                    line = utils.to_unicode(line).split()
+                    i = 0
+                    while i < len(line):
+                        yield line[i:(i + self.max_sentence_length)]
+                        i += self.max_sentence_length
 
 
 # Example: ./word2vec.py ~/workspace/word2vec/text8 ~/workspace/word2vec/questions-words.txt ./text8
 if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logging.info("running %s" % " ".join(sys.argv))
-    logging.info("using optimization %s" % FAST_VERSION)
+    logging.basicConfig(
+        format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
+        level=logging.INFO)
+    logging.info("running %s", " ".join(sys.argv))
+    logging.info("using optimization %s", FAST_VERSION)
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
@@ -1420,4 +1524,4 @@ if __name__ == "__main__":
         questions_file = sys.argv[2]
         model.accuracy(sys.argv[2])
 
-    logging.info("finished running %s" % program)
+    logging.info("finished running %s", program)

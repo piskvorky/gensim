@@ -1,14 +1,23 @@
 Changes
 =======
 
-0.11.2, 05/07/2015
+0.12.1, 20/07/2015
+
+* improvements to testing, switch to Travis CI containers
+* support for loading old word2vec models (<=0.11.1) in 0.12+ (Gordon Mohr, #405)
+* various bug fixes to word2vec, doc2vec (Gordon Mohr, #393, #386, #404)
+* TextSummatization support for very short texts (Federico Barrios, #390)
+* support for word2vec[['word1', 'word2'...]] convenience API calls (Satish Palaniappan, #395)
+* MatrixSimilarity supports indexing generator corpora (single pass)
+
+0.12.0, 06/07/2015
 
 * complete API, performance, memory overhaul of doc2vec (Gordon Mohr, #356, #373, #380, #384)
   - fast infer_vector(); optional memory-mapped doc vectors; memory savings with int doc IDs
   - 'dbow_words' for combined DBOW & word skip-gram training; new 'dm_concat' mode
   - multithreading & negative-sampling optimizations (also benefitting word2vec)
-  - API NOTE: doc vectors must now be accessed/compared through model's 'docvecs' field 
-    (eg: "model.docvecs['my_ID']" or "model.docvecs.most_similar('my_ID')") 
+  - API NOTE: doc vectors must now be accessed/compared through model's 'docvecs' field
+    (eg: "model.docvecs['my_ID']" or "model.docvecs.most_similar('my_ID')")
   - https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/doc2vec-IMDB.ipynb
 * new "text summarization" module (PR #324: Federico Lopez, Federico Barrios)
   - https://github.com/summanlp/docs/raw/master/articulo/articulo-en.pdf
@@ -18,6 +27,7 @@ Changes
   - http://arxiv.org/abs/1504.07295
   - http://nbviewer.ipython.org/github/taddylab/deepir/blob/master/w2v-inversion.ipynb
 * word2vec supports "encoding" parameter when loading from C format, for non-utf8 models
+* more memory-efficient word2vec training (#385)
 * fixes to Python3 compatibility (Pavel Kalaidin #330, S-Eugene #369)
 * enhancements to save/load format (Liang Bo Wang #363, Gordon Mohr #356)
   - pickle defaults to protocol=2 for better py3 compatibility
