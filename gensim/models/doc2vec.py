@@ -597,6 +597,20 @@ class Doc2Vec(Word2Vec):
         self.docvecs.borrow_from(other_model.docvecs)
         super(Doc2Vec, self).reset_from(other_model)
 
+    def build_vocab(self, sentences, keep_raw_vocab=False):
+        """
+        Build vocabulary from a sequence of sentences (can be a once-only generator stream).
+        Each sentence must be a list of unicode strings.
+
+        """
+        if isinstance(sentences, tuple):
+            raise TypeError
+        if not sentences:
+            return
+        self.scan_vocab(sentences)  # initial survey
+        self.scale_vocab(keep_raw_vocab)  # trim by min_count & precalculate downsampling
+        self.finalize_vocab()  # build tables & arrays
+
     def scan_vocab(self, documents, progress_per=10000):
         logger.info("collecting all words and their counts")
         document_no = -1
