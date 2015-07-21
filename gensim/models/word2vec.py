@@ -499,7 +499,7 @@ class Word2Vec(utils.SaveLoad):
                 return False
             # train & return tally
             work_vocab = self._do_scan_vocab_job(items, inits)
-            progress_queue.put((len(items), work_vocab))  # report progress
+            progress_queue.put((len(items), work_vocab.copy()))  # report progress
             return True
 
         def worker_loop():
