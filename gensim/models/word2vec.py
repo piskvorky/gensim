@@ -67,6 +67,7 @@ where "words" are actually multiword expressions, such as `new_york_times` or `f
 .. [3] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
 """
 from __future__ import division  # py3 "true division"
+import inspect
 
 import logging
 import sys
@@ -478,6 +479,8 @@ class Word2Vec(utils.SaveLoad):
         Each sentence must be a list of unicode strings.
 
         """
+        if inspect.isgenerator(sentences[0]) or inspect.isgeneratorfunction(sentences[0]):
+            raise TypeError
         if not sentences:
             return
         self.scan_vocab(sentences, chunksize=scan_size)  # initial survey
