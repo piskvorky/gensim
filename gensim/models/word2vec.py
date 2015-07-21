@@ -479,7 +479,7 @@ class Word2Vec(utils.SaveLoad):
         Each sentence must be a list of unicode strings.
 
         """
-        if inspect.isgenerator(sentences[0]) or inspect.isgeneratorfunction(sentences[0]):
+        if isinstance(sentences, tuple):
             raise TypeError
         if not sentences:
             return
@@ -570,8 +570,6 @@ class Word2Vec(utils.SaveLoad):
     def _do_scan_vocab_job(self, job, inits):
         inits.clear()
         for sentence in job:
-            if not sentence:
-                print job
             for word in sentence:
                 inits[word] += 1
         return inits
