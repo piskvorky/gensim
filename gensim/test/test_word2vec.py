@@ -111,20 +111,22 @@ class TestWord2VecModel(unittest.TestCase):
         corpus = LeeCorpus()
         total_words = sum(len(sentence) for sentence in corpus)
 
-        # try vocab building explicitly, using all words
-        model = word2vec.Word2Vec(min_count=1)
-        model.build_vocab(corpus)
-        self.assertTrue(len(model.vocab) == 6981)
-        # with min_count=1, we're not throwing away anything, so make sure the word counts add up to be the entire corpus
-        self.assertEqual(sum(v.count for v in model.vocab.values()), total_words)
-        # make sure the binary codes are correct
-        numpy.allclose(model.vocab['the'].code, [1, 1, 0, 0])
+        for workers in [2, 4]:
+            for batch_size in [25, 50]:
+                # try vocab building explicitly, using all words
+                model = word2vec.Word2Vec(min_count=1, workers=workers)
+                model.build_vocab(corpus, scan_size=batch_size)
+                self.assertTrue(len(model.vocab) == 6981)
+                # with min_count=1, we're not throwing away anything, so make sure the word counts add up to be the entire corpus
+                self.assertEqual(sum(v.count for v in model.vocab.values()), total_words)
+                # make sure the binary codes are correct
+                numpy.allclose(model.vocab['the'].code, [1, 1, 0, 0])
 
-        # test building vocab with default params
-        model = word2vec.Word2Vec()
-        model.build_vocab(corpus)
-        self.assertTrue(len(model.vocab) == 1750)
-        numpy.allclose(model.vocab['the'].code, [1, 1, 1, 0])
+                # test building vocab with default params
+                model = word2vec.Word2Vec(workers=workers)
+                model.build_vocab(corpus, scan_size=batch_size)
+                self.assertTrue(len(model.vocab) == 1750)
+                numpy.allclose(model.vocab['the'].code, [1, 1, 1, 0])
 
         # no input => "RuntimeError: you must first build vocabulary before training the model"
         self.assertRaises(RuntimeError, word2vec.Word2Vec, [])
@@ -154,7 +156,6 @@ class TestWord2VecModel(unittest.TestCase):
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1)
         self.models_equal(model, model2)
-
 
     def testLocking(self):
         """Test word2vec training doesn't change locked vectors."""

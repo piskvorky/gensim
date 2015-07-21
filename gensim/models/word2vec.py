@@ -74,7 +74,7 @@ import os
 import heapq
 from timeit import default_timer
 from copy import deepcopy
-from collections import defaultdict
+from collections import defaultdict, Counter
 import threading
 import time
 try:
@@ -472,20 +472,22 @@ class Word2Vec(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i", max_depth)
 
-    def build_vocab(self, sentences, keep_raw_vocab=False):
+    def build_vocab(self, sentences, keep_raw_vocab=False, scan_size=10000):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
 
         """
-        self.scan_vocab(sentences)  # initial survey
+        if not sentences:
+            return
+        self.scan_vocab(sentences, chunksize=scan_size)  # initial survey
         self.scale_vocab(keep_raw_vocab)  # trim by min_count & precalculate downsampling
         self.finalize_vocab()  # build tables & arrays
 
-    def scan_vocab(self, sentences, chunksize=10000, total_sentences=None, queue_factor=2, report_delay=1):
+    def scan_vocab(self, sentences, chunksize=10000, queue_factor=2, report_delay=1):
         """Do an initial scan of all words appearing in sentences."""
         def worker_init():
-            work_vocab = defaultdict(int)
+            work_vocab = Counter()
             return work_vocab
 
         def worker_one_job(job, inits):
@@ -523,7 +525,8 @@ class Word2Vec(utils.SaveLoad):
         sent_count = 0
         push_done = False
         done_jobs = 0
-        vocab = defaultdict(int)
+        job_no = 0
+        vocab = Counter()
         jobs_source = enumerate(utils.grouper(sentences, chunksize))
         while True:
             try:
@@ -535,20 +538,18 @@ class Word2Vec(utils.SaveLoad):
                     "reached end of input; waiting to finish %i outstanding jobs",
                     job_no - done_jobs + 1)
                 for _ in xrange(self.workers):
-                    job_queue.put((None, 0))  # give the workers heads up that they can finish -- no more work!
+                    job_queue.put(None)  # give the workers heads up that they can finish -- no more work!
                 push_done = True
             try:
                 while done_jobs < (job_no+1) or not push_done:
                     sentences, work_vocab = progress_queue.get(push_done)  # only block after all jobs pushed
                     sent_count += sentences
-                    vocab.update(work_vocab)
+                    vocab += work_vocab
                     done_jobs += 1
                     elapsed = default_timer() - start
                     if elapsed >= next_report:
-                        if total_sentences:
-                            # examples-based progress %
-                            logger.info("PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
-                                        sent_count, sum(itervalues(vocab)) + total_words, len(vocab))
+                        logger.info("PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
+                                    sent_count, sum(itervalues(vocab)) + total_words, len(vocab))
                         next_report = elapsed + report_delay  # don't flood log, wait report_delay seconds
                 else:
                     # loop ended by job count; really done
@@ -559,15 +560,16 @@ class Word2Vec(utils.SaveLoad):
         logger.info("PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
                     sent_count, sum(itervalues(vocab)) + total_words, len(vocab))
 
-        if total_sentences and total_sentences != sent_count:
-            logger.warn("supplied sentence count (%i) did not equal expected count (%i)", sent_count, total_sentences)
-
         total_words += sum(itervalues(vocab))
-        self.corpus_count = sent_count + 1
-        self.raw_vocab = vocab
+        self.corpus_count = sent_count
+        self.raw_vocab = dict(vocab)
 
     def _do_scan_vocab_job(self, job, inits):
-        for word in job:
+        inits.clear()
+        for sentence in job:
+            if not sentence:
+                print job
+            for word in sentence:
                 inits[word] += 1
         return inits
 
