@@ -488,7 +488,7 @@ class LsiModel(interfaces.TransformationABC):
             return ''
         c = numpy.asarray(self.projection.u.T[topicno, :]).flatten()
         norm = numpy.sqrt(numpy.sum(numpy.dot(c, c)))
-        most = numpy.abs(c).argsort()[::-1][:topn]
+        most = matutils.argsort(numpy.abs(c), topn, reverse=True)
         return [(1.0 * c[val] / norm, self.id2word[val]) for val in most]
 
     def print_topic(self, topicno, topn=10):

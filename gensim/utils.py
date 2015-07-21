@@ -11,7 +11,7 @@ This module contains various general utility functions.
 from __future__ import with_statement
 
 import logging
-logger = logging.getLogger('gensim.utils')
+logger = logging.getLogger(__name__)
 
 try:
     from html.entities import name2codepoint as n2cp
@@ -170,7 +170,7 @@ def copytree_hardlink(source, dest):
 def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False, lower=False):
     """
     Iteratively yield tokens as unicode strings, removing accent marks
-    and optionally lowercasing the unidoce string by assigning True 
+    and optionally lowercasing the unidoce string by assigning True
     to one of the parameters, lowercase, to_lower, or lower.
 
     Input text may be either unicode or utf8-encoded byte string.
@@ -363,10 +363,10 @@ class SaveLoad(object):
     def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
         """
         Save aside any attributes that need to be handled separately, including
-        by recursion any attributes that are themselves SaveLoad instances. 
+        by recursion any attributes that are themselves SaveLoad instances.
 
-        Returns a list of (obj, {attrib: value, ...}) settings that the caller 
-        should use to restore each object's attributes that were set aside 
+        Returns a list of (obj, {attrib: value, ...}) settings that the caller
+        should use to restore each object's attributes that were set aside
         during the default pickle().
 
         """
@@ -389,11 +389,11 @@ class SaveLoad(object):
         recursive_saveloads = []
         restores = []
         for attrib, val in iteritems(self.__dict__):
-            if isinstance(val, SaveLoad):
+            if hasattr(val, '_save_specials'):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
                 recursive_saveloads.append(attrib)
                 cfname = '.'.join((fname,attrib))
-                restores.extend(val._save_specials(cfname, separately, sep_limit, ignore,
-                                                   pickle_protocol,compress, subname))
+                restores.extend(val._save_specials(cfname, None, sep_limit, ignore,
+                                                   pickle_protocol, compress, subname))
 
         try:
             numpys, scipys, ignoreds = [], [], []
@@ -1010,7 +1010,8 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
 
 
 if HAS_PATTERN:
-    def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False, stopwords=frozenset()):
+    def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
+            stopwords=frozenset(), min_length=2, max_length=15):
         """
         This function is only available when the optional 'pattern' package is installed.
 
@@ -1044,7 +1045,7 @@ if HAS_PATTERN:
         result = []
         for sentence in parsed:
             for token, tag, _, _, lemma in sentence:
-                if 2 <= len(lemma) <= 15 and not lemma.startswith('_') and lemma not in stopwords:
+                if min_length <= len(lemma) <= max_length and not lemma.startswith('_') and lemma not in stopwords:
                     if allowed_tags.match(tag):
                         lemma += "/" + tag[:2]
                         result.append(lemma.encode('utf8'))
@@ -1074,3 +1075,21 @@ def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
     data = [mock_data_row(dim=dim, prob_nnz=prob_nnz, lam=lam)
             for _ in xrange(n_items)]
     return data
+
+
+def prune_vocab(vocab, min_reduce):
+    """
+    Remove all entries from the `vocab` dictionary with count smaller than `min_reduce`.
+
+    Modifies `vocab` in place, returns the sum of all counts that were pruned.
+
+    """
+    result = 0
+    old_len = len(vocab)
+    for w in list(vocab):  # make a copy of dict's keys
+        if vocab[w] <= min_reduce:
+            result += vocab[w]
+            del vocab[w]
+    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)",
+                old_len - len(vocab), min_reduce, old_len, len(vocab))
+    return result

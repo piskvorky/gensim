@@ -15,69 +15,23 @@ cimport numpy as np
 from libc.math cimport exp
 from libc.string cimport memset, memcpy
 
-cdef extern from "voidptr.h":
-    void* PyCObject_AsVoidPtr(object obj)
-
 from scipy.linalg.blas import fblas
 
-REAL = np.float32
-ctypedef np.float32_t REAL_t
+from word2vec_inner cimport bisect_left, random_int32, \
+     scopy, saxpy, sdot, dsdot, snrm2, sscal, \
+     REAL_t, EXP_TABLE, \
+     our_dot, our_saxpy, \
+     our_dot_double, our_dot_float, our_dot_noblas, our_saxpy_noblas
+
+from word2vec import FAST_VERSION
 
 DEF MAX_DOCUMENT_LEN = 10000
-
-ctypedef void (*scopy_ptr) (const int *N, const float *X, const int *incX, float *Y, const int *incY) nogil
-ctypedef void (*saxpy_ptr) (const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil
-ctypedef float (*sdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
-ctypedef double (*dsdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
-ctypedef double (*snrm2_ptr) (const int *N, const float *X, const int *incX) nogil
-ctypedef void (*sscal_ptr) (const int *N, const float *alpha, const float *X, const int *incX) nogil
-
-cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(fblas.scopy._cpointer)  # y = x
-cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(fblas.saxpy._cpointer)  # y += alpha * x
-cdef sdot_ptr sdot=<sdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # float = dot(x, y)
-cdef dsdot_ptr dsdot=<dsdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # double = dot(x, y)
-cdef snrm2_ptr snrm2=<snrm2_ptr>PyCObject_AsVoidPtr(fblas.snrm2._cpointer)  # sqrt(x^2)
-cdef sscal_ptr sscal=<sscal_ptr>PyCObject_AsVoidPtr(fblas.sscal._cpointer) # x = alpha * x
-
-DEF EXP_TABLE_SIZE = 1000
-DEF MAX_EXP = 6
-
-cdef REAL_t[EXP_TABLE_SIZE] EXP_TABLE
 
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
-# function implementations swapped based on BLAS detected
-ctypedef REAL_t (*our_dot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
-ctypedef void (*our_saxpy_ptr) (const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil
-
-cdef our_dot_ptr our_dot
-cdef our_saxpy_ptr our_saxpy
-
-# for when fblas.sdot returns a double
-cdef REAL_t our_dot_double(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil:
-    return <REAL_t>dsdot(N, X, incX, Y, incY)
-
-# for when fblas.sdot returns a float
-cdef REAL_t our_dot_float(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil:
-    return <REAL_t>sdot(N, X, incX, Y, incY)
-
-# for when no blas available
-cdef REAL_t our_dot_noblas(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil:
-    # not a true full dot()-implementation: just enough for our cases
-    cdef int i
-    cdef REAL_t a
-    a = <REAL_t>0.0
-    for i from 0 <= i < N[0] by 1:
-        a += X[i] * Y[i]
-    return a
-
-# for when no blas available
-cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil:
-    cdef int i
-    for i from 0 <= i < N[0] by 1:
-        Y[i * (incY[0])] = (alpha[0]) * X[i * (incX[0])] + Y[i * (incY[0])]
-
+DEF EXP_TABLE_SIZE = 1000
+DEF MAX_EXP = 6
 
 cdef void fast_document_dbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
@@ -105,7 +59,7 @@ cdef void fast_document_dbow_hs(
 
 
 cdef unsigned long long fast_document_dbow_neg(
-    const int negative, np.uint32_t *table, unsigned long long table_len,
+    const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len,
     REAL_t *context_vectors, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t context_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, int learn_context, int learn_hidden, REAL_t *context_locks) nogil:
@@ -124,7 +78,7 @@ cdef unsigned long long fast_document_dbow_neg(
             target_index = word_index
             label = ONEF
         else:
-            target_index = table[(next_random >> 16) % table_len]
+            target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == word_index:
                 continue
@@ -168,7 +122,7 @@ cdef void fast_document_dm_hs(
 
 
 cdef unsigned long long fast_document_dm_neg(
-    const int negative, np.uint32_t *table, unsigned long long table_len, unsigned long long next_random,
+    const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, unsigned long long next_random,
     REAL_t *neu1, REAL_t *syn1neg, const int predict_word_index, const REAL_t alpha, REAL_t *work,
     const int size, int learn_hidden) nogil:
 
@@ -185,7 +139,7 @@ cdef unsigned long long fast_document_dm_neg(
             target_index = predict_word_index
             label = ONEF
         else:
-            target_index = table[(next_random >> 16) % table_len]
+            target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == predict_word_index:
                 continue
@@ -228,7 +182,7 @@ cdef void fast_document_dmc_hs(
 
 
 cdef unsigned long long fast_document_dmc_neg(
-    const int negative, np.uint32_t *table, unsigned long long table_len, unsigned long long next_random,
+    const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, unsigned long long next_random,
     REAL_t *neu1, REAL_t *syn1neg, const int predict_word_index, const REAL_t alpha, REAL_t *work, 
     const int layer1_size, const int vector_size, int learn_hidden) nogil:
 
@@ -246,7 +200,7 @@ cdef unsigned long long fast_document_dmc_neg(
             target_index = predict_word_index
             label = ONEF
         else:
-            target_index = table[(next_random >> 16) % table_len]
+            target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
             next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == predict_word_index:
                 continue
@@ -265,11 +219,12 @@ cdef unsigned long long fast_document_dmc_neg(
     return next_random
 
 
-def train_document_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
+def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
                         train_words=False, learn_doctags=True, learn_words=True, learn_hidden=True,
                         word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
     cdef int hs = model.hs
     cdef int negative = model.negative
+    cdef int sample = (model.sample != 0)
     cdef int _train_words = train_words
     cdef int _learn_words = learn_words
     cdef int _learn_hidden = learn_hidden
@@ -292,6 +247,7 @@ def train_document_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
     cdef int window = model.window
 
     cdef int i, j
+    cdef unsigned long long r
     cdef long result = 0
 
     # For hierarchical softmax
@@ -301,8 +257,8 @@ def train_document_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
 
     # For negative sampling
     cdef REAL_t *syn1neg
-    cdef np.uint32_t *table
-    cdef unsigned long long table_len
+    cdef np.uint32_t *cum_table
+    cdef unsigned long long cum_table_len
     cdef unsigned long long next_random
 
     # default vectors, locks from syn0/doctag_syn0
@@ -324,36 +280,41 @@ def train_document_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        table = <np.uint32_t *>(np.PyArray_DATA(model.table))
-        table_len = len(model.table)
-        next_random = (2**24) * np.random.randint(0, 2**24) + np.random.randint(0, 2**24)
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
+        cum_table_len = len(model.cum_table)
+    if negative or sample:
+        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     if work is None:
        work = zeros(model.layer1_size, dtype=REAL)
     _work = <REAL_t *>np.PyArray_DATA(work)
-    document_len = <int>min(MAX_DOCUMENT_LEN, len(word_vocabs))
-    doctag_len = <int>min(MAX_DOCUMENT_LEN, len(doctag_indexes))
 
-    for i in range(document_len):
-        predict_word = word_vocabs[i]
-        if predict_word is None:
-            # shrink document to leave out word
-            document_len = document_len - 1
-            continue  # leaving j unchanged
-        else:
-            indexes[i] = predict_word.index
-            if hs:
-                codelens[i] = <int>len(predict_word.code)
-                codes[i] = <np.uint8_t *>np.PyArray_DATA(predict_word.code)
-                points[i] = <np.uint32_t *>np.PyArray_DATA(predict_word.point)
-            else:
-                codelens[i] = 1
-            result += 1
+    vlookup = model.vocab
+    i = 0
+    for token in doc_words:
+        predict_word = vlookup[token] if token in vlookup else None
+        if predict_word is None:  # shrink document to leave out word
+            continue  # leaving i unchanged
+        if sample and predict_word.sample_int < random_int32(&next_random):
+            continue
+        indexes[i] = predict_word.index
+        if hs:
+            codelens[i] = <int>len(predict_word.code)
+            codes[i] = <np.uint8_t *>np.PyArray_DATA(predict_word.code)
+            points[i] = <np.uint32_t *>np.PyArray_DATA(predict_word.point)
+        result += 1
+        i += 1
+        if i == MAX_DOCUMENT_LEN:
+            break  # TODO: log warning, tally overflow?
+    document_len = i
+
     if _train_words:
         # single randint() call avoids a big thread-synchronization slowdown
-        for i, item in enumerate(np.random.randint(0, window, document_len)):
+        for i, item in enumerate(model.random.randint(0, window, document_len)):
             reduced_windows[i] = item
+
+    doctag_len = <int>min(MAX_DOCUMENT_LEN, len(doctag_indexes))
     for i in range(doctag_len):
         _doctag_indexes[i] = doctag_indexes[i]
         result += 1
@@ -361,8 +322,6 @@ def train_document_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
     # release GIL & train on the document
     with nogil:
         for i in range(document_len):
-            if codelens[i] == 0:
-                continue
             if _train_words:  # simultaneous skip-gram wordvec-training
                 j = i - window + reduced_windows[i]
                 if j < 0:
@@ -371,7 +330,7 @@ def train_document_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
                 if k > document_len:
                     k = document_len
                 for j in range(j, k):
-                    if j == i or codelens[j] == 0:
+                    if j == i:
                         continue
                     if hs:
                         # we reuse the DBOW function, as it is equivalent to skip-gram for this purpose
@@ -379,7 +338,7 @@ def train_document_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
                                               _alpha, _work, _learn_words, _learn_hidden, _word_locks)
                     if negative:
                         # we reuse the DBOW function, as it is equivalent to skip-gram for this purpose
-                        next_random = fast_document_dbow_neg(negative, table, table_len, _word_vectors, syn1neg, size,
+                        next_random = fast_document_dbow_neg(negative, cum_table, cum_table_len, _word_vectors, syn1neg, size,
                                                              indexes[i], indexes[j], _alpha, _work, next_random,
                                                              _learn_words, _learn_hidden, _word_locks)
 
@@ -389,18 +348,19 @@ def train_document_dbow(model, word_vocabs, doctag_indexes, alpha, work=None,
                     fast_document_dbow_hs(points[i], codes[i], codelens[i], _doctag_vectors, syn1, size, _doctag_indexes[j],
                                           _alpha, _work, _learn_doctags, _learn_hidden, _doctag_locks)
                 if negative:
-                    next_random = fast_document_dbow_neg(negative, table, table_len, _doctag_vectors, syn1neg, size,
+                    next_random = fast_document_dbow_neg(negative, cum_table, cum_table_len, _doctag_vectors, syn1neg, size,
                                                              indexes[i], _doctag_indexes[j], _alpha, _work, next_random,
                                                              _learn_doctags, _learn_hidden, _doctag_locks)
 
     return result
 
 
-def train_document_dm(model, word_vocabs, doctag_indexes, alpha, work=None, neu1=None,
+def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=None,
                       learn_doctags=True, learn_words=True, learn_hidden=True,
                       word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
     cdef int hs = model.hs
     cdef int negative = model.negative
+    cdef int sample = (model.sample != 0)
     cdef int _learn_doctags = learn_doctags
     cdef int _learn_words = learn_words
     cdef int _learn_hidden = learn_hidden
@@ -434,8 +394,8 @@ def train_document_dm(model, word_vocabs, doctag_indexes, alpha, work=None, neu1
 
     # For negative sampling
     cdef REAL_t *syn1neg
-    cdef np.uint32_t *table
-    cdef unsigned long long table_len
+    cdef np.uint32_t *cum_table
+    cdef unsigned long long cum_table_len
     cdef unsigned long long next_random
 
     # default vectors, locks from syn0/doctag_syn0
@@ -457,9 +417,10 @@ def train_document_dm(model, word_vocabs, doctag_indexes, alpha, work=None, neu1
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        table = <np.uint32_t *>(np.PyArray_DATA(model.table))
-        table_len = len(model.table)
-        next_random = (2**24)*np.random.randint(0,2**24) + np.random.randint(0,2**24)
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
+        cum_table_len = len(model.cum_table)
+    if negative or sample:
+        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     if work is None:
@@ -469,24 +430,27 @@ def train_document_dm(model, word_vocabs, doctag_indexes, alpha, work=None, neu1
        neu1 = zeros(model.layer1_size, dtype=REAL)
     _neu1 = <REAL_t *>np.PyArray_DATA(neu1)
 
-    document_len = <int>min(MAX_DOCUMENT_LEN, len(word_vocabs))
-    j = 0
-    for i in range(document_len):
-        word = word_vocabs[i]
-        if word is None:
-            # shrink document to leave out word
-            document_len = document_len - 1
-            continue  # leaving j unchanged
-        else:
-            indexes[j] = word.index
-            if hs:
-                codelens[j] = <int>len(word.code)
-                codes[j] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                points[j] = <np.uint32_t *>np.PyArray_DATA(word.point)
-            result += 1
-            j = j + 1
+    vlookup = model.vocab
+    i = 0
+    for token in doc_words:
+        predict_word = vlookup[token] if token in vlookup else None
+        if predict_word is None:  # shrink document to leave out word
+            continue  # leaving i unchanged
+        if sample and predict_word.sample_int < random_int32(&next_random):
+            continue
+        indexes[i] = predict_word.index
+        if hs:
+            codelens[i] = <int>len(predict_word.code)
+            codes[i] = <np.uint8_t *>np.PyArray_DATA(predict_word.code)
+            points[i] = <np.uint32_t *>np.PyArray_DATA(predict_word.point)
+        result += 1
+        i += 1
+        if i == MAX_DOCUMENT_LEN:
+            break  # TODO: log warning, tally overflow?
+    document_len = i
+
     # single randint() call avoids a big thread-sync slowdown
-    for i, item in enumerate(np.random.randint(0, window, document_len)):
+    for i, item in enumerate(model.random.randint(0, window, document_len)):
         reduced_windows[i] = item
 
     doctag_len = <int>min(MAX_DOCUMENT_LEN, len(doctag_indexes))
@@ -526,7 +490,7 @@ def train_document_dm(model, word_vocabs, doctag_indexes, alpha, work=None, neu1
                                     _neu1, syn1, _alpha, _work,
                                     size, _learn_hidden)
             if negative:
-                next_random = fast_document_dm_neg(negative, table, table_len, next_random,
+                next_random = fast_document_dm_neg(negative, cum_table, cum_table_len, next_random,
                                                    _neu1, syn1neg, indexes[i], _alpha, _work,
                                                    size, _learn_hidden)
 
@@ -548,11 +512,12 @@ def train_document_dm(model, word_vocabs, doctag_indexes, alpha, work=None, neu1
     return result
 
 
-def train_document_dm_concat(model, word_vocabs, doctag_indexes, alpha, work=None, neu1=None,
+def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None, neu1=None,
                              learn_doctags=True, learn_words=True, learn_hidden=True,
                              word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
     cdef int hs = model.hs
     cdef int negative = model.negative
+    cdef int sample = (model.sample != 0)
     cdef int _learn_doctags = learn_doctags
     cdef int _learn_words = learn_words
     cdef int _learn_hidden = learn_hidden
@@ -587,13 +552,13 @@ def train_document_dm_concat(model, word_vocabs, doctag_indexes, alpha, work=Non
 
     # For negative sampling
     cdef REAL_t *syn1neg
-    cdef np.uint32_t *table
-    cdef unsigned long long table_len
+    cdef np.uint32_t *cum_table
+    cdef unsigned long long cum_table_len
     cdef unsigned long long next_random
 
     doctag_len = <int>min(MAX_DOCUMENT_LEN, len(doctag_indexes))
     if doctag_len != expected_doctag_len:
-        return 0  # skip doc without expected nmber of tags
+        return 0  # skip doc without expected number of tags
 
     # default vectors, locks from syn0/doctag_syn0
     if word_vectors is None:
@@ -614,9 +579,10 @@ def train_document_dm_concat(model, word_vocabs, doctag_indexes, alpha, work=Non
 
     if negative:
         syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
-        table = <np.uint32_t *>(np.PyArray_DATA(model.table))
-        table_len = len(model.table)
-        next_random = (2**24)*np.random.randint(0,2**24) + np.random.randint(0,2**24)
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
+        cum_table_len = len(model.cum_table)
+    if negative or sample:
+        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     if work is None:
@@ -626,24 +592,24 @@ def train_document_dm_concat(model, word_vocabs, doctag_indexes, alpha, work=Non
        neu1 = zeros(model.layer1_size, dtype=REAL)
     _neu1 = <REAL_t *>np.PyArray_DATA(neu1)
 
-    document_len = <int>min(MAX_DOCUMENT_LEN, len(word_vocabs))
-    j = 0
-    for i in range(document_len):
-        word = word_vocabs[i]
-        if word is None:
-            # shrink document to leave out word
-            document_len = document_len - 1
-            continue  # leaving j unchanged
-        else:
-            indexes[j] = word.index
-            if hs:
-                codelens[j] = <int>len(word.code)
-                codes[j] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                points[j] = <np.uint32_t *>np.PyArray_DATA(word.point)
-            else:
-                codelens[j] = 1
-            result += 1
-            j = j + 1
+    vlookup = model.vocab
+    i = 0
+    for token in doc_words:
+        predict_word = vlookup[token] if token in vlookup else None
+        if predict_word is None:  # shrink document to leave out word
+            continue  # leaving i unchanged
+        if sample and predict_word.sample_int < random_int32(&next_random):
+            continue
+        indexes[i] = predict_word.index
+        if hs:
+            codelens[i] = <int>len(predict_word.code)
+            codes[i] = <np.uint8_t *>np.PyArray_DATA(predict_word.code)
+            points[i] = <np.uint32_t *>np.PyArray_DATA(predict_word.point)
+        result += 1
+        i += 1
+        if i == MAX_DOCUMENT_LEN:
+            break  # TODO: log warning, tally overflow?
+    document_len = i
 
     for i in range(doctag_len):
         _doctag_indexes[i] = doctag_indexes[i]
@@ -680,7 +646,7 @@ def train_document_dm_concat(model, word_vocabs, doctag_indexes, alpha, work=Non
                                      _neu1, syn1, _alpha, _work,
                                      layer1_size, vector_size, _learn_hidden)
             if negative:
-                next_random = fast_document_dmc_neg(negative, table, table_len, next_random,
+                next_random = fast_document_dmc_neg(negative, cum_table, cum_table_len, next_random,
                                                     _neu1, syn1neg, indexes[i], _alpha, _work, 
                                                    layer1_size, vector_size, _learn_hidden)
 
@@ -694,46 +660,3 @@ def train_document_dm_concat(model, word_vocabs, doctag_indexes, alpha, work=Non
                               &ONE, &_word_vectors[window_indexes[m] * vector_size], &ONE)
 
     return result
-
-
-def init():
-    """
-    Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized
-    into table EXP_TABLE.
-
-    """
-    global our_dot
-    global our_saxpy
-
-    cdef int i
-    cdef float *x = [<float>10.0]
-    cdef float *y = [<float>0.01]
-    cdef float expected = <float>0.1
-    cdef int size = 1
-    cdef double d_res
-    cdef float *p_res
-
-    # build the sigmoid table
-    for i in range(EXP_TABLE_SIZE):
-        EXP_TABLE[i] = <REAL_t>exp((i / <REAL_t>EXP_TABLE_SIZE * 2 - 1) * MAX_EXP)
-        EXP_TABLE[i] = <REAL_t>(EXP_TABLE[i] / (EXP_TABLE[i] + 1))
-
-    # check whether sdot returns double or float
-    d_res = dsdot(&size, x, &ONE, y, &ONE)
-    p_res = <float *>&d_res
-    if (abs(d_res - expected) < 0.0001):
-        our_dot = our_dot_double
-        our_saxpy = saxpy
-        return 0  # double
-    elif (abs(p_res[0] - expected) < 0.0001):
-        our_dot = our_dot_float
-        our_saxpy = saxpy 
-        return 1  # float
-    else:
-        # neither => use cython loops, no BLAS
-        # actually, the BLAS is so messed up we'll probably have segfaulted above and never even reach here
-        our_dot = our_dot_noblas
-        our_saxpy = our_saxpy_noblas
-        return 2
-
-FAST_VERSION = init()  # initialize the module

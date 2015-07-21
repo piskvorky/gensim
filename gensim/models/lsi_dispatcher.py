@@ -72,7 +72,7 @@ class Dispatcher(object):
         self.workers = {}
         with utils.getNS() as ns:
             self.callback = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher') # = self
-            for name, uri in ns.list(prefix='gensim.lsi_worker').iteritems():
+            for name, uri in iteritems(ns.list(prefix='gensim.lsi_worker')):
                 try:
                     worker = Pyro4.Proxy(uri)
                     workerid = len(self.workers)
