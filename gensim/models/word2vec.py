@@ -67,7 +67,6 @@ where "words" are actually multiword expressions, such as `new_york_times` or `f
 .. [3] Optimizing word2vec in gensim, http://radimrehurek.com/2013/09/word2vec-in-python-part-two-optimizing/
 """
 from __future__ import division  # py3 "true division"
-import inspect
 
 import logging
 import sys
@@ -75,7 +74,7 @@ import os
 import heapq
 from timeit import default_timer
 from copy import deepcopy
-from collections import defaultdict, Counter
+from collections import defaultdict
 import threading
 import time
 try:
@@ -490,7 +489,7 @@ class Word2Vec(utils.SaveLoad):
     def scan_vocab(self, sentences, chunksize=10000, queue_factor=2, report_delay=1):
         """Do an initial scan of all words appearing in sentences."""
         def worker_init():
-            work_vocab = Counter()
+            work_vocab = defaultdict(int)
             return work_vocab
 
         def worker_one_job(job, inits):
@@ -529,7 +528,7 @@ class Word2Vec(utils.SaveLoad):
         push_done = False
         done_jobs = 0
         job_no = 0
-        vocab = Counter()
+        vocab = defaultdict(int)
         jobs_source = enumerate(utils.grouper(sentences, chunksize))
         while True:
             try:
@@ -547,7 +546,7 @@ class Word2Vec(utils.SaveLoad):
                 while done_jobs < (job_no+1) or not push_done:
                     sentences, work_vocab = progress_queue.get(push_done)  # only block after all jobs pushed
                     sent_count += sentences
-                    vocab += work_vocab
+                    vocab = {x: vocab.get(x, 0) + work_vocab.get(x, 0) for x in set(vocab).union(work_vocab)}
                     done_jobs += 1
                     elapsed = default_timer() - start
                     if elapsed >= next_report:
@@ -565,7 +564,7 @@ class Word2Vec(utils.SaveLoad):
 
         total_words += sum(itervalues(vocab))
         self.corpus_count = sent_count
-        self.raw_vocab = dict(vocab)
+        self.raw_vocab = vocab
 
     def _do_scan_vocab_job(self, job, inits):
         inits.clear()
