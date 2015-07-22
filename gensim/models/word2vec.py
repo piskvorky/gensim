@@ -546,7 +546,8 @@ class Word2Vec(utils.SaveLoad):
                 while done_jobs < (job_no+1) or not push_done:
                     sentences, work_vocab = progress_queue.get(push_done)  # only block after all jobs pushed
                     sent_count += sentences
-                    vocab = {x: vocab.get(x, 0) + work_vocab.get(x, 0) for x in set(vocab).union(work_vocab)}
+                    for k in work_vocab:
+                        vocab[k] += work_vocab[k]
                     done_jobs += 1
                     elapsed = default_timer() - start
                     if elapsed >= next_report:
