@@ -327,6 +327,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
         """Get list of command line arguments for running prediction."""
         cmd = [self.vw_path,
                '--testonly', # don't update model with this data
+               '--lda', str(self.num_topics),
                '--lda_D', str(corpus_size),
                '-i', self._model_filename, # load existing binary model
                '-d', self._corpus_filename,
