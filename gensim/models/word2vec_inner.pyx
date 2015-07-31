@@ -15,7 +15,12 @@ from libc.math cimport exp
 from libc.math cimport log
 from libc.string cimport memset
 
-from scipy.linalg.blas import fblas
+# scipy <= 0.15
+try:
+    from scipy.linalg.blas import fblas
+except ImportError:
+    # in scipy > 0.15, fblas function has been removed
+    import scipy.linalg.blas as fblas
 
 REAL = np.float32
 
