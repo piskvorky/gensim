@@ -20,6 +20,8 @@ of each document.
 import logging
 import shelve
 
+import numpy as np
+
 from gensim import interfaces, utils
 
 logger = logging.getLogger('gensim.corpora.indexedcorpus')
@@ -113,7 +115,7 @@ class IndexedCorpus(interfaces.CorpusABC):
         if self.index is None:
             raise RuntimeError("cannot call corpus[docid] without an index")
 
-        if isinstance(docno, slice):
+        if isinstance(docno, slice) or isinstance(docno, np.ndarray):
             return utils.SlicedCorpus(self, docno)
 
         return self.docbyoffset(self.index[docno])

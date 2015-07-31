@@ -705,7 +705,7 @@ class SlicedCorpus(SaveLoad):
         self.length = None
 
     def __iter__(self):
-        if hasattr(self.corpus, 'index') and self.corpus.index:
+        if hasattr(self.corpus, 'index') and len(self.corpus.index) > 0:
             return (self.corpus.docbyoffset(i) for i in
                     self.corpus.index[self.slice_])
         else:
