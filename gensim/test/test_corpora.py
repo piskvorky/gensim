@@ -169,12 +169,13 @@ class CorpusTestCase(unittest.TestCase):
         self.assertEqual(len(docs), len(corpus[:]))
         self.assertEqual(len(docs[::2]), len(corpus[::2]))
         
+        def _get_slice(corpus, slice_):
+            # assertRaises for python 2.6 takes a callable
+            return corpus[slice_]
+
         # make sure proper input validation for sliced corpora is done
-        with self.assertRaises(ValueError):
-            corpus[set([1])]
-            
-        with self.assertRaises(ValueError):
-            corpus[1.0]
+        self.assertRaises(ValueError, _get_slice, corpus, set([1]))
+        self.assertRaises(ValueError, _get_slice, corpus, 1.0)
 
         # check sliced corpora that use fancy indexing
         c = corpus[[1, 3, 4]]
