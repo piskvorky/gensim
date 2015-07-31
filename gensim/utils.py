@@ -701,13 +701,19 @@ class SlicedCorpus(SaveLoad):
         Negative slicing can only be used if the corpus is indexable.
         Otherwise, the corpus will be iterated over.
 
+        Slice can also be a numpy.ndarray to support fancy indexing.
+
+        NOTE: calculating the size of a SlicedCorpus is expensive
+        when using a slice as the corpus has to be iterated over once.
+        Using a list or numpy.ndarray does not have this drawback, but
+        consumes more memory.
         """
         self.corpus = corpus
         self.slice_ = slice_
         self.length = None
 
     def __iter__(self):
-        if hasattr(self.corpus, 'index') and self.corpus.index:
+        if hasattr(self.corpus, 'index') and len(self.corpus.index) > 0:
             return (self.corpus.docbyoffset(i) for i in
                     self.corpus.index[self.slice_])
         else:
@@ -717,7 +723,10 @@ class SlicedCorpus(SaveLoad):
     def __len__(self):
         # check cached length, calculate if needed
         if self.length is None:
-            self.length = sum(1 for x in self)
+            if isinstance(self.slice_, (list, numpy.ndarray)):
+                self.length = len(self.slice_)
+            else:
+                self.length = sum(1 for x in self)
 
         return self.length
 
