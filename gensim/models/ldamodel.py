@@ -40,7 +40,7 @@ from gensim import interfaces, utils, matutils
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
-from six.moves import xrange, filter
+from six.moves import xrange
 
 # log(sum(exp(x))) that tries to avoid overflow
 try:
@@ -129,8 +129,8 @@ class LdaState(utils.SaveLoad):
         if other.numdocs == 0 or targetsize == other.numdocs:
             scale = 1.0
         else:
-            logger.info("merging changes from %i documents into a model of %i documents" %
-                        (other.numdocs, targetsize))
+            logger.info("merging changes from %i documents into a model of %i documents",
+                        other.numdocs, targetsize)
             scale = 1.0 * targetsize / other.numdocs
         self.sstats += rhot * scale * other.sstats
 
@@ -258,15 +258,15 @@ class LdaModel(interfaces.TransformationABC):
 
         self.optimize_alpha = alpha == 'auto'
         if alpha == 'symmetric' or alpha is None:
-            logger.info("using symmetric alpha at %s" % (1.0 / num_topics))
+            logger.info("using symmetric alpha at %s", 1.0 / num_topics)
             self.alpha = numpy.asarray([1.0 / num_topics for i in xrange(num_topics)])
         elif alpha == 'asymmetric':
             self.alpha = numpy.asarray([1.0 / (i + numpy.sqrt(num_topics)) for i in xrange(num_topics)])
             self.alpha /= self.alpha.sum()
-            logger.info("using asymmetric alpha %s" % list(self.alpha))
+            logger.info("using asymmetric alpha %s", list(self.alpha))
         elif alpha == 'auto':
             self.alpha = numpy.asarray([1.0 / num_topics for i in xrange(num_topics)])
-            logger.info("using autotuned alpha, starting with %s" % list(self.alpha))
+            logger.info("using autotuned alpha, starting with %s", list(self.alpha))
         else:
             # must be either float or an array of floats, of size num_topics
             self.alpha = alpha if isinstance(alpha, numpy.ndarray) else numpy.asarray([alpha] * num_topics)
@@ -301,7 +301,7 @@ class LdaModel(interfaces.TransformationABC):
                 self.numworkers = len(dispatcher.getworkers())
                 logger.info("using distributed version with %i workers" % self.numworkers)
             except Exception as err:
-                logger.error("failed to initialize distributed LDA (%s)" % err)
+                logger.error("failed to initialize distributed LDA (%s)", err)
                 raise RuntimeError("failed to initialize distributed LDA (%s)" % err)
 
         # Initialize the variational distribution q(beta|lambda)
@@ -349,7 +349,7 @@ class LdaModel(interfaces.TransformationABC):
             # convert iterators/generators to plain list, so we have len() etc.
             chunk = list(chunk)
         if len(chunk) > 1:
-            logger.debug("performing inference on a chunk of %i documents" % len(chunk))
+            logger.debug("performing inference on a chunk of %i documents", len(chunk))
 
         # Initialize the variational distribution q(theta|gamma) for the chunk
         gamma = numpy.random.gamma(100., 1. / 100., (len(chunk), self.num_topics))
@@ -400,8 +400,8 @@ class LdaModel(interfaces.TransformationABC):
                 sstats[:, ids] += numpy.outer(expElogthetad.T, cts / phinorm)
 
         if len(chunk) > 1:
-            logger.debug("%i/%i documents converged within %i iterations" %
-                         (converged, len(chunk), self.iterations))
+            logger.debug("%i/%i documents converged within %i iterations",
+                         converged, len(chunk), self.iterations)
 
         if collect_sstats:
             # This step finishes computing the sufficient statistics for the
@@ -429,7 +429,8 @@ class LdaModel(interfaces.TransformationABC):
         Update parameters for the Dirichlet prior on the per-document
         topic weights `alpha` given the last `gammat`.
 
-        Uses Newton's method, described in **Huang: Maximum Likelihood Estimation of Dirichlet Distribution Parameters.** (http://www.stanford.edu/~jhuang11/research/dirichlet/dirichlet.pdf)
+        Uses Newton's method, described in **Huang: Maximum Likelihood Estimation of Dirichlet Distribution Parameters.**
+        http://jonathan-huang.org/research/dirichlet/dirichlet.pdf
 
         """
         N = float(len(gammat))
@@ -448,7 +449,7 @@ class LdaModel(interfaces.TransformationABC):
             self.alpha += rho * dalpha
         else:
             logger.warning("updated alpha not positive")
-        logger.info("optimized alpha %s" % list(self.alpha))
+        logger.info("optimized alpha %s", list(self.alpha))
 
         return self.alpha
 
@@ -532,10 +533,10 @@ class LdaModel(interfaces.TransformationABC):
         logger.info("running %s LDA training, %s topics, %i passes over "
                     "the supplied corpus of %i documents, updating model once "
                     "every %i documents, evaluating perplexity every %i documents, "
-                    "iterating %ix with a convergence threshold of %f" %
-                    (updatetype, self.num_topics, passes, lencorpus,
+                    "iterating %ix with a convergence threshold of %f",
+                    updatetype, self.num_topics, passes, lencorpus,
                         updateafter, evalafter, iterations,
-                        gamma_threshold))
+                        gamma_threshold)
 
         if updates_per_pass * passes < 10:
             logger.warning("too few updates, training might not converge; consider "
@@ -564,13 +565,13 @@ class LdaModel(interfaces.TransformationABC):
 
                 if self.dispatcher:
                     # add the chunk to dispatcher's job queue, so workers can munch on it
-                    logger.info('PROGRESS: pass %i, dispatching documents up to #%i/%i' %
-                                (pass_, chunk_no * chunksize + len(chunk), lencorpus))
+                    logger.info('PROGRESS: pass %i, dispatching documents up to #%i/%i',
+                                pass_, chunk_no * chunksize + len(chunk), lencorpus)
                     # this will eventually block until some jobs finish, because the queue has a small finite length
                     self.dispatcher.putjob(chunk)
                 else:
-                    logger.info('PROGRESS: pass %i, at document #%i/%i' %
-                                (pass_, chunk_no * chunksize + len(chunk), lencorpus))
+                    logger.info('PROGRESS: pass %i, at document #%i/%i',
+                                pass_, chunk_no * chunksize + len(chunk), lencorpus)
                     gammat = self.do_estep(chunk, other)
 
                     if self.optimize_alpha:
@@ -625,7 +626,7 @@ class LdaModel(interfaces.TransformationABC):
 
         # print out some debug info at the end of each EM iteration
         self.print_topics(5)
-        logger.info("topic diff=%f, rho=%f" % (numpy.mean(numpy.abs(diff)), rho))
+        logger.info("topic diff=%f, rho=%f", numpy.mean(numpy.abs(diff)), rho)
 
         if not extra_pass:
             # only update if this isn't an additional pass
@@ -647,7 +648,7 @@ class LdaModel(interfaces.TransformationABC):
 
         for d, doc in enumerate(corpus):  # stream the input doc-by-doc, in case it's too large to fit in RAM
             if d % self.chunksize == 0:
-                logger.debug("bound: at document #%i" % d)
+                logger.debug("bound: at document #%i", d)
             if gamma is None:
                 gammad, _ = self.inference([doc])
             else:
@@ -716,7 +717,7 @@ class LdaModel(interfaces.TransformationABC):
 
             shown.append(topic)
             if log:
-                logger.info("topic #%i (%.3f): %s" % (i, self.alpha[i], topic))
+                logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic)
 
         return shown
 
@@ -805,11 +806,10 @@ class LdaModel(interfaces.TransformationABC):
         Ignore topics with very low probability (below `minimum_probability`).
 
         """
-        # if the input vector is a corpus, return a transformed corpus
-
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
 
+        # if the input vector is a corpus, return a transformed corpus
         is_corpus, corpus = utils.is_corpus(bow)
         if is_corpus:
             return self._apply(corpus)
@@ -868,6 +868,6 @@ class LdaModel(interfaces.TransformationABC):
         try:
             result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
         except Exception as e:
-            logging.warning("failed to load state from %s: %s" % (state_fname, e))
+            logging.warning("failed to load state from %s: %s", state_fname, e)
         return result
 # endclass LdaModel
