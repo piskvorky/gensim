@@ -123,7 +123,7 @@ class IndexedCorpus(interfaces.CorpusABC):
 
         if isinstance(docno, (slice, list, numpy.ndarray)):
             return utils.SlicedCorpus(self, docno)
-        elif isinstance(docno, (int, numpy.int)):
+        elif isinstance(docno, (int, numpy.integer)):
             return self.docbyoffset(self.index[docno])
         else:
             raise ValueError('Unrecognised value for docno, use either a single integer, a slice or a numpy.ndarray')
