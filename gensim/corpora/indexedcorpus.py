@@ -48,10 +48,7 @@ class IndexedCorpus(interfaces.CorpusABC):
             if index_fname is None:
                 index_fname = utils.smart_extension(fname, '.index')
             self.index = utils.unpickle(index_fname)
-            # change self.index into a numpy.ndarray
-            # this will break code like
-            #     if corpus.index:
-            #         do stuff
+            # change self.index into a numpy.ndarray to support fancy indexing
             self.index = numpy.asarray(self.index)
             logger.info("loaded corpus index from %s" % index_fname)
         except:
@@ -103,8 +100,8 @@ class IndexedCorpus(interfaces.CorpusABC):
         # store offsets persistently, using pickle
         # we shouldn't have to worry about self.index being a numpy.ndarray as the serializer will return
         # the offsets that are actually stored on disk - we're not storing self.index in any case, the
-        # load just needs to turn whatever is loaded from disk back into a ndarray - this should also be
-        # backwards compatible
+        # load just needs to turn whatever is loaded from disk back into a ndarray - this should also ensure
+        # backwards compatibility
         logger.info("saving %s index to %s" % (serializer.__name__, index_fname))
         utils.pickle(offsets, index_fname)
 
