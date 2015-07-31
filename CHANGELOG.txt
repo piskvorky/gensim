@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.12.2
+
+* added support for NumPy style fancy indexing to corpus objects (Matti Lyra, #414)
+
 0.12.1, 20/07/2015
 
 * improvements to testing, switch to Travis CI containers
