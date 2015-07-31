@@ -699,6 +699,7 @@ class SlicedCorpus(SaveLoad):
         Negative slicing can only be used if the corpus is indexable.
         Otherwise, the corpus will be iterated over.
 
+        Slice can also be a numpy.ndarray to support fancy indexing.
         """
         self.corpus = corpus
         self.slice_ = slice_
