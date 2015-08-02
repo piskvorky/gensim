@@ -249,7 +249,8 @@ except ImportError:
         if model.negative:
             raise RuntimeError("scoring is only available for HS=True")
 
-        for pos, word in enumerate(sentence):
+        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab]
+        for pos, word in enumerate(word_vocabs):
             if word is None:
                 continue  # OOV word in the input sentence => skip
 
@@ -277,7 +278,8 @@ except ImportError:
         if model.negative:
             raise RuntimeError("scoring is only available for HS=True")
 
-        for pos, word in enumerate(sentence):
+        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab]
+        for pos, word in enumerate(word_vocabs):
             if word is None:
                 continue  # OOV word in the input sentence => skip
 
@@ -789,18 +791,21 @@ class Word2Vec(utils.SaveLoad):
         self.clear_sims()
         return trained_word_count
 
-    def _score_job_words(self, sentence, work, neu1):
+    def _score_job_words(self, sentence, inits):
+        work, neu1 = inits
         if self.sg:
             return score_sentence_sg(self, sentence, work)
         else:
             return score_sentence_cbow(self, sentence, work, neu1)
 
     # basics copied from the train() function
-    def score(self, sentences, total_sentences=None, chunksize=100):
+    def score(self, sentences, total_sentences=int(1e9), chunksize=100, queue_factor=2, report_delay=1):
         """
         Score the log probability for a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
         This does not change the fitted model in any way (see Word2Vec.train() for that)
+
+        Note that you should specify total_sentences; we'll run into problems if you ask to score more than the default
 
         See the article by Taddy [taddy]_ for examples of how to use such scores in document classification.
 
@@ -823,57 +828,84 @@ class Word2Vec(utils.SaveLoad):
         if not self.hs:
             raise RuntimeError("we have only implemented score for hs")
 
-        start, next_report = time.time(), [1.0]
-        # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
-        jobs = Queue(maxsize=2 * self.workers)
-        lock = threading.Lock()  # for shared state (scores, log reports...)
-        total_sentences = total_sentences or int(1e9)
-        sentence_scores = matutils.zeros_aligned(total_sentences, dtype=REAL)
-        sentence_count = [0]
-
-        def worker_score():
-            """score the enumerated sentences, lifting lists of sentences from the jobs queue."""
+        def worker_init():
             work = zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
+            return (work, neu1)
 
+        def worker_one_job(job, inits):
+            if job is None:  # signal to finish
+                return False
+            ns = 0
+            for (id, sentence) in job:
+                sentence_scores[id] = self._score_job_words(sentence, inits)
+                ns += 1
+            progress_queue.put(ns)  # report progress
+            return True
+
+        def worker_loop():
+            """Train the model, lifting lists of sentences from the jobs queue."""
+            init = worker_init()
             while True:
-                job = jobs.get()
-                if job is None:  # data finished, exit
+                job = job_queue.get()
+                if not worker_one_job(job, init):
                     break
-                ns = 0
-                for (id, sentence) in job:
-                    sentence_scores[id] = self._score_job_words(sentence, work, neu1)
-                    ns += 1
 
-                with lock:
-                    sentence_count[0] += ns
-                    elapsed = time.time() - start
-                    if elapsed >= next_report[0]:
-                        logger.info("PROGRESS: at %i sentences,  %.0f sentences/s"
-                                    % (sentence_count[0], sentence_count[0] / elapsed if elapsed else 0.0))
-                        next_report[0] = elapsed + 1.0  # wait at least a second between progress reports
+        start, next_report = default_timer(), 1.0
+        # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
+        if self.workers > 0:
+            job_queue = Queue(maxsize=queue_factor * self.workers)
+        else:
+            job_queue = FakeJobQueue(worker_init, worker_one_job)
+        progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
-        workers = [threading.Thread(target=worker_score) for _ in xrange(self.workers)]
+        workers = [threading.Thread(target=worker_loop) for _ in xrange(self.workers)]
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
 
-        # convert input strings to Vocab objects and start filling the jobs queue
-        for job_no, job in enumerate(utils.grouper(enumerate(self._prepare_items(sentences)), chunksize)):
-            logger.debug("putting job #%i in the queue, qsize=%i" % (job_no, jobs.qsize()))
-            jobs.put(job)
-        logger.info("reached the end of input; waiting to finish %i outstanding jobs" % jobs.qsize())
-        for _ in xrange(self.workers):
-            jobs.put(None)  # give the workers heads up that they can finish -- no more work!
+        sentence_count = 0
+        sentence_scores = matutils.zeros_aligned(total_sentences, dtype=REAL)
 
-        for thread in workers:
-            thread.join()
+        push_done = False
+        done_jobs = 0
+        jobs_source = enumerate(utils.grouper(enumerate(sentences), chunksize))
 
-        elapsed = time.time() - start
+        # fill jobs queue with (id, sentence) job items
+        while True:
+            try:
+                job_no, items = next(jobs_source)
+                logger.debug("putting job #%i in the queue", job_no)
+                job_queue.put(items)
+            except StopIteration:
+                logger.info(
+                    "reached end of input; waiting to finish %i outstanding jobs",
+                    job_no - done_jobs + 1)
+                for _ in xrange(self.workers):
+                    job_queue.put(None)  # give the workers heads up that they can finish -- no more work!
+                push_done = True
+            try:
+                while done_jobs < (job_no+1) or not push_done:
+                    ns = progress_queue.get(push_done)  # only block after all jobs pushed
+                    sentence_count += ns
+                    done_jobs += 1
+                    elapsed = default_timer() - start
+                    if elapsed >= next_report:
+                        logger.info(
+                                "PROGRESS: at %.2f%% sentences, %.0f sentences/s",
+                                100.0 * sentence_count, sentence_count / elapsed)
+                        next_report = elapsed + report_delay  # don't flood log, wait report_delay seconds
+                else:
+                    # loop ended by job count; really done
+                    break
+            except Empty:
+                pass  # already out of loop; continue to next push
+
+        elapsed = default_timer() - start
+        self.clear_sims()
         logger.info("scoring %i sentences took %.1fs, %.0f sentences/s"
-                    % (sentence_count[0], elapsed, sentence_count[0] / elapsed if elapsed else 0.0))
-        self.syn0norm = None
-        return sentence_scores[:sentence_count[0]]
+                    % (sentence_count, elapsed, sentence_count / elapsed if elapsed else 0.0))
+        return sentence_scores[:sentence_count]
 
     def clear_sims(self):
         self.syn0norm = None

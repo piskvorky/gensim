@@ -155,6 +155,14 @@ class TestWord2VecModel(unittest.TestCase):
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1)
         self.models_equal(model, model2)
 
+    def testScoring(self):
+        """Test word2vec scoring."""
+        model = word2vec.Word2Vec(sentences, size=2, min_count=1)
+
+        # just score and make sure they exist
+        scores = model.score(sentences)
+        self.assertEqual(len(scores),len(sentences))
+
 
     def testLocking(self):
         """Test word2vec training doesn't change locked vectors."""
