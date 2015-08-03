@@ -23,7 +23,6 @@ Modules:
     corpora/indexedcorpus
     models/ldamodel
     models/ldamulticore
-    models/ldamallet
     models/lsimodel
     models/tfidfmodel
     models/rpmodel
@@ -35,8 +34,10 @@ Modules:
     models/lda_worker
     models/word2vec
     models/doc2vec
-    models/dtmmodel
     models/phrases
+    models/wrappers/ldamallet
+    models/wrappers/dtmmodel
+    models/wrappers/ldavowpalwabbit.rst
     similarities/docsim
     similarities/simserver
 

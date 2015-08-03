@@ -17,7 +17,7 @@ with other dictionary (:func:`Dictionary.merge_with`) etc.
 
 from __future__ import with_statement
 
-from collections import Mapping
+from collections import Mapping, defaultdict
 import sys
 import logging
 import itertools
@@ -124,7 +124,7 @@ class Dictionary(utils.SaveLoad, Mapping):
                 logger.info("adding document #%i to %s", docno, self)
 
             # update Dictionary with the document
-            _ = self.doc2bow(document, allow_update=True) # ignore the result, here we only care about updating token ids
+            self.doc2bow(document, allow_update=True) # ignore the result, here we only care about updating token ids
 
         logger.info("built %s from %i documents (total %i corpus positions)",
                      self, self.num_docs, self.num_pos)
@@ -145,35 +145,33 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         If `allow_update` is **not** set, this function is `const`, aka read-only.
         """
-        result = {}
-        missing = {}
         if isinstance(document, string_types):
             raise TypeError("doc2bow expects an array of unicode tokens on input, not a single string")
-        document = sorted(utils.to_unicode(token) for token in document)
-        # construct (word, frequency) mapping. in python3 this is done simply
-        # using Counter(), but here i use itertools.groupby() for the job
-        for word_norm, group in itertools.groupby(document):
-            frequency = len(list(group)) # how many times does this word appear in the input document
-            tokenid = self.token2id.get(word_norm, None)
-            if tokenid is None:
-                # first time we see this token (~normalized form)
-                if return_missing:
-                    missing[word_norm] = frequency
-                if not allow_update: # if we aren't allowed to create new tokens, continue with the next unique token
-                    continue
-                tokenid = len(self.token2id)
-                self.token2id[word_norm] = tokenid # new id = number of ids made so far; NOTE this assumes there are no gaps in the id sequence!
 
-            # update how many times a token appeared in the document
-            result[tokenid] = frequency
+        # Construct (word, frequency) mapping.
+        counter = defaultdict(int)
+        for w in document:
+            counter[w if isinstance(w, unicode) else unicode(w, 'utf-8')] += 1
+
+        token2id = self.token2id
+        if allow_update or return_missing:
+            missing = dict((w, freq) for w, freq in iteritems(counter) if w not in token2id)
+            if allow_update:
+                for w in missing:
+                    # new id = number of ids made so far;
+                    # NOTE this assumes there are no gaps in the id sequence!
+                    token2id[w] = len(token2id)
+
+        result = dict((token2id[w], freq) for w, freq in iteritems(counter) if w in token2id)
 
         if allow_update:
             self.num_docs += 1
-            self.num_pos += len(document)
+            self.num_pos += sum(itervalues(counter))
             self.num_nnz += len(result)
             # increase document count for each unique token that appeared in the document
+            dfs = self.dfs
             for tokenid in iterkeys(result):
-                self.dfs[tokenid] = self.dfs.get(tokenid, 0) + 1
+                dfs[tokenid] = dfs.get(tokenid, 0) + 1
 
         # return tokenids, in ascending id order
         result = sorted(iteritems(result))
@@ -213,7 +211,6 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
         self.filter_tokens(good_ids=good_ids)
-        self.compactify()
         logger.info("resulting dictionary: %s" % self)
 
 
@@ -240,6 +237,7 @@ class Dictionary(utils.SaveLoad, Mapping):
             self.dfs = dict((tokenid, freq)
                             for tokenid, freq in iteritems(self.dfs)
                             if tokenid in good_ids)
+        self.compactify()
 
 
     def compactify(self):
@@ -392,4 +390,5 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.info("built %s from %i documents (total %i corpus positions)" %
                      (result, result.num_docs, result.num_pos))
         return result
+
 #endclass Dictionary

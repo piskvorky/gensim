@@ -42,30 +42,28 @@ except ImportError:
 
 blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
 
-
-try:
-    # with bottleneck installed, we can use faster partial sorting
-    import bottleneck
-    def argsort(x, topn=None):
-        """Return indices of the `topn` greatest elements in numpy array `x`, in order."""
-        if topn is None:
-            topn = x.size
-        if topn <= 0:
-            return []
-        if topn >= x.size:
-            return numpy.argsort(x)[::-1]
-        biggest = bottleneck.argpartsort(x, x.size - topn)[-topn:]
-        # the indices in `biggest` are not sorted by magnitude => sort & return
-        return biggest.take(numpy.argsort(x.take(biggest))[::-1])
-except ImportError:
-    # no bottleneck => fall back to numpy
-    def argsort(x, topn=None):
-        if topn is None:
-            topn = x.size
-        return numpy.argsort(x)[::-1][:topn]
+logger = logging.getLogger(__name__)
 
 
-logger = logging.getLogger("gensim.matutils")
+def argsort(x, topn=None, reverse=False):
+    """
+    Return indices of the `topn` smallest elements in array `x`, in ascending order.
+
+    If reverse is True, return the greatest elements instead, in descending order.
+
+    """
+    x = numpy.asarray(x)  # unify code path for when `x` is not a numpy array (list, tuple...)
+    if topn is None:
+        topn = x.size
+    if topn <= 0:
+        return []
+    if reverse:
+        x = -x
+    if topn >= x.size or not hasattr(numpy, 'argpartition'):
+        return numpy.argsort(x)[:topn]
+    # numpy >= 1.8 has a fast partial argsort, use that!
+    most_extreme = numpy.argpartition(x, topn)[:topn]
+    return most_extreme.take(numpy.argsort(x.take(most_extreme)))  # resort topn into order
 
 
 def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_nnz=None, printprogress=0):
@@ -233,13 +231,13 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
     Like `full2sparse`, but only return the `topn` elements of the greatest magnitude (abs).
 
     """
-    # use numpy.argsort and only form tuples that are actually returned.
+    # use numpy.argpartition/argsort and only form tuples that are actually returned.
     # this is about 40x faster than explicitly forming all 2-tuples to run sort() or heapq.nlargest() on.
     if topn <= 0:
         return []
     vec = numpy.asarray(vec, dtype=float)
     nnz = numpy.nonzero(abs(vec) > eps)[0]
-    biggest = nnz.take(argsort(vec.take(nnz), topn))
+    biggest = nnz.take(argsort(vec.take(nnz), topn, reverse=True))
     return list(zip(biggest, vec.take(biggest)))
 
 
@@ -435,7 +433,7 @@ class MmWriter(object):
         self.fname = fname
         if fname.endswith(".gz") or fname.endswith('.bz2'):
             raise NotImplementedError("compressed output not supported with MmWriter")
-        self.fout = open(self.fname, 'wb+') # open for both reading and writing
+        self.fout = utils.smart_open(self.fname, 'wb+') # open for both reading and writing
         self.headers_written = False
 
 
@@ -671,7 +669,7 @@ class MmReader(object):
         if offset == -1:
             return []
         if isinstance(self.input, string_types):
-            fin = open(self.input)
+            fin = utils.smart_open(self.input)
         else:
             fin = self.input
 

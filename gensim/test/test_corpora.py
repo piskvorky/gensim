@@ -14,7 +14,9 @@ import unittest
 import tempfile
 import itertools
 
-from gensim.utils import to_unicode
+import numpy
+
+from gensim.utils import to_unicode, smart_extension
 from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
                             ucicorpus, malletcorpus, textcorpus, indexedcorpus)
 
@@ -48,9 +50,25 @@ class CorpusTestCase(unittest.TestCase):
     def test_load(self):
         fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
         corpus = self.corpus_class(fname)
+
         docs = list(corpus)
         # the deerwester corpus always has nine documents
         self.assertEqual(len(docs), 9)
+
+    def test_len(self):
+        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        corpus = self.corpus_class(fname)
+
+        # make sure corpus.index works, too
+        corpus = self.corpus_class(fname)
+        self.assertEqual(len(corpus), 9)
+
+        # for subclasses of IndexedCorpus, we need to nuke this so we don't
+        # test length on the index, but just testcorpus contents
+        if hasattr(corpus, 'index'):
+            corpus.index = None
+
+        self.assertEqual(len(corpus), 9)
 
     def test_empty_input(self):
         with open(testfile(), 'w') as f:
@@ -88,6 +106,12 @@ class CorpusTestCase(unittest.TestCase):
         # make sure the indexing corpus[i] works
         for i in range(len(corpus)):
             self.assertEqual(corpus[i], corpus2[i])
+
+        # make sure that subclasses of IndexedCorpus support fancy indexing
+        # after deserialisation
+        if isinstance(corpus, indexedcorpus.IndexedCorpus):
+            idx = [1, 3, 5, 7]
+            self.assertEquals(corpus[idx], corpus2[idx])
 
     def test_serialize_compressed(self):
         corpus = self.TEST_CORPUS
@@ -144,6 +168,21 @@ class CorpusTestCase(unittest.TestCase):
         self.assertEqual(len(docs), len(corpus))
         self.assertEqual(len(docs), len(corpus[:]))
         self.assertEqual(len(docs[::2]), len(corpus[::2]))
+        
+        def _get_slice(corpus, slice_):
+            # assertRaises for python 2.6 takes a callable
+            return corpus[slice_]
+
+        # make sure proper input validation for sliced corpora is done
+        self.assertRaises(ValueError, _get_slice, corpus, set([1]))
+        self.assertRaises(ValueError, _get_slice, corpus, 1.0)
+
+        # check sliced corpora that use fancy indexing
+        c = corpus[[1, 3, 4]]
+        self.assertEquals([d for i, d in enumerate(docs) if i in [1, 3, 4]], list(c))
+        self.assertEquals([d for i, d in enumerate(docs) if i in [1, 3, 4]], list(c))
+        self.assertEquals(len(corpus[[0, 1, -1]]), 3)
+        self.assertEquals(len(corpus[numpy.asarray([0, 1, -1])]), 3)
 
 
 class TestMmCorpus(CorpusTestCase):
@@ -166,6 +205,24 @@ class TestBleiCorpus(CorpusTestCase):
     def setUp(self):
         self.corpus_class = bleicorpus.BleiCorpus
         self.file_extension = '.blei'
+
+    def test_save_format_for_dtm(self):
+        corpus = [[(1, 1.0)], [], [(0, 5.0), (2, 1.0)], []]
+        test_file = testfile()
+        self.corpus_class.save_corpus(test_file, corpus)
+        with open(test_file) as f:
+            for line in f:
+                # unique_word_count index1:count1 index2:count2 ... indexn:counnt
+                tokens = line.split()
+                words_len = int(tokens[0])
+                if words_len > 0:
+                    tokens = tokens[1:]
+                else:
+                    tokens = []
+                self.assertEqual(words_len, len(tokens))
+                for token in tokens:
+                    word, count = token.split(':')
+                    self.assertEqual(count, str(int(count)))
 
 
 class TestLowCorpus(CorpusTestCase):

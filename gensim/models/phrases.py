@@ -182,7 +182,8 @@ class Phrases(interfaces.TransformationABC):
         of 40M needs about 3.6GB of RAM; increase/decrease `max_vocab_size` depending
         on how much available memory you have.
 
-        `delimiter` is the glue character used to join collocation tokens.
+        `delimiter` is the glue character used to join collocation tokens, and
+        should be a byte string (e.g. b'_').
 
         `exact_count`  whether to use exact counting (memory intensive)  or use approximating counting.
 
@@ -248,9 +249,8 @@ class Phrases(interfaces.TransformationABC):
                 word = sentence[-1]
                 vocab.update_counts(word, 1)
 
-            if  len(vocab) > max_vocab_size:
-                if exact_count:
-                    prune_vocab(vocab, min_reduce)
+            if len(vocab) > max_vocab_size:
+                utils.prune_vocab(vocab, min_reduce)
                 min_reduce += 1
 
         logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
@@ -313,51 +313,36 @@ class Phrases(interfaces.TransformationABC):
 
         s, new_s = [utils.any2utf8(w) for w in sentence], []
         last_bigram = False
-        for bigram in zip(s, s[1:]):
-            if (not self.exact_count) or all(uni in self.vocab for uni in bigram):
-                bigram_word = self.delimiter.join(bigram)
-                if ( (not self.exact_count) or bigram_word in self.vocab ) and not last_bigram:
-                    pa = float(self.vocab[bigram[0]])
-                    pb = float(self.vocab[bigram[1]])
-                    pab = float(self.vocab[bigram_word])
-                    score = 0
-                    if pa > 0 and pb > 0:
-                            score = (pab - self.min_count) / pa / pb * len(self.vocab)
-                            # FIXME (Better way)
-                            # Vocab is fixed to 1 when using approximate counts
-                            # So scores are way off how to fix this?
-
-                    logger.info("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
-                                bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
-                    if score > self.threshold:
+        vocab = self.vocab
+        threshold = self.threshold
+        delimiter = self.delimiter
+        min_count = self.min_count
+        for word_a, word_b in zip(s, s[1:]):
+            if word_a in vocab and word_b in vocab:
+                bigram_word = delimiter.join((word_a, word_b))
+                if bigram_word in vocab and not last_bigram:
+                    pa = float(vocab[word_a])
+                    pb = float(vocab[word_b])
+                    pab = float(vocab[bigram_word])
+                    score = (pab - min_count) / pa / pb * len(vocab)
+                    # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
+                    #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
+                    if score > threshold:
                         new_s.append(bigram_word)
                         last_bigram = True
                         continue
 
             if not last_bigram:
-                new_s.append(bigram[0])
+                new_s.append(word_a)
             last_bigram = False
 
         if s:  # add last word skipped by previous loop
             last_token = s[-1]
-            if (not self.exact_count  ) or ( last_token in self.vocab and not last_bigram):
+
+            if not last_bigram:
                 new_s.append(last_token)
 
         return [utils.to_unicode(w) for w in new_s]
-
-
-def prune_vocab(vocab, min_reduce):
-    """
-    Remove all entries from the `vocab` dictionary with count smaller than `min_reduce`.
-    Modifies `vocab` in place.
-
-    """
-    old_len = len(vocab)
-    for w in list(vocab):  # make a copy of dict's keys
-        if vocab[w] <= min_reduce:
-            del vocab[w]
-    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)" %
-        (old_len - len(vocab), min_reduce, old_len, len(vocab)))
 
 
 if __name__ == '__main__':
