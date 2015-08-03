@@ -432,9 +432,7 @@ class Word2Vec(utils.SaveLoad):
         self.null_word = null_word
         self.train_count = 0
         self.total_train_time = 0
-        # --------
         self.unknown_word = unknown_word
-        # --------
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -553,15 +551,12 @@ class Word2Vec(utils.SaveLoad):
             # make stored settings match these applied settings
             self.min_count = min_count
             self.sample = sample
-            # self.vocab = {}
-            # --------
             if self.unknown_word is not None:
                 self.index2word.append(self.unknown_word)
                 self.unknown_vocab = Vocab(count=0, index=0)
                 self.vocab = defaultdict(CallableWord(self.unknown_vocab))
             else:
                 self.vocab = {}
-            # --------
         drop_unique, drop_total, retain_total, original_total = 0, 0, 0, 0
         retain_words = []
         if self.unknown_word is not None:
@@ -576,7 +571,6 @@ class Word2Vec(utils.SaveLoad):
                     self.vocab[word] = Vocab(count=v, index=len(self.index2word))
                     self.index2word.append(word)
             else:
-                # -------
                 if self.unknown_word is not None:
                     retain_total += v
                     original_total += v
@@ -586,7 +580,6 @@ class Word2Vec(utils.SaveLoad):
                     drop_unique += 1
                     drop_total += v
                     original_total += v
-                    # -------
 
         self.raw_vocab[self.unknown_word] = self.unknown_vocab.count
         logger.info("min_count=%d retains %i unique words (drops %i)", min_count, len(retain_words), drop_unique)
