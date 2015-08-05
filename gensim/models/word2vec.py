@@ -978,18 +978,6 @@ class Word2Vec(utils.SaveLoad):
         super(Word2Vec, self).save(*args, **kwargs)
     save.__doc__ = utils.SaveLoad.save.__doc__
 
-class Sentences(object):
-    def __init__(self, filename):
-        self.filename = filename
-
-    def __iter__(self):
-        for line in utils.smart_open(self.filename):
-            line = utils.to_unicode(line)
-            line = line.strip()
-            words = [token.lower() for token in line.split(" ")]
-            if not words:  # don't bother sending out empty sentences
-                continue
-            yield words
 
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
