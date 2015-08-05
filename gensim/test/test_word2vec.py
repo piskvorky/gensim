@@ -44,18 +44,32 @@ sentences = [
     ['graph', 'minors', 'survey']
 ]
 
+new_sentences = [
+    ['computer', 'artificial', 'intelligence'],
+    ['artificial', 'trees']
+]
 
 def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_word2vec.tst')
 
-
 class TestWord2VecModel(unittest.TestCase):
+
     def testPersistence(self):
         """Test storing/loading the entire model."""
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.save(testfile())
         self.models_equal(model, word2vec.Word2Vec.load(testfile()))
+
+    def testOnlineLearning(self):
+        """Test that the algorithm is able to add new words to the
+        vocabulary and to a trained model"""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.update_vocab(new_sentences)
+        model.train(new_sentences)
+        self.assertEqual(len(model.vocab), 14)
+        self.models_equal(model, word2vec.Word2Vec.load(datapath(
+            "gensim_word2vec_update.tst")))
 
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
