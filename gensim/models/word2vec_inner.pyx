@@ -454,18 +454,22 @@ def score_sentence_sg(model, sentence, _work):
 
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
-    sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
-    
-    for i in range(sentence_len):
-        word = sentence[i]
+
+    vlookup = model.vocab
+    i = 0
+    for token in sentence:
+        word = vlookup[token] if token in vlookup else None
         if word is None:
-            codelens[i] = 0
-        else:
-            indexes[i] = word.index
-            codelens[i] = <int>len(word.code)
-            codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-            points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
-            result += 1
+            continue  # should drop the 
+        indexes[i] = word.index
+        codelens[i] = <int>len(word.code)
+        codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+        points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+        result += 1
+        i += 1
+        if i == MAX_SENTENCE_LEN:
+            break  # TODO: log warning, tally overflow?
+    sentence_len = i
 
     # release GIL & train on the sentence
     work[0] = 0.0
@@ -533,18 +537,22 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
     neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
-    sentence_len = <int>min(MAX_SENTENCE_LEN, len(sentence))
 
-    for i in range(sentence_len):
-        word = sentence[i]
+    vlookup = model.vocab
+    i = 0
+    for token in sentence:
+        word = vlookup[token] if token in vlookup else None
         if word is None:
-            codelens[i] = 0
-        else:
-            indexes[i] = word.index
-            codelens[i] = <int>len(word.code)
-            codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-            points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
-            result += 1
+            continue  # for score, should this be a default negative value?
+        indexes[i] = word.index
+        codelens[i] = <int>len(word.code)
+        codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+        points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+        result += 1
+        i += 1
+        if i == MAX_SENTENCE_LEN:
+            break  # TODO: log warning, tally overflow?
+    sentence_len = i
 
     # release GIL & train on the sentence
     work[0] = 0.0
