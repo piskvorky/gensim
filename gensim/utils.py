@@ -915,6 +915,7 @@ def pickle(obj, fname, protocol=2):
 def unpickle(fname):
     """Load pickled object from `fname`"""
     with smart_open(fname) as f:
+        # Because of loading from S3 load can't be used (missing readline in smart_open)
         return _pickle.loads(f.read())
 
 
