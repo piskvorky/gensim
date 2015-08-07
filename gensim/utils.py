@@ -915,7 +915,7 @@ def pickle(obj, fname, protocol=2):
 def unpickle(fname):
     """Load pickled object from `fname`"""
     with smart_open(fname) as f:
-        return _pickle.load(f)
+        return _pickle.loads(f.read())
 
 
 def revdict(d):
