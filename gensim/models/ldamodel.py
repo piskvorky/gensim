@@ -834,7 +834,11 @@ class LdaModel(interfaces.TransformationABC):
         """
         Save the model to file.
 
-        Large internal arrays may be stored into separate files, with `fname` as prefix.
+        Large internal arrays may be stored into separate files, with `fname` as prefix.Use
+        `separately=[]` to define which arrays should be stored in separate
+        files. The `ignore` parameter can be used to define which variables should be ignored.
+        By default the internal `state` is ignored as it uses its own serialisation not the
+        one provided by `LdaModel`.
 
         Note: do not save as a compressed file if you intend to load the file back with `mmap`.
 
