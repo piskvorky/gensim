@@ -41,6 +41,7 @@ from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
 from six.moves import xrange
+import six
 
 # log(sum(exp(x))) that tries to avoid overflow
 try:
