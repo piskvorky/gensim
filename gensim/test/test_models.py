@@ -322,6 +322,17 @@ class TestLdaModel(unittest.TestCase):
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
+    def testPersistenceIgnore(self):
+        fname = testfile()
+        model = ldamodel.LdaModel(self.corpus, num_topics=2)
+        model.save(fname, ignore='id2word')
+        model2 = ldamodel.LdaModel.load(fname)
+        self.assertTrue(model2.id2word is None)
+        
+        model.save(fname, ignore=['id2word'])
+        model2 = ldamodel.LdaModel.load(fname)
+        self.assertTrue(model2.id2word is None)
+    
     def testPersistenceCompressed(self):
         fname = testfile() + '.gz'
         model = self.class_(self.corpus, num_topics=2)

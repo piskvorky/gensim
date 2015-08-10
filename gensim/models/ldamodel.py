@@ -41,6 +41,7 @@ from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
 from six.moves import xrange
+import six
 
 # log(sum(exp(x))) that tries to avoid overflow
 try:
@@ -829,11 +830,19 @@ class LdaModel(interfaces.TransformationABC):
         """
         return self.get_document_topics(bow, eps)
 
-    def save(self, fname, *args, **kwargs):
+    def save(self, fname, ignore=['state', 'dispatcher'], *args, **kwargs):
         """
         Save the model to file.
 
         Large internal arrays may be stored into separate files, with `fname` as prefix.
+        
+        `separately` can be used to define which arrays should be stored in separate files.
+        
+        `ignore` parameter can be used to define which variables should be ignored, i.e. left
+        out from the pickled lda model. By default the internal `state` is ignored as it uses
+        its own serialisation not the one provided by `LdaModel`. The `state` and `dispatcher
+        will be added to any ignore parameter defined.
+
 
         Note: do not save as a compressed file if you intend to load the file back with `mmap`.
 
@@ -850,7 +859,17 @@ class LdaModel(interfaces.TransformationABC):
         """
         if self.state is not None:
             self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
-        super(LdaModel, self).save(fname, *args, ignore=['state', 'dispatcher'], **kwargs)
+        
+        # make sure 'state' and 'dispatcher' are ignored from the pickled object, even if
+        # someone sets the ignore list themselves
+        if ignore is not None and ignore:
+            if isinstance(ignore, six.string_types):
+                ignore = [ignore]
+            ignore = [e for e in ignore if e] # make sure None and '' are not in the list
+            ignore = list(set(['state', 'dispatcher']) | set(ignore))
+        else:
+            ignore = ['state', 'dispatcher']
+        super(LdaModel, self).save(fname, *args, ignore=ignore, **kwargs)
 
     @classmethod
     def load(cls, fname, *args, **kwargs):
