@@ -20,26 +20,27 @@ Tested with python 2.6, 2.7, and 3.4.
 
 Example:
 
-    Train model:
+    >>> # train model
     >>> lda = gensim.models.wrappers.LdaVowpalWabbit('/usr/local/bin/vw',
                                                      corpus=corpus,
                                                      num_topics=20,
                                                      id2word=dictionary)
 
-    Update existing model:
+    >>> # update an existing model
     >>> lda.update(another_corpus)
 
-    Get topic probability distributions for a document:
+    >>> # get topic probability distributions for a document
     >>> print(lda[doc_bow])
 
-    Print 10 topics:
+    >>> # print 10 topics
     >>> print(lda.print_topics())
 
-    Save/load the trained model:
+    >>> # save/load the trained model:
+
     >>> lda.save('vw_lda.model')
     >>> lda = gensim.models.wrappers.LdaVowpalWabbit.load('vw_lda.model')
 
-    Get bound on log perplexity for given test set:
+    >>> # get bound on log perplexity for given test set
     >>> print(lda.log_perpexity(test_corpus))
 
 Vowpal Wabbit works on files, so this wrapper maintains a temporary directory
@@ -64,9 +65,9 @@ import subprocess
 
 import numpy
 
-from gensim import utils
+from gensim import utils, matutils
 
-LOG = logging.getLogger('gensim.models.ldavowpalwabbit')
+LOG = logging.getLogger(__name__)
 
 
 class LdaVowpalWabbit(utils.SaveLoad):
@@ -266,7 +267,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
     def show_topic(self, topicid, topn=10):
         topics = self._get_topics()
         topic = topics[topicid]
-        bestn = numpy.argsort(topic)[::-1][:topn]
+        bestn = matutils.argsort(topic, topn, reverse=True)
         return [(topic[t_id], self.id2word[t_id]) for t_id in bestn]
 
     def save(self, fname, *args, **kwargs):
@@ -276,12 +277,12 @@ class LdaVowpalWabbit(utils.SaveLoad):
             # variable before serialising this object - keeps all data
             # self contained within a single serialised file
             LOG.debug("Reading model bytes from '%s'", self._model_filename)
-            with open(self._model_filename, 'rb') as fhandle:
+            with utils.smart_open(self._model_filename, 'rb') as fhandle:
                 self._model_data = fhandle.read()
 
         if os.path.exists(self._topics_filename):
             LOG.debug("Reading topic bytes from '%s'", self._topics_filename)
-            with open(self._topics_filename, 'rb') as fhandle:
+            with utils.smart_open(self._topics_filename, 'rb') as fhandle:
                 self._topics_data = fhandle.read()
 
         if 'ignore' not in kwargs:
@@ -299,13 +300,13 @@ class LdaVowpalWabbit(utils.SaveLoad):
             # Vowpal Wabbit operates on its own binary model file - deserialise
             # to file at load time, making it immediately ready for use
             LOG.debug("Writing model bytes to '%s'", lda_vw._model_filename)
-            with open(lda_vw._model_filename, 'wb') as fhandle:
+            with utils.smart_open(lda_vw._model_filename, 'wb') as fhandle:
                 fhandle.write(lda_vw._model_data)
             lda_vw._model_data = None # no need to keep in memory after this
 
         if lda_vw._topics_data:
             LOG.debug("Writing topic bytes to '%s'", lda_vw._topics_filename)
-            with open(lda_vw._topics_filename, 'wb') as fhandle:
+            with utils.smart_open(lda_vw._topics_filename, 'wb') as fhandle:
                 fhandle.write(lda_vw._topics_data)
             lda_vw._topics_data = None
 
@@ -326,6 +327,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
         """Get list of command line arguments for running prediction."""
         cmd = [self.vw_path,
                '--testonly', # don't update model with this data
+               '--lda', str(self.num_topics),
                '--lda_D', str(corpus_size),
                '-i', self._model_filename, # load existing binary model
                '-d', self._corpus_filename,
@@ -385,12 +387,12 @@ class LdaVowpalWabbit(utils.SaveLoad):
         topics = numpy.zeros((self.num_topics, self.num_terms),
                              dtype=numpy.float32)
 
-        with open(self._topics_filename) as topics_file:
+        with utils.smart_open(self._topics_filename) as topics_file:
             found_options = False
 
             for line in topics_file:
                 if not found_options:
-                    if line.startswith('options:'):
+                    if line.startswith(b'options:'):
                         found_options = True
                     continue
 
@@ -427,7 +429,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
         predictions = numpy.zeros((corpus_size, self.num_topics),
                                   dtype=numpy.float32)
 
-        with open(self._predict_filename) as fhandle:
+        with utils.smart_open(self._predict_filename) as fhandle:
             for i, line in enumerate(fhandle):
                 predictions[i, :] = line.split()
 
@@ -514,9 +516,9 @@ def write_corpus_as_vw(corpus, filename):
     LOG.debug("Writing corpus to: %s", filename)
 
     corpus_size = 0
-    with open(filename, 'w') as corpus_file:
+    with utils.smart_open(filename, 'wb') as corpus_file:
         for line in corpus_to_vw(corpus):
-            print(line, file=corpus_file)
+            corpus_file.write(line.encode('utf-8') + b'\n')
             corpus_size += 1
 
     return corpus_size

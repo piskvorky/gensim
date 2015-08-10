@@ -14,6 +14,8 @@ import unittest
 import tempfile
 import itertools
 
+import numpy
+
 from gensim.utils import to_unicode, smart_extension
 from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
                             ucicorpus, malletcorpus, textcorpus, indexedcorpus)
@@ -105,6 +107,12 @@ class CorpusTestCase(unittest.TestCase):
         for i in range(len(corpus)):
             self.assertEqual(corpus[i], corpus2[i])
 
+        # make sure that subclasses of IndexedCorpus support fancy indexing
+        # after deserialisation
+        if isinstance(corpus, indexedcorpus.IndexedCorpus):
+            idx = [1, 3, 5, 7]
+            self.assertEquals(corpus[idx], corpus2[idx])
+
     def test_serialize_compressed(self):
         corpus = self.TEST_CORPUS
 
@@ -160,6 +168,22 @@ class CorpusTestCase(unittest.TestCase):
         self.assertEqual(len(docs), len(corpus))
         self.assertEqual(len(docs), len(corpus[:]))
         self.assertEqual(len(docs[::2]), len(corpus[::2]))
+        
+        def _get_slice(corpus, slice_):
+            # assertRaises for python 2.6 takes a callable
+            return corpus[slice_]
+
+        # make sure proper input validation for sliced corpora is done
+        self.assertRaises(ValueError, _get_slice, corpus, set([1]))
+        self.assertRaises(ValueError, _get_slice, corpus, 1.0)
+
+        # check sliced corpora that use fancy indexing
+        c = corpus[[1, 3, 4]]
+        self.assertEquals([d for i, d in enumerate(docs) if i in [1, 3, 4]], list(c))
+        self.assertEquals([d for i, d in enumerate(docs) if i in [1, 3, 4]], list(c))
+        self.assertEquals(len(corpus[[0, 1, -1]]), 3)
+        self.assertEquals(len(corpus[numpy.asarray([0, 1, -1])]), 3)
+
 
 class TestMmCorpus(CorpusTestCase):
     def setUp(self):

@@ -31,6 +31,7 @@ class LeeCorpus(object):
             for line in f:
                 yield utils.simple_preprocess(line)
 
+list_corpus = list(LeeCorpus())
 
 sentences = [
     ['human', 'interface', 'computer'],
@@ -77,7 +78,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(numpy.allclose(model['human'], text_model['human'], atol=1e-6))
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=False, norm_only=True)
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human'], atol=1e-6))
-        
+
         self.assertTrue(numpy.allclose(model.syn0norm[model.vocab['human'].index], norm_only_model['human'], atol=1e-4))
 
     def testPersistenceWord2VecFormatWithVocab(self):
@@ -88,6 +89,11 @@ class TestWord2VecModel(unittest.TestCase):
         model.save_word2vec_format(testfile(), testvocab, binary=True)
         binary_model_with_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), testvocab, binary=True)
         self.assertEqual(model.vocab['human'].count, binary_model_with_vocab.vocab['human'].count)
+
+    def test_zero_workers_mode(self):
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model0 = word2vec.Word2Vec(sentences, min_count=1, workers=0)
+        self.models_equal(model,model0)
 
     def testLargeMmap(self):
         """Test storing/loading the entire model."""
@@ -110,8 +116,7 @@ class TestWord2VecModel(unittest.TestCase):
         model.build_vocab(corpus)
         self.assertTrue(len(model.vocab) == 6981)
         # with min_count=1, we're not throwing away anything, so make sure the word counts add up to be the entire corpus
-        self.assertEqual(sum(v.count for v in model.vocab.values()),
-                         total_words)
+        self.assertEqual(sum(v.count for v in model.vocab.values()), total_words)
         # make sure the binary codes are correct
         numpy.allclose(model.vocab['the'].code, [1, 1, 0, 0])
 
@@ -143,11 +148,78 @@ class TestWord2VecModel(unittest.TestCase):
         # test querying for "most similar" by vector
         graph_vector = model.syn0norm[model.vocab['graph'].index]
         sims2 = model.most_similar(positive=[graph_vector], topn=11)
-        self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is 'graph' itself
+        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+        self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1)
         self.models_equal(model, model2)
+
+    def testScoring(self):
+        """Test word2vec scoring."""
+        model = word2vec.Word2Vec(sentences, size=2, min_count=1)
+
+        # just score and make sure they exist
+        scores = model.score(sentences)
+        self.assertEqual(len(scores),len(sentences))
+
+
+    def testLocking(self):
+        """Test word2vec training doesn't change locked vectors."""
+        corpus = LeeCorpus()
+        # build vocabulary, don't train yet
+        for sg in range(2):  # test both cbow and sg
+            model = word2vec.Word2Vec(size=4, hs=1, negative=5, min_count=1, sg=sg, window=5)
+            model.build_vocab(corpus)
+
+            # remember two vectors
+            locked0 = numpy.copy(model.syn0[0])
+            unlocked1 = numpy.copy(model.syn0[1])
+            # lock the vector in slot 0 against change
+            model.syn0_lockf[0] = 0.0
+
+            model.train(corpus)
+            self.assertFalse((unlocked1==model.syn0[1]).all())  # unlocked vector should vary
+            self.assertTrue((locked0==model.syn0[0]).all())     # locked vector should not vary
+
+    def model_sanity(self, model, train=True):
+        """Even tiny models trained on LeeCorpus should pass these sanity checks"""
+        # run extra before/after training tests if train=True
+        if train:
+            model.build_vocab(list_corpus)
+            orig0 = numpy.copy(model.syn0[0])
+            model.train(list_corpus)
+            self.assertFalse((orig0==model.syn0[1]).all())  # vector should vary after training
+        sims = model.most_similar('war', topn=len(model.index2word))
+        t_rank = [word for word, score in sims].index('terrorism')
+        # in >200 calibration runs w/ calling parameters, 'terrorism' in 50-most_sim for 'war'
+        self.assertLess(t_rank, 50)
+        war_vec = model['war']
+        sims2 = model.most_similar([war_vec], topn=51)
+        self.assertTrue('war' in [word for word, score in sims2])
+        self.assertTrue('terrorism' in [word for word, score in sims2])
+
+    def test_sg_hs(self):
+        """Test skipgram w/ hierarchical softmax"""
+        model = word2vec.Word2Vec(sg=1, window=4, hs=1, negative=0, min_count=5, iter=10, workers=2)
+        self.model_sanity(model)
+
+    def test_sg_neg(self):
+        """Test skipgram w/ negative sampling"""
+        model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=15, min_count=5, iter=10, workers=2)
+        self.model_sanity(model)
+
+    def test_cbow_hs(self):
+        """Test CBOW w/ hierarchical softmax"""
+        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
+                                  min_count=5, iter=10, workers=2)
+        self.model_sanity(model)
+
+    def test_cbow_neg(self):
+        """Test CBOW w/ negative sampling"""
+        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
+                                  min_count=5, iter=10, workers=2)
+        self.model_sanity(model)
 
     def testTrainingCbow(self):
         """Test CBOW word2vec training."""
@@ -165,7 +237,8 @@ class TestWord2VecModel(unittest.TestCase):
         # test querying for "most similar" by vector
         graph_vector = model.syn0norm[model.vocab['graph'].index]
         sims2 = model.most_similar(positive=[graph_vector], topn=11)
-        self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is 'graph' itself
+        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+        self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, sg=0)
@@ -187,7 +260,8 @@ class TestWord2VecModel(unittest.TestCase):
         # test querying for "most similar" by vector
         graph_vector = model.syn0norm[model.vocab['graph'].index]
         sims2 = model.most_similar(positive=[graph_vector], topn=11)
-        self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is 'graph' itself
+        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+        self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=0, negative=2)
@@ -209,7 +283,8 @@ class TestWord2VecModel(unittest.TestCase):
         # test querying for "most similar" by vector
         graph_vector = model.syn0norm[model.vocab['graph'].index]
         sims2 = model.most_similar(positive=[graph_vector], topn=11)
-        self.assertEqual(sims, sims2[1:])  # ignore first element of sims2, which is 'graph' itself
+        sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
+        self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
         model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, sg=0, hs=0, negative=2)
@@ -257,6 +332,13 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
 #endclass TestWord2VecModel
 
+    def test_sentences_should_not_be_a_generator(self):
+        """
+        Is sentences a generator object?
+        """
+        gen = (s for s in sentences)
+        self.assertRaises(TypeError, word2vec.Word2Vec, (gen,))
+
 
 class TestWord2VecSentenceIterators(unittest.TestCase):
     def testLineSentenceWorksWithFilename(self):
@@ -282,6 +364,12 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
                     self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 #endclass TestWord2VecSentenceIterators
 
+if not hasattr(TestWord2VecModel, 'assertLess'):
+    # workaround for python 2.6
+    def assertLess(self, a, b, msg=None):
+        self.assertTrue(a < b, msg="%s is not less than %s" % (a, b))
+
+    setattr(TestWord2VecModel, 'assertLess', assertLess)
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

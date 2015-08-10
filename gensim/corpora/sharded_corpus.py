@@ -26,15 +26,15 @@ import numpy
 import scipy.sparse as sparse
 import time
 
+logger = logging.getLogger(__name__)
+
 #: Specifies which dtype should be used for serializing the shards.
 _default_dtype = float
 try:
     import theano
     _default_dtype = theano.config.floatX
 except ImportError:
-    logging.info('Could not import Theano, will use standard float'
-                 'for default ShardedCorpus dtype.')
-    pass
+    logger.info('Could not import Theano, will use standard float for default ShardedCorpus dtype.')
 
 
 from six.moves import xrange
@@ -235,20 +235,20 @@ class ShardedCorpus(IndexedCorpus):
         self.current_offset = None   # The index into the dataset which
                                      # corresponds to index 0 of current shard
 
-        logging.info('Initializing sharded corpus with prefix '
+        logger.info('Initializing sharded corpus with prefix '
                      '{0}'.format(output_prefix))
         if (not os.path.isfile(output_prefix)) or overwrite:
-            logging.info('Building from corpus...')
+            logger.info('Building from corpus...')
             self.init_shards(output_prefix, corpus, shardsize)
 
             # Save automatically, to facilitate re-loading
             # and retain information about how the corpus
             # was serialized.
-            logging.info('Saving ShardedCorpus object to '
+            logger.info('Saving ShardedCorpus object to '
                          '{0}'.format(self.output_prefix))
             self.save()
         else:
-            logging.info('Cloning existing...')
+            logger.info('Cloning existing...')
             self.init_by_clone()
 
     def init_shards(self, output_prefix, corpus, shardsize=4096, dtype=_default_dtype):
@@ -261,10 +261,10 @@ class ShardedCorpus(IndexedCorpus):
         proposed_dim = self._guess_n_features(corpus)
         if proposed_dim != self.dim:
             if self.dim is None:
-                logging.info('Deriving dataset dimension from corpus: '
+                logger.info('Deriving dataset dimension from corpus: '
                              '{0}'.format(proposed_dim))
             else:
-                logging.warn('Dataset dimension derived from input corpus diffe'
+                logger.warn('Dataset dimension derived from input corpus diffe'
                              'rs from initialization argument, using corpus.'
                              '(corpus {0}, init arg {1})'.format(proposed_dim,
                                                                  self.dim))
@@ -274,13 +274,13 @@ class ShardedCorpus(IndexedCorpus):
 
         start_time = time.clock()
 
-        logging.info('Running init from corpus.')
+        logger.info('Running init from corpus.')
 
         for n, doc_chunk in enumerate(gensim.utils.grouper(corpus, chunksize=shardsize)):
-            logging.info('Chunk no. {0} at {1} s'.format(n, time.clock() - start_time))
+            logger.info('Chunk no. {0} at {1} s'.format(n, time.clock() - start_time))
 
             current_shard = numpy.zeros((len(doc_chunk), self.dim), dtype=dtype)
-            logging.debug('Current chunk dimension: '
+            logger.debug('Current chunk dimension: '
                           '{0} x {1}'.format(len(doc_chunk), self.dim))
 
             for i, doc in enumerate(doc_chunk):
@@ -294,7 +294,7 @@ class ShardedCorpus(IndexedCorpus):
             self.save_shard(current_shard)
 
         end_time = time.clock()
-        logging.info('Built {0} shards in {1} s.'.format(self.n_shards, end_time - start_time))
+        logger.info('Built {0} shards in {1} s.'.format(self.n_shards, end_time - start_time))
 
     def init_by_clone(self):
         """
@@ -309,9 +309,9 @@ class ShardedCorpus(IndexedCorpus):
 
         if temp.dim != self.dim:
             if self.dim is None:
-                logging.info('Loaded dataset dimension: {0}'.format(temp.dim))
+                logger.info('Loaded dataset dimension: {0}'.format(temp.dim))
             else:
-                logging.warn('Loaded dataset dimension differs from init arg '
+                logger.warn('Loaded dataset dimension differs from init arg '
                              'dimension, using loaded dim. '
                              '(loaded {0}, init {1})'.format(temp.dim, self.dim))
 
@@ -344,7 +344,7 @@ class ShardedCorpus(IndexedCorpus):
         """
         Load (unpickle) the n-th shard as the "live" part of the dataset
         into the Dataset object."""
-        #logging.debug('ShardedCorpus loading shard {0}, '
+        #logger.debug('ShardedCorpus loading shard {0}, '
         #              'current shard: {1}'.format(n, self.current_shard_n))
 
         # No-op if the shard is already open.
@@ -470,7 +470,7 @@ class ShardedCorpus(IndexedCorpus):
             for old_shard_n, old_shard_name in enumerate(old_shard_names):
                 os.remove(old_shard_name)
         except Exception as e:
-            logging.error('Exception occurred during old shard no. {0} '
+            logger.error('Exception occurred during old shard no. {0} '
                           'removal: {1}.\nAttempting to at least move '
                           'new shards in.'.format(old_shard_n, str(e)))
         finally:
@@ -531,12 +531,12 @@ class ShardedCorpus(IndexedCorpus):
                                  'refusing to guess (dimension set to {0},'
                                  'type of corpus: {1}).'.format(self.dim, type(corpus)))
             else:
-                logging.warn('Couldn\'t find number of features, trusting '
+                logger.warn('Couldn\'t find number of features, trusting '
                              'supplied dimension ({0})'.format(self.dim))
                 n_features = self.dim
 
         if self.dim and n_features != self.dim:
-            logging.warn('Discovered inconsistent dataset dim ({0}) and '
+            logger.warn('Discovered inconsistent dataset dim ({0}) and '
                          'feature count from corpus ({1}). Coercing to dimension'
                          ' given by argument.'.format(self.dim, n_features))
 
@@ -604,7 +604,7 @@ class ShardedCorpus(IndexedCorpus):
                 # This fails on one-past
                 # slice indexing; that's why there's a code branch here.
 
-            #logging.debug('ShardedCorpus: Retrieving slice {0}: '
+            #logger.debug('ShardedCorpus: Retrieving slice {0}: '
             #              'shard {1}'.format((offset.start, offset.stop),
             #                                 (first_shard, last_shard)))
 
@@ -794,7 +794,7 @@ class ShardedCorpus(IndexedCorpus):
         super(ShardedCorpus, self).save(*args, **kwargs)
         #
         # self.reset()
-        # with open(self.output_prefix, 'wb') as pickle_handle:
+        # with smart_open(self.output_prefix, 'wb') as pickle_handle:
         #     cPickle.dump(self, pickle_handle)
 
     @classmethod

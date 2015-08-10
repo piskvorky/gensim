@@ -3,7 +3,7 @@ This package contains interfaces and functionality to compute pair-wise document
 similarities within a corpus of documents.
 """
 
-from gensim import utils, matutils, interfaces, corpora, models, similarities
+from gensim import parsing, matutils, interfaces, corpora, models, similarities, summarization
 import logging
 
 try:

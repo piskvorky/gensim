@@ -1,11 +1,60 @@
 Changes
 =======
 
-0.10.4
+0.12.2
 
-* make utils.decode_htmlentities more robust and reliable on narrow Python builds
-* Move wrappers for external modeling programs into a submodule (Christopher Corley, #295)
-* Compress secondary NumPy state files (Christopher Corley, #248)
+* added support for NumPy style fancy indexing to corpus objects (Matti Lyra, #414)
+
+0.12.1, 20/07/2015
+
+* improvements to testing, switch to Travis CI containers
+* support for loading old word2vec models (<=0.11.1) in 0.12+ (Gordon Mohr, #405)
+* various bug fixes to word2vec, doc2vec (Gordon Mohr, #393, #386, #404)
+* TextSummatization support for very short texts (Federico Barrios, #390)
+* support for word2vec[['word1', 'word2'...]] convenience API calls (Satish Palaniappan, #395)
+* MatrixSimilarity supports indexing generator corpora (single pass)
+
+0.12.0, 06/07/2015
+
+* complete API, performance, memory overhaul of doc2vec (Gordon Mohr, #356, #373, #380, #384)
+  - fast infer_vector(); optional memory-mapped doc vectors; memory savings with int doc IDs
+  - 'dbow_words' for combined DBOW & word skip-gram training; new 'dm_concat' mode
+  - multithreading & negative-sampling optimizations (also benefitting word2vec)
+  - API NOTE: doc vectors must now be accessed/compared through model's 'docvecs' field
+    (eg: "model.docvecs['my_ID']" or "model.docvecs.most_similar('my_ID')")
+  - https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/doc2vec-IMDB.ipynb
+* new "text summarization" module (PR #324: Federico Lopez, Federico Barrios)
+  - https://github.com/summanlp/docs/raw/master/articulo/articulo-en.pdf
+* new matutils.argsort with partial sort
+  - performance speedups to all similarity queries (word2vec, Similarity classes...)
+* word2vec can compute likelihood scores for classification (Mat Addy, #358)
+  - http://arxiv.org/abs/1504.07295
+  - http://nbviewer.ipython.org/github/taddylab/deepir/blob/master/w2v-inversion.ipynb
+* word2vec supports "encoding" parameter when loading from C format, for non-utf8 models
+* more memory-efficient word2vec training (#385)
+* fixes to Python3 compatibility (Pavel Kalaidin #330, S-Eugene #369)
+* enhancements to save/load format (Liang Bo Wang #363, Gordon Mohr #356)
+  - pickle defaults to protocol=2 for better py3 compatibility
+* fixes and improvements to wiki parsing (Lukas Elmer #357, Excellent5 #333)
+* fix to phrases scoring (Ikuya Yamada, #353)
+* speed up of phrases generation (Dave Challis, #349)
+* changes to multipass LDA training (Christopher Corley, #298)
+* various doc improvements and fixes (Matti Lyra #331, Hongjoo Lee #334)
+* fixes and improvements to LDA (Christopher Corley #323)
+
+0.11.0 = 0.11.1 = 0.11.1-1, 10/04/2015
+
+* added "topic ranking" to sort topics by coherence in LdaModel (jtmcmc, #311)
+* new fast ShardedCorpus out-of-core corpus (Jan Hajic jr., #284)
+* utils.smart_open now uses the smart_open package (#316)
+* new wrapper for LDA in Vowpal Wabbit (Dave Challis, #304)
+* improvements to the DtmModel wrapper (Yang Han, #272, #277)
+* move wrappers for external modeling programs into a submodule (Christopher Corley, #295)
+* allow transparent compression of NumPy files in save/load (Christopher Corley, #248)
+* save/load methods now accept file handles, in addition to file names (macks22, #292)
+* fixes to LdaMulticore on Windows (Feng Mai, #305)
+* lots of small fixes & py3k compatibility improvements (Chyi-Kwei Yau, Daniel Nouri, Timothy Emerick, Juarez Bochi, Christopher Corley, Chirag Nagpal, Jan Hajic jr., Flávio Codeço Coelho)
+* re-released as 0.11.1 and 0.11.1-1 because of a packaging bug
 
 0.10.3, 17/11/2014
 
