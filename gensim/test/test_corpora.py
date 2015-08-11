@@ -198,7 +198,7 @@ class CorpusTestCase(unittest.TestCase):
 
         # check that TransformedCorpus supports indexing when the underlying
         # corpus does, and throws an error otherwise
-        if hasattr(corpus, 'index'):
+        if hasattr(corpus, 'index') and corpus.index is not None:
             corpus_ = TransformedCorpus(DummyTransformer(), corpus)
             self.assertEqual(corpus_[0][0][1], docs[0][0][1]+1)
             self.assertRaises(ValueError, _get_slice, corpus_, set([1]))
