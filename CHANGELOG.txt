@@ -1,12 +1,10 @@
 Changes
 =======
 
-0.12.3
-
-* added support for sliced TransformedCorpus objects, so that after applying (for instance) TfidfModel the returned corpus remains randomly indexable. (Matti Lyra, #425)
 
 0.12.2
 
+* added support for sliced TransformedCorpus objects, so that after applying (for instance) TfidfModel the returned corpus remains randomly indexable. (Matti Lyra, #425)
 * added support for NumPy style fancy indexing to corpus objects (Matti Lyra, #414)
 
 0.12.1, 20/07/2015
