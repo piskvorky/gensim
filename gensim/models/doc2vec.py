@@ -288,7 +288,8 @@ class DocvecsArray(utils.SaveLoad):
             self.count = max(self.count, key+1)
         else:
             if key in self.doctags:
-                self.doctags[key] = self.doctags[key].repeat(document_length)
+                #self.doctags[key] = self.doctags[key].repeat(document_length)
+                return
             else:
                 self.doctags[key] = Doctag(len(self.index2doctag), document_length, 1)
                 self.index2doctag.append(key)
@@ -635,6 +636,11 @@ class Doc2Vec(Word2Vec):
         tally = 0
         raw_tally = 0
         for doc in job:
+            # add the doc to dict if it's not already there
+            document_length = len(doc.words)
+            for tag in doc.tags:
+                self.docvecs.note_doctag(tag, 0, document_length)
+
             indexed_doctags = self.docvecs.indexed_doctags(doc.tags)
             doctag_indexes, doctag_vectors, doctag_locks, ignored = indexed_doctags
             if self.sg:
