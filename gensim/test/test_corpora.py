@@ -17,6 +17,7 @@ import itertools
 import numpy
 
 from gensim.utils import to_unicode, smart_extension
+from gensim.interfaces import TransformedCorpus
 from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
                             ucicorpus, malletcorpus, textcorpus, indexedcorpus)
 
@@ -183,6 +184,18 @@ class CorpusTestCase(unittest.TestCase):
         self.assertEquals([d for i, d in enumerate(docs) if i in [1, 3, 4]], list(c))
         self.assertEquals(len(corpus[[0, 1, -1]]), 3)
         self.assertEquals(len(corpus[numpy.asarray([0, 1, -1])]), 3)
+
+        # check that TransformedCorpus supports indexing when the underlying
+        # corpus does, and throws an error otherwise
+        if hasattr(corpus, 'index'):
+            corpus_ = TransformedCorpus(None, corpus)
+            self.assertEqual(corpus_[0], docs[0])
+            self.assertRaises(ValueError, _get_slice, corpus_, set([1]))
+            self.assertEquals([d for i, d in enumerate(docs) if i in [1, 3, 4]], list(corpus_[[1, 3, 4]]))
+        else:
+            self.assertRaises(RuntimeError, _get_slice, corpus_, [1, 3, 4])
+            self.assertRaises(RuntimeError, _get_slice, corpus_, set([1]))
+            self.assertRaises(RuntimeError, _get_slice, corpus_, 1.0)
 
 
 class TestMmCorpus(CorpusTestCase):
