@@ -631,15 +631,24 @@ class Doc2Vec(Word2Vec):
         self.corpus_count = document_no + 1
         self.raw_vocab = vocab
 
+    def train(self, documents, total_words=None, word_count=0, chunksize=None, queue_factor=2, report_delay=1):
+        # rebuild doctag dict
+        for document in documents:
+            document_length = len(document.words)
+            for tag in document.tags:
+                self.docvecs.note_doctag(tag, 0, document_length)
+        self.docvecs.reset_weights(self)
+        super(Doc2Vec, self).train(self, documents, total_words, word_count, chunksize, queue_factor, report_delay)
+        
     def _do_train_job(self, job, alpha, inits):
         work, neu1 = inits
         tally = 0
         raw_tally = 0
         for doc in job:
             # add the doc to dict if it's not already there
-            document_length = len(doc.words)
-            for tag in doc.tags:
-                self.docvecs.note_doctag(tag, 0, document_length)
+            #document_length = len(doc.words)
+            #for tag in doc.tags:
+                #self.docvecs.note_doctag(tag, 0, document_length)
 
             indexed_doctags = self.docvecs.indexed_doctags(doc.tags)
             doctag_indexes, doctag_vectors, doctag_locks, ignored = indexed_doctags
