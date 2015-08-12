@@ -204,6 +204,7 @@ class CorpusTestCase(unittest.TestCase):
             self.assertRaises(ValueError, _get_slice, corpus_, set([1]))
             transformed_docs = [val+1 for i, d in enumerate(docs) for _, val in d if i in [1, 3, 4]]
             self.assertEquals(transformed_docs, list(v for doc in corpus_[[1, 3, 4]] for _, v in doc))
+            self.assertEqual(3, len(corpus_[[1, 3, 4]]))
         else:
             self.assertRaises(RuntimeError, _get_slice, corpus_, [1, 3, 4])
             self.assertRaises(RuntimeError, _get_slice, corpus_, set([1]))
