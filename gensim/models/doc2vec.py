@@ -631,14 +631,14 @@ class Doc2Vec(Word2Vec):
         self.corpus_count = document_no + 1
         self.raw_vocab = vocab
 
-    def train(self, documents, total_words=None, word_count=0, chunksize=None, queue_factor=2, report_delay=1):
+    def train_new_doc(self, documents, total_words=None, word_count=0, chunksize=100, total_examples=None, queue_factor=2, report_delay=1):
         # rebuild doctag dict
         for document in documents:
             document_length = len(document.words)
             for tag in document.tags:
                 self.docvecs.note_doctag(tag, 0, document_length)
         self.docvecs.reset_weights(self)
-        super(Doc2Vec, self).train(self, documents, total_words, word_count, chunksize, queue_factor, report_delay)
+        self.train(documents, total_words, word_count, chunksize, total_examples, queue_factor, report_delay)
         
     def _do_train_job(self, job, alpha, inits):
         work, neu1 = inits
