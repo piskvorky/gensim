@@ -421,7 +421,7 @@ class Word2Vec(utils.SaveLoad):
 
         if trim_rule:
             def keep_vocab_item(word, count, min_count_):
-                rule_res = trim_rule(word, count)
+                rule_res = trim_rule(word, count, min_count)
                 default_res = count >= min_count_
                 return True if (rule_res == RULE_KEEP) else (False if (rule_res == RULE_DISCARD) else default_res)
         else:
