@@ -338,7 +338,8 @@ class Word2Vec(utils.SaveLoad):
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
-            sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0):
+            sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0,
+            trim_rule=None):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -413,6 +414,21 @@ class Word2Vec(utils.SaveLoad):
         self.null_word = null_word
         self.train_count = 0
         self.total_train_time = 0
+
+        RULE_DEFAULT = 0
+        RULE_DISCARD = 1
+        RULE_KEEP = 2
+
+        if trim_rule:
+            def keep_vocab_item(word, count, min_count_):
+                rule_res = self.trim_rule(word, count)
+                default_res = count >= min_count_
+                return True if (rule_res == RULE_KEEP) else (False if (rule_res == RULE_DISCARD) else default_res)
+        else:
+            def keep_vocab_item(word, count, min_count_):
+                return count >= min_count_
+        self.keep_vocab_item = keep_vocab_item
+
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -499,7 +515,7 @@ class Word2Vec(utils.SaveLoad):
                 vocab[word] += 1
 
             if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                total_words += utils.prune_vocab(vocab, min_reduce)
+                total_words += utils.prune_vocab(vocab, min_reduce, rule=self.keep_vocab_item)
                 min_reduce += 1
 
         total_words += sum(itervalues(vocab))
@@ -535,7 +551,7 @@ class Word2Vec(utils.SaveLoad):
         drop_unique, drop_total, retain_total, original_total = 0, 0, 0, 0
         retain_words = []
         for word, v in iteritems(self.raw_vocab):
-            if v >= min_count:
+            if self.keep_vocab_item(word, v, min_count):
                 retain_words.append(word)
                 retain_total += v
                 original_total += v
