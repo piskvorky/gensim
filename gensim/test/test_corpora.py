@@ -17,6 +17,7 @@ import itertools
 import numpy
 
 from gensim.utils import to_unicode, smart_extension
+from gensim.interfaces import TransformedCorpus
 from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
                             ucicorpus, malletcorpus, textcorpus, indexedcorpus)
 
@@ -28,6 +29,17 @@ datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_corpus.tst')
+
+
+class DummyTransformer(object):
+    def __getitem__(self, bow):
+        if len(next(iter(bow))) == 2:
+            # single bag of words
+            transformed = [(termid, count + 1) for termid, count in bow]
+        else:
+            # sliced corpus
+            transformed = [[(termid, count + 1) for termid, count in doc] for doc in bow]
+        return transformed
 
 
 class CorpusTestCase(unittest.TestCase):
@@ -183,6 +195,20 @@ class CorpusTestCase(unittest.TestCase):
         self.assertEquals([d for i, d in enumerate(docs) if i in [1, 3, 4]], list(c))
         self.assertEquals(len(corpus[[0, 1, -1]]), 3)
         self.assertEquals(len(corpus[numpy.asarray([0, 1, -1])]), 3)
+
+        # check that TransformedCorpus supports indexing when the underlying
+        # corpus does, and throws an error otherwise
+        if hasattr(corpus, 'index') and corpus.index is not None:
+            corpus_ = TransformedCorpus(DummyTransformer(), corpus)
+            self.assertEqual(corpus_[0][0][1], docs[0][0][1]+1)
+            self.assertRaises(ValueError, _get_slice, corpus_, set([1]))
+            transformed_docs = [val+1 for i, d in enumerate(docs) for _, val in d if i in [1, 3, 4]]
+            self.assertEquals(transformed_docs, list(v for doc in corpus_[[1, 3, 4]] for _, v in doc))
+            self.assertEqual(3, len(corpus_[[1, 3, 4]]))
+        else:
+            self.assertRaises(RuntimeError, _get_slice, corpus_, [1, 3, 4])
+            self.assertRaises(RuntimeError, _get_slice, corpus_, set([1]))
+            self.assertRaises(RuntimeError, _get_slice, corpus_, 1.0)
 
 
 class TestMmCorpus(CorpusTestCase):
