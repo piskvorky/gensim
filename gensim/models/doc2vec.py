@@ -37,6 +37,7 @@ The model can also be instantiated from an existing file on disk in the word2vec
 import logging
 import os
 import warnings
+import itertools
 
 try:
     from queue import Queue
@@ -288,7 +289,8 @@ class DocvecsArray(utils.SaveLoad):
             self.count = max(self.count, key+1)
         else:
             if key in self.doctags:
-                self.doctags[key] = self.doctags[key].repeat(document_length)
+                #self.doctags[key] = self.doctags[key].repeat(document_length)
+                return
             else:
                 self.doctags[key] = Doctag(len(self.index2doctag), document_length, 1)
                 self.index2doctag.append(key)
@@ -354,7 +356,7 @@ class DocvecsArray(utils.SaveLoad):
         """Estimated memory for tag lookup; 0 if using pure int tags."""
         return 60 * len(self.index2doctag) + 140 * len(self.doctags)
 
-    def reset_weights(self, model):
+    def reset_space(self, model):
         length = max(len(self.doctags), self.count)
         if self.mapfile_path:
             self.doctag_syn0 = np_memmap(self.mapfile_path+'.doctag_syn0', dtype=REAL,
@@ -366,10 +368,35 @@ class DocvecsArray(utils.SaveLoad):
             self.doctag_syn0 = empty((length, model.vector_size), dtype=REAL)
             self.doctag_syn0_lockf = ones((length,), dtype=REAL)  # zeros suppress learning
 
+    def init_weight(self, model, i):
+        # construct deterministic seed from index AND model seed
+        seed = "%d %s" % (model.seed, self.index2doctag[i] if len(self.index2doctag) > 0 else str(i))
+        self.doctag_syn0[i] = model.seeded_vector(seed)
+       
+    def reset_weights(self, model):
+        self.reset_space(model)
+        length = max(len(self.doctags), self.count)
         for i in xrange(length):
-            # construct deterministic seed from index AND model seed
-            seed = "%d %s" % (model.seed, self.index2doctag[i] if len(self.index2doctag) > 0 else str(i))
-            self.doctag_syn0[i] = model.seeded_vector(seed)
+            self.init_weight(model, i)
+
+    def add_new_docs(self, documents, model):
+        old_length = len(self.index2doctag)
+        for document in documents:
+            document_length = len(document.words)
+            for tag in document.tags:
+                self.note_doctag(tag, 0, document_length)
+        # cache old
+        doctag_syn0_tmp = self.doctag_syn0
+        doctag_syn0_lockf_tmp = self.doctag_syn0_lockf
+        self.reset_space(model)
+        # restore old
+        for i in xrange(old_length):
+            self.doctag_syn0[i] = doctag_syn0_tmp[i]
+            self.doctag_syn0_lockf[i] = doctag_syn0_lockf_tmp[i]
+        # init new
+        length = max(len(self.doctags), self.count)
+        for i in xrange(old_length, length):
+            self.init_weight(model, i)
 
     def init_sims(self, replace=False):
         """
@@ -630,11 +657,22 @@ class Doc2Vec(Word2Vec):
         self.corpus_count = document_no + 1
         self.raw_vocab = vocab
 
+    def train_new_doc(self, documents, total_words=None, word_count=0, chunksize=100, total_examples=None, queue_factor=2, report_delay=1):
+        # add new docs and initialize their weights
+        doc_iter1, doc_iter2 = itertools.tee(documents)
+        self.docvecs.add_new_docs(doc_iter1, self)
+        self.train(doc_iter2, total_words, word_count, chunksize, total_examples, queue_factor, report_delay)
+        
     def _do_train_job(self, job, alpha, inits):
         work, neu1 = inits
         tally = 0
         raw_tally = 0
         for doc in job:
+            # add the doc to dict if it's not already there
+            #document_length = len(doc.words)
+            #for tag in doc.tags:
+                #self.docvecs.note_doctag(tag, 0, document_length)
+
             indexed_doctags = self.docvecs.indexed_doctags(doc.tags)
             doctag_indexes, doctag_vectors, doctag_locks, ignored = indexed_doctags
             if self.sg:
