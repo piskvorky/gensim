@@ -327,6 +327,10 @@ class Vocab(object):
         return "%s(%s)" % (self.__class__.__name__, ', '.join(vals))
 
 
+def keep_vocab_item(word, count, min_count):
+    return count >= min_count
+
+
 class Word2Vec(utils.SaveLoad):
     """
     Class for training, using and evaluating neural networks described in https://code.google.com/p/word2vec/
@@ -419,6 +423,7 @@ class Word2Vec(utils.SaveLoad):
         RULE_DISCARD = 1
         RULE_KEEP = 2
 
+        global keep_vocab_item
         if trim_rule:
             def keep_vocab_item(word, count, min_count):
                 rule_res = trim_rule(word, count, min_count)
@@ -430,9 +435,7 @@ class Word2Vec(utils.SaveLoad):
                     return False
                 else:
                     return default_res
-        else:
-            def keep_vocab_item(word, count, min_count):
-                return count >= min_count
+
         self.trim_rule = keep_vocab_item
 
         if sentences is not None:
