@@ -514,7 +514,7 @@ class Word2Vec(utils.SaveLoad):
         sentence_no = -1
         total_words = 0
         min_reduce = 1
-        _modified_trim_rule = lambda (word, count, min_count): keep_vocab_item(word, count, min_count, self.trim_rule)
+        _modified_trim_rule = lambda word, count, min_count: keep_vocab_item(word, count, min_count, self.trim_rule)
         vocab = defaultdict(int)
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % progress_per == 0:
