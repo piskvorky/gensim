@@ -327,8 +327,24 @@ class Vocab(object):
         return "%s(%s)" % (self.__class__.__name__, ', '.join(vals))
 
 
-def keep_vocab_item(word, count, min_count):
-    pass
+RULE_DEFAULT = 0
+RULE_DISCARD = 1
+RULE_KEEP = 2
+
+
+def keep_vocab_item(word, count, min_count, trim_rule=None):
+    if trim_rule:
+        rule_res = trim_rule(word, count, min_count)
+    else:
+        rule_res = RULE_DEFAULT
+    default_res = count >= min_count
+
+    if rule_res == RULE_KEEP:
+        return True
+    elif rule_res == RULE_DISCARD:
+        return False
+    else:
+        return default_res
 
 
 class Word2Vec(utils.SaveLoad):
@@ -419,27 +435,7 @@ class Word2Vec(utils.SaveLoad):
         self.train_count = 0
         self.total_train_time = 0
 
-        RULE_DEFAULT = 0
-        RULE_DISCARD = 1
-        RULE_KEEP = 2
-
-        global keep_vocab_item
-        if trim_rule:
-            def keep_vocab_item(word, count, min_count):
-                rule_res = trim_rule(word, count, min_count)
-                default_res = count >= min_count
-
-                if rule_res == RULE_KEEP:
-                    return True
-                elif rule_res == RULE_DISCARD:
-                    return False
-                else:
-                    return default_res
-        else:
-            def keep_vocab_item(word, count, min_count):
-                return count >= min_count
-
-        self.trim_rule = keep_vocab_item
+        self.trim_rule = trim_rule
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
@@ -518,6 +514,7 @@ class Word2Vec(utils.SaveLoad):
         sentence_no = -1
         total_words = 0
         min_reduce = 1
+        _modified_trim_rule = lambda (word, count, min_count): keep_vocab_item(word, count, min_count, self.trim_rule)
         vocab = defaultdict(int)
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % progress_per == 0:
@@ -527,7 +524,7 @@ class Word2Vec(utils.SaveLoad):
                 vocab[word] += 1
 
             if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=self.trim_rule)
+                total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=_modified_trim_rule)
                 min_reduce += 1
 
         total_words += sum(itervalues(vocab))
@@ -563,7 +560,7 @@ class Word2Vec(utils.SaveLoad):
         drop_unique, drop_total, retain_total, original_total = 0, 0, 0, 0
         retain_words = []
         for word, v in iteritems(self.raw_vocab):
-            if self.trim_rule(word, v, min_count):
+            if keep_vocab_item(word, v, min_count, self.trim_rule):
                 retain_words.append(word)
                 retain_total += v
                 original_total += v
