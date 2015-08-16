@@ -50,6 +50,11 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_word2vec.tst')
 
+def rule_for_testing(word, count, min_count):
+    if word == "human":
+        return 1  # throw out
+    else:
+        return 0  # default rule
 
 class TestWord2VecModel(unittest.TestCase):
     def testPersistence(self):
@@ -57,6 +62,13 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.save(testfile())
         self.models_equal(model, word2vec.Word2Vec.load(testfile()))
+
+    def testPersistenceWithRule(self):
+        """Test storing/loading the entire model with vocab trimming rule."""
+        model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule_for_testing)
+        model.save(testfile())
+        self.models_equal(model, word2vec.Word2Vec.load(testfile()))
+        self.assertTrue("human" not in model.vocab)
 
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""

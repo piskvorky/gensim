@@ -328,7 +328,7 @@ class Vocab(object):
 
 
 def keep_vocab_item(word, count, min_count):
-    return count >= min_count
+    pass
 
 
 class Word2Vec(utils.SaveLoad):
@@ -435,6 +435,9 @@ class Word2Vec(utils.SaveLoad):
                     return False
                 else:
                     return default_res
+        else:
+            def keep_vocab_item(word, count, min_count):
+                return count >= min_count
 
         self.trim_rule = keep_vocab_item
 
