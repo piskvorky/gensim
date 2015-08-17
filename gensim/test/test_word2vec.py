@@ -103,7 +103,6 @@ class TestWord2VecModel(unittest.TestCase):
         model.train(new_sentences)
         self.assertEqual(len(model.vocab), 14)
         self.assertEqual(model.syn0.shape[0], 14)
-        self.assertEqual(model.syn0.shape[1], 100)
 
 
     def testPersistenceWord2VecFormat(self):
