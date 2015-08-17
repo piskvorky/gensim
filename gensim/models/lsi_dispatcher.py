@@ -72,7 +72,7 @@ class Dispatcher(object):
         self.workers = {}
         with utils.getNS() as ns:
             self.callback = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher') # = self
-            for name, uri in ns.list(prefix='gensim.lsi_worker').iteritems():
+            for name, uri in iteritems(ns.list(prefix='gensim.lsi_worker')):
                 try:
                     worker = Pyro4.Proxy(uri)
                     workerid = len(self.workers)
@@ -122,7 +122,7 @@ class Dispatcher(object):
         # but merging only takes place once, after all input data has been processed,
         # so the overall effect would be small... compared to the amount of coding :-)
         logger.info("merging states from %i workers" % len(self.workers))
-        workers = self.workers.items()
+        workers = list(self.workers.items())
         result = workers[0][1].getstate()
         for workerid, worker in workers[1:]:
             logger.info("pulling state from worker %s" % workerid)

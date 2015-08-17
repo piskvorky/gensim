@@ -11,7 +11,7 @@ This module contains various general utility functions.
 from __future__ import with_statement
 
 import logging
-logger = logging.getLogger('gensim.utils')
+logger = logging.getLogger(__name__)
 
 try:
     from html.entities import name2codepoint as n2cp
@@ -170,7 +170,7 @@ def copytree_hardlink(source, dest):
 def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False, lower=False):
     """
     Iteratively yield tokens as unicode strings, removing accent marks
-    and optionally lowercasing the unidoce string by assigning True 
+    and optionally lowercasing the unidoce string by assigning True
     to one of the parameters, lowercase, to_lower, or lower.
 
     Input text may be either unicode or utf8-encoded byte string.
@@ -200,8 +200,10 @@ def simple_preprocess(doc, deacc=False, min_len=2, max_len=15):
     tokens = unicode strings, that won't be processed any further.
 
     """
-    tokens = [token for token in tokenize(doc, lower=True, deacc=deacc, errors='ignore')
-            if min_len <= len(token) <= max_len and not token.startswith('_')]
+    tokens = [
+        token for token in tokenize(doc, lower=True, deacc=deacc, errors='ignore')
+        if min_len <= len(token) <= max_len and not token.startswith('_')
+    ]
     return tokens
 
 
@@ -247,59 +249,82 @@ class SaveLoad(object):
         """
         logger.info("loading %s object from %s" % (cls.__name__, fname))
 
-        if fname.endswith('.gz') or fname.endswith('.bz2'):
-            compress = True
-            subname = lambda *args: '.'.join([fname] + list(args) + ['npz'])
-        else:
-            compress = False
-            subname = lambda *args: '.'.join([fname] + list(args) + ['npy'])
+        compress, subname = SaveLoad._adapt_by_suffix(fname)
 
+        obj = unpickle(fname)
+        obj._load_specials(fname, mmap, compress, subname)
+        return obj
+
+
+    def _load_specials(self, fname, mmap, compress, subname):
+        """
+        Loads any attributes that were stored specially, and gives the same
+        opportunity to recursively included SaveLoad instances.
+
+        """
 
         mmap_error = lambda x, y: IOError(
             'Cannot mmap compressed object %s in file %s. ' % (x, y) +
             'Use `load(fname, mmap=None)` or uncompress files manually.')
 
-        obj = unpickle(fname)
-        for attrib in getattr(obj, '__numpys', []):
+        for attrib in getattr(self, '__recursive_saveloads', []):
+            cfname = '.'.join((fname, attrib))
+            logger.info("loading %s recursively from %s.* with mmap=%s" % (
+                attrib, cfname, mmap))
+            getattr(self, attrib)._load_specials(cfname, mmap, compress, subname)
+
+        for attrib in getattr(self, '__numpys', []):
             logger.info("loading %s from %s with mmap=%s" % (
-                attrib, subname(attrib), mmap))
+                attrib, subname(fname, attrib), mmap))
 
             if compress:
                 if mmap:
-                    raise mmap_error(attrib, subname(attrib))
+                    raise mmap_error(attrib, subname(fname, attrib))
 
-                val = numpy.load(subname(attrib))['val']
+                val = numpy.load(subname(fname, attrib))['val']
             else:
-                val = numpy.load(subname(attrib), mmap_mode=mmap)
+                val = numpy.load(subname(fname, attrib), mmap_mode=mmap)
 
-            setattr(obj, attrib, val)
+            setattr(self, attrib, val)
 
-        for attrib in getattr(obj, '__scipys', []):
+        for attrib in getattr(self, '__scipys', []):
             logger.info("loading %s from %s with mmap=%s" % (
-                attrib, subname(attrib), mmap))
-            sparse = unpickle(subname(attrib))
+                attrib, subname(fname, attrib), mmap))
+            sparse = unpickle(subname(fname, attrib))
             if compress:
                 if mmap:
-                    raise mmap_error(attrib, subname(attrib))
+                    raise mmap_error(attrib, subname(fname, attrib))
 
-                with numpy.load(subname(attrib, 'sparse')) as f:
+                with numpy.load(subname(fname, attrib, 'sparse')) as f:
                     sparse.data = f['data']
                     sparse.indptr = f['indptr']
                     sparse.indices = f['indices']
             else:
-                sparse.data = numpy.load(subname(attrib, 'data'), mmap_mode=mmap)
-                sparse.indptr = numpy.load(subname(attrib, 'indptr'), mmap_mode=mmap)
-                sparse.indices = numpy.load(subname(attrib, 'indices'), mmap_mode=mmap)
+                sparse.data = numpy.load(subname(fname, attrib, 'data'), mmap_mode=mmap)
+                sparse.indptr = numpy.load(subname(fname, attrib, 'indptr'), mmap_mode=mmap)
+                sparse.indices = numpy.load(subname(fname, attrib, 'indices'), mmap_mode=mmap)
 
-            setattr(obj, attrib, sparse)
+            setattr(self, attrib, sparse)
 
-        for attrib in getattr(obj, '__ignoreds', []):
+        for attrib in getattr(self, '__ignoreds', []):
             logger.info("setting ignored attribute %s to None" % (attrib))
-            setattr(obj, attrib, None)
-        return obj
+            setattr(self, attrib, None)
+
+
+    @staticmethod
+    def _adapt_by_suffix(fname):
+        """Give appropriate compress setting and filename formula"""
+        if fname.endswith('.gz') or fname.endswith('.bz2'):
+            compress = True
+            subname = lambda *args: '.'.join(list(args) + ['npz'])
+        else:
+            compress = False
+            subname = lambda *args: '.'.join(list(args) + ['npy'])
+        return (compress, subname)
+
 
     def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2,
-                    ignore=frozenset()):
+                    ignore=frozenset(), pickle_protocol=2):
         """
         Save the object to file (also see `load`).
 
@@ -316,19 +341,38 @@ class SaveLoad(object):
         handles, caches etc). On subsequent load() these attributes will
         be set to None.
 
+        `pickle_protocol` defaults to 2 so the pickled object can be imported
+        in both Python 2 and 3.
+
         """
         logger.info(
             "saving %s object under %s, separately %s" % (
                 self.__class__.__name__, fname, separately))
 
-        if fname.endswith('.gz') or fname.endswith('.bz2'):
-            compress = True
-            subname = lambda *args: '.'.join([fname] + list(args) + ['npz'])
-        else:
-            compress = False
-            subname = lambda *args: '.'.join([fname] + list(args) + ['npy'])
+        compress, subname = SaveLoad._adapt_by_suffix(fname)
 
-        tmp = {}
+        restores = self._save_specials(fname, separately, sep_limit, ignore, pickle_protocol,
+                                       compress, subname)
+        try:
+            pickle(self, fname, protocol=pickle_protocol)
+        finally:
+            # restore attribs handled specially
+            for obj, asides in restores:
+                for attrib, val in iteritems(asides):
+                    setattr(obj, attrib, val)
+
+
+    def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
+        """
+        Save aside any attributes that need to be handled separately, including
+        by recursion any attributes that are themselves SaveLoad instances.
+
+        Returns a list of (obj, {attrib: value, ...}) settings that the caller
+        should use to restore each object's attributes that were set aside
+        during the default pickle().
+
+        """
+        asides = {}
         sparse_matrices = (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)
         if separately is None:
             separately = []
@@ -341,42 +385,52 @@ class SaveLoad(object):
         # whatever's in `separately` or `ignore` at this point won't get pickled
         for attrib in separately + list(ignore):
             if hasattr(self, attrib):
-                tmp[attrib] = getattr(self, attrib)
+                asides[attrib] = getattr(self, attrib)
                 delattr(self, attrib)
+
+        recursive_saveloads = []
+        restores = []
+        for attrib, val in iteritems(self.__dict__):
+            if hasattr(val, '_save_specials'):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
+                recursive_saveloads.append(attrib)
+                cfname = '.'.join((fname,attrib))
+                restores.extend(val._save_specials(cfname, None, sep_limit, ignore,
+                                                   pickle_protocol, compress, subname))
 
         try:
             numpys, scipys, ignoreds = [], [], []
-            for attrib, val in iteritems(tmp):
+            for attrib, val in iteritems(asides):
                 if isinstance(val, numpy.ndarray) and attrib not in ignore:
                     numpys.append(attrib)
                     logger.info("storing numpy array '%s' to %s" % (
-                        attrib, subname(attrib)))
+                        attrib, subname(fname, attrib)))
 
                     if compress:
-                        numpy.savez_compressed(subname(attrib), val=numpy.ascontiguousarray(val))
+                        numpy.savez_compressed(subname(fname, attrib), val=numpy.ascontiguousarray(val))
                     else:
-                        numpy.save(subname(attrib), numpy.ascontiguousarray(val))
+                        numpy.save(subname(fname, attrib), numpy.ascontiguousarray(val))
 
                 elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and attrib not in ignore:
                     scipys.append(attrib)
                     logger.info("storing scipy.sparse array '%s' under %s" % (
-                        attrib, subname(attrib)))
+                        attrib, subname(fname, attrib)))
 
                     if compress:
-                        numpy.savez_compressed(subname(attrib, 'sparse'),
+                        numpy.savez_compressed(subname(fname, attrib, 'sparse'),
                                                data=val.data,
                                                indptr=val.indptr,
                                                indices=val.indices)
                     else:
-                        numpy.save(subname(attrib, 'data'), val.data)
-                        numpy.save(subname(attrib, 'indptr'), val.indptr)
-                        numpy.save(subname(attrib, 'indices'), val.indices)
+                        numpy.save(subname(fname, attrib, 'data'), val.data)
+                        numpy.save(subname(fname, attrib, 'indptr'), val.indptr)
+                        numpy.save(subname(fname, attrib, 'indices'), val.indices)
 
                     data, indptr, indices = val.data, val.indptr, val.indices
                     val.data, val.indptr, val.indices = None, None, None
 
                     try:
-                        pickle(val, subname(attrib)) # store array-less object
+                        # store array-less object
+                        pickle(val, subname(fname, attrib), protocol=pickle_protocol)
                     finally:
                         val.data, val.indptr, val.indices = data, indptr, indices
                 else:
@@ -386,14 +440,17 @@ class SaveLoad(object):
             self.__dict__['__numpys'] = numpys
             self.__dict__['__scipys'] = scipys
             self.__dict__['__ignoreds'] = ignoreds
-            pickle(self, fname)
-        finally:
-            # restore the attributes
-            for attrib, val in iteritems(tmp):
+            self.__dict__['__recursive_saveloads'] = recursive_saveloads
+        except:
+            # restore the attributes if exception-interrupted
+            for attrib, val in iteritems(asides):
                 setattr(self, attrib, val)
+            raise
+        return restores + [(self, asides)]
+
 
     def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2,
-             ignore=frozenset()):
+             ignore=frozenset(), pickle_protocol=2):
         """
         Save the object to file (also see `load`).
 
@@ -415,12 +472,16 @@ class SaveLoad(object):
         handles, caches etc). On subsequent load() these attributes will
         be set to None.
 
+        `pickle_protocol` defaults to 2 so the pickled object can be imported
+        in both Python 2 and 3.
+
         """
         try:
-            _pickle.dump(self, fname_or_handle, protocol=_pickle.HIGHEST_PROTOCOL)
+            _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object" % self.__class__.__name__)
         except TypeError:  # `fname_or_handle` does not have write attribute
-            self._smart_save(fname_or_handle, separately, sep_limit, ignore)
+            self._smart_save(fname_or_handle, separately, sep_limit, ignore,
+                             pickle_protocol=pickle_protocol)
 #endclass SaveLoad
 
 
@@ -523,7 +584,7 @@ def is_corpus(obj):
     except:
         pass
     try:
-        if hasattr(obj, 'next'):
+        if hasattr(obj, 'next') or hasattr(obj, '__next__'):
             # the input is an iterator object, meaning once we call next()
             # that element could be gone forever. we must be careful to put
             # whatever we retrieve back again
@@ -640,13 +701,19 @@ class SlicedCorpus(SaveLoad):
         Negative slicing can only be used if the corpus is indexable.
         Otherwise, the corpus will be iterated over.
 
+        Slice can also be a numpy.ndarray to support fancy indexing.
+
+        NOTE: calculating the size of a SlicedCorpus is expensive
+        when using a slice as the corpus has to be iterated over once.
+        Using a list or numpy.ndarray does not have this drawback, but
+        consumes more memory.
         """
         self.corpus = corpus
         self.slice_ = slice_
         self.length = None
 
     def __iter__(self):
-        if hasattr(self.corpus, 'index') and self.corpus.index:
+        if hasattr(self.corpus, 'index') and len(self.corpus.index) > 0:
             return (self.corpus.docbyoffset(i) for i in
                     self.corpus.index[self.slice_])
         else:
@@ -656,7 +723,10 @@ class SlicedCorpus(SaveLoad):
     def __len__(self):
         # check cached length, calculate if needed
         if self.length is None:
-            self.length = sum(1 for x in self)
+            if isinstance(self.slice_, (list, numpy.ndarray)):
+                self.length = len(self.slice_)
+            else:
+                self.length = sum(1 for x in self)
 
         return self.length
 
@@ -831,8 +901,13 @@ def smart_extension(fname, ext):
     return fname
 
 
-def pickle(obj, fname, protocol=_pickle.HIGHEST_PROTOCOL):
-    """Pickle object `obj` to file `fname`."""
+def pickle(obj, fname, protocol=2):
+    """Pickle object `obj` to file `fname`.
+
+    `protocol` defaults to 2 so pickled objects are compatible across
+    Python 2.x and 3.x.
+
+    """
     with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
         _pickle.dump(obj, fout, protocol=protocol)
 
@@ -840,7 +915,8 @@ def pickle(obj, fname, protocol=_pickle.HIGHEST_PROTOCOL):
 def unpickle(fname):
     """Load pickled object from `fname`"""
     with smart_open(fname) as f:
-        return _pickle.load(f)
+        # Because of loading from S3 load can't be used (missing readline in smart_open)
+        return _pickle.loads(f.read())
 
 
 def revdict(d):
@@ -946,7 +1022,8 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
 
 
 if HAS_PATTERN:
-    def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False, stopwords=frozenset()):
+    def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
+            stopwords=frozenset(), min_length=2, max_length=15):
         """
         This function is only available when the optional 'pattern' package is installed.
 
@@ -980,7 +1057,7 @@ if HAS_PATTERN:
         result = []
         for sentence in parsed:
             for token, tag, _, _, lemma in sentence:
-                if 2 <= len(lemma) <= 15 and not lemma.startswith('_') and lemma not in stopwords:
+                if min_length <= len(lemma) <= max_length and not lemma.startswith('_') and lemma not in stopwords:
                     if allowed_tags.match(tag):
                         lemma += "/" + tag[:2]
                         result.append(lemma.encode('utf8'))
@@ -1010,3 +1087,21 @@ def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
     data = [mock_data_row(dim=dim, prob_nnz=prob_nnz, lam=lam)
             for _ in xrange(n_items)]
     return data
+
+
+def prune_vocab(vocab, min_reduce):
+    """
+    Remove all entries from the `vocab` dictionary with count smaller than `min_reduce`.
+
+    Modifies `vocab` in place, returns the sum of all counts that were pruned.
+
+    """
+    result = 0
+    old_len = len(vocab)
+    for w in list(vocab):  # make a copy of dict's keys
+        if vocab[w] <= min_reduce:
+            result += vocab[w]
+            del vocab[w]
+    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)",
+                old_len - len(vocab), min_reduce, old_len, len(vocab))
+    return result

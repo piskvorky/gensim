@@ -24,7 +24,7 @@ The output Matrix Market files can then be compressed (e.g., by bzip2) to save
 disk space; gensim's corpus iterators can work with compressed input, too.
 
 `VOCABULARY_SIZE` controls how many of the most frequent words to keep (after
-removing tokens that appear in more than 10% of all documents). Defaults to
+removing tokens that appear in more than 10%% of all documents). Defaults to
 100,000.
 
 If you have the `pattern` package installed, this script will use a fancy

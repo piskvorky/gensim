@@ -65,9 +65,9 @@ import subprocess
 
 import numpy
 
-from gensim import utils
+from gensim import utils, matutils
 
-LOG = logging.getLogger('gensim.models.ldavowpalwabbit')
+LOG = logging.getLogger(__name__)
 
 
 class LdaVowpalWabbit(utils.SaveLoad):
@@ -267,7 +267,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
     def show_topic(self, topicid, topn=10):
         topics = self._get_topics()
         topic = topics[topicid]
-        bestn = numpy.argsort(topic)[::-1][:topn]
+        bestn = matutils.argsort(topic, topn, reverse=True)
         return [(topic[t_id], self.id2word[t_id]) for t_id in bestn]
 
     def save(self, fname, *args, **kwargs):
@@ -327,6 +327,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
         """Get list of command line arguments for running prediction."""
         cmd = [self.vw_path,
                '--testonly', # don't update model with this data
+               '--lda', str(self.num_topics),
                '--lda_D', str(corpus_size),
                '-i', self._model_filename, # load existing binary model
                '-d', self._corpus_filename,
