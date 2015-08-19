@@ -553,6 +553,13 @@ class Doc2Vec(Word2Vec):
         `dbow_words` if set to 1 trains word-vectors (in skip-gram fashion) simultaneous with DBOW
         doc-vector training; default is 0 (faster training of doc-vectors only).
 
+        `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
+         in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
+         Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
+         returns either word2vec.RULE_DISCARD, word2vec.RULE_KEEP or word2vec.RULE_DEFAULT.
+         Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
+          of the model.
+
         """
         super(Doc2Vec, self).__init__(
             size=size, alpha=alpha, window=window, min_count=min_count, max_vocab_size=max_vocab_size,
