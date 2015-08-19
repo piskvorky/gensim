@@ -52,9 +52,9 @@ def testfile():
 
 def rule_for_testing(word, count, min_count):
     if word == "human":
-        return word2vec.RULE_DISCARD  # throw out
+        return utils.RULE_DISCARD  # throw out
     else:
-        return word2vec.RULE_DEFAULT  # apply default rule, i.e. min_count
+        return utils.RULE_DEFAULT  # apply default rule, i.e. min_count
 
 class TestWord2VecModel(unittest.TestCase):
     def testPersistence(self):

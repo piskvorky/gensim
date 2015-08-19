@@ -76,7 +76,9 @@ from timeit import default_timer
 from copy import deepcopy
 from collections import defaultdict
 import threading
-import time
+
+from gensim.utils import _keep_vocab_item
+
 try:
     from queue import Queue, Empty
 except ImportError:
@@ -327,27 +329,6 @@ class Vocab(object):
         return "%s(%s)" % (self.__class__.__name__, ', '.join(vals))
 
 
-RULE_DEFAULT = 0
-RULE_DISCARD = 1
-RULE_KEEP = 2
-
-
-def _keep_vocab_item(word, count, min_count, trim_rule=None):
-    default_res = count >= min_count
-
-    if trim_rule is None:
-        return default_res
-    else:
-        rule_res = trim_rule(word, count, min_count)
-        if rule_res == RULE_KEEP:
-            return True
-        elif rule_res == RULE_DISCARD:
-            return False
-        else:
-            return default_res
-
-
-
 class Word2Vec(utils.SaveLoad):
     """
     Class for training, using and evaluating neural networks described in https://code.google.com/p/word2vec/
@@ -411,9 +392,10 @@ class Word2Vec(utils.SaveLoad):
 
         `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
          in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
-         Must be a callable that accepts a tuple (word, count, min_count) and returns
-         either word2vec.RULE_DISCARD, word2vec.RULE_KEEP or word2vec.RULE_DEFAULT.
-         Note: the rule is NOT serialized.
+         Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
+         returns either word2vec.RULE_DISCARD, word2vec.RULE_KEEP or word2vec.RULE_DEFAULT.
+         Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
+          of the model.
 
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
@@ -509,12 +491,8 @@ class Word2Vec(utils.SaveLoad):
         Each sentence must be a list of unicode strings.
 
         """
-        if trim_rule is not None:
-            self.scan_vocab(sentences, trim_rule=trim_rule)  # initial survey
-            self.scale_vocab(keep_raw_vocab, trim_rule=trim_rule)  # trim by min_count & precalculate downsampling
-        else:
-            self.scan_vocab(sentences)  # initial survey with rule
-            self.scale_vocab(keep_raw_vocab)  # trim by min_count plus rule & precalculate downsampling
+        self.scan_vocab(sentences, trim_rule=trim_rule)  # initial survey
+        self.scale_vocab(keep_raw_vocab, trim_rule=trim_rule)  # trim by min_count & precalculate downsampling
         self.finalize_vocab()  # build tables & arrays
 
     def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
@@ -523,7 +501,6 @@ class Word2Vec(utils.SaveLoad):
         sentence_no = -1
         total_words = 0
         min_reduce = 1
-        _modified_trim_rule = lambda word, count, min_count: _keep_vocab_item(word, count, min_count, trim_rule)
         vocab = defaultdict(int)
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % progress_per == 0:
@@ -533,7 +510,7 @@ class Word2Vec(utils.SaveLoad):
                 vocab[word] += 1
 
             if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=_modified_trim_rule)
+                total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
                 min_reduce += 1
 
         total_words += sum(itervalues(vocab))
