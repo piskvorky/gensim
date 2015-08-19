@@ -21,7 +21,7 @@ def pagerank_weighted(graph, damping=0.85):
     probability_matrix = build_probability_matrix(graph)
 
     pagerank_matrix = damping * adjacency_matrix.todense() + (1 - damping) * probability_matrix
-    vals, vecs = eig(pagerank_matrix, left=True, right=False)
+    vals, vecs = eig(pagerank_matrix, left=True, right=False)  # TODO optimize this.
     return process_results(graph, vecs)
 
 
@@ -58,6 +58,6 @@ def build_probability_matrix(graph):
 def process_results(graph, vecs):
     scores = {}
     for i, node in enumerate(graph.nodes()):
-        scores[node] = abs(vecs[i][0])
+        scores[node] = abs(vecs[i][0])  # TODO: this is wasteful (only compute the principal component).
 
     return scores
