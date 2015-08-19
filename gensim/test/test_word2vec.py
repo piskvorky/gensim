@@ -52,9 +52,9 @@ def testfile():
 
 def rule_for_testing(word, count, min_count):
     if word == "human":
-        return 1  # throw out
+        return word2vec.RULE_DISCARD  # throw out
     else:
-        return 0  # default rule
+        return word2vec.RULE_DEFAULT  # apply default rule, i.e. min_count
 
 class TestWord2VecModel(unittest.TestCase):
     def testPersistence(self):
@@ -63,11 +63,24 @@ class TestWord2VecModel(unittest.TestCase):
         model.save(testfile())
         self.models_equal(model, word2vec.Word2Vec.load(testfile()))
 
-    def testPersistenceWithRule(self):
-        """Test storing/loading the entire model with vocab trimming rule."""
+    def testPersistenceWithConstructorRule(self):
+        """Test storing/loading the entire model with a vocab trimming rule passed in the constructor."""
         model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule_for_testing)
         model.save(testfile())
         self.models_equal(model, word2vec.Word2Vec.load(testfile()))
+
+    def testRuleWithMinCount(self):
+        """Test that returning RULE_DEFAULT from trim_rule triggers min_count"""
+        model = word2vec.Word2Vec(sentences + [["occurs_only_once"]], min_count=2, trim_rule=rule_for_testing)
+        self.assertTrue("human" not in model.vocab)
+        self.assertTrue("occurs_only_once" not in model.vocab)
+        self.assertTrue("interface" in model.vocab)
+
+
+    def testRule(self):
+        """Test applying vocab trim_rule to build_vocab instead of constructor"""
+        model = word2vec.Word2Vec(min_count=1)
+        model.build_vocab(sentences, trim_rule=rule_for_testing)
         self.assertTrue("human" not in model.vocab)
 
     def testPersistenceWord2VecFormat(self):
