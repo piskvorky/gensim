@@ -556,7 +556,7 @@ class Doc2Vec(Word2Vec):
         `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
          in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
          Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
-         returns either word2vec.RULE_DISCARD, word2vec.RULE_KEEP or word2vec.RULE_DEFAULT.
+         returns either util.RULE_DISCARD, util.RULE_KEEP or util.RULE_DEFAULT.
          Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
           of the model.
 

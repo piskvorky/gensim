@@ -1100,7 +1100,7 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
     result = 0
     old_len = len(vocab)
     for w in list(vocab):  # make a copy of dict's keys
-        if not _keep_vocab_item(w, vocab[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
+        if not keep_vocab_item(w, vocab[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
             result += vocab[w]
             del vocab[w]
     logger.info("pruned out %i tokens with count <=%i (before %i, after %i)",
@@ -1113,7 +1113,7 @@ RULE_DISCARD = 1
 RULE_KEEP = 2
 
 
-def _keep_vocab_item(word, count, min_count, trim_rule=None):
+def keep_vocab_item(word, count, min_count, trim_rule=None):
     default_res = count >= min_count
 
     if trim_rule is None:
