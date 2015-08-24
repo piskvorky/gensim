@@ -76,7 +76,9 @@ from timeit import default_timer
 from copy import deepcopy
 from collections import defaultdict
 import threading
-import time
+
+from gensim.utils import keep_vocab_item
+
 try:
     from queue import Queue, Empty
 except ImportError:
@@ -338,7 +340,8 @@ class Word2Vec(utils.SaveLoad):
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
-            sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0):
+            sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0,
+            trim_rule=None):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -387,6 +390,13 @@ class Word2Vec(utils.SaveLoad):
 
         `iter` = number of iterations (epochs) over the corpus.
 
+        `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
+         in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
+         Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
+         returns either util.RULE_DISCARD, util.RULE_KEEP or util.RULE_DEFAULT.
+         Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
+          of the model.
+
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
@@ -413,10 +423,11 @@ class Word2Vec(utils.SaveLoad):
         self.null_word = null_word
         self.train_count = 0
         self.total_train_time = 0
+
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
-            self.build_vocab(sentences)
+            self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(sentences)
 
     def make_cum_table(self, power=0.75, domain=2**31 - 1):
@@ -474,17 +485,17 @@ class Word2Vec(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i", max_depth)
 
-    def build_vocab(self, sentences, keep_raw_vocab=False):
+    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
 
         """
-        self.scan_vocab(sentences)  # initial survey
-        self.scale_vocab(keep_raw_vocab)  # trim by min_count & precalculate downsampling
+        self.scan_vocab(sentences, trim_rule=trim_rule)  # initial survey
+        self.scale_vocab(keep_raw_vocab, trim_rule=trim_rule)  # trim by min_count & precalculate downsampling
         self.finalize_vocab()  # build tables & arrays
 
-    def scan_vocab(self, sentences, progress_per=10000):
+    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
         """Do an initial scan of all words appearing in sentences."""
         logger.info("collecting all words and their counts")
         sentence_no = -1
@@ -499,7 +510,7 @@ class Word2Vec(utils.SaveLoad):
                 vocab[word] += 1
 
             if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                total_words += utils.prune_vocab(vocab, min_reduce)
+                total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
                 min_reduce += 1
 
         total_words += sum(itervalues(vocab))
@@ -508,7 +519,7 @@ class Word2Vec(utils.SaveLoad):
         self.corpus_count = sentence_no + 1
         self.raw_vocab = vocab
 
-    def scale_vocab(self, min_count=None, sample=None, dry_run=False, keep_raw_vocab=False):
+    def scale_vocab(self, min_count=None, sample=None, dry_run=False, keep_raw_vocab=False, trim_rule=None):
         """
         Apply vocabulary settings for `min_count` (discarding less-frequent words)
         and `sample` (controlling the downsampling of more-frequent words).
@@ -535,7 +546,7 @@ class Word2Vec(utils.SaveLoad):
         drop_unique, drop_total, retain_total, original_total = 0, 0, 0, 0
         retain_words = []
         for word, v in iteritems(self.raw_vocab):
-            if v >= min_count:
+            if keep_vocab_item(word, v, min_count, trim_rule=trim_rule):
                 retain_words.append(word)
                 retain_total += v
                 original_total += v

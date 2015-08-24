@@ -4,9 +4,13 @@ Changes
 
 0.12.2
 
+* tutorial on text summarization (Ólavur Mortensen, #436)
+* more flexible vocabulary construction in word2vec & doc2vec (Philipp Dowling, #434)
 * added support for sliced TransformedCorpus objects, so that after applying (for instance) TfidfModel the returned corpus remains randomly indexable. (Matti Lyra, #425)
 * changed the LdaModel.save so that a custom `ignore` list can be passed in (Matti Lyra, #331)
 * added support for NumPy style fancy indexing to corpus objects (Matti Lyra, #414)
+* py3k fix in distributed LSI (spacecowboy, #433)
+* Windows fix for setup.py (#428)
 
 0.12.1, 20/07/2015
 

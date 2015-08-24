@@ -50,6 +50,11 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_word2vec.tst')
 
+def rule_for_testing(word, count, min_count):
+    if word == "human":
+        return utils.RULE_DISCARD  # throw out
+    else:
+        return utils.RULE_DEFAULT  # apply default rule, i.e. min_count
 
 class TestWord2VecModel(unittest.TestCase):
     def testPersistence(self):
@@ -57,6 +62,31 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.save(testfile())
         self.models_equal(model, word2vec.Word2Vec.load(testfile()))
+
+    def testPersistenceWithConstructorRule(self):
+        """Test storing/loading the entire model with a vocab trimming rule passed in the constructor."""
+        model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule_for_testing)
+        model.save(testfile())
+        self.models_equal(model, word2vec.Word2Vec.load(testfile()))
+
+    def testRuleWithMinCount(self):
+        """Test that returning RULE_DEFAULT from trim_rule triggers min_count."""
+        model = word2vec.Word2Vec(sentences + [["occurs_only_once"]], min_count=2, trim_rule=rule_for_testing)
+        self.assertTrue("human" not in model.vocab)
+        self.assertTrue("occurs_only_once" not in model.vocab)
+        self.assertTrue("interface" in model.vocab)
+
+    def testRule(self):
+        """Test applying vocab trim_rule to build_vocab instead of constructor."""
+        model = word2vec.Word2Vec(min_count=1)
+        model.build_vocab(sentences, trim_rule=rule_for_testing)
+        self.assertTrue("human" not in model.vocab)
+
+    def testLambdaRule(self):
+        """Test that lambda trim_rule works."""
+        rule = lambda word, count, min_count: utils.RULE_DISCARD if word == "human" else utils.RULE_DEFAULT
+        model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule)
+        self.assertTrue("human" not in model.vocab)
 
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
