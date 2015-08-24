@@ -565,7 +565,7 @@ class Word2Vec(utils.SaveLoad):
                     drop_unique += 1
                     drop_total += v
                     original_total += v
-        elif update:
+        else:
             logger.info("Updating model with new vocabulary")
             for word, v in iteritems(self.raw_vocab):
                 if not word in self.vocab:
@@ -951,14 +951,13 @@ class Word2Vec(utils.SaveLoad):
     def clear_sims(self):
         self.syn0norm = None
 
-
     def update_weights(self):
         """
         Copy all the existing weights, and reset the weights for the newly
         added vocabulary.
         """
         logger.info("updating layer weights")
-        newsyn0 = empty((len(self.vocab), self.layer1_size), dtype=REAL)
+        newsyn0 = empty((len(self.vocab), self.vector_size), dtype=REAL)
 
         # copy the weights that are already learned
         for i in xrange(0, len(self.syn0)):
@@ -984,7 +983,6 @@ class Word2Vec(utils.SaveLoad):
 
         # do not suppress learning for already learned words
         self.syn0_lockf = ones(len(self.vocab), dtype=REAL)  # zeros suppress learning
-
 
     def reset_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
