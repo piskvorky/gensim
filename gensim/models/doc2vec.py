@@ -390,8 +390,9 @@ class DocvecsArray(utils.SaveLoad):
                 self.doctag_syn0norm = self.doctag_syn0
             else:
                 if self.mapfile_path:
-                    self.doctag_syn0norm = np_memmap(self.mapfile_path+'.doctag_syn0norm', dtype=REAL,
-                                                     mode='w+', shape=self.doctag_syn0.shape)
+                    self.doctag_syn0norm = np_memmap(
+                        self.mapfile_path+'.doctag_syn0norm', dtype=REAL,
+                        mode='w+', shape=self.doctag_syn0.shape)
                 else:
                     self.doctag_syn0norm = empty(self.doctag_syn0.shape, dtype=REAL)
                 np_divide(self.doctag_syn0, sqrt((self.doctag_syn0 ** 2).sum(-1))[..., newaxis], self.doctag_syn0norm)
@@ -418,10 +419,14 @@ class DocvecsArray(utils.SaveLoad):
             positive = [positive]
 
         # add weights for each doc, if not already present; default to 1.0 for positive and -1.0 for negative docs
-        positive = [(doc, 1.0) if isinstance(doc, string_types + (ndarray,) + integer_types)
-                    else doc for doc in positive]
-        negative = [(doc, -1.0) if isinstance(doc, string_types + (ndarray,) + integer_types)
-                    else doc for doc in negative]
+        positive = [
+            (doc, 1.0) if isinstance(doc, string_types + (ndarray,) + integer_types)
+            else doc for doc in positive
+        ]
+        negative = [
+            (doc, -1.0) if isinstance(doc, string_types + (ndarray,) + integer_types)
+            else doc for doc in negative
+        ]
 
         # compute the weighted average of all docs
         all_docs, mean = set(), []
