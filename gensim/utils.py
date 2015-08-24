@@ -11,6 +11,7 @@ This module contains various general utility functions.
 from __future__ import with_statement
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -1089,7 +1090,7 @@ def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
     return data
 
 
-def prune_vocab(vocab, min_reduce):
+def prune_vocab(vocab, min_reduce, trim_rule=None):
     """
     Remove all entries from the `vocab` dictionary with count smaller than `min_reduce`.
 
@@ -1099,9 +1100,29 @@ def prune_vocab(vocab, min_reduce):
     result = 0
     old_len = len(vocab)
     for w in list(vocab):  # make a copy of dict's keys
-        if vocab[w] <= min_reduce:
+        if not keep_vocab_item(w, vocab[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
             result += vocab[w]
             del vocab[w]
     logger.info("pruned out %i tokens with count <=%i (before %i, after %i)",
                 old_len - len(vocab), min_reduce, old_len, len(vocab))
     return result
+
+
+RULE_DEFAULT = 0
+RULE_DISCARD = 1
+RULE_KEEP = 2
+
+
+def keep_vocab_item(word, count, min_count, trim_rule=None):
+    default_res = count >= min_count
+
+    if trim_rule is None:
+        return default_res
+    else:
+        rule_res = trim_rule(word, count, min_count)
+        if rule_res == RULE_KEEP:
+            return True
+        elif rule_res == RULE_DISCARD:
+            return False
+        else:
+            return default_res
