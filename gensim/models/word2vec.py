@@ -961,7 +961,7 @@ class Word2Vec(utils.SaveLoad):
 
         # copy the weights that are already learned
         for i in xrange(0, len(self.syn0)):
-            newsyn0[i] = self.syn0[i]
+            newsyn0[i] = deepcopy(self.syn0[i])
 
         # randomize the remaining words
         for i in xrange(len(self.vocab), len(newsyn0)):
@@ -970,13 +970,15 @@ class Word2Vec(utils.SaveLoad):
         self.syn0 = deepcopy(newsyn0)
 
         if self.hs:
-            oldsyn1 = self.syn1
+            oldsyn1 = deepcopy(self.syn1)
             self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
             self.syn1[i] = deepcopy(oldsyn1[i])
+
         if self.negative:
-            oldneg = self.syn1neg
+            oldneg = deepcopy(self.syn1neg)
             self.syn1neg = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
             self.syn1neg[i] = deepcopy(oldneg[i])
+
         self.syn0norm = None
 
         # do not suppress learning for already learned words
