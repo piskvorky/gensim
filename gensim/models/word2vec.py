@@ -967,18 +967,16 @@ class Word2Vec(utils.SaveLoad):
         for i in xrange(len(self.vocab), len(newsyn0)):
             # construct deterministic seed from word AND seed argument
             self.syn0[i] = self.seeded_vector(self.index2word[i] + str(self.seed))
-        self.syn0 = newsyn0
+        self.syn0 = deepcopy(newsyn0)
 
         if self.hs:
             oldsyn1 = self.syn1
             self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
-            for i in xrange(0, len(oldsyn1)):
-                self.syn1[i] = oldsyn1[i]
+            self.syn1[i] = deepcopy(oldsyn1[i])
         if self.negative:
             oldneg = self.syn1neg
             self.syn1neg = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
-            for i in xrange(0, len(oldneg)):
-                self.syn1neg[i] = oldneg[i]
+            self.syn1neg[i] = deepcopy(oldneg[i])
         self.syn0norm = None
 
         # do not suppress learning for already learned words
