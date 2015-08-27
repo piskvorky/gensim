@@ -67,6 +67,87 @@ from gensim import utils, interfaces
 logger = logging.getLogger(__name__)
 
 
+
+import random
+import numpy as np
+import sys
+
+_PRIME =  66405897020462343733
+
+class DictWordCounter(defaultdict):
+    def __init__(self):
+        defaultdict.__init__(self, int)
+    def update_counts(self, key, increment ):
+        self[key] += increment
+
+
+class CMSketchCounter(object):
+    def __init__(self, delta=10**-2, epsilon=5E-6, conservative=True, logcount=False):
+        """
+        `epsilon`: controls the  amount of torelable error in the returned error count.
+        `delta`: cobntrols the probability  with which the returned count is not within the accepted error.
+        These two variables control the depth and the width of the sketch.
+        """
+        if delta <= 0 or delta >= 1:
+            raise ValueError("delta must be between 0 and 1, exclusive")
+        if epsilon <= 0 or epsilon >= 1:
+            raise ValueError("epsilon must be between 0 and 1, exclusive")
+        self.conservative = conservative
+        self.logcount = logcount # Not used yet
+
+        self.w = int(np.ceil(2 / epsilon))
+        self.d = int(np.ceil(np.log(1 / delta)))
+        logging.info("Creating a Count Min-Sketch with dimension {}x{}".format(self.d, self.w))
+
+        self.hash_functions = [self.__generate_hash_function() for i in range(self.d)]
+        self.count = np.zeros((self.d, self.w), dtype='int32')
+        self.no_updates = 0 # to approximate the #words !
+
+    def update_counts(self, key, c):
+        """ Modified version of update, as the increment is done in a dict-like manner
+
+        """
+        #logging.info("Incrementing key '{}' by {}".format(key, increment))
+        chat = self["key"]
+
+        for row, hash_function in enumerate(self.hash_functions):
+            column = hash_function(abs(hash(key)))
+            if self.conservative:
+                self.count[row, column] = max(self.count[row, column], c + chat)
+            else:
+                self.count[row, column]  =  self.count[row, column] +  c
+
+    def __setitem__(self, key, value):
+        for row, hash_function in enumerate(self.hash_functions):
+            column = hash_function(abs(hash(key)))
+            self.count[row, column]  = value
+
+
+    def __getitem__(self, key):
+
+        value = sys.maxint
+        for row, hash_function in enumerate(self.hash_functions):
+            column = hash_function(abs(hash(key)))
+            value = min(self.count[row, column], value)
+
+        return value
+
+    def __delitem__(self, item):
+        pass
+
+    def __len__(self):
+        return 1
+
+    def __generate_hash_function(self):
+        """
+        Returns a hash function from a family of pairwise-independent hash
+        functions
+
+        """
+        a, b = random.randrange(0, _PRIME - 1),  random.randrange(0, _PRIME - 1)
+        return lambda x: (a * x + b) % _PRIME % self.w
+
+
 class Phrases(interfaces.TransformationABC):
     """
     Detect phrases, based on collected collocation counts. Adjacent words that appear
@@ -77,7 +158,7 @@ class Phrases(interfaces.TransformationABC):
 
     """
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
-            max_vocab_size=40000000, delimiter=b'_'):
+            max_vocab_size=40000000, delimiter=b'_', exact_count=True):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -104,6 +185,9 @@ class Phrases(interfaces.TransformationABC):
         `delimiter` is the glue character used to join collocation tokens, and
         should be a byte string (e.g. b'_').
 
+        `exact_count`  whether to use exact counting (memory intensive)  or use approximating counting.
+
+
         """
         if min_count <= 0:
             raise ValueError("min_count should be at least 1")
@@ -114,12 +198,24 @@ class Phrases(interfaces.TransformationABC):
         self.min_count = min_count
         self.threshold = threshold
         self.max_vocab_size = max_vocab_size
-        self.vocab = defaultdict(int)  # mapping between utf8 token => its count
+        self.exact_count = exact_count
+        self.vocab = Phrases._get_counter_instance(self.exact_count, max_vocab_size)
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
 
+        # if not self.exact_count: # TODO: Delete ME!
+        #      self.min_count = self.min_count*0.0001
+        #      self.threshold = self.threshold*0.0001
+
         if sentences is not None:
             self.add_vocab(sentences)
+
+    @staticmethod
+    def _get_counter_instance(exact_count, max_vocab_size): #TODO: add parameters
+        if exact_count:
+            return  DictWordCounter()  # mapping between utf8 token => its count
+        else:
+            return  CMSketchCounter()
 
 
     def __str__(self):
@@ -130,12 +226,14 @@ class Phrases(interfaces.TransformationABC):
 
 
     @staticmethod
-    def learn_vocab(sentences, max_vocab_size, delimiter=b'_'):
+    def learn_vocab(sentences, max_vocab_size, delimiter=b'_', exact_count=True):
         """Collect unigram/bigram counts from the `sentences` iterable."""
+
         sentence_no = -1
         total_words = 0
         logger.info("collecting all words and their counts")
-        vocab = defaultdict(int)
+        vocab = Phrases._get_counter_instance(exact_count, max_vocab_size)
+
         min_reduce = 1
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % 10000 == 0:
@@ -143,13 +241,13 @@ class Phrases(interfaces.TransformationABC):
                             (sentence_no, total_words, len(vocab)))
             sentence = [utils.any2utf8(w) for w in sentence]
             for bigram in zip(sentence, sentence[1:]):
-                vocab[bigram[0]] += 1
-                vocab[delimiter.join(bigram)] += 1
+                vocab.update_counts(bigram[0], 1)
+                vocab.update_counts(delimiter.join(bigram), 1)
                 total_words += 1
 
             if sentence:    # add last word skipped by previous loop
                 word = sentence[-1]
-                vocab[word] += 1
+                vocab.update_counts(word, 1)
 
             if len(vocab) > max_vocab_size:
                 utils.prune_vocab(vocab, min_reduce)
@@ -157,31 +255,33 @@ class Phrases(interfaces.TransformationABC):
 
         logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
                     (len(vocab), total_words, sentence_no + 1))
+        #print(vocab)
         return min_reduce, vocab
 
 
     def add_vocab(self, sentences):
         """
         Merge the collected counts `vocab` into this phrase detector.
-
         """
         # uses a separate vocab to collect the token counts from `sentences`.
         # this consumes more RAM than merging new sentences into `self.vocab`
         # directly, but gives the new sentences a fighting chance to collect
         # sufficient counts, before being pruned out by the (large) accummulated
         # counts collected in previous learn_vocab runs.
-        min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter)
+        min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter, self.exact_count)
+        if self.exact_count:
+            logger.info("merging %i counts into %s" % (len(vocab), self))
+            self.min_reduce = max(self.min_reduce, min_reduce)
+            for word, count in iteritems(vocab):
+                self.vocab.update_counts(word, count)
+                #logger.info("{} : {}".format(word, count))
+            if len(self.vocab) > self.max_vocab_size:
+                prune_vocab(self.vocab, self.min_reduce)
+                self.min_reduce += 1
 
-        logger.info("merging %i counts into %s" % (len(vocab), self))
-        self.min_reduce = max(self.min_reduce, min_reduce)
-        for word, count in iteritems(vocab):
-            self.vocab[word] += count
-        if len(self.vocab) > self.max_vocab_size:
-            prune_vocab(self.vocab, self.min_reduce)
-            self.min_reduce += 1
-
-        logger.info("merged %s" % self)
-
+            logger.info("merged %s" % self)
+        else:
+            self.vocab.count += vocab.count # Linearity property of CM Sketch
 
     def __getitem__(self, sentence):
         """
@@ -238,6 +338,7 @@ class Phrases(interfaces.TransformationABC):
 
         if s:  # add last word skipped by previous loop
             last_token = s[-1]
+
             if not last_bigram:
                 new_s.append(last_token)
 
@@ -256,11 +357,11 @@ if __name__ == '__main__':
         sys.exit(1)
     infile = sys.argv[1]
 
-    from gensim.models import Phrases  # for pickle
+    #from gensim.models import Phrases  # for pickle
     from gensim.models.word2vec import Text8Corpus
     sentences = Text8Corpus(infile)
 
     # test_doc = LineSentence('test/test_data/testcorpus.txt')
-    bigram = Phrases(sentences, min_count=5, threshold=100)
+    bigram = Phrases(sentences, min_count=5, threshold=100, exact_count=False)
     for s in bigram[sentences]:
         print(utils.to_utf8(u' '.join(s)))
