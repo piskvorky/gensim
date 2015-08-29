@@ -32,6 +32,7 @@ def _get_words_for_graph(tokens, pos_filter):
         include_filters, exclude_filters = _get_pos_filters()
     else:
         include_filters = set(pos_filter)
+        exclude_filters = frozenset([])
     if include_filters and exclude_filters:
         raise ValueError("Can't use both include and exclude filters, should use only one")
 
