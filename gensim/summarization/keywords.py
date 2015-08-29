@@ -12,12 +12,13 @@ from itertools import combinations as _combinations
 from six.moves.queue import Queue as _Queue
 from six.moves import xrange
 
-
 WINDOW_SIZE = 2
 
-"""Check tags in http://www.clips.ua.ac.be/pages/mbsp-tags and use only first two letters
+"""
+Check tags in http://www.clips.ua.ac.be/pages/mbsp-tags and use only first two letters
 Example: filter for nouns and adjectives:
-INCLUDING_FILTER = ['NN', 'JJ']"""
+INCLUDING_FILTER = ['NN', 'JJ']
+"""
 INCLUDING_FILTER = ['NN', 'JJ']
 EXCLUDING_FILTER = []
 
@@ -26,8 +27,11 @@ def _get_pos_filters():
     return frozenset(INCLUDING_FILTER), frozenset(EXCLUDING_FILTER)
 
 
-def _get_words_for_graph(tokens):
-    include_filters, exclude_filters = _get_pos_filters()
+def _get_words_for_graph(tokens, pos_filter):
+    if pos_filter is None:
+        include_filters, exclude_filters = _get_pos_filters()
+    else:
+        include_filters = set(pos_filter)
     if include_filters and exclude_filters:
         raise ValueError("Can't use both include and exclude filters, should use only one")
 
@@ -189,13 +193,13 @@ def _format_results(_keywords, combined_keywords, split, scores):
     return "\n".join(combined_keywords)
 
 
-def keywords(text, ratio=0.2, words=None, split=False, scores=False):
+def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=['NN', 'JJ']):
     # Gets a dict of word -> lemma
     tokens = _clean_text_by_word(text)
     split_text = list(_tokenize_by_word(text))
 
     # Creates the graph and adds the edges
-    graph = _build_graph(_get_words_for_graph(tokens))
+    graph = _build_graph(_get_words_for_graph(tokens, pos_filter))
     _set_graph_edges(graph, tokens, split_text)
     del split_text  # It's no longer used
 
