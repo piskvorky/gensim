@@ -13,6 +13,7 @@ in this test.
 """
 
 import os.path
+import logging
 import unittest
 
 from gensim import utils
@@ -128,3 +129,7 @@ class TestSummarizationTest(unittest.TestCase):
             expected_summary_length = int(len(corpus) * ratio)
 
             self.assertEqual(len(selected_docs), expected_summary_length)
+
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    unittest.main()
