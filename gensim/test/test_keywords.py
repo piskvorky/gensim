@@ -36,7 +36,7 @@ class TestKeywordsTest(unittest.TestCase):
         with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.kw.txt"), mode="r") as f:
             kw = f.read()
 
-        self.assertEqual(generated_keywords, kw)
+        self.assertEqual(set(generated_keywords), set(kw))
 
     def test_text_keywords_words(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -45,7 +45,7 @@ class TestKeywordsTest(unittest.TestCase):
             text = f.read()
 
         # calculate exactly 13 keywords
-        generated_keywords = keywords(text, words=13).split('\n')
+        generated_keywords = keywords(text, words=13, split=True)
 
         self.assertEqual(len(generated_keywords), 13)
 
@@ -86,10 +86,10 @@ class TestKeywordsTest(unittest.TestCase):
 
         # Check ratio parameter is well behaved.  Because length is taken on tokenized clean text
         # we just check that ratio 40% is twice as long as ratio 20%
-        selected_docs_20 = keywords(text, ratio=0.2).split("\n")
-        selected_docs_40 = keywords(text, ratio=0.4).split("\n")
+        selected_docs_20 = keywords(text, ratio=0.2, split=True)
+        selected_docs_40 = keywords(text, ratio=0.4, split=True)
 
-        self.assertAlmostEqual(float(len(selected_docs_40))/len(selected_docs_20), 1.93, places=2)
+        self.assertAlmostEqual(float(len(selected_docs_40))/len(selected_docs_20), 1.9, places=1)
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
