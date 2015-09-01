@@ -75,9 +75,6 @@ class TestKeywordsTest(unittest.TestCase):
 
         self.assertTrue(keywords(text) is not None)
 
-    def test_empty_text_keywords_none(self):
-        self.assertRaises(ZeroDivisionError)
-
     def test_keywords_ratio(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
