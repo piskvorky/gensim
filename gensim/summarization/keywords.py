@@ -11,6 +11,8 @@ from gensim.summarization.commons import remove_unreachable_nodes as _remove_unr
 from itertools import combinations as _combinations
 from six.moves.queue import Queue as _Queue
 from six.moves import xrange
+from six import iteritems
+
 
 WINDOW_SIZE = 2
 
@@ -37,7 +39,7 @@ def _get_words_for_graph(tokens, pos_filter):
         raise ValueError("Can't use both include and exclude filters, should use only one")
 
     result = []
-    for word, unit in tokens.iteritems():
+    for word, unit in iteritems(tokens):
         if exclude_filters and unit.tag in exclude_filters:
             continue
         if (include_filters and unit.tag in include_filters) or not include_filters or not unit.tag:
@@ -116,7 +118,7 @@ def _extract_tokens(lemmas, scores, ratio, words):
 
 def _lemmas_to_words(tokens):
     lemma_to_word = {}
-    for word, unit in tokens.iteritems():
+    for word, unit in iteritems(tokens):
         lemma = unit.token
         if lemma in lemma_to_word:
             lemma_to_word[lemma].append(word)
@@ -214,7 +216,7 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
     # The results can be polluted by many variations of the same word
     if lemmatize:
         lemmas_to_word = {}
-        for word, unit in tokens.iteritems():
+        for word, unit in iteritems(tokens):
             lemmas_to_word[unit.token] = [word]
     else:
         lemmas_to_word = _lemmas_to_words(tokens)
