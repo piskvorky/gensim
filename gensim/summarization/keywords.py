@@ -194,7 +194,7 @@ def _format_results(_keywords, combined_keywords, split, scores):
     return "\n".join(combined_keywords)
 
 
-def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=['NN', 'JJ']):
+def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=['NN', 'JJ'], lemmatize=False):
     # Gets a dict of word -> lemma
     tokens = _clean_text_by_word(text)
     split_text = list(_tokenize_by_word(text))
@@ -211,7 +211,14 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
 
     extracted_lemmas = _extract_tokens(graph.nodes(), pagerank_scores, ratio, words)
 
-    lemmas_to_word = _lemmas_to_words(tokens)
+    # The results can be polluted by many variations of the same word
+    if lemmatize:
+        lemmas_to_word = {}
+        for word, unit in tokens.iteritems():
+            lemmas_to_word[unit.token] = [word]
+    else:
+        lemmas_to_word = _lemmas_to_words(tokens)
+
     keywords = _get_keywords_with_score(extracted_lemmas, lemmas_to_word)
 
     # text.split() to keep numbers and punctuation marks, so separeted concepts are not combined
