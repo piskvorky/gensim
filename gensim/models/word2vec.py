@@ -756,13 +756,11 @@ class Word2Vec(utils.SaveLoad):
                         next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
                     next_alpha = max(next_alpha, self.min_alpha)
             except StopIteration:
-                if job_no == -1 and self.corpus_count > 0:
-                    raise Exception(
-                        "Caught StopIteration before performing any work, and "
-                        "yet the corpus count is > 0. Are you by any chance "
-                        "trying to train on an iterator that is based on a "
-                        "generator that does not re-initialize itself? See "
-                        "https://github.com/piskvorky/gensim/issues/443"
+                if job_no == -1 and self.train_count == 0:
+                    logger.warning(
+                        "train() called with empty iterator (if not intended, "
+                        "be sure to provide a corpus that offers restartable "
+                        "iteration)."
                     )
                 logger.info(
                     "reached end of input; waiting to finish %i outstanding jobs",
