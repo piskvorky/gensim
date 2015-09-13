@@ -85,14 +85,14 @@ class TestLdaModel(unittest.TestCase):
             self.assertTrue(isinstance(score, float))
 
             for v, k in topic:
-                self.assertTrue(isinstance(k, unicode))
+                self.assertTrue(isinstance(k, six.string_types))
                 self.assertTrue(isinstance(v, float))
 
     def testGetTopicTerms(self):
         topic_terms = self.model.get_topic_terms(1)
 
         for k, v in topic_terms:
-            self.assertTrue(isinstance(k, int))
+            self.assertTrue(isinstance(k, int) or isinstance(k, numpy.int64))
             self.assertTrue(isinstance(v, float))
 
     def testShowTopic(self):
@@ -101,6 +101,17 @@ class TestLdaModel(unittest.TestCase):
         for v, k in topic:
             self.assertTrue(isinstance(v, float))
             self.assertTrue(isinstance(k, six.string_types))
+
+    def testShowTopics(self):
+        topics = self.model.show_topics(formatted=False)
+
+        for topic_no, topic in topics:
+            self.assertTrue(isinstance(topic_no, int))
+            self.assertTrue(isinstance(topic, list))
+            for v, k in topic:
+                self.assertTrue(isinstance(v, float))
+                self.assertTrue(isinstance(k, six.string_types))
+
 
     def testGetDocumentTopics(self):
         doc_topics = self.model.get_document_topics(self.corpus)

@@ -77,6 +77,18 @@ class TestLsiModel(unittest.TestCase):
             self.assertTrue(isinstance(v, float))
             self.assertTrue(isinstance(k, six.string_types))
 
+
+    def testShowTopics(self):
+        topics = self.model.show_topics(formatted=False)
+
+        for topic_no, topic in topics:
+            self.assertTrue(isinstance(topic_no, int))
+            self.assertTrue(isinstance(topic, list))
+            for v, k in topic:
+                self.assertTrue(isinstance(v, float))
+                self.assertTrue(isinstance(k, six.string_types))
+
+
     def testCorpusTransform(self):
         """Test lsi[corpus] transformation."""
         model = self.model

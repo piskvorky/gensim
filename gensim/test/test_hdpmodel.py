@@ -54,7 +54,7 @@ class TestHdpModel(unittest.TestCase):
         self.class_ = hdpmodel.HdpModel
         self.model = self.class_(corpus, id2word=dictionary)
 
-    def testShowTopic(self):
+    def testShowTopics(self):
         topics = self.model.show_topics(formatted=False)
 
         for topic_no, topic in topics:

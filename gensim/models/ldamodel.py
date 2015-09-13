@@ -716,7 +716,7 @@ class LdaModel(interfaces.TransformationABC):
             else:
                 topic = self.show_topic(i, topn=num_words)
 
-            shown.append(topic)
+            shown.append((i, topic))
             if log:
                 logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic)
 
@@ -730,11 +730,20 @@ class LdaModel(interfaces.TransformationABC):
         Only return 2-tuples for the topn most probable words (ignore the rest).
 
         """
+        return [(value, self.id2word[id]) for id, value in self.get_topic_terms(topicid, topn)]
+
+    def get_topic_terms(self, topicid, topn=10):
+        """
+        Return a list of `(word_id, words_probability)` 2-tuples for the most
+        probable words in topic `topicid`.
+
+        Only return 2-tuples for the topn most probable words (ignore the rest).
+
+        """
         topic = self.state.get_lambda()[topicid]
         topic = topic / topic.sum()  # normalize to probability distribution
         bestn = matutils.argsort(topic, topn, reverse=True)
-        beststr = [(topic[id], self.id2word[id]) for id in bestn]
-        return beststr
+        return [(id, topic[id]) for id in bestn]
 
     def print_topic(self, topicid, topn=10):
         """Return the result of `show_topic`, but formatted as a single string."""
