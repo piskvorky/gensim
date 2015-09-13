@@ -474,7 +474,7 @@ class LsiModel(interfaces.TransformationABC):
         of the topic (both negative and positive).
 
         >>> lsimodel.show_topic(10, topn=5)
-        [(-0.340, "category"), (0.298, "$M$"), (0.183, "algebra"), (-0.174, "functor"), (-0.168, "operator")]
+        [("category", -0.340), ("$M$", 0.298), ("algebra", 0.183), ("functor", -0.174), ("operator", -0.168)]
 
         """
         # size of the projection matrix can actually be smaller than `self.num_topics`,
@@ -503,7 +503,7 @@ class LsiModel(interfaces.TransformationABC):
         For each topic, show `num_words` most significant words (10 words by default).
 
         The topics are returned as a list -- a list of strings if `formatted` is
-        True, or a list of (weight, word) 2-tuples if False.
+        True, or a list of `(word, probability)` 2-tuples if False.
 
         If `log` is True, also output this result to log.
 

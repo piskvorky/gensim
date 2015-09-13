@@ -688,7 +688,7 @@ class LdaModel(interfaces.TransformationABC):
         (10 words per topic, by default).
 
         The topics are returned as a list -- a list of strings if `formatted` is
-        True, or a list of (probability, word) 2-tuples if False.
+        True, or a list of `(word, probability)` 2-tuples if False.
 
         If `log` is True, also output this result to log.
 
@@ -724,7 +724,7 @@ class LdaModel(interfaces.TransformationABC):
 
     def show_topic(self, topicid, topn=10):
         """
-        Return a list of `(words_probability, word)` 2-tuples for the most probable
+        Return a list of `(word, probability)` 2-tuples for the most probable
         words in topic `topicid`.
 
         Only return 2-tuples for the topn most probable words (ignore the rest).
@@ -734,7 +734,7 @@ class LdaModel(interfaces.TransformationABC):
 
     def get_topic_terms(self, topicid, topn=10):
         """
-        Return a list of `(word_id, words_probability)` 2-tuples for the most
+        Return a list of `(word_id, probability)` 2-tuples for the most
         probable words in topic `topicid`.
 
         Only return 2-tuples for the topn most probable words (ignore the rest).
