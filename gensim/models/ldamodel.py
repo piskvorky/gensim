@@ -788,11 +788,13 @@ class LdaModel(interfaces.TransformationABC):
                     # l_docs is v_l^(t)
                     l_docs = doc_word_list[l]
 
-                    # co_doc_frequency is D(v_m^(t), v_l^(t))
-                    co_doc_frequency = len(m_docs.intersection(l_docs))
+                    # make sure this word appears in some documents.
+                    if len(l_docs) > 0:
+                        # co_doc_frequency is D(v_m^(t), v_l^(t))
+                        co_doc_frequency = len(m_docs.intersection(l_docs))
 
-                    # add to the coherence sum for these two words m, l
-                    coherence += numpy.log((co_doc_frequency + 1.0) / len(l_docs))
+                        # add to the coherence sum for these two words m, l
+                        coherence += numpy.log((co_doc_frequency + 1.0) / len(l_docs))
 
             coherence_scores.append((str_topics[t], coherence))
 
