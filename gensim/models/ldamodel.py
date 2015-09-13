@@ -730,7 +730,7 @@ class LdaModel(interfaces.TransformationABC):
         Only return 2-tuples for the topn most probable words (ignore the rest).
 
         """
-        return [(value, self.id2word[id]) for id, value in self.get_topic_terms(topicid, topn)]
+        return [(self.id2word[id], value) for id, value in self.get_topic_terms(topicid, topn)]
 
     def get_topic_terms(self, topicid, topn=10):
         """
@@ -747,7 +747,7 @@ class LdaModel(interfaces.TransformationABC):
 
     def print_topic(self, topicid, topn=10):
         """Return the result of `show_topic`, but formatted as a single string."""
-        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
+        return ' + '.join(['%.3f*%s' % (v, k)  for k, v in self.show_topic(topicid, topn)])
 
     def top_topics(self, corpus, num_words=20):
         """

@@ -485,7 +485,7 @@ class LsiModel(interfaces.TransformationABC):
         c = numpy.asarray(self.projection.u.T[topicno, :]).flatten()
         norm = numpy.sqrt(numpy.sum(numpy.dot(c, c)))
         most = matutils.argsort(numpy.abs(c), topn, reverse=True)
-        return [(1.0 * c[val] / norm, self.id2word[val]) for val in most]
+        return [(self.id2word[val], 1.0 * c[val] / norm) for val in most]
 
     def print_topic(self, topicno, topn=10):
         """
@@ -495,7 +495,7 @@ class LsiModel(interfaces.TransformationABC):
         '-0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + -0.174 * "functor" + -0.168 * "operator"'
 
         """
-        return ' + '.join(['%.3f*"%s"' % v for v in self.show_topic(topicno, topn)])
+        return ' + '.join(['%.3f*"%s"' % (v, k) for k, v in self.show_topic(topicno, topn)])
 
     def show_topics(self, num_topics=-1, num_words=10, log=False, formatted=True):
         """

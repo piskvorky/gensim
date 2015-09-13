@@ -612,14 +612,14 @@ class HdpTopicFormatter(object):
         return shown
 
     def show_topic_terms(self, topic_data, topn):
-        return [(weight, self.dictionary[wid]) for (weight, wid) in topic_data[:topn]]
+        return [(self.dictionary[wid], weight) for (weight, wid) in topic_data[:topn]]
 
     def format_topic(self, topic_id, topic_terms):
         if self.STYLE_GENSIM == self.style:
-            fmt = ' + '.join(['%.3f*%s' % (weight, word) for (weight, word) in topic_terms])
+            fmt = ' + '.join(['%.3f*%s' % (weight, word) for (word, weight) in topic_terms])
             fmt = 'topic %i: %s' % (topic_id, fmt)
         else:
-            fmt = '\n'.join(['    %20s    %.8f' % (word, weight) for (weight, word) in topic_terms])
+            fmt = '\n'.join(['    %20s    %.8f' % (word, weight) for (word, weight) in topic_terms])
             fmt = 'topic %i:\n%s' % (topic_id, fmt)
 
         return fmt
