@@ -998,7 +998,7 @@ class Word2Vec(utils.SaveLoad):
         with utils.smart_open(fname) as fin:
             header = utils.to_unicode(fin.readline(), encoding=encoding)
             vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
-            result = Word2Vec(size=vector_size)
+            result = cls(size=vector_size)
             result.syn0 = zeros((vocab_size, vector_size), dtype=REAL)
             if binary:
                 binary_len = dtype(REAL).itemsize * vector_size
