@@ -39,7 +39,7 @@ import numpy
 
 from gensim import utils, matutils
 
-logger = logging.getLogger('gensim.models.wrappers.ldamallet')
+logger = logging.getLogger(__name__)
 
 
 def read_doctopics(fname, eps=1e-6):

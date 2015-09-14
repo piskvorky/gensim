@@ -806,7 +806,6 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
 grouper = chunkize_serial
 
 
-
 class InputQueue(multiprocessing.Process):
     def __init__(self, q, corpus, chunksize, maxsize, as_numpy):
         super(InputQueue, self).__init__()
