@@ -76,6 +76,7 @@ from timeit import default_timer
 from copy import deepcopy
 from collections import defaultdict
 import threading
+import itertools
 
 from gensim.utils import keep_vocab_item
 
@@ -950,7 +951,7 @@ class Word2Vec(utils.SaveLoad):
 
         """
         if fvocab is not None:
-            logger.info("Storing vocabulary in %s" % (fvocab))
+            logger.info("storing vocabulary in %s" % (fvocab))
             with utils.smart_open(fvocab, 'wb') as vout:
                 for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
                     vout.write(utils.to_utf8("%s %s\n" % (word, vocab.count)))
@@ -1495,10 +1496,14 @@ class Text8Corpus(object):
 
 
 class LineSentence(object):
-    """Simple format: one sentence = one line; words already preprocessed and separated by whitespace."""
-    def __init__(self, source, max_sentence_length=10000):
+    """
+    Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
+    """
+
+    def __init__(self, source, max_sentence_length=10000, limit=None):
         """
-        `source` can be either a string or a file object.
+        `source` can be either a string or a file object. Clip the file to the first
+        `limit` lines (or no clipped if limit is None, the default).
 
         Example::
 
@@ -1512,6 +1517,7 @@ class LineSentence(object):
         """
         self.source = source
         self.max_sentence_length = max_sentence_length
+        self.limit = limit
 
     def __iter__(self):
         """Iterate through the lines in the source."""
@@ -1519,20 +1525,20 @@ class LineSentence(object):
             # Assume it is a file-like object and try treating it as such
             # Things that don't have seek will trigger an exception
             self.source.seek(0)
-            for line in self.source:
+            for line in itertools.islice(self.source, self.limit):
                 line = utils.to_unicode(line).split()
                 i = 0
                 while i < len(line):
-                    yield line[i:(i + self.max_sentence_length)]
+                    yield line[i : i + self.max_sentence_length]
                     i += self.max_sentence_length
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
             with utils.smart_open(self.source) as fin:
-                for line in fin:
+                for line in itertools.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
                     i = 0
                     while i < len(line):
-                        yield line[i:(i + self.max_sentence_length)]
+                        yield line[i : i + self.max_sentence_length]
                         i += self.max_sentence_length
 
 
