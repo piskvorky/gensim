@@ -1417,7 +1417,7 @@ class Word2Vec(utils.SaveLoad):
         # update older models
         if hasattr(model, 'table'):
             delattr(model, 'table')  # discard in favor of cum_table
-        if model.negative:
+        if model.negative and hasattr(model, 'index2word'):
             model.make_cum_table()  # rebuild cum_table from vocabulary
         if not hasattr(model, 'corpus_count'):
             model.corpus_count = None
@@ -1427,7 +1427,7 @@ class Word2Vec(utils.SaveLoad):
             else:
                 v.sample_int = int(round(v.sample_probability * 2**32))
                 del v.sample_probability
-        if not hasattr(model, 'syn0_lockf'):
+        if not hasattr(model, 'syn0_lockf') and hasattr(model, 'syn0'):
             model.syn0_lockf = ones(len(model.syn0), dtype=REAL)
         if not hasattr(model, 'random'):
             model.random = random.RandomState(model.seed)
