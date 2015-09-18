@@ -908,7 +908,7 @@ def pickle(obj, fname, protocol=2):
     Python 2.x and 3.x.
 
     """
-    with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
+    with smart_open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
         _pickle.dump(obj, fout, protocol=protocol)
 
 

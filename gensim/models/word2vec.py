@@ -987,14 +987,14 @@ class Word2Vec(utils.SaveLoad):
         """
         counts = None
         if fvocab is not None:
-            logger.info("loading word counts from %s" % (fvocab))
+            logger.info("loading word counts from %s", fvocab)
             counts = {}
             with utils.smart_open(fvocab) as fin:
                 for line in fin:
                     word, count = utils.to_unicode(line).strip().split()
                     counts[word] = int(count)
 
-        logger.info("loading projection weights from %s" % (fname))
+        logger.info("loading projection weights from %s", fname)
         with utils.smart_open(fname) as fin:
             header = utils.to_unicode(fin.readline(), encoding=encoding)
             vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
@@ -1028,6 +1028,7 @@ class Word2Vec(utils.SaveLoad):
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
                     word, weights = parts[0], list(map(REAL, parts[1:]))
+                    assert word not in result.vocab, "duplicate word '%s' in %s" % (word, fname)
                     if counts is None:
                         result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
                     elif word in counts:
