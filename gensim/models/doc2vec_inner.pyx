@@ -15,7 +15,12 @@ cimport numpy as np
 from libc.math cimport exp
 from libc.string cimport memset, memcpy
 
-from scipy.linalg.blas import fblas
+# scipy <= 0.15
+try:
+     from scipy.linalg.blas import fblas
+except ImportError:
+     # in scipy > 0.15, fblas function has been removed
+     import scipy.linalg.blas as fblas
 
 from word2vec_inner cimport bisect_left, random_int32, \
      scopy, saxpy, sdot, dsdot, snrm2, sscal, \

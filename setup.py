@@ -13,6 +13,7 @@ sudo python ./setup.py install
 import os
 import sys
 import warnings
+import io
 
 if sys.version_info[:2] < (2, 6):
     raise Exception('This version of gensim needs Python 2.6 or later.')
@@ -101,13 +102,14 @@ http://api.mongodb.org/python/current/installation.html#osx
 
 
 def readfile(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    path = os.path.join(os.path.dirname(__file__), fname)
+    return io.open(path, encoding='utf8').read()
 
 model_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
 
 setup(
     name='gensim',
-    version='0.12.1',
+    version='0.12.2',
     description='Python framework for fast Vector Space Modelling',
     long_description=readfile('README.rst'),
 
@@ -158,7 +160,7 @@ setup(
     install_requires=[
         'numpy >= 1.3',
         'scipy >= 0.7.0',
-        'six >= 1.2.0',
+        'six >= 1.5.0',
         'smart_open >= 1.2.1',
     ],
 

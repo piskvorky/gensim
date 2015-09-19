@@ -122,9 +122,9 @@ class TestDoc2VecModel(unittest.TestCase):
         f_rank = [docid for docid, sim in sims_to_infer].index(fire1)
         self.assertLess(fire1, 10)
 
-        # fire8 should be top30 close to fire1
+        # fire2 should be top30 close to fire1
         sims = model.docvecs.most_similar(fire1, topn=len(model.docvecs))
-        f2_rank = [docid for docid, sim in sims_to_infer].index(fire2)
+        f2_rank = [docid for docid, sim in sims].index(fire2)
         self.assertLess(f2_rank, 30)
 
         # same sims should appear in lookup by vec as by index

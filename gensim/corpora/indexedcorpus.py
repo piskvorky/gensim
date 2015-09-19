@@ -20,6 +20,8 @@ of each document.
 import logging
 import shelve
 
+import numpy
+
 from gensim import interfaces, utils
 
 logger = logging.getLogger('gensim.corpora.indexedcorpus')
@@ -46,6 +48,8 @@ class IndexedCorpus(interfaces.CorpusABC):
             if index_fname is None:
                 index_fname = utils.smart_extension(fname, '.index')
             self.index = utils.unpickle(index_fname)
+            # change self.index into a numpy.ndarray to support fancy indexing
+            self.index = numpy.asarray(self.index)
             logger.info("loaded corpus index from %s" % index_fname)
         except:
             self.index = None
@@ -94,6 +98,10 @@ class IndexedCorpus(interfaces.CorpusABC):
                 serializer.__name__)
 
         # store offsets persistently, using pickle
+        # we shouldn't have to worry about self.index being a numpy.ndarray as the serializer will return
+        # the offsets that are actually stored on disk - we're not storing self.index in any case, the
+        # load just needs to turn whatever is loaded from disk back into a ndarray - this should also ensure
+        # backwards compatibility
         logger.info("saving %s index to %s" % (serializer.__name__, index_fname))
         utils.pickle(offsets, index_fname)
 
@@ -113,10 +121,12 @@ class IndexedCorpus(interfaces.CorpusABC):
         if self.index is None:
             raise RuntimeError("cannot call corpus[docid] without an index")
 
-        if isinstance(docno, slice):
+        if isinstance(docno, (slice, list, numpy.ndarray)):
             return utils.SlicedCorpus(self, docno)
-
-        return self.docbyoffset(self.index[docno])
+        elif isinstance(docno, (int, numpy.integer)):
+            return self.docbyoffset(self.index[docno])
+        else:
+            raise ValueError('Unrecognised value for docno, use either a single integer, a slice or a numpy.ndarray')
 
 
 

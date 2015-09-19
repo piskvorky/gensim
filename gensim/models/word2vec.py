@@ -76,7 +76,10 @@ from timeit import default_timer
 from copy import deepcopy
 from collections import defaultdict
 import threading
-import time
+import itertools
+
+from gensim.utils import keep_vocab_item
+
 try:
     from queue import Queue, Empty
 except ImportError:
@@ -84,7 +87,7 @@ except ImportError:
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones
+    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from six import iteritems, itervalues, string_types
@@ -249,7 +252,8 @@ except ImportError:
         if model.negative:
             raise RuntimeError("scoring is only available for HS=True")
 
-        for pos, word in enumerate(sentence):
+        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab]
+        for pos, word in enumerate(word_vocabs):
             if word is None:
                 continue  # OOV word in the input sentence => skip
 
@@ -277,7 +281,8 @@ except ImportError:
         if model.negative:
             raise RuntimeError("scoring is only available for HS=True")
 
-        for pos, word in enumerate(sentence):
+        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab]
+        for pos, word in enumerate(word_vocabs):
             if word is None:
                 continue  # OOV word in the input sentence => skip
 
@@ -336,7 +341,8 @@ class Word2Vec(utils.SaveLoad):
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
-            sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0):
+            sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0,
+            trim_rule=None):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -385,6 +391,13 @@ class Word2Vec(utils.SaveLoad):
 
         `iter` = number of iterations (epochs) over the corpus.
 
+        `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
+         in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
+         Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
+         returns either util.RULE_DISCARD, util.RULE_KEEP or util.RULE_DEFAULT.
+         Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
+          of the model.
+
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
@@ -411,10 +424,11 @@ class Word2Vec(utils.SaveLoad):
         self.null_word = null_word
         self.train_count = 0
         self.total_train_time = 0
+
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
-            self.build_vocab(sentences)
+            self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(sentences)
 
     def make_cum_table(self, power=0.75, domain=2**31 - 1):
@@ -472,17 +486,17 @@ class Word2Vec(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i", max_depth)
 
-    def build_vocab(self, sentences, keep_raw_vocab=False):
+    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
 
         """
-        self.scan_vocab(sentences)  # initial survey
-        self.scale_vocab(keep_raw_vocab)  # trim by min_count & precalculate downsampling
+        self.scan_vocab(sentences, trim_rule=trim_rule)  # initial survey
+        self.scale_vocab(keep_raw_vocab, trim_rule=trim_rule)  # trim by min_count & precalculate downsampling
         self.finalize_vocab()  # build tables & arrays
 
-    def scan_vocab(self, sentences, progress_per=10000):
+    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
         """Do an initial scan of all words appearing in sentences."""
         logger.info("collecting all words and their counts")
         sentence_no = -1
@@ -497,7 +511,7 @@ class Word2Vec(utils.SaveLoad):
                 vocab[word] += 1
 
             if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                total_words += utils.prune_vocab(vocab, min_reduce)
+                total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
                 min_reduce += 1
 
         total_words += sum(itervalues(vocab))
@@ -506,7 +520,7 @@ class Word2Vec(utils.SaveLoad):
         self.corpus_count = sentence_no + 1
         self.raw_vocab = vocab
 
-    def scale_vocab(self, min_count=None, sample=None, dry_run=False, keep_raw_vocab=False):
+    def scale_vocab(self, min_count=None, sample=None, dry_run=False, keep_raw_vocab=False, trim_rule=None):
         """
         Apply vocabulary settings for `min_count` (discarding less-frequent words)
         and `sample` (controlling the downsampling of more-frequent words).
@@ -533,7 +547,7 @@ class Word2Vec(utils.SaveLoad):
         drop_unique, drop_total, retain_total, original_total = 0, 0, 0, 0
         retain_words = []
         for word, v in iteritems(self.raw_vocab):
-            if v >= min_count:
+            if keep_vocab_item(word, v, min_count, trim_rule=trim_rule):
                 retain_words.append(word)
                 retain_total += v
                 original_total += v
@@ -789,18 +803,21 @@ class Word2Vec(utils.SaveLoad):
         self.clear_sims()
         return trained_word_count
 
-    def _score_job_words(self, sentence, work, neu1):
+    def _score_job_words(self, sentence, inits):
+        work, neu1 = inits
         if self.sg:
             return score_sentence_sg(self, sentence, work)
         else:
             return score_sentence_cbow(self, sentence, work, neu1)
 
     # basics copied from the train() function
-    def score(self, sentences, total_sentences=None, chunksize=100):
+    def score(self, sentences, total_sentences=int(1e9), chunksize=100, queue_factor=2, report_delay=1):
         """
         Score the log probability for a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
         This does not change the fitted model in any way (see Word2Vec.train() for that)
+
+        Note that you should specify total_sentences; we'll run into problems if you ask to score more than the default
 
         See the article by Taddy [taddy]_ for examples of how to use such scores in document classification.
 
@@ -823,57 +840,84 @@ class Word2Vec(utils.SaveLoad):
         if not self.hs:
             raise RuntimeError("we have only implemented score for hs")
 
-        start, next_report = time.time(), [1.0]
-        # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
-        jobs = Queue(maxsize=2 * self.workers)
-        lock = threading.Lock()  # for shared state (scores, log reports...)
-        total_sentences = total_sentences or int(1e9)
-        sentence_scores = matutils.zeros_aligned(total_sentences, dtype=REAL)
-        sentence_count = [0]
-
-        def worker_score():
-            """score the enumerated sentences, lifting lists of sentences from the jobs queue."""
+        def worker_init():
             work = zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
+            return (work, neu1)
 
+        def worker_one_job(job, inits):
+            if job is None:  # signal to finish
+                return False
+            ns = 0
+            for (id, sentence) in job:
+                sentence_scores[id] = self._score_job_words(sentence, inits)
+                ns += 1
+            progress_queue.put(ns)  # report progress
+            return True
+
+        def worker_loop():
+            """Train the model, lifting lists of sentences from the jobs queue."""
+            init = worker_init()
             while True:
-                job = jobs.get()
-                if job is None:  # data finished, exit
+                job = job_queue.get()
+                if not worker_one_job(job, init):
                     break
-                ns = 0
-                for (id, sentence) in job:
-                    sentence_scores[id] = self._score_job_words(sentence, work, neu1)
-                    ns += 1
 
-                with lock:
-                    sentence_count[0] += ns
-                    elapsed = time.time() - start
-                    if elapsed >= next_report[0]:
-                        logger.info("PROGRESS: at %i sentences,  %.0f sentences/s"
-                                    % (sentence_count[0], sentence_count[0] / elapsed if elapsed else 0.0))
-                        next_report[0] = elapsed + 1.0  # wait at least a second between progress reports
+        start, next_report = default_timer(), 1.0
+        # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
+        if self.workers > 0:
+            job_queue = Queue(maxsize=queue_factor * self.workers)
+        else:
+            job_queue = FakeJobQueue(worker_init, worker_one_job)
+        progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
-        workers = [threading.Thread(target=worker_score) for _ in xrange(self.workers)]
+        workers = [threading.Thread(target=worker_loop) for _ in xrange(self.workers)]
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
 
-        # convert input strings to Vocab objects and start filling the jobs queue
-        for job_no, job in enumerate(utils.grouper(enumerate(self._prepare_items(sentences)), chunksize)):
-            logger.debug("putting job #%i in the queue, qsize=%i" % (job_no, jobs.qsize()))
-            jobs.put(job)
-        logger.info("reached the end of input; waiting to finish %i outstanding jobs" % jobs.qsize())
-        for _ in xrange(self.workers):
-            jobs.put(None)  # give the workers heads up that they can finish -- no more work!
+        sentence_count = 0
+        sentence_scores = matutils.zeros_aligned(total_sentences, dtype=REAL)
 
-        for thread in workers:
-            thread.join()
+        push_done = False
+        done_jobs = 0
+        jobs_source = enumerate(utils.grouper(enumerate(sentences), chunksize))
 
-        elapsed = time.time() - start
+        # fill jobs queue with (id, sentence) job items
+        while True:
+            try:
+                job_no, items = next(jobs_source)
+                logger.debug("putting job #%i in the queue", job_no)
+                job_queue.put(items)
+            except StopIteration:
+                logger.info(
+                    "reached end of input; waiting to finish %i outstanding jobs",
+                    job_no - done_jobs + 1)
+                for _ in xrange(self.workers):
+                    job_queue.put(None)  # give the workers heads up that they can finish -- no more work!
+                push_done = True
+            try:
+                while done_jobs < (job_no+1) or not push_done:
+                    ns = progress_queue.get(push_done)  # only block after all jobs pushed
+                    sentence_count += ns
+                    done_jobs += 1
+                    elapsed = default_timer() - start
+                    if elapsed >= next_report:
+                        logger.info(
+                                "PROGRESS: at %.2f%% sentences, %.0f sentences/s",
+                                100.0 * sentence_count, sentence_count / elapsed)
+                        next_report = elapsed + report_delay  # don't flood log, wait report_delay seconds
+                else:
+                    # loop ended by job count; really done
+                    break
+            except Empty:
+                pass  # already out of loop; continue to next push
+
+        elapsed = default_timer() - start
+        self.clear_sims()
         logger.info("scoring %i sentences took %.1fs, %.0f sentences/s"
-                    % (sentence_count[0], elapsed, sentence_count[0] / elapsed if elapsed else 0.0))
-        self.syn0norm = None
-        return sentence_scores[:sentence_count[0]]
+                    % (sentence_count, elapsed, sentence_count / elapsed if elapsed else 0.0))
+        return sentence_scores[:sentence_count]
 
     def clear_sims(self):
         self.syn0norm = None
@@ -907,7 +951,7 @@ class Word2Vec(utils.SaveLoad):
 
         """
         if fvocab is not None:
-            logger.info("Storing vocabulary in %s" % (fvocab))
+            logger.info("storing vocabulary in %s" % (fvocab))
             with utils.smart_open(fvocab, 'wb') as vout:
                 for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
                     vout.write(utils.to_utf8("%s %s\n" % (word, vocab.count)))
@@ -943,19 +987,38 @@ class Word2Vec(utils.SaveLoad):
         """
         counts = None
         if fvocab is not None:
-            logger.info("loading word counts from %s" % (fvocab))
+            logger.info("loading word counts from %s", fvocab)
             counts = {}
             with utils.smart_open(fvocab) as fin:
                 for line in fin:
                     word, count = utils.to_unicode(line).strip().split()
                     counts[word] = int(count)
 
-        logger.info("loading projection weights from %s" % (fname))
+        logger.info("loading projection weights from %s", fname)
         with utils.smart_open(fname) as fin:
             header = utils.to_unicode(fin.readline(), encoding=encoding)
             vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
-            result = Word2Vec(size=vector_size)
+            result = cls(size=vector_size)
             result.syn0 = zeros((vocab_size, vector_size), dtype=REAL)
+
+            def add_word(word, weights):
+                word_id = len(result.vocab)
+                if word in result.vocab:
+                    logger.warning("duplicate word '%s' in %s, ignoring all but first", word, fname)
+                    return
+                if counts is None:
+                    # most common scenario: no vocab file given. just make up some bogus counts, in descending order
+                    result.vocab[word] = Vocab(index=word_id, count=vocab_size - word_id)
+                elif word in counts:
+                    # use count from the vocab file
+                    result.vocab[word] = Vocab(index=word_id, count=counts[word])
+                else:
+                    # vocab file given, but word is missing -- set count to None (TODO: or raise?)
+                    logger.warning("vocabulary file is incomplete: '%s' is missing", word)
+                    result.vocab[word] = Vocab(index=word_id, count=None)
+                result.syn0[word_id] = weights
+                result.index2word.append(word)
+
             if binary:
                 binary_len = dtype(REAL).itemsize * vector_size
                 for line_no in xrange(vocab_size):
@@ -966,33 +1029,25 @@ class Word2Vec(utils.SaveLoad):
                         if ch == b' ':
                             break
                         if ch != b'\n':  # ignore newlines in front of words (some binary files have)
-
                             word.append(ch)
                     word = utils.to_unicode(b''.join(word), encoding=encoding)
-                    if counts is None:
-                        result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
-                    elif word in counts:
-                        result.vocab[word] = Vocab(index=line_no, count=counts[word])
-                    else:
-                        logger.warning("vocabulary file is incomplete")
-                        result.vocab[word] = Vocab(index=line_no, count=None)
-                    result.index2word.append(word)
-                    result.syn0[line_no] = fromstring(fin.read(binary_len), dtype=REAL)
+                    weights = fromstring(fin.read(binary_len), dtype=REAL)
+                    add_word(word, weights)
             else:
                 for line_no, line in enumerate(fin):
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
                     word, weights = parts[0], list(map(REAL, parts[1:]))
-                    if counts is None:
-                        result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
-                    elif word in counts:
-                        result.vocab[word] = Vocab(index=line_no, count=counts[word])
-                    else:
-                        logger.warning("vocabulary file is incomplete")
-                        result.vocab[word] = Vocab(index=line_no, count=None)
-                    result.index2word.append(word)
-                    result.syn0[line_no] = weights
+                    add_word(word, weights)
+        if result.syn0.shape[0] != len(result.vocab):
+            logger.info(
+                "duplicate words detected, shrinking matrix size from %i to %i",
+                result.syn0.shape[0], len(result.vocab)
+            )
+            result.syn0 = ascontiguousarray(result.syn0[: len(result.vocab)])
+        assert (len(result.vocab), result.vector_size) == result.syn0.shape
+
         logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
         result.init_sims(norm_only)
         return result
@@ -1372,7 +1427,7 @@ class Word2Vec(utils.SaveLoad):
         # update older models
         if hasattr(model, 'table'):
             delattr(model, 'table')  # discard in favor of cum_table
-        if model.negative:
+        if model.negative and hasattr(model, 'index2word'):
             model.make_cum_table()  # rebuild cum_table from vocabulary
         if not hasattr(model, 'corpus_count'):
             model.corpus_count = None
@@ -1382,7 +1437,7 @@ class Word2Vec(utils.SaveLoad):
             else:
                 v.sample_int = int(round(v.sample_probability * 2**32))
                 del v.sample_probability
-        if not hasattr(model, 'syn0_lockf'):
+        if not hasattr(model, 'syn0_lockf') and hasattr(model, 'syn0'):
             model.syn0_lockf = ones(len(model.syn0), dtype=REAL)
         if not hasattr(model, 'random'):
             model.random = random.RandomState(model.seed)
@@ -1452,10 +1507,14 @@ class Text8Corpus(object):
 
 
 class LineSentence(object):
-    """Simple format: one sentence = one line; words already preprocessed and separated by whitespace."""
-    def __init__(self, source, max_sentence_length=10000):
+    """
+    Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
+    """
+
+    def __init__(self, source, max_sentence_length=10000, limit=None):
         """
-        `source` can be either a string or a file object.
+        `source` can be either a string or a file object. Clip the file to the first
+        `limit` lines (or no clipped if limit is None, the default).
 
         Example::
 
@@ -1469,6 +1528,7 @@ class LineSentence(object):
         """
         self.source = source
         self.max_sentence_length = max_sentence_length
+        self.limit = limit
 
     def __iter__(self):
         """Iterate through the lines in the source."""
@@ -1476,20 +1536,20 @@ class LineSentence(object):
             # Assume it is a file-like object and try treating it as such
             # Things that don't have seek will trigger an exception
             self.source.seek(0)
-            for line in self.source:
+            for line in itertools.islice(self.source, self.limit):
                 line = utils.to_unicode(line).split()
                 i = 0
                 while i < len(line):
-                    yield line[i:(i + self.max_sentence_length)]
+                    yield line[i : i + self.max_sentence_length]
                     i += self.max_sentence_length
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
             with utils.smart_open(self.source) as fin:
-                for line in fin:
+                for line in itertools.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
                     i = 0
                     while i < len(line):
-                        yield line[i:(i + self.max_sentence_length)]
+                        yield line[i : i + self.max_sentence_length]
                         i += self.max_sentence_length
 
 
