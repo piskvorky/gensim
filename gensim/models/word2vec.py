@@ -956,7 +956,8 @@ class Word2Vec(utils.SaveLoad):
                 for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
                     vout.write(utils.to_utf8("%s %s\n" % (word, vocab.count)))
         logger.info("storing %sx%s projection weights into %s" % (len(self.vocab), self.vector_size, fname))
-        assert (len(self.vocab), self.vector_size) == self.syn0.shape
+        if not (len(self.vocab), self.vector_size) == self.syn0.shape:
+            logger.error("syn0.shape doesn't match vocab size & dimensions")
         with utils.smart_open(fname, 'wb') as fout:
             fout.write(utils.to_utf8("%s %s\n" % self.syn0.shape))
             # store in sorted order: most frequent words at the top
