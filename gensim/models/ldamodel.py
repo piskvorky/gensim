@@ -310,7 +310,6 @@ class LdaModel(interfaces.TransformationABC):
         self.state.sstats = numpy.random.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
         self.expElogbeta = numpy.exp(dirichlet_expectation(self.state.sstats))
 
-
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
             self.update(corpus)
