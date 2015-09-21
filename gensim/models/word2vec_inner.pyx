@@ -300,6 +300,8 @@ def train_sentence_sg(model, sentence, alpha, _work):
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
 
+    # TODO: batching, add another loop somewhere around here, looping over the sentences in the batch.
+
     vlookup = model.vocab
     i = 0
     for token in sentence:

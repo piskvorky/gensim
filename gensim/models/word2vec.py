@@ -627,7 +627,7 @@ class Word2Vec(utils.SaveLoad):
         work, neu1 = inits
         tally = 0
         raw_tally = 0
-        for sentence in job:
+        for sentence in job:  # TODO: batching, send a set of sentences to the train_sentence_sg Cython method. Sum of sentence lengths should not exceed MAX_SENTENCE_LENGTH (probably just import this constant directly from word2vec_inner.pyx).
             if self.sg:
                 tally += train_sentence_sg(self, sentence, alpha, work)
             else:
@@ -729,6 +729,7 @@ class Word2Vec(utils.SaveLoad):
         # fill jobs queue with (sentence, alpha) job tuples
         while True:
             try:
+                # TODO: batching, consider: concatenate items while sum of sentence lengths is below MAX_SENTENCE_LENGTH, and then submit to queue. NOTE: this will be unnecessary if the jobs already have large batches.
                 job_no, items = next(jobs_source)
                 logger.debug("putting job #%i in the queue at alpha %.05f", job_no, next_alpha)
                 job_queue.put((items, next_alpha))
