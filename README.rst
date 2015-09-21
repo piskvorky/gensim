@@ -19,7 +19,7 @@ Target audience is the *natural language processing* (NLP) and *information retr
 Features
 ---------
 
-* All algorithms are **memory-independent** w.r.t. the corpus size (can process input larger than RAM),
+* All algorithms are **memory-independent** w.r.t. the corpus size (can process input larger than RAM, streamed, out-of-core),
 * **Intuitive interfaces**
 
   * easy to plug in your own input corpus/datastream (trivial streaming API)

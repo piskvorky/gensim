@@ -11,6 +11,7 @@ This module contains various general utility functions.
 from __future__ import with_statement
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -200,8 +201,10 @@ def simple_preprocess(doc, deacc=False, min_len=2, max_len=15):
     tokens = unicode strings, that won't be processed any further.
 
     """
-    tokens = [token for token in tokenize(doc, lower=True, deacc=deacc, errors='ignore')
-            if min_len <= len(token) <= max_len and not token.startswith('_')]
+    tokens = [
+        token for token in tokenize(doc, lower=True, deacc=deacc, errors='ignore')
+        if min_len <= len(token) <= max_len and not token.startswith('_')
+    ]
     return tokens
 
 
@@ -699,13 +702,19 @@ class SlicedCorpus(SaveLoad):
         Negative slicing can only be used if the corpus is indexable.
         Otherwise, the corpus will be iterated over.
 
+        Slice can also be a numpy.ndarray to support fancy indexing.
+
+        NOTE: calculating the size of a SlicedCorpus is expensive
+        when using a slice as the corpus has to be iterated over once.
+        Using a list or numpy.ndarray does not have this drawback, but
+        consumes more memory.
         """
         self.corpus = corpus
         self.slice_ = slice_
         self.length = None
 
     def __iter__(self):
-        if hasattr(self.corpus, 'index') and self.corpus.index:
+        if hasattr(self.corpus, 'index') and len(self.corpus.index) > 0:
             return (self.corpus.docbyoffset(i) for i in
                     self.corpus.index[self.slice_])
         else:
@@ -715,7 +724,10 @@ class SlicedCorpus(SaveLoad):
     def __len__(self):
         # check cached length, calculate if needed
         if self.length is None:
-            self.length = sum(1 for x in self)
+            if isinstance(self.slice_, (list, numpy.ndarray)):
+                self.length = len(self.slice_)
+            else:
+                self.length = sum(1 for x in self)
 
         return self.length
 
@@ -792,7 +804,6 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
         yield wrapped_chunk.pop()
 
 grouper = chunkize_serial
-
 
 
 class InputQueue(multiprocessing.Process):
@@ -897,14 +908,15 @@ def pickle(obj, fname, protocol=2):
     Python 2.x and 3.x.
 
     """
-    with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
+    with smart_open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
         _pickle.dump(obj, fout, protocol=protocol)
 
 
 def unpickle(fname):
     """Load pickled object from `fname`"""
     with smart_open(fname) as f:
-        return _pickle.load(f)
+        # Because of loading from S3 load can't be used (missing readline in smart_open)
+        return _pickle.loads(f.read())
 
 
 def revdict(d):
@@ -1077,7 +1089,7 @@ def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
     return data
 
 
-def prune_vocab(vocab, min_reduce):
+def prune_vocab(vocab, min_reduce, trim_rule=None):
     """
     Remove all entries from the `vocab` dictionary with count smaller than `min_reduce`.
 
@@ -1087,9 +1099,29 @@ def prune_vocab(vocab, min_reduce):
     result = 0
     old_len = len(vocab)
     for w in list(vocab):  # make a copy of dict's keys
-        if vocab[w] <= min_reduce:
+        if not keep_vocab_item(w, vocab[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
             result += vocab[w]
             del vocab[w]
     logger.info("pruned out %i tokens with count <=%i (before %i, after %i)",
                 old_len - len(vocab), min_reduce, old_len, len(vocab))
     return result
+
+
+RULE_DEFAULT = 0
+RULE_DISCARD = 1
+RULE_KEEP = 2
+
+
+def keep_vocab_item(word, count, min_count, trim_rule=None):
+    default_res = count >= min_count
+
+    if trim_rule is None:
+        return default_res
+    else:
+        rule_res = trim_rule(word, count, min_count)
+        if rule_res == RULE_KEEP:
+            return True
+        elif rule_res == RULE_DISCARD:
+            return False
+        else:
+            return default_res

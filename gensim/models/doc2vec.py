@@ -390,8 +390,9 @@ class DocvecsArray(utils.SaveLoad):
                 self.doctag_syn0norm = self.doctag_syn0
             else:
                 if self.mapfile_path:
-                    self.doctag_syn0norm = np_memmap(self.mapfile_path+'.doctag_syn0norm', dtype=REAL,
-                                                     mode='w+', shape=self.doctag_syn0.shape)
+                    self.doctag_syn0norm = np_memmap(
+                        self.mapfile_path+'.doctag_syn0norm', dtype=REAL,
+                        mode='w+', shape=self.doctag_syn0.shape)
                 else:
                     self.doctag_syn0norm = empty(self.doctag_syn0.shape, dtype=REAL)
                 np_divide(self.doctag_syn0, sqrt((self.doctag_syn0 ** 2).sum(-1))[..., newaxis], self.doctag_syn0norm)
@@ -418,10 +419,14 @@ class DocvecsArray(utils.SaveLoad):
             positive = [positive]
 
         # add weights for each doc, if not already present; default to 1.0 for positive and -1.0 for negative docs
-        positive = [(doc, 1.0) if isinstance(doc, string_types + (ndarray,) + integer_types)
-                    else doc for doc in positive]
-        negative = [(doc, -1.0) if isinstance(doc, string_types + (ndarray,) + integer_types)
-                    else doc for doc in negative]
+        positive = [
+            (doc, 1.0) if isinstance(doc, string_types + (ndarray,) + integer_types)
+            else doc for doc in positive
+        ]
+        negative = [
+            (doc, -1.0) if isinstance(doc, string_types + (ndarray,) + integer_types)
+            else doc for doc in negative
+        ]
 
         # compute the weighted average of all docs
         all_docs, mean = set(), []
@@ -499,7 +504,7 @@ class Doc2Vec(Word2Vec):
     def __init__(self, documents=None, size=300, alpha=0.025, window=8, min_count=5,
                  max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
                  dm=1, hs=1, negative=0, dbow_words=0, dm_mean=0, dm_concat=0, dm_tag_count=1,
-                 docvecs=None, docvecs_mapfile=None, comment=None, **kwargs):
+                 docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, **kwargs):
         """
         Initialize the model from an iterable of `documents`. Each document is a
         TaggedDocument object that will be used for training.
@@ -553,6 +558,13 @@ class Doc2Vec(Word2Vec):
         `dbow_words` if set to 1 trains word-vectors (in skip-gram fashion) simultaneous with DBOW
         doc-vector training; default is 0 (faster training of doc-vectors only).
 
+        `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
+         in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
+         Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
+         returns either util.RULE_DISCARD, util.RULE_KEEP or util.RULE_DEFAULT.
+         Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
+          of the model.
+
         """
         super(Doc2Vec, self).__init__(
             size=size, alpha=alpha, window=window, min_count=min_count, max_vocab_size=max_vocab_size,
@@ -569,7 +581,7 @@ class Doc2Vec(Word2Vec):
         self.docvecs = docvecs or DocvecsArray(docvecs_mapfile)
         self.comment = comment
         if documents is not None:
-            self.build_vocab(documents)
+            self.build_vocab(documents, trim_rule=trim_rule)
             self.train(documents)
 
     @property
@@ -597,7 +609,7 @@ class Doc2Vec(Word2Vec):
         self.docvecs.borrow_from(other_model.docvecs)
         super(Doc2Vec, self).reset_from(other_model)
 
-    def scan_vocab(self, documents, progress_per=10000):
+    def scan_vocab(self, documents, progress_per=10000, trim_rule=None):
         logger.info("collecting all words and their counts")
         document_no = -1
         total_words = 0
@@ -622,7 +634,7 @@ class Doc2Vec(Word2Vec):
             total_words += len(document.words)
 
             if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                utils.prune_vocab(vocab, min_reduce)
+                utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
                 min_reduce += 1
 
         logger.info("collected %i word types and %i unique tags from a corpus of %i examples and %i words",
