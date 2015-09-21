@@ -406,7 +406,7 @@ class Word2Vec(utils.SaveLoad):
 
         `iter` = number of iterations (epochs) over the corpus.
 
-        `unknown_word` : if provided, this strintg is used for words that appear less than min_count in the vocabulary.
+        `unknown_word` : if provided, this string is used for words that appear less than min_count in the vocabulary.
         All queries to the Word2Vec object that target words that do not appear in the trained vocabulary are redirected
         to target the entry for the unknown_word.
         """
