@@ -1097,7 +1097,7 @@ class Word2Vec(utils.SaveLoad):
                         self.syn0[self.vocab[word].index] = weights
         logger.info("merged %d vectors into %s matrix from %s" % (overlap_count, self.syn0.shape, fname))
 
-    def most_similar(self, positive=[], negative=[], topn=10):
+    def most_similar(self, positive=[], negative=[], topn=10, limit=None):
         """
         Find the top-N most similar words. Positive words contribute positively towards the
         similarity, negative words negatively.
@@ -1145,7 +1145,8 @@ class Word2Vec(utils.SaveLoad):
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
 
-        dists = dot(self.syn0norm, mean)
+        limited = self.syn0norm if limit is None else self.syn0norm[:limit]
+        dists = dot(limited, mean)
         if not topn:
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
@@ -1386,7 +1387,7 @@ class Word2Vec(utils.SaveLoad):
                 ignore = set(self.vocab[v].index for v in [a, b, c])  # indexes of words to ignore
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
-                sims = most_similar(self, positive=[b, c], negative=[a], topn=False)
+                sims = most_similar(self, positive=[b, c], negative=[a], topn=False, limit=restrict_vocab)
                 for index in matutils.argsort(sims, reverse=True):
                     if index in ok_index and index not in ignore:
                         predicted = self.index2word[index]
