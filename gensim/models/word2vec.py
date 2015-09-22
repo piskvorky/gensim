@@ -93,6 +93,8 @@ from types import GeneratorType
 
 logger = logging.getLogger("gensim.models.word2vec")
 
+MAX_SENTENCE_LEN = 10000  # TODO: get this from word2vec_inner.
+
 try:
     from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
 except ImportError:
@@ -627,7 +629,21 @@ class Word2Vec(utils.SaveLoad):
         work, neu1 = inits
         tally = 0
         raw_tally = 0
-        for sentence in job:  # TODO: batching, send a set of sentences to the train_sentence_sg Cython method. Sum of sentence lengths should not exceed MAX_SENTENCE_LENGTH (probably just import this constant directly from word2vec_inner.pyx).
+        if not FAST_VERSION == -1 and self.sg:
+            sentences = []
+            sentences_len = 0
+            for sentence in job:
+                # If, by appending the sentence to the sentence list, we do not exceed MAX_SENTENCE_LEN, append the sentence and continue.
+                # Else, send the sentences to train_sentence_sg.
+                if sentences_len + len(sentence) < MAX_SENTENCE_LEN:
+                    sentences.append(sentence)
+                    sentences_len += len(sentence)
+                else:
+                    tally += train_sentence_sg(self, sentences, alpha, work)
+                    raw_tally += sentences_len
+                    sentences = []
+                    sentences_len = 0
+        for sentence in job:
             if self.sg:
                 tally += train_sentence_sg(self, sentence, alpha, work)
             else:
