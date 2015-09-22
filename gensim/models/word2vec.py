@@ -738,6 +738,7 @@ class Word2Vec(utils.SaveLoad):
         done_jobs = 0
         next_alpha = self.alpha
         jobs_source = enumerate(utils.grouper(sentences, chunksize))
+        job_no = -1
         # fill jobs queue with (sentence, alpha) job tuples
         while True:
             try:
@@ -756,6 +757,12 @@ class Word2Vec(utils.SaveLoad):
                         next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
                     next_alpha = max(next_alpha, self.min_alpha)
             except StopIteration:
+                if job_no == -1 and self.train_count == 0:
+                    logger.warning(
+                        "train() called with empty iterator (if not intended, "
+                        "be sure to provide a corpus that offers restartable "
+                        "iteration)."
+                    )
                 logger.info(
                     "reached end of input; waiting to finish %i outstanding jobs",
                     job_no - done_jobs + 1)
