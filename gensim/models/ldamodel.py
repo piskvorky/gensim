@@ -308,7 +308,7 @@ class LdaModel(interfaces.TransformationABC):
         # Initialize the variational distribution q(beta|lambda)
         self.state = LdaState(self.eta, (self.num_topics, self.num_terms))
         self.state.sstats = numpy.random.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
-        self.sync_state()
+        self.expElogbeta = numpy.exp(dirichlet_expectation(self.state.sstats))
 
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
@@ -797,11 +797,13 @@ class LdaModel(interfaces.TransformationABC):
                     # l_docs is v_l^(t)
                     l_docs = doc_word_list[l]
 
-                    # co_doc_frequency is D(v_m^(t), v_l^(t))
-                    co_doc_frequency = len(m_docs.intersection(l_docs))
+                    # make sure this word appears in some documents.
+                    if len(l_docs) > 0:
+                        # co_doc_frequency is D(v_m^(t), v_l^(t))
+                        co_doc_frequency = len(m_docs.intersection(l_docs))
 
-                    # add to the coherence sum for these two words m, l
-                    coherence += numpy.log((co_doc_frequency + 1.0) / len(l_docs))
+                        # add to the coherence sum for these two words m, l
+                        coherence += numpy.log((co_doc_frequency + 1.0) / len(l_docs))
 
             coherence_scores.append((str_topics[t], coherence))
 

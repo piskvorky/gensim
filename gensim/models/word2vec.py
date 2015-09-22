@@ -76,6 +76,7 @@ from timeit import default_timer
 from copy import deepcopy
 from collections import defaultdict
 import threading
+import itertools
 
 from gensim.utils import keep_vocab_item
 
@@ -86,7 +87,7 @@ except ImportError:
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones
+    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from six import iteritems, itervalues, string_types
@@ -737,6 +738,7 @@ class Word2Vec(utils.SaveLoad):
         done_jobs = 0
         next_alpha = self.alpha
         jobs_source = enumerate(utils.grouper(sentences, chunksize))
+        job_no = -1
         # fill jobs queue with (sentence, alpha) job tuples
         while True:
             try:
@@ -755,6 +757,12 @@ class Word2Vec(utils.SaveLoad):
                         next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
                     next_alpha = max(next_alpha, self.min_alpha)
             except StopIteration:
+                if job_no == -1 and self.train_count == 0:
+                    logger.warning(
+                        "train() called with empty iterator (if not intended, "
+                        "be sure to provide a corpus that offers restartable "
+                        "iteration)."
+                    )
                 logger.info(
                     "reached end of input; waiting to finish %i outstanding jobs",
                     job_no - done_jobs + 1)
@@ -950,7 +958,7 @@ class Word2Vec(utils.SaveLoad):
 
         """
         if fvocab is not None:
-            logger.info("Storing vocabulary in %s" % (fvocab))
+            logger.info("storing vocabulary in %s" % (fvocab))
             with utils.smart_open(fvocab, 'wb') as vout:
                 for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
                     vout.write(utils.to_utf8("%s %s\n" % (word, vocab.count)))
@@ -986,19 +994,38 @@ class Word2Vec(utils.SaveLoad):
         """
         counts = None
         if fvocab is not None:
-            logger.info("loading word counts from %s" % (fvocab))
+            logger.info("loading word counts from %s", fvocab)
             counts = {}
             with utils.smart_open(fvocab) as fin:
                 for line in fin:
                     word, count = utils.to_unicode(line).strip().split()
                     counts[word] = int(count)
 
-        logger.info("loading projection weights from %s" % (fname))
+        logger.info("loading projection weights from %s", fname)
         with utils.smart_open(fname) as fin:
             header = utils.to_unicode(fin.readline(), encoding=encoding)
             vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
-            result = Word2Vec(size=vector_size)
+            result = cls(size=vector_size)
             result.syn0 = zeros((vocab_size, vector_size), dtype=REAL)
+
+            def add_word(word, weights):
+                word_id = len(result.vocab)
+                if word in result.vocab:
+                    logger.warning("duplicate word '%s' in %s, ignoring all but first", word, fname)
+                    return
+                if counts is None:
+                    # most common scenario: no vocab file given. just make up some bogus counts, in descending order
+                    result.vocab[word] = Vocab(index=word_id, count=vocab_size - word_id)
+                elif word in counts:
+                    # use count from the vocab file
+                    result.vocab[word] = Vocab(index=word_id, count=counts[word])
+                else:
+                    # vocab file given, but word is missing -- set count to None (TODO: or raise?)
+                    logger.warning("vocabulary file is incomplete: '%s' is missing", word)
+                    result.vocab[word] = Vocab(index=word_id, count=None)
+                result.syn0[word_id] = weights
+                result.index2word.append(word)
+
             if binary:
                 binary_len = dtype(REAL).itemsize * vector_size
                 for line_no in xrange(vocab_size):
@@ -1009,33 +1036,25 @@ class Word2Vec(utils.SaveLoad):
                         if ch == b' ':
                             break
                         if ch != b'\n':  # ignore newlines in front of words (some binary files have)
-
                             word.append(ch)
                     word = utils.to_unicode(b''.join(word), encoding=encoding)
-                    if counts is None:
-                        result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
-                    elif word in counts:
-                        result.vocab[word] = Vocab(index=line_no, count=counts[word])
-                    else:
-                        logger.warning("vocabulary file is incomplete")
-                        result.vocab[word] = Vocab(index=line_no, count=None)
-                    result.index2word.append(word)
-                    result.syn0[line_no] = fromstring(fin.read(binary_len), dtype=REAL)
+                    weights = fromstring(fin.read(binary_len), dtype=REAL)
+                    add_word(word, weights)
             else:
                 for line_no, line in enumerate(fin):
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
                     word, weights = parts[0], list(map(REAL, parts[1:]))
-                    if counts is None:
-                        result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
-                    elif word in counts:
-                        result.vocab[word] = Vocab(index=line_no, count=counts[word])
-                    else:
-                        logger.warning("vocabulary file is incomplete")
-                        result.vocab[word] = Vocab(index=line_no, count=None)
-                    result.index2word.append(word)
-                    result.syn0[line_no] = weights
+                    add_word(word, weights)
+        if result.syn0.shape[0] != len(result.vocab):
+            logger.info(
+                "duplicate words detected, shrinking matrix size from %i to %i",
+                result.syn0.shape[0], len(result.vocab)
+            )
+            result.syn0 = ascontiguousarray(result.syn0[: len(result.vocab)])
+        assert (len(result.vocab), result.vector_size) == result.syn0.shape
+
         logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
         result.init_sims(norm_only)
         return result
@@ -1415,7 +1434,7 @@ class Word2Vec(utils.SaveLoad):
         # update older models
         if hasattr(model, 'table'):
             delattr(model, 'table')  # discard in favor of cum_table
-        if model.negative:
+        if model.negative and hasattr(model, 'index2word'):
             model.make_cum_table()  # rebuild cum_table from vocabulary
         if not hasattr(model, 'corpus_count'):
             model.corpus_count = None
@@ -1425,7 +1444,7 @@ class Word2Vec(utils.SaveLoad):
             else:
                 v.sample_int = int(round(v.sample_probability * 2**32))
                 del v.sample_probability
-        if not hasattr(model, 'syn0_lockf'):
+        if not hasattr(model, 'syn0_lockf') and hasattr(model, 'syn0'):
             model.syn0_lockf = ones(len(model.syn0), dtype=REAL)
         if not hasattr(model, 'random'):
             model.random = random.RandomState(model.seed)
@@ -1495,10 +1514,14 @@ class Text8Corpus(object):
 
 
 class LineSentence(object):
-    """Simple format: one sentence = one line; words already preprocessed and separated by whitespace."""
-    def __init__(self, source, max_sentence_length=10000):
+    """
+    Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
+    """
+
+    def __init__(self, source, max_sentence_length=10000, limit=None):
         """
-        `source` can be either a string or a file object.
+        `source` can be either a string or a file object. Clip the file to the first
+        `limit` lines (or no clipped if limit is None, the default).
 
         Example::
 
@@ -1512,6 +1535,7 @@ class LineSentence(object):
         """
         self.source = source
         self.max_sentence_length = max_sentence_length
+        self.limit = limit
 
     def __iter__(self):
         """Iterate through the lines in the source."""
@@ -1519,20 +1543,20 @@ class LineSentence(object):
             # Assume it is a file-like object and try treating it as such
             # Things that don't have seek will trigger an exception
             self.source.seek(0)
-            for line in self.source:
+            for line in itertools.islice(self.source, self.limit):
                 line = utils.to_unicode(line).split()
                 i = 0
                 while i < len(line):
-                    yield line[i:(i + self.max_sentence_length)]
+                    yield line[i : i + self.max_sentence_length]
                     i += self.max_sentence_length
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
             with utils.smart_open(self.source) as fin:
-                for line in fin:
+                for line in itertools.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
                     i = 0
                     while i < len(line):
-                        yield line[i:(i + self.max_sentence_length)]
+                        yield line[i : i + self.max_sentence_length]
                         i += self.max_sentence_length
 
 

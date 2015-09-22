@@ -806,7 +806,6 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
 grouper = chunkize_serial
 
 
-
 class InputQueue(multiprocessing.Process):
     def __init__(self, q, corpus, chunksize, maxsize, as_numpy):
         super(InputQueue, self).__init__()
@@ -909,7 +908,7 @@ def pickle(obj, fname, protocol=2):
     Python 2.x and 3.x.
 
     """
-    with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
+    with smart_open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
         _pickle.dump(obj, fout, protocol=protocol)
 
 

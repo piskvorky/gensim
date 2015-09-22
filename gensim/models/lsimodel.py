@@ -63,7 +63,7 @@ from six import iterkeys
 from six.moves import xrange
 
 
-logger = logging.getLogger('gensim.models.lsimodel')
+logger = logging.getLogger(__name__)
 
 
 # accuracy defaults for the multi-pass stochastic algo
