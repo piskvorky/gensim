@@ -132,10 +132,14 @@ class TestSummarizationTest(unittest.TestCase):
     def test_keywords_runs(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
-        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
+        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.txt")) as f:
             text = f.read()
 
         kwds = keywords(text)
         self.assertTrue(len(kwds.splitlines()))
+
+        kwds_u = keywords(utils.to_unicode(text))
+        self.assertTrue(len(kwds_u.splitlines()))
+
         kwds_lst = keywords(text, split=True)
         self.assertTrue(len(kwds_lst))

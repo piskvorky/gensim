@@ -8,7 +8,7 @@ from gensim.summarization.textcleaner import clean_text_by_word as _clean_text_b
 from gensim.summarization.textcleaner import tokenize_by_word as _tokenize_by_word
 from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
-from gensim.utils import to_unicode, to_utf8
+from gensim.utils import to_unicode
 from itertools import combinations as _combinations
 from six.moves.queue import Queue as _Queue
 from six.moves import xrange
@@ -188,7 +188,7 @@ def _format_results(_keywords, combined_keywords, split, scores):
         return [(word, _get_average_score(word, _keywords)) for word in combined_keywords]
     if split:
         return combined_keywords
-    return to_utf8("\n".join(combined_keywords))
+    return "\n".join(combined_keywords)
 
 
 def keywords(text, ratio=0.2, words=None, split=False, scores=False):
