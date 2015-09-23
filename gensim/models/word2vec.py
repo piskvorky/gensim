@@ -342,7 +342,7 @@ class Word2Vec(utils.SaveLoad):
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
             sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0,
-            trim_rule=None):
+            trim_rule=None, sorted_vocab=1):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -398,6 +398,9 @@ class Word2Vec(utils.SaveLoad):
          Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
           of the model.
 
+        `sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before
+        assigning word indexes.
+
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
@@ -424,6 +427,7 @@ class Word2Vec(utils.SaveLoad):
         self.null_word = null_word
         self.train_count = 0
         self.total_train_time = 0
+        self.sorted_vocab = sorted_vocab
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
@@ -608,6 +612,8 @@ class Word2Vec(utils.SaveLoad):
         """Build tables and model weights based on final vocabulary settings."""
         if not self.index2word:
             self.scale_vocab()
+        if self.sorted_vocab:
+            self.sort_vocab()
         if self.hs:
             # add info about each word's Huffman encoding
             self.create_binary_tree()
@@ -623,6 +629,14 @@ class Word2Vec(utils.SaveLoad):
             self.vocab[word] = v
         # set initial input/projection and hidden weights
         self.reset_weights()
+
+    def sort_vocab(self):
+        """Sort the vocabulary so the most frequent words have the lowest indexes."""
+        if hasattr(self, 'syn0'):
+            raise RuntimeError("must sort before initializing vectors/weights")
+        self.index2word.sort(key=lambda word: self.vocab[word].count, reverse=True)
+        for i, word in enumerate(self.index2word):
+            self.vocab[word].index = i
 
     def reset_from(self, other_model):
         """
@@ -1104,7 +1118,7 @@ class Word2Vec(utils.SaveLoad):
                         self.syn0[self.vocab[word].index] = weights
         logger.info("merged %d vectors into %s matrix from %s" % (overlap_count, self.syn0.shape, fname))
 
-    def most_similar(self, positive=[], negative=[], topn=10):
+    def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None):
         """
         Find the top-N most similar words. Positive words contribute positively towards the
         similarity, negative words negatively.
@@ -1115,6 +1129,11 @@ class Word2Vec(utils.SaveLoad):
         word2vec implementation.
 
         If topn is False, most_similar returns the vector of similarity scores.
+
+        `restrict_vocab` is an optional integer which limits the range of vectors which
+        are searched for most-similar values. For example, restrict_vocab=10000 would
+        only check the first 10000 word vectors in the vocabulary order. (This may be
+        meaningful if you've sorted the vocabulary by descending frequency.)
 
         Example::
 
@@ -1152,7 +1171,8 @@ class Word2Vec(utils.SaveLoad):
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
 
-        dists = dot(self.syn0norm, mean)
+        limited = self.syn0norm if restrict_vocab is None else self.syn0norm[:restrict_vocab]
+        dists = dot(limited, mean)
         if not topn:
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
@@ -1393,7 +1413,7 @@ class Word2Vec(utils.SaveLoad):
                 ignore = set(self.vocab[v].index for v in [a, b, c])  # indexes of words to ignore
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
-                sims = most_similar(self, positive=[b, c], negative=[a], topn=False)
+                sims = most_similar(self, positive=[b, c], negative=[a], topn=False, restrict_vocab=restrict_vocab)
                 for index in matutils.argsort(sims, reverse=True):
                     if index in ok_index and index not in ignore:
                         predicted = self.index2word[index]
