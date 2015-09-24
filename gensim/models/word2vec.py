@@ -96,7 +96,7 @@ logger = logging.getLogger("gensim.models.word2vec")
 MAX_SENTENCE_LEN = 10000  # TODO: get this from word2vec_inner.
 
 try:
-    from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
+    from gensim.models.word2vec_inner import train_sentence_sg, train_batch_sg, train_sentence_cbow, FAST_VERSION
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
