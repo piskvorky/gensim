@@ -93,8 +93,6 @@ from types import GeneratorType
 
 logger = logging.getLogger("gensim.models.word2vec")
 
-MAX_SENTENCE_LEN = 10000  # TODO: get this from word2vec_inner.
-
 try:
     from gensim.models.word2vec_inner import train_sentence_sg, train_batch_sg, train_sentence_cbow, FAST_VERSION
 except ImportError:
@@ -630,7 +628,6 @@ class Word2Vec(utils.SaveLoad):
         work, neu1 = inits
         tally = 0
         raw_tally = 0
-        logging.info('Batch size: %d sentences.', len(job)) # TODO: remove when not needed anymore.
         if not FAST_VERSION == -1 and self.sg and self.batch:  # TODO: do for cbow also.
             tally += train_batch_sg(self, job, alpha, work)
             for sentence in job:
@@ -739,25 +736,17 @@ class Word2Vec(utils.SaveLoad):
         jobs_source = []
         sentence_list = []
         sentences_len = 0
-        sent_idx = 0
-        while True:
-            sent = sentences[sent_idx]
+        MAX_SENTENCE_LEN = 200  # TODO: consider proper value for this constant.
+        for sent in sentences:
             if sentences_len + len(sent) < MAX_SENTENCE_LEN:
                 # Append sentence to job batch and proceed.
                 sentence_list.append(sent)
                 sentences_len += len(sent)
-                sent_idx += 1
             else:
                 # Append batch to job list.
                 jobs_source.append(sentence_list)
-                sentence_list = []
-                sentences_len = 0
-            if sent_idx == len(sentences) - 1:
-                if sentences_len > 0:
-                    jobs_source.append(sentence_list)
-                    sentence_list = []
-                    sentences_len = 0
-                break
+                sentence_list = [sent]
+                sentences_len = len(sent)
 
         jobs_source = enumerate(jobs_source)
 

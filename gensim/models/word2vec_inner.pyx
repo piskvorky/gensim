@@ -362,7 +362,8 @@ def train_batch_sg(model, sentences, alpha, _work):
 
     cdef int i, j, k
     cdef long result = 0
-    cdef int num_sentences = len(sentences)
+    cdef int num_sentences = 0
+    cdef int sent_idx = 0
 
     # For hierarchical softmax
     cdef REAL_t *syn1
@@ -408,6 +409,7 @@ def train_batch_sg(model, sentences, alpha, _work):
             if i == MAX_SENTENCE_LEN:
                 break  # TODO: log warning, tally overflow?
         sentence_len[sent_idx] = i
+        num_sentences += 1
 
         # single randint() call avoids a big thread-sync slowdown
         for i, item in enumerate(model.random.randint(0, window, sentence_len[sent_idx])):
@@ -431,7 +433,7 @@ def train_batch_sg(model, sentences, alpha, _work):
                     if negative:
                         next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[sent_idx][i], indexes[sent_idx][j], _alpha, work, next_random, word_locks)
 
-    return result  # NOTE: this returns the sum of results from all the sentences in the batch.
+    return result
 
 
 def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
