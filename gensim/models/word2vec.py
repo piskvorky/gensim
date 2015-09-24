@@ -340,7 +340,7 @@ class Word2Vec(utils.SaveLoad):
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
-            sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0):
+            sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0, batch=False):  # TODO: remove "batch" input variable when done working on batching.
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -415,6 +415,7 @@ class Word2Vec(utils.SaveLoad):
         self.null_word = null_word
         self.train_count = 0
         self.total_train_time = 0
+        self.batch = batch
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -629,26 +630,11 @@ class Word2Vec(utils.SaveLoad):
         work, neu1 = inits
         tally = 0
         raw_tally = 0
-        # TODO: remove this log when done with batching tests.
-        logging.info('Num. of sentences in job: %d', len(job))
-        if not FAST_VERSION == -1 and self.sg:  # TODO: do for cbow also.
-            sentences = []
-            sentences_len = 0
-            # FIXME: last sentence is ignored.
+        logging.info('Batch size: %d sentences.', len(job)) # TODO: remove when not needed anymore.
+        if not FAST_VERSION == -1 and self.sg and self.batch:  # TODO: do for cbow also.
+            tally += train_batch_sg(self, job, alpha, work)
             for sentence in job:
-                # If, by appending the sentence to the sentence list, we do not exceed MAX_SENTENCE_LEN, append the sentence and continue.
-                # Else, send the sentences to train_sentence_sg.
-                if sentences_len + len(sentence) < MAX_SENTENCE_LEN:
-                    sentences.append(sentence)
-                    sentences_len += len(sentence)
-                else:
-                    # TODO: remove these logs when done with batching tests.
-                    logging.info('Num. of sentences in batch: %d', len(sentences))
-                    logging.info('Total length of sentences in batch: %d', sentences_len)
-                    tally += train_batch_sg(self, sentences, alpha, work)
-                    raw_tally += sentences_len
-                    sentences = []
-                    sentences_len = 0
+                raw_tally += len(sentence)
         else:
             for sentence in job:
                 if self.sg:
@@ -748,11 +734,36 @@ class Word2Vec(utils.SaveLoad):
         push_done = False
         done_jobs = 0
         next_alpha = self.alpha
-        jobs_source = enumerate(utils.grouper(sentences, chunksize))
+
+        # Make jobs with batches of sentences.
+        jobs_source = []
+        sentence_list = []
+        sentences_len = 0
+        sent_idx = 0
+        while True:
+            sent = sentences[sent_idx]
+            if sentences_len + len(sent) < MAX_SENTENCE_LEN:
+                # Append sentence to job batch and proceed.
+                sentence_list.append(sent)
+                sentences_len += len(sent)
+                sent_idx += 1
+            else:
+                # Append batch to job list.
+                jobs_source.append(sentence_list)
+                sentence_list = []
+                sentences_len = 0
+            if sent_idx == len(sentences) - 1:
+                if sentences_len > 0:
+                    jobs_source.append(sentence_list)
+                    sentence_list = []
+                    sentences_len = 0
+                break
+
+        jobs_source = enumerate(jobs_source)
+
         # fill jobs queue with (sentence, alpha) job tuples
         while True:
             try:
-                # TODO: batching, consider: concatenate items while sum of sentence lengths is below MAX_SENTENCE_LENGTH, and then submit to queue. NOTE: this will be unnecessary if the jobs already have large batches.
                 job_no, items = next(jobs_source)
                 logger.debug("putting job #%i in the queue at alpha %.05f", job_no, next_alpha)
                 job_queue.put((items, next_alpha))
