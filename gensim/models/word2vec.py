@@ -629,7 +629,9 @@ class Word2Vec(utils.SaveLoad):
         work, neu1 = inits
         tally = 0
         raw_tally = 0
-        if not FAST_VERSION == -1 and self.sg:
+        # TODO: remove this log when done with batching tests.
+        logging.info('Num. of sentences in job: %d', len(job))
+        if not FAST_VERSION == -1 and self.sg:  # TODO: do for cbow also.
             sentences = []
             sentences_len = 0
             for sentence in job:
@@ -639,16 +641,20 @@ class Word2Vec(utils.SaveLoad):
                     sentences.append(sentence)
                     sentences_len += len(sentence)
                 else:
-                    tally += train_sentence_sg(self, sentences, alpha, work)
+                    # TODO: remove these logs when done with batching tests.
+                    logging.info('Num. of sentences in batch: %d', len(sentences))
+                    logging.info('Total length of sentences in batch: %d', sentences_len)
+                    tally += train_batch_sg(self, sentences, alpha, work)
                     raw_tally += sentences_len
                     sentences = []
                     sentences_len = 0
-        for sentence in job:
-            if self.sg:
-                tally += train_sentence_sg(self, sentence, alpha, work)
-            else:
-                tally += train_sentence_cbow(self, sentence, alpha, work, neu1)
-            raw_tally += len(sentence)
+        else:
+            for sentence in job:
+                if self.sg:
+                    tally += train_sentence_sg(self, sentence, alpha, work)
+                else:
+                    tally += train_sentence_cbow(self, sentence, alpha, work, neu1)
+                raw_tally += len(sentence)
         return (tally, raw_tally)
 
     def _raw_word_count(self, items):

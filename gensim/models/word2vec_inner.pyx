@@ -254,8 +254,95 @@ cdef unsigned long long fast_sentence_cbow_neg(
     return next_random
 
 
+def train_sentence_sg(model, sentence, alpha, _work):
+    cdef int hs = model.hs
+    cdef int negative = model.negative
+    cdef int sample = (model.sample != 0)
 
-def train_sentence_sg(model, sentences, alpha, _work):
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
+    cdef REAL_t *work
+    cdef REAL_t _alpha = alpha
+    cdef int size = model.layer1_size
+
+    cdef int codelens[MAX_SENTENCE_LEN]
+    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
+    cdef int sentence_len
+    cdef int window = model.window
+
+    cdef int i, j, k
+    cdef long result = 0
+
+    # For hierarchical softmax
+    cdef REAL_t *syn1
+    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
+    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
+
+    # For negative sampling
+    cdef REAL_t *syn1neg
+    cdef np.uint32_t *cum_table
+    cdef unsigned long long cum_table_len
+    # for sampling (negative and frequent-word downsampling)
+    cdef unsigned long long next_random
+
+    if hs:
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+
+    if negative:
+        syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
+        cum_table_len = len(model.cum_table)
+    if negative or sample:
+        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
+
+    # convert Python structures to primitive types, so we can release the GIL
+    work = <REAL_t *>np.PyArray_DATA(_work)
+
+    vlookup = model.vocab
+    i = 0
+    for token in sentence:
+        word = vlookup[token] if token in vlookup else None
+        if word is None:
+            continue  # leaving i unchanged/shortening sentence
+        if sample and word.sample_int < random_int32(&next_random):
+            continue
+        indexes[i] = word.index
+        if hs:
+            codelens[i] = <int>len(word.code)
+            codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+            points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+        result += 1
+        i += 1
+        if i == MAX_SENTENCE_LEN:
+            break  # TODO: log warning, tally overflow?
+    sentence_len = i
+
+    # single randint() call avoids a big thread-sync slowdown
+    for i, item in enumerate(model.random.randint(0, window, sentence_len)):
+        reduced_windows[i] = item
+
+    # release GIL & train on the sentence
+    with nogil:
+        for i in range(sentence_len):
+            j = i - window + reduced_windows[i]
+            if j < 0:
+                j = 0
+            k = i + window + 1 - reduced_windows[i]
+            if k > sentence_len:
+                k = sentence_len
+            for j in range(j, k):
+                if j == i:
+                    continue
+                if hs:
+                    fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks)
+                if negative:
+                    next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
+
+    return result
+
+
+def train_batch_sg(model, sentences, alpha, _work):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.sample != 0)
