@@ -634,6 +634,7 @@ class Word2Vec(utils.SaveLoad):
         if not FAST_VERSION == -1 and self.sg:  # TODO: do for cbow also.
             sentences = []
             sentences_len = 0
+            # FIXME: last sentence is ignored.
             for sentence in job:
                 # If, by appending the sentence to the sentence list, we do not exceed MAX_SENTENCE_LEN, append the sentence and continue.
                 # Else, send the sentences to train_sentence_sg.

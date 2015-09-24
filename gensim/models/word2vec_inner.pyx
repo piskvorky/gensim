@@ -25,6 +25,7 @@ except ImportError:
 REAL = np.float32
 
 DEF MAX_SENTENCE_LEN = 10000
+DEF MAX_NUM_SENTENCES = 100
 
 cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(fblas.scopy._cpointer)  # y = x
 cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(fblas.saxpy._cpointer)  # y += alpha * x
@@ -352,21 +353,21 @@ def train_batch_sg(model, sentences, alpha, _work):
     cdef REAL_t *work
     cdef REAL_t _alpha = alpha
     cdef int size = model.layer1_size
-    cdef int num_sentences = len(sentences)
 
-    cdef int codelens[num_sentences][MAX_SENTENCE_LEN]
-    cdef np.uint32_t indexes[num_sentences][MAX_SENTENCE_LEN]
-    cdef np.uint32_t reduced_windows[num_sentences][MAX_SENTENCE_LEN]
-    cdef int sentence_len[num_sentences]
+    cdef int codelens[MAX_NUM_SENTENCES][MAX_SENTENCE_LEN]
+    cdef np.uint32_t indexes[MAX_NUM_SENTENCES][MAX_SENTENCE_LEN]
+    cdef np.uint32_t reduced_windows[MAX_NUM_SENTENCES][MAX_SENTENCE_LEN]
+    cdef int sentence_len[MAX_NUM_SENTENCES]
     cdef int window = model.window
 
     cdef int i, j, k
     cdef long result = 0
+    cdef int num_sentences = len(sentences)
 
     # For hierarchical softmax
     cdef REAL_t *syn1
-    cdef np.uint32_t *points[num_sentences][MAX_SENTENCE_LEN]
-    cdef np.uint8_t *codes[num_sentences][MAX_SENTENCE_LEN]
+    cdef np.uint32_t *points[MAX_NUM_SENTENCES][MAX_SENTENCE_LEN]
+    cdef np.uint8_t *codes[MAX_NUM_SENTENCES][MAX_SENTENCE_LEN]
 
     # For negative sampling
     cdef REAL_t *syn1neg
@@ -414,7 +415,7 @@ def train_batch_sg(model, sentences, alpha, _work):
 
     # release GIL & train on the sentence
     with nogil:
-        for sent_idx, sentence in enumerate(sentences):
+        for sent_idx in range(num_sentences):
             for i in range(sentence_len[sent_idx]):
                 j = i - window + reduced_windows[sent_idx][i]
                 if j < 0:
