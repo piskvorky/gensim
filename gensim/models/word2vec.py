@@ -989,7 +989,7 @@ class Word2Vec(utils.SaveLoad):
                     fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
 
     @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, norm_only=True, encoding='utf8'):
+    def load_word2vec_format(cls, fname, fvocab=None, binary=False, norm_only=True, encoding='utf8', unicode_errors='strict'):
         """
         Load the input-hidden weight matrix from the original C word2vec-tool format.
 
@@ -1051,12 +1051,12 @@ class Word2Vec(utils.SaveLoad):
                             break
                         if ch != b'\n':  # ignore newlines in front of words (some binary files have)
                             word.append(ch)
-                    word = utils.to_unicode(b''.join(word), encoding=encoding)
+                    word = utils.to_unicode(b''.join(word), encoding=encoding, errors=unicode_errors)
                     weights = fromstring(fin.read(binary_len), dtype=REAL)
                     add_word(word, weights)
             else:
                 for line_no, line in enumerate(fin):
-                    parts = utils.to_unicode(line.rstrip(), encoding=encoding).split(" ")
+                    parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
                     word, weights = parts[0], list(map(REAL, parts[1:]))
@@ -1073,7 +1073,7 @@ class Word2Vec(utils.SaveLoad):
         result.init_sims(norm_only)
         return result
 
-    def intersect_word2vec_format(self, fname, binary=False, encoding='utf8'):
+    def intersect_word2vec_format(self, fname, binary=False, encoding='utf8', unicode_errors='strict'):
         """
         Merge the input-hidden weight matrix from the original C word2vec-tool format
         given, where it intersects with the current vocabulary. (No words are added to the
@@ -1101,7 +1101,7 @@ class Word2Vec(utils.SaveLoad):
                             break
                         if ch != b'\n':  # ignore newlines in front of words (some binary files have)
                             word.append(ch)
-                    word = utils.to_unicode(b''.join(word), encoding=encoding)
+                    word = utils.to_unicode(b''.join(word), encoding=encoding, errors=unicode_errors)
                     weights = fromstring(fin.read(binary_len), dtype=REAL)
                     if word in self.vocab:
                         overlap_count += 1
@@ -1109,7 +1109,7 @@ class Word2Vec(utils.SaveLoad):
                         self.syn0_lockf[self.vocab[word].index] = 0.0  # lock it
             else:
                 for line_no, line in enumerate(fin):
-                    parts = utils.to_unicode(line.rstrip(), encoding=encoding).split(" ")
+                    parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
                     word, weights = parts[0], list(map(REAL, parts[1:]))
