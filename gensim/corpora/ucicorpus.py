@@ -43,9 +43,12 @@ class UciReader(MmReader):
 
         with utils.smart_open(self.input) as fin:
             self.num_docs = self.num_terms = self.num_nnz = 0
-            self.num_docs = int(next(fin).strip())
-            self.num_terms = int(next(fin).strip())
-            self.num_nnz = int(next(fin).strip())
+            try:
+                self.num_docs = int(next(fin).strip())
+                self.num_terms = int(next(fin).strip())
+                self.num_nnz = int(next(fin).strip())
+            except StopIteration:
+                pass
 
         logger.info('accepted corpus with %i documents, %i features, %i non-zero entries' %
             (self.num_docs, self.num_terms, self.num_nnz))
@@ -54,7 +57,8 @@ class UciReader(MmReader):
         for lineno, _ in enumerate(input_file):
             if lineno == 2:
                 break
-#endclass UciReader
+
+# endclass UciReader
 
 
 class UciWriter(MmWriter):
@@ -133,7 +137,8 @@ class UciWriter(MmWriter):
         writer.close()
         if index:
             return offsets
-#endclass UciWriter
+
+# endclass UciWriter
 
 
 class UciCorpus(UciReader, IndexedCorpus):
@@ -145,7 +150,7 @@ class UciCorpus(UciReader, IndexedCorpus):
         UciReader.__init__(self, fname)
 
         if fname_vocab is None:
-            fname_vocab = fname + '.vocab'
+            fname_vocab = utils.smart_extension(fname, '.vocab')
 
         self.fname = fname
         with utils.smart_open(fname_vocab) as fin:
@@ -208,7 +213,7 @@ class UciCorpus(UciReader, IndexedCorpus):
             num_terms = 1 + max([-1] + id2word.keys())
 
         # write out vocabulary
-        fname_vocab = fname + '.vocab'
+        fname_vocab = utils.smart_extension(fname, '.vocab')
         logger.info("saving vocabulary of %i words to %s" % (num_terms, fname_vocab))
         with utils.smart_open(fname_vocab, 'wb') as fout:
             for featureid in xrange(num_terms):
@@ -217,4 +222,5 @@ class UciCorpus(UciReader, IndexedCorpus):
         logger.info("storing corpus in UCI Bag-of-Words format: %s" % fname)
 
         return UciWriter.write_corpus(fname, corpus, index=True, progress_cnt=progress_cnt)
-#endclass UciCorpus
+
+# endclass UciCorpus

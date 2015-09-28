@@ -21,7 +21,7 @@ The wrapped model can NOT be updated with new documents for online training -- u
 
 Example:
 
->>> model = gensim.models.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet', corpus=my_corpus, num_topics=20, id2word=dictionary)
+>>> model = gensim.models.wrappers.LdaMallet('/Users/kofola/mallet-2.0.7/bin/mallet', corpus=my_corpus, num_topics=20, id2word=dictionary)
 >>> print model[my_vector]  # print LDA topics of a document
 
 .. [1] http://mallet.cs.umass.edu/
@@ -37,9 +37,9 @@ from subprocess import call
 
 import numpy
 
-from gensim import utils
+from gensim import utils, matutils
 
-logger = logging.getLogger('gensim.models.ldamallet')
+logger = logging.getLogger(__name__)
 
 
 def read_doctopics(fname, eps=1e-6):
@@ -139,7 +139,7 @@ class LdaMallet(utils.SaveLoad):
                 fout.write(utils.to_utf8("%s 0 %s\n" % (docno, ' '.join(tokens))))
 
         # convert the text file above into MALLET's internal format
-        cmd = self.mallet_path + " import-file --keep-sequence --remove-stopwords --token-regex '\S+' --input %s --output %s"
+        cmd = self.mallet_path + " import-file --preserve-case --keep-sequence --remove-stopwords --token-regex '\S+' --input %s --output %s"
         if infer:
             cmd += ' --use-pipe-from ' + self.fcorpusmallet()
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet() + '.infer')
@@ -172,7 +172,9 @@ class LdaMallet(utils.SaveLoad):
         cmd = self.mallet_path + " infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s"
         cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations)
         logger.info("inferring topics with MALLET LDA '%s'" % cmd)
-        call(cmd, shell=True)
+        retval = call(cmd, shell=True)
+        if retval != 0:
+            raise RuntimeError("MALLET failed with error %s on return" % retval)
         result = list(read_doctopics(self.fdoctopics() + '.infer'))
         return result if is_corpus else result[0]
 
@@ -187,7 +189,7 @@ class LdaMallet(utils.SaveLoad):
             _ = next(fin)  # beta
             for lineno, line in enumerate(fin):
                 line = utils.to_unicode(line)
-                doc, source, pos, typeindex, token, topic = line.split()
+                doc, source, pos, typeindex, token, topic = line.split(" ")
                 tokenid = self.id2word.token2id[token] if hasattr(self.id2word, 'token2id') else int(token)
                 wordtopics[int(topic), tokenid] += 1
         logger.info("loaded assigned topics for %i tokens" % wordtopics.sum())
@@ -195,32 +197,39 @@ class LdaMallet(utils.SaveLoad):
         self.print_topics(15)
 
 
-    def print_topics(self, topics=10, topn=10):
-        return self.show_topics(topics, topn, log=True)
+    def print_topics(self, num_topics=10, num_words=10):
+        return self.show_topics(num_topics, num_words, log=True)
 
-
-    def show_topics(self, topics=10, topn=10, log=False, formatted=True):
+    def load_document_topics(self):
         """
-        Print the `topN` most probable words for `topics` number of topics.
-        Set `topics=-1` to print all topics.
+        Return an iterator over the topic distribution of training corpus, by reading
+        the doctopics.txt generated during training.
+        """
+        return read_doctopics(self.fdoctopics())
+
+
+    def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
+        """
+        Print the `num_words` most probable words for `num_topics` number of topics.
+        Set `num_topics=-1` to print all topics.
 
         Set `formatted=True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
 
         """
-        if topics < 0 or topics >= self.num_topics:
-            topics = self.num_topics
-            chosen_topics = range(topics)
+        if num_topics < 0 or num_topics >= self.num_topics:
+            num_topics = self.num_topics
+            chosen_topics = range(num_topics)
         else:
-            topics = min(topics, self.num_topics)
+            num_topics = min(num_topics, self.num_topics)
             sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha)) # add a little random jitter, to randomize results around the same alpha
-            sorted_topics = list(numpy.argsort(sort_alpha))
-            chosen_topics = sorted_topics[ : topics/2] + sorted_topics[-topics/2 : ]
+            sorted_topics = list(matutils.argsort(sort_alpha))
+            chosen_topics = sorted_topics[ : num_topics//2] + sorted_topics[-num_topics//2 : ]
         shown = []
         for i in chosen_topics:
             if formatted:
-                topic = self.print_topic(i, topn=topn)
+                topic = self.print_topic(i, topn=num_words)
             else:
-                topic = self.show_topic(i, topn=topn)
+                topic = self.show_topic(i, topn=num_words)
             shown.append(topic)
             if log:
                 logger.info("topic #%i (%.3f): %s" % (i, self.alpha[i], topic))
@@ -229,8 +238,8 @@ class LdaMallet(utils.SaveLoad):
 
     def show_topic(self, topicid, topn=10):
         topic = self.wordtopics[topicid]
-        topic = topic / topic.sum() # normalize to probability dist
-        bestn = numpy.argsort(topic)[::-1][:topn]
+        topic = topic / topic.sum()  # normalize to probability dist
+        bestn = matutils.argsort(topic, topn, reverse=True)
         beststr = [(topic[id], self.id2word[id]) for id in bestn]
         return beststr
 

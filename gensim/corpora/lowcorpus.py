@@ -81,7 +81,6 @@ class LowCorpus(IndexedCorpus):
         else:
             logger.info("using provided word mapping (%i ids)" % len(id2word))
             self.id2word = id2word
-        self.word2id = dict((v, k) for k, v in iteritems(self.id2word))
         self.num_terms = len(self.word2id)
         self.use_wordids = True # return documents as (wordIndex, wordCount) 2-tuples
 
@@ -91,12 +90,15 @@ class LowCorpus(IndexedCorpus):
     def _calculate_num_docs(self):
         # the first line in input data is the number of documents (integer). throws exception on bad input.
         with utils.smart_open(self.fname) as fin:
-            result = int(fin.readline())
+            try:
+                result = int(next(fin))
+            except StopIteration:
+                result = 0
+
         return result
 
     def __len__(self):
         return self.num_docs
-
 
     def line2doc(self, line):
         words = self.line2words(line)
@@ -127,7 +129,6 @@ class LowCorpus(IndexedCorpus):
         # note that this way, only one doc is stored in memory at a time, not the whole corpus
         return doc
 
-
     def __iter__(self):
         """
         Iterate over the corpus, returning one bag-of-words vector at a time.
@@ -136,7 +137,6 @@ class LowCorpus(IndexedCorpus):
             for lineno, line in enumerate(fin):
                 if lineno > 0: # ignore the first line = number of documents
                     yield self.line2doc(line)
-
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, metadata=False):
@@ -160,7 +160,7 @@ class LowCorpus(IndexedCorpus):
                 for wordid, value in doc:
                     if abs(int(value) - value) > 1e-6:
                         truncated += 1
-                    words.extend([str(id2word[wordid])] * int(value))
+                    words.extend([utils.to_unicode(id2word[wordid])] * int(value))
                 offsets.append(fout.tell())
                 fout.write(utils.to_utf8('%s\n' % ' '.join(words)))
 
@@ -170,7 +170,6 @@ class LowCorpus(IndexedCorpus):
                             truncated)
         return offsets
 
-
     def docbyoffset(self, offset):
         """
         Return the document stored at file position `offset`.
@@ -178,4 +177,14 @@ class LowCorpus(IndexedCorpus):
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())
-#endclass LowCorpus
+
+    @property
+    def id2word(self):
+        return self._id2word
+
+    @id2word.setter
+    def id2word(self, val):
+        self._id2word = val
+        self.word2id = dict((v, k) for k, v in iteritems(val))
+
+# endclass LowCorpus

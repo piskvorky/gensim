@@ -30,13 +30,13 @@ much communication going on), so the network is allowed to be of relatively high
 
   To see what BLAS and LAPACK you are using, type into your shell::
 
-    python -c 'import numpy; numpy.show_config()'
+    python -c 'import scipy; scipy.show_config()'
 
 Prerequisites
 -----------------
 
 For communication between nodes, `gensim` uses `Pyro (PYthon Remote Objects)
-<http://pypi.python.org/pypi/Pyro4>`_, version >= 4.8. This is a library for low-level socket communication
+<http://pypi.python.org/pypi/Pyro4>`_, version >= 4.27. This is a library for low-level socket communication
 and remote procedure calls (RPC) in Python. `Pyro` is a pure-Python library, so its
 installation is quite painless and only involves copying its `*.py` files somewhere onto your Python's import path::
 

@@ -127,7 +127,7 @@ def remove_template(s):
         if in_template:
             if c == '{':
                 n_open += 1
-            elif  c == '}':
+            elif c == '}':
                 n_close += 1
             if n_open == n_close:
                 ends.append(i)
@@ -170,7 +170,7 @@ def tokenize(content):
             if 2 <= len(token) <= 15 and not token.startswith('_')]
 
 
-def _get_namespace(tag):
+def get_namespace(tag):
     """Returns the namespace of tag."""
     m = re.match("^{(.*?)}", tag)
     namespace = m.group(1) if m else ""
@@ -178,16 +178,14 @@ def _get_namespace(tag):
         raise ValueError("%s not recognized as MediaWiki dump namespace"
                          % namespace)
     return namespace
+_get_namespace = get_namespace
 
-
-def _extract_pages(f, filter_namespaces=False):
+def extract_pages(f, filter_namespaces=False):
     """
     Extract pages from MediaWiki database dump.
 
-    Returns
-    -------
-    pages : iterable over (str, str)
-        Generates (title, content) pairs.
+    Return an iterable over (str, str, str) which generates (title, content, pageid) triplets.
+
     """
     elems = (elem for _, elem in iterparse(f, events=("end",)))
 
@@ -196,7 +194,7 @@ def _extract_pages(f, filter_namespaces=False):
     # those from the first element we find, which will be part of the metadata,
     # and construct element paths.
     elem = next(elems)
-    namespace = _get_namespace(elem.tag)
+    namespace = get_namespace(elem.tag)
     ns_mapping = {"ns": namespace}
     page_tag = "{%(ns)s}page" % ns_mapping
     text_path = "./{%(ns)s}revision/{%(ns)s}text" % ns_mapping
@@ -224,7 +222,7 @@ def _extract_pages(f, filter_namespaces=False):
             # ./revision/text element. The pages comprise the bulk of the
             # file, so in practice we prune away enough.
             elem.clear()
-
+_extract_pages = extract_pages  # for backward compatibility
 
 def process_article(args):
     """
@@ -240,7 +238,6 @@ def process_article(args):
     return result, title, pageid
 
 
-
 class WikiCorpus(TextCorpus):
     """
     Treat a wikipedia articles dump (\*articles.xml.bz2) as a (read-only) corpus.
@@ -249,7 +246,7 @@ class WikiCorpus(TextCorpus):
     can stay compressed on disk.
 
     >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id mapping, takes almost 8h
-    >>> wiki.saveAsText('wiki_en_vocab200k') # another 8h, creates a file in MatrixMarket format plus file with id->word
+    >>> MmCorpus.serialize('wiki_en_vocab200k', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
 
     """
     def __init__(self, fname, processes=None, lemmatize=utils.HAS_PATTERN, dictionary=None, filter_namespaces=('0',)):
@@ -274,7 +271,6 @@ class WikiCorpus(TextCorpus):
         else:
             self.dictionary = dictionary
 
-
     def get_texts(self):
         """
         Iterate over the dump, returning text version of each article as a list
@@ -291,25 +287,28 @@ class WikiCorpus(TextCorpus):
         """
         articles, articles_all = 0, 0
         positions, positions_all = 0, 0
-        texts = ((text, self.lemmatize, title, pageid) for title, text, pageid in _extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces))
+        texts = ((text, self.lemmatize, title, pageid) for title, text, pageid in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces))
         pool = multiprocessing.Pool(self.processes)
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
         # is dumb and would load the entire input into RAM at once...
+        ignore_namespaces = 'Wikipedia Category File Portal Template MediaWiki User Help Book Draft'.split()
         for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
             for tokens, title, pageid in pool.imap(process_article, group): # chunksize=10):
                 articles_all += 1
                 positions_all += len(tokens)
-                if len(tokens) > ARTICLE_MIN_WORDS: # article redirects and short stubs are pruned here
-                    articles += 1
-                    positions += len(tokens)
-                    if self.metadata:
-                        yield (tokens, (pageid, title))
-                    else:
-                        yield tokens
+                # article redirects and short stubs are pruned here
+                if len(tokens) < ARTICLE_MIN_WORDS or any(title.startswith(ignore + ':') for ignore in ignore_namespaces):
+                    continue
+                articles += 1
+                positions += len(tokens)
+                if self.metadata:
+                    yield (tokens, (pageid, title))
+                else:
+                    yield tokens
         pool.terminate()
 
         logger.info("finished iterating over Wikipedia corpus of %i documents with %i positions"
             " (total %i articles, %i positions before pruning articles shorter than %i words)" %
             (articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS))
         self.length = articles # cache corpus length
-#endclass WikiCorpus
+# endclass WikiCorpus

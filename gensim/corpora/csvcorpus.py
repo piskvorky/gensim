@@ -16,7 +16,7 @@ import logging
 import csv
 import itertools
 
-from gensim import interfaces
+from gensim import interfaces, utils
 
 logger = logging.getLogger('gensim.corpora.csvcorpus')
 
@@ -42,18 +42,17 @@ class CsvCorpus(interfaces.CorpusABC):
         self.labels = labels
 
         # load the first few lines, to guess the CSV dialect
-        head = ''.join(itertools.islice(open(self.fname), 5))
+        head = ''.join(itertools.islice(utils.smart_open(self.fname), 5))
         self.headers = csv.Sniffer().has_header(head)
         self.dialect = csv.Sniffer().sniff(head)
         logger.info("sniffed CSV delimiter=%r, headers=%s" % (self.dialect.delimiter, self.headers))
-
 
     def __iter__(self):
         """
         Iterate over the corpus, returning one sparse vector at a time.
 
         """
-        reader = csv.reader(open(self.fname), self.dialect)
+        reader = csv.reader(utils.smart_open(self.fname), self.dialect)
         if self.headers:
             next(reader)    # skip the headers
 
@@ -64,3 +63,5 @@ class CsvCorpus(interfaces.CorpusABC):
             yield list(enumerate(map(float, line)))
 
         self.length = line_no + 1  # store the total number of CSV rows = documents
+
+# endclass CsvCorpus

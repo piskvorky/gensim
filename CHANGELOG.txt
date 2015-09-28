@@ -1,7 +1,109 @@
 Changes
 =======
 
-0.10.0rc1
+
+0.12.2
+
+* tutorial on text summarization (Ólavur Mortensen, #436)
+* more flexible vocabulary construction in word2vec & doc2vec (Philipp Dowling, #434)
+* added support for sliced TransformedCorpus objects, so that after applying (for instance) TfidfModel the returned corpus remains randomly indexable. (Matti Lyra, #425)
+* changed the LdaModel.save so that a custom `ignore` list can be passed in (Matti Lyra, #331)
+* added support for NumPy style fancy indexing to corpus objects (Matti Lyra, #414)
+* py3k fix in distributed LSI (spacecowboy, #433)
+* Windows fix for setup.py (#428)
+* fix compatibility for scipy 0.16.0 (#415)
+
+0.12.1, 20/07/2015
+
+* improvements to testing, switch to Travis CI containers
+* support for loading old word2vec models (<=0.11.1) in 0.12+ (Gordon Mohr, #405)
+* various bug fixes to word2vec, doc2vec (Gordon Mohr, #393, #386, #404)
+* TextSummatization support for very short texts (Federico Barrios, #390)
+* support for word2vec[['word1', 'word2'...]] convenience API calls (Satish Palaniappan, #395)
+* MatrixSimilarity supports indexing generator corpora (single pass)
+
+0.12.0, 06/07/2015
+
+* complete API, performance, memory overhaul of doc2vec (Gordon Mohr, #356, #373, #380, #384)
+  - fast infer_vector(); optional memory-mapped doc vectors; memory savings with int doc IDs
+  - 'dbow_words' for combined DBOW & word skip-gram training; new 'dm_concat' mode
+  - multithreading & negative-sampling optimizations (also benefitting word2vec)
+  - API NOTE: doc vectors must now be accessed/compared through model's 'docvecs' field
+    (eg: "model.docvecs['my_ID']" or "model.docvecs.most_similar('my_ID')")
+  - https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/doc2vec-IMDB.ipynb
+* new "text summarization" module (PR #324: Federico Lopez, Federico Barrios)
+  - https://github.com/summanlp/docs/raw/master/articulo/articulo-en.pdf
+* new matutils.argsort with partial sort
+  - performance speedups to all similarity queries (word2vec, Similarity classes...)
+* word2vec can compute likelihood scores for classification (Mat Addy, #358)
+  - http://arxiv.org/abs/1504.07295
+  - http://nbviewer.ipython.org/github/taddylab/deepir/blob/master/w2v-inversion.ipynb
+* word2vec supports "encoding" parameter when loading from C format, for non-utf8 models
+* more memory-efficient word2vec training (#385)
+* fixes to Python3 compatibility (Pavel Kalaidin #330, S-Eugene #369)
+* enhancements to save/load format (Liang Bo Wang #363, Gordon Mohr #356)
+  - pickle defaults to protocol=2 for better py3 compatibility
+* fixes and improvements to wiki parsing (Lukas Elmer #357, Excellent5 #333)
+* fix to phrases scoring (Ikuya Yamada, #353)
+* speed up of phrases generation (Dave Challis, #349)
+* changes to multipass LDA training (Christopher Corley, #298)
+* various doc improvements and fixes (Matti Lyra #331, Hongjoo Lee #334)
+* fixes and improvements to LDA (Christopher Corley #323)
+
+0.11.0 = 0.11.1 = 0.11.1-1, 10/04/2015
+
+* added "topic ranking" to sort topics by coherence in LdaModel (jtmcmc, #311)
+* new fast ShardedCorpus out-of-core corpus (Jan Hajic jr., #284)
+* utils.smart_open now uses the smart_open package (#316)
+* new wrapper for LDA in Vowpal Wabbit (Dave Challis, #304)
+* improvements to the DtmModel wrapper (Yang Han, #272, #277)
+* move wrappers for external modeling programs into a submodule (Christopher Corley, #295)
+* allow transparent compression of NumPy files in save/load (Christopher Corley, #248)
+* save/load methods now accept file handles, in addition to file names (macks22, #292)
+* fixes to LdaMulticore on Windows (Feng Mai, #305)
+* lots of small fixes & py3k compatibility improvements (Chyi-Kwei Yau, Daniel Nouri, Timothy Emerick, Juarez Bochi, Christopher Corley, Chirag Nagpal, Jan Hajic jr., Flávio Codeço Coelho)
+* re-released as 0.11.1 and 0.11.1-1 because of a packaging bug
+
+0.10.3, 17/11/2014
+
+* added streamed phrases = collocation detection (Miguel Cabrera, #258)
+* added param for multiple word2vec epochs (sebastienj, #243)
+* added doc2vec (=paragraph2vec = extension of word2vec) model (Timothy Emerick, #231)
+* initialize word2vec deterministically, for increased experiment reproducibility (KCzar, #240)
+* all indexed corpora now allow full Python slicing syntax (Christopher Corley, #246)
+* update distributed code for new Pyro4 API and py3k (Michael Brooks, Marco Bonzanini, #255, #249)
+* fixes to six module version (Lars Buitinck, #259)
+* fixes to setup.py (Maxim Avanov and Christopher Corley, #260, #251)
+* ...and lots of minor fixes & updates all around
+
+0.10.2, 18/09/2014
+
+* new parallelized, LdaMulticore implementation (Jan Zikes, #232)
+* Dynamic Topic Models (DTM) wrapper (Arttii, #205)
+* word2vec compiled from bundled C file at install time: no more pyximport (#233)
+* standardize show_/print_topics in LdaMallet (Benjamin Bray, #223)
+* add new word2vec multiplicative objective (3CosMul) of Levy & Goldberg (Gordon Mohr, #224)
+* preserve case in MALLET wrapper (mcburton, #222)
+* support for matrix-valued topic/word prior eta in LdaModel (mjwillson, #208)
+* py3k fix to SparseCorpus (Andreas Madsen, #234)
+* fix to LowCorpus when switching dictionaries (Christopher Corley, #237)
+
+0.10.1, 22/07/2014
+
+* word2vec: new n_similarity method for comparing two sets of words (François Scharffe, #219)
+* make LDA print/show topics parameters consistent with LSI (Bram Vandekerckhove, #201)
+* add option for efficient word2vec subsampling (Gordon Mohr, #206)
+* fix length calculation for corpora on empty files (Christopher Corley, #209)
+* improve file cleanup of unit tests (Christopher Corley)
+* more unit tests
+* unicode now stored everywhere in gensim internally; accepted input stays either utf8 or unicode
+* various fixes to the py3k ported code
+* allow any dict-like input in Dictionary.from_corpus (Andreas Madsen)
+* error checking improvements to the MALLET wrapper
+* ignore non-articles during wiki parsig
+* utils.lemmatize now (optionally) ignores stopwords
+
+0.10.0 (aka "PY3K port"), 04/06/2014
 
 * full Python 3 support (targeting 3.3+, #196)
 * all internal methods now expect & store unicode, instead of utf8

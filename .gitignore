@@ -29,6 +29,7 @@
 *.pkl
 *.bak
 *.npy
+*.npz
 
 # OS generated files #
 ######################
@@ -41,7 +42,10 @@ Thumbs.db
 #########
 .project
 .pydevproject
+.ropeproject
 .settings/
+.eggs
+cython_debug
 docs/src/_build/
 docs/_static
 dedan_gensim.tmproj

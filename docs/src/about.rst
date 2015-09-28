@@ -8,7 +8,7 @@ History
 --------
 
 Gensim started off as a collection of various Python scripts for the Czech Digital Mathematics Library `dml.cz <http://dml.cz/>`_ in 2008,
-where it served to generate a short list of the most similar articles to a given article (gensim = "generate similar").
+where it served to generate a short list of the most similar articles to a given article (**gensim = "generate similar"**).
 I also wanted to try these fancy "Latent Semantic Methods", but the libraries that
 realized the necessary computation were `not much fun to work with <http://soi.stanford.edu/~rmunk/PROPACK/>`_.
 
@@ -39,9 +39,9 @@ the source code of these modifications.
 Apart from that, you are free to redistribute gensim in any way you like, though you're
 not allowed to modify its license (doh!).
 
-My intent here is, of course, to get more help and community involvement with the development of gensim.
+My intent here is, of course, to **get more help and community involvement** with the development of gensim.
 The legalese is therefore less important to me than your input and contributions.
-Contact me if LGPL doesn't fit your bill but you'd still like to use it -- we'll work something out.
+Contact me if LGPL doesn't fit your bill but you'd still like to use gensim -- we'll work something out.
 
 .. seealso::
 
@@ -56,7 +56,7 @@ Contributors
 --------------
 
 Credit goes to all the people who contributed to gensim, be it in `discussions <http://groups.google.com/group/gensim>`_,
-ideas, `code contributions <https://github.com/piskvorky/gensim/pulls>`_ or bug reports.
+ideas, `code contributions <https://github.com/piskvorky/gensim/pulls>`_ or `bug reports <https://github.com/piskvorky/gensim/issues>`_.
 It's really useful and motivating to get feedback, in any shape or form, so big thanks to you all!
 
 Some honorable mentions are included in the `CHANGELOG.txt <https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt>`_.
@@ -65,7 +65,7 @@ Some honorable mentions are included in the `CHANGELOG.txt <https://github.com/p
 Academic citing
 ----------------
 
-Gensim has been used in many students' final theses as well as research papers. When citing gensim,
+Gensim has been used in `many students' final theses as well as research papers <http://scholar.google.cz/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:u-x6o8ySG0sC>`_. When citing gensim,
 please use `this BibTeX entry <bibtex_gensim.bib>`_::
 
   @inproceedings{rehurek_lrec,

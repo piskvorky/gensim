@@ -20,6 +20,8 @@ of each document.
 import logging
 import shelve
 
+import numpy
+
 from gensim import interfaces, utils
 
 logger = logging.getLogger('gensim.corpora.indexedcorpus')
@@ -44,13 +46,14 @@ class IndexedCorpus(interfaces.CorpusABC):
         """
         try:
             if index_fname is None:
-                index_fname = fname + '.index'
+                index_fname = utils.smart_extension(fname, '.index')
             self.index = utils.unpickle(index_fname)
+            # change self.index into a numpy.ndarray to support fancy indexing
+            self.index = numpy.asarray(self.index)
             logger.info("loaded corpus index from %s" % index_fname)
         except:
             self.index = None
         self.length = None
-
 
     @classmethod
     def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None, labels=None, metadata=False):
@@ -77,7 +80,7 @@ class IndexedCorpus(interfaces.CorpusABC):
             raise ValueError("identical input vs. output corpus filename, refusing to serialize: %s" % fname)
 
         if index_fname is None:
-            index_fname = fname + '.index'
+            index_fname = utils.smart_extension(fname, '.index')
 
         if progress_cnt is not None:
             if labels is not None:
@@ -95,9 +98,12 @@ class IndexedCorpus(interfaces.CorpusABC):
                 serializer.__name__)
 
         # store offsets persistently, using pickle
+        # we shouldn't have to worry about self.index being a numpy.ndarray as the serializer will return
+        # the offsets that are actually stored on disk - we're not storing self.index in any case, the
+        # load just needs to turn whatever is loaded from disk back into a ndarray - this should also ensure
+        # backwards compatibility
         logger.info("saving %s index to %s" % (serializer.__name__, index_fname))
         utils.pickle(offsets, index_fname)
-
 
     def __len__(self):
         """
@@ -111,9 +117,17 @@ class IndexedCorpus(interfaces.CorpusABC):
             self.length = sum(1 for doc in self)
         return self.length
 
-
     def __getitem__(self, docno):
         if self.index is None:
             raise RuntimeError("cannot call corpus[docid] without an index")
-        return self.docbyoffset(self.index[docno])
-#endclass IndexedCorpus
+
+        if isinstance(docno, (slice, list, numpy.ndarray)):
+            return utils.SlicedCorpus(self, docno)
+        elif isinstance(docno, (int, numpy.integer)):
+            return self.docbyoffset(self.index[docno])
+        else:
+            raise ValueError('Unrecognised value for docno, use either a single integer, a slice or a numpy.ndarray')
+
+
+
+# endclass IndexedCorpus

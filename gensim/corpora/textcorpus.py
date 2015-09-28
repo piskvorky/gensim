@@ -43,8 +43,8 @@ class TextCorpus(interfaces.CorpusABC):
     Helper class to simplify the pipeline of getting bag-of-words vectors (= a
     gensim corpus) from plain text.
 
-    This is an abstract base class: override the `get_texts()` method to match
-    your particular input.
+    This is an abstract base class: override the `get_texts()` and `__len__()`
+    methods to match your particular input.
 
     Given a filename (or a file-like object) in constructor, the corpus object
     will be automatically initialized with a dictionary in `self.dictionary` and
@@ -63,7 +63,6 @@ class TextCorpus(interfaces.CorpusABC):
             logger.warning("No input document stream provided; assuming "
                            "dictionary will be initialized some other way.")
 
-
     def __iter__(self):
         """
         The function that defines a corpus.
@@ -72,14 +71,12 @@ class TextCorpus(interfaces.CorpusABC):
         """
         for text in self.get_texts():
             if self.metadata:
-                yield (self.dictionary.doc2bow(text[0], allow_update=False), text[1])
+                yield self.dictionary.doc2bow(text[0], allow_update=False), text[1]
             else:
                 yield self.dictionary.doc2bow(text, allow_update=False)
 
-
     def getstream(self):
         return utils.file_or_filename(self.input)
-
 
     def get_texts(self):
         """
@@ -93,13 +90,17 @@ class TextCorpus(interfaces.CorpusABC):
         # Instead of raising NotImplementedError, let's provide a sample implementation:
         # assume documents are lines in a single file (one document per line).
         # Yield each document as a list of lowercase tokens, via `utils.tokenize`.
-        length = 0
         with self.getstream() as lines:
             for lineno, line in enumerate(lines):
-                length += 1
-                yield utils.tokenize(line, lowercase=True)
-        self.length = length
-
+                if self.metadata:
+                    yield utils.tokenize(line, lowercase=True), (lineno,)
+                else:
+                    yield utils.tokenize(line, lowercase=True)
 
     def __len__(self):
-        return self.length # will throw if corpus not initialized
+        if not hasattr(self, 'length'):
+            # cache the corpus length
+            self.length = sum(1 for _ in self.get_texts())
+        return self.length
+
+# endclass TextCorpus

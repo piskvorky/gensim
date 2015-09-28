@@ -51,35 +51,30 @@ class BleiCorpus(IndexedCorpus):
             fname_base, _ = path.splitext(fname)
             fname_dir = path.dirname(fname)
             for fname_vocab in [
-                        fname + '.vocab',
-                        fname + '/vocab.txt',
-                        fname_base + '.vocab',
-                        fname_dir + '/vocab.txt',
+                        utils.smart_extension(fname, '.vocab'),
+                        utils.smart_extension(fname, '/vocab.txt'),
+                        utils.smart_extension(fname_base, '.vocab'),
+                        utils.smart_extension(fname_dir, '/vocab.txt'),
                         ]:
                 if path.exists(fname_vocab):
                     break
             else:
                 raise IOError('BleiCorpus: could not find vocabulary file')
 
-
         self.fname = fname
         with utils.smart_open(fname_vocab) as fin:
             words = [utils.to_unicode(word).rstrip() for word in fin]
         self.id2word = dict(enumerate(words))
-        self.length = None
-
 
     def __iter__(self):
         """
         Iterate over the corpus, returning one sparse vector at a time.
         """
-        length = 0
+        lineno = -1
         with utils.smart_open(self.fname) as fin:
             for lineno, line in enumerate(fin):
-                length += 1
                 yield self.line2doc(line)
-        self.length = length
-
+        self.length = lineno + 1
 
     def line2doc(self, line):
         parts = utils.to_unicode(line).split()
@@ -88,7 +83,6 @@ class BleiCorpus(IndexedCorpus):
         doc = [part.rsplit(':', 1) for part in parts[1:]]
         doc = [(int(p1), float(p2)) for p1, p2 in doc]
         return doc
-
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, metadata=False):
@@ -114,11 +108,11 @@ class BleiCorpus(IndexedCorpus):
             for doc in corpus:
                 doc = list(doc)
                 offsets.append(fout.tell())
-                parts = ["%i:%s" % p for p in doc if abs(p[1]) > 1e-7]
+                parts = ["%i:%g" % p for p in doc if abs(p[1]) > 1e-7]
                 fout.write(utils.to_utf8("%i %s\n" % (len(doc), ' '.join(parts))))
 
         # write out vocabulary, in a format compatible with Blei's topics.py script
-        fname_vocab = fname + '.vocab'
+        fname_vocab = utils.smart_extension(fname, '.vocab')
         logger.info("saving vocabulary of %i words to %s" % (num_terms, fname_vocab))
         with utils.smart_open(fname_vocab, 'wb') as fout:
             for featureid in xrange(num_terms):
@@ -133,5 +127,5 @@ class BleiCorpus(IndexedCorpus):
         with utils.smart_open(self.fname) as f:
             f.seek(offset)
             return self.line2doc(f.readline())
-#endclass BleiCorpus
 
+# endclass BleiCorpus

@@ -40,7 +40,7 @@ import logging, time
 import numpy as np
 import scipy.special as sp
 
-from gensim import interfaces, utils
+from gensim import interfaces, utils, matutils
 from six.moves import xrange
 
 logger = logging.getLogger(__name__)
@@ -435,7 +435,7 @@ class HdpModel(interfaces.TransformationABC):
         """
         ordering the topics
         """
-        idx = np.argsort(self.m_lambda_sum)[::-1]
+        idx = matutils.argsort(self.m_lambda_sum, reverse=True)
         self.m_varphi_ss = self.m_varphi_ss[idx]
         self.m_lambda = self.m_lambda[idx, :]
         self.m_lambda_sum = self.m_lambda_sum[idx]
@@ -463,16 +463,16 @@ class HdpModel(interfaces.TransformationABC):
         probable words for `topics` number of topics to log.
         Set `topics=-1` to print all topics."""
         return self.show_topics(topics=topics, topn=topn, log=True)
-        
+
     def show_topics(self, topics=20, topn=20, log=False, formatted=True):
         """
         Print the `topN` most probable words for `topics` number of topics.
         Set `topics=-1` to print all topics.
 
-        Set `formatted=True` to return the topics as a list of strings, or 
+        Set `formatted=True` to return the topics as a list of strings, or
         `False` as lists of (weight, word) pairs.
 
-        """        
+        """
         if not self.m_status_up_to_date:
             self.update_expectations()
         betas = self.m_lambda + self.m_eta
@@ -499,7 +499,7 @@ class HdpModel(interfaces.TransformationABC):
             logger.error("cannot store options without having specified an output directory")
             return
         fname = '%s/options.dat' % self.outputdir
-        with open(fname, 'wb') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             fout.write('tau: %s\n' % str(self.m_tau - 1))
             fout.write('chunksize: %s\n' % str(self.chunksize))
             fout.write('var_converge: %s\n' % str(self.m_var_converge))
@@ -570,7 +570,7 @@ class HdpTopicFormatter(object):
 
         # sort topics
         topics_sums = np.sum(topics, axis=1)
-        idx = np.argsort(topics_sums)[::-1]
+        idx = matutils.argsort(topics_sums, reverse=True)
         self.data = topics[idx]
 
         self.dictionary = dictionary

@@ -5,4 +5,5 @@
     :synopsis: Math utils
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:

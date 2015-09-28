@@ -5,4 +5,5 @@
     :synopsis: Corpus in Matrix Market format
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:

@@ -17,11 +17,16 @@ with other dictionary (:func:`Dictionary.merge_with`) etc.
 
 from __future__ import with_statement
 
-from collections import Mapping
+from collections import Mapping, defaultdict
+import sys
 import logging
 import itertools
 
 from gensim import utils
+
+if sys.version_info[0] >= 3:
+    unicode = str
+
 from six import PY3, iteritems, iterkeys, itervalues, string_types
 from six.moves import xrange
 from six.moves import zip as izip
@@ -37,7 +42,10 @@ class Dictionary(utils.SaveLoad, Mapping):
     The main function is `doc2bow`, which converts a collection of words to its
     bag-of-words representation: a list of (word_id, word_frequency) 2-tuples.
     """
-    def __init__(self, documents=None):
+    def __init__(self, documents=None, prune_at=2000000):
+        """
+        If `documents` are given, use them to initialize Dictionary (see `add_documents()`).
+        """
         self.token2id = {} # token -> tokenId
         self.id2token = {} # reverse mapping for token2id; only formed on request, to save memory
         self.dfs = {} # document frequencies: tokenId -> in how many documents this token appeared
@@ -47,7 +55,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         self.num_nnz = 0 # total number of non-zeroes in the BOW matrix
 
         if documents is not None:
-            self.add_documents(documents)
+            self.add_documents(documents, prune_at=prune_at)
 
 
     def __getitem__(self, tokenid):
@@ -95,30 +103,38 @@ class Dictionary(utils.SaveLoad, Mapping):
         return Dictionary(documents=documents)
 
 
-    def add_documents(self, documents):
+    def add_documents(self, documents, prune_at=2000000):
         """
-        Build dictionary from a collection of documents. Each document is a list
-        of tokens = **tokenized and normalized** utf-8 encoded strings.
+        Update dictionary from a collection of documents. Each document is a list
+        of tokens = **tokenized and normalized** strings (either utf8 or unicode).
 
-        This is only a convenience wrapper for calling `doc2bow` on each document
-        with `allow_update=True`.
+        This is a convenience wrapper for calling `doc2bow` on each document
+        with `allow_update=True`, which also prunes infrequent words, keeping the
+        total number of unique words <= `prune_at`. This is to save memory on very
+        large inputs. To disable this pruning, set `prune_at=None`.
 
         >>> print(Dictionary(["máma mele maso".split(), "ema má máma".split()]))
         Dictionary(5 unique tokens)
         """
         for docno, document in enumerate(documents):
+            # log progress & run a regular check for pruning, once every 10k docs
             if docno % 10000 == 0:
-                logger.info("adding document #%i to %s" % (docno, self))
-            _ = self.doc2bow(document, allow_update=True) # ignore the result, here we only care about updating token ids
-        logger.info("built %s from %i documents (total %i corpus positions)" %
-                     (self, self.num_docs, self.num_pos))
+                if prune_at is not None and len(self) > prune_at:
+                    self.filter_extremes(no_below=0, no_above=1.0, keep_n=prune_at)
+                logger.info("adding document #%i to %s", docno, self)
+
+            # update Dictionary with the document
+            self.doc2bow(document, allow_update=True) # ignore the result, here we only care about updating token ids
+
+        logger.info("built %s from %i documents (total %i corpus positions)",
+                     self, self.num_docs, self.num_pos)
 
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
         """
         Convert `document` (a list of words) into the bag-of-words format = list
         of `(token_id, token_count)` 2-tuples. Each word is assumed to be a
-        **tokenized and normalized** utf-8 encoded string. No further preprocessing
+        **tokenized and normalized** string (either unicode or utf8-encoded). No further preprocessing
         is done on the words in `document`; apply tokenization, stemming etc. before
         calling this method.
 
@@ -129,35 +145,33 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         If `allow_update` is **not** set, this function is `const`, aka read-only.
         """
-        result = {}
-        missing = {}
         if isinstance(document, string_types):
             raise TypeError("doc2bow expects an array of unicode tokens on input, not a single string")
-        document = sorted(utils.to_unicode(token) for token in document)
-        # construct (word, frequency) mapping. in python3 this is done simply
-        # using Counter(), but here i use itertools.groupby() for the job
-        for word_norm, group in itertools.groupby(document):
-            frequency = len(list(group)) # how many times does this word appear in the input document
-            tokenid = self.token2id.get(word_norm, None)
-            if tokenid is None:
-                # first time we see this token (~normalized form)
-                if return_missing:
-                    missing[word_norm] = frequency
-                if not allow_update: # if we aren't allowed to create new tokens, continue with the next unique token
-                    continue
-                tokenid = len(self.token2id)
-                self.token2id[word_norm] = tokenid # new id = number of ids made so far; NOTE this assumes there are no gaps in the id sequence!
 
-            # update how many times a token appeared in the document
-            result[tokenid] = frequency
+        # Construct (word, frequency) mapping.
+        counter = defaultdict(int)
+        for w in document:
+            counter[w if isinstance(w, unicode) else unicode(w, 'utf-8')] += 1
+
+        token2id = self.token2id
+        if allow_update or return_missing:
+            missing = dict((w, freq) for w, freq in iteritems(counter) if w not in token2id)
+            if allow_update:
+                for w in missing:
+                    # new id = number of ids made so far;
+                    # NOTE this assumes there are no gaps in the id sequence!
+                    token2id[w] = len(token2id)
+
+        result = dict((token2id[w], freq) for w, freq in iteritems(counter) if w in token2id)
 
         if allow_update:
             self.num_docs += 1
-            self.num_pos += len(document)
+            self.num_pos += sum(itervalues(counter))
             self.num_nnz += len(result)
             # increase document count for each unique token that appeared in the document
+            dfs = self.dfs
             for tokenid in iterkeys(result):
-                self.dfs[tokenid] = self.dfs.get(tokenid, 0) + 1
+                dfs[tokenid] = dfs.get(tokenid, 0) + 1
 
         # return tokenids, in ascending id order
         result = sorted(iteritems(result))
@@ -186,16 +200,17 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         # determine which tokens to keep
         good_ids = (v for v in itervalues(self.token2id)
-                      if no_below <= self.dfs[v] <= no_above_abs)
+                      if no_below <= self.dfs.get(v, 0) <= no_above_abs)
         good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
         if keep_n is not None:
             good_ids = good_ids[:keep_n]
-        logger.info("keeping %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents" %
-                     (len(good_ids), no_below, no_above_abs, 100.0 * no_above))
+        bad_words = [(self[id], self.dfs.get(id, 0)) for id in set(self).difference(good_ids)]
+        logger.info("discarding %i tokens: %s...", len(self) - len(good_ids), bad_words[:10])
+        logger.info("keeping %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents",
+            len(good_ids), no_below, no_above_abs, 100.0 * no_above)
 
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
         self.filter_tokens(good_ids=good_ids)
-        self.compactify()
         logger.info("resulting dictionary: %s" % self)
 
 
@@ -222,6 +237,7 @@ class Dictionary(utils.SaveLoad, Mapping):
             self.dfs = dict((tokenid, freq)
                             for tokenid, freq in iteritems(self.dfs)
                             if tokenid in good_ids)
+        self.compactify()
 
 
     def compactify(self):
@@ -235,15 +251,12 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.debug("rebuilding dictionary, shrinking gaps")
 
         # build mapping from old id -> new id
-        idmap = dict(izip(itervalues(self.token2id),
-                     xrange(len(self.token2id))))
+        idmap = dict(izip(itervalues(self.token2id), xrange(len(self.token2id))))
 
         # reassign mappings to new ids
-        self.token2id = dict((token, idmap[tokenid])
-                             for token, tokenid in iteritems(self.token2id))
+        self.token2id = dict((token, idmap[tokenid]) for token, tokenid in iteritems(self.token2id))
         self.id2token = {}
-        self.dfs = dict((idmap[tokenid], freq)
-                        for tokenid, freq in iteritems(self.dfs))
+        self.dfs = dict((idmap[tokenid], freq) for tokenid, freq in iteritems(self.dfs))
 
 
     def save_as_text(self, fname, sort_by_word=True):
@@ -337,7 +350,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
 
     @staticmethod
-    def from_corpus(corpus):
+    def from_corpus(corpus, id2word=None):
         """
         Create Dictionary from an existing corpus. This can be useful if you only
         have a term-document BOW matrix (represented by `corpus`), but not the
@@ -345,8 +358,13 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         This will scan the term-document count matrix for all word ids that
         appear in it, then construct and return Dictionary which maps each
-        `word_id -> str(word_id)`.
+        `word_id -> id2word[word_id]`.
+
+        `id2word` is an optional dictionary that maps the `word_id` to a token. In
+        case `id2word` isn't specified the mapping `id2word[word_id] = str(word_id)`
+        will be used.
         """
+
         result = Dictionary()
         max_id = -1
         for docno, document in enumerate(corpus):
@@ -358,12 +376,19 @@ class Dictionary(utils.SaveLoad, Mapping):
                 max_id = max(wordid, max_id)
                 result.num_pos += word_freq
                 result.dfs[wordid] = result.dfs.get(wordid, 0) + 1
-        # now make sure length(result) == get_max_id(corpus) + 1
-        for i in xrange(max_id + 1):
-            result.token2id[str(i)] = i
-            result.dfs[i] = result.dfs.get(i, 0)
+
+        if id2word is None:
+            # make sure length(result) == get_max_id(corpus) + 1
+            result.token2id = dict((unicode(i), i) for i in xrange(max_id + 1))
+        else:
+            # id=>word mapping given: simply copy it
+            result.token2id = dict((utils.to_unicode(token), id) for id, token in iteritems(id2word))
+        for id in itervalues(result.token2id):
+            # make sure all token ids have a valid `dfs` entry
+            result.dfs[id] = result.dfs.get(id, 0)
 
         logger.info("built %s from %i documents (total %i corpus positions)" %
                      (result, result.num_docs, result.num_pos))
         return result
+
 #endclass Dictionary

@@ -5,4 +5,5 @@
     :synopsis: Latent Dirichlet Allocation
     :members:
     :inherited-members:
-
+    :undoc-members:
+    :show-inheritance:
