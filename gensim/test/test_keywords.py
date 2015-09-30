@@ -61,19 +61,7 @@ class TestKeywordsTest(unittest.TestCase):
 
         self.assertTrue(keywords(text) is not None)
 
-    def test_keywords_ratio(self):
-        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
-
-        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
-            text = f.read()
-
-        # Check ratio parameter is well behaved.  Because length is taken on tokenized clean text
-        # we just check that ratio 40% is twice as long as ratio 20%
-        selected_docs_20 = keywords(text, ratio=0.2, split=True)
-        selected_docs_40 = keywords(text, ratio=0.4, split=True)
-
-        self.assertAlmostEqual(float(len(selected_docs_40))/len(selected_docs_20), 1.9, places=1)
-
+  
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
