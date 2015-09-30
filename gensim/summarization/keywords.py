@@ -8,6 +8,7 @@ from gensim.summarization.textcleaner import clean_text_by_word as _clean_text_b
 from gensim.summarization.textcleaner import tokenize_by_word as _tokenize_by_word
 from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
+from gensim.utils import to_unicode
 from itertools import combinations as _combinations
 from six.moves.queue import Queue as _Queue
 from six.moves import xrange
@@ -163,7 +164,7 @@ def _get_combined_keywords(_keywords, split_text):
                 result.append(word)   # appends last word if keyword and doesn't iterate
             for j in xrange(i + 1, len_text):
                 other_word = _strip_word(split_text[j])
-                if other_word in _keywords and other_word == split_text[j].decode("utf-8"):
+                if other_word in _keywords and other_word == split_text[j]:
                     combined_word.append(other_word)
                 else:
                     for keyword in combined_word:
@@ -198,6 +199,7 @@ def _format_results(_keywords, combined_keywords, split, scores):
 
 def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=['NN', 'JJ'], lemmatize=False):
     # Gets a dict of word -> lemma
+    text = to_unicode(text)
     tokens = _clean_text_by_word(text)
     split_text = list(_tokenize_by_word(text))
 
