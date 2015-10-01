@@ -4265,10 +4265,10 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_2train_batch_sg(CYTHO
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_work;
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t __pyx_v__alpha;
   int __pyx_v_size;
-  int __pyx_v_codelens[0x64][0x2710];
-  __pyx_t_5numpy_uint32_t __pyx_v_indexes[0x64][0x2710];
-  __pyx_t_5numpy_uint32_t __pyx_v_reduced_windows[0x64][0x2710];
-  int __pyx_v_sentence_len[0x64];
+  int __pyx_v_codelens[0x3E8][0x2710];
+  __pyx_t_5numpy_uint32_t __pyx_v_indexes[0x3E8][0x2710];
+  __pyx_t_5numpy_uint32_t __pyx_v_reduced_windows[0x3E8][0x2710];
+  int __pyx_v_sentence_len[0x3E8];
   int __pyx_v_window;
   int __pyx_v_i;
   int __pyx_v_j;
@@ -4277,8 +4277,8 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_2train_batch_sg(CYTHO
   int __pyx_v_num_sentences;
   int __pyx_v_sent_idx;
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_syn1;
-  __pyx_t_5numpy_uint32_t *__pyx_v_points[0x64][0x2710];
-  __pyx_t_5numpy_uint8_t *__pyx_v_codes[0x64][0x2710];
+  __pyx_t_5numpy_uint32_t *__pyx_v_points[0x3E8][0x2710];
+  __pyx_t_5numpy_uint8_t *__pyx_v_codes[0x3E8][0x2710];
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_syn1neg;
   __pyx_t_5numpy_uint32_t *__pyx_v_cum_table;
   unsigned PY_LONG_LONG __pyx_v_cum_table_len;
@@ -5285,7 +5285,7 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_2train_batch_sg(CYTHO
  *                     if negative:
  *                         next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[sent_idx][i], indexes[sent_idx][j], _alpha, work, next_random, word_locks)             # <<<<<<<<<<<<<<
  * 
- *     return result  # NOTE: this returns the sum of results from all the sentences in the batch.
+ *     return result
  */
                 __pyx_v_next_random = __pyx_f_6gensim_6models_14word2vec_inner_fast_sentence_sg_neg(__pyx_v_negative, __pyx_v_cum_table, __pyx_v_cum_table_len, __pyx_v_syn0, __pyx_v_syn1neg, __pyx_v_size, ((__pyx_v_indexes[__pyx_v_sent_idx])[__pyx_v_i]), ((__pyx_v_indexes[__pyx_v_sent_idx])[__pyx_v_j]), __pyx_v__alpha, __pyx_v_work, __pyx_v_next_random, __pyx_v_word_locks);
 
@@ -5324,7 +5324,7 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_2train_batch_sg(CYTHO
   /* "gensim/models/word2vec_inner.pyx":436
  *                         next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[sent_idx][i], indexes[sent_idx][j], _alpha, work, next_random, word_locks)
  * 
- *     return result  # NOTE: this returns the sum of results from all the sentences in the batch.             # <<<<<<<<<<<<<<
+ *     return result             # <<<<<<<<<<<<<<
  * 
  * 
  */
@@ -11227,7 +11227,7 @@ PyMODINIT_FUNC PyInit_word2vec_inner(void)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "gensim/models/word2vec_inner.pyx":30
- * DEF MAX_NUM_SENTENCES = 100
+ * DEF MAX_NUM_SENTENCES = 1000
  * 
  * cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(fblas.scopy._cpointer)  # y = x             # <<<<<<<<<<<<<<
  * cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(fblas.saxpy._cpointer)  # y += alpha * x

@@ -25,7 +25,7 @@ except ImportError:
 REAL = np.float32
 
 DEF MAX_SENTENCE_LEN = 10000
-DEF MAX_NUM_SENTENCES = 100
+DEF MAX_NUM_SENTENCES = 1000
 
 cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(fblas.scopy._cpointer)  # y = x
 cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(fblas.saxpy._cpointer)  # y += alpha * x
@@ -415,7 +415,7 @@ def train_batch_sg(model, sentences, alpha, _work):
         for i, item in enumerate(model.random.randint(0, window, sentence_len[sent_idx])):
             reduced_windows[sent_idx][i] = item
 
-    # release GIL & train on the sentence
+    # release GIL & train on the sentences
     with nogil:
         for sent_idx in range(num_sentences):
             for i in range(sentence_len[sent_idx]):
