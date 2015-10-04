@@ -88,6 +88,20 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule)
         self.assertTrue("human" not in model.vocab)
 
+    def testUnknownWord(self):
+        """Test using unkown word token fore rare/missing words."""
+        model = word2vec.Word2Vec(min_count=3, unknown_word="<UNK>")
+        model.build_vocab(sentences)
+        self.assertTrue(model.index2word[0] == "<UNK>")
+
+        self.assertTrue("human" not in model.vocab)
+        self.assertTrue(model.vocab["human"].index == 0)
+
+        self.assertTrue("kingkong" not in model.vocab)
+        self.assertTrue(model.vocab["kingkong"].index == 0)
+
+        self.assertTrue(all(model["kingkong"] == model["human"]))
+
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
         model = word2vec.Word2Vec(sentences, min_count=1)

@@ -595,12 +595,14 @@ class Word2Vec(utils.SaveLoad):
                     drop_total += v
                     original_total += v
 
-        self.raw_vocab[self.unknown_word] = self.unknown_vocab.count
         logger.info("min_count=%d retains %i unique words (drops %i)", min_count, len(retain_words), drop_unique)
         logger.info("min_count leaves %i word corpus (%i%% of original %i)", retain_total,
                     retain_total * 100 / max(original_total, 1), original_total)
 
-        logger.info("unknown vocab item: count=%i, index=%i", self.unknown_vocab.count, self.unknown_vocab.index)
+        if self.unknown_word is not None:
+            self.raw_vocab[self.unknown_word] = self.unknown_vocab.count
+            logger.info("unknown vocab item: count=%i, index=%i", self.unknown_vocab.count, self.unknown_vocab.index)
+
         # Precalculate each vocabulary item's threshold for sampling
         if not sample:
             # no words downsampled
