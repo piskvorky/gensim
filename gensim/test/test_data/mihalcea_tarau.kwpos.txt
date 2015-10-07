@@ -1,17 +1,17 @@
 gilbert
 hurricane
-winds
 coast
 storm
 saturday
+winds heavy
 flood
 flooding
 weather
 alert
 defense alerted
 strong
-people
 pushed
+people
 puerto
 cabral said
 north
@@ -19,3 +19,12 @@ associated
 south
 domingo
 residents
+dominican
+miles
+southeast
+san
+civil
+home
+reached
+juan
+named

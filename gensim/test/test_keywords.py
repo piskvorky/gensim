@@ -49,6 +49,20 @@ class TestKeywordsTest(unittest.TestCase):
 
         self.assertEqual(len(generated_keywords), 16)
 
+    def test_text_keywords_pos(self):
+        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
+
+        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
+            text = f.read()
+
+        # calculate keywords using only certain parts of speech
+        generated_keywords_NNVBJJ = keywords(text, pos_filter=['NN', 'VB', 'JJ'], ratio=0.3, split=True)
+
+        # To be compared to the reference.
+        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.kwpos.txt"), mode="r") as f:
+            kw = f.read().strip().split("\n")
+
+        self.assertEqual(set(map(str, generated_keywords_NNVBJJ)), set(map(str, kw)))
 
     def test_text_summarization_raises_exception_on_short_input_text(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -61,7 +75,23 @@ class TestKeywordsTest(unittest.TestCase):
 
         self.assertTrue(keywords(text) is not None)
 
-  
+
+    def test_keywords_ratio(self):
+        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
+
+        with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.txt"), mode="r") as f:
+            text = f.read()
+
+        # Check ratio parameter is well behaved.  Because length is taken on tokenized clean text
+        # we just check that ratio 20% is twice as long as ratio 10%
+        # Values of 10% and 20% were carefully selected for this test to avoid
+        # numerical instabilities when several keywords have almost the same score
+        selected_docs_12 = keywords(text, ratio=0.1, split=True)
+        selected_docs_21 = keywords(text, ratio=0.2, split=True)
+
+        self.assertAlmostEqual(float(len(selected_docs_21))/len(selected_docs_12), float(21)/12, places=1)
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
