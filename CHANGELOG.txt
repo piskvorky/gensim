@@ -1,8 +1,17 @@
 Changes
 =======
 
+NEXT
 
-0.12.2
+* Make show_topics return value consistent across models (Christopher Corley, #448)
+  - All models with the `show_topics` method should return a list of
+    `(topic_number, topic)` tuples, where `topic` is a list of
+    `(word, probability)` tuples.
+  - This is a breaking change that affects users of the `LsiModel`, `LdaModel`,
+  and `LdaMulticore` that may be reliant on the old tuple layout of
+  `(probability, word)`.
+
+0.12.2, 19/09/2015
 
 * tutorial on text summarization (Ólavur Mortensen, #436)
 * more flexible vocabulary construction in word2vec & doc2vec (Philipp Dowling, #434)
