@@ -56,7 +56,7 @@ class TestKeywordsTest(unittest.TestCase):
             text = f.read()
 
         # calculate keywords using only certain parts of speech
-        generated_keywords_NNVBJJ = keywords(text, pos_filter=['NN', 'VB', 'JJ'], split=True)
+        generated_keywords_NNVBJJ = keywords(text, pos_filter=['NN', 'VB', 'JJ'], ratio=0.3, split=True)
 
         # To be compared to the reference.
         with utils.smart_open(os.path.join(pre_path, "mihalcea_tarau.kwpos.txt"), mode="r") as f:
