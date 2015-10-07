@@ -1,17 +1,30 @@
-hurricane
 gilbert
-storm
+hurricane
 coast
+storm
 saturday
 winds heavy
-weather
 flood
 flooding
+weather
+alert
+defense alerted
 strong
-defense
+pushed
 people
+puerto
 cabral said
-associated
 north
+associated
+south
+domingo
 residents
+dominican
+miles
 southeast
+san
+civil
+home
+reached
+juan
+named
