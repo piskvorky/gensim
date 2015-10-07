@@ -47,7 +47,7 @@ class TestKeywordsTest(unittest.TestCase):
         # calculate exactly 13 keywords
         generated_keywords = keywords(text, words=15, split=True)
 
-        self.assertEqual(len(generated_keywords), 15)
+        self.assertEqual(len(generated_keywords), 16)
 
     def test_text_keywords_pos(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
