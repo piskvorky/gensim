@@ -8,16 +8,20 @@ from gensim.summarization.textcleaner import clean_text_by_word as _clean_text_b
 from gensim.summarization.textcleaner import tokenize_by_word as _tokenize_by_word
 from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
+from gensim.utils import to_unicode
 from itertools import combinations as _combinations
 from six.moves.queue import Queue as _Queue
 from six.moves import xrange
+from six import iteritems
 
 
 WINDOW_SIZE = 2
 
-"""Check tags in http://www.clips.ua.ac.be/pages/mbsp-tags and use only first two letters
+"""
+Check tags in http://www.clips.ua.ac.be/pages/mbsp-tags and use only first two letters
 Example: filter for nouns and adjectives:
-INCLUDING_FILTER = ['NN', 'JJ']"""
+INCLUDING_FILTER = ['NN', 'JJ']
+"""
 INCLUDING_FILTER = ['NN', 'JJ']
 EXCLUDING_FILTER = []
 
@@ -26,13 +30,17 @@ def _get_pos_filters():
     return frozenset(INCLUDING_FILTER), frozenset(EXCLUDING_FILTER)
 
 
-def _get_words_for_graph(tokens):
-    include_filters, exclude_filters = _get_pos_filters()
+def _get_words_for_graph(tokens, pos_filter):
+    if pos_filter is None:
+        include_filters, exclude_filters = _get_pos_filters()
+    else:
+        include_filters = set(pos_filter)
+        exclude_filters = frozenset([])
     if include_filters and exclude_filters:
         raise ValueError("Can't use both include and exclude filters, should use only one")
 
     result = []
-    for word, unit in tokens.iteritems():
+    for word, unit in iteritems(tokens):
         if exclude_filters and unit.tag in exclude_filters:
             continue
         if (include_filters and unit.tag in include_filters) or not include_filters or not unit.tag:
@@ -111,7 +119,7 @@ def _extract_tokens(lemmas, scores, ratio, words):
 
 def _lemmas_to_words(tokens):
     lemma_to_word = {}
-    for word, unit in tokens.iteritems():
+    for word, unit in iteritems(tokens):
         lemma = unit.token
         if lemma in lemma_to_word:
             lemma_to_word[lemma].append(word)
@@ -156,7 +164,7 @@ def _get_combined_keywords(_keywords, split_text):
                 result.append(word)   # appends last word if keyword and doesn't iterate
             for j in xrange(i + 1, len_text):
                 other_word = _strip_word(split_text[j])
-                if other_word in _keywords and other_word == split_text[j].decode("utf-8"):
+                if other_word in _keywords and other_word == split_text[j]:
                     combined_word.append(other_word)
                 else:
                     for keyword in combined_word:
@@ -189,13 +197,14 @@ def _format_results(_keywords, combined_keywords, split, scores):
     return "\n".join(combined_keywords)
 
 
-def keywords(text, ratio=0.2, words=None, split=False, scores=False):
+def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=['NN', 'JJ'], lemmatize=False):
     # Gets a dict of word -> lemma
+    text = to_unicode(text)
     tokens = _clean_text_by_word(text)
     split_text = list(_tokenize_by_word(text))
 
     # Creates the graph and adds the edges
-    graph = _build_graph(_get_words_for_graph(tokens))
+    graph = _build_graph(_get_words_for_graph(tokens, pos_filter))
     _set_graph_edges(graph, tokens, split_text)
     del split_text  # It's no longer used
 
@@ -206,7 +215,14 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False):
 
     extracted_lemmas = _extract_tokens(graph.nodes(), pagerank_scores, ratio, words)
 
-    lemmas_to_word = _lemmas_to_words(tokens)
+    # The results can be polluted by many variations of the same word
+    if lemmatize:
+        lemmas_to_word = {}
+        for word, unit in iteritems(tokens):
+            lemmas_to_word[unit.token] = [word]
+    else:
+        lemmas_to_word = _lemmas_to_words(tokens)
+
     keywords = _get_keywords_with_score(extracted_lemmas, lemmas_to_word)
 
     # text.split() to keep numbers and punctuation marks, so separeted concepts are not combined

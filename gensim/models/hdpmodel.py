@@ -606,7 +606,7 @@ class HdpTopicFormatter(object):
                 if log:
                     logger.info(topic)
             else:
-                topic = [k, topic_terms]
+                topic = (k, topic_terms)
             shown.append(topic)
 
         return shown

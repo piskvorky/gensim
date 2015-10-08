@@ -10,12 +10,13 @@ from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
 from gensim.summarization.bm25 import get_bm25_weights as _bm25_weights
 from gensim.corpora import Dictionary
-from scipy.sparse import csr_matrix
 from math import log10 as _log10
 from six.moves import xrange
 
 
 INPUT_MIN_LENGTH = 10
+
+WEIGHT_THRESHOLD = 1.e-3
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ def _set_graph_edge_weights(graph):
 
     for i in xrange(len(documents)):
         for j in xrange(len(documents)):
-            if i == j:
+            if i == j or weights[i][j] < WEIGHT_THRESHOLD:
                 continue
 
             sentence_1 = documents[i]
