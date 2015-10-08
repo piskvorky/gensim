@@ -628,6 +628,8 @@ class Word2Vec(utils.SaveLoad):
         work, neu1 = inits
         tally = 0
         raw_tally = 0
+        batch_size = sum([len(j) for j in job])
+        logging.info('Number of sentences: %d, batch size: %d', len(job), batch_size) 
         if not FAST_VERSION == -1 and self.sg and self.batch:  # TODO: do for cbow also.
             logging.info('Submitting job to train_batch_sg.')
             tally += train_batch_sg(self, job, alpha, work)
