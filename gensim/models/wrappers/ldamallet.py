@@ -33,11 +33,11 @@ import logging
 import random
 import tempfile
 import os
-from subprocess import call
 
 import numpy
 
 from gensim import utils, matutils
+from gensim.models.wrappers.wrapper_utils import check_output
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +146,7 @@ class LdaMallet(utils.SaveLoad):
         else:
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet())
         logger.info("converting temporary corpus to MALLET format with %s" % cmd)
-        call(cmd, shell=True)
+        check_output(cmd, shell=True)
 
 
     def train(self, corpus):
@@ -158,7 +158,7 @@ class LdaMallet(utils.SaveLoad):
             self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations, self.finferencer())
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
         logger.info("training MALLET LDA with %s" % cmd)
-        call(cmd, shell=True)
+        check_output(cmd, shell=True)
         self.word_topics = self.load_word_topics()
 
 
@@ -172,9 +172,7 @@ class LdaMallet(utils.SaveLoad):
         cmd = self.mallet_path + " infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s"
         cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations)
         logger.info("inferring topics with MALLET LDA '%s'" % cmd)
-        retval = call(cmd, shell=True)
-        if retval != 0:
-            raise RuntimeError("MALLET failed with error %s on return" % retval)
+        check_output(cmd, shell=True)
         result = list(read_doctopics(self.fdoctopics() + '.infer'))
         return result if is_corpus else result[0]
 
