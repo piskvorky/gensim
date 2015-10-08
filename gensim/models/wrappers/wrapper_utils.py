@@ -1,5 +1,6 @@
 import subprocess
 
+
 def check_output(*popenargs, **kwargs):
     r"""Run command with arguments and return its output as a byte string.
     Backported from Python 2.7 as it's implemented as pure python on stdlib.
