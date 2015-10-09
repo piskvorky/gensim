@@ -205,6 +205,7 @@ def sparse2full(doc, length):
     """
     result = numpy.zeros(length, dtype=numpy.float32) # fill with zeroes (default value)
     doc = dict(doc)
+    doc = dict((k, v) for (k, v) in doc.items() if k < length)
     # overwrite some of the zeroes with explicit values
     result[list(doc)] = list(itervalues(doc))
     return result
