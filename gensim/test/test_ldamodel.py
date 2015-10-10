@@ -77,6 +77,20 @@ class TestLdaModel(unittest.TestCase):
                             (i, sorted(vec), sorted(expected)))
         self.assertTrue(passed)
 
+    def testAlpha(self):
+        model1 = self.class_(corpus, id2word=dictionary, alpha='symmetric', passes=10)
+        modelauto = self.class_(corpus, id2word=dictionary, alpha='auto', passes=10)
+
+        # did we learn something?
+        self.assertFalse(all(numpy.equal(model1.alpha, modelauto.alpha)))
+
+    def testEta(self):
+        model1 = self.class_(corpus, id2word=dictionary, eta='symmetric', passes=10)
+        modelauto = self.class_(corpus, id2word=dictionary, eta='auto', passes=10)
+
+        # did we learn something?
+        self.assertFalse(all(numpy.equal(model1.eta, modelauto.eta)))
+
     def testTopTopics(self):
         top_topics = self.model.top_topics(self.corpus)
 
@@ -253,6 +267,11 @@ class TestLdaMulticore(TestLdaModel):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = ldamulticore.LdaMulticore
         self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
+
+    # override LdaModel because multicore does not allow alpha=auto
+    def testAlpha(self):
+        pass
+
 
 #endclass TestLdaMulticore
 
