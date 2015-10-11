@@ -66,6 +66,29 @@ def dirichlet_expectation(alpha):
         result = psi(alpha) - psi(numpy.sum(alpha, 1))[:, numpy.newaxis]
     return result.astype(alpha.dtype)  # keep the same precision as input
 
+def update_dir_prior(prior, N, logphat, rho):
+    """
+    Updates a given prior using Newton's method, described in
+    **Huang: Maximum Likelihood Estimation of Dirichlet Distribution Parameters.**
+    http://jonathan-huang.org/research/dirichlet/dirichlet.pdf
+    """
+    dprior = numpy.copy(prior)
+    gradf = N * (psi(numpy.sum(prior)) - psi(prior) + logphat)
+
+    c = N * polygamma(1, numpy.sum(prior))
+    q = -N * polygamma(1, prior)
+
+    b = numpy.sum(gradf / q) / (1 / c + numpy.sum(1 / q))
+
+    dprior = -(gradf - b) / q
+
+    if all(rho * dprior + prior > 0):
+        prior += rho * dprior
+    else:
+        logger.warning("updated prior not positive")
+
+    return prior
+
 
 class LdaState(utils.SaveLoad):
     """
@@ -432,31 +455,16 @@ class LdaModel(interfaces.TransformationABC):
         state.numdocs += gamma.shape[0]  # avoids calling len(chunk) on a generator
         return gamma
 
+
     def update_alpha(self, gammat, rho):
         """
         Update parameters for the Dirichlet prior on the per-document
         topic weights `alpha` given the last `gammat`.
-
-        Uses Newton's method, described in **Huang: Maximum Likelihood Estimation of Dirichlet Distribution Parameters.**
-        http://jonathan-huang.org/research/dirichlet/dirichlet.pdf
-
         """
         N = float(len(gammat))
         logphat = sum(dirichlet_expectation(gamma) for gamma in gammat) / N
-        dalpha = numpy.copy(self.alpha)
-        gradf = N * (psi(numpy.sum(self.alpha)) - psi(self.alpha) + logphat)
 
-        c = N * polygamma(1, numpy.sum(self.alpha))
-        q = -N * polygamma(1, self.alpha)
-
-        b = numpy.sum(gradf / q) / (1 / c + numpy.sum(1 / q))
-
-        dalpha = -(gradf - b) / q
-
-        if all(rho * dalpha + self.alpha > 0):
-            self.alpha += rho * dalpha
-        else:
-            logger.warning("updated alpha not positive")
+        self.alpha = update_dir_prior(self.alpha, N, logphat, rho)
         logger.info("optimized alpha %s", list(self.alpha))
 
         return self.alpha
@@ -465,28 +473,13 @@ class LdaModel(interfaces.TransformationABC):
         """
         Update parameters for the Dirichlet prior on the per-topic
         word weights `eta` given the last `lambdat`.
-
-        Uses Newton's method, described in **Huang: Maximum Likelihood Estimation of Dirichlet Distribution Parameters.**
-        http://jonathan-huang.org/research/dirichlet/dirichlet.pdf
-
         """
         if self.eta.shape[1] != 1:
             raise ValueError("Can't use update_eta with eta matrices, only column vectors.")
         N = float(lambdat.shape[1])
         logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat.transpose()) / N).reshape((self.num_topics,1))
-        deta = numpy.copy(self.eta)
-        gradf = N * (psi(numpy.sum(self.eta)) - psi(self.eta) + logphat)
 
-        c = N * polygamma(1, numpy.sum(self.eta))
-        q = -N * polygamma(1, self.eta)
-
-        b = numpy.sum(gradf / q) / (1 / c + numpy.sum(1 / q))
-
-        deta = -(gradf - b) / q
-        if all(rho * deta + self.eta > 0):
-            self.eta += rho * deta
-        else:
-            logger.warning("updated eta not positive")
+        self.eta = update_dir_prior(self.eta, N, logphat, rho)
         logger.info("optimized eta %s", list(self.eta.reshape((self.num_topics))))
 
         return self.eta
