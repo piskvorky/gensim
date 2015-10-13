@@ -21,5 +21,5 @@ def check_output(*popenargs, **kwargs):
             raise error
         return output
     except KeyboardInterrupt:
-            process.terminate()
-            return None
+        process.terminate()
+        raise
