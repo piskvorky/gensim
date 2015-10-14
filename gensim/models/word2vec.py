@@ -624,15 +624,13 @@ class Word2Vec(utils.SaveLoad):
         self.corpus_count = other_model.corpus_count
         self.reset_weights()
 
-    def _do_train_job(self, job, alpha, inits):
+    def _do_train_job(self, job, alpha, inits, sentence_indeces):
         work, neu1 = inits
         tally = 0
         raw_tally = 0
         if not FAST_VERSION == -1 and self.sg and self.batch:  # TODO: do for cbow also.
-            logging.info('Calling train_batch_sg.')
-            tally += train_batch_sg(self, job, alpha, work)
-            for sentence in job:
-                raw_tally += len(sentence)
+            tally += train_batch_sg(self, job, alpha, sentence_indeces, work)
+            raw_tally += len(job)
         else:
             for sentence in job:
                 if self.sg:
@@ -694,11 +692,11 @@ class Word2Vec(utils.SaveLoad):
             return (work, neu1)
 
         def worker_one_job(job, inits):
-            items, alpha = job
+            items, alpha, sentence_indeces = job
             if items is None:  # signal to finish
                 return False
             # train & return tally
-            tally, raw_tally = self._do_train_job(items, alpha, inits)
+            tally, raw_tally = self._do_train_job(items, alpha, inits, sentence_indeces)
             progress_queue.put((len(items), tally, raw_tally))  # report progress
             return True
 
@@ -734,24 +732,27 @@ class Word2Vec(utils.SaveLoad):
         next_alpha = self.alpha
 
         job_batch = []
+        num_sentences = 0
         batch_size = 0
+        sentence_indeces = [0]
         job_no = 0
         MAX_WORDS_IN_BATCH = 1000  # NOTE: should be same as MAX_SENTENCE_LEN in word2vec_inner.pyx.
-        MAX_NUM_SENTENCES = 100  # TODO: should be in word2vec_inner.pyx as well. TODO: consider proper value.
+        MAX_NUM_SENTENCES = 1000  # TODO: should be in word2vec_inner.pyx as well. TODO: consider proper value.
         # fill jobs queue with (sentence, alpha) job tuples
-        # TODO: make this code more elegant, it is very messy now.
         job_source = enumerate(sentences)
         while True:
             try:
                 sent_idx, sent = job_source.next()
-                if batch_size + len(sent) < MAX_WORDS_IN_BATCH and len(job_batch) < MAX_NUM_SENTENCES:
+                if batch_size + len(sent) < MAX_WORDS_IN_BATCH and num_sentences < MAX_NUM_SENTENCES:
                     # Append sentence to job batch and proceed.
-                    job_batch.append(sent)
+                    job_batch.extend(sent)
                     batch_size += len(sent)
+                    sentence_indeces.append(sentence_indeces[-1] + batch_size)
+                    num_sentences += 1
                 else:
                     # Submit job to queue.
                     logger.debug("putting job #%i in the queue at alpha %.05f", job_no, next_alpha)
-                    job_queue.put((job_batch, next_alpha))
+                    job_queue.put((job_batch, next_alpha, sentence_indeces))
                     # update the learning rate before every next job
                     if self.min_alpha < next_alpha:
                         if total_examples:
@@ -764,19 +765,22 @@ class Word2Vec(utils.SaveLoad):
                             next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
                         next_alpha = max(next_alpha, self.min_alpha)
                     job_no += 1
+                    num_sentences = 0
                     if len(sent) < MAX_WORDS_IN_BATCH:
-                        job_batch = [sent]
+                        job_batch = sent
                         batch_size = len(sent)
                     else:
                         sent_slice = sent[:MAX_WORDS_IN_BATCH]
-                        job_batch = [sent_slice]
+                        job_batch = sent_slice
                         batch_size = len(sent_slice)
+                    sentence_indeces = [0, batch_size]
+                    num_sentences += 1
             except StopIteration:
                 # No more sentences left.
                 if job_batch:  # If there are still items left in job, submit them.
                     ## Submit job to queue.
                     logger.debug("putting job #%i in the queue at alpha %.05f", job_no, next_alpha)
-                    job_queue.put((job_batch, next_alpha))
+                    job_queue.put((job_batch, next_alpha, sentence_indeces))
                     # update the learning rate before every next job
                     if self.min_alpha < next_alpha:
                         if total_examples:
@@ -803,7 +807,7 @@ class Word2Vec(utils.SaveLoad):
                     "reached end of input; waiting to finish %i outstanding jobs",
                     job_no - done_jobs)
                 for _ in xrange(self.workers):
-                    job_queue.put((None, 0))  # give the workers heads up that they can finish -- no more work!
+                    job_queue.put((None, 0, [0]))  # give the workers heads up that they can finish -- no more work!
                 push_done = True
             try:
                 while done_jobs < job_no or not push_done:

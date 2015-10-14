@@ -25,7 +25,7 @@ except ImportError:
 REAL = np.float32
 
 DEF MAX_SENTENCE_LEN = 1000
-DEF MAX_NUM_SENTENCES = 100
+DEF MAX_NUM_SENTENCES = 1000
 
 cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(fblas.scopy._cpointer)  # y = x
 cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(fblas.saxpy._cpointer)  # y += alpha * x
@@ -343,7 +343,7 @@ def train_sentence_sg(model, sentence, alpha, _work):
     return result
 
 
-def train_batch_sg(model, sentences, alpha, _work):
+def train_batch_sg(model, sentences, alpha, sentence_indeces, _work):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.sample != 0)
@@ -354,21 +354,22 @@ def train_batch_sg(model, sentences, alpha, _work):
     cdef REAL_t _alpha = alpha
     cdef int size = model.layer1_size
 
-    cdef int codelens[MAX_NUM_SENTENCES][MAX_SENTENCE_LEN]
-    cdef np.uint32_t indexes[MAX_NUM_SENTENCES][MAX_SENTENCE_LEN]
-    cdef np.uint32_t reduced_windows[MAX_NUM_SENTENCES][MAX_SENTENCE_LEN]
+    cdef int codelens[MAX_SENTENCE_LEN]
+    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
     cdef int sentence_len[MAX_NUM_SENTENCES]
+    cdef int sentence_indeces_c[MAX_NUM_SENTENCES]
     cdef int window = model.window
 
-    cdef int i, j, k
+    cdef int i, j, k, m
     cdef long result = 0
     cdef int num_sentences = 0
     cdef int sent_idx = 0
 
     # For hierarchical softmax
     cdef REAL_t *syn1
-    cdef np.uint32_t *points[MAX_NUM_SENTENCES][MAX_SENTENCE_LEN]
-    cdef np.uint8_t *codes[MAX_NUM_SENTENCES][MAX_SENTENCE_LEN]
+    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
+    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
 
     # For negative sampling
     cdef REAL_t *syn1neg
@@ -391,9 +392,11 @@ def train_batch_sg(model, sentences, alpha, _work):
     work = <REAL_t *>np.PyArray_DATA(_work)
 
     vlookup = model.vocab
-    for sent_idx, sentence in enumerate(sentences):
-        #print sent_idx
-        #sys.stdout.flush()
+    for sent_idx, idx in enumerate(range(len(sentence_indeces) - 1)):
+        idx1 = sentence_indeces[idx]
+        idx2 = sentence_indeces[idx + 1]
+        sentence = sentences[idx1:idx2]
+        sentence_indeces_c[sent_idx] = idx1
         i = 0
         for token in sentence:
             word = vlookup[token] if token in vlookup else None
@@ -401,40 +404,42 @@ def train_batch_sg(model, sentences, alpha, _work):
                 continue  # leaving i unchanged/shortening sentence
             if sample and word.sample_int < random_int32(&next_random):
                 continue
-            indexes[sent_idx][i] = word.index
+            indexes[idx1 + i] = word.index
             if hs:
-                codelens[sent_idx][i] = <int>len(word.code)
-                codes[sent_idx][i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                points[sent_idx][i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+                codelens[idx1 + i] = <int>len(word.code)
+                codes[idx1 + i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                points[idx1 + i] = <np.uint32_t *>np.PyArray_DATA(word.point)
             result += 1
             i += 1
             if i == MAX_SENTENCE_LEN:
                 break  # TODO: log warning, tally overflow?
         sentence_len[sent_idx] = i
-        num_sentences += 1
 
         # single randint() call avoids a big thread-sync slowdown
         for i, item in enumerate(model.random.randint(0, window, sentence_len[sent_idx])):
-            reduced_windows[sent_idx][i] = item
+            reduced_windows[idx1 + i] = item
+
+        num_sentences += 1
 
 
     # release GIL & train on the sentences
     with nogil:
         for sent_idx in range(num_sentences):
+            m = sentence_indeces_c[sent_idx]
             for i in range(sentence_len[sent_idx]):
-                j = i - window + reduced_windows[sent_idx][i]
+                j = i - window + reduced_windows[m + i]
                 if j < 0:
                     j = 0
-                k = i + window + 1 - reduced_windows[sent_idx][i]
+                k = i + window + 1 - reduced_windows[m + i]
                 if k > sentence_len[sent_idx]:
                     k = sentence_len[sent_idx]
                 for j in range(j, k):
                     if j == i:
                         continue
                     if hs:
-                        fast_sentence_sg_hs(points[sent_idx][i], codes[sent_idx][i], codelens[sent_idx][i], syn0, syn1, size, indexes[sent_idx][j], _alpha, work, word_locks)
+                        fast_sentence_sg_hs(points[m + i], codes[m + i], codelens[m + i], syn0, syn1, size, indexes[m + j], _alpha, work, word_locks)
                     if negative:
-                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[sent_idx][i], indexes[sent_idx][j], _alpha, work, next_random, word_locks)
+                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[m + i], indexes[m + j], _alpha, work, next_random, word_locks)
 
     return result
 
