@@ -1179,6 +1179,90 @@ class Word2Vec(utils.SaveLoad):
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
+    
+    def most_similar_in_list(self, positive=[], negative=[], topn=10, restrict_vocab=None):
+        """
+        Find the top-N most similar words. Positive words contribute positively towards the
+        similarity, negative words negatively.
+
+        This method computes cosine similarity between a simple mean of the projection
+        weight vectors of the given words and the vectors for each word in the model.
+        The method corresponds to the `word-analogy` and `distance` scripts in the original
+        word2vec implementation.
+
+        If topn is False, most_similar returns the vector of similarity scores.
+
+        `restrict_vocab` is optional. An integer values limits the range of vectors which
+        are searched for most-similar values. For example, restrict_vocab=10000 would
+        only check the first 10000 word vectors in the vocabulary order. (This may be
+        meaningful if you've sorted the vocabulary by descending frequency.)
+        If `restrict_vocab` is a list, then only the vectors for the words in that list are
+        searched for most-similar values. 
+
+        Example::
+
+          >>> trained_model.most_similar(positive=['woman', 'king'], negative=['man'])
+          [('queen', 0.50882536), ...]
+
+        """
+        self.init_sims()
+
+        if isinstance(positive, string_types) and not negative:
+            # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
+            positive = [positive]
+
+        # add weights for each word, if not already present; default to 1.0 for positive and -1.0 for negative words
+        positive = [
+            (word, 1.0) if isinstance(word, string_types + (ndarray,)) else word
+            for word in positive
+        ]
+        negative = [
+            (word, -1.0) if isinstance(word, string_types + (ndarray,)) else word
+            for word in negative
+        ]
+
+        # compute the weighted average of all words
+        all_words, mean = set(), []
+        for word, weight in positive + negative:
+            if isinstance(word, ndarray):
+                mean.append(weight * word)
+            elif word in self.vocab:
+                mean.append(weight * self.syn0norm[self.vocab[word].index])
+                all_words.add(self.vocab[word].index)
+            else:
+                raise KeyError("word '%s' not in vocabulary" % word)
+        if not mean:
+            raise ValueError("cannot compute similarity with no input")
+        mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
+
+        if restrict_vocab is None:
+            limited = self.syn0norm
+        elif isinstance(restrict_vocab, int):
+            # Same behavior as `most_similar` method
+            limited = self.syn0norm[:restrict_vocab]
+        elif isinstance(restrict_vocab, list):
+            restrict_vocab = list(set(restrict_vocab))
+            for word in restrict_vocab:
+                if word not in self.vocab:
+                    raise KeyError("word '%s' not in vocabulary" % word)
+            restrict_vocab_idx = [self.vocab[word].index for word in restrict_vocab]
+            limited = self.syn0norm[restrict_vocab_idx]
+        
+        dists = dot(limited, mean)
+        if not topn:
+            return dists
+        best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
+
+        # ignore (don't return) words from the input
+        if not isinstance(restrict_vocab, list):
+            result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
+        else:
+            result = []
+            for sim in best:
+                idx = restrict_vocab_idx[sim]
+                if idx not in all_words:
+                    result.append((self.index2word[idx], float(dists[sim])))
+        return result[:topn]
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         """
