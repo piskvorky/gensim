@@ -497,7 +497,7 @@ class Word2Vec(utils.SaveLoad):
 
         """
         self.scan_vocab(sentences, trim_rule=trim_rule)  # initial survey
-        self.scale_vocab(keep_raw_vocab, trim_rule=trim_rule)  # trim by min_count & precalculate downsampling
+        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule)  # trim by min_count & precalculate downsampling
         self.finalize_vocab()  # build tables & arrays
 
     def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
