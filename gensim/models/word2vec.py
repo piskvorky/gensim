@@ -697,7 +697,7 @@ class Word2Vec(utils.SaveLoad):
                 return False
             # train & return tally
             tally, raw_tally = self._do_train_job(items, alpha, inits, sentence_indeces)
-            progress_queue.put((len(items), tally, raw_tally))  # report progress
+            progress_queue.put((len(sentence_indeces) - 1, tally, raw_tally))  # report progress
             return True
 
         def worker_loop():
@@ -736,7 +736,7 @@ class Word2Vec(utils.SaveLoad):
         batch_size = 0
         sentence_indeces = [0]
         job_no = 0
-        MAX_WORDS_IN_BATCH = 1000  # NOTE: should be same as MAX_SENTENCE_LEN in word2vec_inner.pyx.
+        MAX_WORDS_IN_BATCH = 10000  # NOTE: should be same as MAX_SENTENCE_LEN in word2vec_inner.pyx.
         MAX_NUM_SENTENCES = 1000  # TODO: should be in word2vec_inner.pyx as well. TODO: consider proper value.
         # fill jobs queue with (sentence, alpha) job tuples
         job_source = enumerate(sentences)

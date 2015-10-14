@@ -3203,9 +3203,9 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_train_sentence_sg(CYT
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_work;
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t __pyx_v__alpha;
   int __pyx_v_size;
-  int __pyx_v_codelens[0x3E8];
-  __pyx_t_5numpy_uint32_t __pyx_v_indexes[0x3E8];
-  __pyx_t_5numpy_uint32_t __pyx_v_reduced_windows[0x3E8];
+  int __pyx_v_codelens[0x2710];
+  __pyx_t_5numpy_uint32_t __pyx_v_indexes[0x2710];
+  __pyx_t_5numpy_uint32_t __pyx_v_reduced_windows[0x2710];
   int __pyx_v_sentence_len;
   int __pyx_v_window;
   int __pyx_v_i;
@@ -3213,8 +3213,8 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_train_sentence_sg(CYT
   int __pyx_v_k;
   long __pyx_v_result;
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_syn1;
-  __pyx_t_5numpy_uint32_t *__pyx_v_points[0x3E8];
-  __pyx_t_5numpy_uint8_t *__pyx_v_codes[0x3E8];
+  __pyx_t_5numpy_uint32_t *__pyx_v_points[0x2710];
+  __pyx_t_5numpy_uint8_t *__pyx_v_codes[0x2710];
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_syn1neg;
   __pyx_t_5numpy_uint32_t *__pyx_v_cum_table;
   unsigned PY_LONG_LONG __pyx_v_cum_table_len;
@@ -3780,7 +3780,7 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_train_sentence_sg(CYT
  *             break  # TODO: log warning, tally overflow?
  *     sentence_len = i
  */
-    __pyx_t_7 = ((__pyx_v_i == 0x3E8) != 0);
+    __pyx_t_7 = ((__pyx_v_i == 0x2710) != 0);
     if (__pyx_t_7) {
 
       /* "gensim/models/word2vec_inner.pyx":319
@@ -4298,9 +4298,9 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_2train_batch_sg(CYTHO
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_work;
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t __pyx_v__alpha;
   int __pyx_v_size;
-  int __pyx_v_codelens[0x3E8];
-  __pyx_t_5numpy_uint32_t __pyx_v_indexes[0x3E8];
-  __pyx_t_5numpy_uint32_t __pyx_v_reduced_windows[0x3E8];
+  int __pyx_v_codelens[0x2710];
+  __pyx_t_5numpy_uint32_t __pyx_v_indexes[0x2710];
+  __pyx_t_5numpy_uint32_t __pyx_v_reduced_windows[0x2710];
   int __pyx_v_sentence_len[0x3E8];
   int __pyx_v_sentence_indeces_c[0x3E8];
   int __pyx_v_window;
@@ -4312,8 +4312,8 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_2train_batch_sg(CYTHO
   int __pyx_v_num_sentences;
   int __pyx_v_sent_idx;
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_syn1;
-  __pyx_t_5numpy_uint32_t *__pyx_v_points[0x3E8];
-  __pyx_t_5numpy_uint8_t *__pyx_v_codes[0x3E8];
+  __pyx_t_5numpy_uint32_t *__pyx_v_points[0x2710];
+  __pyx_t_5numpy_uint8_t *__pyx_v_codes[0x2710];
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_syn1neg;
   __pyx_t_5numpy_uint32_t *__pyx_v_cum_table;
   unsigned PY_LONG_LONG __pyx_v_cum_table_len;
@@ -5048,7 +5048,7 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_2train_batch_sg(CYTHO
  *                 break  # TODO: log warning, tally overflow?
  *         sentence_len[sent_idx] = i
  */
-      __pyx_t_7 = ((__pyx_v_i == 0x3E8) != 0);
+      __pyx_t_7 = ((__pyx_v_i == 0x2710) != 0);
       if (__pyx_t_7) {
 
         /* "gensim/models/word2vec_inner.pyx":415
@@ -5620,9 +5620,9 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_4train_sentence_cbow(
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_neu1;
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t __pyx_v__alpha;
   int __pyx_v_size;
-  int __pyx_v_codelens[0x3E8];
-  __pyx_t_5numpy_uint32_t __pyx_v_indexes[0x3E8];
-  __pyx_t_5numpy_uint32_t __pyx_v_reduced_windows[0x3E8];
+  int __pyx_v_codelens[0x2710];
+  __pyx_t_5numpy_uint32_t __pyx_v_indexes[0x2710];
+  __pyx_t_5numpy_uint32_t __pyx_v_reduced_windows[0x2710];
   int __pyx_v_sentence_len;
   int __pyx_v_window;
   int __pyx_v_i;
@@ -5630,8 +5630,8 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_4train_sentence_cbow(
   int __pyx_v_k;
   long __pyx_v_result;
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_syn1;
-  __pyx_t_5numpy_uint32_t *__pyx_v_points[0x3E8];
-  __pyx_t_5numpy_uint8_t *__pyx_v_codes[0x3E8];
+  __pyx_t_5numpy_uint32_t *__pyx_v_points[0x2710];
+  __pyx_t_5numpy_uint8_t *__pyx_v_codes[0x2710];
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_syn1neg;
   __pyx_t_5numpy_uint32_t *__pyx_v_cum_table;
   unsigned PY_LONG_LONG __pyx_v_cum_table_len;
@@ -6218,7 +6218,7 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_4train_sentence_cbow(
  *             break  # TODO: log warning, tally overflow?
  *     sentence_len = i
  */
-    __pyx_t_7 = ((__pyx_v_i == 0x3E8) != 0);
+    __pyx_t_7 = ((__pyx_v_i == 0x2710) != 0);
     if (__pyx_t_7) {
 
       /* "gensim/models/word2vec_inner.pyx":511
@@ -6672,8 +6672,8 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_6score_sentence_sg(CY
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_syn0;
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_work;
   int __pyx_v_size;
-  int __pyx_v_codelens[0x3E8];
-  __pyx_t_5numpy_uint32_t __pyx_v_indexes[0x3E8];
+  int __pyx_v_codelens[0x2710];
+  __pyx_t_5numpy_uint32_t __pyx_v_indexes[0x2710];
   int __pyx_v_sentence_len;
   int __pyx_v_window;
   int __pyx_v_i;
@@ -6681,8 +6681,8 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_6score_sentence_sg(CY
   int __pyx_v_k;
   long __pyx_v_result;
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_syn1;
-  __pyx_t_5numpy_uint32_t *__pyx_v_points[0x3E8];
-  __pyx_t_5numpy_uint8_t *__pyx_v_codes[0x3E8];
+  __pyx_t_5numpy_uint32_t *__pyx_v_points[0x2710];
+  __pyx_t_5numpy_uint8_t *__pyx_v_codes[0x2710];
   PyObject *__pyx_v_vlookup = NULL;
   PyObject *__pyx_v_token = NULL;
   PyObject *__pyx_v_word = NULL;
@@ -6973,7 +6973,7 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_6score_sentence_sg(CY
  *             break  # TODO: log warning, tally overflow?
  *     sentence_len = i
  */
-    __pyx_t_8 = ((__pyx_v_i == 0x3E8) != 0);
+    __pyx_t_8 = ((__pyx_v_i == 0x2710) != 0);
     if (__pyx_t_8) {
 
       /* "gensim/models/word2vec_inner.pyx":572
@@ -7506,8 +7506,8 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_8score_sentence_cbow(
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_work;
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_neu1;
   int __pyx_v_size;
-  int __pyx_v_codelens[0x3E8];
-  __pyx_t_5numpy_uint32_t __pyx_v_indexes[0x3E8];
+  int __pyx_v_codelens[0x2710];
+  __pyx_t_5numpy_uint32_t __pyx_v_indexes[0x2710];
   int __pyx_v_sentence_len;
   int __pyx_v_window;
   int __pyx_v_i;
@@ -7515,8 +7515,8 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_8score_sentence_cbow(
   int __pyx_v_k;
   long __pyx_v_result;
   __pyx_t_6gensim_6models_14word2vec_inner_REAL_t *__pyx_v_syn1;
-  __pyx_t_5numpy_uint32_t *__pyx_v_points[0x3E8];
-  __pyx_t_5numpy_uint8_t *__pyx_v_codes[0x3E8];
+  __pyx_t_5numpy_uint32_t *__pyx_v_points[0x2710];
+  __pyx_t_5numpy_uint8_t *__pyx_v_codes[0x2710];
   PyObject *__pyx_v_vlookup = NULL;
   PyObject *__pyx_v_token = NULL;
   PyObject *__pyx_v_word = NULL;
@@ -7828,7 +7828,7 @@ static PyObject *__pyx_pf_6gensim_6models_14word2vec_inner_8score_sentence_cbow(
  *             break  # TODO: log warning, tally overflow?
  *     sentence_len = i
  */
-    __pyx_t_8 = ((__pyx_v_i == 0x3E8) != 0);
+    __pyx_t_8 = ((__pyx_v_i == 0x2710) != 0);
     if (__pyx_t_8) {
 
       /* "gensim/models/word2vec_inner.pyx":655
@@ -11369,7 +11369,7 @@ PyMODINIT_FUNC PyInit_word2vec_inner(void)
  * 
  * REAL = np.float32             # <<<<<<<<<<<<<<
  * 
- * DEF MAX_SENTENCE_LEN = 1000
+ * DEF MAX_SENTENCE_LEN = 10000
  */
   __pyx_t_7 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 25; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_7);
