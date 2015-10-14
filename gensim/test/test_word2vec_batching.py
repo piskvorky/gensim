@@ -24,7 +24,7 @@ class SentenceGenerator(object):
     def __iter__(self):
         i = 0
         for sentence in self.brown_sentences:
-            if i > self.num_sents:
+            if i > self.num_sents:  # NOTE: slice instead.
                 break
             i += 1
             tokens = word_tokenize(' '.join(sentence))

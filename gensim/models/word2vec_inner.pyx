@@ -24,8 +24,8 @@ except ImportError:
 
 REAL = np.float32
 
-DEF MAX_SENTENCE_LEN = 10000
-DEF MAX_NUM_SENTENCES = 1000
+DEF MAX_SENTENCE_LEN = 1000
+DEF MAX_NUM_SENTENCES = 100
 
 cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(fblas.scopy._cpointer)  # y = x
 cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(fblas.saxpy._cpointer)  # y += alpha * x
@@ -392,6 +392,8 @@ def train_batch_sg(model, sentences, alpha, _work):
 
     vlookup = model.vocab
     for sent_idx, sentence in enumerate(sentences):
+        #print sent_idx
+        #sys.stdout.flush()
         i = 0
         for token in sentence:
             word = vlookup[token] if token in vlookup else None
@@ -414,6 +416,7 @@ def train_batch_sg(model, sentences, alpha, _work):
         # single randint() call avoids a big thread-sync slowdown
         for i, item in enumerate(model.random.randint(0, window, sentence_len[sent_idx])):
             reduced_windows[sent_idx][i] = item
+
 
     # release GIL & train on the sentences
     with nogil:
