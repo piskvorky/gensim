@@ -63,7 +63,7 @@ from six import iterkeys
 from six.moves import xrange
 
 
-logger = logging.getLogger('gensim.models.lsimodel')
+logger = logging.getLogger(__name__)
 
 
 # accuracy defaults for the multi-pass stochastic algo
@@ -474,7 +474,7 @@ class LsiModel(interfaces.TransformationABC):
         of the topic (both negative and positive).
 
         >>> lsimodel.show_topic(10, topn=5)
-        [(-0.340, "category"), (0.298, "$M$"), (0.183, "algebra"), (-0.174, "functor"), (-0.168, "operator")]
+        [("category", -0.340), ("$M$", 0.298), ("algebra", 0.183), ("functor", -0.174), ("operator", -0.168)]
 
         """
         # size of the projection matrix can actually be smaller than `self.num_topics`,
@@ -485,7 +485,7 @@ class LsiModel(interfaces.TransformationABC):
         c = numpy.asarray(self.projection.u.T[topicno, :]).flatten()
         norm = numpy.sqrt(numpy.sum(numpy.dot(c, c)))
         most = matutils.argsort(numpy.abs(c), topn, reverse=True)
-        return [(1.0 * c[val] / norm, self.id2word[val]) for val in most]
+        return [(self.id2word[val], 1.0 * c[val] / norm) for val in most]
 
     def print_topic(self, topicno, topn=10):
         """
@@ -495,7 +495,7 @@ class LsiModel(interfaces.TransformationABC):
         '-0.340 * "category" + 0.298 * "$M$" + 0.183 * "algebra" + -0.174 * "functor" + -0.168 * "operator"'
 
         """
-        return ' + '.join(['%.3f*"%s"' % v for v in self.show_topic(topicno, topn)])
+        return ' + '.join(['%.3f*"%s"' % (v, k) for k, v in self.show_topic(topicno, topn)])
 
     def show_topics(self, num_topics=-1, num_words=10, log=False, formatted=True):
         """
@@ -503,7 +503,7 @@ class LsiModel(interfaces.TransformationABC):
         For each topic, show `num_words` most significant words (10 words by default).
 
         The topics are returned as a list -- a list of strings if `formatted` is
-        True, or a list of (weight, word) 2-tuples if False.
+        True, or a list of `(word, probability)` 2-tuples if False.
 
         If `log` is True, also output this result to log.
 
@@ -517,7 +517,7 @@ class LsiModel(interfaces.TransformationABC):
                     topic = self.print_topic(i, topn=num_words)
                 else:
                     topic = self.show_topic(i, topn=num_words)
-                shown.append(topic)
+                shown.append((i, topic))
                 if log:
                     logger.info("topic #%i(%.3f): %s", i, self.projection.s[i], topic)
         return shown
