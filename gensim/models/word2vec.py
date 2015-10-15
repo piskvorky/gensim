@@ -681,7 +681,7 @@ class Word2Vec(utils.SaveLoad):
         if total_words is None and total_examples is None:
             if self.corpus_count:
                 total_examples = self.corpus_count
-                logger.info("expecting %i examples, matching count from corpus used for vocabulary survey", total_examples)
+                logger.info("expecting %i sentences, matching count from corpus used for vocabulary survey", total_examples)
             else:
                 raise ValueError("you must provide either total_words or total_examples, to enable alpha and progress calculations")
 
@@ -727,24 +727,25 @@ class Word2Vec(utils.SaveLoad):
                     batch_size += len(sentence)
                 else:
                     # no => submit the existing job
-                    logger.debug("putting job #%i at alpha %.05f", job_no, next_alpha)
+                    logger.debug("putting job #%i at alpha %.05f", next_alpha)
                     job_queue.put((job_batch, next_alpha))
                     job_no += 1
-
-                    # add the sentence that didn't fit as the first item of a new job
-                    job_batch, batch_size = [sentence], len(sentence)
 
                     # update the learning rate for the next job
                     if self.min_alpha < next_alpha:
                         if total_examples:
                             # examples-based decay
                             pushed_examples += len(job_batch)
-                            next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_examples / total_examples)
+                            progress = 1.0 * pushed_examples / total_examples
                         else:
                             # words-based decay
                             pushed_words += self._raw_word_count(job_batch)
-                            next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
-                        next_alpha = max(next_alpha, self.min_alpha)
+                            progress = 1.0 * pushed_words / total_words
+                        next_alpha = self.alpha - (self.alpha - self.min_alpha) * progress
+                        next_alpha = max(self.min_alpha, next_alpha)
+
+                    # add the sentence that didn't fit as the first item of a new job
+                    job_batch, batch_size = [sentence], len(sentence)
             # add the last job too (may be significantly smaller than MAX_WORDS_IN_BATCH / MAX_BATCH_SENTENCES)
             if job_batch:
                 logger.debug("putting job #%i in the queue at alpha %.05f", job_no, next_alpha)
