@@ -102,7 +102,7 @@ try:
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
-    MAX_WORDS_IN_BATCH, MAX_BATCH_SENTENCES = 10000, 100
+    MAX_WORDS_IN_BATCH, MAX_BATCH_SENTENCES = 100000, 100
 
     def train_sentence_sg(model, sentence, alpha, work=None):
         """
