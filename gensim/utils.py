@@ -1105,3 +1105,12 @@ def prune_vocab(vocab, min_reduce):
     logger.info("pruned out %i tokens with count <=%i (before %i, after %i)",
                 old_len - len(vocab), min_reduce, old_len, len(vocab))
     return result
+
+
+def qsize(queue):
+    """Return the (approximate) queue size where available; -1 where not (OS X)."""
+    try:
+        return queue.qsize()
+    except NotImplementedError:
+        # OS X doesn't support qsize
+        return -1

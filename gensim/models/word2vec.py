@@ -94,10 +94,12 @@ from types import GeneratorType
 logger = logging.getLogger("gensim.models.word2vec")
 
 try:
-    from gensim.models.word2vec_inner import train_sentence_sg, train_batch_sg, train_sentence_cbow, FAST_VERSION
+    from gensim.models.word2vec_inner import train_sentence_sg, train_batch_sg, train_sentence_cbow
+    from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH, MAX_BATCH_SENTENCES
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
+    MAX_WORDS_IN_BATCH, MAX_BATCH_SENTENCES = 10000, 100
 
     def train_sentence_sg(model, sentence, alpha, work=None):
         """
@@ -624,15 +626,16 @@ class Word2Vec(utils.SaveLoad):
         self.corpus_count = other_model.corpus_count
         self.reset_weights()
 
-    def _do_train_job(self, job, alpha, inits, sentence_indeces):
+    def _do_train_job(self, sentences, alpha, inits):
         work, neu1 = inits
-        tally = 0
-        raw_tally = 0
-        if not FAST_VERSION == -1 and self.sg and self.batch:  # TODO: do for cbow also.
-            tally += train_batch_sg(self, job, alpha, sentence_indeces, work)
-            raw_tally += len(job)
+        tally, raw_tally = 0, 0
+        if self.batch:
+            assert FAST_VERSION > -1, "FIXME: python-only code path"
+            assert self.sg, "FIXME: cbow also"
+            tally += train_batch_sg(self, sentences, alpha, work)
+            raw_tally += len(sentences)
         else:
-            for sentence in job:
+            for sentence in sentences:
                 if self.sg:
                     tally += train_sentence_sg(self, sentence, alpha, work)
                 else:
@@ -643,7 +646,8 @@ class Word2Vec(utils.SaveLoad):
     def _raw_word_count(self, items):
         return sum(len(item) for item in items)
 
-    def train(self, sentences, total_words=None, word_count=0, chunksize=100, total_examples=None, queue_factor=2, report_delay=1):
+    def train(self, sentences, total_words=None, word_count=0, chunksize=100,
+              total_examples=None, queue_factor=2, report_delay=1.0):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         For Word2Vec, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
@@ -692,23 +696,74 @@ class Word2Vec(utils.SaveLoad):
             return (work, neu1)
 
         def worker_one_job(job, inits):
-            items, alpha, sentence_indeces = job
-            if items is None:  # signal to finish
-                return False
-            # train & return tally
-            tally, raw_tally = self._do_train_job(items, alpha, inits, sentence_indeces)
-            progress_queue.put((len(sentence_indeces) - 1, tally, raw_tally))  # report progress
-            return True
+            sentences, alpha = job
+            tally, raw_tally = self._do_train_job(sentences, alpha, inits)
+            progress_queue.put((len(sentences), tally, raw_tally))  # report back progress
 
         def worker_loop():
             """Train the model, lifting lists of sentences from the jobs queue."""
             init = worker_init()
             while True:
                 job = job_queue.get()
-                if not worker_one_job(job, init):
+                if job is None:
                     break
+                worker_one_job(job, init)
 
-        start, next_report = default_timer(), 1.0
+        def job_producer():
+            """Fill jobs queue using the input sentences iterator."""
+            job_batch, batch_size = [], 0
+            job_no, pushed_words, pushed_examples = 0, 0, 0
+            next_alpha = self.alpha
+            self.jobs_finished = False
+
+            for sent_idx, sentence in enumerate(sentences):
+                # clip sentences that are too large for the C structures
+                sentence = sentence[: MAX_WORDS_IN_BATCH]
+
+                # can we fit this sentence into the existing job batch?
+                if batch_size + len(sentence) <= MAX_WORDS_IN_BATCH and len(job_batch) + 1 <= MAX_BATCH_SENTENCES:
+                    # yes => add it to the current job
+                    job_batch.append(sentence)
+                    batch_size += len(sentence)
+                else:
+                    # no => submit the existing job
+                    logger.debug("putting job #%i at alpha %.05f", job_no, next_alpha)
+                    job_queue.put((job_batch, next_alpha))
+                    job_no += 1
+
+                    # add the sentence that didn't fit as the first item of a new job
+                    job_batch, batch_size = [sentence], len(sentence)
+
+                    # update the learning rate for the next job
+                    if self.min_alpha < next_alpha:
+                        if total_examples:
+                            # examples-based decay
+                            pushed_examples += len(job_batch)
+                            next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_examples / total_examples)
+                        else:
+                            # words-based decay
+                            pushed_words += self._raw_word_count(job_batch)
+                            next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
+                        next_alpha = max(next_alpha, self.min_alpha)
+            # add the last job too (may be significantly smaller than MAX_WORDS_IN_BATCH / MAX_BATCH_SENTENCES)
+            if job_batch:
+                logger.debug("putting job #%i in the queue at alpha %.05f", job_no, next_alpha)
+                job_queue.put((job_batch, next_alpha))
+                job_no += 1
+
+            logger.info("reached end of input; waiting to finish %i outstanding jobs", utils.qsize(job_queue))
+
+            if job_no == 0 and self.train_count == 0:
+                logger.warning(
+                    "train() called with an empty iterator (if not intended, "
+                    "be sure to provide a corpus that offers restartable "
+                    "iteration = an iterable)."
+                )
+
+            # give the workers heads up that they can finish -- no more work!
+            for _ in xrange(self.workers):
+                job_queue.put(None)
+            self.jobs_finished = True
 
         # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         if self.workers > 0:
@@ -718,128 +773,45 @@ class Word2Vec(utils.SaveLoad):
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
         workers = [threading.Thread(target=worker_loop) for _ in xrange(self.workers)]
+        workers.append(threading.Thread(target=job_producer))
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
 
-        pushed_words = 0
-        pushed_examples = 0
-        example_count = 0
-        trained_word_count = 0
-        raw_word_count = word_count
-        push_done = False
-        done_jobs = 0
-        next_alpha = self.alpha
+        example_count, trained_word_count, raw_word_count = 0, 0, word_count
+        start, next_report = default_timer(), 1.0
 
-        job_batch = []
-        num_sentences = 0
-        batch_size = 0
-        sentence_indeces = [0]
-        job_no = 0
-        MAX_WORDS_IN_BATCH = 10000  # NOTE: should be same as MAX_SENTENCE_LEN in word2vec_inner.pyx.
-        MAX_NUM_SENTENCES = 1000  # TODO: should be in word2vec_inner.pyx as well. TODO: consider proper value.
-        # fill jobs queue with (sentence, alpha) job tuples
-        job_source = enumerate(sentences)
-        while True:  # TODO: use for instead.
-            try:
-                sent_idx, sent = job_source.next()
-                if batch_size + len(sent) < MAX_WORDS_IN_BATCH and num_sentences < MAX_NUM_SENTENCES:
-                    # Append sentence to job batch and proceed.
-                    job_batch.extend(sent)
-                    batch_size += len(sent)
-                    sentence_indeces.append(sentence_indeces[-1] + batch_size)
-                    num_sentences += 1
+        while not (self.jobs_finished and job_queue.empty()):
+            examples, trained_words, raw_words = progress_queue.get()  # blocks if workers too slow
+
+            # update progress stats
+            example_count += examples
+            trained_word_count += trained_words  # only words in vocab & sampled
+            raw_word_count += raw_words
+
+            # log progress once every report_delay seconds
+            elapsed = default_timer() - start
+            if elapsed >= next_report:
+                if total_examples:
+                    # examples-based progress %
+                    logger.info(
+                        "PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
+                        100.0 * example_count / total_examples, trained_word_count / elapsed,
+                        utils.qsize(job_queue), utils.qsize(progress_queue))
                 else:
-                    # Submit job to queue.
-                    logger.debug("putting job #%i in the queue at alpha %.05f", job_no, next_alpha)
-                    job_queue.put((job_batch, next_alpha, sentence_indeces))
-                    # update the learning rate before every next job
-                    if self.min_alpha < next_alpha:
-                        if total_examples:
-                            # examples-based decay
-                            pushed_examples += len(job_batch)
-                            next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_examples / total_examples)
-                        else:
-                            # words-based decay
-                            pushed_words += self._raw_word_count(job_batch)
-                            next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
-                        next_alpha = max(next_alpha, self.min_alpha)
-                    job_no += 1
-                    num_sentences = 0
-                    if len(sent) < MAX_WORDS_IN_BATCH:
-                        job_batch = sent
-                        batch_size = len(sent)
-                    else:
-                        sent_slice = sent[:MAX_WORDS_IN_BATCH]
-                        job_batch = sent_slice
-                        batch_size = len(sent_slice)
-                    sentence_indeces = [0, batch_size]
-                    num_sentences += 1
-            except StopIteration:
-                # No more sentences left.
-                if job_batch:  # If there are still items left in job, submit them.
-                    ## Submit job to queue.
-                    logger.debug("putting job #%i in the queue at alpha %.05f", job_no, next_alpha)
-                    job_queue.put((job_batch, next_alpha, sentence_indeces))
-                    # update the learning rate before every next job
-                    if self.min_alpha < next_alpha:
-                        if total_examples:
-                            # examples-based decay
-                            pushed_examples += len(job_batch)
-                            next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_examples / total_examples)
-                        else:
-                            # words-based decay
-                            pushed_words += self._raw_word_count(job_batch)
-                            next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
-                        next_alpha = max(next_alpha, self.min_alpha)
-                    job_batch = []
-                    batch_size = 0
-                    job_no += 1
+                    # words-based progress %
+                    logger.info(
+                        "PROGRESS: at %.2f%% words, %.0f words/s",
+                        100.0 * raw_word_count / total_words, trained_word_count / elapsed)
+                next_report = elapsed + report_delay
 
-                logger.info(
-                    "reached end of input; waiting to finish %i outstanding jobs",
-                    job_no - done_jobs)
-                for _ in xrange(self.workers):
-                    job_queue.put((None, 0, [0]))  # give the workers heads up that they can finish -- no more work!
-                push_done = True
-
-            if job_no == -1 and self.train_count == 0:
-                logger.warning(
-                    "train() called with empty iterator (if not intended, "
-                    "be sure to provide a corpus that offers restartable "
-                    "iteration)."
-                )
-            try:
-                while done_jobs < job_no or not push_done:
-                    examples, trained_words, raw_words = progress_queue.get(push_done)  # only block after all jobs pushed
-                    example_count += examples
-                    trained_word_count += trained_words  # only words in vocab & sampled
-                    raw_word_count += raw_words
-                    done_jobs += 1
-                    elapsed = default_timer() - start
-                    if elapsed >= next_report:
-                        if total_examples:
-                            # examples-based progress %
-                            logger.info(
-                                "PROGRESS: at %.2f%% examples, %.0f words/s",
-                                100.0 * example_count / total_examples, trained_word_count / elapsed)
-                        else:
-                            # words-based progress %
-                            logger.info(
-                                "PROGRESS: at %.2f%% words, %.0f words/s",
-                                100.0 * raw_word_count / total_words, trained_word_count / elapsed)
-                        next_report = elapsed + report_delay  # don't flood log, wait report_delay seconds
-                else:
-                    # loop ended by job count; really done
-                    break
-            except Empty:
-                pass  # already out of loop; continue to next push
-
+        # all done; report the final stats
         elapsed = default_timer() - start
         logger.info(
             "training on %i raw words took %.1fs, %.0f trained words/s",
             raw_word_count, elapsed, trained_word_count / elapsed if elapsed else 0.0)
 
+        # check that the input corpus hasn't changed during iteration
         if total_examples and total_examples != example_count:
             logger.warn("supplied example count (%i) did not equal expected count (%i)", example_count, total_examples)
         if total_words and total_words != raw_word_count:

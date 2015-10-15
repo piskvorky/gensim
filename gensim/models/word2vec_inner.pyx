@@ -561,7 +561,7 @@ def score_sentence_sg(model, sentence, _work):
     for token in sentence:
         word = vlookup[token] if token in vlookup else None
         if word is None:
-            continue  # should drop the 
+            continue  # should drop the
         indexes[i] = word.index
         codelens[i] = <int>len(word.code)
         codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
@@ -579,10 +579,10 @@ def score_sentence_sg(model, sentence, _work):
         for i in range(sentence_len):
             if codelens[i] == 0:
                 continue
-            j = i - window 
+            j = i - window
             if j < 0:
                 j = 0
-            k = i + window + 1 
+            k = i + window + 1
             if k > sentence_len:
                 k = sentence_len
             for j in range(j, k):
@@ -661,7 +661,7 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
         for i in range(sentence_len):
             if codelens[i] == 0:
                 continue
-            j = i - window 
+            j = i - window
             if j < 0:
                 j = 0
             k = i + window + 1
@@ -738,7 +738,7 @@ def init():
         return 0  # double
     elif (abs(p_res[0] - expected) < 0.0001):
         our_dot = our_dot_float
-        our_saxpy = saxpy 
+        our_saxpy = saxpy
         return 1  # float
     else:
         # neither => use cython loops, no BLAS
@@ -748,3 +748,5 @@ def init():
         return 2
 
 FAST_VERSION = init()  # initialize the module
+MAX_WORDS_IN_BATCH = MAX_SENTENCE_LEN
+MAX_BATCH_SENTENCES = MAX_NUM_SENTENCES
