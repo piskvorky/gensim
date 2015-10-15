@@ -36,17 +36,23 @@ if __name__ == '__main__':
     num_sents = 10000
     sentences = SentenceGenerator(num_sents=num_sents)
 
+    test_words = ['chance', 'strings', 'spiral']
+
     logging.info('Training model with batching.')
     start = time()
-    model2 = Word2Vec(sentences, batch=True)
+    model2 = Word2Vec(sentences, batch=True, seed=0)
     logging.info('------------------------------------------------------')
     logging.info('Done training model. Time elapsed: %f seconds.', time() - start)
 
     logging.info('Training model without batching.')
     start = time()
-    model1 = Word2Vec(sentences)
+    model1 = Word2Vec(sentences, seed=0)
     logging.info('------------------------------------------------------')
     logging.info('Done training model. Time elapsed: %f seconds.', time() - start)
+
+    diff = {}
+    for test_word in test_words:
+        diff[test_word] = model1[test_word] - model2[test_word]
 
     import pdb
     pdb.set_trace()

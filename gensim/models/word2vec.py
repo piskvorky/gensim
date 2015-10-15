@@ -740,7 +740,7 @@ class Word2Vec(utils.SaveLoad):
         MAX_NUM_SENTENCES = 1000  # TODO: should be in word2vec_inner.pyx as well. TODO: consider proper value.
         # fill jobs queue with (sentence, alpha) job tuples
         job_source = enumerate(sentences)
-        while True:
+        while True:  # TODO: use for instead.
             try:
                 sent_idx, sent = job_source.next()
                 if batch_size + len(sent) < MAX_WORDS_IN_BATCH and num_sentences < MAX_NUM_SENTENCES:
@@ -796,19 +796,19 @@ class Word2Vec(utils.SaveLoad):
                     batch_size = 0
                     job_no += 1
 
-                if job_no == -1 and self.train_count == 0:
-                    logger.warning(
-                        "train() called with empty iterator (if not intended, "
-                        "be sure to provide a corpus that offers restartable "
-                        "iteration)."
-                    )
-
                 logger.info(
                     "reached end of input; waiting to finish %i outstanding jobs",
                     job_no - done_jobs)
                 for _ in xrange(self.workers):
                     job_queue.put((None, 0, [0]))  # give the workers heads up that they can finish -- no more work!
                 push_done = True
+
+            if job_no == -1 and self.train_count == 0:
+                logger.warning(
+                    "train() called with empty iterator (if not intended, "
+                    "be sure to provide a corpus that offers restartable "
+                    "iteration)."
+                )
             try:
                 while done_jobs < job_no or not push_done:
                     examples, trained_words, raw_words = progress_queue.get(push_done)  # only block after all jobs pushed
