@@ -22,6 +22,7 @@ import scipy.linalg
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models.wrappers import ldamallet
 from gensim import matutils
+from gensim.models import ldamodel
 
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
