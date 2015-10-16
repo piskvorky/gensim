@@ -37,7 +37,7 @@ import os
 import numpy
 
 from gensim import utils, matutils
-from gensim.models.wrappers.wrapper_utils import check_output
+from gensim.utils import check_output
 
 logger = logging.getLogger(__name__)
 

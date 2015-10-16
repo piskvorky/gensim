@@ -28,7 +28,7 @@ from subprocess import PIPE
 import numpy as np
 
 from gensim import utils, corpora, matutils
-from gensim.models.wrappers.wrapper_utils import check_output
+from gensim.utils import check_output
 
 logger = logging.getLogger(__name__)
 
