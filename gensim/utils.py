@@ -44,6 +44,8 @@ if sys.version_info[0] >= 3:
 from six import iteritems, u, string_types, unichr
 from six.moves import xrange
 
+from models.wrappers.wrapper_utils import check_output # wrapper_utils for external process management
+
 try:
     from smart_open import smart_open
 except ImportError:
