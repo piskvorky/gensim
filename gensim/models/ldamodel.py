@@ -283,54 +283,12 @@ class LdaModel(interfaces.TransformationABC):
         self.eval_every = eval_every
 
         self.optimize_alpha = alpha == 'auto'
-        if alpha == 'symmetric' or alpha is None:
-            logger.info("using symmetric alpha at %s", 1.0 / num_topics)
-            self.alpha = numpy.asarray([1.0 / num_topics for i in xrange(num_topics)])
-        elif alpha == 'asymmetric':
-            self.alpha = numpy.asarray([1.0 / (i + numpy.sqrt(num_topics)) for i in xrange(num_topics)])
-            self.alpha /= self.alpha.sum()
-            logger.info("using asymmetric alpha %s", list(self.alpha))
-        elif alpha == 'auto':
-            self.alpha = numpy.asarray([1.0 / num_topics for i in xrange(num_topics)])
-            logger.info("using autotuned alpha, starting with %s", list(self.alpha))
-        elif isinstance(alpha, list):
-            self.alpha = numpy.asarray(alpha)
-        elif isinstance(alpha, numpy.ndarray):
-            self.alpha = alpha
-        elif isinstance(alpha, numpy.number) or isinstance(alpha, numbers.Real):
-            self.alpha = numpy.asarray([alpha] * num_topics)
-        else:
-            raise ValueError("alpha must be either a numpy array of scalars, list of scalars, or scalar")
+        self.alpha = self.init_dir_prior(alpha, 'alpha')
 
         assert self.alpha.shape == (num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), num_topics)
 
-        # please note the difference in init between alpha and eta:
-        # alpha is a row: [0.1, 0.1]
-        # eta is a column: [[0.1],
-        #                   [0.1]]
         self.optimize_eta = eta == 'auto'
-        if eta == 'symmetric' or eta is None:
-            logger.info("using symmetric eta at %s", 1.0 / num_topics)
-            self.eta = numpy.asarray([[1.0 / num_topics] for i in xrange(num_topics)])
-        elif eta == 'asymmetric':
-            self.eta = numpy.asarray([[1.0 / (i + numpy.sqrt(num_topics))] for i in xrange(num_topics)])
-            self.eta /= self.eta.sum()
-            logger.info("using asymmetric eta %s", list(self.eta))
-        elif eta == 'auto':
-            self.eta = numpy.asarray([[1.0 / num_topics] for i in xrange(num_topics)])
-            logger.info("using autotuned eta, starting with %s", list(self.eta))
-        elif isinstance(eta, list):
-            self.eta = numpy.asarray(eta)
-        elif isinstance(eta, numpy.ndarray):
-            self.eta = eta
-        elif isinstance(eta, numpy.number) or isinstance(eta, numbers.Real):
-            self.eta = numpy.asarray([[eta]] * num_topics)
-        else:
-            raise ValueError("eta must be either a numpy array of scalars, list of scalars, or scalar")
-
-        if self.eta.shape == (num_topics,) or self.eta.shape == (1, num_topics):
-            # client sent in something in the wrong shape, but in this case is a simple mistake that we can fix.
-            self.eta = self.eta.reshape((num_topics, 1)) # this statement throws ValueError if eta did not match num_topics
+        self.eta = self.init_dir_prior(eta, 'eta')
 
         assert (self.eta.shape == (num_topics, 1) or self.eta.shape == (num_topics, self.num_terms)), (
             "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
@@ -370,6 +328,36 @@ class LdaModel(interfaces.TransformationABC):
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
             self.update(corpus)
+
+    def init_dir_prior(self, prior, name):
+        if prior == 'symmetric' or prior is None:
+            logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
+            init_prior = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
+        elif prior == 'asymmetric':
+            init_prior = numpy.asarray([1.0 / (i + numpy.sqrt(self.num_topics)) for i in xrange(self.num_topics)])
+            init_prior /= init_prior.sum()
+            logger.info("using asymmetric %s %s", name, list(init_prior))
+        elif prior == 'auto':
+            init_prior = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
+            logger.info("using autotuned %s, starting with %s", name, list(init_prior))
+        elif isinstance(prior, list):
+            init_prior = numpy.asarray(prior)
+        elif isinstance(prior, numpy.ndarray):
+            init_prior = prior
+        elif isinstance(prior, numpy.number) or isinstance(prior, numbers.Real):
+            init_prior = numpy.asarray([prior] * self.num_topics)
+        else:
+            raise ValueError("%s must be either a numpy array of scalars, list of scalars, or scalar" % name)
+
+        if name == 'eta':
+            # please note the difference in shapes between alpha and eta:
+            # alpha is a row: [0.1, 0.1]
+            # eta is a column: [[0.1],
+            #                   [0.1]]
+            if init_prior.shape == (self.num_topics,) or init_prior.shape == (1, self.num_topics):
+                init_prior = init_prior.reshape((self.num_topics, 1)) # this statement throws ValueError if eta did not match self.num_topics
+
+        return init_prior
 
     def __str__(self):
         return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % \
