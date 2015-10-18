@@ -77,19 +77,131 @@ class TestLdaModel(unittest.TestCase):
                             (i, sorted(vec), sorted(expected)))
         self.assertTrue(passed)
 
-    def testAlpha(self):
+    def testAlphaAuto(self):
         model1 = self.class_(corpus, id2word=dictionary, alpha='symmetric', passes=10)
         modelauto = self.class_(corpus, id2word=dictionary, alpha='auto', passes=10)
 
         # did we learn something?
         self.assertFalse(all(numpy.equal(model1.alpha, modelauto.alpha)))
 
-    def testEta(self):
+    def testAlpha(self):
+        kwargs = dict(
+            id2word=dictionary,
+            num_topics=2,
+            alpha=None
+        )
+        expected_shape = (2,)
+
+        # should not raise anything
+        self.class_(**kwargs)
+
+        kwargs['alpha'] = 'symmetric'
+        model = self.class_(**kwargs)
+        self.assertEqual(model.alpha.shape, expected_shape)
+        self.assertTrue(all(model.alpha == numpy.array([0.5, 0.5])))
+
+        kwargs['alpha'] = 'asymmetric'
+        model = self.class_(**kwargs)
+        self.assertEqual(model.alpha.shape, expected_shape)
+        self.assertTrue(numpy.allclose(model.alpha, [0.630602, 0.369398]))
+
+        kwargs['alpha'] = 0.3
+        model = self.class_(**kwargs)
+        self.assertEqual(model.alpha.shape, expected_shape)
+        self.assertTrue(all(model.alpha == numpy.array([0.3, 0.3])))
+
+        kwargs['alpha'] = 3
+        model = self.class_(**kwargs)
+        self.assertEqual(model.alpha.shape, expected_shape)
+        self.assertTrue(all(model.alpha == numpy.array([3, 3])))
+
+        kwargs['alpha'] = [0.3, 0.3]
+        model = self.class_(**kwargs)
+        self.assertEqual(model.alpha.shape, expected_shape)
+        self.assertTrue(all(model.alpha == numpy.array([0.3, 0.3])))
+
+        # all should raise an exception for being wrong shape
+        kwargs['alpha'] = [0.3, 0.3, 0.3]
+        self.assertRaises(AssertionError, self.class_, **kwargs)
+
+        kwargs['alpha'] = [[0.3], [0.3]]
+        self.assertRaises(AssertionError, self.class_, **kwargs)
+
+        kwargs['alpha'] = [0.3]
+        self.assertRaises(AssertionError, self.class_, **kwargs)
+
+        kwargs['alpha'] = "gensim is cool"
+        self.assertRaises(ValueError, self.class_, **kwargs)
+
+
+    def testEtaAuto(self):
         model1 = self.class_(corpus, id2word=dictionary, eta='symmetric', passes=10)
         modelauto = self.class_(corpus, id2word=dictionary, eta='auto', passes=10)
 
         # did we learn something?
         self.assertFalse(all(numpy.equal(model1.eta, modelauto.eta)))
+
+    def testEta(self):
+        kwargs = dict(
+            id2word=dictionary,
+            num_topics=2,
+            eta=None
+        )
+        expected_shape = (2, 1)
+
+        # should not raise anything
+        model = self.class_(**kwargs)
+        self.assertEqual(model.eta.shape, expected_shape)
+        self.assertTrue(all(model.eta == numpy.array([[0.5], [0.5]])))
+
+        kwargs['eta'] = 'symmetric'
+        model = self.class_(**kwargs)
+        self.assertEqual(model.eta.shape, expected_shape)
+        self.assertTrue(all(model.eta == numpy.array([[0.5], [0.5]])))
+
+        kwargs['eta'] = 'asymmetric'
+        model = self.class_(**kwargs)
+        self.assertEqual(model.eta.shape, expected_shape)
+        self.assertTrue(numpy.allclose(model.eta, [[0.630602], [0.369398]]))
+
+        kwargs['eta'] = 0.3
+        model = self.class_(**kwargs)
+        self.assertEqual(model.eta.shape, expected_shape)
+        self.assertTrue(all(model.eta == numpy.array([[0.3], [0.3]])))
+
+        kwargs['eta'] = 3
+        model = self.class_(**kwargs)
+        self.assertEqual(model.eta.shape, expected_shape)
+        self.assertTrue(all(model.eta == numpy.array([[3], [3]])))
+
+        kwargs['eta'] = [[0.3], [0.3]]
+        model = self.class_(**kwargs)
+        self.assertEqual(model.eta.shape, expected_shape)
+        self.assertTrue(all(model.eta == numpy.array([[0.3], [0.3]])))
+
+        kwargs['eta'] = [0.3, 0.3]
+        model = self.class_(**kwargs)
+        self.assertEqual(model.eta.shape, expected_shape)
+        self.assertTrue(all(model.eta == numpy.array([[0.3], [0.3]])))
+
+        # should be ok with num_topics x num_terms
+        testeta = numpy.array([[0.5] * len(dictionary)] * 2)
+        kwargs['eta'] = testeta
+        self.class_(**kwargs)
+
+        # all should raise an exception for being wrong shape
+        kwargs['eta'] = testeta.reshape(tuple(reversed(testeta.shape)))
+        self.assertRaises(AssertionError, self.class_, **kwargs)
+
+        kwargs['eta'] = [0.3, 0.3, 0.3]
+        self.assertRaises(AssertionError, self.class_, **kwargs)
+
+        kwargs['eta'] = [0.3]
+        self.assertRaises(AssertionError, self.class_, **kwargs)
+
+        kwargs['eta'] = "gensim is cool"
+        self.assertRaises(ValueError, self.class_, **kwargs)
+
 
     def testTopTopics(self):
         top_topics = self.model.top_topics(self.corpus)
@@ -269,8 +381,8 @@ class TestLdaMulticore(TestLdaModel):
         self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
 
     # override LdaModel because multicore does not allow alpha=auto
-    def testAlpha(self):
-        pass
+    def testAlphaAuto(self):
+        self.assertRaises(RuntimeError, self.class_, alpha='auto')
 
 
 #endclass TestLdaMulticore

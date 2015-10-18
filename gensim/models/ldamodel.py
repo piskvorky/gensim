@@ -35,6 +35,7 @@ The algorithm:
 
 import logging
 import numpy  # for arrays, array broadcasting etc.
+import numbers
 
 from gensim import interfaces, utils, matutils
 from itertools import chain
@@ -292,22 +293,48 @@ class LdaModel(interfaces.TransformationABC):
         elif alpha == 'auto':
             self.alpha = numpy.asarray([1.0 / num_topics for i in xrange(num_topics)])
             logger.info("using autotuned alpha, starting with %s", list(self.alpha))
+        elif isinstance(alpha, list):
+            self.alpha = numpy.asarray(alpha)
+        elif isinstance(alpha, numpy.ndarray):
+            self.alpha = alpha
+        elif isinstance(alpha, numpy.number) or isinstance(alpha, numbers.Real):
+            self.alpha = numpy.asarray([alpha] * num_topics)
         else:
-            # must be either float or an array of floats, of size num_topics
-            self.alpha = alpha if isinstance(alpha, numpy.ndarray) else numpy.asarray([alpha] * num_topics)
-            if len(self.alpha) != num_topics:
-                raise RuntimeError("invalid alpha shape (must match num_topics)")
+            raise ValueError("alpha must be either a numpy array of scalars, list of scalars, or scalar")
 
+        assert self.alpha.shape == (num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), num_topics)
+
+        # please note the difference in init between alpha and eta:
+        # alpha is a row: [0.1, 0.1]
+        # eta is a column: [[0.1],
+        #                   [0.1]]
         self.optimize_eta = eta == 'auto'
         if eta == 'symmetric' or eta is None:
             logger.info("using symmetric eta at %s", 1.0 / num_topics)
-            self.eta = 1.0 / num_topics
+            self.eta = numpy.asarray([[1.0 / num_topics] for i in xrange(num_topics)])
+        elif eta == 'asymmetric':
+            self.eta = numpy.asarray([[1.0 / (i + numpy.sqrt(num_topics))] for i in xrange(num_topics)])
+            self.eta /= self.eta.sum()
+            logger.info("using asymmetric eta %s", list(self.eta))
         elif eta == 'auto':
-            # this needs to be a column vector of length num_topics
-            self.eta = numpy.asarray([1.0 / num_topics for i in xrange(num_topics)]).reshape((num_topics,1))
+            self.eta = numpy.asarray([[1.0 / num_topics] for i in xrange(num_topics)])
             logger.info("using autotuned eta, starting with %s", list(self.eta))
-        else:
+        elif isinstance(eta, list):
+            self.eta = numpy.asarray(eta)
+        elif isinstance(eta, numpy.ndarray):
             self.eta = eta
+        elif isinstance(eta, numpy.number) or isinstance(eta, numbers.Real):
+            self.eta = numpy.asarray([[eta]] * num_topics)
+        else:
+            raise ValueError("eta must be either a numpy array of scalars, list of scalars, or scalar")
+
+        if self.eta.shape == (num_topics,) or self.eta.shape == (1, num_topics):
+            # client sent in something in the wrong shape, but in this case is a simple mistake that we can fix.
+            self.eta = self.eta.reshape((num_topics, 1)) # this statement throws ValueError if eta did not match num_topics
+
+        assert (self.eta.shape == (num_topics, 1) or self.eta.shape == (num_topics, self.num_terms)), (
+            "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
+            (str(self.eta.shape), num_topics, num_topics, self.num_terms))
 
         # VB constants
         self.iterations = iterations
