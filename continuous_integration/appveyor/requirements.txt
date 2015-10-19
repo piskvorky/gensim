@@ -1,7 +1,6 @@
 # fix the versions of numpy to force the use of numpy and scipy to use the whl
 # of the rackspace folder instead of trying to install from more recent
 # source tarball published on PyPI
-atlas
 cython
 numpy >= 1.3
 scipy  >= 0.7.0
