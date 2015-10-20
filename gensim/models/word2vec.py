@@ -658,6 +658,14 @@ class Word2Vec(utils.SaveLoad):
         if self.batch:
             assert FAST_VERSION > -1, "FIXME: python-only code path"
             assert self.sg, "FIXME: cbow also"
+            import line_profiler
+            profile = line_profiler.LineProfiler(train_batch_sg)
+            temp_tally = profile.runcall(train_batch_sg, self, sentences, alpha, work)
+            print 'temp_tally = %d' % temp_tally
+            profile.print_stats()
+            import pdb
+            pdb.set_trace()
+
             tally += train_batch_sg(self, sentences, alpha, work)
             raw_tally += len(sentences)
         else:
