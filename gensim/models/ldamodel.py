@@ -308,7 +308,7 @@ class LdaModel(interfaces.TransformationABC):
         # Initialize the variational distribution q(beta|lambda)
         self.state = LdaState(self.eta, (self.num_topics, self.num_terms))
         self.state.sstats = numpy.random.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
-        self.sync_state()
+        self.expElogbeta = numpy.exp(dirichlet_expectation(self.state.sstats))
 
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
@@ -688,7 +688,7 @@ class LdaModel(interfaces.TransformationABC):
         (10 words per topic, by default).
 
         The topics are returned as a list -- a list of strings if `formatted` is
-        True, or a list of (probability, word) 2-tuples if False.
+        True, or a list of `(word, probability)` 2-tuples if False.
 
         If `log` is True, also output this result to log.
 
@@ -716,7 +716,7 @@ class LdaModel(interfaces.TransformationABC):
             else:
                 topic = self.show_topic(i, topn=num_words)
 
-            shown.append(topic)
+            shown.append((i, topic))
             if log:
                 logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic)
 
@@ -724,8 +724,18 @@ class LdaModel(interfaces.TransformationABC):
 
     def show_topic(self, topicid, topn=10):
         """
-        Return a list of `(words_probability, word)` 2-tuples for the most probable
+        Return a list of `(word, probability)` 2-tuples for the most probable
         words in topic `topicid`.
+
+        Only return 2-tuples for the topn most probable words (ignore the rest).
+
+        """
+        return [(self.id2word[id], value) for id, value in self.get_topic_terms(topicid, topn)]
+
+    def get_topic_terms(self, topicid, topn=10):
+        """
+        Return a list of `(word_id, probability)` 2-tuples for the most
+        probable words in topic `topicid`.
 
         Only return 2-tuples for the topn most probable words (ignore the rest).
 
@@ -733,12 +743,11 @@ class LdaModel(interfaces.TransformationABC):
         topic = self.state.get_lambda()[topicid]
         topic = topic / topic.sum()  # normalize to probability distribution
         bestn = matutils.argsort(topic, topn, reverse=True)
-        beststr = [(topic[id], self.id2word[id]) for id in bestn]
-        return beststr
+        return [(id, topic[id]) for id in bestn]
 
     def print_topic(self, topicid, topn=10):
         """Return the result of `show_topic`, but formatted as a single string."""
-        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
+        return ' + '.join(['%.3f*%s' % (v, k)  for k, v in self.show_topic(topicid, topn)])
 
     def top_topics(self, corpus, num_words=20):
         """
@@ -788,11 +797,13 @@ class LdaModel(interfaces.TransformationABC):
                     # l_docs is v_l^(t)
                     l_docs = doc_word_list[l]
 
-                    # co_doc_frequency is D(v_m^(t), v_l^(t))
-                    co_doc_frequency = len(m_docs.intersection(l_docs))
+                    # make sure this word appears in some documents.
+                    if len(l_docs) > 0:
+                        # co_doc_frequency is D(v_m^(t), v_l^(t))
+                        co_doc_frequency = len(m_docs.intersection(l_docs))
 
-                    # add to the coherence sum for these two words m, l
-                    coherence += numpy.log((co_doc_frequency + 1.0) / len(l_docs))
+                        # add to the coherence sum for these two words m, l
+                        coherence += numpy.log((co_doc_frequency + 1.0) / len(l_docs))
 
             coherence_scores.append((str_topics[t], coherence))
 
