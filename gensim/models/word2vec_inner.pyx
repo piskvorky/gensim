@@ -343,7 +343,7 @@ def train_sentence_sg(model, sentence, alpha, _work):
     return result
 
 
-def train_batch_sg(model, sentences, alpha, sentence_indeces, _work):
+def train_batch_sg(model, sentences, alpha, _work):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.sample != 0)
@@ -392,40 +392,37 @@ def train_batch_sg(model, sentences, alpha, sentence_indeces, _work):
     work = <REAL_t *>np.PyArray_DATA(_work)
 
     vlookup = model.vocab
-    for sent_idx, idx in enumerate(range(len(sentence_indeces) - 1)):
-        idx1 = sentence_indeces[idx]
-        idx2 = sentence_indeces[idx + 1]
-        sentence = sentences[idx1:idx2]
-        sentence_indeces_c[sent_idx] = idx1
+    idx = 0
+    for sent_idx, sent in enumerate(sentences):
         i = 0
-        for token in sentence:
+        for token in sent:
             word = vlookup[token] if token in vlookup else None
             if word is None:
                 continue  # leaving i unchanged/shortening sentence
             if sample and word.sample_int < random_int32(&next_random):
                 continue
-            indexes[idx1 + i] = word.index
+            indexes[idx + i] = word.index
             if hs:
-                codelens[idx1 + i] = <int>len(word.code)
-                codes[idx1 + i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                points[idx1 + i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+                codelens[idx + i] = <int>len(word.code)
+                codes[idx + i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                points[idx + i] = <np.uint32_t *>np.PyArray_DATA(word.point)
             result += 1
             i += 1
             if i == MAX_SENTENCE_LEN:
                 break  # TODO: log warning, tally overflow?
-        sentence_len[sent_idx] = i
 
+        sentence_len[sent_idx] = i
         # single randint() call avoids a big thread-sync slowdown
         for i, item in enumerate(model.random.randint(0, window, sentence_len[sent_idx])):
-            reduced_windows[idx1 + i] = item
+            reduced_windows[idx + i] = item
 
+        idx += len(sent)
         num_sentences += 1
-
 
     # release GIL & train on the sentences
     with nogil:
         for sent_idx in range(num_sentences):
-            m = sentence_indeces_c[sent_idx]
+            m = 0 if sent_idx == 0 else sentence_len[sent_idx - 1]
             for i in range(sentence_len[sent_idx]):
                 j = i - window + reduced_windows[m + i]
                 if j < 0:
