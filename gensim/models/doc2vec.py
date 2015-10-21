@@ -278,21 +278,22 @@ class DocvecsArray(utils.SaveLoad):
     """
     def __init__(self, mapfile_path=None):
         self.doctags = {}  # string -> Doctag (only filled if necessary)
-        self.index2doctag = []  # int index -> String (only filled if necessary)
+        self.max_rawint = -1  # highest rawint-indexed doctag
+        self.offset2doctag = []  # int offset-past-(max_rawint+1) -> String (only filled if necessary)
         self.count = 0
         self.mapfile_path = mapfile_path
 
     def note_doctag(self, key, document_no, document_length):
         """Note a document tag during initial corpus scan, for structure sizing."""
         if isinstance(key, int):
-            self.count = max(self.count, key+1)
+            self.max_rawint = max(self.max_rawint, key)
         else:
             if key in self.doctags:
                 self.doctags[key] = self.doctags[key].repeat(document_length)
             else:
-                self.doctags[key] = Doctag(len(self.index2doctag), document_length, 1)
-                self.index2doctag.append(key)
-                self.count = max(self.count, len(self.index2doctag))
+                self.doctags[key] = Doctag(len(self.offset2doctag), document_length, 1)
+                self.offset2doctag.append(key)
+        self.count = self.max_rawint + 1 + len(self.offset2doctag)
 
     def indexed_doctags(self, doctag_tokens):
         """Return indexes and backing-arrays used in training examples."""
@@ -309,12 +310,18 @@ class DocvecsArray(utils.SaveLoad):
         if isinstance(index, int):
             return index
         else:
-            return self.doctags[index].index if index in self.doctags else missing
+            return self.max_rawint + 1 + self.doctags[index].offset if index in self.doctags else missing
 
     def _key_index(self, i_index, missing=None):
         """Return string index for given int index, if available"""
-        if i_index < len(self.index2doctag):
-            return self.index2doctag[i_index]
+        warnings.warn("use DocvecsArray.index_to_doctag", DeprecationWarning)
+        return self.index_to_doctag(i_index)
+
+    def index_to_doctag(self, i_index):
+        """Return string key for given i_index, if available. Otherwise return raw int doctag (same int)."""
+        candidate_offset = self.max_rawint - i_index - 1
+        if 0 <= candidate_offset < len(self.offset2doctag):
+            return self.offset2doctag[candidate_offset]
         else:
             return i_index
 
@@ -345,14 +352,14 @@ class DocvecsArray(utils.SaveLoad):
     def borrow_from(self, other_docvecs):
         self.count = other_docvecs.count
         self.doctags = other_docvecs.doctags
-        self.index2doctag = other_docvecs.index2doctag
+        self.offset2doctag = other_docvecs.offset2doctag
 
     def clear_sims(self):
         self.doctag_syn0norm = None
 
     def estimated_lookup_memory(self):
         """Estimated memory for tag lookup; 0 if using pure int tags."""
-        return 60 * len(self.index2doctag) + 140 * len(self.doctags)
+        return 60 * len(self.offset2doctag) + 140 * len(self.doctags)
 
     def reset_weights(self, model):
         length = max(len(self.doctags), self.count)
@@ -368,7 +375,7 @@ class DocvecsArray(utils.SaveLoad):
 
         for i in xrange(length):
             # construct deterministic seed from index AND model seed
-            seed = "%d %s" % (model.seed, self.index2doctag[i] if len(self.index2doctag) > 0 else str(i))
+            seed = "%d %s" % (model.seed, self.index_to_doctag(i))
             self.doctag_syn0[i] = model.seeded_vector(seed)
 
     def init_sims(self, replace=False):
@@ -447,7 +454,7 @@ class DocvecsArray(utils.SaveLoad):
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_docs), reverse=True)
         # ignore (don't return) docs from the input
-        result = [(self._key_index(sim), float(dists[sim])) for sim in best if sim not in all_docs]
+        result = [(self.index_to_doctag(sim), float(dists[sim])) for sim in best if sim not in all_docs]
         return result[:topn]
 
     def doesnt_match(self, docs):
@@ -487,11 +494,16 @@ class DocvecsArray(utils.SaveLoad):
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
 
 
-class Doctag(namedtuple('Doctag', 'index, word_count, doc_count')):
+class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
     """A string document tag discovered during the initial vocabulary
     scan. (The document-vector equivalent of a Vocab object.)
 
     Will not be used if all presented document tags are ints.
+
+    The offset is only the true index into the doctags_syn0/doctags_syn0_lockf
+    if-and-only-if no raw-int tags were used. If any raw-int tags were used,
+    string Doctag vectors begin at index (max_rawint + 1), so the true index is
+    (rawint_index + 1 + offset). See also DocvecsArray.index_to_doctag().
     """
     __slots__ = ()
 
