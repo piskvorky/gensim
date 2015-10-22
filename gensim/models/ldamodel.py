@@ -367,8 +367,12 @@ class LdaModel(interfaces.TransformationABC):
         # Lee&Seung trick which speeds things up by an order of magnitude, compared
         # to Blei's original LDA-C code, cool!).
         for d, doc in enumerate(chunk):
-            ids = [id for id, _ in doc]
-            cts = numpy.array([cnt for _, cnt in doc])
+            if isinstance(doc, numpy.ndarray):
+                ids = doc[:, 0].astype(numpy.int_)
+                cts = doc[:, 1]
+            else:
+                ids = [id for id, _ in doc]
+                cts = numpy.array([cnt for _, cnt in doc])
             gammad = gamma[d, :]
             Elogthetad = Elogtheta[d, :]
             expElogthetad = expElogtheta[d, :]
