@@ -2,6 +2,7 @@
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
+# cython: profile=True
 # cython: linetrace=True
 # cython: binding=True
 # distutils: define_macros=CYTHON_TRACE=1
