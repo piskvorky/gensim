@@ -2,11 +2,6 @@
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
-# cython: profile=True
-# cython: linetrace=True
-# cython: binding=True
-# distutils: define_macros=CYTHON_TRACE=1
-# distutils: define_macros=CYTHON_TRACE_NOGIL=1
 # coding: utf-8
 #
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
@@ -363,13 +358,13 @@ def train_batch_sg(model, sentences, alpha, _work):
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
     cdef int sentence_len[MAX_NUM_SENTENCES]
-    cdef int sentence_indeces_c[MAX_NUM_SENTENCES]
     cdef int window = model.window
 
     cdef int i, j, k, m
     cdef long result = 0
     cdef int num_sentences = 0
     cdef int sent_idx = 0
+    cdef int idx = 0
 
     # For hierarchical softmax
     cdef REAL_t *syn1
@@ -397,7 +392,6 @@ def train_batch_sg(model, sentences, alpha, _work):
     work = <REAL_t *>np.PyArray_DATA(_work)
 
     vlookup = model.vocab
-    idx = 0
     for sent_idx, sent in enumerate(sentences):
         i = 0
         for token in sent:

@@ -9,6 +9,8 @@ from time import time
 from nltk.corpus import brown
 from nltk import word_tokenize
 
+import pickle
+
 from gensim.models import Word2Vec
 
 import logging
@@ -40,13 +42,15 @@ if __name__ == '__main__':
 
     logging.info('Training model with batching.')
     start = time()
-    model2 = Word2Vec(sentences, batch=True, seed=0)
+    model2 = Word2Vec(sentences, batch=True, const_alpha=False, seed=0, workers=1)
     logging.info('------------------------------------------------------')
     logging.info('Done training model. Time elapsed: %f seconds.', time() - start)
 
+    pickle.dump(model2, open('batch_vecs.npy', 'wb'))
+
     logging.info('Training model without batching.')
     start = time()
-    model1 = Word2Vec(sentences, seed=0)
+    model1 = Word2Vec(sentences, const_alpha=False, seed=0, workers=1)
     logging.info('------------------------------------------------------')
     logging.info('Done training model. Time elapsed: %f seconds.', time() - start)
 

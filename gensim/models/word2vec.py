@@ -344,7 +344,7 @@ class Word2Vec(utils.SaveLoad):
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
             sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0,
-            trim_rule=None, sorted_vocab=1, batch=False):    # FIXME: remove "batch" input variable when done working on batching.
+            trim_rule=None, sorted_vocab=1, batch=False, const_alpha=False):    # FIXME: remove "batch" and "const_alpha" input variable when done working on batching.
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -430,6 +430,7 @@ class Word2Vec(utils.SaveLoad):
         self.train_count = 0
         self.total_train_time = 0
         self.batch = batch
+        self.const_alpha = const_alpha
         self.sorted_vocab = sorted_vocab
 
         if sentences is not None:
@@ -658,16 +659,10 @@ class Word2Vec(utils.SaveLoad):
         if self.batch:
             assert FAST_VERSION > -1, "FIXME: python-only code path"
             assert self.sg, "FIXME: cbow also"
-            import line_profiler
-            profile = line_profiler.LineProfiler(train_batch_sg)
-            temp_tally = profile.runcall(train_batch_sg, self, sentences, alpha, work)
-            print 'temp_tally = %d' % temp_tally
-            profile.print_stats()
-            import pdb
-            pdb.set_trace()
 
             tally += train_batch_sg(self, sentences, alpha, work)
-            raw_tally += len(sentences)
+            for sentence in sentences:
+                raw_tally += len(sentence)
         else:
             for sentence in sentences:
                 if self.sg:
@@ -775,8 +770,12 @@ class Word2Vec(utils.SaveLoad):
                             # words-based decay
                             pushed_words += self._raw_word_count(job_batch)
                             progress = 1.0 * pushed_words / total_words
-                        next_alpha = self.alpha - (self.alpha - self.min_alpha) * progress
-                        next_alpha = max(self.min_alpha, next_alpha)
+                        if not self.const_alpha:
+                            next_alpha = self.alpha - (self.alpha - self.min_alpha) * progress
+                            next_alpha = max(self.min_alpha, next_alpha)
+                        else:
+                            next_alpha = self.alpha
+
 
                     # add the sentence that didn't fit as the first item of a new job
                     job_batch, batch_size = [sentence], len(sentence)
