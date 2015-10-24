@@ -97,7 +97,8 @@ from types import GeneratorType
 logger = logging.getLogger("gensim.models.word2vec")
 
 try:
-    from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION
+    from gensim.models.word2vec_inner import train_sentence_sg, train_sentence_cbow, FAST_VERSION,\
+        score_sentence_sg, score_sentence_cbow
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
@@ -151,6 +152,66 @@ except ImportError:
             train_cbow_pair(model, word, word2_indices, l1, alpha)
 
         return len(word_vocabs)
+
+    def score_sentence_sg(model, sentence, work=None):
+        """
+        Obtain likelihood score for a single sentence in a fitted skip-gram representaion.
+
+        The sentence is a list of Vocab objects (or None, when the corresponding
+        word is not in the vocabulary). Called internally from `Word2Vec.score()`.
+
+        This is the non-optimized, Python version. If you have cython installed, gensim
+        will use the optimized version from word2vec_inner instead.
+
+        """
+
+        log_prob_sentence = 0.0
+        if model.negative:
+            raise RuntimeError("scoring is only available for HS=True")
+
+        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab]
+        for pos, word in enumerate(word_vocabs):
+            if word is None:
+                continue  # OOV word in the input sentence => skip
+
+            # now go over all words from the window, predicting each one in turn
+            start = max(0, pos - model.window)
+            for pos2, word2 in enumerate(sentence[start:(pos + model.window + 1)], start):
+                # don't train on OOV words and on the `word` itself
+                if word2 and not (pos2 == pos):
+                    log_prob_sentence += score_sg_pair(model, word, word2)
+
+        return log_prob_sentence
+
+    def score_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
+        """
+        Obtain likelihood score for a single sentence in a fitted CBOW representaion.
+
+        The sentence is a list of Vocab objects (or None, where the corresponding
+        word is not in the vocabulary. Called internally from `Word2Vec.score()`.
+
+        This is the non-optimized, Python version. If you have cython installed, gensim
+        will use the optimized version from word2vec_inner instead.
+
+        """
+        log_prob_sentence = 0.0
+        if model.negative:
+            raise RuntimeError("scoring is only available for HS=True")
+
+        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab]
+        for pos, word in enumerate(word_vocabs):
+            if word is None:
+                continue  # OOV word in the input sentence => skip
+
+            start = max(0, pos - model.window)
+            window_pos = enumerate(sentence[start:(pos + model.window + 1)], start)
+            word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
+            l1 = np_sum(model.syn0[word2_indices], axis=0)  # 1 x layer1_size
+            if word2_indices and model.cbow_mean:
+                l1 /= len(word2_indices)
+            log_prob_sentence += score_cbow_pair(model, word, word2_indices, l1)
+
+        return log_prob_sentence
 
 
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
@@ -230,71 +291,6 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
             model.syn0[i] += neu1e * model.syn0_lockf[i]
 
     return neu1e
-
-# could move this import up to where train_* is imported,
-# but for now just do it separately incase there are unforseen bugs in score_
-try:
-    from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
-except ImportError:
-    def score_sentence_sg(model, sentence, work=None):
-        """
-        Obtain likelihood score for a single sentence in a fitted skip-gram representaion.
-
-        The sentence is a list of Vocab objects (or None, when the corresponding
-        word is not in the vocabulary). Called internally from `Word2Vec.score()`.
-
-        This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from word2vec_inner instead.
-
-        """
-
-        log_prob_sentence = 0.0
-        if model.negative:
-            raise RuntimeError("scoring is only available for HS=True")
-
-        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab]
-        for pos, word in enumerate(word_vocabs):
-            if word is None:
-                continue  # OOV word in the input sentence => skip
-
-            # now go over all words from the window, predicting each one in turn
-            start = max(0, pos - model.window)
-            for pos2, word2 in enumerate(sentence[start:(pos + model.window + 1)], start):
-                # don't train on OOV words and on the `word` itself
-                if word2 and not (pos2 == pos):
-                    log_prob_sentence += score_sg_pair(model, word, word2)
-
-        return log_prob_sentence
-
-    def score_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
-        """
-        Obtain likelihood score for a single sentence in a fitted CBOW representaion.
-
-        The sentence is a list of Vocab objects (or None, where the corresponding
-        word is not in the vocabulary. Called internally from `Word2Vec.score()`.
-
-        This is the non-optimized, Python version. If you have cython installed, gensim
-        will use the optimized version from word2vec_inner instead.
-
-        """
-        log_prob_sentence = 0.0
-        if model.negative:
-            raise RuntimeError("scoring is only available for HS=True")
-
-        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab]
-        for pos, word in enumerate(word_vocabs):
-            if word is None:
-                continue  # OOV word in the input sentence => skip
-
-            start = max(0, pos - model.window)
-            window_pos = enumerate(sentence[start:(pos + model.window + 1)], start)
-            word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
-            l1 = np_sum(model.syn0[word2_indices], axis=0)  # 1 x layer1_size
-            if word2_indices and model.cbow_mean:
-                l1 /= len(word2_indices)
-            log_prob_sentence += score_cbow_pair(model, word, word2_indices, l1)
-
-        return log_prob_sentence
 
 
 def score_sg_pair(model, word, word2):
