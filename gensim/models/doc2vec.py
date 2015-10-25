@@ -516,7 +516,8 @@ class Doc2Vec(Word2Vec):
     def __init__(self, documents=None, size=300, alpha=0.025, window=8, min_count=5,
                  max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
                  dm=1, hs=1, negative=0, dbow_words=0, dm_mean=0, dm_concat=0, dm_tag_count=1,
-                 docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, **kwargs):
+                 docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None,
+                 batch_target=-1, **kwargs):
         """
         Initialize the model from an iterable of `documents`. Each document is a
         TaggedDocument object that will be used for training.
@@ -577,12 +578,19 @@ class Doc2Vec(Word2Vec):
          Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
           of the model.
 
+        `batch_target` = if non-negative, attempt to batch together as many sentences as possible
+        to the cython-optimized training routined, without going over this number of total words.
+        The default, -1, means no batching. Value should be chosen with consideration of cython
+        routine and stack limits (such as word2vec_inner.pyx's MAX_SENTENCE_LEN of 10000). A
+        single example's size may still exceed this target, but the excess words will be ignored
+        in the optimized routine.
+
         """
         super(Doc2Vec, self).__init__(
             size=size, alpha=alpha, window=window, min_count=min_count, max_vocab_size=max_vocab_size,
             sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
             sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean,
-            null_word=dm_concat, **kwargs)
+            null_word=dm_concat, batch_target=batch_target, **kwargs)
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
@@ -673,6 +681,43 @@ class Doc2Vec(Word2Vec):
                                            doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
             raw_tally += len(doc.words)
             self.docvecs.trained_item(indexed_doctags)
+        return (tally, raw_tally)
+
+    def _batched(self, job):
+        """Break items in job down to batches per self.batch_words size"""
+        batch = []
+        words_in_batch = 0
+        for doc in job:
+            if words_in_batch > 0 and (words_in_batch + len(doc.words)) > self.batch_target:
+                yield batch
+                batch = []
+                words_in_batch = 0
+            batch.append(doc)
+            words_in_batch += len(doc.words)
+        if batch:
+            yield batch
+
+    def _do_train_job_batched(self, job, alpha, inits):
+        work, neu1 = inits
+        tally = 0
+        raw_tally = 0
+        for batch in self._batched(job):
+            batch_words, batch_indexed_doctags = zip(*[(doc.words, self.docvecs.indexed_doctags(doc.tags)) for doc in batch])
+            batch_doctag_indexes = [item[0] for item in batch_indexed_doctags]
+            ignored, doctag_vectors, doctag_locks, ignored = batch_indexed_doctags[0]  # assume same vectors, locks for entire batch
+            if self.sg:
+                tally += train_document_dbow(self, batch_words, batch_doctag_indexes, alpha, work,
+                                             train_words=self.dbow_words, batch=True,
+                                             doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+            elif self.dm_concat:
+                tally += train_document_dm_concat(self, doc.words, doctag_indexes, alpha, work, neu1,  #####
+                                                  doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+            else:
+                tally += train_document_dm(self, doc.words, doctag_indexes, alpha, work, neu1,  #####
+                                           doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
+            raw_tally += sum(len(doc.words) for doc in batch)
+            for indexed_doctags in batch_indexed_doctags:
+                self.docvecs.trained_item(indexed_doctags)
         return (tally, raw_tally)
 
     def _raw_word_count(self, items):

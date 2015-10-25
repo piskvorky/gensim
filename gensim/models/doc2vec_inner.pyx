@@ -1,5 +1,5 @@
 #!/usr/bin/env cython
-# cython: boundscheck=False
+# cython: boundscheck=True
 # cython: wraparound=False
 # cython: cdivision=True
 # coding: utf-8
@@ -14,6 +14,8 @@ cimport numpy as np
 
 from libc.math cimport exp
 from libc.string cimport memset, memcpy
+cdef extern from "alloca.h":
+    void * alloca(unsigned long size)
 
 # scipy <= 0.15
 try:
@@ -223,10 +225,19 @@ cdef unsigned long long fast_document_dmc_neg(
 
     return next_random
 
+import sys
+import time
 
-def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
+def train_document_dbow(model, batch_words, batch_doctag_indexes, alpha, work=None, batch=False,
                         train_words=False, learn_doctags=True, learn_words=True, learn_hidden=True,
                         word_vectors=None, word_locks=None, doctag_vectors=None, doctag_locks=None):
+    if not batch:  # remain compatible with unbatched params, by wrapping in list
+         batch_words = [batch_words]
+         batch_doctag_indexes = [batch_doctag_indexes]
+    cdef int batch_count = len(batch_words)
+    cdef int *batch_words_lengths = <int *> alloca(batch_count * cython.sizeof(int))
+    cdef int *batch_doctags_lengths = <int *> alloca(batch_count * cython.sizeof(int))
+
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.sample != 0)
@@ -251,7 +262,7 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
     cdef int doctag_len
     cdef int window = model.window
 
-    cdef int i, j
+    cdef int i, j, doc_i
     cdef unsigned long long r
     cdef long result = 0
 
@@ -297,7 +308,9 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
 
     vlookup = model.vocab
     i = 0
-    for token in doc_words:
+    for doc_i, doc_words in enumerate(batch_words):
+      doc_words_length = 0
+      for token in doc_words: ### TEMPORARY MISINDENT FOR DIFF MINIMIZATION
         predict_word = vlookup[token] if token in vlookup else None
         if predict_word is None:  # shrink document to leave out word
             continue  # leaving i unchanged
@@ -310,28 +323,52 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
             points[i] = <np.uint32_t *>np.PyArray_DATA(predict_word.point)
         result += 1
         i += 1
+        doc_words_length += 1
         if i == MAX_DOCUMENT_LEN:
             break  # TODO: log warning, tally overflow?
-    document_len = i
+      batch_words_lengths[doc_i] = doc_words_length
+      if i == MAX_DOCUMENT_LEN:
+          batch_count = doc_i + 1  # truncate to count of docs that actually fit
+          break
+    total_words = i
 
     if _train_words:
         # single randint() call avoids a big thread-synchronization slowdown
-        for i, item in enumerate(model.random.randint(0, window, document_len)):
+        for i, item in enumerate(model.random.randint(0, window, total_words)):
             reduced_windows[i] = item
 
-    doctag_len = <int>min(MAX_DOCUMENT_LEN, len(doctag_indexes))
-    for i in range(doctag_len):
-        _doctag_indexes[i] = doctag_indexes[i]
-        result += 1
+    i = 0
+    for doc_i, doctag_indexes in enumerate(batch_doctag_indexes):
+        doc_doctags_length = 0
+        for j in range(len(doctag_indexes)):
+            _doctag_indexes[i] = doctag_indexes[j]
+            result += 1
+            i += 1
+            doc_doctags_length += 1
+            if i == MAX_DOCUMENT_LEN:
+                 break
+        batch_doctags_lengths[doc_i] = doc_doctags_length
+        if i == MAX_DOCUMENT_LEN:
+             batch_count = min(batch_count, doc_i + 1)  # truncate to count of docs that actually fit
+             break
 
     # release GIL & train on the document
     with nogil:
-        for i in range(document_len):
+      ptr_reduced_windows = &reduced_windows[0]
+      ptr_points = &points[0]
+      ptr_codes = &codes[0]
+      ptr_codelens = &codelens[0]
+      ptr_indexes = &indexes[0]
+      ptr_doctag_indexes = &_doctag_indexes[0]
+      for doc_i in range(batch_count):
+        document_len = batch_words_lengths[doc_i]
+        doctag_len = batch_doctags_lengths[doc_i]
+        for i in range(document_len): ###
             if _train_words:  # simultaneous skip-gram wordvec-training
-                j = i - window + reduced_windows[i]
+                j = i - window + ptr_reduced_windows[i]
                 if j < 0:
                     j = 0
-                k = i + window + 1 - reduced_windows[i]
+                k = i + window + 1 - ptr_reduced_windows[i]
                 if k > document_len:
                     k = document_len
                 for j in range(j, k):
@@ -339,25 +376,32 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
                         continue
                     if hs:
                         # we reuse the DBOW function, as it is equivalent to skip-gram for this purpose
-                        fast_document_dbow_hs(points[i], codes[i], codelens[i], _word_vectors, syn1, size, indexes[j],
+                        fast_document_dbow_hs(ptr_points[i], ptr_codes[i], ptr_codelens[i], _word_vectors, syn1, size, ptr_indexes[j],
                                               _alpha, _work, _learn_words, _learn_hidden, _word_locks)
                     if negative:
                         # we reuse the DBOW function, as it is equivalent to skip-gram for this purpose
                         next_random = fast_document_dbow_neg(negative, cum_table, cum_table_len, _word_vectors, syn1neg, size,
-                                                             indexes[i], indexes[j], _alpha, _work, next_random,
+                                                             ptr_indexes[i], ptr_indexes[j], _alpha, _work, next_random,
                                                              _learn_words, _learn_hidden, _word_locks)
 
             # docvec-training
             for j in range(doctag_len):
                 if hs:
-                    fast_document_dbow_hs(points[i], codes[i], codelens[i], _doctag_vectors, syn1, size, _doctag_indexes[j],
+                    fast_document_dbow_hs(ptr_points[i], ptr_codes[i], ptr_codelens[i], _doctag_vectors, syn1, size, ptr_doctag_indexes[j],
                                           _alpha, _work, _learn_doctags, _learn_hidden, _doctag_locks)
                 if negative:
                     next_random = fast_document_dbow_neg(negative, cum_table, cum_table_len, _doctag_vectors, syn1neg, size,
-                                                             indexes[i], _doctag_indexes[j], _alpha, _work, next_random,
+                                                             ptr_indexes[i], ptr_doctag_indexes[j], _alpha, _work, next_random,
                                                              _learn_doctags, _learn_hidden, _doctag_locks)
+        # advance all pointers to start of next doc
+        ptr_reduced_windows += document_len
+        ptr_points += document_len
+        ptr_codes += document_len
+        ptr_codelens += document_len
+        ptr_indexes += document_len
+        ptr_doctag_indexes += doctag_len
 
-    return result
+     return result
 
 
 def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=None,

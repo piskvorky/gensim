@@ -342,7 +342,7 @@ class Word2Vec(utils.SaveLoad):
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
             sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0,
-            trim_rule=None, sorted_vocab=1):
+            trim_rule=None, sorted_vocab=1, batch_target=-1):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -401,6 +401,13 @@ class Word2Vec(utils.SaveLoad):
         `sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before
         assigning word indexes.
 
+        `batch_target` = if non-negative, attempt to batch together as many sentences as possible
+        to the cython-optimized training routined, without going over this number of total words.
+        The default, -1, means no batching. Value should be chosen with consideration of cython
+        routine and stack limits (such as word2vec_inner.pyx's MAX_SENTENCE_LEN of 10000). A
+        single example's size may still exceed this target, but the excess words will be ignored
+        in the optimized routine.
+
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
@@ -428,6 +435,7 @@ class Word2Vec(utils.SaveLoad):
         self.train_count = 0
         self.total_train_time = 0
         self.sorted_vocab = sorted_vocab
+        self.batch_target = batch_target
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
@@ -717,7 +725,10 @@ class Word2Vec(utils.SaveLoad):
             if items is None:  # signal to finish
                 return False
             # train & return tally
-            tally, raw_tally = self._do_train_job(items, alpha, inits)
+            if self.batch_target > 0 and FAST_VERSION > -1:  # pass larger batches of examples to NOGIL training
+                tally, raw_tally = self._do_train_job_batched(items, alpha, inits)
+            else:
+                tally, raw_tally = self._do_train_job(items, alpha, inits)
             progress_queue.put((len(items), tally, raw_tally))  # report progress
             return True
 
