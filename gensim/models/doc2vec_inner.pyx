@@ -401,7 +401,7 @@ def train_document_dbow(model, batch_words, batch_doctag_indexes, alpha, work=No
         ptr_indexes += document_len
         ptr_doctag_indexes += doctag_len
 
-     return result
+    return result
 
 
 def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=None,
