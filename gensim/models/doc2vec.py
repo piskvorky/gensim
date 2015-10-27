@@ -710,10 +710,10 @@ class Doc2Vec(Word2Vec):
                                              train_words=self.dbow_words, batch=True,
                                              doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
             elif self.dm_concat:
-                tally += train_document_dm_concat(self, doc.words, doctag_indexes, alpha, work, neu1,  #####
+                tally += train_document_dm_concat(self, batch_words, batch_doctag_indexes, alpha, work, neu1, batch=True,
                                                   doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
             else:
-                tally += train_document_dm(self, doc.words, doctag_indexes, alpha, work, neu1,  #####
+                tally += train_document_dm(self, batch_words, batch_doctag_indexes, alpha, work, neu1, batch=True,
                                            doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
             raw_tally += sum(len(doc.words) for doc in batch)
             for indexed_doctags in batch_indexed_doctags:
