@@ -368,6 +368,8 @@ class LdaModel(interfaces.TransformationABC):
         # to Blei's original LDA-C code, cool!).
         for d, doc in enumerate(chunk):
             if isinstance(doc, numpy.ndarray):
+                if len(doc) == 0:
+                    continue
                 ids = doc[:, 0].astype(numpy.int_)
                 cts = doc[:, 1]
             else:
