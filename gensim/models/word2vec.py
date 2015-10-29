@@ -433,6 +433,9 @@ class Word2Vec(utils.SaveLoad):
         self.const_alpha = const_alpha
         self.sorted_vocab = sorted_vocab
 
+        self.debug_word= 'of'  # TODO: remove, just for debugging.
+        self.check_first_word = True
+
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -656,11 +659,21 @@ class Word2Vec(utils.SaveLoad):
     def _do_train_job(self, sentences, alpha, inits):
         work, neu1 = inits
         tally, raw_tally = 0, 0
+        #logging.info('len sents: %d', sum([len(s) for s in sentences]))
+        #logging.info('num sents: %d', len(sentences))
         if self.batch:
             assert FAST_VERSION > -1, "FIXME: python-only code path"
             assert self.sg, "FIXME: cbow also"
+            #import line_profiler
+            #profile = line_profiler.LineProfiler(train_batch_sg)
+            #temp_tally = profile.runcall(train_batch_sg, self, sentences, alpha, work)
+            #print 'temp_tally = %d' % temp_tally
+            #profile.print_stats()
+            #import pdb
+            #pdb.set_trace()
 
             tally += train_batch_sg(self, sentences, alpha, work)
+            #logging.debug('self.model[self.debug_word] = %s', str(self.model[self.debug_word]))
             for sentence in sentences:
                 raw_tally += len(sentence)
         else:
@@ -746,6 +759,7 @@ class Word2Vec(utils.SaveLoad):
             self.jobs_finished = False
 
             for sent_idx, sentence in enumerate(sentences):
+                logging.info('%s', next_alpha)
                 # clip sentences that are too large for the C structures
                 sentence = sentence[: MAX_WORDS_IN_BATCH]
 
@@ -773,6 +787,7 @@ class Word2Vec(utils.SaveLoad):
                         if not self.const_alpha:
                             next_alpha = self.alpha - (self.alpha - self.min_alpha) * progress
                             next_alpha = max(self.min_alpha, next_alpha)
+                            #logging.debug('next_alpha = %s', str(next_alpha))
                         else:
                             next_alpha = self.alpha
 
