@@ -60,13 +60,119 @@ two tokens (e.g. `new_york_times`):
 import sys
 import os
 import logging
+import itertools
+import random
 from collections import defaultdict
 
+import numpy as np
 from six import iteritems, string_types
-
 from gensim import utils, interfaces
+import hyperloglog
 
 logger = logging.getLogger(__name__)
+
+
+class DictCounter(defaultdict):
+    def __init__(self):
+        defaultdict.__init__(self, int)
+
+    def increment(self, key, increase=1):
+        self[key] += increase
+
+
+class CountMinimalSketchCounter(object):
+    """This class is using two algorithms:
+     * count-min sketch (https://en.wikipedia.org/wiki/Count%E2%80%93min_sketch)
+        is used for determining the approximate frequency of token.
+     * hyperloglog (https://pypi.python.org/pypi/hyperloglog)
+        is used for counting number of unique tokens in vocabulary
+
+    This version is refactored version of original Miguel Cabrera's version
+        https://github.com/piskvorky/gensim/pull/270
+    and expanded by hyperloglog library (suggested by Radim Řehůřek and Miguel Cabrera).
+    """
+    def __init__(
+            self, overestimated_freq_count_error=0.01, approximation_factor=5E-6, vocabulary_size_error=0.01,
+            conservative=True, prime=66405897020462343733):
+        """
+        `approximation_factor`: (epsilon in c implementation)
+            amount of tolerable error in the returned error count: 1 + approximation_factor * true_value
+            influence a width of the sketch
+        `overestimated_freq_count_error`: (delta in c implementation)
+            probability that the returned token frequency is not within the accepted error.
+            influence a depth of the sketch
+        `vocabulary_size_error`: allowed percentage difference between real and estimated unique token counts
+        `prime`: prime number used for hash function generation
+        """
+        if not 0 <= overestimated_freq_count_error <= 1:
+            raise ValueError("delta must be between 0 and 1, exclusive")
+        if not 0 <= approximation_factor <= 1:
+            raise ValueError("epsilon must be between 0 and 1, exclusive")
+        if not 0 < vocabulary_size_error < 1:
+            raise ValueError("`vocabulary_size_error` is a percentage error, it must be in open range (0, 1)")
+
+        # initialise hyperloglog counter for approximate unique word count
+        self.counter = hyperloglog.HyperLogLog(vocabulary_size_error)
+        self.conservative = conservative
+
+        self.prime = prime
+
+        self.width = int(np.ceil(2 / approximation_factor))
+        self.depth = int(np.ceil(np.log(1 / overestimated_freq_count_error)))
+        logging.info("Creating a Count Min-Sketch with dimension {}x{}".format(self.depth, self.width))
+
+        self.hash_functions = [self._generate_hash_function() for d_i in range(self.depth)]
+        self.count = np.zeros((self.depth, self.width), dtype='int32')
+
+    def increment(self, key, increase=1):
+        """Modified version of update, as the increment is done in a dict-like manner
+        """
+        self.counter.add(key)  # add key to unique vocabulary
+        chat = self["key"]
+        for row, hash_function in enumerate(self.hash_functions):
+            column = hash_function(abs(hash(key)))
+            if self.conservative:
+                self.count[row, column] = max(self.count[row, column], increase + chat)
+            else:
+                self.count[row, column] += increase
+
+    def get(self, key, default=0):
+        value = self[key]
+        if value is 0:
+            return default
+        else:
+            return value
+
+    def _generate_hash_function(self):
+        """Returns a hash function from a family of pairwise-independent hash functions,
+        """
+        a, b = random.randrange(0, self.prime - 1),  random.randrange(0, self.prime - 1)
+        return lambda x: (a * x + b) % self.prime % self.width
+
+    def __setitem__(self, key, value):
+        for row, hash_function in enumerate(self.hash_functions):
+            column = hash_function(abs(hash(key)))
+            self.count[row, column]  = value
+
+    def __getitem__(self, key):
+        value = sys.maxint
+        for row, hash_function in enumerate(self.hash_functions):
+            column = hash_function(abs(hash(key)))
+            value = min(self.count[row, column], value)
+        return value
+
+    def __delitem__(self, item):
+        pass
+
+    def __len__(self):
+        """Use hyperloglog propery."""
+        return len(self.counter)
+
+    def __contains__(self, key):
+        """True if key frequency count is greater than zero -- function predicts precisely or overestimate
+        frequency count. Otherwise False.
+        """
+        return self.__getitem__(key) > 0
 
 
 class Phrases(interfaces.TransformationABC):
@@ -78,8 +184,9 @@ class Phrases(interfaces.TransformationABC):
     and `phrases[corpus]` syntax.
 
     """
-    def __init__(self, sentences=None, min_count=5, threshold=10.0,
-            max_vocab_size=40000000, delimiter=b'_'):
+    def __init__(
+            self, sentences=None, min_count=5, threshold=10.0,
+            max_vocab_size=40000000, delimiter=b'_', average_sentence_size=20):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -106,6 +213,10 @@ class Phrases(interfaces.TransformationABC):
         `delimiter` is the glue character used to join collocation tokens, and
         should be a byte string (e.g. b'_').
 
+        `average_sentence_size`: expected number of tokens in average sentence.
+            max_vocab_size / average_sentence_size sentences is used to build python
+            dictionary per thread.
+            Lowering `average_sentence_size` will increase memory demands.
         """
         if min_count <= 0:
             raise ValueError("min_count should be at least 1")
@@ -116,7 +227,8 @@ class Phrases(interfaces.TransformationABC):
         self.min_count = min_count
         self.threshold = threshold
         self.max_vocab_size = max_vocab_size
-        self.vocab = defaultdict(int)  # mapping between utf8 token => its count
+        self.average_sentence_size = average_sentence_size
+        self.vocab = CountMinimalSketchCounter()  # mapping between utf8 token => its count
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
 
@@ -130,54 +242,72 @@ class Phrases(interfaces.TransformationABC):
             self.threshold, self.max_vocab_size)
 
     @staticmethod
-    def learn_vocab(sentences, max_vocab_size, delimiter=b'_'):
-        """Collect unigram/bigram counts from the `sentences` iterable."""
+    def add_subvocab(sentences, start_position, delimiter=b'_', min_count=None):
+        """Count token frequency for sentence iterator. Parent function must keep sentence size small enough
+        to let the token freq dictionary fit into memory.
+
+        `sentences`: sentence iterator
+        `start_position`: used only for logs, helps to count current sentence number
+        `delimiter`: bigram joiner symbol
+        `min_count`: prune everything with less than min_count freq, skip this step if `not min_count`
+        
+        :return: dictionary key=>freq
+        :raise: StopIteration if given empty iterator
+        """
+        logger.info("Next chunks of sentences is processed: collecting all tokens and their counts.")
+        sub_vocab = defaultdict(int)  # storage for token frequencies
         sentence_no = -1
         total_words = 0
-        logger.info("collecting all words and their counts")
-        vocab = defaultdict(int)
-        min_reduce = 1
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % 10000 == 0:
-                logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
-                            (sentence_no, total_words, len(vocab)))
-            sentence = [utils.any2utf8(w) for w in sentence]
-            for bigram in zip(sentence, sentence[1:]):
-                vocab[bigram[0]] += 1
-                vocab[delimiter.join(bigram)] += 1
+                # TODO in parallel version, log information must be changed
+                logger.info("PROGRESS: at sentence #%i" % (sentence_no + start_position))
+
+            for token_bigram in itertools.izip(sentence, sentence[1:]):
+                sub_vocab[token_bigram[0]] += 1
+                sub_vocab[delimiter.join(token_bigram)] += 1
                 total_words += 1
 
-            if sentence:  # add last word skipped by previous loop
-                word = sentence[-1]
-                vocab[word] += 1
+            if sentence:  # add last sentence token skipped by previous loop
+                last_token = sentence[-1]
+                sub_vocab[last_token] += 1
+                total_words += 1
 
-            if len(vocab) > max_vocab_size:
-                utils.prune_vocab(vocab, min_reduce)
-                min_reduce += 1
-
-        logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
-                    (len(vocab), total_words, sentence_no + 1))
-        return min_reduce, vocab
+        # if iterator is empty, let parent method know by raising StopIteration.
+        if sentence_no == -1:
+            raise StopIteration()
+        logger.info(
+            ("processed chunk of sentences contains %i new word types " +
+             "(unigrams + bigrams) from a corpus of %i tokens and %i sentences") % (
+                len(sub_vocab), total_words, sentence_no + 1))
+        # prune using min_count
+        # return built token=>freq dictionary        
+        if min_count:
+            return dict(
+                (key, freq) for key, freq in sub_vocab.iteritems() if freq >= min_count)
+        else:
+            return sub_vocab
 
     def add_vocab(self, sentences):
         """
         Merge the collected counts `vocab` into this phrase detector.
 
         """
-        # uses a separate vocab to collect the token counts from `sentences`.
-        # this consumes more RAM than merging new sentences into `self.vocab`
-        # directly, but gives the new sentences a fighting chance to collect
-        # sufficient counts, before being pruned out by the (large) accummulated
-        # counts collected in previous learn_vocab runs.
-        min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter)
+        sentences_iterator = iter(sentences)
+        step = int(self.max_vocab_size / self.average_sentence_size)
 
-        logger.info("merging %i counts into %s", len(vocab), self)
-        self.min_reduce = max(self.min_reduce, min_reduce)
-        for word, count in iteritems(vocab):
-            self.vocab[word] += count
-        if len(self.vocab) > self.max_vocab_size:
-            utils.prune_vocab(self.vocab, self.min_reduce)
-            self.min_reduce += 1
+        current_position = 0
+
+        while True:
+            try:
+                sentences_chunk = itertools.islice(sentences_iterator, step)
+                sub_vocab = Phrases.add_subvocab(sentences_chunk, current_position, min_count=self.min_count)
+                current_position += step
+
+                for word, count in iteritems(sub_vocab):
+                    self.vocab.increment(word, count)
+            except StopIteration:
+                break
 
         logger.info("merged %s", self)
 
@@ -194,7 +324,7 @@ class Phrases(interfaces.TransformationABC):
 
           >>> sentences = Text8Corpus(path_to_corpus)
           >>> bigram = Phrases(sentences, min_count=5, threshold=100)
-          >>> for sentence in phrases[sentences]:
+          >>> for sentence in bigram[sentences]:
           ...     print(u' '.join(s))
             he refuted nechaev other anarchists sometimes identified as pacifist anarchists advocated complete
             nonviolence leo_tolstoy
@@ -229,7 +359,6 @@ class Phrases(interfaces.TransformationABC):
                         new_s.append(bigram_word)
                         last_bigram = True
                         continue
-
             if not last_bigram:
                 new_s.append(word_a)
             last_bigram = False
@@ -242,7 +371,7 @@ class Phrases(interfaces.TransformationABC):
         return [utils.to_unicode(w) for w in new_s]
 
 
-if __name__ == '__main__':
+if __name__ == '__main__' and 0:
     logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
     logging.info("running %s" % " ".join(sys.argv))
 
