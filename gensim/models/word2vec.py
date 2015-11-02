@@ -828,17 +828,19 @@ class Word2Vec(utils.SaveLoad):
             return score_sentence_cbow(self, sentence, work, neu1)
 
     # basics copied from the train() function
-    def score(self, sentences, total_sentences=int(1e9), chunksize=100, queue_factor=2, report_delay=1):
+    def score(self, sentences, total_sentences=int(1e6), chunksize=100, queue_factor=2, report_delay=1):
         """
         Score the log probability for a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
         This does not change the fitted model in any way (see Word2Vec.train() for that)
 
-        Note that you should specify total_sentences; we'll run into problems if you ask to score more than the default
+        Note that you should specify total_sentences; we'll run into problems if you ask to 
+        score more than this number of sentences but it is inefficient to set the value too high.
 
-        See the article by Taddy [taddy]_ for examples of how to use such scores in document classification.
+        See the article by [taddy]_ and the gensim demo at [deepir]_ for examples of how to use such scores in document classification.
 
         .. [taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
+        .. [deepir] https://github.com/TaddyLab/gensim/blob/deepir/docs/notebooks/deepir.ipynb
 
         """
         if FAST_VERSION < 0:

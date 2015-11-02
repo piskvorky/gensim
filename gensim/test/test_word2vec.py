@@ -190,7 +190,7 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, size=2, min_count=1)
 
         # just score and make sure they exist
-        scores = model.score(sentences)
+        scores = model.score(sentences, len(sentences))
         self.assertEqual(len(scores),len(sentences))
 
 
