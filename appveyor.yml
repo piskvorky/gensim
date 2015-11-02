@@ -8,6 +8,7 @@ environment:
     # /E:ON and /V:ON options are not enabled in the batch script intepreter
     # See: http://stackoverflow.com/a/13751649/163740
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\continuous_integration\\appveyor\\run_with_env.cmd"
+    # TODO: use gensim's username
     WHEELHOUSE_UPLOADER_USERNAME: sklearn-appveyor
     WHEELHOUSE_UPLOADER_SECRET:
       secure: BQm8KfEj6v2Y+dQxb2syQvTFxDnHXvaNktkLcYSq7jfbTOO6eH9n09tfQzFUVcWZ
