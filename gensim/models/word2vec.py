@@ -869,6 +869,9 @@ class Word2Vec(utils.SaveLoad):
                 return False
             ns = 0
             for (id, sentence) in job:
+                if id >= total_sentences:
+                    logger.warning("you are trying to score more than total_sentences; we are stopping now.")
+                    return False
                 sentence_scores[id] = self._score_job_words(sentence, inits)
                 ns += 1
             progress_queue.put(ns)  # report progress
