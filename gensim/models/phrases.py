@@ -72,15 +72,7 @@ import hyperloglog
 logger = logging.getLogger(__name__)
 
 
-class DictCounter(defaultdict):
-    def __init__(self):
-        defaultdict.__init__(self, int)
-
-    def increment(self, key, increase=1):
-        self[key] += increase
-
-
-class CountMinimalSketchCounter(object):
+class CountMinSketchCounter(object):
     """This class is using two algorithms:
      * count-min sketch (https://en.wikipedia.org/wiki/Count%E2%80%93min_sketch)
         is used for determining the approximate frequency of token.
@@ -93,7 +85,7 @@ class CountMinimalSketchCounter(object):
     """
     def __init__(
             self, overestimated_freq_count_error=0.01, approximation_factor=5E-6, vocabulary_size_error=0.01,
-            conservative=True, prime=66405897020462343733):
+            conservative=False, prime=66405897020462343733):
         """
         `approximation_factor`: (epsilon in c implementation)
             amount of tolerable error in the returned error count: 1 + approximation_factor * true_value
@@ -228,7 +220,7 @@ class Phrases(interfaces.TransformationABC):
         self.threshold = threshold
         self.max_vocab_size = max_vocab_size
         self.average_sentence_size = average_sentence_size
-        self.vocab = CountMinimalSketchCounter()  # mapping between utf8 token => its count
+        self.vocab = CountMinSketchCounter()  # mapping between utf8 token => its count
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
 
