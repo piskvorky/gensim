@@ -67,6 +67,7 @@ from itertools import islice
 
 import numpy as np
 from six import iteritems, string_types
+from six.moves import zip
 from gensim import utils, interfaces
 import hyperloglog
 
@@ -112,7 +113,7 @@ class CountMinSketchCounter(object):
 
         self.width = int(np.ceil(2 / approximation_factor))
         self.depth = int(np.ceil(np.log(1 / overestimated_freq_count_error)))
-        logging.info("Creating a Count Min-Sketch with dimension {}x{}".format(self.depth, self.width))
+        logging.info("Creating a Count Min-Sketch with dimension {0}x{1}".format(self.depth, self.width))
 
         self.hash_functions = [self._generate_hash_function() for d_i in range(self.depth)]
         self.count = np.zeros((self.depth, self.width), dtype='int32')
@@ -148,7 +149,7 @@ class CountMinSketchCounter(object):
             self.count[row, column]  = value
 
     def __getitem__(self, key):
-        value = sys.maxint
+        value = sys.maxsize
         for row, hash_function in enumerate(self.hash_functions):
             column = hash_function(abs(hash(key)))
             value = min(self.count[row, column], value)
@@ -251,6 +252,7 @@ class Phrases(interfaces.TransformationABC):
         sentence_no = -1
         total_words = 0
         for sentence_no, sentence in enumerate(sentences):
+            sentence = [utils.any2utf8(w) for w in sentence]
             if sentence_no % 10000 == 0:
                 # TODO in parallel version, log information must be changed
                 logger.info("PROGRESS: at sentence #%i" % (sentence_no + start_position))

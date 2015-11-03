@@ -77,7 +77,7 @@ class TestPhrasesModel(unittest.TestCase):
         phrases.add_vocab(current)
 
         freq = phrases.vocab[special_token]
-        self.assertGreaterEqual(freq, 100)
+        self.assertTrue(freq >= 100)
 
         current = iter([])
         for i in range(100):
@@ -85,7 +85,7 @@ class TestPhrasesModel(unittest.TestCase):
         phrases.add_vocab(current)
 
         freq = phrases.vocab[special_token]
-        self.assertGreaterEqual(freq, 200)
+        self.assertTrue(freq >= 200)
 
 
 #endclass TestPhrasesModel
