@@ -124,7 +124,7 @@ setup(
     cmdclass={'build_ext': custom_build_ext},
     packages=find_packages(),
 
-    author=u'Radim Řehůřek',
+    author=u'Radim Rehurek',
     author_email='me@radimrehurek.com',
 
     url='http://radimrehurek.com/gensim',
