@@ -177,7 +177,7 @@ class Phrases(interfaces.TransformationABC):
 
     """
     def __init__(
-            self, sentences=None, min_count=5, threshold=10.0,
+            self, sentences=None, min_count=1, threshold=10.0,
             max_vocab_size=40000000, delimiter=b'_', average_sentence_size=20):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
@@ -189,8 +189,7 @@ class Phrases(interfaces.TransformationABC):
         :class:`Text8Corpus` or :class:`LineSentence` in the :mod:`gensim.models.word2vec`
         module for such examples.
 
-        `min_count` ignore all words and bigrams with total collected count lower
-        than this.
+        `min_count` obsolete, all words are kept, should be 1.
 
         `threshold` represents a threshold for forming the phrases (higher means
         fewer phrases). A phrase of words `a` and `b` is accepted if
@@ -211,8 +210,9 @@ class Phrases(interfaces.TransformationABC):
             Lowering `average_sentence_size` will increase memory demands.
         """
         if min_count <= 0:
-            raise ValueError("min_count should be at least 1")
-
+            raise ValueError("min_count should be 1")
+        if min_count > 1:
+            logger.warning("min_count should be 1")
         if threshold <= 0:
             raise ValueError("threshold should be positive")
 
@@ -234,14 +234,13 @@ class Phrases(interfaces.TransformationABC):
             self.threshold, self.max_vocab_size)
 
     @staticmethod
-    def add_subvocab(sentences, start_position, delimiter=b'_', min_count=None):
+    def add_subvocab(sentences, start_position, delimiter=b'_'):
         """Count token frequency for sentence iterator. Parent function must keep sentence size small enough
         to let the token freq dictionary fit into memory.
 
         `sentences`: sentence iterator
         `start_position`: used only for logs, helps to count current sentence number
         `delimiter`: bigram joiner symbol
-        `min_count`: prune everything with less than min_count freq, skip this step if `not min_count`
         
         :return: dictionary key=>freq
         :raise: StopIteration if given empty iterator
@@ -272,13 +271,8 @@ class Phrases(interfaces.TransformationABC):
             ("processed chunk of sentences contains %i new word types " +
              "(unigrams + bigrams) from a corpus of %i tokens and %i sentences") % (
                 len(sub_vocab), total_words, sentence_no + 1))
-        # prune using min_count
         # return built token=>freq dictionary        
-        if min_count:
-            return dict(
-                (key, freq) for key, freq in sub_vocab.iteritems() if freq >= min_count)
-        else:
-            return sub_vocab
+        return sub_vocab
 
     def add_vocab(self, sentences):
         """
@@ -293,7 +287,8 @@ class Phrases(interfaces.TransformationABC):
         while True:
             try:
                 sentences_chunk = itertools.islice(sentences_iterator, step)
-                sub_vocab = Phrases.add_subvocab(sentences_chunk, current_position, min_count=self.min_count)
+                sub_vocab = Phrases.add_subvocab(
+                    sentences_chunk, current_position)
                 current_position += step
 
                 for word, count in iteritems(sub_vocab):
@@ -315,7 +310,7 @@ class Phrases(interfaces.TransformationABC):
         Example::
 
           >>> sentences = Text8Corpus(path_to_corpus)
-          >>> bigram = Phrases(sentences, min_count=5, threshold=100)
+          >>> bigram = Phrases(sentences, threshold=100)
           >>> for sentence in bigram[sentences]:
           ...     print(u' '.join(s))
             he refuted nechaev other anarchists sometimes identified as pacifist anarchists advocated complete
@@ -379,6 +374,6 @@ if __name__ == '__main__' and 0:
     sentences = Text8Corpus(infile)
 
     # test_doc = LineSentence('test/test_data/testcorpus.txt')
-    bigram = Phrases(sentences, min_count=5, threshold=100)
+    bigram = Phrases(sentences, threshold=100)
     for s in bigram[sentences]:
         print(utils.to_utf8(u' '.join(s)))
