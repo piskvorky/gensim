@@ -359,7 +359,7 @@ class Phrases(interfaces.TransformationABC):
         return [utils.to_unicode(w) for w in new_s]
 
 
-if __name__ == '__main__' and 0:
+if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
     logging.info("running %s" % " ".join(sys.argv))
 
