@@ -60,9 +60,10 @@ two tokens (e.g. `new_york_times`):
 import sys
 import os
 import logging
-import itertools
 import random
 from collections import defaultdict
+from itertools import islice
+
 
 import numpy as np
 from six import iteritems, string_types
@@ -254,7 +255,7 @@ class Phrases(interfaces.TransformationABC):
                 # TODO in parallel version, log information must be changed
                 logger.info("PROGRESS: at sentence #%i" % (sentence_no + start_position))
 
-            for token_bigram in itertools.izip(sentence, sentence[1:]):
+            for token_bigram in zip(sentence, sentence[1:]):
                 sub_vocab[token_bigram[0]] += 1
                 sub_vocab[delimiter.join(token_bigram)] += 1
                 total_words += 1
@@ -286,7 +287,7 @@ class Phrases(interfaces.TransformationABC):
 
         while True:
             try:
-                sentences_chunk = itertools.islice(sentences_iterator, step)
+                sentences_chunk = islice(sentences_iterator, step)
                 sub_vocab = Phrases.add_subvocab(
                     sentences_chunk, current_position)
                 current_position += step
