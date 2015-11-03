@@ -869,11 +869,11 @@ class Word2Vec(utils.SaveLoad):
                 return False
             ns = 0
             for (id, sentence) in job:
-                if id >= total_sentences:
-                    logger.warning("you are trying to score more than total_sentences; we are stopping now.")
-                    return False
-                sentence_scores[id] = self._score_job_words(sentence, inits)
-                ns += 1
+                if id < total_sentences:
+                    sentence_scores[id] = self._score_job_words(sentence, inits)
+                    ns += 1
+                else:
+                    break
             progress_queue.put(ns)  # report progress
             return True
 
@@ -909,6 +909,10 @@ class Word2Vec(utils.SaveLoad):
         while True:
             try:
                 job_no, items = next(jobs_source)
+                if (job_no-1)*chunksize > total_sentences:
+                    logger.warning("terminating after %i sentences (set higher total_sentences if you want more)."%total_sentences)
+                    job_no -= 1
+                    raise StopIteration()
                 logger.debug("putting job #%i in the queue", job_no)
                 job_queue.put(items)
             except StopIteration:
