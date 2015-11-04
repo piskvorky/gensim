@@ -10,6 +10,10 @@ NEXT
   - This is a breaking change that affects users of the `LsiModel`, `LdaModel`,
   and `LdaMulticore` that may be reliant on the old tuple layout of
   `(probability, word)`.
+* Mixed integer & string document-tags (keys to doc-vectors) will work (Gordon Mohr, #491)
+  - DocvecsArray's `index2doctag` list is renamed/reinterpreted as `offset2doctag`
+  - `offset2doctag` entries map to `doctag_syn0` indexes *after* last plain-int doctag (if any)
+  - (If using only string doctags, `offset2doctag` may be interpreted same as `index2doctag`.)
 
 0.12.2, 19/09/2015
 

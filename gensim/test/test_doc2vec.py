@@ -41,7 +41,7 @@ class DocsLeeCorpus(object):
 
 list_corpus = list(DocsLeeCorpus())
 
-sentences = [
+raw_sentences = [
         ['human', 'interface', 'computer'],
         ['survey', 'user', 'computer', 'system', 'response', 'time'],
         ['eps', 'user', 'interface', 'system'],
@@ -53,8 +53,7 @@ sentences = [
         ['graph', 'minors', 'survey']
     ]
 
-sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(sentences)]
-
+sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(raw_sentences)]
 
 def testfile():
     # temporary data will be stored to this file
@@ -101,7 +100,8 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(model.docvecs[0].shape, (300,))
         self.assertEqual(model.docvecs['_*0'].shape, (300,))
         self.assertTrue(all(model.docvecs['_*0'] == model.docvecs[0]))
-        self.assertTrue(max(d.index for d in model.docvecs.doctags.values()) < len(model.docvecs.doctag_syn0))
+        self.assertTrue(max(d.offset for d in model.docvecs.doctags.values()) < len(model.docvecs.doctags))
+        self.assertTrue(max(model.docvecs._int_index(str_key) for str_key in model.docvecs.doctags.keys()) < len(model.docvecs.doctag_syn0))
 
     def test_empty_errors(self):
         # no input => "RuntimeError: you must first build vocabulary before training the model"
@@ -235,6 +235,16 @@ class TestDoc2VecModel(unittest.TestCase):
                                  seed=42, workers=1)
         self.models_equal(model, model2)
 
+    def test_mixed_tag_types(self):
+        """Ensure alternating int/string tags don't share indexes in doctag_syn0"""
+        mixed_tag_corpus = [doc2vec.TaggedDocument(words, [i, words[0]]) for i, words in enumerate(raw_sentences)]
+        model = doc2vec.Doc2Vec()
+        model.build_vocab(mixed_tag_corpus)
+        expected_length = len(sentences) + len(model.docvecs.doctags)  # 9 sentences, 7 unique first tokens
+        print(model.docvecs.doctags)
+        print(model.docvecs.count)
+        self.assertEquals(len(model.docvecs.doctag_syn0), expected_length)
+
     def models_equal(self, model, model2):
         # check words/hidden-weights
         self.assertEqual(len(model.vocab), len(model2.vocab))
@@ -245,7 +255,7 @@ class TestDoc2VecModel(unittest.TestCase):
             self.assertTrue(np.allclose(model.syn1neg, model2.syn1neg))
         # check docvecs
         self.assertEqual(len(model.docvecs.doctags), len(model2.docvecs.doctags))
-        self.assertEqual(len(model.docvecs.index2doctag), len(model2.docvecs.index2doctag))
+        self.assertEqual(len(model.docvecs.offset2doctag), len(model2.docvecs.offset2doctag))
         self.assertTrue(np.allclose(model.docvecs.doctag_syn0, model2.docvecs.doctag_syn0))
 
 #endclass TestDoc2VecModel
