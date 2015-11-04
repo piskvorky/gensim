@@ -10,7 +10,7 @@ before_install:
   - wget 'http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh' -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
-  - export PATH=$PREFIX/bin:$PATH
+  - export PATH=/home/travis/miniconda2/bin:$PATH
   - conda update --yes conda
 install:
   - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy
