@@ -24,7 +24,8 @@ except ImportError:
 
 REAL = np.float32
 
-DEF MAX_SENTENCE_LEN = 10000
+DEF MAX_SENTENCE_LEN = 100000
+DEF MAX_NUM_SENTENCES = 10000
 
 cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(fblas.scopy._cpointer)  # y = x
 cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(fblas.saxpy._cpointer)  # y += alpha * x
@@ -254,7 +255,6 @@ cdef unsigned long long fast_sentence_cbow_neg(
     return next_random
 
 
-
 def train_sentence_sg(model, sentence, alpha, _work):
     cdef int hs = model.hs
     cdef int negative = model.negative
@@ -339,6 +339,103 @@ def train_sentence_sg(model, sentence, alpha, _work):
                     fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks)
                 if negative:
                     next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
+
+    return result
+
+
+def train_batch_sg(model, sentences, alpha, _work):
+    cdef int hs = model.hs
+    cdef int negative = model.negative
+    cdef int sample = (model.sample != 0)
+
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
+    cdef REAL_t *work
+    cdef REAL_t _alpha = alpha
+    cdef int size = model.layer1_size
+
+    cdef int codelens[MAX_SENTENCE_LEN]
+    cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
+    cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
+    cdef int sentence_len[MAX_NUM_SENTENCES]
+    cdef int window = model.window
+
+    cdef int i, j, k, m
+    cdef long result = 0
+    cdef int num_sentences = 0
+    cdef int sent_idx = 0
+    cdef int idx = 0
+
+    # For hierarchical softmax
+    cdef REAL_t *syn1
+    cdef np.uint32_t *points[MAX_SENTENCE_LEN]
+    cdef np.uint8_t *codes[MAX_SENTENCE_LEN]
+
+    # For negative sampling
+    cdef REAL_t *syn1neg
+    cdef np.uint32_t *cum_table
+    cdef unsigned long long cum_table_len
+    # for sampling (negative and frequent-word downsampling)
+    cdef unsigned long long next_random
+
+    if hs:
+        syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
+
+    if negative:
+        syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
+        cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
+        cum_table_len = len(model.cum_table)
+    if negative or sample:
+        next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
+
+    # convert Python structures to primitive types, so we can release the GIL
+    work = <REAL_t *>np.PyArray_DATA(_work)
+
+    vlookup = model.vocab
+    for sent_idx, sent in enumerate(sentences):
+        i = 0
+        for token in sent:
+            word = vlookup[token] if token in vlookup else None
+            if word is None:
+                continue  # leaving i unchanged/shortening sentence
+            if sample and word.sample_int < random_int32(&next_random):
+                continue
+            indexes[idx + i] = word.index
+            if hs:
+                codelens[idx + i] = <int>len(word.code)
+                codes[idx + i] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                points[idx + i] = <np.uint32_t *>np.PyArray_DATA(word.point)
+            result += 1
+            i += 1
+            if i == MAX_SENTENCE_LEN:
+                break  # TODO: log warning, tally overflow?
+
+        sentence_len[sent_idx] = i
+        # single randint() call avoids a big thread-sync slowdown
+        for i, item in enumerate(model.random.randint(0, window, sentence_len[sent_idx])):
+            reduced_windows[idx + i] = item
+
+        idx += len(sent)
+        num_sentences += 1
+
+    # release GIL & train on the sentences
+    with nogil:
+        for sent_idx in range(num_sentences):
+            m = 0 if sent_idx == 0 else sentence_len[sent_idx - 1]
+            for i in range(sentence_len[sent_idx]):
+                j = i - window + reduced_windows[m + i]
+                if j < 0:
+                    j = 0
+                k = i + window + 1 - reduced_windows[m + i]
+                if k > sentence_len[sent_idx]:
+                    k = sentence_len[sent_idx]
+                for j in range(j, k):
+                    if j == i:
+                        continue
+                    if hs:
+                        fast_sentence_sg_hs(points[m + i], codes[m + i], codelens[m + i], syn0, syn1, size, indexes[m + j], _alpha, work, word_locks)
+                    if negative:
+                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[m + i], indexes[m + j], _alpha, work, next_random, word_locks)
 
     return result
 
@@ -460,7 +557,7 @@ def score_sentence_sg(model, sentence, _work):
     for token in sentence:
         word = vlookup[token] if token in vlookup else None
         if word is None:
-            continue  # should drop the 
+            continue  # should drop the
         indexes[i] = word.index
         codelens[i] = <int>len(word.code)
         codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
@@ -478,10 +575,10 @@ def score_sentence_sg(model, sentence, _work):
         for i in range(sentence_len):
             if codelens[i] == 0:
                 continue
-            j = i - window 
+            j = i - window
             if j < 0:
                 j = 0
-            k = i + window + 1 
+            k = i + window + 1
             if k > sentence_len:
                 k = sentence_len
             for j in range(j, k):
@@ -560,7 +657,7 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
         for i in range(sentence_len):
             if codelens[i] == 0:
                 continue
-            j = i - window 
+            j = i - window
             if j < 0:
                 j = 0
             k = i + window + 1
@@ -637,7 +734,7 @@ def init():
         return 0  # double
     elif (abs(p_res[0] - expected) < 0.0001):
         our_dot = our_dot_float
-        our_saxpy = saxpy 
+        our_saxpy = saxpy
         return 1  # float
     else:
         # neither => use cython loops, no BLAS
@@ -647,3 +744,5 @@ def init():
         return 2
 
 FAST_VERSION = init()  # initialize the module
+MAX_WORDS_IN_BATCH = MAX_SENTENCE_LEN
+MAX_BATCH_SENTENCES = MAX_NUM_SENTENCES

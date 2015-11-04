@@ -1108,6 +1108,14 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
     return result
 
 
+def qsize(queue):
+    """Return the (approximate) queue size where available; -1 where not (OS X)."""
+    try:
+        return queue.qsize()
+    except NotImplementedError:
+        # OS X doesn't support qsize
+        return -1
+
 RULE_DEFAULT = 0
 RULE_DISCARD = 1
 RULE_KEEP = 2
