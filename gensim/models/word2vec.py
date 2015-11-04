@@ -962,7 +962,9 @@ class Word2Vec(utils.SaveLoad):
     def seeded_vector(self, seed_string):
         """Create one 'random' vector (but deterministic by seed_string)"""
         # Note: built-in hash() may vary by Python version or even (in Py3.x) per launch
-        once = random.RandomState(uint32(self.hashfxn(seed_string)))
+        self.hashfxn(seed_string) 
+        ui = uint32(h)
+        once = random.RandomState(ui)
         return (once.rand(self.vector_size) - 0.5) / self.vector_size
 
     def save_word2vec_format(self, fname, fvocab=None, binary=False):
