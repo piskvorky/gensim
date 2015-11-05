@@ -1,7 +1,7 @@
 Changes
 =======
 
-NEXT
+0.12.3rc1
 
 * Make show_topics return value consistent across models (Christopher Corley, #448)
   - All models with the `show_topics` method should return a list of
