@@ -15,7 +15,7 @@ Example:
 
 >>> model = gensim.models.wrappers.DtmModel('dtm-win64.exe', my_corpus, my_timeslices, num_topics=20, id2word=dictionary)
 
-.. [1] https://code.google.com/p/princeton-statistical-learning/downloads/detail?name=dtm_release-0.8.tgz
+.. [1] https://github.com/magsilva/dtm/tree/master/bin
 
 """
 
@@ -24,11 +24,11 @@ import logging
 import random
 import tempfile
 import os
-from subprocess import Popen, PIPE
-
+from subprocess import PIPE
 import numpy as np
 
 from gensim import utils, corpora, matutils
+from gensim.utils import check_output
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +70,9 @@ class DtmModel(utils.SaveLoad):
         `initialize_lda` initialize DTM with LDA.
 
         """
+        if not os.path.isfile(dtm_path):
+            raise ValueError("dtm_path must point to the binary file, not to a folder")
+
         self.dtm_path = dtm_path
         self.id2word = id2word
         if self.id2word is None:
@@ -188,15 +191,17 @@ class DtmModel(utils.SaveLoad):
 
         arguments = arguments + " " + params
         logger.info("training DTM with args %s" % arguments)
-        try:
-            p = Popen([self.dtm_path] + arguments.split(), stdout=PIPE, stderr=PIPE)
-            p.communicate()
-        except KeyboardInterrupt:
-            p.terminate()
+
+        cmd = [self.dtm_path] + arguments.split()
+        logger.info("Running command %s" % cmd)
+        check_output(cmd, stderr=PIPE)
+
         self.em_steps = np.loadtxt(self.fem_steps())
-        self.init_alpha = np.loadtxt(self.finit_alpha())
-        self.init_beta = np.loadtxt(self.finit_beta())
         self.init_ss = np.loadtxt(self.flda_ss())
+
+        if self.initialize_lda:
+            self.init_alpha = np.loadtxt(self.finit_alpha())
+            self.init_beta = np.loadtxt(self.finit_beta())
 
         self.lhood_ = np.loadtxt(self.fout_liklihoods())
 
