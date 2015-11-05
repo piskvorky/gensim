@@ -218,7 +218,7 @@ class TestLdaModel(unittest.TestCase):
         topic_terms = self.model.get_topic_terms(1)
 
         for k, v in topic_terms:
-            self.assertTrue(isinstance(k, int) or isinstance(k, numpy.int64))
+            self.assertTrue(isinstance(k, int) or isinstance(k, numpy.int_))
             self.assertTrue(isinstance(v, float))
 
     def testShowTopic(self):
