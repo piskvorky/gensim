@@ -116,7 +116,7 @@ if WHEELHOUSE_UPLOADER_COMMANDS.intersection(sys.argv):
 
 setup(
     name='gensim',
-    version='0.12.2',
+    version='0.12.3rc1',
     description='Python framework for fast Vector Space Modelling',
     long_description=readfile('README.rst'),
 
