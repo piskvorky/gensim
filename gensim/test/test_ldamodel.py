@@ -219,7 +219,9 @@ class TestLdaModel(unittest.TestCase):
 
         for k, v in topic_terms:
             logging.warning(str(type(k)))
-            self.assertTrue(isinstance(k, int) or isinstance(k, numpy.int32) or isinstance(k,numpy.int64))
+            logging.warning(isinstance(k, numpy.int32))
+            logging.warning(isinstance(k, int) or isinstance(k, numpy.int32))
+            self.assertTrue(isinstance(k, int) or isinstance(k, numpy.int32) or isinstance(k, numpy.int64))
             self.assertTrue(isinstance(v, float))
 
     def testShowTopic(self):
