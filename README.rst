@@ -5,13 +5,17 @@ gensim -- Topic Modelling in Python
 |Travis|_
 |Downloads|_
 |License|_
+|Wheel|_
 
 .. |Travis| image:: https://img.shields.io/travis/piskvorky/gensim/develop.svg
 .. |Downloads| image:: https://img.shields.io/pypi/dm/gensim.svg
 .. |License| image:: https://img.shields.io/pypi/l/gensim.svg
+.. |Wheel| image:: https://img.shields.io/pypi/wheel/gensim.svg
+
 .. _Travis: https://travis-ci.org/piskvorky/gensim
 .. _Downloads: https://pypi.python.org/pypi/gensim
 .. _License: http://radimrehurek.com/gensim/about.html
+.. _Wheel: https://pypi.python.org/pypi/gensim
 
 Gensim is a Python library for *topic modelling*, *document indexing* and *similarity retrieval* with large corpora.
 Target audience is the *natural language processing* (NLP) and *information retrieval* (IR) community.
