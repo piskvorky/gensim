@@ -4,8 +4,8 @@ gensim -- Topic Modelling in Python
 
 |Travis|_
 |Downloads|_
-|License|_
 |Wheel|_
+|License|_
 
 .. |Travis| image:: https://img.shields.io/travis/piskvorky/gensim/develop.svg
 .. |Downloads| image:: https://img.shields.io/pypi/dm/gensim.svg
