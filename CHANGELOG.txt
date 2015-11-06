@@ -1,7 +1,7 @@
 Changes
 =======
 
-NEXT
+0.12.3rc1, 05/11/2015
 
 * Make show_topics return value consistent across models (Christopher Corley, #448)
   - All models with the `show_topics` method should return a list of
@@ -14,6 +14,12 @@ NEXT
   - DocvecsArray's `index2doctag` list is renamed/reinterpreted as `offset2doctag`
   - `offset2doctag` entries map to `doctag_syn0` indexes *after* last plain-int doctag (if any)
   - (If using only string doctags, `offset2doctag` may be interpreted same as `index2doctag`.)
+* New Tutorials on Dynamic Topic Modelling and Classification via Word2Vec (@arttii #471, @mataddy #500)
+* Auto-learning for the eta parameter on the LdaModel (Christopher Corley, #479)
+* Python 3.5 support
+* Speed improvements to keyword and summarisation methods (@erbas #441)
+* OSX wheels (#504)
+* Win build (#492)
 
 0.12.2, 19/09/2015
 
