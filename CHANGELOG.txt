@@ -19,6 +19,7 @@ Changes
 * Python 3.5 support
 * Speed improvements to keyword and summarisation methods (@erbas #441)
 * OSX wheels (#504)
+* Win build (#492)
 
 0.12.2, 19/09/2015
 
