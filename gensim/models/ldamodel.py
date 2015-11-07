@@ -368,11 +368,15 @@ class LdaModel(interfaces.TransformationABC):
         # to Blei's original LDA-C code, cool!).
         for d, doc in enumerate(chunk):
             if isinstance(doc, numpy.ndarray):
+                if len(doc) == 0:
+                    continue
+
+                # if utils.grouper was called with as_numpy=True all the
+                # term IDs will be floats, let's convert them to ints
                 ids = doc[:, 0].astype(numpy.int_)
-                cts = doc[:, 1]
             else:
                 ids = [id for id, _ in doc]
-                cts = numpy.array([cnt for _, cnt in doc])
+            cts = numpy.array([cnt for _, cnt in doc])
             gammad = gamma[d, :]
             Elogthetad = Elogtheta[d, :]
             expElogthetad = expElogtheta[d, :]
