@@ -834,7 +834,7 @@ class Word2Vec(utils.SaveLoad):
         Each sentence must be a list of unicode strings.
         This does not change the fitted model in any way (see Word2Vec.train() for that)
 
-        Note that you should specify total_sentences; we'll run into problems if you ask to 
+        Note that you should specify total_sentences; we'll run into problems if you ask to
         score more than this number of sentences but it is inefficient to set the value too high.
 
         See the article by [taddy]_ and the gensim demo at [deepir]_ for examples of how to use such scores in document classification.

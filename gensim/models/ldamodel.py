@@ -868,6 +868,7 @@ class LdaModel(interfaces.TransformationABC):
         """
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
+        minimum_probability = max(abs(minimum_probability), 1e-8)  # never allow zero values in sparse output
 
         # if the input vector is a corpus, return a transformed corpus
         is_corpus, corpus = utils.is_corpus(bow)
