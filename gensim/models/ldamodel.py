@@ -838,10 +838,11 @@ class LdaModel(interfaces.TransformationABC):
             for m in top_words[1:]:
                 # m_docs is v_m^(t)
                 m_docs = doc_word_list[m]
+                m_index = numpy.where(top_words == m)[0]
 
                 # Sum of top words l=1..m-1
                 # i.e., all words ranked higher than the current word m
-                for l in top_words[:m - 1]:
+                for l in top_words[:m_index - 1]:
                     # l_docs is v_l^(t)
                     l_docs = doc_word_list[l]
 

@@ -41,24 +41,7 @@ from gensim.utils import check_output
 
 logger = logging.getLogger(__name__)
 
-
-def read_doctopics(fname, eps=1e-6):
-    """
-    Yield document topic vectors from MALLET's "doc-topics" format, as sparse gensim vectors.
-
-    """
-    with utils.smart_open(fname) as fin:
-        next(fin)  # skip the header line
-        for lineno, line in enumerate(fin):
-            parts = line.split()[2:]  # skip "doc" and "source" columns
-            if len(parts) % 2 != 0:
-                raise RuntimeError("invalid doc topics format at line %i in %s" % (lineno + 1, fname))
-            doc = [(int(id), float(weight)) for id, weight in zip(parts[::2], parts[1::2]) if abs(float(weight)) > eps]
-            # explicitly normalize probs to sum up to 1.0, just to be sure...
-            weights = float(sum([weight for _, weight in doc]))
-            yield [] if weights == 0 else sorted((id, 1.0 * weight / weights) for id, weight in doc)
-
-
+            
 
 class LdaMallet(utils.SaveLoad):
     """
@@ -173,13 +156,14 @@ class LdaMallet(utils.SaveLoad):
         cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations)
         logger.info("inferring topics with MALLET LDA '%s'" % cmd)
         check_output(cmd, shell=True)
-        result = list(read_doctopics(self.fdoctopics() + '.infer'))
+        result = list(self.read_doctopics(self.fdoctopics() + '.infer'))
         return result if is_corpus else result[0]
 
 
     def load_word_topics(self):
         logger.info("loading assigned topics from %s" % self.fstate())
         wordtopics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float32)
+        word2id = dict((v, k) for k, v in iteritems(self.id2word))
         with utils.smart_open(self.fstate()) as fin:
             _ = next(fin)  # header
             self.alpha = numpy.array([float(val) for val in next(fin).split()[2:]])
@@ -188,7 +172,7 @@ class LdaMallet(utils.SaveLoad):
             for lineno, line in enumerate(fin):
                 line = utils.to_unicode(line)
                 doc, source, pos, typeindex, token, topic = line.split(" ")
-                tokenid = self.id2word.token2id[token] if hasattr(self.id2word, 'token2id') else int(token)
+                tokenid = word2id[token]
                 wordtopics[int(topic), tokenid] += 1
         logger.info("loaded assigned topics for %i tokens" % wordtopics.sum())
         self.wordtopics = wordtopics
@@ -203,7 +187,7 @@ class LdaMallet(utils.SaveLoad):
         Return an iterator over the topic distribution of training corpus, by reading
         the doctopics.txt generated during training.
         """
-        return read_doctopics(self.fdoctopics())
+        return self.read_doctopics(self.fdoctopics())
 
 
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
@@ -244,3 +228,27 @@ class LdaMallet(utils.SaveLoad):
 
     def print_topic(self, topicid, topn=10):
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
+
+
+    def read_doctopics(self, fname, eps=1e-6):
+        """
+        Yield document topic vectors from MALLET's "doc-topics" format, as sparse gensim vectors.
+
+        """
+        fin = utils.smart_open(fname)
+        first_line = next(fin)
+        fin.close()
+        with utils.smart_open(fname) as fin:
+            if first_line.startswith("#doc "):  # check the file header
+                next(fin)   # skip the header line
+            for lineno, line in enumerate(fin):
+                parts = line.split()[2:]  # skip "doc" and "source" columns
+                if len(parts) == 2 * self.num_topics:
+                    doc = [(int(id), float(weight)) for id, weight in zip(parts[::2], parts[1::2]) if abs(float(weight)) > eps]
+                elif len(parts) == self.num_topics:
+                    doc = [(int(id), float(weight)) for id, weight in list(enumerate(parts)) if abs(float(weight)) > eps]
+                else:
+                    raise RuntimeError("invalid doc topics format at line %i in %s" % (lineno + 1, fname))
+                # explicitly normalize probs to sum up to 1.0, just to be sure...
+                weights = float(sum([weight for _, weight in doc]))
+                yield [] if weights == 0 else sorted((id, 1.0 * weight / weights) for id, weight in doc)
