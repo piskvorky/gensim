@@ -86,7 +86,7 @@ except ImportError:
     from Queue import Queue, Empty
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
-    uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
+    double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
     ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
@@ -1184,6 +1184,56 @@ class Word2Vec(utils.SaveLoad):
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
+
+
+    def wmdistance(self, document1, document2):
+        """
+        Compute the Word Mover's Distance of two documents, proposed by Matt J. Kusner et al.
+        """
+        # TODO: reference and example in docstring.
+
+        # FIXME: no external import, include in Gensim somehow.
+        from pyemd import emd
+
+        def nBOW(document, vocab):
+            doc_len = len(document)
+            d = []
+            for i, t in enumerate(vocab):
+                d.append(document.count(t) / float(doc_len))
+
+            return d
+
+        # Remove out-of-vocabulary words.
+        len_pre_oov1 = len(document1)
+        len_pre_oov2 = len(document2)
+        document1 = [token for token in document1 if token in self.vocab.keys()]
+        document2 = [token for token in document2 if token in self.vocab.keys()]
+        logging.info('Removed %d and %d OOV words from document 1 and 2 (respectively).', len_pre_oov1 - len(document1), len_pre_oov2 - len(document2))
+
+        if len(document1) == 0 or len(document2) == 0:
+            logging.info('At least one of the documents had no words that were in the vocabulary. Aborting (returning NaN).')
+            return float('nan')
+
+        vocab = set(document1 + document2)
+
+        # Compute nBOW representation of documents.
+        d1 = array(nBOW(document1, vocab), dtype=double)
+        d2 = array(nBOW(document2, vocab), dtype=double)
+
+        vocab_len = len(vocab)
+        distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
+        for i, t1 in enumerate(vocab):
+            for j, t2 in enumerate(vocab):
+                if not t1 in document1 or not t2 in document2:
+                    # Only compute the distances that we need.
+                    continue
+                # Compute Euclidean distance between word vectors.
+                # TODO: this matrix is (and should be) symmetric, so we can save some computation here.
+                # TODO: why not cosine distance?
+                distance_matrix[i][j] = sqrt(np_sum((self[t1] - self[t2])**2))
+
+        # Return WMD.
+        return emd(d1, d2, distance_matrix)
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         """
