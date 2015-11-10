@@ -11,10 +11,10 @@ implementation [1]_.
 This uses Matt Hoffman's online algorithm, for LDA [2]_, i.e. the same
 algorithm that Gensim's LdaModel is based on.
 
-Note: Currently working and tested with Vowpal Wabbit 7.10. Vowpal Wabbit's
-API isn't currently stable, so this may or may not work with older/newer
-versions. The aim will be to ensure this wrapper always works with the latest
-release of Vowpal Wabbit.
+Note: Currently working and tested with Vowpal Wabbit versions 7.10 to 8.1.1.
+Vowpal Wabbit's API isn't currently stable, so this may or may not work with
+older/newer versions. The aim will be to ensure this wrapper always works with
+the latest release of Vowpal Wabbit.
 
 Tested with python 2.6, 2.7, and 3.4.
 
