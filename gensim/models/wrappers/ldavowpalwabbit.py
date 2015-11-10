@@ -391,7 +391,7 @@ class LdaVowpalWabbit(utils.SaveLoad):
             for line in topics_file:
                 # look for start of data
                 if not found_data:
-                    if line.startswith(b'0 ') and ':' not in line:
+                    if line.startswith(b'0 ') and b':' not in line:
                         found_data = True
                     else:
                         continue
