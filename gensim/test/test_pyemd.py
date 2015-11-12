@@ -5,7 +5,7 @@ import numpy as np
 import unittest
 import logging
 
-from pyemd import emd
+from gensim.pyemd import emd
 
 class TestPyemd(unittest.TestCase):
     def test_case_1(self):
