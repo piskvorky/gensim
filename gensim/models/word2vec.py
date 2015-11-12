@@ -1189,11 +1189,25 @@ class Word2Vec(utils.SaveLoad):
 
     def wmdistance(self, document1, document2):
         """
-        Compute the Word Mover's Distance of two documents, proposed by Matt J. Kusner et al.
-        """
-        # TODO: reference and example in docstring.
+        Compute the Word Mover's Distance of two documents. Algorithm proposed by Matt J. Kusner et al. in "From Word Embeddings To Document Distances".
 
-        # FIXME: no external import, include in Gensim somehow.
+        Example:
+        # Train word2vec model.
+        model = Word2Vec(sentences)
+
+        # Some sentences to test.
+        sentence1 = 'Obama speaks to the media in Illinois'.lower().split()
+        sentence2 = 'The president speaks to the media in Chicago'.lower().split()
+
+        # Remove their stopwords.
+        from nltk.corpus import stopwords
+        stopwords = nltk.corpus.stopwords.words('english')
+        sentence1 = [w for w in sentence1 if w not in stopwords]
+        sentence2 = [w for w in sentence2 if w not in stopwords]
+
+        # Compute WMD.
+        distance = model.wmdistance(sentence1, sentence2)
+        """
 
         def nBOW(document, vocab):
             doc_len = len(document)
@@ -1228,7 +1242,6 @@ class Word2Vec(utils.SaveLoad):
                     # Only compute the distances that we need.
                     continue
                 # Compute Euclidean distance between word vectors.
-                # TODO: this matrix is (and should be) symmetric, so we can save some computation here.
                 # TODO: why not cosine distance?
                 distance_matrix[i][j] = sqrt(np_sum((self[t1] - self[t2])**2))
 
