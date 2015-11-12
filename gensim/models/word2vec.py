@@ -1075,7 +1075,7 @@ class Word2Vec(utils.SaveLoad):
         assert (len(result.vocab), result.vector_size) == result.syn0.shape
 
         logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
-        result.init_sims(norm_only)
+        # result.init_sims(norm_only)
         return result
 
     def intersect_word2vec_format(self, fname, binary=False, encoding='utf8', unicode_errors='strict'):
