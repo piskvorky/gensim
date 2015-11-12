@@ -3,22 +3,10 @@ package:
   version: 0.12.3
 
 source:
-  git_rev: 0.12.3
-  git_url: git@github.com:ijstokes/gensim.git
+  path: ..
 
 build:
-  # entry_points:
-    # Put any entry points (scripts to be generated automatically) here. The
-    # syntax is module:function.  For example
-    #
-    # - gensim = gensim:main
-    #
-    # Would create an entry point called gensim that calls gensim.main()
-
-
-  # If this is a new build for the same version, increment the build
-  # number. If you do not include this key, it defaults to 0.
-  number: 1
+  number: 2
 
 requirements:
   build:
@@ -49,22 +37,8 @@ test:
     - gensim.parsing
     - gensim
 
-  # commands:
-    # You can put test commands to be run here.  Use this to test that the
-    # entry points work.
-
-
-  # You can also put a file called run_test.py in the recipe that will be run
-  # at test time.
-
-  # requires:
-    # Put any additional test requirements here.  For example
-    # - nose
 
 about:
   home: http://radimrehurek.com/gensim
   license: GNU Library or Lesser General Public License (LGPL)
 
-# See
-# http://docs.continuum.io/conda/build.html for
-# more information about meta.yaml
