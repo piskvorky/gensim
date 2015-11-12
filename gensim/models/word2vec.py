@@ -90,6 +90,7 @@ from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
+from gensim.pyemd import emd
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
@@ -1193,7 +1194,6 @@ class Word2Vec(utils.SaveLoad):
         # TODO: reference and example in docstring.
 
         # FIXME: no external import, include in Gensim somehow.
-        from pyemd import emd
 
         def nBOW(document, vocab):
             doc_len = len(document)
