@@ -1037,8 +1037,9 @@ def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
     """
     try:
         from pattern.en import parse
-    except ImportError:
+    except ImportError, e:
         logger.error("Pattern library is not installed. It needs to be installed for calling lemmatize()")
+        raise e
 
     if light:
         import warnings
