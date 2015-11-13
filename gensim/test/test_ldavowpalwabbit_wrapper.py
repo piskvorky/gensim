@@ -147,8 +147,9 @@ class TestLdaVowpalWabbit(unittest.TestCase):
         lda.print_topics(5, 10)
 
         # map words in known topic to an ID
-        topic_map = {frozenset(words): i
-                     for i, words in enumerate(TOPIC_WORDS)}
+        topic_map = {}
+        for i, words in enumerate(TOPIC_WORDS):
+            topic_map[frozenset(words)] = i
 
         n_coherent = 0
         for topic_id in range(lda.num_topics):
