@@ -56,7 +56,11 @@ class TestLdaVowpalWabbit(unittest.TestCase):
         if not vw_path:
             msg = "Environment variable 'VOWPAL_WABBIT_PATH' not specified, skipping tests"
 
-            raise unittest.SkipTest(msg)
+            try:
+                raise unittest.SkipTest(msg)
+            except AttributeError:
+                # couldn't find a way of skipping tests in python 2.6
+                self.vw_path = None
 
         corpus, dictionary = get_corpus()
         self.vw_path = vw_path
@@ -65,6 +69,8 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
     def test_save_load(self):
         """Test loading/saving LdaVowpalWabbit model."""
+        if not self.vw_path: # for python 2.6
+            return
         lda = LdaVowpalWabbit(self.vw_path,
                               corpus=self.corpus,
                               passes=10,
@@ -98,6 +104,8 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
     def test_model_update(self):
         """Test updating existing LdaVowpalWabbit model."""
+        if not self.vw_path: # for python 2.6
+            return
         lda = LdaVowpalWabbit(self.vw_path,
                               corpus=[self.corpus[0]],
                               passes=10,
@@ -116,6 +124,8 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
     def test_perplexity(self):
         """Test LdaVowpalWabbit perplexity is within expected range."""
+        if not self.vw_path: # for python 2.6
+            return
         lda = LdaVowpalWabbit(self.vw_path,
                               corpus=self.corpus,
                               passes=10,
@@ -134,6 +144,8 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
     def test_topic_coherence(self):
         """Test LdaVowpalWabbit topic coherence."""
+        if not self.vw_path: # for python 2.6
+            return
         corpus, dictionary = get_corpus()
         lda = LdaVowpalWabbit(self.vw_path,
                               corpus=corpus,
@@ -184,6 +196,8 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
     def test_corpus_to_vw(self):
         """Test corpus to Vowpal Wabbit format conversion."""
+        if not self.vw_path: # for python 2.6
+            return
         corpus = [[(0, 5), (7, 1), (5, 3), (0, 2)],
                   [(7, 2), (2, 1), (3, 11)],
                   [(1, 1)],
