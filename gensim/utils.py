@@ -1016,6 +1016,7 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
 
 def has_pattern():
     """
+    Function to check if there is installed pattern library
     """
     pattern = False
     try:
