@@ -55,6 +55,7 @@ class TestLdaVowpalWabbit(unittest.TestCase):
         vw_path = os.environ.get('VOWPAL_WABBIT_PATH', None)
         if not vw_path:
             msg = "Environment variable 'VOWPAL_WABBIT_PATH' not specified, skipping tests"
+
             raise unittest.SkipTest(msg)
 
         corpus, dictionary = get_corpus()
@@ -110,8 +111,8 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
         lda.update(self.corpus[1:])
         result = lda.log_perplexity(self.corpus)
-        self.assertLess(result, -1)
-        self.assertGreater(result, -5)
+        self.assertTrue(result < -1)
+        self.assertTrue(result > -5)
 
     def test_perplexity(self):
         """Test LdaVowpalWabbit perplexity is within expected range."""
@@ -128,8 +129,8 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
         # varies, but should be between -1 and -5
         result = lda.log_perplexity(self.corpus)
-        self.assertLess(result, -1)
-        self.assertGreater(result, -5)
+        self.assertTrue(result < -1)
+        self.assertTrue(result > -5)
 
     def test_topic_coherence(self):
         """Test LdaVowpalWabbit topic coherence."""
@@ -179,7 +180,7 @@ class TestLdaVowpalWabbit(unittest.TestCase):
                 n_coherent += 1
 
         # not 100% deterministic, but should always get 3+ coherent topics
-        self.assertGreaterEqual(n_coherent, 3)
+        self.assertTrue(n_coherent >= 3)
 
     def test_corpus_to_vw(self):
         """Test corpus to Vowpal Wabbit format conversion."""
