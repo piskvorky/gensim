@@ -1,6 +1,9 @@
 Changes
 =======
 
+* Loading of pattern library in utils.py is optional (Jan Zikes, #461)
+  - utlis.HAS_PATTERN, has chnged to utils.has_pattern()
+
 0.12.3, 05/11/2015
 
 * Make show_topics return value consistent across models (Christopher Corley, #448)
