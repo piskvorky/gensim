@@ -1027,50 +1027,51 @@ def has_pattern():
     return pattern
 
 
-if has_pattern():
-    def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
-            stopwords=frozenset(), min_length=2, max_length=15):
-        """
-        This function is only available when the optional 'pattern' package is installed.
+def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
+        stopwords=frozenset(), min_length=2, max_length=15):
+    """
+    This function is only available when the optional 'pattern' package is installed.
 
-        Use the English lemmatizer from `pattern` to extract UTF8-encoded tokens in
-        their base form=lemma, e.g. "are, is, being" -> "be" etc.
-        This is a smarter version of stemming, taking word context into account.
+    Use the English lemmatizer from `pattern` to extract UTF8-encoded tokens in
+    their base form=lemma, e.g. "are, is, being" -> "be" etc.
+    This is a smarter version of stemming, taking word context into account.
 
-        Only considers nouns, verbs, adjectives and adverbs by default (=all other lemmas are discarded).
+    Only considers nouns, verbs, adjectives and adverbs by default (=all other lemmas are discarded).
 
-        >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
-        ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
+    >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
+    ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
 
-        >>> lemmatize('The study ranks high.')
-        ['study/NN', 'rank/VB', 'high/JJ']
+    >>> lemmatize('The study ranks high.')
+    ['study/NN', 'rank/VB', 'high/JJ']
 
-        >>> lemmatize('The ranks study hard.')
-        ['rank/NN', 'study/VB', 'hard/RB']
+    >>> lemmatize('The ranks study hard.')
+    ['rank/NN', 'study/VB', 'hard/RB']
 
-        """
-        from pattern.en import parse
+    """
+    if not has_pattern():
+        raise ImportError("Pattern library is not installed. Pattern library is needed in order  \
+         to use lemmatize function")
+    from pattern.en import parse
 
-        if light:
-            import warnings
-            warnings.warn("The light flag is no longer supported by pattern.")
+    if light:
+        import warnings
+        warnings.warn("The light flag is no longer supported by pattern.")
 
-        # tokenization in `pattern` is weird; it gets thrown off by non-letters,
-        # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
-        # FIXME this throws away all fancy parsing cues, including sentence structure,
-        # abbreviations etc.
-        content = u(' ').join(tokenize(content, lower=True, errors='ignore'))
+    # tokenization in `pattern` is weird; it gets thrown off by non-letters,
+    # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
+    # FIXME this throws away all fancy parsing cues, including sentence structure,
+    # abbreviations etc.
+    content = u(' ').join(tokenize(content, lower=True, errors='ignore'))
 
-        parsed = parse(content, lemmata=True, collapse=False)
-        result = []
-        for sentence in parsed:
-            for token, tag, _, _, lemma in sentence:
-                if min_length <= len(lemma) <= max_length and not lemma.startswith('_') and lemma not in stopwords:
-                    if allowed_tags.match(tag):
-                        lemma += "/" + tag[:2]
-                        result.append(lemma.encode('utf8'))
-        return result
-# endif has_pattern()
+    parsed = parse(content, lemmata=True, collapse=False)
+    result = []
+    for sentence in parsed:
+        for token, tag, _, _, lemma in sentence:
+            if min_length <= len(lemma) <= max_length and not lemma.startswith('_') and lemma not in stopwords:
+                if allowed_tags.match(tag):
+                    lemma += "/" + tag[:2]
+                    result.append(lemma.encode('utf8'))
+    return result
 
 
 def mock_data_row(dim=1000, prob_nnz=0.5, lam=1.0):
