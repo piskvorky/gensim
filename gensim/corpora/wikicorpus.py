@@ -249,7 +249,7 @@ class WikiCorpus(TextCorpus):
     >>> MmCorpus.serialize('wiki_en_vocab200k', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
 
     """
-    def __init__(self, fname, processes=None, lemmatize=utils.HAS_PATTERN, dictionary=None, filter_namespaces=('0',)):
+    def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None, filter_namespaces=('0',)):
         """
         Initialize the corpus. Unless a dictionary is provided, this scans the
         corpus once, to determine its vocabulary.

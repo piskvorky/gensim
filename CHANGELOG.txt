@@ -1,6 +1,9 @@
 Changes
 =======
 
+* Loading of pattern library in utils.py is only in lemmatize function (Jan Zikes, #461)
+  - utils.HAS_PATTERN, has also changed to utils.has_pattern()
+
 0.12.3, 05/11/2015
 
 * Make show_topics return value consistent across models (Christopher Corley, #448)
