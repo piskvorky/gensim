@@ -1197,7 +1197,7 @@ class Word2Vec(utils.SaveLoad):
 
         # Some sentences to test.
         sentence1 = 'Obama speaks to the media in Illinois'.lower().split()
-        sentence2 = 'The president speaks to the media in Chicago'.lower().split()
+        sentence2 = 'The president greets the press in Chicago'.lower().split()
 
         # Remove their stopwords.
         from nltk.corpus import stopwords
