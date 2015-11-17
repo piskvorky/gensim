@@ -59,7 +59,6 @@ def read_doctopics(fname, eps=1e-6):
             yield [] if weights == 0 else sorted((id, 1.0 * weight / weights) for id, weight in doc)
 
 
-
 class LdaMallet(utils.SaveLoad):
     """
     Class for LDA training using MALLET. Communication between MALLET and Python
@@ -175,7 +174,6 @@ class LdaMallet(utils.SaveLoad):
         check_output(cmd, shell=True)
         result = list(read_doctopics(self.fdoctopics() + '.infer'))
         return result if is_corpus else result[0]
-
 
     def load_word_topics(self):
         logger.info("loading assigned topics from %s" % self.fstate())
