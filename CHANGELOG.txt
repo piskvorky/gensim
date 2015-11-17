@@ -11,6 +11,18 @@ NEXT
   and `LdaMulticore` that may be reliant on the old tuple layout of
   `(probability, word)`.
 
+* Forwards compatibility for  NumPy > 1.10 (Matti Lyra, #494)
+  - LdaModel and LdaMulticore produce a large number of DepracationWarnings from
+    .inference() because the term ids in each chunk returned from utils.grouper
+    are floats. This behaviour has been changed so that the term IDs are now ints.
+  - utils.grouper returns a python list instead of a numpy array in .update() when
+    LdaModel is called in non distributed mode
+  - in distributed mode .update() will still call utils.grouper with as_numpy=True
+    to save memory
+  - LdaModel.update and LdaMulticore.update have a new keyword parameter
+    chunks_as_numpy=True/False (defaults to False) that allows controlling
+    this behaviour.
+
 0.12.2, 19/09/2015
 
 * tutorial on text summarization (Ólavur Mortensen, #436)
