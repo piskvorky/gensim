@@ -327,7 +327,8 @@ class LdaModel(interfaces.TransformationABC):
 
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
-            self.update(corpus)
+            use_numpy = self.dispatcher is not None
+            self.update(corpus, chunks_as_numpy=use_numpy)
 
     def init_dir_prior(self, prior, name):
         if prior == 'symmetric' or prior is None:
@@ -412,7 +413,11 @@ class LdaModel(interfaces.TransformationABC):
         # Lee&Seung trick which speeds things up by an order of magnitude, compared
         # to Blei's original LDA-C code, cool!).
         for d, doc in enumerate(chunk):
-            ids = [id for id, _ in doc]
+            if doc and not isinstance(doc[0][0], six.integer_types):
+                # make sure the term IDs are ints, otherwise numpy will get upset
+                ids = [int(id) for id, _ in doc]
+            else:
+                ids = [id for id, _ in doc]
             cts = numpy.array([cnt for _, cnt in doc])
             gammad = gamma[d, :]
             Elogthetad = Elogtheta[d, :]
@@ -517,7 +522,7 @@ class LdaModel(interfaces.TransformationABC):
 
     def update(self, corpus, chunksize=None, decay=None, offset=None,
                passes=None, update_every=None, eval_every=None, iterations=None,
-               gamma_threshold=None):
+               gamma_threshold=None, chunks_as_numpy=False):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -535,6 +540,23 @@ class LdaModel(interfaces.TransformationABC):
         converge for any `decay` in (0.5, 1.0>. Additionally, for smaller
         `corpus` sizes, an increasing `offset` may be beneficial (see
         Table 1 in Hoffman et al.)
+
+        Parameters
+        ------------
+        corpus: (gensim corpus object, list of tuples)
+            The corpus with which the LDA model should be updated with.
+
+        chunks_as_numpy: bool
+            Whether each chunk passed to `.inference` should be a numpy
+            array of not. Numpy can in some settings turn the term IDs
+            into floats, these will be converted back into integers in
+            inference, which incurs a performance hit. For distributed
+            computing it may be desirable to keep the chunks as numpy
+            arrays.
+
+        See Also
+        --------
+        For other parameter settings see LdaModel().
 
         """
         # use parameters given in constructor, unless user explicitly overrode them
@@ -603,7 +625,7 @@ class LdaModel(interfaces.TransformationABC):
             dirty = False
 
             reallen = 0
-            for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize, as_numpy=True)):
+            for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize, as_numpy=chunks_as_numpy)):
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
 
                 if eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % (eval_every * self.numworkers) == 0)):
