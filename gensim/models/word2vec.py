@@ -344,7 +344,7 @@ class Word2Vec(utils.SaveLoad):
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
             sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0,
-            trim_rule=None, sorted_vocab=1, batch=False, const_alpha=False):    # FIXME: remove "batch" and "const_alpha" input variable when done working on batching.
+            trim_rule=None, sorted_vocab=1):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -429,10 +429,7 @@ class Word2Vec(utils.SaveLoad):
         self.null_word = null_word
         self.train_count = 0
         self.total_train_time = 0
-        self.batch = batch
         self.sorted_vocab = sorted_vocab
-
-        self.check_first_word = True
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
@@ -661,23 +658,16 @@ class Word2Vec(utils.SaveLoad):
         """
         work, neu1 = inits
         tally = 0
-        if self.batch:
-            if self.sg:
-                tally += train_batch_sg(self, sentences, alpha, work)
-            else:
-                raise NotImplementedError("FIXME implement Cythonized cbow")
+        if self.sg:
+            tally += train_batch_sg(self, sentences, alpha, work)
         else:
-            for sentence in sentences:
-                if self.sg:
-                    tally += train_sentence_sg(self, sentence, alpha, work)
-                else:
-                    tally += train_sentence_cbow(self, sentence, alpha, work, neu1)
+            raise NotImplementedError("FIXME implement Cythonized cbow")
         return tally, self._raw_word_count(sentences)
 
     def _raw_word_count(self, items):
         return sum(len(item) for item in items)
 
-    def train(self, sentences, total_words=None, word_count=0, chunksize=100,
+    def train(self, sentences, total_words=None, word_count=0, batch_words=None,
               total_examples=None, queue_factor=2, report_delay=1.0):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
@@ -701,9 +691,9 @@ class Word2Vec(utils.SaveLoad):
         batch_words = min(batch_words or MAX_WORDS_IN_BATCH, MAX_WORDS_IN_BATCH)
         logger.info(
             "training model with %i workers on %i vocabulary and %i features, "
-            "using sg=%s hs=%s sample=%s, batch=%s and negative=%s",
+            "using sg=%s hs=%s sample=%s negative=%s",
             self.workers, len(self.vocab), self.layer1_size, self.sg,
-            self.hs, self.sample, self.batch, self.negative)
+            self.hs, self.sample, self.negative)
 
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
@@ -767,11 +757,8 @@ class Word2Vec(utils.SaveLoad):
                             # words-based decay
                             pushed_words += self._raw_word_count(job_batch)
                             progress = 1.0 * pushed_words / total_words
-                        if True:  # FIXME
-                            next_alpha = self.alpha - (self.alpha - self.min_alpha) * progress
-                            next_alpha = max(self.min_alpha, next_alpha)
-                        else:
-                            next_alpha = self.alpha
+                        next_alpha = self.alpha - (self.alpha - self.min_alpha) * progress
+                        next_alpha = max(self.min_alpha, next_alpha)
 
                     # add the sentence that didn't fit as the first item of a new job
                     job_batch, batch_size = [sentence], len(sentence)
@@ -838,8 +825,8 @@ class Word2Vec(utils.SaveLoad):
         # all done; report the final stats
         elapsed = default_timer() - start
         logger.info(
-            "training on %i raw words took %.1fs, %.0f trained words/s",
-            raw_word_count, elapsed, trained_word_count / elapsed if elapsed else 0.0)
+            "training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
+            raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed if elapsed else 0.0)
 
         # check that the input corpus hasn't changed during iteration
         if total_examples and total_examples != example_count:
@@ -1523,7 +1510,7 @@ class BrownCorpus(object):
 
 class Text8Corpus(object):
     """Iterate over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip ."""
-    def __init__(self, fname, max_sentence_length=1000):
+    def __init__(self, fname, max_sentence_length=MAX_WORDS_IN_BATCH):
         self.fname = fname
         self.max_sentence_length = max_sentence_length
 
@@ -1553,7 +1540,7 @@ class LineSentence(object):
     Simple format: one sentence = one line; words already preprocessed and separated by whitespace.
     """
 
-    def __init__(self, source, max_sentence_length=10000, limit=None):
+    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
         """
         `source` can be either a string or a file object. Clip the file to the first
         `limit` lines (or no clipped if limit is None, the default).
@@ -1614,7 +1601,7 @@ if __name__ == "__main__":
     seterr(all='raise')  # don't ignore numpy errors
 
     # model = Word2Vec(LineSentence(infile), size=200, min_count=5, workers=4)
-    model = Word2Vec(Text8Corpus(infile), size=200, min_count=5, workers=1)
+    model = Word2Vec(Text8Corpus(infile, 10), size=256, min_count=5, workers=4)
 
     if len(sys.argv) > 3:
         outfile = sys.argv[3]
