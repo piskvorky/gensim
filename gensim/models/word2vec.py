@@ -94,15 +94,15 @@ from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
 
-logger = logging.getLogger("gensim.models.word2vec")
+logger = logging.getLogger(__name__)
 
 try:
     from gensim.models.word2vec_inner import train_sentence_sg, train_batch_sg, train_sentence_cbow
-    from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH, MAX_BATCH_SENTENCES
+    from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
-    MAX_WORDS_IN_BATCH, MAX_BATCH_SENTENCES = 100000, 100
+    MAX_WORDS_IN_BATCH = 10000
 
     def train_sentence_sg(model, sentence, alpha, work=None):
         """
@@ -430,10 +430,8 @@ class Word2Vec(utils.SaveLoad):
         self.train_count = 0
         self.total_train_time = 0
         self.batch = batch
-        self.const_alpha = const_alpha
         self.sorted_vocab = sorted_vocab
 
-        self.debug_word= 'of'  # TODO: remove, just for debugging.
         self.check_first_word = True
 
         if sentences is not None:
@@ -657,33 +655,24 @@ class Word2Vec(utils.SaveLoad):
         self.reset_weights()
 
     def _do_train_job(self, sentences, alpha, inits):
+        """
+        Train a single batch of sentences. Return 2-tuple `(effective word count after
+        ignoring unknown words and sentence length trimming, total word count)`.
+        """
         work, neu1 = inits
-        tally, raw_tally = 0, 0
-        #logging.info('len sents: %d', sum([len(s) for s in sentences]))
-        #logging.info('num sents: %d', len(sentences))
+        tally = 0
         if self.batch:
-            assert FAST_VERSION > -1, "FIXME: python-only code path"
-            assert self.sg, "FIXME: cbow also"
-            #import line_profiler
-            #profile = line_profiler.LineProfiler(train_batch_sg)
-            #temp_tally = profile.runcall(train_batch_sg, self, sentences, alpha, work)
-            #print 'temp_tally = %d' % temp_tally
-            #profile.print_stats()
-            #import pdb
-            #pdb.set_trace()
-
-            tally += train_batch_sg(self, sentences, alpha, work)
-            #logging.debug('self.model[self.debug_word] = %s', str(self.model[self.debug_word]))
-            for sentence in sentences:
-                raw_tally += len(sentence)
+            if self.sg:
+                tally += train_batch_sg(self, sentences, alpha, work)
+            else:
+                raise NotImplementedError("FIXME implement Cythonized cbow")
         else:
             for sentence in sentences:
                 if self.sg:
                     tally += train_sentence_sg(self, sentence, alpha, work)
                 else:
                     tally += train_sentence_cbow(self, sentence, alpha, work, neu1)
-                raw_tally += len(sentence)
-        return (tally, raw_tally)
+        return tally, self._raw_word_count(sentences)
 
     def _raw_word_count(self, items):
         return sum(len(item) for item in items)
@@ -709,11 +698,12 @@ class Word2Vec(utils.SaveLoad):
                 self.neg_labels = zeros(self.negative + 1)
                 self.neg_labels[0] = 1.
 
+        batch_words = min(batch_words or MAX_WORDS_IN_BATCH, MAX_WORDS_IN_BATCH)
         logger.info(
             "training model with %i workers on %i vocabulary and %i features, "
-            "using sg=%s hs=%s sample=%s and negative=%s",
+            "using sg=%s hs=%s sample=%s, batch=%s and negative=%s",
             self.workers, len(self.vocab), self.layer1_size, self.sg,
-            self.hs, self.sample, self.negative)
+            self.hs, self.sample, self.batch, self.negative)
 
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
@@ -727,44 +717,37 @@ class Word2Vec(utils.SaveLoad):
             else:
                 raise ValueError("you must provide either total_words or total_examples, to enable alpha and progress calculations")
 
+        self.jobs_finished = False
+
         if self.iter > 1:
             sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
             total_words = total_words and total_words * self.iter
             total_examples = total_examples and total_examples * self.iter
 
-        def worker_init():
+        def worker_loop():
+            """Train the model, lifting lists of sentences from the job_queue."""
             work = matutils.zeros_aligned(self.layer1_size, dtype=REAL)  # per-thread private work memory
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
-            return (work, neu1)
-
-        def worker_one_job(job, inits):
-            sentences, alpha = job
-            tally, raw_tally = self._do_train_job(sentences, alpha, inits)
-            progress_queue.put((len(sentences), tally, raw_tally))  # report back progress
-
-        def worker_loop():
-            """Train the model, lifting lists of sentences from the jobs queue."""
-            init = worker_init()
             while True:
                 job = job_queue.get()
                 if job is None:
-                    break
-                worker_one_job(job, init)
+                    break  # no more jobs => quit this worker
+                sentences, alpha = job
+                tally, raw_tally = self._do_train_job(sentences, alpha, (work, neu1))
+                progress_queue.put((len(sentences), tally, raw_tally))  # report back progress
 
         def job_producer():
-            """Fill jobs queue using the input sentences iterator."""
+            """Fill jobs queue using the input `sentences` iterator."""
             job_batch, batch_size = [], 0
             job_no, pushed_words, pushed_examples = 0, 0, 0
             next_alpha = self.alpha
-            self.jobs_finished = False
 
             for sent_idx, sentence in enumerate(sentences):
-                logging.info('%s', next_alpha)
                 # clip sentences that are too large for the C structures
-                sentence = sentence[: MAX_WORDS_IN_BATCH]
+                sentence = sentence[: batch_words]
 
                 # can we fit this sentence into the existing job batch?
-                if batch_size + len(sentence) <= MAX_WORDS_IN_BATCH and len(job_batch) + 1 <= MAX_BATCH_SENTENCES:
+                if batch_size + len(sentence) <= batch_words:
                     # yes => add it to the current job
                     job_batch.append(sentence)
                     batch_size += len(sentence)
@@ -784,17 +767,16 @@ class Word2Vec(utils.SaveLoad):
                             # words-based decay
                             pushed_words += self._raw_word_count(job_batch)
                             progress = 1.0 * pushed_words / total_words
-                        if not self.const_alpha:
+                        if True:  # FIXME
                             next_alpha = self.alpha - (self.alpha - self.min_alpha) * progress
                             next_alpha = max(self.min_alpha, next_alpha)
-                            #logging.debug('next_alpha = %s', str(next_alpha))
                         else:
                             next_alpha = self.alpha
 
-
                     # add the sentence that didn't fit as the first item of a new job
                     job_batch, batch_size = [sentence], len(sentence)
-            # add the last job too (may be significantly smaller than MAX_WORDS_IN_BATCH / MAX_BATCH_SENTENCES)
+
+            # add the last job too (may be significantly smaller than batch_words)
             if job_batch:
                 logger.debug("putting job #%i in the queue at alpha %.05f", job_no, next_alpha)
                 job_queue.put((job_batch, next_alpha))
@@ -815,14 +797,12 @@ class Word2Vec(utils.SaveLoad):
             self.jobs_finished = True
 
         # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
-        if self.workers > 0:
-            job_queue = Queue(maxsize=queue_factor * self.workers)
-        else:
-            job_queue = FakeJobQueue(worker_init, worker_one_job)
+        job_queue = Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
         workers = [threading.Thread(target=worker_loop) for _ in xrange(self.workers)]
         workers.append(threading.Thread(target=job_producer))
+
         for thread in workers:
             thread.daemon = True  # make interrupting the process with ctrl+c easier
             thread.start()
@@ -934,10 +914,7 @@ class Word2Vec(utils.SaveLoad):
 
         start, next_report = default_timer(), 1.0
         # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
-        if self.workers > 0:
-            job_queue = Queue(maxsize=queue_factor * self.workers)
-        else:
-            job_queue = FakeJobQueue(worker_init, worker_one_job)
+        job_queue = Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
         workers = [threading.Thread(target=worker_loop) for _ in xrange(self.workers)]
@@ -1522,16 +1499,6 @@ class Word2Vec(utils.SaveLoad):
         return model
 
 
-class FakeJobQueue(object):
-    """Pretends to be a Queue; does equivalent of work_loop in calling thread."""
-    def __init__(self, init_fn, job_fn):
-        self.inits = init_fn()
-        self.job_fn = job_fn
-
-    def put(self, job):
-        self.job_fn(job, self.inits)
-
-
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
     def __init__(self, dirname):
@@ -1633,8 +1600,8 @@ if __name__ == "__main__":
     logging.basicConfig(
         format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
         level=logging.INFO)
-    logging.info("running %s", " ".join(sys.argv))
-    logging.info("using optimization %s", FAST_VERSION)
+    logger.info("running %s", " ".join(sys.argv))
+    logger.info("using optimization %s", FAST_VERSION)
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
@@ -1659,4 +1626,4 @@ if __name__ == "__main__":
         questions_file = sys.argv[2]
         model.accuracy(sys.argv[2])
 
-    logging.info("finished running %s", program)
+    logger.info("finished running %s", program)
