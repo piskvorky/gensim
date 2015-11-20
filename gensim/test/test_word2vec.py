@@ -372,11 +372,12 @@ class TestWord2VecModel(unittest.TestCase):
 class TestWMD(unittest.TestCase):
     def testNonzero(self):
         '''Test basic functionality with some random sentenes.'''
-        model = word2vec.Word2Vec(sentences, min_count=1)
+        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         distance = model.wmdistance(sentence1, sentence2)
-        self.assertNotEqual(0.0, distance)
+        distance = round(distance, 5)  # Round distance to 5 decimal places.
+        self.assertEqual(0.03219, distance)
 
     def testIdenticalSentences(self):
         '''Check that the distance from a sentence to itself is zero.'''
