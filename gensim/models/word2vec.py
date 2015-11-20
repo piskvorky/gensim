@@ -97,7 +97,7 @@ from types import GeneratorType
 logger = logging.getLogger(__name__)
 
 try:
-    from gensim.models.word2vec_inner import train_sentence_sg, train_batch_sg, train_sentence_cbow
+    from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
 except ImportError:
@@ -657,7 +657,7 @@ class Word2Vec(utils.SaveLoad):
         if self.sg:
             tally += train_batch_sg(self, sentences, alpha, work)
         else:
-            raise NotImplementedError("FIXME implement Cythonized cbow")
+            tally += train_batch_cbow(self, sentences, alpha, work, neu1)
         return tally, self._raw_word_count(sentences)
 
     def _raw_word_count(self, items):
@@ -1606,7 +1606,7 @@ if __name__ == "__main__":
     seterr(all='raise')  # don't ignore numpy errors
 
     # model = Word2Vec(LineSentence(infile), size=200, min_count=5, workers=4)
-    model = Word2Vec(Text8Corpus(infile, 10), size=256, min_count=5, workers=4)
+    model = Word2Vec(Text8Corpus(infile), size=256, min_count=5, workers=4, sg=0, hs=0, cbow_mean=1, negative=5)
 
     if len(sys.argv) > 3:
         outfile = sys.argv[3]

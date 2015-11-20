@@ -51,7 +51,7 @@ from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
     sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_sentence_sg
+from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_batch_sg
 from six.moves import xrange, zip
 from six import string_types, integer_types, itervalues
 
@@ -94,7 +94,7 @@ except:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
         if train_words and learn_words:
-            train_sentence_sg(model, doc_words, alpha, work)
+            train_batch_sg(model, [doc_words], alpha, work)
         for doctag_index in doctag_indexes:
             for word in doc_words:
                 train_sg_pair(model, word, doctag_index, alpha, learn_vectors=learn_doctags,
