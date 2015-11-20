@@ -1209,6 +1209,10 @@ class Word2Vec(utils.SaveLoad):
         distance = model.wmdistance(sentence1, sentence2)
         """
 
+        if FAST_VERSION == -1:
+            # Use brute force pure Python method.
+            return model.wmdistance_slow(document1, document2)
+
         def nBOW(document, vocab):
             doc_len = len(document)
             d = []
@@ -1247,6 +1251,65 @@ class Word2Vec(utils.SaveLoad):
 
         # Return WMD.
         return emd(d1, d2, distance_matrix)
+
+    def wmdistance_slow(self, document1, document2):
+        '''
+        Brute force implementation of Word Mover's Distance in pure Python. See the wmdistance method for more info.
+        '''
+
+        # Remove out-of-vocabulary words.
+        document1 = [token for token in document1 if token in self.vocab.keys()]
+        document2 = [token for token in document2 if token in self.vocab.keys()]
+
+        if len(document1) == 0 or len(document2) == 0:
+            logging.info('At least one of the documents had no words that were in the vocabulary. Aborting (returning NaN).')
+            return float('nan')
+
+        # Get a dictionary with unique words and indeces.
+        vocab = {}
+        for i, w in enumerate(document1 + document2):
+            vocab[w] = i
+        vocab_len = len(vocab)
+
+        # Compute distance matrix.
+        distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
+        for t1, i in vocab.items():
+            for t2, j in vocab.items():
+                if not t1 in document1 or not t2 in document2:
+                    # Only compute the distances that we need.
+                    continue
+                # Compute Euclidean distance between word vectors.
+                distance_matrix[i][j] = sqrt(np_sum((self[t1] - self[t2])**2))
+
+        # Convert document words to corresponding indeces.
+        document1 = [vocab[w] for w in document1]
+        document2 = [vocab[w] for w in document2]
+
+        # Find all permutations of the longer document.
+        len1 = len(document1)
+        len2 = len(document2)
+        if len1 < len2:
+            n = len1
+            permutations = itertools.permutations(document2)
+        else:
+            n = len2
+            permutations = itertools.permutations(document1)
+
+        # Compute distances for all combinations of both documents.
+        dist = []
+        for idx, perm in enumerate(permutations):
+            dist[idx] = 0
+            j = 0
+            for i in perm:
+                dist[idx] += distance_matrix[i][document1[j]]
+                j += 1
+
+        # Find the minimum distance, and normalize it by the document length (the shorter document).
+        min_dist = float(array(dist).min()/float(n))
+
+        return dist
+
+                
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         """
