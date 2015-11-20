@@ -1606,7 +1606,7 @@ if __name__ == "__main__":
     seterr(all='raise')  # don't ignore numpy errors
 
     # model = Word2Vec(LineSentence(infile), size=200, min_count=5, workers=4)
-    model = Word2Vec(Text8Corpus(infile), size=256, min_count=5, workers=4, sg=0, hs=0, cbow_mean=1, negative=5)
+    model = Word2Vec(Text8Corpus(infile, 10), size=256, min_count=5, workers=4, sg=0, hs=0, cbow_mean=1, negative=5)
 
     if len(sys.argv) > 3:
         outfile = sys.argv[3]
