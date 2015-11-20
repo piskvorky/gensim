@@ -1209,9 +1209,10 @@ class Word2Vec(utils.SaveLoad):
         distance = model.wmdistance(sentence1, sentence2)
         """
 
-        if FAST_VERSION == -1:
-            # Use brute force pure Python method.
-            return model.wmdistance_slow(document1, document2)
+        if False:  # TODO: how to check whether C WMD extension is installed?
+            import warnings
+            warnings.warn("C extension not loaded for wmdistance, computing WMD will be slow. ")
+            return self.wmdistance_slow(document1, document2)
 
         def nBOW(document, vocab):
             doc_len = len(document)
