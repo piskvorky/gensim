@@ -141,7 +141,7 @@ class LdaMulticore(LdaModel):
             gamma_threshold=gamma_threshold)
 
 
-    def update(self, corpus):
+    def update(self, corpus, chunks_as_numpy=False):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -221,7 +221,7 @@ class LdaMulticore(LdaModel):
                     if self.eval_every is not None and ((force and queue_size[0] == 0) or (self.eval_every != 0 and (self.num_updates / updateafter) % self.eval_every == 0)):
                         self.log_perplexity(chunk, total_docs=lencorpus)
 
-            chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=True)
+            chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=chunks_as_numpy)
             for chunk_no, chunk in enumerate(chunk_stream):
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
 
