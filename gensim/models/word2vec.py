@@ -867,7 +867,7 @@ class Word2Vec(utils.SaveLoad):
         See the article by [taddy]_ and the gensim demo at [deepir]_ for examples of how to use such scores in document classification.
 
         .. [taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
-        .. [deepir] https://github.com/TaddyLab/gensim/blob/deepir/docs/notebooks/deepir.ipynb
+        .. [deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
 
         """
         if FAST_VERSION < 0:
