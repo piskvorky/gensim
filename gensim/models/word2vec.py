@@ -105,55 +105,59 @@ except ImportError:
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
 
-    def train_sentence_sg(model, sentence, alpha, work=None):
+    def train_batch_sg(model, sentences, alpha, work=None):
         """
-        Update skip-gram model by training on a single sentence.
+        Update skip-gram model by training on a sequence of sentences.
 
-        The sentence is a list of string tokens, which are looked up in the model's
+        Each sentence is a list of string tokens, which are looked up in the model's
         vocab dictionary. Called internally from `Word2Vec.train()`.
 
         This is the non-optimized, Python version. If you have cython installed, gensim
         will use the optimized version from word2vec_inner instead.
 
         """
-        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab and
-                       model.vocab[w].sample_int > model.random.rand() * 2**32]
-        for pos, word in enumerate(word_vocabs):
-            reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
+        result = 0
+        for sentence in sentences:
+            word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab and
+                           model.vocab[w].sample_int > model.random.rand() * 2**32]
+            for pos, word in enumerate(word_vocabs):
+                reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
 
-            # now go over all words from the (reduced) window, predicting each one in turn
-            start = max(0, pos - model.window + reduced_window)
-            for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
-                # don't train on the `word` itself
-                if pos2 != pos:
-                    train_sg_pair(model, model.index2word[word.index], word2.index, alpha)
+                # now go over all words from the (reduced) window, predicting each one in turn
+                start = max(0, pos - model.window + reduced_window)
+                for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
+                    # don't train on the `word` itself
+                    if pos2 != pos:
+                        train_sg_pair(model, model.index2word[word.index], word2.index, alpha)
+            result += len(word_vocabs)
+        return result
 
-        return len(word_vocabs)
-
-    def train_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
+    def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
         """
-        Update CBOW model by training on a single sentence.
+        Update CBOW model by training on a sequence of sentences.
 
-        The sentence is a list of string tokens, which are looked up in the model's
+        Each sentence is a list of string tokens, which are looked up in the model's
         vocab dictionary. Called internally from `Word2Vec.train()`.
 
         This is the non-optimized, Python version. If you have cython installed, gensim
         will use the optimized version from word2vec_inner instead.
 
         """
-        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab and
-                       model.vocab[w].sample_int > model.random.rand() * 2**32]
-        for pos, word in enumerate(word_vocabs):
-            reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
-            start = max(0, pos - model.window + reduced_window)
-            window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
-            word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
-            l1 = np_sum(model.syn0[word2_indices], axis=0)  # 1 x vector_size
-            if word2_indices and model.cbow_mean:
-                l1 /= len(word2_indices)
-            train_cbow_pair(model, word, word2_indices, l1, alpha)
-
-        return len(word_vocabs)
+        result = 0
+        for sentence in sentences:
+            word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab and
+                           model.vocab[w].sample_int > model.random.rand() * 2**32]
+            for pos, word in enumerate(word_vocabs):
+                reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
+                start = max(0, pos - model.window + reduced_window)
+                window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
+                word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
+                l1 = np_sum(model.syn0[word2_indices], axis=0)  # 1 x vector_size
+                if word2_indices and model.cbow_mean:
+                    l1 /= len(word2_indices)
+                train_cbow_pair(model, word, word2_indices, l1, alpha)
+            result += len(word_vocabs)
+        return result
 
     def score_sentence_sg(model, sentence, work=None):
         """
@@ -178,9 +182,9 @@ except ImportError:
 
             # now go over all words from the window, predicting each one in turn
             start = max(0, pos - model.window)
-            for pos2, word2 in enumerate(sentence[start:(pos + model.window + 1)], start):
+            for pos2, word2 in enumerate(word_vocabs[start : pos + model.window + 1], start):
                 # don't train on OOV words and on the `word` itself
-                if word2 and not (pos2 == pos):
+                if word2 is not None and pos2 != pos:
                     log_prob_sentence += score_sg_pair(model, word, word2)
 
         return log_prob_sentence
@@ -206,7 +210,7 @@ except ImportError:
                 continue  # OOV word in the input sentence => skip
 
             start = max(0, pos - model.window)
-            window_pos = enumerate(sentence[start:(pos + model.window + 1)], start)
+            window_pos = enumerate(word_vocabs[start:(pos + model.window + 1)], start)
             word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
             l1 = np_sum(model.syn0[word2_indices], axis=0)  # 1 x layer1_size
             if word2_indices and model.cbow_mean:
@@ -850,13 +854,6 @@ class Word2Vec(utils.SaveLoad):
         self.clear_sims()
         return trained_word_count
 
-    def _score_job_words(self, sentence, inits):
-        work, neu1 = inits
-        if self.sg:
-            return score_sentence_sg(self, sentence, work)
-        else:
-            return score_sentence_cbow(self, sentence, work, neu1)
-
     # basics copied from the train() function
     def score(self, sentences, total_sentences=int(1e6), chunksize=100, queue_factor=2, report_delay=1):
         """
@@ -889,31 +886,25 @@ class Word2Vec(utils.SaveLoad):
         if not self.hs:
             raise RuntimeError("we have only implemented score for hs")
 
-        def worker_init():
-            work = zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
-            neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
-            return (work, neu1)
-
-        def worker_one_job(job, inits):
-            if job is None:  # signal to finish
-                return False
-            ns = 0
-            for (id, sentence) in job:
-                if id < total_sentences:
-                    sentence_scores[id] = self._score_job_words(sentence, inits)
-                    ns += 1
-                else:
-                    break
-            progress_queue.put(ns)  # report progress
-            return True
-
         def worker_loop():
             """Train the model, lifting lists of sentences from the jobs queue."""
-            init = worker_init()
+            work = zeros(1, dtype=REAL)  # for sg hs, we actually only need one memory loc (running sum)
+            neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
             while True:
                 job = job_queue.get()
-                if not worker_one_job(job, init):
+                if job is None:  # signal to finish
                     break
+                ns = 0
+                for sentence_id, sentence in job:
+                    if sentence_id >= total_sentences:
+                        break
+                    if self.sg:
+                        score = score_sentence_sg(self, sentence, work)
+                    else:
+                        score = score_sentence_cbow(self, sentence, work, neu1)
+                    sentence_scores[sentence_id] = score
+                    ns += 1
+                progress_queue.put(ns)  # report progress
 
         start, next_report = default_timer(), 1.0
         # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
@@ -936,8 +927,10 @@ class Word2Vec(utils.SaveLoad):
         while True:
             try:
                 job_no, items = next(jobs_source)
-                if (job_no-1)*chunksize > total_sentences:
-                    logger.warning("terminating after %i sentences (set higher total_sentences if you want more)."%total_sentences)
+                if (job_no - 1) * chunksize > total_sentences:
+                    logger.warning(
+                        "terminating after %i sentences (set higher total_sentences if you want more).",
+                        total_sentences)
                     job_no -= 1
                     raise StopIteration()
                 logger.debug("putting job #%i in the queue", job_no)
@@ -950,15 +943,15 @@ class Word2Vec(utils.SaveLoad):
                     job_queue.put(None)  # give the workers heads up that they can finish -- no more work!
                 push_done = True
             try:
-                while done_jobs < (job_no+1) or not push_done:
+                while done_jobs < (job_no + 1) or not push_done:
                     ns = progress_queue.get(push_done)  # only block after all jobs pushed
                     sentence_count += ns
                     done_jobs += 1
                     elapsed = default_timer() - start
                     if elapsed >= next_report:
                         logger.info(
-                                "PROGRESS: at %.2f%% sentences, %.0f sentences/s",
-                                100.0 * sentence_count, sentence_count / elapsed)
+                            "PROGRESS: at %.2f%% sentences, %.0f sentences/s",
+                            100.0 * sentence_count, sentence_count / elapsed)
                         next_report = elapsed + report_delay  # don't flood log, wait report_delay seconds
                 else:
                     # loop ended by job count; really done
@@ -968,8 +961,9 @@ class Word2Vec(utils.SaveLoad):
 
         elapsed = default_timer() - start
         self.clear_sims()
-        logger.info("scoring %i sentences took %.1fs, %.0f sentences/s"
-                    % (sentence_count, elapsed, sentence_count / elapsed if elapsed else 0.0))
+        logger.info(
+            "scoring %i sentences took %.1fs, %.0f sentences/s",
+            sentence_count, elapsed, sentence_count / elapsed if elapsed else 0.0)
         return sentence_scores[:sentence_count]
 
     def clear_sims(self):
