@@ -664,8 +664,9 @@ class Word2Vec(utils.SaveLoad):
             tally += train_batch_cbow(self, sentences, alpha, work, neu1)
         return tally, self._raw_word_count(sentences)
 
-    def _raw_word_count(self, items):
-        return sum(len(item) for item in items)
+    def _raw_word_count(self, job):
+        """Return the number of words in a given job."""
+        return sum(len(sentence) for sentence in job)
 
     def train(self, sentences, total_words=None, word_count=0, batch_words=None,
               total_examples=None, queue_factor=2, report_delay=1.0):
@@ -738,14 +739,13 @@ class Word2Vec(utils.SaveLoad):
             next_alpha = self.alpha
 
             for sent_idx, sentence in enumerate(sentences):
-                # clip sentences that are too large for the C structures
-                sentence = sentence[: batch_words]
+                sentence_length = self._raw_word_count([sentence])
 
                 # can we fit this sentence into the existing job batch?
-                if batch_size + len(sentence) <= batch_words:
+                if batch_size + sentence_length <= batch_words:
                     # yes => add it to the current job
                     job_batch.append(sentence)
-                    batch_size += len(sentence)
+                    batch_size += sentence_length
                 else:
                     # no => submit the existing job
                     logger.debug(
@@ -769,7 +769,7 @@ class Word2Vec(utils.SaveLoad):
                         next_alpha = max(self.min_alpha, next_alpha)
 
                     # add the sentence that didn't fit as the first item of a new job
-                    job_batch, batch_size = [sentence], len(sentence)
+                    job_batch, batch_size = [sentence], sentence_length
 
             # add the last job too (may be significantly smaller than batch_words)
             if job_batch:

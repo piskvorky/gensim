@@ -673,8 +673,9 @@ class Doc2Vec(Word2Vec):
             self.docvecs.trained_item(indexed_doctags)
         return tally, self._raw_word_count(job)
 
-    def _raw_word_count(self, items):
-        return sum(len(item.words) for item in items)
+    def _raw_word_count(self, job):
+        """Return the number of words in a given job."""
+        return sum(len(sentence.words) for sentence in job)
 
     def infer_vector(self, doc_words, alpha=0.1, min_alpha=0.0001, steps=5):
         """
