@@ -21,7 +21,7 @@ import numpy
 from gensim import utils, matutils
 from gensim.models import word2vec
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
@@ -50,11 +50,13 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_word2vec.tst')
 
+
 def _rule(word, count, min_count):
     if word == "human":
         return utils.RULE_DISCARD  # throw out
     else:
         return utils.RULE_DEFAULT  # apply default rule, i.e. min_count
+
 
 class TestWord2VecModel(unittest.TestCase):
     def testPersistence(self):
@@ -119,11 +121,6 @@ class TestWord2VecModel(unittest.TestCase):
         model.save_word2vec_format(testfile(), testvocab, binary=True)
         binary_model_with_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), testvocab, binary=True)
         self.assertEqual(model.vocab['human'].count, binary_model_with_vocab.vocab['human'].count)
-
-    def test_zero_workers_mode(self):
-        model = word2vec.Word2Vec(sentences, min_count=1)
-        model0 = word2vec.Word2Vec(sentences, min_count=1, workers=0)
-        self.models_equal(model,model0)
 
     def testLargeMmap(self):
         """Test storing/loading the entire model."""
@@ -191,8 +188,7 @@ class TestWord2VecModel(unittest.TestCase):
 
         # just score and make sure they exist
         scores = model.score(sentences, len(sentences))
-        self.assertEqual(len(scores),len(sentences))
-
+        self.assertEqual(len(scores), len(sentences))
 
     def testLocking(self):
         """Test word2vec training doesn't change locked vectors."""
@@ -209,8 +205,8 @@ class TestWord2VecModel(unittest.TestCase):
             model.syn0_lockf[0] = 0.0
 
             model.train(corpus)
-            self.assertFalse((unlocked1==model.syn0[1]).all())  # unlocked vector should vary
-            self.assertTrue((locked0==model.syn0[0]).all())     # locked vector should not vary
+            self.assertFalse((unlocked1 == model.syn0[1]).all())  # unlocked vector should vary
+            self.assertTrue((locked0 == model.syn0[0]).all())  # locked vector should not vary
 
     def model_sanity(self, model, train=True):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
@@ -219,7 +215,7 @@ class TestWord2VecModel(unittest.TestCase):
             model.build_vocab(list_corpus)
             orig0 = numpy.copy(model.syn0[0])
             model.train(list_corpus)
-            self.assertFalse((orig0==model.syn0[1]).all())  # vector should vary after training
+            self.assertFalse((orig0 == model.syn0[1]).all())  # vector should vary after training
         sims = model.most_similar('war', topn=len(model.index2word))
         t_rank = [word for word, score in sims].index('terrorism')
         # in >200 calibration runs w/ calling parameters, 'terrorism' in 50-most_sim for 'war'
@@ -394,6 +390,7 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
                     self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 #endclass TestWord2VecSentenceIterators
 
+
 if not hasattr(TestWord2VecModel, 'assertLess'):
     # workaround for python 2.6
     def assertLess(self, a, b, msg=None):
@@ -401,7 +398,10 @@ if not hasattr(TestWord2VecModel, 'assertLess'):
 
     setattr(TestWord2VecModel, 'assertLess', assertLess)
 
+
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
-    logging.info("using optimization %s" % word2vec.FAST_VERSION)
+    logging.basicConfig(
+        format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
+        level=logging.DEBUG)
+    logging.info("using optimization %s", word2vec.FAST_VERSION)
     unittest.main()

@@ -657,7 +657,6 @@ class Doc2Vec(Word2Vec):
     def _do_train_job(self, job, alpha, inits):
         work, neu1 = inits
         tally = 0
-        raw_tally = 0
         for doc in job:
             indexed_doctags = self.docvecs.indexed_doctags(doc.tags)
             doctag_indexes, doctag_vectors, doctag_locks, ignored = indexed_doctags
@@ -671,9 +670,8 @@ class Doc2Vec(Word2Vec):
             else:
                 tally += train_document_dm(self, doc.words, doctag_indexes, alpha, work, neu1,
                                            doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
-            raw_tally += len(doc.words)
             self.docvecs.trained_item(indexed_doctags)
-        return (tally, raw_tally)
+        return tally, self._raw_word_count(job)
 
     def _raw_word_count(self, items):
         return sum(len(item.words) for item in items)

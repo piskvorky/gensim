@@ -55,6 +55,7 @@ raw_sentences = [
 
 sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(raw_sentences)]
 
+
 def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.tst')
@@ -118,7 +119,7 @@ class TestDoc2VecModel(unittest.TestCase):
 
         # inferred vector should be top10 close to bulk-trained one
         doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
-        sims_to_infer = model.docvecs.most_similar([doc0_inferred],topn=len(model.docvecs))
+        sims_to_infer = model.docvecs.most_similar([doc0_inferred], topn=len(model.docvecs))
         f_rank = [docid for docid, sim in sims_to_infer].index(fire1)
         self.assertLess(fire1, 10)
 
@@ -290,6 +291,7 @@ class ConcatenatedDoc2Vec(object):
 
     def train(self, ignored):
         pass  # train subcomponents individually
+
 
 class ConcatenatedDocvecs(object):
     def __init__(self, models):

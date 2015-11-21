@@ -415,8 +415,8 @@ class Word2Vec(utils.SaveLoad):
         self.random = random.RandomState(seed)
         self.min_count = min_count
         self.sample = sample
-        self.workers = workers
-        self.min_alpha = min_alpha
+        self.workers = int(workers)
+        self.min_alpha = float(min_alpha)
         self.hs = hs
         self.negative = negative
         self.cbow_mean = int(cbow_mean)
@@ -703,7 +703,7 @@ class Word2Vec(utils.SaveLoad):
             else:
                 raise ValueError("you must provide either total_words or total_examples, to enable alpha and progress calculations")
 
-        self.jobs_finished = False
+        self.jobs_finished, self.job_no, self.jobs_left = False, 0, 0
 
         if self.iter > 1:
             sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
@@ -714,18 +714,23 @@ class Word2Vec(utils.SaveLoad):
             """Train the model, lifting lists of sentences from the job_queue."""
             work = matutils.zeros_aligned(self.layer1_size, dtype=REAL)  # per-thread private work memory
             neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
+            jobs_processed = 0
             while True:
                 job = job_queue.get()
                 if job is None:
+                    progress_queue.put(None)
                     break  # no more jobs => quit this worker
                 sentences, alpha = job
                 tally, raw_tally = self._do_train_job(sentences, alpha, (work, neu1))
+                self.jobs_left -= 1
                 progress_queue.put((len(sentences), tally, raw_tally))  # report back progress
+                jobs_processed += 1
+            logger.debug("worker exiting, processed %i jobs", jobs_processed)
 
         def job_producer():
             """Fill jobs queue using the input `sentences` iterator."""
             job_batch, batch_size = [], 0
-            job_no, pushed_words, pushed_examples = 0, 0, 0
+            pushed_words, pushed_examples = 0, 0
             next_alpha = self.alpha
 
             for sent_idx, sentence in enumerate(sentences):
@@ -739,9 +744,12 @@ class Word2Vec(utils.SaveLoad):
                     batch_size += len(sentence)
                 else:
                     # no => submit the existing job
-                    logger.debug("putting job #%i in the queue at alpha %.05f", job_no, next_alpha)
+                    logger.debug(
+                        "queueing job #%i (%i words, %i sentences) at alpha %.05f",
+                        self.job_no, batch_size, len(job_batch), next_alpha)
+                    self.job_no += 1
+                    self.jobs_left += 1
                     job_queue.put((job_batch, next_alpha))
-                    job_no += 1
 
                     # update the learning rate for the next job
                     if self.min_alpha < next_alpha:
@@ -761,13 +769,17 @@ class Word2Vec(utils.SaveLoad):
 
             # add the last job too (may be significantly smaller than batch_words)
             if job_batch:
-                logger.debug("putting job #%i in the queue at alpha %.05f", job_no, next_alpha)
+                logger.debug(
+                    "queueing job #%i (%i words, %i sentences) at alpha %.05f",
+                    self.job_no, batch_size, len(job_batch), next_alpha)
+                self.job_no += 1
+                self.jobs_left += 1
                 job_queue.put((job_batch, next_alpha))
-                job_no += 1
 
-            logger.info("reached end of input; waiting to finish %i outstanding jobs", utils.qsize(job_queue))
+            self.jobs_finished = True
+            logger.info("reached end of input; waiting to finish %i outstanding jobs", self.jobs_left)
 
-            if job_no == 0 and self.train_count == 0:
+            if self.job_no == 0 and self.train_count == 0:
                 logger.warning(
                     "train() called with an empty iterator (if not intended, "
                     "be sure to provide a corpus that offers restartable "
@@ -776,8 +788,8 @@ class Word2Vec(utils.SaveLoad):
 
             # give the workers heads up that they can finish -- no more work!
             for _ in xrange(self.workers):
-                job_queue.put(None)
-            self.jobs_finished = True
+                job_queue.put(None)  # no need to increase job_no
+            logger.debug("job loop exiting, total %i jobs", self.job_no)
 
         # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         job_queue = Queue(maxsize=queue_factor * self.workers)
@@ -793,8 +805,11 @@ class Word2Vec(utils.SaveLoad):
         example_count, trained_word_count, raw_word_count = 0, 0, word_count
         start, next_report = default_timer(), 1.0
 
-        while not (self.jobs_finished and job_queue.empty()):
-            examples, trained_words, raw_words = progress_queue.get()  # blocks if workers too slow
+        while not self.jobs_finished or self.jobs_left > 0:
+            report = progress_queue.get()  # blocks if workers too slow
+            if report is None:
+                continue
+            examples, trained_words, raw_words = report
 
             # update progress stats
             example_count += examples

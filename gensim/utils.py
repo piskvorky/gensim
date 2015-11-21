@@ -1023,7 +1023,7 @@ def has_pattern():
         from pattern.en import parse
         pattern = True
     except ImportError:
-        logger.warning("Pattern library is not installed.")
+        logger.info("Pattern library is not installed, lemmatization won't be available.")
     return pattern
 
 
