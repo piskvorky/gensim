@@ -1023,7 +1023,7 @@ def has_pattern():
         from pattern.en import parse
         pattern = True
     except ImportError:
-        logger.warning("Pattern library is not installed.")
+        logger.info("Pattern library is not installed, lemmatization won't be available.")
     return pattern
 
 
@@ -1115,6 +1115,14 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
                 old_len - len(vocab), min_reduce, old_len, len(vocab))
     return result
 
+
+def qsize(queue):
+    """Return the (approximate) queue size where available; -1 where not (OS X)."""
+    try:
+        return queue.qsize()
+    except NotImplementedError:
+        # OS X doesn't support qsize
+        return -1
 
 RULE_DEFAULT = 0
 RULE_DISCARD = 1

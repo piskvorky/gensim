@@ -51,7 +51,7 @@ from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
     sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_sentence_sg
+from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_batch_sg
 from six.moves import xrange, zip
 from six import string_types, integer_types, itervalues
 
@@ -94,7 +94,7 @@ except:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
         if train_words and learn_words:
-            train_sentence_sg(model, doc_words, alpha, work)
+            train_batch_sg(model, [doc_words], alpha, work)
         for doctag_index in doctag_indexes:
             for word in doc_words:
                 train_sg_pair(model, word, doctag_index, alpha, learn_vectors=learn_doctags,
@@ -657,7 +657,6 @@ class Doc2Vec(Word2Vec):
     def _do_train_job(self, job, alpha, inits):
         work, neu1 = inits
         tally = 0
-        raw_tally = 0
         for doc in job:
             indexed_doctags = self.docvecs.indexed_doctags(doc.tags)
             doctag_indexes, doctag_vectors, doctag_locks, ignored = indexed_doctags
@@ -671,12 +670,12 @@ class Doc2Vec(Word2Vec):
             else:
                 tally += train_document_dm(self, doc.words, doctag_indexes, alpha, work, neu1,
                                            doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
-            raw_tally += len(doc.words)
             self.docvecs.trained_item(indexed_doctags)
-        return (tally, raw_tally)
+        return tally, self._raw_word_count(job)
 
-    def _raw_word_count(self, items):
-        return sum(len(item.words) for item in items)
+    def _raw_word_count(self, job):
+        """Return the number of words in a given job."""
+        return sum(len(sentence.words) for sentence in job)
 
     def infer_vector(self, doc_words, alpha=0.1, min_alpha=0.0001, steps=5):
         """

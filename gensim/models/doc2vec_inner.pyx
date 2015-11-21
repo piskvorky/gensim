@@ -41,7 +41,7 @@ DEF MAX_EXP = 6
 cdef void fast_document_dbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *context_vectors, REAL_t *syn1, const int size,
-    const np.uint32_t context_index, const REAL_t alpha, REAL_t *work, int learn_context, int learn_hidden, 
+    const np.uint32_t context_index, const REAL_t alpha, REAL_t *work, int learn_context, int learn_hidden,
     REAL_t *context_locks) nogil:
 
     cdef long long a, b
@@ -164,7 +164,7 @@ cdef unsigned long long fast_document_dm_neg(
 
 cdef void fast_document_dmc_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int word_code_len,
-    REAL_t *neu1, REAL_t *syn1, const REAL_t alpha, REAL_t *work, 
+    REAL_t *neu1, REAL_t *syn1, const REAL_t alpha, REAL_t *work,
     const int layer1_size, const int vector_size, int learn_hidden) nogil:
 
     cdef long long a, b
@@ -188,7 +188,7 @@ cdef void fast_document_dmc_hs(
 
 cdef unsigned long long fast_document_dmc_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, unsigned long long next_random,
-    REAL_t *neu1, REAL_t *syn1neg, const int predict_word_index, const REAL_t alpha, REAL_t *work, 
+    REAL_t *neu1, REAL_t *syn1neg, const int predict_word_index, const REAL_t alpha, REAL_t *work,
     const int layer1_size, const int vector_size, int learn_hidden) nogil:
 
     cdef long long a
@@ -199,7 +199,7 @@ cdef unsigned long long fast_document_dmc_neg(
     cdef int d, m
 
     # l1 already composed by caller, passed in as neu1
-    # work accumulates net l1 error; eventually applied by caller    
+    # work accumulates net l1 error; eventually applied by caller
     for d in range(negative+1):
         if d == 0:
             target_index = predict_word_index
@@ -540,7 +540,7 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
     cdef int codelens[MAX_DOCUMENT_LEN]
     cdef np.uint32_t indexes[MAX_DOCUMENT_LEN]
     cdef np.uint32_t _doctag_indexes[MAX_DOCUMENT_LEN]
-    cdef np.uint32_t window_indexes[MAX_DOCUMENT_LEN] 
+    cdef np.uint32_t window_indexes[MAX_DOCUMENT_LEN]
     cdef int document_len
     cdef int doctag_len
     cdef int window = model.window
@@ -652,7 +652,7 @@ def train_document_dm_concat(model, doc_words, doctag_indexes, alpha, work=None,
                                      layer1_size, vector_size, _learn_hidden)
             if negative:
                 next_random = fast_document_dmc_neg(negative, cum_table, cum_table_len, next_random,
-                                                    _neu1, syn1neg, indexes[i], _alpha, _work, 
+                                                    _neu1, syn1neg, indexes[i], _alpha, _work,
                                                    layer1_size, vector_size, _learn_hidden)
 
             if _learn_doctags:
