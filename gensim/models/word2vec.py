@@ -1290,17 +1290,19 @@ class Word2Vec(utils.SaveLoad):
         n = len(short_doc)
         permutations = itertools.permutations(long_doc)
         # Compute distances for all combinations of both documents.
-        dist = []
-        for idx, perm in enumerate(permutations):
-            dist.append(0)
+        min_dist = sys.float_info.max
+        for perm in permutations:
             j = 0
+            dist = 0
             for i in range(n):
                 k = perm[i]
-                dist[idx] += distance_matrix[k][short_doc[j]]
+                dist += distance_matrix[k][short_doc[j]]
                 j += 1
+            if min_dist > dist:
+                min_dist = dist
 
-        # Find the minimum distance, and normalize it by the document length (the shorter document).
-        min_dist = float(array(dist).min()/float(n))
+        # Normalize the distance by the length of the shortest document.
+        min_dist = float(min_dist / float(n))
 
         return min_dist
 
