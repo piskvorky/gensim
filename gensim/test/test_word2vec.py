@@ -376,8 +376,11 @@ class TestWMD(unittest.TestCase):
         sentence1 = ['human', 'interface', 'computer']
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         distance = model.wmdistance(sentence1, sentence2)
-        distance = round(distance, 5)  # Round distance to 5 decimal places.
-        self.assertEqual(0.03219, distance)
+
+        # Check that the difference between the computed distance, and what it should be, is less than some threshold.
+        true_distance = 0.03219
+        difference = abs(distance - true_distance) < 0.01)
+        self.assertTrue(difference)
 
     def testIdenticalSentences(self):
         '''Check that the distance from a sentence to itself is zero.'''
