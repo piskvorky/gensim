@@ -379,7 +379,7 @@ class TestWMD(unittest.TestCase):
 
         # Check that the difference between the computed distance, and what it should be, is less than some threshold.
         true_distance = 0.03219
-        difference = abs(distance - true_distance) < 0.01)
+        difference = abs(distance - true_distance) < 0.01
         self.assertTrue(difference)
 
     def testIdenticalSentences(self):
