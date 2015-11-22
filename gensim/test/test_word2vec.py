@@ -382,6 +382,16 @@ class TestWMD(unittest.TestCase):
         difference = abs(distance - true_distance) < 0.01
         self.assertTrue(difference)
 
+    def testSymmetry(self):
+        '''Check that distance is symmetric.'''
+        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        sentence1 = ['human', 'interface', 'computer']
+        sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        distance1 = model.wmdistance(sentence1, sentence2)
+        distance2 = model.wmdistance(sentence2, sentence1)
+
+        self.assertEqual(distance1, distance2)
+
     def testIdenticalSentences(self):
         '''Check that the distance from a sentence to itself is zero.'''
         model = word2vec.Word2Vec(sentences, min_count=1)
