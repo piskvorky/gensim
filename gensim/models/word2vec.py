@@ -90,7 +90,6 @@ from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from gensim.pyemd import emd
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
@@ -214,6 +213,12 @@ except ImportError:
 
         return log_prob_sentence
 
+# If pyemd C extension is available, import it. Else use brute force pure Python version.
+try:
+    from gensim.pyemd import emd
+    PYEMD_EXT = True
+except ImportError:
+    PYEMD_EXT = False
 
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
                   context_vectors=None, context_locks=None):
@@ -1209,7 +1214,7 @@ class Word2Vec(utils.SaveLoad):
         distance = model.wmdistance(sentence1, sentence2)
         """
 
-        if False:  # TODO: how to check whether C WMD extension is installed?
+        if not PYEMD_EXT:
             import warnings
             warnings.warn("C extension not loaded for wmdistance, computing WMD will be slow. ")
             return self.wmdistance_slow(document1, document2)
