@@ -45,7 +45,7 @@ Credits
 
 
 :copyright: (c) 2014 by Will Mayner.
-:license: See the LICENSE file.
+:license: MIT. See the LICENSE file.
 
 """
 

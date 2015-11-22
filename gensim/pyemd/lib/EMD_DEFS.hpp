@@ -1,3 +1,5 @@
+// Licensed by Will Mayner under an MIT license. See LICENSE file.
+
 #ifndef EMD_DEFS_HXX_
 #define EMD_DEFS_HXX_
 

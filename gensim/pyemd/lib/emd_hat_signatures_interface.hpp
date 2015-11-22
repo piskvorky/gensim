@@ -1,3 +1,5 @@
+// Licensed by Will Mayner under an MIT license. See LICENSE file.
+
 #ifndef _EMD_HAT_SIGNATURE_INTERFACE_HXX
 #define _EMD_HAT_SIGNATURE_INTERFACE_HXX
 

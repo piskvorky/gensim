@@ -1,3 +1,5 @@
+// Licensed by Will Mayner under an MIT license. See LICENSE file.
+
 #ifndef FLOW_UTILS_HPP
 #define FLOW_UTILS_HPP
 

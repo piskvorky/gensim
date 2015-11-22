@@ -1,3 +1,5 @@
+// Licensed by Will Mayner under an MIT license. See LICENSE file.
+
 #ifndef EMD_HAT_IMPL_HPP
 #define EMD_HAT_IMPL_HPP
 
