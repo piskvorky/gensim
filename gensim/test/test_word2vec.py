@@ -395,7 +395,7 @@ class TestWMD(unittest.TestCase):
         sentence1 = ['human', 'interface', 'computer']
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         distance1 = model.wmdistance(sentence1, sentence2)
-        distance2 = model.wmdistance_slow(sentence1, sentence2)
+        distance2 = model.wmdistance(sentence1, sentence2, force_pure_python=True)
 
         difference = abs(distance1 - distance2) < 0.01
         self.assertTrue(difference)

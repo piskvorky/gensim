@@ -1192,7 +1192,6 @@ class Word2Vec(utils.SaveLoad):
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
-
     def wmdistance(self, document1, document2, force_pure_python=False):
         """
         Compute the Word Mover's Distance of two documents. Algorithm proposed
@@ -1222,10 +1221,11 @@ class Word2Vec(utils.SaveLoad):
         document1 = [token for token in document1 if token in self]
         document2 = [token for token in document2 if token in self]
         logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).',
-                len_pre_oov1 - len(document1), len_pre_oov2 - len(document2))
+                    len_pre_oov1 - len(document1), len_pre_oov2 - len(document2))
 
         if len(document1) == 0 or len(document2) == 0:
-            logger.info('At least one of the documents had no words that were in the vocabulary. Aborting (returning NaN).')
+            logger.info('At least one of the documents had no words that were'
+                        'in the vocabulary. Aborting (returning NaN).')
             return float('nan')
 
         dictionary = Dictionary(documents=[document1, document2])
@@ -1243,7 +1243,6 @@ class Word2Vec(utils.SaveLoad):
                     # Only compute the distances that we need.
                     continue
                 # Compute Euclidean distance between word vectors.
-                # TODO: why not cosine distance?
                 distance_matrix[i][j] = sqrt(np_sum((self[t1] - self[t2])**2))
 
         if not PYEMD_EXT:
@@ -1269,7 +1268,8 @@ class Word2Vec(utils.SaveLoad):
 
     def wmdistance_slow(self, document1, document2, dictionary, distance_matrix):
         '''
-        Brute force implementation of Word Mover's Distance in pure Python. See the wmdistance method for more info.
+        Brute force implementation of Word Mover's Distance in pure Python.
+        See the wmdistance method for more info.
         '''
 
         len1 = len(document1)
