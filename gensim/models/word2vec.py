@@ -90,6 +90,7 @@ from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
+from gensim.corpora.dictionary import Dictionary
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
@@ -1194,7 +1195,8 @@ class Word2Vec(utils.SaveLoad):
 
     def wmdistance(self, document1, document2):
         """
-        Compute the Word Mover's Distance of two documents. Algorithm proposed by Matt J. Kusner et al. in "From Word Embeddings To Document Distances".
+        Compute the Word Mover's Distance of two documents. Algorithm proposed
+        by Matt J. Kusner et al. in "From Word Embeddings To Document Distances".
 
         Example:
         # Train word2vec model.
@@ -1215,39 +1217,39 @@ class Word2Vec(utils.SaveLoad):
         """
 
         if not PYEMD_EXT:
-            import warnings
-            warnings.warn("C extension not loaded for wmdistance, computing WMD will be slow. ")
+            logger.warning("C extension not loaded for wmdistance, computing WMD will be slow. ")
             return self.wmdistance_slow(document1, document2)
-
-        def nBOW(document, vocab):
-            doc_len = len(document)
-            d = []
-            for i, t in enumerate(vocab):
-                d.append(document.count(t) / float(doc_len))
-
-            return d
 
         # Remove out-of-vocabulary words.
         len_pre_oov1 = len(document1)
         len_pre_oov2 = len(document2)
         document1 = [token for token in document1 if token in self.vocab.keys()]
         document2 = [token for token in document2 if token in self.vocab.keys()]
-        logging.info('Removed %d and %d OOV words from document 1 and 2 (respectively).', len_pre_oov1 - len(document1), len_pre_oov2 - len(document2))
+        logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).',
+                len_pre_oov1 - len(document1), len_pre_oov2 - len(document2))
 
         if len(document1) == 0 or len(document2) == 0:
-            logging.info('At least one of the documents had no words that were in the vocabulary. Aborting (returning NaN).')
+            logger.info('At least one of the documents had no words that were in the vocabulary. Aborting (returning NaN).')
             return float('nan')
 
-        vocab = set(document1 + document2)
+        dictionary = Dictionary(documents=[document1, document2])
+        vocab_len = len(dictionary)
+
+        def nbow(document):
+            d = zeros(vocab_len, dtype=double)
+            nbow = dictionary.doc2bow(document)
+            doc_len = len(document)
+            for idx, freq in nbow:
+                d[idx] = freq / float(doc_len)
+            return d
 
         # Compute nBOW representation of documents.
-        d1 = array(nBOW(document1, vocab), dtype=double)
-        d2 = array(nBOW(document2, vocab), dtype=double)
+        d1 = nbow(document1)
+        d2 = nbow(document2)
 
-        vocab_len = len(vocab)
         distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
-        for i, t1 in enumerate(vocab):
-            for j, t2 in enumerate(vocab):
+        for i, t1 in dictionary.items():
+            for j, t2 in dictionary.items():
                 if not t1 in document1 or not t2 in document2:
                     # Only compute the distances that we need.
                     continue
