@@ -389,6 +389,17 @@ class TestWMD(unittest.TestCase):
         distance = model.wmdistance(sentence, sentence)
         self.assertEqual(0.0, distance)
 
+    def testNonzeroSlow(self):
+        '''Check that brute force pure Python version produces the same result.'''
+        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        sentence1 = ['human', 'interface', 'computer']
+        sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        distance1 = model.wmdistance(sentence1, sentence2)
+        distance2 = model.wmdistance_slow(sentence1, sentence2)
+
+        difference = abs(distance1 - distance2) < 0.01
+        self.assertTrue(difference)
+
 
 class TestWord2VecSentenceIterators(unittest.TestCase):
     def testLineSentenceWorksWithFilename(self):
