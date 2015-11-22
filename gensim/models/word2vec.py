@@ -1193,7 +1193,7 @@ class Word2Vec(utils.SaveLoad):
         return result[:topn]
 
 
-    def wmdistance(self, document1, document2):
+    def wmdistance(self, document1, document2, force_pure_python=False):
         """
         Compute the Word Mover's Distance of two documents. Algorithm proposed
         by Matt J. Kusner et al. in "From Word Embeddings To Document Distances".
@@ -1216,15 +1216,11 @@ class Word2Vec(utils.SaveLoad):
         distance = model.wmdistance(sentence1, sentence2)
         """
 
-        if not PYEMD_EXT:
-            logger.warning("C extension not loaded for wmdistance, computing WMD will be slow. ")
-            return self.wmdistance_slow(document1, document2)
-
         # Remove out-of-vocabulary words.
         len_pre_oov1 = len(document1)
         len_pre_oov2 = len(document2)
-        document1 = [token for token in document1 if token in self.vocab.keys()]
-        document2 = [token for token in document2 if token in self.vocab.keys()]
+        document1 = [token for token in document1 if token in self]
+        document2 = [token for token in document2 if token in self]
         logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).',
                 len_pre_oov1 - len(document1), len_pre_oov2 - len(document2))
 
@@ -1234,6 +1230,27 @@ class Word2Vec(utils.SaveLoad):
 
         dictionary = Dictionary(documents=[document1, document2])
         vocab_len = len(dictionary)
+
+        # Sets for faster look-up.
+        docset1 = set(document1)
+        docset2 = set(document2)
+
+        # Compute distance matrix.
+        distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
+        for i, t1 in dictionary.items():
+            for j, t2 in dictionary.items():
+                if not t1 in docset1 or not t2 in docset2:
+                    # Only compute the distances that we need.
+                    continue
+                # Compute Euclidean distance between word vectors.
+                # TODO: why not cosine distance?
+                distance_matrix[i][j] = sqrt(np_sum((self[t1] - self[t2])**2))
+
+        if not PYEMD_EXT:
+            logger.warning("C extension not loaded for wmdistance, computing WMD will be slow. ")
+            return self.wmdistance_slow(document1, document2, dictionary, distance_matrix)
+        if force_pure_python:
+            return self.wmdistance_slow(document1, document2, dictionary, distance_matrix)
 
         def nbow(document):
             d = zeros(vocab_len, dtype=double)
@@ -1247,31 +1264,13 @@ class Word2Vec(utils.SaveLoad):
         d1 = nbow(document1)
         d2 = nbow(document2)
 
-        distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
-        for i, t1 in dictionary.items():
-            for j, t2 in dictionary.items():
-                if not t1 in document1 or not t2 in document2:
-                    # Only compute the distances that we need.
-                    continue
-                # Compute Euclidean distance between word vectors.
-                # TODO: why not cosine distance?
-                distance_matrix[i][j] = sqrt(np_sum((self[t1] - self[t2])**2))
-
         # Return WMD.
         return emd(d1, d2, distance_matrix)
 
-    def wmdistance_slow(self, document1, document2):
+    def wmdistance_slow(self, document1, document2, dictionary, distance_matrix):
         '''
         Brute force implementation of Word Mover's Distance in pure Python. See the wmdistance method for more info.
         '''
-
-        # Remove out-of-vocabulary words.
-        document1 = [token for token in document1 if token in self.vocab.keys()]
-        document2 = [token for token in document2 if token in self.vocab.keys()]
-
-        if len(document1) == 0 or len(document2) == 0:
-            logging.info('At least one of the documents had no words that were in the vocabulary. Aborting (returning NaN).')
-            return float('nan')
 
         len1 = len(document1)
         len2 = len(document2)
@@ -1281,27 +1280,11 @@ class Word2Vec(utils.SaveLoad):
         else:
             short_doc = document1
             long_doc = document2
-
-        # Get a dictionary with unique words and indeces.
-        vocab = {}
-        for i, w in enumerate(long_doc + short_doc):
-            if not w in vocab:
-                vocab[w] = i
-        vocab_len = len(vocab)
-
-        # Compute distance matrix.
-        distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
-        for t1, i in vocab.items():
-            for t2, j in vocab.items():
-                if not t1 in long_doc or not t2 in short_doc:
-                    # Only compute the distances that we need.
-                    continue
-                # Compute Euclidean distance between word vectors.
-                distance_matrix[i][j] = sqrt(np_sum((self[t1] - self[t2])**2))
+            distance_matrix = distance_matrix.transpose()
 
         # Convert document words to corresponding indeces.
-        long_doc = [vocab[w] for w in long_doc]
-        short_doc = [vocab[w] for w in short_doc]
+        long_doc = [dictionary.token2id[w] for w in long_doc]
+        short_doc = [dictionary.token2id[w] for w in short_doc]
 
         # Find all permutations of the longer document.
         n = len(short_doc)
