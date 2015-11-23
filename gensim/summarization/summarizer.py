@@ -132,7 +132,7 @@ def summarize_corpus(corpus, ratio=0.2):
     """
     Returns a list of the most important documents of a corpus using a
     variation of the TextRank algorithm.
-    The input must have at least INPUT_MIN_LENGTH ({}) documents for the
+    The input must have at least INPUT_MIN_LENGTH (%d) documents for the
     summary to make sense.
 
     The length of the output can be specified using the ratio parameter,
@@ -142,7 +142,7 @@ def summarize_corpus(corpus, ratio=0.2):
     The most important documents are returned as a list sorted by the
     document score, highest first.
 
-    """.format(INPUT_MIN_LENGTH)
+    """ % INPUT_MIN_LENGTH
     hashable_corpus = _build_hasheable_corpus(corpus)
 
     # If the corpus is empty, the function ends.
