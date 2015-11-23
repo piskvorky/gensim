@@ -337,7 +337,7 @@ class Word2Vec(utils.SaveLoad):
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
-            sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0,
+            sg=1, hs=1, negative=0, cbow_mean=1, hashfxn=hash, iter=1, null_word=0,
             trim_rule=None, sorted_vocab=1):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
@@ -379,7 +379,7 @@ class Word2Vec(utils.SaveLoad):
         `negative` = if > 0, negative sampling will be used, the int for negative
         specifies how many "noise words" should be drawn (usually between 5-20).
 
-        `cbow_mean` = if 0 (default), use the sum of the context word vectors. If 1, use the mean.
+        `cbow_mean` = if 0, use the sum of the context word vectors. If 1 (default), use the mean.
         Only applies when cbow is used.
 
         `hashfxn` = hash function to use to randomly initialize weights, for increased
