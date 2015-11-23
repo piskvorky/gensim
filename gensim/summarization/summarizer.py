@@ -137,7 +137,7 @@ def summarize_corpus(corpus, ratio=0.2):
 
     The length of the output can be specified using the ratio parameter,
     which determines how many documents will be chosen for the summary
-    (defaults at 20% of the number of documents of the corpus).
+    (defaults at 20%% of the number of documents of the corpus).
 
     The most important documents are returned as a list sorted by the
     document score, highest first.
