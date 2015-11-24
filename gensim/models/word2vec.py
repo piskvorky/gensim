@@ -994,7 +994,7 @@ class Word2Vec(utils.SaveLoad):
                     fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
 
     @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, norm_only=True, encoding='utf8', unicode_errors='strict'):
+    def load_word2vec_format(cls, fname, fvocab=None, binary=False, norm_only=True, encoding='utf8', unicode_errors='strict', init_sims=True):
         """
         Load the input-hidden weight matrix from the original C word2vec-tool format.
 
@@ -1075,7 +1075,8 @@ class Word2Vec(utils.SaveLoad):
         assert (len(result.vocab), result.vector_size) == result.syn0.shape
 
         logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
-        # result.init_sims(norm_only)
+        if init_sims:
+            result.init_sims(norm_only)
         return result
 
     def intersect_word2vec_format(self, fname, binary=False, encoding='utf8', unicode_errors='strict'):
