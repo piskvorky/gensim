@@ -1123,7 +1123,7 @@ class Word2Vec(utils.SaveLoad):
                         self.syn0[self.vocab[word].index] = weights
         logger.info("merged %d vectors into %s matrix from %s" % (overlap_count, self.syn0.shape, fname))
 
-    def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None):
+    def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
         """
         Find the top-N most similar words. Positive words contribute positively towards the
         similarity, negative words negatively.
@@ -1139,6 +1139,8 @@ class Word2Vec(utils.SaveLoad):
         are searched for most-similar values. For example, restrict_vocab=10000 would
         only check the first 10000 word vectors in the vocabulary order. (This may be
         meaningful if you've sorted the vocabulary by descending frequency.)
+
+	The 'indexer' is any instance of NeighborIndexer which speeds up the search process.
 
         Example::
 
@@ -1175,6 +1177,9 @@ class Word2Vec(utils.SaveLoad):
         if not mean:
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
+
+        if indexer is not None:
+            return indexer.get_nearest_items(mean, top_n=topn)
 
         limited = self.syn0norm if restrict_vocab is None else self.syn0norm[:restrict_vocab]
         dists = dot(limited, mean)
