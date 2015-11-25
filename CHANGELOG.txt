@@ -1,6 +1,8 @@
 Changes
 =======
 
+* load_word2vec_format(): new parameter to skip init_sims() call (@svenkreiss #545)
+
 0.12.3, 05/11/2015
 
 * Make show_topics return value consistent across models (Christopher Corley, #448)
