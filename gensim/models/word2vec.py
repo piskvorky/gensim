@@ -1467,7 +1467,7 @@ class Word2Vec(utils.SaveLoad):
         for v in model.vocab.values():
             if hasattr(v, 'sample_int'):
                 break  # already 0.12.0+ style int probabilities
-            else:
+            elif hasattr(v, 'sample_probability'):
                 v.sample_int = int(round(v.sample_probability * 2**32))
                 del v.sample_probability
         if not hasattr(model, 'syn0_lockf') and hasattr(model, 'syn0'):
