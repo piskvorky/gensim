@@ -36,6 +36,8 @@ import os
 
 import numpy
 
+from six import iteritems
+
 from gensim import utils, matutils
 from gensim.utils import check_output
 
