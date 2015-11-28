@@ -1015,7 +1015,7 @@ class Word2Vec(utils.SaveLoad):
                     fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
 
     @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, norm_only=True, encoding='utf8', unicode_errors='strict'):
+    def load_word2vec_format(cls, fname, fvocab=None, binary=False, norm_only=True, encoding='utf8', unicode_errors='strict', init_sims=True):
         """
         Load the input-hidden weight matrix from the original C word2vec-tool format.
 
@@ -1096,7 +1096,8 @@ class Word2Vec(utils.SaveLoad):
         assert (len(result.vocab), result.vector_size) == result.syn0.shape
 
         logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
-        result.init_sims(norm_only)
+        if init_sims:
+            result.init_sims(norm_only)
         return result
 
     def intersect_word2vec_format(self, fname, binary=False, encoding='utf8', unicode_errors='strict'):
@@ -1487,7 +1488,7 @@ class Word2Vec(utils.SaveLoad):
         for v in model.vocab.values():
             if hasattr(v, 'sample_int'):
                 break  # already 0.12.0+ style int probabilities
-            else:
+            elif hasattr(v, 'sample_probability'):
                 v.sample_int = int(round(v.sample_probability * 2**32))
                 del v.sample_probability
         if not hasattr(model, 'syn0_lockf') and hasattr(model, 'syn0'):

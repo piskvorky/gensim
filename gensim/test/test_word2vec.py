@@ -90,6 +90,16 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule)
         self.assertTrue("human" not in model.vocab)
 
+    def testPersistenceWord2VecFormatInitSims(self):
+        """Test storing/loading the entire model in word2vec format skipping
+        the init_sims() call."""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        model.save_word2vec_format(testfile(), binary=True)
+        binary_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, norm_only=False, init_sims=False)
+        self.assertTrue(numpy.allclose(model['human'], binary_model['human']))
+        self.assertFalse(hasattr(binary_model, 'syn0norm'))
+
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
         model = word2vec.Word2Vec(sentences, min_count=1)
@@ -121,6 +131,23 @@ class TestWord2VecModel(unittest.TestCase):
         model.save_word2vec_format(testfile(), testvocab, binary=True)
         binary_model_with_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), testvocab, binary=True)
         self.assertEqual(model.vocab['human'].count, binary_model_with_vocab.vocab['human'].count)
+
+    def testPersistenceWord2VecFormatCombinationWithStandardPersistence(self):
+        """Test storing/loading the entire model and vocabulary in word2vec format chained with
+         saving and loading via `save` and `load` methods`."""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        testvocab = os.path.join(tempfile.gettempdir(), 'gensim_word2vec.vocab')
+        model.save_word2vec_format(testfile(), testvocab, binary=True)
+        binary_model_with_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), testvocab, binary=True)
+        binary_model_with_vocab.save(testfile())
+        binary_model_with_vocab = word2vec.Word2Vec.load(testfile())
+        self.assertEqual(model.vocab['human'].count, binary_model_with_vocab.vocab['human'].count)
+
+    def test_zero_workers_mode(self):
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model0 = word2vec.Word2Vec(sentences, min_count=1, workers=0)
+        self.models_equal(model, model0)
 
     def testLargeMmap(self):
         """Test storing/loading the entire model."""
