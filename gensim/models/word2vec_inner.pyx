@@ -254,8 +254,7 @@ cdef unsigned long long fast_sentence_cbow_neg(
     return next_random
 
 
-
-def train_sentence_sg(model, sentence, alpha, _work):
+def train_batch_sg(model, sentences, alpha, _work):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.sample != 0)
@@ -269,11 +268,12 @@ def train_sentence_sg(model, sentence, alpha, _work):
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
-    cdef int sentence_len
+    cdef int sentence_idx[MAX_SENTENCE_LEN + 1]
     cdef int window = model.window
 
     cdef int i, j, k
-    cdef long result = 0
+    cdef int effective_words = 0, effective_sentences = 0
+    cdef int sent_idx, idx_start, idx_end
 
     # For hierarchical softmax
     cdef REAL_t *syn1
@@ -300,50 +300,64 @@ def train_sentence_sg(model, sentence, alpha, _work):
     # convert Python structures to primitive types, so we can release the GIL
     work = <REAL_t *>np.PyArray_DATA(_work)
 
+    # prepare C structures so we can go "full C" and release the Python GIL
     vlookup = model.vocab
-    i = 0
-    for token in sentence:
-        word = vlookup[token] if token in vlookup else None
-        if word is None:
-            continue  # leaving i unchanged/shortening sentence
-        if sample and word.sample_int < random_int32(&next_random):
-            continue
-        indexes[i] = word.index
-        if hs:
-            codelens[i] = <int>len(word.code)
-            codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-            points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
-        result += 1
-        i += 1
-        if i == MAX_SENTENCE_LEN:
-            break  # TODO: log warning, tally overflow?
-    sentence_len = i
+    sentence_idx[0] = 0  # indices of the first sentence always start at 0
+    for sent in sentences:
+        if not sent:
+            continue  # ignore empty sentences; leave effective_sentences unchanged
+        for token in sent:
+            word = vlookup[token] if token in vlookup else None
+            if word is None:
+                continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
+            if sample and word.sample_int < random_int32(&next_random):
+                continue
+            indexes[effective_words] = word.index
+            if hs:
+                codelens[effective_words] = <int>len(word.code)
+                codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
+            effective_words += 1
+            if effective_words == MAX_SENTENCE_LEN:
+                break  # TODO: log warning, tally overflow?
 
-    # single randint() call avoids a big thread-sync slowdown
-    for i, item in enumerate(model.random.randint(0, window, sentence_len)):
+        # keep track of which words go into which sentence, so we don't train
+        # across sentence boundaries.
+        # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
+        effective_sentences += 1
+        sentence_idx[effective_sentences] = effective_words
+
+        if effective_words == MAX_SENTENCE_LEN:
+            break  # TODO: log warning, tally overflow?
+
+    # precompute "reduced window" offsets in a single randint() call
+    for i, item in enumerate(model.random.randint(0, window, effective_words)):
         reduced_windows[i] = item
 
-    # release GIL & train on the sentence
+    # release GIL & train on all sentences
     with nogil:
-        for i in range(sentence_len):
-            j = i - window + reduced_windows[i]
-            if j < 0:
-                j = 0
-            k = i + window + 1 - reduced_windows[i]
-            if k > sentence_len:
-                k = sentence_len
-            for j in range(j, k):
-                if j == i:
-                    continue
-                if hs:
-                    fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks)
-                if negative:
-                    next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
+        for sent_idx in range(effective_sentences):
+            idx_start = sentence_idx[sent_idx]
+            idx_end = sentence_idx[sent_idx + 1]
+            for i in range(idx_start, idx_end):
+                j = i - window + reduced_windows[i]
+                if j < idx_start:
+                    j = idx_start
+                k = i + window + 1 - reduced_windows[i]
+                if k > idx_end:
+                    k = idx_end
+                for j in range(j, k):
+                    if j == i:
+                        continue
+                    if hs:
+                        fast_sentence_sg_hs(points[i], codes[i], codelens[i], syn0, syn1, size, indexes[j], _alpha, work, word_locks)
+                    if negative:
+                        next_random = fast_sentence_sg_neg(negative, cum_table, cum_table_len, syn0, syn1neg, size, indexes[i], indexes[j], _alpha, work, next_random, word_locks)
 
-    return result
+    return effective_words
 
 
-def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
+def train_batch_cbow(model, sentences, alpha, _work, _neu1):
     cdef int hs = model.hs
     cdef int negative = model.negative
     cdef int sample = (model.sample != 0)
@@ -352,18 +366,18 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
     cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
     cdef REAL_t *work
-    cdef REAL_t *neu1
     cdef REAL_t _alpha = alpha
     cdef int size = model.layer1_size
 
     cdef int codelens[MAX_SENTENCE_LEN]
     cdef np.uint32_t indexes[MAX_SENTENCE_LEN]
     cdef np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
-    cdef int sentence_len
+    cdef int sentence_idx[MAX_SENTENCE_LEN + 1]
     cdef int window = model.window
 
     cdef int i, j, k
-    cdef long result = 0
+    cdef int effective_words = 0, effective_sentences = 0
+    cdef int sent_idx, idx_start, idx_end
 
     # For hierarchical softmax
     cdef REAL_t *syn1
@@ -374,7 +388,7 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
     cdef REAL_t *syn1neg
     cdef np.uint32_t *cum_table
     cdef unsigned long long cum_table_len
-    # for sampling (negative or frequent-word downsampling)
+    # for sampling (negative and frequent-word downsampling)
     cdef unsigned long long next_random
 
     if hs:
@@ -391,44 +405,58 @@ def train_sentence_cbow(model, sentence, alpha, _work, _neu1):
     work = <REAL_t *>np.PyArray_DATA(_work)
     neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
+    # prepare C structures so we can go "full C" and release the Python GIL
     vlookup = model.vocab
-    i = 0
-    for token in sentence:
-        word = vlookup[token] if token in vlookup else None
-        if word is None:
-            continue  # leaving i unchanged/shortening sentence
-        if sample and word.sample_int < random_int32(&next_random):
-            continue
-        indexes[i] = word.index
-        if hs:
-            codelens[i] = <int>len(word.code)
-            codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
-            points[i] = <np.uint32_t *>np.PyArray_DATA(word.point)
-        result += 1
-        i += 1
-        if i == MAX_SENTENCE_LEN:
-            break  # TODO: log warning, tally overflow?
-    sentence_len = i
+    sentence_idx[0] = 0  # indices of the first sentence always start at 0
+    for sent in sentences:
+        if not sent:
+            continue  # ignore empty sentences; leave effective_sentences unchanged
+        for token in sent:
+            word = vlookup[token] if token in vlookup else None
+            if word is None:
+                continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
+            if sample and word.sample_int < random_int32(&next_random):
+                continue
+            indexes[effective_words] = word.index
+            if hs:
+                codelens[effective_words] = <int>len(word.code)
+                codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
+                points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
+            effective_words += 1
+            if effective_words == MAX_SENTENCE_LEN:
+                break  # TODO: log warning, tally overflow?
 
-    # single randint() call avoids a big thread-sync slowdown
-    for i, item in enumerate(model.random.randint(0, window, sentence_len)):
+        # keep track of which words go into which sentence, so we don't train
+        # across sentence boundaries.
+        # indices of sentence number X are between <sentence_idx[X], sentence_idx[X])
+        effective_sentences += 1
+        sentence_idx[effective_sentences] = effective_words
+
+        if effective_words == MAX_SENTENCE_LEN:
+            break  # TODO: log warning, tally overflow?
+
+    # precompute "reduced window" offsets in a single randint() call
+    for i, item in enumerate(model.random.randint(0, window, effective_words)):
         reduced_windows[i] = item
 
-    # release GIL & train on the sentence
+    # release GIL & train on all sentences
     with nogil:
-        for i in range(sentence_len):
-            j = i - window + reduced_windows[i]
-            if j < 0:
-                j = 0
-            k = i + window + 1 - reduced_windows[i]
-            if k > sentence_len:
-                k = sentence_len
-            if hs:
-                fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks)
-            if negative:
-                next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks)
+        for sent_idx in range(effective_sentences):
+            idx_start = sentence_idx[sent_idx]
+            idx_end = sentence_idx[sent_idx + 1]
+            for i in range(idx_start, idx_end):
+                j = i - window + reduced_windows[i]
+                if j < idx_start:
+                    j = idx_start
+                k = i + window + 1 - reduced_windows[i]
+                if k > idx_end:
+                    k = idx_end
+                if hs:
+                    fast_sentence_cbow_hs(points[i], codes[i], codelens, neu1, syn0, syn1, size, indexes, _alpha, work, i, j, k, cbow_mean, word_locks)
+                if negative:
+                    next_random = fast_sentence_cbow_neg(negative, cum_table, cum_table_len, codelens, neu1, syn0, syn1neg, size, indexes, _alpha, work, i, j, k, cbow_mean, next_random, word_locks)
 
-    return result
+    return effective_words
 
 
 # Score is only implemented for hierarchical softmax
@@ -460,7 +488,7 @@ def score_sentence_sg(model, sentence, _work):
     for token in sentence:
         word = vlookup[token] if token in vlookup else None
         if word is None:
-            continue  # should drop the 
+            continue  # should drop the
         indexes[i] = word.index
         codelens[i] = <int>len(word.code)
         codes[i] = <np.uint8_t *>np.PyArray_DATA(word.code)
@@ -478,10 +506,10 @@ def score_sentence_sg(model, sentence, _work):
         for i in range(sentence_len):
             if codelens[i] == 0:
                 continue
-            j = i - window 
+            j = i - window
             if j < 0:
                 j = 0
-            k = i + window + 1 
+            k = i + window + 1
             if k > sentence_len:
                 k = sentence_len
             for j in range(j, k):
@@ -560,7 +588,7 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
         for i in range(sentence_len):
             if codelens[i] == 0:
                 continue
-            j = i - window 
+            j = i - window
             if j < 0:
                 j = 0
             k = i + window + 1
@@ -637,7 +665,7 @@ def init():
         return 0  # double
     elif (abs(p_res[0] - expected) < 0.0001):
         our_dot = our_dot_float
-        our_saxpy = saxpy 
+        our_saxpy = saxpy
         return 1  # float
     else:
         # neither => use cython loops, no BLAS
@@ -647,3 +675,4 @@ def init():
         return 2
 
 FAST_VERSION = init()  # initialize the module
+MAX_WORDS_IN_BATCH = MAX_SENTENCE_LEN

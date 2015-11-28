@@ -129,7 +129,7 @@ class TestSummarizationTest(unittest.TestCase):
             expected_summary_length = int(len(corpus) * ratio)
 
             self.assertEqual(len(selected_docs), expected_summary_length)
-            
+
     def test_keywords_runs(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
@@ -148,4 +148,3 @@ class TestSummarizationTest(unittest.TestCase):
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
-

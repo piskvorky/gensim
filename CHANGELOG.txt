@@ -1,10 +1,24 @@
 Changes
 =======
 
-* load_word2vec_format(): new parameter to skip init_sims() call (@svenkreiss #545)
-* Loading of pattern library in utils.py is only in lemmatize function (Jan Zikes, #461)
-  - utils.HAS_PATTERN, has also changed to utils.has_pattern()
-* Word2vec allows non-strict unicode error handling (ignore or replace). (Gordon Mohr, #466)
+0.12.4, XX/XX/XXXX
+
+* Better internal handling of job batching in word2vec (#535)
+  - up to 300% speed up when training on very short documents (~tweets)
+* Word2vec allows non-strict unicode error handling (ignore or replace) (Gordon Mohr, #466)
+* On-demand loading of the `pattern` library in utils.lemmatize (Jan Zikes, #461)
+  - `utils.HAS_PATTERN` flag moved to `utils.has_pattern()`
+* Forwards compatibility for NumPy > 1.10 (Matti Lyra, #494, #513)
+  - LdaModel and LdaMulticore produce a large number of DeprecationWarnings from
+    .inference() because the term ids in each chunk returned from utils.grouper
+    are floats. This behaviour has been changed so that the term IDs are now ints.
+  - utils.grouper returns a python list instead of a numpy array in .update() when
+    LdaModel is called in non distributed mode
+  - in distributed mode .update() will still call utils.grouper with as_numpy=True
+    to save memory
+  - LdaModel.update and LdaMulticore.update have a new keyword parameter
+    chunks_as_numpy=True/False (defaults to False) that allows controlling
+    this behaviour
 
 0.12.3, 05/11/2015
 
@@ -25,18 +39,6 @@ Changes
 * Speed improvements to keyword and summarisation methods (@erbas #441)
 * OSX wheels (#504)
 * Win build (#492)
-
-* Forwards compatibility for  NumPy > 1.10 (Matti Lyra, #494)
-  - LdaModel and LdaMulticore produce a large number of DepracationWarnings from
-    .inference() because the term ids in each chunk returned from utils.grouper
-    are floats. This behaviour has been changed so that the term IDs are now ints.
-  - utils.grouper returns a python list instead of a numpy array in .update() when
-    LdaModel is called in non distributed mode
-  - in distributed mode .update() will still call utils.grouper with as_numpy=True
-    to save memory
-  - LdaModel.update and LdaMulticore.update have a new keyword parameter
-    chunks_as_numpy=True/False (defaults to False) that allows controlling
-    this behaviour.
 
 0.12.2, 19/09/2015
 
