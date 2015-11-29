@@ -8,7 +8,7 @@ environment:
     # /E:ON and /V:ON options are not enabled in the batch script intepreter
     # See: http://stackoverflow.com/a/13751649/163740
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\continuous_integration\\appveyor\\run_with_env.cmd"
-    WHEELHOUSE_UPLOADER_USERNAME: Lev.Konstantinovskiy
+    WHEELHOUSE_UPLOADER_USERNAME: "Lev.Konstantinovskiy"
     WHEELHOUSE_UPLOADER_SECRET:
       secure: qXqY3dFmLOqvxa3Om2gQi/BjotTOK+EP2IPLolBNo0c61yDtNWxbmE4wH3up72Be
     
