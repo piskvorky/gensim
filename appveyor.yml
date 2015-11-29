@@ -3,15 +3,14 @@
 # https://ci.appveyor.com/project/tmylk/gensim
 
 environment:
-  global:
-    # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
-    # /E:ON and /V:ON options are not enabled in the batch script intepreter
-    # See: http://stackoverflow.com/a/13751649/163740
-    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\continuous_integration\\appveyor\\run_with_env.cmd"
-    # TODO: use gensim's username
-    WHEELHOUSE_UPLOADER_USERNAME: sklearn-appveyor
-    WHEELHOUSE_UPLOADER_SECRET:
-      secure: BQm8KfEj6v2Y+dQxb2syQvTFxDnHXvaNktkLcYSq7jfbTOO6eH9n09tfQzFUVcWZ
+  global:
+    # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
+    # /E:ON and /V:ON options are not enabled in the batch script intepreter
+    # See: http://stackoverflow.com/a/13751649/163740
+    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\continuous_integration\\appveyor\\run_with_env.cmd"
+    WHEELHOUSE_UPLOADER_USERNAME: Lev.Konstantinovskiy
+    WHEELHOUSE_UPLOADER_SECRET:
+      secure: qXqY3dFmLOqvxa3Om2gQi/BjotTOK+EP2IPLolBNo0c61yDtNWxbmE4wH3up72Be
     
   matrix:
     - PYTHON: "C:\\Python27"
@@ -67,18 +66,17 @@ test_script:
 artifacts:
   # Archive the generated wheel package in the ci.appveyor.com build report.
   - path: dist\*
-# TODO: get a share
-#on_success:
-#  # Upload the generated wheel package to Rackspace
-#  # On Windows, Apache Libcloud cannot find a standard CA cert bundle so we
-#  # disable the ssl checks.
-#  - "python -m wheelhouse_uploader upload --no-ssl-check --local-folder=dist sklearn-windows-wheels"
+on_success:
+  # Upload the generated wheel package to Rackspace
+  # On Windows, Apache Libcloud cannot find a standard CA cert bundle so we
+  # disable the ssl checks.
+  - "python -m wheelhouse_uploader upload --no-ssl-check --local-folder=dist gensim-windows-wheels"
 
-#notifications:
-#  - provider: Webhook
-#    url: https://webhooks.gitter.im/e/0dc8e57cd38105aeb1b4
-#    on_build_success: false
-#    on_build_failure: True
+notifications:
+  - provider: Webhook
+    url:https://webhooks.gitter.im/e/62c44ad26933cd7ed7e8
+    on_build_success: false
+    on_build_failure: True
 
 cache:
   # Use the appveyor cache to avoid re-downloading large archives such
