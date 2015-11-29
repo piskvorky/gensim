@@ -282,13 +282,11 @@ class LdaModel(interfaces.TransformationABC):
         self.update_every = update_every
         self.eval_every = eval_every
 
-        self.optimize_alpha = alpha == 'auto'
-        self.alpha = self.init_dir_prior(alpha, 'alpha')
+        self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
         assert self.alpha.shape == (num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), num_topics)
 
-        self.optimize_eta = eta == 'auto'
-        self.eta = self.init_dir_prior(eta, 'eta')
+        self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
 
         assert (self.eta.shape == (num_topics, 1) or self.eta.shape == (num_topics, self.num_terms)), (
             "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
@@ -331,16 +329,25 @@ class LdaModel(interfaces.TransformationABC):
             self.update(corpus, chunks_as_numpy=use_numpy)
 
     def init_dir_prior(self, prior, name):
-        if prior == 'symmetric' or prior is None:
-            logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
-            init_prior = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
-        elif prior == 'asymmetric':
-            init_prior = numpy.asarray([1.0 / (i + numpy.sqrt(self.num_topics)) for i in xrange(self.num_topics)])
-            init_prior /= init_prior.sum()
-            logger.info("using asymmetric %s %s", name, list(init_prior))
-        elif prior == 'auto':
-            init_prior = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
-            logger.info("using autotuned %s, starting with %s", name, list(init_prior))
+        if prior is None:
+            prior = 'symmetric'
+
+        is_auto = False
+
+        if isinstance(prior, six.string_types):
+            if prior == 'symmetric':
+                logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
+                init_prior = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
+            elif prior == 'asymmetric':
+                init_prior = numpy.asarray([1.0 / (i + numpy.sqrt(self.num_topics)) for i in xrange(self.num_topics)])
+                init_prior /= init_prior.sum()
+                logger.info("using asymmetric %s %s", name, list(init_prior))
+            elif prior == 'auto':
+                is_auto = True
+                init_prior = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
+                logger.info("using autotuned %s, starting with %s", name, list(init_prior))
+            else:
+                raise ValueError("Unable to determine proper %s value given '%s'" % (name, prior))
         elif isinstance(prior, list):
             init_prior = numpy.asarray(prior)
         elif isinstance(prior, numpy.ndarray):
@@ -358,7 +365,7 @@ class LdaModel(interfaces.TransformationABC):
             if init_prior.shape == (self.num_topics,) or init_prior.shape == (1, self.num_topics):
                 init_prior = init_prior.reshape((self.num_topics, 1)) # this statement throws ValueError if eta did not match self.num_topics
 
-        return init_prior
+        return init_prior, is_auto
 
     def __str__(self):
         return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % \

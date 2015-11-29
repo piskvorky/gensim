@@ -121,6 +121,11 @@ class TestLdaModel(unittest.TestCase):
         self.assertEqual(model.alpha.shape, expected_shape)
         self.assertTrue(all(model.alpha == numpy.array([0.3, 0.3])))
 
+        kwargs['alpha'] = numpy.array([0.3, 0.3])
+        model = self.class_(**kwargs)
+        self.assertEqual(model.alpha.shape, expected_shape)
+        self.assertTrue(all(model.alpha == numpy.array([0.3, 0.3])))
+
         # all should raise an exception for being wrong shape
         kwargs['alpha'] = [0.3, 0.3, 0.3]
         self.assertRaises(AssertionError, self.class_, **kwargs)
@@ -181,6 +186,11 @@ class TestLdaModel(unittest.TestCase):
         self.assertTrue(all(model.eta == numpy.array([[0.3], [0.3]])))
 
         kwargs['eta'] = [0.3, 0.3]
+        model = self.class_(**kwargs)
+        self.assertEqual(model.eta.shape, expected_shape)
+        self.assertTrue(all(model.eta == numpy.array([[0.3], [0.3]])))
+
+        kwargs['eta'] = numpy.array([0.3, 0.3])
         model = self.class_(**kwargs)
         self.assertEqual(model.eta.shape, expected_shape)
         self.assertTrue(all(model.eta == numpy.array([[0.3], [0.3]])))
