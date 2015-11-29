@@ -74,7 +74,7 @@ on_success:
 
 notifications:
   - provider: Webhook
-    url:https://webhooks.gitter.im/e/62c44ad26933cd7ed7e8
+    url: https://webhooks.gitter.im/e/62c44ad26933cd7ed7e8
     on_build_success: false
     on_build_failure: True
 
