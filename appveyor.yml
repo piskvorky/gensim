@@ -3,14 +3,14 @@
 # https://ci.appveyor.com/project/tmylk/gensim
 
 environment:
-  global:
-    # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
-    # /E:ON and /V:ON options are not enabled in the batch script intepreter
-    # See: http://stackoverflow.com/a/13751649/163740
-    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\continuous_integration\\appveyor\\run_with_env.cmd"
-    WHEELHOUSE_UPLOADER_USERNAME: "Lev.Konstantinovskiy"
-    WHEELHOUSE_UPLOADER_SECRET:
-      secure: qXqY3dFmLOqvxa3Om2gQi/BjotTOK+EP2IPLolBNo0c61yDtNWxbmE4wH3up72Be
+  global:
+    # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
+    # /E:ON and /V:ON options are not enabled in the batch script intepreter
+    # See: http://stackoverflow.com/a/13751649/163740
+    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\continuous_integration\\appveyor\\run_with_env.cmd"
+    WHEELHOUSE_UPLOADER_USERNAME: "Lev.Konstantinovskiy"
+    WHEELHOUSE_UPLOADER_SECRET:
+      secure: qXqY3dFmLOqvxa3Om2gQi/BjotTOK+EP2IPLolBNo0c61yDtNWxbmE4wH3up72Be
     
   matrix:
     - PYTHON: "C:\\Python27"
