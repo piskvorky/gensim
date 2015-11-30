@@ -4,8 +4,8 @@ Changes
 0.12.4, XX/XX/XXXX
 
 * load_word2vec_format() performance (@svenkreiss, #555)
-  - remove `init_sims()` call for performance improvements when normalized vectors are not needed
-  - remove `norm_only` parameter (API change)
+  - Remove `init_sims()` call for performance improvements when normalized vectors are not needed.
+  - Remove `norm_only` parameter (API change). Call `init_sims(replace=True)` after the `load_word2vec_format()` call for the old `norm_only=True` behavior.
 * Better internal handling of job batching in word2vec (#535)
   - up to 300% speed up when training on very short documents (~tweets)
 * Word2vec allows non-strict unicode error handling (ignore or replace) (Gordon Mohr, #466)
