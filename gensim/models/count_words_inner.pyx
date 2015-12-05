@@ -11,17 +11,13 @@ from cpython cimport PyUnicode_GET_DATA_SIZE
 from libc.stdint cimport uint64_t
 
 from murmurhash.mrmr cimport hash64
-from preshed.counter cimport PreshCounter
+from preshed.counter cimport PreshCounter, count_t
 
 from collections import defaultdict
 from six import iteritems
 
 
 cpdef uint64_t _hash_string(unicode string) except 0:
-    # TODO: Is it acceptable to have the argument strictly typed?? It's not, right?
-    # That seems against the way Gensim is set out --- the library seems to
-    # follow an "input agnostic", duck-typey sort of design, right?
-    #
     # This code is copied from spacy.strings. The implementation took some thought,
     # and consultation with Stefan Behnel. Do not change blindly. Interaction
     # with Python 2/3 is subtle.
@@ -30,19 +26,36 @@ cpdef uint64_t _hash_string(unicode string) except 0:
     return hash64(chars, size, 1)
 
 
-def count_words_fast(sentences, int min_freq, int progress_per, log_progress):
+cpdef uint64_t _hash_bytes(bytes string) except 0:
+    chars = <char*>string
+    return hash64(chars, len(string), 1)
+
+
+def count_words_fast(sentences, count_t min_freq, int progress_per, log_progress):
     cdef PreshCounter counts = PreshCounter()
     strings = {}
     sentence_no = -1
     total_words = 0
-    cdef unicode word
     cdef uint64_t key
+    cdef count_t count
     for sentence_no, sentence in enumerate(sentences):
         if sentence_no % progress_per == 0:
             log_progress(sentence_no, total_words, len(strings))
         
         for word in sentence:
-            key = _hash_string(word)
+            # There's a likely bug here: we're going to be maintaining separate
+            # counts for unicode and byte strings, where defaultdict presumably
+            # hashes these the same, right?
+            # 
+            # We could convert to one or the other by default, but the performance
+            # implications are pretty bad. It might be best to merge the counts
+            # when we form up the final vocab.
+            if isinstance(word, unicode):
+                key = _hash_string(word)
+            elif isinstance(word, bytes):
+                key = _hash_bytes(word)
+            else:
+                raise TypeError(type(word))
             counts.inc(key, 1)
             # TODO: Why doesn't .inc return this? =/
             count = counts[key]
