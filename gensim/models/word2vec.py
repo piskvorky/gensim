@@ -97,6 +97,11 @@ from types import GeneratorType
 logger = logging.getLogger(__name__)
 
 try:
+    from gensim.models.count_words_inner import fast_count_words
+except ImportError:
+    fast_count_words = None
+
+try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
@@ -504,21 +509,30 @@ class Word2Vec(utils.SaveLoad):
 
     def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
         """Do an initial scan of all words appearing in sentences."""
-        logger.info("collecting all words and their counts")
-        sentence_no = -1
-        total_words = 0
-        min_reduce = 1
-        vocab = defaultdict(int)
-        for sentence_no, sentence in enumerate(sentences):
-            if sentence_no % progress_per == 0:
-                logger.info("PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
-                            sentence_no, sum(itervalues(vocab)) + total_words, len(vocab))
-            for word in sentence:
-                vocab[word] += 1
+        def log_progress(sentence_no, total_words, vocab_size):
+            logger.info("PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
+                        sentence_no, total_words, vocab_size)
 
-            if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
-                min_reduce += 1
+        logger.info("collecting all words and their counts")
+        
+        total_words = 0
+        # Use the fast version if it exists, and if no trim rule is specified
+        if fast_count_words is not None and trim_rule is None:
+            vocab, sentence_no = fast_count_words(sentences, self.min_freq,
+                                                  progress_per, log_progress)
+        else:
+            sentence_no = -1
+            min_reduce = 1
+            vocab = defaultdict(int)
+            for sentence_no, sentence in enumerate(sentences):
+                if sentence_no % progress_per == 0:
+                    log_progress(sentence_no, sum(itervalues(vocab)) + total_words, len(vocab))
+            
+                for word in sentence:
+                    vocab[word] += 1
+                if self.max_vocab_size and len(vocab) > self.max_vocab_size:
+                    total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
+                    min_reduce += 1
 
         total_words += sum(itervalues(vocab))
         logger.info("collected %i word types from a corpus of %i raw words and %i sentences",
