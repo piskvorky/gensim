@@ -97,9 +97,9 @@ from types import GeneratorType
 logger = logging.getLogger(__name__)
 
 try:
-    from gensim.models.count_words_inner import fast_count_words
+    from gensim.models.count_words_inner import count_words_fast
 except ImportError:
-    fast_count_words = None
+    count_words_fast = None
 
 try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
@@ -518,7 +518,7 @@ class Word2Vec(utils.SaveLoad):
         total_words = 0
         # Use the fast version if it exists, and if no trim rule is specified
         if fast_count_words is not None and trim_rule is None:
-            vocab, sentence_no = fast_count_words(sentences, self.min_freq,
+            vocab, sentence_no = count_words_fast(sentences, self.min_count,
                                                   progress_per, log_progress)
         else:
             sentence_no = -1
