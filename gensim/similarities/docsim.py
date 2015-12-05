@@ -569,6 +569,60 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.index.shape[1])
 #endclass MatrixSimilarity
 
+class WmdSimilarity(interfaces.SimilarityABC):
+    """
+    Document similarity (like MatrixSimilarity) that uses WMD (gensim.models.word2vec.wmdistance) as a distance measure.
+    """
+    def __init__(self, corpus, w2v_model, num_best=None, chunksize=256):
+        """
+        corpus:     List of lists of strings, as in gensim.models.word2vec.
+        w2v_model:  A trained word2vec model.
+        """
+        self.corpus = corpus
+        self.w2v_model = w2v_model
+        self.num_best = num_best
+        self.chunksize = chunksize
+
+        # Normalization is not possible, as corpus is a list (of lists) of strings.
+        self.normalize = False
+
+        # index is simply an array from 0 to size of corpus.
+        self.index = numpy.array(range(len(corpus)))
+
+    def __len__(self):
+        return len(self.corpus)
+
+    def get_similarities(self, query):
+        """
+        **Do not use this function directly; use the self[query] syntax instead.**
+        """
+        if type(query) == numpy.ndarray:
+            query = [self.corpus[i] for i in query]
+
+        # Compute WMD.
+        if type(query[0]) == list:
+            # "query" is a list of queries.
+            n_queries = len(query)
+            result = []
+            for i in range(n_queries):
+                qresult = []
+                for document in self.corpus:
+                    dist = self.w2v_model.wmdistance(document, query[i])
+                    qresult.append(dist)
+                result.append(qresult)
+        else:
+            result = []
+            for document in self.corpus:
+                dist = self.w2v_model.wmdistance(document, query)
+                result.append(dist)
+
+        result = numpy.array(result) # Return as numpy array.
+
+        return result
+
+    def __str__(self):
+        return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.w2v_model.syn0.shape[1])
+#endclass MatrixSimilarity
 
 class SparseMatrixSimilarity(interfaces.SimilarityABC):
     """
