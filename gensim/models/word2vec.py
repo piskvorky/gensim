@@ -87,7 +87,7 @@ except ImportError:
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
+    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray, nanmin, nansum
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
@@ -1192,7 +1192,7 @@ class Word2Vec(utils.SaveLoad):
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
-    def wmdistance(self, document1, document2, force_pure_python=False):
+    def wmdistance(self, document1, document2, WCD=False, RWMD=False, force_pure_python=False):
         """
         Compute the Word Mover's Distance of two documents. Algorithm proposed
         by Matt J. Kusner et al. in "From Word Embeddings To Document Distances".
@@ -1235,15 +1235,16 @@ class Word2Vec(utils.SaveLoad):
         docset1 = set(document1)
         docset2 = set(document2)
 
-        # Compute distance matrix.
-        distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
-        for i, t1 in dictionary.items():
-            for j, t2 in dictionary.items():
-                if not t1 in docset1 or not t2 in docset2:
-                    # Only compute the distances that we need.
-                    continue
-                # Compute Euclidean distance between word vectors.
-                distance_matrix[i][j] = sqrt(np_sum((self[t1] - self[t2])**2))
+        if not WCD:  # distance matrix not necessary in WCD.
+            # Compute distance matrix.
+            distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
+            for i, t1 in dictionary.items():
+                for j, t2 in dictionary.items():
+                    if not t1 in docset1 or not t2 in docset2:
+                        # Only compute the distances that we need.
+                        continue
+                    # Compute Euclidean distance between word vectors.
+                    distance_matrix[i][j] = sqrt(np_sum((self[t1] - self[t2])**2))
 
         if not PYEMD_EXT:
             logger.warning("C extension not loaded for wmdistance, computing WMD will be slow. ")
@@ -1263,8 +1264,39 @@ class Word2Vec(utils.SaveLoad):
         d1 = nbow(document1)
         d2 = nbow(document2)
 
-        # Return WMD.
-        return emd(d1, d2, distance_matrix)
+        if WCD:
+            # Compute WCD.
+            # Stack all word vectors in a matrix.
+            X = []
+            for i, token in dictionary.items():
+                X.append(self[token])
+            X = array(X).transpose()
+
+            dist = sqrt(np_sum((X.dot(d1) - X.dot(d2))**2))
+            return dist
+        if RWMD:
+            # Compute RWMD.
+
+            # Construct distance matrix that is NaN for token pairs that don't exist in the input documents.
+            dm_nan = zeros(distance_matrix.shape) * float('nan')
+            token2id = dictionary.token2id
+            for t1 in docset1:
+                for t2 in docset2:
+                    i = token2id[t1]
+                    j = token2id[t2]
+                    dm_nan[i, j] = distance_matrix[i, j]
+
+            # Compute RWMD vertically and horizontally in the distance matrix, and return the max of these distances.
+            rwmd1 = nansum(nanmin(dm_nan, axis=0))
+            rwmd2 = nansum(nanmin(dm_nan, axis=1))
+            rwmd = max(rwmd1, rwmd2)
+
+            # Normalize by the length of the shorter document.
+            rwmd = rwmd / min(len(document1), len(document2))
+            return rwmd
+        else:
+            # Compute WMD.
+            return emd(d1, d2, distance_matrix)
 
     def wmdistance_slow(self, document1, document2, dictionary, distance_matrix):
         '''
@@ -1302,7 +1334,7 @@ class Word2Vec(utils.SaveLoad):
                 min_dist = dist
 
         # Normalize the distance by the length of the shortest document.
-        min_dist = float(min_dist / float(n))
+        min_dist = float(min_dist / float(n))  # FIXME: is this the correct normalization factor?
 
         return min_dist
 
