@@ -371,13 +371,13 @@ class TestWord2VecModel(unittest.TestCase):
 
 class TestWMD(unittest.TestCase):
     def testNonzero(self):
-        '''Test basic functionality with some random sentenes.'''
+        '''Test basic functionality with a test sentence.'''
         model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         distance = model.wmdistance(sentence1, sentence2)
 
-        # Check that difference is non-zero.
+        # Check that distance is non-zero.
         self.assertFalse(distance == 0.0)
 
     def testSymmetry(self):
@@ -397,7 +397,7 @@ class TestWMD(unittest.TestCase):
         distance = model.wmdistance(sentence, sentence)
         self.assertEqual(0.0, distance)
 
-    def testNonzeroSlow(self):
+    def testEqualSlow(self):
         '''Check that brute force pure Python version produces the same result.'''
         model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
@@ -407,6 +407,80 @@ class TestWMD(unittest.TestCase):
 
         difference = abs(distance1 - distance2) < 0.01
         self.assertTrue(difference)
+
+    def testWCDnonzero(self):
+        '''Test basic functionality with a test sentence.'''
+        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        sentence1 = ['human', 'interface', 'computer']
+        sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        distance = model.wmdistance(sentence1, sentence2, WCD=True)
+
+        # Check that distance is non-zero.
+        self.assertFalse(distance == 0.0)
+
+    def testRWMDnonzero(self):
+        '''Test basic functionality with a test sentence.'''
+        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        sentence1 = ['human', 'interface', 'computer']
+        sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        distance = model.wmdistance(sentence1, sentence2, RWMD=True)
+
+        # Check that distance is non-zero.
+        self.assertFalse(distance == 0.0)
+
+    def testSymmetryWCD(self):
+        '''Check that WCD is symmetric.'''
+        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        sentence1 = ['human', 'interface', 'computer']
+        sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        distance1 = model.wmdistance(sentence1, sentence2, WCD=True)
+        distance2 = model.wmdistance(sentence2, sentence1, WCD=True)
+
+        self.assertEqual(distance1, distance2)
+
+    def testSymmetryRWMD(self):
+        '''Check that RWMD is symmetric.'''
+        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        sentence1 = ['human', 'interface', 'computer']
+        sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        distance1 = model.wmdistance(sentence1, sentence2, RWMD=True)
+        distance2 = model.wmdistance(sentence2, sentence1, RWMD=True)
+
+        self.assertEqual(distance1, distance2)
+
+    def testIdenticalSentencesWCD(self):
+        '''Check that WCD from a sentence to itself is zero.'''
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        sentence = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        distance = model.wmdistance(sentence, sentence, WCD=True)
+        self.assertEqual(0.0, distance)
+
+    def testIdenticalSentencesRWMD(self):
+        '''Check that RWMD from a sentence to itself is zero.'''
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        sentence = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        distance = model.wmdistance(sentence, sentence, RWMD=True)
+        self.assertEqual(0.0, distance)
+
+    def testOrderWCD(self):
+        '''Check that WCD is less than RWMD.'''
+        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        sentence1 = ['human', 'interface', 'computer']
+        sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        wcd = model.wmdistance(sentence1, sentence2, WCD=True)
+        rwmd = model.wmdistance(sentence1, sentence2, RWMD=True)
+
+        self.assertTrue(wcd < rwmd)
+
+    def testOrderRWMD(self):
+        '''Check that RWMD is less than WMD.'''
+        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        sentence1 = ['human', 'interface', 'computer']
+        sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        rwmd = model.wmdistance(sentence1, sentence2, RWMD=True)
+        wmd = model.wmdistance(sentence1, sentence2)
+
+        self.assertTrue(rwmd < wmd)
 
 
 class TestWord2VecSentenceIterators(unittest.TestCase):
