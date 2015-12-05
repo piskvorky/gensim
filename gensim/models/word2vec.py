@@ -517,7 +517,7 @@ class Word2Vec(utils.SaveLoad):
         
         total_words = 0
         # Use the fast version if it exists, and if no trim rule is specified
-        if fast_count_words is not None and trim_rule is None:
+        if count_words_fast is not None and trim_rule is None:
             vocab, sentence_no = count_words_fast(sentences, self.min_count,
                                                   progress_per, log_progress)
         else:
