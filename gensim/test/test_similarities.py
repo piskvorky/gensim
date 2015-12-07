@@ -51,8 +51,6 @@ class _TestSimilarityABC(object):
     def testFull(self, num_best=None, shardsize=100):
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=shardsize)
-        elif self.cls == similarities.WmdSimilarity:
-            index = self.cls(None, texts, w2v_model)
         else:
             index = self.cls(corpus, num_features=len(dictionary))
         if isinstance(index, similarities.MatrixSimilarity):
@@ -140,6 +138,8 @@ class _TestSimilarityABC(object):
         fname = testfile()
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        elif self.cls == similarities.WmdSimilarity:
+            index = self.cls(None, texts, self.w2v_model, num_best=num_best)
         else:
             index = self.cls(corpus, num_features=len(dictionary))
         index.save(fname)
@@ -160,6 +160,8 @@ class _TestSimilarityABC(object):
         fname = testfile() + '.gz'
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        elif self.cls == similarities.WmdSimilarity:
+            index = self.cls(None, texts, self.w2v_model, num_best=num_best)
         else:
             index = self.cls(corpus, num_features=len(dictionary))
         index.save(fname)
@@ -180,6 +182,8 @@ class _TestSimilarityABC(object):
         fname = testfile()
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        elif self.cls == similarities.WmdSimilarity:
+            index = self.cls(None, texts, self.w2v_model, num_best=num_best)
         else:
             index = self.cls(corpus, num_features=len(dictionary))
         # store all arrays separately
@@ -202,6 +206,8 @@ class _TestSimilarityABC(object):
         fname = testfile() + '.gz'
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        elif self.cls == similarities.WmdSimilarity:
+            index = self.cls(None, texts, self.w2v_model, num_best=num_best)
         else:
             index = self.cls(corpus, num_features=len(dictionary))
         # store all arrays separately
@@ -225,6 +231,8 @@ class _TestSimilarityABC(object):
         fname = testfile()
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        elif self.cls == similarities.WmdSimilarity:
+            index = self.cls(None, texts, self.w2v_model, num_best=num_best)
         else:
             index = self.cls(corpus, num_features=len(dictionary))
         # store all arrays separately
@@ -248,6 +256,8 @@ class _TestSimilarityABC(object):
         fname = testfile() + '.gz'
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        elif self.cls == similarities.WmdSimilarity:
+            index = self.cls(None, texts, self.w2v_model, num_best=num_best)
         else:
             index = self.cls(corpus, num_features=len(dictionary))
         # store all arrays separately
@@ -267,7 +277,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
 
     def testFull(self, num_best=None):
         # Override testFull.
-        index = self.cls(None, texts, self.w2v_model, num_best=num_best)
+        index = self.cls(texts, self.w2v_model)
         index.num_best = num_best
         query = texts[0]
         sims = index[query]
@@ -278,7 +288,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
 
     def testChunking(self):
         # Override testChunking.
-        index = self.cls(None, texts, self.w2v_model)
+        index = self.cls(texts, self.w2v_model)
         query = texts[:3]
         sims = index[query]
         self.assertTrue(numpy.alltrue(sims != 0.0))
@@ -290,7 +300,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
 
     def testIter(self):
         # Override testIter.
-        index = self.cls(None, texts, self.w2v_model)
+        index = self.cls(texts, self.w2v_model)
         sims = [sim for sim in index]
         self.assertTrue(numpy.alltrue(sims != 0.0))
 
