@@ -567,7 +567,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
     def __str__(self):
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.index.shape[1])
-#endclass MatrixSimilarity
+#endclass WmdSimilarity
 
 class WmdSimilarity(interfaces.SimilarityABC):
     """
@@ -596,25 +596,19 @@ class WmdSimilarity(interfaces.SimilarityABC):
         """
         **Do not use this function directly; use the self[query] syntax instead.**
         """
-        if type(query) == numpy.ndarray:
+        if isinstance(query, numpy.ndarray):
             query = [self.corpus[i] for i in query]
 
         # Compute WMD.
-        if type(query[0]) == list:
+        if isinstance(query[0], list):
             # "query" is a list of queries.
             n_queries = len(query)
             result = []
             for i in range(n_queries):
-                qresult = []
-                for document in self.corpus:
-                    dist = self.w2v_model.wmdistance(document, query[i])
-                    qresult.append(dist)
+                qresult = [self.w2v_model.wmdistance(document, query) for document in self.corpus]
                 result.append(qresult)
         else:
-            result = []
-            for document in self.corpus:
-                dist = self.w2v_model.wmdistance(document, query)
-                result.append(dist)
+            result = [self.w2v_model.wmdistance(document, query) for document in self.corpus]
 
         result = numpy.array(result) # Return as numpy array.
 
