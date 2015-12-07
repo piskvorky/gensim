@@ -18,6 +18,7 @@ import numpy
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim import matutils, utils, similarities
+from gensim.models import Word2Vec
 
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
@@ -50,6 +51,8 @@ class _TestSimilarityABC(object):
     def testFull(self, num_best=None, shardsize=100):
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=shardsize)
+        elif self.cls == similarities.WmdSimilarity:
+            index = self.cls(None, texts, w2v_model)
         else:
             index = self.cls(corpus, num_features=len(dictionary))
         if isinstance(index, similarities.MatrixSimilarity):
@@ -256,6 +259,40 @@ class _TestSimilarityABC(object):
 class TestMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.MatrixSimilarity
+
+class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
+    def setUp(self):
+        self.cls = similarities.WmdSimilarity
+        self.w2v_model = Word2Vec(texts)
+
+    def testFull(self, num_best=None):
+        # Override testFull.
+        index = self.cls(None, texts, self.w2v_model, num_best=num_best)
+        index.num_best = num_best
+        query = texts[0]
+        sims = index[query]
+
+        if num_best is not None: # when num_best is None, sims is already a numpy array
+            sims = matutils.sparse2full(sims, len(index))
+        self.assertTrue(numpy.alltrue(sims != 0.0))
+
+    def testChunking(self):
+        # Override testChunking.
+        index = self.cls(None, texts, self.w2v_model)
+        query = texts[:3]
+        sims = index[query]
+        self.assertTrue(numpy.alltrue(sims != 0.0))
+
+        # test the same thing but with num_best
+        index.num_best = 3
+        sims = index[query]
+        self.assertTrue(numpy.alltrue(sims != 0.0))
+
+    def testIter(self):
+        # Override testIter.
+        index = self.cls(None, texts, self.w2v_model)
+        sims = [sim for sim in index]
+        self.assertTrue(numpy.alltrue(sims != 0.0))
 
 
 class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
