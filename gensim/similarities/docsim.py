@@ -567,7 +567,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
     def __str__(self):
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.index.shape[1])
-#endclass WmdSimilarity
+#endclass MatrixSimilarity
 
 class WmdSimilarity(interfaces.SimilarityABC):
     """
@@ -605,7 +605,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
             n_queries = len(query)
             result = []
             for i in range(n_queries):
-                qresult = [self.w2v_model.wmdistance(document, query) for document in self.corpus]
+                qresult = [self.w2v_model.wmdistance(document, query[i]) for document in self.corpus]
                 result.append(qresult)
         else:
             result = [self.w2v_model.wmdistance(document, query) for document in self.corpus]
@@ -616,7 +616,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
     def __str__(self):
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.w2v_model.syn0.shape[1])
-#endclass MatrixSimilarity
+#endclass WmdSimilarity
 
 class SparseMatrixSimilarity(interfaces.SimilarityABC):
     """

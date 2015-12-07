@@ -263,7 +263,7 @@ class TestMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
 class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.WmdSimilarity
-        self.w2v_model = Word2Vec(texts)
+        self.w2v_model = Word2Vec(texts, min_count=1)
 
     def testFull(self, num_best=None):
         # Override testFull.
