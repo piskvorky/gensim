@@ -41,10 +41,18 @@ from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
 from six.moves import xrange
 import six
-from lda_model import (mean_change, _dirichlet_expectation_1d,
-                       _dirichlet_expectation_2d)
 
-# log(sum(exp(x))) that tries to avoid overflow
+FAST_VERSION = 0
+
+try:
+    from lda_model import (mean_change, _dirichlet_expectation_1d, _dirichlet_expectation_2d)
+except:
+    # failed... fall back to plain python
+    FAST_VERSION = -1
+    import warnings
+    warnings.warn("C extension not loaded for LdaModel, computation will be slow. "
+                          "Install a C compiler and reinstall gensim for fast computation.")
+
 try:
     # try importing from here if older scipy is installed
     from scipy.maxentropy import logsumexp
@@ -63,11 +71,16 @@ def dirichlet_expectation(alpha):
     """
     # change by George Dausheyev: calling cython version of dirichlet_expectation
     if len(alpha.shape) == 1:
-        result = _dirichlet_expectation_1d(alpha)
-        # result = psi(alpha) - psi(numpy.sum(alpha))
+        if FAST_VERSION < 0:
+            result = psi(alpha) - psi(numpy.sum(alpha))
+        else:
+            result = _dirichlet_expectation_1d(alpha)
     else:
-        result = _dirichlet_expectation_2d(alpha)
-#        result = psi(alpha) - psi(numpy.sum(alpha, 1))[:, numpy.newaxis]
+        if FAST_VERSION < 0:
+            result = psi(alpha) - psi(numpy.sum(alpha, 1))[:, numpy.newaxis]
+        else:
+            result = _dirichlet_expectation_2d(alpha)
+
     return result.astype(alpha.dtype)  # keep the same precision as input
 
 
@@ -482,9 +495,12 @@ class LdaModel(interfaces.TransformationABC):
 
                 # If gamma hasn't changed much, we're done.
                 # change by George Dausheyev: calling cython version of mean
-                meanchange = mean_change(gammad, lastgamma)
-                # meanchange = numpy.mean(abs(gammad - lastgamma))
-                if (meanchange < self.gamma_threshold):
+                if FAST_VERSION < 0:
+                    meanchange = numpy.mean(abs(gammad - lastgamma))
+                else:
+                    meanchange = mean_change(gammad, lastgamma)
+
+                if meanchange < self.gamma_threshold:
                     converged += 1
                     break
             gamma[d, :] = gammad
@@ -1047,3 +1063,4 @@ class LdaModel(interfaces.TransformationABC):
         return result
 
 # endclass LdaModel
+
