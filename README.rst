@@ -39,8 +39,8 @@ If this feature list left you scratching your head, you can first read more abou
 Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised
 document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
 
-Fast Installation
------------------
+Fast Installation with Docker
+-----------------------------
 
 If your system supports Docker and you are root, the easiest way to get the library working is to start the `gensim image <https://hub.docker.com/r/zmarty/python3-gensim-doc2vec/>`_.
 
