@@ -44,13 +44,11 @@ Fast Installation
 
 If your system supports Docker and you are root, the easiest way to get the library working is to start the `gensim image <https://hub.docker.com/r/zmarty/python3-gensim-doc2vec/>`_.
 
-The instructions below are for an Ubuntu system, but they can be easily modified for any other Docker system::
-
-Install docker::
+The instructions below are for an Ubuntu system, but they can be easily modified for any other Docker system. First install docker::
 
     apt-get install docker-engine
 
-Map a folder inside the Docker container, and run the container::
+Then map a folder inside the Docker container, and run the container::
 
     docker run -it --rm -v /usr/local/gensim-app/:/usr/local/gensim-app/ zmarty/python3-gensim:based-on-ubuntu-15.10
 
