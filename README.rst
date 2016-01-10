@@ -52,9 +52,7 @@ Then map a folder inside the Docker container, and run the container::
 
     docker run -it --rm -v /usr/local/gensim-app/:/usr/local/gensim-app/ zmarty/python3-gensim:based-on-ubuntu-15.10
 
-Then write your script and use the python3 command to run it.
-
-**Keep all your code in that folder (in our example /usr/local/gensim-app/), as all other folders in the container will get wiped out when exiting the container.**
+Then write your script in **/usr/local/gensim** and use the python3 command to run it. **Keep all your code in that folder**, as all other folders in the container will get wiped out when exiting the container.
 
 Manual Installation
 -------------------
