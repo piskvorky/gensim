@@ -305,12 +305,12 @@ class DocvecsArray(utils.SaveLoad):
         returned by indexed_doctags()); a no-op for this implementation"""
         pass
 
-    def _int_index(self, index, missing=None):
+    def _int_index(self, index):
         """Return int index for either string or int index"""
         if isinstance(index, int):
             return index
         else:
-            return self.max_rawint + 1 + self.doctags[index].offset if index in self.doctags else missing
+            return self.max_rawint + 1 + self.doctags[index].offset
 
     def _key_index(self, i_index, missing=None):
         """Return string index for given int index, if available"""
