@@ -336,8 +336,8 @@ class Word2Vec(utils.SaveLoad):
     """
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
-            max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
-            sg=1, hs=1, negative=0, cbow_mean=1, hashfxn=hash, iter=1, null_word=0,
+            max_vocab_size=None, sample=1e-3, seed=1, workers=12, min_alpha=0.0001,
+            sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
             trim_rule=None, sorted_vocab=1):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
@@ -351,8 +351,8 @@ class Word2Vec(utils.SaveLoad):
         If you don't supply `sentences`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
 
-        `sg` defines the training algorithm. By default (`sg=1`), skip-gram is used.
-        Otherwise, `cbow` is employed.
+        `sg` defines the training algorithm. By default (`sg=0`), CBOW is used.
+        Otherwise (`sg=1`), SkipGram is employed.
 
         `size` is the dimensionality of the feature vectors.
 
@@ -370,14 +370,15 @@ class Word2Vec(utils.SaveLoad):
         need about 1GB of RAM. Set to `None` for no limit (default).
 
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
-            default is 0 (off), useful value is 1e-5.
+            default is 1e-3, useful value is 1e-5, 0 stands for off.
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
 
-        `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0).
+        `hs` = if 1, hierarchical sampling will be used for model training (default is set to 0, thus negative sampling is used).
 
         `negative` = if > 0, negative sampling will be used, the int for negative
         specifies how many "noise words" should be drawn (usually between 5-20).
+        Default is 5.
 
         `cbow_mean` = if 0, use the sum of the context word vectors. If 1 (default), use the mean.
         Only applies when cbow is used.
