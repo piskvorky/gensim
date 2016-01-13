@@ -1,11 +1,15 @@
 Changes
 =======
 
+<<<<<<< HEAD
 * Loading of pattern library in utils.py is only in lemmatize function (Jan Zikes, #461)
   - utils.HAS_PATTERN, has also changed to utils.has_pattern()
 * Word2vec allows non-strict unicode error handling (ignore or replace). (Gordon Mohr, #466)
 
 0.12.3, 05/11/2015
+=======
+0.12.3, 06/11/2015
+>>>>>>> upstream/master
 
 * Make show_topics return value consistent across models (Christopher Corley, #448)
   - All models with the `show_topics` method should return a list of
