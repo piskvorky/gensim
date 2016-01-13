@@ -337,7 +337,7 @@ class Word2Vec(utils.SaveLoad):
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=12, min_alpha=0.0001,
-            sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
+            sg=0, hs=1, negative=0, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
             trim_rule=None, sorted_vocab=1):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
@@ -374,11 +374,11 @@ class Word2Vec(utils.SaveLoad):
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
 
-        `hs` = if 1, hierarchical sampling will be used for model training (default is set to 0, thus negative sampling is used).
+        `hs` = if 1 (default), hierarchical sampling will be used for model training (if set to 0, negative sampling will be used).
 
         `negative` = if > 0, negative sampling will be used, the int for negative
         specifies how many "noise words" should be drawn (usually between 5-20).
-        Default is 5.
+        Default is 0, thus hierarchical softmax is used.
 
         `cbow_mean` = if 0, use the sum of the context word vectors. If 1 (default), use the mean.
         Only applies when cbow is used.
