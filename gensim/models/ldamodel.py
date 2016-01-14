@@ -32,9 +32,11 @@ The algorithm:
 
 """
 
+
 import logging
 import numpy  # for arrays, array broadcasting etc.
 import numbers
+
 from gensim import interfaces, utils, matutils
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
@@ -53,12 +55,24 @@ except:
     warnings.warn("C extension not loaded for LdaModel, computation will be slow. "
                           "Install a C compiler and reinstall gensim for fast computation.")
 
+    def mean_change(gammad, lastgamma):
+        print "########################################################################################################"
+        return numpy.abs(gammad - lastgamma).mean()
+
+    def _dirichlet_expectation_1d(alpha):
+        return psi(alpha) - psi(numpy.sum(alpha))
+
+    def _dirichlet_expectation_2d(alpha):
+        return psi(alpha) - psi(numpy.sum(alpha, 1))[:, numpy.newaxis]
+
+
 try:
     # try importing from here if older scipy is installed
     from scipy.maxentropy import logsumexp
 except ImportError:
     # maxentropy has been removed in recent releases, logsumexp now in misc
     from scipy.misc import logsumexp
+
 
 logger = logging.getLogger('gensim.models.ldamodel')
 EPS = numpy.finfo(numpy.float).eps
@@ -71,16 +85,9 @@ def dirichlet_expectation(alpha):
     """
     # change by George Dausheyev: calling cython version of dirichlet_expectation
     if len(alpha.shape) == 1:
-        if FAST_VERSION < 0:
-            result = psi(alpha) - psi(numpy.sum(alpha))
-        else:
-            result = _dirichlet_expectation_1d(alpha)
+        result = _dirichlet_expectation_1d(alpha)
     else:
-        if FAST_VERSION < 0:
-            result = psi(alpha) - psi(numpy.sum(alpha, 1))[:, numpy.newaxis]
-        else:
-            result = _dirichlet_expectation_2d(alpha)
-
+        result = _dirichlet_expectation_2d(alpha)
     return result.astype(alpha.dtype)  # keep the same precision as input
 
 
@@ -307,8 +314,7 @@ class LdaModel(interfaces.TransformationABC):
         self.optimize_alpha = alpha == 'auto'
         self.alpha = self.init_dir_prior(alpha, 'alpha')
 
-        assert self.alpha.shape == (num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (
-        str(self.alpha.shape), num_topics)
+        assert self.alpha.shape == (num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), num_topics)
 
         self.optimize_eta = eta == 'auto'
         self.eta = self.init_dir_prior(eta, 'eta')
@@ -388,14 +394,13 @@ class LdaModel(interfaces.TransformationABC):
             # eta is a column: [[0.1],
             #                   [0.1]]
             if init_prior.shape == (self.num_topics,) or init_prior.shape == (1, self.num_topics):
-                init_prior = init_prior.reshape(
-                    (self.num_topics, 1))  # this statement throws ValueError if eta did not match self.num_topics
+                init_prior = init_prior.reshape((self.num_topics, 1)) # this statement throws ValueError if eta did not match self.num_topics
 
         return init_prior
 
     def __str__(self):
         return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % \
-               (self.num_terms, self.num_topics, self.decay, self.chunksize)
+            (self.num_terms, self.num_topics, self.decay, self.chunksize)
 
     def sync_state(self):
         if __debug__:
@@ -494,11 +499,7 @@ class LdaModel(interfaces.TransformationABC):
                     logger.debug("document %i, iteration %i, norm_phi aka phinorm %s", d, _, phinorm)
 
                 # If gamma hasn't changed much, we're done.
-                # change by George Dausheyev: calling cython version of mean
-                if FAST_VERSION < 0:
-                    meanchange = numpy.mean(abs(gammad - lastgamma))
-                else:
-                    meanchange = mean_change(gammad, lastgamma)
+                meanchange = mean_change(gammad, lastgamma)
 
                 if meanchange < self.gamma_threshold:
                     converged += 1
@@ -541,6 +542,7 @@ class LdaModel(interfaces.TransformationABC):
         state.numdocs += gamma.shape[0]  # avoids calling len(chunk) on a generator
         return gamma
 
+
     def update_alpha(self, gammat, rho):
         """
         Update parameters for the Dirichlet prior on the per-document
@@ -566,8 +568,7 @@ class LdaModel(interfaces.TransformationABC):
         if self.eta.shape[1] != 1:
             raise ValueError("Can't use update_eta with eta matrices, only column vectors.")
         N = float(lambdat.shape[1])
-        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat.transpose()) / N).reshape(
-            (self.num_topics, 1))
+        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat.transpose()) / N).reshape((self.num_topics,1))
 
         self.eta = update_dir_prior(self.eta, N, logphat, rho)
         logger.info("optimized eta %s", list(self.eta.reshape((self.num_topics))))
@@ -665,8 +666,8 @@ class LdaModel(interfaces.TransformationABC):
                     "every %i documents, evaluating perplexity every %i documents, "
                     "iterating %ix with a convergence threshold of %f",
                     updatetype, self.num_topics, passes, lencorpus,
-                    updateafter, evalafter, iterations,
-                    gamma_threshold)
+                        updateafter, evalafter, iterations,
+                        gamma_threshold)
 
         if updates_per_pass * passes < 10:
             logger.warning("too few updates, training might not converge; consider "
@@ -908,7 +909,7 @@ class LdaModel(interfaces.TransformationABC):
 
     def print_topic(self, topicid, topn=10):
         """Return the result of `show_topic`, but formatted as a single string."""
-        return ' + '.join(['%.3f*%s' % (v, k) for k, v in self.show_topic(topicid, topn)])
+        return ' + '.join(['%.3f*%s' % (v, k)  for k, v in self.show_topic(topicid, topn)])
 
     def top_topics(self, corpus, num_words=20):
         """
@@ -1037,7 +1038,7 @@ class LdaModel(interfaces.TransformationABC):
         if ignore is not None and ignore:
             if isinstance(ignore, six.string_types):
                 ignore = [ignore]
-            ignore = [e for e in ignore if e]  # make sure None and '' are not in the list
+            ignore = [e for e in ignore if e] # make sure None and '' are not in the list
             ignore = list(set(['state', 'dispatcher']) | set(ignore))
         else:
             ignore = ['state', 'dispatcher']
