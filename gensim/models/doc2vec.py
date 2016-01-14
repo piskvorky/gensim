@@ -319,7 +319,7 @@ class DocvecsArray(utils.SaveLoad):
 
     def index_to_doctag(self, i_index):
         """Return string key for given i_index, if available. Otherwise return raw int doctag (same int)."""
-        candidate_offset = self.max_rawint - i_index - 1
+        candidate_offset = i_index - self.max_rawint - 1
         if 0 <= candidate_offset < len(self.offset2doctag):
             return self.offset2doctag[candidate_offset]
         else:
