@@ -56,7 +56,6 @@ except:
                           "Install a C compiler and reinstall gensim for fast computation.")
 
     def mean_change(gammad, lastgamma):
-        print "########################################################################################################"
         return numpy.abs(gammad - lastgamma).mean()
 
     def _dirichlet_expectation_1d(alpha):
