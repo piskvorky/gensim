@@ -344,7 +344,8 @@ class Word2Vec(utils.SaveLoad):
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
             sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0,
-            trim_rule=None, sorted_vocab=1):
+            trim_rule=None, sorted_vocab=1,
+            pretrained_model=None):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -430,7 +431,11 @@ class Word2Vec(utils.SaveLoad):
         self.train_count = 0
         self.total_train_time = 0
         self.sorted_vocab = sorted_vocab
-
+        self.pretrained_model = pretrained_model
+        if self.pretrained_model is not None:
+            if self.vector_size != self.pretrained_model.vector_size:
+                raise Exception('Embedding dimension of pretrained model does not match.')
+            
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -973,10 +978,25 @@ class Word2Vec(utils.SaveLoad):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
         logger.info("resetting layer weights")
         self.syn0 = empty((len(self.vocab), self.vector_size), dtype=REAL)
+        num_pretrained = 0
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
         for i in xrange(len(self.vocab)):
-            # construct deterministic seed from word AND seed argument
-            self.syn0[i] = self.seeded_vector(self.index2word[i] + str(self.seed))
+            word = self.index2word[i]
+            if self.pretrained_model is not None:
+                word_idx_pretrained = self.pretrained_model.vocab.get(word, None)
+                if word_idx_pretrained is not None:
+                    # use pretrained vector
+                    self.syn0[i] = self.pretrained_model.syn0[word_idx_pretrained.index]
+                    num_pretrained += 1
+                else:
+                    self.syn0[i] = self.seeded_vector(str(word) + str(self.seed))
+            else:
+                # construct deterministic seed from word AND seed argument
+                self.syn0[i] = self.seeded_vector(str(word) + str(self.seed))
+
+        if self.pretrained_model is not None:
+            print 'Set weights using {:,} pretrained vectors of a possible {:,}.'.format(num_pretrained, len(self.vocab))
+                
         if self.hs:
             self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
         if self.negative:
@@ -1155,10 +1175,12 @@ class Word2Vec(utils.SaveLoad):
 
         If topn is False, most_similar returns the vector of similarity scores.
 
-        `restrict_vocab` is an optional integer which limits the range of vectors which
+        `restrict_vocab` is optional. An integer values limits the range of vectors which
         are searched for most-similar values. For example, restrict_vocab=10000 would
         only check the first 10000 word vectors in the vocabulary order. (This may be
         meaningful if you've sorted the vocabulary by descending frequency.)
+        If `restrict_vocab` is a list, then only the vectors for the words in that list are
+        searched for most-similar values. 
 
         Example::
 
@@ -1196,13 +1218,33 @@ class Word2Vec(utils.SaveLoad):
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
 
-        limited = self.syn0norm if restrict_vocab is None else self.syn0norm[:restrict_vocab]
+        if restrict_vocab is None:
+            limited = self.syn0norm
+        elif isinstance(restrict_vocab, int):
+            # Same behavior as original `most_similar` method
+            limited = self.syn0norm[:restrict_vocab]
+        elif isinstance(restrict_vocab, list):
+            restrict_vocab = list(set(restrict_vocab))
+            for word in restrict_vocab:
+                if word not in self.vocab:
+                    raise KeyError("word '%s' not in vocabulary" % word)
+            restrict_vocab_idx = [self.vocab[word].index for word in restrict_vocab]
+            limited = self.syn0norm[restrict_vocab_idx]
+        
         dists = dot(limited, mean)
         if not topn:
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
+
         # ignore (don't return) words from the input
-        result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
+        if not isinstance(restrict_vocab, list):
+            result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
+        else:
+            result = []
+            for sim in best:
+                idx = restrict_vocab_idx[sim]
+                if idx not in all_words:
+                    result.append((self.index2word[idx], float(dists[sim])))
         return result[:topn]
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
