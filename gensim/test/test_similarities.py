@@ -303,7 +303,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         index.num_best = 3
         sims = index[query]
         for sims_temp in sims:
-            for i, sim in sims:
+            for i, sim in sims_temp:
                 self.assertTrue(numpy.alltrue(sim < 0.0))
 
     def testIter(self):
