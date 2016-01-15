@@ -310,7 +310,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         # Override testIter.
         index = self.cls(texts, self.w2v_model)
         for sims in index:
-            self.assertTrue(numpy.alltrue(sims =< 0.0))
+            self.assertTrue(numpy.alltrue(sims <= 0.0))
 
 
 class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
