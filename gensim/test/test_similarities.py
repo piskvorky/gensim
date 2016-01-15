@@ -298,7 +298,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
 
         self.assertTrue(numpy.alltrue(numpy.diag(sims) == 0.0))  # Similarity of a document with itself is 0.0.
         for i in range(3):
-            sims[i, i] = 1.0
+            sims[i, i] = -1.0
         self.assertTrue(numpy.alltrue(sims < 0.0))
 
         # test the same thing but with num_best
@@ -310,7 +310,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         # Override testIter.
         index = self.cls(texts, self.w2v_model)
         for sims in index:
-            self.assertTrue(numpy.alltrue(sims < 0.0))
+            self.assertTrue(numpy.alltrue(sims =< 0.0))
 
 
 class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
