@@ -284,7 +284,8 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
 
         if num_best is not None:
             # Sparse array.
-            self.assertTrue(numpy.alltrue(sims < 0.0))  # Note that similarities are less than zero, as they are the negative of the distances.
+            for i, sim in sims:
+                self.assertTrue(numpy.alltrue(sim < 0.0))  # Note that similarities are less than zero, as they are the negative of the distances.
         else:
             self.assertTrue(sims[0] == 0.0)  # Similarity of a document with itself is 0.0.
             self.assertTrue(numpy.alltrue(sims[1:] < 0.0))
@@ -295,7 +296,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         query = texts[:3]
         sims = index[query]
 
-        self.assertTrue(numpy.alltrue(numpy.diag(sims) < 0.0))  # Similarity of a document with itself is 0.0.
+        self.assertTrue(numpy.alltrue(numpy.diag(sims) == 0.0))  # Similarity of a document with itself is 0.0.
         for i in range(3):
             sims[i, i] = 1.0
         self.assertTrue(numpy.alltrue(sims < 0.0))
@@ -308,8 +309,8 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
     def testIter(self):
         # Override testIter.
         index = self.cls(texts, self.w2v_model)
-        sims = [sim for sim in index]
-        self.assertTrue(numpy.alltrue(sims < 0.0))
+        for sims in index:
+            self.assertTrue(numpy.alltrue(sims < 0.0))
 
 
 class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
