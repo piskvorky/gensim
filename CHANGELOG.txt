@@ -12,6 +12,8 @@ Changes
 * Fix `DocvecsArray.index_to_doctag` so `most_similar()` returns string doctags (Gordon Mohr, #560) 
 * On-demand loading of the `pattern` library in utils.lemmatize (Jan Zikes, #461)
   - `utils.HAS_PATTERN` flag moved to `utils.has_pattern()`
+* Threadsafe Word2Vec/Doc2Vec finish-check to avoid hang/unending Word2Vec/Doc2Vec training (Gordon Mohr, #571)
+* Tuned `TestWord2VecModel.test_cbow_hs()` against random failures (Gordon Mohr, #531)
 * Forwards compatibility for NumPy > 1.10 (Matti Lyra, #494, #513)
   - LdaModel and LdaMulticore produce a large number of DeprecationWarnings from
     .inference() because the term ids in each chunk returned from utils.grouper
