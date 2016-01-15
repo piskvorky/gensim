@@ -342,8 +342,8 @@ class Word2Vec(utils.SaveLoad):
     """
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
-            max_vocab_size=None, sample=1e-3, seed=1, workers=12, min_alpha=0.0001,
-            sg=0, hs=1, negative=0, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
+            max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
+            sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
             trim_rule=None, sorted_vocab=1):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
@@ -358,7 +358,7 @@ class Word2Vec(utils.SaveLoad):
         you plan to initialize it in some other way.
 
         `sg` defines the training algorithm. By default (`sg=0`), CBOW is used.
-        Otherwise (`sg=1`), SkipGram is employed.
+        Otherwise (`sg=1`), skip-gram is employed.
 
         `size` is the dimensionality of the feature vectors.
 
@@ -376,15 +376,16 @@ class Word2Vec(utils.SaveLoad):
         need about 1GB of RAM. Set to `None` for no limit (default).
 
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
-            default is 1e-3, useful value is 1e-5, 0 stands for off.
+            default is 1e-3, useful range is (0, 1e-5).
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
 
-        `hs` = if 1 (default), hierarchical sampling will be used for model training (if set to 0, negative sampling will be used).
+        `hs` = if 1, hierarchical softmax will be used for model training.
+        If set to 0 (default), and `negative` is non-zero, negative sampling will be used.
 
         `negative` = if > 0, negative sampling will be used, the int for negative
         specifies how many "noise words" should be drawn (usually between 5-20).
-        Default is 0, thus hierarchical softmax is used.
+        Default is 5. If set to 0, hierarchical softmax is used instead.
 
         `cbow_mean` = if 0, use the sum of the context word vectors. If 1 (default), use the mean.
         Only applies when cbow is used.
@@ -1614,7 +1615,7 @@ if __name__ == "__main__":
     from gensim.models.word2vec import Word2Vec  # avoid referencing __main__ in pickle
 
     seterr(all='raise')  # don't ignore numpy errors
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-train", help="Use text data from file TRAIN to train the model", required=True)
     parser.add_argument("-output", help="Use file OUTPUT to save the resulting word vectors")
@@ -1638,9 +1639,9 @@ if __name__ == "__main__":
         skipgram = 0
 
     corpus = LineSentence(args.train)
-    
+
     model = Word2Vec(corpus, size=args.size, min_count=args.min_count, workers=args.threads, window=args.window,sample=args.sample,sg=skipgram,hs=args.hs,negative=args.negative,cbow_mean=1,iter=args.iter)
-    
+
     if args.output:
         outfile = args.output
         model.save_word2vec_format(outfile, binary=args.binary)
@@ -1651,7 +1652,7 @@ if __name__ == "__main__":
         model.save_word2vec_format(outfile + '.model.bin', binary=True)
     else:
         model.save_word2vec_format(outfile + '.model.txt', binary=False)
-    
+
     if args.accuracy:
         questions_file = args.accuracy
         model.accuracy(questions_file)
