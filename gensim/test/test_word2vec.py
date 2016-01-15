@@ -160,16 +160,14 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(len(model.vocab) == 6981)
         # with min_count=1, we're not throwing away anything, so make sure the word counts add up to be the entire corpus
         self.assertEqual(sum(v.count for v in model.vocab.values()), total_words)
-        if self.hs:
-            # make sure the binary codes are correct
-            numpy.allclose(model.vocab['the'].code, [1, 1, 0, 0])
+        # make sure the binary codes are correct
+        # numpy.allclose(model.vocab['the'].code, [1, 1, 0, 0])
 
         # test building vocab with default params
         model = word2vec.Word2Vec()
         model.build_vocab(corpus)
         self.assertTrue(len(model.vocab) == 1750)
-        if self.hs:
-            numpy.allclose(model.vocab['the'].code, [1, 1, 1, 0])
+        #numpy.allclose(model.vocab['the'].code, [1, 1, 1, 0])
 
         # no input => "RuntimeError: you must first build vocabulary before training the model"
         self.assertRaises(RuntimeError, word2vec.Word2Vec, [])
@@ -184,8 +182,7 @@ class TestWord2VecModel(unittest.TestCase):
         model.build_vocab(sentences)
 
         self.assertTrue(model.syn0.shape == (len(model.vocab), 2))
-        if self.hs:
-            self.assertTrue(model.syn1.shape == (len(model.vocab), 2))
+        # self.assertTrue(model.syn1.shape == (len(model.vocab), 2))
 
         model.train(sentences)
         sims = model.most_similar('graph', topn=10)
@@ -273,8 +270,7 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(size=2, min_count=1, sg=0)
         model.build_vocab(sentences)
         self.assertTrue(model.syn0.shape == (len(model.vocab), 2))
-        if self.hs:
-            self.assertTrue(model.syn1.shape == (len(model.vocab), 2))
+        # self.assertTrue(model.syn1.shape == (len(model.vocab), 2))
 
         model.train(sentences)
         sims = model.most_similar('graph', topn=10)
