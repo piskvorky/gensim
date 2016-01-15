@@ -281,13 +281,13 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         index.num_best = num_best
         query = texts[0]
         sims = index[query]
-    
+
         if num_best is not None:
             # Sparse array.
-            self.assertTrue(numpy.alltrue(sims != 0.0))
+            self.assertTrue(numpy.alltrue(sims < 0.0))  # Note that similarities are less than zero, as they are the negative of the distances.
         else:
             self.assertTrue(sims[0] == 0.0)  # Similarity of a document with itself is 0.0.
-            self.assertTrue(numpy.alltrue(sims[1:] != 0.0))
+            self.assertTrue(numpy.alltrue(sims[1:] < 0.0))
 
     def testChunking(self):
         # Override testChunking.
@@ -295,21 +295,21 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         query = texts[:3]
         sims = index[query]
 
-        self.assertTrue(numpy.alltrue(numpy.diag(sims) == 0.0))  # Similarity of a document with itself is 0.0.
+        self.assertTrue(numpy.alltrue(numpy.diag(sims) < 0.0))  # Similarity of a document with itself is 0.0.
         for i in range(3):
             sims[i, i] = 1.0
-        self.assertTrue(numpy.alltrue(sims != 0.0))
+        self.assertTrue(numpy.alltrue(sims < 0.0))
 
         # test the same thing but with num_best
         index.num_best = 3
         sims = index[query]
-        self.assertTrue(numpy.alltrue(sims != 0.0))  # sims is sparse.
+        self.assertTrue(numpy.alltrue(sims < 0.0))  # sims is sparse.
 
     def testIter(self):
         # Override testIter.
         index = self.cls(texts, self.w2v_model)
         sims = [sim for sim in index]
-        self.assertTrue(numpy.alltrue(sims != 0.0))
+        self.assertTrue(numpy.alltrue(sims < 0.0))
 
 
 class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):

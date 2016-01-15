@@ -571,7 +571,7 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
 class WmdSimilarity(interfaces.SimilarityABC):
     """
-    Document similarity (like MatrixSimilarity) that uses WMD (gensim.models.word2vec.wmdistance) as a distance measure.
+    Document similarity (like MatrixSimilarity) that uses the negative of WMD (gensim.models.word2vec.wmdistance) as a similarity measure.
     """
     def __init__(self, corpus, w2v_model, num_best=None, chunksize=256):
         """
@@ -612,7 +612,9 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
         result = numpy.array(result) # Return as numpy array.
 
-        return result
+        sim = - result  # The similarity is the negative of the distance.
+
+        return sim
 
     def __str__(self):
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.w2v_model.syn0.shape[1])
