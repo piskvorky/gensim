@@ -296,15 +296,15 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         query = texts[:3]
         sims = index[query]
 
-        self.assertTrue(numpy.alltrue(numpy.diag(sims) == 0.0))  # Similarity of a document with itself is 0.0.
         for i in range(3):
-            sims[i, i] = -1.0
-        self.assertTrue(numpy.alltrue(sims < 0.0))
+            self.assertTrue(numpy.alltrue(sims[i, i] <= 0.0))  # Similarity of a document with itself is 0.0.
 
         # test the same thing but with num_best
         index.num_best = 3
         sims = index[query]
-        self.assertTrue(numpy.alltrue(sims < 0.0))  # sims is sparse.
+        for sims_temp in sims:
+            for i, sim in sims:
+                self.assertTrue(numpy.alltrue(sim < 0.0))
 
     def testIter(self):
         # Override testIter.
