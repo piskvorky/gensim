@@ -297,7 +297,7 @@ class DocvecsArray(utils.SaveLoad):
 
     def indexed_doctags(self, doctag_tokens):
         """Return indexes and backing-arrays used in training examples."""
-        return ([i for i in [self._int_index(index, -1) for index in doctag_tokens] if i > -1],
+        return ([self._int_index(index) for index in doctag_tokens if index in self],
                 self.doctag_syn0, self.doctag_syn0_lockf, doctag_tokens)
 
     def trained_item(self, indexed_tuple):
@@ -305,12 +305,12 @@ class DocvecsArray(utils.SaveLoad):
         returned by indexed_doctags()); a no-op for this implementation"""
         pass
 
-    def _int_index(self, index, missing=None):
+    def _int_index(self, index):
         """Return int index for either string or int index"""
         if isinstance(index, int):
             return index
         else:
-            return self.max_rawint + 1 + self.doctags[index].offset if index in self.doctags else missing
+            return self.max_rawint + 1 + self.doctags[index].offset
 
     def _key_index(self, i_index, missing=None):
         """Return string index for given int index, if available"""
