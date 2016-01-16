@@ -1272,9 +1272,8 @@ class Word2Vec(utils.SaveLoad):
                 X.append(self[token])
             X = array(X).transpose()
 
-            dist = sqrt(np_sum((X.dot(d1) - X.dot(d2))**2))
+            dist = sqrt(np_sum((X.dot(d1)**2 - X.dot(d2))**2))
             return dist
-
         if RWMD:
             # Compute RWMD.
 
