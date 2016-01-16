@@ -385,7 +385,7 @@ class Word2Vec(utils.SaveLoad):
 
         `negative` = if > 0, negative sampling will be used, the int for negative
         specifies how many "noise words" should be drawn (usually between 5-20).
-        Default is 5. If set to 0, hierarchical softmax is used instead.
+        Default is 5. If set to 0, no negative samping is used.
 
         `cbow_mean` = if 0, use the sum of the context word vectors. If 1 (default), use the mean.
         Only applies when cbow is used.
