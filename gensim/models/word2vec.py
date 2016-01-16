@@ -1274,6 +1274,7 @@ class Word2Vec(utils.SaveLoad):
 
             dist = sqrt(np_sum((X.dot(d1) - X.dot(d2))**2))
             return dist
+
         if RWMD:
             # Compute RWMD.
 
