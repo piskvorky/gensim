@@ -387,8 +387,7 @@ class TestWMD(unittest.TestCase):
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         distance1 = model.wmdistance(sentence1, sentence2)
         distance2 = model.wmdistance(sentence2, sentence1)
-
-        self.assertEqual(distance1, distance2)
+        self.assertTrue(numpy.allclose(distance1, distance2))
 
     def testIdenticalSentences(self):
         '''Check that the distance from a sentence to itself is zero.'''
@@ -404,9 +403,7 @@ class TestWMD(unittest.TestCase):
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         distance1 = model.wmdistance(sentence1, sentence2)
         distance2 = model.wmdistance(sentence1, sentence2, force_pure_python=True)
-
-        difference = abs(distance1 - distance2) < 0.01
-        self.assertTrue(difference)
+        self.assertTrue(numpy.allclose(distance1, distance2))
 
     def testWCDnonzero(self):
         '''Test basic functionality with a test sentence.'''
@@ -427,7 +424,7 @@ class TestWMD(unittest.TestCase):
         distance2 = model.wmdistance(sentence2, sentence1, WCD=True)
 
         # Check that the distances are the same.
-        self.assertEqual(distance1, distance2)
+        self.assertTrue(numpy.allclose(distance1, distance2))
 
     def testIdenticalSentencesWCD(self):
         '''Check that WCD from a sentence to itself is zero.'''
