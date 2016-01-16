@@ -1267,12 +1267,11 @@ class Word2Vec(utils.SaveLoad):
         if WCD:
             # Compute WCD.
             # Stack all word vectors in a matrix.
-            X = []
+            X = zeros((self.vector_size, vocab_len))
             for i, token in dictionary.items():
-                X.append(self[token])
-            X = array(X).transpose()
+                X[:, i] = self[token]
 
-            dist = sqrt(np_sum((X.dot(d1)**2 - X.dot(d2))**2))
+            dist = sqrt(np_sum((X.dot(d1) - X.dot(d2))**2))
             return dist
         if RWMD:
             # Compute RWMD.
