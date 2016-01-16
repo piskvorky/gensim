@@ -403,7 +403,8 @@ class TestWMD(unittest.TestCase):
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         distance1 = model.wmdistance(sentence1, sentence2)
         distance2 = model.wmdistance(sentence1, sentence2, force_pure_python=True)
-        self.assertTrue(numpy.allclose(distance1, distance2))
+        difference = abs(distance1 - distance2) < 0.01
+        self.assertTrue(difference)
 
     def testWCDnonzero(self):
         '''Test basic functionality with a test sentence.'''
