@@ -14,6 +14,7 @@ Changes
   - `utils.HAS_PATTERN` flag moved to `utils.has_pattern()`
 * Threadsafe Word2Vec/Doc2Vec finish-check to avoid hang/unending Word2Vec/Doc2Vec training (Gordon Mohr, #571)
 * Tuned `TestWord2VecModel.test_cbow_hs()` against random failures (Gordon Mohr, #531)
+* Prevent ZeroDivisionError when `default_timer()` indicate no elapsed time (Gordon Mohr, #518)
 * Forwards compatibility for NumPy > 1.10 (Matti Lyra, #494, #513)
   - LdaModel and LdaMulticore produce a large number of DeprecationWarnings from
     .inference() because the term ids in each chunk returned from utils.grouper

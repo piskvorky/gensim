@@ -626,7 +626,7 @@ class Doc2Vec(Word2Vec):
         document_no = -1
         total_words = 0
         min_reduce = 1
-        interval_start = default_timer()
+        interval_start = default_timer() - 0.00001  # guard against next sample being identical
         interval_count = 0
         vocab = defaultdict(int)
         for document_no, document in enumerate(documents):
