@@ -45,7 +45,6 @@ sentences = [
     ['graph', 'minors', 'survey']
 ]
 
-
 def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_word2vec.tst')
@@ -161,10 +160,10 @@ class TestWord2VecModel(unittest.TestCase):
         # with min_count=1, we're not throwing away anything, so make sure the word counts add up to be the entire corpus
         self.assertEqual(sum(v.count for v in model.vocab.values()), total_words)
         # make sure the binary codes are correct
-         numpy.allclose(model.vocab['the'].code, [1, 1, 0, 0])
+        numpy.allclose(model.vocab['the'].code, [1, 1, 0, 0])
 
         # test building vocab with default params
-        model = word2vec.Word2Vec()
+        model = word2vec.Word2Vec(hs=1, negative=0)
         model.build_vocab(corpus)
         self.assertTrue(len(model.vocab) == 1750)
         numpy.allclose(model.vocab['the'].code, [1, 1, 1, 0])
@@ -253,8 +252,8 @@ class TestWord2VecModel(unittest.TestCase):
 
     def test_cbow_hs(self):
         """Test CBOW w/ hierarchical softmax"""
-        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
-                                  min_count=5, iter=10, workers=2)
+        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=8, hs=1, negative=0,
+                                  min_count=5, iter=10, workers=2, batch_words=1000)
         self.model_sanity(model)
 
     def test_cbow_neg(self):

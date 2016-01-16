@@ -344,7 +344,7 @@ class Word2Vec(utils.SaveLoad):
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
-            trim_rule=None, sorted_vocab=1):
+            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -404,6 +404,11 @@ class Word2Vec(utils.SaveLoad):
 
         `sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before
         assigning word indexes.
+
+        `batch_words` = target size (in words) for batches of examples passed to worker threads (and
+        thus cython routines). Default is 10000. (Larger batches can be passed if individual
+        texts are longer, but the cython code may truncate.)
+
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
@@ -431,6 +436,7 @@ class Word2Vec(utils.SaveLoad):
         self.train_count = 0
         self.total_train_time = 0
         self.sorted_vocab = sorted_vocab
+        self.batch_words = batch_words
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
@@ -669,7 +675,7 @@ class Word2Vec(utils.SaveLoad):
         """Return the number of words in a given job."""
         return sum(len(sentence) for sentence in job)
 
-    def train(self, sentences, total_words=None, word_count=0, batch_words=None,
+    def train(self, sentences, total_words=None, word_count=0,
               total_examples=None, queue_factor=2, report_delay=1.0):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
@@ -690,7 +696,6 @@ class Word2Vec(utils.SaveLoad):
                 self.neg_labels = zeros(self.negative + 1)
                 self.neg_labels[0] = 1.
 
-        batch_words = min(batch_words or MAX_WORDS_IN_BATCH, MAX_WORDS_IN_BATCH)
         logger.info(
             "training model with %i workers on %i vocabulary and %i features, "
             "using sg=%s hs=%s sample=%s negative=%s",
@@ -709,7 +714,7 @@ class Word2Vec(utils.SaveLoad):
             else:
                 raise ValueError("you must provide either total_words or total_examples, to enable alpha and progress calculations")
 
-        self.jobs_finished, self.job_no, self.jobs_left = False, 0, 0
+        job_tally = 0
 
         if self.iter > 1:
             sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
@@ -728,7 +733,6 @@ class Word2Vec(utils.SaveLoad):
                     break  # no more jobs => quit this worker
                 sentences, alpha = job
                 tally, raw_tally = self._do_train_job(sentences, alpha, (work, neu1))
-                self.jobs_left -= 1
                 progress_queue.put((len(sentences), tally, raw_tally))  # report back progress
                 jobs_processed += 1
             logger.debug("worker exiting, processed %i jobs", jobs_processed)
@@ -738,12 +742,13 @@ class Word2Vec(utils.SaveLoad):
             job_batch, batch_size = [], 0
             pushed_words, pushed_examples = 0, 0
             next_alpha = self.alpha
+            job_no = 0
 
             for sent_idx, sentence in enumerate(sentences):
                 sentence_length = self._raw_word_count([sentence])
 
                 # can we fit this sentence into the existing job batch?
-                if batch_size + sentence_length <= batch_words:
+                if batch_size + sentence_length <= self.batch_words:
                     # yes => add it to the current job
                     job_batch.append(sentence)
                     batch_size += sentence_length
@@ -751,9 +756,8 @@ class Word2Vec(utils.SaveLoad):
                     # no => submit the existing job
                     logger.debug(
                         "queueing job #%i (%i words, %i sentences) at alpha %.05f",
-                        self.job_no, batch_size, len(job_batch), next_alpha)
-                    self.job_no += 1
-                    self.jobs_left += 1
+                        job_no, batch_size, len(job_batch), next_alpha)
+                    job_no += 1
                     job_queue.put((job_batch, next_alpha))
 
                     # update the learning rate for the next job
@@ -776,15 +780,11 @@ class Word2Vec(utils.SaveLoad):
             if job_batch:
                 logger.debug(
                     "queueing job #%i (%i words, %i sentences) at alpha %.05f",
-                    self.job_no, batch_size, len(job_batch), next_alpha)
-                self.job_no += 1
-                self.jobs_left += 1
+                    job_no, batch_size, len(job_batch), next_alpha)
+                job_no += 1
                 job_queue.put((job_batch, next_alpha))
 
-            self.jobs_finished = True
-            logger.info("reached end of input; waiting to finish %i outstanding jobs", self.jobs_left)
-
-            if self.job_no == 0 and self.train_count == 0:
+            if job_no == 0 and self.train_count == 0:
                 logger.warning(
                     "train() called with an empty iterator (if not intended, "
                     "be sure to provide a corpus that offers restartable "
@@ -793,14 +793,15 @@ class Word2Vec(utils.SaveLoad):
 
             # give the workers heads up that they can finish -- no more work!
             for _ in xrange(self.workers):
-                job_queue.put(None)  # no need to increase job_no
-            logger.debug("job loop exiting, total %i jobs", self.job_no)
+                job_queue.put(None)
+            logger.debug("job loop exiting, total %i jobs", job_no)
 
         # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
         job_queue = Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
 
         workers = [threading.Thread(target=worker_loop) for _ in xrange(self.workers)]
+        unfinished_worker_count = len(workers)
         workers.append(threading.Thread(target=job_producer))
 
         for thread in workers:
@@ -810,11 +811,14 @@ class Word2Vec(utils.SaveLoad):
         example_count, trained_word_count, raw_word_count = 0, 0, word_count
         start, next_report = default_timer(), 1.0
 
-        while not self.jobs_finished or self.jobs_left > 0:
+        while unfinished_worker_count > 0:
             report = progress_queue.get()  # blocks if workers too slow
-            if report is None:
+            if report is None:  # a thread reporting that it finished
+                unfinished_worker_count -= 1
+                logger.info("worker thread finished; awaiting finish of %i more threads", unfinished_worker_count)
                 continue
             examples, trained_words, raw_words = report
+            job_tally += 1
 
             # update progress stats
             example_count += examples
@@ -843,6 +847,8 @@ class Word2Vec(utils.SaveLoad):
         logger.info(
             "training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
             raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed if elapsed else 0.0)
+        if job_tally < 10 * self.workers:
+            logger.warn("under 10 jobs per worker: consider setting a smaller `batch_words' for smoother alpha decay")
 
         # check that the input corpus hasn't changed during iteration
         if total_examples and total_examples != example_count:
