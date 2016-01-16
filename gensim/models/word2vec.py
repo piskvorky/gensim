@@ -77,6 +77,7 @@ from copy import deepcopy
 from collections import defaultdict
 import threading
 import itertools
+import warnings
 
 from gensim.utils import keep_vocab_item
 
@@ -1285,9 +1286,14 @@ class Word2Vec(utils.SaveLoad):
                     j = token2id[t2]
                     dm_nan[i, j] = distance_matrix[i, j]
 
-            # Compute RWMD vertically and horizontally in the distance matrix, and return the max of these distances.
-            rwmd1 = nansum(nanmin(dm_nan, axis=0))
-            rwmd2 = nansum(nanmin(dm_nan, axis=1))
+            with warnings.catch_warnings():
+                # Ignore Numpy warning: "All-NaN axis encountered".
+                warnings.filterwarnings('ignore', r'All-NaN axis encountered')
+
+                # Compute RWMD vertically and horizontally in the distance matrix, and return the max of these distances.
+                rwmd1 = nansum(nanmin(dm_nan, axis=0))
+                rwmd2 = nansum(nanmin(dm_nan, axis=1))
+
             rwmd = max(rwmd1, rwmd2)
 
             # Normalize by the length of the shorter document.
