@@ -89,6 +89,16 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(model.docvecs[0].shape, (300,))
         self.assertRaises(KeyError, model.__getitem__, '_*0')
 
+    def test_missing_string_doctag(self):
+        """Test doc2vec doctag alternatives"""
+        corpus = list(DocsLeeCorpus(True))
+        # force duplicated tags
+        corpus = corpus[0:10] + corpus
+
+        model = doc2vec.Doc2Vec(min_count=1)
+        model.build_vocab(corpus)
+        self.assertRaises(KeyError, model.docvecs.__getitem__, 'not_a_tag')
+
     def test_string_doctags(self):
         """Test doc2vec doctag alternatives"""
         corpus = list(DocsLeeCorpus(True))
