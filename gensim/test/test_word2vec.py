@@ -259,7 +259,7 @@ class TestWord2VecModel(unittest.TestCase):
     def test_cbow_neg(self):
         """Test CBOW w/ negative sampling"""
         model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
-                                  min_count=5, iter=10, workers=2)
+                                  min_count=5, iter=10, workers=2, sample=0)
         self.model_sanity(model)
 
     def testTrainingCbow(self):
