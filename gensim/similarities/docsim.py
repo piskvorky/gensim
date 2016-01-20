@@ -571,7 +571,17 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
 class WmdSimilarity(interfaces.SimilarityABC):
     """
-    Document similarity (like MatrixSimilarity) that uses the negative of WMD (gensim.models.word2vec.wmdistance) as a similarity measure.
+    Document similarity (like MatrixSimilarity) that uses the negative of WMD
+    as a similarity measure. See gensim.models.word2vec.wmdistance for more
+    information.
+
+    Example:
+        # Given a document collection "corpus", train word2vec model.
+        model = word2vec(corpus)
+        instance = WmdSimilarity(corpus, model, num_best=10)
+
+        # Make query.
+        sims = instance[query]
     """
     def __init__(self, corpus, w2v_model, num_best=None, chunksize=256):
         """

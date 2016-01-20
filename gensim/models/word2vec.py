@@ -1197,8 +1197,11 @@ class Word2Vec(utils.SaveLoad):
 
     def wmdistance(self, document1, document2, WCD=False, RWMD=False, force_pure_python=False):
         """
-        Compute the Word Mover's Distance of two documents. Algorithm proposed
-        by Matt J. Kusner et al. in "From Word Embeddings To Document Distances".
+        Compute the Word Mover's Distance between two documents. When using this
+        code, please consider citing the following papers:
+        * Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
+        * Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
+        * Matt Kusner et al. "From Word Embeddings To Document Distances".
 
         Example:
         # Train word2vec model.
