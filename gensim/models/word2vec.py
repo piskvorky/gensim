@@ -88,13 +88,15 @@ except ImportError:
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray, nanmin, nansum
+    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray, nanmin,\
+    nansum, isnan
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
+from scipy.spatial.distance import cdist
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -1290,14 +1292,20 @@ class Word2Vec(utils.SaveLoad):
                 # Ignore Numpy warning: "All-NaN axis encountered".
                 warnings.filterwarnings('ignore', r'All-NaN axis encountered')
 
-                # Compute RWMD vertically and horizontally in the distance matrix, and return the max of these distances.
-                rwmd1 = nansum(nanmin(dm_nan, axis=0))
-                rwmd2 = nansum(nanmin(dm_nan, axis=1))
+                # Compute "naive" minimum distances.
+                mdist1 = nanmin(dm_nan, axis=1)
+                mdist2 = nanmin(dm_nan, axis=0)
 
+            mdist1[isnan(mdist1)] = 0.0
+            mdist2[isnan(mdist2)] = 0.0
+
+            # Dot the "naive" minimum distances with the nBOW representation.
+            rwmd1 = mdist1.dot(d1)
+            rwmd2 = mdist2.dot(d2)
+
+            # Use the greater of the two lower bounds.
             rwmd = max(rwmd1, rwmd2)
 
-            # Normalize by the length of the shorter document.
-            rwmd = rwmd / min(len(document1), len(document2))
             return rwmd
         else:
             # Compute WMD.
