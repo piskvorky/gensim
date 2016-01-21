@@ -80,7 +80,7 @@ It is also included in the source distribution package.
 Citing gensim
 -------------
 
-When citing gensim in academic papers and theses, use `this BibTeX entry <bibtex_gensim.bib>`_::
+When `citing gensim in academic papers and theses <https://scholar.google.cz/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:u-x6o8ySG0sC>`_, please use this BibTeX entry::
 
   @inproceedings{rehurek_lrec,
         title = {{Software Framework for Topic Modelling with Large Corpora}},
