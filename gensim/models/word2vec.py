@@ -89,7 +89,7 @@ except ImportError:
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
     ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray, nanmin,\
-    nansum, isnan
+    nansum, isnan, full as np_full
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
@@ -1243,7 +1243,11 @@ class Word2Vec(utils.SaveLoad):
 
         if not WCD:  # distance matrix not necessary in WCD.
             # Compute distance matrix.
-            distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
+            if RWMD:
+                distance_matrix = np_full([vocab_len, vocab_len], float('nan'), dtype=double)
+            else:
+                distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
+
             for i, t1 in dictionary.items():
                 for j, t2 in dictionary.items():
                     if not t1 in docset1 or not t2 in docset2:
@@ -1281,23 +1285,13 @@ class Word2Vec(utils.SaveLoad):
             return dist
         if RWMD:
             # Compute RWMD.
-
-            # Construct distance matrix that is NaN for token pairs that don't exist in the input documents.
-            dm_nan = zeros(distance_matrix.shape) * float('nan')
-            token2id = dictionary.token2id
-            for t1 in docset1:
-                for t2 in docset2:
-                    i = token2id[t1]
-                    j = token2id[t2]
-                    dm_nan[i, j] = distance_matrix[i, j]
-
             with warnings.catch_warnings():
                 # Ignore Numpy warning: "All-NaN axis encountered".
                 warnings.filterwarnings('ignore', r'All-NaN axis encountered')
 
                 # Compute "naive" minimum distances.
-                mdist1 = nanmin(dm_nan, axis=1)
-                mdist2 = nanmin(dm_nan, axis=0)
+                mdist1 = nanmin(distance_matrix, axis=1)
+                mdist2 = nanmin(distance_matrix, axis=0)
 
             mdist1[isnan(mdist1)] = 0.0
             mdist2[isnan(mdist2)] = 0.0
@@ -1316,6 +1310,10 @@ class Word2Vec(utils.SaveLoad):
 
     def wmdistance_slow(self, document1, document2, dictionary, distance_matrix):
         '''
+        NOTE: don't use this for now. The algorithm does not produce the correct
+        WMD as it does not take the frequency distributions (i.e. nBOW, d) into
+        account.
+
         Brute force implementation of Word Mover's Distance in pure Python.
         See the wmdistance method for more info.
         '''
