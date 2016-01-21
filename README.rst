@@ -77,6 +77,26 @@ Manual for the gensim package is available in `HTML <http://radimrehurek.com/gen
 contains a walk-through of all its features and a complete reference section.
 It is also included in the source distribution package.
 
+Citing gensim
+-------------
+
+When citing gensim in academic papers and theses, use `this BibTeX entry <bibtex_gensim.bib>`_::
+
+  @inproceedings{rehurek_lrec,
+        title = {{Software Framework for Topic Modelling with Large Corpora}},
+        author = {Radim {\v R}eh{\r u}{\v r}ek and Petr Sojka},
+        booktitle = {{Proceedings of the LREC 2010 Workshop on New
+             Challenges for NLP Frameworks}},
+        pages = {45--50},
+        year = 2010,
+        month = May,
+        day = 22,
+        publisher = {ELRA},
+        address = {Valletta, Malta},
+        note={\url{http://is.muni.cz/publication/884893/en}},
+        language={English}
+  }
+
 ----------------
 
 Gensim is open source software released under the `GNU LGPL license <http://www.gnu.org/licenses/lgpl.html>`_.
