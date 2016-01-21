@@ -966,7 +966,13 @@ class Word2Vec(utils.SaveLoad):
                     self.syn0[i] = self.seeded_vector(str(word) + str(self.seed))
             else:
                 # construct deterministic seed from word AND seed argument
-                self.syn0[i] = self.seeded_vector(str(word) + str(self.seed))
+                if not isinstance(word, basestring):
+                    # allow for integer "words"
+                    word_str = str(word)
+                else:
+                    # don't convert everything to ASCII b/c some Unicode words might fail.
+                    word_str = word
+                self.syn0[i] = self.seeded_vector(word_str + str(self.seed))
 
         if self.pretrained_model is not None:
             print 'Set weights using {:,} pretrained vectors of a possible {:,}.'.format(num_pretrained, len(self.vocab))
