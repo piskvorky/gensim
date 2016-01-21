@@ -290,6 +290,20 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
             self.assertTrue(sims[0] == 0.0)  # Similarity of a document with itself is 0.0.
             self.assertTrue(numpy.alltrue(sims[1:] < 0.0))
 
+    def testNonIncreasing(self):
+        ''' Check that similarities are non-increasing when `num_best` is not
+        `None`.'''
+        # NOTE: this could be implemented for other similarities as well (i.e.
+        # in _TestSimilarityABC).
+        index = self.cls(texts, self.w2v_model, num_best=3)
+        query = texts[0]
+        sims = index[query]
+        sims2 = numpy.asarray(sims)[:, 1]  # Just the similarities themselves.
+
+        # The difference of adjacent elements should be negative.
+        cond = sum(numpy.diff(sims2) < 0) == len(sims2) - 1
+        self.assertTrue(cond)
+
     def testChunking(self):
         # Override testChunking.
         index = self.cls(texts, self.w2v_model)
