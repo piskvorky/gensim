@@ -20,3 +20,16 @@ class NullHandler(logging.Handler):
 logger = logging.getLogger('gensim')
 if len(logger.handlers) == 0:	# To ensure reload() doesn't add another one
     logger.addHandler(NullHandler())
+
+
+def get_includes():
+    """
+        get folder paths that contain .h files
+    """
+    import os.path
+    # voidptr.h under models
+    model_path = os.path.dirname(os.path.abspath(models.__file__))
+    return [
+        model_path,
+    ]
+    
