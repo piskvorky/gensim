@@ -12,7 +12,7 @@ from gensim import interfaces, matutils, utils
 from six import iteritems
 
 
-logger = logging.getLogger('gensim.models.tfidfmodel')
+logger = logging.getLogger(__name__)
 
 
 def df2idf(docfreq, totaldocs, log_base=2.0, add=0.0):
