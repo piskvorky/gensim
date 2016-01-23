@@ -677,6 +677,8 @@ class WmdSimilarity(interfaces.SimilarityABC):
         if len(result) == 1:
             # Only one query.
             result = result[0]
+        else:
+            result = numpy.array(result)
 
         return result
 
