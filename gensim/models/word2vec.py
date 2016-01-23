@@ -1203,6 +1203,9 @@ class Word2Vec(utils.SaveLoad):
         * Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
         * Matt Kusner et al. "From Word Embeddings To Document Distances".
 
+        Note that if one of the documents have no words that exist in the
+        Word2Vec vocab, `float('inf')` (i.e. infinity) will be returned.
+
         Example:
         # Train word2vec model.
         model = Word2Vec(sentences)
@@ -1230,9 +1233,10 @@ class Word2Vec(utils.SaveLoad):
                     len_pre_oov1 - len(document1), len_pre_oov2 - len(document2))
 
         if len(document1) == 0 or len(document2) == 0:
+            # TODO: make a warning for the user here (this can cause confusion).
             logger.info('At least one of the documents had no words that were'
-                        'in the vocabulary. Aborting (returning NaN).')
-            return float('nan')
+                        'in the vocabulary. Aborting (returning inf).')
+            return float('inf')
 
         dictionary = Dictionary(documents=[document1, document2])
         vocab_len = len(dictionary)
@@ -1248,6 +1252,7 @@ class Word2Vec(utils.SaveLoad):
             else:
                 distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
 
+            # TODO: simplify loop; "for i, t1 in enumerate(docset1)"
             for i, t1 in dictionary.items():
                 for j, t2 in dictionary.items():
                     if not t1 in docset1 or not t2 in docset2:

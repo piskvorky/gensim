@@ -592,21 +592,17 @@ class WmdSimilarity(interfaces.SimilarityABC):
         # Make query.
         sims = instance[query]
     """
-    def __init__(self, corpus, w2v_model, num_best=None, pp=False, chunksize=256):
+    def __init__(self, corpus, w2v_model, num_best=None, chunksize=256):
         """
         corpus:     List of lists of strings, as in gensim.models.word2vec.
         w2v_model:  A trained word2vec model.
-        pp:         Whether or not to use "prefetch and prune" fast algorithm.
-                    A `num_best` value must be provided.
+        num_best:   Number of results to retrieve. If provided, a fast algorithm
+                    called "prefetch and prune" is used.
         """
         self.corpus = corpus
         self.w2v_model = w2v_model
         self.num_best = num_best
-        self.pp = pp
         self.chunksize = chunksize
-
-        if pp:
-            assert num_best is not None, 'When prefetch and prune is used (pp is True), num_best must be supplied.'
 
         # Normalization is not possible, as corpus is a list (of lists) of strings.
         self.normalize = False
@@ -632,17 +628,28 @@ class WmdSimilarity(interfaces.SimilarityABC):
         result = []
         for qidx in range(n_queries):
             # Compute similarity vector for each query.
-            if self.pp:
+            if self.num_best:
                 # Use prefetch and prune algorithm.
                 # Compute WCD to entire corpus, and sort according to this.
                 wcd = [self.w2v_model.wmdistance(document, query[qidx], WCD=True) for document in self.corpus]
-                wcd_order = numpy.array(wcd).argsort()
+                wcd = numpy.array(wcd)
+
+                # We don't want to return documents identical to the query, so
+                # we set these distances to infinity.
+                wcd[wcd == 0.0] = float('inf')
+
+                wcd_order = wcd.argsort()
 
                 # Take the closest documents and compute their exact WMD distance.
                 best_idx = wcd_order[:self.num_best]
-                wmd_best = numpy.zeros(self.num_best)
+                wmd_best = numpy.zeros(len(best_idx))
                 for i, idx in enumerate(best_idx):
                     wmd_best[i] = self.w2v_model.wmdistance(self.corpus[idx], query[qidx])
+
+                # Sort top results again w.r.t. exact WMD.
+                sidx = wmd_best.argsort()
+                wmd_best = wmd_best[sidx]
+                best_idx = best_idx[sidx]
 
                 for idx in wcd_order[self.num_best:]:
                     # For each of the rest of the documents, compute RWMD.
@@ -651,15 +658,21 @@ class WmdSimilarity(interfaces.SimilarityABC):
                         # Document is not closer, continue (i.e. prune).
                         continue
                     else:
-                        # Document is closer. Compute exact WMD.
+                        # Document might be closer. Compute exact WMD.
                         wmd_cur = self.w2v_model.wmdistance(self.corpus[idx], query[qidx])
 
-                        # Find correct place in order of top documents.
-                        ii = numpy.argmin(wmd_best > wmd_cur)
-                        wmd_best[ii + 1:] = wmd_best[ii:-1]
-                        wmd_best[ii] = wmd_cur
-                        best_idx[ii + 1:] = best_idx[ii:-1]
-                        best_idx[ii] = idx
+                        if wmd_cur > wmd_best[-1] or wmd_cur == 0.0:
+                            # Document is not closer, or is identical to query.
+                            # Continue.
+                            continue
+                        else:
+                            # Document is closer.
+                            # Find correct place in order of top documents.
+                            ii = numpy.argmax(wmd_best > wmd_cur)
+                            wmd_best[ii + 1:] = wmd_best[ii:-1]
+                            wmd_best[ii] = wmd_cur
+                            best_idx[ii + 1:] = best_idx[ii:-1]
+                            best_idx[ii] = idx
 
                 # All documents that are not one of the closest get some large distance.
                 qresult = numpy.full(len(self.corpus), wmd_best.max()*10)
