@@ -16,6 +16,8 @@ Changes
 * Threadsafe Word2Vec/Doc2Vec finish-check to avoid hang/unending Word2Vec/Doc2Vec training (Gordon Mohr, #571)
 * Tuned `TestWord2VecModel.test_cbow_hs()` against random failures (Gordon Mohr, #531)
 * Prevent ZeroDivisionError when `default_timer()` indicate no elapsed time (Gordon Mohr, #518)
+* Add export_phrases(sentences) to model Phrases (hanabi1224 #588)
+* Try to initialize pyximport in gensim.__init__ and warn if slow version of doc2vec and word2vec are used (hanabi1224 #588)
 * Forwards compatibility for NumPy > 1.10 (Matti Lyra, #494, #513)
   - LdaModel and LdaMulticore produce a large number of DeprecationWarnings from
     .inference() because the term ids in each chunk returned from utils.grouper

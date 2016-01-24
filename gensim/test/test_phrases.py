@@ -54,7 +54,7 @@ class TestPhrasesModel(unittest.TestCase):
         for s in bigram[sentences]:
             if not bigram1_seen and u'response_time' in s:
                 bigram1_seen = True
-            elif not bigram2_seen and u'graph_minors' in s:
+            if not bigram2_seen and u'graph_minors' in s:
                 bigram2_seen = True
             if bigram1_seen and bigram2_seen:
                 break
