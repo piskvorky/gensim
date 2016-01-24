@@ -52,10 +52,13 @@ class TestPhrasesModel(unittest.TestCase):
         bigram2_seen = False
 
         for s in bigram[sentences]:
-            if u'response_time' in s:
+            if not bigram1_seen and u'response_time' in s:
                 bigram1_seen = True
-            if u'graph_minors' in s:
+            elif not bigram2_seen and u'graph_minors' in s:
                 bigram2_seen = True
+            if bigram1_seen and bigram2_seen:
+                break
+                
         self.assertTrue(bigram1_seen and bigram2_seen)
 
         # check the same thing, this time using single doc transformation
@@ -64,6 +67,27 @@ class TestPhrasesModel(unittest.TestCase):
         self.assertTrue(u'graph_minors' in bigram[sentences[-2]])
         self.assertTrue(u'graph_minors' in bigram[sentences[-1]])
 
+    def testExportPhrases(self):
+        """Test Phrases bigram export_phrases functionality."""
+        bigram = Phrases(sentences, min_count=1, threshold=1)
+        
+        # with this setting we should get response_time and graph_minors
+        bigram1_seen = False
+        bigram2_seen = False
+        
+        import gensim
+        print(gensim.__file__)
+        for phrase, score in bigram.export_phrases(sentences):
+            if not bigram1_seen and u'response time' == phrase:
+                bigram1_seen = True
+            elif not bigram2_seen and u'graph minors' == phrase:
+                bigram2_seen = True
+            if bigram1_seen and bigram2_seen:
+                break
+        
+        self.assertTrue(bigram1_seen)
+        self.assertTrue(bigram2_seen)
+        
     def testBadParameters(self):
         """Test the phrases module with bad parameters."""
         # should fail with something less or equal than 0
