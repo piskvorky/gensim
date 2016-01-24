@@ -61,7 +61,6 @@ It's really useful and motivating to get feedback, in any shape or form, so big 
 
 Some honorable mentions are included in the `CHANGELOG.txt <https://github.com/piskvorky/gensim/blob/develop/CHANGELOG.txt>`_.
 
-
 Academic citing
 ----------------
 
