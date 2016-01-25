@@ -20,21 +20,26 @@ if len(logger.handlers) == 0:	# To ensure reload() doesn't add another one
 
 # try to initialize pyximport before importing models otherwise cython code in word2vec and doc2doc does not compile
 try:
-    import pyximport
-    def get_includes():
-        """
-            get folder paths that contain .h files
-        """
-        import os.path
-        # voidptr.h under models
-        model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models')
-        return [
-            model_path,
-        ]
-    
-    from numpy import get_include as np_get_include
-    include_dirs = [np_get_include()] + get_includes()
-    pyximport.install(setup_args={"include_dirs":include_dirs}, reload_support=True)
+    import platform
+    if platform.system().lower() == u'windows':
+        import pyximport
+        def get_includes():
+            """
+                get folder paths that contain .h files
+            """
+            import os.path
+            # voidptr.h under models
+            model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models')
+            return [
+                model_path,
+            ]
+        
+        from numpy import get_include as np_get_include
+        include_dirs = [np_get_include()] + get_includes()
+        pyximport.install(setup_args={"include_dirs":include_dirs}, reload_support=True)
+    else:
+        # TODO: pyximport initialization for other OS
+        pass
 except ImportError as err:
     logger.warning("Fail to initialize pyximport: {0}".format(err))
 
