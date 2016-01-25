@@ -581,13 +581,18 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
     The matrix is internally stored as a `scipy.sparse.csr` matrix. Unless the entire
     matrix fits into main memory, use `Similarity` instead.
 
+    Takes an optional `maintain_sparsity` argument, setting this to True
+    causes `get_similarities` to return a sparse matrix instead of a
+    dense representation if possible.
+
     See also `Similarity` and `MatrixSimilarity` in this module.
     """
     def __init__(self, corpus, num_features=None, num_terms=None, num_docs=None, num_nnz=None,
-                 num_best=None, chunksize=500, dtype=numpy.float32):
+                 num_best=None, chunksize=500, dtype=numpy.float32, maintain_sparsity=False):
         self.num_best = num_best
         self.normalize = True
         self.chunksize = chunksize
+        self.maintain_sparsity = maintain_sparsity
 
         if corpus is not None:
             logger.info("creating sparse index")
@@ -653,6 +658,9 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         if result.shape[1] == 1 and not is_corpus:
             # for queries of one document, return a 1d array
             result = result.toarray().flatten()
+        elif self.maintain_sparsity:
+            # avoid converting to dense array if maintaining sparsity
+            result = result.T
         else:
             # otherwise, return a 2d matrix (#queries x #index)
             result = result.toarray().T
