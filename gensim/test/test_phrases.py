@@ -75,12 +75,10 @@ class TestPhrasesModel(unittest.TestCase):
         bigram1_seen = False
         bigram2_seen = False
         
-        import gensim
-        print(gensim.__file__)
         for phrase, score in bigram.export_phrases(sentences):
-            if not bigram1_seen and u'response time' == phrase:
+            if not bigram1_seen and b'response time' == phrase:
                 bigram1_seen = True
-            elif not bigram2_seen and u'graph minors' == phrase:
+            elif not bigram2_seen and b'graph minors' == phrase:
                 bigram2_seen = True
             if bigram1_seen and bigram2_seen:
                 break
