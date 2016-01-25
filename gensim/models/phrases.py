@@ -212,7 +212,7 @@ class Phrases(interfaces.TransformationABC):
                         # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
                         #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
                         if score > threshold:
-                            yield (' '.join((word_a, word_b)), score)
+                            yield (b' '.join((word_a, word_b)), score)
                             last_bigram = True
 
     def __getitem__(self, sentence):

@@ -101,11 +101,11 @@ class TestPhrasesModel(unittest.TestCase):
         expected = [u'survey', u'user', u'computer', u'system', u'response_time']
 
         bigram_utf8 = Phrases(sentences, min_count=1, threshold=1)
-        self.assertEquals(bigram_utf8[sentences[1]], expected)
+        self.assertEqual(bigram_utf8[sentences[1]], expected)
 
         unicode_sentences = [[utils.to_unicode(w) for w in sentence] for sentence in sentences]
         bigram_unicode = Phrases(unicode_sentences, min_count=1, threshold=1)
-        self.assertEquals(bigram_unicode[sentences[1]], expected)
+        self.assertEqual(bigram_unicode[sentences[1]], expected)
 
         transformed = ' '.join(bigram_utf8[sentences[1]])
         self.assertTrue(isinstance(transformed, unicode))
