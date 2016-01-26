@@ -809,7 +809,7 @@ class Word2Vec(utils.SaveLoad):
             thread.start()
 
         example_count, trained_word_count, raw_word_count = 0, 0, word_count
-        start, next_report = default_timer(), 1.0
+        start, next_report = default_timer() - 0.00001, 1.0
 
         while unfinished_worker_count > 0:
             report = progress_queue.get()  # blocks if workers too slow
@@ -846,7 +846,7 @@ class Word2Vec(utils.SaveLoad):
         elapsed = default_timer() - start
         logger.info(
             "training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
-            raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed if elapsed else 0.0)
+            raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed)
         if job_tally < 10 * self.workers:
             logger.warn("under 10 jobs per worker: consider setting a smaller `batch_words' for smoother alpha decay")
 
@@ -970,7 +970,7 @@ class Word2Vec(utils.SaveLoad):
         self.clear_sims()
         logger.info(
             "scoring %i sentences took %.1fs, %.0f sentences/s",
-            sentence_count, elapsed, sentence_count / elapsed if elapsed else 0.0)
+            sentence_count, elapsed, sentence_count / elapsed)
         return sentence_scores[:sentence_count]
 
     def clear_sims(self):

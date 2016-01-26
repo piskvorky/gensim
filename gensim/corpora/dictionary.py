@@ -46,29 +46,26 @@ class Dictionary(utils.SaveLoad, Mapping):
         """
         If `documents` are given, use them to initialize Dictionary (see `add_documents()`).
         """
-        self.token2id = {} # token -> tokenId
-        self.id2token = {} # reverse mapping for token2id; only formed on request, to save memory
-        self.dfs = {} # document frequencies: tokenId -> in how many documents this token appeared
+        self.token2id = {}  # token -> tokenId
+        self.id2token = {}  # reverse mapping for token2id; only formed on request, to save memory
+        self.dfs = {}  # document frequencies: tokenId -> in how many documents this token appeared
 
-        self.num_docs = 0 # number of documents processed
-        self.num_pos = 0 # total number of corpus positions
-        self.num_nnz = 0 # total number of non-zeroes in the BOW matrix
+        self.num_docs = 0  # number of documents processed
+        self.num_pos = 0  # total number of corpus positions
+        self.num_nnz = 0  # total number of non-zeroes in the BOW matrix
 
         if documents is not None:
             self.add_documents(documents, prune_at=prune_at)
-
 
     def __getitem__(self, tokenid):
         if len(self.id2token) != len(self.token2id):
             # the word->id mapping has changed (presumably via add_documents);
             # recompute id->word accordingly
             self.id2token = dict((v, k) for k, v in iteritems(self.token2id))
-        return self.id2token[tokenid] # will throw for non-existent ids
-
+        return self.id2token[tokenid]  # will throw for non-existent ids
 
     def __iter__(self):
         return iter(self.keys())
-
 
     if PY3:
         # restore Py2-style dict API
@@ -80,11 +77,9 @@ class Dictionary(utils.SaveLoad, Mapping):
         def itervalues(self):
             return self.values()
 
-
     def keys(self):
         """Return a list of all token ids."""
         return list(self.token2id.values())
-
 
     def __len__(self):
         """
@@ -92,16 +87,13 @@ class Dictionary(utils.SaveLoad, Mapping):
         """
         return len(self.token2id)
 
-
     def __str__(self):
         some_keys = list(itertools.islice(iterkeys(self.token2id), 5))
         return "Dictionary(%i unique tokens: %s%s)" % (len(self), some_keys, '...' if len(self) > 5 else '')
 
-
     @staticmethod
     def from_documents(documents):
         return Dictionary(documents=documents)
-
 
     def add_documents(self, documents, prune_at=2000000):
         """
@@ -124,11 +116,11 @@ class Dictionary(utils.SaveLoad, Mapping):
                 logger.info("adding document #%i to %s", docno, self)
 
             # update Dictionary with the document
-            self.doc2bow(document, allow_update=True) # ignore the result, here we only care about updating token ids
+            self.doc2bow(document, allow_update=True)  # ignore the result, here we only care about updating token ids
 
-        logger.info("built %s from %i documents (total %i corpus positions)",
-                     self, self.num_docs, self.num_pos)
-
+        logger.info(
+            "built %s from %i documents (total %i corpus positions)",
+            self, self.num_docs, self.num_pos)
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
         """
@@ -180,7 +172,6 @@ class Dictionary(utils.SaveLoad, Mapping):
         else:
             return result
 
-
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000):
         """
         Filter out tokens that appear in
@@ -213,7 +204,6 @@ class Dictionary(utils.SaveLoad, Mapping):
         self.filter_tokens(good_ids=good_ids)
         logger.info("resulting dictionary: %s" % self)
 
-
     def filter_tokens(self, bad_ids=None, good_ids=None):
         """
         Remove the selected `bad_ids` tokens from all dictionary mappings, or, keep
@@ -239,7 +229,6 @@ class Dictionary(utils.SaveLoad, Mapping):
                             if tokenid in good_ids)
         self.compactify()
 
-
     def compactify(self):
         """
         Assign new word ids to all words.
@@ -257,7 +246,6 @@ class Dictionary(utils.SaveLoad, Mapping):
         self.token2id = dict((token, idmap[tokenid]) for token, tokenid in iteritems(self.token2id))
         self.id2token = {}
         self.dfs = dict((idmap[tokenid], freq) for tokenid, freq in iteritems(self.dfs))
-
 
     def save_as_text(self, fname, sort_by_word=True):
         """
@@ -278,7 +266,6 @@ class Dictionary(utils.SaveLoad, Mapping):
                 for tokenid, freq in sorted(iteritems(self.dfs), key=lambda item: -item[1]):
                     line = "%i\t%s\t%i\n" % (tokenid, self[tokenid], freq)
                     fout.write(utils.to_utf8(line))
-
 
     def merge_with(self, other):
         """
@@ -325,7 +312,6 @@ class Dictionary(utils.SaveLoad, Mapping):
         import gensim.models
         return gensim.models.VocabTransform(old2new)
 
-
     @staticmethod
     def load_from_text(fname):
         """
@@ -347,7 +333,6 @@ class Dictionary(utils.SaveLoad, Mapping):
                 result.token2id[word] = wordid
                 result.dfs[wordid] = int(docfreq)
         return result
-
 
     @staticmethod
     def from_corpus(corpus, id2word=None):
@@ -390,5 +375,3 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.info("built %s from %i documents (total %i corpus positions)" %
                      (result, result.num_docs, result.num_pos))
         return result
-
-#endclass Dictionary
