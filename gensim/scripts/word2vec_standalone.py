@@ -74,8 +74,6 @@ if __name__ == "__main__":
         print(globals()['__doc__'] % locals())
         sys.exit(1)
 
-    
-
     seterr(all='raise')  # don't ignore numpy errors
 
     parser = argparse.ArgumentParser()
@@ -103,19 +101,19 @@ if __name__ == "__main__":
 
     corpus = LineSentence(args.train)
 
-    model = Word2Vec(corpus, size=args.size, min_count=args.min_count, workers=args.threads, window=args.window, \
-    sample=args.sample,sg=skipgram,hs=args.hs,negative=args.negative,cbow_mean=1,iter=args.iter)
+    model = Word2Vec(corpus, size=args.size, min_count=args.min_count, workers=args.threads, window=args.window,
+    sample=args.sample, sg=skipgram, hs=args.hs, negative=args.negative, cbow_mean=1, iter=args.iter)
 
     if args.output:
         outfile = args.output
         model.save_word2vec_format(outfile, binary=args.binary)
     else:
-        outfile = args.train
+        outfile = args.train.split('.')[0]
         model.save(outfile + '.model')
-    if args.binary == 1:
-        model.save_word2vec_format(outfile + '.model.bin', binary=True)
-    else:
-        model.save_word2vec_format(outfile + '.model.txt', binary=False)
+        if args.binary == 1:
+            model.save_word2vec_format(outfile + '.model.bin', binary=True)
+        else:
+            model.save_word2vec_format(outfile + '.model.txt', binary=False)
 
     if args.accuracy:
         questions_file = args.accuracy
