@@ -604,6 +604,9 @@ class WmdSimilarity(interfaces.SimilarityABC):
         self.num_best = num_best
         self.chunksize = chunksize
 
+        # Normalize embeddings to sum to 1.
+        self.w2v_model.init_sims(replace=True)
+
         # Normalization is not possible, as corpus is a list (of lists) of strings.
         self.normalize = False
 
