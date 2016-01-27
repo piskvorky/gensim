@@ -7,7 +7,7 @@
 """
 USAGE: %(program)s -train CORPUS -output VECTORS -size SIZE -window WINDOW
 -cbow CBOW -sample SAMPLE -hs HS -negative NEGATIVE -threads THREADS -iter ITER
--min-count MIN-COUNT -binary BINARY -accuracy FILE
+-min_count MIN-COUNT -binary BINARY -accuracy FILE
 
 Trains a neural embedding model on text file CORPUS.
 Parameters essentially reproduce those used by the original C tool 
@@ -33,7 +33,7 @@ Parameters for training:
                 Use <int> threads (default 3)
         -iter <int>
                 Run more training iterations (default 5)
-        -min-count <int>
+        -min_count <int>
                 This will discard words that appear less than <int> times; default is 5
         -binary <int>
                 Save the resulting vectors in binary moded; default is 0 (off)
@@ -52,14 +52,20 @@ import os.path
 import sys
 import argparse
 
+
+logger = logging.getLogger(__name__)
+
 if __name__ == "__main__":
     from gensim.models.word2vec import Word2Vec  # avoid referencing __main__ in pickle
     from gensim.models.word2vec_inner import FAST_VERSION
+    from gensim.models.word2vec import LineSentence
+    from numpy import seterr
+
     logging.basicConfig(
         format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
         level=logging.INFO)
-    logging.info("running %s", " ".join(sys.argv))
-    logging.info("using optimization %s", FAST_VERSION)
+    logger.info("running %s", " ".join(sys.argv))
+    logger.info("using optimization %s", FAST_VERSION)
 
 
     # check and process cmdline input
@@ -115,4 +121,4 @@ if __name__ == "__main__":
         questions_file = args.accuracy
         model.accuracy(questions_file)
 
-    logging.info("finished running %s", program)
+    logger.info("finished running %s", program)
