@@ -344,8 +344,8 @@ class Word2Vec(utils.SaveLoad):
     """
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
-            max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
-            sg=1, hs=1, negative=0, cbow_mean=0, hashfxn=hash, iter=1, null_word=0,
+            max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
+            sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
             trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
@@ -359,8 +359,8 @@ class Word2Vec(utils.SaveLoad):
         If you don't supply `sentences`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
 
-        `sg` defines the training algorithm. By default (`sg=1`), skip-gram is used.
-        Otherwise, `cbow` is employed.
+        `sg` defines the training algorithm. By default (`sg=0`), CBOW is used.
+        Otherwise (`sg=1`), skip-gram is employed.
 
         `size` is the dimensionality of the feature vectors.
 
@@ -378,16 +378,18 @@ class Word2Vec(utils.SaveLoad):
         need about 1GB of RAM. Set to `None` for no limit (default).
 
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
-            default is 0 (off), useful value is 1e-5.
+            default is 1e-3, useful range is (0, 1e-5).
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
 
-        `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0).
+        `hs` = if 1, hierarchical softmax will be used for model training.
+        If set to 0 (default), and `negative` is non-zero, negative sampling will be used.
 
         `negative` = if > 0, negative sampling will be used, the int for negative
         specifies how many "noise words" should be drawn (usually between 5-20).
+        Default is 5. If set to 0, no negative samping is used.
 
-        `cbow_mean` = if 0 (default), use the sum of the context word vectors. If 1, use the mean.
+        `cbow_mean` = if 0, use the sum of the context word vectors. If 1 (default), use the mean.
         Only applies when cbow is used.
 
         `hashfxn` = hash function to use to randomly initialize weights, for increased
@@ -1602,35 +1604,65 @@ class LineSentence(object):
                         i += self.max_sentence_length
 
 
-# Example: ./word2vec.py ~/workspace/word2vec/text8 ~/workspace/word2vec/questions-words.txt ./text8
+# Example: ./word2vec.py -train data.txt -output vec.txt -size 200 -window 5 -sample 1e-4 -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3
 if __name__ == "__main__":
+    import argparse
     logging.basicConfig(
         format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
         level=logging.INFO)
-    logger.info("running %s", " ".join(sys.argv))
-    logger.info("using optimization %s", FAST_VERSION)
+    logging.info("running %s", " ".join(sys.argv))
+    logging.info("using optimization %s", FAST_VERSION)
+
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
     if len(sys.argv) < 2:
         print(globals()['__doc__'] % locals())
         sys.exit(1)
-    infile = sys.argv[1]
+
     from gensim.models.word2vec import Word2Vec  # avoid referencing __main__ in pickle
 
     seterr(all='raise')  # don't ignore numpy errors
 
-    # model = Word2Vec(LineSentence(infile), size=200, min_count=5, workers=4)
-    model = Word2Vec(Text8Corpus(infile, 10), size=256, min_count=5, workers=4, sg=0, hs=0, cbow_mean=1, negative=5)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-train", help="Use text data from file TRAIN to train the model", required=True)
+    parser.add_argument("-output", help="Use file OUTPUT to save the resulting word vectors")
+    parser.add_argument("-window", help="Set max skip length WINDOW between words; default is 5", type=int, default=5)
+    parser.add_argument("-size", help="Set size of word vectors; default is 100", type=int, default=100)
+    parser.add_argument("-sample", help="Set threshold for occurrence of words. Those that appear with higher frequency in the training data will be randomly down-sampled; default is 1e-3, useful range is (0, 1e-5)", type=float, default=1e-3)
+    parser.add_argument("-hs", help="Use Hierarchical Softmax; default is 0 (not used)", type=int, default=0, choices=[0, 1])
+    parser.add_argument("-negative", help="Number of negative examples; default is 5, common values are 3 - 10 (0 = not used)", type=int, default=5)
+    parser.add_argument("-threads", help="Use THREADS threads (default 12)", type=int, default=12)
+    parser.add_argument("-iter", help="Run more training iterations (default 5)", type=int, default=5)
+    parser.add_argument("-min_count", help="This will discard words that appear less than MIN_COUNT times; default is 5", type=int, default=5)
+    parser.add_argument("-cbow", help="Use the continuous bag of words model; default is 1 (use 0 for skip-gram model)", type=int, default=1, choices=[0, 1])
+    parser.add_argument("-binary", help="Save the resulting vectors in binary mode; default is 0 (off)", type=int, default=0, choices=[0, 1])
+    parser.add_argument("-accuracy", help="Use questions from file ACCURACY to evaluate the model")
 
-    if len(sys.argv) > 3:
-        outfile = sys.argv[3]
+    args = parser.parse_args()
+
+    if args.cbow == 0:
+        skipgram = 1
+    else:
+        skipgram = 0
+
+    corpus = LineSentence(args.train)
+
+    model = Word2Vec(corpus, size=args.size, min_count=args.min_count, workers=args.threads, window=args.window,sample=args.sample,sg=skipgram,hs=args.hs,negative=args.negative,cbow_mean=1,iter=args.iter)
+
+    if args.output:
+        outfile = args.output
+        model.save_word2vec_format(outfile, binary=args.binary)
+    else:
+        outfile = args.train
         model.save(outfile + '.model')
+    if args.binary == 1:
         model.save_word2vec_format(outfile + '.model.bin', binary=True)
+    else:
         model.save_word2vec_format(outfile + '.model.txt', binary=False)
 
-    if len(sys.argv) > 2:
-        questions_file = sys.argv[2]
-        model.accuracy(sys.argv[2])
+    if args.accuracy:
+        questions_file = args.accuracy
+        model.accuracy(questions_file)
 
     logger.info("finished running %s", program)
