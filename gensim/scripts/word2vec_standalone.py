@@ -7,7 +7,7 @@
 """
 USAGE: %(program)s -train CORPUS -output VECTORS -size SIZE -window WINDOW
 -cbow CBOW -sample SAMPLE -hs HS -negative NEGATIVE -threads THREADS -iter ITER
--min-count MIN-COUNT -binary BINARY -accuracy FILE
+-min_count MIN-COUNT -alpha ALPHA -binary BINARY -accuracy FILE
 
 Trains a neural embedding model on text file CORPUS.
 Parameters essentially reproduce those used by the original C tool 
@@ -33,8 +33,10 @@ Parameters for training:
                 Use <int> threads (default 3)
         -iter <int>
                 Run more training iterations (default 5)
-        -min-count <int>
+        -min_count <int>
                 This will discard words that appear less than <int> times; default is 5
+        -alpha <float>
+                Set the starting learning rate; default is 0.025 for skip-gram and 0.05 for CBOW
         -binary <int>
                 Save the resulting vectors in binary moded; default is 0 (off)
         -cbow <int>
@@ -56,11 +58,6 @@ from numpy import seterr
 logger = logging.getLogger(__name__)
 
 from gensim.models.word2vec import Word2Vec, LineSentence  # avoid referencing __main__ in pickle
-try:
-    from gensim.models.word2vec_inner import FAST_VERSION
-except ImportError:
-    # failed... fall back to plain numpy (20-80x slower training than the above)
-    FAST_VERSION = -1
 
 
 if __name__ == "__main__":
@@ -68,8 +65,7 @@ if __name__ == "__main__":
     logging.basicConfig(
         format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
         level=logging.INFO)
-    logging.info("running %s", " ".join(sys.argv))
-    logging.info("using optimization %s", FAST_VERSION)
+    logger.info("running %s", " ".join(sys.argv))
 
 
     # check and process cmdline input
@@ -94,6 +90,7 @@ if __name__ == "__main__":
     parser.add_argument("-threads", help="Use THREADS threads (default 3)", type=int, default=3)
     parser.add_argument("-iter", help="Run more training iterations (default 5)", type=int, default=5)
     parser.add_argument("-min_count", help="This will discard words that appear less than MIN_COUNT times; default is 5", type=int, default=5)
+    parser.add_argument("-alpha", help="Set the starting learning rate; default is 0.025 for skip-gram and 0.05 for CBOW", type=float)
     parser.add_argument("-cbow", help="Use the continuous bag of words model; default is 1 (use 0 for skip-gram model)", type=int, default=1, choices=[0, 1])
     parser.add_argument("-binary", help="Save the resulting vectors in binary mode; default is 0 (off)", type=int, default=0, choices=[0, 1])
     parser.add_argument("-accuracy", help="Use questions from file ACCURACY to evaluate the model")
@@ -102,24 +99,28 @@ if __name__ == "__main__":
 
     if args.cbow == 0:
         skipgram = 1
+        if not args.alpha:
+            args.alpha = 0.025
     else:
         skipgram = 0
+        if not args.alpha:
+            args.alpha = 0.05
 
     corpus = LineSentence(args.train)
 
-    model = Word2Vec(corpus, size=args.size, min_count=args.min_count, workers=args.threads, window=args.window, \
-    sample=args.sample,sg=skipgram,hs=args.hs,negative=args.negative,cbow_mean=1,iter=args.iter)
+    model = Word2Vec(corpus, size=args.size, min_count=args.min_count, workers=args.threads, window=args.window,
+    sample=args.sample, alpha=args.alpha, sg=skipgram, hs=args.hs, negative=args.negative, cbow_mean=1, iter=args.iter)
 
     if args.output:
         outfile = args.output
         model.save_word2vec_format(outfile, binary=args.binary)
     else:
-        outfile = args.train
+        outfile = args.train.split('.')[0]
         model.save(outfile + '.model')
-    if args.binary == 1:
-        model.save_word2vec_format(outfile + '.model.bin', binary=True)
-    else:
-        model.save_word2vec_format(outfile + '.model.txt', binary=False)
+        if args.binary == 1:
+            model.save_word2vec_format(outfile + '.model.bin', binary=True)
+        else:
+            model.save_word2vec_format(outfile + '.model.txt', binary=False)
 
     if args.accuracy:
         questions_file = args.accuracy
