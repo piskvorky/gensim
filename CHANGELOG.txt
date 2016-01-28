@@ -3,6 +3,13 @@ Changes
 
 0.12.4, XX/XX/XXXX
 
+* Word2vec default values of hyperparameters now are identical to those of original C tool, generally improving performance (Andrey Kutuzov, #538)
+ - By default use CBOW with negative sampling and the mean of context vectors, instead of skip-gram with hierarchical softmax.
+ - By default use 3 workers, instead of 1.
+ - By default use 5 iterations instead of 1.
+ - By defaut use downsampling with the value 1e-3.
+ - Additionally, wordvec.py can be now used as a standalone script with command line arguments matching those of original C tool.
+   (for example, ./word2vec.py -train data.txt -output trained_vec.txt -size 200 -window 2 -sample 1e-4 -negative 10 -hs 0 -binary 0 -iter 3)
 * load_word2vec_format() performance (@svenkreiss, #555)
   - Remove `init_sims()` call for performance improvements when normalized vectors are not needed.
   - Remove `norm_only` parameter (API change). Call `init_sims(replace=True)` after the `load_word2vec_format()` call for the old `norm_only=True` behavior.
