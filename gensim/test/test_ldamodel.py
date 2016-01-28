@@ -71,7 +71,7 @@ class TestLdaModel(unittest.TestCase):
 
             vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
             expected = [0.13, 0.87]
-            passed = numpy.allclose(sorted(vec), sorted(expected), atol=1e-2) # must contain the same values, up to re-ordering
+            passed = numpy.allclose(sorted(vec), sorted(expected), atol=1e-1) # must contain the same values, up to re-ordering
             if passed:
                 break
             logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)" %
