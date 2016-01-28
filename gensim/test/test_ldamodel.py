@@ -60,7 +60,7 @@ class TestLdaModel(unittest.TestCase):
         # sometimes, LDA training gets stuck at a local minimum
         # in that case try re-training the model from scratch, hoping for a
         # better random initialization
-        for i in range(5): # restart at most 5 times
+        for i in range(25): # restart at most 5 times
             # create the transformation model
             model = self.class_(id2word=dictionary, num_topics=2, passes=100)
             model.update(self.corpus)
