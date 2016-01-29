@@ -1,7 +1,7 @@
 Changes
 =======
 
-0.12.4, XX/XX/XXXX
+0.12.4, 29/01/2016
 
 * Word2vec in line with original word2vec.c (Andrey Kutuzov, #538) 
 - Same default values. See diff https://github.com/akutuzov/gensim/commit/6456cbcd75e6f8720451766ba31cc046b4463ae2
