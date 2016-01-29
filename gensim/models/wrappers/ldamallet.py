@@ -189,6 +189,8 @@ class LdaMallet(utils.SaveLoad):
             for lineno, line in enumerate(fin):
                 line = utils.to_unicode(line)
                 doc, source, pos, typeindex, token, topic = line.split(" ")
+                if token not in word2id:
+                    continue
                 tokenid = word2id[token]
                 wordtopics[int(topic), tokenid] += 1
         logger.info("loaded assigned topics for %i tokens", wordtopics.sum())
