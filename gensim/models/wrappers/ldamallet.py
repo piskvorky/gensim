@@ -37,6 +37,7 @@ import os
 import numpy
 
 from six import iteritems
+from smart_open import smart_open
 
 from gensim import utils, matutils
 from gensim.utils import check_output
@@ -54,11 +55,17 @@ class LdaMallet(utils.SaveLoad):
                  optimize_interval=0, iterations=1000):
         """
         `mallet_path` is path to the mallet executable, e.g. `/home/kofola/mallet-2.0.7/bin/mallet`.
+
         `corpus` is a gensim corpus, aka a stream of sparse document vectors.
+
         `id2word` is a mapping between tokens ids and token.
+
         `workers` is the number of threads, for parallel training.
+
         `prefix` is the string prefix under which all data files will be stored; default: system temp + random filename prefix.
+
         `optimize_interval` optimize hyperparameters every N iterations (sometimes leads to Java exception; 0 to switch off hyperparameter optimization).
+
         `iterations` is the number of sampling iterations.
 
         """
@@ -105,22 +112,29 @@ class LdaMallet(utils.SaveLoad):
     def fwordweights(self):
         return self.prefix + 'wordweights.txt'
 
-    def convert_input(self, corpus, infer=False):
+    def corpus2mallet(self, corpus, file_like):
+        """
+        Write out `corpus` in a file format that MALLET understands: one document per line:
+
+          document id[SPACE]label (not used)[SPACE]whitespace delimited utf8-encoded tokens[NEWLINE]
+        """
+        for docno, doc in enumerate(corpus):
+            if self.id2word:
+                tokens = sum(([self.id2word[tokenid]] * int(cnt) for tokenid, cnt in doc), [])
+            else:
+                tokens = sum(([str(tokenid)] * int(cnt) for tokenid, cnt in doc), [])
+            file_like.write(utils.to_utf8("%s 0 %s\n" % (docno, ' '.join(tokens))))
+
+    def convert_input(self, corpus, infer=False, overwrite_existing=True):
         """
         Serialize documents (lists of unicode tokens) to a temporary text file,
         then convert that text file to MALLET format `outfile`.
 
         """
-        logger.info("serializing temporary corpus to %s" % self.fcorpustxt())
-        # write out the corpus in a file format that MALLET understands: one document per line:
-        # document id[SPACE]label (not used)[SPACE]whitespace delimited utf8-encoded tokens
-        with utils.smart_open(self.fcorpustxt(), 'wb') as fout:
-            for docno, doc in enumerate(corpus):
-                if self.id2word:
-                    tokens = sum(([self.id2word[tokenid]] * int(cnt) for tokenid, cnt in doc), [])
-                else:
-                    tokens = sum(([str(tokenid)] * int(cnt) for tokenid, cnt in doc), [])
-                fout.write(utils.to_utf8("%s 0 %s\n" % (docno, ' '.join(tokens))))
+        if overwrite_existing or not os.path.exists(self.fcorpustxt()):
+            logger.info("serializing temporary corpus to %s", self.fcorpustxt())
+            with smart_open(self.fcorpustxt(), 'wb') as fout:
+                self.corpus2mallet(corpus, fout)
 
         # convert the text file above into MALLET's internal format
         cmd = self.mallet_path + " import-file --preserve-case --keep-sequence --remove-stopwords --token-regex '\S+' --input %s --output %s"
