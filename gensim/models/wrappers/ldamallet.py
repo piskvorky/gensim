@@ -129,7 +129,7 @@ class LdaMallet(utils.SaveLoad):
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet() + '.infer')
         else:
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet())
-        logger.info("converting temporary corpus to MALLET format with %s" % cmd)
+        logger.info("converting temporary corpus to MALLET format with %s", cmd)
         check_output(cmd, shell=True)
 
     def train(self, corpus):
@@ -137,10 +137,11 @@ class LdaMallet(utils.SaveLoad):
         cmd = self.mallet_path + " train-topics --input %s --num-topics %s --optimize-interval %s "\
             "--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s "\
             "--num-iterations %s --inferencer-filename %s"
-        cmd = cmd % (self.fcorpusmallet(), self.num_topics, self.optimize_interval, self.workers,
+        cmd = cmd % (
+            self.fcorpusmallet(), self.num_topics, self.optimize_interval, self.workers,
             self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations, self.finferencer())
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
-        logger.info("training MALLET LDA with %s" % cmd)
+        logger.info("training MALLET LDA with %s", cmd)
         check_output(cmd, shell=True)
         self.word_topics = self.load_word_topics()
 
@@ -153,13 +154,13 @@ class LdaMallet(utils.SaveLoad):
         self.convert_input(bow, infer=True)
         cmd = self.mallet_path + " infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s"
         cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations)
-        logger.info("inferring topics with MALLET LDA '%s'" % cmd)
+        logger.info("inferring topics with MALLET LDA '%s'", cmd)
         check_output(cmd, shell=True)
         result = list(self.read_doctopics(self.fdoctopics() + '.infer'))
         return result if is_corpus else result[0]
 
     def load_word_topics(self):
-        logger.info("loading assigned topics from %s" % self.fstate())
+        logger.info("loading assigned topics from %s", self.fstate())
         wordtopics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float32)
         if hasattr(self.id2word, 'token2id'):
             word2id = self.id2word.token2id
@@ -176,7 +177,7 @@ class LdaMallet(utils.SaveLoad):
                 doc, source, pos, typeindex, token, topic = line.split(" ")
                 tokenid = word2id[token]
                 wordtopics[int(topic), tokenid] += 1
-        logger.info("loaded assigned topics for %i tokens" % wordtopics.sum())
+        logger.info("loaded assigned topics for %i tokens", wordtopics.sum())
         self.wordtopics = wordtopics
         self.print_topics(15)
 
@@ -214,7 +215,7 @@ class LdaMallet(utils.SaveLoad):
                 topic = self.show_topic(i, topn=num_words)
             shown.append(topic)
             if log:
-                logger.info("topic #%i (%.3f): %s" % (i, self.alpha[i], topic))
+                logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic)
         return shown
 
     def show_topic(self, topicid, topn=10):
