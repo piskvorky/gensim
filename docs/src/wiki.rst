@@ -14,7 +14,7 @@ Preparing the corpus
 ----------------------
 
 1. First, download the dump of all Wikipedia articles from http://download.wikimedia.org/enwiki/
-   (you want a file like `enwiki-latest-pages-articles.xml.bz2`). This file is about 8GB in size
+   (you want the file `enwiki-latest-pages-articles.xml.bz2`, or `enwiki-YYYYMMDD-pages-articles.xml.bz2` for date-specific dumps). This file is about 8GB in size
    and contains (a compressed version of) all articles from the English Wikipedia.
 
 2. Convert the articles to plain text (process Wiki markup) and store the result as

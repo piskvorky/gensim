@@ -76,14 +76,6 @@ except ImportError:
         return open(fname, mode)
 
 
-try:
-    from pattern.en import parse
-    logger.info("'pattern' package found; utils.lemmatize() is available for English")
-    HAS_PATTERN = True
-except ImportError:
-    HAS_PATTERN = False
-
-
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
@@ -1022,48 +1014,64 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
             daemon.requestLoop()
 
 
-if HAS_PATTERN:
-    def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
-            stopwords=frozenset(), min_length=2, max_length=15):
-        """
-        This function is only available when the optional 'pattern' package is installed.
+def has_pattern():
+    """
+    Function to check if there is installed pattern library
+    """
+    pattern = False
+    try:
+        from pattern.en import parse
+        pattern = True
+    except ImportError:
+        logger.info("Pattern library is not installed, lemmatization won't be available.")
+    return pattern
 
-        Use the English lemmatizer from `pattern` to extract UTF8-encoded tokens in
-        their base form=lemma, e.g. "are, is, being" -> "be" etc.
-        This is a smarter version of stemming, taking word context into account.
 
-        Only considers nouns, verbs, adjectives and adverbs by default (=all other lemmas are discarded).
+def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
+        stopwords=frozenset(), min_length=2, max_length=15):
+    """
+    This function is only available when the optional 'pattern' package is installed.
 
-        >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
-        ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
+    Use the English lemmatizer from `pattern` to extract UTF8-encoded tokens in
+    their base form=lemma, e.g. "are, is, being" -> "be" etc.
+    This is a smarter version of stemming, taking word context into account.
 
-        >>> lemmatize('The study ranks high.')
-        ['study/NN', 'rank/VB', 'high/JJ']
+    Only considers nouns, verbs, adjectives and adverbs by default (=all other lemmas are discarded).
 
-        >>> lemmatize('The ranks study hard.')
-        ['rank/NN', 'study/VB', 'hard/RB']
+    >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
+    ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
 
-        """
-        if light:
-            import warnings
-            warnings.warn("The light flag is no longer supported by pattern.")
+    >>> lemmatize('The study ranks high.')
+    ['study/NN', 'rank/VB', 'high/JJ']
 
-        # tokenization in `pattern` is weird; it gets thrown off by non-letters,
-        # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
-        # FIXME this throws away all fancy parsing cues, including sentence structure,
-        # abbreviations etc.
-        content = u(' ').join(tokenize(content, lower=True, errors='ignore'))
+    >>> lemmatize('The ranks study hard.')
+    ['rank/NN', 'study/VB', 'hard/RB']
 
-        parsed = parse(content, lemmata=True, collapse=False)
-        result = []
-        for sentence in parsed:
-            for token, tag, _, _, lemma in sentence:
-                if min_length <= len(lemma) <= max_length and not lemma.startswith('_') and lemma not in stopwords:
-                    if allowed_tags.match(tag):
-                        lemma += "/" + tag[:2]
-                        result.append(lemma.encode('utf8'))
-        return result
-#endif HAS_PATTERN
+    """
+    if not has_pattern():
+        raise ImportError("Pattern library is not installed. Pattern library is needed in order  \
+         to use lemmatize function")
+    from pattern.en import parse
+
+    if light:
+        import warnings
+        warnings.warn("The light flag is no longer supported by pattern.")
+
+    # tokenization in `pattern` is weird; it gets thrown off by non-letters,
+    # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
+    # FIXME this throws away all fancy parsing cues, including sentence structure,
+    # abbreviations etc.
+    content = u(' ').join(tokenize(content, lower=True, errors='ignore'))
+
+    parsed = parse(content, lemmata=True, collapse=False)
+    result = []
+    for sentence in parsed:
+        for token, tag, _, _, lemma in sentence:
+            if min_length <= len(lemma) <= max_length and not lemma.startswith('_') and lemma not in stopwords:
+                if allowed_tags.match(tag):
+                    lemma += "/" + tag[:2]
+                    result.append(lemma.encode('utf8'))
+    return result
 
 
 def mock_data_row(dim=1000, prob_nnz=0.5, lam=1.0):
@@ -1107,6 +1115,14 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
                 old_len - len(vocab), min_reduce, old_len, len(vocab))
     return result
 
+
+def qsize(queue):
+    """Return the (approximate) queue size where available; -1 where not (OS X)."""
+    try:
+        return queue.qsize()
+    except NotImplementedError:
+        # OS X doesn't support qsize
+        return -1
 
 RULE_DEFAULT = 0
 RULE_DISCARD = 1

@@ -11,10 +11,10 @@ implementation [1]_.
 This uses Matt Hoffman's online algorithm, for LDA [2]_, i.e. the same
 algorithm that Gensim's LdaModel is based on.
 
-Note: Currently working and tested with Vowpal Wabbit 7.10. Vowpal Wabbit's
-API isn't currently stable, so this may or may not work with older/newer
-versions. The aim will be to ensure this wrapper always works with the latest
-release of Vowpal Wabbit.
+Note: Currently working and tested with Vowpal Wabbit versions 7.10 to 8.1.1.
+Vowpal Wabbit's API isn't currently stable, so this may or may not work with
+older/newer versions. The aim will be to ensure this wrapper always works with
+the latest release of Vowpal Wabbit.
 
 Tested with python 2.6, 2.7, and 3.4.
 
@@ -327,11 +327,9 @@ class LdaVowpalWabbit(utils.SaveLoad):
         """Get list of command line arguments for running prediction."""
         cmd = [self.vw_path,
                '--testonly', # don't update model with this data
-               '--lda', str(self.num_topics),
                '--lda_D', str(corpus_size),
                '-i', self._model_filename, # load existing binary model
                '-d', self._corpus_filename,
-               '-b', str(_bit_length(self.num_terms)),
                '--learning_rate', '0', # possibly not needed, but harmless
                '-p', self._predict_filename]
 
@@ -351,12 +349,9 @@ class LdaVowpalWabbit(utils.SaveLoad):
                '--power_t', str(self.decay),
                '--initial_t', str(self.offset),
                '--minibatch', str(self.chunksize),
-               '-b', str(_bit_length(self.num_terms)),
                '--lda_D', str(corpus_size),
                '--passes', str(self.passes),
                '--cache_file', self._cache_filename,
-               '--lda_alpha', str(self.alpha),
-               '--lda_rho', str(self.eta),
                '--lda_epsilon', str(self.gamma_threshold),
                '--readable_model', self._topics_filename,
                '-k', # clear cache
@@ -365,8 +360,11 @@ class LdaVowpalWabbit(utils.SaveLoad):
         if update:
             cmd.extend(['-i', self._model_filename])
         else:
-            # this param is read from model file if updating
-            cmd.extend(['--lda', str(self.num_topics)])
+            # these params are read from model file if updating
+            cmd.extend(['--lda', str(self.num_topics),
+                        '-b', str(_bit_length(self.num_terms)),
+                        '--lda_alpha', str(self.alpha),
+                        '--lda_rho', str(self.eta)])
 
         if self.random_seed is not None:
             cmd.extend(['--random_seed', str(self.random_seed)])
@@ -388,13 +386,15 @@ class LdaVowpalWabbit(utils.SaveLoad):
                              dtype=numpy.float32)
 
         with utils.smart_open(self._topics_filename) as topics_file:
-            found_options = False
+            found_data = False
 
             for line in topics_file:
-                if not found_options:
-                    if line.startswith(b'options:'):
-                        found_options = True
-                    continue
+                # look for start of data
+                if not found_data:
+                    if line.startswith(b'0 ') and b':' not in line:
+                        found_data = True
+                    else:
+                        continue
 
                 fields = line.split()
                 word_id = int(fields[0])

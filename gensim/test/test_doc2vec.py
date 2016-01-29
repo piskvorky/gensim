@@ -55,6 +55,7 @@ raw_sentences = [
 
 sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(raw_sentences)]
 
+
 def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_doc2vec.tst')
@@ -88,6 +89,16 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(model.docvecs[0].shape, (300,))
         self.assertRaises(KeyError, model.__getitem__, '_*0')
 
+    def test_missing_string_doctag(self):
+        """Test doc2vec doctag alternatives"""
+        corpus = list(DocsLeeCorpus(True))
+        # force duplicated tags
+        corpus = corpus[0:10] + corpus
+
+        model = doc2vec.Doc2Vec(min_count=1)
+        model.build_vocab(corpus)
+        self.assertRaises(KeyError, model.docvecs.__getitem__, 'not_a_tag')
+
     def test_string_doctags(self):
         """Test doc2vec doctag alternatives"""
         corpus = list(DocsLeeCorpus(True))
@@ -102,6 +113,8 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(all(model.docvecs['_*0'] == model.docvecs[0]))
         self.assertTrue(max(d.offset for d in model.docvecs.doctags.values()) < len(model.docvecs.doctags))
         self.assertTrue(max(model.docvecs._int_index(str_key) for str_key in model.docvecs.doctags.keys()) < len(model.docvecs.doctag_syn0))
+        # verify docvecs.most_similar() returns string doctags rather than indexes
+        self.assertEqual(model.docvecs.offset2doctag[0], model.docvecs.most_similar([model.docvecs[0]])[0][0])
 
     def test_empty_errors(self):
         # no input => "RuntimeError: you must first build vocabulary before training the model"
@@ -118,7 +131,7 @@ class TestDoc2VecModel(unittest.TestCase):
 
         # inferred vector should be top10 close to bulk-trained one
         doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
-        sims_to_infer = model.docvecs.most_similar([doc0_inferred],topn=len(model.docvecs))
+        sims_to_infer = model.docvecs.most_similar([doc0_inferred], topn=len(model.docvecs))
         f_rank = [docid for docid, sim in sims_to_infer].index(fire1)
         self.assertLess(fire1, 10)
 
@@ -241,8 +254,6 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec()
         model.build_vocab(mixed_tag_corpus)
         expected_length = len(sentences) + len(model.docvecs.doctags)  # 9 sentences, 7 unique first tokens
-        print(model.docvecs.doctags)
-        print(model.docvecs.count)
         self.assertEquals(len(model.docvecs.doctag_syn0), expected_length)
 
     def models_equal(self, model, model2):
@@ -290,6 +301,7 @@ class ConcatenatedDoc2Vec(object):
 
     def train(self, ignored):
         pass  # train subcomponents individually
+
 
 class ConcatenatedDocvecs(object):
     def __init__(self, models):

@@ -282,13 +282,11 @@ class LdaModel(interfaces.TransformationABC):
         self.update_every = update_every
         self.eval_every = eval_every
 
-        self.optimize_alpha = alpha == 'auto'
-        self.alpha = self.init_dir_prior(alpha, 'alpha')
+        self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
         assert self.alpha.shape == (num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), num_topics)
 
-        self.optimize_eta = eta == 'auto'
-        self.eta = self.init_dir_prior(eta, 'eta')
+        self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
 
         assert (self.eta.shape == (num_topics, 1) or self.eta.shape == (num_topics, self.num_terms)), (
             "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
@@ -327,19 +325,29 @@ class LdaModel(interfaces.TransformationABC):
 
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
-            self.update(corpus)
+            use_numpy = self.dispatcher is not None
+            self.update(corpus, chunks_as_numpy=use_numpy)
 
     def init_dir_prior(self, prior, name):
-        if prior == 'symmetric' or prior is None:
-            logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
-            init_prior = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
-        elif prior == 'asymmetric':
-            init_prior = numpy.asarray([1.0 / (i + numpy.sqrt(self.num_topics)) for i in xrange(self.num_topics)])
-            init_prior /= init_prior.sum()
-            logger.info("using asymmetric %s %s", name, list(init_prior))
-        elif prior == 'auto':
-            init_prior = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
-            logger.info("using autotuned %s, starting with %s", name, list(init_prior))
+        if prior is None:
+            prior = 'symmetric'
+
+        is_auto = False
+
+        if isinstance(prior, six.string_types):
+            if prior == 'symmetric':
+                logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
+                init_prior = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
+            elif prior == 'asymmetric':
+                init_prior = numpy.asarray([1.0 / (i + numpy.sqrt(self.num_topics)) for i in xrange(self.num_topics)])
+                init_prior /= init_prior.sum()
+                logger.info("using asymmetric %s %s", name, list(init_prior))
+            elif prior == 'auto':
+                is_auto = True
+                init_prior = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
+                logger.info("using autotuned %s, starting with %s", name, list(init_prior))
+            else:
+                raise ValueError("Unable to determine proper %s value given '%s'" % (name, prior))
         elif isinstance(prior, list):
             init_prior = numpy.asarray(prior)
         elif isinstance(prior, numpy.ndarray):
@@ -357,7 +365,7 @@ class LdaModel(interfaces.TransformationABC):
             if init_prior.shape == (self.num_topics,) or init_prior.shape == (1, self.num_topics):
                 init_prior = init_prior.reshape((self.num_topics, 1)) # this statement throws ValueError if eta did not match self.num_topics
 
-        return init_prior
+        return init_prior, is_auto
 
     def __str__(self):
         return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % \
@@ -412,7 +420,11 @@ class LdaModel(interfaces.TransformationABC):
         # Lee&Seung trick which speeds things up by an order of magnitude, compared
         # to Blei's original LDA-C code, cool!).
         for d, doc in enumerate(chunk):
-            ids = [id for id, _ in doc]
+            if doc and not isinstance(doc[0][0], six.integer_types):
+                # make sure the term IDs are ints, otherwise numpy will get upset
+                ids = [int(id) for id, _ in doc]
+            else:
+                ids = [id for id, _ in doc]
             cts = numpy.array([cnt for _, cnt in doc])
             gammad = gamma[d, :]
             Elogthetad = Elogtheta[d, :]
@@ -517,7 +529,7 @@ class LdaModel(interfaces.TransformationABC):
 
     def update(self, corpus, chunksize=None, decay=None, offset=None,
                passes=None, update_every=None, eval_every=None, iterations=None,
-               gamma_threshold=None):
+               gamma_threshold=None, chunks_as_numpy=False):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -535,6 +547,23 @@ class LdaModel(interfaces.TransformationABC):
         converge for any `decay` in (0.5, 1.0>. Additionally, for smaller
         `corpus` sizes, an increasing `offset` may be beneficial (see
         Table 1 in Hoffman et al.)
+
+        Parameters
+        ------------
+        corpus: (gensim corpus object, list of tuples)
+            The corpus with which the LDA model should be updated with.
+
+        chunks_as_numpy: bool
+            Whether each chunk passed to `.inference` should be a numpy
+            array of not. Numpy can in some settings turn the term IDs
+            into floats, these will be converted back into integers in
+            inference, which incurs a performance hit. For distributed
+            computing it may be desirable to keep the chunks as numpy
+            arrays.
+
+        See Also
+        --------
+        For other parameter settings see LdaModel().
 
         """
         # use parameters given in constructor, unless user explicitly overrode them
@@ -603,7 +632,7 @@ class LdaModel(interfaces.TransformationABC):
             dirty = False
 
             reallen = 0
-            for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize, as_numpy=True)):
+            for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize, as_numpy=chunks_as_numpy)):
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
 
                 if eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % (eval_every * self.numworkers) == 0)):
@@ -838,10 +867,11 @@ class LdaModel(interfaces.TransformationABC):
             for m in top_words[1:]:
                 # m_docs is v_m^(t)
                 m_docs = doc_word_list[m]
+                m_index = numpy.where(top_words == m)[0]
 
                 # Sum of top words l=1..m-1
                 # i.e., all words ranked higher than the current word m
-                for l in top_words[:m - 1]:
+                for l in top_words[:m_index - 1]:
                     # l_docs is v_l^(t)
                     l_docs = doc_word_list[l]
 
@@ -868,6 +898,7 @@ class LdaModel(interfaces.TransformationABC):
         """
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
+        minimum_probability = max(abs(minimum_probability), 1e-8)  # never allow zero values in sparse output
 
         # if the input vector is a corpus, return a transformed corpus
         is_corpus, corpus = utils.is_corpus(bow)

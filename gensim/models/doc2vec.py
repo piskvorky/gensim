@@ -51,7 +51,7 @@ from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
     sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_sentence_sg
+from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_batch_sg
 from six.moves import xrange, zip
 from six import string_types, integer_types, itervalues
 
@@ -94,7 +94,7 @@ except:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
         if train_words and learn_words:
-            train_sentence_sg(model, doc_words, alpha, work)
+            train_batch_sg(model, [doc_words], alpha, work)
         for doctag_index in doctag_indexes:
             for word in doc_words:
                 train_sg_pair(model, word, doctag_index, alpha, learn_vectors=learn_doctags,
@@ -297,7 +297,7 @@ class DocvecsArray(utils.SaveLoad):
 
     def indexed_doctags(self, doctag_tokens):
         """Return indexes and backing-arrays used in training examples."""
-        return ([i for i in [self._int_index(index, -1) for index in doctag_tokens] if i > -1],
+        return ([self._int_index(index) for index in doctag_tokens if index in self],
                 self.doctag_syn0, self.doctag_syn0_lockf, doctag_tokens)
 
     def trained_item(self, indexed_tuple):
@@ -305,12 +305,12 @@ class DocvecsArray(utils.SaveLoad):
         returned by indexed_doctags()); a no-op for this implementation"""
         pass
 
-    def _int_index(self, index, missing=None):
+    def _int_index(self, index):
         """Return int index for either string or int index"""
         if isinstance(index, int):
             return index
         else:
-            return self.max_rawint + 1 + self.doctags[index].offset if index in self.doctags else missing
+            return self.max_rawint + 1 + self.doctags[index].offset
 
     def _key_index(self, i_index, missing=None):
         """Return string index for given int index, if available"""
@@ -319,7 +319,7 @@ class DocvecsArray(utils.SaveLoad):
 
     def index_to_doctag(self, i_index):
         """Return string key for given i_index, if available. Otherwise return raw int doctag (same int)."""
-        candidate_offset = self.max_rawint - i_index - 1
+        candidate_offset = i_index - self.max_rawint - 1
         if 0 <= candidate_offset < len(self.offset2doctag):
             return self.offset2doctag[candidate_offset]
         else:
@@ -626,7 +626,7 @@ class Doc2Vec(Word2Vec):
         document_no = -1
         total_words = 0
         min_reduce = 1
-        interval_start = default_timer()
+        interval_start = default_timer() - 0.00001  # guard against next sample being identical
         interval_count = 0
         vocab = defaultdict(int)
         for document_no, document in enumerate(documents):
@@ -657,7 +657,6 @@ class Doc2Vec(Word2Vec):
     def _do_train_job(self, job, alpha, inits):
         work, neu1 = inits
         tally = 0
-        raw_tally = 0
         for doc in job:
             indexed_doctags = self.docvecs.indexed_doctags(doc.tags)
             doctag_indexes, doctag_vectors, doctag_locks, ignored = indexed_doctags
@@ -671,12 +670,12 @@ class Doc2Vec(Word2Vec):
             else:
                 tally += train_document_dm(self, doc.words, doctag_indexes, alpha, work, neu1,
                                            doctag_vectors=doctag_vectors, doctag_locks=doctag_locks)
-            raw_tally += len(doc.words)
             self.docvecs.trained_item(indexed_doctags)
-        return (tally, raw_tally)
+        return tally, self._raw_word_count(job)
 
-    def _raw_word_count(self, items):
-        return sum(len(item.words) for item in items)
+    def _raw_word_count(self, job):
+        """Return the number of words in a given job."""
+        return sum(len(sentence.words) for sentence in job)
 
     def infer_vector(self, doc_words, alpha=0.1, min_alpha=0.0001, steps=5):
         """

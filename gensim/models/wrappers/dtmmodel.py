@@ -26,6 +26,7 @@ import tempfile
 import os
 from subprocess import PIPE
 import numpy as np
+import six
 
 from gensim import utils, corpora, matutils
 from gensim.utils import check_output
@@ -172,9 +173,9 @@ class DtmModel(utils.SaveLoad):
         corpora.BleiCorpus.save_corpus(self.fcorpustxt(), corpus)
 
         with utils.smart_open(self.ftimeslices(), 'wb') as fout:
-            fout.write(str(len(self.time_slices)) + "\n")
+            fout.write(six.u(str(len(self.time_slices)) + "\n"))
             for sl in time_slices:
-                fout.write(str(sl) + "\n")
+                fout.write(six.u(str(sl) + "\n"))
 
     def train(self, corpus, time_slices, mode, model):
         """
