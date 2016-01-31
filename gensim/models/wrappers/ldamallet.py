@@ -125,13 +125,13 @@ class LdaMallet(utils.SaveLoad):
                 tokens = sum(([str(tokenid)] * int(cnt) for tokenid, cnt in doc), [])
             file_like.write(utils.to_utf8("%s 0 %s\n" % (docno, ' '.join(tokens))))
 
-    def convert_input(self, corpus, infer=False, overwrite_existing=True):
+    def convert_input(self, corpus, infer=False, serialize_corpus=True):
         """
         Serialize documents (lists of unicode tokens) to a temporary text file,
         then convert that text file to MALLET format `outfile`.
 
         """
-        if overwrite_existing or not os.path.exists(self.fcorpustxt()):
+        if serialize_corpus:
             logger.info("serializing temporary corpus to %s", self.fcorpustxt())
             with smart_open(self.fcorpustxt(), 'wb') as fout:
                 self.corpus2mallet(corpus, fout)
