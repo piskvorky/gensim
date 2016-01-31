@@ -37,6 +37,7 @@ import os
 import numpy
 
 from six import iteritems
+from smart_open import smart_open
 
 from gensim import utils, matutils
 from gensim.utils import check_output
@@ -54,11 +55,17 @@ class LdaMallet(utils.SaveLoad):
                  optimize_interval=0, iterations=1000):
         """
         `mallet_path` is path to the mallet executable, e.g. `/home/kofola/mallet-2.0.7/bin/mallet`.
+
         `corpus` is a gensim corpus, aka a stream of sparse document vectors.
+
         `id2word` is a mapping between tokens ids and token.
+
         `workers` is the number of threads, for parallel training.
+
         `prefix` is the string prefix under which all data files will be stored; default: system temp + random filename prefix.
+
         `optimize_interval` optimize hyperparameters every N iterations (sometimes leads to Java exception; 0 to switch off hyperparameter optimization).
+
         `iterations` is the number of sampling iterations.
 
         """
@@ -105,22 +112,29 @@ class LdaMallet(utils.SaveLoad):
     def fwordweights(self):
         return self.prefix + 'wordweights.txt'
 
-    def convert_input(self, corpus, infer=False):
+    def corpus2mallet(self, corpus, file_like):
+        """
+        Write out `corpus` in a file format that MALLET understands: one document per line:
+
+          document id[SPACE]label (not used)[SPACE]whitespace delimited utf8-encoded tokens[NEWLINE]
+        """
+        for docno, doc in enumerate(corpus):
+            if self.id2word:
+                tokens = sum(([self.id2word[tokenid]] * int(cnt) for tokenid, cnt in doc), [])
+            else:
+                tokens = sum(([str(tokenid)] * int(cnt) for tokenid, cnt in doc), [])
+            file_like.write(utils.to_utf8("%s 0 %s\n" % (docno, ' '.join(tokens))))
+
+    def convert_input(self, corpus, infer=False, serialize_corpus=True):
         """
         Serialize documents (lists of unicode tokens) to a temporary text file,
         then convert that text file to MALLET format `outfile`.
 
         """
-        logger.info("serializing temporary corpus to %s" % self.fcorpustxt())
-        # write out the corpus in a file format that MALLET understands: one document per line:
-        # document id[SPACE]label (not used)[SPACE]whitespace delimited utf8-encoded tokens
-        with utils.smart_open(self.fcorpustxt(), 'wb') as fout:
-            for docno, doc in enumerate(corpus):
-                if self.id2word:
-                    tokens = sum(([self.id2word[tokenid]] * int(cnt) for tokenid, cnt in doc), [])
-                else:
-                    tokens = sum(([str(tokenid)] * int(cnt) for tokenid, cnt in doc), [])
-                fout.write(utils.to_utf8("%s 0 %s\n" % (docno, ' '.join(tokens))))
+        if serialize_corpus:
+            logger.info("serializing temporary corpus to %s", self.fcorpustxt())
+            with smart_open(self.fcorpustxt(), 'wb') as fout:
+                self.corpus2mallet(corpus, fout)
 
         # convert the text file above into MALLET's internal format
         cmd = self.mallet_path + " import-file --preserve-case --keep-sequence --remove-stopwords --token-regex '\S+' --input %s --output %s"
@@ -129,7 +143,7 @@ class LdaMallet(utils.SaveLoad):
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet() + '.infer')
         else:
             cmd = cmd % (self.fcorpustxt(), self.fcorpusmallet())
-        logger.info("converting temporary corpus to MALLET format with %s" % cmd)
+        logger.info("converting temporary corpus to MALLET format with %s", cmd)
         check_output(cmd, shell=True)
 
     def train(self, corpus):
@@ -137,10 +151,11 @@ class LdaMallet(utils.SaveLoad):
         cmd = self.mallet_path + " train-topics --input %s --num-topics %s --optimize-interval %s "\
             "--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s "\
             "--num-iterations %s --inferencer-filename %s"
-        cmd = cmd % (self.fcorpusmallet(), self.num_topics, self.optimize_interval, self.workers,
+        cmd = cmd % (
+            self.fcorpusmallet(), self.num_topics, self.optimize_interval, self.workers,
             self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations, self.finferencer())
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
-        logger.info("training MALLET LDA with %s" % cmd)
+        logger.info("training MALLET LDA with %s", cmd)
         check_output(cmd, shell=True)
         self.word_topics = self.load_word_topics()
 
@@ -153,13 +168,13 @@ class LdaMallet(utils.SaveLoad):
         self.convert_input(bow, infer=True)
         cmd = self.mallet_path + " infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s"
         cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations)
-        logger.info("inferring topics with MALLET LDA '%s'" % cmd)
+        logger.info("inferring topics with MALLET LDA '%s'", cmd)
         check_output(cmd, shell=True)
         result = list(self.read_doctopics(self.fdoctopics() + '.infer'))
         return result if is_corpus else result[0]
 
     def load_word_topics(self):
-        logger.info("loading assigned topics from %s" % self.fstate())
+        logger.info("loading assigned topics from %s", self.fstate())
         wordtopics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float32)
         if hasattr(self.id2word, 'token2id'):
             word2id = self.id2word.token2id
@@ -174,9 +189,11 @@ class LdaMallet(utils.SaveLoad):
             for lineno, line in enumerate(fin):
                 line = utils.to_unicode(line)
                 doc, source, pos, typeindex, token, topic = line.split(" ")
+                if token not in word2id:
+                    continue
                 tokenid = word2id[token]
                 wordtopics[int(topic), tokenid] += 1
-        logger.info("loaded assigned topics for %i tokens" % wordtopics.sum())
+        logger.info("loaded assigned topics for %i tokens", wordtopics.sum())
         self.wordtopics = wordtopics
         self.print_topics(15)
 
@@ -214,7 +231,7 @@ class LdaMallet(utils.SaveLoad):
                 topic = self.show_topic(i, topn=num_words)
             shown.append(topic)
             if log:
-                logger.info("topic #%i (%.3f): %s" % (i, self.alpha[i], topic))
+                logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic)
         return shown
 
     def show_topic(self, topicid, topn=10):
