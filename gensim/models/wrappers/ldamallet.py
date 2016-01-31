@@ -244,7 +244,7 @@ class LdaMallet(utils.SaveLoad):
     def print_topic(self, topicid, topn=10):
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
 
-    def read_doctopics(self, fname, eps=1e-6):
+    def read_doctopics(self, fname, eps=1e-6, renorm=True):
         """
         Yield document topic vectors from MALLET's "doc-topics" format, as sparse gensim vectors.
 
@@ -270,9 +270,9 @@ class LdaMallet(utils.SaveLoad):
                 else:
                     raise RuntimeError("invalid doc topics format at line %i in %s" % (lineno + 1, fname))
 
-                # explicitly normalize weights to sum up to 1.0, just to be sure...
-                total_weight = float(sum([weight for _, weight in doc]))
-                if total_weight:
-                    yield sorted((id_, float(weight) / total_weight) for id_, weight in doc)
-                else:
-                    yield []
+                if renorm:
+                    # explicitly normalize weights to sum up to 1.0, just to be sure...
+                    total_weight = float(sum([weight for _, weight in doc]))
+                    if total_weight:
+                        doc = [(id_, float(weight) / total_weight) for id_, weight in doc]
+                yield doc
