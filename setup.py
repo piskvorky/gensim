@@ -106,6 +106,7 @@ def readfile(fname):
     return io.open(path, encoding='utf8').read()
 
 model_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
+gensim_dir = os.path.join(os.path.dirname(__file__), 'gensim')
 
 cmdclass = {'build_ext': custom_build_ext}
 
@@ -127,6 +128,8 @@ setup(
         Extension('gensim.models.doc2vec_inner',
             sources=['./gensim/models/doc2vec_inner.c'],
             include_dirs=[model_dir]),
+        Extension('gensim.pyemd.emd',
+            sources=['./gensim/pyemd/emd.cpp'])
     ],
     cmdclass=cmdclass,
     packages=find_packages(),

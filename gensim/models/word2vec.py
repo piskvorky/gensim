@@ -77,6 +77,7 @@ from copy import deepcopy
 from collections import defaultdict
 import threading
 import itertools
+import warnings
 
 from gensim.utils import keep_vocab_item
 
@@ -86,13 +87,16 @@ except ImportError:
     from Queue import Queue, Empty
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
-    uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
+    double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
+    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray, nanmin,\
+    nansum, isnan, full as np_full
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
+from gensim.corpora.dictionary import Dictionary
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
+from scipy.spatial.distance import cdist
 
 logger = logging.getLogger(__name__)
 
@@ -219,6 +223,12 @@ except ImportError:
 
         return log_prob_sentence
 
+# If pyemd C extension is available, import it. Else use brute force pure Python version.
+try:
+    from gensim.pyemd import emd
+    PYEMD_EXT = True
+except ImportError:
+    PYEMD_EXT = False
 
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
                   context_vectors=None, context_locks=None):
@@ -1211,6 +1221,124 @@ class Word2Vec(utils.SaveLoad):
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
+
+    def wmdistance(self, document1, document2, WCD=False, RWMD=False, force_pure_python=False):
+        """
+        Compute the Word Mover's Distance between two documents. When using this
+        code, please consider citing the following papers:
+        * Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
+        * Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
+        * Matt Kusner et al. "From Word Embeddings To Document Distances".
+
+        Note that if one of the documents have no words that exist in the
+        Word2Vec vocab, `float('inf')` (i.e. infinity) will be returned.
+
+        This method only works if the C extension for `pyemd` is loaded (Gensim
+        should be installed with a working C compiler).
+
+        Example:
+        > # Train word2vec model.
+        > model = Word2Vec(sentences)
+
+        > # Some sentences to test.
+        > sentence1 = 'Obama speaks to the media in Illinois'.lower().split()
+        > sentence2 = 'The president greets the press in Chicago'.lower().split()
+
+        > # Remove their stopwords.
+        > from nltk.corpus import stopwords
+        > stopwords = nltk.corpus.stopwords.words('english')
+        > sentence1 = [w for w in sentence1 if w not in stopwords]
+        > sentence2 = [w for w in sentence2 if w not in stopwords]
+
+        > # Compute WMD.
+        > distance = model.wmdistance(sentence1, sentence2)
+        """
+
+        # Remove out-of-vocabulary words.
+        len_pre_oov1 = len(document1)
+        len_pre_oov2 = len(document2)
+        document1 = [token for token in document1 if token in self]
+        document2 = [token for token in document2 if token in self]
+        logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).',
+                    len_pre_oov1 - len(document1), len_pre_oov2 - len(document2))
+
+        if len(document1) == 0 or len(document2) == 0:
+            # TODO: make a warning for the user here (this can cause confusion).
+            logger.info('At least one of the documents had no words that were'
+                        'in the vocabulary. Aborting (returning inf).')
+            return float('inf')
+
+        dictionary = Dictionary(documents=[document1, document2])
+        vocab_len = len(dictionary)
+
+        # Sets for faster look-up.
+        docset1 = set(document1)
+        docset2 = set(document2)
+
+        if not WCD:  # distance matrix not necessary in WCD.
+            # Compute distance matrix.
+            if RWMD:
+                distance_matrix = np_full([vocab_len, vocab_len], float('nan'), dtype=double)
+            else:
+                distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
+
+            for t1 in docset1:
+                for t2 in docset2:
+                    # Get word indeces.
+                    i = dictionary.token2id[t1]
+                    j = dictionary.token2id[t2]
+                    # Compute Euclidean distance between word vectors.
+                    distance_matrix[i][j] = sqrt(np_sum((self[t1] - self[t2])**2))
+
+        # TODO: is this the proper way of handling this?
+        if not PYEMD_EXT:
+            assert False, "C extension for pyemd not loaded, computing WMD will be slow. "
+
+        def nbow(document):
+            d = zeros(vocab_len, dtype=double)
+            nbow = dictionary.doc2bow(document)
+            doc_len = len(document)
+            for idx, freq in nbow:
+                d[idx] = freq / float(doc_len)
+            return d
+
+        # Compute nBOW representation of documents.
+        d1 = nbow(document1)
+        d2 = nbow(document2)
+
+        if WCD:
+            # Compute WCD.
+            # Stack all word vectors in a matrix.
+            X = zeros((self.vector_size, vocab_len))
+            for i, token in dictionary.items():
+                X[:, i] = self[token]
+
+            dist = sqrt(np_sum((X.dot(d1) - X.dot(d2))**2))
+            return dist
+        if RWMD:
+            # Compute RWMD.
+            with warnings.catch_warnings():
+                # Ignore Numpy warning: "All-NaN axis encountered".
+                warnings.filterwarnings('ignore', r'All-NaN axis encountered')
+
+                # Compute "naive" minimum distances.
+                mdist1 = nanmin(distance_matrix, axis=1)
+                mdist2 = nanmin(distance_matrix, axis=0)
+
+            mdist1[isnan(mdist1)] = 0.0
+            mdist2[isnan(mdist2)] = 0.0
+
+            # Dot the "naive" minimum distances with the nBOW representation.
+            rwmd1 = mdist1.dot(d1)
+            rwmd2 = mdist2.dot(d2)
+
+            # Use the greater of the two lower bounds.
+            rwmd = max(rwmd1, rwmd2)
+
+            return rwmd
+        else:
+            # Compute WMD.
+            return emd(d1, d2, distance_matrix)
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         """
