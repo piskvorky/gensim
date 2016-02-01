@@ -592,12 +592,14 @@ class WmdSimilarity(interfaces.SimilarityABC):
         # Make query.
         sims = instance[query]
     """
-    def __init__(self, corpus, w2v_model, num_best=None, chunksize=256):
+    def __init__(self, corpus, w2v_model, num_best=None, init_distances=True, chunksize=256):
         """
-        corpus:     List of lists of strings, as in gensim.models.word2vec.
-        w2v_model:  A trained word2vec model.
-        num_best:   Number of results to retrieve. If provided, a fast algorithm
-                    called "prefetch and prune" is used.
+        corpus:             List of lists of strings, as in gensim.models.word2vec.
+        w2v_model:          A trained word2vec model.
+        num_best:           Number of results to retrieve. If provided, a fast algorithm
+                            called "prefetch and prune" is used.
+        init_distances:     Whether or not to initialize a distance matrix
+                            (euclidean distance between words in vocab).
         """
         self.corpus = corpus
         self.w2v_model = w2v_model
@@ -612,6 +614,11 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
         # index is simply an array from 0 to size of corpus.
         self.index = numpy.array(range(len(corpus)))
+
+        if init_distances:
+            # Pre-compute distance matrix (euclidean distance between words in
+            # vocab).
+            w2v_model.init_distances()
 
     def __len__(self):
         return len(self.corpus)

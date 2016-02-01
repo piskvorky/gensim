@@ -434,6 +434,7 @@ class Word2Vec(utils.SaveLoad):
         self.train_count = 0
         self.total_train_time = 0
         self.sorted_vocab = sorted_vocab
+        self.dist_provided = False
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
@@ -1260,14 +1261,24 @@ class Word2Vec(utils.SaveLoad):
                     # Get word indeces.
                     i = dictionary.token2id[t1]
                     j = dictionary.token2id[t2]
-                    # Compute Euclidean distance between word vectors.
-                    distance_matrix[i][j] = sqrt(np_sum((self[t1] - self[t2])**2))
+                    if self.dist_provided:
+                        # Use pre-computed word distances.
+                        k = self.vocab[t1].index
+                        l = self.vocab[t2].index
+                        if k > l:
+                            # Ensures that we use the upper triangular matrix.
+                            k, l = l, k
+                        distance_matrix[i, j] = self.vocab_dist[k, l]
+                    else:
+                        # Compute Euclidean distance between word vectors.
+                        distance_matrix[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
 
         # TODO: is this the proper way of handling this?
         if not PYEMD_EXT:
             assert False, "C extension for pyemd not loaded, computing WMD will be slow. "
 
         def nbow(document):
+            # TODO: add some comments.
             d = zeros(vocab_len, dtype=double)
             nbow = dictionary.doc2bow(document)
             doc_len = len(document)
@@ -1312,6 +1323,26 @@ class Word2Vec(utils.SaveLoad):
         else:
             # Compute WMD.
             return emd(d1, d2, distance_matrix)
+
+    def init_distances(self):
+        '''
+        Compute the euclidean distance between all the words in the vocabulary,
+        and store in a matrix. This matrix is used in `wmdistance`, if provided.
+        '''
+
+        self.dist_provided = True  # Tells wmdistance that vocab_dist exists.
+
+        # Compute the upper triangular distance matrix (it is symmetric, and 0
+        # in the diagonal).
+        vocab_size = len(self.vocab)
+        vocab_dist = zeros((vocab_size, vocab_size), dtype=double)
+        for i in range(vocab_size):
+            for j in range(i + 1, vocab_size):
+                t1 = self.index2word[i]
+                t2 = self.index2word[j]
+                vocab_dist[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
+
+        self.vocab_dist = vocab_dist
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         """
