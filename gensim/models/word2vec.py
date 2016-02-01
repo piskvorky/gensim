@@ -1206,22 +1206,25 @@ class Word2Vec(utils.SaveLoad):
         Note that if one of the documents have no words that exist in the
         Word2Vec vocab, `float('inf')` (i.e. infinity) will be returned.
 
+        This method only works if the C extension for `pyemd` is loaded (Gensim
+        should be installed with a working C compiler).
+
         Example:
-        # Train word2vec model.
-        model = Word2Vec(sentences)
+        > # Train word2vec model.
+        > model = Word2Vec(sentences)
 
-        # Some sentences to test.
-        sentence1 = 'Obama speaks to the media in Illinois'.lower().split()
-        sentence2 = 'The president greets the press in Chicago'.lower().split()
+        > # Some sentences to test.
+        > sentence1 = 'Obama speaks to the media in Illinois'.lower().split()
+        > sentence2 = 'The president greets the press in Chicago'.lower().split()
 
-        # Remove their stopwords.
-        from nltk.corpus import stopwords
-        stopwords = nltk.corpus.stopwords.words('english')
-        sentence1 = [w for w in sentence1 if w not in stopwords]
-        sentence2 = [w for w in sentence2 if w not in stopwords]
+        > # Remove their stopwords.
+        > from nltk.corpus import stopwords
+        > stopwords = nltk.corpus.stopwords.words('english')
+        > sentence1 = [w for w in sentence1 if w not in stopwords]
+        > sentence2 = [w for w in sentence2 if w not in stopwords]
 
-        # Compute WMD.
-        distance = model.wmdistance(sentence1, sentence2)
+        > # Compute WMD.
+        > distance = model.wmdistance(sentence1, sentence2)
         """
 
         # Remove out-of-vocabulary words.
@@ -1252,20 +1255,17 @@ class Word2Vec(utils.SaveLoad):
             else:
                 distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
 
-            # TODO: simplify loop; "for i, t1 in enumerate(docset1)"
-            for i, t1 in dictionary.items():
-                for j, t2 in dictionary.items():
-                    if not t1 in docset1 or not t2 in docset2:
-                        # Only compute the distances that we need.
-                        continue
+            for t1 in docset1:
+                for t2 in docset2:
+                    # Get word indeces.
+                    i = dictionary.token2id[t1]
+                    j = dictionary.token2id[t2]
                     # Compute Euclidean distance between word vectors.
                     distance_matrix[i][j] = sqrt(np_sum((self[t1] - self[t2])**2))
 
+        # TODO: is this the proper way of handling this?
         if not PYEMD_EXT:
-            logger.warning("C extension not loaded for wmdistance, computing WMD will be slow. ")
-            return self.wmdistance_slow(document1, document2, dictionary, distance_matrix)
-        if force_pure_python:
-            return self.wmdistance_slow(document1, document2, dictionary, distance_matrix)
+            assert False, "C extension for pyemd not loaded, computing WMD will be slow. "
 
         def nbow(document):
             d = zeros(vocab_len, dtype=double)
@@ -1312,50 +1312,6 @@ class Word2Vec(utils.SaveLoad):
         else:
             # Compute WMD.
             return emd(d1, d2, distance_matrix)
-
-    def wmdistance_slow(self, document1, document2, dictionary, distance_matrix):
-        '''
-        NOTE: don't use this for now. The algorithm does not produce the correct
-        WMD as it does not take the frequency distributions (i.e. nBOW, d) into
-        account.
-
-        Brute force implementation of Word Mover's Distance in pure Python.
-        See the wmdistance method for more info.
-        '''
-
-        len1 = len(document1)
-        len2 = len(document2)
-        if len1 > len2:
-            short_doc = document2
-            long_doc = document1
-        else:
-            short_doc = document1
-            long_doc = document2
-            distance_matrix = distance_matrix.transpose()
-
-        # Convert document words to corresponding indeces.
-        long_doc = [dictionary.token2id[w] for w in long_doc]
-        short_doc = [dictionary.token2id[w] for w in short_doc]
-
-        # Find all permutations of the longer document.
-        n = len(short_doc)
-        permutations = itertools.permutations(long_doc)
-        # Compute distances for all combinations of both documents.
-        min_dist = sys.float_info.max
-        for perm in permutations:
-            j = 0
-            dist = 0
-            for i in range(n):
-                k = perm[i]
-                dist += distance_matrix[k][short_doc[j]]
-                j += 1
-            if min_dist > dist:
-                min_dist = dist
-
-        # Normalize the distance by the length of the shortest document.
-        min_dist = float(min_dist / float(n))  # FIXME: is this the correct normalization factor?
-
-        return min_dist
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         """
