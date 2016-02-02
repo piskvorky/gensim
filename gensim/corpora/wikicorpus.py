@@ -54,6 +54,12 @@ RE_P14 = re.compile('\[\[Category:[^][]*\]\]', re.UNICODE) # categories
 # Remove File and Image template
 RE_P15 = re.compile('\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)
 
+# MediaWiki namespaces (https://www.mediawiki.org/wiki/Manual:Namespace) that
+# ought to be ignored
+IGNORED_NAMESPACES = ['Wikipedia', 'Category', 'File', 'Portal', 'Template',
+                      'MediaWiki', 'User', 'Help', 'Book', 'Draft',
+                      'WikiProject', 'Special', 'Talk']
+
 
 def filter_wiki(raw):
     """
@@ -293,13 +299,12 @@ class WikiCorpus(TextCorpus):
         pool = multiprocessing.Pool(self.processes)
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
         # is dumb and would load the entire input into RAM at once...
-        ignore_namespaces = 'Wikipedia Category File Portal Template MediaWiki User Help Book Draft'.split()
         for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
             for tokens, title, pageid in pool.imap(process_article, group):  # chunksize=10):
                 articles_all += 1
                 positions_all += len(tokens)
                 # article redirects and short stubs are pruned here
-                if len(tokens) < ARTICLE_MIN_WORDS or any(title.startswith(ignore + ':') for ignore in ignore_namespaces):
+                if len(tokens) < ARTICLE_MIN_WORDS or any(title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
                     continue
                 articles += 1
                 positions += len(tokens)
