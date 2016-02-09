@@ -1205,7 +1205,7 @@ class Word2Vec(utils.SaveLoad):
                     raise KeyError("word '%s' not in vocabulary" % word)
             restrict_vocab_idx = [self.vocab[word].index for word in restrict_vocab]
             limited = self.syn0norm[restrict_vocab_idx]
-        
+
         dists = dot(limited, mean)
         if not topn:
             return dists
