@@ -256,7 +256,6 @@ class SaveLoad(object):
         opportunity to recursively included SaveLoad instances.
 
         """
-
         mmap_error = lambda x, y: IOError(
             'Cannot mmap compressed object %s in file %s. ' % (x, y) +
             'Use `load(fname, mmap=None)` or uncompress files manually.')
