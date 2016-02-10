@@ -114,6 +114,7 @@ if WHEELHOUSE_UPLOADER_COMMANDS.intersection(sys.argv):
     import wheelhouse_uploader.cmd
     cmdclass.update(vars(wheelhouse_uploader.cmd))
 
+#change by Dausheyev George - adding lda_model.pyx extension
 setup(
     name='gensim',
     version='0.12.4',
@@ -127,6 +128,9 @@ setup(
         Extension('gensim.models.doc2vec_inner',
             sources=['./gensim/models/doc2vec_inner.c'],
             include_dirs=[model_dir]),
+        Extension('gensim.models.lda_model',
+            sources=['./gensim/models/lda_model.c'],
+            include_dirs=[model_dir])
     ],
     cmdclass=cmdclass,
     packages=find_packages(),

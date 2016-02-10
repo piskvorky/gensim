@@ -32,17 +32,38 @@ The algorithm:
 
 """
 
-
 import logging
 import numpy  # for arrays, array broadcasting etc.
 import numbers
-
 from gensim import interfaces, utils, matutils
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
 from six.moves import xrange
 import six
+from gensim.models.word2vec_inner import FAST_VERSION
+
+try:
+    from lda_model import (mean_change, _dirichlet_expectation_1d, _dirichlet_expectation_2d)
+except:
+    # failed... fall back to plain python
+    FAST_VERSION = -1
+    import warnings
+
+    warnings.warn("C extension not loaded for LdaModel, computation will be slow. "
+                  "Install a C compiler and reinstall gensim for fast computation.")
+
+
+    def mean_change(gammad, lastgamma):
+        return numpy.abs(gammad - lastgamma).mean()
+
+
+    def _dirichlet_expectation_1d(alpha):
+        return psi(alpha) - psi(numpy.sum(alpha))
+
+
+    def _dirichlet_expectation_2d(alpha):
+        return psi(alpha) - psi(numpy.sum(alpha, 1))[:, numpy.newaxis]
 
 # log(sum(exp(x))) that tries to avoid overflow
 try:
@@ -51,7 +72,6 @@ try:
 except ImportError:
     # maxentropy has been removed in recent releases, logsumexp now in misc
     from scipy.misc import logsumexp
-
 
 logger = logging.getLogger('gensim.models.ldamodel')
 
@@ -62,10 +82,11 @@ def dirichlet_expectation(alpha):
 
     """
     if (len(alpha.shape) == 1):
-        result = psi(alpha) - psi(numpy.sum(alpha))
+        result = _dirichlet_expectation_1d(alpha)
     else:
-        result = psi(alpha) - psi(numpy.sum(alpha, 1))[:, numpy.newaxis]
+        result = _dirichlet_expectation_2d(alpha)
     return result.astype(alpha.dtype)  # keep the same precision as input
+
 
 def update_dir_prior(prior, N, logphat, rho):
     """
@@ -99,6 +120,7 @@ class LdaState(utils.SaveLoad):
     reduce traffic.
 
     """
+
     def __init__(self, eta, shape):
         self.eta = eta
         self.sstats = numpy.zeros(shape)
@@ -178,6 +200,8 @@ class LdaState(utils.SaveLoad):
 
     def get_Elogbeta(self):
         return dirichlet_expectation(self.get_lambda())
+
+
 # endclass LdaState
 
 
@@ -198,11 +222,12 @@ class LdaModel(interfaces.TransformationABC):
 
     Model persistency is achieved through its `load`/`save` methods.
     """
+
     def __init__(self, corpus=None, num_topics=100, id2word=None,
                  distributed=False, chunksize=2000, passes=1, update_every=1,
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0,
                  eval_every=10, iterations=50, gamma_threshold=0.001,
-                 minimum_probability=0.01):
+                 minimum_probability=0.01, cython_enable=False):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -256,7 +281,8 @@ class LdaModel(interfaces.TransformationABC):
         # store user-supplied parameters
         self.id2word = id2word
         if corpus is None and self.id2word is None:
-            raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
+            raise ValueError(
+                'at least one of corpus/id2word must be specified, to establish input space dimensionality')
 
         if self.id2word is None:
             logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
@@ -284,7 +310,8 @@ class LdaModel(interfaces.TransformationABC):
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
-        assert self.alpha.shape == (num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), num_topics)
+        assert self.alpha.shape == (num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (
+            str(self.alpha.shape), num_topics)
 
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
 
@@ -363,13 +390,14 @@ class LdaModel(interfaces.TransformationABC):
             # eta is a column: [[0.1],
             #                   [0.1]]
             if init_prior.shape == (self.num_topics,) or init_prior.shape == (1, self.num_topics):
-                init_prior = init_prior.reshape((self.num_topics, 1)) # this statement throws ValueError if eta did not match self.num_topics
+                init_prior = init_prior.reshape(
+                    (self.num_topics, 1))  # this statement throws ValueError if eta did not match self.num_topics
 
         return init_prior, is_auto
 
     def __str__(self):
         return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % \
-            (self.num_terms, self.num_topics, self.decay, self.chunksize)
+               (self.num_terms, self.num_topics, self.decay, self.chunksize)
 
     def sync_state(self):
         self.expElogbeta = numpy.exp(self.state.get_Elogbeta())
@@ -447,8 +475,8 @@ class LdaModel(interfaces.TransformationABC):
                 expElogthetad = numpy.exp(Elogthetad)
                 phinorm = numpy.dot(expElogthetad, expElogbetad) + 1e-100
                 # If gamma hasn't changed much, we're done.
-                meanchange = numpy.mean(abs(gammad - lastgamma))
-                if (meanchange < self.gamma_threshold):
+                meanchange = mean_change(gammad, lastgamma)
+                if meanchange < self.gamma_threshold:
                     converged += 1
                     break
             gamma[d, :] = gammad
@@ -482,7 +510,6 @@ class LdaModel(interfaces.TransformationABC):
         state.numdocs += gamma.shape[0]  # avoids calling len(chunk) on a generator
         return gamma
 
-
     def update_alpha(self, gammat, rho):
         """
         Update parameters for the Dirichlet prior on the per-document
@@ -504,7 +531,8 @@ class LdaModel(interfaces.TransformationABC):
         if self.eta.shape[1] != 1:
             raise ValueError("Can't use update_eta with eta matrices, only column vectors.")
         N = float(lambdat.shape[1])
-        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat.transpose()) / N).reshape((self.num_topics,1))
+        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat.transpose()) / N).reshape(
+            (self.num_topics, 1))
 
         self.eta = update_dir_prior(self.eta, N, logphat, rho)
         logger.info("optimized eta %s", list(self.eta.reshape((self.num_topics))))
@@ -523,8 +551,9 @@ class LdaModel(interfaces.TransformationABC):
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         subsample_ratio = 1.0 * total_docs / len(chunk)
         perwordbound = self.bound(chunk, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
-        logger.info("%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words" %
-                    (perwordbound, numpy.exp2(-perwordbound), len(chunk), corpus_words))
+        logger.info(
+            "%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words" %
+            (perwordbound, numpy.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
 
     def update(self, corpus, chunksize=None, decay=None, offset=None,
@@ -610,8 +639,8 @@ class LdaModel(interfaces.TransformationABC):
                     "every %i documents, evaluating perplexity every %i documents, "
                     "iterating %ix with a convergence threshold of %f",
                     updatetype, self.num_topics, passes, lencorpus,
-                        updateafter, evalafter, iterations,
-                        gamma_threshold)
+                    updateafter, evalafter, iterations,
+                    gamma_threshold)
 
         if updates_per_pass * passes < 10:
             logger.warning("too few updates, training might not converge; consider "
@@ -683,7 +712,7 @@ class LdaModel(interfaces.TransformationABC):
                 self.do_mstep(rho(), other, pass_ > 0)
                 del other
                 dirty = False
-        # endfor entire corpus update
+                # endfor entire corpus update
 
     def do_mstep(self, rho, other, extra_pass=False):
         """
@@ -824,7 +853,7 @@ class LdaModel(interfaces.TransformationABC):
 
     def print_topic(self, topicid, topn=10):
         """Return the result of `show_topic`, but formatted as a single string."""
-        return ' + '.join(['%.3f*%s' % (v, k)  for k, v in self.show_topic(topicid, topn)])
+        return ' + '.join(['%.3f*%s' % (v, k) for k, v in self.show_topic(topicid, topn)])
 
     def top_topics(self, corpus, num_words=20):
         """
@@ -955,7 +984,7 @@ class LdaModel(interfaces.TransformationABC):
         if ignore is not None and ignore:
             if isinstance(ignore, six.string_types):
                 ignore = [ignore]
-            ignore = [e for e in ignore if e] # make sure None and '' are not in the list
+            ignore = [e for e in ignore if e]  # make sure None and '' are not in the list
             ignore = list(set(['state', 'dispatcher']) | set(ignore))
         else:
             ignore = ['state', 'dispatcher']
@@ -979,4 +1008,5 @@ class LdaModel(interfaces.TransformationABC):
         except Exception as e:
             logging.warning("failed to load state from %s: %s", state_fname, e)
         return result
+
 # endclass LdaModel
