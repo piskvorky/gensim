@@ -10,7 +10,7 @@ USAGE: %(program)s -train CORPUS -output VECTORS -size SIZE -window WINDOW
 -min_count MIN-COUNT -alpha ALPHA -binary BINARY -accuracy FILE
 
 Trains a neural embedding model on text file CORPUS.
-Parameters essentially reproduce those used by the original C tool 
+Parameters essentially reproduce those used by the original C tool
 (see https://code.google.com/archive/p/word2vec/).
 
 Parameters for training:
@@ -61,20 +61,16 @@ from gensim.models.word2vec import Word2Vec, LineSentence  # avoid referencing _
 
 
 if __name__ == "__main__":
-
     logging.basicConfig(
         format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
         level=logging.INFO)
     logger.info("running %s", " ".join(sys.argv))
-
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
     if len(sys.argv) < 2:
         print(globals()['__doc__'] % locals())
         sys.exit(1)
-
-    
 
     seterr(all='raise')  # don't ignore numpy errors
 
@@ -83,8 +79,8 @@ if __name__ == "__main__":
     parser.add_argument("-output", help="Use file OUTPUT to save the resulting word vectors")
     parser.add_argument("-window", help="Set max skip length WINDOW between words; default is 5", type=int, default=5)
     parser.add_argument("-size", help="Set size of word vectors; default is 100", type=int, default=100)
-    parser.add_argument("-sample", help="""Set threshold for occurrence of words. Those that appear with higher frequency in the training data will be randomly down-sampled;
-    default is 1e-3, useful range is (0, 1e-5)""", type=float, default=1e-3)
+    parser.add_argument("-sample", help="Set threshold for occurrence of words. Those that appear with higher frequency in the training data will be randomly down-sampled; "
+                                        "default is 1e-3, useful range is (0, 1e-5)", type=float, default=1e-3)
     parser.add_argument("-hs", help="Use Hierarchical Softmax; default is 0 (not used)", type=int, default=0, choices=[0, 1])
     parser.add_argument("-negative", help="Number of negative examples; default is 5, common values are 3 - 10 (0 = not used)", type=int, default=5)
     parser.add_argument("-threads", help="Use THREADS threads (default 3)", type=int, default=3)
@@ -108,8 +104,10 @@ if __name__ == "__main__":
 
     corpus = LineSentence(args.train)
 
-    model = Word2Vec(corpus, size=args.size, min_count=args.min_count, workers=args.threads, window=args.window,
-    sample=args.sample, alpha=args.alpha, sg=skipgram, hs=args.hs, negative=args.negative, cbow_mean=1, iter=args.iter)
+    model = Word2Vec(
+        corpus, size=args.size, min_count=args.min_count, workers=args.threads,
+        window=args.window, sample=args.sample, alpha=args.alpha, sg=skipgram,
+        hs=args.hs, negative=args.negative, cbow_mean=1, iter=args.iter)
 
     if args.output:
         outfile = args.output

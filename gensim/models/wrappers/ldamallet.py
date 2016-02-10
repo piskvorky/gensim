@@ -192,7 +192,7 @@ class LdaMallet(utils.SaveLoad):
                 if token not in word2id:
                     continue
                 tokenid = word2id[token]
-                wordtopics[int(topic), tokenid] += 1
+                wordtopics[int(topic), tokenid] += 1.0
         logger.info("loaded assigned topics for %i tokens", wordtopics.sum())
         self.wordtopics = wordtopics
         self.print_topics(15)
