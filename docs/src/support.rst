@@ -22,9 +22,9 @@ You can also try asking on StackOverflow, using the `gensim tag <http://stackove
 Business support
 ------------------
 
-I also run a consulting business for data mining and information retrieval solutions, `radimrehurek.com <http://radimrehurek.com>`_.
+I also run a consulting business for data mining and information retrieval solutions, `rare-technologies.com <http://rare-technologies.com>`_.
 
-In case you need commercial support, design validation, technical training or custom system development, `get in touch <http://radimrehurek.com/contact/>`_ for a quote.
+In case you need commercial support, design validation, technical training or custom system development, `get in touch <http://rare-technologies/contact>`_ for a quote.
 
 Developer support
 ------------------
