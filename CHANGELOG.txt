@@ -3,18 +3,18 @@ Changes
 
 0.12.4, 29/01/2016
 
-* Word2vec in line with original word2vec.c (Andrey Kutuzov, #538) 
-- Same default values. See diff https://github.com/akutuzov/gensim/commit/6456cbcd75e6f8720451766ba31cc046b4463ae2
-- Standalone script with command line arguments matching those of original C tool.
-   Usage ./word2vec_standalone.py -train data.txt -output trained_vec.txt -size 200 -window 2 -sample 1e-4
-* load_word2vec_format() performance (@svenkreiss, #555)
-  - Remove `init_sims()` call for performance improvements when normalized vectors are not needed.
-  - Remove `norm_only` parameter (API change). Call `init_sims(replace=True)` after the `load_word2vec_format()` call for the old `norm_only=True` behavior.
 * Better internal handling of job batching in word2vec (#535)
   - up to 300% speed up when training on very short documents (~tweets)
+* Word2vec CLI in line with original word2vec.c (Andrey Kutuzov, #538)
+  - Same default values. See diff https://github.com/akutuzov/gensim/commit/6456cbcd75e6f8720451766ba31cc046b4463ae2
+  - Standalone script with command line arguments matching those of original C tool.
+  - Usage: python -m gensim.scripts.word2vec_standalone -train data.txt -output trained_vec.txt -size 200 -window 2 -sample 1e-4
+* Improved load_word2vec_format() performance (@svenkreiss, #555)
+  - Remove `init_sims()` call for performance improvements when normalized vectors are not needed.
+  - Remove `norm_only` parameter (API change). Call `init_sims(replace=True)` after the `load_word2vec_format()` call for the old `norm_only=True` behavior.
 * Word2vec allows non-strict unicode error handling (ignore or replace) (Gordon Mohr, #466)
 * Doc2Vec `model.docvecs[key]` now raises KeyError for unknown keys (Gordon Mohr, #520)
-* Fix `DocvecsArray.index_to_doctag` so `most_similar()` returns string doctags (Gordon Mohr, #560) 
+* Fix `DocvecsArray.index_to_doctag` so `most_similar()` returns string doctags (Gordon Mohr, #560)
 * On-demand loading of the `pattern` library in utils.lemmatize (Jan Zikes, #461)
   - `utils.HAS_PATTERN` flag moved to `utils.has_pattern()`
 * Threadsafe Word2Vec/Doc2Vec finish-check to avoid hang/unending Word2Vec/Doc2Vec training (Gordon Mohr, #571)
