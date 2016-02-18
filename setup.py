@@ -107,9 +107,16 @@ def readfile(fname):
 
 model_dir = os.path.join(os.path.dirname(__file__), 'gensim', 'models')
 
+cmdclass = {'build_ext': custom_build_ext}
+
+WHEELHOUSE_UPLOADER_COMMANDS = set(['fetch_artifacts', 'upload_all'])
+if WHEELHOUSE_UPLOADER_COMMANDS.intersection(sys.argv):
+    import wheelhouse_uploader.cmd
+    cmdclass.update(vars(wheelhouse_uploader.cmd))
+
 setup(
     name='gensim',
-    version='0.12.1',
+    version='0.12.4',
     description='Python framework for fast Vector Space Modelling',
     long_description=readfile('README.rst'),
 
@@ -121,10 +128,10 @@ setup(
             sources=['./gensim/models/doc2vec_inner.c'],
             include_dirs=[model_dir]),
     ],
-    cmdclass={'build_ext': custom_build_ext},
+    cmdclass=cmdclass,
     packages=find_packages(),
 
-    author=u'Radim Řehůřek',
+    author=u'Radim Rehurek',
     author_email='me@radimrehurek.com',
 
     url='http://radimrehurek.com/gensim',

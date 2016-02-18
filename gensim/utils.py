@@ -11,6 +11,7 @@ This module contains various general utility functions.
 from __future__ import with_statement
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -33,6 +34,7 @@ import multiprocessing
 import shutil
 import sys
 from contextlib import contextmanager
+import subprocess
 
 import numpy
 import scipy.sparse
@@ -72,14 +74,6 @@ except ImportError:
             from gzip import GzipFile
             return make_closing(GzipFile)(fname, mode)
         return open(fname, mode)
-
-
-try:
-    from pattern.en import parse
-    logger.info("'pattern' package found; utils.lemmatize() is available for English")
-    HAS_PATTERN = True
-except ImportError:
-    HAS_PATTERN = False
 
 
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
@@ -805,7 +799,6 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
 grouper = chunkize_serial
 
 
-
 class InputQueue(multiprocessing.Process):
     def __init__(self, q, corpus, chunksize, maxsize, as_numpy):
         super(InputQueue, self).__init__()
@@ -908,7 +901,7 @@ def pickle(obj, fname, protocol=2):
     Python 2.x and 3.x.
 
     """
-    with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
+    with smart_open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
         _pickle.dump(obj, fout, protocol=protocol)
 
 
@@ -1021,48 +1014,64 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
             daemon.requestLoop()
 
 
-if HAS_PATTERN:
-    def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
-            stopwords=frozenset(), min_length=2, max_length=15):
-        """
-        This function is only available when the optional 'pattern' package is installed.
+def has_pattern():
+    """
+    Function to check if there is installed pattern library
+    """
+    pattern = False
+    try:
+        from pattern.en import parse
+        pattern = True
+    except ImportError:
+        logger.info("Pattern library is not installed, lemmatization won't be available.")
+    return pattern
 
-        Use the English lemmatizer from `pattern` to extract UTF8-encoded tokens in
-        their base form=lemma, e.g. "are, is, being" -> "be" etc.
-        This is a smarter version of stemming, taking word context into account.
 
-        Only considers nouns, verbs, adjectives and adverbs by default (=all other lemmas are discarded).
+def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
+        stopwords=frozenset(), min_length=2, max_length=15):
+    """
+    This function is only available when the optional 'pattern' package is installed.
 
-        >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
-        ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
+    Use the English lemmatizer from `pattern` to extract UTF8-encoded tokens in
+    their base form=lemma, e.g. "are, is, being" -> "be" etc.
+    This is a smarter version of stemming, taking word context into account.
 
-        >>> lemmatize('The study ranks high.')
-        ['study/NN', 'rank/VB', 'high/JJ']
+    Only considers nouns, verbs, adjectives and adverbs by default (=all other lemmas are discarded).
 
-        >>> lemmatize('The ranks study hard.')
-        ['rank/NN', 'study/VB', 'hard/RB']
+    >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
+    ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
 
-        """
-        if light:
-            import warnings
-            warnings.warn("The light flag is no longer supported by pattern.")
+    >>> lemmatize('The study ranks high.')
+    ['study/NN', 'rank/VB', 'high/JJ']
 
-        # tokenization in `pattern` is weird; it gets thrown off by non-letters,
-        # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
-        # FIXME this throws away all fancy parsing cues, including sentence structure,
-        # abbreviations etc.
-        content = u(' ').join(tokenize(content, lower=True, errors='ignore'))
+    >>> lemmatize('The ranks study hard.')
+    ['rank/NN', 'study/VB', 'hard/RB']
 
-        parsed = parse(content, lemmata=True, collapse=False)
-        result = []
-        for sentence in parsed:
-            for token, tag, _, _, lemma in sentence:
-                if min_length <= len(lemma) <= max_length and not lemma.startswith('_') and lemma not in stopwords:
-                    if allowed_tags.match(tag):
-                        lemma += "/" + tag[:2]
-                        result.append(lemma.encode('utf8'))
-        return result
-#endif HAS_PATTERN
+    """
+    if not has_pattern():
+        raise ImportError("Pattern library is not installed. Pattern library is needed in order  \
+         to use lemmatize function")
+    from pattern.en import parse
+
+    if light:
+        import warnings
+        warnings.warn("The light flag is no longer supported by pattern.")
+
+    # tokenization in `pattern` is weird; it gets thrown off by non-letters,
+    # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
+    # FIXME this throws away all fancy parsing cues, including sentence structure,
+    # abbreviations etc.
+    content = u(' ').join(tokenize(content, lower=True, errors='ignore'))
+
+    parsed = parse(content, lemmata=True, collapse=False)
+    result = []
+    for sentence in parsed:
+        for token, tag, _, _, lemma in sentence:
+            if min_length <= len(lemma) <= max_length and not lemma.startswith('_') and lemma not in stopwords:
+                if allowed_tags.match(tag):
+                    lemma += "/" + tag[:2]
+                    result.append(lemma.encode('utf8'))
+    return result
 
 
 def mock_data_row(dim=1000, prob_nnz=0.5, lam=1.0):
@@ -1089,7 +1098,7 @@ def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
     return data
 
 
-def prune_vocab(vocab, min_reduce):
+def prune_vocab(vocab, min_reduce, trim_rule=None):
     """
     Remove all entries from the `vocab` dictionary with count smaller than `min_reduce`.
 
@@ -1099,9 +1108,60 @@ def prune_vocab(vocab, min_reduce):
     result = 0
     old_len = len(vocab)
     for w in list(vocab):  # make a copy of dict's keys
-        if vocab[w] <= min_reduce:
+        if not keep_vocab_item(w, vocab[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
             result += vocab[w]
             del vocab[w]
     logger.info("pruned out %i tokens with count <=%i (before %i, after %i)",
                 old_len - len(vocab), min_reduce, old_len, len(vocab))
     return result
+
+
+def qsize(queue):
+    """Return the (approximate) queue size where available; -1 where not (OS X)."""
+    try:
+        return queue.qsize()
+    except NotImplementedError:
+        # OS X doesn't support qsize
+        return -1
+
+RULE_DEFAULT = 0
+RULE_DISCARD = 1
+RULE_KEEP = 2
+
+
+def keep_vocab_item(word, count, min_count, trim_rule=None):
+    default_res = count >= min_count
+
+    if trim_rule is None:
+        return default_res
+    else:
+        rule_res = trim_rule(word, count, min_count)
+        if rule_res == RULE_KEEP:
+            return True
+        elif rule_res == RULE_DISCARD:
+            return False
+        else:
+            return default_res
+
+def check_output(*popenargs, **kwargs):
+    r"""Run command with arguments and return its output as a byte string.
+    Backported from Python 2.7 as it's implemented as pure python on stdlib.
+    >>> check_output(['/usr/bin/python', '--version'])
+    Python 2.6.2
+    Added extra KeyboardInterrupt handling
+    """
+    try:
+        process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+        output, unused_err = process.communicate()
+        retcode = process.poll()
+        if retcode:
+            cmd = kwargs.get("args")
+            if cmd is None:
+                cmd = popenargs[0]
+            error = subprocess.CalledProcessError(retcode, cmd)
+            error.output = output
+            raise error
+        return output
+    except KeyboardInterrupt:
+        process.terminate()
+        raise

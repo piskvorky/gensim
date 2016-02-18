@@ -57,6 +57,8 @@ two tokens (e.g. `new_york_times`):
 
 """
 
+import sys
+import os
 import logging
 from collections import defaultdict
 
@@ -121,13 +123,11 @@ class Phrases(interfaces.TransformationABC):
         if sentences is not None:
             self.add_vocab(sentences)
 
-
     def __str__(self):
         """Get short string representation of this phrase detector."""
         return "%s<%i vocab, min_count=%s, threshold=%s, max_vocab_size=%s>" % (
             self.__class__.__name__, len(self.vocab), self.min_count,
             self.threshold, self.max_vocab_size)
-
 
     @staticmethod
     def learn_vocab(sentences, max_vocab_size, delimiter=b'_'):
@@ -147,7 +147,7 @@ class Phrases(interfaces.TransformationABC):
                 vocab[delimiter.join(bigram)] += 1
                 total_words += 1
 
-            if sentence:    # add last word skipped by previous loop
+            if sentence:  # add last word skipped by previous loop
                 word = sentence[-1]
                 vocab[word] += 1
 
@@ -158,7 +158,6 @@ class Phrases(interfaces.TransformationABC):
         logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
                     (len(vocab), total_words, sentence_no + 1))
         return min_reduce, vocab
-
 
     def add_vocab(self, sentences):
         """
@@ -172,16 +171,15 @@ class Phrases(interfaces.TransformationABC):
         # counts collected in previous learn_vocab runs.
         min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter)
 
-        logger.info("merging %i counts into %s" % (len(vocab), self))
+        logger.info("merging %i counts into %s", len(vocab), self)
         self.min_reduce = max(self.min_reduce, min_reduce)
         for word, count in iteritems(vocab):
             self.vocab[word] += count
         if len(self.vocab) > self.max_vocab_size:
-            prune_vocab(self.vocab, self.min_reduce)
+            utils.prune_vocab(self.vocab, self.min_reduce)
             self.min_reduce += 1
 
-        logger.info("merged %s" % self)
-
+        logger.info("merged %s", self)
 
     def __getitem__(self, sentence):
         """
@@ -245,7 +243,6 @@ class Phrases(interfaces.TransformationABC):
 
 
 if __name__ == '__main__':
-    import sys, os
     logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
     logging.info("running %s" % " ".join(sys.argv))
 

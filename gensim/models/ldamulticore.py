@@ -51,6 +51,8 @@ import logging
 
 from gensim import utils
 from gensim.models.ldamodel import LdaModel, LdaState
+
+import six
 from six.moves import queue, xrange
 from multiprocessing import Pool, Queue, cpu_count
 
@@ -133,15 +135,17 @@ class LdaMulticore(LdaModel):
         """
         self.workers = max(1, cpu_count() - 1) if workers is None else workers
         self.batch = batch
-        if alpha == 'auto':
+
+        if isinstance(alpha, six.string_types) and alpha == 'auto':
             raise NotImplementedError("auto-tuning alpha not implemented in multicore LDA; use plain LdaModel.")
+
         super(LdaMulticore, self).__init__(corpus=corpus, num_topics=num_topics,
             id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
             decay=decay, offset=offset, eval_every=eval_every, iterations=iterations,
             gamma_threshold=gamma_threshold)
 
 
-    def update(self, corpus):
+    def update(self, corpus, chunks_as_numpy=False):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -221,7 +225,7 @@ class LdaMulticore(LdaModel):
                     if self.eval_every is not None and ((force and queue_size[0] == 0) or (self.eval_every != 0 and (self.num_updates / updateafter) % self.eval_every == 0)):
                         self.log_perplexity(chunk, total_docs=lencorpus)
 
-            chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=True)
+            chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=chunks_as_numpy)
             for chunk_no, chunk in enumerate(chunk_stream):
                 reallen += len(chunk)  # keep track of how many documents we've processed so far
 

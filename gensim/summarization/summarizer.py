@@ -10,12 +10,13 @@ from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
 from gensim.summarization.bm25 import get_bm25_weights as _bm25_weights
 from gensim.corpora import Dictionary
-from scipy.sparse import csr_matrix
 from math import log10 as _log10
 from six.moves import xrange
 
 
 INPUT_MIN_LENGTH = 10
+
+WEIGHT_THRESHOLD = 1.e-3
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ def _set_graph_edge_weights(graph):
 
     for i in xrange(len(documents)):
         for j in xrange(len(documents)):
-            if i == j:
+            if i == j or weights[i][j] < WEIGHT_THRESHOLD:
                 continue
 
             sentence_1 = documents[i]
@@ -131,17 +132,17 @@ def summarize_corpus(corpus, ratio=0.2):
     """
     Returns a list of the most important documents of a corpus using a
     variation of the TextRank algorithm.
-    The input must have at least INPUT_MIN_LENGTH documents for the
+    The input must have at least INPUT_MIN_LENGTH (%d) documents for the
     summary to make sense.
 
     The length of the output can be specified using the ratio parameter,
     which determines how many documents will be chosen for the summary
-    (defaults at 20% of the number of documents of the corpus).
+    (defaults at 20%% of the number of documents of the corpus).
 
     The most important documents are returned as a list sorted by the
     document score, highest first.
 
-    """
+    """ % INPUT_MIN_LENGTH
     hashable_corpus = _build_hasheable_corpus(corpus)
 
     # If the corpus is empty, the function ends.
