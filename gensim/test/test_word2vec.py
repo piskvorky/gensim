@@ -19,6 +19,8 @@ import bz2
 import numpy
 
 from gensim import utils, matutils
+from gensim.utils import check_output
+from subprocess import PIPE
 from gensim.models import word2vec
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
@@ -44,7 +46,6 @@ sentences = [
     ['graph', 'minors', 'trees'],
     ['graph', 'minors', 'survey']
 ]
-
 
 def testfile():
     # temporary data will be stored to this file
@@ -95,9 +96,11 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
         model.save_word2vec_format(testfile(), binary=True)
-        binary_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, norm_only=False)
+        binary_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
+        binary_model.init_sims(replace=False)
         self.assertTrue(numpy.allclose(model['human'], binary_model['human']))
-        norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, norm_only=True)
+        norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
+        norm_only_model.init_sims(replace=True)
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human']))
         self.assertTrue(numpy.allclose(model.syn0norm[model.vocab['human'].index], norm_only_model['human']))
 
@@ -106,9 +109,11 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.init_sims()
         model.save_word2vec_format(testfile(), binary=False)
-        text_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=False, norm_only=False)
+        text_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=False)
+        text_model.init_sims(False)
         self.assertTrue(numpy.allclose(model['human'], text_model['human'], atol=1e-6))
-        norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=False, norm_only=True)
+        norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=False)
+        norm_only_model.init_sims(True)
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human'], atol=1e-6))
 
         self.assertTrue(numpy.allclose(model.syn0norm[model.vocab['human'].index], norm_only_model['human'], atol=1e-4))
@@ -120,6 +125,18 @@ class TestWord2VecModel(unittest.TestCase):
         testvocab = os.path.join(tempfile.gettempdir(), 'gensim_word2vec.vocab')
         model.save_word2vec_format(testfile(), testvocab, binary=True)
         binary_model_with_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), testvocab, binary=True)
+        self.assertEqual(model.vocab['human'].count, binary_model_with_vocab.vocab['human'].count)
+
+    def testPersistenceWord2VecFormatCombinationWithStandardPersistence(self):
+        """Test storing/loading the entire model and vocabulary in word2vec format chained with
+         saving and loading via `save` and `load` methods`."""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        testvocab = os.path.join(tempfile.gettempdir(), 'gensim_word2vec.vocab')
+        model.save_word2vec_format(testfile(), testvocab, binary=True)
+        binary_model_with_vocab = word2vec.Word2Vec.load_word2vec_format(testfile(), testvocab, binary=True)
+        binary_model_with_vocab.save(testfile())
+        binary_model_with_vocab = word2vec.Word2Vec.load(testfile())
         self.assertEqual(model.vocab['human'].count, binary_model_with_vocab.vocab['human'].count)
 
     def testLargeMmap(self):
@@ -139,7 +156,7 @@ class TestWord2VecModel(unittest.TestCase):
         total_words = sum(len(sentence) for sentence in corpus)
 
         # try vocab building explicitly, using all words
-        model = word2vec.Word2Vec(min_count=1)
+        model = word2vec.Word2Vec(min_count=1, hs=1, negative=0)
         model.build_vocab(corpus)
         self.assertTrue(len(model.vocab) == 6981)
         # with min_count=1, we're not throwing away anything, so make sure the word counts add up to be the entire corpus
@@ -148,7 +165,7 @@ class TestWord2VecModel(unittest.TestCase):
         numpy.allclose(model.vocab['the'].code, [1, 1, 0, 0])
 
         # test building vocab with default params
-        model = word2vec.Word2Vec()
+        model = word2vec.Word2Vec(hs=1, negative=0)
         model.build_vocab(corpus)
         self.assertTrue(len(model.vocab) == 1750)
         numpy.allclose(model.vocab['the'].code, [1, 1, 1, 0])
@@ -162,7 +179,7 @@ class TestWord2VecModel(unittest.TestCase):
     def testTraining(self):
         """Test word2vec training."""
         # build vocabulary, don't train yet
-        model = word2vec.Word2Vec(size=2, min_count=1)
+        model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0)
         model.build_vocab(sentences)
 
         self.assertTrue(model.syn0.shape == (len(model.vocab), 2))
@@ -179,12 +196,12 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
-        model2 = word2vec.Word2Vec(sentences, size=2, min_count=1)
+        model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
         self.models_equal(model, model2)
 
     def testScoring(self):
         """Test word2vec scoring."""
-        model = word2vec.Word2Vec(sentences, size=2, min_count=1)
+        model = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
 
         # just score and make sure they exist
         scores = model.score(sentences, len(sentences))
@@ -237,21 +254,21 @@ class TestWord2VecModel(unittest.TestCase):
 
     def test_cbow_hs(self):
         """Test CBOW w/ hierarchical softmax"""
-        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
-                                  min_count=5, iter=10, workers=2)
+        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=8, hs=1, negative=0,
+                                  min_count=5, iter=10, workers=2, batch_words=1000)
         self.model_sanity(model)
 
     def test_cbow_neg(self):
         """Test CBOW w/ negative sampling"""
         model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
-                                  min_count=5, iter=10, workers=2)
+                                  min_count=5, iter=10, workers=2, sample=0)
         self.model_sanity(model)
 
     def testTrainingCbow(self):
         """Test CBOW word2vec training."""
         # to test training, make the corpus larger by repeating its sentences over and over
         # build vocabulary, don't train yet
-        model = word2vec.Word2Vec(size=2, min_count=1, sg=0)
+        model = word2vec.Word2Vec(size=2, min_count=1, sg=0, hs=1, negative=0)
         model.build_vocab(sentences)
         self.assertTrue(model.syn0.shape == (len(model.vocab), 2))
         self.assertTrue(model.syn1.shape == (len(model.vocab), 2))
@@ -267,7 +284,7 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(sims, sims2)
 
         # build vocab and train in one step; must be the same as above
-        model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, sg=0)
+        model2 = word2vec.Word2Vec(sentences, size=2, min_count=1, sg=0, hs=1, negative=0)
         self.models_equal(model, model2)
 
     def testTrainingSgNegative(self):
@@ -389,6 +406,15 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
                 for words in sentences:
                     self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 #endclass TestWord2VecSentenceIterators
+
+# TODO: get correct path to Python binary
+# class TestWord2VecScripts(unittest.TestCase):
+#     def testWord2VecStandAloneScript(self):
+#         """Does Word2Vec script launch standalone?"""
+#         cmd = 'python -m gensim.scripts.word2vec_standalone -train ' + datapath('testcorpus.txt') + ' -output vec.txt -size 200 -sample 1e-4 -binary 0 -iter 3 -min_count 1'
+#         output = check_output(cmd, stderr=PIPE)
+#         self.assertEqual(output, '0')
+# #endclass TestWord2VecScripts
 
 
 if not hasattr(TestWord2VecModel, 'assertLess'):

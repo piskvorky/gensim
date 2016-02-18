@@ -51,6 +51,8 @@ import logging
 
 from gensim import utils
 from gensim.models.ldamodel import LdaModel, LdaState
+
+import six
 from six.moves import queue, xrange
 from multiprocessing import Pool, Queue, cpu_count
 
@@ -133,8 +135,10 @@ class LdaMulticore(LdaModel):
         """
         self.workers = max(1, cpu_count() - 1) if workers is None else workers
         self.batch = batch
-        if alpha == 'auto':
+
+        if isinstance(alpha, six.string_types) and alpha == 'auto':
             raise NotImplementedError("auto-tuning alpha not implemented in multicore LDA; use plain LdaModel.")
+
         super(LdaMulticore, self).__init__(corpus=corpus, num_topics=num_topics,
             id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
             decay=decay, offset=offset, eval_every=eval_every, iterations=iterations,

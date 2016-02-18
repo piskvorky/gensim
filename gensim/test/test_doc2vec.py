@@ -89,6 +89,16 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(model.docvecs[0].shape, (300,))
         self.assertRaises(KeyError, model.__getitem__, '_*0')
 
+    def test_missing_string_doctag(self):
+        """Test doc2vec doctag alternatives"""
+        corpus = list(DocsLeeCorpus(True))
+        # force duplicated tags
+        corpus = corpus[0:10] + corpus
+
+        model = doc2vec.Doc2Vec(min_count=1)
+        model.build_vocab(corpus)
+        self.assertRaises(KeyError, model.docvecs.__getitem__, 'not_a_tag')
+
     def test_string_doctags(self):
         """Test doc2vec doctag alternatives"""
         corpus = list(DocsLeeCorpus(True))
@@ -103,6 +113,8 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(all(model.docvecs['_*0'] == model.docvecs[0]))
         self.assertTrue(max(d.offset for d in model.docvecs.doctags.values()) < len(model.docvecs.doctags))
         self.assertTrue(max(model.docvecs._int_index(str_key) for str_key in model.docvecs.doctags.keys()) < len(model.docvecs.doctag_syn0))
+        # verify docvecs.most_similar() returns string doctags rather than indexes
+        self.assertEqual(model.docvecs.offset2doctag[0], model.docvecs.most_similar([model.docvecs[0]])[0][0])
 
     def test_empty_errors(self):
         # no input => "RuntimeError: you must first build vocabulary before training the model"
@@ -242,8 +254,6 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec()
         model.build_vocab(mixed_tag_corpus)
         expected_length = len(sentences) + len(model.docvecs.doctags)  # 9 sentences, 7 unique first tokens
-        print(model.docvecs.doctags)
-        print(model.docvecs.count)
         self.assertEquals(len(model.docvecs.doctag_syn0), expected_length)
 
     def models_equal(self, model, model2):
