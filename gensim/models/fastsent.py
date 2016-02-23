@@ -8,9 +8,9 @@
 """
 FastSent model for sentence representation.
 
-The FastSent algorithm was originally inspired by the C package https://code.google.com/p/word2vec/.
+The FastSent algorithm was originally inspired by the C package https://code.google.com/p/fastsent/.
 
-For a blog tutorial on gensim word2vec, which is closely related, visit http://radimrehurek.com/2014/02/word2vec-tutorial/
+For a blog tutorial on gensim fastsent, which is closely related, visit http://radimrehurek.com/2014/02/fastsent-tutorial/
 
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled) fastsent training**
 (70x speedup compared to plain NumPy implementation [3]_).
@@ -24,14 +24,13 @@ Persist a model to disk with::
 >>> model.save(fname)
 >>> model = FastSent.load(fname)  # you can continue training with the loaded model!
 
-The model can also be instantiated from an existing file on disk in the word2vec C format::
+The model can also be instantiated from an existing file on disk in the fastsent C format::
 
   >>> model = FastSent.load_fastsent_format('/tmp/vectors.txt', binary=False)  # C text format
   >>> model = FastSent.load_fastsent_format('/tmp/vectors.bin', binary=True)  # C binary format
 """
 
 from __future__ import division  # py3 "true division"
-print 'READING THIS FILE'
 import logging
 import sys
 import os
@@ -55,7 +54,7 @@ from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
 
-logger = logging.getLogger("gensim.models.word2vec")
+logger = logging.getLogger("gensim.models.fastsent")
 
 try:
     from gensim.models.fastsent_inner import train_sentence_fastsent, FAST_VERSION
@@ -135,7 +134,7 @@ class FastSent(utils.SaveLoad):
     Class for training, using and evaluating neural networks described in http://arxiv.org/abs/1602.03483
 
     The model can be stored/loaded via its `save()` and `load()` methods, or stored/loaded in a format
-    compatible with the original word2vec implementation via `save_word2vec_format()` and `load_word2vec_format()`.
+    compatible with the original fastsent implementation via `save_fastsent_format()` and `load_fastsent_format()`.
 
     """
     def __init__(
@@ -215,7 +214,6 @@ class FastSent(utils.SaveLoad):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences)
             self.train(sentences)
-        print 'USING LOCAL GENSIM'
 
     def make_cum_table(self, power=0.75, domain=2**31 - 1):
         """
@@ -559,12 +557,12 @@ class FastSent(utils.SaveLoad):
                         if total_examples:
                             # examples-based progress %
                             logger.info(
-                                "MODIFIED MODEL PROGRESS: at %.2f%% examples, %.0f words/s",
+                                "FASTSENT MODEL PROGRESS: at %.2f%% examples, %.0f words/s",
                                 100.0 * example_count / total_examples, trained_word_count / elapsed)
                         else:
                             # words-based progress %
                             logger.info(
-                                "MODIFIED MODEL PROGRESS: at %.2f%% words, %.0f words/s",
+                                "FASTSENT MODEL PROGRESS: at %.2f%% words, %.0f words/s",
                                 100.0 * raw_word_count / total_words, trained_word_count / elapsed)
                         next_report = elapsed + report_delay  # don't flood log, wait report_delay seconds
                 else:
@@ -610,10 +608,10 @@ class FastSent(utils.SaveLoad):
         once = random.RandomState(uint32(self.hashfxn(seed_string)))
         return (once.rand(self.vector_size) - 0.5) / self.vector_size
 
-    def save_word2vec_format(self, fname, fvocab=None, binary=False):
+    def save_fastsent_format(self, fname, fvocab=None, binary=False):
         """
         Store the input-hidden weight matrix in the same format used by the original
-        C word2vec-tool, for compatibility.
+        C fastsent-tool, for compatibility.
 
         """
         if fvocab is not None:
@@ -634,16 +632,16 @@ class FastSent(utils.SaveLoad):
                     fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
 
     @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, norm_only=True, encoding='utf8'):
+    def load_fastsent_format(cls, fname, fvocab=None, binary=False, norm_only=True, encoding='utf8'):
         """
-        Load the input-hidden weight matrix from the original C word2vec-tool format.
+        Load the input-hidden weight matrix from the original C fastsent-tool format.
 
         Note that the information stored in the file is incomplete (the binary tree is missing),
         so while you can query for sentence similarity etc., you cannot continue training
         with a model loaded this way.
 
-        `binary` is a boolean indicating whether the data is in binary word2vec format.
-        `norm_only` is a boolean indicating whether to only store normalised word2vec vectors in memory.
+        `binary` is a boolean indicating whether the data is in binary fastsent format.
+        `norm_only` is a boolean indicating whether to only store normalised fastsent vectors in memory.
         Word counts are read from `fvocab` filename, if set (this is the file generated
         by `-save-vocab` flag of the original C tool).
 
@@ -710,24 +708,17 @@ class FastSent(utils.SaveLoad):
     def __getitem__(self, sentence):
 
         """
-        Accept a single word or a list of words as input.
-
-        If a single word: returns the word's representations in vector space, as
-        a 1D numpy array.
-
-        Multiple words: return the words' representations in vector space, as a
-        2d numpy array: #words x #vector_size. Matrix rows are in the same order
-        as in input.
+        Accepts a sentence (string) as input
+        where 'words' are separated by white space.
+        Returns a vector for that setence (or word).
 
         Example::
 
           >>> trained_model['office']
           array([ -1.40128313e-02, ...])
 
-          >>> trained_model[['office', 'products']]
-          array([ -1.40128313e-02, ...]
-                [ -1.70425311e-03, ...]
-                 ...)
+          >>> trained_model['I  go to the office']]
+          array([ -1.328313e-02, ...])
 
         """
         if self.fastsent_mean:
@@ -765,7 +756,7 @@ class FastSent(utils.SaveLoad):
         ones = saves lots of memory!
 
         Note that you **cannot continue training** after doing a replace. The model becomes
-        effectively read-only = you can call `most_similar`, `similarity` etc., but not `train`.
+        effectively read-only = you can call `sentence_similarity` etc., but not `train`.
 
         """
         if getattr(self, 'syn0norm', None) is None or replace:
@@ -946,7 +937,7 @@ if __name__ == "__main__":
         print(globals()['__doc__'] % locals())
         sys.exit(1)
     infile = sys.argv[1]
-    from gensim.models.word2vec import Word2Vec  # avoid referencing __main__ in pickle
+    from gensim.models.fastsent import Word2Vec  # avoid referencing __main__ in pickle
 
     seterr(all='raise')  # don't ignore numpy errors
 
@@ -956,8 +947,8 @@ if __name__ == "__main__":
     if len(sys.argv) > 3:
         outfile = sys.argv[3]
         model.save(outfile + '.model')
-        model.save_word2vec_format(outfile + '.model.bin', binary=True)
-        model.save_word2vec_format(outfile + '.model.txt', binary=False)
+        model.save_fastsent_format(outfile + '.model.bin', binary=True)
+        model.save_fastsent_format(outfile + '.model.txt', binary=False)
 
     if len(sys.argv) > 2:
         questions_file = sys.argv[2]
