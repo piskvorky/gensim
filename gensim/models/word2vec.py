@@ -649,7 +649,7 @@ class Word2Vec(utils.SaveLoad):
         """Build tables and model weights based on final vocabulary settings."""
         if not self.index2word:
             self.scale_vocab(False)
-        if self.sorted_vocab:
+        if self.sorted_vocab and not update:
             self.sort_vocab()
         if self.hs:
             # add info about each word's Huffman encoding
