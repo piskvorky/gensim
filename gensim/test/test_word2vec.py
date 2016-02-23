@@ -100,7 +100,7 @@ class TestWord2VecModel(unittest.TestCase):
     def testOnlineLearning(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model"""
-        model = word2vec.Word2Vec(sentences, min_count=1)
+        model = word2vec.Word2Vec(sentences, min_count=1, sorted_vocab=0)
         model.build_vocab(new_sentences, update=True)
         model.train(new_sentences)
         self.assertEqual(len(model.vocab), 14)
