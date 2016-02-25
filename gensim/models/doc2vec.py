@@ -404,7 +404,7 @@ class DocvecsArray(utils.SaveLoad):
                     self.doctag_syn0norm = empty(self.doctag_syn0.shape, dtype=REAL)
                 np_divide(self.doctag_syn0, sqrt((self.doctag_syn0 ** 2).sum(-1))[..., newaxis], self.doctag_syn0norm)
 
-    def most_similar(self, positive=[], negative=[], topn=10, clip_start=0, clip_end=None):
+    def most_similar(self, positive=[], negative=[], topn=10, clip_start=0, clip_end=None, indexer=None):
         """
         Find the top-N most similar docvecs known from training. Positive docs contribute
         positively towards the similarity, negative docs negatively.
@@ -417,6 +417,8 @@ class DocvecsArray(utils.SaveLoad):
         The 'clip_start' and 'clip_end' allow limiting results to a particular contiguous
         range of the underlying doctag_syn0norm vectors. (This may be useful if the ordering
         there was chosen to be significant, such as more popular tag IDs in lower indexes.)
+
+        The 'indexer' is any instance of Indexer which speeds up the search process.
         """
         self.init_sims()
         clip_end = clip_end or len(self.doctag_syn0norm)
@@ -448,6 +450,9 @@ class DocvecsArray(utils.SaveLoad):
         if not mean:
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
+
+        if indexer is not None:
+            return indexer.get_nearest_items(mean, top_n=topn)
 
         dists = dot(self.doctag_syn0norm[clip_start:clip_end], mean)
         if not topn:
