@@ -16,7 +16,7 @@ from gensim import interfaces, matutils
 from gensim.corpora import IndexedCorpus
 
 
-logger = logging.getLogger('gensim.corpora.mmcorpus')
+logger = logging.getLogger(__name__)
 
 
 class MmCorpus(matutils.MmReader, IndexedCorpus):
@@ -34,6 +34,7 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         (yielding one document at a time).
         """
         for doc_id, doc in super(MmCorpus, self).__iter__():
+            logger.debug('{}'.format(doc_id))
             yield doc  # get rid of doc id, return the sparse vector only
 
     @staticmethod
