@@ -550,10 +550,9 @@ class LsiModel(interfaces.TransformationABC):
         Note: do not save as a compressed file if you intend to load the file back with `mmap`.
 
         """
-        file_handle = utils.smart_open(fname)
         if self.projection is not None:
-            self.projection.save(utils.smart_extension(file_handle.name, '.projection'), *args, **kwargs)
-        super(LsiModel, self).save(file_handle, *args, ignore=['projection', 'dispatcher'], **kwargs)
+            self.projection.save(utils.smart_extension(fname, '.projection'), *args, **kwargs)
+        super(LsiModel, self).save(fname, *args, ignore=['projection', 'dispatcher'], **kwargs)
 
     @classmethod
     def load(cls, fname, *args, **kwargs):
