@@ -77,7 +77,6 @@ from copy import deepcopy
 from collections import defaultdict
 import threading
 import itertools
-import warnings
 
 from gensim.utils import keep_vocab_item
 
@@ -88,16 +87,13 @@ except ImportError:
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray, nanmin,\
-    nansum, isnan, full as np_full
+    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
-from scipy.spatial.distance import cdist
-from scipy.sparse import dok_matrix
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -435,7 +431,6 @@ class Word2Vec(utils.SaveLoad):
         self.train_count = 0
         self.total_train_time = 0
         self.sorted_vocab = sorted_vocab
-        self.dist_provided = False
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
@@ -1197,7 +1192,7 @@ class Word2Vec(utils.SaveLoad):
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
-    def wmdistance(self, document1, document2, WCD=False, RWMD=False, force_pure_python=False):
+    def wmdistance(self, document1, document2, WCD=False, RWMD=False):
         """
         Compute the Word Mover's Distance between two documents. When using this
         code, please consider citing the following papers:
@@ -1229,6 +1224,10 @@ class Word2Vec(utils.SaveLoad):
         > distance = model.wmdistance(sentence1, sentence2)
         """
 
+        # TODO: is this the proper way of handling this?
+        if not PYEMD_EXT:
+            assert False, "C extension for pyemd not loaded, cannot compute WMD. "
+
         # Remove out-of-vocabulary words.
         len_pre_oov1 = len(document1)
         len_pre_oov2 = len(document2)
@@ -1241,7 +1240,6 @@ class Word2Vec(utils.SaveLoad):
                         diff1, diff2)
 
         if len(document1) == 0 or len(document2) == 0:
-            # TODO: make a warning for the user here (this can cause confusion).
             logger.info('At least one of the documents had no words that were'
                         'in the vocabulary. Aborting (returning inf).')
             return float('inf')
@@ -1253,105 +1251,29 @@ class Word2Vec(utils.SaveLoad):
         docset1 = set(document1)
         docset2 = set(document2)
 
-        if not WCD:  # distance matrix not necessary in WCD.
-            # Compute distance matrix.
-            if RWMD:
-                distance_matrix = np_full([vocab_len, vocab_len], float('nan'), dtype=double)
-            else:
-                distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
-
-            for t1 in docset1:
-                for t2 in docset2:
-                    # Get word indeces.
-                    i = dictionary.token2id[t1]
-                    j = dictionary.token2id[t2]
-                    if self.dist_provided:
-                        # Use pre-computed word distances.
-                        k = self.vocab[t1].index
-                        l = self.vocab[t2].index
-                        if k > l:
-                            # Ensures that we use the upper triangular matrix.
-                            k, l = l, k
-                        distance_matrix[i, j] = self.vocab_dist[k, l]
-                    else:
-                        # Compute Euclidean distance between word vectors.
-                        distance_matrix[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
-
-        # TODO: is this the proper way of handling this?
-        if not PYEMD_EXT:
-            assert False, "C extension for pyemd not loaded, computing WMD will be slow. "
+        # Compute distance matrix.
+        distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
+        for i, t1 in dictionary.items():
+            for j, t2 in dictionary.items():
+                if not t1 in docset1 or not t2 in docset2:
+                    continue
+                # Compute Euclidean distance between word vectors.
+                distance_matrix[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
 
         def nbow(document):
-            # TODO: add some comments.
             d = zeros(vocab_len, dtype=double)
-            nbow = dictionary.doc2bow(document)
+            nbow = dictionary.doc2bow(document)  # Word frequencies.
             doc_len = len(document)
             for idx, freq in nbow:
-                d[idx] = freq / float(doc_len)
+                d[idx] = freq / float(doc_len)  # Normalized word frequencies.
             return d
 
         # Compute nBOW representation of documents.
         d1 = nbow(document1)
         d2 = nbow(document2)
 
-        if WCD:
-            # Compute WCD.
-            # Stack all word vectors in a matrix.
-            X = zeros((self.vector_size, vocab_len))
-            for i, token in dictionary.items():
-                X[:, i] = self[token]
-
-            dist = sqrt(np_sum((X.dot(d1) - X.dot(d2))**2))
-            return dist
-        if RWMD:
-            # Compute RWMD.
-            with warnings.catch_warnings():
-                # Ignore Numpy warning: "All-NaN axis encountered".
-                warnings.filterwarnings('ignore', r'All-NaN axis encountered')
-
-                # Compute "naive" minimum distances.
-                mdist1 = nanmin(distance_matrix, axis=1)
-                mdist2 = nanmin(distance_matrix, axis=0)
-
-            mdist1[isnan(mdist1)] = 0.0
-            mdist2[isnan(mdist2)] = 0.0
-
-            # Dot the "naive" minimum distances with the nBOW representation.
-            rwmd1 = mdist1.dot(d1)
-            rwmd2 = mdist2.dot(d2)
-
-            # Use the greater of the two lower bounds.
-            rwmd = max(rwmd1, rwmd2)
-
-            return rwmd
-        else:
-            # Compute WMD.
-            return emd(d1, d2, distance_matrix)
-
-    def init_distances(self):
-        '''
-        Compute the euclidean distance between all the words in the provided
-        vocabulary, and store in a matrix. This matrix is used in `wmdistance`,
-        if provided.
-
-        Input:
-        vocab:      List of word tokens to compute distances between. Make sure
-                    it doesn't contain out-of-vocabulary words.
-        '''
-
-        self.dist_provided = True  # Tells wmdistance that vocab_dist exists.
-
-        # Compute the upper triangular distance matrix (it is symmetric, and 0
-        # in the diagonal).
-        vocab_size = len(self.vocab)
-        vocab_dist = zeros((vocab_size, vocab_size), dtype=double)
-        for i in range(vocab_size):
-            for j in range(i + 1, vocab_size):
-                t1 = self.index2word[i]
-                t2 = self.index2word[j]
-                vocab_dist[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
-
-        self.vocab_dist = vocab_dist
+        # Compute WMD.
+        return emd(d1, d2, distance_matrix)
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         """
