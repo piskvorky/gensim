@@ -97,6 +97,7 @@ from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
 from scipy.spatial.distance import cdist
+from scipy.sparse import dok_matrix
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -1233,8 +1234,11 @@ class Word2Vec(utils.SaveLoad):
         len_pre_oov2 = len(document2)
         document1 = [token for token in document1 if token in self]
         document2 = [token for token in document2 if token in self]
-        logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).',
-                    len_pre_oov1 - len(document1), len_pre_oov2 - len(document2))
+        diff1 = len_pre_oov1 - len(document1)
+        diff2 = len_pre_oov2 - len(document2)
+        if diff1 > 0 or diff2 > 0:
+            logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).',
+                        diff1, diff2)
 
         if len(document1) == 0 or len(document2) == 0:
             # TODO: make a warning for the user here (this can cause confusion).
@@ -1326,8 +1330,13 @@ class Word2Vec(utils.SaveLoad):
 
     def init_distances(self):
         '''
-        Compute the euclidean distance between all the words in the vocabulary,
-        and store in a matrix. This matrix is used in `wmdistance`, if provided.
+        Compute the euclidean distance between all the words in the provided
+        vocabulary, and store in a matrix. This matrix is used in `wmdistance`,
+        if provided.
+
+        Input:
+        vocab:      List of word tokens to compute distances between. Make sure
+                    it doesn't contain out-of-vocabulary words.
         '''
 
         self.dist_provided = True  # Tells wmdistance that vocab_dist exists.
