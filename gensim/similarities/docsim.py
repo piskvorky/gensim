@@ -592,18 +592,23 @@ class WmdSimilarity(interfaces.SimilarityABC):
         # Make query.
         sims = instance[query]
     """
-    def __init__(self, corpus, w2v_model, num_best=None, init_distances=True, chunksize=256):
+    def __init__(self, corpus, w2v_model, num_best=None, pp=True, normalize_w2v=True, init_distances=False, chunksize=256):
         """
         corpus:             List of lists of strings, as in gensim.models.word2vec.
         w2v_model:          A trained word2vec model.
         num_best:           Number of results to retrieve. If provided, a fast algorithm
                             called "prefetch and prune" is used.
+        pp:                 Whether or not to use the prefetch and prune
+                            algorithm.
+        normalize_w2v:      Whether or not to normalize the word2vec vectors to
+                            length 1.
         init_distances:     Whether or not to initialize a distance matrix
                             (euclidean distance between words in vocab).
         """
         self.corpus = corpus
         self.w2v_model = w2v_model
         self.num_best = num_best
+        self.pp = pp
         self.chunksize = chunksize
 
         # Normalize embeddings to sum to 1.
@@ -615,9 +620,12 @@ class WmdSimilarity(interfaces.SimilarityABC):
         # index is simply an array from 0 to size of corpus.
         self.index = numpy.array(range(len(corpus)))
 
+        if normalize_w2v:
+            # Normalize vectors in word2vec class to length 1.
+            w2v_model.init_sims(replace=True)
+
         if init_distances:
-            # Pre-compute distance matrix (euclidean distance between words in
-            # vocab).
+            # Pre-compute distance matrix (euclidean distance between words).
             w2v_model.init_distances()
 
     def __len__(self):
@@ -638,7 +646,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         result = []
         for qidx in range(n_queries):
             # Compute similarity vector for each query.
-            if self.num_best:
+            if self.num_best and self.pp:
                 # Use prefetch and prune algorithm.
                 # Compute WCD to entire corpus, and sort according to this.
                 wcd = [self.w2v_model.wmdistance(document, query[qidx], WCD=True) for document in self.corpus]
