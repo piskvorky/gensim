@@ -866,7 +866,10 @@ class Word2Vec(utils.SaveLoad):
         """
         Score the log probability for a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
-        This does not change the fitted model in any way (see Word2Vec.train() for that)
+        This does not change the fitted model in any way (see Word2Vec.train() for that).
+
+        We have currently only implemented score for the hierarchical softmax scheme, 
+        so you need to have run word2vec with hs=1 and negative=0 for this to work.  
 
         Note that you should specify total_sentences; we'll run into problems if you ask to
         score more than this number of sentences but it is inefficient to set the value too high.
