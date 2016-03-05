@@ -23,8 +23,8 @@ How It Works
 The `Similarity` class splits the index into several smaller sub-indexes ("shards"),
 which are disk-based. If your entire index fits in memory (~hundreds of thousands
 documents for 1GB of RAM), you can also use the `MatrixSimilarity` or `SparseMatrixSimilarity`
-classes directly. These are more simple but do not scale well (the entire index is
-kept in RAM).
+classes directly. These are more simple but do not scale as well (they keep the
+entire index in RAM, no sharding).
 
 Once the index has been initialized, you can query for document similarity simply by:
 
@@ -42,11 +42,10 @@ To see the speed-up on your machine, run ``python -m gensim.test.simspeed``
 
 There is also a special syntax for when you need similarity of documents in the index
 to the index itself (i.e. queries=indexed documents themselves). This special syntax
-already uses the faster, batch queries internally:
+uses the faster, batch queries internally and **is ideal for all-vs-all pairwise similarities**:
 
->>> for similarities in index: # return all similarities of the 1st index document, then 2nd...
+>>> for similarities in index: # yield similarities of the 1st indexed document, then 2nd...
 >>>     ...
-
 
 """
 
@@ -63,7 +62,7 @@ from gensim import interfaces, utils, matutils
 from six.moves import map as imap, xrange, zip as izip
 
 
-logger = logging.getLogger('gensim.similarities.docsim')
+logger = logging.getLogger(__name__)
 
 PARALLEL_SHARDS = False
 try:
@@ -87,7 +86,7 @@ class Shard(utils.SaveLoad):
         self.dirname, self.fname = os.path.split(fname)
         self.length = len(index)
         self.cls = index.__class__
-        logger.info("saving index shard to %s" % self.fullname())
+        logger.info("saving index shard to %s", self.fullname())
         index.save(self.fullname())
         self.index = self.get_index()
 
@@ -107,13 +106,11 @@ class Shard(utils.SaveLoad):
     def __str__(self):
         return ("%s Shard(%i documents in %s)" % (self.cls.__name__, len(self), self.fullname()))
 
-
     def get_index(self):
         if not hasattr(self, 'index'):
-            logger.debug("mmaping index from %s" % self.fullname())
+            logger.debug("mmaping index from %s", self.fullname())
             self.index = self.cls.load(self.fullname(), mmap='r')
         return self.index
-
 
     def get_document_id(self, pos):
         """Return index vector at position `pos`.
@@ -123,7 +120,6 @@ class Shard(utils.SaveLoad):
         """
         assert 0 <= pos < len(self), "requested position out of range"
         return self.get_index().index[pos]
-
 
     def __getitem__(self, query):
         index = self.get_index()
@@ -136,12 +132,11 @@ class Shard(utils.SaveLoad):
 
 
 def query_shard(args):
-    query, shard = args # simulate starmap (not part of multiprocessing in older Pythons)
-    logger.debug("querying shard %s num_best=%s in process %s" % (shard, shard.num_best, os.getpid()))
+    query, shard = args  # simulate starmap (not part of multiprocessing in older Pythons)
+    logger.debug("querying shard %s num_best=%s in process %s", shard, shard.num_best, os.getpid())
     result = shard[query]
-    logger.debug("finished querying shard %s in process %s" % (shard, os.getpid()))
+    logger.debug("finished querying shard %s in process %s", shard, os.getpid())
     return result
-
 
 
 class Similarity(interfaces.SimilarityABC):
@@ -194,7 +189,7 @@ class Similarity(interfaces.SimilarityABC):
             self.output_prefix = utils.randfname(prefix='simserver')
         else:
             self.output_prefix = output_prefix
-        logger.info("starting similarity index under %s" % self.output_prefix)
+        logger.info("starting similarity index under %s", self.output_prefix)
         self.num_features = num_features
         self.num_best = num_best
         self.normalize = True
@@ -206,15 +201,12 @@ class Similarity(interfaces.SimilarityABC):
         if corpus is not None:
             self.add_documents(corpus)
 
-
     def __len__(self):
         return len(self.fresh_docs) + sum([len(shard) for shard in self.shards])
-
 
     def __str__(self):
         return ("Similarity index with %i documents in %i shards (stored under %s)" %
                 (len(self), len(self.shards), self.output_prefix))
-
 
     def add_documents(self, corpus):
         """
@@ -223,7 +215,7 @@ class Similarity(interfaces.SimilarityABC):
         Internally, documents are buffered and then spilled to disk when there's
         `self.shardsize` of them (or when a query is issued).
         """
-        min_ratio = 1.0 # 0.5 to only reopen shards that are <50% complete
+        min_ratio = 1.0  # 0.5 to only reopen shards that are <50% complete
         if self.shards and len(self.shards[-1]) < min_ratio * self.shardsize:
             # The last shard was incomplete (<; load it back and add the documents there, don't start a new shard
             self.reopen_shard()
@@ -243,15 +235,13 @@ class Similarity(interfaces.SimilarityABC):
             if len(self.fresh_docs) >= self.shardsize:
                 self.close_shard()
             if len(self.fresh_docs) % 10000 == 0:
-                logger.info("PROGRESS: fresh_shard size=%i" % len(self.fresh_docs))
-
+                logger.info("PROGRESS: fresh_shard size=%i", len(self.fresh_docs))
 
     def shardid2filename(self, shardid):
         if self.output_prefix.endswith('.'):
             return "%s%s" % (self.output_prefix, shardid)
         else:
             return "%s.%s" % (self.output_prefix, shardid)
-
 
     def close_shard(self):
         """
@@ -272,13 +262,12 @@ class Similarity(interfaces.SimilarityABC):
                                            num_docs=len(self.fresh_docs), num_nnz=self.fresh_nnz)
         else:
             index = MatrixSimilarity(self.fresh_docs, num_features=self.num_features)
-        logger.info("creating %s shard #%s" % ('sparse' if issparse else 'dense', shardid))
+        logger.info("creating %s shard #%s", 'sparse' if issparse else 'dense', shardid)
         shard = Shard(self.shardid2filename(shardid), index)
         shard.num_best = self.num_best
         shard.num_nnz = self.fresh_nnz
         self.shards.append(shard)
         self.fresh_docs, self.fresh_nnz = [], 0
-
 
     def reopen_shard(self):
         assert self.shards
@@ -286,13 +275,12 @@ class Similarity(interfaces.SimilarityABC):
             raise ValueError("cannot reopen a shard with fresh documents in index")
         last_shard = self.shards[-1]
         last_index = last_shard.get_index()
-        logger.info("reopening an incomplete shard of %i documents" % len(last_shard))
+        logger.info("reopening an incomplete shard of %i documents", len(last_shard))
 
         self.fresh_docs = list(last_index.index)
         self.fresh_nnz = last_shard.num_nnz
-        del self.shards[-1] # remove the shard from index, *but its file on disk is not deleted*
+        del self.shards[-1]  # remove the shard from index, *but its file on disk is not deleted*
         logger.debug("reopen complete")
-
 
     def query_shards(self, query):
         """
@@ -304,7 +292,7 @@ class Similarity(interfaces.SimilarityABC):
         """
         args = zip([query] * len(self.shards), self.shards)
         if PARALLEL_SHARDS and PARALLEL_SHARDS > 1:
-            logger.debug("spawning %i query processes" % PARALLEL_SHARDS)
+            logger.debug("spawning %i query processes", PARALLEL_SHARDS)
             pool = multiprocessing.Pool(PARALLEL_SHARDS)
             result = pool.imap(query_shard, args, chunksize=1 + len(args) / PARALLEL_SHARDS)
         else:
@@ -312,7 +300,6 @@ class Similarity(interfaces.SimilarityABC):
             pool = None
             result = imap(query_shard, args)
         return pool, result
-
 
     def __getitem__(self, query):
         """Get similarities of document `query` to all documents in the corpus.
@@ -323,7 +310,7 @@ class Similarity(interfaces.SimilarityABC):
         of all query documents vs. all corpus document. This batch query is more
         efficient than computing the similarities one document after another.
         """
-        self.close_shard() # no-op if no documents added to index since last query
+        self.close_shard()  # no-op if no documents added to index since last query
 
         # reset num_best and normalize parameters, in case they were changed dynamically
         for shard in self.shards:
@@ -368,12 +355,11 @@ class Similarity(interfaces.SimilarityABC):
 
         return result
 
-
     def vector_by_id(self, docpos):
         """
         Return indexed vector corresponding to the document at position `docpos`.
         """
-        self.close_shard() # no-op if no documents added to index since last query
+        self.close_shard()  # no-op if no documents added to index since last query
         pos = 0
         for shard in self.shards:
             pos += len(shard)
@@ -385,7 +371,6 @@ class Similarity(interfaces.SimilarityABC):
         result = shard.get_document_id(docpos - pos + len(shard))
         return result
 
-
     def similarity_by_id(self, docpos):
         """
         Return similarity of the given document only. `docpos` is the position
@@ -396,7 +381,6 @@ class Similarity(interfaces.SimilarityABC):
         result = self[query]
         self.normalize = norm
         return result
-
 
     def __iter__(self):
         """
@@ -413,8 +397,7 @@ class Similarity(interfaces.SimilarityABC):
             else:
                 yield self[chunk]
 
-        self.normalize = norm # restore normalization
-
+        self.normalize = norm  # restore normalization
 
     def iter_chunks(self, chunksize=None):
         """
@@ -437,9 +420,8 @@ class Similarity(interfaces.SimilarityABC):
                 # (unlike numpy). so, clip the end of the chunk explicitly to make
                 # scipy.sparse happy
                 chunk_end = min(query.shape[0], chunk_start + chunksize)
-                chunk = query[chunk_start: chunk_end] # create a view
+                chunk = query[chunk_start: chunk_end]  # create a view
                 yield chunk
-
 
     def check_moved(self):
         """
@@ -448,7 +430,6 @@ class Similarity(interfaces.SimilarityABC):
         dirname = os.path.dirname(self.output_prefix)
         for shard in self.shards:
             shard.dirname = dirname
-
 
     def save(self, fname=None, *args, **kwargs):
         """
@@ -471,7 +452,7 @@ class Similarity(interfaces.SimilarityABC):
         """
         import glob
         for fname in glob.glob(self.output_prefix + '*'):
-            logger.info("deleting %s" % fname)
+            logger.info("deleting %s", fname)
             os.remove(fname)
 #endclass Similarity
 
@@ -610,17 +591,16 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
             corpus = (matutils.scipy2sparse(v) if scipy.sparse.issparse(v) else
                       (matutils.full2sparse(v) if isinstance(v, numpy.ndarray) else
                        matutils.unitvec(v)) for v in corpus)
-            self.index = matutils.corpus2csc(corpus, num_terms=num_terms, num_docs=num_docs, num_nnz=num_nnz,
-                                              dtype=dtype, printprogress=10000).T
+            self.index = matutils.corpus2csc(
+                corpus, num_terms=num_terms, num_docs=num_docs, num_nnz=num_nnz,
+                dtype=dtype, printprogress=10000).T
 
             # convert to Compressed Sparse Row for efficient row slicing and multiplications
-            self.index = self.index.tocsr() # currently no-op, CSC.T is already CSR
-            logger.info("created %r" % self.index)
-
+            self.index = self.index.tocsr()  # currently no-op, CSC.T is already CSR
+            logger.info("created %r", self.index)
 
     def __len__(self):
         return self.index.shape[0]
-
 
     def get_similarities(self, query):
         """
@@ -639,7 +619,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
             query = matutils.corpus2csc(query, self.index.shape[1], dtype=self.index.dtype)
         else:
             if scipy.sparse.issparse(query):
-                query = query.T # convert documents=rows to documents=columns
+                query = query.T  # convert documents=rows to documents=columns
             elif isinstance(query, numpy.ndarray):
                 if query.ndim == 1:
                     query.shape = (1, len(query))
@@ -649,7 +629,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
                 query = matutils.corpus2csc([query], self.index.shape[1], dtype=self.index.dtype)
 
         # compute cosine similarity against every other document in the collection
-        result = self.index * query.tocsc() # N x T * T x C = N x C
+        result = self.index * query.tocsc()  # N x T * T x C = N x C
         if result.shape[1] == 1 and not is_corpus:
             # for queries of one document, return a 1d array
             result = result.toarray().flatten()

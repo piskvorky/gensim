@@ -396,11 +396,11 @@ class Word2Vec(utils.SaveLoad):
         `iter` = number of iterations (epochs) over the corpus.
 
         `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
-         in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
-         Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
-         returns either util.RULE_DISCARD, util.RULE_KEEP or util.RULE_DEFAULT.
-         Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
-          of the model.
+        in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
+        Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
+        returns either util.RULE_DISCARD, util.RULE_KEEP or util.RULE_DEFAULT.
+        Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
+        of the model.
 
         `sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before
         assigning word indexes.
