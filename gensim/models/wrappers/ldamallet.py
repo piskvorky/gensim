@@ -51,7 +51,7 @@ class LdaMallet(utils.SaveLoad):
     takes place by passing around data files on disk and calling Java with subprocess.call().
 
     """
-    def __init__(self, mallet_path, corpus=None, num_topics=100, id2word=None, workers=4, prefix=None,
+    def __init__(self, mallet_path, corpus=None, num_topics=100, alpha=50, id2word=None, workers=4, prefix=None,
                  optimize_interval=0, iterations=1000):
         """
         `mallet_path` is path to the mallet executable, e.g. `/home/kofola/mallet-2.0.7/bin/mallet`.
@@ -80,6 +80,7 @@ class LdaMallet(utils.SaveLoad):
         if self.num_terms == 0:
             raise ValueError("cannot compute LDA over an empty collection (no terms)")
         self.num_topics = num_topics
+        self.alpha = alpha
         if prefix is None:
             rand_prefix = hex(random.randint(0, 0xffffff))[2:] + '_'
             prefix = os.path.join(tempfile.gettempdir(), rand_prefix)
@@ -148,11 +149,11 @@ class LdaMallet(utils.SaveLoad):
 
     def train(self, corpus):
         self.convert_input(corpus, infer=False)
-        cmd = self.mallet_path + " train-topics --input %s --num-topics %s --optimize-interval %s "\
+        cmd = self.mallet_path + " train-topics --input %s --num-topics %s  --alpha %s --optimize-interval %s "\
             "--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s "\
             "--num-iterations %s --inferencer-filename %s"
         cmd = cmd % (
-            self.fcorpusmallet(), self.num_topics, self.optimize_interval, self.workers,
+            self.fcorpusmallet(), self.num_topics, self.alpha, self.optimize_interval, self.workers,
             self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations, self.finferencer())
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
         logger.info("training MALLET LDA with %s", cmd)
