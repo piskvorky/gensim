@@ -214,9 +214,10 @@ except ImportError:
 
         return log_prob_sentence
 
-# If pyemd C extension is available, import it. Else use brute force pure Python version.
+# If pyemd C extension is available, import it.
+# If pyemd is attempted to be used, but isn't installed, ImportError will be raised.
 try:
-    from gensim.pyemd import emd
+    from pyemd import emd
     PYEMD_EXT = True
 except ImportError:
     PYEMD_EXT = False
@@ -1203,8 +1204,7 @@ class Word2Vec(utils.SaveLoad):
         Note that if one of the documents have no words that exist in the
         Word2Vec vocab, `float('inf')` (i.e. infinity) will be returned.
 
-        This method only works if the C extension for `pyemd` is loaded (Gensim
-        should be installed with a working C compiler).
+        This method only works if `pyemd` is installed (can be installed via pip, but requires a C compiler).
 
         Example:
         > # Train word2vec model.
@@ -1226,7 +1226,7 @@ class Word2Vec(utils.SaveLoad):
 
         # TODO: is this the proper way of handling this?
         if not PYEMD_EXT:
-            assert False, "C extension for pyemd not loaded, cannot compute WMD. "
+            raise ImportError, "C extension for pyemd not loaded, cannot compute WMD. "
 
         # Remove out-of-vocabulary words.
         len_pre_oov1 = len(document1)
