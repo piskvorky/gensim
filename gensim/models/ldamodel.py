@@ -67,6 +67,7 @@ def dirichlet_expectation(alpha):
         result = psi(alpha) - psi(numpy.sum(alpha, 1))[:, numpy.newaxis]
     return result.astype(alpha.dtype)  # keep the same precision as input
 
+
 def update_dir_prior(prior, N, logphat, rho):
     """
     Updates a given prior using Newton's method, described in
@@ -363,7 +364,7 @@ class LdaModel(interfaces.TransformationABC):
             # eta is a column: [[0.1],
             #                   [0.1]]
             if init_prior.shape == (self.num_topics,) or init_prior.shape == (1, self.num_topics):
-                init_prior = init_prior.reshape((self.num_topics, 1)) # this statement throws ValueError if eta did not match self.num_topics
+                init_prior = init_prior.reshape((self.num_topics, 1))  # this statement throws ValueError if eta did not match self.num_topics
 
         return init_prior, is_auto
 
@@ -482,7 +483,6 @@ class LdaModel(interfaces.TransformationABC):
         state.numdocs += gamma.shape[0]  # avoids calling len(chunk) on a generator
         return gamma
 
-
     def update_alpha(self, gammat, rho):
         """
         Update parameters for the Dirichlet prior on the per-document
@@ -504,7 +504,7 @@ class LdaModel(interfaces.TransformationABC):
         if self.eta.shape[1] != 1:
             raise ValueError("Can't use update_eta with eta matrices, only column vectors.")
         N = float(lambdat.shape[1])
-        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat.transpose()) / N).reshape((self.num_topics,1))
+        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat.transpose()) / N).reshape((self.num_topics, 1))
 
         self.eta = update_dir_prior(self.eta, N, logphat, rho)
         logger.info("optimized eta %s", list(self.eta.reshape((self.num_topics))))
@@ -548,22 +548,17 @@ class LdaModel(interfaces.TransformationABC):
         `corpus` sizes, an increasing `offset` may be beneficial (see
         Table 1 in Hoffman et al.)
 
-        Parameters
-        ------------
-        corpus: (gensim corpus object, list of tuples)
-            The corpus with which the LDA model should be updated with.
+        Args:
+            corpus (gensim corpus): The corpus with which the LDA model should be updated.
 
-        chunks_as_numpy: bool
-            Whether each chunk passed to `.inference` should be a numpy
-            array of not. Numpy can in some settings turn the term IDs
-            into floats, these will be converted back into integers in
-            inference, which incurs a performance hit. For distributed
-            computing it may be desirable to keep the chunks as numpy
-            arrays.
+            chunks_as_numpy (bool): Whether each chunk passed to `.inference` should be a numpy
+                array of not. Numpy can in some settings turn the term IDs
+                into floats, these will be converted back into integers in
+                inference, which incurs a performance hit. For distributed
+                computing it may be desirable to keep the chunks as numpy
+                arrays.
 
-        See Also
-        --------
-        For other parameter settings see LdaModel().
+        For other parameter settings, see :class:`LdaModel` constructor.
 
         """
         # use parameters given in constructor, unless user explicitly overrode them
@@ -824,7 +819,7 @@ class LdaModel(interfaces.TransformationABC):
 
     def print_topic(self, topicid, topn=10):
         """Return the result of `show_topic`, but formatted as a single string."""
-        return ' + '.join(['%.3f*%s' % (v, k)  for k, v in self.show_topic(topicid, topn)])
+        return ' + '.join(['%.3f*%s' % (v, k) for k, v in self.show_topic(topicid, topn)])
 
     def top_topics(self, corpus, num_words=20):
         """
@@ -898,7 +893,7 @@ class LdaModel(interfaces.TransformationABC):
         """
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
-        minimum_probability = max(abs(minimum_probability), 1e-8)  # never allow zero values in sparse output
+        minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
 
         # if the input vector is a corpus, return a transformed corpus
         is_corpus, corpus = utils.is_corpus(bow)
@@ -930,7 +925,7 @@ class LdaModel(interfaces.TransformationABC):
 
         `ignore` parameter can be used to define which variables should be ignored, i.e. left
         out from the pickled lda model. By default the internal `state` is ignored as it uses
-        its own serialisation not the one provided by `LdaModel`. The `state` and `dispatcher
+        its own serialisation not the one provided by `LdaModel`. The `state` and `dispatcher`
         will be added to any ignore parameter defined.
 
 
