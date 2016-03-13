@@ -1224,7 +1224,6 @@ class Word2Vec(utils.SaveLoad):
         > distance = model.wmdistance(sentence1, sentence2)
         """
 
-        # TODO: is this the proper way of handling this?
         if not PYEMD_EXT:
             raise ImportError("Please install pyemd Python package to compute WMD.")
 
@@ -1259,6 +1258,11 @@ class Word2Vec(utils.SaveLoad):
                     continue
                 # Compute Euclidean distance between word vectors.
                 distance_matrix[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
+
+        if np_sum(distance_matrix) == 0.0:
+            # `emd` gets stuck if the distance matrix contains only zeros.
+            logger.info('The distance matrix is all zeros. Aborting (returning inf).')
+            return float('inf')
 
         def nbow(document):
             d = zeros(vocab_len, dtype=double)
