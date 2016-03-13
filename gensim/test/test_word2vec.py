@@ -382,6 +382,33 @@ class TestWord2VecModel(unittest.TestCase):
         gen = (s for s in sentences)
         self.assertRaises(TypeError, word2vec.Word2Vec, (gen,))
 
+class TestWMD(unittest.TestCase):
+    def testNonzero(self):
+        '''Test basic functionality with a test sentence.'''
+        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        sentence1 = ['human', 'interface', 'computer']
+        sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        distance = model.wmdistance(sentence1, sentence2)
+
+        # Check that distance is non-zero.
+        self.assertFalse(distance == 0.0)
+
+    def testSymmetry(self):
+        '''Check that distance is symmetric.'''
+        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        sentence1 = ['human', 'interface', 'computer']
+        sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        distance1 = model.wmdistance(sentence1, sentence2)
+        distance2 = model.wmdistance(sentence2, sentence1)
+        self.assertTrue(numpy.allclose(distance1, distance2))
+
+    def testIdenticalSentences(self):
+        '''Check that the distance from a sentence to itself is zero.'''
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        sentence = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        distance = model.wmdistance(sentence, sentence)
+        self.assertEqual(0.0, distance)
+
 
 class TestWord2VecSentenceIterators(unittest.TestCase):
     def testLineSentenceWorksWithFilename(self):
