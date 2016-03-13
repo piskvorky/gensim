@@ -21,6 +21,12 @@ import numpy
 from gensim import utils, matutils
 from gensim.models import word2vec
 
+try:
+    from pyemd import emd
+    PYEMD_EXT = True
+except ImportError:
+    PYEMD_EXT = False
+
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
@@ -372,6 +378,10 @@ class TestWord2VecModel(unittest.TestCase):
 class TestWMD(unittest.TestCase):
     def testNonzero(self):
         '''Test basic functionality with a test sentence.'''
+
+        if not PYEMD_EXT:
+            return
+
         model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
@@ -382,6 +392,10 @@ class TestWMD(unittest.TestCase):
 
     def testSymmetry(self):
         '''Check that distance is symmetric.'''
+
+        if not PYEMD_EXT:
+            return
+
         model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
@@ -391,6 +405,10 @@ class TestWMD(unittest.TestCase):
 
     def testIdenticalSentences(self):
         '''Check that the distance from a sentence to itself is zero.'''
+
+        if not PYEMD_EXT:
+            return
+
         model = word2vec.Word2Vec(sentences, min_count=1)
         sentence = ['survey', 'user', 'computer', 'system', 'response', 'time']
         distance = model.wmdistance(sentence, sentence)
