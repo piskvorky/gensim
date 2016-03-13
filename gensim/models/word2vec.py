@@ -1226,7 +1226,7 @@ class Word2Vec(utils.SaveLoad):
 
         # TODO: is this the proper way of handling this?
         if not PYEMD_EXT:
-            raise ImportError, "C extension for pyemd not loaded, cannot compute WMD. "
+            raise ImportError("Please install pyemd Python package to compute WMD.")
 
         # Remove out-of-vocabulary words.
         len_pre_oov1 = len(document1)
