@@ -2,19 +2,18 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2016 Manas Ranjan Kar <manasrkar91@gmail.com>
-# Licensed under the MIT License https://opensource.org/licenses/MIT
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
 CLI USAGE: python glove2word2vec.py <GloVe vector file> <Output model file>
 
-Convert GloVe vectors into Gensim compatible format to instantiate from an existing file on disk in the word2vec C format;
+Convert GloVe vectors into word2vec C format;
 
 model = gensim.models.Word2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
 
 word2vec embeddings start with a line with the number of lines (tokens?) and the number of dimensions of the file. This allows gensim to allocate memory 
 accordingly for querying the model. Larger dimensions mean larger memory is held captive. Accordingly, this line has to be inserted into the GloVe 
 embeddings file.
-
 """
 import re
 import sys
