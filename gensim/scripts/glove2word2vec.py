@@ -6,7 +6,9 @@
 
 """
 USAGE: %(program)s --input <GloVe vector file> --output <Word2vec vector file>
+
 Convert GloVe vectors in text format into the word2vec text format.
+
 The only difference between the two formats is an extra header line in word2vec,
 which contains the number of vectors and their dimensionality (two integers).
 """
