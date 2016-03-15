@@ -16,29 +16,39 @@ accordingly for querying the model. Larger dimensions mean larger memory is held
 embeddings file.
 """
 
+
 import re
 import sys
 import gensim
 import logging
 import argparse
 import smart_open
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
 def glove2word2vec(glove_vector_file, output_model_file):
     """Convert GloVe vectors into word2vec C format"""
     
+    def count_dims(filename):
+        """ 
+        Function to calculate the number of dimensions from an embeddings file
+        """
+        count=0
+        dims=[]
+        for line in smart_open.smart_open(filename):
+            count+=1
+            if count<100:
+                dims.append(len(re.findall('[\d]+.[\d]+', line)))
+            else: break
+            return int(np.median(dims))
+
     def get_info(glove_file_name):
         """ 
         Function to calculate the number of lines and dimensions of the GloVe vectors to make it Gensim compatible
         """
         num_lines = sum(1 for line in smart_open.smart_open(glove_vector_file))
-        if 'twitter' in glove_file_name:
-            dims= re.findall('\d+',glove_vector_file.split('.')[3])
-            dims=''.join(dims)
-        else:
-            dims=re.findall('\d+',glove_vector_file.split('.')[2])
-            dims=''.join(dims)
+        dims= count_dims(glove_file_name)
         return num_lines, dims
     
     def prepend_line(infile, outfile, line):
@@ -60,29 +70,31 @@ def glove2word2vec(glove_vector_file, output_model_file):
     return num_lines, dims, model, model_file
 
 if __name__ == "__main__":
-
+    
     program = sys.argv[0]
     parser = argparse.ArgumentParser()
     
     parser.add_argument("-input", help="Use GloVe model file to convert into word2vec C format", type=str, required=True)
     parser.add_argument("-output", help="Use file OUTPUT to save the resulting word vectors", type=str, default='output_vectors.txt')
 
+    
     logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
     logging.root.setLevel(level=logging.INFO)
-    logger.info("running %s" % ' '.join(sys.argv))
+    logger.info("running %s", ' '.join(sys.argv))
     
     args = parser.parse_args()
 
     glove_vector_file= args.input
     output_model_file= args.output
-
+    
+    
     num_lines, dims, model, model_file= glove2word2vec(glove_vector_file, output_model_file)
 
-    logger.info('%d lines with %s dimensions', (num_lines, dims))
-    logger.info('Model %s successfully created',output_model_file)
+    logger.info('%d lines with %d dimensions', num_lines, dims)
+    logger.info('Model %s successfully created', output_model_file)
     
     logger.info('Testing the model....')
     logger.info('Most similar to king are:%s ', model.most_similar(positive=['king'], topn=10))
-    logger.info('Similarity score between woman and man is %s ' , model.similarity('woman', 'man'))
+    logger.info('Similarity score between woman and man is %s ', model.similarity('woman', 'man'))
     
     logger.info("Finished running %s", program)
