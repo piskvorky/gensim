@@ -6,9 +6,7 @@
 
 """
 USAGE: %(program)s --input <GloVe vector file> --output <Word2vec vector file>
-
 Convert GloVe vectors in text format into the word2vec text format.
-
 The only difference between the two formats is an extra header line in word2vec,
 which contains the number of vectors and their dimensionality (two integers).
 """
@@ -23,26 +21,13 @@ from smart_open import smart_open
 
 logger = logging.getLogger(__name__)
 
-def count_dims(filename):
-    """ 
-    Function to calculate the number of dimensions from an embeddings file
-    """
-    count= 0
-    dims= []
-    for line in smart_open.smart_open(filename):
-        count+=1
-        if count<100:
-            dims.append(len(re.findall('[\d]+.[\d]+', line)))
-        else: break
-        return int(np.median(dims))
-
 
 def get_glove_info(glove_file_name):
     """
     Return the number of vectors and dimensions in a file in GloVe format.
     """
     num_lines = sum(1 for line in smart_open(glove_file_name))
-    num_dims = count_dims(glove_file_name)
+    num_dims = len(smart_open(glove_file_name).next().split()) - 1
     return num_lines, num_dims
 
 
@@ -51,7 +36,7 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
     Convert `glove_input_file` in GloVe format into `word2vec_output_file` in word2vec format.
     """
     num_lines, num_dims = get_glove_info(glove_input_file)
-    header = "{} {}".format(num_lines, 50)
+    header = "{} {}".format(num_lines, num_dims)
     logger.info("converting %i vectors from %s to %s", num_lines, glove_input_file, word2vec_output_file)
 
     with smart_open(word2vec_output_file, 'wb') as fout:
