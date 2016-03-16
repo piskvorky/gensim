@@ -5,7 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-USAGE: %(program)s --input <GloVe vector file> --output <Word2vec vector file>
+USAGE: %(program)s --input <GloVe vector file> --output <Word2vec vector file>.
 
 Convert GloVe vectors in text format into the word2vec text format.
 
@@ -24,18 +24,16 @@ from smart_open import smart_open
 
 logger = logging.getLogger(__name__)
 
+
 def get_glove_info(glove_file_name):
-    """
-    Return the number of vectors and dimensions in a file in GloVe format.
-    """
+    """Return the number of vectors and dimensions in a file in GloVe format."""
     num_lines = sum(1 for line in smart_open(glove_file_name))
     num_dims = len(smart_open(glove_file_name).next().split()) - 1
     return num_lines, num_dims
 
+
 def glove2word2vec(glove_input_file, word2vec_output_file):
-    """
-    Convert `glove_input_file` in GloVe format into `word2vec_output_file` in word2vec format.
-    """
+    """Convert `glove_input_file` in GloVe format into `word2vec_output_file` in word2vec format."""
     num_lines, num_dims = get_glove_info(glove_input_file)
     header = "{} {}".format(num_lines, num_dims)
     logger.info("converting %i vectors from %s to %s", num_lines, glove_input_file, word2vec_output_file)
@@ -46,6 +44,7 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
             for line in fin:
                 fout.write(line)
     return num_lines, num_dims
+
 
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -66,23 +65,21 @@ if __name__ == "__main__":
         "-o", "--output", required=True,
         help="Output file, in word2vec text format (will be overwritten!).")
     args = parser.parse_args()
-    
+
     # do the actual conversion
     num_lines, num_dims = glove2word2vec(args.input, args.output)
     logger.info('converted model with %i vectors and %i dimensions', num_lines, num_dims)
-    
     # test that the converted model loads successfully
     model = gensim.models.Word2Vec.load_word2vec_format(args.output, binary=False)
     logger.info('model %s successfully loaded', model)
-
     try:
         logger.info('testing the model....')
         with smart_open(args.output, 'rb') as f:
             seed_word1, seed_word2 = random.sample([line.split()[0] for line in f], 2)
-        logger.info('top-10 most similar words to %s: %s', seed_word1, model.most_similar(positive=[seed_word1], topn=10))
+        logger.info('top-10 most similar words to "%s" are: %s', seed_word1, model.most_similar(positive=[seed_word1], topn=10))
         logger.info('similarity score between %s and %s: %s', seed_word1, seed_word2, model.similarity(seed_word1, seed_word2))
     except:
-        logger.error('error encountered. checking for model file creation now....')
+        logger.error(' error encountered. checking for model file creation now....')
         if os.path.isfile(os.path.join(args.output)):
             logger.info('model file %s successfully created.', args.output)
         else:
