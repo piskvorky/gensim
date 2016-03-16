@@ -83,7 +83,7 @@ if __name__ == "__main__":
         logger.info('similarity score between "woman" and "man": %s', model.similarity('woman', 'man'))
     except:
         logger.error('"king" may not be present in the vocab of the test file. checking for model file creation now....')
-        if os.path.isfile(os.path.join(os.getcwd(), args.output)):
+        if os.path.isfile(os.path.join(args.output)):
             logger.info('model file %s successfully created in directory %s. pLease check with other words/phrases', args.output, os.getcwd())
         else:
             logger.info('program failed. please check the parameters and input file format.')
