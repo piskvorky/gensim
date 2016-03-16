@@ -12,7 +12,7 @@ import gensim
 from gensim.utils import check_output
 
 module_path = os.path.dirname(gensim.__file__)
-datapath = os.path.join(module_path, 'test_data', 'testglove.txt')  # Sample data files are located in the same folder
+datapath = os.path.join(module_path, 'test_data', 'test_glove.txt')  # Sample data files are located in the same folder
 output_file = 'sample_word2vec_out.txt'
 
 output = check_output(['python', '-m', 'gensim.scripts.glove2word2vec', '-i', datapath, '-o', output_file])
