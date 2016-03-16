@@ -72,12 +72,20 @@ if __name__ == "__main__":
     # do the actual conversion
     num_lines, num_dims = glove2word2vec(args.input, args.output)
     logger.info('converted model with %i vectors and %i dimensions', num_lines, num_dims)
-
+    
     # test that the converted model loads successfully
     model = gensim.models.Word2Vec.load_word2vec_format(args.output, binary=False)
     logger.info('model %s successfully loaded', model)
     logger.info('testing the model....')
-    logger.info('top-10 most similar words to "king": %s', model.most_similar(positive=['king'], topn=10))
-    logger.info('similarity score between "woman" and "man": %s', model.similarity('woman', 'man'))
+   
+    try:
+        logger.info('top-10 most similar words to "king": %s', model.most_similar(positive=['king'], topn=10))
+        logger.info('similarity score between "woman" and "man": %s', model.similarity('woman', 'man'))
+    except:
+        logger.error('"king" may not be present in the vocab of the test file. checking for model file creation now....')
+        if os.path.isfile(os.path.join(os.getcwd(), args.output)):
+            logger.info('model file %s successfully created in directory %s. pLease check with other words/phrases', args.output, os.getcwd())
+        else:
+            logger.info('program failed. please check the parameters and input file format.')
 
     logger.info("finished running %s", program)
