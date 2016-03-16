@@ -79,7 +79,7 @@ if __name__ == "__main__":
         logger.info('top-10 most similar words to "%s" are: %s', seed_word1, model.most_similar(positive=[seed_word1], topn=10))
         logger.info('similarity score between %s and %s: %s', seed_word1, seed_word2, model.similarity(seed_word1, seed_word2))
     except:
-        logger.error(' error encountered. checking for model file creation now....')
+        logger.error('error encountered. checking for model file creation now....')
         if os.path.isfile(os.path.join(args.output)):
             logger.info('model file %s successfully created.', args.output)
         else:
