@@ -15,6 +15,7 @@ which contains the number of vectors and their dimensionality (two integers).
 
 import os
 import sys
+import random
 import logging
 import argparse
 
@@ -76,15 +77,19 @@ if __name__ == "__main__":
     # test that the converted model loads successfully
     model = gensim.models.Word2Vec.load_word2vec_format(args.output, binary=False)
     logger.info('model %s successfully loaded', model)
-    logger.info('testing the model....')
+    
    
     try:
-        logger.info('top-10 most similar words to "king": %s', model.most_similar(positive=['king'], topn=10))
-        logger.info('similarity score between "woman" and "man": %s', model.similarity('woman', 'man'))
+        logger.info('testing the model....')
+        with smart_open(args.output, 'rb') as f:
+            seed_word1, seed_word2 = random.sample([each.split()[0] for each in f.readlines()], 2)
+            
+        logger.info('top-10 most similar words to %s: %s', seed_word1, model.most_similar(positive=['the'], topn=10))
+        logger.info('similarity score between %s and %s: %s', seed_word1, seed_word2, model.similarity(seed_word1, seed_word2))
     except:
-        logger.error('"king" may not be present in the vocab of the test file. checking for model file creation now....')
+        logger.error(' error encountered. checking for model file creation now....', seed_word1)
         if os.path.isfile(os.path.join(args.output)):
-            logger.info('model file %s successfully created in directory %s. pLease check with other words/phrases', args.output, os.getcwd())
+            logger.info('model file %s successfully created.', args.output)
         else:
             logger.info('program failed. please check the parameters and input file format.')
 
