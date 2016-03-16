@@ -15,4 +15,4 @@ module_path = os.path.dirname(gensim.__file__)
 datapath = os.path.join(module_path, 'test_data', 'testglove.txt')  # Sample data files are located in the same folder
 output_file = 'sample_word2vec_out.txt'
 
-output = check_output(['python', 'gensim.scripts.glove2word2vec.py', '-i', datapath, '-o', output_file])
+output = check_output(['python', 'glove2word2vec.py', '-i', datapath, '-o', output_file])
