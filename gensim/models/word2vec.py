@@ -344,7 +344,7 @@ class Word2Vec(utils.SaveLoad):
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
-            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH):
+            trim_rule=None, sorted_vocab=1, chunksize=100, batch_words=MAX_WORDS_IN_BATCH):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -409,7 +409,11 @@ class Word2Vec(utils.SaveLoad):
         thus cython routines). Default is 10000. (Larger batches can be passed if individual
         texts are longer, but the cython code may truncate.)
 
+        `chunksize` = useful for extending in cases where chunksize is needed to be passed/defined,
+         such as in GPU training via Theano. default size is 100.
+
         """
+        self.chunksize = int(chunksize)
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
         self.sg = int(sg)
