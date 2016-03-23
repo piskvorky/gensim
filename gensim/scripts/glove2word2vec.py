@@ -34,9 +34,9 @@ else:
 def get_glove_info(glove_file_name):
     """Return the number of vectors and dimensions in a file in GloVe format."""
     with smart_open(glove_file_name) as f:
-        num_lines = str(sum(1 for line in f))
+        num_lines = sum(1 for line in f)
     with smart_open(glove_file_name) as f:
-        num_dims = str(len(f.readline().split()) - 1)
+        num_dims = len(f.readline().split()) - 1
     return num_lines, num_dims
 
 
@@ -46,7 +46,7 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
     logger.info("converting %i vectors from %s to %s", num_lines, glove_input_file, word2vec_output_file)
 
     with smart_open(word2vec_output_file, 'wb') as fout:
-        fout.write("%s %s\n" % (b(num_lines), b(num_dims)))
+        fout.write("%d %d\n" % (b(num_lines), b(num_dims)))
         with smart_open(glove_input_file, 'rb') as fin:
             for line in fin:
                 fout.write(b(line))
