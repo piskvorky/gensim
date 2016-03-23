@@ -114,6 +114,11 @@ if WHEELHOUSE_UPLOADER_COMMANDS.intersection(sys.argv):
     import wheelhouse_uploader.cmd
     cmdclass.update(vars(wheelhouse_uploader.cmd))
 
+python_2_6_backports = ''
+if sys.version_info[:2] < (2, 7):
+    python_2_6_backports = 'argparse'
+
+
 setup(
     name='gensim',
     version='0.12.4',
@@ -169,6 +174,7 @@ setup(
         'scipy >= 0.7.0',
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
+        python_2_6_backports,
     ],
 
     extras_require={

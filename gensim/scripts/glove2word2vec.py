@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2016 Manas Ranjan Kar <manasrkar91@gmail.com>
+# Copyright (C) 2016 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
@@ -27,8 +27,10 @@ logger = logging.getLogger(__name__)
 
 def get_glove_info(glove_file_name):
     """Return the number of vectors and dimensions in a file in GloVe format."""
-    num_lines = sum(1 for line in smart_open(glove_file_name))
-    num_dims = len(smart_open(glove_file_name).next().split()) - 1
+    with smart_open(glove_file_name) as f:
+        num_lines = sum(1 for line in f)
+    with smart_open(glove_file_name) as f:
+        num_dims = len(f.readline().split()) - 1
     return num_lines, num_dims
 
 
@@ -63,15 +65,15 @@ if __name__ == "__main__":
         help="Input file, in gloVe format (read-only).")
     parser.add_argument(
         "-o", "--output", required=True,
-        help="Output file, in word2vec text format (will be overwritten!).")
+        help="Output file, in word2vec text format (will be overwritten).")
     args = parser.parse_args()
 
     # do the actual conversion
     num_lines, num_dims = glove2word2vec(args.input, args.output)
-    logger.info('converted model with %i vectors and %i dimensions', num_lines, num_dims)
+    logger.info('Converted model with %i vectors and %i dimensions', num_lines, num_dims)
     # test that the converted model loads successfully
     model = gensim.models.Word2Vec.load_word2vec_format(args.output, binary=False)
-    logger.info('model %s successfully loaded', model)
+    logger.info('Model %s successfully loaded', model)
     try:
         logger.info('testing the model....')
         with smart_open(args.output, 'rb') as f:
@@ -81,8 +83,10 @@ if __name__ == "__main__":
     except:
         logger.error('error encountered. checking for model file creation now....')
         if os.path.isfile(os.path.join(args.output)):
-            logger.info('model file %s successfully created.', args.output)
+            logger.info('model file %s was created but could not be loaded.', args.output)
         else:
-            logger.info('program failed. please check the parameters and input file format.')
+            logger.info('model file %s creation failed. ')
+        logger.info('please check the parameters and input file format.')
+        raise
 
     logger.info("finished running %s", program)
