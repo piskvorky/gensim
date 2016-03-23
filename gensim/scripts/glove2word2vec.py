@@ -36,11 +36,10 @@ def get_glove_info(glove_file_name):
 def glove2word2vec(glove_input_file, word2vec_output_file):
     """Convert `glove_input_file` in GloVe format into `word2vec_output_file` in word2vec format."""
     num_lines, num_dims = get_glove_info(glove_input_file)
-    header = "{} {}".format(num_lines, num_dims)
     logger.info("converting %i vectors from %s to %s", num_lines, glove_input_file, word2vec_output_file)
 
     with smart_open(word2vec_output_file, 'wb') as fout:
-        fout.write("%s\n" % header)
+        fout.write("%d %d\n" % (num_lines, num_dims))
         with smart_open(glove_input_file, 'rb') as fin:
             for line in fin:
                 fout.write(line)
