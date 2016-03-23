@@ -26,9 +26,9 @@ if sys.version_info < (3,):
     def b(x):
         return x
 else:
-    import codecs
+    #import codecs
     def b(x):
-        return str(x)
+        return x.encode('ISO-8859-1').decode('ISO-8859-1')
 
 
 def get_glove_info(glove_file_name):
