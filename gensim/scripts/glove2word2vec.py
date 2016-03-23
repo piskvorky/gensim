@@ -39,7 +39,7 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
     logger.info("converting %i vectors from %s to %s", num_lines, glove_input_file, word2vec_output_file)
 
     with smart_open(word2vec_output_file, 'wb') as fout:
-        fout.write("%d %d\n" % (num_lines, num_dims))
+        fout.write("%s %s\n" % (num_lines.encode(), num_dims.encode()))
         with smart_open(glove_input_file, 'rb') as fin:
             for line in fin:
                 fout.write(line)
