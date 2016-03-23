@@ -25,11 +25,11 @@ logger = logging.getLogger(__name__)
 
 if sys.version_info < (3, ):
     def b(x):
-        return x
+        return str(x)
 else:
     import codecs
     def b(x):
-        return codecs.latin_1_encode(x)[0]
+        return codecs.latin_1_encode(str(x))[0]
         
         
 def get_glove_info(glove_file_name):
