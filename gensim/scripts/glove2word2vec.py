@@ -28,7 +28,7 @@ if sys.version_info < (3,):
 else:
     import codecs
     def b(x):
-        return codecs.latin_1_encode(x)[0]
+        return bytes(x)
 
 
 def get_glove_info(glove_file_name):
