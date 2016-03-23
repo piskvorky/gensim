@@ -1,4 +1,3 @@
-from __future__ import unicode_literals 
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
@@ -38,14 +37,22 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
     num_lines, num_dims = get_glove_info(glove_input_file)
     logger.info("converting %i vectors from %s to %s", num_lines, glove_input_file, word2vec_output_file)
 
-    with smart_open(word2vec_output_file, 'wb') as fout:
-        fout.write("%d %d\n" % (num_lines, num_dims))
-        with smart_open(glove_input_file, 'rb') as fin:
-            for line in fin:
-                fout.write(line)
-    return num_lines, num_dims
-
-
+    if sys.version_info < (3,):
+        with smart_open(word2vec_output_file, 'wb') as fout:
+            fout.write("%s %s\n" % (str(num_lines), str(num_dims)))
+            with smart_open(glove_input_file, 'rb') as fin:
+                for line in fin:
+                    fout.write(line)
+        return num_lines, num_dims
+    else:
+        with smart_open(word2vec_output_file, 'wb') as fout:
+            fout.write("%s %s\n" % (bytes(str(num_lines), 'UTF-8'), bytes(str(num_dims), 'UTF-8')))
+            with smart_open(glove_input_file, 'r') as fin:
+                for line in fin.read().decode('UTF-8'):
+                    fout.write(bytes(line, 'UTF-8'))
+        return num_lines, num_dims
+  
+  
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
     logging.root.setLevel(level=logging.INFO)
