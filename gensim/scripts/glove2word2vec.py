@@ -28,7 +28,7 @@ if sys.version_info < (3,):
 else:
     import codecs
     def b(x):
-        return bytes(x)
+        return str(x)
 
 
 def get_glove_info(glove_file_name):
@@ -46,7 +46,7 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
     logger.info("converting %i vectors from %s to %s", num_lines, glove_input_file, word2vec_output_file)
 
     with smart_open(word2vec_output_file, 'wb') as fout:
-        fout.write("%d %d\n" % (b(num_lines), b(num_dims)))
+        fout.write("%s %s\n" % (b(num_lines), b(num_dims)))
         with smart_open(glove_input_file, 'rb') as fin:
             for line in fin:
                 fout.write(b(line))
