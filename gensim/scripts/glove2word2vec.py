@@ -12,6 +12,7 @@ The only difference between the two formats is an extra header line in word2vec,
 which contains the number of vectors and their dimensionality (two integers).
 """
 import os
+import io
 import sys
 import random
 import logging
@@ -21,14 +22,6 @@ import gensim
 from smart_open import smart_open
 
 logger = logging.getLogger(__name__)
-
-if sys.version_info < (3,):
-    import codecs
-    def u(x):
-        return codecs.unicode_escape_decode(x)[0]
-else:
-    def u(x):
-        return x
 
 
 def get_glove_info(glove_file_name):
@@ -45,9 +38,9 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
     num_lines, num_dims = get_glove_info(glove_input_file)
     logger.info("converting %i vectors from %s to %s", num_lines, glove_input_file, word2vec_output_file)
 
-    with smart_open(word2vec_output_file, 'wb') as fout:
-        fout.write("%s %s\n" % (u(num_lines), u(num_dims)))
-        with smart_open(glove_input_file, 'rb') as fin:
+    with io.open(word2vec_output_file, 'wb') as fout:
+        fout.write("%d %d\n" % (num_lines, num_dims))
+        with io.open(glove_input_file, 'rb') as fin:
             for line in fin:
                 fout.write(line)
     return num_lines, num_dims
