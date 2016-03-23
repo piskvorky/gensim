@@ -11,32 +11,73 @@ This module contains various general utility functions.
 from __future__ import with_statement
 
 import logging
-logger = logging.getLogger('gensim.utils')
+
+logger = logging.getLogger(__name__)
+
+try:
+    from html.entities import name2codepoint as n2cp
+except ImportError:
+    from htmlentitydefs import name2codepoint as n2cp
+try:
+    import cPickle as _pickle
+except ImportError:
+    import pickle as _pickle
 
 import re
 import unicodedata
 import os
 import random
-import cPickle
 import itertools
 import tempfile
-from functools import wraps # for `synchronous` function lock
-from htmlentitydefs import name2codepoint as n2cp # for `decode_htmlentities`
+from functools import wraps  # for `synchronous` function lock
 import multiprocessing
 import shutil
-import traceback
+import sys
+from contextlib import contextmanager
+import subprocess
 
+import numpy
+import scipy.sparse
+
+if sys.version_info[0] >= 3:
+    unicode = str
+
+from six import iteritems, u, string_types, unichr
+from six.moves import xrange
 
 try:
-    from pattern.en import parse
-    logger.info("'pattern' package found; utils.lemmatize() is available for English")
-    HAS_PATTERN = True
+    from smart_open import smart_open
 except ImportError:
-    HAS_PATTERN = False
+    logger.info("smart_open library not found; falling back to local-filesystem-only")
+
+    def make_closing(base, **attrs):
+        """
+        Add support for `with Base(attrs) as fout:` to the base class if it's missing.
+        The base class' `close()` method will be called on context exit, to always close the file properly.
+
+        This is needed for gzip.GzipFile, bz2.BZ2File etc in older Pythons (<=2.6), which otherwise
+        raise "AttributeError: GzipFile instance has no attribute '__exit__'".
+
+        """
+        if not hasattr(base, '__enter__'):
+            attrs['__enter__'] = lambda self: self
+        if not hasattr(base, '__exit__'):
+            attrs['__exit__'] = lambda self, type, value, traceback: self.close()
+        return type('Closing' + base.__name__, (base, object), attrs)
+
+    def smart_open(fname, mode='rb'):
+        _, ext = os.path.splitext(fname)
+        if ext == '.bz2':
+            from bz2 import BZ2File
+            return make_closing(BZ2File)(fname, mode)
+        if ext == '.gz':
+            from gzip import GzipFile
+            return make_closing(GzipFile)(fname, mode)
+        return open(fname, mode)
 
 
 PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
-RE_HTML_ENTITY = re.compile(r'&(#?)(x?)(\w+);', re.UNICODE)
+RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
 
@@ -50,12 +91,12 @@ def synchronous(tlockname):
         @wraps(func)
         def _synchronizer(self, *args, **kwargs):
             tlock = getattr(self, tlockname)
-            logger.debug("acquiring lock %r for %s" % (tlockname, func.func_name))
+            logger.debug("acquiring lock %r for %s" % (tlockname, func.__name__))
 
             with tlock: # use lock as a context manager to perform safe acquire/release pairs
-                logger.debug("acquired lock %r for %s" % (tlockname, func.func_name))
+                logger.debug("acquired lock %r for %s" % (tlockname, func.__name__))
                 result = func(self, *args, **kwargs)
-                logger.debug("releasing lock %r for %s" % (tlockname, func.func_name))
+                logger.debug("releasing lock %r for %s" % (tlockname, func.__name__))
                 return result
         return _synchronizer
     return _synched
@@ -73,6 +114,22 @@ class NoCM(object):
 nocm = NoCM()
 
 
+@contextmanager
+def file_or_filename(input):
+    """
+    Return a file-like object ready to be read from the beginning. `input` is either
+    a filename (gz/bz2 also supported) or a file-like object supporting seek.
+
+    """
+    if isinstance(input, string_types):
+        # input was a filename: open as file
+        yield smart_open(input)
+    else:
+        # input already a file-like object; just reset to the beginning
+        input.seek(0)
+        yield input
+
+
 def deaccent(text):
     """
     Remove accentuation from the given string. Input text is either a unicode string or utf8 encoded bytestring.
@@ -81,11 +138,13 @@ def deaccent(text):
 
     >>> deaccent("Šéf chomutovských komunistů dostal poštou bílý prášek")
     u'Sef chomutovskych komunistu dostal postou bily prasek'
+
     """
     if not isinstance(text, unicode):
-        text = unicode(text, 'utf8') # assume utf8 for byte strings, use default (strict) error handling
+        # assume utf8 for byte strings, use default (strict) error handling
+        text = text.decode('utf8')
     norm = unicodedata.normalize("NFD", text)
-    result = u''.join(ch for ch in norm if unicodedata.category(ch) != 'Mn')
+    result = u('').join(ch for ch in norm if unicodedata.category(ch) != 'Mn')
     return unicodedata.normalize("NFC", result)
 
 
@@ -104,8 +163,9 @@ def copytree_hardlink(source, dest):
 
 def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False, lower=False):
     """
-    Iteratively yield tokens as unicode strings, optionally also lowercasing them
-    and removing accent marks.
+    Iteratively yield tokens as unicode strings, removing accent marks
+    and optionally lowercasing the unidoce string by assigning True
+    to one of the parameters, lowercase, to_lower, or lower.
 
     Input text may be either unicode or utf8-encoded byte string.
 
@@ -114,10 +174,10 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
 
     >>> list(tokenize('Nic nemůže letět rychlostí vyšší, než 300 tisíc kilometrů za sekundu!', deacc = True))
     [u'Nic', u'nemuze', u'letet', u'rychlosti', u'vyssi', u'nez', u'tisic', u'kilometru', u'za', u'sekundu']
+
     """
     lowercase = lowercase or to_lower or lower
-    if not isinstance(text, unicode):
-        text = unicode(text, encoding='utf8', errors=errors)
+    text = to_unicode(text, errors=errors)
     if lowercase:
         text = text.lower()
     if deacc:
@@ -126,21 +186,23 @@ def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False
         yield match.group()
 
 
-def simple_preprocess(doc, deacc=False):
+def simple_preprocess(doc, deacc=False, min_len=2, max_len=15):
     """
     Convert a document into a list of tokens.
 
-    This lowercases, tokenizes, stems, normalizes etc. -- the output are final,
-    utf8 encoded strings that won't be processed any further.
+    This lowercases, tokenizes, de-accents (optional). -- the output are final
+    tokens = unicode strings, that won't be processed any further.
+
     """
-    tokens = [token.encode('utf8') for token in tokenize(doc, lower=True, deacc=deacc, errors='ignore')
-            if 2 <= len(token) <= 15 and not token.startswith('_')]
+    tokens = [
+        token for token in tokenize(doc, lower=True, deacc=deacc, errors='ignore')
+        if min_len <= len(token) <= max_len and not token.startswith('_')
+    ]
     return tokens
 
 
 def any2utf8(text, errors='strict', encoding='utf8'):
-    """Convert a string (unicode or bytestring in `encoding`), to bytestring in utf8.
-    """
+    """Convert a string (unicode or bytestring in `encoding`), to bytestring in utf8."""
     if isinstance(text, unicode):
         return text.encode('utf8')
     # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
@@ -161,35 +223,273 @@ class SaveLoad(object):
     Objects which inherit from this class have save/load functions, which un/pickle
     them to disk.
 
-    This uses cPickle for de/serializing, so objects must not contains unpicklable
-    attributes, such as lambda functions etc.
+    This uses pickle for de/serializing, so objects must not contain
+    unpicklable attributes, such as lambda functions etc.
+
     """
     @classmethod
-    def load(cls, fname):
+    def load(cls, fname, mmap=None):
         """
         Load a previously saved object from file (also see `save`).
+
+        If the object was saved with large arrays stored separately, you can load
+        these arrays via mmap (shared memory) using `mmap='r'`. Default: don't use
+        mmap, load large arrays as normal objects.
+
+        If the file being loaded is compressed (either '.gz' or '.bz2'), then
+        `mmap=None` must be set.  Load will raise an `IOError` if this condition
+        is encountered.
+
         """
         logger.info("loading %s object from %s" % (cls.__name__, fname))
-        return unpickle(fname)
 
-    def save(self, fname):
+        compress, subname = SaveLoad._adapt_by_suffix(fname)
+
+        obj = unpickle(fname)
+        obj._load_specials(fname, mmap, compress, subname)
+        return obj
+
+
+    def _load_specials(self, fname, mmap, compress, subname):
         """
-        Save the object to file via pickling (also see `load`).
+        Loads any attributes that were stored specially, and gives the same
+        opportunity to recursively included SaveLoad instances.
+
         """
-        logger.info("saving %s object to %s" % (self.__class__.__name__, fname))
-        pickle(self, fname)
+
+        mmap_error = lambda x, y: IOError(
+            'Cannot mmap compressed object %s in file %s. ' % (x, y) +
+            'Use `load(fname, mmap=None)` or uncompress files manually.')
+
+        for attrib in getattr(self, '__recursive_saveloads', []):
+            cfname = '.'.join((fname, attrib))
+            logger.info("loading %s recursively from %s.* with mmap=%s" % (
+                attrib, cfname, mmap))
+            getattr(self, attrib)._load_specials(cfname, mmap, compress, subname)
+
+        for attrib in getattr(self, '__numpys', []):
+            logger.info("loading %s from %s with mmap=%s" % (
+                attrib, subname(fname, attrib), mmap))
+
+            if compress:
+                if mmap:
+                    raise mmap_error(attrib, subname(fname, attrib))
+
+                val = numpy.load(subname(fname, attrib))['val']
+            else:
+                val = numpy.load(subname(fname, attrib), mmap_mode=mmap)
+
+            setattr(self, attrib, val)
+
+        for attrib in getattr(self, '__scipys', []):
+            logger.info("loading %s from %s with mmap=%s" % (
+                attrib, subname(fname, attrib), mmap))
+            sparse = unpickle(subname(fname, attrib))
+            if compress:
+                if mmap:
+                    raise mmap_error(attrib, subname(fname, attrib))
+
+                with numpy.load(subname(fname, attrib, 'sparse')) as f:
+                    sparse.data = f['data']
+                    sparse.indptr = f['indptr']
+                    sparse.indices = f['indices']
+            else:
+                sparse.data = numpy.load(subname(fname, attrib, 'data'), mmap_mode=mmap)
+                sparse.indptr = numpy.load(subname(fname, attrib, 'indptr'), mmap_mode=mmap)
+                sparse.indices = numpy.load(subname(fname, attrib, 'indices'), mmap_mode=mmap)
+
+            setattr(self, attrib, sparse)
+
+        for attrib in getattr(self, '__ignoreds', []):
+            logger.info("setting ignored attribute %s to None" % (attrib))
+            setattr(self, attrib, None)
+
+
+    @staticmethod
+    def _adapt_by_suffix(fname):
+        """Give appropriate compress setting and filename formula"""
+        if fname.endswith('.gz') or fname.endswith('.bz2'):
+            compress = True
+            subname = lambda *args: '.'.join(list(args) + ['npz'])
+        else:
+            compress = False
+            subname = lambda *args: '.'.join(list(args) + ['npy'])
+        return (compress, subname)
+
+
+    def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2,
+                    ignore=frozenset(), pickle_protocol=2):
+        """
+        Save the object to file (also see `load`).
+
+        If `separately` is None, automatically detect large
+        numpy/scipy.sparse arrays in the object being stored, and store
+        them into separate files. This avoids pickle memory errors and
+        allows mmap'ing large arrays back on load efficiently.
+
+        You can also set `separately` manually, in which case it must be
+        a list of attribute names to be stored in separate files. The
+        automatic check is not performed in this case.
+
+        `ignore` is a set of attribute names to *not* serialize (file
+        handles, caches etc). On subsequent load() these attributes will
+        be set to None.
+
+        `pickle_protocol` defaults to 2 so the pickled object can be imported
+        in both Python 2 and 3.
+
+        """
+        logger.info(
+            "saving %s object under %s, separately %s" % (
+                self.__class__.__name__, fname, separately))
+
+        compress, subname = SaveLoad._adapt_by_suffix(fname)
+
+        restores = self._save_specials(fname, separately, sep_limit, ignore, pickle_protocol,
+                                       compress, subname)
+        try:
+            pickle(self, fname, protocol=pickle_protocol)
+        finally:
+            # restore attribs handled specially
+            for obj, asides in restores:
+                for attrib, val in iteritems(asides):
+                    setattr(obj, attrib, val)
+
+
+    def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
+        """
+        Save aside any attributes that need to be handled separately, including
+        by recursion any attributes that are themselves SaveLoad instances.
+
+        Returns a list of (obj, {attrib: value, ...}) settings that the caller
+        should use to restore each object's attributes that were set aside
+        during the default pickle().
+
+        """
+        asides = {}
+        sparse_matrices = (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)
+        if separately is None:
+            separately = []
+            for attrib, val in iteritems(self.__dict__):
+                if isinstance(val, numpy.ndarray) and val.size >= sep_limit:
+                    separately.append(attrib)
+                elif isinstance(val, sparse_matrices) and val.nnz >= sep_limit:
+                    separately.append(attrib)
+
+        # whatever's in `separately` or `ignore` at this point won't get pickled
+        for attrib in separately + list(ignore):
+            if hasattr(self, attrib):
+                asides[attrib] = getattr(self, attrib)
+                delattr(self, attrib)
+
+        recursive_saveloads = []
+        restores = []
+        for attrib, val in iteritems(self.__dict__):
+            if hasattr(val, '_save_specials'):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
+                recursive_saveloads.append(attrib)
+                cfname = '.'.join((fname,attrib))
+                restores.extend(val._save_specials(cfname, None, sep_limit, ignore,
+                                                   pickle_protocol, compress, subname))
+
+        try:
+            numpys, scipys, ignoreds = [], [], []
+            for attrib, val in iteritems(asides):
+                if isinstance(val, numpy.ndarray) and attrib not in ignore:
+                    numpys.append(attrib)
+                    logger.info("storing numpy array '%s' to %s" % (
+                        attrib, subname(fname, attrib)))
+
+                    if compress:
+                        numpy.savez_compressed(subname(fname, attrib), val=numpy.ascontiguousarray(val))
+                    else:
+                        numpy.save(subname(fname, attrib), numpy.ascontiguousarray(val))
+
+                elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and attrib not in ignore:
+                    scipys.append(attrib)
+                    logger.info("storing scipy.sparse array '%s' under %s" % (
+                        attrib, subname(fname, attrib)))
+
+                    if compress:
+                        numpy.savez_compressed(subname(fname, attrib, 'sparse'),
+                                               data=val.data,
+                                               indptr=val.indptr,
+                                               indices=val.indices)
+                    else:
+                        numpy.save(subname(fname, attrib, 'data'), val.data)
+                        numpy.save(subname(fname, attrib, 'indptr'), val.indptr)
+                        numpy.save(subname(fname, attrib, 'indices'), val.indices)
+
+                    data, indptr, indices = val.data, val.indptr, val.indices
+                    val.data, val.indptr, val.indices = None, None, None
+
+                    try:
+                        # store array-less object
+                        pickle(val, subname(fname, attrib), protocol=pickle_protocol)
+                    finally:
+                        val.data, val.indptr, val.indices = data, indptr, indices
+                else:
+                    logger.info("not storing attribute %s" % (attrib))
+                    ignoreds.append(attrib)
+
+            self.__dict__['__numpys'] = numpys
+            self.__dict__['__scipys'] = scipys
+            self.__dict__['__ignoreds'] = ignoreds
+            self.__dict__['__recursive_saveloads'] = recursive_saveloads
+        except:
+            # restore the attributes if exception-interrupted
+            for attrib, val in iteritems(asides):
+                setattr(self, attrib, val)
+            raise
+        return restores + [(self, asides)]
+
+
+    def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2,
+             ignore=frozenset(), pickle_protocol=2):
+        """
+        Save the object to file (also see `load`).
+
+        `fname_or_handle` is either a string specifying the file name to
+        save to, or an open file-like object which can be written to. If
+        the object is a file handle, no special array handling will be
+        performed; all attributes will be saved to the same file.
+
+        If `separately` is None, automatically detect large
+        numpy/scipy.sparse arrays in the object being stored, and store
+        them into separate files. This avoids pickle memory errors and
+        allows mmap'ing large arrays back on load efficiently.
+
+        You can also set `separately` manually, in which case it must be
+        a list of attribute names to be stored in separate files. The
+        automatic check is not performed in this case.
+
+        `ignore` is a set of attribute names to *not* serialize (file
+        handles, caches etc). On subsequent load() these attributes will
+        be set to None.
+
+        `pickle_protocol` defaults to 2 so the pickled object can be imported
+        in both Python 2 and 3.
+
+        """
+        try:
+            _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
+            logger.info("saved %s object" % self.__class__.__name__)
+        except TypeError:  # `fname_or_handle` does not have write attribute
+            self._smart_save(fname_or_handle, separately, sep_limit, ignore,
+                             pickle_protocol=pickle_protocol)
 #endclass SaveLoad
 
 
 def identity(p):
+    """Identity fnc, for flows that don't accept lambda (pickling etc)."""
     return p
 
 
 def get_max_id(corpus):
     """
-    Return highest feature id that appears in the corpus.
+    Return the highest feature id that appears in the corpus.
 
     For empty corpora (no features at all), return -1.
+
     """
     maxid = -1
     for document in corpus:
@@ -204,6 +504,7 @@ class FakeDict(object):
 
     This is meant to avoid allocating real dictionaries when `num_terms` is huge, which
     is a waste of memory.
+
     """
     def __init__(self, num_terms):
         self.num_terms = num_terms
@@ -229,7 +530,8 @@ class FakeDict(object):
         internal id of a corpus = the vocabulary dimensionality.
 
         HACK: To avoid materializing the whole `range(0, self.num_terms)`, this returns
-        `[self.num_terms - 1]` only.
+        the highest id = `[self.num_terms - 1]` only.
+
         """
         return [self.num_terms - 1]
 
@@ -245,11 +547,12 @@ class FakeDict(object):
 def dict_from_corpus(corpus):
     """
     Scan corpus for all word ids that appear in it, then construct and return a mapping
-    which maps each ``wordId -> str(wordId)``.
+    which maps each `wordId -> str(wordId)`.
 
     This function is used whenever *words* need to be displayed (as opposed to just
     their ids) but no wordId->word mapping was provided. The resulting mapping
     only covers words actually used in the corpus, up to the highest wordId found.
+
     """
     num_terms = 1 + get_max_id(corpus)
     id2word = FakeDict(num_terms)
@@ -267,6 +570,7 @@ def is_corpus(obj):
 
     Note: An "empty" corpus (empty input sequence) is ambiguous, so in this case the
     result is forcefully defined as `is_corpus=False`.
+
     """
     try:
         if 'Corpus' in obj.__class__.__name__: # the most common case, quick hack
@@ -274,17 +578,17 @@ def is_corpus(obj):
     except:
         pass
     try:
-        if hasattr(obj, 'next'):
+        if hasattr(obj, 'next') or hasattr(obj, '__next__'):
             # the input is an iterator object, meaning once we call next()
             # that element could be gone forever. we must be careful to put
             # whatever we retrieve back again
-            doc1 = obj.next()
+            doc1 = next(obj)
             obj = itertools.chain([doc1], obj)
         else:
-            doc1 = iter(obj).next() # empty corpus is resolved to False here
+            doc1 = next(iter(obj)) # empty corpus is resolved to False here
         if len(doc1) == 0: # sparse documents must have a __len__ function (list, tuple...)
             return True, obj # the first document is empty=>assume this is a corpus
-        id1, val1 = iter(doc1).next() # if obj is a numpy array, it resolves to False here
+        id1, val1 = next(iter(doc1)) # if obj is a numpy array, it resolves to False here
         id1, val1 = int(id1), float(val1) # must be a 2-tuple (integer, float)
     except:
         return False, obj
@@ -300,6 +604,7 @@ def get_my_ip():
     local misconfigurations, which often mess up hostname resolution.
 
     If all else fails, fall back to simple `socket.gethostbyname()` lookup.
+
     """
     import socket
     try:
@@ -345,6 +650,88 @@ class RepeatCorpus(SaveLoad):
     def __iter__(self):
         return itertools.islice(itertools.cycle(self.corpus), self.reps)
 
+class RepeatCorpusNTimes(SaveLoad):
+
+    def __init__(self, corpus, n):
+        """
+        Repeat a `corpus` `n` times.
+
+        >>> corpus = [[(1, 0.5)], []]
+        >>> list(RepeatCorpusNTimes(corpus, 3)) # repeat 3 times
+        [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)], []]
+        """
+        self.corpus = corpus
+        self.n = n
+
+    def __iter__(self):
+        for _ in xrange(self.n):
+            for document in self.corpus:
+                yield document
+
+class ClippedCorpus(SaveLoad):
+    def __init__(self, corpus, max_docs=None):
+        """
+        Return a corpus that is the "head" of input iterable `corpus`.
+
+        Any documents after `max_docs` are ignored. This effectively limits the
+        length of the returned corpus to <= `max_docs`. Set `max_docs=None` for
+        "no limit", effectively wrapping the entire input corpus.
+
+        """
+        self.corpus = corpus
+        self.max_docs = max_docs
+
+    def __iter__(self):
+        return itertools.islice(self.corpus, self.max_docs)
+
+    def __len__(self):
+        return min(self.max_docs, len(self.corpus))
+
+class SlicedCorpus(SaveLoad):
+    def __init__(self, corpus, slice_):
+        """
+        Return a corpus that is the slice of input iterable `corpus`.
+
+        Negative slicing can only be used if the corpus is indexable.
+        Otherwise, the corpus will be iterated over.
+
+        Slice can also be a numpy.ndarray to support fancy indexing.
+
+        NOTE: calculating the size of a SlicedCorpus is expensive
+        when using a slice as the corpus has to be iterated over once.
+        Using a list or numpy.ndarray does not have this drawback, but
+        consumes more memory.
+        """
+        self.corpus = corpus
+        self.slice_ = slice_
+        self.length = None
+
+    def __iter__(self):
+        if hasattr(self.corpus, 'index') and len(self.corpus.index) > 0:
+            return (self.corpus.docbyoffset(i) for i in
+                    self.corpus.index[self.slice_])
+        else:
+            return itertools.islice(self.corpus, self.slice_.start,
+                                    self.slice_.stop, self.slice_.step)
+
+    def __len__(self):
+        # check cached length, calculate if needed
+        if self.length is None:
+            if isinstance(self.slice_, (list, numpy.ndarray)):
+                self.length = len(self.slice_)
+            else:
+                self.length = sum(1 for x in self)
+
+        return self.length
+
+def safe_unichr(intval):
+    try:
+        return unichr(intval)
+    except ValueError:
+        # ValueError: unichr() arg not in range(0x10000) (narrow Python build)
+        s = "\\U%08x" % intval
+        # return UTF16 surrogate pair
+        return s.decode('unicode-escape')
 
 def decode_htmlentities(text):
     """
@@ -353,38 +740,37 @@ def decode_htmlentities(text):
     Adapted from http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py
 
     >>> u = u'E tu vivrai nel terrore - L&#x27;aldil&#xE0; (1981)'
-    >>> print decode_htmlentities(u).encode('UTF-8')
+    >>> print(decode_htmlentities(u).encode('UTF-8'))
     E tu vivrai nel terrore - L'aldilà (1981)
-    >>> print decode_htmlentities("l&#39;eau")
+    >>> print(decode_htmlentities("l&#39;eau"))
     l'eau
-    >>> print decode_htmlentities("foo &lt; bar")
+    >>> print(decode_htmlentities("foo &lt; bar"))
     foo < bar
 
     """
     def substitute_entity(match):
-        ent = match.group(3)
-        if match.group(1) == "#":
-            # decoding by number
-            if match.group(2) == '':
-                # number is in decimal
-                return unichr(int(ent))
-            elif match.group(2) == 'x':
-                # number is in hex
-                return unichr(int('0x' + ent, 16))
-        else:
-            # they were using a name
-            cp = n2cp.get(ent)
-            if cp:
-                return unichr(cp)
+        try:
+            ent = match.group(3)
+            if match.group(1) == "#":
+                # decoding by number
+                if match.group(2) == '':
+                    # number is in decimal
+                    return safe_unichr(int(ent))
+                elif match.group(2) in ['x', 'X']:
+                    # number is in hex
+                    return safe_unichr(int(ent, 16))
             else:
-                return match.group()
+                # they were using a name
+                cp = n2cp.get(ent)
+                if cp:
+                    return safe_unichr(cp)
+                else:
+                    return match.group()
+        except:
+            # in case of errors, return original input
+            return match.group()
 
-    try:
-        return RE_HTML_ENTITY.sub(substitute_entity, text)
-    except:
-        # in case of errors, return input
-        # e.g., ValueError: unichr() arg not in range(0x10000) (narrow Python build)
-        return text
+    return RE_HTML_ENTITY.sub(substitute_entity, text)
 
 
 def chunkize_serial(iterable, chunksize, as_numpy=False):
@@ -392,8 +778,9 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
     Return elements from the iterable in `chunksize`-ed lists. The last returned
     element may be smaller (if length of collection is not divisible by `chunksize`).
 
-    >>> print list(grouper(xrange(10), 3))
+    >>> print(list(grouper(range(10), 3)))
     [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
+
     """
     import numpy
     it = iter(iterable)
@@ -410,7 +797,6 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
         yield wrapped_chunk.pop()
 
 grouper = chunkize_serial
-
 
 
 class InputQueue(multiprocessing.Process):
@@ -450,64 +836,80 @@ class InputQueue(multiprocessing.Process):
 #endclass InputQueue
 
 
-def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
-    """
-    Split a stream of values into smaller chunks.
-    Each chunk is of length `chunksize`, except the last one which may be smaller.
-    A once-only input stream (`corpus` from a generator) is ok, chunking is done
-    efficiently via itertools.
+if os.name == 'nt':
+    logger.info("detected Windows; aliasing chunkize to chunkize_serial")
 
-    If `maxsize > 1`, don't wait idly in between successive chunk `yields`, but
-    rather keep filling a short queue (of size at most `maxsize`) with forthcoming
-    chunks in advance. This is realized by starting a separate process, and is
-    meant to reduce I/O delays, which can be significant when `corpus` comes
-    from a slow medium (like harddisk).
-
-    If `maxsize==0`, don't fool around with parallelism and simply yield the chunksize
-    via `chunkize_serial()` (no I/O optimizations).
-
-    >>> for chunk in chunkize(xrange(10), 4): print chunk
-    [0, 1, 2, 3]
-    [4, 5, 6, 7]
-    [8, 9]
-
-    """
-    assert chunksize > 0
-
-    if maxsize > 0:
-        q = multiprocessing.Queue(maxsize=maxsize)
-        worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy)
-        worker.daemon = True
-        worker.start()
-        while True:
-            chunk = [q.get(block=True)]
-            if chunk[0] is None:
-                break
-            yield chunk.pop()
-    else:
-        for chunk in chunkize_serial(corpus, chunksize):
+    def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
+        for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
             yield chunk
+else:
+    def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
+        """
+        Split a stream of values into smaller chunks.
+        Each chunk is of length `chunksize`, except the last one which may be smaller.
+        A once-only input stream (`corpus` from a generator) is ok, chunking is done
+        efficiently via itertools.
 
-def smart_open(fname, mode):
-    from os import path
-    _,ext = path.splitext(fname)
-    if ext == '.bz2':
-        from bz2 import BZ2File
-        return BZ2File(fname, mode)
-    if ext == '.gz':
-        from gzip import GzipFile
-        return GzipFile(fname, mode)
-    return open(fname, mode)
+        If `maxsize > 1`, don't wait idly in between successive chunk `yields`, but
+        rather keep filling a short queue (of size at most `maxsize`) with forthcoming
+        chunks in advance. This is realized by starting a separate process, and is
+        meant to reduce I/O delays, which can be significant when `corpus` comes
+        from a slow medium (like harddisk).
 
-def pickle(obj, fname, protocol=-1):
-    """Pickle object `obj` to file `fname`."""
-    with smart_open(fname, 'wb') as fout: # 'b' for binary, needed on Windows
-        cPickle.dump(obj, fout, protocol=protocol)
+        If `maxsize==0`, don't fool around with parallelism and simply yield the chunksize
+        via `chunkize_serial()` (no I/O optimizations).
+
+        >>> for chunk in chunkize(range(10), 4): print(chunk)
+        [0, 1, 2, 3]
+        [4, 5, 6, 7]
+        [8, 9]
+
+        """
+        assert chunksize > 0
+
+        if maxsize > 0:
+            q = multiprocessing.Queue(maxsize=maxsize)
+            worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy)
+            worker.daemon = True
+            worker.start()
+            while True:
+                chunk = [q.get(block=True)]
+                if chunk[0] is None:
+                    break
+                yield chunk.pop()
+        else:
+            for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
+                yield chunk
+
+
+def smart_extension(fname, ext):
+    fname, oext = os.path.splitext(fname)
+    if oext.endswith('.bz2'):
+        fname = fname + oext[:-4] + ext + '.bz2'
+    elif oext.endswith('.gz'):
+        fname = fname + oext[:-3] + ext + '.gz'
+    else:
+        fname = fname + oext + ext
+
+    return fname
+
+
+def pickle(obj, fname, protocol=2):
+    """Pickle object `obj` to file `fname`.
+
+    `protocol` defaults to 2 so pickled objects are compatible across
+    Python 2.x and 3.x.
+
+    """
+    with smart_open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
+        _pickle.dump(obj, fout, protocol=protocol)
 
 
 def unpickle(fname):
     """Load pickled object from `fname`"""
-    return cPickle.load(smart_open(fname, 'rb'))
+    with smart_open(fname) as f:
+        # Because of loading from S3 load can't be used (missing readline in smart_open)
+        return _pickle.loads(f.read())
 
 
 def revdict(d):
@@ -515,8 +917,10 @@ def revdict(d):
     Reverse a dictionary mapping.
 
     When two keys map to the same value, only one of them will be kept in the
-    result (which one is kept is arbitrary)."""
-    return dict((v, k) for (k, v) in d.iteritems())
+    result (which one is kept is arbitrary).
+
+    """
+    return dict((v, k) for (k, v) in iteritems(d))
 
 
 def toptexts(query, texts, index, n=10):
@@ -528,6 +932,7 @@ def toptexts(query, texts, index, n=10):
     via `texts[docid]`, such as its fulltext or snippet.
 
     Return a list of 3-tuples (docid, doc's similarity to the query, texts[docid]).
+
     """
     sims = index[query] # perform a similarity query against the corpus
     sims = sorted(enumerate(sims), key=lambda item: -item[1])
@@ -550,6 +955,7 @@ def upload_chunked(server, docs, chunksize=1000, preprocess=None):
     Use this function to train or index large collections -- avoid sending the
     entire corpus over the wire as a single Pyro in-memory object. The documents
     will be sent in smaller chunks, of `chunksize` documents each.
+
     """
     start = 0
     for chunk in grouper(docs, chunksize):
@@ -570,6 +976,7 @@ def getNS():
     """
     Return a Pyro name server proxy. If there is no name server running,
     start one on 0.0.0.0 (all interfaces), as a background process.
+
     """
     import Pyro4
     try:
@@ -588,9 +995,12 @@ def getNS():
 
 
 def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
-    """Register object with name server (starting the name server if not running
+    """
+    Register object with name server (starting the name server if not running
     yet) and block until the daemon is terminated. The object is registered under
-    `name`, or `name`+ some random suffix if `random_suffix` is set."""
+    `name`, or `name`+ some random suffix if `random_suffix` is set.
+
+    """
     if random_suffix:
         name += '.' + hex(random.randint(0, 0xffffff))[2:]
     import Pyro4
@@ -604,41 +1014,154 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None):
             daemon.requestLoop()
 
 
-# the following is only available when the optional 'pattern' package is installed
-if HAS_PATTERN:
-    def lemmatize(content, light=False, allowed_tags=re.compile('(NN|VB|JJ|RB)')):
-        """
-        Use the English lemmatizer from the `pattern` package to extract tokens in
-        their base form=lemma, e.g. "are, is, being" -> "be" etc.
-        This is a smarter version of stemming. Only consider nouns, verbs, adjectives
-        and adverbs by default (=all other lemmas are discarded).
+def has_pattern():
+    """
+    Function to check if there is installed pattern library
+    """
+    pattern = False
+    try:
+        from pattern.en import parse
+        pattern = True
+    except ImportError:
+        logger.info("Pattern library is not installed, lemmatization won't be available.")
+    return pattern
 
-        >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
-        ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
 
-        From http://www.clips.ua.ac.be/pages/pattern-en#parser :
+def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
+        stopwords=frozenset(), min_length=2, max_length=15):
+    """
+    This function is only available when the optional 'pattern' package is installed.
 
-            The parser is built on a Brill lexicon of tagged words and rules to
-            improve the tags context-wise. With light=False, it uses Brill's contextual
-            rules. With light=True it uses Jason Wiener's simpler ruleset. This
-            ruleset is 5-10x faster but also 25% less accurate.
+    Use the English lemmatizer from `pattern` to extract UTF8-encoded tokens in
+    their base form=lemma, e.g. "are, is, being" -> "be" etc.
+    This is a smarter version of stemming, taking word context into account.
 
-        """
-        # tokenization in `pattern` is weird; it gets thrown off by non-letters,
-        # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
-        # FIXME this throws away all fancy parsing cues, including sentence structure,
-        # abbreviations etc.
-        content = u' '.join(tokenize(content, lower=True, errors='ignore'))
+    Only considers nouns, verbs, adjectives and adverbs by default (=all other lemmas are discarded).
 
-        # use simpler, modified pattern.text.en.text.parser.parse that doesn't
-        # collapse the output at the end: https://github.com/piskvorky/pattern
-        parsed = parse(content, lemmata=True, collapse=False, light=light)
-        result = []
-        for sentence in parsed:
-            for token, tag, _, _, lemma in sentence:
-                if 2 <= len(lemma) <= 15 and not lemma.startswith('_'):
-                    if allowed_tags.match(tag):
-                        lemma += "/" + tag[:2]
-                        result.append(lemma.encode('utf8'))
-        return result
-#endif HAS_PATTERN
+    >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
+    ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
+
+    >>> lemmatize('The study ranks high.')
+    ['study/NN', 'rank/VB', 'high/JJ']
+
+    >>> lemmatize('The ranks study hard.')
+    ['rank/NN', 'study/VB', 'hard/RB']
+
+    """
+    if not has_pattern():
+        raise ImportError("Pattern library is not installed. Pattern library is needed in order  \
+         to use lemmatize function")
+    from pattern.en import parse
+
+    if light:
+        import warnings
+        warnings.warn("The light flag is no longer supported by pattern.")
+
+    # tokenization in `pattern` is weird; it gets thrown off by non-letters,
+    # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
+    # FIXME this throws away all fancy parsing cues, including sentence structure,
+    # abbreviations etc.
+    content = u(' ').join(tokenize(content, lower=True, errors='ignore'))
+
+    parsed = parse(content, lemmata=True, collapse=False)
+    result = []
+    for sentence in parsed:
+        for token, tag, _, _, lemma in sentence:
+            if min_length <= len(lemma) <= max_length and not lemma.startswith('_') and lemma not in stopwords:
+                if allowed_tags.match(tag):
+                    lemma += "/" + tag[:2]
+                    result.append(lemma.encode('utf8'))
+    return result
+
+
+def mock_data_row(dim=1000, prob_nnz=0.5, lam=1.0):
+    """
+    Create a random gensim sparse vector. Each coordinate is nonzero with
+    probability `prob_nnz`, each non-zero coordinate value is drawn from
+    a Poisson distribution with parameter lambda equal to `lam`.
+
+    """
+    nnz = numpy.random.uniform(size=(dim,))
+    data = [(i, float(numpy.random.poisson(lam=lam) + 1.0))
+            for i in xrange(dim) if nnz[i] < prob_nnz]
+    return data
+
+
+def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
+    """
+    Create a random gensim-style corpus, as a list of lists of (int, float) tuples,
+    to be used as a mock corpus.
+
+    """
+    data = [mock_data_row(dim=dim, prob_nnz=prob_nnz, lam=lam)
+            for _ in xrange(n_items)]
+    return data
+
+
+def prune_vocab(vocab, min_reduce, trim_rule=None):
+    """
+    Remove all entries from the `vocab` dictionary with count smaller than `min_reduce`.
+
+    Modifies `vocab` in place, returns the sum of all counts that were pruned.
+
+    """
+    result = 0
+    old_len = len(vocab)
+    for w in list(vocab):  # make a copy of dict's keys
+        if not keep_vocab_item(w, vocab[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
+            result += vocab[w]
+            del vocab[w]
+    logger.info("pruned out %i tokens with count <=%i (before %i, after %i)",
+                old_len - len(vocab), min_reduce, old_len, len(vocab))
+    return result
+
+
+def qsize(queue):
+    """Return the (approximate) queue size where available; -1 where not (OS X)."""
+    try:
+        return queue.qsize()
+    except NotImplementedError:
+        # OS X doesn't support qsize
+        return -1
+
+RULE_DEFAULT = 0
+RULE_DISCARD = 1
+RULE_KEEP = 2
+
+
+def keep_vocab_item(word, count, min_count, trim_rule=None):
+    default_res = count >= min_count
+
+    if trim_rule is None:
+        return default_res
+    else:
+        rule_res = trim_rule(word, count, min_count)
+        if rule_res == RULE_KEEP:
+            return True
+        elif rule_res == RULE_DISCARD:
+            return False
+        else:
+            return default_res
+
+def check_output(*popenargs, **kwargs):
+    r"""Run command with arguments and return its output as a byte string.
+    Backported from Python 2.7 as it's implemented as pure python on stdlib.
+    >>> check_output(['/usr/bin/python', '--version'])
+    Python 2.6.2
+    Added extra KeyboardInterrupt handling
+    """
+    try:
+        process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+        output, unused_err = process.communicate()
+        retcode = process.poll()
+        if retcode:
+            cmd = kwargs.get("args")
+            if cmd is None:
+                cmd = popenargs[0]
+            error = subprocess.CalledProcessError(retcode, cmd)
+            error.output = output
+            raise error
+        return output
+    except KeyboardInterrupt:
+        process.terminate()
+        raise

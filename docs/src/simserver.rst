@@ -212,10 +212,10 @@ There are two types of queries:
 
    .. code-block:: python
 
-     >>> print service.find_similar('doc_0')
+     >>> print(service.find_similar('doc_0'))
      [('doc_0', 1.0, None), ('doc_2', 0.30426699, None), ('doc_1', 0.25648531, None), ('doc_3', 0.25480536, None)]
 
-   >>> print service.find_similar('doc_5') # we deleted doc_5 and doc_8, remember?
+   >>> print(service.find_similar('doc_5')) # we deleted doc_5 and doc_8, remember?
    ValueError: document 'doc_5' not in index
 
    In the resulting 3-tuples, `doc_n` is the document id we supplied during indexing,
@@ -229,7 +229,7 @@ There are two types of queries:
    .. code-block:: python
 
      >>> doc = {'tokens': utils.simple_preprocess('Graph and minors and humans and trees.')}
-     >>> print service.find_similar(doc, min_score=0.4, max_results=50)
+     >>> print(service.find_similar(doc, min_score=0.4, max_results=50))
      [('doc_7', 0.93350589, None), ('doc_3', 0.42718196, None)]
 
 Remote access
@@ -257,7 +257,7 @@ Now `service` is only a proxy object: every call is physically executed wherever
 you ran the `run_server.py` script, which can be a totally different computer
 (within a network broadcast domain), but you don't even know::
 
->>> print service.status()
+>>> print(service.status())
 >>> service.train(corpus)
 >>> service.index(other_corpus)
 >>> service.find_similar(query)

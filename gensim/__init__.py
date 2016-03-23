@@ -3,10 +3,8 @@ This package contains interfaces and functionality to compute pair-wise document
 similarities within a corpus of documents.
 """
 
-# for IPython tab-completion
-import utils, matutils, interfaces, corpora, models, similarities
+from gensim import parsing, matutils, interfaces, corpora, models, similarities, summarization
 import logging
-
 
 try:
     __version__ = __import__('pkg_resources').get_distribution('gensim').version

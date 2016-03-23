@@ -14,6 +14,7 @@ from __future__ import with_statement
 
 import logging
 
+from gensim import utils
 from gensim.corpora import IndexedCorpus
 
 
@@ -41,35 +42,44 @@ class SvmLightCorpus(IndexedCorpus):
     feature ids to be 1-based (counting starts at 1). We convert features to 0-base
     internally by decrementing all ids when loading a SVMlight input file, and
     increment them again when saving as SVMlight.
+
     """
 
-    def __init__(self, fname):
+    def __init__(self, fname, store_labels=True):
         """
         Initialize the corpus from a file.
+
+        Although vector labels (~SVM target class) are not used in gensim in any way,
+        they are parsed and stored in `self.labels` for convenience. Set `store_labels=False`
+        to skip storing these labels (e.g. if there are too many vectors to store
+        the self.labels array in memory).
+
         """
         IndexedCorpus.__init__(self, fname)
         logger.info("loading corpus from %s" % fname)
 
         self.fname = fname # input file, see class doc for format
         self.length = None
-
+        self.store_labels = store_labels
+        self.labels = []
 
     def __iter__(self):
         """
         Iterate over the corpus, returning one sparse vector at a time.
         """
-        length = 0
-        with open(self.fname) as fin:
-            for lineNo, line in enumerate(fin):
+        lineno = -1
+        self.labels = []
+        with utils.smart_open(self.fname) as fin:
+            for lineno, line in enumerate(fin):
                 doc = self.line2doc(line)
                 if doc is not None:
-                    length += 1
-                    yield doc
-        self.length = length
-
+                    if self.store_labels:
+                        self.labels.append(doc[1])
+                    yield doc[0]
+        self.length = lineno + 1
 
     @staticmethod
-    def save_corpus(fname, corpus, id2word=None, labels=False):
+    def save_corpus(fname, corpus, id2word=None, labels=False, metadata=False):
         """
         Save a corpus in the SVMlight format.
 
@@ -82,27 +92,26 @@ class SvmLightCorpus(IndexedCorpus):
         logger.info("converting corpus to SVMlight format: %s" % fname)
 
         offsets = []
-        with open(fname, 'w') as fout:
+        with utils.smart_open(fname, 'wb') as fout:
             for docno, doc in enumerate(corpus):
                 label = labels[docno] if labels else 0 # target class is 0 by default
                 offsets.append(fout.tell())
-                fout.write(SvmLightCorpus.doc2line(doc, label))
+                fout.write(utils.to_utf8(SvmLightCorpus.doc2line(doc, label)))
         return offsets
-
 
     def docbyoffset(self, offset):
         """
         Return the document stored at file position `offset`.
         """
-        with open(self.fname) as f:
+        with utils.smart_open(self.fname) as f:
             f.seek(offset)
-            return self.line2doc(f.readline())
-
+            return self.line2doc(f.readline())[0]
 
     def line2doc(self, line):
         """
         Create a document from a single line (string) in SVMlight format
         """
+        line = utils.to_unicode(line)
         line = line[: line.find('#')].strip()
         if not line:
             return None # ignore comments and empty lines
@@ -111,8 +120,7 @@ class SvmLightCorpus(IndexedCorpus):
             raise ValueError('invalid line format in %s' % self.fname)
         target, fields = parts[0], [part.rsplit(':', 1) for part in parts[1:]]
         doc = [(int(p1) - 1, float(p2)) for p1, p2 in fields if p1 != 'qid'] # ignore 'qid' features, convert 1-based feature ids to 0-based
-        return doc
-
+        return doc, target
 
     @staticmethod
     def doc2line(doc, label=0):
@@ -120,5 +128,6 @@ class SvmLightCorpus(IndexedCorpus):
         Output the document in SVMlight format, as a string. Inverse function to `line2doc`.
         """
         pairs = ' '.join("%i:%s" % (termid + 1, termval) for termid, termval in doc) # +1 to convert 0-base to 1-base
-        return str(label) + " %s\n" % pairs
-#endclass SvmLightCorpus
+        return "%s %s\n" % (label, pairs)
+
+# endclass SvmLightCorpus

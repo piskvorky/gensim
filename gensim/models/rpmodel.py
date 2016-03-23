@@ -31,7 +31,7 @@ class RpModel(interfaces.TransformationABC):
        space.
 
     >>> rp = RpModel(corpus)
-    >>> print rp[some_doc]
+    >>> print(rp[some_doc])
     >>> rp.save('/tmp/foo.rp_model')
 
     Model persistency is achieved via its load/save methods.
@@ -83,7 +83,7 @@ class RpModel(interfaces.TransformationABC):
 
         vec = matutils.sparse2full(bow, self.num_terms).reshape(self.num_terms, 1) / numpy.sqrt(self.num_topics)
         vec = numpy.asfortranarray(vec, dtype=numpy.float32)
-        topic_dist = scipy.linalg.fblas.sgemv(1.0, self.projection, vec)  # (k, d) * (d, 1) = (k, 1)
+        topic_dist = numpy.dot(self.projection, vec) # (k, d) * (d, 1) = (k, 1)
         return [(topicid, float(topicvalue)) for topicid, topicvalue in enumerate(topic_dist.flat)
                 if numpy.isfinite(topicvalue) and not numpy.allclose(topicvalue, 0.0)]
 

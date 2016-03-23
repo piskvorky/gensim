@@ -33,11 +33,11 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         Interpret a matrix in Matrix Market format as a streamed gensim corpus
         (yielding one document at a time).
         """
-        for docId, doc in super(MmCorpus, self).__iter__():
-            yield doc # get rid of docId, return the sparse vector only
+        for doc_id, doc in super(MmCorpus, self).__iter__():
+            yield doc  # get rid of doc id, return the sparse vector only
 
     @staticmethod
-    def save_corpus(fname, corpus, id2word=None, progress_cnt=1000):
+    def save_corpus(fname, corpus, id2word=None, progress_cnt=1000, metadata=False):
         """
         Save a corpus in the Matrix Market format to disk.
 
@@ -45,7 +45,7 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         call it directly, call `serialize` instead.
         """
         logger.info("storing corpus in Matrix Market format to %s" % fname)
-        return matutils.MmWriter.write_corpus(fname, corpus, index=True, progress_cnt=progress_cnt)
-#endclass MmCorpus
+        num_terms = len(id2word) if id2word is not None else None
+        return matutils.MmWriter.write_corpus(fname, corpus, num_terms=num_terms, index=True, progress_cnt=progress_cnt, metadata=metadata)
 
-
+# endclass MmCorpus

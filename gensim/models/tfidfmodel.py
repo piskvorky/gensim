@@ -6,14 +6,13 @@
 
 
 import logging
-import itertools
-
 import math
 
 from gensim import interfaces, matutils, utils
+from six import iteritems
 
 
-logger = logging.getLogger('gensim.models.tfidfmodel')
+logger = logging.getLogger(__name__)
 
 
 def df2idf(docfreq, totaldocs, log_base=2.0, add=0.0):
@@ -29,7 +28,8 @@ def precompute_idfs(wglobal, dfs, total_docs):
     """Precompute the inverse document frequency mapping for all terms."""
     # not strictly necessary and could be computed on the fly in TfidfModel__getitem__.
     # this method is here just to speed things up a little.
-    return dict((termid, wglobal(df, total_docs)) for termid, df in dfs.iteritems())
+    return dict((termid, wglobal(df, total_docs))
+                for termid, df in iteritems(dfs))
 
 
 class TfidfModel(interfaces.TransformationABC):
@@ -44,7 +44,7 @@ class TfidfModel(interfaces.TransformationABC):
        space.
 
     >>> tfidf = TfidfModel(corpus)
-    >>> print = tfidf[some_doc]
+    >>> print(tfidf[some_doc])
     >>> tfidf.save('/tmp/foo.tfidf_model')
 
     Model persistency is achieved via its load/save methods.
@@ -125,8 +125,9 @@ class TfidfModel(interfaces.TransformationABC):
         self.dfs = dfs
 
         # and finally compute the idf weights
+        n_features = max(dfs) if dfs else 0
         logger.info("calculating IDF weights for %i documents and %i features (%i matrix non-zeros)" %
-                     (self.num_docs, 1 + max([-1] + dfs.keys()), self.num_nnz))
+                     (self.num_docs, n_features, self.num_nnz))
         self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
 
 

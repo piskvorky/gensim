@@ -20,7 +20,7 @@ as a stream of vectors. To continue, let's fire up gensim and use that corpus:
 >>> from gensim import corpora, models, similarities
 >>> dictionary = corpora.Dictionary.load('/tmp/deerwester.dict')
 >>> corpus = corpora.MmCorpus('/tmp/deerwester.mm')
->>> print corpus
+>>> print(corpus)
 MmCorpus(9 documents, 12 features, 28 non-zero entries)
 
 In this tutorial, I will show how to transform documents from one vector representation
@@ -66,14 +66,14 @@ any vector from the old representation (bag-of-words integer counts) to the new 
 (TfIdf real-valued weights):
 
 >>> doc_bow = [(0, 1), (1, 1)]
->>> print tfidf[doc_bow] # step 2 -- use the model to transform vectors
+>>> print(tfidf[doc_bow]) # step 2 -- use the model to transform vectors
 [(0, 0.70710678), (1, 0.70710678)]
 
 Or to apply a transformation to a whole corpus:
 
 >>> corpus_tfidf = tfidf[corpus]
 >>> for doc in corpus_tfidf:
->>>     print doc
+...     print(doc)
 [(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
 [(0, 0.44424552527467476), (3, 0.44424552527467476), (4, 0.44424552527467476), (5, 0.32448702061385548), (6, 0.44424552527467476), (7, 0.32448702061385548)]
 [(2, 0.5710059809418182), (5, 0.41707573620227772), (7, 0.41707573620227772), (8, 0.5710059809418182)]
@@ -122,7 +122,7 @@ the first five documents are more strongly related to the second topic while the
 remaining four documents to the first topic:
 
 >>> for doc in corpus_lsi: # both bow->tfidf and tfidf->lsi transformations are actually executed here, on the fly
->>>     print doc
+...     print(doc)
 [(0, -0.066), (1, 0.520)] # "Human machine interface for lab abc computer applications"
 [(0, -0.197), (1, 0.761)] # "A survey of user opinion of computer system response time"
 [(0, -0.090), (1, 0.724)] # "The EPS user interface management system"

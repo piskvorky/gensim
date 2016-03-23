@@ -14,7 +14,7 @@ Preparing the corpus
 ----------------------
 
 1. First, download the dump of all Wikipedia articles from http://download.wikimedia.org/enwiki/
-   (you want a file like `enwiki-latest-pages-articles.xml.bz2`). This file is about 8GB in size
+   (you want the file `enwiki-latest-pages-articles.xml.bz2`, or `enwiki-YYYYMMDD-pages-articles.xml.bz2` for date-specific dumps). This file is about 8GB in size
    and contains (a compressed version of) all articles from the English Wikipedia.
 
 2. Convert the articles to plain text (process Wiki markup) and store the result as
@@ -33,7 +33,7 @@ Preparing the corpus
   I recommend compressing these files immediately, e.g. with bzip2 (down to ~13GB). Gensim
   can work with compressed files directly, so this lets you save disk space.
 
-Latent Sematic Analysis
+Latent Semantic Analysis
 --------------------------
 
 First let's load the corpus iterator and dictionary, created in the second step above::
@@ -47,7 +47,7 @@ First let's load the corpus iterator and dictionary, created in the second step 
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
     >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output (recommended)
 
-    >>> print mm
+    >>> print(mm)
     MmCorpus(3931787 documents, 100000 features, 756379027 non-zero entries)
 
 We see that our corpus contains 3.9M documents, 100K features (distinct
@@ -102,7 +102,7 @@ As with Latent Semantic Analysis above, first load the corpus iterator and dicti
     >>> mm = gensim.corpora.MmCorpus('wiki_en_tfidf.mm')
     >>> # mm = gensim.corpora.MmCorpus(bz2.BZ2File('wiki_en_tfidf.mm.bz2')) # use this if you compressed the TFIDF output
 
-    >>> print mm
+    >>> print(mm)
     MmCorpus(3931787 documents, 100000 features, 756379027 non-zero entries)
 
 We will run online LDA (see Hoffman et al. [3]_), which is an algorithm that takes a chunk of documents,

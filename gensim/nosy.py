@@ -47,8 +47,8 @@ if __name__ == '__main__':
                 val = checkSum()
                 os.system('%s %s %s' % (EXECUTABLE, DEFAULTARGS,
                     ' '.join(sys.argv[1:])))
-                print datetime.datetime.now().__str__()
-                print '=' * 77
+                print(datetime.datetime.now().__str__())
+                print('=' * 77)
             time.sleep(1)
     except KeyboardInterrupt:
-        print 'Goodbye'
+        print('Goodbye')

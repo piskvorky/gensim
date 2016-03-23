@@ -31,6 +31,10 @@ Release 2: July 2008
 Optimizations and cleanup of the code by Lars Buitinck, July 2012.
 """
 
+
+from six.moves import xrange
+
+
 class PorterStemmer(object):
     def __init__(self):
         """The main part of the stemming algorithm starts here.

@@ -4,7 +4,7 @@
 Introduction
 ============
 
-Gensim is a :ref:`free <availability>` Python framework designed to automatically extract semantic
+Gensim is a :ref:`free <availability>` Python library designed to automatically extract semantic
 topics from documents, as efficiently (computer-wise) and painlessly (human-wise) as possible.
 
 
@@ -41,8 +41,7 @@ frameworks that realize topic modelling, and/or their overwhelming internal comp
 You can read more about the motivation in our `LREC 2010 workshop paper <lrec2010_final.pdf>`_.
 If you want to cite `gensim` in your own work, please refer to that article (`BibTeX <bibtex_gensim.bib>`_).
 
-You're welcome to share your results on the `mailing list <https://groups.google.com/group/gensim>`_,
-so others can learn from your success :)
+You're welcome to share your results and experiments on the `mailing list <https://groups.google.com/group/gensim>`_.
 
 The **principal design objectives** behind `gensim` are:
 
@@ -61,7 +60,7 @@ The **principal design objectives** behind `gensim` are:
 Availability
 ------------
 
-Gensim is licensed under the OSI-approved `GNU LPGL license <http://www.gnu.org/licenses/lgpl.html>`_
+Gensim is licensed under the OSI-approved `GNU LGPL license <http://www.gnu.org/licenses/lgpl.html>`_
 and can be downloaded either from its `github repository <https://github.com/piskvorky/gensim/>`_
 or from the `Python Package Index <http://pypi.python.org/pypi/gensim>`_.
 

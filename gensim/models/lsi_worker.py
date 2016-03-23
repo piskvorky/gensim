@@ -20,7 +20,11 @@ from __future__ import with_statement
 import os, sys, logging
 import threading
 import tempfile
-
+try:
+    import Queue
+except ImportError:
+    import queue as Queue
+import Pyro4
 from gensim.models import lsimodel
 from gensim import utils
 
@@ -41,21 +45,32 @@ class Worker(object):
         self.jobsdone = 0 # how many jobs has this worker completed?
         self.myid = myid # id of this worker in the dispatcher; just a convenience var for easy access/logging TODO remove?
         self.dispatcher = dispatcher
+        self.finished = False
         logger.info("initializing worker #%s" % myid)
         self.model = lsimodel.LsiModel(**model_params)
 
 
+    @Pyro4.oneway
     def requestjob(self):
         """
-        Request jobs from the dispatcher in an infinite loop. The requests are
-        blocking, so if there are no jobs available, the thread will wait.
+        Request jobs from the dispatcher, in a perpetual loop until `getstate()` is called.
         """
         if self.model is None:
             raise RuntimeError("worker must be initialized before receiving jobs")
-        job = self.dispatcher.getjob(self.myid) # blocks until a new job is available from the dispatcher
-        logger.info("worker #%s received job #%i" % (self.myid, self.jobsdone))
-        self.processjob(job)
-        self.dispatcher.jobdone(self.myid)
+
+        job = None
+        while job is None and not self.finished:
+            try:
+                job = self.dispatcher.getjob(self.myid)
+            except Queue.Empty:
+                # no new job: try again, unless we're finished with all work
+                continue
+        if job is not None:
+            logger.info("worker #%s received job #%i" % (self.myid, self.jobsdone))
+            self.processjob(job)
+            self.dispatcher.jobdone(self.myid)
+        else:
+            logger.info("worker #%i stopping asking for jobs" % self.myid)
 
 
     @utils.synchronous('lock_update')
@@ -72,11 +87,18 @@ class Worker(object):
         logger.info("worker #%i returning its state after %s jobs" %
                     (self.myid, self.jobsdone))
         assert isinstance(self.model.projection, lsimodel.Projection)
-        result = self.model.projection
+        self.finished = True
+        return self.model.projection
+
+
+    @utils.synchronous('lock_update')
+    def reset(self):
+        logger.info("resetting worker #%i" % self.myid)
         self.model.projection = self.model.projection.empty_like()
-        return result
+        self.finished = False
 
 
+    @Pyro4.oneway
     def exit(self):
         logger.info("terminating worker #%i" % self.myid)
         os._exit(0)
@@ -91,7 +113,7 @@ def main():
     program = os.path.basename(sys.argv[0])
     # make sure we have enough cmd line parameters
     if len(sys.argv) < 1:
-        print globals()["__doc__"] % locals()
+        print(globals()["__doc__"] % locals())
         sys.exit(1)
 
     utils.pyro_daemon('gensim.lsi_worker', Worker(), random_suffix=True)

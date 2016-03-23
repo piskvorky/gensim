@@ -5,8 +5,8 @@ Tutorials
 
 
 The tutorials are organized as a series of examples that highlight various features
-of `gensim`. It is assumed that the reader is familiar with the Python language
-and has read the :doc:`intro`.
+of `gensim`. It is assumed that the reader is familiar with the `Python language <http://www.python.org/>`_, has :doc:`installed gensim <install>`
+and read the :doc:`introduction <intro>`.
 
 The examples are divided into parts on:
 
@@ -22,10 +22,7 @@ The examples are divided into parts on:
 Preliminaries
 --------------
 
-All the examples can be directly copied to your Python interpreter shell (assuming
-you have :doc:`gensim installed <install>`, of course).
-`IPython <http://ipython.scipy.org>`_'s ``cpaste`` command is especially handy for copypasting code fragments which include superfluous
-characters, such as the leading ``>>>``.
+All the examples can be directly copied to your Python interpreter shell. `IPython <http://ipython.scipy.org>`_'s ``cpaste`` command is especially handy for copypasting code fragments, including the leading ``>>>`` characters.
 
 Gensim uses Python's standard :mod:`logging` module to log various stuff at various
 priority levels; to activate logging (this is optional), run
@@ -54,14 +51,10 @@ First, let's import gensim and create a small corpus of nine documents and twelv
 >>>           [(8, 1.0), (10, 1.0), (11, 1.0)]]
 
 :dfn:`Corpus` is simply an object which, when iterated over, returns its documents represented
-as sparse vectors.
+as sparse vectors. If you're not familiar with the `vector space model <http://en.wikipedia.org/wiki/Vector_space_model>`_, we'll bridge the gap between **raw strings**, **corpora** and **sparse vectors** in the next tutorial on :doc:`tut1`.
 
-If you're familiar with the `Vector Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_,
-you'll probably know that the way you parse your documents and convert them to vectors
-has major impact on the quality of any subsequent applications. If you're not familiar
-with :abbr:`VSM (Vector Space Model)`, we'll bridge the gap between **raw strings**
-and **sparse vectors** in the next tutorial
-on :doc:`tut1`.
+If you're familiar with the vector space model, you'll probably know that the way you parse your documents and convert them to vectors
+has major impact on the quality of any subsequent applications.
 
 .. note::
     In this example, the whole corpus is stored in memory, as a Python list. However,
@@ -79,7 +72,7 @@ Next, let's initialize a :dfn:`transformation`:
 A transformation is used to convert documents from one vector representation into another:
 
 >>> vec = [(0, 1), (4, 1)]
->>> print tfidf[vec]
+>>> print(tfidf[vec])
 [(0, 0.8075244), (4, 0.5898342)]
 
 Here, we used `Tf-Idf <http://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_, a simple
@@ -96,7 +89,7 @@ To transform the whole corpus via TfIdf and index it, in preparation for similar
 and to query the similarity of our query vector ``vec`` against every document in the corpus:
 
 >>> sims = index[tfidf[vec]]
->>> print list(enumerate(sims))
+>>> print(list(enumerate(sims)))
 [(0, 0.4662244), (1, 0.19139354), (2, 0.24600551), (3, 0.82094586), (4, 0.0), (5, 0.0), (6, 0.0), (7, 0.0), (8, 0.0)]
 
 How to read this output? Document number zero (the first document) has a similarity score of 0.466=46.6\%,

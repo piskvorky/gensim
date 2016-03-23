@@ -30,8 +30,8 @@ import unittest
 
 import numpy as np
 
-from gensim import corpora, models, matutils
-from gensim.parsing.preprocessing import preprocess_documents
+from gensim import corpora, models, utils, matutils
+from gensim.parsing.preprocessing import preprocess_documents, preprocess_string, DEFAULT_FILTERS
 
 
 bg_corpus = None
@@ -42,7 +42,7 @@ human_sim_vector = None
 class TestLeeTest(unittest.TestCase):
     def setUp(self):
         """setup lee test corpora"""
-        global bg_corpus, corpus, human_sim_vector
+        global bg_corpus, corpus, human_sim_vector, bg_corpus2, corpus2
 
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
         bg_corpus_file = 'lee_background.cor'
@@ -50,10 +50,15 @@ class TestLeeTest(unittest.TestCase):
         sim_file = 'similarities0-1.txt'
 
         # read in the corpora
-        with open(os.path.join(pre_path, bg_corpus_file)) as f:
-            bg_corpus = preprocess_documents(f)
-        with open(os.path.join(pre_path, corpus_file)) as f:
-            corpus = preprocess_documents(f)
+        latin1 = lambda line: utils.to_unicode(line, encoding='latin1')
+        with utils.smart_open(os.path.join(pre_path, bg_corpus_file)) as f:
+            bg_corpus = preprocess_documents(latin1(line) for line in f)
+        with utils.smart_open(os.path.join(pre_path, corpus_file)) as f:
+            corpus = preprocess_documents(latin1(line) for line in f)
+        with utils.smart_open(os.path.join(pre_path, bg_corpus_file)) as f:
+            bg_corpus2 = [preprocess_string(latin1(s), filters=DEFAULT_FILTERS[:-1]) for s in f]
+        with utils.smart_open(os.path.join(pre_path, corpus_file)) as f:
+            corpus2 = [preprocess_string(latin1(s), filters=DEFAULT_FILTERS[:-1]) for s in f]
 
         # read the human similarity data
         sim_matrix = np.loadtxt(os.path.join(pre_path, sim_file))
@@ -99,11 +104,37 @@ class TestLeeTest(unittest.TestCase):
                 res[i, j] = matutils.cossim(par1, par2)
         flat = res[matutils.triu_indices(len(corpus), 1)]
 
-        cor = np.corrcoef(flat, human_sim_vector)
-        self.assertTrue(cor[0, 1] > 0.6)
+        cor = np.corrcoef(flat, human_sim_vector)[0, 1]
+        logging.info("LSI correlation coefficient is %s" % cor)
+        self.assertTrue(cor > 0.6)
+
+
+    # def test_lee_mallet(self):
+    #     global bg_corpus, corpus, bg_corpus2, corpus2
+
+    #     # create a dictionary and corpus (bag of words)
+    #     dictionary = corpora.Dictionary(bg_corpus2)
+    #     bg_corpus = [dictionary.doc2bow(text) for text in bg_corpus2]
+    #     corpus = [dictionary.doc2bow(text) for text in corpus2]
+
+    #     # initialize an LDA transformation from background corpus
+    #     lda = models.wrappers.LdaMallet('/Users/kofola/Downloads/mallet-2.0.7/bin/mallet',
+    #         corpus=bg_corpus, id2word=dictionary, num_topics=200, optimize_interval=10)
+    #     corpus_lda = lda[corpus]
+
+    #     # compute pairwise similarity matrix and extract upper triangular
+    #     res = np.zeros((len(corpus), len(corpus)))
+    #     for i, par1 in enumerate(corpus_lda):
+    #         for j, par2 in enumerate(corpus_lda):
+    #             res[i, j] = matutils.cossim(par1, par2)
+    #     flat = res[matutils.triu_indices(len(corpus), 1)]
+
+    #     cor = np.corrcoef(flat, human_sim_vector)[0, 1]
+    #     logging.info("LDA correlation coefficient is %s" % cor)
+    #     self.assertTrue(cor > 0.35)
 
 
 
 if __name__ == '__main__':
-    logging.root.setLevel(logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
