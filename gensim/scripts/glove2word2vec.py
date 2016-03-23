@@ -11,7 +11,7 @@ Convert GloVe vectors in text format into the word2vec text format.
 The only difference between the two formats is an extra header line in word2vec,
 which contains the number of vectors and their dimensionality (two integers).
 """
-
+from __future__ import unicode_literals
 import os
 import sys
 import random
@@ -23,15 +23,7 @@ from smart_open import smart_open
 
 logger = logging.getLogger(__name__)
 
-if sys.version_info < (3, ):
-    def b(x):
-        return str(x)
-else:
-    import codecs
-    def b(x):
-        return codecs.latin_1_encode(str(x))[0]
-        
-        
+
 def get_glove_info(glove_file_name):
     """Return the number of vectors and dimensions in a file in GloVe format."""
     with smart_open(glove_file_name) as f:
@@ -47,7 +39,7 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
     logger.info("converting %i vectors from %s to %s", num_lines, glove_input_file, word2vec_output_file)
 
     with smart_open(word2vec_output_file, 'wb') as fout:
-        fout.write("%s %s\n" % (b(num_lines), b(num_dims)))
+        fout.write("%d %d\n" % (num_lines, num_dims))
         with smart_open(glove_input_file, 'rb') as fin:
             for line in fin:
                 fout.write(line)
