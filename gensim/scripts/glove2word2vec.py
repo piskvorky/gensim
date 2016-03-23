@@ -23,12 +23,15 @@ from smart_open import smart_open
 logger = logging.getLogger(__name__)
 
 if sys.version_info < (3,):
-    def b(x):
-        return x
+    def write_mode():
+        return 'wb'
+    def read_mode():
+        return 'rb'
 else:
-    #import codecs
-    def b(x):
-        return x.encode('ISO-8859-1').decode('ISO-8859-1')
+    def write_mode():
+        return 'w'
+    def read_mode():
+        return 'r'
 
 
 def get_glove_info(glove_file_name):
@@ -45,11 +48,11 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
     num_lines, num_dims = get_glove_info(glove_input_file)
     logger.info("converting %i vectors from %s to %s", num_lines, glove_input_file, word2vec_output_file)
 
-    with smart_open(word2vec_output_file, 'wb') as fout:
-        fout.write("%s %s\n" % (b(str(num_lines)), b(str(num_dims))))
-        with smart_open(glove_input_file, 'rb') as fin:
+    with smart_open(word2vec_output_file, write_mode()) as fout:
+        fout.write("%d %d\n" % (num_lines, num_dims))
+        with smart_open(glove_input_file, read_mode()) as fin:
             for line in fin:
-                fout.write(b(line))
+                fout.write(line)
     return num_lines, num_dims
 
 
