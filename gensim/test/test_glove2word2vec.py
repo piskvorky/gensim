@@ -9,6 +9,7 @@
 
 import unittest
 import os
+import sys
 import gensim
 from gensim.utils import check_output
 
@@ -21,4 +22,7 @@ class TestGlove2Word2Vec(unittest.TestCase):
 
     def testConversion(self):
         output = check_output(['python', '-m', 'gensim.scripts.glove2word2vec', '-i', self.datapath, '-o', self.output_file])
-        self.assertEqual(output, '')
+        if sys.version_info < (3,):
+            self.assertEqual(output, '')
+        else:
+            self.assertEqual(output, b'')
