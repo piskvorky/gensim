@@ -40,7 +40,7 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
     logger.info("converting %i vectors from %s to %s", num_lines, glove_input_file, word2vec_output_file)
     if sys.version_info < (3,):
         with smart_open(word2vec_output_file, 'wb') as fout:
-            fout.write("%s\n" % header)
+            fout.write("%s %s\n" % (num_lines, num_dims))
             with smart_open(glove_input_file, 'rb') as fin:
                 for line in fin:
                     fout.write(line)
