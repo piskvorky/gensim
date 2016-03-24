@@ -45,9 +45,8 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
                     fout.write(line)
         return num_lines, num_dims
     else:
-        header = "{} {}".format(num_lines, num_dims)
         with smart_open(word2vec_output_file, 'w') as fout:
-            fout.write("%s\n" % header)
+            fout.write("%s %s\n" % (num_lines, num_dims))
             with smart_open(glove_input_file, 'r') as fin:
                 for line in fin:
                     fout.write(line)
