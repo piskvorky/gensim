@@ -1211,17 +1211,17 @@ class Word2Vec(utils.SaveLoad):
         > model = Word2Vec(sentences)
 
         > # Some sentences to test.
-        > sentence1 = 'Obama speaks to the media in Illinois'.lower().split()
-        > sentence2 = 'The president greets the press in Chicago'.lower().split()
+        > sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
+        > sentence_president = 'The president greets the press in Chicago'.lower().split()
 
         > # Remove their stopwords.
         > from nltk.corpus import stopwords
         > stopwords = nltk.corpus.stopwords.words('english')
-        > sentence1 = [w for w in sentence1 if w not in stopwords]
-        > sentence2 = [w for w in sentence2 if w not in stopwords]
+        > sentence_obama = [w for w in sentence_obama if w not in stopwords]
+        > sentence_president = [w for w in sentence_president if w not in stopwords]
 
         > # Compute WMD.
-        > distance = model.wmdistance(sentence1, sentence2)
+        > distance = model.wmdistance(sentence_obama, sentence_president)
         """
 
         if not PYEMD_EXT:

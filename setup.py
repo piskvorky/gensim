@@ -174,6 +174,7 @@ setup(
 
     extras_require={
         'distributed': ['Pyro4 >= 4.27'],
+        'wmd': ['pyemd >= 0.2.0'],
     },
 
     include_package_data=True,

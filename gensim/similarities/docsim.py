@@ -591,14 +591,14 @@ class WmdSimilarity(interfaces.SimilarityABC):
         # Make query.
         sims = instance[query]
     """
-    def __init__(self, corpus, w2v_model, num_best=None, normalize_w2v=True, chunksize=256):
+    def __init__(self, corpus, w2v_model, num_best=None, normalize_w2v_and_replace=True, chunksize=256):
         """
-        corpus:             List of lists of strings, as in gensim.models.word2vec.
-        w2v_model:          A trained word2vec model.
-        num_best:           Number of results to retrieve. If provided, a fast algorithm
-                            called "prefetch and prune" is used.
-        normalize_w2v:      Whether or not to normalize the word2vec vectors to
-                            length 1.
+        corpus:                         List of lists of strings, as in gensim.models.word2vec.
+        w2v_model:                      A trained word2vec model.
+        num_best:                       Number of results to retrieve. If provided, a fast algorithm
+                                        called "prefetch and prune" is used.
+        normalize_w2v_and_replace:      Whether or not to normalize the word2vec vectors to
+                                        length 1.
         """
         self.corpus = corpus
         self.w2v_model = w2v_model
@@ -611,7 +611,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         # index is simply an array from 0 to size of corpus.
         self.index = numpy.array(range(len(corpus)))
 
-        if normalize_w2v:
+        if normalize_w2v_and_replace:
             # Normalize vectors in word2vec class to length 1.
             w2v_model.init_sims(replace=True)
 
@@ -623,7 +623,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         **Do not use this function directly; use the self[query] syntax instead.**
         """
         if isinstance(query, numpy.ndarray):
-            # Convert document indeces to actual documents.
+            # Convert document indexes to actual documents.
             query = [self.corpus[i] for i in query]
 
         if not isinstance(query[0], list):
