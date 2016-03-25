@@ -42,6 +42,7 @@ Here are some hints for popular operating systems:
 If you are seeing this message on Linux you probably need to
 install GCC and/or the Python development package for your
 version of Python.
+
 Debian and Ubuntu users should issue the following command:
     $ sudo apt-get install build-essential python-dev
 RedHat, CentOS, and Fedora users should issue the following command:
