@@ -29,6 +29,7 @@ from setuptools.command.build_ext import build_ext
 # no compiler is available.
 class custom_build_ext(build_ext):
     """Allow C extension building to fail.
+    
     The C extension speeds up word2vec and doc2vec training, but is not essential.
     """
 
@@ -38,17 +39,24 @@ WARNING: %s could not
 be compiled. No C extensions are essential for gensim to run,
 although they do result in significant speed improvements for some modules.
 %s
+
 Here are some hints for popular operating systems:
+
 If you are seeing this message on Linux you probably need to
 install GCC and/or the Python development package for your
 version of Python.
 
 Debian and Ubuntu users should issue the following command:
+
     $ sudo apt-get install build-essential python-dev
+    
 RedHat, CentOS, and Fedora users should issue the following command:
+
     $ sudo yum install gcc python-devel
+    
 If you are seeing this message on OSX please read the documentation
 here:
+
 http://api.mongodb.org/python/current/installation.html#osx
 ********************************************************************
 """
