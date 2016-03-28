@@ -364,10 +364,14 @@ class Word2Vec(utils.SaveLoad):
 
         `window` is the maximum distance between the current and predicted word within a sentence.
 
-        `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
+        `alpha` is the initial learning rate (will linearly drop to `min_alpha` as training progresses).
 
         `seed` = for the random number generator. Initial vectors for each
         word are seeded with a hash of the concatenation of word + str(seed).
+        Note that for a fully deterministically-reproducible run, you must also limit the model to
+        a single worker thread, to eliminate ordering jitter from OS thread scheduling. (In Python
+        3, reproducibility between interpreter launches also requires use of the PYTHONHASHSEED
+        environment variable to control hash randomization.)
 
         `min_count` = ignore all words with total frequency lower than this.
 
@@ -393,7 +397,7 @@ class Word2Vec(utils.SaveLoad):
         `hashfxn` = hash function to use to randomly initialize weights, for increased
         training reproducibility. Default is Python's rudimentary built in hash function.
 
-        `iter` = number of iterations (epochs) over the corpus.
+        `iter` = number of iterations (epochs) over the corpus. Default is 5. 
 
         `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
         in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
@@ -406,8 +410,8 @@ class Word2Vec(utils.SaveLoad):
         assigning word indexes.
 
         `batch_words` = target size (in words) for batches of examples passed to worker threads (and
-        thus cython routines). Default is 10000. (Larger batches can be passed if individual
-        texts are longer, but the cython code may truncate.)
+        thus cython routines). Default is 10000. (Larger batches will be passed if individual
+        texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
 
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
