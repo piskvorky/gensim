@@ -5,7 +5,7 @@ Changes
 
 * Easy import of GloVe vectors using Gensim (Manas Ranjan Kar, #625)
   - Allow easy port of GloVe vectors into Gensim
-  - Standalone script with command line arguments, compatible with Python >= 2.6 
+  - Standalone script with command line arguments, compatible with Python>=2.6 
   - Usage: python -m gensim.scripts.glove2word2vec -i glove_vectors.txt -o output_word2vec_compatible.txt
 * Better internal handling of job batching in word2vec (#535)
   - up to 300% speed up when training on very short documents (~tweets)
