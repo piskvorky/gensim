@@ -30,7 +30,7 @@ from setuptools.command.build_ext import build_ext
 # no compiler is available.
 class custom_build_ext(build_ext):
     """Allow C extension building to fail.
-
+    
     The C extension speeds up word2vec and doc2vec training, but is not essential.
     """
 
@@ -50,11 +50,11 @@ version of Python.
 Debian and Ubuntu users should issue the following command:
 
     $ sudo apt-get install build-essential python-dev
-
+    
 RedHat, CentOS, and Fedora users should issue the following command:
 
     $ sudo yum install gcc python-devel
-
+    
 If you are seeing this message on OSX please read the documentation
 here:
 
@@ -114,6 +114,11 @@ if WHEELHOUSE_UPLOADER_COMMANDS.intersection(sys.argv):
     import wheelhouse_uploader.cmd
     cmdclass.update(vars(wheelhouse_uploader.cmd))
 
+python_2_6_backports = ''
+if sys.version_info[:2] < (2, 7):
+    python_2_6_backports = 'argparse'
+
+
 setup(
     name='gensim',
     version='0.12.4',
@@ -169,6 +174,7 @@ setup(
         'scipy >= 0.7.0',
         'six >= 1.5.0',
         'smart_open >= 1.2.1',
+        python_2_6_backports,
     ],
 
     extras_require={

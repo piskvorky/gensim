@@ -10,8 +10,7 @@ USAGE: %(program)s -train CORPUS -output VECTORS -size SIZE -window WINDOW
 -min_count MIN-COUNT -alpha ALPHA -binary BINARY -accuracy FILE
 
 Trains a neural embedding model on text file CORPUS.
-Parameters essentially reproduce those used by the original C tool 
-(see https://code.google.com/archive/p/word2vec/).
+Parameters essentially reproduce those used by the original C tool (see https://code.google.com/archive/p/word2vec/).
 
 Parameters for training:
         -train <file>
@@ -61,20 +60,16 @@ from gensim.models.word2vec import Word2Vec, LineSentence  # avoid referencing _
 
 
 if __name__ == "__main__":
-
     logging.basicConfig(
         format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
         level=logging.INFO)
     logger.info("running %s", " ".join(sys.argv))
-
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
     if len(sys.argv) < 2:
         print(globals()['__doc__'] % locals())
         sys.exit(1)
-
-    
 
     seterr(all='raise')  # don't ignore numpy errors
 
@@ -108,8 +103,10 @@ if __name__ == "__main__":
 
     corpus = LineSentence(args.train)
 
-    model = Word2Vec(corpus, size=args.size, min_count=args.min_count, workers=args.threads, window=args.window,
-    sample=args.sample, alpha=args.alpha, sg=skipgram, hs=args.hs, negative=args.negative, cbow_mean=1, iter=args.iter)
+    model = Word2Vec(
+        corpus, size=args.size, min_count=args.min_count, workers=args.threads, window=args.window,
+        sample=args.sample, alpha=args.alpha, sg=skipgram, hs=args.hs, negative=args.negative,
+        cbow_mean=1, iter=args.iter)
 
     if args.output:
         outfile = args.output
