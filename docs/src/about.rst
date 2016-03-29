@@ -31,7 +31,7 @@ and the gensim website moved to its present domain. In 2013, gensim got its curr
 Licensing
 ----------
 
-Gensim is licensed under the OSI-approved `GNU LGPL license <http://www.gnu.org/licenses/lgpl.html>`_.
+Gensim is licensed under the OSI-approved `GNU LGPLv2.1 license <http://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html>`_.
 This means that it's free for both personal and commercial use, but if you make any
 modification to gensim that you distribute to other people, you have to disclose
 the source code of these modifications.

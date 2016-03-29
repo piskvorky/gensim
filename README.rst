@@ -99,7 +99,7 @@ When `citing gensim in academic papers and theses <https://scholar.google.cz/cit
 
 ----------------
 
-Gensim is open source software released under the `GNU LGPL license <http://www.gnu.org/licenses/lgpl.html>`_.
+Gensim is open source software released under the `GNU LGPLv2.1 license <http://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html>`_.
 Copyright (c) 2009-now Radim Rehurek
 
 |Analytics|_

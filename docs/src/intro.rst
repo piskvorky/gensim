@@ -60,7 +60,7 @@ The **principal design objectives** behind `gensim` are:
 Availability
 ------------
 
-Gensim is licensed under the OSI-approved `GNU LGPL license <http://www.gnu.org/licenses/lgpl.html>`_
+Gensim is licensed under the OSI-approved `GNU LGPLv2.1 license <http://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html>`_
 and can be downloaded either from its `github repository <https://github.com/piskvorky/gensim/>`_
 or from the `Python Package Index <http://pypi.python.org/pypi/gensim>`_.
 
