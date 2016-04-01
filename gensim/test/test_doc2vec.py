@@ -256,6 +256,13 @@ class TestDoc2VecModel(unittest.TestCase):
         expected_length = len(sentences) + len(model.docvecs.doctags)  # 9 sentences, 7 unique first tokens
         self.assertEquals(len(model.docvecs.doctag_syn0), expected_length)
 
+    def test_int_str_tag_types(self):
+        """Test int/str doc2vec tag."""
+        int_tag_corpus = [doc2vec.TaggedDocument(words, i) for i, words in enumerate(raw_sentences)]
+        str_tag_corpus = [doc2vec.TaggedDocument(words, str(i)) for i, words in enumerate(raw_sentences)]
+        self.assertEquals(int_tag_corpus, sentences)
+        self.assertEquals(str_tag_corpus, sentences)
+
     def models_equal(self, model, model2):
         # check words/hidden-weights
         self.assertEqual(len(model.vocab), len(model2.vocab))
