@@ -1,7 +1,7 @@
 Changes
 =======
 
-* Allow calls like TaggedDocument(words=words,tags='SENT1') or TaggedDocument(words=words,tags=1), as a shorthand for TaggedDocument(words=words,tags=['SENT1'])or TaggedDocument(words=words,tags=["1"]) (Hayate ISO, #651)
+* Allow calls like TaggedDocument(words=words,tags='SENT1') or TaggedDocument(words=words,tags=1), as a shorthand for TaggedDocument(words=words,tags=['SENT1']) or TaggedDocument(words=words,tags=['1']) (Hayate ISO, #651)
 
 0.12.4, 29/01/2016
 
