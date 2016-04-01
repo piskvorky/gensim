@@ -245,6 +245,9 @@ class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
         if isinstance(self.tags, string_types):
         # allow calls like TaggedDocument(words=words,tags='SENT_99'), as a shorthand for TaggedDocument(words=words,tags=['SENT_99']) 
             self.tags = [self.tags]
+        elif isinstance(self.tags, integer_types):
+        # allow calls like TaggedDocument(words=words,tags=1), as a shorthand for TaggedDocument(words=words,tags=['1']) 
+            self.tags = [str(self.tags)]
         return '%s(%s, %s)' % (self.__class__.__name__, self.words, self.tags)
 
 
