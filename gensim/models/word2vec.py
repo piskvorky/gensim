@@ -503,13 +503,13 @@ class Word2Vec(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i", max_depth)
 
-    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None):
+    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
 
         """
-        self.scan_vocab(sentences, trim_rule=trim_rule)  # initial survey
+        self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule)  # trim by min_count & precalculate downsampling
         self.finalize_vocab()  # build tables & arrays
 
