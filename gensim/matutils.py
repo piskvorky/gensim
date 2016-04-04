@@ -18,6 +18,7 @@ from gensim import utils
 
 import numpy
 import scipy.sparse
+from scipy.stats import entropy
 import scipy.linalg
 from scipy.linalg.lapack import get_lapack_funcs
 
@@ -381,6 +382,101 @@ def cossim(vec1, vec2):
     result /= vec1len * vec2len # rescale by vector lengths
     return result
 
+
+def kullback_leibler(vec1,vec2,lda=None,num_of_docs=None):
+    """
+    A similarity metric between two probability distributions.
+    Returns a similarity in range <0,1> where values closer to 0 mean a higher similarity.
+    Uses the scipy.stats.entropy method to identify kullback_leibler convergence value.
+    If input is an LDA vector, lda model must be passed.
+    If the distribution draws from a certain number of docs, that value must be passed.
+    Input must be in the form of a sequence of 2-tuples.
+    """
+    if lda is None:
+        if scipy.sparse.issparse(vec1) and scipy.sparse.issparse(vec2):
+            vec1 = vec1.todense().tolist()
+            vec2 = vec2.todense().tolist()
+            max_len = max(len(vec1),len(vec2),num_of_docs)
+            dense1 = sparse2full(vec1,max_len)
+            dense2 = sparse2full(vec2,max_len)     
+            return scipy.stats.entropy(dense1,dense2)
+        elif isinstance(vec1,numpy.ndarray) and isinstance(vec2,numpy.ndarray):
+            vec1 = vec1.tolist()
+            vec2 = vec2.tolist()
+            max_len = max(len(vec1),len(vec2),num_of_docs)
+            dense1 = sparse2full(vec1,max_len)
+            dense2 = sparse2full(vec2,max_len)     
+            return scipy.stats.entropy(dense1,dense2)
+        elif type(vec1) is list and type(vec2) is list:
+            max_len = max(len(vec1),len(vec2),num_of_docs)
+            dense1 = sparse2full(vec1,max_len)
+            dense2 = sparse2full(vec2,max_len)     
+            return scipy.stats.entropy(dense1,dense2)
+    elif isinstance(lda,gensim.models.ldamodel.LdaModel):
+        dense1 = sparse2full(vec1,lda.num_topics)
+        dense2 = sparse2full(vec2,lda.num_topics)
+        return scipy.stats.entropy(dense1,dense2)
+
+
+def hellinger(vec1,vec2,lda=None,bow=False,num_of_docs=None):
+    """
+    Hellinger distance is a distance metric to quanitfy the similarity between two probability distributions.
+    Similarity between distributions will be a number between <0,1>, where 0 is maximum similarity and 1 is minimum similarity.
+    If the distribution draws from a certain number of docs, that value must be passed.
+    If input is an LDA vector, lda model must be passed.
+    If the input is in the form of bag of words, this must be mentioned.
+    Input must be a sequence of 2-tuples.
+    """
+    if bow is True:
+        vec1, vec2 = dict(vec1), dict(vec2)
+        if len(vec2) < len(vec1):
+            vec1, vec2 = vec2, vec1 
+        sim = numpy.sqrt(0.5*sum((numpy.sqrt(value) - numpy.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
+        return sim
+    elif lda is None:
+        if scipy.sparse.issparse(vec1) and scipy.sparse.issparse(vec2):
+            vec1 = vec1.todense().tolist()
+            vec2 = vec2.todense().tolist()
+            max_len = max(len(vec1),len(vec2),num_of_docs)
+            dense1 = sparse2full(vec1,max_len)
+            dense2 = sparse2full(vec2,max_len)     
+            sim = numpy.sqrt(0.5 * ((numpy.sqrt(dense1) - numpy.sqrt(dense2))**2).sum())
+            return sim
+        elif isinstance(vec1,numpy.ndarray) and isinstance(vec2,numpy.ndarray):
+            vec1 = vec1.tolist()
+            vec2 = vec2.tolist()
+            max_len = max(len(vec1),len(vec2),num_of_docs)
+            dense1 = sparse2full(vec1,max_len)
+            dense2 = sparse2full(vec2,max_len)     
+            sim = numpy.sqrt(0.5 * ((numpy.sqrt(dense1) - numpy.sqrt(dense2))**2).sum())
+            return sim
+        elif type(vec1) is list and type(vec2) is list:
+            max_len = max(len(vec1),len(vec2),num_of_docs)
+            dense1 = sparse2full(vec1,max_len)
+            dense2 = sparse2full(vec2,max_len) 
+            sim = numpy.sqrt(0.5 * ((numpy.sqrt(dense1) - numpy.sqrt(dense2))**2).sum())
+            return sim
+    elif isinstance(lda,gensim.models.ldamodel.LdaModel):
+        dense1 = sparse2full(vec1,lda.num_topics)
+        dense2 = sparse2full(vec2,lda.num_topics)
+        sim = numpy.sqrt(0.5 * ((numpy.sqrt(dense1) - numpy.sqrt(dense2))**2).sum())
+        return sim
+
+
+
+def jaccard(vec1,vec2):
+    """
+    A similarity metric between bags of words representation.
+    Return the intersection divided by union, where union is the sum of the size of the two bags.
+    Highest value jaccard similarity of two bags is 1/2, which indicates the highest similarity.
+    """
+    intersection = 0
+    union = sum(row[1] for row in vec1) + sum(row[1] for row in vec2)
+    vec1, vec2 = dict(vec1), dict(vec2)
+    for item in vec1:
+        if item in vec2:
+            intersection = min(vec2[item],vec1[item]) + intersection
+    return(float(intersection)/float(union))
 
 def qr_destroy(la):
     """
