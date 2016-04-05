@@ -346,8 +346,12 @@ class TestWord2VecModel(unittest.TestCase):
     def testSimilarBy(self):
         """Test word2vec similar_by_word and similar_by_vector."""
         model = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
-        self.assertEqual(model.similar_by_word('graph', topn=10), model.most_similar(positive='graph', topn=10))
-        self.assertEqual(model.similar_by_vector(model['graph'], topn=10), model.most_similar([model['graph']], topn=10))
+        wordsims = model.similar_by_word('graph', topn=10)
+        wordsims2 = model.most_similar(positive='graph', topn=10)
+        vectorsims = model.similar_by_vector(model['graph'], topn=10)
+        vectorsims2 = model.most_similar([model['graph']], topn=10)
+        self.assertEqual(wordsim, wordsims2)
+        self.assertEqual(vectorsims, vectorsims2)
 
     def testParallel(self):
         """Test word2vec parallel training."""
