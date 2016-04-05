@@ -1290,22 +1290,8 @@ class Word2Vec(utils.SaveLoad):
           [('user', 0.9999163150787354), ...]
 
         """
-        self.init_sims()
 
-        # compute the weighted average of all words
-        if word in self.vocab:
-            mean = self.syn0norm[self.vocab[word].index]
-        else:
-            raise KeyError("word '%s' not in vocabulary" % word)
-
-        limited = self.syn0norm if restrict_vocab is None else self.syn0norm[:restrict_vocab]
-        dists = dot(limited, mean)
-        if not topn:
-            return dists
-        best = matutils.argsort(dists, topn=topn+1, reverse=True)
-        # ignore (don't return) words from the input
-        result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim != self.vocab[word].index]
-        return result[:topn]
+        return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
 
     def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
         """
@@ -1320,25 +1306,12 @@ class Word2Vec(utils.SaveLoad):
 
         Example::
 
-          >>> trained_model.similar_by_vector([1,2,3,4,5])
-          [('woman', 0.50882536), ...]
+          >>> trained_model.similar_by_vector([1,2])
+          [('survey', 0.9942699074745178), ...]
 
         """
-        self.init_sims()
 
-        # compute the weighted average of word
-#        if len(vector) == len(self.syn0norm):
-        mean = matutils.unitvec(array(vector)).astype(REAL)
-#        else:
-#            raise KeyError("length of vector is incorrect")
-
-        limited = self.syn0norm if restrict_vocab is None else self.syn0norm[:restrict_vocab]
-        dists = dot(limited, mean)
-        if not topn:
-            return dists
-        best = matutils.argsort(dists, topn=topn, reverse=True)
-        result = [(self.index2word[sim], float(dists[sim])) for sim in best]
-        return result
+        return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
 
     def doesnt_match(self, words):
         """
