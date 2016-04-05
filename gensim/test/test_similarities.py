@@ -18,7 +18,13 @@ import numpy
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim import matutils, utils, similarities
+from gensim.models import Word2Vec
 
+try:
+    from pyemd import emd
+    PYEMD_EXT = True
+except ImportError:
+    PYEMD_EXT = False
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -82,6 +88,10 @@ class _TestSimilarityABC(object):
 
 
     def testNumBest(self):
+
+        if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
+            return
+
         for num_best in [None, 0, 1, 9, 1000]:
             self.testFull(num_best=num_best)
 
@@ -134,9 +144,14 @@ class _TestSimilarityABC(object):
 
 
     def testPersistency(self):
+        if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
+            return
+
         fname = testfile()
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        elif self.cls == similarities.WmdSimilarity:
+            index = self.cls(texts, self.w2v_model)
         else:
             index = self.cls(corpus, num_features=len(dictionary))
         index.save(fname)
@@ -154,9 +169,14 @@ class _TestSimilarityABC(object):
             self.assertEqual(index.num_best, index2.num_best)
 
     def testPersistencyCompressed(self):
+        if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
+            return
+
         fname = testfile() + '.gz'
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        elif self.cls == similarities.WmdSimilarity:
+            index = self.cls(texts, self.w2v_model)
         else:
             index = self.cls(corpus, num_features=len(dictionary))
         index.save(fname)
@@ -174,9 +194,14 @@ class _TestSimilarityABC(object):
             self.assertEqual(index.num_best, index2.num_best)
 
     def testLarge(self):
+        if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
+            return
+
         fname = testfile()
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        elif self.cls == similarities.WmdSimilarity:
+            index = self.cls(texts, self.w2v_model)
         else:
             index = self.cls(corpus, num_features=len(dictionary))
         # store all arrays separately
@@ -196,9 +221,14 @@ class _TestSimilarityABC(object):
             self.assertEqual(index.num_best, index2.num_best)
 
     def testLargeCompressed(self):
+        if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
+            return
+
         fname = testfile() + '.gz'
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        elif self.cls == similarities.WmdSimilarity:
+            index = self.cls(texts, self.w2v_model)
         else:
             index = self.cls(corpus, num_features=len(dictionary))
         # store all arrays separately
@@ -219,9 +249,14 @@ class _TestSimilarityABC(object):
 
 
     def testMmap(self):
+        if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
+            return
+
         fname = testfile()
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        elif self.cls == similarities.WmdSimilarity:
+            index = self.cls(texts, self.w2v_model)
         else:
             index = self.cls(corpus, num_features=len(dictionary))
         # store all arrays separately
@@ -242,9 +277,14 @@ class _TestSimilarityABC(object):
             self.assertEqual(index.num_best, index2.num_best)
 
     def testMmapCompressed(self):
+        if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
+            return
+
         fname = testfile() + '.gz'
         if self.cls == similarities.Similarity:
             index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        elif self.cls == similarities.WmdSimilarity:
+            index = self.cls(texts, self.w2v_model)
         else:
             index = self.cls(corpus, num_features=len(dictionary))
         # store all arrays separately
@@ -256,6 +296,78 @@ class _TestSimilarityABC(object):
 class TestMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.MatrixSimilarity
+
+class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
+    def setUp(self):
+        self.cls = similarities.WmdSimilarity
+        self.w2v_model = Word2Vec(texts, min_count=1)
+
+    def testFull(self, num_best=None):
+        # Override testFull.
+
+        if not PYEMD_EXT:
+            return
+
+        index = self.cls(texts, self.w2v_model)
+        index.num_best = num_best
+        query = texts[0]
+        sims = index[query]
+
+        if num_best is not None:
+            # Sparse array.
+            for i, sim in sims:
+                self.assertTrue(numpy.alltrue(sim < 0.0))  # Note that similarities are less than zero, as they are the negative of the distances.
+        else:
+            self.assertTrue(sims[0] == 0.0)  # Similarity of a document with itself is 0.0.
+            self.assertTrue(numpy.alltrue(sims[1:] < 0.0))
+
+    def testNonIncreasing(self):
+        ''' Check that similarities are non-increasing when `num_best` is not
+        `None`.'''
+        # NOTE: this could be implemented for other similarities as well (i.e.
+        # in _TestSimilarityABC).
+
+        if not PYEMD_EXT:
+            return
+
+        index = self.cls(texts, self.w2v_model, num_best=3)
+        query = texts[0]
+        sims = index[query]
+        sims2 = numpy.asarray(sims)[:, 1]  # Just the similarities themselves.
+
+        # The difference of adjacent elements should be negative.
+        cond = sum(numpy.diff(sims2) < 0) == len(sims2) - 1
+        self.assertTrue(cond)
+
+    def testChunking(self):
+        # Override testChunking.
+
+        if not PYEMD_EXT:
+            return
+
+        index = self.cls(texts, self.w2v_model)
+        query = texts[:3]
+        sims = index[query]
+
+        for i in range(3):
+            self.assertTrue(numpy.alltrue(sims[i, i] <= 0.0))  # Similarity of a document with itself is 0.0.
+
+        # test the same thing but with num_best
+        index.num_best = 3
+        sims = index[query]
+        for sims_temp in sims:
+            for i, sim in sims_temp:
+                self.assertTrue(numpy.alltrue(sim < 0.0))
+
+    def testIter(self):
+        # Override testIter.
+
+        if not PYEMD_EXT:
+            return
+
+        index = self.cls(texts, self.w2v_model)
+        for sims in index:
+            self.assertTrue(numpy.alltrue(sims <= 0.0))
 
 
 class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):

@@ -15,5 +15,6 @@ before_install:
 install:
   - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy
   - source activate gensim-test
+  - pip install pyemd
   - python setup.py install
 script: python setup.py test
