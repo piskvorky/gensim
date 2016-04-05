@@ -1,6 +1,7 @@
 Changes
 =======
 
+* Adding different similarity metrics (@bhargavvader, #656)
 * build_vocab takes progress_per parameter for smaller output (@zer0n, #624)
 
 0.12.4, 29/01/2016
