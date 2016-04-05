@@ -2,6 +2,7 @@ Changes
 =======
 
 * build_vocab takes progress_per parameter for smaller output (@zer0n, #624)
+* Add `similar_by_word()` and `similar_by_vector()` to word2vec (@isohyt, #381)
 
 0.12.4, 29/01/2016
 

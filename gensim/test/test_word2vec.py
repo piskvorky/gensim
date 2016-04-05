@@ -343,6 +343,12 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(model.n_similarity(['graph', 'trees'], ['trees', 'graph']))
         self.assertTrue(model.n_similarity(['graph'], ['trees']) == model.similarity('graph', 'trees'))
 
+    def testSimilarBy(self):
+        """Test word2vec similar_by_word and similar_by_vector."""
+        model = word2vec.Word2Vec(sentences, size=2, min_count=1, hs=1, negative=0)
+        self.assertEqual(model.similar_by_word('graph', topn=10), model.most_similar(positive='graph', topn=10))
+        self.assertEqual(model.similar_by_vector(model['graph'], topn=10), model.most_similar([model['graph']], topn=10))
+
     def testParallel(self):
         """Test word2vec parallel training."""
         if word2vec.FAST_VERSION < 0:  # don't test the plain NumPy version for parallelism (too slow)
