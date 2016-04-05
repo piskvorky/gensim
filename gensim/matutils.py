@@ -428,9 +428,7 @@ def hellinger(vec1, vec2, lda=None):
     """
     Hellinger distance is a distance metric to quanitfy the similarity between two probability distributions.
     Similarity between distributions will be a number between <0,1>, where 0 is maximum similarity and 1 is minimum similarity.
-    If the distribution draws from a certain number of docs, that value must be passed.
     If input is an LDA vector, lda model must be passed.
-    Input must be a sequence of 2-tuples.
     """
     if lda is None:
         if scipy.sparse.issparse(vec1) and scipy.sparse.issparse(vec2):
