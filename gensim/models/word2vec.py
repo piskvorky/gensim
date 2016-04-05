@@ -1006,6 +1006,11 @@ class Word2Vec(utils.SaveLoad):
         """
         Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
+        
+         `fname` is the file used to save the vectors in
+         `fvocab` is an optional file used to save the vocabulary
+         `binary` is an optional boolean indicating whether the data is to be saved
+         in binary word2vec format (default: False)
 
         """
         if fvocab is not None:
