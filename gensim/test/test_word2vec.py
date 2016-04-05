@@ -350,7 +350,7 @@ class TestWord2VecModel(unittest.TestCase):
         wordsims2 = model.most_similar(positive='graph', topn=10)
         vectorsims = model.similar_by_vector(model['graph'], topn=10)
         vectorsims2 = model.most_similar([model['graph']], topn=10)
-        self.assertEqual(wordsim, wordsims2)
+        self.assertEqual(wordsims, wordsims2)
         self.assertEqual(vectorsims, vectorsims2)
 
     def testParallel(self):
