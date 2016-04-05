@@ -383,92 +383,77 @@ def cossim(vec1, vec2):
     return result
 
 
-def kullback_leibler(vec1,vec2,lda=None,num_of_docs=None):
+def kullback_leibler(vec1,vec2,num_of_features=None):
     """
     A similarity metric between two probability distributions.
     Returns a similarity in range <0,1> where values closer to 0 mean a higher similarity.
     Uses the scipy.stats.entropy method to identify kullback_leibler convergence value.
-    If input is an LDA vector, lda model must be passed.
     If the distribution draws from a certain number of docs, that value must be passed.
     """
-    if lda is None:
-        if scipy.sparse.issparse(vec1) and scipy.sparse.issparse(vec2):
-            vec1 = vec1.todense()
-            vec2 = vec2.todense()
-            if vec1.shape[1] == 2 and vec2.shape[1] == 2:
-                vec1 = vec1.tolist()
-                vec2 = vec2.tolist()
-                max_len = max(len(vec1),len(vec2),num_of_docs)
-                dense1 = sparse2full(vec1,max_len)
-                dense2 = sparse2full(vec2,max_len)     
-                return scipy.stats.entropy(dense1,dense2)
-            else:
-                return scipy.stats.entropy(vec1,vec2)
-        elif isinstance(vec1,numpy.ndarray) and isinstance(vec2,numpy.ndarray):
-            if vec1.shape[1] == 2 and vec2.shape[1] == 2:
-                vec1 = vec1.tolist()
-                vec2 = vec2.tolist()
-                max_len = max(len(vec1),len(vec2),num_of_docs)
-                dense1 = sparse2full(vec1,max_len)
-                dense2 = sparse2full(vec2,max_len)     
-                return scipy.stats.entropy(dense1,dense2)
-            else:
-                return scipy.stats.entropy(vec1,vec2)
-        elif type(vec1) is list and type(vec2) is list:
-            max_len = max(len(vec1),len(vec2),num_of_docs)
+    if scipy.sparse.issparse(vec1) and scipy.sparse.issparse(vec2):
+        vec1 = vec1.todense()
+        vec2 = vec2.todense()
+        if vec1.shape[1] == 2 and vec2.shape[1] == 2:
+            vec1 = vec1.tolist()
+            vec2 = vec2.tolist()
+            max_len = max(len(vec1),len(vec2),num_of_features)
             dense1 = sparse2full(vec1,max_len)
             dense2 = sparse2full(vec2,max_len)     
             return scipy.stats.entropy(dense1,dense2)
-    elif isinstance(lda,gensim.models.ldamodel.LdaModel):
-        dense1 = sparse2full(vec1,lda.num_topics)
-        dense2 = sparse2full(vec2,lda.num_topics)
+        else:
+            return scipy.stats.entropy(vec1,vec2)
+    elif isinstance(vec1,numpy.ndarray) and isinstance(vec2,numpy.ndarray):
+        if vec1.shape[1] == 2 and vec2.shape[1] == 2:
+            vec1 = vec1.tolist()
+            vec2 = vec2.tolist()
+            max_len = max(len(vec1),len(vec2),num_of_features)
+            dense1 = sparse2full(vec1,max_len)
+            dense2 = sparse2full(vec2,max_len)
+            return scipy.stats.entropy(dense1,dense2)
+        else:
+            return scipy.stats.entropy(vec1,vec2)
+    elif type(vec1) is list and type(vec2) is list:
+        max_len = max(len(vec1),len(vec2),num_of_features)
+        dense1 = sparse2full(vec1,max_len)
+        dense2 = sparse2full(vec2,max_len)
         return scipy.stats.entropy(dense1,dense2)
 
-def hellinger(vec1, vec2, lda=None):
+
+def hellinger(vec1, vec2):
     """
     Hellinger distance is a distance metric to quanitfy the similarity between two probability distributions.
     Similarity between distributions will be a number between <0,1>, where 0 is maximum similarity and 1 is minimum similarity.
-    If input is an LDA vector, lda model must be passed.
     """
-    if lda is None:
-        if scipy.sparse.issparse(vec1) and scipy.sparse.issparse(vec2):
-            dense1 = vec1.todense()
-            dense2 = vec2.todense()
-            # if it is a sparse matrix in bag of words format, convert to list and go ahead.
-            if dense1.shape[1] == 2 and dense2.shape[1] == 2:
-                dense1,dense2 = dict(dense1.tolist()),dict(dense2.tolist())
-                if len(dense2) < len(dense1):
-                    dense1, dense2 = dense1, dense2 # swap references so that we iterate over the shorter vector
-                sim = numpy.sqrt(0.5*sum((numpy.sqrt(value) - numpy.sqrt(dense2.get(index, 0.0)))**2 for index, value in iteritems(dense1)))
-                return sim  
-            # else if it is in a different format, directly go about it 
-            sim = numpy.sqrt(0.5 * ((numpy.sqrt(dense1) - numpy.sqrt(dense2))**2).sum())
+    if scipy.sparse.issparse(vec1) and scipy.sparse.issparse(vec2):
+        dense1 = vec1.todense()
+        dense2 = vec2.todense()
+        # if it is a sparse matrix in bag of words format, convert to list and go ahead.
+        if dense1.shape[1] == 2 and dense2.shape[1] == 2:
+            dense1,dense2 = dict(dense1.tolist()),dict(dense2.tolist())
+            if len(dense2) < len(dense1):
+                dense1, dense2 = dense1, dense2 # swap references so that we iterate over the shorter vector
+            sim = numpy.sqrt(0.5*sum((numpy.sqrt(value) - numpy.sqrt(dense2.get(index, 0.0)))**2 for index, value in iteritems(dense1)))
             return sim
-        elif isinstance(vec1,numpy.ndarray) and isinstance(vec2,numpy.ndarray):
-            # if it is in a bag of words format, go ahead with list method
-            if vec1.shape[1] == 2 and vec2.shape[1] == 2:
-                vec1, vec2 = dict(vec1.tolist()), dict(vec2.tolist())
-                if len(vec2) < len(vec1):
-                    vec1, vec2 = vec2, vec1 
-                sim = numpy.sqrt(0.5*sum((numpy.sqrt(value) - numpy.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
-                return sim
-            # else if it is in a different format, directly go about it     
-            sim = numpy.sqrt(0.5 * ((numpy.sqrt(vec1) - numpy.sqrt(vec2))**2).sum())
-            return sim
-        elif type(vec1) is list and type(vec2) is list:
-            # this is for your traditional gensim vector
-            vec1, vec2 = dict(vec1), dict(vec2)
-            if len(vec2) < len(vec1):
-                vec1, vec2 = vec2, vec1 
-            sim = numpy.sqrt(0.5*sum((numpy.sqrt(value) - numpy.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
-            return sim
-    elif isinstance(lda,gensim.models.ldamodel.LdaModel):
-        # this is for LDA vectors
-        dense1 = sparse2full(vec1,lda.num_topics)
-        dense2 = sparse2full(vec2,lda.num_topics)
+        # else if it is in a different format, directly go about it
         sim = numpy.sqrt(0.5 * ((numpy.sqrt(dense1) - numpy.sqrt(dense2))**2).sum())
         return sim
-
+    elif isinstance(vec1,numpy.ndarray) and isinstance(vec2,numpy.ndarray):
+        # if it is in a bag of words format, go ahead with list method
+        if vec1.shape[1] == 2 and vec2.shape[1] == 2:
+            vec1, vec2 = dict(vec1.tolist()), dict(vec2.tolist())
+            if len(vec2) < len(vec1):
+                vec1, vec2 = vec2, vec1
+            sim = numpy.sqrt(0.5*sum((numpy.sqrt(value) - numpy.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
+            return sim
+        # else if it is in a different format, directly go about it
+        sim = numpy.sqrt(0.5 * ((numpy.sqrt(vec1) - numpy.sqrt(vec2))**2).sum())
+        return sim
+    elif type(vec1) is list and type(vec2) is list:
+        vec1, vec2 = dict(vec1), dict(vec2)
+        if len(vec2) < len(vec1):
+            vec1, vec2 = vec2, vec1
+        sim = numpy.sqrt(0.5*sum((numpy.sqrt(value) - numpy.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
+        return sim
 
 
 def jaccard(vec1,vec2):
