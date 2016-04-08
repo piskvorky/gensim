@@ -62,11 +62,9 @@ if __name__ == '__main__':
         print(globals()['__doc__'] % locals())
         sys.exit(1)
     inp, outp = sys.argv[1:3]
-    print "Checking if output directory exists: "+'/'.join(outp.split("/")[:-1])
-    if os.path.isdir('/'.join(outp.split("/")[:-1])) == False:
+
+    if not os.path.isdir(os.path.dirname(outp)):
         raise SystemExit("Error: The output directory does not exist. Create the directory and try again.")
-    else:
-        print "OK"
 
     if len(sys.argv) > 3:
         keep_words = int(sys.argv[3])
