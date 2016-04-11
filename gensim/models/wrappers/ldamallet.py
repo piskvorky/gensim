@@ -36,6 +36,8 @@ import os
 
 import numpy
 
+from bs4 import BeautifulSoup
+
 from six import iteritems
 from smart_open import smart_open
 
@@ -245,11 +247,22 @@ class LdaMallet(utils.SaveLoad):
     def print_topic(self, topicid, topn=10):
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
 
+    #########  function to check the version of mallet can be generalised to all the problematic version  ######
+    def check_version(self, direc_path):
+        xml_path = direc_path.split("bin")[0]
+        soup=BeautifulSoup(open(xml_path+"pom.xml").read())
+        if soup.find("version").text == "2.0.7-SNAPSHOT":
+            return True
+        else:
+            return False
+
+
     def read_doctopics(self, fname, eps=1e-6, renorm=True):
         """
         Yield document topic vectors from MALLET's "doc-topics" format, as sparse gensim vectors.
 
         """
+        bool_v7 = self.check_version(self.mallet_path)
         with utils.smart_open(fname) as fin:
             for lineno, line in enumerate(fin):
                 if lineno == 0 and line.startswith("#doc "):
@@ -269,7 +282,28 @@ class LdaMallet(utils.SaveLoad):
                            for id_, weight in enumerate(map(float, parts))
                            if abs(weight) > eps]
                 else:
-                    raise RuntimeError("invalid doc topics format at line %i in %s" % (lineno + 1, fname))
+                    if bool_v7:
+                        # 1   1   0   1.0780612802674239  9   0.005575655428533364    8   0.005575655428533364    7   0.005575655428533364    6   0.005575655428533364    5   0.005575655428533364    30.005575655428533364   2   0.005575655428533364    1   0.005575655428533364    
+                        # 2   2   0   0.9184413079632608  9   0.009062076892971008    8   0.009062076892971008    7   0.009062076892971008    6   0.009062076892971008    5   0.009062076892971008    40.009062076892971008   3   0.009062076892971008    2   0.009062076892971008    1   0.009062076892971008
+                        # In the above example there is a mix of the above if and elif statement. There are neither 2*num_topics nor num_topics elements.
+                        # It has 2 formats 40.009062076892971008 and 9   0.005575655428533364 which cannot be handled by above if elif.
+                        # Also, there are some topics are missing(meaning that the topic is not there) ehich is another reason why the above if elif
+                        # fails even when the result is ok
+                        # Since this problem is found specifically for mallet 2.0.7 so handling it sep is an option via bool_v7 that checks
+                        # the version before throwing the error
+                        pointer = 0
+                        doc = []
+                        while pointer < len(parts):
+                            if float(parts[pointer]) == int(parts[pointer]):
+                                if float(parts[pointer+1]) > eps:
+                                    doc.append((int(parts[pointer]), float(parts[pointer+1])))
+                                pointer+=2
+                            else:
+                                if float(parts[pointer])-int(parts[pointer]) > eps:
+                                    doc.append((int(parts[pointer])%10, float(parts[pointer])-int(parts[pointer])))
+                                pointer+=1
+                    else:
+                        raise RuntimeError("invalid doc topics format at line %i in %s" % (lineno + 1, fname))
 
                 if renorm:
                     # explicitly normalize weights to sum up to 1.0, just to be sure...
