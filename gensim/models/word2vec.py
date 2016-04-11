@@ -870,7 +870,10 @@ class Word2Vec(utils.SaveLoad):
         """
         Score the log probability for a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
-        This does not change the fitted model in any way (see Word2Vec.train() for that)
+        This does not change the fitted model in any way (see Word2Vec.train() for that).
+
+        We have currently only implemented score for the hierarchical softmax scheme, 
+        so you need to have run word2vec with hs=1 and negative=0 for this to work.  
 
         Note that you should specify total_sentences; we'll run into problems if you ask to
         score more than this number of sentences but it is inefficient to set the value too high.
@@ -878,7 +881,7 @@ class Word2Vec(utils.SaveLoad):
         See the article by [taddy]_ and the gensim demo at [deepir]_ for examples of how to use such scores in document classification.
 
         .. [taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
-        .. [deepir] https://github.com/TaddyLab/gensim/blob/deepir/docs/notebooks/deepir.ipynb
+        .. [deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
 
         """
         if FAST_VERSION < 0:
