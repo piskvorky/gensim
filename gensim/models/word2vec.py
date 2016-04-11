@@ -1414,7 +1414,7 @@ class Word2Vec(utils.SaveLoad):
                         (section['section'], 100.0 * correct / (correct + incorrect),
                          correct, correct + incorrect))
 
-    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar):
+    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, use_lowercase=True):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
@@ -1425,6 +1425,9 @@ class Word2Vec(utils.SaveLoad):
 
         Use `restrict_vocab` to ignore all questions containing a word whose frequency
         is not in the top-N most frequent words (default top 30,000).
+
+        Use `use_lowercase` to convert all words in questions to thier lowercase form before evaluating
+        the accuracy. It's useful when assuming the text preprocessing also uses lowercase.  (default True).
 
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
 
@@ -1447,7 +1450,10 @@ class Word2Vec(utils.SaveLoad):
                 if not section:
                     raise ValueError("missing section header before line #%i in %s" % (line_no, questions))
                 try:
-                    a, b, c, expected = [word.lower() for word in line.split()]  # TODO assumes vocabulary preprocessing uses lowercase, too...
+                    if use_lowercase:
+                        a, b, c, expected = [word.lower() for word in line.split()]  # assumes vocabulary preprocessing uses lowercase, too...
+                    else:
+                        a, b, c, expected = [word for word in line.split()]
                 except:
                     logger.info("skipping invalid line #%i in %s" % (line_no, questions))
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
