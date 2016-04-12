@@ -247,8 +247,8 @@ class LdaMallet(utils.SaveLoad):
     def print_topic(self, topicid, topn=10):
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
 
-    #########  function to check the version of mallet can be generalised to all the problematic version  ######
-    def check_version(self, direc_path):
+    #########  function to return the version of mallet   ######
+    def get_version(self, direc_path):
         xml_path = direc_path.split("bin")[0]
         doc = et.parse(xml_path+"pom.xml").getroot()
         namespace = doc.tag[:doc.tag.index('}')+1]
@@ -260,7 +260,7 @@ class LdaMallet(utils.SaveLoad):
         Yield document topic vectors from MALLET's "doc-topics" format, as sparse gensim vectors.
 
         """
-        mallet_version = self.check_version(self.mallet_path)
+        mallet_version = self.get_version(self.mallet_path)
         with utils.smart_open(fname) as fin:
             for lineno, line in enumerate(fin):
                 if lineno == 0 and line.startswith("#doc "):
