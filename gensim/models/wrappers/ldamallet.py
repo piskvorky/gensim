@@ -36,7 +36,7 @@ import os
 
 import numpy
 
-from bs4 import BeautifulSoup
+import xml.etree.ElementTree as et
 
 from six import iteritems
 from smart_open import smart_open
@@ -250,11 +250,9 @@ class LdaMallet(utils.SaveLoad):
     #########  function to check the version of mallet can be generalised to all the problematic version  ######
     def check_version(self, direc_path):
         xml_path = direc_path.split("bin")[0]
-        soup=BeautifulSoup(open(xml_path+"pom.xml").read())
-        if soup.find("version").text == "2.0.7-SNAPSHOT":
-            return True
-        else:
-            return False
+        doc = et.parse(xml_path+"pom.xml").getroot()
+        namespace = doc.tag[:doc.tag.index('}')+1]
+        return doc.find(namespace+'version').text
 
 
     def read_doctopics(self, fname, eps=1e-6, renorm=True):
@@ -262,7 +260,7 @@ class LdaMallet(utils.SaveLoad):
         Yield document topic vectors from MALLET's "doc-topics" format, as sparse gensim vectors.
 
         """
-        bool_v7 = self.check_version(self.mallet_path)
+        mallet_version = self.check_version(self.mallet_path)
         with utils.smart_open(fname) as fin:
             for lineno, line in enumerate(fin):
                 if lineno == 0 and line.startswith("#doc "):
@@ -282,7 +280,7 @@ class LdaMallet(utils.SaveLoad):
                            for id_, weight in enumerate(map(float, parts))
                            if abs(weight) > eps]
                 else:
-                    if bool_v7:
+                    if mallet_version == "2.0.7-SNAPSHOT":
                         # 1   1   0   1.0780612802674239  9   0.005575655428533364    8   0.005575655428533364    7   0.005575655428533364    6   0.005575655428533364    5   0.005575655428533364    30.005575655428533364   2   0.005575655428533364    1   0.005575655428533364    
                         # 2   2   0   0.9184413079632608  9   0.009062076892971008    8   0.009062076892971008    7   0.009062076892971008    6   0.009062076892971008    5   0.009062076892971008    40.009062076892971008   3   0.009062076892971008    2   0.009062076892971008    1   0.009062076892971008
                         # In the above example there is a mix of the above if and elif statement. There are neither 2*num_topics nor num_topics elements.
