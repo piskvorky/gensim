@@ -247,12 +247,21 @@ class LdaMallet(utils.SaveLoad):
     def print_topic(self, topicid, topn=10):
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
 
-    #########  function to return the version of mallet   ######
+
     def get_version(self, direc_path):
+        """"
+
+        function to return the version of `mallet`
+
+        """
         xml_path = direc_path.split("bin")[0]
-        doc = et.parse(xml_path+"pom.xml").getroot()
-        namespace = doc.tag[:doc.tag.index('}')+1]
-        return doc.find(namespace+'version').text
+        try:
+            doc = et.parse(xml_path+"pom.xml").getroot()
+            namespace = doc.tag[:doc.tag.index('}')+1]
+            return doc.find(namespace+'version').text.split("-")[0]
+        except Exception, e:
+            return "No version file to detect"
+        
 
 
     def read_doctopics(self, fname, eps=1e-6, renorm=True):
@@ -280,15 +289,17 @@ class LdaMallet(utils.SaveLoad):
                            for id_, weight in enumerate(map(float, parts))
                            if abs(weight) > eps]
                 else:
-                    if mallet_version == "2.0.7-SNAPSHOT":
-                        # 1   1   0   1.0780612802674239  9   0.005575655428533364    8   0.005575655428533364    7   0.005575655428533364    6   0.005575655428533364    5   0.005575655428533364    30.005575655428533364   2   0.005575655428533364    1   0.005575655428533364    
-                        # 2   2   0   0.9184413079632608  9   0.009062076892971008    8   0.009062076892971008    7   0.009062076892971008    6   0.009062076892971008    5   0.009062076892971008    40.009062076892971008   3   0.009062076892971008    2   0.009062076892971008    1   0.009062076892971008
-                        # In the above example there is a mix of the above if and elif statement. There are neither 2*num_topics nor num_topics elements.
-                        # It has 2 formats 40.009062076892971008 and 9   0.005575655428533364 which cannot be handled by above if elif.
-                        # Also, there are some topics are missing(meaning that the topic is not there) ehich is another reason why the above if elif
-                        # fails even when the result is ok
-                        # Since this problem is found specifically for mallet 2.0.7 so handling it sep is an option via bool_v7 that checks
-                        # the version before throwing the error
+                    if mallet_version == "2.0.7":
+                        """
+
+                            1   1   0   1.0780612802674239  30.005575655428533364   2   0.005575655428533364    1   0.005575655428533364    
+                            2   2   0   0.9184413079632608  40.009062076892971008   3   0.009062076892971008    2   0.009062076892971008    1   0.009062076892971008
+                            In the above example there is a mix of the above if and elif statement. There are neither `2*num_topics` nor `num_topics` elements.
+                            It has 2 formats 40.009062076892971008 and 0   1.0780612802674239 which cannot be handled by above if elif.
+                            Also, there are some topics are missing(meaning that the topic is not there) which is another reason why the above if elif
+                            fails even when the `mallet` produces the right results
+
+                        """
                         pointer = 0
                         doc = []
                         while pointer < len(parts):
