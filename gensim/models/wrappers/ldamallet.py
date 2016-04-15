@@ -256,10 +256,10 @@ class LdaMallet(utils.SaveLoad):
         """
         xml_path = direc_path.split("bin")[0]
         try:
-            doc = et.parse(xml_path+"pom.xml").getroot()
-            namespace = doc.tag[:doc.tag.index('}')+1]
-            return doc.find(namespace+'version').text.split("-")[0]
-        except Exception, e:
+            doc = et.parse(xml_path + "pom.xml").getroot()
+            namespace = doc.tag[:doc.tag.index('}') + 1]
+            return doc.find(namespace + 'version').text.split("-")[0]
+        except Exception:
             return "No version file to detect"
         
 
@@ -300,17 +300,28 @@ class LdaMallet(utils.SaveLoad):
                             fails even when the `mallet` produces the right results
 
                         """
-                        pointer = 0
+                        count = 0
                         doc = []
-                        while pointer < len(parts):
-                            if float(parts[pointer]) == int(parts[pointer]):
-                                if float(parts[pointer+1]) > eps:
-                                    doc.append((int(parts[pointer]), float(parts[pointer+1])))
-                                pointer+=2
-                            else:
-                                if float(parts[pointer])-int(parts[pointer]) > eps:
-                                    doc.append((int(parts[pointer])%10, float(parts[pointer])-int(parts[pointer])))
-                                pointer+=1
+                        if len(parts) > 0:
+                            while count < len(parts):
+                                """ 
+                                if section is to deal with formats of type 2 0.034
+                                so if count reaches index of 2 and since int(2) == float(2) so if block is executed
+                                now  there is one extra element afer 2, so count + 1 access should not give an error
+
+                                else section handles  formats of type 20.034
+                                now count is there on index of 20.034 since float(20.034) != int(20.034) so else block
+                                is executed 
+
+                                """
+                                if float(parts[count]) == int(parts[count]):
+                                    if float(parts[count + 1]) > eps:
+                                        doc.append((int(parts[count]), float(parts[count + 1])))
+                                    count += 2
+                                else:
+                                    if float(parts[count]) - int(parts[count]) > eps:
+                                        doc.append((int(parts[count]) % 10, float(parts[count]) - int(parts[count])))
+                                    count += 1
                     else:
                         raise RuntimeError("invalid doc topics format at line %i in %s" % (lineno + 1, fname))
 
