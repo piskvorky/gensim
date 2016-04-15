@@ -615,6 +615,8 @@ class WmdSimilarity(interfaces.SimilarityABC):
         self.normalize = False
 
         # index is simply an array from 0 to size of corpus.
+        # This variable is used in the SimilarityABC interface to sort the
+        # results.
         self.index = numpy.array(range(len(corpus)))
 
         if normalize_w2v:

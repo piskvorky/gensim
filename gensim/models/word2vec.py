@@ -97,7 +97,6 @@ from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
 from scipy.spatial.distance import cdist
-from scipy.sparse import dok_matrix
 
 logger = logging.getLogger("gensim.models.word2vec")
 
@@ -1261,19 +1260,24 @@ class Word2Vec(utils.SaveLoad):
             else:
                 distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
 
+            #for t1 in docset1:
+            #    for t2 in docset2:
+            #        # Get word indeces.
+            #        i = dictionary.token2id[t1]
+            #        j = dictionary.token2id[t2]
+            #        # Compute Euclidean distance between word vectors.
+            #        distance_matrix[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
+
             for t1 in docset1:
                 for t2 in docset2:
                     # Get word indeces.
                     i = dictionary.token2id[t1]
                     j = dictionary.token2id[t2]
                     if self.dist_provided:
-                        # Use pre-computed word distances.
-                        k = self.vocab[t1].index
-                        l = self.vocab[t2].index
-                        if k > l:
-                            # Ensures that we use the upper triangular matrix.
-                            k, l = l, k
-                        distance_matrix[i, j] = self.vocab_dist[k, l]
+                        if self.dist_dict.get(t1 + '_-_' + t2):
+                            distance_matrix[i, j] = self.dist_dict[t1 + '_-_' + t2]
+                        else:
+                            distance_matrix[i, j] = self.dist_dict[t2 + '_-_' + t1]
                     else:
                         # Compute Euclidean distance between word vectors.
                         distance_matrix[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
@@ -1332,27 +1336,23 @@ class Word2Vec(utils.SaveLoad):
     def init_distances(self):
         '''
         Compute the euclidean distance between all the words in the provided
-        vocabulary, and store in a matrix. This matrix is used in `wmdistance`,
-        if provided.
-
-        Input:
-        vocab:      List of word tokens to compute distances between. Make sure
-                    it doesn't contain out-of-vocabulary words.
+        vocabulary, and store in a dictionary. This dictionaryis used in
+        `wmdistance`, if provided.
         '''
 
-        self.dist_provided = True  # Tells wmdistance that vocab_dist exists.
+        self.dist_provided = True  # Tells wmdistance that dist_dict exists.
 
-        # Compute the upper triangular distance matrix (it is symmetric, and 0
-        # in the diagonal).
+        # Make a dictionary of word pair distances.
         vocab_size = len(self.vocab)
-        vocab_dist = zeros((vocab_size, vocab_size), dtype=double)
+        dist_dict = {}
         for i in range(vocab_size):
+            t1 = self.index2word[i]
+            dist_dict[t1 + '_-_' + t1] = 0.0
             for j in range(i + 1, vocab_size):
-                t1 = self.index2word[i]
                 t2 = self.index2word[j]
-                vocab_dist[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
+                dist_dict[t1 + '_-_' + t2] = sqrt(np_sum((self[t1] - self[t2])**2))
 
-        self.vocab_dist = vocab_dist
+        self.dist_dict = dist_dict
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         """

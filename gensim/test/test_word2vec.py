@@ -372,7 +372,7 @@ class TestWord2VecModel(unittest.TestCase):
 class TestWMD(unittest.TestCase):
     def testNonzero(self):
         '''Test basic functionality with a test sentence.'''
-        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        model = word2vec.Word2Vec(sentences, min_count=1, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         distance = model.wmdistance(sentence1, sentence2)
@@ -382,7 +382,7 @@ class TestWMD(unittest.TestCase):
 
     def testSymmetry(self):
         '''Check that distance is symmetric.'''
-        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        model = word2vec.Word2Vec(sentences, min_count=1, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         distance1 = model.wmdistance(sentence1, sentence2)
@@ -398,7 +398,7 @@ class TestWMD(unittest.TestCase):
 
     def testWCDnonzero(self):
         '''Test basic functionality with a test sentence.'''
-        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        model = word2vec.Word2Vec(sentences, min_count=1, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         distance = model.wmdistance(sentence1, sentence2, WCD=True)
@@ -406,7 +406,7 @@ class TestWMD(unittest.TestCase):
 
     def testSymmetryWCD(self):
         '''Check that WCD is symmetric.'''
-        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        model = word2vec.Word2Vec(sentences, min_count=1, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         distance1 = model.wmdistance(sentence1, sentence2, WCD=True)
@@ -422,7 +422,7 @@ class TestWMD(unittest.TestCase):
 
     def testOrderWCD(self):
         '''Check that WCD is a lower bound to WMD.'''
-        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        model = word2vec.Word2Vec(sentences, min_count=1, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         wcd = model.wmdistance(sentence1, sentence2, WCD=True)
@@ -431,7 +431,7 @@ class TestWMD(unittest.TestCase):
 
     def testRWMDnonzero(self):
         '''Test basic functionality with a test sentence.'''
-        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        model = word2vec.Word2Vec(sentences, min_count=1, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         distance = model.wmdistance(sentence1, sentence2, RWMD=True)
@@ -439,7 +439,7 @@ class TestWMD(unittest.TestCase):
 
     def testSymmetryRWMD(self):
         '''Check that RWMD is symmetric.'''
-        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        model = word2vec.Word2Vec(sentences, min_count=1, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         distance1 = model.wmdistance(sentence1, sentence2, RWMD=True)
@@ -455,7 +455,7 @@ class TestWMD(unittest.TestCase):
 
     def testOrderRWMD(self):
         '''Check that RWMD is less than WMD.'''
-        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        model = word2vec.Word2Vec(sentences, min_count=1, seed=42, workers=1)
         sentence1 = ['human', 'interface', 'computer']
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         rwmd = model.wmdistance(sentence1, sentence2, RWMD=True)
