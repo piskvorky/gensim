@@ -383,6 +383,20 @@ def cossim(vec1, vec2):
     return result
 
 
+def isbow(vec):
+    """
+    Checks if vector passed is in bag of words representation or not.
+    """
+    if scipy.sparse.issparse(vec):
+        vec = vec.todense().tolist()
+    for item in vec:
+        if type(item) is int or type(item) is long or type(item) is float:
+            return False
+        if len(item) != 2:
+            return False
+    return True
+
+
 def kullback_leibler(vec1, vec2, num_features=None):
     """
     A similarity metric between two probability distributions.
@@ -390,33 +404,21 @@ def kullback_leibler(vec1, vec2, num_features=None):
     Uses the scipy.stats.entropy method to identify kullback_leibler convergence value.
     If the distribution draws from a certain number of docs, that value must be passed.
     """
-    if scipy.sparse.issparse(vec1) and scipy.sparse.issparse(vec2):
-        vec1 = vec1.todense()
-        vec2 = vec2.todense()
-        if vec1.shape[1] == 2 and vec2.shape[1] == 2:
-            vec1 = vec1.tolist()
-            vec2 = vec2.tolist()
-            max_len = max(len(vec1), len(vec2), num_features)
-            dense1 = sparse2full(vec1, max_len)
-            dense2 = sparse2full(vec2, max_len)
-            return scipy.stats.entropy(dense1, dense2)
-        else:
-            return scipy.stats.entropy(vec1, vec2)
-    elif isinstance(vec1, numpy.ndarray) and isinstance(vec2, numpy.ndarray):
-        if vec1.shape[1] == 2 and vec2.shape[1] == 2:
-            vec1 = vec1.tolist()
-            vec2 = vec2.tolist()
-            max_len = max(len(vec1), len(vec2), num_features)
-            dense1 = sparse2full(vec1, max_len)
-            dense2 = sparse2full(vec2, max_len)
-            return scipy.stats.entropy(dense1, dense2)
-        else:
-            return scipy.stats.entropy(vec1, vec2)
-    else:
+    if scipy.sparse.issparse(vec1):
+        vec1 = numpy.asarray(vec1.todense())
+    if scipy.sparse.issparse(vec2):
+        vec2 = numpy.asarray(vec2.todense())
+    if isinstance(vec1, numpy.ndarray):
+        vec1 = vec1.tolist()
+    if isinstance(vec2, numpy.ndarray):
+        vec2 = vec2.tolist()
+    if isbow(vec1) and isbow(vec2):
         max_len = max(len(vec1), len(vec2), num_features)
         dense1 = sparse2full(vec1, max_len)
         dense2 = sparse2full(vec2, max_len)
         return scipy.stats.entropy(dense1, dense2)
+    else:
+        return scipy.stats.entropy(vec1, vec2)
 
 
 def hellinger(vec1, vec2):
@@ -424,51 +426,66 @@ def hellinger(vec1, vec2):
     Hellinger distance is a distance metric to quanitfy the similarity between two probability distributions.
     Similarity between distributions will be a number between <0,1>, where 0 is maximum similarity and 1 is minimum similarity.
     """
-    if scipy.sparse.issparse(vec1) and scipy.sparse.issparse(vec2):
-        dense1 = vec1.todense()
-        dense2 = vec2.todense()
-        # if it is a sparse matrix in bag of words format, convert to list and go ahead.
-        if dense1.shape[1] == 2 and dense2.shape[1] == 2:
-            dense1,dense2 = dict(dense1.tolist()), dict(dense2.tolist())
-            if len(dense2) < len(dense1):
-                dense1, dense2 = dense1, dense2 # swap references so that we iterate over the shorter vector
-            sim = numpy.sqrt(0.5*sum((numpy.sqrt(value) - numpy.sqrt(dense2.get(index, 0.0)))**2 for index, value in iteritems(dense1)))
-            return sim
-        # else if it is in a different format, directly go about it
-        sim = numpy.sqrt(0.5 * ((numpy.sqrt(dense1) - numpy.sqrt(dense2))**2).sum())
-        return sim
-    elif isinstance(vec1, numpy.ndarray) and isinstance(vec2, numpy.ndarray):
-        # if it is in a bag of words format, go ahead with list method
-        if vec1.shape[1] == 2 and vec2.shape[1] == 2:
-            vec1, vec2 = dict(vec1.tolist()), dict(vec2.tolist())
-            if len(vec2) < len(vec1):
-                vec1, vec2 = vec2, vec1
-            sim = numpy.sqrt(0.5*sum((numpy.sqrt(value) - numpy.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
-            return sim
-        # else if it is in a different format, directly go about it
-        sim = numpy.sqrt(0.5 * ((numpy.sqrt(vec1) - numpy.sqrt(vec2))**2).sum())
-        return sim
-    else:
+    if scipy.sparse.issparse(vec1):
+        vec1 = numpy.asarray(vec1.todense())
+    if scipy.sparse.issparse(vec2):
+        vec2 = numpy.asarray(vec2.todense())
+    if isinstance(vec1, numpy.ndarray):
+        vec1 = vec1.tolist()
+    if isinstance(vec2, numpy.ndarray):
+        vec2 = vec2.tolist()
+    if isbow(vec1) and isbow(vec2):
         vec1, vec2 = dict(vec1), dict(vec2)
         if len(vec2) < len(vec1):
             vec1, vec2 = vec2, vec1
         sim = numpy.sqrt(0.5*sum((numpy.sqrt(value) - numpy.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
         return sim
+    else:
+        sim = numpy.sqrt(0.5 * ((numpy.sqrt(vec1) - numpy.sqrt(vec2))**2).sum())
+        return sim
 
-
-def jaccard(vec1, vec2):
+def jaccard(vec1,vec2):
     """
     A similarity metric between bags of words representation.
     Return the intersection divided by union, where union is the sum of the size of the two bags.
     Highest value jaccard similarity of two bags is 1/2, which indicates the highest similarity.
+    If it is not a bag of words representation, the union and intersection is calculated in the traditional manner.
+    Returns a similarity in range <0,1> where values closer to 1 mean a higher similarity.
     """
-    intersection = 0
-    union = sum(weight for id_, weight in vec1) + sum(weight for id_, weight in vec2)
-    vec1, vec2 = dict(vec1), dict(vec2)
-    for item in vec1:
-        if item in vec2:
-            intersection = min(vec2[item], vec1[item]) + intersection
-    return(float(intersection)/float(union))
+
+    if isbow(vec1) and isbow(vec2):
+        if scipy.sparse.issparse(vec1):
+            vec1 = numpy.asarray(vec1.todense())
+        if scipy.sparse.issparse(vec2):
+            vec2 = numpy.asarray(vec2.todense())
+        intersection = 0
+        union = sum(weight for id_,weight in vec1) + sum(weight for id_,weight in vec2)
+        vec1, vec2 = dict(vec1), dict(vec2)
+        for item in vec1:
+            if item in vec2:
+                intersection = min(vec2[item],vec1[item]) + intersection
+        return(float(intersection)/float(union))
+    else:
+        if scipy.sparse.issparse(vec1):
+            vec1 = numpy.asarray(vec1.todense())
+        if scipy.sparse.issparse(vec2):
+            vec2 = numpy.asarray(vec2.todense())
+        if isinstance(vec1, numpy.ndarray) and len(vec1) == 1:
+            vec1 = vec1.tolist()[0]
+        if isinstance(vec2, numpy.ndarray) and len(vec2) == 1:
+            vec2 = vec2.tolist()[0]
+        intersection = 0
+        union = []
+        for item in vec1:
+            if item in vec2:
+                intersection = intersection + 1
+                vec2.remove(item)
+            if item not in union:
+                union.append(item)
+        for item in vec2:
+            if item not in union:
+                union.append(item)
+        return(float(intersection)/float(len(union)))
 
 def qr_destroy(la):
     """
