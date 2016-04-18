@@ -573,7 +573,7 @@ def is_corpus(obj):
 
     """
     try:
-        if 'Corpus' in obj.__class__.__name__: # the most common case, quick hack
+        if 'Corpus' in obj.__class__.__name__:  # the most common case, quick hack
             return True, obj
     except:
         pass
@@ -585,15 +585,14 @@ def is_corpus(obj):
             doc1 = next(obj)
             obj = itertools.chain([doc1], obj)
         else:
-            doc1 = next(iter(obj)) # empty corpus is resolved to False here
-        if len(doc1) == 0: # sparse documents must have a __len__ function (list, tuple...)
-            return True, obj # the first document is empty=>assume this is a corpus
-        id1, val1 = next(iter(doc1)) # if obj is a numpy array, it resolves to False here
-        id1, val1 = int(id1), float(val1) # must be a 2-tuple (integer, float)
-    except:
+            doc1 = next(iter(obj))  # empty corpus is resolved to False here
+        if len(doc1) == 0:  # sparse documents must have a __len__ function (list, tuple...)
+            return True, obj  # the first document is empty=>assume this is a corpus
+        id1, val1 = next(iter(doc1))  # if obj is a numpy array, it resolves to False here
+        id1, val1 = int(id1), float(val1)  # must be a 2-tuple (integer, float)
+    except Exception:
         return False, obj
     return True, obj
-
 
 
 def get_my_ip():

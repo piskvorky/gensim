@@ -203,7 +203,7 @@ def sparse2full(doc, length):
     This is the mirror function to `full2sparse`.
 
     """
-    result = numpy.zeros(length, dtype=numpy.float32) # fill with zeroes (default value)
+    result = numpy.zeros(length, dtype=numpy.float32)  # fill with zeroes (default value)
     doc = dict(doc)
     # overwrite some of the zeroes with explicit values
     result[list(doc)] = list(itervalues(doc))

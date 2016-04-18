@@ -397,7 +397,7 @@ class Word2Vec(utils.SaveLoad):
         `hashfxn` = hash function to use to randomly initialize weights, for increased
         training reproducibility. Default is Python's rudimentary built in hash function.
 
-        `iter` = number of iterations (epochs) over the corpus. Default is 5. 
+        `iter` = number of iterations (epochs) over the corpus. Default is 5.
 
         `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
         in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
@@ -872,8 +872,8 @@ class Word2Vec(utils.SaveLoad):
         Each sentence must be a list of unicode strings.
         This does not change the fitted model in any way (see Word2Vec.train() for that).
 
-        We have currently only implemented score for the hierarchical softmax scheme, 
-        so you need to have run word2vec with hs=1 and negative=0 for this to work.  
+        We have currently only implemented score for the hierarchical softmax scheme,
+        so you need to have run word2vec with hs=1 and negative=0 for this to work.
 
         Note that you should specify total_sentences; we'll run into problems if you ask to
         score more than this number of sentences but it is inefficient to set the value too high.
@@ -1009,7 +1009,7 @@ class Word2Vec(utils.SaveLoad):
         """
         Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
-        
+
          `fname` is the file used to save the vectors in
          `fvocab` is an optional file used to save the vocabulary
          `binary` is an optional boolean indicating whether the data is to be saved
@@ -1629,7 +1629,6 @@ if __name__ == "__main__":
     logging.info("running %s", " ".join(sys.argv))
     logging.info("using optimization %s", FAST_VERSION)
 
-
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
     if len(sys.argv) < 2:
@@ -1664,7 +1663,10 @@ if __name__ == "__main__":
 
     corpus = LineSentence(args.train)
 
-    model = Word2Vec(corpus, size=args.size, min_count=args.min_count, workers=args.threads, window=args.window,sample=args.sample,sg=skipgram,hs=args.hs,negative=args.negative,cbow_mean=1,iter=args.iter)
+    model = Word2Vec(
+        corpus, size=args.size, min_count=args.min_count, workers=args.threads,
+        window=args.window, sample=args.sample, sg=skipgram, hs=args.hs,
+        negative=args.negative, cbow_mean=1, iter=args.iter)
 
     if args.output:
         outfile = args.output
@@ -1678,7 +1680,6 @@ if __name__ == "__main__":
         model.save_word2vec_format(outfile + '.model.txt', binary=False)
 
     if args.accuracy:
-        questions_file = args.accuracy
-        model.accuracy(questions_file)
+        model.accuracy(args.accuracy)
 
     logger.info("finished running %s", program)
