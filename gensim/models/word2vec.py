@@ -870,7 +870,10 @@ class Word2Vec(utils.SaveLoad):
         """
         Score the log probability for a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
-        This does not change the fitted model in any way (see Word2Vec.train() for that)
+        This does not change the fitted model in any way (see Word2Vec.train() for that).
+
+        We have currently only implemented score for the hierarchical softmax scheme, 
+        so you need to have run word2vec with hs=1 and negative=0 for this to work.  
 
         Note that you should specify total_sentences; we'll run into problems if you ask to
         score more than this number of sentences but it is inefficient to set the value too high.
@@ -878,7 +881,7 @@ class Word2Vec(utils.SaveLoad):
         See the article by [taddy]_ and the gensim demo at [deepir]_ for examples of how to use such scores in document classification.
 
         .. [taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
-        .. [deepir] https://github.com/TaddyLab/gensim/blob/deepir/docs/notebooks/deepir.ipynb
+        .. [deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
 
         """
         if FAST_VERSION < 0:
@@ -1006,6 +1009,11 @@ class Word2Vec(utils.SaveLoad):
         """
         Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
+        
+         `fname` is the file used to save the vectors in
+         `fvocab` is an optional file used to save the vocabulary
+         `binary` is an optional boolean indicating whether the data is to be saved
+         in binary word2vec format (default: False)
 
         """
         if fvocab is not None:
@@ -1406,7 +1414,7 @@ class Word2Vec(utils.SaveLoad):
                         (section['section'], 100.0 * correct / (correct + incorrect),
                          correct, correct + incorrect))
 
-    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar):
+    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, use_lowercase=True):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
@@ -1417,6 +1425,9 @@ class Word2Vec(utils.SaveLoad):
 
         Use `restrict_vocab` to ignore all questions containing a word whose frequency
         is not in the top-N most frequent words (default top 30,000).
+
+        Use `use_lowercase` to convert all words in questions to thier lowercase form before evaluating
+        the accuracy. It's useful when assuming the text preprocessing also uses lowercase.  (default True).
 
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
 
@@ -1439,7 +1450,10 @@ class Word2Vec(utils.SaveLoad):
                 if not section:
                     raise ValueError("missing section header before line #%i in %s" % (line_no, questions))
                 try:
-                    a, b, c, expected = [word.lower() for word in line.split()]  # TODO assumes vocabulary preprocessing uses lowercase, too...
+                    if use_lowercase:
+                        a, b, c, expected = [word.lower() for word in line.split()]  # assumes vocabulary preprocessing uses lowercase, too...
+                    else:
+                        a, b, c, expected = [word for word in line.split()]
                 except:
                     logger.info("skipping invalid line #%i in %s" % (line_no, questions))
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
