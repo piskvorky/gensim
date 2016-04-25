@@ -37,6 +37,7 @@ import os
 import numpy
 
 import xml.etree.ElementTree as et
+import zipfile
 
 from six import iteritems
 from smart_open import smart_open
@@ -121,6 +122,7 @@ class LdaMallet(utils.SaveLoad):
 
           document id[SPACE]label (not used)[SPACE]whitespace delimited utf8-encoded tokens[NEWLINE]
         """
+        print "corpus int he mallet", corpus
         for docno, doc in enumerate(corpus):
             if self.id2word:
                 tokens = sum(([self.id2word[tokenid]] * int(cnt) for tokenid, cnt in doc), [])
@@ -150,6 +152,8 @@ class LdaMallet(utils.SaveLoad):
         check_output(cmd, shell=True)
 
     def train(self, corpus):
+        print corpus
+        return
         self.convert_input(corpus, infer=False)
         cmd = self.mallet_path + " train-topics --input %s --num-topics %s  --alpha %s --optimize-interval %s "\
             "--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s "\
@@ -254,13 +258,24 @@ class LdaMallet(utils.SaveLoad):
         function to return the version of `mallet`
 
         """
-        xml_path = direc_path.split("bin")[0]
         try:
-            doc = et.parse(xml_path + "pom.xml").getroot()
-            namespace = doc.tag[:doc.tag.index('}') + 1]
-            return doc.find(namespace + 'version').text.split("-")[0]
+            """
+            Check version of mallet via jar file
+            """
+            archive = zipfile.ZipFile(direc_path, 'r')
+            if u'cc/mallet/regression/' not in archive.namelist():     
+                return '2.0.7'
+            else:
+                return '2.0.8RC3'
         except Exception:
-            return "No version file to detect"
+            
+            xml_path = direc_path.split("bin")[0]
+            try:
+                doc = et.parse(xml_path + "pom.xml").getroot()
+                namespace = doc.tag[:doc.tag.index('}') + 1]
+                return doc.find(namespace + 'version').text.split("-")[0]
+            except Exception:
+                return "No version file to detect"
         
 
 
