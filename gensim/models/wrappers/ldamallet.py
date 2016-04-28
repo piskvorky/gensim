@@ -122,7 +122,6 @@ class LdaMallet(utils.SaveLoad):
 
           document id[SPACE]label (not used)[SPACE]whitespace delimited utf8-encoded tokens[NEWLINE]
         """
-        print "corpus int he mallet", corpus
         for docno, doc in enumerate(corpus):
             if self.id2word:
                 tokens = sum(([self.id2word[tokenid]] * int(cnt) for tokenid, cnt in doc), [])
@@ -152,8 +151,6 @@ class LdaMallet(utils.SaveLoad):
         check_output(cmd, shell=True)
 
     def train(self, corpus):
-        print corpus
-        return
         self.convert_input(corpus, infer=False)
         cmd = self.mallet_path + " train-topics --input %s --num-topics %s  --alpha %s --optimize-interval %s "\
             "--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s "\
