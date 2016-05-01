@@ -390,11 +390,11 @@ def isbow(vec):
     if scipy.sparse.issparse(vec):
         vec = vec.todense().tolist()
     try:
-		id_, val_ = vec[0]
-		id_, val_ = int(id_), float(val_)
-	except Exception:
-		return False
-	return True
+        id_, val_ = vec[0]
+        id_, val_ = int(id_), float(val_)
+    except Exception:
+        return False
+    return True
 
 
 def kullback_leibler(vec1, vec2, num_features=None):
