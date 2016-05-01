@@ -389,12 +389,12 @@ def isbow(vec):
     """
     if scipy.sparse.issparse(vec):
         vec = vec.todense().tolist()
-    for item in vec:
-        if type(item) is int or type(item) is long or type(item) is float:
-            return False
-        if len(item) != 2:
-            return False
-    return True
+    try:
+		id_, val_ = vec[0]
+		id_, val_ = int(id_), float(val_)
+	except Exception:
+		return False
+	return True
 
 
 def kullback_leibler(vec1, vec2, num_features=None):
