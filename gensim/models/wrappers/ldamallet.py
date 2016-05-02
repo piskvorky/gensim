@@ -272,7 +272,7 @@ class LdaMallet(utils.SaveLoad):
                 namespace = doc.tag[:doc.tag.index('}') + 1]
                 return doc.find(namespace + 'version').text.split("-")[0]
             except Exception:
-                return "No version file to detect"
+                return "Can't parse pom.xml version file"
         
 
 
@@ -296,7 +296,7 @@ class LdaMallet(utils.SaveLoad):
                            for id_, weight in zip(map(int, parts[::2]),
                                                   map(float, parts[1::2]))
                            if abs(weight) > eps]
-                elif len(parts) == self.num_topics:
+                elif len(parts) == self.num_topics and mallet_version != '2.0.7':
                     doc = [(id_, weight)
                            for id_, weight in enumerate(map(float, parts))
                            if abs(weight) > eps]
