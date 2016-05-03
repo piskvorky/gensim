@@ -285,13 +285,13 @@ class LdaModel(interfaces.TransformationABC):
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
-        assert self.alpha.shape == (num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), num_topics)
+        assert self.alpha.shape == (self.num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
 
-        assert (self.eta.shape == (num_topics, 1) or self.eta.shape == (num_topics, self.num_terms)), (
+        assert (self.eta.shape == (self.num_topics, 1) or self.eta.shape == (self.num_topics, self.num_terms)), (
             "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
-            (str(self.eta.shape), num_topics, num_topics, self.num_terms))
+            (str(self.eta.shape), self.num_topics, self.num_topics, self.num_terms))
 
         # VB constants
         self.iterations = iterations
@@ -310,7 +310,7 @@ class LdaModel(interfaces.TransformationABC):
                 import Pyro4
                 dispatcher = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher')
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
-                dispatcher.initialize(id2word=self.id2word, num_topics=num_topics,
+                dispatcher.initialize(id2word=self.id2word, num_topics=self.num_topics,
                                       chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
                 self.dispatcher = dispatcher
                 self.numworkers = len(dispatcher.getworkers())
