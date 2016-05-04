@@ -385,8 +385,9 @@ class DocvecsArray(utils.SaveLoad):
         If `replace` is set, forget the original vectors and only keep the normalized
         ones = saves lots of memory!
 
-        Note that you **cannot continue training** after doing a replace. The model becomes
-        effectively read-only = you can call `most_similar`, `similarity` etc., but not `train`.
+        Note that you **cannot continue training or inference** after doing a replace.
+        The model becomes effectively read-only = you can call `most_similar`, `similarity`
+        etc., but not `train` or `infer_vector`.
 
         """
         if getattr(self, 'doctag_syn0norm', None) is None or replace:
@@ -537,8 +538,11 @@ class Doc2Vec(Word2Vec):
 
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
 
-        `seed` = for the random number generator. Only runs with a single worker will be
-        deterministically reproducible because of the ordering randomness in multi-threaded runs.
+        `seed` = for the random number generator. 
+        Note that for a fully deterministically-reproducible run, you must also limit the model to
+        a single worker thread, to eliminate ordering jitter from OS thread scheduling. (In Python
+        3, reproducibility between interpreter launches also requires use of the PYTHONHASHSEED
+        environment variable to control hash randomization.)
 
         `min_count` = ignore all words with total frequency lower than this.
 
@@ -550,6 +554,9 @@ class Doc2Vec(Word2Vec):
                 default is 0 (off), useful value is 1e-5.
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
+
+        `iter` = number of iterations (epochs) over the corpus. The default inherited from Word2Vec is 5, 
+        but values of 10 or 20 are common in published 'Paragraph Vector' experiments.
 
         `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0).
 

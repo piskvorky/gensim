@@ -302,14 +302,14 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
 def score_sg_pair(model, word, word2):
     l1 = model.syn0[word2.index]
     l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
-    sgn = -1.0**word.code  # ch function, 0-> 1, 1 -> -1
+    sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
     lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
     return sum(lprob)
 
 
 def score_cbow_pair(model, word, word2_indices, l1):
     l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
-    sgn = -1.0**word.code  # ch function, 0-> 1, 1 -> -1
+    sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
     lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
     return sum(lprob)
 
@@ -364,10 +364,14 @@ class Word2Vec(utils.SaveLoad):
 
         `window` is the maximum distance between the current and predicted word within a sentence.
 
-        `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
+        `alpha` is the initial learning rate (will linearly drop to `min_alpha` as training progresses).
 
         `seed` = for the random number generator. Initial vectors for each
         word are seeded with a hash of the concatenation of word + str(seed).
+        Note that for a fully deterministically-reproducible run, you must also limit the model to
+        a single worker thread, to eliminate ordering jitter from OS thread scheduling. (In Python
+        3, reproducibility between interpreter launches also requires use of the PYTHONHASHSEED
+        environment variable to control hash randomization.)
 
         `min_count` = ignore all words with total frequency lower than this.
 
@@ -393,7 +397,7 @@ class Word2Vec(utils.SaveLoad):
         `hashfxn` = hash function to use to randomly initialize weights, for increased
         training reproducibility. Default is Python's rudimentary built in hash function.
 
-        `iter` = number of iterations (epochs) over the corpus.
+        `iter` = number of iterations (epochs) over the corpus. Default is 5.
 
         `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
         in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
@@ -406,8 +410,8 @@ class Word2Vec(utils.SaveLoad):
         assigning word indexes.
 
         `batch_words` = target size (in words) for batches of examples passed to worker threads (and
-        thus cython routines). Default is 10000. (Larger batches can be passed if individual
-        texts are longer, but the cython code may truncate.)
+        thus cython routines). Default is 10000. (Larger batches will be passed if individual
+        texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
 
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
@@ -499,13 +503,13 @@ class Word2Vec(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i", max_depth)
 
-    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None):
+    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
 
         """
-        self.scan_vocab(sentences, trim_rule=trim_rule)  # initial survey
+        self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule)  # trim by min_count & precalculate downsampling
         self.finalize_vocab()  # build tables & arrays
 
@@ -866,7 +870,10 @@ class Word2Vec(utils.SaveLoad):
         """
         Score the log probability for a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
-        This does not change the fitted model in any way (see Word2Vec.train() for that)
+        This does not change the fitted model in any way (see Word2Vec.train() for that).
+
+        We have currently only implemented score for the hierarchical softmax scheme,
+        so you need to have run word2vec with hs=1 and negative=0 for this to work.
 
         Note that you should specify total_sentences; we'll run into problems if you ask to
         score more than this number of sentences but it is inefficient to set the value too high.
@@ -874,7 +881,7 @@ class Word2Vec(utils.SaveLoad):
         See the article by [taddy]_ and the gensim demo at [deepir]_ for examples of how to use such scores in document classification.
 
         .. [taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
-        .. [deepir] https://github.com/TaddyLab/gensim/blob/deepir/docs/notebooks/deepir.ipynb
+        .. [deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
 
         """
         if FAST_VERSION < 0:
@@ -1002,6 +1009,11 @@ class Word2Vec(utils.SaveLoad):
         """
         Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
+
+         `fname` is the file used to save the vectors in
+         `fvocab` is an optional file used to save the vocabulary
+         `binary` is an optional boolean indicating whether the data is to be saved
+         in binary word2vec format (default: False)
 
         """
         if fvocab is not None:
@@ -1269,6 +1281,46 @@ class Word2Vec(utils.SaveLoad):
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
+    def similar_by_word(self, word, topn=10, restrict_vocab=None):
+        """
+        Find the top-N most similar words.
+
+        If topn is False, similar_by_word returns the vector of similarity scores.
+
+        `restrict_vocab` is an optional integer which limits the range of vectors which
+        are searched for most-similar values. For example, restrict_vocab=10000 would
+        only check the first 10000 word vectors in the vocabulary order. (This may be
+        meaningful if you've sorted the vocabulary by descending frequency.)
+
+        Example::
+
+          >>> trained_model.similar_by_word('graph')
+          [('user', 0.9999163150787354), ...]
+
+        """
+
+        return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
+
+    def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
+        """
+        Find the top-N most similar words by vector.
+
+        If topn is False, similar_by_vector returns the vector of similarity scores.
+
+        `restrict_vocab` is an optional integer which limits the range of vectors which
+        are searched for most-similar values. For example, restrict_vocab=10000 would
+        only check the first 10000 word vectors in the vocabulary order. (This may be
+        meaningful if you've sorted the vocabulary by descending frequency.)
+
+        Example::
+
+          >>> trained_model.similar_by_vector([1,2])
+          [('survey', 0.9942699074745178), ...]
+
+        """
+
+        return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
+
     def doesnt_match(self, words):
         """
         Which word from the given list doesn't go with the others?
@@ -1402,7 +1454,7 @@ class Word2Vec(utils.SaveLoad):
                         (section['section'], 100.0 * correct / (correct + incorrect),
                          correct, correct + incorrect))
 
-    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar):
+    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, use_lowercase=True):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
@@ -1413,6 +1465,9 @@ class Word2Vec(utils.SaveLoad):
 
         Use `restrict_vocab` to ignore all questions containing a word whose frequency
         is not in the top-N most frequent words (default top 30,000).
+
+        Use `use_lowercase` to convert all words in questions to thier lowercase form before evaluating
+        the accuracy. It's useful when assuming the text preprocessing also uses lowercase.  (default True).
 
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
 
@@ -1435,7 +1490,10 @@ class Word2Vec(utils.SaveLoad):
                 if not section:
                     raise ValueError("missing section header before line #%i in %s" % (line_no, questions))
                 try:
-                    a, b, c, expected = [word.lower() for word in line.split()]  # TODO assumes vocabulary preprocessing uses lowercase, too...
+                    if use_lowercase:
+                        a, b, c, expected = [word.lower() for word in line.split()]  # assumes vocabulary preprocessing uses lowercase, too...
+                    else:
+                        a, b, c, expected = [word for word in line.split()]
                 except:
                     logger.info("skipping invalid line #%i in %s" % (line_no, questions))
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
@@ -1611,7 +1669,6 @@ if __name__ == "__main__":
     logging.info("running %s", " ".join(sys.argv))
     logging.info("using optimization %s", FAST_VERSION)
 
-
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
     if len(sys.argv) < 2:
@@ -1646,7 +1703,10 @@ if __name__ == "__main__":
 
     corpus = LineSentence(args.train)
 
-    model = Word2Vec(corpus, size=args.size, min_count=args.min_count, workers=args.threads, window=args.window,sample=args.sample,sg=skipgram,hs=args.hs,negative=args.negative,cbow_mean=1,iter=args.iter)
+    model = Word2Vec(
+        corpus, size=args.size, min_count=args.min_count, workers=args.threads,
+        window=args.window, sample=args.sample, sg=skipgram, hs=args.hs,
+        negative=args.negative, cbow_mean=1, iter=args.iter)
 
     if args.output:
         outfile = args.output
@@ -1660,7 +1720,6 @@ if __name__ == "__main__":
         model.save_word2vec_format(outfile + '.model.txt', binary=False)
 
     if args.accuracy:
-        questions_file = args.accuracy
-        model.accuracy(questions_file)
+        model.accuracy(args.accuracy)
 
     logger.info("finished running %s", program)
