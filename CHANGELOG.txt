@@ -7,6 +7,7 @@ Changes
   - Allow easy port of GloVe vectors into Gensim
   - Standalone script with command line arguments, compatible with Python>=2.6 
   - Usage: python -m gensim.scripts.glove2word2vec -i glove_vectors.txt -o output_word2vec_compatible.txt
+* Add `similar_by_word()` and `similar_by_vector()` to word2vec (@isohyt, #381)
 
 0.12.4, 29/01/2016
 * Better internal handling of job batching in word2vec (#535)
