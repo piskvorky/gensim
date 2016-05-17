@@ -386,12 +386,15 @@ def cossim(vec1, vec2):
 def isbow(vec):
     """
     Checks if vector passed is in bag of words representation or not.
+    Vec is considered to be in bag of words format if it is 2-tuple format.
     """
     if scipy.sparse.issparse(vec):
         vec = vec.todense().tolist()
     try:
-        id_, val_ = vec[0]
+        id_, val_ = vec[0] # checking first value to see if it is in bag of words format by unpacking
         id_, val_ = int(id_), float(val_)
+    except IndexError:
+        return True # this is to handle the empty input case
     except Exception:
         return False
     return True
@@ -407,12 +410,8 @@ def kullback_leibler(vec1, vec2, num_features=None):
     if scipy.sparse.issparse(vec1):
         vec1 = numpy.asarray(vec1.todense())
     if scipy.sparse.issparse(vec2):
-        vec2 = numpy.asarray(vec2.todense())
-    if isinstance(vec1, numpy.ndarray):
-        vec1 = vec1.tolist()
-    if isinstance(vec2, numpy.ndarray):
-        vec2 = vec2.tolist()
-    if isbow(vec1) and isbow(vec2):
+        vec2 = numpy.asarray(vec2.todense()) # converted both the vectors to dense in case they were in sparse matrix 
+    if isbow(vec1) and isbow(vec2): # if they are in bag of words format we make it dense
         max_len = max(len(vec1), len(vec2), num_features)
         dense1 = sparse2full(vec1, max_len)
         dense2 = sparse2full(vec2, max_len)
@@ -423,21 +422,18 @@ def kullback_leibler(vec1, vec2, num_features=None):
 
 def hellinger(vec1, vec2):
     """
-    Hellinger distance is a distance metric to quanitfy the similarity between two probability distributions.
+    Hellinger distance is a distance metric to quantify the similarity between two probability distributions.
     Similarity between distributions will be a number between <0,1>, where 0 is maximum similarity and 1 is minimum similarity.
     """
     if scipy.sparse.issparse(vec1):
         vec1 = numpy.asarray(vec1.todense())
     if scipy.sparse.issparse(vec2):
         vec2 = numpy.asarray(vec2.todense())
-    if isinstance(vec1, numpy.ndarray):
-        vec1 = vec1.tolist()
-    if isinstance(vec2, numpy.ndarray):
-        vec2 = vec2.tolist()
-    if isbow(vec1) and isbow(vec2):
+    if isbow(vec1) and isbow(vec2): 
+        # if it is a bag of words format, instead of converting to dense we use dictionaries to calculate appropriate distance
         vec1, vec2 = dict(vec1), dict(vec2)
-        if len(vec2) < len(vec1):
-            vec1, vec2 = vec2, vec1
+        if len(vec2) < len(vec1): 
+            vec1, vec2 = vec2, vec1 # swap references so that we iterate over the shorter vector
         sim = numpy.sqrt(0.5*sum((numpy.sqrt(value) - numpy.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
         return sim
     else:
@@ -453,7 +449,10 @@ def jaccard(vec1,vec2):
     Returns a similarity in range <0,1> where values closer to 1 mean a higher similarity.
     """
 
-    if isbow(vec1) and isbow(vec2):
+    if isbow(vec1) and isbow(vec2): 
+        # if it's in bow format, we use the following definitions:
+        # union = sum of the 'weights' of both the bags
+        # intersection = lowest weight for a particular id; basically the number of common words or items 
         if scipy.sparse.issparse(vec1):
             vec1 = numpy.asarray(vec1.todense())
         if scipy.sparse.issparse(vec2):
@@ -464,7 +463,7 @@ def jaccard(vec1,vec2):
         for item in vec1:
             if item in vec2:
                 intersection = min(vec2[item],vec1[item]) + intersection
-        return(float(intersection)/float(union))
+        return float(intersection)/float(union)
     else:
         if scipy.sparse.issparse(vec1):
             vec1 = numpy.asarray(vec1.todense())
@@ -478,14 +477,14 @@ def jaccard(vec1,vec2):
         union = []
         for item in vec1:
             if item in vec2:
-                intersection = intersection + 1
+                intersection += 1
                 vec2.remove(item)
             if item not in union:
                 union.append(item)
         for item in vec2:
             if item not in union:
                 union.append(item)
-        return(float(intersection)/float(len(union)))
+        return float(intersection)/float(len(union))
 
 def qr_destroy(la):
     """
