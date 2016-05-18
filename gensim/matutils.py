@@ -458,11 +458,11 @@ def jaccard(vec1,vec2):
         # union = sum of the 'weights' of both the bags
         # intersection = lowest weight for a particular id; basically the number of common words or items 
         intersection = 0
-        union = sum(weight for id_,weight in vec1) + sum(weight for id_,weight in vec2)
+        union = sum(weight for id_, weight in vec1) + sum(weight for id_, weight in vec2)
         vec1, vec2 = dict(vec1), dict(vec2)
         for item in vec1:
             if item in vec2:
-                intersection = min(vec2[item],vec1[item]) + intersection
+                intersection = min(vec2[item], vec1[item]) + intersection
         return float(intersection)/float(union)
     else:
         # if it isn't in bag of words format, we can use sets to calculate intersection and union
