@@ -465,22 +465,16 @@ def jaccard(vec1,vec2):
                 intersection = min(vec2[item],vec1[item]) + intersection
         return float(intersection)/float(union)
     else:
-        if isinstance(vec1, numpy.ndarray) and len(vec1) == 1:
-            vec1 = vec1.tolist()[0]
-        if isinstance(vec2, numpy.ndarray) and len(vec2) == 1:
-            vec2 = vec2.tolist()[0]
-        intersection = 0
-        union = []
-        for item in vec1:
-            if item in vec2:
-                intersection += 1
-                vec2.remove(item)
-            if item not in union:
-                union.append(item)
-        for item in vec2:
-            if item not in union:
-                union.append(item)
-        return float(intersection)/float(len(union))
+        # if it isn't in bag of words format, we can use sets to calculate intersection and union
+        if isinstance(vec1, numpy.ndarray):
+            vec1 = vec1.tolist()
+        if isinstance(vec2, numpy.ndarray):
+            vec2 = vec2.tolist()
+        vec1 = set(vec1)
+        vec2 = set(vec2)
+        intersection = vec1 & vec2
+        union = vec1 | vec2
+        return float(len(intersection))/float(len(union))
 
 
 def qr_destroy(la):
