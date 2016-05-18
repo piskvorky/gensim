@@ -448,15 +448,15 @@ def jaccard(vec1,vec2):
     If it is not a bag of words representation, the union and intersection is calculated in the traditional manner.
     Returns a similarity in range <0,1> where values closer to 1 mean a higher similarity.
     """
-
+    if scipy.sparse.issparse(vec1):
+        vec1 = numpy.asarray(vec1.todense())
+    if scipy.sparse.issparse(vec2):
+        vec2 = numpy.asarray(vec2.todense())
+    # converting from sparse for easier manipulation    
     if isbow(vec1) and isbow(vec2): 
         # if it's in bow format, we use the following definitions:
         # union = sum of the 'weights' of both the bags
         # intersection = lowest weight for a particular id; basically the number of common words or items 
-        if scipy.sparse.issparse(vec1):
-            vec1 = numpy.asarray(vec1.todense())
-        if scipy.sparse.issparse(vec2):
-            vec2 = numpy.asarray(vec2.todense())
         intersection = 0
         union = sum(weight for id_,weight in vec1) + sum(weight for id_,weight in vec2)
         vec1, vec2 = dict(vec1), dict(vec2)
@@ -465,10 +465,6 @@ def jaccard(vec1,vec2):
                 intersection = min(vec2[item],vec1[item]) + intersection
         return float(intersection)/float(union)
     else:
-        if scipy.sparse.issparse(vec1):
-            vec1 = numpy.asarray(vec1.todense())
-        if scipy.sparse.issparse(vec2):
-            vec2 = numpy.asarray(vec2.todense())
         if isinstance(vec1, numpy.ndarray) and len(vec1) == 1:
             vec1 = vec1.tolist()[0]
         if isinstance(vec2, numpy.ndarray) and len(vec2) == 1:
@@ -485,6 +481,7 @@ def jaccard(vec1,vec2):
             if item not in union:
                 union.append(item)
         return float(intersection)/float(len(union))
+
 
 def qr_destroy(la):
     """
