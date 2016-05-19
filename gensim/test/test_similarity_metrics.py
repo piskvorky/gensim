@@ -15,6 +15,7 @@ import unittest
 from gensim import matutils
 from scipy.sparse import csr_matrix
 import numpy
+import math
 
 class TestIsBow(unittest.TestCase):
     def test_None(self):
@@ -153,8 +154,7 @@ class TestKL(unittest.TestCase):
         vec_1 = [(2, 0.1), (3, 0.4), (4, 0.1), (5, 0.1), (1, 0.1), (7, 0.2)]
         vec_2 = [(1, 0.1), (3, 0.8), (4, 0.1)]
         result = matutils.kullback_leibler(vec_1, vec_2, 8)
-        expected = float("inf")
-        self.assertAlmostEqual(expected, result)
+        self.assertTrue(math.isinf(result))
 
         # checking ndarray, csr_matrix as inputs
         vec_1 = numpy.array([[1, 0.3], [0, 0.4], [2, 0.3]])
@@ -176,8 +176,7 @@ class TestJaccard(unittest.TestCase):
         # all empty inputs will give a divide by zero exception
         vec_1 = []
         vec_2 = []
-        with self.assertRaises(ZeroDivisionError):
-            matutils.jaccard(vec_1, vec_2)
+        self.assertRaises(ZeroDivisionError, matutils.jaccard , vec_1, vec_2)
 
     def test_distributions(self):
 
