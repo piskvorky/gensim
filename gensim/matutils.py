@@ -417,6 +417,12 @@ def kullback_leibler(vec1, vec2, num_features=None):
         dense2 = sparse2full(vec2, max_len)
         return scipy.stats.entropy(dense1, dense2)
     else:
+        if len(vec1) == 1:
+            vec1 = vec1[0]
+        if len(vec2) == 1:
+            vec2 = vec2[0]
+        # this conversion is made because if it is not in bow format, it might be a list within a list.
+        # the scipy implementation of Kullback fails in such a case so we pick up only the nested list.
         return scipy.stats.entropy(vec1, vec2)
 
 
