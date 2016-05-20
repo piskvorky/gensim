@@ -62,7 +62,7 @@ class TestLdaMallet(unittest.TestCase):
         passed = False
         for i in range(5): # restart at most 5 times
             # create the transformation model
-            model = ldamallet.LdaMallet(self.mallet_path, corpus, id2word=dictionary, num_topics=2, iterations=200, topic_threshold=0.0)
+            model = ldamallet.LdaMallet(self.mallet_path, corpus, id2word=dictionary, num_topics=2, iterations=200)
             # transform one document
             doc = list(corpus)[0]
             transformed = model[doc]
@@ -100,7 +100,7 @@ class TestLdaMallet(unittest.TestCase):
         if not self.mallet_path:
             return
         fname = testfile()
-        model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100, topic_threshold=0.00)
+        model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100)
         model.save(fname)
         model2 = ldamallet.LdaMallet.load(fname)
         self.assertEqual(model.num_topics, model2.num_topics)
@@ -112,7 +112,7 @@ class TestLdaMallet(unittest.TestCase):
         if not self.mallet_path:
             return
         fname = testfile() + '.gz'
-        model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100, topic_threshold=0.00)
+        model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100)
         model.save(fname)
         model2 = ldamallet.LdaMallet.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
@@ -124,7 +124,7 @@ class TestLdaMallet(unittest.TestCase):
         if not self.mallet_path:
             return
         fname = testfile()
-        model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100, topic_threshold=0.00)
+        model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100)
 
         # simulate storing large arrays separately
         model.save(testfile(), sep_limit=0)
@@ -141,7 +141,7 @@ class TestLdaMallet(unittest.TestCase):
         if not self.mallet_path:
             return
         fname = testfile() + '.gz'
-        model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100, topic_threshold=0.00)
+        model = ldamallet.LdaMallet(self.mallet_path, self.corpus, num_topics=2, iterations=100)
 
         # simulate storing large arrays separately
         model.save(fname, sep_limit=0)
