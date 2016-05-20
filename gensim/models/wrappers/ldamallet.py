@@ -55,7 +55,7 @@ class LdaMallet(utils.SaveLoad):
 
     """
     def __init__(self, mallet_path, corpus=None, num_topics=100, alpha=50, id2word=None, workers=4, prefix=None,
-                 optimize_interval=0, iterations=1000):
+                 optimize_interval=0, iterations=1000, topic_threshold=0.0):
         """
         `mallet_path` is path to the mallet executable, e.g. `/home/kofola/mallet-2.0.7/bin/mallet`.
 
@@ -71,6 +71,8 @@ class LdaMallet(utils.SaveLoad):
 
         `iterations` is the number of sampling iterations.
 
+        `topic_threshold` is the threshold of the probability above which we consider a topic. This is basically for sparse topic distribution.
+
         """
         self.mallet_path = mallet_path
         self.id2word = id2word
@@ -83,6 +85,7 @@ class LdaMallet(utils.SaveLoad):
         if self.num_terms == 0:
             raise ValueError("cannot compute LDA over an empty collection (no terms)")
         self.num_topics = num_topics
+        self.topic_threshold=topic_threshold
         self.alpha = alpha
         if prefix is None:
             rand_prefix = hex(random.randint(0, 0xffffff))[2:] + '_'
@@ -154,10 +157,10 @@ class LdaMallet(utils.SaveLoad):
         self.convert_input(corpus, infer=False)
         cmd = self.mallet_path + " train-topics --input %s --num-topics %s  --alpha %s --optimize-interval %s "\
             "--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s "\
-            "--num-iterations %s --inferencer-filename %s"
+            "--num-iterations %s --inferencer-filename %s --doc-topics-threshold %s"
         cmd = cmd % (
             self.fcorpusmallet(), self.num_topics, self.alpha, self.optimize_interval, self.workers,
-            self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations, self.finferencer())
+            self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations, self.finferencer(), self.topic_threshold)
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
         logger.info("training MALLET LDA with %s", cmd)
         check_output(cmd, shell=True)
@@ -170,8 +173,8 @@ class LdaMallet(utils.SaveLoad):
             bow = [bow]
 
         self.convert_input(bow, infer=True)
-        cmd = self.mallet_path + " infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s"
-        cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations)
+        cmd = self.mallet_path + " infer-topics --input %s --inferencer %s --output-doc-topics %s --num-iterations %s --doc-topics-threshold %s"
+        cmd = cmd % (self.fcorpusmallet() + '.infer', self.finferencer(), self.fdoctopics() + '.infer', iterations, self.topic_threshold)
         logger.info("inferring topics with MALLET LDA '%s'", cmd)
         check_output(cmd, shell=True)
         result = list(self.read_doctopics(self.fdoctopics() + '.infer'))
