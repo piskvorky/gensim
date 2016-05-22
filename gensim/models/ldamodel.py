@@ -883,7 +883,7 @@ class LdaModel(interfaces.TransformationABC):
         top_topics = sorted(coherence_scores, key=lambda t: t[1], reverse=True)
         return top_topics
 
-    def get_document_topics(self, bow, minimum_probability=None):
+    def get_document_topics(self, bow, minimum_probability=None, per_word_topics=False):
         """
         Return topic distribution for the given document `bow`, as a list of
         (topic_id, topic_probability) 2-tuples.
@@ -899,11 +899,24 @@ class LdaModel(interfaces.TransformationABC):
         is_corpus, corpus = utils.is_corpus(bow)
         if is_corpus:
             return self._apply(corpus)
+        if per_word_topics is False:
+            gamma, _ = self.inference([bow])
+            topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
+            return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
+                    if topicvalue >= minimum_probability]
 
-        gamma, _ = self.inference([bow])
-        topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
-        return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
-                if topicvalue >= minimum_probability]
+        if per_word_topics is True:
+            gamma, _ = self.inference([bow])
+            topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
+
+            word_phi = []
+            for word, weight in bow:
+                phi_values = []
+                for i in range(0, self.num_topics):
+                    phi_values.append(self.inference([bow], collect_sstats=True)[1][i][word])
+                word_phi.append((word, phi_values.index(max(phi_values))))
+            return ([(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
+                    if topicvalue >= minimum_probability], word_phi)               
 
     def __getitem__(self, bow, eps=None):
         """
