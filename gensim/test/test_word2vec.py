@@ -22,6 +22,7 @@ from gensim import utils, matutils
 from gensim.utils import check_output
 from subprocess import PIPE
 from gensim.models import word2vec
+from testfixtures import log_capture
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -383,6 +384,31 @@ class TestWord2VecModel(unittest.TestCase):
             self.assertTrue(numpy.allclose(model.syn1neg, model2.syn1neg))
         most_common_word = max(model.vocab.items(), key=lambda item: item[1].count)[0]
         self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
+
+    @log_capture()
+    def testBuildVocabWarning(self, l):
+        """Test if warning is raised on non-ideal input to a word2vec model"""
+        sentences = ['human', 'machine']
+        model = word2vec.Word2Vec()
+        model.build_vocab(sentences)
+        warning = "Each 'sentences' item should be a list of words (usually unicode strings)."
+        self.assertTrue(warning in str(l))
+
+    @log_capture()
+    def testTrainWarning(self, l):
+        """Test if warning is raised if alpha rises during subsequent calls to train()"""
+        sentences = [['human'],
+                     ['graph', 'trees']]
+        model = word2vec.Word2Vec(min_count=1)
+        model.build_vocab(sentences)
+        for epoch in range(10):
+            model.train(sentences)
+            model.alpha -= 0.002
+            model.min_alpha = model.alpha
+            if epoch == 5:
+                model.alpha += 0.05
+        warning = "Effective 'alpha' higher than previous training cycles"
+        self.assertTrue(warning in str(l))
 #endclass TestWord2VecModel
 
     def test_sentences_should_not_be_a_generator(self):

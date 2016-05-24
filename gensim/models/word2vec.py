@@ -423,6 +423,7 @@ class Word2Vec(utils.SaveLoad):
         if size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
         self.alpha = float(alpha)
+        self.min_alpha_yet_reached = float(alpha) # To warn user if alpha increases
         self.window = int(window)
         self.max_vocab_size = max_vocab_size
         self.seed = seed
@@ -520,7 +521,13 @@ class Word2Vec(utils.SaveLoad):
         total_words = 0
         min_reduce = 1
         vocab = defaultdict(int)
+        checked_string_types = 0
         for sentence_no, sentence in enumerate(sentences):
+            if not checked_string_types:
+                if isinstance(sentence, string_types):
+                    logger.warn("Each 'sentences' item should be a list of words (usually unicode strings)."
+                                "First item here is instead plain %s.", type(sentence))
+                checked_string_types += 1
             if sentence_no % progress_per == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
                             sentence_no, sum(itervalues(vocab)) + total_words, len(vocab))
@@ -746,6 +753,9 @@ class Word2Vec(utils.SaveLoad):
             job_batch, batch_size = [], 0
             pushed_words, pushed_examples = 0, 0
             next_alpha = self.alpha
+            if next_alpha > self.min_alpha_yet_reached:
+                logger.warn("Effective 'alpha' higher than previous training cycles")
+            self.min_alpha_yet_reached = next_alpha
             job_no = 0
 
             for sent_idx, sentence in enumerate(sentences):
