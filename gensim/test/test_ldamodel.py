@@ -251,7 +251,11 @@ class TestLdaModel(unittest.TestCase):
 
 
     def testGetDocumentTopics(self):
-        doc_topics = self.model.get_document_topics(self.corpus)
+
+        numpy.random.seed(0)
+        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes= 100)
+
+        doc_topics = model.get_document_topics(self.corpus)
 
         for topic in doc_topics:
             self.assertTrue(isinstance(topic, list))
@@ -259,7 +263,7 @@ class TestLdaModel(unittest.TestCase):
                 self.assertTrue(isinstance(k, int))
                 self.assertTrue(isinstance(v, float))
 
-        doc_topics, word_topics = self.model.get_document_topics(self.corpus[0], per_word_topics=True)
+        doc_topics, word_topics = model.get_document_topics(self.corpus[0], per_word_topics=True)
 
         for k, v in doc_topics:
             self.assertTrue(isinstance(k, int))
@@ -268,6 +272,10 @@ class TestLdaModel(unittest.TestCase):
         for w, t in word_topics:
             self.assertTrue(isinstance(w, int))
             self.assertTrue(isinstance(t, int))
+
+        # first word in the doc belongs to topic 2
+        self.assertEqual(word_topics[0], (0, 1))
+
 
     def testPasses(self):
         # long message includes the original error message with a custom one
