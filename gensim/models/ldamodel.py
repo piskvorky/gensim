@@ -905,6 +905,25 @@ class LdaModel(interfaces.TransformationABC):
         return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                 if topicvalue >= minimum_probability]
 
+    def get_static_topic(self, word_id):
+        """
+        Returns static topic for word in vocabulary.
+        """
+
+        # if user enters word instead of id in vocab, change to get id
+        if isinstance(word_id, str):
+            for id_, word in self.id2word.iteritems():
+                if word_id == word:
+                    word_id = id_
+                    break
+
+        # get maximum value from expElogbeta
+        max_values = []
+        for i in range(0, self.num_topics):
+            max_values.append(self.expElogbeta[i][word_id])
+
+        return max_values.index(max(max_values))
+
     def __getitem__(self, bow, eps=None):
         """
         Return topic distribution for the given document `bow`, as a list of
