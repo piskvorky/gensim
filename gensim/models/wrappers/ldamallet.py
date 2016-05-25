@@ -252,7 +252,7 @@ class LdaMallet(utils.SaveLoad):
         """
         with utils.smart_open(fname) as fin:
             for lineno, line in enumerate(fin):
-                if lineno == 0 and line.startswith("#doc "):
+                if lineno == 0 and line.startswith(b"#doc "):
                     continue  # skip the header line if it exists
 
                 parts = line.split()[2:]  # skip "doc" and "source" columns
