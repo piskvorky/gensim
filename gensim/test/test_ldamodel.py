@@ -265,6 +265,20 @@ class TestLdaModel(unittest.TestCase):
             self.assertTrue(isinstance(k, int))
             self.assertTrue(isinstance(v, float))
 
+    def testStaticTopics(self):
+
+        numpy.random.seed(0)
+        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes= 100)
+
+        # check with id
+        result = model.get_static_topic(2)
+        expected = 1
+        self.assertEqual(result, expected)
+
+        # if user has entered word instead, check with word
+        result = model.get_static_topic("time")
+        expected = 0
+        self.assertEqual(result, expected)
 
     def testPasses(self):
         # long message includes the original error message with a custom one
