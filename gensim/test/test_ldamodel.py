@@ -259,12 +259,15 @@ class TestLdaModel(unittest.TestCase):
                 self.assertTrue(isinstance(k, int))
                 self.assertTrue(isinstance(v, float))
 
-        doc_topics = self.model.get_document_topics(self.corpus[0])
+        doc_topics, word_topics = self.model.get_document_topics(self.corpus[0], per_word_topics=True)
 
         for k, v in doc_topics:
             self.assertTrue(isinstance(k, int))
             self.assertTrue(isinstance(v, float))
 
+        for w, t in word_topics:
+            self.assertTrue(isinstance(w, int))
+            self.assertTrue(isinstance(t, int))
 
     def testPasses(self):
         # long message includes the original error message with a custom one

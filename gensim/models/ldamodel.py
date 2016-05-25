@@ -899,21 +899,20 @@ class LdaModel(interfaces.TransformationABC):
         is_corpus, corpus = utils.is_corpus(bow)
         if is_corpus:
             return self._apply(corpus)
+
+        gamma, phis = self.inference([bow], collect_sstats=True)
+        topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
+
         if per_word_topics is False:
-            gamma, _ = self.inference([bow])
-            topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
             return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                     if topicvalue >= minimum_probability]
 
-        if per_word_topics is True:
-            gamma, _ = self.inference([bow])
-            topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
-
+        elif per_word_topics is True:
             word_phi = [] # contains word and corresponding topic
             for word, weight in bow:
                 phi_values = [] # contains phi values for each topic
                 for i in range(0, self.num_topics):
-                    phi_values.append(self.inference([bow], collect_sstats=True)[1][i][word]) 
+                    phi_values.append(phis[i][word]) 
                     # appends phi values for each topic for that word
                 word_phi.append((word, phi_values.index(max(phi_values))))
                 # appends the word and the highest probability topic
