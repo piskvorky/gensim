@@ -494,14 +494,14 @@ class DocvecsArray(utils.SaveLoad):
         v2 = [self[doc] for doc in ds2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
 
-    def oot_similarity(self, model, doc_words1, doc_words2):
+    def similarity_off_training(self, model, doc_words1, doc_words2, alpha=0.1, min_alpha=0.0001, steps=5):
         """
-        Compute cosine similarity between two post-bulk training documents.
+        Compute cosine similarity between two post-bulk out of training documents.
 
         Document should be a list of (word) tokens.
         """
-        d1 = model.infer_vector(doc_words1)
-        d2 = model.infer_vector(doc_words2)
+        d1 = model.infer_vector(doc_words1, alpha, min_alpha, steps)
+        d2 = model.infer_vector(doc_words2, alpha, min_alpha, steps)
         return dot(matutils.unitvec(d1), matutils.unitvec(d2))
         
         
