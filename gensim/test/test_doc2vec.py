@@ -123,6 +123,19 @@ class TestDoc2VecModel(unittest.TestCase):
         # input not empty, but rather completely filtered out
         self.assertRaises(RuntimeError, doc2vec.Doc2Vec, list_corpus, min_count=10000)
 
+    def test_oot_similarity(self):
+        """Test similarity of out of training sentences"""
+        empty_str = ''
+        rome_str = 'rome italy'
+        paris_str = 'paris france'
+        car_str = 'car'
+        corpus = list(DocsLeeCorpus(True))
+
+        model = doc2vec.Doc2Vec(min_count=1)
+        model.build_vocab(corpus)
+        self.assertEqual(int(model.docvecs.oot_similarity(model, '', '')), 1)
+        self.assertTrue(model.docvecs.oot_similarity(model, rome_str, paris_str) > model.docvecs.oot_similarity(model, rome_str, car_str))
+
     def model_sanity(self, model):
         """Any non-trivial model on DocsLeeCorpus can pass these sanity checks"""
         fire1 = 0  # doc 0 sydney fires
