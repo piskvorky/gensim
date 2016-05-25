@@ -127,14 +127,13 @@ class TestDoc2VecModel(unittest.TestCase):
         """Test similarity of out of training sentences"""
         empty_str = ''
         rome_str = 'rome italy'
-        paris_str = 'paris france'
         car_str = 'car'
         corpus = list(DocsLeeCorpus(True))
 
         model = doc2vec.Doc2Vec(min_count=1)
         model.build_vocab(corpus)
         self.assertEqual(int(model.docvecs.oot_similarity(model, '', '')), 1)
-        self.assertTrue(model.docvecs.oot_similarity(model, rome_str, paris_str) > model.docvecs.oot_similarity(model, rome_str, car_str))
+        self.assertTrue(model.docvecs.oot_similarity(model, rome_str, rome_str) > model.docvecs.oot_similarity(model, rome_str, car_str))
 
     def model_sanity(self, model):
         """Any non-trivial model on DocsLeeCorpus can pass these sanity checks"""
