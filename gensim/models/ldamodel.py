@@ -912,10 +912,7 @@ class LdaModel(interfaces.TransformationABC):
 
         # if user enters word instead of id in vocab, change to get id
         if isinstance(word_id, str):
-            for id_, word in self.id2word.iteritems():
-                if word_id == word:
-                    word_id = id_
-                    break
+            word_id = self.id2word.doc2bow([word_id])[0][0]
 
         # get maximum value from expElogbeta
         max_values = []
