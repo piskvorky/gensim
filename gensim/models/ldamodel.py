@@ -905,21 +905,27 @@ class LdaModel(interfaces.TransformationABC):
         return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                 if topicvalue >= minimum_probability]
 
-    def get_static_topic(self, word_id):
+    def get_static_topic(self, word_id, minimum_probability=None):
         """
-        Returns static topic for word in vocabulary.
+        Returns static topics for word in vocabulary.
+
         """
+        if minimum_probability is None:
+            minimum_probability = self.minimum_probability
+        minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
 
         # if user enters word instead of id in vocab, change to get id
         if isinstance(word_id, str):
             word_id = self.id2word.doc2bow([word_id])[0][0]
 
-        # get maximum value from expElogbeta
-        max_values = []
-        for i in range(0, self.num_topics):
-            max_values.append(self.expElogbeta[i][word_id])
+        values = []
+        for topic_id in range(0, self.num_topics):
+            if self.expElogbeta[topic_id][word_id] >= minimum_probability:
+                values.append((topic_id, self.expElogbeta[topic_id][word_id]))
 
-        return (word_id, max_values.index(max(max_values)))
+        return values
+
+        
 
     def __getitem__(self, bow, eps=None):
         """
