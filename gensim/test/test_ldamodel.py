@@ -273,8 +273,9 @@ class TestLdaModel(unittest.TestCase):
             self.assertTrue(isinstance(w, int))
             self.assertTrue(isinstance(t, int))
 
-        # first word in the doc belongs to topic 2
-        self.assertEqual(word_topics[0], (0, 1))
+        # a tuple such as (0, 1) is returned with word and corresponding topic
+        # first word in the doc belongs to topic 2, so we check for the same.
+        self.assertEqual(word_topics[0][1], 1)
 
 
     def testPasses(self):
