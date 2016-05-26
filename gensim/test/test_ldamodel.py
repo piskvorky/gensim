@@ -54,6 +54,7 @@ class TestLdaModel(unittest.TestCase):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = ldamodel.LdaModel
         self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
+        self.dictionary = self.model.id2word
 
     def testTransform(self):
         passed = False
@@ -268,7 +269,7 @@ class TestLdaModel(unittest.TestCase):
     def testStaticTopics(self):
 
         numpy.random.seed(0)
-        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes= 100)
+        model = self.class_(self.corpus, id2word=self.dictionary, num_topics=2, passes= 100)
 
         # check with id
         result = model.get_static_topic(2)
@@ -404,6 +405,7 @@ class TestLdaMulticore(TestLdaModel):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = ldamulticore.LdaMulticore
         self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
+        self.dictionary = self.model.id2word
 
     # override LdaModel because multicore does not allow alpha=auto
     def testAlphaAuto(self):
