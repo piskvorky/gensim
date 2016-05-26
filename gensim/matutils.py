@@ -408,26 +408,25 @@ def kullback_leibler(vec1, vec2, num_features=None):
     If the distribution draws from a certain number of docs, that value must be passed.
     """
     if scipy.sparse.issparse(vec1):
-        vec1 = numpy.asarray(vec1.todense())
+        vec1 = vec1.toarray()
     if scipy.sparse.issparse(vec2):
-        vec2 = numpy.asarray(vec2.todense()) # converted both the vectors to dense in case they were in sparse matrix 
+        vec2 = vec2.toarray() # converted both the vectors to dense in case they were in sparse matrix 
     if isbow(vec1) and isbow(vec2): # if they are in bag of words format we make it dense
         if num_features != None: # if not None, make as large as the documents drawing from
-            max_len = max(len(vec1), len(vec2), num_features)
-            dense1 = sparse2full(vec1, max_len)
-            dense2 = sparse2full(vec2, max_len)
-            return scipy.stats.entropy(dense1, dense2)
+            dense1 = sparse2full(vec1, num_features)
+            dense2 = sparse2full(vec2, num_features)
+            return entropy(dense1, dense2)
         else:
             max_len = max(len(vec1), len(vec2))
             dense1 = sparse2full(vec1, max_len)
             dense2 = sparse2full(vec2, max_len)
-            return scipy.stats.entropy(dense1, dense2)
+            return entropy(dense1, dense2)
     else:
         if len(vec1) == 1:
             vec1 = vec1[0]
         if len(vec2) == 1:
             vec2 = vec2[0]
-        # this conversion is made because if it is not in bow format, it might be a list within a list.
+        # this conversion is made because if it is not in bow format, it might be a list within a list after conversion
         # the scipy implementation of Kullback fails in such a case so we pick up only the nested list.
         return scipy.stats.entropy(vec1, vec2)
 
@@ -438,9 +437,9 @@ def hellinger(vec1, vec2):
     Similarity between distributions will be a number between <0,1>, where 0 is maximum similarity and 1 is minimum similarity.
     """
     if scipy.sparse.issparse(vec1):
-        vec1 = numpy.asarray(vec1.todense())
+        vec1 = vec1.toarray()
     if scipy.sparse.issparse(vec2):
-        vec2 = numpy.asarray(vec2.todense())
+        vec2 = vec2.toarray()
     if isbow(vec1) and isbow(vec2): 
         # if it is a bag of words format, instead of converting to dense we use dictionaries to calculate appropriate distance
         vec1, vec2 = dict(vec1), dict(vec2)
