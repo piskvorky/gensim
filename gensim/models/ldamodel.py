@@ -922,7 +922,7 @@ class LdaModel(interfaces.TransformationABC):
         for i in range(0, self.num_topics):
             max_values.append(self.expElogbeta[i][word_id])
 
-        return max_values.index(max(max_values))
+        return (word_id, max_values.index(max(max_values)))
 
     def __getitem__(self, bow, eps=None):
         """
