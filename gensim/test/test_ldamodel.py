@@ -276,8 +276,8 @@ class TestLdaModel(unittest.TestCase):
         self.assertEqual(result, expected)
 
         # if user has entered word instead, check with word
-        result = model.get_static_topic("time")
-        expected = (4, 0)
+        result = model.get_static_topic("human")
+        expected = (2, 1)
         self.assertEqual(result, expected)
 
     def testPasses(self):
