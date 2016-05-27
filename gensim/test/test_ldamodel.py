@@ -270,34 +270,19 @@ class TestLdaModel(unittest.TestCase):
         numpy.random.seed(0)
         model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes= 100)
 
-        if isinstance(self.class_, ldamodel.LdaModel):
-            # check with id 
-            result = model.get_static_topic(2)
-            expected = [(1, 0.10658834157061754)]
-            self.assertEqual(result[0][0], expected[0][0])
-            self.assertAlmostEqual(result[0][1], expected[0][1])
+        # check with id 
+        result = model.get_static_topic(2)
+        expected = [(1, 0.1066)]
+        self.assertEqual(result[0][0], expected[0][0])
+        self.assertAlmostEqual(result[0][1], expected[0][1], places=2)
 
 
-            # if user has entered word instead, check with word
-            result = model.get_static_topic(str(model.id2word[2]))
-            expected = [(1, 0.10658834157061754)]
-            self.assertEqual(result[0][0], expected[0][0])
-            self.assertAlmostEqual(result[0][1], expected[0][1])
+        # if user has entered word instead, check with word
+        result = model.get_static_topic(str(model.id2word[2]))
+        expected = [(1, 0.1066)]
+        self.assertEqual(result[0][0], expected[0][0])
+        self.assertAlmostEqual(result[0][1], expected[0][1], places=2)
 
-
-        if isinstance(self.class_, ldamulticore.LdaMulticore):
-            # check with id 
-            result = model.get_static_topic(2)
-            expected = [(1, 0.10656513711312614)]
-            self.assertEqual(result[0][0], expected[0][0])
-            self.assertAlmostEqual(result[0][1], expected[0][1])
-
-
-            # if user has entered word instead, check with word
-            result = model.get_static_topic(str(model.id2word[2]))
-            expected = [(1, 0.10656513711312614)]
-            self.assertEqual(result[0][0], expected[0][0])
-            self.assertAlmostEqual(result[0][1], expected[0][1])
 
     def testPasses(self):
         # long message includes the original error message with a custom one
