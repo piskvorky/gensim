@@ -451,7 +451,7 @@ def hellinger(vec1, vec2):
         sim = numpy.sqrt(0.5 * ((numpy.sqrt(vec1) - numpy.sqrt(vec2))**2).sum())
         return sim
 
-def jaccard(vec1,vec2):
+def jaccard(vec1, vec2):
     """
     A similarity metric between bags of words representation.
     Return the intersection divided by union, where union is the sum of the size of the two bags.
@@ -460,9 +460,9 @@ def jaccard(vec1,vec2):
     Returns a similarity in range <0,1> where values closer to 1 mean a higher similarity.
     """
     if scipy.sparse.issparse(vec1):
-        vec1 = numpy.asarray(vec1.todense())
+        vec1 = vec1.toarray()
     if scipy.sparse.issparse(vec2):
-        vec2 = numpy.asarray(vec2.todense())
+        vec2 = vec2.toarray()
     # converting from sparse for easier manipulation    
     if isbow(vec1) and isbow(vec2): 
         # if it's in bow format, we use the following definitions:
@@ -473,7 +473,7 @@ def jaccard(vec1,vec2):
         vec1, vec2 = dict(vec1), dict(vec2)
         for feature_id, feature_weight in iteritems(vec1):
             intersection += min(feature_weight, vec2.get(feature_id, 0.0))
-        return float(intersection)/float(union)
+        return float(intersection) / float(union)
     else:
         # if it isn't in bag of words format, we can use sets to calculate intersection and union
         if isinstance(vec1, numpy.ndarray):
@@ -484,7 +484,7 @@ def jaccard(vec1,vec2):
         vec2 = set(vec2)
         intersection = vec1 & vec2
         union = vec1 | vec2
-        return float(len(intersection))/float(len(union))
+        return float(len(intersection)) / float(len(union))
 
 
 def qr_destroy(la):
