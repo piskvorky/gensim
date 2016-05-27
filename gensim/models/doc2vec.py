@@ -500,8 +500,8 @@ class DocvecsArray(utils.SaveLoad):
 
         Document should be a list of (word) tokens.
         """
-        d1 = model.infer_vector(doc_words1, alpha, min_alpha, steps)
-        d2 = model.infer_vector(doc_words2, alpha, min_alpha, steps)
+        d1 = model.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, steps=steps)
+        d2 = model.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, steps=steps)
         return dot(matutils.unitvec(d1), matutils.unitvec(d2))
         
         
