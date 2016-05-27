@@ -494,7 +494,17 @@ class DocvecsArray(utils.SaveLoad):
         v2 = [self[doc] for doc in ds2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
 
+    def similarity_unseen_docs(self, model, doc_words1, doc_words2, alpha=0.1, min_alpha=0.0001, steps=5):
+        """
+        Compute cosine similarity between two post-bulk out of training documents.
 
+        Document should be a list of (word) tokens.
+        """
+        d1 = model.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, steps=steps)
+        d2 = model.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, steps=steps)
+        return dot(matutils.unitvec(d1), matutils.unitvec(d2))
+        
+        
 class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
     """A string document tag discovered during the initial vocabulary
     scan. (The document-vector equivalent of a Vocab object.)
