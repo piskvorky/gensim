@@ -909,13 +909,15 @@ class LdaModel(interfaces.TransformationABC):
 
         elif per_word_topics is True:
             word_phi = [] # contains word and corresponding topic
-            for word, weight in bow:
+            for word_type, weight in bow:
                 phi_values = [] # contains phi values for each topic
-                for i in range(0, self.num_topics):
-                    phi_values.append(phis[i][word]) 
+                for topic_id in range(0, self.num_topics):
+                    if phis[topic_id][word_type] >= minimum_probability:
+                        phi_values.append((topic_id, phis[topic_id][word_type]))
                     # appends phi values for each topic for that word
-                word_phi.append((word, phi_values.index(max(phi_values))))
-                # appends the word and the highest probability topic
+                word_phi.append((word_type, phi_values))
+                # appends the word and the corresponding values for each topic.
+                # If we choose the highest value for a word, we get the corresponding most probable topic.
             return ([(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                     if topicvalue >= minimum_probability], word_phi) # returns 2-tuple
 

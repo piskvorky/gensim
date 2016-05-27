@@ -263,20 +263,25 @@ class TestLdaModel(unittest.TestCase):
                 self.assertTrue(isinstance(k, int))
                 self.assertTrue(isinstance(v, float))
 
-        doc_topics, word_topics = model.get_document_topics(self.corpus[0], per_word_topics=True)
+        doc_topics, word_topics = model.get_document_topics(self.corpus[1], per_word_topics=True)
 
         for k, v in doc_topics:
             self.assertTrue(isinstance(k, int))
             self.assertTrue(isinstance(v, float))
 
-        for w, t in word_topics:
-            self.assertTrue(isinstance(w, int))
-            self.assertTrue(isinstance(t, int))
+        for w, topics in word_topics:
+            for topic_id, topic_prob in topics:
+                self.assertTrue(isinstance(topic_id, int))
+                self.assertTrue(isinstance(topic_prob, float))
 
-        # a tuple such as (0, 1) is returned with word and corresponding topic
-        # first word in the doc belongs to topic 2, so we check for the same.
-        self.assertEqual(word_topics[0][1], 1)
-
+        # word_topics looks like this: [(first_word, [(topic, phi_value)]), .... ,  (last_word, [(topic, phi_value)])] 
+        # we check one case in the word_topics, i.e of the 3rd word in the doc, and it's phi value for topic 0.
+        expected_word = 3
+        expected_topic = 0
+        expected_phi = 0.932
+        self.assertEqual(word_topics[1][0], expected_word)
+        self.assertEqual(word_topics[1][1][0][0], expected_topic)
+        self.assertAlmostEqual(word_topics[1][1][0][1], expected_phi, places=3)
 
     def testPasses(self):
         # long message includes the original error message with a custom one
