@@ -494,7 +494,7 @@ class DocvecsArray(utils.SaveLoad):
         v2 = [self[doc] for doc in ds2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
 
-    def similarity_off_training(self, model, doc_words1, doc_words2, alpha=0.1, min_alpha=0.0001, steps=5):
+    def similarity_unseen_docs(self, model, doc_words1, doc_words2, alpha=0.1, min_alpha=0.0001, steps=5):
         """
         Compute cosine similarity between two post-bulk out of training documents.
 
