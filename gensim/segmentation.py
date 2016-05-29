@@ -51,7 +51,11 @@ def S_One_Set(topics):
                                                                   W* = W}
     Example:
         >>> topics = [np.array([9, 10, 7])
-        >>> S_One_(topics[0])
+        >>> S_One_Set(topics)
+        [[(9, array([ 9, 10,  7])),
+          (10, array([ 9, 10,  7])),
+          (7, array([ 9, 10,  7]))]]
+
     Args:
     ----
     topics : list of topics obtained from an algorithm such as LDA. Is a list such as [array([ 9, 10, 11]), array([ 9, 10,  7]), ...]
