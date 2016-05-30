@@ -907,10 +907,8 @@ class LdaModel(interfaces.TransformationABC):
 
         document_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                     if topicvalue >= minimum_probability]
-
         if not per_word_topics:
             return document_topics
-
         else:
             word_phi = [] # contains word and corresponding topic
             for word_type, weight in bow:
