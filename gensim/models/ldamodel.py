@@ -890,6 +890,8 @@ class LdaModel(interfaces.TransformationABC):
 
         Ignore topics with very low probability (below `minimum_probability`).
 
+        If per_word_topics is True, it also returns a list of topics, sorted in descending order of most likely topics for that word. 
+
         """
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
@@ -903,23 +905,26 @@ class LdaModel(interfaces.TransformationABC):
         gamma, phis = self.inference([bow], collect_sstats=True)
         topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
 
-        if per_word_topics is False:
-            return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
+        document_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                     if topicvalue >= minimum_probability]
 
-        elif per_word_topics is True:
+        if not per_word_topics:
+            return document_topics
+
+        else:
             word_phi = [] # contains word and corresponding topic
             for word_type, weight in bow:
                 phi_values = [] # contains phi values for each topic
                 for topic_id in range(0, self.num_topics):
                     if phis[topic_id][word_type] >= minimum_probability:
-                        phi_values.append((topic_id, phis[topic_id][word_type]))
-                    # appends phi values for each topic for that word
-                word_phi.append((word_type, phi_values))
-                # appends the word and the corresponding values for each topic.
-                # If we choose the highest value for a word, we get the corresponding most probable topic.
-            return ([(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
-                    if topicvalue >= minimum_probability], word_phi) # returns 2-tuple
+                        # appends phi values for each topic for that word
+                        phi_values.append((phis[topic_id][word_type], topic_id))
+                # sorts the topics based on most likely topic
+                # returns a list like ({word_id => [topic_id_most_probable, topic_id_second_most_probable, ...]).
+                phi_values = sorted(phi_values, reverse=True)
+                topics_sorted = [x[1] for x in phi_values]
+                word_phi.append((word_type, topics_sorted))
+            return (document_topics, word_phi) # returns 2-tuple
 
     def __getitem__(self, bow, eps=None):
         """
