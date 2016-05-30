@@ -422,12 +422,12 @@ def kullback_leibler(vec1, vec2, num_features=None):
             dense2 = sparse2full(vec2, max_len)
             return entropy(dense1, dense2)
     else:
+        # this conversion is made because if it is not in bow format, it might be a list within a list after conversion
+        # the scipy implementation of Kullback fails in such a case so we pick up only the nested list.
         if len(vec1) == 1:
             vec1 = vec1[0]
         if len(vec2) == 1:
             vec2 = vec2[0]
-        # this conversion is made because if it is not in bow format, it might be a list within a list after conversion
-        # the scipy implementation of Kullback fails in such a case so we pick up only the nested list.
         return scipy.stats.entropy(vec1, vec2)
 
 
@@ -451,6 +451,7 @@ def hellinger(vec1, vec2):
         sim = numpy.sqrt(0.5 * ((numpy.sqrt(vec1) - numpy.sqrt(vec2))**2).sum())
         return sim
 
+
 def jaccard(vec1, vec2):
     """
     A similarity metric between bags of words representation.
@@ -459,18 +460,19 @@ def jaccard(vec1, vec2):
     If it is not a bag of words representation, the union and intersection is calculated in the traditional manner.
     Returns a similarity in range <0,1> where values closer to 1 mean a higher similarity.
     """
+
+    # converting from sparse for easier manipulation
     if scipy.sparse.issparse(vec1):
         vec1 = vec1.toarray()
     if scipy.sparse.issparse(vec2):
         vec2 = vec2.toarray()
-    # converting from sparse for easier manipulation    
     if isbow(vec1) and isbow(vec2): 
         # if it's in bow format, we use the following definitions:
         # union = sum of the 'weights' of both the bags
         # intersection = lowest weight for a particular id; basically the number of common words or items 
-        intersection = 0
         union = sum(weight for id_, weight in vec1) + sum(weight for id_, weight in vec2)
         vec1, vec2 = dict(vec1), dict(vec2)
+        intersection = 0.0
         for feature_id, feature_weight in iteritems(vec1):
             intersection += min(feature_weight, vec2.get(feature_id, 0.0))
         return float(intersection) / float(union)
