@@ -265,24 +265,22 @@ class TestLdaModel(unittest.TestCase):
             self.assertTrue(isinstance(k, int))
             self.assertTrue(isinstance(v, float))
 
-    def testStaticTopics(self):
+    def testTermTopics(self):
 
         numpy.random.seed(0)
-        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes= 100)
+        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes=100)
 
         # check with id 
-        result = model.get_static_topic(2)
+        result = model.get_term_topics(2)
         expected = [(1, 0.1066)]
         self.assertEqual(result[0][0], expected[0][0])
         self.assertAlmostEqual(result[0][1], expected[0][1], places=2)
-
 
         # if user has entered word instead, check with word
-        result = model.get_static_topic(str(model.id2word[2]))
+        result = model.get_term_topics(str(model.id2word[2]))
         expected = [(1, 0.1066)]
         self.assertEqual(result[0][0], expected[0][0])
         self.assertAlmostEqual(result[0][1], expected[0][1], places=2)
-
 
     def testPasses(self):
         # long message includes the original error message with a custom one

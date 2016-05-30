@@ -905,9 +905,9 @@ class LdaModel(interfaces.TransformationABC):
         return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                 if topicvalue >= minimum_probability]
 
-    def get_static_topic(self, word_id, minimum_probability=None):
+    def get_term_topics(self, word_id, minimum_probability=None):
         """
-        Returns static topics for word in vocabulary.
+        Returns most likely topics for a particular word in vocab.
 
         """
         if minimum_probability is None:
@@ -926,7 +926,6 @@ class LdaModel(interfaces.TransformationABC):
         return values
 
         
-
     def __getitem__(self, bow, eps=None):
         """
         Return topic distribution for the given document `bow`, as a list of
