@@ -924,6 +924,27 @@ class LdaModel(interfaces.TransformationABC):
                 word_phi.append((word_type, topics_sorted))
             return (document_topics, word_phi) # returns 2-tuple
 
+    def get_term_topics(self, word_id, minimum_probability=None):
+        """
+        Returns most likely topics for a particular word in vocab.
+
+        """
+        if minimum_probability is None:
+            minimum_probability = self.minimum_probability
+        minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
+
+        # if user enters word instead of id in vocab, change to get id
+        if isinstance(word_id, str):
+            word_id = self.id2word.doc2bow([word_id])[0][0]
+
+        values = []
+        for topic_id in range(0, self.num_topics):
+            if self.expElogbeta[topic_id][word_id] >= minimum_probability:
+                values.append((topic_id, self.expElogbeta[topic_id][word_id]))
+
+        return values
+
+        
     def __getitem__(self, bow, eps=None):
         """
         Return topic distribution for the given document `bow`, as a list of
