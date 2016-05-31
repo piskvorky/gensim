@@ -39,10 +39,10 @@ class CoherenceModel(interfaces.TransformationABC):
         self.corpus = corpus
         self.topics = topics
         if coherence == 'u_mass':
-            self.seg = segmentation.S_One_Pre
-            self.prob = probability_estimation.P_Boolean_Document
-            self.conf = confirmation_measure.Log_Conditional_Probability
-            self.aggr = aggregation.Arithmetic_Mean
+            self.seg = segmentation.s_one_pre
+            self.prob = probability_estimation.p_boolean_document
+            self.conf = confirmation_measure.log_conditional_probability
+            self.aggr = aggregation.arithmetic_mean
 
     def __str__(self):
         return "CoherenceModel(segmentation=%s, probability estimation=%s, confirmation measure=%s, aggregation=%s)" % (

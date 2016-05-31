@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 EPSILON = 1e-12 # Should be small. Value as suggested in paper.
 
-def Log_Conditional_Probability(segmented_topics, per_topic_probability):
+def log_conditional_probability(segmented_topics, per_topic_probability):
     """
     This function calculates the log-conditional-probability measure
     which is used by coherence measures such as U_mass.
