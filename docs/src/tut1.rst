@@ -277,6 +277,7 @@ to help converting from/to numpy matrices::
 >>> numpy_matrix = gensim.matutils.corpus2dense(corpus, num_terms=number_of_corpus_features)
 
 and from/to `scipy.sparse` matrices::
+
 >>> import scipy.sparse
 >>> scipy_sparse_matrix = scipy.sparse.random(5,2)  # random sparse matrix as example
 >>> corpus = gensim.matutils.Sparse2Corpus(scipy_sparse_matrix)
