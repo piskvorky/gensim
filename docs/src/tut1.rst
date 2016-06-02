@@ -20,7 +20,7 @@ From Strings to Vectors
 
 This time, let's start from documents represented as strings:
 
->>> from gensim import corpora, models, similarities
+>>> from gensim import corpora
 >>>
 >>> documents = ["Human machine interface for lab abc computer applications",
 >>>              "A survey of user opinion of computer system response time",
