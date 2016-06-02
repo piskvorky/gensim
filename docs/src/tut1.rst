@@ -3,6 +3,8 @@
 Corpora and Vector Spaces
 ===================================
 
+This tutorial is available as a Jupyter Notebook `here <https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/Corpora_and_Vector_Spaces.ipynb>`_
+
 Don't forget to set
 
 >>> import logging
@@ -285,4 +287,3 @@ Or continue to the next tutorial on :doc:`tut2`.
 
 .. [1]  This is the same corpus as used in
         `Deerwester et al. (1990): Indexing by Latent Semantic Analysis <http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf>`_, Table 2.
-
