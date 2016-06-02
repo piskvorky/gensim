@@ -109,7 +109,7 @@ To actually convert tokenized documents to vectors:
 >>> print(new_vec) # the word "interaction" does not appear in the dictionary and is ignored
 [(0, 1), (1, 1)]
 
-The function :func:`doc2bow` simply counts the number of occurences of
+The function :func:`doc2bow` simply counts the number of occurrences of
 each distinct word, converts the word to its integer word id
 and returns the result as a sparse vector. The sparse vector ``[(0, 1), (1, 1)]``
 therefore reads: in the document `"Human computer interaction"`, the words `computer`
