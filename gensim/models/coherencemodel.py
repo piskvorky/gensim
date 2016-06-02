@@ -19,11 +19,13 @@ import logging
 
 from gensim import interfaces
 from gensim import segmentation, probability_estimation, confirmation_measure, aggregation
+from gensim.corpora import Dictionary
+from gensim.matutils import argsort
 
 logger = logging.getLogger(__name__)
 
 
-class CoherenceModel(interfaces.TransformationABC):
+class CoherenceModel(interfaces.TransformationABC): # FIXME : Document all the arguments for __init__
     """
     Objects of this class allow for building and maintaining a model for topic
     coherence.
@@ -35,12 +37,52 @@ class CoherenceModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, corpus, topics, coherence='u_mass'): # Have to validate coherence input. Check for invalid pipeline methods.
-        self.corpus = corpus
-        self.topics = topics
+    def __init__(self, topics, texts=None, corpus=None, dictionary=None, coherence='u_mass'):
+        """
+        FIXME : Write documentation.
+        """
+        if texts is None and corpus is None:
+            raise ValueError("One of texts or corpus has to be provided.")
         if coherence == 'u_mass':
+            if corpus is not None:
+                if dictionary is None:
+                    raise ValueError("The associated dictionary should be provided with the corpus.")
+                else:
+                    self.corpus = corpus
+                    self.dictionary = dictionary
+            elif texts is not None:
+                self.texts = texts
+                if dictionary is None:
+                    self.dictionary = Dictionary(self.texts)
+                else:
+                    self.dictionary = dictionary
+                self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
+            else:
+                raise ValueError("Either 'corpus' with 'dictionary' or 'texts' should be provided for %s coherence." % coherence)
+
+        elif coherence == 'c_v':
+            if texts is None:
+                raise ValueError("'texts' should be provided for %s coherence." % coherence)
+            else:
+                self.texts = texts
+                self.dictionary = Dictionary(self.texts)
+
+        else:
+            raise ValueError("%s coherence is not currently supported." % coherence)
+
+        self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
+        self.topics = topics
+        self.coherence = coherence
+        # Set pipeline parameters:
+        if self.coherence == 'u_mass':
             self.seg = segmentation.s_one_pre
             self.prob = probability_estimation.p_boolean_document
+            self.conf = confirmation_measure.log_conditional_probability
+            self.aggr = aggregation.arithmetic_mean
+
+        elif self.coherence == 'c_v':  # FIXME : Write in the correct pipeline values. This is just for testing.
+            self.seg = segmentation.s_one_set
+            self.prob = probability_estimation.p_boolean_sliding_window
             self.conf = confirmation_measure.log_conditional_probability
             self.aggr = aggregation.arithmetic_mean
 
@@ -49,7 +91,16 @@ class CoherenceModel(interfaces.TransformationABC):
             self.seg, self.prob, self.conf, self.aggr)
 
     def get_coherence(self):
-        segmented_topics = self.seg(self.topics)
-        per_topic_prob = self.prob(self.corpus, segmented_topics)
-        confirmed_measures = self.conf(segmented_topics, per_topic_prob)
-        return self.aggr(confirmed_measures)
+        if self.coherence == 'u_mass':
+            segmented_topics = self.seg(self.topics)
+            per_topic_postings = self.prob(self.corpus, segmented_topics)
+            confirmed_measures = self.conf(segmented_topics, per_topic_postings)
+            return self.aggr(confirmed_measures)
+
+        elif self.coherence == 'c_v':  # FIXME : Write correct pipeline parameters. Using just for testing.
+            segmented_topics = self.seg(self.topics)
+            per_topic_postings = self.prob(texts=self.texts, segmented_topics=segmented_topics,
+                                           dictionary=self.dictionary, window_size=2)  # FIXME : Change window size to 110 finally.
+            return per_topic_postings
+            confirmed_measures = self.conf(segmented_topics, per_topic_postings)
+            # return self.aggr(confirmed_measures)
