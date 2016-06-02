@@ -270,11 +270,15 @@ Compatibility with NumPy and SciPy
 Gensim also contains `efficient utility functions <http://radimrehurek.com/gensim/matutils.html>`_
 to help converting from/to numpy matrices::
 
+>>> import gensim
+>>> import numpy as np
+>>> numpy_matrix = np.random.randint(10, size=[5,2])  # random matrix as an example
 >>> corpus = gensim.matutils.Dense2Corpus(numpy_matrix)
 >>> numpy_matrix = gensim.matutils.corpus2dense(corpus, num_terms=number_of_corpus_features)
 
 and from/to `scipy.sparse` matrices::
-
+>>> import scipy.sparse
+>>> scipy_sparse_matrix = scipy.sparse.random(5,2)  # random sparse matrix as example
 >>> corpus = gensim.matutils.Sparse2Corpus(scipy_sparse_matrix)
 >>> scipy_csc_matrix = gensim.matutils.corpus2csc(corpus)
 
