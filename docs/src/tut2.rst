@@ -23,9 +23,7 @@ as a stream of vectors. To continue, let's fire up gensim and use that corpus:
 >>>    corpus = corpora.MmCorpus('/tmp/deerwester.mm')
 >>>    print("Used files generated from first tutorial")
 >>> else:
->>>    dictionary = corpora.Dictionary.load('./data/deerwester.dict')
->>>    corpus = corpora.MmCorpus('./data/deerwester.mm')
->>>    print("Used version from data folder in same directory as tutorial")
+>>>    print("Please run first tutorial to generate data set")
 
 MmCorpus(9 documents, 12 features, 28 non-zero entries)
 
