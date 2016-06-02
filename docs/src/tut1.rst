@@ -215,7 +215,6 @@ a time, without the whole corpus being read into main memory at once.
 One of the more notable file formats is the `Market Matrix format <http://math.nist.gov/MatrixMarket/formats.html>`_.
 To save a corpus in the Matrix Market format:
 
->>> from gensim import corpora
 >>> # create a toy corpus of 2 documents, as a plain Python list
 >>> corpus = [[(1, 0.5)], []]  # make one document empty, for the heck of it
 >>>
