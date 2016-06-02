@@ -67,7 +67,7 @@ as well as words that only appear once in the corpus:
 
 Your way of processing the documents will likely vary; here, I only split on whitespace
 to tokenize, followed by lowercasing each word. In fact, I use this particular
-(simplistic and inefficient) setup to mimick the experiment done in Deerwester et al.'s
+(simplistic and inefficient) setup to mimic the experiment done in Deerwester et al.'s
 original LSA article [1]_.
 
 The ways to process documents are so varied and application- and language-dependent that I
