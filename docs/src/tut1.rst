@@ -3,7 +3,7 @@
 Corpora and Vector Spaces
 ===================================
 
-This tutorial is available as a Jupyter Notebook `here <https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/Corpora_and_Vector_Spaces.ipynb>`_
+This tutorial is available as a Jupyter Notebook `here <https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/Corpora_and_Vector_Spaces.ipynb>`_.
 
 Don't forget to set
 
