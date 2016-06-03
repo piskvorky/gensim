@@ -1,6 +1,8 @@
 Changes
 =======
 0.12.5, 2016
+* Made normalization an explicit transformation. Added 'l1' norm support (Devashish Deshpande, #649)
+* added term-topics API for most probable topic for word in vocab. (@bhargavvader, #706)
 * build_vocab takes progress_per parameter for smaller output (@zer0n, #624)
 * Control whether to use lowercase for computing word2vec accuracy. (@alantian, #607)
 * Easy import of GloVe vectors using Gensim (Manas Ranjan Kar, #625)
@@ -8,6 +10,8 @@ Changes
   - Standalone script with command line arguments, compatible with Python>=2.6 
   - Usage: python -m gensim.scripts.glove2word2vec -i glove_vectors.txt -o output_word2vec_compatible.txt
 * Add `similar_by_word()` and `similar_by_vector()` to word2vec (@isohyt, #381)
+* Convenience method for similarity of two out of training sentences to doc2vec (@ellolo, #707)
+* Dynamic Topic Modelling Tutorial updated with Dynamic Influence Model (@bhargavvader, #689)
 
 0.12.4, 29/01/2016
 * Better internal handling of job batching in word2vec (#535)

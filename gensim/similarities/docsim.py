@@ -149,7 +149,7 @@ class Similarity(interfaces.SimilarityABC):
     The shards themselves are simply stored as files to disk and mmap'ed back as needed.
 
     """
-    def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=256, shardsize=32768):
+    def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=256, shardsize=32768, norm='l2'):
         """
         Construct the index from `corpus`. The index can be later extended by calling
         the `add_documents` method. **Note**: documents are split (internally, transparently)
@@ -163,6 +163,8 @@ class Similarity(interfaces.SimilarityABC):
 
         `num_features` is the number of features in the `corpus` (e.g. size of the
         dictionary, or the number of latent topics for latent semantic models).
+
+        `norm` is the user-chosen normalization to use. Accepted values are: 'l1' and 'l2'.
 
         If `num_best` is left unspecified, similarity queries will return a full
         vector with one float for every document in the index:
@@ -192,7 +194,7 @@ class Similarity(interfaces.SimilarityABC):
         logger.info("starting similarity index under %s", self.output_prefix)
         self.num_features = num_features
         self.num_best = num_best
-        self.normalize = True
+        self.norm = norm
         self.chunksize = int(chunksize)
         self.shardsize = shardsize
         self.shards = []
@@ -227,9 +229,9 @@ class Similarity(interfaces.SimilarityABC):
             else:
                 doclen = len(doc)
                 if doclen < 0.3 * self.num_features:
-                    doc = matutils.unitvec(matutils.corpus2csc([doc], self.num_features).T)
+                    doc = matutils.unitvec(matutils.corpus2csc([doc], self.num_features).T, self.norm)
                 else:
-                    doc = matutils.unitvec(matutils.sparse2full(doc, self.num_features))
+                    doc = matutils.unitvec(matutils.sparse2full(doc, self.num_features), self.norm)
             self.fresh_docs.append(doc)
             self.fresh_nnz += doclen
             if len(self.fresh_docs) >= self.shardsize:
@@ -315,7 +317,7 @@ class Similarity(interfaces.SimilarityABC):
         # reset num_best and normalize parameters, in case they were changed dynamically
         for shard in self.shards:
             shard.num_best = self.num_best
-            shard.normalize = self.normalize
+            shard.normalize = self.norm
 
         # there are 4 distinct code paths, depending on whether input `query` is
         # a corpus (or numpy/scipy matrix) or a single document, and whether the
@@ -377,9 +379,9 @@ class Similarity(interfaces.SimilarityABC):
         of the query document within index.
         """
         query = self.vector_by_id(docpos)
-        norm, self.normalize = self.normalize, False
+        norm, self.norm = self.norm, False
         result = self[query]
-        self.normalize = norm
+        self.norm = norm
         return result
 
     def __iter__(self):
@@ -388,7 +390,7 @@ class Similarity(interfaces.SimilarityABC):
         documents in the index and yield the result.
         """
         # turn off query normalization (vectors in the index are already normalized, save some CPU)
-        norm, self.normalize = self.normalize, False
+        norm, self.norm = self.norm, False
 
         for chunk in self.iter_chunks():
             if chunk.shape[0] > 1:
@@ -397,7 +399,7 @@ class Similarity(interfaces.SimilarityABC):
             else:
                 yield self[chunk]
 
-        self.normalize = norm  # restore normalization
+        self.norm = norm  # restore normalization
 
     def iter_chunks(self, chunksize=None):
         """
