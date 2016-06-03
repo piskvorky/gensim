@@ -219,7 +219,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         # determine which tokens to keep
         most_frequent_ids = (v for v in itervalues(self.token2id))
         most_frequent_ids = sorted(most_frequent_ids, key=self.dfs.get, reverse=True)
-        good_ids = good_ids[:keep_n]
+        most_frequent_ids = most_frequent_ids[:keep_n]
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
         most_frequent_words = [(self[id], self.dfs.get(id, 0)) for id in most_frequent_ids]
         logger.info("discarding %i tokens: %s...",len(most_frequent_ids), most_frequent_words[:10])
