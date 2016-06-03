@@ -18,6 +18,7 @@ import numpy
 import scipy
 
 from gensim.corpora import mmcorpus, Dictionary
+from gensim.models import word2vec
 from gensim import matutils, utils, similarities
 from gensim.models import Word2Vec
 
@@ -418,6 +419,40 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
         pass
         # turns out this test doesn't exercise this because there are no arrays
         # to be mmaped!
+
+
+class TestWord2VecSimilarityIndex(unittest.TestCase):
+
+    def setUp(self):
+        try:
+            import annoy
+        except ImportError:
+            raise unittest.SkipTest("Annoy library is not available")
+
+        from gensim.similarities.index import SimilarityIndex
+
+        self.model = word2vec.Word2Vec(texts, min_count=1)
+        self.model.init_sims()
+        self.index = SimilarityIndex.build_from_word2vec(self.model, 10)
+
+    def testVectorIsSimilarToItself(self):
+        label = self.model.index2word[0]
+        vector = self.model.syn0norm[0]
+        approx_neighbors = self.index.most_similar(vector, 1)
+        word, similarity = approx_neighbors[0]
+
+        self.assertEqual(word, label)
+        self.assertEqual(similarity, 1.0)
+
+    def testApproxNeighborsMatchExact(self):
+        vector = self.model.syn0norm[0]
+        approx_neighbors = self.index.most_similar(vector, 5)
+        exact_neighbors = self.model.most_similar(positive=[vector], topn=5)
+
+        approx_words = [neighbor[0] for neighbor in approx_neighbors]
+        exact_words = [neighbor[0] for neighbor in exact_neighbors]
+
+        self.assertEqual(approx_words, exact_words)
 
 
 if __name__ == '__main__':
