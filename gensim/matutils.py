@@ -319,12 +319,17 @@ def veclen(vec):
     assert length > 0.0, "sparse documents must not contain any explicit zero entries"
     return length
 
+def ret_normalized_vec(vec, length):
+    if length != 1.0:
+        return [(termid, val / length) for termid, val in vec]
+    else:
+        return list(vec)
 
 blas_nrm2 = blas('nrm2', numpy.array([], dtype=float))
 blas_scal = blas('scal', numpy.array([], dtype=float))
 
 
-def unitvec(vec):
+def unitvec(vec, norm='l2'):
     """
     Scale a vector to unit length. The only exception is the zero vector, which
     is returned back unchanged.
@@ -332,9 +337,14 @@ def unitvec(vec):
     Output will be in the same format as input (i.e., gensim vector=>gensim vector,
     or numpy array=>numpy array, scipy.sparse=>scipy.sparse).
     """
-    if scipy.sparse.issparse(vec): # convert scipy.sparse to standard numpy array
+    if norm not in ('l1', 'l2'):
+        raise ValueError("'%s' is not a supported norm. Currently supported norms are 'l1' and 'l2'." % norm)
+    if scipy.sparse.issparse(vec):
         vec = vec.tocsr()
-        veclen = numpy.sqrt(numpy.sum(vec.data ** 2))
+        if norm == 'l1':
+            veclen = numpy.sum(numpy.abs(vec.data))
+        if norm == 'l2':
+            veclen = numpy.sqrt(numpy.sum(vec.data ** 2))
         if veclen > 0.0:
             return vec / veclen
         else:
@@ -342,7 +352,10 @@ def unitvec(vec):
 
     if isinstance(vec, numpy.ndarray):
         vec = numpy.asarray(vec, dtype=float)
-        veclen = blas_nrm2(vec)
+        if norm == 'l1':
+            veclen = numpy.sum(numpy.abs(vec))
+        if norm == 'l2':
+            veclen = blas_nrm2(vec)
         if veclen > 0.0:
             return blas_scal(1.0 / veclen, vec)
         else:
@@ -353,13 +366,13 @@ def unitvec(vec):
     except:
         return vec
 
-    if isinstance(first, (tuple, list)) and len(first) == 2: # gensim sparse format?
-        length = 1.0 * math.sqrt(sum(val ** 2 for _, val in vec))
+    if isinstance(first, (tuple, list)) and len(first) == 2: # gensim sparse format
+        if norm == 'l1':
+            length = float(sum(abs(val) for _, val in vec))
+        if norm == 'l2':
+            length = 1.0 * math.sqrt(sum(val ** 2 for _, val in vec))
         assert length > 0.0, "sparse documents must not contain any explicit zero entries"
-        if length != 1.0:
-            return [(termid, val / length) for termid, val in vec]
-        else:
-            return list(vec)
+        return ret_normalized_vec(vec, length)
     else:
         raise ValueError("unknown input type")
 
