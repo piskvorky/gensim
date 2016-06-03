@@ -1,6 +1,7 @@
 Changes
 =======
 0.12.5, 2016
+* Added Similarity Metrics, and tutorial for the same. (@bhargavvader, #656)
 * Made normalization an explicit transformation. Added 'l1' norm support (Devashish Deshpande, #649)
 * added term-topics API for most probable topic for word in vocab. (@bhargavvader, #706)
 * build_vocab takes progress_per parameter for smaller output (@zer0n, #624)
