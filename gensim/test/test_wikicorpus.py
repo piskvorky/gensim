@@ -28,9 +28,9 @@ class TestWikiCorpus(unittest.TestCase):
 
     def test_get_texts_returns_generator_of_lists(self):
         l = self.wc.get_texts()
-        self.assertIsInstance(l, types.GeneratorType)
+        self.assertEqual(type(l), types.GeneratorType)
         first = next(l)
-        self.assertIsInstance(first, list)
+        self.assertEqual(type(first), list)
         self.assertTrue(isinstance(first[0], bytes) or isinstance(first[0], str))
 
     def test_first_element(self):
@@ -41,5 +41,5 @@ class TestWikiCorpus(unittest.TestCase):
 
         """
         l = self.wc.get_texts()
-        self.assertIn(b"anarchism", next(l))
-        self.assertIn(b"autism", next(l))
+        self.assertTrue(b"anarchism" in next(l))
+        self.assertTrue(b"autism" in next(l))
