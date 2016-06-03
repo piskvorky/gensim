@@ -206,6 +206,27 @@ class Dictionary(utils.SaveLoad, Mapping):
         self.filter_tokens(good_ids=good_ids)
         logger.info("resulting dictionary: %s" % self)
 
+    def filter_n_most_frequent(self, remove_n):
+        """
+        Filter out the 'remove_n' most frequent tokens that appear in the documents.
+
+        After the pruning, shrink resulting gaps in word ids.
+
+        **Note**: Due to the gap shrinking, the same word may have a different
+        word id before and after the call to this function!
+        """
+
+        # determine which tokens to keep
+        most_frequent_ids = (v for v in itervalues(self.token2id))
+        most_frequent_ids = sorted(most_frequent_ids, key=self.dfs.get, reverse=True)
+        most_frequent_ids = most_frequent_ids[:remove_n]
+        # do the actual filtering, then rebuild dictionary to remove gaps in ids
+        most_frequent_words = [(self[id], self.dfs.get(id, 0)) for id in most_frequent_ids]
+        logger.info("discarding %i tokens: %s...",len(most_frequent_ids), most_frequent_words[:10])
+        
+        self.filter_tokens(bad_ids=most_frequent_ids)
+        logger.info("resulting dictionary: %s" % self)
+
     def filter_tokens(self, bad_ids=None, good_ids=None):
         """
         Remove the selected `bad_ids` tokens from all dictionary mappings, or, keep

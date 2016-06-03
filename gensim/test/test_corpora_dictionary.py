@@ -121,6 +121,13 @@ class TestDictionary(unittest.TestCase):
         expected = {0: 3, 1: 3, 2: 3, 3: 3}
         self.assertEqual(d.dfs, expected)
 
+    def testFilterMostFrequent(self):
+    	d = Dictionary(self.texts)
+    	d.filter_n_most_frequent(4)
+    	expected = {0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2}
+    	self.assertEqual(d.dfs, expected)
+    	
+    	
     def testFilterTokens(self):
         self.maxDiff = 10000
         d = Dictionary(self.texts)
