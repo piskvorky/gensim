@@ -10,7 +10,7 @@ Tutorials and example gensim applications to get you started.
 ### Adopters
 
 |----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Talentpair                            | ![Talentpair](https://avatars3.githubusercontent.com/u/8418395)                                                 | [website](//talentpair.com)                                                           | Data science driving high-touch recruiting                                                                                                                                                                                 |
+| Talentpair                            | ![Talentpair](https://avatars3.githubusercontent.com/u/8418395?v=3&s=100)                                                 | [website](//talentpair.com)                                                           | Data science driving high-touch recruiting                                                                                                                                                                                 |
 -------
 
 #### Contributing
