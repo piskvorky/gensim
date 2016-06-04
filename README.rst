@@ -73,9 +73,9 @@ Memory-wise, gensim makes heavy use of Python's built-in generators and iterator
 Documentation
 -------------
 
-* .. _Official Documentation and Walkthrough: http://radimrehurek.com/gensim/
-* .. _Tutorial Videos: https://github.com/totalgood/gensim/blob/develop/docs/adopters.md#videos
-* .. _Adopters: https://github.com/totalgood/gensim/blob/develop/docs/resources.md#adopters
+* `Official Documentation and Walkthrough`_
+* `Tutorial Videos`_ https://github.com/totalgood/gensim/blob/develop/docs/adopters.md#videos
+* `Adopters`_ https://github.com/totalgood/gensim/blob/develop/docs/resources.md#adopters
 
 ----------------
 
@@ -86,3 +86,6 @@ Copyright (c) 2009-now Radim Rehurek
 
 .. |Analytics| image:: https://ga-beacon.appspot.com/UA-24066335-5/your-repo/page-name
 .. _Analytics: https://github.com/igrigorik/ga-beacon
+.. _Official Documentation and Walkthrough: http://radimrehurek.com/gensim/
+.. _Tutorial Videos: https://github.com/totalgood/gensim/blob/develop/docs/adopters.md#videos
+.. _Adopters: https://github.com/totalgood/gensim/blob/develop/docs/resources.md#adopters
