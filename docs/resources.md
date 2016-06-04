@@ -22,4 +22,4 @@ Businesses that use gensim.
 
 #### Contributing
 
-Pull requests welcome! We'd love to hear about resources you use to get the most out of Gensim.
+Pull requests welcome! We'd love to add links to the resources you use to get the most out of gensim.
