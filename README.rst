@@ -74,8 +74,8 @@ Documentation
 -------------
 
 * `Official Documentation and Walkthrough`_
-* `Tutorial Videos`_ https://github.com/totalgood/gensim/blob/develop/docs/adopters.md#videos
-* `Adopters`_ https://github.com/totalgood/gensim/blob/develop/docs/resources.md#adopters
+* `Tutorial Videos`_
+* `Adopters`_
 
 ----------------
 
