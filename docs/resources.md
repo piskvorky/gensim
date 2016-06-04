@@ -6,7 +6,7 @@ Tutorials and example gensim applications to get you started.
 
 * [Making an Impact with NLP](https://www.youtube.com/watch?v=oSSnDeOXTZQ) -- Pycon 2016 Tutorial by Hobsons Lane
 * [NLP with NLTK and Gensim](https://www.youtube.com/watch?v=itKNpCPHq3I) -- Pycon 2016 Tutorial by Tony Ojeda, Benjamin Bengfort, Laura Lorenz from District Data Labs
-* [Word Embeddings for Fun and Profit](https://www.youtube.com/watch?v=lfqW46u0UKc) -- PyData London 2016 talk by Lev Konstantinovskiy
+* [Word Embeddings for Fun and Profit](https://www.youtube.com/watch?v=lfqW46u0UKc) -- Talk at PyData London 2016 talk by Lev Konstantinovskiy. See accompanying [repo](https://github.com/RaRe-Technologies/movie-plots-by-genre)
 
 ### Adopters
 
