@@ -52,11 +52,11 @@ class TextCorpus(interfaces.CorpusABC):
     implementation.
 
     """
-    def __init__(self, input=None):
+    def __init__(self, input=None, metadata=False):
         super(TextCorpus, self).__init__()
         self.input = input
         self.dictionary = Dictionary()
-        self.metadata = False
+        self.metadata = metadata
         if input is not None:
             self.dictionary.add_documents(self.get_texts())
         else:
