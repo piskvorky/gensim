@@ -21,7 +21,7 @@ module.
 import bz2
 import logging
 import re
-from xml.etree.cElementTree import iterparse # LXML isn't faster, so let's go with the built-in solution
+from xml.etree.cElementTree import iterparse  # LXML isn't faster, so let's go with the built-in solution
 import multiprocessing
 
 from gensim import utils
