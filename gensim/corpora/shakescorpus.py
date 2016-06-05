@@ -3,33 +3,18 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""
-Text corpora usually reside on disk, as text files in one format or another
-In a common scenario, we need to build a dictionary (a `word->integer id`
-mapping), which is then used to construct sparse bag-of-word vectors
-(= sequences of `(word_id, word_weight)` 2-tuples).
+"""ShakesCorpus is an iterable over the lines of The Complete Workds of William Shakespeare
 
-This module provides some code scaffolding to simplify this pipeline. For
-example, given a corpus where each document is a separate line in file on disk,
-you would override the `TextCorpus.get_texts` method to read one line=document
-at a time, process it (lowercase, tokenize, whatever) and yield it as a sequence
-of words.
+This module provides the ShakesCorpus class and functions for segmenting
+Gutenberg Project books with formatting similar to the text file used for this Corpus.
 
-Overriding `get_texts` is enough; you can then initialize the corpus with e.g.
-`MyTextCorpus(bz2.BZ2File('mycorpus.txt.bz2'))` and it will behave correctly like a
-corpus of sparse vectors. The `__iter__` methods is automatically set up, and
-dictionary is automatically populated with all `word->id` mappings.
-
-The resulting object can be used as input to all gensim models (TFIDF, LSI, ...),
-serialized with any format (Matrix Market, SvmLight, Blei's LDA-C format etc).
-
-See the `gensim.test.test_miislita.CorpusMiislita` class for a simple example.
+source text: 'gensim/test/test_data/shakespeare-complete-works.txt.gz'
+source meta-data: 'gensim/test/test_data/shakespeare-complete-works-meta.json'
 """
 from __future__ import with_statement
 
 import gzip
 import re
-import os
 import json
 import logging
 
@@ -37,20 +22,22 @@ import logging
 
 
 from gensim import utils
-from gensim.corpora.dictionary import TextCorpus
+from gensim.corpora.textcorpus import TextCorpus
+from gensim.corpora.dictionary import Dictionary
 
 logger = logging.getLogger('gensim.corpora.shakescorpus')
 
-DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                         'test', 'test_data')
-PATH_SHAKESPEARE = os.path.join(DATA_PATH, 'shakespeare-complete-works.txt.gz')
+# FIXME:
+# module_path = os.path.dirname(__file__)
+
+PATH_SHAKESPEARE = utils.datapath('shakespeare-complete-works.txt.gz')
 DICT_ROMAN2INT = {'I': 1, 'II': 2, 'III': 3, 'IV': 4,  'V': 5,
                   'VI': 6, 'VII': 7, 'VIII': 8, 'IX': 9, 'X': 10}
 for num_X in range(1, 5):
     for s, num in DICT_ROMAN2INT.items():
         DICT_ROMAN2INT['X' * num_X + s] = 10 + num
-PATH_SHAKES = os.path.join(DATA_PATH, 'shakespeare-complete-works.txt.gz')
-META_SHAKES = json.load(os.path.join(DATA_PATH, 'shakespeare-complete-works-meta.json'))
+PATH_SHAKES = utils.datapath('shakespeare-complete-works.txt.gz')
+META_SHAKES = json.load(open(utils.datapath('shakespeare-complete-works-meta.json'), 'rU'))
 
 RE_TITLE = re.compile(r'(([-;,\'A-Z]+[ ]?){3,8})')
 RE_TITLE_LINE = re.compile(r'^' + RE_TITLE.pattern + r'$')
@@ -138,36 +125,68 @@ def segment_shakespeare_works(input_file=PATH_SHAKESPEARE, verbose=False):
 
 class ShakesCorpus(TextCorpus):
     """Iterable, memory-efficient sequence of BOWs (bag of words vectors) for each line in Shakespeare's words"""
-    def __init__(self, input_file=None, lemmatize=False, lowercase=False, dictionary=None, filter_namespaces=('0',), metadata=False):
+    def __init__(self, input_file=PATH_SHAKES, lemmatize=False, lowercase=False, dictionary=None, filter_namespaces=('0',), metadata=False):
         """Initialize a Corpus of the lines in Shakespeare's Collected Works
 
         Unless a dictionary is provided, this scans the corpus once, to determine its vocabulary.
         This Corpus should not be used with any other input_file than that provided in gensim/test/test_data.
+
+        >>> shakes = ShakesCorpus()
+        >>> for i, tokens in enumerate(shakes.get_texts()):
+        ...     print(i, tokens)
+        ...     if i >= 4:
+        ...         break
+        (0, [])
+        (1, [])
+        (2, [u'THE', u'SONNETS'])
+        (3, [])
+        (4, [u'by', u'William', u'Shakespeare'])
+        >>> for i, vec in enumerate(shakes):
+        ...     print(i, vec)
+        ...     if i >= 4:
+        ...         break
+        (0, [])
+        (1, [])
+        (2, [(0, 1), (1, 1)])
+        (3, [])
+        (4, [(2, 1), (3, 1), (4, 1)])
         """
         if input_file is None:
             raise(ValueError('ShakesCorpus requires an input document which it preprocesses to compute ' +
                              'the Dictionary and `book_meta` information (title, sections, etc).'))
         super(ShakesCorpus, self).__init__(input=None, metadata=metadata)
+        self.lowercase = lowercase
+        self.lemmatize = lemmatize
         if input_file is None:
             self.book_meta = dict(META_SHAKES)
         else:
             logger.warn('This ShakesCorpus is only intended for use with the gzipped text file from the ' +
                         'Gutenberg project which comes with gensim.')
             self.book_meta = segment_shakespeare_works(input_file)
-        self.input_file = gzip.GzipFile(input_file or PATH_SHAKES)
+        self.input_file_path = input_file or PATH_SHAKES
+        self.dictionary = Dictionary(self.get_texts(metadata=False))
 
-    def get_texts(self):
-        """
-        Iterate over all the lines of Shakespeare's works.
+    def get_texts(self, metadata=None):
+        """Iterate over the lines of "The Complete Works of William Shakespeare".
 
-        This yields lists of strings (**texts**) rather than vectors (BOWs).
+        This yields lists of strings (**texts**) rather than vectors (vectorized bags-of-words).
+        And the **texts** yielded are lines rather than entire plays or sonnets.
         If you want vectors, use the corpus interface instead of this method.
 
-        >>> for i, vec in enumerate(ShakesCorpus()):
-        ...     print(i, vec)
-        ...     if i > 100:
+        >>> shakes = ShakesCorpus(lowercase=True)
+        >>> for i, tokens in enumerate(shakes.get_texts()):
+        ...     print(i, tokens)
+        ...     if i >= 4:
         ...         break
+        (0, [])
+        (1, [])
+        (2, [u'the', u'sonnets'])
+        (3, [])
+        (4, [u'by', u'william', u'shakespeare'])
         """
+        if metadata is None:
+            metadata = self.metadata
+        self.input_file = gzip.GzipFile(self.input_file_path)
         volume_num = 0
         with self.input_file as lines:
             for lineno, line in enumerate(lines):
@@ -175,15 +194,20 @@ class ShakesCorpus(TextCorpus):
                     raise StopIteration()
                 if lineno < self.book_meta['volumes'][volume_num]['start']:
                     continue
-                if lineno < self.book_meta['volumes'][volume_num]['end']:
-                    act_num, scene_num = 0, 0  # FIXME: use self.book_meta['volumes'][volume_num]['sections']
-                    if self.metadata:
-                        yield (utils.tokenize(line, lowercase=self.lowercase, lemmatize=self.lemmatize),
-                               (lineno, volume_num, act_num, scene_num))
+                if lineno < self.book_meta['volumes'][volume_num]['stop']:
+                    # act_num, scene_num = 0, 0  # FIXME: use self.book_meta['volumes'][volume_num]['sections']
+                    if metadata:
+                        # FIXME: use self.lemmatize
+                        toks = self.tokenize(line, lowercase=self.lowercase)
+                        yield (toks, (lineno,))
                     else:
-                        yield utils.tokenize(line, lowercase=self.lowercase, lemmatize=self.lemmatize)
+                        toks = self.tokenize(line, lowercase=self.lowercase)
+                        yield toks
                 else:
                     volume_num += 1  # don't yield the "THE END" line?
+
+    def tokenize(self, line, **kwargs):
+        return list(utils.tokenize(line, **kwargs))
 
     def __len__(self):
         if not hasattr(self, 'length'):

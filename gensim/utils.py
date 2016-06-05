@@ -80,6 +80,15 @@ PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
+def datapath(fname):
+    """Return the full, absolute path to a data file located in gensim/test/test_data/<fname>
+
+    >>> expected = 'gensim' + os.path.sep + 'test' + os.path.sep + 'test_data' + os.path.sep + 'ldavowpalwabbit.txt'
+    >>> datapath('ldavowpalwabbit.txt').endswith(expected)
+    True
+    """
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test', 'test_data', fname)
+
 
 def synchronous(tlockname):
     """
