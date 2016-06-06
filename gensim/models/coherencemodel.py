@@ -37,19 +37,24 @@ class CoherenceModel(interfaces.TransformationABC): # FIXME : Document all the a
 
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, topics, texts=None, corpus=None, dictionary=None, coherence='u_mass'):
+    def __init__(self, model, texts=None, corpus=None, dictionary=None, coherence='u_mass'):
         """
         FIXME : Write documentation.
+        model : Pre-trained topic model
         """
         if texts is None and corpus is None:
             raise ValueError("One of texts or corpus has to be provided.")
         if coherence == 'u_mass':
             if corpus is not None:
                 if dictionary is None:
-                    raise ValueError("The associated dictionary should be provided with the corpus.")
+                    if model.id2word[0] == 0:
+                        raise ValueError("The associated dictionary should be provided with the corpus or 'id2word' for topic model"
+                                         "should be set as the dictionary.")
+                    else:
+                        self.dictionary = model.id2word
                 else:
-                    self.corpus = corpus
                     self.dictionary = dictionary
+                self.corpus = corpus
             elif texts is not None:
                 self.texts = texts
                 if dictionary is None:
@@ -66,12 +71,13 @@ class CoherenceModel(interfaces.TransformationABC): # FIXME : Document all the a
             else:
                 self.texts = texts
                 self.dictionary = Dictionary(self.texts)
+                self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
 
         else:
             raise ValueError("%s coherence is not currently supported." % coherence)
 
-        self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
-        self.topics = topics
+        self.model = model
+        self.topics = self._get_topics()
         self.coherence = coherence
         # Set pipeline parameters:
         if self.coherence == 'u_mass':
@@ -90,17 +96,25 @@ class CoherenceModel(interfaces.TransformationABC): # FIXME : Document all the a
         return "CoherenceModel(segmentation=%s, probability estimation=%s, confirmation measure=%s, aggregation=%s)" % (
             self.seg, self.prob, self.conf, self.aggr)
 
+    def _get_topics(self):
+        """Internal helper function to return topics from a trained topic model."""
+        topics = []  # FIXME : Meant to work for LDAModel right now. Make it work for others.
+        for topic in self.model.state.get_lambda():
+            bestn = argsort(topic, topn=10, reverse=True)
+            topics.append(bestn)
+        return topics
+
     def get_coherence(self):
         if self.coherence == 'u_mass':
             segmented_topics = self.seg(self.topics)
-            per_topic_postings = self.prob(self.corpus, segmented_topics)
-            confirmed_measures = self.conf(segmented_topics, per_topic_postings)
+            per_topic_postings, num_docs = self.prob(self.corpus, segmented_topics)
+            confirmed_measures = self.conf(segmented_topics, per_topic_postings, num_docs)
             return self.aggr(confirmed_measures)
 
         elif self.coherence == 'c_v':  # FIXME : Write correct pipeline parameters. Using just for testing.
             segmented_topics = self.seg(self.topics)
-            per_topic_postings = self.prob(texts=self.texts, segmented_topics=segmented_topics,
-                                           dictionary=self.dictionary, window_size=2)  # FIXME : Change window size to 110 finally.
+            per_topic_postings, num_windows = self.prob(texts=self.texts, segmented_topics=segmented_topics,
+                                                        dictionary=self.dictionary, window_size=2)  # FIXME : Change window size to 110 finally.
             return per_topic_postings
             confirmed_measures = self.conf(segmented_topics, per_topic_postings)
             # return self.aggr(confirmed_measures)

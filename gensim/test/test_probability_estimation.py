@@ -32,14 +32,14 @@ class TestProbabilityEstimation(unittest.TestCase):
     def testPBooleanDocument(self):
         """Test p_boolean_document()"""
         # Unique topic ids are 1, 3, 4 and 9
-        obtained = probability_estimation.p_boolean_document(self.corpus, self.segmented_topics)
+        obtained, _ = probability_estimation.p_boolean_document(self.corpus, self.segmented_topics)
         expected = {9: set([5]), 3: set([1, 3]), 4: set([1, 2]), 1: set([0])}
         self.assertTrue(obtained == expected)
 
     def testPBooleanSlidingWindow(self):
         """Test p_boolean_sliding_window()"""
         # Test with window size as 2. window_id is zero indexed.
-        obtained = probability_estimation.p_boolean_sliding_window(self.texts, self.segmented_topics, self.dictionary, 2)
+        obtained, _ = probability_estimation.p_boolean_sliding_window(self.texts, self.segmented_topics, self.dictionary, 2)
         expected = {1: set([1]), 3: set([8, 2, 3]), 4: set([4, 5, 6, 7]), 9: set([11])}
         self.assertTrue(obtained == expected)
 

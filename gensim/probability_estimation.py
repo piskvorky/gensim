@@ -44,6 +44,7 @@ def p_boolean_document(corpus, segmented_topics): # FIXME : Works only for S_One
     Returns:
     -------
     per_topic_postings : Boolean document posting list for each unique topic id.
+    num_docs : Total number of documents in corpus.
     """
     top_ids = _ret_top_ids(segmented_topics)
     # Perform boolean document now to create document word list.
@@ -54,8 +55,8 @@ def p_boolean_document(corpus, segmented_topics): # FIXME : Works only for S_One
             if id in frozenset(x[0] for x in document):
                 id_list.add(n)
         per_topic_postings[id] = id_list
-
-    return per_topic_postings
+    num_docs = len(corpus)
+    return (per_topic_postings, num_docs)
 
 def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     """
@@ -74,6 +75,7 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     Returns:
     -------
     per_topic_postings : Boolean sliding window postings list of all the unique topic ids.
+    window_id[0] : Total no of windows
     """
     top_ids = _ret_top_ids(segmented_topics)
     window_id = [0]  # Each window assigned a window id.
@@ -99,4 +101,4 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
             window = window[1:] + (elem,)
             add_topic_posting()
 
-    return per_topic_postings
+    return (per_topic_postings, window_id[0])
