@@ -25,8 +25,13 @@ class TestWikiCorpus(unittest.TestCase):
 
     def setUp(self):
         self.wc = WikiCorpus(datapath(FILENAME))
+        if sys.version_info < (2, 7, 0):
+            logging.warning("WikiDump script doesn't run in Python 2.6.")
+
 
     def test_get_texts_returns_generator_of_lists(self):
+        if sys.version_info < (2, 7, 0):
+            return
         l = self.wc.get_texts()
         self.assertEqual(type(l), types.GeneratorType)
         first = next(l)
@@ -40,6 +45,8 @@ class TestWikiCorpus(unittest.TestCase):
         2) autism
 
         """
+        if sys.version_info < (2, 7, 0):
+            return
         l = self.wc.get_texts()
         self.assertTrue(b"anarchism" in next(l))
         self.assertTrue(b"autism" in next(l))
