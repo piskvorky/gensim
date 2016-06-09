@@ -67,14 +67,10 @@ def update_zeta(sslm):
     num_sequence = sslm.obs.shape[1] # this is number of sequeces
     # making zero and updating
     sslm.zeta.fill(0)
-
     for i in range(0, num_terms):
         for j in range(0, num_sequence):
-            try:
-                m = sslm.mean[i][j + 1]
-                v = sslm.variance[i][j + 1]
-                val = numpy.exp(m + v/2)
-                sslm.zeta[j] = sslm.zeta[j] + val 
-            except IndexError:
-                print i, j
+            m = sslm.mean[i][j + 1]
+            v = sslm.variance[i][j + 1]
+            val = numpy.exp(m + v/2)
+            sslm.zeta[j] = sslm.zeta[j] + val 
     return
