@@ -415,8 +415,8 @@ def isbow(vec):
 
 def kullback_leibler(vec1, vec2, num_features=None):
     """
-    A similarity metric between two probability distributions.
-    Returns a similarity in range <0,1> where values closer to 0 mean a higher similarity.
+    A distance metric between two probability distributions.
+    Returns a distance value in range <0,1> where values closer to 0 mean a higher similarity (or less distance).
     Uses the scipy.stats.entropy method to identify kullback_leibler convergence value.
     If the distribution draws from a certain number of docs, that value must be passed.
     """
@@ -447,7 +447,7 @@ def kullback_leibler(vec1, vec2, num_features=None):
 def hellinger(vec1, vec2):
     """
     Hellinger distance is a distance metric to quantify the similarity between two probability distributions.
-    Similarity between distributions will be a number between <0,1>, where 0 is maximum similarity and 1 is minimum similarity.
+    Distance between distributions will be a number between <0,1>, where 0 is maximum similarity (minimum distance) and 1 is minimum similarity (maximum distance).
     """
     if scipy.sparse.issparse(vec1):
         vec1 = vec1.toarray()
