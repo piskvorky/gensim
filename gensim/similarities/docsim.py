@@ -618,7 +618,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
             # Compute similarity for each query.
             qresult = [self.w2v_model.wmdistance(document, query[qidx]) for document in self.corpus]
             qresult = numpy.array(qresult)
-            qresult = -qresult  # Similarity is the negative of the distance.
+            qresult = 1./(1.+qresult)  # Similarity is the negative of the distance.
 
             # Append single query result to list of all results.
             result.append(qresult)
