@@ -282,10 +282,10 @@ class TestLdaModel(unittest.TestCase):
         # also check one case of phi_values
         expected_word = 0
         expected_topiclist = [1, 0]
-        expected_phi_values = (0, 0.605)
+        expected_phi_values = (0, 0.6)
         self.assertEqual(word_topics[0][0], expected_word)
         self.assertEqual(word_topics[0][1], expected_topiclist)
-        self.assertAlmostEqual(phi_values[0][1], expected_phi_values[1], places = 2)
+        self.assertAlmostEqual(phi_values[0][1], expected_phi_values[1], places = 1)
 
     def testTermTopics(self):
 
