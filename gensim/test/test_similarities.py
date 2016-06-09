@@ -15,6 +15,7 @@ import os
 import tempfile
 
 import numpy
+import scipy
 
 from gensim.corpora import mmcorpus, Dictionary
 from gensim import matutils, utils, similarities
@@ -373,6 +374,20 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
 class TestSparseMatrixSimilarity(unittest.TestCase, _TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.SparseMatrixSimilarity
+
+    def testMaintainSparsity(self):
+        """Sparsity is correctly maintained when maintain_sparsity=True"""
+        num_features = len(dictionary)
+
+        index = self.cls(corpus, num_features=num_features)
+        dense_sims = index[corpus]
+
+        index = self.cls(corpus, num_features=num_features, maintain_sparsity=True)
+        sparse_sims = index[corpus]
+
+        self.assertFalse(scipy.sparse.issparse(dense_sims))
+        self.assertTrue(scipy.sparse.issparse(sparse_sims))
+        numpy.testing.assert_array_equal(dense_sims, sparse_sims.todense())
 
 
 class TestSimilarity(unittest.TestCase, _TestSimilarityABC):

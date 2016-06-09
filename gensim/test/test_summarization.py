@@ -130,6 +130,21 @@ class TestSummarizationTest(unittest.TestCase):
 
             self.assertEqual(len(selected_docs), expected_summary_length)
 
+    def test_repeated_keywords(self):
+        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
+
+        with utils.smart_open(os.path.join(pre_path, "testrepeatedkeywords.txt")) as f:
+            text = f.read()
+
+        kwds = keywords(text)
+        self.assertTrue(len(kwds.splitlines()))
+
+        kwds_u = keywords(utils.to_unicode(text))
+        self.assertTrue(len(kwds_u.splitlines()))
+
+        kwds_lst = keywords(text, split=True)
+        self.assertTrue(len(kwds_lst))
+
     def test_keywords_runs(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 

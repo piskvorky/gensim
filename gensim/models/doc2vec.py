@@ -60,7 +60,9 @@ logger = logging.getLogger(__name__)
 try:
     from gensim.models.doc2vec_inner import train_document_dbow, train_document_dm, train_document_dm_concat
     from gensim.models.word2vec_inner import FAST_VERSION  # blas-adaptation shared from word2vec
-except:
+    logger.debug('Fast version of {0} is being used'.format(__name__))
+except ImportError:
+    logger.warning('Slow version of {0} is being used'.format(__name__))
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
 
@@ -494,7 +496,17 @@ class DocvecsArray(utils.SaveLoad):
         v2 = [self[doc] for doc in ds2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
 
+    def similarity_unseen_docs(self, model, doc_words1, doc_words2, alpha=0.1, min_alpha=0.0001, steps=5):
+        """
+        Compute cosine similarity between two post-bulk out of training documents.
 
+        Document should be a list of (word) tokens.
+        """
+        d1 = model.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, steps=steps)
+        d2 = model.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, steps=steps)
+        return dot(matutils.unitvec(d1), matutils.unitvec(d2))
+        
+        
 class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
     """A string document tag discovered during the initial vocabulary
     scan. (The document-vector equivalent of a Vocab object.)
@@ -635,8 +647,14 @@ class Doc2Vec(Word2Vec):
         min_reduce = 1
         interval_start = default_timer() - 0.00001  # guard against next sample being identical
         interval_count = 0
+        checked_string_types = 0
         vocab = defaultdict(int)
         for document_no, document in enumerate(documents):
+            if not checked_string_types:
+                if isinstance(document.words, string_types):
+                    logger.warn("Each 'words' should be a list of words (usually unicode strings)."
+                                "First 'words' here is instead plain %s." % type(document.words))
+                checked_string_types += 1
             if document_no % progress_per == 0:
                 interval_rate = (total_words - interval_count) / (default_timer() - interval_start)
                 logger.info("PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags",

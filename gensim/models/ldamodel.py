@@ -285,13 +285,13 @@ class LdaModel(interfaces.TransformationABC):
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
-        assert self.alpha.shape == (num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), num_topics)
+        assert self.alpha.shape == (self.num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
 
-        assert (self.eta.shape == (num_topics, 1) or self.eta.shape == (num_topics, self.num_terms)), (
+        assert (self.eta.shape == (self.num_topics, 1) or self.eta.shape == (self.num_topics, self.num_terms)), (
             "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
-            (str(self.eta.shape), num_topics, num_topics, self.num_terms))
+            (str(self.eta.shape), self.num_topics, self.num_topics, self.num_terms))
 
         # VB constants
         self.iterations = iterations
@@ -310,7 +310,7 @@ class LdaModel(interfaces.TransformationABC):
                 import Pyro4
                 dispatcher = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher')
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
-                dispatcher.initialize(id2word=self.id2word, num_topics=num_topics,
+                dispatcher.initialize(id2word=self.id2word, num_topics=self.num_topics,
                                       chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
                 self.dispatcher = dispatcher
                 self.numworkers = len(dispatcher.getworkers())
@@ -883,28 +883,81 @@ class LdaModel(interfaces.TransformationABC):
         top_topics = sorted(coherence_scores, key=lambda t: t[1], reverse=True)
         return top_topics
 
-    def get_document_topics(self, bow, minimum_probability=None):
+    def get_document_topics(self, bow, minimum_probability=None, minimum_phi_probability=None, per_word_topics=False):
         """
         Return topic distribution for the given document `bow`, as a list of
         (topic_id, topic_probability) 2-tuples.
 
         Ignore topics with very low probability (below `minimum_probability`).
 
+        If per_word_topics is True, it also returns a list of topics, sorted in descending order of most likely topics for that word. 
+        It also returns a list of word_ids and each words corresponding topics' phi_values, multiplied by feature length (i.e, word count)
+
         """
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
         minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
+
+        if minimum_phi_probability is None:
+            minimum_phi_probability = self.minimum_probability
+        minimum_phi_probability = max(minimum_phi_probability, 1e-8)  # never allow zero values in sparse output
 
         # if the input vector is a corpus, return a transformed corpus
         is_corpus, corpus = utils.is_corpus(bow)
         if is_corpus:
             return self._apply(corpus)
 
-        gamma, _ = self.inference([bow])
+        gamma, phis = self.inference([bow], collect_sstats=True)
         topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
-        return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
-                if topicvalue >= minimum_probability]
 
+        document_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
+                    if topicvalue >= minimum_probability]
+     
+        if not per_word_topics:
+            return document_topics
+        else:
+            word_topic = [] # contains word and corresponding topic
+            word_phi = [] # contains word and phi values
+            for word_type, weight in bow:
+                phi_values = [] # contains (phi_value, topic) pairing to later be sorted
+                phi_topic = [] # contains topic and corresponding phi value to be returned 'raw' to user
+                for topic_id in range(0, self.num_topics):
+                    if phis[topic_id][word_type] >= minimum_phi_probability:
+                        # appends phi values for each topic for that word
+                        # these phi values are scaled by feature length 
+                        phi_values.append((phis[topic_id][word_type], topic_id))
+                        phi_topic.append((topic_id, phis[topic_id][word_type]))
+               
+                # list with ({word_id => [(topic_0, phi_value), (topic_1, phi_value) ...]).
+                word_phi.append((word_type, phi_topic))
+                # sorts the topics based on most likely topic
+                # returns a list like ({word_id => [topic_id_most_probable, topic_id_second_most_probable, ...]).
+                sorted_phi_values = sorted(phi_values, reverse=True)
+                topics_sorted = [x[1] for x in sorted_phi_values]
+                word_topic.append((word_type, topics_sorted))
+            return (document_topics, word_topic, word_phi) # returns 2-tuple
+
+    def get_term_topics(self, word_id, minimum_probability=None):
+        """
+        Returns most likely topics for a particular word in vocab.
+
+        """
+        if minimum_probability is None:
+            minimum_probability = self.minimum_probability
+        minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
+
+        # if user enters word instead of id in vocab, change to get id
+        if isinstance(word_id, str):
+            word_id = self.id2word.doc2bow([word_id])[0][0]
+
+        values = []
+        for topic_id in range(0, self.num_topics):
+            if self.expElogbeta[topic_id][word_id] >= minimum_probability:
+                values.append((topic_id, self.expElogbeta[topic_id][word_id]))
+
+        return values
+
+        
     def __getitem__(self, bow, eps=None):
         """
         Return topic distribution for the given document `bow`, as a list of
