@@ -263,7 +263,7 @@ class TestLdaModel(unittest.TestCase):
                 self.assertTrue(isinstance(k, int))
                 self.assertTrue(isinstance(v, float))
 
-        doc_topics, word_topics = model.get_document_topics(self.corpus[1], per_word_topics=True)
+        doc_topics, word_topics, word_phis = model.get_document_topics(self.corpus[1], per_word_topics=True)
 
         for k, v in doc_topics:
             self.assertTrue(isinstance(k, int))
@@ -273,12 +273,19 @@ class TestLdaModel(unittest.TestCase):
             self.assertTrue(isinstance(w, int))
             self.assertTrue(isinstance(topic_list, list))
 
+        for w, phi_values in word_phis:
+            self.assertTrue(isinstance(w, int))
+            self.assertTrue(isinstance(phi_values, list))            
+
         # word_topics looks like this: ({word_id => [topic_id_most_probable, topic_id_second_most_probable, ...]).
         # we check one case in word_topics, i.e of the first word in the doc, and it's likely topics.
+        # also check one case of phi_values
         expected_word = 0
         expected_topiclist = [1, 0]
+        expected_phi_values = (0, 0.605)
         self.assertEqual(word_topics[0][0], expected_word)
         self.assertEqual(word_topics[0][1], expected_topiclist)
+        self.assertAlmostEqual(phi_values[0][1], expected_phi_values[1], places = 2)
 
     def testTermTopics(self):
 
