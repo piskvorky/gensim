@@ -25,13 +25,14 @@ FILENAME = 'enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2
 class TestWikiCorpus(unittest.TestCase):
 
     def setUp(self):
-        self.wc = WikiCorpus(datapath(FILENAME))
+        wc = WikiCorpus(datapath(FILENAME))
 
 
     def test_get_texts_returns_generator_of_lists(self):
         if sys.version_info < (2, 7, 0):
             return
-        l = self.wc.get_texts()
+        wc = WikiCorpus(datapath(FILENAME))
+        l = wc.get_texts()
         self.assertEqual(type(l), types.GeneratorType)
         first = next(l)
         self.assertEqual(type(first), list)
@@ -46,6 +47,8 @@ class TestWikiCorpus(unittest.TestCase):
         """
         if sys.version_info < (2, 7, 0):
             return
-        l = self.wc.get_texts()
+        wc = WikiCorpus(datapath(FILENAME))
+
+        l = wc.get_texts()
         self.assertTrue(b"anarchism" in next(l))
         self.assertTrue(b"autism" in next(l))
