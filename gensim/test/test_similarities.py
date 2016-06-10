@@ -319,7 +319,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
             for i, sim in sims:
                 self.assertTrue(numpy.alltrue(sim > 0.0))  # Note that similarities are bigger than zero, as they are the 1/ 1 + distances.
         else:
-            self.assertTrue(sims[0] == 0.0)  # Similarity of a document with itself is 0.0.
+            self.assertTrue(sims[0] == 1.0)  # Similarity of a document with itself is 0.0.
             self.assertTrue(numpy.alltrue(sims[1:] > 0.0))
             self.assertTrue(numpy.alltrue(sims[1:] < 1.0))
 
@@ -352,7 +352,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         sims = index[query]
 
         for i in range(3):
-            self.assertTrue(numpy.alltrue(sims[i, i] == 0.0))  # Similarity of a document with itself is 0.0.
+            self.assertTrue(numpy.alltrue(sims[i, i] == 1.0))  # Similarity of a document with itself is 0.0.
 
         # test the same thing but with num_best
         index.num_best = 3
@@ -360,7 +360,7 @@ class TestWmdSimilarity(unittest.TestCase, _TestSimilarityABC):
         for sims_temp in sims:
             for i, sim in sims_temp:
                 self.assertTrue(numpy.alltrue(sim > 0.0))
-                self.assertTrue(numpy.alltrue(sim < 1.0))
+                self.assertTrue(numpy.alltrue(sim <= 1.0))
 
     def testIter(self):
         # Override testIter.
