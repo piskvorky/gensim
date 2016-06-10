@@ -24,7 +24,13 @@ from subprocess import PIPE
 from gensim.models import word2vec
 from testfixtures import log_capture
 
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
+try:
+    from pyemd import emd
+    PYEMD_EXT = True
+except ImportError:
+    PYEMD_EXT = False
+
+module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
@@ -417,6 +423,45 @@ class TestWord2VecModel(unittest.TestCase):
         """
         gen = (s for s in sentences)
         self.assertRaises(TypeError, word2vec.Word2Vec, (gen,))
+
+class TestWMD(unittest.TestCase):
+    def testNonzero(self):
+        '''Test basic functionality with a test sentence.'''
+
+        if not PYEMD_EXT:
+            return
+
+        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        sentence1 = ['human', 'interface', 'computer']
+        sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        distance = model.wmdistance(sentence1, sentence2)
+
+        # Check that distance is non-zero.
+        self.assertFalse(distance == 0.0)
+
+    def testSymmetry(self):
+        '''Check that distance is symmetric.'''
+
+        if not PYEMD_EXT:
+            return
+
+        model = word2vec.Word2Vec(sentences, min_count=2, seed=42, workers=1)
+        sentence1 = ['human', 'interface', 'computer']
+        sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        distance1 = model.wmdistance(sentence1, sentence2)
+        distance2 = model.wmdistance(sentence2, sentence1)
+        self.assertTrue(numpy.allclose(distance1, distance2))
+
+    def testIdenticalSentences(self):
+        '''Check that the distance from a sentence to itself is zero.'''
+
+        if not PYEMD_EXT:
+            return
+
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        sentence = ['survey', 'user', 'computer', 'system', 'response', 'time']
+        distance = model.wmdistance(sentence, sentence)
+        self.assertEqual(0.0, distance)
 
 
 class TestWord2VecSentenceIterators(unittest.TestCase):
