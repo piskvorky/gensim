@@ -233,21 +233,21 @@ class TestJaccard(unittest.TestCase):
         vec_1 = [(2, 1), (3, 4), (4, 1), (5, 1), (1, 1), (7, 2)]
         vec_2 = [(1, 1), (3, 8), (4, 1)]
         result = matutils.jaccard(vec_2, vec_1)
-        expected = 0.3
+        expected = 1 - 0.3
         self.assertAlmostEqual(expected, result)
 
         # checking ndarray, csr_matrix as inputs
         vec_1 = numpy.array([[1, 3], [0, 4], [2, 3]])
         vec_2 = csr_matrix([[1, 4], [0, 2], [2, 2]])
         result = matutils.jaccard(vec_1, vec_2)
-        expected = 0.388888888889
+        expected = 1 - 0.388888888889
         self.assertAlmostEqual(expected, result)
 
         # checking ndarray, list as inputs
         vec_1 = numpy.array([6, 1, 2, 3])
         vec_2 = [4, 3, 2, 5]
         result = matutils.jaccard(vec_1, vec_2)
-        expected = 0.333333333333
+        expected = 1 - 0.333333333333
         self.assertAlmostEqual(expected, result)
 
 if __name__ == '__main__':

@@ -416,7 +416,7 @@ def isbow(vec):
 def kullback_leibler(vec1, vec2, num_features=None):
     """
     A distance metric between two probability distributions.
-    Returns a distance value in range <0,1> where values closer to 0 mean a higher similarity (or less distance).
+    Returns a distance value in range <0,1> where values closer to 0 mean less distance (and a higher similarity)
     Uses the scipy.stats.entropy method to identify kullback_leibler convergence value.
     If the distribution draws from a certain number of docs, that value must be passed.
     """
@@ -447,7 +447,7 @@ def kullback_leibler(vec1, vec2, num_features=None):
 def hellinger(vec1, vec2):
     """
     Hellinger distance is a distance metric to quantify the similarity between two probability distributions.
-    Distance between distributions will be a number between <0,1>, where 0 is maximum similarity (minimum distance) and 1 is minimum similarity (maximum distance).
+    Distance between distributions will be a number between <0,1>, where 0 is minimum distance (maximum similarity) and 1 is maximum distance (minimum similarity).
     """
     if scipy.sparse.issparse(vec1):
         vec1 = vec1.toarray()
@@ -467,11 +467,11 @@ def hellinger(vec1, vec2):
 
 def jaccard(vec1, vec2):
     """
-    A similarity metric between bags of words representation.
-    Return the intersection divided by union, where union is the sum of the size of the two bags.
-    Highest value jaccard similarity of two bags is 1/2, which indicates the highest similarity.
+    A distance metric between bags of words representation.
+    Returns 1 minus the intersection divided by union, where union is the sum of the size of the two bags.
     If it is not a bag of words representation, the union and intersection is calculated in the traditional manner.
-    Returns a similarity in range <0,1> where values closer to 1 mean a higher similarity.
+    Returns a value in range <0,1> where values closer to 0 mean less distance and thus higher similarity.
+
     """
 
     # converting from sparse for easier manipulation
@@ -488,7 +488,7 @@ def jaccard(vec1, vec2):
         intersection = 0.0
         for feature_id, feature_weight in iteritems(vec1):
             intersection += min(feature_weight, vec2.get(feature_id, 0.0))
-        return float(intersection) / float(union)
+        return 1 - float(intersection) / float(union)
     else:
         # if it isn't in bag of words format, we can use sets to calculate intersection and union
         if isinstance(vec1, numpy.ndarray):
@@ -499,7 +499,7 @@ def jaccard(vec1, vec2):
         vec2 = set(vec2)
         intersection = vec1 & vec2
         union = vec1 | vec2
-        return float(len(intersection)) / float(len(union))
+        return 1 - float(len(intersection)) / float(len(union))
 
 
 def qr_destroy(la):
