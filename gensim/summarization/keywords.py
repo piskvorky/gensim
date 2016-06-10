@@ -15,7 +15,7 @@ is_py2 = sys.version[0] == '2'
 if is_py2:
     from six.moves.queue import Queue as _Queue
 else:
-    from six.moves.queue import queue as _Queue
+    from six.moves import queue as _Queue
 from six.moves import xrange
 from six import iteritems
 
