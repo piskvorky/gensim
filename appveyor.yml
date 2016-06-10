@@ -59,7 +59,7 @@ test_script:
   # installed library.
   - "mkdir empty_folder"
   - "cd empty_folder"
-  - "pip install pyemd testfixtues"
+  - "pip install pyemd testfixtures"
 
   - "python -c \"import nose; nose.main()\" -s -v gensim"
   # Move back to the project folder
