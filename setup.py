@@ -123,7 +123,7 @@ if sys.version_info[:2] < (2, 7):
 
 setup(
     name='gensim',
-    version='0.13.0',
+    version='0.13.0rc1',
     description='Python framework for fast Vector Space Modelling',
     long_description=readfile('README.rst'),
 
