@@ -1,6 +1,6 @@
 Changes
 =======
-0.12.5, 2016
+0.13.0, 2016
 * Tutorials migrated from website to ipynb (@j9chan, #721), (@jesford, #733), (@jesford, #725), (@jesford, #716)
 * New doc2vec intro tutorial (@seanlaw, #730)
 * Gensim Quick Start Tutorial (@andrewjlm, #727)
