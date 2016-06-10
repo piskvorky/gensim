@@ -36,6 +36,7 @@ install:
   # not already installed.
   - "powershell ./continuous_integration/appveyor/install.ps1"
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "python -m pip install -U pip"
 
   # Check that we have the expected version and architecture for Python
   - "python --version"
@@ -58,6 +59,7 @@ test_script:
   # installed library.
   - "mkdir empty_folder"
   - "cd empty_folder"
+  - "pip install pyemd testfixtures"
 
   - "python -c \"import nose; nose.main()\" -s -v gensim"
   # Move back to the project folder

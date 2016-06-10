@@ -17,6 +17,7 @@ import tempfile
 
 from six.moves import zip as izip
 from collections import namedtuple
+from testfixtures import log_capture
 
 import numpy as np
 
@@ -143,7 +144,7 @@ class TestDoc2VecModel(unittest.TestCase):
         doc0_inferred = model.infer_vector(list(DocsLeeCorpus())[0].words)
         sims_to_infer = model.docvecs.most_similar([doc0_inferred], topn=len(model.docvecs))
         f_rank = [docid for docid, sim in sims_to_infer].index(fire1)
-        self.assertLess(fire1, 10)
+        self.assertLess(f_rank, 10)
 
         # fire2 should be top30 close to fire1
         sims = model.docvecs.most_similar(fire1, topn=len(model.docvecs))
@@ -279,6 +280,32 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(len(model.docvecs.offset2doctag), len(model2.docvecs.offset2doctag))
         self.assertTrue(np.allclose(model.docvecs.doctag_syn0, model2.docvecs.doctag_syn0))
 
+    @log_capture()
+    def testBuildVocabWarning(self, l):
+        """Test if logger warning is raised on non-ideal input to a doc2vec model"""
+        raw_sentences = ['human', 'machine']
+        sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(raw_sentences)]
+        model = doc2vec.Doc2Vec()
+        model.build_vocab(sentences)
+        warning = "Each 'words' should be a list of words (usually unicode strings)."
+        self.assertTrue(warning in str(l))
+
+    @log_capture()
+    def testTrainWarning(self, l):
+        """Test if warning is raised if alpha rises during subsequent calls to train()"""
+        raw_sentences = [['human'],
+                         ['graph', 'trees']]
+        sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(raw_sentences)]
+        model = doc2vec.Doc2Vec(alpha=0.025, min_alpha=0.025, min_count=1, workers=8, size=5)
+        model.build_vocab(sentences)
+        for epoch in range(10):
+            model.train(sentences)
+            model.alpha -= 0.002
+            model.min_alpha = model.alpha
+            if epoch == 5:
+                model.alpha += 0.05
+        warning = "Effective 'alpha' higher than previous training cycles"
+        self.assertTrue(warning in str(l))
 #endclass TestDoc2VecModel
 
 
