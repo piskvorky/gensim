@@ -1,20 +1,44 @@
 Changes
 =======
+0.12.5, 2016
+* Tutorials migrated from website to ipynb (@j9chan, #721), (@jesford, #733), (@jesford, #725), (@jesford, #716)
+* New doc2vec intro tutorial (@seanlaw, #730)
+* Gensim Quick Start Tutorial (@andrewjlm, #727)
+* Add export_phrases(sentences) to model Phrases (hanabi1224 #588)
+* SparseMatrixSimilarity returns a sparse matrix if `maintain_sparsity` is True (@davechallis, #590)
+* added functionality for Topics of Words in document - i.e, dynamic topics. (@bhargavvader, #704)
+  - also included tutorial which explains new functionalities, and document word-topic colring.
+* Made normalization an explicit transformation. Added 'l1' norm support (@squareindia, #649)
+* added term-topics API for most probable topic for word in vocab. (@bhargavvader, #706)
+* build_vocab takes progress_per parameter for smaller output (@zer0n, #624)
+* Control whether to use lowercase for computing word2vec accuracy. (@alantian, #607)
+* Easy import of GloVe vectors using Gensim (Manas Ranjan Kar, #625)
+  - Allow easy port of GloVe vectors into Gensim
+  - Standalone script with command line arguments, compatible with Python>=2.6 
+  - Usage: python -m gensim.scripts.glove2word2vec -i glove_vectors.txt -o output_word2vec_compatible.txt
+* Add `similar_by_word()` and `similar_by_vector()` to word2vec (@isohyt, #381)
+* Convenience method for similarity of two out of training sentences to doc2vec (@ellolo, #707)
+* Dynamic Topic Modelling Tutorial updated with Dynamic Influence Model (@bhargavvader, #689)
+* Added function to filter 'n' most frequent words from the dictionary (@abhinavchawla, #718)
+* Raise warnings if vocab is single character elements and if alpha is increased in word2vec/doc2vec (@dsquareindia, #705)
+* Tests for wikidump (@jonmcoe, #723)
+* Mallet wrapper sparse format support (@RishabGoel, #664)
+* Doc2vec pre-processing script translated from bash to Python (@andrewjlm, #720)
+
 
 0.12.4, 29/01/2016
-
-* Word2vec in line with original word2vec.c (Andrey Kutuzov, #538) 
-- Same default values. See diff https://github.com/akutuzov/gensim/commit/6456cbcd75e6f8720451766ba31cc046b4463ae2
-- Standalone script with command line arguments matching those of original C tool.
-   Usage ./word2vec_standalone.py -train data.txt -output trained_vec.txt -size 200 -window 2 -sample 1e-4
-* load_word2vec_format() performance (@svenkreiss, #555)
-  - Remove `init_sims()` call for performance improvements when normalized vectors are not needed.
-  - Remove `norm_only` parameter (API change). Call `init_sims(replace=True)` after the `load_word2vec_format()` call for the old `norm_only=True` behavior.
 * Better internal handling of job batching in word2vec (#535)
   - up to 300% speed up when training on very short documents (~tweets)
+* Word2vec CLI in line with original word2vec.c (Andrey Kutuzov, #538)
+  - Same default values. See diff https://github.com/akutuzov/gensim/commit/6456cbcd75e6f8720451766ba31cc046b4463ae2
+  - Standalone script with command line arguments matching those of original C tool.
+  - Usage: python -m gensim.scripts.word2vec_standalone -train data.txt -output trained_vec.txt -size 200 -window 2 -sample 1e-4
+* Improved load_word2vec_format() performance (@svenkreiss, #555)
+  - Remove `init_sims()` call for performance improvements when normalized vectors are not needed.
+  - Remove `norm_only` parameter (API change). Call `init_sims(replace=True)` after the `load_word2vec_format()` call for the old `norm_only=True` behavior.
 * Word2vec allows non-strict unicode error handling (ignore or replace) (Gordon Mohr, #466)
 * Doc2Vec `model.docvecs[key]` now raises KeyError for unknown keys (Gordon Mohr, #520)
-* Fix `DocvecsArray.index_to_doctag` so `most_similar()` returns string doctags (Gordon Mohr, #560) 
+* Fix `DocvecsArray.index_to_doctag` so `most_similar()` returns string doctags (Gordon Mohr, #560)
 * On-demand loading of the `pattern` library in utils.lemmatize (Jan Zikes, #461)
   - `utils.HAS_PATTERN` flag moved to `utils.has_pattern()`
 * Threadsafe Word2Vec/Doc2Vec finish-check to avoid hang/unending Word2Vec/Doc2Vec training (Gordon Mohr, #571)

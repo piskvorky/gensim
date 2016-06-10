@@ -22,13 +22,12 @@ You can also try asking on StackOverflow, using the `gensim tag <http://stackove
 Business support
 ------------------
 
-I also run a consulting business for data mining and information retrieval solutions, `radimrehurek.com <http://radimrehurek.com>`_.
+I also run a consulting business for data mining and information retrieval solutions, `rare-technologies.com <http://rare-technologies.com>`_.
 
-In case you need commercial support, design validation, technical training or custom system development, `get in touch <http://radimrehurek.com/contact/>`_ for a quote.
+In case you need commercial support, design validation, technical training or custom system development, `get in touch <http://rare-technologies.com/contact>`_ for a quote.
 
 Developer support
 ------------------
 
 Developers who `tweak gensim internals <https://github.com/piskvorky/gensim/wiki/Developer-page>`_ are encouraged to report issues at the `GitHub issue tracker <https://github.com/piskvorky/gensim/issues>`_.
 Note that this is not a medium for discussions or asking open-ended questions; please use the mailing list for that.
-
