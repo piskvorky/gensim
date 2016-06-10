@@ -18,7 +18,9 @@ coherence measure of his/her choice by choosing a method in each of the pipeline
 import logging
 
 from gensim import interfaces
-from gensim import segmentation, probability_estimation, confirmation_measure, aggregation
+from gensim import (segmentation, probability_estimation,
+                    direct_confirmation_measure, indirect_confirmation_measure,
+                    aggregation)
 from gensim.corpora import Dictionary
 from gensim.matutils import argsort
 
@@ -83,13 +85,13 @@ class CoherenceModel(interfaces.TransformationABC): # FIXME : Document all the a
         if self.coherence == 'u_mass':
             self.seg = segmentation.s_one_pre
             self.prob = probability_estimation.p_boolean_document
-            self.conf = confirmation_measure.log_conditional_probability
+            self.conf = direct_confirmation_measure.log_conditional_probability
             self.aggr = aggregation.arithmetic_mean
 
-        elif self.coherence == 'c_v':  # FIXME : Write in the correct pipeline values. This is just for testing.
+        elif self.coherence == 'c_v':
             self.seg = segmentation.s_one_set
             self.prob = probability_estimation.p_boolean_sliding_window
-            self.conf = confirmation_measure.log_conditional_probability
+            self.conf = indirect_confirmation_measure.cosine_similarity
             self.aggr = aggregation.arithmetic_mean
 
     def __str__(self):
@@ -111,10 +113,9 @@ class CoherenceModel(interfaces.TransformationABC): # FIXME : Document all the a
             confirmed_measures = self.conf(segmented_topics, per_topic_postings, num_docs)
             return self.aggr(confirmed_measures)
 
-        elif self.coherence == 'c_v':  # FIXME : Write correct pipeline parameters. Using just for testing.
+        elif self.coherence == 'c_v':
             segmented_topics = self.seg(self.topics)
             per_topic_postings, num_windows = self.prob(texts=self.texts, segmented_topics=segmented_topics,
                                                         dictionary=self.dictionary, window_size=2)  # FIXME : Change window size to 110 finally.
-            return per_topic_postings
-            confirmed_measures = self.conf(segmented_topics, per_topic_postings)
-            # return self.aggr(confirmed_measures)
+            confirmed_measures = self.conf(self.topics, segmented_topics, per_topic_postings, 'nlr', 1, num_windows)
+            return self.aggr(confirmed_measures)

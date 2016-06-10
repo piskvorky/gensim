@@ -34,7 +34,7 @@ def s_one_pre(topics):
     """
     s_one_pre = []
 
-    for t, top_words in enumerate(topics):
+    for top_words in topics:
         s_one_pre_t = []
         for w_prime in top_words[1:]:
             w_prime_index = np.where(top_words == w_prime)[0] # To get index of w_star in top_words
@@ -42,7 +42,7 @@ def s_one_pre(topics):
                 s_one_pre_t.append((w_prime, w_star))
         s_one_pre.append(s_one_pre_t)
 
-    return s_one_pre # FIXME : need to make generator
+    return s_one_pre  # FIXME : need to make generator
 
 def s_one_set(topics):
     """
@@ -66,10 +66,10 @@ def s_one_set(topics):
     """
     s_one_set = []
 
-    for t, top_words in enumerate(topics):
+    for top_words in topics:
         s_one_set_t = []
         for w_prime in top_words:
             s_one_set_t.append((w_prime, top_words))
         s_one_set.append(s_one_set_t)
 
-    return s_one_set # FIXME : need to yield
+    return s_one_set  # FIXME : need to yield

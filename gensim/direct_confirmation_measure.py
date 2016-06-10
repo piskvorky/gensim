@@ -5,7 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-This module contains functions to compute confirmation on a pair of words or word subsets.
+This module contains functions to compute direct confirmation on a pair of words or word subsets.
 """
 
 import logging
@@ -64,8 +64,8 @@ def log_ratio_measure(segmented_topics, per_topic_postings, num_docs):
             w_prime_docs = per_topic_postings[w_prime]
             w_star_docs = per_topic_postings[w_star]
             co_docs = w_prime_docs.intersection(w_star_docs)
-            numerator = (len(co_docs) / num_docs) + EPSILON
-            denominator = (len(w_prime_docs) / num_docs) * (len(w_star_docs) / num_docs)
+            numerator = (len(co_docs) / float(num_docs)) + EPSILON
+            denominator = (len(w_prime_docs) / float(num_docs)) * (len(w_star_docs) / float(num_docs))
             m_lr_i = np.log(numerator / denominator)
             m_lr.append(m_lr_i)
 
@@ -87,3 +87,15 @@ def normalized_log_ratio_measure(segmented_topics, per_topic_postings, num_docs)
     -------
     m_nlr : List of log ratio measures on each set in segmented topics.
     """
+    m_nlr = []
+    for s_i in segmented_topics:
+        for w_prime, w_star in s_i:
+            numerator = log_ratio_measure([[(w_prime, w_star)]], per_topic_postings, num_docs)[0]
+            w_prime_docs = per_topic_postings[w_prime]
+            w_star_docs = per_topic_postings[w_star]
+            co_docs = w_prime_docs.intersection(w_star_docs)
+            co_doc_prob = len(co_docs) / float(num_docs)
+            m_nlr_i = numerator / np.log(co_doc_prob + EPSILON)
+            m_nlr.append(m_nlr_i)
+
+    return m_nlr
