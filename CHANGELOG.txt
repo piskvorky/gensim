@@ -10,7 +10,6 @@ Changes
 * added functionality for Topics of Words in document - i.e, dynamic topics. (@bhargavvader, #704)
   - also included tutorial which explains new functionalities, and document word-topic colring.
 * Made normalization an explicit transformation. Added 'l1' norm support (@squareindia, #649)
->>>>>>> e80bcfc342ae11ac1b4fdc6f03cdd7f14d2c1209
 * added term-topics API for most probable topic for word in vocab. (@bhargavvader, #706)
 * build_vocab takes progress_per parameter for smaller output (@zer0n, #624)
 * Control whether to use lowercase for computing word2vec accuracy. (@alantian, #607)
