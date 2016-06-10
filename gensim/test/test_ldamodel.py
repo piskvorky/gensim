@@ -293,13 +293,23 @@ class TestLdaModel(unittest.TestCase):
         numpy.random.seed(0)
         model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes=100)
 
-        # checks if topic '1' is in the result list
-        # check with id 
+        # check with word_type
         result = model.get_term_topics(2)
+        for topic_no, probability in result:
+            self.assertTrue(isinstance(topic_no, int))
+            self.assertTrue(isinstance(probability, float))
+
+        # checks if topic '1' is in the result list
         self.assertTrue(1 in result[0])
+
 
         # if user has entered word instead, check with word
         result = model.get_term_topics(str(model.id2word[2]))
+        for topic_no, probability in result:
+            self.assertTrue(isinstance(topic_no, int))
+            self.assertTrue(isinstance(probability, float))
+
+        # checks if topic '1' is in the result list
         self.assertTrue(1 in result[0])
 
 
