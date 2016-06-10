@@ -56,9 +56,9 @@ class sslm(utils.SaveLoad):
                mean_t=None, variance_t=None, influence_sum_lgl=None, w_phi_l=None, w_phi_sum=None, w_phi_l_sq=None,  m_update_coeff_g=None):
 
         self.obs = obs
-        self.zeta = zeta
-        self.mean = mean
-        self.variance = variance
+        self.zeta = zeta # array equal to number of sequences
+        self.mean = mean # matrix of dimensions num_terms * (num_of sequences + 1)
+        self.variance = variance # matrix of dimensions num_terms * (num_of sequences + 1)
 
 
 def update_zeta(sslm):
@@ -72,5 +72,41 @@ def update_zeta(sslm):
             m = sslm.mean[i][j + 1]
             v = sslm.variance[i][j + 1]
             val = numpy.exp(m + v/2)
-            sslm.zeta[j] = sslm.zeta[j] + val 
+            sslm.zeta[j] = sslm.zeta[j] + val  
     return
+
+def compute_post_variance(sslm):
+    return
+
+    
+def sslm_counts_init(sslm, lda, obs_variance, chain_variance):
+
+    W = sslm.num_terms
+    T = sslm.num_sequence
+
+    log_norm_counts = lda.state.sstats
+    log_norm_counts = log_norm_counts / sum(log_norm_counts)
+
+    log_norm_counts = log_norm_counts + 1.0/W
+    log_norm_counts = log_norm_counts / sum(log_norm_counts)
+    log_norm_counts = numpy.log(log_norm_counts)
+
+    # setting variational observations to transformed counts
+    for t in range(0, T):
+        sslm.obs[t] = log_norm_counts
+
+    # set variational parameters
+
+    sslm.obs_variance = obs_variance
+    sslm.chain_variance = chain_variance
+
+    # compute post variance
+    for w in range(0, W):
+       compute_post_variance(w, sslm, sslm.chain_variance)
+
+    for w in range(0, W):
+       compute_post_mean(w, sslm, sslm.chain_variance)
+
+    update_zeta(sslm)
+    compute_expected_log_prob(sslm)
+
