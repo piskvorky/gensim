@@ -28,7 +28,7 @@ from gensim.utils import is_corpus
 logger = logging.getLogger(__name__)
 
 
-class CoherenceModel(interfaces.TransformationABC): # FIXME : Document all the arguments for __init__
+class CoherenceModel(interfaces.TransformationABC):
     """
     Objects of this class allow for building and maintaining a model for topic
     coherence.
@@ -38,12 +38,22 @@ class CoherenceModel(interfaces.TransformationABC): # FIXME : Document all the a
     1. constructor, which initializes the four stage pipeline by accepting a coherence measure,
     2. the ``get_coherence()`` method, which returns the topic coherence.
 
+    >>> cm = CoherenceModel(model=tm, corpus=corpus, coherence='u_mass')  # tm is the trained topic model
+    >>> cm.get_coherence()
+
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, model, texts=None, corpus=None, dictionary=None, coherence='u_mass'):
+    def __init__(self, model, texts=None, corpus=None, dictionary=None, coherence='c_v'):
         """
-        FIXME : Write documentation.
-        model : Pre-trained topic model
+        Args:
+        ----
+        model : Pre-trained topic model.
+        texts : Tokenized texts. Needed for coherence models that use sliding window based probability estimator.
+        corpus : Gensim document corpus.
+        dictionary : Gensim dictionary mapping of id word to create corpus.
+        coherence : Coherence measure to be used. Supported values are:
+                    u_mass
+                    c_v
         """
         if texts is None and corpus is None:
             raise ValueError("One of texts or corpus has to be provided.")
