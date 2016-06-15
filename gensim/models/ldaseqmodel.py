@@ -123,7 +123,8 @@ def compute_post_mean(word, sslm, chain_variance):
         w = sslm.obs_variance / (fwd_variance[t - 1] + chain_variance + sslm.obs_variance)
         fwd_mean[t] = w * fwd_mean[t - 1] + (1 - w) * obs[t - 1]
         if fwd_mean[t] is None:
-            print"log message"
+            # error message
+            pass
 
     # backward pass
     mean[T] = fwd_mean[T]
@@ -134,7 +135,9 @@ def compute_post_mean(word, sslm, chain_variance):
             w = chain_variance / (fwd_variance[t] + chain_variance)
         mean[t] = w * fwd_mean[t] + (1 - w) * mean[t + 1]
         if mean[t] is None:
-            print "log message"
+            # error message
+            pass
+
     sslm.mean[word] = mean
     sslm.fwd_mean[word] = fwd_mean    
     return
