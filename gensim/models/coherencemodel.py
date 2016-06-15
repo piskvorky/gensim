@@ -23,6 +23,7 @@ from gensim import (segmentation, probability_estimation,
                     aggregation)
 from gensim.corpora import Dictionary
 from gensim.matutils import argsort
+from gensim.utils import is_corpus
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ class CoherenceModel(interfaces.TransformationABC): # FIXME : Document all the a
         if texts is None and corpus is None:
             raise ValueError("One of texts or corpus has to be provided.")
         if coherence == 'u_mass':
-            if corpus is not None:
+            if is_corpus(corpus)[0]:
                 if dictionary is None:
                     if model.id2word[0] == 0:
                         raise ValueError("The associated dictionary should be provided with the corpus or 'id2word' for topic model"
