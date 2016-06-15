@@ -37,12 +37,15 @@ class LdaSeqModel(utils.SaveLoad):
             self.num_terms = 0
 
         if self.num_terms == 0:
-            raise ValueError("cannot compute LDA over an empty collection (no terms)")
+            raise ValueError("cannot compute DTM over an empty collection (no terms)")
 
         self.num_topics = num_topics
         self.num_sequence = num_sequence
         self.alphas = alphas
-        self.topic_chains = topic_chains
+        self.topic_chains = []
+        for topic in range(0, num_topics):
+            topic_chains.append(sslm)
+
         self.top_doc_phis = top_doc_phis
 
         # influence values as of now not using
@@ -51,7 +54,7 @@ class LdaSeqModel(utils.SaveLoad):
         self.influence_sum_lgl = influence_sum_lgl
 
 class sslm(utils.SaveLoad):
-  def __init__(num_terms=None, num_sequence=None, obs=None, obs_variance=None, chain_variance=None, fwd_variance=None,
+  def __init__(num_terms=None, num_sequence=None, obs=None, obs_variance=0.5, chain_variance=0.005, fwd_variance=None,
                mean=None, variance=None,  zeta=None, e_log_prob=None, fwd_mean=None, m_update_coeff=None,
                mean_t=None, variance_t=None, influence_sum_lgl=None, w_phi_l=None, w_phi_sum=None, w_phi_l_sq=None,  m_update_coeff_g=None):
 
@@ -75,28 +78,94 @@ def update_zeta(sslm):
             sslm.zeta[j] = sslm.zeta[j] + val  
     return
 
-def compute_post_variance(sslm):
+def compute_post_variance(word , sslm, chain_variance):
+    T = sslm.num_sequence
+    variance = sslm.variance[word] # pick wordth row
+    fwd_variance = sslm.fwd_variance[word] # pick wordth row
+
+    # forward pass. Set initial variance very high
+    fwd_variance[0] = chain_variance * 1000
+    
+    for t in range(1, T + 1):
+        if sslm.obs_variance:
+            w = sslm.obs_variance / (fwd_variance[t - 1] + chain_variance + sslm.obs_variance)
+        else:
+            w = 0
+        fwd_variance[t] = w * (fwd_variance[t-1] + chain_variance)
+
+    # backward pass 
+    variance[T] = fwd_variance[T]
+    for t in range(T - 1, -1, -1):
+        if fwd_variance[t] > 0.0:
+            w = numpy.power((fwd_variance[t] / (fwd_variance[t] + chain_variance)), 2)
+        else:
+            w = 0
+        variance[t] = (w * (variance[t + 1] - chain_variance)) + ((1 - w) * fwd_variance[t])
+
+    sslm.variance[word] = variance
+    sslm.fwd_variance[word] = fwd_variance
+    return
+    
+
+def compute_post_mean(word, sslm, chain_variance):
+
+    T = sslm.num_sequence
+    obs = sslm.obs[word] # wordth row
+    mean = sslm.mean[word]
+    fwd_mean = sslm.fwd_mean[word]
+    fwd_variance = sslm.fwd_variance[word]
+
+    # forward 
+    fwd_mean[0] = 0
+    for t in range(1, T + 1):
+            # assert(fabs(vget(&fwd_variance, t-1) +
+            # chain_variance + var->obs_variance) > 0.0);
+        w = sslm.obs_variance / (fwd_variance[t - 1] + chain_variance + sslm.obs_variance)
+        fwd_mean[t] = w * fwd_mean[t - 1] + (1 - w) * obs[t - 1]
+        if fwd_mean[t] is None:
+            print"log message"
+
+    # backward pass
+    mean[T] = fwd_mean[T]
+    for t in range(T - 1, -1, -1):
+        if chain_variance == 0.0:
+            w = 0.0
+        else:
+            w = chain_variance / (fwd_variance[t] + chain_variance)
+        mean[t] = w * fwd_mean[t] + (1 - w) * mean[t + 1]
+        if mean[t] is None:
+            print "log message"
+    sslm.mean[word] = mean
+    sslm.fwd_mean[word] = fwd_mean    
     return
 
-    
-def sslm_counts_init(sslm, lda, obs_variance, chain_variance):
+def compute_expected_log_prob(sslm):
+
+    W = sslm.num_terms
+    T = sslm.num_sequence
+    for t in range(0, T):
+        for w in range(0, W):
+            sslm.e_log_prob[w][t] = sslm.mean[w][t + 1] - numpy.log(sslm.zeta[t])
+    return
+
+
+def sslm_counts_init(sslm, obs_variance, chain_variance, sstats):
 
     W = sslm.num_terms
     T = sslm.num_sequence
 
-    log_norm_counts = lda.state.sstats
+    log_norm_counts = sstats
     log_norm_counts = log_norm_counts / sum(log_norm_counts)
 
     log_norm_counts = log_norm_counts + 1.0/W
     log_norm_counts = log_norm_counts / sum(log_norm_counts)
     log_norm_counts = numpy.log(log_norm_counts)
-
+    
     # setting variational observations to transformed counts
     for t in range(0, T):
-        sslm.obs[t] = log_norm_counts
+        sslm.obs[:,t] = log_norm_counts
 
     # set variational parameters
-
     sslm.obs_variance = obs_variance
     sslm.chain_variance = chain_variance
 
@@ -110,3 +179,13 @@ def sslm_counts_init(sslm, lda, obs_variance, chain_variance):
     update_zeta(sslm)
     compute_expected_log_prob(sslm)
 
+def init_ldaseq_ss(ldaseq, lda, alpha, topic_chain_variance, topic_obs_variance):
+    ldaseq.alpha = alpha
+    for k in range(0, ldaseq.num_topics):
+        sstats = lda.state.sstats[k]
+        sslm_counts_init(ldaseq.topic_chains[k], topic_obs_variance, topic_chain_variance, sstats)
+
+        # dont't need to initialize here, but writing for reference
+        ldaseq.topic_chains[k].w_phi_l = numpy.zeros((ldaseq.num_terms, ldaseq.num_sequence))
+        ldaseq.topic_chains[k].w_phi_sum = numpy.zeros((ldaseq.num_terms, ldaseq.num_sequence))
+        ldaseq.topic_chains[k].w_phi_sq = numpy.zeros((ldaseq.num_terms, ldaseq.num_sequence))
