@@ -16,7 +16,7 @@ from gensim import direct_confirmation_measure
 class TestDirectConfirmationMeasure(unittest.TestCase):
     def setUp(self):
         # Set up toy example for better understanding and testing
-        # of this module
+        # of this module. See the modules for the mathematical formulas
         self.segmentation = [[(1, 2)]]
         self.posting_list = {1: set([2, 3, 4]), 2: set([3, 5])}
         self.num_docs = 5
