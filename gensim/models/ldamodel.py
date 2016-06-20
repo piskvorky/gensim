@@ -257,7 +257,7 @@ class LdaModel(interfaces.TransformationABC):
 
         `minimum_probability` controls filtering the topics returned for a document (bow).
         
-        `random_state` can be a nump.random.RandomState object or the seed for one
+        `random_state` can be a numpy.random.RandomState object or the seed for one
 
         Example:
 
