@@ -31,7 +31,7 @@ def _ret_top_ids(segmented_topics):
                 top_ids.add(id)
     return top_ids
 
-def p_boolean_document(corpus, segmented_topics): # FIXME : Works only for S_One_One kind of segmentations
+def p_boolean_document(corpus, segmented_topics):
     """
     This function performs the boolean document probability estimation. Boolean document estimates the probability
     of a single word as the number of documents in which the word occurs divided by the total number of documents.

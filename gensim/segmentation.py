@@ -42,7 +42,7 @@ def s_one_pre(topics):
                 s_one_pre_t.append((w_prime, w_star))
         s_one_pre.append(s_one_pre_t)
 
-    return s_one_pre  # FIXME : need to make generator
+    return s_one_pre
 
 def s_one_set(topics):
     """
@@ -72,4 +72,4 @@ def s_one_set(topics):
             s_one_set_t.append((w_prime, top_words))
         s_one_set.append(s_one_set_t)
 
-    return s_one_set  # FIXME : need to yield
+    return s_one_set

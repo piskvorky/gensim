@@ -6,6 +6,16 @@
 
 """
 This module contains functions to compute confirmation on a pair of words or word subsets.
+
+The formula used to compute indirect confirmation measure is:
+                                _              _
+m_sim(m, gamma)(W', W*) = s_sim(V_m,gamma(W'), V_m,gamma(W*))
+
+where s_sim can be cosine, dice or jaccard similarity and
+_
+V_m,gamma(W') = {sigma(w' belonging to W') m(w_i, w_j) ^ gamma} where j = 1, ...., |W|
+
+Here 'm' is the direct confirmation measure used.
 """
 
 import logging
@@ -37,7 +47,7 @@ def _make_seg(w_prime, w, per_topic_postings, measure, gamma, backtrack, num_doc
             context_vectors[w_j] = backtrack[(w_prime, w_j)] ** gamma
     return (context_vectors, backtrack)
 
-def cosine_similarity(topics, segmented_topics, per_topic_postings, measure, gamma, num_docs):  # FIXME : Write documentation for arguments.
+def cosine_similarity(topics, segmented_topics, per_topic_postings, measure, gamma, num_docs):
     """
     This function calculates the indirect cosine measure. Given context vectors
     _   _         _   _
@@ -47,10 +57,17 @@ def cosine_similarity(topics, segmented_topics, per_topic_postings, measure, gam
 
     Args:
     ----
-    measure : String. Supported values are "nlr" (normalized log ratio).
+    topics : Topics obtained from the trained topic model.
+    segmented_topics : segmented_topics : Output from the segmentation module of the segmented topics. Is a list of list of tuples.
+    per_topic_postings : per_topic_postings : Output from the probability_estimation module. Is a dictionary of the posting list of all topics.
+    measure : String. Direct confirmation measure to be used. Supported values are "nlr" (normalized log ratio).
+    gamma : Gamma value for computing W', W* vectors.
+    num_docs : Total number of documents in corresponding corpus.
     """
     if measure == 'nlr':
         measure = direct_confirmation_measure.normalized_log_ratio_measure
+    else:
+        raise ValueError("The direct confirmation measure you entered is not currently supported.")
     backtrack = {}
     s_cos_sim = []
     for top_words, s_i in zip(topics, segmented_topics):
