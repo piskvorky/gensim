@@ -94,10 +94,7 @@ def update_dir_prior(prior, N, logphat, rho):
 def check_random_state(seed):
      """ Turn seed into a np.random.RandomState instance.
 
-         This is a copy of the check_random_state function in sklearn
-         in order to avoid outside dependencies.
-         
-         Method originally from maciejkula/glove-python, and written by joshloyal
+         Method originally from maciejkula/glove-python, and written by @joshloyal
      """
      if seed is None or seed is numpy.random:
          return numpy.random.mtrand._rand
@@ -259,6 +256,8 @@ class LdaModel(interfaces.TransformationABC):
         Hoffman et al, respectively.
 
         `minimum_probability` controls filtering the topics returned for a document (bow).
+        
+        `random_state` can be a nump.random.RandomState object or the seed for one
 
         Example:
 
