@@ -24,7 +24,7 @@ Changes
 * Tests for wikidump (@jonmcoe, #723)
 * Mallet wrapper sparse format support (@RishabGoel, #664)
 * Doc2vec pre-processing script translated from bash to Python (@andrewjlm, #720)
-
+* Added random_state parameter to LdaState initializer and check_random_state() (@droudy, #113)
 
 0.12.4, 29/01/2016
 * Better internal handling of job batching in word2vec (#535)
