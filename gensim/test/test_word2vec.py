@@ -56,7 +56,8 @@ sentences = [
 
 new_sentences = [
     ['computer', 'artificial', 'intelligence'],
-    ['artificial', 'trees']
+    ['artificial', 'trees'],
+    ['human', 'intelligence']
 ]
 
 def testfile():
@@ -119,10 +120,12 @@ class TestWord2VecModel(unittest.TestCase):
         vocabulary and to a trained model when using a sorted vocabulary"""
         model = word2vec.Word2Vec(sentences, min_count=0, sorted_vocab=0)
         model.build_vocab(new_sentences, update=True)
+        orig0 = numpy.copy(model.syn0)[-1]
         model.train(new_sentences)
         self.assertEqual(len(model.vocab), 14)
         self.assertEqual(model.syn0.shape[0], 14)
         self.assertEqual(model.syn0.shape[1], 100)
+        self.assertTrue((model.syn0[-1] != orig0).all())
 
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
