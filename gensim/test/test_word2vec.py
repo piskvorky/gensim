@@ -57,7 +57,10 @@ sentences = [
 new_sentences = [
     ['computer', 'artificial', 'intelligence'],
     ['artificial', 'trees'],
-    ['human', 'intelligence']
+    ['human', 'intelligence'],
+    ['artificial', 'graph'],
+    ['intelligence'],
+    ['survey', 'user', 'artificial', 'system', 'response', 'time']
 ]
 
 def testfile():
