@@ -640,7 +640,7 @@ class Doc2Vec(Word2Vec):
         self.docvecs.borrow_from(other_model.docvecs)
         super(Doc2Vec, self).reset_from(other_model)
 
-    def scan_vocab(self, documents, progress_per=10000, trim_rule=None):
+    def scan_vocab(self, documents, update=False, progress_per=10000, trim_rule=None):
         logger.info("collecting all words and their counts")
         document_no = -1
         total_words = 0
