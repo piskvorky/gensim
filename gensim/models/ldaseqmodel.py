@@ -17,7 +17,16 @@ Few mathematical helper functions will be made and tested.
 """
 
 from gensim import interfaces, utils, matutils
+from gensim.models import ldamodel
 import numpy
+
+class seq_corpus(utils.SaveLoad):
+    def __init__(self, num_terms=0, max_nterms=0, length=0, num_doc=0, corpuses=0):
+        self.num_terms = num_terms
+        self.max_nterms = max_nterms
+        self.length = length
+        self.num_docs = num_docs
+        self.corpuses = corpuses
 
 class LdaSeqModel(utils.SaveLoad):
     def __init__(self, corpus=None, num_topics=10, id2word=None, num_sequence=None, num_terms=None, alphas=None, top_doc_phis=None,
@@ -192,3 +201,155 @@ def init_ldaseq_ss(ldaseq, lda, alpha, topic_chain_variance, topic_obs_variance)
         ldaseq.topic_chains[k].w_phi_l = numpy.zeros((ldaseq.num_terms, ldaseq.num_sequence))
         ldaseq.topic_chains[k].w_phi_sum = numpy.zeros((ldaseq.num_terms, ldaseq.num_sequence))
         ldaseq.topic_chains[k].w_phi_sq = numpy.zeros((ldaseq.num_terms, ldaseq.num_sequence))
+
+def fit_lda_seq(ldaseq, seq_corpus):
+    K = ldaseq.num_topics
+    W = ldaseq.num_terms
+    data_len = seq_corpus.length
+    no_docs = seq_corpus.no_docs
+    
+    # heldout_gammas = NULL
+    # heldout_llhood = NULL
+
+    bound = 0
+    heldout_bound = 0
+    ldasqe_em_threshold = 1e-4
+    convergence = ldasqe_em_threshold + 1
+
+    # make directory
+    em_log = open("em_log.dat", "w")
+    gammas_file = open("gammas.dat", "w")
+    lhoods_file = open("lhoods.dat", "w")
+
+    iter_ = 0
+    final_iters_flag = 0 
+    last_iter = 0
+
+    # this is a flag/input do something about it
+    lda_seq_min_iter = 0
+    lda_seq_max_iter = 0
+    
+    while iter_ < lda_seq_min_iter or ((final_iters_flag is 0 or convergence > ldasqe_em_threshold) and iter_ <= lda_seq_max_iter):
+        if (!(iter_ < lda_sequence_min_iter or ((final_iters_flag is 0 or convergence > ldasqe_em_threshold) and iter_ <= lda_seq_max_iter))):
+            last_iter = 1
+
+        # log
+        print " EM iter " , iter_
+        print "E Step"
+
+        # writing to file
+        em_log.write(str(bound) + "\t" + str(convergence))
+        old_bound = bound
+
+        # initiate sufficient statistics
+        topic_suffstats = numpy.zeros(K)
+        for k in range(0, K):
+            topic_suffstats[k] = numpy.resize(numpy.zeros(W * data_len), (W, data_len))
+
+        # set up variables
+        gammas = numpy.resize(numpy.zeros(no_docs * K), (no_docs, K))
+        lhoods = numpy.resize(numpy.zeros(no_docs * K + 1), (no_docs, K + 1))
+
+        bound = lda_seq_infer(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, last_iter)
+
+        # figure out how to write to file here
+        # TODO save to file for command line
+        gammas_file.write(gammas)
+        lhoods_file.write(lhoods)
+
+        print "M Step"
+
+        topic_bound = fit_lda_seq_topics(ldaseq, topic_suffstats)
+        bound += topic_bound
+
+        write_lda_seq(ldaseq)
+
+        if ((bound - old_bound) < 0):
+            if (LDA_INFERENCE_MAX_ITER == 1):
+                LDA_INFERENCE_MAX_ITER = 2
+            if (LDA_INFERENCE_MAX_ITER == 2):
+                LDA_INFERENCE_MAX_ITER = 5
+            if (LDA_INFERENCE_MAX_ITER == 5):
+                LDA_INFERENCE_MAX_ITER = 10
+            if (LDA_INFERENCE_MAX_ITER == 10):
+                LDA_INFERENCE_MAX_ITER = 20
+            print "Bound went down, increasing it to" , LDA_INFERENCE_MAX_ITER
+
+        # check for convergence
+        convergence = numpy.fabs((bound - old_bound) / old_bound)
+
+        if convergence < ldasqe_em_threshold:
+            final_iters_flag = 1
+            LDA_INFERENCE_MAX_ITER = 500
+            print "Starting final iterations, max iter is", LDA_INFERENCE_MAX_ITER
+            convergence = 1.0
+
+        print "%d lda seq bound is = %d, convergence is %d", iter_, bound, convergence
+
+        iter_ += 1
+
+    return bound
+
+
+def lda_seq_infer(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, last_iter):
+    K = ldaseq.num_topics
+    W = ldaseq.num_terms
+    bound = 0.0
+
+#     typedef struct lda {
+#     int ntopics;         // number of topics
+#     int nterms;          // vocabulary size
+#     gsl_matrix* topics;  // each column is a topic (V X K)
+#     gsl_vector* alpha;   // dirichlet parameters
+# } lda;
+
+# // lda posterior
+
+# typedef struct lda_post {
+#     doc_t* doc;          // document associated to this posterior
+#     lda* model;          // lda model
+#     gsl_matrix* phi;     // variational mult parameters (nterms x K)
+#     gsl_matrix* log_phi; // convenient for computation (nterms x K)
+#     gsl_vector* gamma;   // variational dirichlet parameters (K)
+#     gsl_vector* lhood;   // a K+1 vector, sums to the lhood bound
+#     gsl_vector* doc_weight;  // Not owned by this structure.
+#     gsl_vector* renormalized_doc_weight;  // Not owned by this structure.
+# } lda_post;
+    
+    lda = ldamodel.LdaModel(num_topics=K)
+
+    lda_post.phi = numpy.resize(numpy.zeros(seq_corpus.max_nterms * K), (seq_corpus.max_nterms, K))
+    lda_post.log_phi = numpy.resize(numpy.zeros(seq_corpus.max_nterms * K), (seq_corpus.max_nterms, K))
+    lda_post.model = lda
+
+    model = "DTM"
+    if model == "DTM":
+        inferDTMseq(K, ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, last_iter, lda, lda_post, bound)
+    elif model == "DIM":
+        InfluenceTotalFixed(ldaseq, seq_corpus);
+        inferDIMseq(K, ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, last_iter, lda, lda_post, bound)
+
+    return bound
+
+def inferDTMseq(K, ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, last_iter, lda, lda_post, bound):
+    return
+
+def fit_lda_seq_topics(ldaseq, topic_suffstats):
+    lhood = 0
+    lhood_term = 0
+    K = ldaseq.num_topics
+
+    for k in range(0, K):
+        print "Fitting topic number" , k
+        lhood_term = fit_sslm(ldaseq.topic_chains[k], topic_suffstats[k])
+        lhood +=lhood_term
+
+    return lhood
+
+def fit_sslm(sslm, counts):
+    W = sslm.num_terms
+    bound = 0
+    old_bound = 0
+    sslm_fit_threshold = 1e-6
+    converged = sslm_fit_threshold + 1
+    
