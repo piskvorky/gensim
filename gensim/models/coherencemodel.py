@@ -27,6 +27,8 @@ from gensim.topic_coherence import (segmentation, probability_estimation,
 from gensim.corpora import Dictionary
 from gensim.matutils import argsort
 from gensim.utils import is_corpus
+from gensim.models.ldamodel import LdaModel
+from gensim.models.wrappers import LdaVowpalWabbit
 
 logger = logging.getLogger(__name__)
 
@@ -114,10 +116,15 @@ class CoherenceModel(interfaces.TransformationABC):
 
     def _get_topics(self):
         """Internal helper function to return topics from a trained topic model."""
-        topics = []  # FIXME : Meant to work for LDAModel right now. Make it work for others.
-        for topic in self.model.state.get_lambda():
-            bestn = argsort(topic, topn=10, reverse=True)
-            topics.append(bestn)
+        topics = []  # FIXME : Meant to work for LDAModel, LdaVowpalWabbit right now. Make it work for others.
+        if isinstance(self.model, LdaModel):
+            for topic in self.model.state.get_lambda():
+                bestn = argsort(topic, topn=10, reverse=True)
+                topics.append(bestn)
+        elif isinstance(self.model, LdaVowpalWabbit):
+            for topic in self.model._get_topics():
+                bestn = argsort(topic, topn=10, reverse=True)
+                topics.append(bestn)
         return topics
 
     def get_coherence(self):
