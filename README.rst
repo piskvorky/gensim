@@ -3,13 +3,9 @@ gensim -- Topic Modelling in Python
 ==============================================
 
 |Travis|_
-|Downloads|_
 |Wheel|_
-|License|_
 
 .. |Travis| image:: https://img.shields.io/travis/piskvorky/gensim/develop.svg
-.. |Downloads| image:: https://img.shields.io/pypi/dm/gensim.svg
-.. |License| image:: https://img.shields.io/pypi/l/gensim.svg
 .. |Wheel| image:: https://img.shields.io/pypi/wheel/gensim.svg
 
 .. _Travis: https://travis-ci.org/piskvorky/gensim
