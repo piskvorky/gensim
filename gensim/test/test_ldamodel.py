@@ -279,14 +279,9 @@ class TestLdaModel(unittest.TestCase):
 
         # word_topics looks like this: ({word_id => [topic_id_most_probable, topic_id_second_most_probable, ...]).
         # we check one case in word_topics, i.e of the first word in the doc, and it's likely topics.
-        # also check one case of phi_values
         expected_word = 0
-        expected_topiclist = [1, 0]
-        expected_phi_values = (0, 0.6)
-        # FIXME: Fails on osx and win
-        # self.assertEqual(word_topics[0][0], expected_word)
-        # self.assertEqual(word_topics[0][1], expected_topiclist)
-        # self.assertAlmostEqual(phi_values[0][1], expected_phi_values[1], places = 1)
+        self.assertEqual(word_topics[0][0], expected_word)
+        self.assertTrue(0 in word_topics[0][1])
 
     def testTermTopics(self):
 
