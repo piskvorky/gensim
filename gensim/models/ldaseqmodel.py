@@ -230,7 +230,7 @@ def fit_lda_seq(ldaseq, seq_corpus):
     lda_seq_max_iter = 0
     
     while iter_ < lda_seq_min_iter or ((final_iters_flag is 0 or convergence > ldasqe_em_threshold) and iter_ <= lda_seq_max_iter):
-        if (!(iter_ < lda_sequence_min_iter or ((final_iters_flag is 0 or convergence > ldasqe_em_threshold) and iter_ <= lda_seq_max_iter))):
+        if not (iter_ < lda_sequence_min_iter or ((final_iters_flag is 0 or convergence > ldasqe_em_threshold) and iter_ <= lda_seq_max_iter)):
             last_iter = 1
 
         # log
