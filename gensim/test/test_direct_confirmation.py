@@ -11,7 +11,7 @@ Automated tests for direct confirmation measures in the direct_confirmation_meas
 import logging
 import unittest
 
-from gensim import direct_confirmation_measure
+from gensim.topic_coherence import direct_confirmation_measure
 
 class TestDirectConfirmationMeasure(unittest.TestCase):
     def setUp(self):

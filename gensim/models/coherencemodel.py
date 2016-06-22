@@ -6,21 +6,24 @@
 
 """
 Module for calculating topic coherence in python. This is the implementation of
-the four stage topic coherence pipeline from http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf.
+the four stage topic coherence pipeline from the paper [1].
 The four stage pipeline is basically:
 
 Segmentation -> Probability Estimation -> Confirmation Measure -> Aggregation.
 
 Implementation of this pipeline allows for the user to in essence "make" a
 coherence measure of his/her choice by choosing a method in each of the pipelines.
+
+[1] Michael Roeder, Andreas Both and Alexander Hinneburg. Exploring the space of topic
+coherence measures. http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf.
 """
 
 import logging
 
 from gensim import interfaces
-from gensim import (segmentation, probability_estimation,
-                    direct_confirmation_measure, indirect_confirmation_measure,
-                    aggregation)
+from gensim.topic_coherence import (segmentation, probability_estimation,
+                                    direct_confirmation_measure, indirect_confirmation_measure,
+                                    aggregation)
 from gensim.corpora import Dictionary
 from gensim.matutils import argsort
 from gensim.utils import is_corpus

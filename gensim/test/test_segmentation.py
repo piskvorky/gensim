@@ -14,7 +14,7 @@ import unittest
 
 import numpy as np
 
-from gensim import segmentation
+from gensim.topic_coherence import segmentation
 from numpy import array
 
 

@@ -11,7 +11,7 @@ Automated tests for indirect confirmation measures in the indirect_confirmation_
 import logging
 import unittest
 
-from gensim import indirect_confirmation_measure
+from gensim.topic_coherence import indirect_confirmation_measure
 
 import numpy as np
 from numpy import array

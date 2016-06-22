@@ -21,7 +21,7 @@ Here 'm' is the direct confirmation measure used.
 import logging
 import numpy as np
 
-from gensim import direct_confirmation_measure
+from gensim.topic_coherence import direct_confirmation_measure
 from gensim.matutils import cossim
 
 logger = logging.getLogger(__name__)

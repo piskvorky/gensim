@@ -11,7 +11,7 @@ Automated tests for probability estimation algorithms in the probability_estimat
 import logging
 import unittest
 
-from gensim import probability_estimation
+from gensim.topic_coherence import probability_estimation
 from gensim.corpora.dictionary import Dictionary
 
 class TestProbabilityEstimation(unittest.TestCase):
