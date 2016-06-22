@@ -17,6 +17,15 @@ class SimilarityIndex(object):
         return cls._build_from_model(model.syn0norm, model.index2word, model.vector_size, num_trees)
 
     @classmethod
+    def build_from_doc2vec(cls, model, num_trees):
+        """Build an Annoy index using document vectors from a Doc2Vec model"""
+
+        docvecs = model.docvecs
+        docvecs.init_sims()
+        labels = [docvecs.index_to_doctag(i) for i in range(0, docvecs.count)]
+        return cls._build_from_model(docvecs.doctag_syn0norm, labels, model.vector_size, num_trees)
+
+    @classmethod
     def _build_from_model(cls, vectors, labels, num_features, num_trees):
         index = AnnoyIndex(num_features)
 
