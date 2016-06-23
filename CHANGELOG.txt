@@ -1,7 +1,19 @@
 Changes
 =======
-0.12.5, 2016
-* Made normalization an explicit transformation. Added 'l1' norm support (Devashish Deshpande, #649)
+0.13.1, 2016-06-22
+* Topic coherence C_v and U_mass (@dsquareindia, #710)
+
+
+0.13.0, 2016
+* Added Distance Metrics to matutils.pt (@bhargavvader, #656)
+* Tutorials migrated from website to ipynb (@j9chan, #721), (@jesford, #733), (@jesford, #725), (@jesford, #716)
+* New doc2vec intro tutorial (@seanlaw, #730)
+* Gensim Quick Start Tutorial (@andrewjlm, #727)
+* Add export_phrases(sentences) to model Phrases (hanabi1224 #588)
+* SparseMatrixSimilarity returns a sparse matrix if `maintain_sparsity` is True (@davechallis, #590)
+* added functionality for Topics of Words in document - i.e, dynamic topics. (@bhargavvader, #704)
+  - also included tutorial which explains new functionalities, and document word-topic colring.
+* Made normalization an explicit transformation. Added 'l1' norm support (@squareindia, #649)
 * added term-topics API for most probable topic for word in vocab. (@bhargavvader, #706)
 * build_vocab takes progress_per parameter for smaller output (@zer0n, #624)
 * Control whether to use lowercase for computing word2vec accuracy. (@alantian, #607)
@@ -13,6 +25,11 @@ Changes
 * Convenience method for similarity of two out of training sentences to doc2vec (@ellolo, #707)
 * Dynamic Topic Modelling Tutorial updated with Dynamic Influence Model (@bhargavvader, #689)
 * Added function to filter 'n' most frequent words from the dictionary (@abhinavchawla, #718)
+* Raise warnings if vocab is single character elements and if alpha is increased in word2vec/doc2vec (@dsquareindia, #705)
+* Tests for wikidump (@jonmcoe, #723)
+* Mallet wrapper sparse format support (@RishabGoel, #664)
+* Doc2vec pre-processing script translated from bash to Python (@andrewjlm, #720)
+
 
 0.12.4, 29/01/2016
 * Better internal handling of job batching in word2vec (#535)

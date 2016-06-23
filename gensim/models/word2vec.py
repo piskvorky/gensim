@@ -86,10 +86,11 @@ except ImportError:
     from Queue import Queue, Empty
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
-    uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
+    double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
     ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
+from gensim.corpora.dictionary import Dictionary
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
@@ -100,8 +101,10 @@ try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
+    logger.debug('Fast version of {0} is being used'.format(__name__))
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
+    logger.warning('Slow version of {0} is being used'.format(__name__))
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
 
@@ -219,6 +222,13 @@ except ImportError:
 
         return log_prob_sentence
 
+# If pyemd C extension is available, import it.
+# If pyemd is attempted to be used, but isn't installed, ImportError will be raised.
+try:
+    from pyemd import emd
+    PYEMD_EXT = True
+except ImportError:
+    PYEMD_EXT = False
 
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
                   context_vectors=None, context_locks=None):
@@ -423,6 +433,7 @@ class Word2Vec(utils.SaveLoad):
         if size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
         self.alpha = float(alpha)
+        self.min_alpha_yet_reached = float(alpha) # To warn user if alpha increases
         self.window = int(window)
         self.max_vocab_size = max_vocab_size
         self.seed = seed
@@ -520,7 +531,13 @@ class Word2Vec(utils.SaveLoad):
         total_words = 0
         min_reduce = 1
         vocab = defaultdict(int)
+        checked_string_types = 0
         for sentence_no, sentence in enumerate(sentences):
+            if not checked_string_types:
+                if isinstance(sentence, string_types):
+                    logger.warn("Each 'sentences' item should be a list of words (usually unicode strings)."
+                                "First item here is instead plain %s.", type(sentence))
+                checked_string_types += 1
             if sentence_no % progress_per == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
                             sentence_no, sum(itervalues(vocab)) + total_words, len(vocab))
@@ -746,6 +763,9 @@ class Word2Vec(utils.SaveLoad):
             job_batch, batch_size = [], 0
             pushed_words, pushed_examples = 0, 0
             next_alpha = self.alpha
+            if next_alpha > self.min_alpha_yet_reached:
+                logger.warn("Effective 'alpha' higher than previous training cycles")
+            self.min_alpha_yet_reached = next_alpha
             job_no = 0
 
             for sent_idx, sentence in enumerate(sentences):
@@ -1223,6 +1243,92 @@ class Word2Vec(utils.SaveLoad):
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
+
+    def wmdistance(self, document1, document2, WCD=False, RWMD=False):
+        """
+        Compute the Word Mover's Distance between two documents. When using this
+        code, please consider citing the following papers:
+        * Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
+        * Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
+        * Matt Kusner et al. "From Word Embeddings To Document Distances".
+
+        Note that if one of the documents have no words that exist in the
+        Word2Vec vocab, `float('inf')` (i.e. infinity) will be returned.
+
+        This method only works if `pyemd` is installed (can be installed via pip, but requires a C compiler).
+
+        Example:
+        > # Train word2vec model.
+        > model = Word2Vec(sentences)
+
+        > # Some sentences to test.
+        > sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
+        > sentence_president = 'The president greets the press in Chicago'.lower().split()
+
+        > # Remove their stopwords.
+        > from nltk.corpus import stopwords
+        > stopwords = nltk.corpus.stopwords.words('english')
+        > sentence_obama = [w for w in sentence_obama if w not in stopwords]
+        > sentence_president = [w for w in sentence_president if w not in stopwords]
+
+        > # Compute WMD.
+        > distance = model.wmdistance(sentence_obama, sentence_president)
+        """
+
+        if not PYEMD_EXT:
+            raise ImportError("Please install pyemd Python package to compute WMD.")
+
+        # Remove out-of-vocabulary words.
+        len_pre_oov1 = len(document1)
+        len_pre_oov2 = len(document2)
+        document1 = [token for token in document1 if token in self]
+        document2 = [token for token in document2 if token in self]
+        diff1 = len_pre_oov1 - len(document1)
+        diff2 = len_pre_oov2 - len(document2)
+        if diff1 > 0 or diff2 > 0:
+            logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).',
+                        diff1, diff2)
+
+        if len(document1) == 0 or len(document2) == 0:
+            logger.info('At least one of the documents had no words that were'
+                        'in the vocabulary. Aborting (returning inf).')
+            return float('inf')
+
+        dictionary = Dictionary(documents=[document1, document2])
+        vocab_len = len(dictionary)
+
+        # Sets for faster look-up.
+        docset1 = set(document1)
+        docset2 = set(document2)
+
+        # Compute distance matrix.
+        distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
+        for i, t1 in dictionary.items():
+            for j, t2 in dictionary.items():
+                if not t1 in docset1 or not t2 in docset2:
+                    continue
+                # Compute Euclidean distance between word vectors.
+                distance_matrix[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
+
+        if np_sum(distance_matrix) == 0.0:
+            # `emd` gets stuck if the distance matrix contains only zeros.
+            logger.info('The distance matrix is all zeros. Aborting (returning inf).')
+            return float('inf')
+
+        def nbow(document):
+            d = zeros(vocab_len, dtype=double)
+            nbow = dictionary.doc2bow(document)  # Word frequencies.
+            doc_len = len(document)
+            for idx, freq in nbow:
+                d[idx] = freq / float(doc_len)  # Normalized word frequencies.
+            return d
+
+        # Compute nBOW representation of documents.
+        d1 = nbow(document1)
+        d2 = nbow(document2)
+
+        # Compute WMD.
+        return emd(d1, d2, distance_matrix)
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         """

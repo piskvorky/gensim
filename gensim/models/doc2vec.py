@@ -60,7 +60,9 @@ logger = logging.getLogger(__name__)
 try:
     from gensim.models.doc2vec_inner import train_document_dbow, train_document_dm, train_document_dm_concat
     from gensim.models.word2vec_inner import FAST_VERSION  # blas-adaptation shared from word2vec
-except:
+    logger.debug('Fast version of {0} is being used'.format(__name__))
+except ImportError:
+    logger.warning('Slow version of {0} is being used'.format(__name__))
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
 
@@ -645,8 +647,14 @@ class Doc2Vec(Word2Vec):
         min_reduce = 1
         interval_start = default_timer() - 0.00001  # guard against next sample being identical
         interval_count = 0
+        checked_string_types = 0
         vocab = defaultdict(int)
         for document_no, document in enumerate(documents):
+            if not checked_string_types:
+                if isinstance(document.words, string_types):
+                    logger.warn("Each 'words' should be a list of words (usually unicode strings)."
+                                "First 'words' here is instead plain %s." % type(document.words))
+                checked_string_types += 1
             if document_no % progress_per == 0:
                 interval_rate = (total_words - interval_count) / (default_timer() - interval_start)
                 logger.info("PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags",

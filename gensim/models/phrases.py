@@ -181,6 +181,40 @@ class Phrases(interfaces.TransformationABC):
 
         logger.info("merged %s", self)
 
+    def export_phrases(self, sentences):
+        """
+        Generate an iterator that contains all phrases in given 'sentences'
+
+        Example::
+
+          >>> sentences = Text8Corpus(path_to_corpus)
+          >>> bigram = Phrases(sentences, min_count=5, threshold=100)
+          >>> for phrase, score in bigram.export_phrases(sentences):
+          ...     print(u'{0}\t{1}'.format(phrase, score))
+
+            then you can debug the threshold with generated tsv
+        """
+        for sentence in sentences:
+            s = [utils.any2utf8(w) for w in sentence]
+            last_bigram = False
+            vocab = self.vocab
+            threshold = self.threshold
+            delimiter = self.delimiter
+            min_count = self.min_count
+            for word_a, word_b in zip(s, s[1:]):
+                if word_a in vocab and word_b in vocab:
+                    bigram_word = delimiter.join((word_a, word_b))
+                    if bigram_word in vocab and not last_bigram:
+                        pa = float(vocab[word_a])
+                        pb = float(vocab[word_b])
+                        pab = float(vocab[bigram_word])
+                        score = (pab - min_count) / pa / pb * len(vocab)
+                        # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
+                        #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
+                        if score > threshold:
+                            yield (b' '.join((word_a, word_b)), score)
+                            last_bigram = True
+
     def __getitem__(self, sentence):
         """
         Convert the input tokens `sentence` (=list of unicode strings) into phrase
