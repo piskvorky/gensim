@@ -1,5 +1,10 @@
 Changes
 =======
+0.13.2
+
+* topics, topn parameters changed to num_topics and num_words in show_topics() and print_topics()(@droudy, #747)
+  - In hdpmodel and dtmmodel
+  - NOT BACKWARDS COMPATIBLE!
 
 0.13.1, 2016-06-22
 
