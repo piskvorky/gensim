@@ -98,7 +98,7 @@ class TestLdaModel(unittest.TestCase):
         expected_shape = (2,)
 
         # should not raise anything
-        self.class_(**kwarghs)
+        self.class_(**kwargs)
 
         kwargs['alpha'] = 'symmetric'
         model = self.class_(**kwargs)
