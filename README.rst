@@ -68,10 +68,10 @@ Memory-wise, gensim makes heavy use of Python's built-in generators and iterator
 
 Documentation
 -------------
-
-Manual for the gensim package is available in `HTML <http://radimrehurek.com/gensim/>`_. It
-contains a walk-through of all its features and a complete reference section.
-It is also included in the source distribution package.
+* `QuickStart`_
+* `Tutorials`_
+* `Tutorial Videos`_
+* `Official Documentation and Walkthrough`_
 
 Citing gensim
 -------------
@@ -102,3 +102,7 @@ Copyright (c) 2009-now Radim Rehurek
 
 .. |Analytics| image:: https://ga-beacon.appspot.com/UA-24066335-5/your-repo/page-name
 .. _Analytics: https://github.com/igrigorik/ga-beacon
+.. _Official Documentation and Walkthrough: http://radimrehurek.com/gensim/
+.. _Tutorial Videos: https://github.com/totalgood/gensim/blob/develop/docs/tutorials.md#videos
+.. _Tutorials: https://github.com/totalgood/gensim/blob/develop/docs/tutorials.md#tutorials
+.. _QuickStart: https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/gensim%20Quick%20Start.ipynb
