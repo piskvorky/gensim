@@ -47,7 +47,6 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
-
 class TestHdpModel(unittest.TestCase):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
@@ -55,7 +54,7 @@ class TestHdpModel(unittest.TestCase):
         self.model = self.class_(corpus, id2word=dictionary)
 
     def testShowTopics(self):
-        topics = self.model.show_topics(formatted=False)
+        topics = self.model.show_topics(formatted=False, num_topics=20, num_words=20)
 
         for topic_no, topic in topics:
             self.assertTrue(isinstance(topic_no, int))
@@ -63,7 +62,6 @@ class TestHdpModel(unittest.TestCase):
             for k, v in topic:
                 self.assertTrue(isinstance(k, six.string_types))
                 self.assertTrue(isinstance(v, float))
-
 
 
 if __name__ == '__main__':
