@@ -35,8 +35,21 @@ If this feature list left you scratching your head, you can first read more abou
 Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised
 document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
 
-Installation
-------------
+Fast Installation with Docker
+-----------------------------
+
+If your system supports `Docker <https://www.docker.com/what-docker>`_ and you are root, the easiest way to get the library working is to start the `gensim image <https://hub.docker.com/r/zmarty/python3-gensim-doc2vec/>`_. The instructions below are for an Ubuntu system, but they can be easily modified for any other Docker system. First install docker::
+
+    apt-get install docker-engine
+
+Then map a folder inside the Docker container, and run the container::
+
+    docker run -it --rm -v /usr/local/gensim-app/:/usr/local/gensim-app/ zmarty/python3-gensim
+
+Then write your script in **/usr/local/gensim-app** and use the python3 command to run it. **Keep all your code in that folder**, as all other folders in the container will get wiped out when exiting the container.
+
+Manual Installation
+-------------------
 
 This software depends on `NumPy and Scipy <http://www.scipy.org/Download>`_, two Python packages for scientific computing.
 You must have them installed prior to installing `gensim`.
