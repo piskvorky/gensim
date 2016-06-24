@@ -28,7 +28,7 @@ from gensim.corpora import Dictionary
 from gensim.matutils import argsort
 from gensim.utils import is_corpus
 from gensim.models.ldamodel import LdaModel
-from gensim.models.wrappers import LdaVowpalWabbit
+from gensim.models.wrappers import LdaVowpalWabbit, LdaMallet
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +116,7 @@ class CoherenceModel(interfaces.TransformationABC):
 
     def _get_topics(self):
         """Internal helper function to return topics from a trained topic model."""
-        topics = []  # FIXME : Meant to work for LDAModel, LdaVowpalWabbit right now. Make it work for others.
+        topics = []
         if isinstance(self.model, LdaModel):
             for topic in self.model.state.get_lambda():
                 bestn = argsort(topic, topn=10, reverse=True)
@@ -125,6 +125,13 @@ class CoherenceModel(interfaces.TransformationABC):
             for topic in self.model._get_topics():
                 bestn = argsort(topic, topn=10, reverse=True)
                 topics.append(bestn)
+        elif isinstance(self.model, LdaMallet):
+            for topic in self.model.wordtopics:
+                bestn = argsort(topic, topn=10, reverse=True)
+                topics.append(bestn)
+        else:
+            raise ValueError("This topic model is not currently supported. Supported topic models are"
+                             "LdaModel, LdaVowpalWabbit and LdaMallet.")
         return topics
 
     def get_coherence(self):
