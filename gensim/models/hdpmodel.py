@@ -588,7 +588,7 @@ class HdpTopicFormatter(object):
 
         num_topics = min(num_topics, len(self.data))
 
-        for k in xrange(topics):
+        for k in xrange(num_topics):
             lambdak = list(self.data[k, :])
             lambdak = lambdak / sum(lambdak)
 
