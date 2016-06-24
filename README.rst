@@ -75,24 +75,26 @@ Documentation
 
 Adopters
 --------
-+--------+---------------------+----------------+----------------------------------+
-| Name   | Logo                | URL            | Description                      |
-+========+=====================+================+==================================+
-| RaRe   | |RaRe Technologies| | `rare-technologies.com`_   | Machine Learning NLP consulting  |
-| Techno |                     |                | and training. Gensim maintainers |
-| logies |                     |                |                                  |
-+--------+---------------------+----------------+----------------------------------+
-| Talent | |Talentpair|        | `talentpair.com`_ | Data science driving high-touch  |
-| pair   |                     |             | recruiting                       |
-+--------+---------------------+----------------+----------------------------------+
++--------------+---------------------+------------------------------+----------------------------------+
+| Name         | Logo                | URL                          | Description                      |
++==============+=====================+==============================+==================================+
+| RaRe         | |RaRe Technologies| | `rare-technologies.com`_     | Machine Learning NLP consulting  |
+| Technologies |                     |                              | and training. Gensim maintainers.|
++--------------+---------------------+------------------------------+----------------------------------+
+| Talent       | |Talentpair|        | `talentpair.com`_            | Data science driving high-touch  |
+| pair         |                     |                              | recruiting                       |
++--------------+---------------------+------------------------------+----------------------------------+
 
 
 .. _talentpair.com: http://talentpair.com
 .. _rare-technologies.com: http://rare-technologies.com
 
 .. |Talentpair| image:: https://avatars3.githubusercontent.com/u/8418395?v=3&s=100
+   :height: 50
+   :width: 50
 .. |RaRe Technologies| image:: http://rare-technologies.com/wp-content/uploads/2016/02/rare_image_only.png
-
+   :height: 50
+   :width: 50
 
 
 Citing gensim
