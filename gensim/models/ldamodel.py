@@ -900,7 +900,7 @@ class LdaModel(interfaces.TransformationABC):
         top_topics = sorted(coherence_scores, key=lambda t: t[1], reverse=True)
         return top_topics
 
-    def get_document_topics(self, bow, minimum_probability=None, minimum_phi_probability=None, per_word_topics=False):
+    def get_document_topics(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
         """
         Return topic distribution for the given document `bow`, as a list of
         (topic_id, topic_probability) 2-tuples.
@@ -915,9 +915,9 @@ class LdaModel(interfaces.TransformationABC):
             minimum_probability = self.minimum_probability
         minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
 
-        if minimum_phi_probability is None:
-            minimum_phi_probability = self.minimum_probability
-        minimum_phi_probability = max(minimum_phi_probability, 1e-8)  # never allow zero values in sparse output
+        if minimum_phi_value is None:
+            minimum_phi_value = self.minimum_probability
+        minimum_phi_value = max(minimum_phi_value, 1e-8)  # never allow zero values in sparse output
 
         # if the input vector is a corpus, return a transformed corpus
         is_corpus, corpus = utils.is_corpus(bow)
@@ -939,7 +939,7 @@ class LdaModel(interfaces.TransformationABC):
                 phi_values = [] # contains (phi_value, topic) pairing to later be sorted
                 phi_topic = [] # contains topic and corresponding phi value to be returned 'raw' to user
                 for topic_id in range(0, self.num_topics):
-                    if phis[topic_id][word_type] >= minimum_phi_probability:
+                    if phis[topic_id][word_type] >= minimum_phi_value:
                         # appends phi values for each topic for that word
                         # these phi values are scaled by feature length 
                         phi_values.append((phis[topic_id][word_type], topic_id))
