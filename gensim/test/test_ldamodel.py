@@ -47,10 +47,6 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
-def testRandomState():
-    testcases = [numpy.random.seed(0), None, numpy.random.RandomState(0), 0]
-    for testcase in testcases:
-        assert(isinstance(ldamodel.check_random_state(testcase),numpy.random.RandomState))
 
 class TestLdaModel(unittest.TestCase):
     def setUp(self):
@@ -97,7 +93,7 @@ class TestLdaModel(unittest.TestCase):
         expected_shape = (2,)
 
         # should not raise anything
-        self.class_(**kwargs)
+        self.class_(**kwarghs)
 
         kwargs['alpha'] = 'symmetric'
         model = self.class_(**kwargs)

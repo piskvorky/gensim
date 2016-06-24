@@ -125,7 +125,7 @@ setup(
     name='gensim',
     version='0.13.1',
     description='Python framework for fast Vector Space Modelling',
-    long_description=readfile('README.rst'),
+    long_description=readfile('README.md'),
 
     ext_modules=[
         Extension('gensim.models.word2vec_inner',

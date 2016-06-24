@@ -55,7 +55,7 @@ class TestHdpModel(unittest.TestCase):
         self.model = self.class_(corpus, id2word=dictionary)
 
     def testShowTopics(self):
-        topics = self.model.show_topics(formatted=False)
+        topics = self.model.show_topics(formatted=False, num_topics=20, num_words=20)
 
         for topic_no, topic in topics:
             self.assertTrue(isinstance(topic_no, int))
