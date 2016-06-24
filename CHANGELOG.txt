@@ -29,7 +29,9 @@ Changes
 * Tests for wikidump (@jonmcoe, #723)
 * Mallet wrapper sparse format support (@RishabGoel, #664)
 * Doc2vec pre-processing script translated from bash to Python (@andrewjlm, #720)
-
+* topics, topn parameters changed to num_topics and num_words in show_topics() and print_topics()(@droudy, #747)
+  - In hdpmodel and dtmmodel
+  - NOT BACKWARDS COMPATIBLE!
 
 0.12.4, 29/01/2016
 * Better internal handling of job batching in word2vec (#535)
