@@ -26,7 +26,7 @@ from gensim.topic_coherence import (segmentation, probability_estimation,
                                     aggregation)
 from gensim.corpora import Dictionary
 from gensim.matutils import argsort
-from gensim.utils import is_corpus
+from gensim.utils import is_corpus, FakeDict
 from gensim.models.ldamodel import LdaModel
 from gensim.models.wrappers import LdaVowpalWabbit, LdaMallet
 
@@ -52,45 +52,43 @@ class CoherenceModel(interfaces.TransformationABC):
         """
         Args:
         ----
-        model : Pre-trained topic model.
+        model : Pre-trained topic model. Should be provided irrespective of which coherence measure is being used.
         texts : Tokenized texts. Needed for coherence models that use sliding window based probability estimator.
         corpus : Gensim document corpus.
-        dictionary : Gensim dictionary mapping of id word to create corpus.
+        dictionary : Gensim dictionary mapping of id word to create corpus. If model.id2word is present, this is not needed.
+                     If both are provided, dictionary will be used.
         coherence : Coherence measure to be used. Supported values are:
-                    u_mass
-                    c_v
+                    'u_mass'
+                    'c_v'
+                    For 'u_mass' corpus should be provided. If texts is provided, it will be converted to corpus using the dictionary.
+                    For 'c_v' texts should be provided. Corpus is not needed.
         """
         if texts is None and corpus is None:
             raise ValueError("One of texts or corpus has to be provided.")
+        # Check if associated dictionary is provided.
+        if dictionary is None:
+            if isinstance(model.id2word, FakeDict):
+                raise ValueError("The associated dictionary should be provided with the corpus or 'id2word' for topic model"
+                                 " should be set as the associated dictionary.")
+            else:
+                self.dictionary = model.id2word
+        else:
+            self.dictionary = dictionary
+        # Check for correct inputs for u_mass coherence measure.
         if coherence == 'u_mass':
             if is_corpus(corpus)[0]:
-                if dictionary is None:
-                    if model.id2word[0] == 0:
-                        raise ValueError("The associated dictionary should be provided with the corpus or 'id2word' for topic model"
-                                         "should be set as the dictionary.")
-                    else:
-                        self.dictionary = model.id2word
-                else:
-                    self.dictionary = dictionary
                 self.corpus = corpus
             elif texts is not None:
                 self.texts = texts
-                if dictionary is None:
-                    self.dictionary = Dictionary(self.texts)
-                else:
-                    self.dictionary = dictionary
                 self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
             else:
                 raise ValueError("Either 'corpus' with 'dictionary' or 'texts' should be provided for %s coherence." % coherence)
-
+        # Check for correct inputs for c_v coherence measure.
         elif coherence == 'c_v':
             if texts is None:
                 raise ValueError("'texts' should be provided for %s coherence." % coherence)
             else:
                 self.texts = texts
-                self.dictionary = Dictionary(self.texts)
-                self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
-
         else:
             raise ValueError("%s coherence is not currently supported." % coherence)
 
