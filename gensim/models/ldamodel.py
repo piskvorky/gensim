@@ -91,7 +91,7 @@ def update_dir_prior(prior, N, logphat, rho):
 
     return prior
 
-def check_random_state(seed):
+def get_random_state(seed):
      """ Turn seed into a np.random.RandomState instance.
 
          Method originally from maciejkula/glove-python, and written by @joshloyal
@@ -304,7 +304,7 @@ class LdaModel(interfaces.TransformationABC):
 
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
         
-        self.random_state = check_random_state(random_state)
+        self.random_state = get_random_state(random_state)
 
         assert (self.eta.shape == (self.num_topics, 1) or self.eta.shape == (self.num_topics, self.num_terms)), (
             "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
