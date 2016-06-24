@@ -462,7 +462,7 @@ class HdpModel(interfaces.TransformationABC):
         Set `topics=-1` to print all topics."""
         return self.show_topics(num_topics=num_topics, num_words=num_words, log=True)
 
-    def show_topics(self, num_topics=20, num_words=20, log=False, formatted=True, topics=None, topn=None):
+    def show_topics(self, num_topics=20, num_words=20, log=False, formatted=True):
         """
         Print the `num_words` most probable words for `topics` number of topics.
         Set `topics=-1` to print all topics.
@@ -471,11 +471,6 @@ class HdpModel(interfaces.TransformationABC):
         `False` as lists of (weight, word) pairs.
 
         """
-        if topics is not None:
-            num_topics = topics
-        if topn is not None:
-            num_words = topn
-
         if not self.m_status_up_to_date:
             self.update_expectations()
         betas = self.m_lambda + self.m_eta
