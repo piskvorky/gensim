@@ -235,23 +235,23 @@ class DtmModel(utils.SaveLoad):
                 # influence[2,5] influence of document 2 on topic 5
                 self.influences_time.append(influence)
 
-    def print_topics(self, topics=10, times=5, topn=10):
-        return self.show_topics(topics, times, topn, log=True)
+    def print_topics(self, num_topics=10, times=5, num_words=10):
+        return self.show_topics(num_topics, times, num_words, log=True)
 
-    def show_topics(self, topics=10, times=5, topn=10, log=False, formatted=True):
+    def show_topics(self, num_topics=10, times=5, num_words=10, log=False, formatted=True):
         """
-        Print the `topn` most probable words for `topics` number of topics at 'times' time slices.
+        Print the `num_words` most probable words for `num_topics` number of topics at 'times' time slices.
         Set `topics=-1` to print all topics.
 
         Set `formatted=True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
 
         """
-        if topics < 0 or topics >= self.num_topics:
-            topics = self.num_topics
-            chosen_topics = range(topics)
+        if num_topics < 0 or num_topics >= self.num_topics:
+            num_topics = self.num_topics
+            chosen_topics = range(num_topics)
         else:
-            topics = min(topics, self.num_topics)
-            chosen_topics = range(topics)
+            num_topics = min(num_topics, self.num_topics)
+            chosen_topics = range(num_topics)
              # add a little random jitter, to randomize results around the same
             # alpha
             # sort_alpha = self.alpha + 0.0001 * \
