@@ -28,7 +28,7 @@ Features
 * Efficient multicore implementations of popular algorithms, such as online **Latent Semantic Analysis (LSA/LSI/SVD)**,
   **Latent Dirichlet Allocation (LDA)**, **Random Projections (RP)**, **Hierarchical Dirichlet Process (HDP)**  or **word2vec deep learning**.
 * **Distributed computing**: can run *Latent Semantic Analysis* and *Latent Dirichlet Allocation* on a cluster of computers.
-* Extensive `HTML documentation and tutorials <http://radimrehurek.com/gensim/>`_.
+* Extensive `documentation and Jupyter Notebook tutorials <https://github.com/RaRe-Technologies/gensim/#documentation>`_.
 
 
 If this feature list left you scratching your head, you can first read more about the `Vector
@@ -68,10 +68,10 @@ Memory-wise, gensim makes heavy use of Python's built-in generators and iterator
 
 Documentation
 -------------
-
-Manual for the gensim package is available in `HTML <http://radimrehurek.com/gensim/>`_. It
-contains a walk-through of all its features and a complete reference section.
-It is also included in the source distribution package.
+* `QuickStart`_
+* `Tutorials`_
+* `Tutorial Videos`_
+* `Official Documentation and Walkthrough`_
 
 Citing gensim
 -------------
@@ -102,3 +102,7 @@ Copyright (c) 2009-now Radim Rehurek
 
 .. |Analytics| image:: https://ga-beacon.appspot.com/UA-24066335-5/your-repo/page-name
 .. _Analytics: https://github.com/igrigorik/ga-beacon
+.. _Official Documentation and Walkthrough: http://radimrehurek.com/gensim/
+.. _Tutorials: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials
+.. _Tutorial Videos: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#videos
+.. _QuickStart: https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/gensim%20Quick%20Start.ipynb
