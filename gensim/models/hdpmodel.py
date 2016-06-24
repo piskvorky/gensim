@@ -586,7 +586,6 @@ class HdpTopicFormatter(object):
         if num_topics < 0:
             num_topics = len(self.data)
 
-
         num_topics = min(num_topics, len(self.data))
 
         for k in xrange(num_topics):
