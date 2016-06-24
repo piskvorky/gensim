@@ -46,8 +46,7 @@ corpus = [dictionary.doc2bow(text) for text in texts]
 def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
-
-
+    
 
 class TestLdaModel(unittest.TestCase):
     def setUp(self):

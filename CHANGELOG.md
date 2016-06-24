@@ -1,9 +1,16 @@
 Changes
 =======
+0.13.2
+
+* topics, topn parameters changed to num_topics and num_words in show_topics() and print_topics()(@droudy, #747)
+  - In hdpmodel and dtmmodel
+  - NOT BACKWARDS COMPATIBLE!
+
 
 0.13.1, 2016-06-22
 
 * Topic coherence C_v and U_mass (@dsquareindia, #710)
+
 
 0.13.0, 2016-06-21
 
@@ -31,6 +38,7 @@ Changes
 * Tests for wikidump (@jonmcoe, #723)
 * Mallet wrapper sparse format support (@RishabGoel, #664)
 * Doc2vec pre-processing script translated from bash to Python (@andrewjlm, #720)
+
 
 0.12.4, 2016-01-29
 
