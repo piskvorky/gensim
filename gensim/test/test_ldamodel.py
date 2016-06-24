@@ -52,6 +52,7 @@ def testRandomState():
     testcases = [numpy.random.seed(0), None, numpy.random.RandomState(0), 0]
     for testcase in testcases:
         assert(isinstance(ldamodel.check_random_state(testcase), numpy.random.RandomState))
+        assertEqual(ldamodel.check_random_state(testcase), numpy.random.RandomState(0))
 
 class TestLdaModel(unittest.TestCase):
     def setUp(self):
