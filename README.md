@@ -91,6 +91,8 @@ Documentation
   [Tutorials]: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials
   [Tutorial Videos]: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#videos
   [Official Documentation and Walkthrough]: http://radimrehurek.com/gensim/
+  
+---------
 
 Adopters
 --------
