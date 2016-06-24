@@ -24,6 +24,8 @@
 * [Docs](https://radimrehurek.com/gensim/models/phrases.html), [Source](https://github.com/piskvorky/gensim/blob/develop/gensim/models/phrases.py) (uses bigram detectors underneath)
 * [Phrases example on How I Met Your Mother](http://www.markhneedham.com/blog/2015/02/12/pythongensim-creating-bigrams-over-how-i-met-your-mother-transcripts/)
 
+####Topic Modeling
+
 #####LSI (Model)
 * [Docs](https://radimrehurek.com/gensim/models/lsimodel.html), [Source](https://github.com/piskvorky/gensim/blob/develop/gensim/models/lsimodel.py) (very standard LSI implementation)
 * [How to interpret negative LSI values](https://www.researchgate.net/post/LSA_SVD_How_to_statistically_interpret_negative_values_in_U_and_Vt)
@@ -42,6 +44,14 @@
 * Tool to get the most similar documents for LDA, LSI
 * [Similarity queries tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/Similarity_Queries.ipynb)
 
+#####Dynamic Topic Modeling      
+* Model evolution of topics through time
+* [Easy intro to DTM. Evolution of Voldemort topic through the 7 Harry Potter books.](http://rare-technologies.com/understanding-and-coding-dynamic-topic-models/)
+* [Dynamic Topic Modeling and Dynamic Influence Model Tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/dtm_example.ipynb)
+
+
+####Word Embeddings
+
 #####Word2Vec (Model)
 * [Docs](https://radimrehurek.com/gensim/models/word2vec.html), [Source](https://github.com/piskvorky/gensim/blob/develop/gensim/models/word2vec.py) (very simple interface)
 * [Simple word2vec tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/word2vec.ipynb) (examples of ```most_similar, similarity, doesnt_match```)
@@ -58,23 +68,20 @@
 * Tool to get the most similar documents for word2vec
 * [Word Movers Distance for Yelp Reviews tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb)
 
-#####Document classification
-* Tutorial showing API for document classification with various techniques: TF-IDF, word2vec averaging, Deep IR, Word Movers Distance and doc2vec 
-* [Movie plots by genre](https://github.com/RaRe-Technologies/movie-plots-by-genre)
+#####Deep Inverse Regression      
+* Document Classification using Bayesian Inversion and several word2vec models(one for each class)
+* [Deep Inverse Regression with Yelp Reviews](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/deepir.ipynb)
+
+
+####Other techniques
 
 #####Summarization	
 * Extract most important keywords and sentences from the text
 * [Tutorial on TextRank summarisation](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/summarization_tutorial.ipynb)
 
-#####Dynamic Topic Modeling      
-* Model evolution of topics through time
-* [Easy intro to DTM. Evolution of Voldemort topic through the 7 Harry Potter books.](http://rare-technologies.com/understanding-and-coding-dynamic-topic-models/)
-* [Dynamic Topic Modeling and Dynamic Influence Model Tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/dtm_example.ipynb)
-
-#####Deep Inverse Regression      
-* Document Classification using Bayesian Inversion and several word2vec models(one for each class)
-* [Deep Inverse Regression with Yelp Reviews](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/deepir.ipynb)
-
+#####Overviews
+* Tutorial showing API for document classification with various techniques: TF-IDF, word2vec averaging, Deep IR, Word Movers Distance and doc2vec 
+* [Movie plots by genre](https://github.com/RaRe-Technologies/movie-plots-by-genre)
 
 
 ###Videos
