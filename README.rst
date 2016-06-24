@@ -73,6 +73,28 @@ Documentation
 * `Tutorial Videos`_
 * `Official Documentation and Walkthrough`_
 
+Adopters
+--------
++--------+---------------------+----------------+----------------------------------+
+| Name   | Logo                | URL            | Description                      |
++========+=====================+================+==================================+
+| RaRe   | |RaRe Technologies| | `rare_tech`_   | Machine Learning NLP consulting  |
+| Techno |                     |                | and training. Gensim maintainers |
+| logies |                     |                |                                  |
++--------+---------------------+----------------+----------------------------------+
+| Talent | |Talentpair|        | `talentpair.co | Data science driving high-touch  |
+| pair   |                     | m`_            | recruiting                       |
++--------+---------------------+----------------+----------------------------------+
+
+
+.. _talentpair.com: http://talentpair.com
+.. _rare_tech: //rare-technologies.com
+
+.. |Talentpair| image:: https://avatars3.githubusercontent.com/u/8418395?v=3&s=100
+.. |RaRe Technologies| image:: http://rare-technologies.com/wp-content/uploads/2016/02/rare_image_only.png%20=10x20
+
+
+
 Citing gensim
 -------------
 
