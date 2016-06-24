@@ -47,6 +47,8 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
+
+
 class TestLdaModel(unittest.TestCase):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
