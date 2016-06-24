@@ -13,17 +13,15 @@ import os.path
 import unittest
 import tempfile
 import itertools
+import doctest
 
 import numpy
 
-from gensim.utils import to_unicode, smart_extension
+from gensim.utils import to_unicode, smart_extension, datapath
 from gensim.interfaces import TransformedCorpus
 from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
-                            ucicorpus, malletcorpus, textcorpus, indexedcorpus)
-
-# needed because sample data files are located in the same folder
-module_path = os.path.dirname(__file__)
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+                            ucicorpus, malletcorpus, textcorpus, indexedcorpus,
+                            shakescorpus)
 
 
 def testfile():
@@ -180,7 +178,7 @@ class CorpusTestCase(unittest.TestCase):
         self.assertEqual(len(docs), len(corpus))
         self.assertEqual(len(docs), len(corpus[:]))
         self.assertEqual(len(docs[::2]), len(corpus[::2]))
-        
+
         def _get_slice(corpus, slice_):
             # assertRaises for python 2.6 takes a callable
             return corpus[slice_]
@@ -299,6 +297,9 @@ class TestTextCorpus(CorpusTestCase):
         self.corpus_class = textcorpus.TextCorpus
         self.file_extension = '.txt'
 
+    def test_doctests(self):
+        doctest.testmod(shakescorpus)
+
     def test_load_with_metadata(self):
         fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
         corpus = self.corpus_class(fname)
@@ -324,6 +325,33 @@ class TestTextCorpus(CorpusTestCase):
     def test_indexing(self):
         pass
 
+
+class TestShakesCorpus(CorpusTestCase):
+
+    def setUp(self):
+        self.module = shakescorpus
+        self.corpus_class = self.module.ShakesCorpus
+        self.filename = 'shakespeare-complete-works.txt.gz'
+
+    def test_load_with_metadata(self):
+        fname = datapath(self.filename)
+        corpus = self.corpus_class(fname, metadata=True)
+        self.assertEqual(len(corpus), 123595)
+
+    def test_doctests(self):
+        self.assertEqual(doctest.testmod(self.module).failed, 0)
+
+    def test_save(self):
+        pass
+
+    def test_serialize(self):
+        pass
+
+    def test_serialize_compressed(self):
+        pass
+
+    def test_indexing(self):
+        pass
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
