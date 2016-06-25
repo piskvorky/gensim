@@ -80,7 +80,7 @@ class LdaMulticore(LdaModel):
     def __init__(self, corpus=None, num_topics=100, id2word=None, workers=None,
                  chunksize=2000, passes=1, batch=False, alpha='symmetric',
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50,
-                 gamma_threshold=0.001):
+                 gamma_threshold=0.001, random_state=None):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -124,6 +124,8 @@ class LdaMulticore(LdaModel):
 
         `decay` and `offset` parameters are the same as Kappa and Tau_0 in
         Hoffman et al, respectively.
+        
+        `random_state` can be a numpy.random.RandomState object or the seed for one
 
         Example:
 
@@ -142,7 +144,7 @@ class LdaMulticore(LdaModel):
         super(LdaMulticore, self).__init__(corpus=corpus, num_topics=num_topics,
             id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
             decay=decay, offset=offset, eval_every=eval_every, iterations=iterations,
-            gamma_threshold=gamma_threshold)
+            gamma_threshold=gamma_threshold, random_state=random_state)
 
 
     def update(self, corpus, chunks_as_numpy=False):

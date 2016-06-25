@@ -5,6 +5,7 @@ Changes
 * topics, topn parameters changed to num_topics and num_words in show_topics() and print_topics()(@droudy, #747)
   - In hdpmodel and dtmmodel
   - NOT BACKWARDS COMPATIBLE!
+* Added random_state parameter to LdaState initializer and check_random_state() (@droudy, #113)
 
 0.13.1, 2016-06-22
 
@@ -36,6 +37,7 @@ Changes
 * Tests for wikidump (@jonmcoe, #723)
 * Mallet wrapper sparse format support (@RishabGoel, #664)
 * Doc2vec pre-processing script translated from bash to Python (@andrewjlm, #720)
+
 
 0.12.4, 2016-01-29
 

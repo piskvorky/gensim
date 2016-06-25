@@ -91,6 +91,19 @@ def update_dir_prior(prior, N, logphat, rho):
 
     return prior
 
+def get_random_state(seed):
+     """ Turn seed into a np.random.RandomState instance.
+
+         Method originally from maciejkula/glove-python, and written by @joshloyal
+     """
+     if seed is None or seed is numpy.random:
+         return numpy.random.mtrand._rand
+     if isinstance(seed, (numbers.Integral, numpy.integer)):
+         return numpy.random.RandomState(seed)
+     if isinstance(seed, numpy.random.RandomState):
+        return seed
+     raise ValueError('%r cannot be used to seed a numpy.random.RandomState'
+                      ' instance' % seed)
 
 class LdaState(utils.SaveLoad):
     """
@@ -203,7 +216,7 @@ class LdaModel(interfaces.TransformationABC):
                  distributed=False, chunksize=2000, passes=1, update_every=1,
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0,
                  eval_every=10, iterations=50, gamma_threshold=0.001,
-                 minimum_probability=0.01):
+                 minimum_probability=0.01, random_state=None):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -243,6 +256,8 @@ class LdaModel(interfaces.TransformationABC):
         Hoffman et al, respectively.
 
         `minimum_probability` controls filtering the topics returned for a document (bow).
+        
+        `random_state` can be a numpy.random.RandomState object or the seed for one
 
         Example:
 
@@ -288,6 +303,8 @@ class LdaModel(interfaces.TransformationABC):
         assert self.alpha.shape == (self.num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
+        
+        self.random_state = get_random_state(random_state)
 
         assert (self.eta.shape == (self.num_topics, 1) or self.eta.shape == (self.num_topics, self.num_terms)), (
             "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
@@ -321,7 +338,7 @@ class LdaModel(interfaces.TransformationABC):
 
         # Initialize the variational distribution q(beta|lambda)
         self.state = LdaState(self.eta, (self.num_topics, self.num_terms))
-        self.state.sstats = numpy.random.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
+        self.state.sstats = self.random_state.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
         self.expElogbeta = numpy.exp(dirichlet_expectation(self.state.sstats))
 
         # if a training corpus was provided, start estimating the model right away
@@ -407,7 +424,7 @@ class LdaModel(interfaces.TransformationABC):
             logger.debug("performing inference on a chunk of %i documents", len(chunk))
 
         # Initialize the variational distribution q(theta|gamma) for the chunk
-        gamma = numpy.random.gamma(100., 1. / 100., (len(chunk), self.num_topics))
+        gamma = self.random_state.gamma(100., 1. / 100., (len(chunk), self.num_topics))
         Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = numpy.exp(Elogtheta)
         if collect_sstats:
@@ -776,7 +793,7 @@ class LdaModel(interfaces.TransformationABC):
             num_topics = min(num_topics, self.num_topics)
 
             # add a little random jitter, to randomize results around the same alpha
-            sort_alpha = self.alpha + 0.0001 * numpy.random.rand(len(self.alpha))
+            sort_alpha = self.alpha + 0.0001 * self.random_state.rand(len(self.alpha))
 
             sorted_topics = list(matutils.argsort(sort_alpha))
             chosen_topics = sorted_topics[:num_topics // 2] + sorted_topics[-num_topics // 2:]
