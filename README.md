@@ -105,8 +105,8 @@ Adopters
 | Talentpair                            | ![Talentpair](https://avatars3.githubusercontent.com/u/8418395?v=3&s=100)                                                 | [talentpair.com](http://talentpair.com)                                                           | Data science driving high-touch recruiting                                                    | 
 | Tailwind          | <img src="http://blog.tailwindapp.com/wp-content/uploads/2013/10/Tailwind-Square-Logo-Blue-White-300x300.png" width="100"> | [Tailwindapp.com](https://www.tailwindapp.com/)| Post interesting and relevant content to Pinterest              |
 | Issuu          | <img src="https://static.isu.pub/fe/issuu-brandpages/s3/155/press/assets/brand_package_zip/issuu%20logos/png/issuu-logo-stacked-colour.png" width="100"> | [Issuu.com](https://issuu.com/)| Gensim’s LDA module lies at the very core of the analysis we perform on each uploaded publication to figure out what it’s all about.
-| Sports Authority        | <img src="http://www.sportsauthority.com/images/tsa_logo_red_bg.gif" width="100"> | [Sports Authority](http://www.sportsauthority.com)| Text mining of customer surveys and social media sources
-
+| Sports Authority        | <img src="http://www.sportsauthority.com/images/tsa_logo_red_bg.gif" width="100"> | [sportsauthority.com](http://www.sportsauthority.com)| Text mining of customer surveys and social media sources |
+| Search Metrics        | <img src="http://www.searchmetrics.com/wp-content/uploads/Logo_searchmetrics_Webversion.png" width="100"> | [searchmetrics.com](http://www.searchmetrics.com/)| Gensim word2vec used for entity disambiguation in Search Engine Optimisation
 -------
 
 
