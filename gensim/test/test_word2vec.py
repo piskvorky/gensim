@@ -349,6 +349,7 @@ class TestWord2VecModel(unittest.TestCase):
 
         self.assertTrue(model.n_similarity(['graph', 'trees'], ['trees', 'graph']))
         self.assertTrue(model.n_similarity(['graph'], ['trees']) == model.similarity('graph', 'trees'))
+        self.assertRaises(ValueError, model.n_similarity, ['graph', 'trees'], [])
 
     def testSimilarBy(self):
         """Test word2vec similar_by_word and similar_by_vector."""

@@ -6,6 +6,7 @@ Changes
   - In hdpmodel and dtmmodel
   - NOT BACKWARDS COMPATIBLE!
 * Added random_state parameter to LdaState initializer and check_random_state() (@droudy, #113)
+* `n_similarity()` raises `ValueError` if an empty list is passed to it (in word2vec,doc2vec) (@droudy, #743)
 
 0.13.1, 2016-06-22
 
