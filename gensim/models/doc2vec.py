@@ -493,7 +493,7 @@ class DocvecsArray(utils.SaveLoad):
 
         """
         if not ds1 or not ds2:
-            raise ZeroDivisionError("An empty list was passed to n_similarity()")
+            raise ValueError("Can't compute similarity with an empty list")
         v1 = [self[doc] for doc in ds1]
         v2 = [self[doc] for doc in ds2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
