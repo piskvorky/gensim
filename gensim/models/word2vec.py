@@ -1564,7 +1564,7 @@ class Word2Vec(utils.SaveLoad):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
-        See https://code.google.com/p/word2vec/source/browse/trunk/questions-words.txt for an example.
+        See questions-words.txt in https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/word2vec/source-archive.zip for an example.
 
         The accuracy is reported (=printed to log and returned as a list) for each
         section separately, plus there's one aggregate summary at the end.
