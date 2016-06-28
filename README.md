@@ -108,10 +108,10 @@ Adopters
 | Sports Authority        | <img src="http://www.sportsauthority.com/images/tsa_logo_red_bg.gif" width="100"> | [sportsauthority.com](http://www.sportsauthority.com)| Text mining of customer surveys and social media sources |
 | Search Metrics        | <img src="http://www.searchmetrics.com/wp-content/uploads/Logo_searchmetrics_Webversion.png" width="100"> | [searchmetrics.com](http://www.searchmetrics.com/)| Gensim word2vec used for entity disambiguation in Search Engine Optimisation
 | Cisco Security        | <img src="https://supportforums.cisco.com/sites/default/files/legacy/1/6/1/2161-CiscoSystems.gif" width="100"> | [cisco.com](http://www.cisco.com/c/en/us/products/security/index.html)|  Large-scale fraud detection
+|  12K Research         | <img src="https://techberlin.com/media/CACHE/images/threesixty/FtA5ANuJ/1aa5b8517ec65ef1c7d69c9bda5f9a3c.jpg" width="100"> | [12k.co](https://12k.co/)|   Document similarity analysis on media articles
 |  National Institutes of Health         | <img src="https://www.nih.gov/sites/default/files/styles/featured_media_breakpoint-large/public/about-nih/2012-logo.png" width="100"> | [github/NIHOPA](https://github.com/NIHOPA/pipeline_word2vec)|   Processing grants and publications with word2vec
+
 -------
-
-
 
 Citing gensim
 ------------
