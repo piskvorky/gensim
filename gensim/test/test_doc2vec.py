@@ -124,6 +124,13 @@ class TestDoc2VecModel(unittest.TestCase):
         # input not empty, but rather completely filtered out
         self.assertRaises(RuntimeError, doc2vec.Doc2Vec, list_corpus, min_count=10000)
 
+    def test_n_similarity(self):
+        corpus = DocsLeeCorpus()
+        model = doc2vec.Doc2Vec(size=100, min_count=2, iter=20)
+        model.build_vocab(corpus)
+        model.train(corpus)
+        self.assertRaises(ValueError, model.n_similarity, ['graph', 'trees'], [])
+
     def test_similarity_unseen_docs(self):
         """Test similarity of out of training sentences"""
         rome_str = ['rome', 'italy']
