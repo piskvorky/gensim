@@ -7,6 +7,7 @@ Changes
   - NOT BACKWARDS COMPATIBLE!
 * Added random_state parameter to LdaState initializer and check_random_state() (@droudy, #113)
 * Implemented LsiModel.docs_processed attribute
+* Added LdaMallet support. Added LdaVowpalWabbit, LdaMallet example to notebook. Added test suite for coherencemodel and aggregation. (@dsquareindia, #750)
 
 0.13.1, 2016-06-22
 
