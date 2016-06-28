@@ -1205,8 +1205,6 @@ class Word2Vec(utils.SaveLoad):
           [('queen', 0.50882536), ...]
 
         """
-
-
         self.init_sims()
 
         if isinstance(positive, string_types) and not negative:
