@@ -396,7 +396,7 @@ class LsiModel(interfaces.TransformationABC):
                 if self.dispatcher:
                     logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                     self.projection = self.dispatcher.getstate()
-                self.docs_processed += len(corpus) if hasattr(corpus, '__len__') else doc_no
+                self.docs_processed += doc_no
 #            logger.info("top topics after adding %i documents" % doc_no)
 #            self.print_debug(10)
         else:
