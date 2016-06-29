@@ -214,6 +214,7 @@ class CorpusTestCase(unittest.TestCase):
 class TestMmCorpus(CorpusTestCase):
     def setUp(self):
         self.corpus_class = mmcorpus.MmCorpus
+        self.corpus = self.corpus_class(datapath('testcorpus.mm'))
         self.file_extension = '.mm'
 
     def test_serialize_compressed(self):
@@ -221,8 +222,7 @@ class TestMmCorpus(CorpusTestCase):
         pass
 
     def test_load(self):
-        corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
-        self.assertEqual(corpus.shape, (1, 42))
+        self.assertEqual(self.corpus.shape, (1, 9))
 
 
 class TestSvmLightCorpus(CorpusTestCase):

@@ -195,7 +195,8 @@ class TestLsiModel(unittest.TestCase):
         self.assertRaises(IOError, lsimodel.LsiModel.load, fname, mmap='r')
 
     def testDocsProcessed(self):
-        self.assertEqual(self.model.docs_processed, 42)
+        self.assertEqual(self.model.docs_processed, 9)
+        self.assertEqual(self.model.docs_processed, self.corpus.shape[1])
 
 #endclass TestLsiModel
 
