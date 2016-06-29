@@ -220,6 +220,10 @@ class TestMmCorpus(CorpusTestCase):
         # MmCorpus needs file write with seek => doesn't support compressed output (only input)
         pass
 
+    def test_load(self):
+        corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+        self.assertEqual(corpus.shape, (1, 42))
+
 
 class TestSvmLightCorpus(CorpusTestCase):
     def setUp(self):
