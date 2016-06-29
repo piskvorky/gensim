@@ -52,10 +52,13 @@ class TestPhrasesModel(unittest.TestCase):
         bigram2_seen = False
 
         for s in bigram[sentences]:
-            if u'response_time' in s:
+            if not bigram1_seen and u'response_time' in s:
                 bigram1_seen = True
-            if u'graph_minors' in s:
+            if not bigram2_seen and u'graph_minors' in s:
                 bigram2_seen = True
+            if bigram1_seen and bigram2_seen:
+                break
+                
         self.assertTrue(bigram1_seen and bigram2_seen)
 
         # check the same thing, this time using single doc transformation
@@ -64,6 +67,25 @@ class TestPhrasesModel(unittest.TestCase):
         self.assertTrue(u'graph_minors' in bigram[sentences[-2]])
         self.assertTrue(u'graph_minors' in bigram[sentences[-1]])
 
+    def testExportPhrases(self):
+        """Test Phrases bigram export_phrases functionality."""
+        bigram = Phrases(sentences, min_count=1, threshold=1)
+        
+        # with this setting we should get response_time and graph_minors
+        bigram1_seen = False
+        bigram2_seen = False
+        
+        for phrase, score in bigram.export_phrases(sentences):
+            if not bigram1_seen and b'response time' == phrase:
+                bigram1_seen = True
+            elif not bigram2_seen and b'graph minors' == phrase:
+                bigram2_seen = True
+            if bigram1_seen and bigram2_seen:
+                break
+        
+        self.assertTrue(bigram1_seen)
+        self.assertTrue(bigram2_seen)
+        
     def testBadParameters(self):
         """Test the phrases module with bad parameters."""
         # should fail with something less or equal than 0
@@ -77,11 +99,11 @@ class TestPhrasesModel(unittest.TestCase):
         expected = [u'survey', u'user', u'computer', u'system', u'response_time']
 
         bigram_utf8 = Phrases(sentences, min_count=1, threshold=1)
-        self.assertEquals(bigram_utf8[sentences[1]], expected)
+        self.assertEqual(bigram_utf8[sentences[1]], expected)
 
         unicode_sentences = [[utils.to_unicode(w) for w in sentence] for sentence in sentences]
         bigram_unicode = Phrases(unicode_sentences, min_count=1, threshold=1)
-        self.assertEquals(bigram_unicode[sentences[1]], expected)
+        self.assertEqual(bigram_unicode[sentences[1]], expected)
 
         transformed = ' '.join(bigram_utf8[sentences[1]])
         self.assertTrue(isinstance(transformed, unicode))

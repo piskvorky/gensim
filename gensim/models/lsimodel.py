@@ -184,7 +184,7 @@ class Projection(utils.SaveLoad):
         # find the rotation that diagonalizes r
         k = numpy.bmat([[numpy.diag(decay * self.s), numpy.multiply(c, other.s)],
                         [matutils.pad(numpy.array([]).reshape(0, 0), min(m, n2), n1), numpy.multiply(r, other.s)]])
-        logger.debug("computing SVD of %s dense matrix", str(k.shape))
+        logger.debug("computing SVD of %s dense matrix", k.shape)
         try:
             # in numpy < 1.1.0, running SVD sometimes results in "LinAlgError: SVD did not converge'.
             # for these early versions of numpy, catch the error and try to compute

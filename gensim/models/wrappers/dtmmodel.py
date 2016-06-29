@@ -26,6 +26,7 @@ import tempfile
 import os
 from subprocess import PIPE
 import numpy as np
+import six
 
 from gensim import utils, corpora, matutils
 from gensim.utils import check_output
@@ -42,7 +43,7 @@ class DtmModel(utils.SaveLoad):
 
     def __init__(
             self, dtm_path, corpus=None, time_slices=None, mode='fit', model='dtm', num_topics=100, id2word=None, prefix=None,
-            lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10, alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=False):
+            lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10, alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=True):
         """
         `dtm_path` is path to the dtm executable, e.g. `C:/dtm/dtm-win64.exe`.
 
@@ -172,9 +173,9 @@ class DtmModel(utils.SaveLoad):
         corpora.BleiCorpus.save_corpus(self.fcorpustxt(), corpus)
 
         with utils.smart_open(self.ftimeslices(), 'wb') as fout:
-            fout.write(str(len(self.time_slices)) + "\n")
+            fout.write(six.u(str(len(self.time_slices)) + "\n"))
             for sl in time_slices:
-                fout.write(str(sl) + "\n")
+                fout.write(six.u(str(sl) + "\n"))
 
     def train(self, corpus, time_slices, mode, model):
         """
@@ -234,23 +235,23 @@ class DtmModel(utils.SaveLoad):
                 # influence[2,5] influence of document 2 on topic 5
                 self.influences_time.append(influence)
 
-    def print_topics(self, topics=10, times=5, topn=10):
-        return self.show_topics(topics, times, topn, log=True)
+    def print_topics(self, num_topics=10, times=5, num_words=10):
+        return self.show_topics(num_topics, times, num_words, log=True)
 
-    def show_topics(self, topics=10, times=5, topn=10, log=False, formatted=True):
+    def show_topics(self, num_topics=10, times=5, num_words=10, log=False, formatted=True):
         """
-        Print the `topn` most probable words for `topics` number of topics at 'times' time slices.
+        Print the `num_words` most probable words for `num_topics` number of topics at 'times' time slices.
         Set `topics=-1` to print all topics.
 
         Set `formatted=True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
 
         """
-        if topics < 0 or topics >= self.num_topics:
-            topics = self.num_topics
-            chosen_topics = range(topics)
+        if num_topics < 0 or num_topics >= self.num_topics:
+            num_topics = self.num_topics
+            chosen_topics = range(num_topics)
         else:
-            topics = min(topics, self.num_topics)
-            chosen_topics = range(topics)
+            num_topics = min(num_topics, self.num_topics)
+            chosen_topics = range(num_topics)
              # add a little random jitter, to randomize results around the same
             # alpha
             # sort_alpha = self.alpha + 0.0001 * \

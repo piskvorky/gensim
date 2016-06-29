@@ -3,6 +3,8 @@
 Corpora and Vector Spaces
 ===================================
 
+This tutorial is available as a Jupyter Notebook `here <https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/Corpora_and_Vector_Spaces.ipynb>`_.
+
 Don't forget to set
 
 >>> import logging
@@ -18,7 +20,7 @@ From Strings to Vectors
 
 This time, let's start from documents represented as strings:
 
->>> from gensim import corpora, models, similarities
+>>> from gensim import corpora
 >>>
 >>> documents = ["Human machine interface for lab abc computer applications",
 >>>              "A survey of user opinion of computer system response time",
@@ -51,7 +53,7 @@ as well as words that only appear once in the corpus:
 >>> texts = [[token for token in text if frequency[token] > 1]
 >>>          for text in texts]
 >>>
->>> from pprint import pprint   # pretty-printer
+>>> from pprint import pprint  # pretty-printer
 >>> pprint(texts)
 [['human', 'interface', 'computer'],
  ['survey', 'user', 'computer', 'system', 'response', 'time'],
@@ -65,7 +67,7 @@ as well as words that only appear once in the corpus:
 
 Your way of processing the documents will likely vary; here, I only split on whitespace
 to tokenize, followed by lowercasing each word. In fact, I use this particular
-(simplistic and inefficient) setup to mimick the experiment done in Deerwester et al.'s
+(simplistic and inefficient) setup to mimic the experiment done in Deerwester et al.'s
 original LSA article [1]_.
 
 The ways to process documents are so varied and application- and language-dependent that I
@@ -86,7 +88,7 @@ It is advantageous to represent the questions only by their (integer) ids. The m
 between the questions and ids is called a dictionary:
 
 >>> dictionary = corpora.Dictionary(texts)
->>> dictionary.save('/tmp/deerwester.dict') # store the dictionary, for future reference
+>>> dictionary.save('/tmp/deerwester.dict')  # store the dictionary, for future reference
 >>> print(dictionary)
 Dictionary(12 unique tokens)
 
@@ -104,17 +106,17 @@ To actually convert tokenized documents to vectors:
 
 >>> new_doc = "Human computer interaction"
 >>> new_vec = dictionary.doc2bow(new_doc.lower().split())
->>> print(new_vec) # the word "interaction" does not appear in the dictionary and is ignored
+>>> print(new_vec)  # the word "interaction" does not appear in the dictionary and is ignored
 [(0, 1), (1, 1)]
 
-The function :func:`doc2bow` simply counts the number of occurences of
+The function :func:`doc2bow` simply counts the number of occurrences of
 each distinct word, converts the word to its integer word id
 and returns the result as a sparse vector. The sparse vector ``[(0, 1), (1, 1)]``
 therefore reads: in the document `"Human computer interaction"`, the words `computer`
 (id 0) and `human` (id 1) appear once; the other ten dictionary words appear (implicitly) zero times.
 
     >>> corpus = [dictionary.doc2bow(text) for text in texts]
-    >>> corpora.MmCorpus.serialize('/tmp/deerwester.mm', corpus) # store to disk, for later use
+    >>> corpora.MmCorpus.serialize('/tmp/deerwester.mm', corpus)  # store to disk, for later use
     >>> print(corpus)
     [(0, 1), (1, 1), (2, 1)]
     [(0, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]
@@ -153,7 +155,7 @@ Walking directories, parsing XML, accessing network...
 Just parse your input to retrieve a clean list of tokens in each document,
 then convert the tokens via a dictionary to their ids and yield the resulting sparse vector inside `__iter__`.
 
->>> corpus_memory_friendly = MyCorpus() # doesn't load the corpus into memory!
+>>> corpus_memory_friendly = MyCorpus()  # doesn't load the corpus into memory!
 >>> print(corpus_memory_friendly)
 <__main__.MyCorpus object at 0x10d5690>
 
@@ -161,7 +163,7 @@ Corpus is now an object. We didn't define any way to print it, so `print` just o
 of the object in memory. Not very useful. To see the constituent vectors, let's
 iterate over the corpus and print each document vector (one at a time)::
 
-    >>> for vector in corpus_memory_friendly: # load one vector into memory at a time
+    >>> for vector in corpus_memory_friendly:  # load one vector into memory at a time
     ...     print(vector)
     [(0, 1), (1, 1), (2, 1)]
     [(0, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)]
@@ -179,14 +181,15 @@ corpus can now be as large as you want.
 
 Similarly, to construct the dictionary without loading all texts into memory::
 
+    >>> from six import iteritems
     >>> # collect statistics about all tokens
     >>> dictionary = corpora.Dictionary(line.lower().split() for line in open('mycorpus.txt'))
     >>> # remove stop words and words that appear only once
     >>> stop_ids = [dictionary.token2id[stopword] for stopword in stoplist
     >>>             if stopword in dictionary.token2id]
-    >>> once_ids = [tokenid for tokenid, docfreq in dictionary.dfs.iteritems() if docfreq == 1]
-    >>> dictionary.filter_tokens(stop_ids + once_ids) # remove stop words and words that appear only once
-    >>> dictionary.compactify() # remove gaps in id sequence after words that were removed
+    >>> once_ids = [tokenid for tokenid, docfreq in iteritems(dictionary.dfs) if docfreq == 1]
+    >>> dictionary.filter_tokens(stop_ids + once_ids)  # remove stop words and words that appear only once
+    >>> dictionary.compactify()  # remove gaps in id sequence after words that were removed
     >>> print(dictionary)
     Dictionary(12 unique tokens)
 
@@ -212,7 +215,6 @@ a time, without the whole corpus being read into main memory at once.
 One of the more notable file formats is the `Market Matrix format <http://math.nist.gov/MatrixMarket/formats.html>`_.
 To save a corpus in the Matrix Market format:
 
->>> from gensim import corpora
 >>> # create a toy corpus of 2 documents, as a plain Python list
 >>> corpus = [[(1, 0.5)], []]  # make one document empty, for the heck of it
 >>>
@@ -239,7 +241,7 @@ MmCorpus(2 documents, 2 features, 1 non-zero entries)
 Instead, to view the contents of a corpus:
 
 >>> # one way of printing a corpus: load it entirely into memory
->>> print(list(corpus)) # calling list() will convert any sequence to a plain Python list
+>>> print(list(corpus))  # calling list() will convert any sequence to a plain Python list
 [[(1, 0.5)], []]
 
 or
@@ -268,11 +270,16 @@ Compatibility with NumPy and SciPy
 Gensim also contains `efficient utility functions <http://radimrehurek.com/gensim/matutils.html>`_
 to help converting from/to numpy matrices::
 
+>>> import gensim
+>>> import numpy as np
+>>> numpy_matrix = np.random.randint(10, size=[5,2])  # random matrix as an example
 >>> corpus = gensim.matutils.Dense2Corpus(numpy_matrix)
 >>> numpy_matrix = gensim.matutils.corpus2dense(corpus, num_terms=number_of_corpus_features)
 
 and from/to `scipy.sparse` matrices::
 
+>>> import scipy.sparse
+>>> scipy_sparse_matrix = scipy.sparse.random(5,2)  # random sparse matrix as example
 >>> corpus = gensim.matutils.Sparse2Corpus(scipy_sparse_matrix)
 >>> scipy_csc_matrix = gensim.matutils.corpus2csc(corpus)
 
@@ -285,4 +292,3 @@ Or continue to the next tutorial on :doc:`tut2`.
 
 .. [1]  This is the same corpus as used in
         `Deerwester et al. (1990): Indexing by Latent Semantic Analysis <http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf>`_, Table 2.
-
