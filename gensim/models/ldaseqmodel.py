@@ -349,24 +349,94 @@ def inferDTMseq(K, ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, l
             lda_post.lhood = lhood
             lda_post.doc = seq_corpus.corpuses[t].doc[d]
             if iter_ == 0:
-                doc_lhood = fit_lda_post(d, t, post, None, None, None, None, None)
+                doc_lhood = fit_lda_post(d, t, lda_post, None, None, None, None, None)
             else:
-                doc_lhood = fit_lda_post(d, t, post, model, None, None, None, None)
+                doc_lhood = fit_lda_post(d, t, lda_post, ldaseq, None, None, None, None)
             if topic_suffstats != None:
                 update_lda_seq_ss(t, seq_corpus.corpuses[t].doc[d], lda_post, topic_suffstats)
             bound += doc_lhood
             doc_index += 1
     return
 
-def fit_lda_post():
+def fit_lda_post(doc_number, time, lda_post, ldaseq, g, g3_matrix, g4_matrix, g5_matrix):
+    init_lda_post(lda_post)
+
+    model = "DTM"
+    if model == "DIM":
+        # if in DIM then we initialise some variables here
+        pass
+
+    lhood = compute_lda_lhood(lda_post)
+    lhood_old = 0
+    converged = 0
+    iter_ = 0
+
+    # convert from a do-while look
+    while converged > LDA_INFERENCE_CONVERGED and iter_ <= LDA_INFERENCE_MAX_ITER:
+        iter_ += 1
+        lhood_old = lhood
+        update_gamma(lda_post)
+
+        model = "DTM"
+        if model == "DTM" or sslm is None:
+            update_phi(doc_number, time, lda_post, sslm, g)
+        elif model == "DIM" and sslm is not None:
+            update_phi_fixed(doc_number, time, lda_post, sslm, g3_matrix, g4_matrix, g5_matrix)
+
+        lhood = compute_lda_lhood(lda_post)
+
+        # go through to this again
+        converged = numpy.fabs((lhood_old - lhood) / lhood_old * lda_post.doc.total)
+
+    return lhood
+
+
+def make_lda_seq_slice(lda, ldaseq, time):
+
+    K = ldaseq.num_topics
+
+    for k in range(0, K):
+        # s = ldaseq.topic_chains[k].e_log_prob[time]
+        # d = lda.topics[k]
+        # deep_copy(s, d)
+        ldaseq.topic_chains[k].e_log_prob[time] = lda.topics[k]
+    ldaseq.alpha = lda.alpha    
+
     return
 
-def make_lda_seq_slice():
+def update_lda_seq_ss(time, doc, lda_post, topic_suffstats):
+
+    K = numpy.size(lda_post.phi)[1].size[1]
+    N = doc.nterms
+
+    for k in range(0, K):
+        topic_ss = topic_suffstats[k]
+        for n in range(0, N):
+            w = doc.word[n]
+            c = doc.count[n]
+            topic_ss[w][time] = topic_ss[w][time] + c * lda_post.phi[n][k]
     return
 
-def update_lda_seq_ss():
+def init_lda_post(ldapost):
+    K = lda_post.lda.num_topics
+    N = lda_post.doc.nterms
+
+    for k in range(0, K):
+        ldapost.gamma[k] = lda_post.lda.alpha[k] + float(lda_post.doc.total) / k 
+        for n in range(0, N):
+            lda_post.phi[n][k] = 1.0 / K
+
+    lda_post.doc_weight = None
     return
 
+def compute_lda_lhood():
+    return
+
+def update_phi():
+    return
+
+def update_gamma():
+    return
 
 def fit_lda_seq_topics(ldaseq, topic_suffstats):
     lhood = 0
@@ -481,17 +551,63 @@ def compute_bound(word_counts, totals, sslm):
     return val
 
 # fucntion to perform optimization
-# def update_obs(counts, totals, sslm):
+def update_obs(word_counts, totals, sslm):
 
-#     W = sslm.num_terms
-#     T = sslm.num_sequence
+    OBS_NORM_CUTOFF = 2
+    W = sslm.num_terms
+    T = sslm.num_sequence
 
-#     runs = 0
+    runs = 0
 
-#     params = opt_params(var=sslm, totals=totals)
-#     mean_deriv_mtx = numpy.resize(numpy.zeros(T * (T + 1)), (T, T + 1))
+    params = opt_params(var=sslm, totals=totals)
+    mean_deriv_mtx = numpy.resize(numpy.zeros(T * (T + 1)), (T, T + 1))
 
-#     # for w in range(0, W):
+
+    for w in range(0, W):
+        w_counts = word_counts[w]
+
+        counts_norm = 0
+        # now we find L2 norm of w_counts
+        for i in range(0, len(word_counts)):
+            counts_norm += word_counts[i] * word_counts[i]
+
+        if counts_norm < OBS_NORM_CUTOFF and norm_cutoff_obs is not None:
+            obs = sslm.obs[w]
+            # a memcopy is happening here
+            norm_cutoff_obs = obs
+        else: 
+            if counts_norm < OBS_NORM_CUTOFF:
+                w_counts = numpy.zeros(len(word_counts))
+
+            for t in range(0, T):
+                mean_deriv = mean_deriv_mtx[t]
+                compute_mean_deriv(w, t, sslm, mean_deriv)
+
+            params.word_counts = w_counts
+            params.word = w
+            params.mean_deriv_mtx = mean_deriv_mtx
+            obs = sslm.obs[w]
+
+            model = "DTM"
+            if model == "DTM":
+                optimize_fdf(T, obs, params, fdf_obs, df_obs, f_obs, f_val, conv_val, niter)
+            if model == "DIM":
+                optimize_fdf(T, obs, params, fdf_obs, df_obs, f_obs_fixed, f_val, conv_val, niter)
+
+            runs += 1
+
+            if counts_norm < OBS_NORM_CUTOFF:
+                norm_cutoff_obs = obs
+
+    update_zeta(sslm)
+    return
+
+
+def compute_mean_deriv():
+    return
+
+def optimize_fdf():
+    return
 
 
 
