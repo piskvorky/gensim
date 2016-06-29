@@ -45,9 +45,8 @@ def testfile():
 
 class TestCoherenceModel(unittest.TestCase):
     def setUp(self):
-        np.random.seed(8)
-        self.badLdaModel = LdaModel(corpus=corpus, num_topics=2, passes=1)  # Bad lda model
-        self.goodLdaModel = LdaModel(corpus=corpus, num_topics=2, passes=50)  # Good lda model
+        self.badLdaModel = LdaModel(corpus=corpus, num_topics=2, passes=1, random_state=17)  # Bad lda model
+        self.goodLdaModel = LdaModel(corpus=corpus, num_topics=2, passes=50, random_state=17)  # Good lda model
 
     def testUMassLdaModel(self):
         """Test U_Mass topic coherence algorithm on LDA Model"""
