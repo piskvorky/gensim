@@ -194,6 +194,9 @@ class TestLsiModel(unittest.TestCase):
         # to be mmaped!
         self.assertRaises(IOError, lsimodel.LsiModel.load, fname, mmap='r')
 
+    def testDocsProcessed(self):
+        self.assertEqual(self.model.docs_processed, 42)
+
 #endclass TestLsiModel
 
 
