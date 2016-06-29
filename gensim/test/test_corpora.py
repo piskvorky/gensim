@@ -16,14 +16,17 @@ import itertools
 
 import numpy
 
-from gensim.utils import to_unicode, smart_extension
+from gensim.utils import to_unicode  # , smart_extension
 from gensim.interfaces import TransformedCorpus
 from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
                             ucicorpus, malletcorpus, textcorpus, indexedcorpus)
 
 # needed because sample data files are located in the same folder
 module_path = os.path.dirname(__file__)
-datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
+
+
+def datapath(fname):
+    return os.path.join(module_path, 'test_data', fname)
 
 
 def testfile():
@@ -180,7 +183,7 @@ class CorpusTestCase(unittest.TestCase):
         self.assertEqual(len(docs), len(corpus))
         self.assertEqual(len(docs), len(corpus[:]))
         self.assertEqual(len(docs[::2]), len(corpus[::2]))
-        
+
         def _get_slice(corpus, slice_):
             # assertRaises for python 2.6 takes a callable
             return corpus[slice_]
@@ -200,9 +203,9 @@ class CorpusTestCase(unittest.TestCase):
         # corpus does, and throws an error otherwise
         if hasattr(corpus, 'index') and corpus.index is not None:
             corpus_ = TransformedCorpus(DummyTransformer(), corpus)
-            self.assertEqual(corpus_[0][0][1], docs[0][0][1]+1)
+            self.assertEqual(corpus_[0][0][1], docs[0][0][1] + 1)
             self.assertRaises(ValueError, _get_slice, corpus_, set([1]))
-            transformed_docs = [val+1 for i, d in enumerate(docs) for _, val in d if i in [1, 3, 4]]
+            transformed_docs = [val + 1 for i, d in enumerate(docs) for _, val in d if i in [1, 3, 4]]
             self.assertEquals(transformed_docs, list(v for doc in corpus_[[1, 3, 4]] for _, v in doc))
             self.assertEqual(3, len(corpus_[[1, 3, 4]]))
         else:
@@ -222,7 +225,10 @@ class TestMmCorpus(CorpusTestCase):
         pass
 
     def test_load(self):
-        self.assertEqual(self.corpus.shape, (1, 9))
+        self.assertEqual(self.corpus.num_docs, 9)
+        self.assertEqual(self.corpus.num_terms, 12)
+        self.assertEqual(self.corpus.num_nnz, 28)
+        self.assertEqual(self.corpus.index, numpy.array([97, 121, 169, 201, 225, 249, 258, 276, 303]))
 
 
 class TestSvmLightCorpus(CorpusTestCase):

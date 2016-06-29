@@ -196,7 +196,7 @@ class TestLsiModel(unittest.TestCase):
 
     def testDocsProcessed(self):
         self.assertEqual(self.model.docs_processed, 9)
-        self.assertEqual(self.model.docs_processed, self.corpus.shape[1])
+        self.assertEqual(self.model.docs_processed, self.corpus.num_docs)
 
 #endclass TestLsiModel
 
