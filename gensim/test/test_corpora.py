@@ -16,7 +16,7 @@ import itertools
 
 import numpy
 
-from gensim.utils import to_unicode  # , smart_extension
+from gensim.utils import to_unicode
 from gensim.interfaces import TransformedCorpus
 from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
                             ucicorpus, malletcorpus, textcorpus, indexedcorpus)
