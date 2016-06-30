@@ -171,11 +171,10 @@ class DtmModel(utils.SaveLoad):
         logger.info("serializing temporary corpus to %s" % self.fcorpustxt())
         # write out the corpus in a file format that DTM understands:
         corpora.BleiCorpus.save_corpus(self.fcorpustxt(), corpus)
-
         with utils.smart_open(self.ftimeslices(), 'wb') as fout:
-            fout.write(six.u(str(len(self.time_slices)) + "\n").encode('utf-8'))
+            fout.write(six.u(utils.to_utf8(str(len(self.time_slices)) + "\n")))
             for sl in time_slices:
-                fout.write(six.u(str(sl) + "\n").encode('utf-8'))
+                fout.write(six.u(utils.to_utf8(str(sl) + "\n")))
 
     def train(self, corpus, time_slices, mode, model):
         """
