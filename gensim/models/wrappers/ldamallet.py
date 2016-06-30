@@ -201,8 +201,8 @@ class LdaMallet(utils.SaveLoad):
                 tokenid = word2id[token]
                 wordtopics[int(topic), tokenid] += 1.0
         logger.info("loaded assigned topics for %i tokens", wordtopics.sum())
-        self.wordtopics = wordtopics
         self.print_topics(15)
+        return wordtopics
 
     def print_topics(self, num_topics=10, num_words=10):
         return self.show_topics(num_topics, num_words, log=True)
