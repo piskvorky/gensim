@@ -363,6 +363,7 @@ def malletmodel2ldamodel(mallet_model):
     -------
     model_gensim : LdaModel instance; copied gensim LdaModel
     """
-    model_gensim = LdaModel(id2word=mallet_model.id2word, num_topics=mallet_model.num_topics, alpha=mallet_model.alpha, iterations=100)
+    model_gensim = LdaModel(id2word=mallet_model.id2word, num_topics=mallet_model.num_topics,
+                            alpha=mallet_model.alpha, iterations=mallet_model.iterations)
     model_gensim.expElogbeta[:] = mallet_model.wordtopics
     return model_gensim
