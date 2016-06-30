@@ -417,25 +417,102 @@ def update_lda_seq_ss(time, doc, lda_post, topic_suffstats):
             topic_ss[w][time] = topic_ss[w][time] + c * lda_post.phi[n][k]
     return
 
-def init_lda_post(ldapost):
+def init_lda_post(lda_post):
     K = lda_post.lda.num_topics
     N = lda_post.doc.nterms
 
     for k in range(0, K):
-        ldapost.gamma[k] = lda_post.lda.alpha[k] + float(lda_post.doc.total) / k 
+        lda_post.gamma[k] = lda_post.lda.alpha[k] + float(lda_post.doc.total) / k 
         for n in range(0, N):
             lda_post.phi[n][k] = 1.0 / K
 
     lda_post.doc_weight = None
     return
 
-def compute_lda_lhood():
+def compute_lda_lhood(lda_post):
+    
+    K = lda_post.lda.num_topics
+    N = lda_post.doc.nterms
+    gamma_sum = numpy.sum(lda_post.gamam)
+
+    # figure out how to do flags
+    FLAGS_sigma_l = 0
+    FLAGS_sigma_d = 0 
+
+    # need to find replacement for this gsl method
+    lhood = gls_sf_lngamma(numpy.sum(lda_post.lda.alpha)) - gls_sf_lngamma(gamma_sum)
+    lda_post.lhood[K] = lhood
+
+    influence_term = 0
+    # need to find replacement for this gsl method
+    digsum = gsl_sf_psi(gamma_sum)
+
+    model = "DTM"
+    for k in range(0, K):
+        if lda_post.doc_weight is not None and (model == "DIM" or model == "DTM"):
+            influence_topic = lda_post.doc_weight[k]
+            influence_term = - ((influence_topic * influence_topic + FLAGS_sigma_l * FLAGS_sigma_l) / 2.0 / (FLAGS_sigma_d * FLAGS_sigma_d))
+
+        e_log_theta_k = gsl_sf_psi(lda_post.gamma[k]) - digsum
+
+        # figure out what is this gsl stuff
+        lhood_term = (lda_post.lda.alpha[k] - lda_post.gamma[k]) * e_log_theta_k + gls_sf_lngamma(lda_post.gamma[k]) - gls_sf_lngamma(lda_post.lda.alpha[k])
+
+        for n in range(0, N):
+            if lda_post.phi[n][k] > 0:
+                lhood_term += lda_post.doc.count[n] *  lda_post.phi[n][k] * (e_log_theta_k + lda_post.lda.topics[lda_post.doc.word[n]][k] - lda_post.log_phi[n][k])
+
+        lda_post.lhood[k] = lhood_term
+        lhood += lhood_term
+        lhood += influence_term
+
+    return lhood
+
+# update variational multinomial parameters
+def update_phi(doc, time, lda_post, ldaseq, g):
+
+    K = lda_post.lda.num_topics
+    N = lda_post.doc.nterms
+
+    dig = numpy.zeros(K)
+
+    for k in range(0, K):
+        dig[k] = gsl_sf_psi(lda_post.gamma[k])
+
+    for n in range(0, N):
+        w = lda_post.doc.word[n]
+        for k in range(0, K):
+            lda_post.log_phi[n][k] = dig[k] + lda_post.lda.topics[w][k]
+        log_phi_row = lda_post.log_phi[n]
+        phi_row = lda_post.phi[n]
+
+        # log normalize
+        v = log_phi_row[0]
+        for i in range(1, len(log_phi_row)):
+            v = numpy.logaddexp(v, log_phi_row[i])
+
+        for i in range(0, len(log_phi_row)):
+            log_phi_row[i] = log_phi_row[i] - v
+
+        for k in range(0, K):
+            phi_row[i] = numpy.exp(log_phi_row[i])
+
     return
 
-def update_phi():
-    return
+# update variational dirichlet parameters
+def update_gamma(lda_post):
 
-def update_gamma():
+    K = lda_post.lda.num_topics
+    N = lda_post.doc.nterms
+
+    lda_post.gamma = lda_post.lda.alpha
+    for n in range(0, N):
+        phi_row = lda_post.phi[n]
+        count = lda_post.doc.count[n]
+
+        for k in range(0, K):
+            lda_post.gamma[k] += phi_row[k] * count
+
     return
 
 def fit_lda_seq_topics(ldaseq, topic_suffstats):
@@ -603,10 +680,69 @@ def update_obs(word_counts, totals, sslm):
     return
 
 
-def compute_mean_deriv():
-    return
+ # compute d E[\beta_{t,w}]/d obs_{s,w} for t = 1:T.
+ # put the result in deriv, allocated T+1 vector
+ 
+def compute_mean_deriv(word, time, sslm, deriv):
 
-def optimize_fdf():
+    T = sslm.num_sequence
+    fwd_variance = sslm.variance[w]
+
+    deriv[0] = 0
+
+    # forward pass
+    for t in range(1, T + 1):
+        if sslm.obs_variance > 0.0:
+            w = sslm.obs_variance / (fwd_variance[t - 1] + sslm.chain_variance + sslm.obs_variance)
+        else:
+            w = 0.0
+
+        val = w * deriv[t - 1]
+        if time == t - 1:
+            val += (1 - w)
+
+        deriv[t]= val
+
+    for t in range(T - 1, -1, -1):
+        if sslm.chain_variance == 0.0:
+            w = 0.0
+        else:
+            w = sslm.chain_variance / (fwd_variance[t] + sslm.chain_variance)
+        deriv[t] = w * deriv[t] + (1 - w) * deriv[t + 1]
+
+    return deriv
+
+# maximize a function using it's derivative
+def optimize_fdf(dim, x, params, fdf, df, f, f_val, conv_val, niter):
+   
+    MAX_ITER = 15
+    # what is multimin?
+    obj = gsl_multimin_function_fdf()
+    obj.f = f
+    obj.df = df
+    obj.fdf = fdf
+    obj.n = dim
+    obj.params = params
+
+    method = gsl_multimin_fdfminimizer_conjugate_fr;
+    opt = gsl_multimin_fdfminimizer_alloc(method, dim);
+    gsl_multimin_fdfminimizer_set(opt, obj, x, 0.01, 1e-3)
+
+    iter_ = 0
+    f_old = 0
+
+    # convert from a do while here
+    while converged > 1e-8 and iter_ < MAX_ITER:
+        iter_ += 1
+        status = gsl_multimin_fdfminimizer_iterate(opt)
+        converged = numpy.fabs((f_old - opt.f) / (dim * f_old))
+        f_old = opt.f
+
+    # all of these are pointer values being reset, so should probably return them
+    f_val = opt.f
+    conv_val = converged
+    niter = iter_
+
     return
 
 
