@@ -44,6 +44,7 @@ from smart_open import smart_open
 
 from gensim import utils, matutils
 from gensim.utils import check_output
+from gensim.models.ldamodel import LdaModel
 
 logger = logging.getLogger(__name__)
 
@@ -346,3 +347,22 @@ class LdaMallet(utils.SaveLoad):
                     if total_weight:
                         doc = [(id_, float(weight) / total_weight) for id_, weight in doc]
                 yield doc
+
+
+def malletmodel2ldamodel(mallet_model):
+    """
+    Function to convert mallet model to gensim LdaModel. This works by copying the
+    training model weights (alpha, beta...) from a trained mallet model into the
+    gensim model.
+
+    Args:
+    ----
+    mallet_model : Trained mallet model
+
+    Returns:
+    -------
+    model_gensim : LdaModel instance; copied gensim LdaModel
+    """
+    model_gensim = LdaModel(id2word=mallet_model.id2word, num_topics=mallet_model.num_topics, alpha=mallet_model.alpha, iterations=100)
+    model_gensim.expElogbeta[:] = mallet_model.wordtopics
+    return model_gensim
