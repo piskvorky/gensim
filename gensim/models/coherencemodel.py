@@ -30,6 +30,8 @@ from gensim.utils import is_corpus, FakeDict
 from gensim.models.ldamodel import LdaModel
 from gensim.models.wrappers import LdaVowpalWabbit, LdaMallet
 
+import numpy as np
+
 logger = logging.getLogger(__name__)
 
 
@@ -48,11 +50,14 @@ class CoherenceModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, model, texts=None, corpus=None, dictionary=None, coherence='c_v'):
+    def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None, coherence='c_v'):
         """
         Args:
         ----
-        model : Pre-trained topic model. Should be provided irrespective of which coherence measure is being used.
+        model : Pre-trained topic model. Should be provided if topics is not provided.
+        topics : List of tokenized topics. If this is preferred over model, dictionary should be provided.
+                 eg. topics = [['human', 'machine', 'computer', 'interface'],
+                                ['graph', 'trees', 'binary', 'widths']]
         texts : Tokenized texts. Needed for coherence models that use sliding window based probability estimator.
         corpus : Gensim document corpus.
         dictionary : Gensim dictionary mapping of id word to create corpus. If model.id2word is present, this is not needed.
@@ -63,6 +68,10 @@ class CoherenceModel(interfaces.TransformationABC):
                     For 'u_mass' corpus should be provided. If texts is provided, it will be converted to corpus using the dictionary.
                     For 'c_v' texts should be provided. Corpus is not needed.
         """
+        if model is None and topics is None:
+            raise ValueError("One of model or topics has to be provided.")
+        elif topics is not None and dictionary is None:
+            raise ValueError("dictionary has to be provided if topics are to be used.")
         if texts is None and corpus is None:
             raise ValueError("One of texts or corpus has to be provided.")
         # Check if associated dictionary is provided.
@@ -93,7 +102,15 @@ class CoherenceModel(interfaces.TransformationABC):
             raise ValueError("%s coherence is not currently supported." % coherence)
 
         self.model = model
-        self.topics = self._get_topics()
+        if model is not None:
+            self.topics = self._get_topics()
+        elif topics is not None:
+            self.topics = []
+            for topic in topics:
+                t_i = []
+                for t in range(len(topic)):
+                    t_i.append(dictionary.token2id[topic[t]])
+                self.topics.append(np.array(t_i))
         self.coherence = coherence
         # Set pipeline parameters:
         if self.coherence == 'u_mass':
