@@ -361,6 +361,7 @@ class LsiModel(interfaces.TransformationABC):
                     num_terms=self.num_terms, chunksize=chunksize,
                     extra_dims=self.extra_samples, power_iters=self.power_iters)
                 self.projection.merge(update, decay=decay)
+                self.docs_processed += len(corpus) if hasattr(corpus, '__len__') else 0
             else:
                 # the one-pass algo
                 doc_no = 0
@@ -395,6 +396,7 @@ class LsiModel(interfaces.TransformationABC):
                 if self.dispatcher:
                     logger.info("reached the end of input; now waiting for all remaining jobs to finish")
                     self.projection = self.dispatcher.getstate()
+                self.docs_processed += doc_no
 #            logger.info("top topics after adding %i documents" % doc_no)
 #            self.print_debug(10)
         else:
@@ -403,6 +405,7 @@ class LsiModel(interfaces.TransformationABC):
             update = Projection(self.num_terms, self.num_topics, corpus.tocsc(), extra_dims=self.extra_samples, power_iters=self.power_iters)
             self.projection.merge(update, decay=decay)
             logger.info("processed sparse job of %i documents", corpus.shape[1])
+            self.docs_processed += corpus.shape[1]
 
     def __str__(self):
         return "LsiModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % (

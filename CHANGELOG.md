@@ -6,6 +6,7 @@ Changes
   - In hdpmodel and dtmmodel
   - NOT BACKWARDS COMPATIBLE!
 * Added random_state parameter to LdaState initializer and check_random_state() (@droudy, #113)
+* Implemented LsiModel.docs_processed attribute
 
 0.13.1, 2016-06-22
 
