@@ -14,8 +14,6 @@ import os
 import os.path
 import tempfile
 
-import numpy as np
-
 from gensim.models.coherencemodel import CoherenceModel
 from gensim.models.ldamodel import LdaModel
 from gensim.models.wrappers import LdaMallet
@@ -45,29 +43,35 @@ def testfile():
 
 class TestCoherenceModel(unittest.TestCase):
     def setUp(self):
-        self.badLdaModel = LdaModel(corpus=corpus, num_topics=2, passes=1, random_state=17)  # Bad lda model
-        self.goodLdaModel = LdaModel(corpus=corpus, num_topics=2, passes=50, random_state=17)  # Good lda model
+        # Suppose given below are the topics which two different LdaModels come up with.
+        # `topics1` is clearly better as it has a clear distinction between system-human
+        # interaction and graphs. Hence both the coherence measures for `topics1` should be
+        # greater.
+        self.topics1 = [['human', 'computer', 'system', 'interface'],
+                        ['graph', 'minors', 'trees', 'eps']]
+        self.topics2 = [['user', 'graph', 'minors', 'system'],
+                        ['time', 'graph', 'survey', 'minors']]
 
-    def testUMassLdaModel(self):
-        """Test U_Mass topic coherence algorithm on LDA Model"""
-        cm1 = CoherenceModel(model=self.badLdaModel, corpus=corpus, dictionary=dictionary, coherence='u_mass')
-        cm2 = CoherenceModel(model=self.goodLdaModel, corpus=corpus, dictionary=dictionary, coherence='u_mass')
-        self.assertTrue(cm1.get_coherence() < cm2.get_coherence())
+    def testUMass(self):
+        """Test U_Mass topic coherence algorithm on given topics"""
+        cm1 = CoherenceModel(topics=self.topics1, corpus=corpus, dictionary=dictionary, coherence='u_mass')
+        cm2 = CoherenceModel(topics=self.topics2, corpus=corpus, dictionary=dictionary, coherence='u_mass')
+        self.assertTrue(cm1.get_coherence() > cm2.get_coherence())
 
-    def testCvLdaModel(self):
-        """Test C_v topic coherence algorithm on LDA Model"""
-        cm1 = CoherenceModel(model=self.badLdaModel, texts=texts, dictionary=dictionary, coherence='c_v')
-        cm2 = CoherenceModel(model=self.goodLdaModel, texts=texts, dictionary=dictionary, coherence='c_v')
-        self.assertTrue(cm1.get_coherence() < cm2.get_coherence())
+    def testCv(self):
+        """Test C_v topic coherence algorithm on given topics"""
+        cm1 = CoherenceModel(topics=self.topics1, texts=texts, dictionary=dictionary, coherence='c_v')
+        cm2 = CoherenceModel(topics=self.topics2, texts=texts, dictionary=dictionary, coherence='c_v')
+        self.assertTrue(cm1.get_coherence() > cm2.get_coherence())
 
     def testErrors(self):
         """Test if errors are raised on bad input"""
         # not providing dictionary
-        self.assertRaises(ValueError, CoherenceModel, model=self.goodLdaModel, corpus=corpus, coherence='u_mass')
+        self.assertRaises(ValueError, CoherenceModel, topics=self.topics1, corpus=corpus, coherence='u_mass')
         # not providing texts for c_v and instead providing corpus
-        self.assertRaises(ValueError, CoherenceModel, model=self.goodLdaModel, corpus=corpus, dictionary=dictionary, coherence='c_v')
+        self.assertRaises(ValueError, CoherenceModel, topics=self.topics1, corpus=corpus, dictionary=dictionary, coherence='c_v')
         # not providing corpus or texts for u_mass
-        self.assertRaises(ValueError, CoherenceModel, self.goodLdaModel, dictionary, 'u_mass')
+        self.assertRaises(ValueError, CoherenceModel, topics=self.topics1, dictionary=dictionary, coherence='u_mass')
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

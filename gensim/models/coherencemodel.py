@@ -141,7 +141,7 @@ class CoherenceModel(interfaces.TransformationABC):
                 bestn = argsort(topic, topn=10, reverse=True)
                 topics.append(bestn)
         elif isinstance(self.model, LdaMallet):
-            for topic in self.model.wordtopics:
+            for topic in self.model.word_topics:
                 bestn = argsort(topic, topn=10, reverse=True)
                 topics.append(bestn)
         else:
