@@ -66,7 +66,7 @@ class LdaSeqModel(utils.SaveLoad):
 
 class sslm(utils.SaveLoad):
   def __init__(self, num_terms=None, num_sequence=None, obs=None, obs_variance=0.5, chain_variance=0.005, fwd_variance=None,
-               mean=None, variance=None,  zeta=None, e_log_prob=None, fwd_mean=None, m_update_coeff=None,
+               mean=None, variance=None,  zeta=None, e_log_prob=None, fwd_mean=None, m_update_coeff=None, temp_vect=None,
                mean_t=None, variance_t=None, influence_sum_lgl=None, w_phi_l=None, w_phi_sum=None, w_phi_l_sq=None,  m_update_coeff_g=None):
 
         self.obs = obs
@@ -89,12 +89,30 @@ class sslm(utils.SaveLoad):
         self.w_phi_l_sq = w_phi_l_sq
         self.m_update_coeff_g = m_update_coeff_g
 
+        # temp_vect 
+        self.temp_vect = temp_vect
+
 class lda_post(utils.SaveLoad):
     def __init__(self, doc=None, lda=None, phi=None, log_phi=None, gamma=None, lhood=None, doc_weight=None, renormalized_doc_weight=None):
+        self.doc = doc
+        self.lda = lda
+        self.phi = phi
+        self.log_phi = log_phi
+        self.gamma = gamma
+        self.lhood = lhood
+        self.doc_weight = doc_weight
+        self.renormalized_doc_weight = renormalized_doc_weight
+
         return
 
 class opt_params(utils.SaveLoad):
-    def __init__(sslm, word_counts, totals, mean_deriv_mtx, word):
+    def __init__(self, sslm, word_counts, totals, mean_deriv_mtx, word):
+        self.sslm = sslm
+        self.word_counts 
+        self.totals = totals
+        self.mean_deriv_mtx = mean_deriv_mtx
+        self.word = word
+
         return
 
 def update_zeta(sslm):
@@ -631,6 +649,12 @@ def compute_bound(word_counts, totals, sslm):
 def update_obs(word_counts, totals, sslm):
 
     OBS_NORM_CUTOFF = 2
+
+    # used in optimize function but not sure what is happening
+    f_val = None
+    conv_val = None
+    niter = None
+
     W = sslm.num_terms
     T = sslm.num_sequence
 
@@ -745,13 +769,127 @@ def optimize_fdf(dim, x, params, fdf, df, f, f_val, conv_val, niter):
 
     return
 
+def fdf_obs(x, params, f, df):
+
+    p = params
+    model = "DTM"
+
+    if model == "DTM":
+        f = f_obs(x, params)
+        compute_obs_deriv(p.word, p.word_counts, p.totals, p.sslm, p.mean_deriv_mtx, df)
+    elif model == "DIM":
+        f = f_obs_multiplt(x, params)
+        compute_obs_deriv_fixed(p.word, p.word_counts, p.totals, p.sslm, p.mean_deriv_mtx, df)
+
+    for i in range(0, len(df)):
+        df[i] = - df[i]
+
+def df_obs(x, params, df):
+
+    p = params
+    p.sslm.obs[p.word] = x
+
+    compute_post_mean(p.word, p.sslm, p.sslm.chain_variance)
+    if model == "DTM":
+        compute_obs_deriv(p.word, p.word_counts, p.totals, p.sslm, p.mean_deriv_mtx, df)
+    elif model == "DIM":
+        compute_obs_deriv_fixed(p.word, p.word_counts, p.totals, p.sslm, p.mean_deriv_mtx, df)
+
+def f_obs(x, params):
+
+    # flag
+    init_mult = 1000
+
+    T = len(x)
+    val = 0
+    term1 = 0
+    term2 = 0
+
+    # term 3 and 4 for DIM
+    term3 = 0 
+    term4 = 0
+
+    p = params
+    p.sslm.obs[p.word] = x
+    compute_post_mean(p.word, p.sslm, p.sslm.chain_variance)
+
+    mean = p.sslm.mean[p.word]
+    variance = p.sslm.variance[p.word]
+    w_phi_l = p.sslm.w_phi_l[p.word]
+    m_update_coeff = p.sslm.m_update_coeff[p.word]
+
+    for t in range(1, T + 1):
+        mean_t = mean[t]
+        mean_t_prev = mean[t - 1]
+        var_t_prev = variance[t - 1]
+
+        val = mean_t - mean_t_prev
+        term1 += val * val
+        term2 += p.word_counts[t - 1] * mean_t - p.totals[t - 1] * numpy.exp(mean_t + variance[t] / 2) / p.sslm.zeta[t - 1]
+
+        model = "DTM"
+        if model == "DIM":
+            # stuff happens
+            pass
+
+    if p.sslm.chain_variance > 0.0:
+        
+        term1 = - (term1 / 2 * p.sslm.chain_variance)
+        term1 = term1 - mean[0] * mean[0] / (2 * init_milt * p.sslm.chain_variance)
+    else:
+        term1 = 0.0
+
+    return -(term1 + term2 + term3 + term4)
 
 
+def compute_obs_deriv(word, word_counts, totals, sslm, mean_deriv_mtx, deriv):
 
+    # flag
+    init_mult = 1000
 
+    T = sslm.num_sequence
 
+    mean = sslm.mean[word]
+    variance = sslm.variance[word]
 
+    sslm.temp_vect = numpy.zeros(T)
 
+    for u in range(0, T):
+        sslm.temp_vect[u] = numpy.exp(mean[u + 1] + variance[u + 1] / 2)
 
+    w_phi_l = sslm.w_phi_l[word]
+    m_update_coeff = sslm.m_update_coeff[word]
 
+    for t in range(0, T):
+        
+        mean_deriv = mean_deriv_mtx[t]
+        term1 = 0
+        term2 = 0
+        term3 = 0
+        term4 = 0
+
+        for u in range(1, T + 1):
+            mean_u = mean[u]
+            variance_u_prev = variance[u - 1]
+            mean_u_prev = mean[u - 1]
+            dmean_u = mean_deriv[u]
+            dmean_u_prev = mean_deriv[u - 1]
+
+            term1 += (mean_u - mean_u_prev) * (dmean_u * dmean_u_prev)
+
+            term2 += (word_counts[u - 1] - (totals[u - 1] * sslm.temp_vect[u - 1] / sslm.zeta[u - 1])) * dmean_u
+
+            model = "DTM"
+            if model == "DIM":
+                # do some stuff
+                pass
+
+        if sslm.chain_variance:
+            term1 = - (term1 / sslm.chain_variance)
+            term1 = term1 - (mean[0] * mean_deriv[0]) / init_mult * sslm.chain_variance
+        else:
+            term1 = 0.0
+
+        deriv[t] = term1 + term2 + term3 + term4
     
+    return
