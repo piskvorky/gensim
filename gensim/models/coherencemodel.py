@@ -24,7 +24,6 @@ from gensim import interfaces
 from gensim.topic_coherence import (segmentation, probability_estimation,
                                     direct_confirmation_measure, indirect_confirmation_measure,
                                     aggregation)
-from gensim.corpora import Dictionary
 from gensim.matutils import argsort
 from gensim.utils import is_corpus, FakeDict
 from gensim.models.ldamodel import LdaModel
@@ -45,7 +44,15 @@ class CoherenceModel(interfaces.TransformationABC):
     1. constructor, which initializes the four stage pipeline by accepting a coherence measure,
     2. the ``get_coherence()`` method, which returns the topic coherence.
 
+    One way of using this feature is through providing a trained topic model. A dictionary has to be explicitly
+    provided if the model does not contain a dictionary already.
     >>> cm = CoherenceModel(model=tm, corpus=corpus, coherence='u_mass')  # tm is the trained topic model
+    >>> cm.get_coherence()
+
+    Another way of using this feature is through providing tokenized topics such as:
+    >>> topics = [['human', 'computer', 'system', 'interface'],
+                  ['graph', 'minors', 'trees', 'eps']]
+    >>> cm = CoherenceModel(topics=topics, corpus=corpus, dictionary=dictionary, coherence='u_mass') # note that a dictionary has to be provided.
     >>> cm.get_coherence()
 
     Model persistency is achieved via its load/save methods.
@@ -57,7 +64,7 @@ class CoherenceModel(interfaces.TransformationABC):
         model : Pre-trained topic model. Should be provided if topics is not provided.
         topics : List of tokenized topics. If this is preferred over model, dictionary should be provided.
                  eg. topics = [['human', 'machine', 'computer', 'interface'],
-                                ['graph', 'trees', 'binary', 'widths']]
+                               ['graph', 'trees', 'binary', 'widths']]
         texts : Tokenized texts. Needed for coherence models that use sliding window based probability estimator.
         corpus : Gensim document corpus.
         dictionary : Gensim dictionary mapping of id word to create corpus. If model.id2word is present, this is not needed.
