@@ -242,6 +242,8 @@ class LdaMallet(utils.SaveLoad):
         return shown
 
     def show_topic(self, topicid, topn=10):
+        if self.word_topics is None:
+            logger.info("Run train or load_word_topics before showing topics.")
         topic = self.word_topics[topicid]
         topic = topic / topic.sum()  # normalize to probability dist
         bestn = matutils.argsort(topic, topn, reverse=True)
