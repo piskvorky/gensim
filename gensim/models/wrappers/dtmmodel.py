@@ -173,9 +173,9 @@ class DtmModel(utils.SaveLoad):
         corpora.BleiCorpus.save_corpus(self.fcorpustxt(), corpus)
 
         with utils.smart_open(self.ftimeslices(), 'wb') as fout:
-            fout.write(six.u(str(len(self.time_slices)) + "\n"))
+            fout.write(six.u(utils.to_utf8(str(len(self.time_slices)) + "\n")))
             for sl in time_slices:
-                fout.write(six.u(str(sl) + "\n"))
+                fout.write(six.u(utils.to_utf8(str(sl) + "\n")))
 
     def train(self, corpus, time_slices, mode, model):
         """
