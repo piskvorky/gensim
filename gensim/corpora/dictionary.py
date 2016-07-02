@@ -187,21 +187,43 @@ class Dictionary(utils.SaveLoad, Mapping):
         **Note**: Due to the gap shrinking, the same word may have a different
         word id before and after the call to this function!
         """
-        no_above_abs = int(no_above * self.num_docs) # convert fractional threshold to absolute threshold
+        no_above_abs = int(no_above * self.num_docs)  # convert fractional threshold to absolute threshold
 
         # determine which tokens to keep
-        good_ids = (v for v in itervalues(self.token2id)
-                      if no_below <= self.dfs.get(v, 0) <= no_above_abs)
+        good_ids = (
+            v for v in itervalues(self.token2id)
+            if no_below <= self.dfs.get(v, 0) <= no_above_abs)
         good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
         if keep_n is not None:
             good_ids = good_ids[:keep_n]
         bad_words = [(self[id], self.dfs.get(id, 0)) for id in set(self).difference(good_ids)]
         logger.info("discarding %i tokens: %s...", len(self) - len(good_ids), bad_words[:10])
-        logger.info("keeping %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents",
+        logger.info(
+            "keeping %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents",
             len(good_ids), no_below, no_above_abs, 100.0 * no_above)
 
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
         self.filter_tokens(good_ids=good_ids)
+        logger.info("resulting dictionary: %s", self)
+
+    def filter_n_most_frequent(self, remove_n):
+        """
+        Filter out the 'remove_n' most frequent tokens that appear in the documents.
+
+        After the pruning, shrink resulting gaps in word ids.
+
+        **Note**: Due to the gap shrinking, the same word may have a different
+        word id before and after the call to this function!
+        """
+        # determine which tokens to keep
+        most_frequent_ids = (v for v in itervalues(self.token2id))
+        most_frequent_ids = sorted(most_frequent_ids, key=self.dfs.get, reverse=True)
+        most_frequent_ids = most_frequent_ids[:remove_n]
+        # do the actual filtering, then rebuild dictionary to remove gaps in ids
+        most_frequent_words = [(self[id], self.dfs.get(id, 0)) for id in most_frequent_ids]
+        logger.info("discarding %i tokens: %s...", len(most_frequent_ids), most_frequent_words[:10])
+        
+        self.filter_tokens(bad_ids=most_frequent_ids)
         logger.info("resulting dictionary: %s" % self)
 
     def filter_tokens(self, bad_ids=None, good_ids=None):
@@ -256,7 +278,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         Note: text format should be use for corpus inspection. Use `save`/`load`
         to store in binary format (pickle) for improved performance.
         """
-        logger.info("saving dictionary mapping to %s" % fname)
+        logger.info("saving dictionary mapping to %s", fname)
         with utils.smart_open(fname, 'wb') as fout:
             if sort_by_word:
                 for token, tokenid in sorted(iteritems(self.token2id)):
@@ -354,7 +376,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         max_id = -1
         for docno, document in enumerate(corpus):
             if docno % 10000 == 0:
-                logger.info("adding document #%i to %s" % (docno, result))
+                logger.info("adding document #%i to %s", docno, result)
             result.num_docs += 1
             result.num_nnz += len(document)
             for wordid, word_freq in document:
@@ -372,6 +394,7 @@ class Dictionary(utils.SaveLoad, Mapping):
             # make sure all token ids have a valid `dfs` entry
             result.dfs[id] = result.dfs.get(id, 0)
 
-        logger.info("built %s from %i documents (total %i corpus positions)" %
-                     (result, result.num_docs, result.num_pos))
+        logger.info(
+            "built %s from %i documents (total %i corpus positions)",
+            result, result.num_docs, result.num_pos)
         return result

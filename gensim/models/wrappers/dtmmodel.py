@@ -26,6 +26,7 @@ import tempfile
 import os
 from subprocess import PIPE
 import numpy as np
+import six
 
 from gensim import utils, corpora, matutils
 from gensim.utils import check_output
@@ -42,7 +43,7 @@ class DtmModel(utils.SaveLoad):
 
     def __init__(
             self, dtm_path, corpus=None, time_slices=None, mode='fit', model='dtm', num_topics=100, id2word=None, prefix=None,
-            lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10, alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=False):
+            lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10, alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=True):
         """
         `dtm_path` is path to the dtm executable, e.g. `C:/dtm/dtm-win64.exe`.
 
@@ -172,9 +173,9 @@ class DtmModel(utils.SaveLoad):
         corpora.BleiCorpus.save_corpus(self.fcorpustxt(), corpus)
 
         with utils.smart_open(self.ftimeslices(), 'wb') as fout:
-            fout.write(str(len(self.time_slices)) + "\n")
+            fout.write(six.u(str(len(self.time_slices)) + "\n"))
             for sl in time_slices:
-                fout.write(str(sl) + "\n")
+                fout.write(six.u(str(sl) + "\n"))
 
     def train(self, corpus, time_slices, mode, model):
         """

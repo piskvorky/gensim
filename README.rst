@@ -3,16 +3,12 @@ gensim -- Topic Modelling in Python
 ==============================================
 
 |Travis|_
-|Downloads|_
 |Wheel|_
-|License|_
 
-.. |Travis| image:: https://img.shields.io/travis/piskvorky/gensim/develop.svg
-.. |Downloads| image:: https://img.shields.io/pypi/dm/gensim.svg
-.. |License| image:: https://img.shields.io/pypi/l/gensim.svg
+.. |Travis| image:: https://img.shields.io/travis/RaRe-Technologies/gensim/develop.svg
 .. |Wheel| image:: https://img.shields.io/pypi/wheel/gensim.svg
 
-.. _Travis: https://travis-ci.org/piskvorky/gensim
+.. _Travis: https://travis-ci.org/RaRe-Technologies/gensim
 .. _Downloads: https://pypi.python.org/pypi/gensim
 .. _License: http://radimrehurek.com/gensim/about.html
 .. _Wheel: https://pypi.python.org/pypi/gensim
@@ -61,7 +57,7 @@ you'd run::
 For alternative modes of installation (without root privileges, development
 installation, optional install features), see the `documentation <http://radimrehurek.com/gensim/install.html>`_.
 
-This version has been tested under Python 2.6, 2.7, 3.3, 3.4 and 3.5 (support for Python 2.5 was dropped in gensim 0.10.0; install gensim 0.9.1 if you *must* use Python 2.5). Gensim's github repo is hooked to `Travis CI for automated testing <https://travis-ci.org/piskvorky/gensim>`_ on every commit push and pull request.
+This version has been tested under Python 2.6, 2.7, 3.3, 3.4 and 3.5 (support for Python 2.5 was dropped in gensim 0.10.0; install gensim 0.9.1 if you *must* use Python 2.5). Gensim's github repo is hooked against `Travis CI for automated testing <https://travis-ci.org/RaRe-Technologies/gensim>`_ on every commit push and pull request.
 
 How come gensim is so fast and memory efficient? Isn't it pure Python, and isn't Python slow and greedy?
 --------------------------------------------------------------------------------------------------------
@@ -99,7 +95,7 @@ When `citing gensim in academic papers and theses <https://scholar.google.cz/cit
 
 ----------------
 
-Gensim is open source software released under the `GNU LGPL license <http://www.gnu.org/licenses/lgpl.html>`_.
+Gensim is open source software released under the `GNU LGPLv2.1 license <http://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html>`_.
 Copyright (c) 2009-now Radim Rehurek
 
 |Analytics|_

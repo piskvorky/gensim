@@ -67,6 +67,7 @@ def dirichlet_expectation(alpha):
         result = psi(alpha) - psi(numpy.sum(alpha, 1))[:, numpy.newaxis]
     return result.astype(alpha.dtype)  # keep the same precision as input
 
+
 def update_dir_prior(prior, N, logphat, rho):
     """
     Updates a given prior using Newton's method, described in
@@ -284,13 +285,13 @@ class LdaModel(interfaces.TransformationABC):
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
-        assert self.alpha.shape == (num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), num_topics)
+        assert self.alpha.shape == (self.num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
 
-        assert (self.eta.shape == (num_topics, 1) or self.eta.shape == (num_topics, self.num_terms)), (
+        assert (self.eta.shape == (self.num_topics, 1) or self.eta.shape == (self.num_topics, self.num_terms)), (
             "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
-            (str(self.eta.shape), num_topics, num_topics, self.num_terms))
+            (str(self.eta.shape), self.num_topics, self.num_topics, self.num_terms))
 
         # VB constants
         self.iterations = iterations
@@ -309,7 +310,7 @@ class LdaModel(interfaces.TransformationABC):
                 import Pyro4
                 dispatcher = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher')
                 logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
-                dispatcher.initialize(id2word=self.id2word, num_topics=num_topics,
+                dispatcher.initialize(id2word=self.id2word, num_topics=self.num_topics,
                                       chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
                 self.dispatcher = dispatcher
                 self.numworkers = len(dispatcher.getworkers())
@@ -363,7 +364,7 @@ class LdaModel(interfaces.TransformationABC):
             # eta is a column: [[0.1],
             #                   [0.1]]
             if init_prior.shape == (self.num_topics,) or init_prior.shape == (1, self.num_topics):
-                init_prior = init_prior.reshape((self.num_topics, 1)) # this statement throws ValueError if eta did not match self.num_topics
+                init_prior = init_prior.reshape((self.num_topics, 1))  # this statement throws ValueError if eta did not match self.num_topics
 
         return init_prior, is_auto
 
@@ -482,7 +483,6 @@ class LdaModel(interfaces.TransformationABC):
         state.numdocs += gamma.shape[0]  # avoids calling len(chunk) on a generator
         return gamma
 
-
     def update_alpha(self, gammat, rho):
         """
         Update parameters for the Dirichlet prior on the per-document
@@ -504,7 +504,7 @@ class LdaModel(interfaces.TransformationABC):
         if self.eta.shape[1] != 1:
             raise ValueError("Can't use update_eta with eta matrices, only column vectors.")
         N = float(lambdat.shape[1])
-        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat.transpose()) / N).reshape((self.num_topics,1))
+        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat.transpose()) / N).reshape((self.num_topics, 1))
 
         self.eta = update_dir_prior(self.eta, N, logphat, rho)
         logger.info("optimized eta %s", list(self.eta.reshape((self.num_topics))))
@@ -548,22 +548,17 @@ class LdaModel(interfaces.TransformationABC):
         `corpus` sizes, an increasing `offset` may be beneficial (see
         Table 1 in Hoffman et al.)
 
-        Parameters
-        ------------
-        corpus: (gensim corpus object, list of tuples)
-            The corpus with which the LDA model should be updated with.
+        Args:
+            corpus (gensim corpus): The corpus with which the LDA model should be updated.
 
-        chunks_as_numpy: bool
-            Whether each chunk passed to `.inference` should be a numpy
-            array of not. Numpy can in some settings turn the term IDs
-            into floats, these will be converted back into integers in
-            inference, which incurs a performance hit. For distributed
-            computing it may be desirable to keep the chunks as numpy
-            arrays.
+            chunks_as_numpy (bool): Whether each chunk passed to `.inference` should be a numpy
+                array of not. Numpy can in some settings turn the term IDs
+                into floats, these will be converted back into integers in
+                inference, which incurs a performance hit. For distributed
+                computing it may be desirable to keep the chunks as numpy
+                arrays.
 
-        See Also
-        --------
-        For other parameter settings see LdaModel().
+        For other parameter settings, see :class:`LdaModel` constructor.
 
         """
         # use parameters given in constructor, unless user explicitly overrode them
@@ -824,7 +819,7 @@ class LdaModel(interfaces.TransformationABC):
 
     def print_topic(self, topicid, topn=10):
         """Return the result of `show_topic`, but formatted as a single string."""
-        return ' + '.join(['%.3f*%s' % (v, k)  for k, v in self.show_topic(topicid, topn)])
+        return ' + '.join(['%.3f*%s' % (v, k) for k, v in self.show_topic(topicid, topn)])
 
     def top_topics(self, corpus, num_words=20):
         """
@@ -888,28 +883,81 @@ class LdaModel(interfaces.TransformationABC):
         top_topics = sorted(coherence_scores, key=lambda t: t[1], reverse=True)
         return top_topics
 
-    def get_document_topics(self, bow, minimum_probability=None):
+    def get_document_topics(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
         """
         Return topic distribution for the given document `bow`, as a list of
         (topic_id, topic_probability) 2-tuples.
 
         Ignore topics with very low probability (below `minimum_probability`).
 
+        If per_word_topics is True, it also returns a list of topics, sorted in descending order of most likely topics for that word. 
+        It also returns a list of word_ids and each words corresponding topics' phi_values, multiplied by feature length (i.e, word count)
+
         """
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
-        minimum_probability = max(abs(minimum_probability), 1e-8)  # never allow zero values in sparse output
+        minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
+
+        if minimum_phi_value is None:
+            minimum_phi_value = self.minimum_probability
+        minimum_phi_value = max(minimum_phi_value, 1e-8)  # never allow zero values in sparse output
 
         # if the input vector is a corpus, return a transformed corpus
         is_corpus, corpus = utils.is_corpus(bow)
         if is_corpus:
             return self._apply(corpus)
 
-        gamma, _ = self.inference([bow])
+        gamma, phis = self.inference([bow], collect_sstats=True)
         topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
-        return [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
-                if topicvalue >= minimum_probability]
 
+        document_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
+                    if topicvalue >= minimum_probability]
+     
+        if not per_word_topics:
+            return document_topics
+        else:
+            word_topic = [] # contains word and corresponding topic
+            word_phi = [] # contains word and phi values
+            for word_type, weight in bow:
+                phi_values = [] # contains (phi_value, topic) pairing to later be sorted
+                phi_topic = [] # contains topic and corresponding phi value to be returned 'raw' to user
+                for topic_id in range(0, self.num_topics):
+                    if phis[topic_id][word_type] >= minimum_phi_value:
+                        # appends phi values for each topic for that word
+                        # these phi values are scaled by feature length 
+                        phi_values.append((phis[topic_id][word_type], topic_id))
+                        phi_topic.append((topic_id, phis[topic_id][word_type]))
+               
+                # list with ({word_id => [(topic_0, phi_value), (topic_1, phi_value) ...]).
+                word_phi.append((word_type, phi_topic))
+                # sorts the topics based on most likely topic
+                # returns a list like ({word_id => [topic_id_most_probable, topic_id_second_most_probable, ...]).
+                sorted_phi_values = sorted(phi_values, reverse=True)
+                topics_sorted = [x[1] for x in sorted_phi_values]
+                word_topic.append((word_type, topics_sorted))
+            return (document_topics, word_topic, word_phi) # returns 2-tuple
+
+    def get_term_topics(self, word_id, minimum_probability=None):
+        """
+        Returns most likely topics for a particular word in vocab.
+
+        """
+        if minimum_probability is None:
+            minimum_probability = self.minimum_probability
+        minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
+
+        # if user enters word instead of id in vocab, change to get id
+        if isinstance(word_id, str):
+            word_id = self.id2word.doc2bow([word_id])[0][0]
+
+        values = []
+        for topic_id in range(0, self.num_topics):
+            if self.expElogbeta[topic_id][word_id] >= minimum_probability:
+                values.append((topic_id, self.expElogbeta[topic_id][word_id]))
+
+        return values
+
+        
     def __getitem__(self, bow, eps=None):
         """
         Return topic distribution for the given document `bow`, as a list of
@@ -930,7 +978,7 @@ class LdaModel(interfaces.TransformationABC):
 
         `ignore` parameter can be used to define which variables should be ignored, i.e. left
         out from the pickled lda model. By default the internal `state` is ignored as it uses
-        its own serialisation not the one provided by `LdaModel`. The `state` and `dispatcher
+        its own serialisation not the one provided by `LdaModel`. The `state` and `dispatcher`
         will be added to any ignore parameter defined.
 
 
