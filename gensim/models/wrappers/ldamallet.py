@@ -164,7 +164,7 @@ class LdaMallet(utils.SaveLoad):
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
         logger.info("training MALLET LDA with %s", cmd)
         check_output(cmd, shell=True)
-        self.word_topics = self.load_word_topics()
+        self.word_topics = self.wordtopics = self.load_word_topics()
 
     def __getitem__(self, bow, iterations=100):
         is_corpus, corpus = utils.is_corpus(bow)
@@ -200,7 +200,6 @@ class LdaMallet(utils.SaveLoad):
                     continue
                 tokenid = word2id[token]
                 word_topics[int(topic), tokenid] += 1.0
-        logger.info("loaded assigned topics for %i tokens", word_topics.sum())
         self.print_topics(15)
         return word_topics
 
@@ -233,25 +232,25 @@ class LdaMallet(utils.SaveLoad):
         shown = []
         for i in chosen_topics:
             if formatted:
-                topic = self.print_topic(i, topn=num_words)
+                topic = self.print_topic(i, num_words=num_words)
             else:
-                topic = self.show_topic(i, topn=num_words)
+                topic = self.show_topic(i, num_words=num_words)
             shown.append(topic)
             if log:
                 logger.info("topic #%i (%.3f): %s", i, self.alpha[i], topic)
         return shown
 
-    def show_topic(self, topicid, topn=10):
+    def show_topic(self, topicid, num_words=10):
         if self.word_topics is None:
             logger.warn("Run train or load_word_topics before showing topics.")
         topic = self.word_topics[topicid]
         topic = topic / topic.sum()  # normalize to probability dist
-        bestn = matutils.argsort(topic, topn, reverse=True)
+        bestn = matutils.argsort(topic, num_words, reverse=True)
         beststr = [(topic[id], self.id2word[id]) for id in bestn]
         return beststr
 
-    def print_topic(self, topicid, topn=10):
-        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, topn)])
+    def print_topic(self, topicid, num_words=10):
+        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, num_words)])
 
 
     def get_version(self, direc_path):
