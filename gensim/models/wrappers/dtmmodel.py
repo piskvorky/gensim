@@ -282,7 +282,7 @@ class DtmModel(utils.SaveLoad):
 
     def show_topic(self, topicid, time, num_words=50):
         """
-        Return `topn` most probable words for the given `topicid`, as a list of
+        Return `num_words` most probable words for the given `topicid`, as a list of
         `(word_probability, word)` 2-tuples.
 
         """
