@@ -458,7 +458,7 @@ def compute_lda_lhood(lda_post):
     FLAGS_sigma_d = 0 
 
     # need to find replacement for this gsl method
-    lhood = gls_sf_lngamma(numpy.sum(lda_post.lda.alpha)) - gls_sf_lngamma(gamma_sum)
+    lhood = gsl_sf_lngamma(numpy.sum(lda_post.lda.alpha)) - gls_sf_lngamma(gamma_sum)
     lda_post.lhood[K] = lhood
 
     influence_term = 0
