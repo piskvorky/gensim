@@ -164,7 +164,10 @@ class LdaMallet(utils.SaveLoad):
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
         logger.info("training MALLET LDA with %s", cmd)
         check_output(cmd, shell=True)
-        self.word_topics = self.wordtopics = self.load_word_topics()
+        self.word_topics = self.load_word_topics()
+        # NOTE - we are still keeping the wordtopics variable to not break backward compatibility. 
+        # word_topics has replaced wordtopics throughout the code; wordtopics just stores the values of word_topics when train is called.
+        self.wordtopics = self.word_topics
 
     def __getitem__(self, bow, iterations=100):
         is_corpus, corpus = utils.is_corpus(bow)
