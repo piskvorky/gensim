@@ -19,6 +19,8 @@ Few mathematical helper functions will be made and tested.
 from gensim import interfaces, utils, matutils
 from gensim.models import ldamodel
 import numpy
+import math
+from scipy.special import digamma
 
 class seq_corpus(utils.SaveLoad):
     def __init__(self, num_terms=0, max_nterms=0, length=0, num_doc=0, corpuses=0):
@@ -457,13 +459,11 @@ def compute_lda_lhood(lda_post):
     FLAGS_sigma_l = 0
     FLAGS_sigma_d = 0 
 
-    # need to find replacement for this gsl method
-    lhood = gsl_sf_lngamma(numpy.sum(lda_post.lda.alpha)) - gls_sf_lngamma(gamma_sum)
+    lhood = math.lgamma(numpy.sum(lda_post.lda.alpha)) - math.lgamma(gamma_sum)
     lda_post.lhood[K] = lhood
 
     influence_term = 0
-    # need to find replacement for this gsl method
-    digsum = gsl_sf_psi(gamma_sum)
+    digsum = digamma(gamma_sum)
 
     model = "DTM"
     for k in range(0, K):
@@ -471,10 +471,9 @@ def compute_lda_lhood(lda_post):
             influence_topic = lda_post.doc_weight[k]
             influence_term = - ((influence_topic * influence_topic + FLAGS_sigma_l * FLAGS_sigma_l) / 2.0 / (FLAGS_sigma_d * FLAGS_sigma_d))
 
-        e_log_theta_k = gsl_sf_psi(lda_post.gamma[k]) - digsum
+        e_log_theta_k = digamma(lda_post.gamma[k]) - digsum
 
-        # figure out what is this gsl stuff
-        lhood_term = (lda_post.lda.alpha[k] - lda_post.gamma[k]) * e_log_theta_k + gls_sf_lngamma(lda_post.gamma[k]) - gls_sf_lngamma(lda_post.lda.alpha[k])
+        lhood_term = (lda_post.lda.alpha[k] - lda_post.gamma[k]) * e_log_theta_k + math.lgamma(lda_post.gamma[k]) - math.lgamma(lda_post.lda.alpha[k])
 
         for n in range(0, N):
             if lda_post.phi[n][k] > 0:
@@ -495,7 +494,7 @@ def update_phi(doc, time, lda_post, ldaseq, g):
     dig = numpy.zeros(K)
 
     for k in range(0, K):
-        dig[k] = gsl_sf_psi(lda_post.gamma[k])
+        dig[k] = digamma(lda_post.gamma[k])
 
     for n in range(0, N):
         w = lda_post.doc.word[n]
