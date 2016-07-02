@@ -102,10 +102,10 @@ class TestLdaMallet(unittest.TestCase):
         tm1 = ldamallet.LdaMallet(self.mallet_path, corpus=corpus, num_topics=2, id2word=dictionary)
         tm2 = ldamallet.malletmodel2ldamodel(tm1)
         for document in corpus:
-            self.assertAlmostEqual(tm1[document][0][1], tm2[document][0][1], places=1)
-            self.assertAlmostEqual(tm1[document][1][1], tm2[document][1][1])
-            logging.debug('%.2f %.2f', tm1[document][0][1], tm2[document][0][1])
-            logging.debug('%.2f %.2f', tm1[document][1][1], tm2[document][1][1])
+            self.assertEqual(tm1[document][0], tm2[document][0])
+            self.assertEqual(tm1[document][1], tm2[document][1])
+            logging.debug('%d %d', tm1[document][0], tm2[document][0])
+            logging.debug('%d %d', tm1[document][1], tm2[document][1])
 
 
     def testPersistence(self):
