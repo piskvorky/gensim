@@ -97,6 +97,35 @@ class TestSSLM(unittest.TestCase):
 
         self.assertAlmostEqual(expected_log_prob[0], sslm.e_log_prob[0][0], places=2)
 
+# to test by Wednesday:
+# 1. update_phi
+# 2. update_gamma
+# 3. update_ldaseq_ss
+# 4. init_lda_post
+# 5. compute_bound
+# 6. compute_mean_deriv
+# 7. compute_obs_deriv
+# 8. compute_lda_lhood
+
+    def testUpdatePhi(self):
+
+        # we test update phi for one particular document
+        doc = ldaseqmodel.doc(nterms=3, word=[549, 560, 561])
+        topics = numpy.array(numpy.split(numpy.loadtxt(datapath('before_posterior_topics')), 562))
+        lda = ldaseqmodel.mockLDA(num_topics=2, topics=topics)
+
+        log_phi = numpy.array(numpy.split(numpy.loadtxt(datapath('before_posterior_logphi')), 116))
+        phi = numpy.array(numpy.split(numpy.loadtxt(datapath('before_posterior_phi')), 116))
+        gamma = numpy.array(numpy.loadtxt(datapath('before_posterior_gamma')))
+
+        lda_post = ldaseqmodel.lda_post(lda=lda, doc=doc, log_phi= log_phi, phi=phi, gamma=gamma)
+        ldaseqmodel.update_phi(10, 3, lda_post, None, None)
+
+        expected_log_phi = numpy.array([[-105.04211145, 0. ], [-103.88817145, 0. ]])
+        expected_phi = numpy.array([[  2.40322000e-46,   1.00000000e+00], [  7.61974000e-46,   1.00000000e+00]])
+
+        self.assertAlmostEqual(expected_log_phi[0][0], lda_post.log_phi[0][0], places=2)
+        self.assertAlmostEqual(expected_phi[0][0], lda_post.phi[0][0], places=2)
 
 
 if __name__ == '__main__':

@@ -22,11 +22,23 @@ import numpy
 import math
 from scipy.special import digamma
 
+# this is a mock LDA class to help with testing until this is figured out
+class mockLDA(utils.SaveLoad):
+    def __init__(self, num_topics, topics):
+        self.num_topics = num_topics
+        self.topics = topics
+
+# a mock document class to help with testing until this is figured out
+class doc(utils.SaveLoad):
+    def __init__(self, nterms, word):
+        self.nterms = nterms
+        self.word = word
+
 class seq_corpus(utils.SaveLoad):
     def __init__(self, num_terms=0, max_nterms=0, length=0, num_doc=0, corpuses=0):
         self.num_terms = num_terms
         self.max_nterms = max_nterms
-        self.length = length
+        self.length = len(corpuses)
         self.num_docs = num_docs
 
         # list of corpus class objects
@@ -362,12 +374,14 @@ def inferDTMseq(K, ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, l
         make_lda_seq_slice(lda, ldaseq, t)
         # what to do here
         ndocs = seq_corpus.corpuses[t].ndocs
+        # ndocs = len(seq_corpus.corpuses[t])
         for d in range(0, ndocs):
             gam = gammas[doc_index]
             lhood = lhoods[doc_index]
             lda_post.gamma = gam
             lda_post.lhood = lhood
             lda_post.doc = seq_corpus.corpuses[t].doc[d]
+            # lda_post.doc = seq_corpus.corpuses[t][d]
             if iter_ == 0:
                 doc_lhood = fit_lda_post(d, t, lda_post, None, None, None, None, None)
             else:
@@ -513,6 +527,9 @@ def update_phi(doc, time, lda_post, ldaseq, g):
 
         for k in range(0, K):
             phi_row[i] = numpy.exp(log_phi_row[i])
+
+        lda_post.log_phi[n] = log_phi_row
+        lda_post.phi[n] = phi_row
 
     return
 
