@@ -43,7 +43,7 @@ class TestDtmModel(unittest.TestCase):
             topics = model.show_topics(num_topics=2, times=2, num_words=10)
             self.assertEqual(len(topics), 4)
 
-            one_topic = model.show_topic(topicid=1, time=1, topn=10)
+            one_topic = model.show_topic(topicid=1, time=1, num_words=10)
             self.assertEqual(len(one_topic), 10)
             self.assertEqual(one_topic[0][1], u'idexx')
 
@@ -56,7 +56,7 @@ class TestDtmModel(unittest.TestCase):
             topics = model.show_topics(num_topics=2, times=2, num_words=10)
             self.assertEqual(len(topics), 4)
 
-            one_topic = model.show_topic(topicid=1, time=1, topn=10)
+            one_topic = model.show_topic(topicid=1, time=1, num_words=10)
             self.assertEqual(len(one_topic), 10)
             self.assertEqual(one_topic[0][1], u'skills')
 

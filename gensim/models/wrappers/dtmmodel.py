@@ -173,9 +173,9 @@ class DtmModel(utils.SaveLoad):
         corpora.BleiCorpus.save_corpus(self.fcorpustxt(), corpus)
 
         with utils.smart_open(self.ftimeslices(), 'wb') as fout:
-            fout.write(six.u(utils.to_utf8(str(len(self.time_slices)) + "\n")))
+            fout.write(utils.to_utf8(str(len(self.time_slices)) + "\n"))
             for sl in time_slices:
-                fout.write(six.u(utils.to_utf8(str(sl) + "\n")))
+                fout.write(utils.to_utf8(str(sl) + "\n"))
 
     def train(self, corpus, time_slices, mode, model):
         """
@@ -271,18 +271,18 @@ class DtmModel(utils.SaveLoad):
         for time in chosen_times:
             for i in chosen_topics:
                 if formatted:
-                    topic = self.print_topic(i, time, topn=topn)
+                    topic = self.print_topic(i, time, num_words=num_words)
                 else:
-                    topic = self.show_topic(i, time, topn=topn)
+                    topic = self.show_topic(i, time, num_words=num_words)
                 shown.append(topic)
                 # if log:
                 # logger.info("topic #%i (%.3f): %s" % (i, self.alpha[i],
                 #     topic))
         return shown
 
-    def show_topic(self, topicid, time, topn=50):
+    def show_topic(self, topicid, time, num_words=50):
         """
-        Return `topn` most probable words for the given `topicid`, as a list of
+        Return `num_words` most probable words for the given `topicid`, as a list of
         `(word_probability, word)` 2-tuples.
 
         """
@@ -293,10 +293,10 @@ class DtmModel(utils.SaveLoad):
         # normalize to probability dist
         topic = topic / topic.sum()
         # sort according to prob
-        bestn = matutils.argsort(topic, topn, reverse=True)
+        bestn = matutils.argsort(topic, num_words, reverse=True)
         beststr = [(topic[id], self.id2word[id]) for id in bestn]
         return beststr
 
-    def print_topic(self, topicid, time, topn=10):
+    def print_topic(self, topicid, time, num_words=10):
         """Return the given topic, formatted as a string."""
-        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, topn)])
+        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, num_words)])
