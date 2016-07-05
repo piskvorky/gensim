@@ -2,6 +2,8 @@ Changes
 =======
 0.13.2
 
+* wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, #771) 
+  - assigning wordtopics value of word_topics to keep backward compatibility, for now
 * topics, topn parameters changed to num_topics and num_words in show_topics() and print_topics()(@droudy, #747)
   - In hdpmodel and dtmmodel
   - NOT BACKWARDS COMPATIBLE!
