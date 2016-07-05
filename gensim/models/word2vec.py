@@ -1511,6 +1511,8 @@ class Word2Vec(utils.SaveLoad):
           True
 
         """
+        if not ws1 or not ws2:
+            raise ValueError("Can't compute similarity with an empty list")
         v1 = [self[word] for word in ws1]
         v2 = [self[word] for word in ws2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))

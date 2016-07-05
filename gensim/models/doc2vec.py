@@ -492,6 +492,8 @@ class DocvecsArray(utils.SaveLoad):
         index or string tag. (TODO: Accept vectors of out-of-training-set docs, as if from inference.)
 
         """
+        if not ds1 or not ds2:
+            raise ValueError("Can't compute similarity with an empty list")
         v1 = [self[doc] for doc in ds1]
         v2 = [self[doc] for doc in ds2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
