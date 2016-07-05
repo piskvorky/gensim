@@ -44,6 +44,7 @@ def log_conditional_probability(segmented_topics, per_topic_postings, num_docs):
 
 def log_ratio_measure(segmented_topics, per_topic_postings, num_docs):
     """
+    Popularly known as PMI.
     This function calculates the log-ratio-measure which is used by
     coherence measures such as c_v.
     This is defined as: m_lr(S_i) = log[(P(W', W*) + e) / (P(W') * P(W*))]

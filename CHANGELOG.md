@@ -9,6 +9,8 @@ Changes
   - NOT BACKWARDS COMPATIBLE!
 * Added random_state parameter to LdaState initializer and check_random_state() (@droudy, #113)
 * Implemented LsiModel.docs_processed attribute
+* Added LdaMallet support. Added LdaVowpalWabbit, LdaMallet example to notebook. Added test suite for coherencemodel and aggregation.
+  Added `topics` parameter to coherencemodel. Can now provide tokenized topics to calculate coherence value (@dsquareindia, #750)
 
 0.13.1, 2016-06-22
 
@@ -24,7 +26,7 @@ Changes
 * SparseMatrixSimilarity returns a sparse matrix if `maintain_sparsity` is True (@davechallis, #590)
 * added functionality for Topics of Words in document - i.e, dynamic topics. (@bhargavvader, #704)
   - also included tutorial which explains new functionalities, and document word-topic colring.
-* Made normalization an explicit transformation. Added 'l1' norm support (@squareindia, #649)
+* Made normalization an explicit transformation. Added 'l1' norm support (@dsquareindia, #649)
 * added term-topics API for most probable topic for word in vocab. (@bhargavvader, #706)
 * build_vocab takes progress_per parameter for smaller output (@zer0n, #624)
 * Control whether to use lowercase for computing word2vec accuracy. (@alantian, #607)
