@@ -24,15 +24,18 @@ from scipy.special import digamma
 
 # this is a mock LDA class to help with testing until this is figured out
 class mockLDA(utils.SaveLoad):
-    def __init__(self, num_topics, topics):
+    def __init__(self, num_topics=None, topics=None, alpha=None):
         self.num_topics = num_topics
         self.topics = topics
+        self.alpha = alpha
 
 # a mock document class to help with testing until this is figured out
 class doc(utils.SaveLoad):
-    def __init__(self, nterms, word):
+    def __init__(self, nterms=None, word=None, count=None, total=None):
         self.nterms = nterms
         self.word = word
+        self.count = count
+        self.total = total
 
 class seq_corpus(utils.SaveLoad):
     def __init__(self, num_terms=0, max_nterms=0, length=0, num_doc=0, corpuses=0):
@@ -117,22 +120,20 @@ class lda_post(utils.SaveLoad):
         self.doc_weight = doc_weight
         self.renormalized_doc_weight = renormalized_doc_weight
 
-        return
-
 class opt_params(utils.SaveLoad):
-    def __init__(self, sslm, word_counts, totals, mean_deriv_mtx, word):
+    def __init__(self, sslm=None, word_counts=None, totals=None, mean_deriv_mtx=None, word=None):
         self.sslm = sslm
-        self.word_counts 
+        self.word_counts = word_counts
         self.totals = totals
         self.mean_deriv_mtx = mean_deriv_mtx
         self.word = word
 
-        return
-
 def update_zeta(sslm):
     # setting limits 
-    num_terms = sslm.obs.shape[0] # this is word length (our example, 562)
-    num_sequence = sslm.obs.shape[1] # this is number of sequeces
+    # num_terms = sslm.obs.shape[0] # this is word length (our example, 562)
+    # num_sequence = sslm.obs.shape[1] # this is number of sequeces
+    num_terms = sslm.num_terms
+    num_sequence = sslm.num_sequence
     # making zero and updating
     sslm.zeta.fill(0)
     for i in range(0, num_terms):
@@ -225,7 +226,7 @@ def sslm_counts_init(sslm, obs_variance, chain_variance, sstats):
     log_norm_counts = sstats
     log_norm_counts = log_norm_counts / sum(log_norm_counts)
 
-    log_norm_counts = log_norm_counts + 1.0/W
+    log_norm_counts = log_norm_counts + 1.0 / W
     log_norm_counts = log_norm_counts / sum(log_norm_counts)
     log_norm_counts = numpy.log(log_norm_counts)
     
@@ -440,7 +441,7 @@ def make_lda_seq_slice(lda, ldaseq, time):
 
 def update_lda_seq_ss(time, doc, lda_post, topic_suffstats):
 
-    K = numpy.size(lda_post.phi)[1].size[1]
+    K = numpy.shape(lda_post.phi)[1]
     N = doc.nterms
 
     for k in range(0, K):
@@ -449,6 +450,9 @@ def update_lda_seq_ss(time, doc, lda_post, topic_suffstats):
             w = doc.word[n]
             c = doc.count[n]
             topic_ss[w][time] = topic_ss[w][time] + c * lda_post.phi[n][k]
+
+        topic_suffstats[k] = topic_ss
+
     return
 
 def init_lda_post(lda_post):
@@ -456,7 +460,7 @@ def init_lda_post(lda_post):
     N = lda_post.doc.nterms
 
     for k in range(0, K):
-        lda_post.gamma[k] = lda_post.lda.alpha[k] + float(lda_post.doc.total) / k 
+        lda_post.gamma[k] = lda_post.lda.alpha[k] + float(lda_post.doc.total) / K
         for n in range(0, N):
             lda_post.phi[n][k] = 1.0 / K
 
@@ -467,7 +471,7 @@ def compute_lda_lhood(lda_post):
     
     K = lda_post.lda.num_topics
     N = lda_post.doc.nterms
-    gamma_sum = numpy.sum(lda_post.gamam)
+    gamma_sum = numpy.sum(lda_post.gamma)
 
     # figure out how to do flags
     FLAGS_sigma_l = 0
@@ -638,6 +642,9 @@ def compute_bound(word_counts, totals, sslm):
     print ("Computing bound, all times")
 
     for t in range(1, T + 1):
+        term_1 = 0.0
+        term_2 = 0.0
+        ent = 0.0
         for w in range(0, W):
 
             m = sslm.mean[w][t]
@@ -647,20 +654,17 @@ def compute_bound(word_counts, totals, sslm):
 
             # Values specifically related to document influence:
             # Note that our indices are off by 1 here.
-
             w_phi_l = sslm.w_phi_l[w][t - 1]
-            exp_i = numpy.exp(numpy.negative(prev_m))
-
+            exp_i = numpy.exp(-prev_m)
             term_1 += (numpy.power(m - prev_m - (w_phi_l * exp_i), 2) / (2 * chain_variance)) - (v / chain_variance) - numpy.log(chain_variance)
-
             term_2 += word_counts[w][t - 1] * m
             ent += numpy.log(v) / 2  # note the 2pi's cancel with term1 (see doc)
 
-        term_3 +=  totals[t - 1] * numpy.log(sslm.zeta[t - 1])
-        val += numpy.negative(term_1) + term_2 + term_3 + ent
+        term_3 =  -totals[t - 1] * numpy.log(sslm.zeta[t - 1])
+        val += term_2 + term_3 + ent - term_1
 
     return val
-
+    
 # fucntion to perform optimization
 def update_obs(word_counts, totals, sslm):
 
@@ -726,7 +730,7 @@ def update_obs(word_counts, totals, sslm):
 def compute_mean_deriv(word, time, sslm, deriv):
 
     T = sslm.num_sequence
-    fwd_variance = sslm.variance[w]
+    fwd_variance = sslm.variance[word]
 
     deriv[0] = 0
 
@@ -750,7 +754,7 @@ def compute_mean_deriv(word, time, sslm, deriv):
             w = sslm.chain_variance / (fwd_variance[t] + sslm.chain_variance)
         deriv[t] = w * deriv[t] + (1 - w) * deriv[t + 1]
 
-    return deriv
+    return
 
 # maximize a function using it's derivative
 def optimize_fdf(dim, x, params, fdf, df, f, f_val, conv_val, niter):
@@ -764,8 +768,8 @@ def optimize_fdf(dim, x, params, fdf, df, f, f_val, conv_val, niter):
     obj.n = dim
     obj.params = params
 
-    method = gsl_multimin_fdfminimizer_conjugate_fr;
-    opt = gsl_multimin_fdfminimizer_alloc(method, dim);
+    method = gsl_multimin_fdfminimizer_conjugate_fr
+    opt = gsl_multimin_fdfminimizer_alloc(method, dim)
     gsl_multimin_fdfminimizer_set(opt, obj, x, 0.01, 1e-3)
 
     iter_ = 0
@@ -850,8 +854,8 @@ def f_obs(x, params):
 
     if p.sslm.chain_variance > 0.0:
         
-        term1 = - (term1 / 2 * p.sslm.chain_variance)
-        term1 = term1 - mean[0] * mean[0] / (2 * init_milt * p.sslm.chain_variance)
+        term1 = - (term1 / (2 * p.sslm.chain_variance))
+        term1 = term1 - mean[0] * mean[0] / (2 * init_mult * p.sslm.chain_variance)
     else:
         term1 = 0.0
 
@@ -891,7 +895,7 @@ def compute_obs_deriv(word, word_counts, totals, sslm, mean_deriv_mtx, deriv):
             dmean_u = mean_deriv[u]
             dmean_u_prev = mean_deriv[u - 1]
 
-            term1 += (mean_u - mean_u_prev) * (dmean_u * dmean_u_prev)
+            term1 += (mean_u - mean_u_prev) * (dmean_u - dmean_u_prev)
 
             term2 += (word_counts[u - 1] - (totals[u - 1] * sslm.temp_vect[u - 1] / sslm.zeta[u - 1])) * dmean_u
 
@@ -902,7 +906,7 @@ def compute_obs_deriv(word, word_counts, totals, sslm, mean_deriv_mtx, deriv):
 
         if sslm.chain_variance:
             term1 = - (term1 / sslm.chain_variance)
-            term1 = term1 - (mean[0] * mean_deriv[0]) / init_mult * sslm.chain_variance
+            term1 = term1 - (mean[0] * mean_deriv[0]) / (init_mult * sslm.chain_variance)
         else:
             term1 = 0.0
 
