@@ -182,7 +182,7 @@ class LdaMallet(utils.SaveLoad):
 
     def load_word_topics(self):
         logger.info("loading assigned topics from %s", self.fstate())
-        wordtopics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float32)
+        word_topics = numpy.zeros((self.num_topics, self.num_terms), dtype=numpy.float32)
         if hasattr(self.id2word, 'token2id'):
             word2id = self.id2word.token2id
         else:
@@ -199,10 +199,10 @@ class LdaMallet(utils.SaveLoad):
                 if token not in word2id:
                     continue
                 tokenid = word2id[token]
-                wordtopics[int(topic), tokenid] += 1.0
-        logger.info("loaded assigned topics for %i tokens", wordtopics.sum())
-        self.wordtopics = wordtopics
+                word_topics[int(topic), tokenid] += 1.0
+        logger.info("loaded assigned topics for %i tokens", word_topics.sum())
         self.print_topics(15)
+        return word_topics
 
     def print_topics(self, num_topics=10, num_words=10):
         return self.show_topics(num_topics, num_words, log=True)
@@ -242,7 +242,9 @@ class LdaMallet(utils.SaveLoad):
         return shown
 
     def show_topic(self, topicid, topn=10):
-        topic = self.wordtopics[topicid]
+        if self.word_topics is None:
+            logger.warn("Run train or load_word_topics before showing topics.")
+        topic = self.word_topics[topicid]
         topic = topic / topic.sum()  # normalize to probability dist
         bestn = matutils.argsort(topic, topn, reverse=True)
         beststr = [(topic[id], self.id2word[id]) for id in bestn]

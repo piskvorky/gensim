@@ -104,7 +104,7 @@ class TestLdaMallet(unittest.TestCase):
         model.save(fname)
         model2 = ldamallet.LdaMallet.load(fname)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.wordtopics, model2.wordtopics))
+        self.assertTrue(numpy.allclose(model.word_topics, model2.word_topics))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
@@ -116,7 +116,7 @@ class TestLdaMallet(unittest.TestCase):
         model.save(fname)
         model2 = ldamallet.LdaMallet.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.wordtopics, model2.wordtopics))
+        self.assertTrue(numpy.allclose(model.word_topics, model2.word_topics))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
@@ -132,8 +132,8 @@ class TestLdaMallet(unittest.TestCase):
         # test loading the large model arrays with mmap
         model2 = ldamodel.LdaModel.load(testfile(), mmap='r')
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(isinstance(model2.wordtopics, numpy.memmap))
-        self.assertTrue(numpy.allclose(model.wordtopics, model2.wordtopics))
+        self.assertTrue(isinstance(model2.word_topics, numpy.memmap))
+        self.assertTrue(numpy.allclose(model.word_topics, model2.word_topics))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
