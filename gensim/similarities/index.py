@@ -4,7 +4,10 @@
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-from annoy import AnnoyIndex
+try:
+    from annoy import AnnoyIndex
+except ImportError:
+    raise ImportError("Annoy has not been installed, if you wish to use the annoy indexer, please run `pip install annoy`")
 
 
 class SimilarityIndex(object):
