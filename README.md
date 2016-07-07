@@ -111,6 +111,7 @@ Adopters
 |  12K Research         | <img src="https://techberlin.com/media/CACHE/images/threesixty/FtA5ANuJ/1aa5b8517ec65ef1c7d69c9bda5f9a3c.jpg" width="100"> | [12k.co](https://12k.co/)|   Document similarity analysis on media articles
 |  National Institutes of Health         | <img src="https://www.nih.gov/sites/default/files/styles/featured_media_breakpoint-large/public/about-nih/2012-logo.png" width="100"> | [github/NIHOPA](https://github.com/NIHOPA/pipeline_word2vec)|   Processing grants and publications with word2vec
 |  Codeq LLC         | <img src="https://codeq.com/wp-content/themes/codeq/assets/img/logo.svg" width="100"> | [codeq.com](https://codeq.com)|   Document classification with word2vec
+| Mass Cognition     | <img src="http://static1.squarespace.com/static/5637b16ee4b050255657c537/t/56a683bf9cadb6bf86a0ea13/1461016648294/?format=1500w" width="100"> | [masscognition.com](http://www.masscognition.com/)                                  | Topic analysis service for consumer text data and general text data |
 
 -------
 
