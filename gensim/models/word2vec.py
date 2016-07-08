@@ -456,7 +456,7 @@ class Word2Vec(utils.SaveLoad):
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
-            self.build_vocab(sentences, trim_rule=trim_rule)
+            self.build_vocab(sentences, trim_rule=trim_rule, update=False)
             self.train(sentences)
 
     def make_cum_table(self, power=0.75, domain=2**31 - 1):
@@ -520,11 +520,11 @@ class Word2Vec(utils.SaveLoad):
         Each sentence must be a list of unicode strings.
 
         """
-        self.scan_vocab(sentences, update, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
-        self.scale_vocab(update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule)  # trim by min_count & precalculate downsampling
-        self.finalize_vocab(update)  # build tables & arrays
+        self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule, update=update)  # initial survey
+        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
+        self.finalize_vocab(update=update)  # build tables & arrays
 
-    def scan_vocab(self, sentences, update, progress_per=10000, trim_rule=None):
+    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None, update=False):
         """Do an initial scan of all words appearing in sentences."""
         logger.info("collecting all words and their counts")
         sentence_no = -1
@@ -555,7 +555,7 @@ class Word2Vec(utils.SaveLoad):
         self.corpus_count = sentence_no + 1
         self.raw_vocab = vocab
 
-    def scale_vocab(self, update, min_count=None, sample=None, dry_run=False, keep_raw_vocab=False, trim_rule=None):
+    def scale_vocab(self, min_count=None, sample=None, dry_run=False, keep_raw_vocab=False, trim_rule=None, update=False):
         """
         Apply vocabulary settings for `min_count` (discarding less-frequent words)
         and `sample` (controlling the downsampling of more-frequent words).
@@ -662,7 +662,7 @@ class Word2Vec(utils.SaveLoad):
 
         return report_values
 
-    def finalize_vocab(self, update):
+    def finalize_vocab(self, update=False):
         """Build tables and model weights based on final vocabulary settings."""
         if not self.index2word:
             self.scale_vocab(False)

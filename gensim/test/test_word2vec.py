@@ -110,25 +110,27 @@ class TestWord2VecModel(unittest.TestCase):
 class TestWord2VecModel(unittest.TestCase):
     def testOnlineLearning(self):
         """Test that the algorithm is able to add new words to the
-        vocabulary and to a trained model"""
-        model = word2vec.Word2Vec(sentences, min_count=1, sorted_vocab=0)
-        model.build_vocab(new_sentences, update=True)
-        model.train(new_sentences)
-        self.assertEqual(len(model.vocab), 14)
-        self.assertEqual(model.syn0.shape[0], 14)
-        self.assertEqual(model.syn0.shape[1], 100)
-
-    def testOnlineLearning(self):
-        """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
-        model = word2vec.Word2Vec(sentences, min_count=0, sorted_vocab=0)
-        model.build_vocab(new_sentences, update=True)
-        orig0 = numpy.copy(model.syn0)
-        model.train(new_sentences)
-        self.assertEqual(len(model.vocab), 14)
-        self.assertEqual(model.syn0.shape[0], 14)
-        self.assertEqual(model.syn0.shape[1], 100)
-        self.assertTrue((model.syn0[-1] != orig0[-1]).any())
+        model_hs = word2vec.Word2Vec(sentences, min_count=0, seed=42, hs=1, negative=0, sorted_vocab=0)
+        model_neg = word2vec.Word2Vec(sentences, min_count=0, seed=42, hs=0, negative=5, sorted_vocab=0)
+        self.assertTrue(len(model_hs.vocab), 12)
+        model_hs.build_vocab(new_sentences, update=True)
+        model_neg.build_vocab(new_sentences, update=True)
+        orig0hs = numpy.copy(model_hs.syn0)
+        orig0neg = numpy.copy(model_neg.syn0)
+        self.assertTrue(numpy.allclose(model_hs.syn0, orig0hs))
+        self.assertTrue(numpy.allclose(model_neg.syn0, orig0neg))
+        orig1 = numpy.copy(model_hs.syn1)
+        orig1neg = numpy.copy(model_neg.syn1neg)
+        self.assertTrue(numpy.allclose(model_hs.syn1, orig1))
+        self.assertTrue(numpy.allclose(model_neg.syn1neg, orig1neg))
+        model_hs.train(new_sentences)
+        model_neg.train(new_sentences)
+        self.assertEqual(len(model_hs.vocab), 14)
+        self.assertFalse(numpy.allclose(model_hs.syn1, orig1))
+        self.assertFalse(numpy.allclose(model_neg.syn1neg, orig1neg))
+        self.assertFalse(numpy.allclose(model_hs.syn0, orig0hs))
+        self.assertFalse(numpy.allclose(model_neg.syn0, orig0neg))
 
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
