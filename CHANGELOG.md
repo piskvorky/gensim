@@ -12,9 +12,12 @@ Changes
 * Implemented LsiModel.docs_processed attribute
 * Added LdaMallet support. Added LdaVowpalWabbit, LdaMallet example to notebook. Added test suite for coherencemodel and aggregation.
   Added `topics` parameter to coherencemodel. Can now provide tokenized topics to calculate coherence value (@dsquareindia, #750)
+<<<<<<< HEAD
 * Added a check for empty (no words) documents before starting to run the DTM wrapper if model = "fixed" is used (DIM model) as this    causes the an error when such documents are reached in training. (@eickho, #806)
 * New parameters `limit`, `datatype` for load_word2vec_format(); `lockf` for intersect_word2vec_format (@gojomo, #817)
 * Changed `use_lowercase` option in word2vec accuracy to `case_insensitive` to account for case variations in training vocabulary (@jayantj, #714)
+* Added 'c_uci', 'c_npmi' coherence measures. Added window_size parameter to CoherenceModel init. Improved backtracking for
+  indirect confirmation. (@dsquareindia)
 
 0.13.1, 2016-06-22
 
