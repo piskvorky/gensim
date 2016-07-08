@@ -166,6 +166,6 @@ class CoherenceModel(interfaces.TransformationABC):
         elif self.coherence == 'c_v':
             segmented_topics = self.seg(self.topics)
             per_topic_postings, num_windows = self.prob(texts=self.texts, segmented_topics=segmented_topics,
-                                                        dictionary=self.dictionary, window_size=2)  # FIXME : Change window size to 110 finally.
+                                                        dictionary=self.dictionary, window_size=110)
             confirmed_measures = self.conf(self.topics, segmented_topics, per_topic_postings, 'nlr', 1, num_windows)
             return self.aggr(confirmed_measures)
