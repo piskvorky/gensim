@@ -1,6 +1,11 @@
 Changes
 =======
+0.13.1, 2016-06-22
+* Topic coherence C_v and U_mass (@dsquareindia, #710)
+
+
 0.13.0, 2016
+* Added Distance Metrics to matutils.pt (@bhargavvader, #656)
 * Tutorials migrated from website to ipynb (@j9chan, #721), (@jesford, #733), (@jesford, #725), (@jesford, #716)
 * New doc2vec intro tutorial (@seanlaw, #730)
 * Gensim Quick Start Tutorial (@andrewjlm, #727)
