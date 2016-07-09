@@ -5,9 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-USAGE: %(program)s
-
-    Worker ("slave") process used in computing distributed LDA. Run this script \
+Worker ("slave") process used in computing distributed LDA. Run this script \
 on every node in your cluster. If you wish, you may even run it multiple times \
 on a single machine, to make better use of multiple cores (just beware that \
 memory footprint increases accordingly).
@@ -20,6 +18,7 @@ from __future__ import with_statement
 import os, sys, logging
 import threading
 import tempfile
+import argparse
 try:
     import Queue
 except ImportError:
@@ -34,6 +33,7 @@ logger = logging.getLogger('gensim.models.lda_worker')
 # periodically save intermediate models after every SAVE_DEBUG updates (0 for never)
 SAVE_DEBUG = 0
 
+LDA_WORKER_PREFIX = 'gensim.lda_worker'
 
 
 class Worker(object):
@@ -113,21 +113,28 @@ class Worker(object):
 #endclass Worker
 
 
-
 def main():
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logger.info("running %s" % " ".join(sys.argv))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--host", help="Nameserver hostname (default: %(default)s)", default=None)
+    parser.add_argument("--port", help="Nameserver port (default: %(default)s)", default=None, type=int)
+    parser.add_argument("--no-broadcast", help="Disable broadcast (default: %(default)s)",
+                        action='store_const', default=True, const=False)
+    parser.add_argument("--hmac", help="Nameserver hmac key (default: %(default)s)", default=None)
+    parser.add_argument('-v', '--verbose', help='Verbose flag', action='store_const', dest="loglevel",
+                        const=logging.INFO, default=logging.WARNING)
+    args = parser.parse_args()
 
-    program = os.path.basename(sys.argv[0])
-    # make sure we have enough cmd line parameters
-    if len(sys.argv) < 1:
-        print(globals()["__doc__"] % locals())
-        sys.exit(1)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=args.loglevel)
+    logger.info("running %s", " ".join(sys.argv))
 
-    utils.pyro_daemon('gensim.lda_worker', Worker(), random_suffix=True)
+    ns_conf = {"broadcast": args.no_broadcast,
+               "host": args.host,
+               "port": args.port,
+               "hmac_key": args.hmac}
 
-    logger.info("finished running %s" % program)
+    utils.pyro_daemon(LDA_WORKER_PREFIX, Worker(), random_suffix=True, ns_conf=ns_conf)
 
+    logger.info("finished running %s", " ".join(sys.argv))
 
 
 if __name__ == '__main__':
