@@ -15,10 +15,13 @@ Example: python -m gensim.models.lda_worker
 
 
 from __future__ import with_statement
-import os, sys, logging
+import os
+import sys
+import logging
 import threading
 import tempfile
 import argparse
+
 try:
     import Queue
 except ImportError:
@@ -40,7 +43,7 @@ class Worker(object):
     def __init__(self):
         self.model = None
 
-
+    @Pyro4.expose
     def initialize(self, myid, dispatcher, **model_params):
         self.lock_update = threading.Lock()
         self.jobsdone = 0 # how many jobs has this worker completed?
@@ -50,7 +53,7 @@ class Worker(object):
         logger.info("initializing worker #%s" % myid)
         self.model = ldamodel.LdaModel(**model_params)
 
-
+    @Pyro4.expose
     @Pyro4.oneway
     def requestjob(self):
         """
@@ -84,7 +87,7 @@ class Worker(object):
             self.model.save(fname)
         logger.info("finished processing job #%i" % (self.jobsdone - 1))
 
-
+    @Pyro4.expose
     @utils.synchronous('lock_update')
     def getstate(self):
         logger.info("worker #%i returning its state after %s jobs" %
@@ -95,7 +98,7 @@ class Worker(object):
         self.finished = True
         return result
 
-
+    @Pyro4.expose
     @utils.synchronous('lock_update')
     def reset(self, state):
         assert state is not None
