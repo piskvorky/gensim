@@ -442,7 +442,7 @@ class TestWord2VecSimilarityIndex(unittest.TestCase):
     def testVectorIsSimilarToItself(self):
         label = self.model.index2word[0]
         vector = self.model.syn0norm[0]
-        approx_neighbors = self.index.most_similar(vector, 1)
+        approx_neighbors = self.index.similar_by_vector(vector, 1)
         word, similarity = approx_neighbors[0]
 
         self.assertEqual(word, label)
@@ -450,8 +450,8 @@ class TestWord2VecSimilarityIndex(unittest.TestCase):
 
     def testApproxNeighborsMatchExact(self):
         vector = self.model.syn0norm[0]
-        approx_neighbors = self.index.most_similar(vector, 5)
-        exact_neighbors = self.model.most_similar(positive=[vector], topn=5)
+        approx_neighbors = self.index.similar_by_vector(vector, 5)
+        exact_neighbors = self.model.similar_by_vector(vector, topn=5)
 
         approx_words = [neighbor[0] for neighbor in approx_neighbors]
         exact_words = [neighbor[0] for neighbor in exact_neighbors]
@@ -476,7 +476,7 @@ class TestDoc2VecSimilarityIndex(unittest.TestCase):
     def testDocumentIsSimilarToItself(self):
         vector = self.model.docvecs.doctag_syn0norm[0]
 
-        approx_neighbors = self.index.most_similar(vector, 1)
+        approx_neighbors = self.index.similar_by_vector(vector, 1)
         doc, similarity = approx_neighbors[0]
 
         self.assertEqual(doc, 0)
@@ -484,7 +484,7 @@ class TestDoc2VecSimilarityIndex(unittest.TestCase):
 
     def testApproxNeighborsMatchExact(self):
         vector = self.model.docvecs.doctag_syn0norm[0]
-        approx_neighbors = self.index.most_similar(vector, 5)
+        approx_neighbors = self.index.similar_by_vector(vector, 5)
         exact_neighbors = self.model.docvecs.most_similar(
             positive=[vector], topn=5)
 
