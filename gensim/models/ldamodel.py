@@ -256,7 +256,7 @@ class LdaModel(interfaces.TransformationABC):
         Hoffman et al, respectively.
 
         `minimum_probability` controls filtering the topics returned for a document (bow).
-        
+
         `random_state` can be a numpy.random.RandomState object or the seed for one
 
         Example:
@@ -303,7 +303,7 @@ class LdaModel(interfaces.TransformationABC):
         assert self.alpha.shape == (self.num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
-        
+
         self.random_state = get_random_state(random_state)
 
         assert (self.eta.shape == (self.num_topics, 1) or self.eta.shape == (self.num_topics, self.num_terms)), (
@@ -907,7 +907,7 @@ class LdaModel(interfaces.TransformationABC):
 
         Ignore topics with very low probability (below `minimum_probability`).
 
-        If per_word_topics is True, it also returns a list of topics, sorted in descending order of most likely topics for that word. 
+        If per_word_topics is True, it also returns a list of topics, sorted in descending order of most likely topics for that word.
         It also returns a list of word_ids and each words corresponding topics' phi_values, multiplied by feature length (i.e, word count)
 
         """
@@ -929,7 +929,7 @@ class LdaModel(interfaces.TransformationABC):
 
         document_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                     if topicvalue >= minimum_probability]
-     
+
         if not per_word_topics:
             return document_topics
         else:
@@ -941,10 +941,10 @@ class LdaModel(interfaces.TransformationABC):
                 for topic_id in range(0, self.num_topics):
                     if phis[topic_id][word_type] >= minimum_phi_value:
                         # appends phi values for each topic for that word
-                        # these phi values are scaled by feature length 
+                        # these phi values are scaled by feature length
                         phi_values.append((phis[topic_id][word_type], topic_id))
                         phi_topic.append((topic_id, phis[topic_id][word_type]))
-               
+
                 # list with ({word_id => [(topic_0, phi_value), (topic_1, phi_value) ...]).
                 word_phi.append((word_type, phi_topic))
                 # sorts the topics based on most likely topic
@@ -974,7 +974,7 @@ class LdaModel(interfaces.TransformationABC):
 
         return values
 
-        
+
     def __getitem__(self, bow, eps=None):
         """
         Return topic distribution for the given document `bow`, as a list of
