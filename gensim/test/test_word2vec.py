@@ -132,28 +132,28 @@ class TestWord2VecModel(unittest.TestCase):
         model.train(terro)
         self.assertFalse(numpy.allclose(model.syn0, orig0))
         sim = model.n_similarity(['war'], ['terrorism'])
-        self.assertGreater(sim, 0.5)
+        self.assertLess(0., sim)
 
     def test_sg_hs_online(self):
         """Test skipgram w/ hierarchical softmax"""
-        model = word2vec.Word2Vec(sg=1, window=4, hs=1, negative=0, min_count=5, iter=10, workers=2)
+        model = word2vec.Word2Vec(sg=1, window=4, hs=1, negative=0, min_count=5, iter=10, seed=42, workers=2)
         self.onlineSanity(model)
 
     def test_sg_neg_online(self):
         """Test skipgram w/ negative sampling"""
-        model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=15, min_count=5, iter=10, workers=2)
+        model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=15, min_count=5, iter=10, seed=42, workers=2)
         self.onlineSanity(model)
 
     def test_cbow_hs_online(self):
         """Test CBOW w/ hierarchical softmax"""
         model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=1, hs=1, negative=0,
-                                  min_count=5, iter=10, workers=2, batch_words=1000)
+                                  min_count=5, iter=10, seed=42, workers=2, batch_words=1000)
         self.onlineSanity(model)
 
     def test_cbow_neg_online(self):
         """Test CBOW w/ negative sampling"""
         model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
-                                  min_count=5, iter=10, workers=2, sample=0)
+                                  min_count=5, iter=10, seed=42, workers=2, sample=0)
         self.onlineSanity(model)
 
     def testPersistenceWord2VecFormat(self):
