@@ -87,7 +87,7 @@ except ImportError:
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
+    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray, concatenate
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
@@ -600,21 +600,20 @@ class Word2Vec(utils.SaveLoad):
         else:
             logger.info("Updating model with new vocabulary")
             for word, v in iteritems(self.raw_vocab):
-                if not word in self.vocab:
-                    # the word does not already exist in vocab
-                    if keep_vocab_item(word, v, min_count,
-                        trim_rule=trim_rule):
-                        retain_words.append(word)
-                        retain_total += v
-                        original_total += v
-                        if not dry_run:
-                            self.vocab[word] = Vocab(count=v,
-                                index=len(self.index2word))
+                if keep_vocab_item(word, v, min_count, trim_rule=trim_rule):
+                    retain_words.append(word)
+                    retain_total += v
+                    original_total += v
+                    if not dry_run:
+                        if word in self.vocab:
+                            self.vocab[word].count += v
+                        else:
+                            self.vocab[word] = Vocab(count=v, index=len(self.index2word))
                             self.index2word.append(word)
-                    else:
-                        drop_unique += 1
-                        drop_total += v
-                        original_total += v
+                else:
+                    drop_unique += 1
+                    drop_total += v
+                    original_total += v
 
         logger.info("min_count=%d retains %i unique words (drops %i)",
                     min_count, len(retain_words), drop_unique)
@@ -1036,28 +1035,19 @@ class Word2Vec(utils.SaveLoad):
         added vocabulary.
         """
         logger.info("updating layer weights")
-        newsyn0 = empty((len(self.vocab), self.vector_size), dtype=REAL)
-
-        # copy the weights that are already learned
-        for i in xrange(0, len(self.syn0)):
-            newsyn0[i] = deepcopy(self.syn0[i])
+        gained_vocab = len(self.vocab) - len(self.syn0)
+        newsyn0 = empty((gained_vocab, self.vector_size), dtype=REAL)
 
         # randomize the remaining words
-        for i in xrange(len(self.vocab), len(newsyn0)):
+        for i in xrange(len(self.syn0), len(self.vocab)):
             # construct deterministic seed from word AND seed argument
-            self.syn0[i] = self.seeded_vector(self.index2word[i] + str(self.seed))
-        self.syn0 = deepcopy(newsyn0)
+            newsyn0[i-len(self.syn0)] = self.seeded_vector(self.index2word[i] + str(self.seed))
+        self.syn0 = concatenate([self.syn0, newsyn0])
 
         if self.hs:
-            oldsyn1 = deepcopy(self.syn1)
-            self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
-            self.syn1[i] = deepcopy(oldsyn1[i])
-
+            self.syn1 = concatenate([self.syn1, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
         if self.negative:
-            oldneg = deepcopy(self.syn1neg)
-            self.syn1neg = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
-            self.syn1neg[i] = deepcopy(oldneg[i])
-
+            self.syn1neg = concatenate([self.syn1neg, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
         self.syn0norm = None
 
         # do not suppress learning for already learned words

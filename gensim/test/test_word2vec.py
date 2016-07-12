@@ -60,7 +60,7 @@ new_sentences = [
     ['human', 'intelligence'],
     ['artificial', 'graph'],
     ['intelligence'],
-    ['survey', 'user', 'artificial', 'system', 'response', 'time']
+    ['artificial', 'intelligence', 'system']
 ]
 
 def testfile():
@@ -111,27 +111,50 @@ class TestWord2VecModel(unittest.TestCase):
     def testOnlineLearning(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
-        model_hs = word2vec.Word2Vec(sentences, min_count=0, seed=42, hs=1, negative=0, sorted_vocab=0, iter=10)
-        model_neg = word2vec.Word2Vec(sentences, min_count=0, seed=42, hs=0, negative=5, sorted_vocab=0, iter=10)
+        model_hs = word2vec.Word2Vec(sentences, size=10, min_count=0, seed=42, hs=1, negative=0)
+        model_neg = word2vec.Word2Vec(sentences, size=10, min_count=0, seed=42, hs=0, negative=5)
         self.assertTrue(len(model_hs.vocab), 12)
+        self.assertTrue(model_hs.vocab['graph'].count, 3)
         model_hs.build_vocab(new_sentences, update=True)
         model_neg.build_vocab(new_sentences, update=True)
-        orig0hs = numpy.copy(model_hs.syn0)
-        orig0neg = numpy.copy(model_neg.syn0)
-        self.assertTrue(numpy.allclose(model_hs.syn0, orig0hs))
-        self.assertTrue(numpy.allclose(model_neg.syn0, orig0neg))
-        orig1hs = numpy.copy(model_hs.syn1)
-        orig1neg = numpy.copy(model_neg.syn1neg)
-        self.assertTrue(numpy.allclose(model_hs.syn1, orig1hs))
-        self.assertTrue(numpy.allclose(model_neg.syn1neg, orig1neg))
-        model_hs.train(new_sentences)
-        model_neg.train(new_sentences)
+        self.assertTrue(model_hs.vocab['graph'].count, 4)
+        self.assertTrue(model_hs.vocab['artificial'].count, 4)
         self.assertEqual(len(model_hs.vocab), 14)
         self.assertEqual(len(model_neg.vocab), 14)
-        self.assertFalse(numpy.allclose(model_hs.syn1, orig1hs))
-        self.assertFalse(numpy.allclose(model_neg.syn1neg, orig1neg))
-        self.assertFalse(numpy.allclose(model_hs.syn0, orig0hs))
-        self.assertFalse(numpy.allclose(model_neg.syn0, orig0neg))
+
+    def onlineSanity(self, model):
+        terro = [l for l in list_corpus if 'terrorism' in l]
+        others = [l for l in list_corpus if 'terrorism' in l]
+        model.build_vocab(others)
+        model.train(others)
+        model.build_vocab(terro, update=True)
+        orig0 = numpy.copy(model.syn0)
+        model.train(terro)
+        self.assertFalse(numpy.allclose(model.syn0, orig0))
+        sim = model.n_similarity(['war'], ['terrorism'])
+        self.assertGreater(sim, 0.5)
+
+    def test_sg_hs_online(self):
+        """Test skipgram w/ hierarchical softmax"""
+        model = word2vec.Word2Vec(sg=1, window=4, hs=1, negative=0, min_count=5, iter=10, workers=2)
+        self.onlineSanity(model)
+
+    def test_sg_neg_online(self):
+        """Test skipgram w/ negative sampling"""
+        model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=15, min_count=5, iter=10, workers=2)
+        self.onlineSanity(model)
+
+    def test_cbow_hs_online(self):
+        """Test CBOW w/ hierarchical softmax"""
+        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=1, hs=1, negative=0,
+                                  min_count=5, iter=10, workers=2, batch_words=1000)
+        self.onlineSanity(model)
+
+    def test_cbow_neg_online(self):
+        """Test CBOW w/ negative sampling"""
+        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
+                                  min_count=5, iter=10, workers=2, sample=0)
+        self.onlineSanity(model)
 
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
