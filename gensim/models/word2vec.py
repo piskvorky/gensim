@@ -1244,7 +1244,7 @@ class Word2Vec(utils.SaveLoad):
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
-    def wmdistance(self, document1, document2, WCD=False, RWMD=False):
+    def wmdistance(self, document1, document2):
         """
         Compute the Word Mover's Distance between two documents. When using this
         code, please consider citing the following papers:
