@@ -39,7 +39,7 @@
 * [Colouring words by topic in a document, print words in a topics](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_methods.ipynb)
 * [Topic Coherence, a metric that correlates that human judgement on topic quality.](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_coherence_tutorial.ipynb) 
 * [Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities] (https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/similarity_metrics.ipynb)
-* [America's Next Topic Model slides](https://speakerdeck.com/tmylk/americas-next-topic-model?slide=6)
+* [America's Next Topic Model slides](https://speakerdeck.com/tmylk/americas-next-topic-model?slide=6) -- How to choose your next topic model, presented at Pydata London 5 July 2016 by Lev Konstantinovsky
 
 #####Query Similarities
 * Tool to get the most similar documents for LDA, LSI
