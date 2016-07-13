@@ -96,7 +96,7 @@ def normalized_log_ratio_measure(segmented_topics, per_topic_postings, num_docs)
             w_star_docs = per_topic_postings[w_star]
             co_docs = w_prime_docs.intersection(w_star_docs)
             co_doc_prob = len(co_docs) / float(num_docs)
-            m_nlr_i = numerator / np.log(co_doc_prob + EPSILON)
+            m_nlr_i = numerator / (-np.log(co_doc_prob + EPSILON))
             m_nlr.append(m_nlr_i)
 
     return m_nlr

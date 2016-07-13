@@ -95,8 +95,6 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
         it = iter(document)
         window = tuple(islice(it, window_size))
         add_topic_posting()
-        if len(window) <= window_size:
-            pass  # FIXME : Handle case when window size is bigger than length of document
         for elem in it:
             window = window[1:] + (elem,)
             add_topic_posting()

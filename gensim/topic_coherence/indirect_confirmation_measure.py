@@ -26,6 +26,23 @@ from gensim.matutils import cossim
 
 logger = logging.getLogger(__name__)
 
+
+def _present((w_prime_star, w), w_backtrack):
+    """
+    Internal helper function to return index of (w_prime_star, w) in w_backtrack.
+    Return -1 if not present.
+    """
+    index = -1
+    flag = 0
+    for arr in w_backtrack:
+        index += 1
+        if np.all(w_prime_star == arr[0]) and np.all(w == arr[1]):
+            flag += 1
+            break
+    if not flag:
+        return -1
+    return index
+
 def _make_seg(w_prime, w, per_topic_postings, measure, gamma, backtrack, num_docs):
     """
     Internal helper function to return context vectors for segmentations.
@@ -72,14 +89,41 @@ def cosine_similarity(topics, segmented_topics, per_topic_postings, measure, gam
         measure = direct_confirmation_measure.normalized_log_ratio_measure
     else:
         raise ValueError("The direct confirmation measure you entered is not currently supported.")
-    backtrack = {}
+    backtrack = {}  # Backtracking dictionary for storing measure values of topic id tuples eg. (1, 2).
+    """
+    For backtracking context vectors, we will create a list called w_backtrack to store (w_prime, w) or
+    (w_star, w) tuples and a corresponding list context_vector_backtrack which will create a
+    mapping of (w_prime or w_star, w) ---> context_vector.
+    """
+    w_backtrack = []
+    context_vector_backtrack = []
     s_cos_sim = []
     for top_words, s_i in zip(topics, segmented_topics):
         for w_prime, w_star in s_i:
-            w_prime_context_vectors, backtrack_i = _make_seg(w_prime, top_words, per_topic_postings, measure, gamma, backtrack, num_docs)
-            backtrack.update(backtrack_i)
-            w_star_context_vectors, backtrack_i = _make_seg(w_star, top_words, per_topic_postings, measure, gamma, backtrack, num_docs)
-            backtrack.update(backtrack_i)
+            # Step 1. Check if (w_prime, top_words) tuple in w_backtrack.
+            # Step 2. If yes, return corresponding context vector
+            w_prime_index = _present((w_prime, top_words), w_backtrack)
+            if w_backtrack and w_prime_index != -1:
+                w_prime_context_vectors = context_vector_backtrack[w_prime_index]
+            else:
+                w_prime_context_vectors, backtrack_i = _make_seg(w_prime, top_words, per_topic_postings, measure, gamma, backtrack, num_docs)
+                backtrack.update(backtrack_i)
+                # Update backtracking lists
+                w_backtrack.append((w_prime, top_words))
+                context_vector_backtrack.append(w_prime_context_vectors)
+
+            # Step 1. Check if (w_star, top_words) tuple in w_backtrack.
+            # Step 2. If yes, check if corresponding w is the same
+            w_star_index = _present((w_star, top_words), w_backtrack)
+            if w_backtrack and w_star_index != -1:
+                w_star_context_vectors = context_vector_backtrack[w_star_index]
+            else:
+                w_star_context_vectors, backtrack_i = _make_seg(w_star, top_words, per_topic_postings, measure, gamma, backtrack, num_docs)
+                backtrack.update(backtrack_i)
+                # Update all backtracking lists
+                w_backtrack.append((w_star, top_words))
+                context_vector_backtrack.append(w_star_context_vectors)
+
             s_cos_sim_i = cossim(w_prime_context_vectors.items(), w_star_context_vectors.items())
             s_cos_sim.append(s_cos_sim_i)
 
