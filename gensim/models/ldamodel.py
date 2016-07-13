@@ -216,7 +216,7 @@ class LdaModel(interfaces.TransformationABC):
                  distributed=False, chunksize=2000, passes=1, update_every=1,
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0,
                  eval_every=10, iterations=50, gamma_threshold=0.001,
-                 minimum_probability=0.01, random_state=None):
+                 minimum_probability=0.01, random_state=None, ns_conf={}):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -325,13 +325,14 @@ class LdaModel(interfaces.TransformationABC):
             # set up distributed version
             try:
                 import Pyro4
-                dispatcher = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher')
-                logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
-                dispatcher.initialize(id2word=self.id2word, num_topics=self.num_topics,
-                                      chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
-                self.dispatcher = dispatcher
-                self.numworkers = len(dispatcher.getworkers())
-                logger.info("using distributed version with %i workers" % self.numworkers)
+                with utils.getNS(**ns_conf) as ns:
+                    from gensim.models.lda_dispatcher import LDA_DISPATCHER_PREFIX
+                    self.dispatcher = Pyro4.Proxy(ns.list(prefix=LDA_DISPATCHER_PREFIX)[LDA_DISPATCHER_PREFIX])
+                    logger.debug("looking for dispatcher at %s" % str(self.dispatcher._pyroUri))
+                    self.dispatcher.initialize(id2word=self.id2word, num_topics=self.num_topics,
+                                               chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
+                    self.numworkers = len(self.dispatcher.getworkers())
+                    logger.info("using distributed version with %i workers" % self.numworkers)
             except Exception as err:
                 logger.error("failed to initialize distributed LDA (%s)", err)
                 raise RuntimeError("failed to initialize distributed LDA (%s)" % err)
