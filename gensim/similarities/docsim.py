@@ -579,8 +579,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         """
         corpus:                         List of lists of strings, as in gensim.models.word2vec.
         w2v_model:                      A trained word2vec model.
-        num_best:                       Number of results to retrieve. If provided, a fast algorithm
-                                        called "prefetch and prune" is used.
+        num_best:                       Number of results to retrieve.
         normalize_w2v_and_replace:      Whether or not to normalize the word2vec vectors to
                                         length 1.
         """
