@@ -562,17 +562,18 @@ class WmdSimilarity(interfaces.SimilarityABC):
     retrieved.
 
     When using this code, please consider citing the following papers:
-    * Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
-    * Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
-    * Matt Kusner et al. "From Word Embeddings To Document Distances".
+
+    .. Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
+    .. Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
+    .. Matt Kusner et al. "From Word Embeddings To Document Distances".
 
     Example:
-        # Given a document collection "corpus", train word2vec model.
-        model = word2vec(corpus)
-        instance = WmdSimilarity(corpus, model, num_best=10)
+        >>> # Given a document collection "corpus", train word2vec model.
+        >>> model = word2vec(corpus)
+        >>> instance = WmdSimilarity(corpus, model, num_best=10)
 
-        # Make query.
-        sims = instance[query]
+        >>> # Make query.
+        >>> sims = instance[query]
     """
     def __init__(self, corpus, w2v_model, num_best=None, normalize_w2v_and_replace=True, chunksize=256):
         """
