@@ -43,11 +43,11 @@ class SimilarityIndex(object):
         self.index = index
         self.labels = labels
 
-    def most_similar(self, vector, num_neighbors):
+    def similar_by_vector(self, vector, topn=10):
         """Find the top-N most similar items"""
 
         ids, distances = self.index.get_nns_by_vector(
-            vector, num_neighbors, include_distances=True)
+            vector, topn, include_distances=True)
 
         result = []
         for i in range(len(ids)):
