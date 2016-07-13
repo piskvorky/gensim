@@ -1244,13 +1244,14 @@ class Word2Vec(utils.SaveLoad):
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
-    def wmdistance(self, document1, document2, WCD=False, RWMD=False):
+    def wmdistance(self, document1, document2):
         """
         Compute the Word Mover's Distance between two documents. When using this
         code, please consider citing the following papers:
-        * Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
-        * Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
-        * Matt Kusner et al. "From Word Embeddings To Document Distances".
+
+        .. Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
+        .. Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
+        .. Matt Kusner et al. "From Word Embeddings To Document Distances".
 
         Note that if one of the documents have no words that exist in the
         Word2Vec vocab, `float('inf')` (i.e. infinity) will be returned.
@@ -1258,21 +1259,21 @@ class Word2Vec(utils.SaveLoad):
         This method only works if `pyemd` is installed (can be installed via pip, but requires a C compiler).
 
         Example:
-        > # Train word2vec model.
-        > model = Word2Vec(sentences)
+            >>> # Train word2vec model.
+            >>> model = Word2Vec(sentences)
 
-        > # Some sentences to test.
-        > sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
-        > sentence_president = 'The president greets the press in Chicago'.lower().split()
+            >>> # Some sentences to test.
+            >>> sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
+            >>> sentence_president = 'The president greets the press in Chicago'.lower().split()
 
-        > # Remove their stopwords.
-        > from nltk.corpus import stopwords
-        > stopwords = nltk.corpus.stopwords.words('english')
-        > sentence_obama = [w for w in sentence_obama if w not in stopwords]
-        > sentence_president = [w for w in sentence_president if w not in stopwords]
+            >>> # Remove their stopwords.
+            >>> from nltk.corpus import stopwords
+            >>> stopwords = nltk.corpus.stopwords.words('english')
+            >>> sentence_obama = [w for w in sentence_obama if w not in stopwords]
+            >>> sentence_president = [w for w in sentence_president if w not in stopwords]
 
-        > # Compute WMD.
-        > distance = model.wmdistance(sentence_obama, sentence_president)
+            >>> # Compute WMD.
+            >>> distance = model.wmdistance(sentence_obama, sentence_president)
         """
 
         if not PYEMD_EXT:
