@@ -425,7 +425,7 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
         # to be mmaped!
 
 
-class TestWord2VecSimilarityIndex(unittest.TestCase):
+class TestWord2VecAnnoyIndexer(unittest.TestCase):
 
     def setUp(self):
         try:
@@ -433,25 +433,24 @@ class TestWord2VecSimilarityIndex(unittest.TestCase):
         except ImportError:
             raise unittest.SkipTest("Annoy library is not available")
 
-        from gensim.similarities.index import SimilarityIndex
+        from gensim.similarities.index import AnnoyIndexer
 
         self.model = word2vec.Word2Vec(texts, min_count=1)
         self.model.init_sims()
-        self.index = SimilarityIndex.build_from_word2vec(self.model, 10)
+        self.index = AnnoyIndexer(self.model, 10)
+        self.vector = self.model.syn0norm[0]
 
     def testVectorIsSimilarToItself(self):
         label = self.model.index2word[0]
-        vector = self.model.syn0norm[0]
-        approx_neighbors = self.index.most_similar(vector, 1)
+        approx_neighbors = self.index.most_similar(self.vector, 1)
         word, similarity = approx_neighbors[0]
 
         self.assertEqual(word, label)
         self.assertEqual(similarity, 1.0)
 
     def testApproxNeighborsMatchExact(self):
-        vector = self.model.syn0norm[0]
-        approx_neighbors = self.index.most_similar(vector, 5)
-        exact_neighbors = self.model.most_similar(positive=[vector], topn=5)
+        approx_neighbors = self.model.most_similar([self.vector], topn=5, indexer=self.index)
+        exact_neighbors = self.model.most_similar(positive=[self.vector], topn=5)
 
         approx_words = [neighbor[0] for neighbor in approx_neighbors]
         exact_words = [neighbor[0] for neighbor in exact_neighbors]
@@ -459,7 +458,7 @@ class TestWord2VecSimilarityIndex(unittest.TestCase):
         self.assertEqual(approx_words, exact_words)
 
 
-class TestDoc2VecSimilarityIndex(unittest.TestCase):
+class TestDoc2VecAnnoyIndexer(unittest.TestCase):
 
     def setUp(self):
         try:
@@ -467,26 +466,24 @@ class TestDoc2VecSimilarityIndex(unittest.TestCase):
         except ImportError:
             raise unittest.SkipTest("Annoy library is not available")
 
-        from gensim.similarities.index import SimilarityIndex
+        from gensim.similarities.index import AnnoyIndexer
 
         self.model = doc2vec.Doc2Vec(sentences, min_count=1)
         self.model.init_sims()
-        self.index = SimilarityIndex.build_from_doc2vec(self.model, 10)
+        self.index = AnnoyIndexer(self.model, 300)
+        self.vector = self.model.docvecs.doctag_syn0norm[0]
 
     def testDocumentIsSimilarToItself(self):
-        vector = self.model.docvecs.doctag_syn0norm[0]
-
-        approx_neighbors = self.index.most_similar(vector, 1)
+        approx_neighbors = self.index.most_similar(self.vector, 1)
         doc, similarity = approx_neighbors[0]
 
         self.assertEqual(doc, 0)
         self.assertEqual(similarity, 1.0)
 
     def testApproxNeighborsMatchExact(self):
-        vector = self.model.docvecs.doctag_syn0norm[0]
-        approx_neighbors = self.index.most_similar(vector, 5)
+        approx_neighbors = self.model.docvecs.most_similar([self.vector], topn=5, indexer=self.index)
         exact_neighbors = self.model.docvecs.most_similar(
-            positive=[vector], topn=5)
+            positive=[self.vector], topn=5)
 
         approx_words = [neighbor[0] for neighbor in approx_neighbors]
         exact_words = [neighbor[0] for neighbor in exact_neighbors]
