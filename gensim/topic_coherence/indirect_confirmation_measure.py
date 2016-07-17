@@ -27,7 +27,7 @@ from gensim.matutils import cossim
 logger = logging.getLogger(__name__)
 
 
-def _present((w_prime_star, w), w_backtrack):
+def _present(w_prime_star, w, w_backtrack):
     """
     Internal helper function to return index of (w_prime_star, w) in w_backtrack.
     Return -1 if not present.
@@ -102,7 +102,7 @@ def cosine_similarity(topics, segmented_topics, per_topic_postings, measure, gam
         for w_prime, w_star in s_i:
             # Step 1. Check if (w_prime, top_words) tuple in w_backtrack.
             # Step 2. If yes, return corresponding context vector
-            w_prime_index = _present((w_prime, top_words), w_backtrack)
+            w_prime_index = _present(w_prime, top_words, w_backtrack)
             if w_backtrack and w_prime_index != -1:
                 w_prime_context_vectors = context_vector_backtrack[w_prime_index]
             else:
@@ -114,7 +114,7 @@ def cosine_similarity(topics, segmented_topics, per_topic_postings, measure, gam
 
             # Step 1. Check if (w_star, top_words) tuple in w_backtrack.
             # Step 2. If yes, check if corresponding w is the same
-            w_star_index = _present((w_star, top_words), w_backtrack)
+            w_star_index = _present(w_star, top_words, w_backtrack)
             if w_backtrack and w_star_index != -1:
                 w_star_context_vectors = context_vector_backtrack[w_star_index]
             else:
