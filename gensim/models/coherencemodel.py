@@ -33,6 +33,8 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
+boolean_document_based = ['u_mass']
+sliding_window_based = ['c_v', 'c_uci', 'c_npmi']
 
 class CoherenceModel(interfaces.TransformationABC):
     """
@@ -57,7 +59,7 @@ class CoherenceModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None, coherence='c_v'):
+    def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None, window_size=None, coherence='c_v'):
         """
         Args:
         ----
@@ -69,11 +71,19 @@ class CoherenceModel(interfaces.TransformationABC):
         corpus : Gensim document corpus.
         dictionary : Gensim dictionary mapping of id word to create corpus. If model.id2word is present, this is not needed.
                      If both are provided, dictionary will be used.
+        window_size : Is the size of the window to be used for coherence measures using boolean sliding window as their
+                      probability estimator. For 'u_mass' this doesn't matter.
+                      If left 'None' the default window sizes are used which are:
+                      'c_v' : 110
+                      'c_uci' : 10
+                      'c_npmi' : 10
         coherence : Coherence measure to be used. Supported values are:
                     'u_mass'
                     'c_v'
+                    'c_uci' also popularly known as c_pmi
+                    'c_npmi'
                     For 'u_mass' corpus should be provided. If texts is provided, it will be converted to corpus using the dictionary.
-                    For 'c_v' texts should be provided. Corpus is not needed.
+                    For 'c_v', 'c_uci' and 'c_npmi' texts should be provided. Corpus is not needed.
         """
         if model is None and topics is None:
             raise ValueError("One of model or topics has to be provided.")
@@ -91,7 +101,7 @@ class CoherenceModel(interfaces.TransformationABC):
         else:
             self.dictionary = dictionary
         # Check for correct inputs for u_mass coherence measure.
-        if coherence == 'u_mass':
+        if coherence in boolean_document_based:
             if is_corpus(corpus)[0]:
                 self.corpus = corpus
             elif texts is not None:
@@ -100,7 +110,8 @@ class CoherenceModel(interfaces.TransformationABC):
             else:
                 raise ValueError("Either 'corpus' with 'dictionary' or 'texts' should be provided for %s coherence." % coherence)
         # Check for correct inputs for c_v coherence measure.
-        elif coherence == 'c_v':
+        elif coherence in sliding_window_based:
+            self.window_size = window_size
             if texts is None:
                 raise ValueError("'texts' should be provided for %s coherence." % coherence)
             else:
@@ -130,6 +141,18 @@ class CoherenceModel(interfaces.TransformationABC):
             self.seg = segmentation.s_one_set
             self.prob = probability_estimation.p_boolean_sliding_window
             self.conf = indirect_confirmation_measure.cosine_similarity
+            self.aggr = aggregation.arithmetic_mean
+
+        elif self.coherence == 'c_uci':
+            self.seg = segmentation.s_one_one
+            self.prob = probability_estimation.p_boolean_sliding_window
+            self.conf = direct_confirmation_measure.log_ratio_measure
+            self.aggr = aggregation.arithmetic_mean
+
+        elif self.coherence == 'c_npmi':
+            self.seg = segmentation.s_one_one
+            self.prob = probability_estimation.p_boolean_sliding_window
+            self.conf = direct_confirmation_measure.normalized_log_ratio_measure
             self.aggr = aggregation.arithmetic_mean
 
     def __str__(self):
@@ -164,8 +187,28 @@ class CoherenceModel(interfaces.TransformationABC):
             return self.aggr(confirmed_measures)
 
         elif self.coherence == 'c_v':
+            if self.window_size is None:
+                self.window_size = 110
             segmented_topics = self.seg(self.topics)
             per_topic_postings, num_windows = self.prob(texts=self.texts, segmented_topics=segmented_topics,
-                                                        dictionary=self.dictionary, window_size=110)
+                                                        dictionary=self.dictionary, window_size=self.window_size)
             confirmed_measures = self.conf(self.topics, segmented_topics, per_topic_postings, 'nlr', 1, num_windows)
+            return self.aggr(confirmed_measures)
+
+        elif self.coherence == 'c_uci':
+            if self.window_size is None:
+                self.window_size = 10
+            segmented_topics = self.seg(self.topics)
+            per_topic_postings, num_windows = self.prob(texts=self.texts, segmented_topics=segmented_topics,
+                                                        dictionary=self.dictionary, window_size=self.window_size)
+            confirmed_measures = self.conf(segmented_topics, per_topic_postings, num_windows)
+            return self.aggr(confirmed_measures)
+
+        elif self.coherence == 'c_npmi':
+            if self.window_size is None:
+                self.window_size = 10
+            segmented_topics = self.seg(self.topics)
+            per_topic_postings, num_windows = self.prob(texts=self.texts, segmented_topics=segmented_topics,
+                                                        dictionary=self.dictionary, window_size=self.window_size)
+            confirmed_measures = self.conf(segmented_topics, per_topic_postings, num_windows)
             return self.aggr(confirmed_measures)
