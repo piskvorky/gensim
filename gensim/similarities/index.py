@@ -4,42 +4,50 @@
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
+
+from gensim.models.doc2vec import Doc2Vec
+from gensim.models.word2vec import Word2Vec
 try:
     from annoy import AnnoyIndex
 except ImportError:
     raise ImportError("Annoy has not been installed, if you wish to use the annoy indexer, please run `pip install annoy`")
 
 
-class SimilarityIndex(object):
+class AnnoyIndexer(object):
 
-    @classmethod
-    def build_from_word2vec(cls, model, num_trees):
+    def __init__(self, model, num_trees):
+        self.model = model
+        self.num_trees = num_trees
+
+        if isinstance(self.model, Doc2Vec):
+            self.build_from_doc2vec()
+        elif isinstance(self.model, Word2Vec):
+            self.build_from_word2vec()
+        else:
+            raise ValueError("Only a Word2Vec or Doc2Vec instance can be used")
+
+    def build_from_word2vec(self):
         """Build an Annoy index using word vectors from a Word2Vec model"""
 
-        model.init_sims()
-        return cls._build_from_model(model.syn0norm, model.index2word, model.vector_size, num_trees)
+        self.model.init_sims()
+        return self._build_from_model(self.model.syn0norm, self.model.index2word
+                                      , self.model.vector_size)
 
-    @classmethod
-    def build_from_doc2vec(cls, model, num_trees):
+    def build_from_doc2vec(self):
         """Build an Annoy index using document vectors from a Doc2Vec model"""
 
-        docvecs = model.docvecs
+        docvecs = self.model.docvecs
         docvecs.init_sims()
         labels = [docvecs.index_to_doctag(i) for i in range(0, docvecs.count)]
-        return cls._build_from_model(docvecs.doctag_syn0norm, labels, model.vector_size, num_trees)
+        return self._build_from_model(docvecs.doctag_syn0norm, labels, self.model.vector_size)
 
-    @classmethod
-    def _build_from_model(cls, vectors, labels, num_features, num_trees):
+    def _build_from_model(self, vectors, labels, num_features):
         index = AnnoyIndex(num_features)
 
-        for i in range(len(vectors)):
-            vector = vectors[i]
-            index.add_item(i, vector)
+        for vector_num, vector in enumerate(vectors):
+            index.add_item(vector_num, vector)
 
-        index.build(num_trees)
-        return SimilarityIndex(index, labels)
-
-    def __init__(self, index, labels):
+        index.build(self.num_trees)
         self.index = index
         self.labels = labels
 
@@ -49,10 +57,4 @@ class SimilarityIndex(object):
         ids, distances = self.index.get_nns_by_vector(
             vector, num_neighbors, include_distances=True)
 
-        result = []
-        for i in range(len(ids)):
-            label = self.labels[ids[i]]
-            similarity = 1 - distances[i] / 2
-            result += [(label, similarity)]
-
-        return result
+        return [(self.labels[ids[i]], 1 - distances[i] / 2) for i in range(len(ids))]
