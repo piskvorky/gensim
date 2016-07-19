@@ -21,6 +21,7 @@ from gensim.models import ldamodel
 import numpy
 import math
 from scipy.special import digamma
+from scipy import optimize
 
 # this is a mock LDA class to help with testing until this is figured out
 class mockLDA(utils.SaveLoad):
@@ -34,7 +35,7 @@ class mockLDA(utils.SaveLoad):
             self.topics = topics
 
 # a mock document class to help with testing until this is figured out
-class doc(utils.SaveLoad):
+class Doc(utils.SaveLoad):
     def __init__(self, nterms=None, word=None, count=None, total=None):
         self.nterms = nterms
         self.word = word
@@ -42,7 +43,7 @@ class doc(utils.SaveLoad):
         self.total = total
 
 class seq_corpus(utils.SaveLoad):
-    def __init__(self, num_terms=0, max_nterms=0, length=0, num_doc=0, corpuses=0):
+    def __init__(self, num_terms=0, max_nterms=0, length=0, num_docs=0, corpuses=0):
         self.num_terms = num_terms
         self.max_nterms = max_nterms
         self.length = len(corpuses)
@@ -124,6 +125,7 @@ def make_seq_corpus(corpus, time_seq):
     # num_terms = len(corpus.dictionary)
 
     seq_corpus_ = seq_corpus(num_docs=num_docs, length=length, corpuses=split_corpus)
+
     return seq_corpus_
 
 def update_zeta(sslm):
@@ -716,18 +718,18 @@ def update_obs(word_counts, totals, sslm):
             for t in range(0, T):
                 mean_deriv = mean_deriv_mtx[t]
                 compute_mean_deriv(w, t, sslm, mean_deriv)
+                mean_deriv_mtx[t] = mean_deriv
 
-            args = sslm, w_counts, totals, mean_deriv_mtx, w
+            deriv = numpy.zeros(4)
+            args = sslm, w_counts, totals, mean_deriv_mtx, w, deriv
             obs = sslm.obs[w]
             step_size = 0.01
             tol = 1e-3
             model = "DTM"
 
             if model == "DTM":
-                obs = optimize.fmin_cg(f=f_obs, x0=obs, gtol=tol, args=args, epsilon=step_size, disp=0)
-                # optimize_fdf(T, obs, params, fdf_obs, df_obs, f_obs, f_val, conv_val, niter)
+                obs = optimize.fmin_cg(f=f_obs, fprime=df_obs, x0=obs, gtol=tol, args=args, epsilon=step_size, disp=0)
             if model == "DIM":
-                # optimize_fdf(T, obs, params, fdf_obs, df_obs, f_obs_fixed, f_val, conv_val, niter)
                 pass
             runs += 1
 
@@ -774,7 +776,7 @@ def compute_mean_deriv(word, time, sslm, deriv):
 
 def f_obs(x, *args):
 
-    sslm, word_counts, totals, mean_deriv_mtx, word = args
+    sslm, word_counts, totals, mean_deriv_mtx, word, deriv = args
     # flag
     init_mult = 1000
 
@@ -874,9 +876,8 @@ def compute_obs_deriv(word, word_counts, totals, sslm, mean_deriv_mtx, deriv):
 
 def df_obs(x, *args):
 
-    sslm, word_counts, totals, mean_deriv_mtx, word = args
+    sslm, word_counts, totals, mean_deriv_mtx, word, deriv = args
 
-    deriv = numpy.zeros(4)
     sslm.obs[word] = x
     compute_post_mean(word, sslm, sslm.chain_variance)
 
