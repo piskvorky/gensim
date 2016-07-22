@@ -49,7 +49,7 @@ class FastKNN():
 
         common_vocabulary : tokens for the count vectorizer, so that words in word embedding are present in BOW vector
         """
-        self.vectorizer = CountVectorizer(vocabulary = valid_vocabulary, dtype = np.double)
+        self.vectorizer = CountVectorizer(vocabulary = common_vocabulary, dtype = np.double)
         self.docs = normalize(check_array([doc.toarray().ravel() for doc in self.vectorizer.transform(docs)]), norm='l1') # BOW : Normalised Bag Of Words representation of doc
         self.id2doc = dict([(idx, doc) for idx, doc in enumerate(self.docs)]) # creates doc_index mapping of docs to docs
         
