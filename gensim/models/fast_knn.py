@@ -19,6 +19,10 @@ from gensim.models import Word2Vec
 class FastKNN():
     def __init__(self, docs, n_neighbours = 5, n_jobs = 1):
         """
+
+        Parameters
+        ----------
+
         docs : array of string documents
         example : 
         docs = ["Obama speaks to the media in Illinois","The President addresses the press in Chicago"]
@@ -45,6 +49,9 @@ class FastKNN():
         2) creates a mapping from doc index to the doc itself (self.id2doc), so that closes documents are recovered 
            from the input docs.
 
+        Parameters
+        ----------
+
         docs : input docs 
 
         common_vocabulary : tokens for the count vectorizer, so that words in word embedding are present in BOW vector
@@ -59,6 +66,9 @@ class FastKNN():
         of dimension (num of docs X dimension of word2vec vector)
 
         It returns the tokens for BOW
+
+        Parameters
+        ----------
 
         docs : Input docs conveted to their BOW representation.(no. of docs X vocabulary size)
         """
@@ -76,6 +86,9 @@ class FastKNN():
         """
         This function returns the sorted word centroid distances of all given docs with respect to query doc.
         
+        Parameters
+        ----------
+        
         test_doc : a normalised BOW representation of the query doc.
         """        
         wcd_distances = Parallel(n_jobs = self.n_jobs)(
@@ -91,15 +104,39 @@ class FastKNN():
         """
         This function calculates the Word Centroid Distance between docs
         
+        Parameters
+        ----------
+       
         test_doc : Normalised BOW representaion of test doc .
         doc : Normalised BOW representaion of stored doc .
         doc_id : id of the stored doc
         """
         return (doc_id,distance.euclidean(np.dot(np.transpose(self.word_embedding), np.transpose(test_doc)), np.dot(np.transpose(self.word_embedding), doc)))
 
+    def get_rwmd(self, test_doc, doc, doc_id):
+        """
+        This function calculates and returns the Relaxed Word Movers Distance (RWMD).
+
+        Parameters:
+        ----------
+
+        test_doc : Normalised BOW representaion of test doc .
+        doc : Normalised BOW representaion of stored doc .
+        doc_id : id of the stored doc
+        """
+        nonzeros_test_doc = np.nonzero(test_doc)[0]
+        nonzeros_train_doc = np.nonzero(test_doc[doc_id])[0]
+        dist1 = np.dot(np.transpose(test_doc[nonzeros_test_doc]), np.min(self.word_embedding_distance[np.ix_(nonzeros_test_doc, nonzeros_train_doc)], axis = 1))
+        dist2 = np.dot(np.transpose(doc[doc_id][nonzeros_train_doc]), np.min(self.word_embedding_distance[np.ix_(nonzeros_train_doc, nonzeros_test_doc)], axis = 1))
+        return (doc_id, max(dist1, dist2))
+
+
     def __getitem__(self, doc):
         """
         This function queries for n nearest neighbours for the given doc
+        
+        Parameters
+        ----------
         
         doc : Sentence to query in string form as follows:
                 "Obama speaks to the media in Illinois"
@@ -107,6 +144,7 @@ class FastKNN():
 #         print np.array(self.vectorizer.transform([doc]))
         doc = normalize(np.array(self.vectorizer.transform([doc]).toarray().ravel()), norm='l1')
         wcd_dists = self._pairwise_wcd_dist_row(doc)[:self.n_neighbours]
+
         # wcd_dists = self._pairwise_wcd_dist_row(doc)
         return wcd_dists
         
