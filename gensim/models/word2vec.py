@@ -1586,7 +1586,7 @@ class Word2Vec(utils.SaveLoad):
                                key=lambda item: -item[1].count)[:restrict_vocab])
         ok_index = set(v.index for v in itervalues(ok_vocab))
         if case_insensitive:
-            ok_vocab = {w.lower(): v for w, v in iteritems(ok_vocab)}
+            ok_vocab = dict((w.lower(), v) for w, v in iteritems(ok_vocab))
 
         sections, section = [], None
         for line_no, line in enumerate(utils.smart_open(questions)):
