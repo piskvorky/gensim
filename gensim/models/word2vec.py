@@ -1564,7 +1564,7 @@ class Word2Vec(utils.SaveLoad):
                         (section['section'], 100.0 * correct / (correct + incorrect),
                          correct, correct + incorrect))
 
-    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, use_lowercase=True):
+    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, case_insensitive=True):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
@@ -1585,6 +1585,8 @@ class Word2Vec(utils.SaveLoad):
         ok_vocab = dict(sorted(iteritems(self.vocab),
                                key=lambda item: -item[1].count)[:restrict_vocab])
         ok_index = set(v.index for v in itervalues(ok_vocab))
+        if case_insensitive:
+            ok_vocab = {w.lower(): v for w, v in iteritems(ok_vocab)}
 
         sections, section = [], None
         for line_no, line in enumerate(utils.smart_open(questions)):
@@ -1600,7 +1602,7 @@ class Word2Vec(utils.SaveLoad):
                 if not section:
                     raise ValueError("missing section header before line #%i in %s" % (line_no, questions))
                 try:
-                    if use_lowercase:
+                    if case_insensitive:
                         a, b, c, expected = [word.lower() for word in line.split()]  # assumes vocabulary preprocessing uses lowercase, too...
                     else:
                         a, b, c, expected = [word for word in line.split()]
@@ -1610,13 +1612,16 @@ class Word2Vec(utils.SaveLoad):
                     logger.debug("skipping line #%i with OOV words: %s" % (line_no, line.strip()))
                     continue
 
+                original_vocab = self.vocab
+                self.vocab = ok_vocab
                 ignore = set(self.vocab[v].index for v in [a, b, c])  # indexes of words to ignore
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
                 sims = most_similar(self, positive=[b, c], negative=[a], topn=False, restrict_vocab=restrict_vocab)
+                self.vocab = original_vocab
                 for index in matutils.argsort(sims, reverse=True):
                     if index in ok_index and index not in ignore:
-                        predicted = self.index2word[index]
+                        predicted = self.index2word[index].lower() if case_insensitive else self.index2word[index]
                         if predicted != expected:
                             logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
                         break
