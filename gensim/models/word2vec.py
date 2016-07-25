@@ -1576,8 +1576,8 @@ class Word2Vec(utils.SaveLoad):
         Use `restrict_vocab` to ignore all questions containing a word whose frequency
         is not in the top-N most frequent words (default top 30,000).
 
-        Use `use_lowercase` to convert all words in questions to thier lowercase form before evaluating
-        the accuracy. It's useful when assuming the text preprocessing also uses lowercase.  (default True).
+        Use `case_insensitive` to convert all words in questions and vocab to their lowercase form before evaluating
+        the accuracy. Useful in case of case-mismatch between training tokens and question words.  (default True).
 
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
 
