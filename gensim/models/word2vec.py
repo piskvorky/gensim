@@ -1573,8 +1573,10 @@ class Word2Vec(utils.SaveLoad):
         The accuracy is reported (=printed to log and returned as a list) for each
         section separately, plus there's one aggregate summary at the end.
 
-        Use `restrict_vocab` to ignore all questions containing a word whose frequency
-        is not in the top-N most frequent words (default top 30,000).
+        `restrict_vocab` is an optional integer which limits the vocab to be used
+        for answering questions. For example, restrict_vocab=10000 would only check
+        the first 10000 word vectors in the vocabulary order. (This may be meaningful
+        if you've sorted the vocabulary by descending frequency.)
 
         Use `case_insensitive` to convert all words in questions and vocab to their lowercase form before evaluating
         the accuracy. Useful in case of case-mismatch between training tokens and question words.  (default True).
@@ -1582,11 +1584,9 @@ class Word2Vec(utils.SaveLoad):
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
 
         """
-        ok_vocab = dict(sorted(iteritems(self.vocab),
-                               key=lambda item: -item[1].count)[:restrict_vocab])
+        ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
+        ok_vocab = dict((w.lower(), v) for w, v in reversed(ok_vocab)) if case_insensitive else dict(ok_vocab)
         ok_index = set(v.index for v in itervalues(ok_vocab))
-        if case_insensitive:
-            ok_vocab = dict((w.lower(), v) for w, v in iteritems(ok_vocab))
 
         sections, section = [], None
         for line_no, line in enumerate(utils.smart_open(questions)):
