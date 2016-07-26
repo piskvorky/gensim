@@ -1578,14 +1578,14 @@ class Word2Vec(utils.SaveLoad):
         the first 10000 word vectors in the vocabulary order. (This may be meaningful
         if you've sorted the vocabulary by descending frequency.)
 
-        Use `case_insensitive` to convert all words in questions and vocab to their lowercase form before evaluating
+        Use `case_insensitive` to convert all words in questions and vocab to their uppercase form before evaluating
         the accuracy. Useful in case of case-mismatch between training tokens and question words.  (default True).
 
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
 
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
-        ok_vocab = dict((w.lower(), v) for w, v in reversed(ok_vocab)) if case_insensitive else dict(ok_vocab)
+        ok_vocab = dict((w.upper(), v) for w, v in reversed(ok_vocab)) if case_insensitive else dict(ok_vocab)
 
         sections, section = [], None
         for line_no, line in enumerate(utils.smart_open(questions)):
@@ -1602,7 +1602,7 @@ class Word2Vec(utils.SaveLoad):
                     raise ValueError("missing section header before line #%i in %s" % (line_no, questions))
                 try:
                     if case_insensitive:
-                        a, b, c, expected = [word.lower() for word in line.split()]  # assumes vocabulary preprocessing uses lowercase, too...
+                        a, b, c, expected = [word.upper() for word in line.split()]
                     else:
                         a, b, c, expected = [word for word in line.split()]
                 except:
@@ -1620,7 +1620,7 @@ class Word2Vec(utils.SaveLoad):
                 sims = most_similar(self, positive=[b, c], negative=[a], topn=False, restrict_vocab=restrict_vocab)
                 self.vocab = original_vocab
                 for index in matutils.argsort(sims, reverse=True):
-                    predicted = self.index2word[index].lower() if case_insensitive else self.index2word[index]
+                    predicted = self.index2word[index].upper() if case_insensitive else self.index2word[index]
                     if predicted in ok_vocab and predicted not in ignore:
                         if predicted != expected:
                             logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
