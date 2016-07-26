@@ -1586,7 +1586,6 @@ class Word2Vec(utils.SaveLoad):
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
         ok_vocab = dict((w.lower(), v) for w, v in reversed(ok_vocab)) if case_insensitive else dict(ok_vocab)
-        ok_index = set(v.index for v in itervalues(ok_vocab))
 
         sections, section = [], None
         for line_no, line in enumerate(utils.smart_open(questions)):
@@ -1615,14 +1614,14 @@ class Word2Vec(utils.SaveLoad):
 
                 original_vocab = self.vocab
                 self.vocab = ok_vocab
-                ignore = set(self.vocab[v].index for v in [a, b, c])  # indexes of words to ignore
+                ignore = set([a, b, c])  # input words to be ignored
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
                 sims = most_similar(self, positive=[b, c], negative=[a], topn=False, restrict_vocab=restrict_vocab)
                 self.vocab = original_vocab
                 for index in matutils.argsort(sims, reverse=True):
-                    if index in ok_index and index not in ignore:
-                        predicted = self.index2word[index].lower() if case_insensitive else self.index2word[index]
+                    predicted = self.index2word[index].lower() if case_insensitive else self.index2word[index]
+                    if predicted in ok_vocab and predicted not in ignore:
                         if predicted != expected:
                             logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
                         break
