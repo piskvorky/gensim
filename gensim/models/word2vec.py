@@ -1608,6 +1608,7 @@ class Word2Vec(utils.SaveLoad):
                         a, b, c, expected = [word for word in line.split()]
                 except:
                     logger.info("skipping invalid line #%i in %s" % (line_no, questions))
+                    continue
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
                     logger.debug("skipping line #%i with OOV words: %s" % (line_no, line.strip()))
                     continue
