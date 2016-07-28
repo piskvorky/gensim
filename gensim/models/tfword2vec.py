@@ -1,9 +1,58 @@
 import tensorflow as tf
 from tensorflow.models.embedding.word2vec_optimized import Word2Vec
-from gensim.models.word2vec import Word2Vec as GensimWord2Vec
+from gensim.models.word2vec import Word2Vec as GensimWord2Vec, Vocab
+from gensim import utils
 from six import string_types
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+
+class GensimWord2VecNoTraining(GensimWord2Vec):
+    """
+    Gensim word2vec without training methods
+
+    """
+
+    def make_cum_table(self, *args, **kwargs):
+        pass
+
+    def create_binary_tree(self, *args, **kwargs):
+        pass
+
+    def build_vocab(self, *args, **kwargs):
+        pass
+
+    def scan_vocab(self, *args, **kwargs):
+        pass
+
+    def scale_vocab(self, *args, **kwargs):
+        pass
+
+    def finalize_vocab(self, *args, **kwargs):
+        pass
+
+    def sort_vocab(self, *args, **kwargs):
+        pass
+
+    def _do_train_job(self, *args, **kwargs):
+        pass
+
+    def train(self, *args, **kwargs):
+        pass
+
+    def score(self, *args, **kwargs):
+        pass
+
+    def save_word2vec_format(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def load_word2vec_format(cls, *args, **kwargs):
+        pass
+
+    def intersect_word2vec_format(self, *args, **kwargs):
+        pass
+
 
 class Options(object):
     """Options class that doesn't use FLAGS"""
@@ -85,32 +134,34 @@ class Options(object):
         self.eval_data = eval_data
 
 
-class Vocab(object):
+def modified_tfw2v_init(self, options, session):
+    self._options = options
+    self._session = session
+    self._word2id = {}
+    self._id2word = []
+    self.build_graph()
+    self.build_eval_graph()
+    self.save_vocab()
+    if options.eval_data is not None:
+        self._read_analogies()
 
-    def __init__(self, **kwargs):
-        self.count = 0
-        self.__dict__.update(kwargs)
-
-    def __lt__(self, other):  # used for sorting in a priority queue
-        return self.count < other.count
-
-    def __str__(self):
-        vals = ['%s:%r' % (key, self.__dict__[key]) for key in sorted(self.__dict__) if not key.startswith('_')]
-        return "%s(%s)" % (self.__class__.__name__, ', '.join(vals))
+Word2Vec.__init__ = modified_tfw2v_init
 
 
-class TFWord2Vec(GensimWord2Vec):
+class TfWord2Vec(GensimWord2VecNoTraining):
 
     def __init__(self, train_data=None, save_path=None, eval_data=None,
                  embedding_size=200, epochs_to_train=15, learning_rate=0.025,
                  num_neg_samples=25, batch_size=500, concurrent_steps=12,
                  window_size=5, min_count=5, subsample=1e-3):
 
-        self.options = Options(train_data=train_data, save_path=save_path, eval_data=eval_data,
+        self.options = Options(train_data, save_path=save_path, eval_data=eval_data,
                                embedding_size=embedding_size, epochs_to_train=epochs_to_train,
                                learning_rate=learning_rate, num_neg_samples=num_neg_samples,
                                batch_size=batch_size, concurrent_steps=concurrent_steps,
                                window_size=window_size, min_count=min_count, subsample=subsample)
+
+        self.convert_input(train_data)
         self.train()
         self.vocab = {}
         self.create_vocab()
@@ -128,9 +179,22 @@ class TFWord2Vec(GensimWord2Vec):
             self.index2word = self.model._id2word
 
     def create_vocab(self):
-        print self.options.vocab_words
         for word in self.options.vocab_words:
             self.vocab[word] = Vocab(index=self.model._word2id[word])
+
+    def convert_input(self, corpus):
+        """
+        Converts gensim corpus to a file that can be used by tf word2vec
+
+        """
+        #assumes that the string represents a file extension
+        if not isinstance(corpus, str):
+            with utils.smart_open('/tmp/converted_corpus', 'w+') as fout:
+                for line in corpus:
+                    for word in line:
+                        fout.write(utils.to_utf8(str(word) + " "))
+                    fout.write("\n")
+            self.options.train_data = "/tmp/converted_corpus"
 
     def __getitem__(self, words):
         if isinstance(words, string_types):
