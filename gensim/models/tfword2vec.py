@@ -14,37 +14,37 @@ class GensimWord2VecNoTraining(GensimWord2Vec):
     """
 
     def make_cum_table(self, *args, **kwargs):
-        pass
+        raise Exception("Cannot call a gensim training method on a tf trained model")
 
     def create_binary_tree(self, *args, **kwargs):
-        pass
+        raise Exception("Cannot call a gensim training method on a tf trained model")
 
     def build_vocab(self, *args, **kwargs):
-        pass
+        raise Exception("Cannot call a gensim training method on a tf trained model")
 
     def scan_vocab(self, *args, **kwargs):
-        pass
+        raise Exception("Cannot call a gensim training method on a tf trained model")
 
     def scale_vocab(self, *args, **kwargs):
-        pass
+        raise Exception("Cannot call a gensim training method on a tf trained model")
 
     def finalize_vocab(self, *args, **kwargs):
-        pass
+        raise Exception("Cannot call a gensim training method on a tf trained model")
 
     def sort_vocab(self, *args, **kwargs):
-        pass
+        raise Exception("Cannot call a gensim training method on a tf trained model")
 
     def _do_train_job(self, *args, **kwargs):
-        pass
+        raise Exception("Cannot call a gensim training method on a tf trained model")
 
     def train(self, *args, **kwargs):
-        pass
+        raise Exception("Cannot call a gensim training method on a tf trained model")
 
     def score(self, *args, **kwargs):
-        pass
+        raise Exception("Cannot call a gensim training method on a tf trained model")
 
     def save_word2vec_format(self, *args, **kwargs):
-        pass
+        raise Exception("Cannot call a gensim training method on a tf trained model")
 
     @classmethod
     def load_word2vec_format(cls, *args, **kwargs):
