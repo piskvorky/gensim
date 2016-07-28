@@ -48,10 +48,10 @@ class GensimWord2VecNoTraining(GensimWord2Vec):
 
     @classmethod
     def load_word2vec_format(cls, *args, **kwargs):
-        pass
+        raise Exception("Cannot call a gensim training method on a tf trained model")
 
     def intersect_word2vec_format(self, *args, **kwargs):
-        pass
+        raise Exception("Cannot call a gensim training method on a tf trained model")
 
 
 class Options(object):
