@@ -86,8 +86,8 @@ class Options(object):
                    will be randomly down-sampled. Set to 0 to disable.
         """
 
-        if train_data is None or save_path is None:
-            raise ValueError("train_data and save_path must be specified.")
+        if train_data is None:
+            raise ValueError("train_data must be specified.")
 
         # Model options.
 
@@ -141,7 +141,8 @@ def modified_tfw2v_init(self, options, session):
     self._id2word = []
     self.build_graph()
     self.build_eval_graph()
-    self.save_vocab()
+    if options.save_path is not None:
+        self.save_vocab()
     if options.eval_data is not None:
         self._read_analogies()
 
