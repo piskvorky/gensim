@@ -54,7 +54,6 @@ class CorpusABC(utils.SaveLoad):
         """
         raise NotImplementedError('cannot instantiate abstract base class')
 
-
     def save(self, *args, **kwargs):
         import warnings
         warnings.warn("corpus.save() stores only the (tiny) iteration object; "
@@ -96,11 +95,11 @@ class CorpusABC(utils.SaveLoad):
         raise NotImplementedError('cannot instantiate abstract base class')
 
         # example code:
-        logger.info("converting corpus to ??? format: %s" % fname)
+        logger.info("converting corpus to ??? format: %s", fname)
         with utils.smart_open(fname, 'wb') as fout:
-            for doc in corpus: # iterate over the document stream
-                fmt = str(doc) # format the document appropriately...
-                fout.write(utils.to_utf8("%s\n" % fmt)) # serialize the formatted document to disk
+            for doc in corpus:  # iterate over the document stream
+                fmt = str(doc)  # format the document appropriately...
+                fout.write(utils.to_utf8("%s\n" % fmt))  # serialize the formatted document to disk
 #endclass CorpusABC
 
 
@@ -123,9 +122,9 @@ class TransformedCorpus(CorpusABC):
 
     def __getitem__(self, docno):
         if hasattr(self.corpus, '__getitem__'):
-           return self.obj[self.corpus[docno]]
+            return self.obj[self.corpus[docno]]
         else:
-            raise RuntimeError('Type {} does not support slicing.'.format(type(self.corpus)))
+            raise RuntimeError('Type %s does not support slicing.' % type(self.corpus))
 #endclass TransformedCorpus
 
 
@@ -155,7 +154,6 @@ class TransformationABC(utils.SaveLoad):
         """
         raise NotImplementedError('cannot instantiate abstract base class')
 
-
     def _apply(self, corpus, chunksize=None):
         """
         Apply the transformation to a whole corpus (as opposed to a single document)
@@ -184,15 +182,14 @@ class SimilarityABC(utils.SaveLoad):
     def __init__(self, corpus):
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 
-
     def get_similarities(self, doc):
         # (Sparse)MatrixSimilarity override this method so that they both use the
         # same  __getitem__ method, defined below
         raise NotImplementedError("cannot instantiate Abstract Base Class")
 
-
     def __getitem__(self, query):
-        """Get similarities of document `query` to all documents in the corpus.
+        """
+        Get similarities of document `query` to all documents in the corpus.
 
         **or**
 
@@ -227,7 +224,6 @@ class SimilarityABC(utils.SaveLoad):
         else:
             # otherwise, return top-n of the single input document
             return matutils.full2sparse_clipped(result, self.num_best)
-
 
     def __iter__(self):
         """
