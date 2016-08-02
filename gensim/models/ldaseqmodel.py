@@ -22,6 +22,7 @@ import numpy
 import math
 from scipy.special import digamma
 from scipy import optimize
+import sys
 
 # this is a mock LDA class to help with testing until this is figured out
 class mockLDA(utils.SaveLoad):
@@ -43,7 +44,7 @@ class Doc(utils.SaveLoad):
         self.total = total
 
 class seq_corpus(utils.SaveLoad):
-    def __init__(self, num_terms=0, max_nterms=0, length=0, num_docs=0, corpuses=0):
+    def __init__(self, num_terms=None, max_nterms=None, length=None, num_docs=None, corpuses=None, corpus=None):
         self.num_terms = num_terms
         self.max_nterms = max_nterms
         self.length = len(corpuses)
@@ -51,6 +52,7 @@ class seq_corpus(utils.SaveLoad):
 
         # list of corpus class objects
         self.corpuses = corpuses
+        self.corpus = corpus
 
 class LdaSeqModel(utils.SaveLoad):
     def __init__(self, corpus=None, num_topics=10, id2word=None, num_sequences=None, num_terms=None, alphas=None, top_doc_phis=None,
@@ -124,7 +126,7 @@ def make_seq_corpus(corpus, time_seq):
     length = len(split_corpus)
     # num_terms = len(corpus.dictionary)
 
-    seq_corpus_ = seq_corpus(num_docs=num_docs, length=length, corpuses=split_corpus)
+    seq_corpus_ = seq_corpus(num_docs=num_docs, length=length, corpuses=split_corpus, corpus=corpus)
 
     return seq_corpus_
 
@@ -204,8 +206,8 @@ def compute_post_mean(word, sslm, chain_variance):
             # error message
             pass
 
-    sslm.mean[word] = mean
-    sslm.fwd_mean[word] = fwd_mean    
+    # sslm.mean[word] = mean
+    # sslm.fwd_mean[word] = fwd_mean    
     return
 
 def compute_expected_log_prob(sslm):
@@ -223,7 +225,7 @@ def sslm_counts_init(sslm, obs_variance, chain_variance, sstats):
     W = sslm.num_terms
     T = sslm.num_sequences
 
-    log_norm_counts = sstats
+    log_norm_counts = numpy.copy(sstats)
     log_norm_counts = log_norm_counts / sum(log_norm_counts)
 
     log_norm_counts = log_norm_counts + 1.0 / W
@@ -253,8 +255,8 @@ def init_ldaseq_ss(ldaseq, topic_chain_variance, topic_obs_variance, alpha, init
 
     ldaseq.alphas = alpha
     for k in range(0, ldaseq.num_topics):
-        sstats = init_suffstats[:,k]
 
+        sstats = init_suffstats[:,k]
         sslm_counts_init(ldaseq.topic_chains[k], topic_obs_variance, topic_chain_variance, sstats)
         # dont't need to initialize here, but writing for reference
         ldaseq.topic_chains[k].w_phi_l = numpy.zeros((ldaseq.num_terms, ldaseq.num_sequences))
@@ -379,11 +381,12 @@ def inferDTMseq(K, ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, l
 
     doc_index = 0
     for t in range(0, seq_corpus.length):
+
         make_lda_seq_slice(lda, ldaseq, t)
-        # what to do here
-        # ndocs = seq_corpus.corpuses[t].ndocs
         ndocs = len(seq_corpus.corpuses[t])
+
         for d in range(0, ndocs):
+
             gam = gammas[doc_index]
             lhood = lhoods[doc_index]
 
@@ -398,6 +401,7 @@ def inferDTMseq(K, ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, l
                 words.append(int(word))
                 counts.append(int(count))
                 totals += int(count)
+
             doc = Doc(word=words, count=counts, total=totals, nterms=int(nterms))
             lda_post.gamma = gam
             lda_post.lhood = lhood
@@ -408,18 +412,23 @@ def inferDTMseq(K, ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, l
                 doc_lhood = fit_lda_post(d, t, lda_post, None, None, None, None, None)
             else:
                 doc_lhood = fit_lda_post(d, t, lda_post, ldaseq, None, None, None, None)
+           
 
 
 
             if topic_suffstats != None:
                 update_lda_seq_ss(t, doc, lda_post, topic_suffstats)
+
             bound += doc_lhood
             doc_index += 1
+
     return
 
 def fit_lda_post(doc_number, time, lda_post, ldaseq, g, g3_matrix, g4_matrix, g5_matrix):
 
+
     init_lda_post(lda_post)
+
 
     model = "DTM"
     if model == "DIM":
@@ -432,20 +441,38 @@ def fit_lda_post(doc_number, time, lda_post, ldaseq, g, g3_matrix, g4_matrix, g5
     iter_ = 0
     LDA_INFERENCE_CONVERGED = 1e-8
     LDA_INFERENCE_MAX_ITER = 25
+
+
+    iter_ += 1
+    lhood_old = lhood
+    update_gamma(lda_post)
+
+    model = "DTM"
+
+    if model == "DTM" or sslm is None:
+        update_phi(doc_number, time, lda_post, sslm, g)
+    elif model == "DIM" and sslm is not None:
+        update_phi_fixed(doc_number, time, lda_post, sslm, g3_matrix, g4_matrix, g5_matrix)
+
+    lhood = compute_lda_lhood(lda_post)
+    converged = numpy.fabs((lhood_old - lhood) / (lhood_old * lda_post.doc.total))
+
     # convert from a do-while look
+
     while converged > LDA_INFERENCE_CONVERGED and iter_ <= LDA_INFERENCE_MAX_ITER:
+
         iter_ += 1
         lhood_old = lhood
         update_gamma(lda_post)
-
         model = "DTM"
+
         if model == "DTM" or sslm is None:
             update_phi(doc_number, time, lda_post, sslm, g)
         elif model == "DIM" and sslm is not None:
             update_phi_fixed(doc_number, time, lda_post, sslm, g3_matrix, g4_matrix, g5_matrix)
 
         lhood = compute_lda_lhood(lda_post)
-        converged = numpy.fabs((lhood_old - lhood) / lhood_old * lda_post.doc.total)
+        converged = numpy.fabs((lhood_old - lhood) / (lhood_old * lda_post.doc.total))
 
     return lhood
 
@@ -455,8 +482,8 @@ def make_lda_seq_slice(lda, ldaseq, time):
     K = ldaseq.num_topics
 
     for k in range(0, K):
-        lda.topics[:,k] = ldaseq.topic_chains[k].e_log_prob[:,time]
-    lda.alpha = ldaseq.alphas 
+        lda.topics[:,k] = numpy.copy(ldaseq.topic_chains[k].e_log_prob[:,time])
+    lda.alpha = numpy.copy(ldaseq.alphas)
 
     return
 
@@ -490,6 +517,7 @@ def init_lda_post(lda_post):
 
 def compute_lda_lhood(lda_post):
     
+
     K = lda_post.lda.num_topics
     N = lda_post.doc.nterms
     gamma_sum = numpy.sum(lda_post.gamma)
@@ -506,12 +534,11 @@ def compute_lda_lhood(lda_post):
 
     model = "DTM"
     for k in range(0, K):
-        if lda_post.doc_weight is not None and (model == "DIM" or model == "DTM"):
+        if lda_post.doc_weight is not None and (model == "DIM" or model == "fixed"):
             influence_topic = lda_post.doc_weight[k]
             influence_term = - ((influence_topic * influence_topic + FLAGS_sigma_l * FLAGS_sigma_l) / 2.0 / (FLAGS_sigma_d * FLAGS_sigma_d))
 
         e_log_theta_k = digamma(lda_post.gamma[k]) - digsum
-
         lhood_term = (lda_post.lda.alpha[k] - lda_post.gamma[k]) * e_log_theta_k + math.lgamma(lda_post.gamma[k]) - math.lgamma(lda_post.lda.alpha[k])
 
         for n in range(0, N):
@@ -532,15 +559,20 @@ def update_phi(doc, time, lda_post, ldaseq, g):
 
     dig = numpy.zeros(K)
 
+
+
     for k in range(0, K):
         dig[k] = digamma(lda_post.gamma[k])
+
 
     for n in range(0, N):
         w = lda_post.doc.word[n]
         for k in range(0, K):
             lda_post.log_phi[n][k] = dig[k] + lda_post.lda.topics[w][k]
+
         log_phi_row = lda_post.log_phi[n]
         phi_row = lda_post.phi[n]
+
 
         # log normalize
         v = log_phi_row[0]
@@ -551,7 +583,7 @@ def update_phi(doc, time, lda_post, ldaseq, g):
             log_phi_row[i] = log_phi_row[i] - v
 
         for k in range(0, K):
-            phi_row[i] = numpy.exp(log_phi_row[i])
+            phi_row[k] = numpy.exp(log_phi_row[k])
 
         lda_post.log_phi[n] = log_phi_row
         lda_post.phi[n] = phi_row
@@ -564,7 +596,8 @@ def update_gamma(lda_post):
     K = lda_post.lda.num_topics
     N = lda_post.doc.nterms
 
-    lda_post.gamma = lda_post.lda.alpha
+    lda_post.gamma = numpy.copy(lda_post.lda.alpha)
+
     for n in range(0, N):
         phi_row = lda_post.phi[n]
         count = lda_post.doc.count[n]
@@ -582,7 +615,7 @@ def fit_lda_seq_topics(ldaseq, topic_suffstats):
     for k in range(0, K):
         print ("Fitting topic number" , k)
         lhood_term = fit_sslm(ldaseq.topic_chains[k], topic_suffstats[k])
-        lhood +=lhood_term
+        lhood += lhood_term
 
     return lhood
 
@@ -601,7 +634,6 @@ def fit_sslm(sslm, counts):
         compute_post_variance(w, sslm, sslm.chain_variance)
 
     totals = col_sum(counts, totals)
-
     iter_ = 0
 
     model = "DTM"
@@ -692,6 +724,7 @@ def compute_bound(word_counts, totals, sslm):
 # fucntion to perform optimization
 def update_obs(word_counts, totals, sslm):
 
+
     OBS_NORM_CUTOFF = 2
 
     W = sslm.num_terms
@@ -708,19 +741,21 @@ def update_obs(word_counts, totals, sslm):
         for i in range(0, len(w_counts)):
             counts_norm += w_counts[i] * w_counts[i]
 
+        counts_norm = numpy.sqrt(counts_norm)
+
         if counts_norm < OBS_NORM_CUTOFF and norm_cutoff_obs is not None:
             obs = sslm.obs[w]
-            norm_cutoff_obs = obs
+            norm_cutoff_obs = numpy.copy(obs)
         else: 
             if counts_norm < OBS_NORM_CUTOFF:
-                w_counts = numpy.zeros(len(word_counts))
+                w_counts = numpy.zeros(len(w_counts))
 
             for t in range(0, T):
                 mean_deriv = mean_deriv_mtx[t]
                 compute_mean_deriv(w, t, sslm, mean_deriv)
                 mean_deriv_mtx[t] = mean_deriv
 
-            deriv = numpy.zeros(4)
+            deriv = numpy.zeros(T)
             args = sslm, w_counts, totals, mean_deriv_mtx, w, deriv
             obs = sslm.obs[w]
             step_size = 0.01
@@ -819,6 +854,7 @@ def f_obs(x, *args):
         term1 = 0.0
 
     final = -(term1 + term2 + term3 + term4)
+
     return final
 
 
@@ -904,4 +940,126 @@ def df_obs(x, *args):
 #     for i in range(0, len(df)):
 #         df[i] = - df[i]
 
+def lda_sstats(seq_corpus, num_topics, num_terms, alpha):
+
+    lda_model = mockLDA(num_topics=num_topics, num_terms=num_terms)
+    lda_model.alpha = alpha # this will have shape equal to  number of topics
+    # lda_ss = initialize_ss_random(seq_corpus, num_topics)
+
+    lda_ss = numpy.array(numpy.split(numpy.loadtxt("sstats_rand"), num_terms))
+
+    lda_m_step(lda_model, lda_ss, seq_corpus, num_topics)
+    em_iter = 10
+    lda_em(lda_model, lda_ss, seq_corpus, em_iter, num_topics)
+
+    return lda_ss
+
+def initialize_ss_random(seq_corpus, num_topics):
+
+    N = seq_corpus.num_terms
+    K = num_topics
+
+    topic = numpy.array(numpy.split(numpy.zeros(N * K), N))
+
+    for n in range(0, N):
+        for k in range(0, K):
+            topic[n][k] = numpy.random.random() + 0.5 / seq_corpus.num_docs + 4.0
+
+    return topic
+
+def lda_m_step(lda_model, lda_ss, seq_corpus, num_topics):
+
+    K = num_topics
+    W = seq_corpus.num_terms
+    lhood = 0
+
+    for k in range(0, K):
+
+        ss_k = lda_ss[:,k]
+        log_p = lda_model.topics[:,k]
+
+        LDA_VAR_BAYES = True
+        if LDA_VAR_BAYES is True:
+
+            lop_p = numpy.copy(ss_k)
+            log_p = log_p / sum(log_p)
+            log_p = numpy.log(log_p)
+
+        else:
+            pass
+
+    return lhood
+
+def lda_em(lda_model, lda_ss, seq_corpus, max_iter, num_topics):
+
+    LDA_EM_CONVERGED = 5e-5
+    LDA_INFERENCE_CONVERGED = 1e-8
+
+    iter_ = 0 
+    lhood = lda_e_step(lda_model, seq_corpus, lda_ss, num_topics)
+    old_lhood = 0
+    converged = 0
+    m_lhood = lda_m_step(lda_model, lda_ss, seq_corpus, num_topics)
+
+    # do step starts
+
+    iter_ += 1
+    old_lhood = lhood
+    e_lhood = lda_e_step(lda_model, seq_corpus, lda_ss, num_topics)
+    m_lhood = lda_m_step(lda_model, lda_ss, seq_corpus, num_topics)
+    lhood = e_lhood + m_lhood
+    converged = (old_lhood - lhood) / old_lhood
+
+    while (converged > LDA_EM_CONVERGED or iter_ <= 5) and iter_ < max_iter:
+
+        iter_ += 1
+        old_lhood = lhood
+        e_lhood = lda_e_step(lda_model, seq_corpus, lda_ss, num_topics)
+        m_lhood = lda_m_step(lda_model, lda_ss, seq_corpus, num_topics)
+        lhood = e_lhood + m_lhood
+        converged = (old_lhood - lhood) / old_lhood
+
+    return lhood
+
+
+def lda_e_step(lda_model, seq_corpus, lda_ss, num_topics):
+
+    K = num_topics
+
+    if lda_ss is not None:
+        lda_ss.fill(0)
+
+    lda_post.phi = numpy.resize(numpy.zeros(seq_corpus.max_nterms * K), (seq_corpus.max_nterms, K))
+    lda_post.log_phi = numpy.resize(numpy.zeros(seq_corpus.max_nterms * K), (seq_corpus.max_nterms, K))
+    lda_post.gamma = numpy.zeros(K)
+    lda_post.lhood = numpy.zeros(K + 1)
+    lda_post.lda = lda_model
+
+    lhood = 0
+
+    for d in range(0, seq_corpus.num_docs):
+
+        doc_ = seq_corpus.corpus[d]
+        nterms, word_id = doc_.split(' ', 1)
+        words = []
+        counts = []
+        totals = 0
+
+        for pair in word_id.split():
+            word, count = pair.split(':')
+            words.append(int(word))
+            counts.append(int(count))
+            totals += int(count)
+
+        doc = Doc(word=words, count=counts, total=totals, nterms=int(nterms))
+
+        lda_post.doc = doc
+        lhood += fit_lda_post(d, 0, lda_post, None, None, None, None, None)
+
+        if lda_ss is not None:
+            for k in range(0, K):
+                for n in range(0, lda_post.doc.nterms):
+                    lda_ss[lda_post.doc.word[n]][k] += lda_post.phi[n][k] * lda_post.doc.count[n]
+
+    return lhood
 

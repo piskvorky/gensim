@@ -101,7 +101,7 @@ class TestSSLM(unittest.TestCase):
     def testUpdatePhi(self):
 
         # we test update phi for one particular document
-        doc = ldaseqmodel.doc(nterms=3, word=[549, 560, 561])
+        doc = ldaseqmodel.Doc(nterms=3, word=[549, 560, 561])
         topics = numpy.array(numpy.split(numpy.loadtxt(datapath('before_posterior_topics')), 562))
         lda = ldaseqmodel.mockLDA(num_topics=2, topics=topics)
 
@@ -120,7 +120,7 @@ class TestSSLM(unittest.TestCase):
 
     def testUpdateGamma(self):
 
-        doc = ldaseqmodel.doc(nterms=3, count=[1, 1, 1])
+        doc = ldaseqmodel.Doc(nterms=3, count=[1, 1, 1])
         lda = ldaseqmodel.mockLDA(num_topics=2, num_terms=562, alpha=[0.01, 0.01])
         phi = numpy.array(numpy.split(numpy.loadtxt(datapath('before_update_phi')), 116))
         lda_post = ldaseqmodel.lda_post(lda=lda, doc=doc, gamma=[0.01, 0.01], phi=phi)
@@ -132,7 +132,7 @@ class TestSSLM(unittest.TestCase):
 
     def testUpdateSeqSS(self):
         lda = ldaseqmodel.mockLDA(num_topics=2, num_terms=562, alpha=[0.01, 0.01])
-        doc = ldaseqmodel.doc(nterms=3, total=3, word=[549, 560, 561],count=[1, 1 ,1])
+        doc = ldaseqmodel.Doc(nterms=3, total=3, word=[549, 560, 561],count=[1, 1 ,1])
         phi = numpy.array(numpy.split(numpy.loadtxt(datapath('before_ldaseq_phi')), 116))
         topic_suffstats = [numpy.array(numpy.split(numpy.loadtxt(datapath('before_ldaseq_sstats_0')), 562)), numpy.array(numpy.split(numpy.loadtxt(datapath('before_ldaseq_sstats_1')), 562))]
         lda_post = ldaseqmodel.lda_post(lda=lda, doc=doc, phi = phi)
@@ -146,7 +146,7 @@ class TestSSLM(unittest.TestCase):
 
     def testInitLdaPost(self):
         lda = ldaseqmodel.mockLDA(num_topics=2, alpha=[0.01, 0.01], num_terms=562)
-        doc = ldaseqmodel.doc(nterms=3, total=3, word=[549, 560, 561], count=[1, 1, 1])
+        doc = ldaseqmodel.Doc(nterms=3, total=3, word=[549, 560, 561], count=[1, 1, 1])
 
         # 116 is the number of terms in time_slice 4, and 2 is the number of topics
         phi = numpy.resize(numpy.zeros(116 * 2), (116, 2))
@@ -234,7 +234,7 @@ class TestSSLM(unittest.TestCase):
         word = [549, 560, 561]
         num_terms = 562
 
-        doc = ldaseqmodel.doc(nterms=nterms, count=count, word=word)
+        doc = ldaseqmodel.Doc(nterms=nterms, count=count, word=word)
         lda = ldaseqmodel.mockLDA(num_topics=num_topics, num_terms=num_terms, alpha=alpha)
         lda_post = ldaseqmodel.lda_post(doc=doc, lda=lda, gamma=gamma, lhood=lhood, phi=phi, log_phi=log_phi)
         lhood = ldaseqmodel.compute_lda_lhood(lda_post)
