@@ -131,9 +131,7 @@ def make_seq_corpus(corpus, time_seq):
     return seq_corpus_
 
 def update_zeta(sslm):
-    # setting limits 
-    # num_terms = sslm.obs.shape[0] # this is word length (our example, 562)
-    # num_sequences = sslm.obs.shape[1] # this is number of sequeces
+
     num_terms = sslm.num_terms
     num_sequences = sslm.num_sequences
     # making zero and updating
@@ -206,8 +204,6 @@ def compute_post_mean(word, sslm, chain_variance):
             # error message
             pass
 
-    # sslm.mean[word] = mean
-    # sslm.fwd_mean[word] = fwd_mean    
     return
 
 def compute_expected_log_prob(sslm):
@@ -280,9 +276,9 @@ def fit_lda_seq(ldaseq, seq_corpus):
     convergence = ldasqe_em_threshold + 1
 
     # make directory
-    em_log = open("em_log.dat", "w")
-    gammas_file = open("gammas.dat", "w")
-    lhoods_file = open("lhoods.dat", "w")
+    # em_log = open("em_log.dat", "w")
+    # gammas_file = open("gammas.dat", "w")
+    # lhoods_file = open("lhoods.dat", "w")
 
     iter_ = 0
     final_iters_flag = 0 
@@ -300,8 +296,8 @@ def fit_lda_seq(ldaseq, seq_corpus):
         print (" EM iter " , iter_)
         print ("E Step")
 
-        # writing to file
-        em_log.write(str(bound) + "\t" + str(convergence))
+        # do we need to write to file
+        # em_log.write(str(bound) + "\t" + str(convergence) + "\n")
         old_bound = bound
 
         # initiate sufficient statistics
@@ -315,11 +311,9 @@ def fit_lda_seq(ldaseq, seq_corpus):
 
         bound = lda_seq_infer(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, last_iter)
 
-
-        # figure out how to write to file here
-        # TODO save to file for command line
-        # gammas_file.write(gammas)
-        # lhoods_file.write(lhoods)
+        # do we need to write to file
+        gammas_file.write(str(gammas) + "\n")
+        lhoods_file.write(str(lhoods) + "\n")
 
         print ("M Step")
 
@@ -327,7 +321,7 @@ def fit_lda_seq(ldaseq, seq_corpus):
         bound += topic_bound
 
 
-
+        # write  ldaseq details to file
         # write_lda_seq(ldaseq)
 
         if ((bound - old_bound) < 0):
@@ -380,6 +374,7 @@ def lda_seq_infer(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, la
 def inferDTMseq(K, ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, last_iter, lda, lda_post, bound):
 
     doc_index = 0
+    
     for t in range(0, seq_corpus.length):
 
         make_lda_seq_slice(lda, ldaseq, t)
@@ -397,12 +392,14 @@ def inferDTMseq(K, ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, l
             totals = 0
 
             for pair in word_id.split():
+
                 word, count = pair.split(':')
                 words.append(int(word))
                 counts.append(int(count))
                 totals += int(count)
 
             doc = Doc(word=words, count=counts, total=totals, nterms=int(nterms))
+
             lda_post.gamma = gam
             lda_post.lhood = lhood
             lda_post.doc = doc
@@ -413,9 +410,6 @@ def inferDTMseq(K, ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, l
             else:
                 doc_lhood = fit_lda_post(d, t, lda_post, ldaseq, None, None, None, None)
            
-
-
-
             if topic_suffstats != None:
                 update_lda_seq_ss(t, doc, lda_post, topic_suffstats)
 
@@ -428,8 +422,6 @@ def fit_lda_post(doc_number, time, lda_post, ldaseq, g, g3_matrix, g4_matrix, g5
 
 
     init_lda_post(lda_post)
-
-
     model = "DTM"
     if model == "DIM":
         # if in DIM then we initialise some variables here
@@ -464,6 +456,7 @@ def fit_lda_post(doc_number, time, lda_post, ldaseq, g, g3_matrix, g4_matrix, g5
         iter_ += 1
         lhood_old = lhood
         update_gamma(lda_post)
+
         model = "DTM"
 
         if model == "DTM" or sslm is None:
@@ -517,7 +510,6 @@ def init_lda_post(lda_post):
 
 def compute_lda_lhood(lda_post):
     
-
     K = lda_post.lda.num_topics
     N = lda_post.doc.nterms
     gamma_sum = numpy.sum(lda_post.gamma)
@@ -559,8 +551,6 @@ def update_phi(doc, time, lda_post, ldaseq, g):
 
     dig = numpy.zeros(K)
 
-
-
     for k in range(0, K):
         dig[k] = digamma(lda_post.gamma[k])
 
@@ -572,7 +562,6 @@ def update_phi(doc, time, lda_post, ldaseq, g):
 
         log_phi_row = lda_post.log_phi[n]
         phi_row = lda_post.phi[n]
-
 
         # log normalize
         v = log_phi_row[0]
@@ -724,7 +713,6 @@ def compute_bound(word_counts, totals, sslm):
 # fucntion to perform optimization
 def update_obs(word_counts, totals, sslm):
 
-
     OBS_NORM_CUTOFF = 2
 
     W = sslm.num_terms
@@ -808,6 +796,7 @@ def compute_mean_deriv(word, time, sslm, deriv):
         deriv[t] = w * deriv[t] + (1 - w) * deriv[t + 1]
 
     return
+
 
 def f_obs(x, *args):
 
@@ -910,6 +899,7 @@ def compute_obs_deriv(word, word_counts, totals, sslm, mean_deriv_mtx, deriv):
     
     return
 
+
 def df_obs(x, *args):
 
     sslm, word_counts, totals, mean_deriv_mtx, word, deriv = args
@@ -925,34 +915,18 @@ def df_obs(x, *args):
 
     return numpy.negative(deriv)
 
-# def fdf_obs(x, params, f, df):
-
-#     p = params
-#     model = "DTM"
-
-#     if model == "DTM":
-#         f = f_obs(x, params)
-#         compute_obs_deriv(p.word, p.word_counts, p.totals, p.sslm, p.mean_deriv_mtx, df)
-#     elif model == "DIM":
-#         f = f_obs_multiplt(x, params)
-#         compute_obs_deriv_fixed(p.word, p.word_counts, p.totals, p.sslm, p.mean_deriv_mtx, df)
-
-#     for i in range(0, len(df)):
-#         df[i] = - df[i]
 
 def lda_sstats(seq_corpus, num_topics, num_terms, alpha):
 
     lda_model = mockLDA(num_topics=num_topics, num_terms=num_terms)
     lda_model.alpha = alpha # this will have shape equal to  number of topics
-    # lda_ss = initialize_ss_random(seq_corpus, num_topics)
-
-    lda_ss = numpy.array(numpy.split(numpy.loadtxt("sstats_rand"), num_terms))
-
+    lda_ss = initialize_ss_random(seq_corpus, num_topics)
     lda_m_step(lda_model, lda_ss, seq_corpus, num_topics)
     em_iter = 10
     lda_em(lda_model, lda_ss, seq_corpus, em_iter, num_topics)
 
     return lda_ss
+
 
 def initialize_ss_random(seq_corpus, num_topics):
 
@@ -967,12 +941,12 @@ def initialize_ss_random(seq_corpus, num_topics):
 
     return topic
 
+
 def lda_m_step(lda_model, lda_ss, seq_corpus, num_topics):
 
     K = num_topics
     W = seq_corpus.num_terms
     lhood = 0
-
     for k in range(0, K):
 
         ss_k = lda_ss[:,k]
@@ -981,14 +955,17 @@ def lda_m_step(lda_model, lda_ss, seq_corpus, num_topics):
         LDA_VAR_BAYES = True
         if LDA_VAR_BAYES is True:
 
-            lop_p = numpy.copy(ss_k)
+            numpy.copyto(log_p, ss_k)
             log_p = log_p / sum(log_p)
             log_p = numpy.log(log_p)
 
         else:
             pass
 
+        lda_model.topics[:,k] = log_p
+
     return lhood
+
 
 def lda_em(lda_model, lda_ss, seq_corpus, max_iter, num_topics):
 
@@ -1052,14 +1029,27 @@ def lda_e_step(lda_model, seq_corpus, lda_ss, num_topics):
             totals += int(count)
 
         doc = Doc(word=words, count=counts, total=totals, nterms=int(nterms))
-
         lda_post.doc = doc
-        lhood += fit_lda_post(d, 0, lda_post, None, None, None, None, None)
 
+        lhood += fit_lda_post(d, 0, lda_post, None, None, None, None, None)
         if lda_ss is not None:
             for k in range(0, K):
                 for n in range(0, lda_post.doc.nterms):
-                    lda_ss[lda_post.doc.word[n]][k] += lda_post.phi[n][k] * lda_post.doc.count[n]
+                    lda_ss[lda_post.doc.word[n]][k] += round(lda_post.phi[n][k], 6) * lda_post.doc.count[n]
 
     return lhood
 
+
+# fdf fucnction
+
+# def fdf_obs(x, params, f, df):
+#     p = params
+#     model = "DTM"
+#     if model == "DTM":
+#         f = f_obs(x, params)
+#         compute_obs_deriv(p.word, p.word_counts, p.totals, p.sslm, p.mean_deriv_mtx, df)
+#     elif model == "DIM":
+#         f = f_obs_multiplt(x, params)
+#         compute_obs_deriv_fixed(p.word, p.word_counts, p.totals, p.sslm, p.mean_deriv_mtx, df)
+#     for i in range(0, len(df)):
+#         df[i] = - df[i]    
