@@ -11,6 +11,7 @@ Changes
 * Implemented LsiModel.docs_processed attribute
 * Added LdaMallet support. Added LdaVowpalWabbit, LdaMallet example to notebook. Added test suite for coherencemodel and aggregation.
   Added `topics` parameter to coherencemodel. Can now provide tokenized topics to calculate coherence value (@dsquareindia, #750)
+* Changed `use_lowercase` option in word2vec accuracy to `case_insensitive` to account for case variations in training vocabulary (@jayantj, #714)
 
 0.13.1, 2016-06-22
 

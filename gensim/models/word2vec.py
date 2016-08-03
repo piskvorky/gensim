@@ -1573,13 +1573,15 @@ class Word2Vec(utils.SaveLoad):
         The accuracy is reported (=printed to log and returned as a list) for each
         section separately, plus there's one aggregate summary at the end.
 
-        `restrict_vocab` is an optional integer which limits the vocab to be used
-        for answering questions. For example, restrict_vocab=10000 would only check
-        the first 10000 word vectors in the vocabulary order. (This may be meaningful
-        if you've sorted the vocabulary by descending frequency.)
+        Use `restrict_vocab` to ignore all questions containing a word not in the first `restrict_vocab`
+        words (default 30,000). This may be meaningful if you've sorted the vocabulary by descending frequency.
+        In case `case_insensitive` is True, the first `restrict_vocab` words are taken first, and then
+        case normalization is performed.
 
-        Use `case_insensitive` to convert all words in questions and vocab to their uppercase form before evaluating
-        the accuracy. Useful in case of case-mismatch between training tokens and question words.  (default True).
+        Use `case_insensitive` to convert all words in questions and vocab to their uppercase form before 
+        evaluating the accuracy (default True). Useful in case of case-mismatch between training tokens 
+        and question words. In case of multiple case variants of a single word, the vector for the first
+        occurrence (also the most frequent if vocabulary is sorted) is taken.
 
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
 
