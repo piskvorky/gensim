@@ -104,8 +104,8 @@ class _TestSimilarityABC(object):
     def test_full2sparse_clipped(self):
 
         vec = [0.8, 0.2, 0.0, 0.0, -0.1, -0.15]
-        expected = numpy.asarray([0, 1, 5], dtype=int)
-        self.assertEqual(matutils.full2sparse_clipped(vec, topn=3), expected)
+        expected = [(0, 0.80000000000000004), (1, 0.20000000000000001), (5, -0.14999999999999999)]
+        self.assertTrue(matutils.full2sparse_clipped(vec, topn=3), expected)
 
 
 
