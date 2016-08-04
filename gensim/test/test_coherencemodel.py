@@ -35,11 +35,23 @@ texts = [['human', 'interface', 'computer'],
          ['graph', 'minors', 'survey']]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
+boolean_document_based = ['u_mass']
+sliding_window_based = ['c_v', 'c_uci', 'c_npmi']
 
 
 def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
+
+def checkCoherenceMeasure(topics1, topics2, coherence):
+    """Check provided topic coherence algorithm on given topics"""
+    if coherence in boolean_document_based:
+        cm1 = CoherenceModel(topics=topics1, corpus=corpus, dictionary=dictionary, coherence=coherence)
+        cm2 = CoherenceModel(topics=topics2, corpus=corpus, dictionary=dictionary, coherence=coherence)
+    else:
+        cm1 = CoherenceModel(topics=topics1, texts=texts, dictionary=dictionary, coherence=coherence)
+        cm2 = CoherenceModel(topics=topics2, texts=texts, dictionary=dictionary, coherence=coherence)
+    return cm1.get_coherence() > cm2.get_coherence()
 
 class TestCoherenceModel(unittest.TestCase):
     def setUp(self):
@@ -67,30 +79,25 @@ class TestCoherenceModel(unittest.TestCase):
 
     def testUMass(self):
         """Test U_Mass topic coherence algorithm on given topics"""
-        cm1 = CoherenceModel(topics=self.topics1, corpus=corpus, dictionary=dictionary, coherence='u_mass')
-        cm2 = CoherenceModel(topics=self.topics2, corpus=corpus, dictionary=dictionary, coherence='u_mass')
-        self.assertTrue(cm1.get_coherence() > cm2.get_coherence())
+        self.assertTrue(checkCoherenceMeasure(self.topics1, self.topics2, 'u_mass'))
 
     def testCv(self):
         """Test C_v topic coherence algorithm on given topics"""
-        cm1 = CoherenceModel(topics=self.topics1, texts=texts, dictionary=dictionary, coherence='c_v')
-        cm2 = CoherenceModel(topics=self.topics2, texts=texts, dictionary=dictionary, coherence='c_v')
-        self.assertTrue(cm1.get_coherence() > cm2.get_coherence())
+        self.assertTrue(checkCoherenceMeasure(self.topics1, self.topics2, 'c_v'))
 
     def testCuci(self):
         """Test C_uci topic coherence algorithm on given topics"""
-        cm1 = CoherenceModel(topics=self.topics1, texts=texts, dictionary=dictionary, coherence='c_uci')
-        cm2 = CoherenceModel(topics=self.topics2, texts=texts, dictionary=dictionary, coherence='c_uci')
-        self.assertTrue(cm1.get_coherence() > cm2.get_coherence())
+        self.assertTrue(checkCoherenceMeasure(self.topics1, self.topics2, 'c_uci'))
 
     def testCnpmi(self):
         """Test C_npmi topic coherence algorithm on given topics"""
-        cm1 = CoherenceModel(topics=self.topics1, texts=texts, dictionary=dictionary, coherence='c_npmi')
-        cm2 = CoherenceModel(topics=self.topics2, texts=texts, dictionary=dictionary, coherence='c_npmi')
-        self.assertTrue(cm1.get_coherence() > cm2.get_coherence())
+        self.assertTrue(checkCoherenceMeasure(self.topics1, self.topics2, 'c_npmi'))
 
     def testUMassLdaModel(self):
         """Perform sanity check to see if u_mass coherence works with LDA Model"""
+        # Note that this is just a sanity check because LDA does not guarantee a better coherence
+        # value on the topics if iterations are increased. This can be seen here:
+        # https://gist.github.com/dsquareindia/60fd9ab65b673711c3fa00509287ddde
         try:
             cm = CoherenceModel(model=self.ldamodel, corpus=corpus, coherence='u_mass')
         except:

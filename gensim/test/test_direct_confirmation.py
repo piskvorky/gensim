@@ -37,7 +37,7 @@ class TestDirectConfirmationMeasure(unittest.TestCase):
 
     def testNormalizedLogRatioMeasure(self):
         """Test normalized_log_ratio_measure()"""
-        obtained = direct_confirmation_measure.normalized_log_ratio_measure(self.segmentation, self.posting_list, self.num_docs)[0]
+        obtained = direct_confirmation_measure.log_ratio_measure(self.segmentation, self.posting_list, self.num_docs, normalize=True)[0]
         # Answer should be ~ -0.182321557 / -ln(1 / 5) = -0.113282753
         expected = -0.113282753
         self.assertAlmostEqual(obtained, expected)
