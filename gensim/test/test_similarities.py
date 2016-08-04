@@ -101,6 +101,13 @@ class _TestSimilarityABC(object):
         for num_best in [None, 0, 1, 9, 1000]:
             self.testFull(num_best=num_best)
 
+    def test_full2sparse_clipped(self):
+
+        vec = [0.8, 0.2, 0.0, 0.0, -0.1, -0.15]
+        expected = numpy.asarray([0, 1, 5], dtype=int)
+        self.assertEqual(matutils.full2sparse_clipped(vec, topn=3), expected)
+
+
 
     def testChunking(self):
         if self.cls == similarities.Similarity:
