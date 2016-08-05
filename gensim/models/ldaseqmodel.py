@@ -85,11 +85,12 @@ class LdaSeqModel(utils.SaveLoad):
     `initalize` allows the user to decide how he wants to initialise the DTM model. Default is through gensim LDA.
     if `initalize` is 'blei-lda', then we will use the python port of blei's oriignal LDA code.
     You can use your own sstats of an LDA model previously trained as well by specifying 'own' and passing a numpy matrix through sstats.
+    If you wish to just pass a previously used LDA model, pass it through `lda_model` 
     Shape of sstats is (num_terms, num_topics)
     """
 
     def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10, 
-                initialize='gensim', sstats=None,  obs_variance=0.5, chain_variance=0.005, max_nterms=None):
+                initialize='gensim', sstats=None,  lda_model=None, obs_variance=0.5, chain_variance=0.005, max_nterms=None):
         
         if corpus is not None:
             self.corpus = seq_corpus(corpus=corpus, id2word=id2word, time_slice=time_slice, max_nterms=max_nterms)
@@ -118,11 +119,12 @@ class LdaSeqModel(utils.SaveLoad):
             if initialize == 'gensim':
                 lda_model = ldamodel.LdaModel(corpus, id2word=self.corpus.id2word, num_topics=self.num_topics, passes=10, alpha=self.alphas)
                 self.sstats = numpy.transpose(lda_model.state.sstats)
-            if initialize == 'blei-lda':
-                self.sstats = lda_sstats(self.corpus, self.num_topics, self.num_terms, self.alphas)
+            if initialize == 'ldamodel':
+                self.sstats = numpy.transpose(lda_model.state.sstats)
             if initialize == 'own':
                 self.sstats = sstats
-
+            if initialize == 'blei-lda':
+                self.sstats = lda_sstats(self.corpus, self.num_topics, self.num_terms, self.alphas)
             # initialize model from sstats
             init_ldaseq_ss(self, chain_variance, obs_variance, self.alphas, self.sstats)
 
