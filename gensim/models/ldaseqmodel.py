@@ -22,7 +22,6 @@ import numpy
 import math
 from scipy.special import digamma
 from scipy import optimize
-import sys
 
 
 class seq_corpus(utils.SaveLoad):
@@ -37,7 +36,7 @@ class seq_corpus(utils.SaveLoad):
     corpus is any iterable gensim corpus.
 
     """
-    def __init__(self, num_terms=None, max_nterms=None, num_sequences=None, num_docs=None, corpus=None, time_slice=None, id2word=None):
+    def __init__(self, corpus=None, time_slice=None, id2word=None, max_nterms=None):
 
 
         self.id2word = id2word
@@ -82,27 +81,54 @@ class LdaSeqModel(utils.SaveLoad):
     """
     Class which contains information of our whole DTM model.
     Topic chains contains for each topic a 'state space language model' object which in turn has information about each topic
-
+    `alphas`  is a prior of your choice and should be a double or float value. default is 0.01
+    `initalize` allows the user to decide how he wants to initialise the DTM model. Default is through gensim LDA.
+    if `initalize` is 'blei-lda', then we will use the python port of blei's oriignal LDA code.
+    You can use your own sstats of an LDA model previously trained as well by specifying 'own' and passing a numpy matrix through sstats.
+    Shape of sstats is (num_terms, num_topics)
     """
 
-    def __init__(self, corpus=None, num_topics=10, id2word=None, num_sequences=None, num_terms=None, alphas=None):
+    def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10, 
+                initialize='gensim', sstats=None,  obs_variance=0.5, chain_variance=0.005, max_nterms=None):
         
+        if corpus is not None:
+            self.corpus = seq_corpus(corpus=corpus, id2word=id2word, time_slice=time_slice, max_nterms=max_nterms)
+            self.num_terms = len(corpus.id2word)
 
-        self.corpus = corpus
+
         self.num_topics = num_topics
-        self.num_sequences = num_sequences
-        self.num_terms = num_terms
-        self.topic_chains = topic_chains
-        if self.topic_chains is None:
-            for topic in range(0, num_topics):
-                sslm_ = sslm(num_sequences=num_sequences, num_terms=num_terms, num_topics=num_topics)
-                topic_chains.append(sslm_)
+        self.num_sequences = len(time_slice)
+        self.alphas = numpy.full(num_topics, alphas)
+
+        self.topic_chains = []
+        for topic in range(0, num_topics):
+            sslm_ = sslm(num_sequences=self.num_sequences, num_terms=self.num_terms, num_topics=self.num_topics, chain_variance=chain_variance, obs_variance=obs_variance)
+            self.topic_chains.append(sslm_)
+
+
 
         # the following are class variables which are to be integrated during Document Influence Model
         self.top_doc_phis = None
         self.influence = None
         self.renormalized_influence = None
         self.influence_sum_lgl = None
+
+        # if a corpus and time_slice is provided, depending on the user choice of initializing LDA, we start DTM.
+        if self.corpus is not None and time_slice is not None:
+            if initialize == 'gensim':
+                lda_model = ldamodel.LdaModel(corpus, id2word=self.corpus.id2word, num_topics=self.num_topics, passes=10, alpha=self.alphas)
+                self.sstats = numpy.transpose(lda_model.state.sstats)
+            if initialize == 'blei-lda':
+                self.sstats = lda_sstats(self.corpus, self.num_topics, self.num_terms, self.alphas)
+            if initialize == 'own':
+                self.sstats = sstats
+
+            # initialize model from sstats
+            init_ldaseq_ss(self, chain_variance, obs_variance, self.alphas, self.sstats)
+
+            # fit DTM
+            fit_lda_seq(self, self.corpus)
+
 
 class sslm(utils.SaveLoad):
     """
@@ -112,13 +138,14 @@ class sslm(utils.SaveLoad):
     variance, fwd_variance contains the variance values to be used for inference for each word in a time_slice
 
     """
-    def __init__(self, num_terms=None, num_sequences=None, obs_variance=0.5, chain_variance=0.005):
+    def __init__(self, num_terms=None, num_sequences=None, num_topics=None, obs_variance=0.5, chain_variance=0.005):
 
 
         self.num_terms = num_terms
         self.num_sequences = num_sequences
         self.obs_variance = obs_variance
         self.chain_variance= chain_variance
+        self.num_topics = num_topics
 
         self.obs = numpy.array(numpy.split(numpy.zeros(num_sequences * num_terms), num_terms))
         self.e_log_prob = numpy.array(numpy.split(numpy.zeros(num_sequences * num_terms), num_terms))
@@ -377,6 +404,8 @@ def lda_seq_infer(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, la
     bound = 0.0
     
     lda = ldamodel.LdaModel(num_topics=K, alpha=ldaseq.alphas, id2word=seq_corpus.id2word)
+    lda.topics = numpy.array(numpy.split(numpy.zeros(W * K), W))
+
     lda_post = Lda_Post(max_nterms=seq_corpus.max_nterms, num_topics=K, lda=lda)
 
 
@@ -572,7 +601,7 @@ def compute_lda_lhood(lda_post):
 
         lda_post.lhood[k] = lhood_term
         lhood += lhood_term
-        lhood += influence_term
+        # lhood += influence_term
 
     return lhood
 
