@@ -28,15 +28,15 @@ class seq_corpus(utils.SaveLoad):
 
     """
     seq_corpus is basically a wrapper class which contains information about the corpus.
-    num_terms is the length of the vocabulary.
-    max_nterms is the maximum number of terms a single document has.
-    num_sequences is the number of sequences, i.e number of time-slices.
-    num_docs is the number of documents present.
+    vocab_len is the length of the vocabulary.
+    max_doc_len is the maximum number of terms a single document has.
+    num_time_slices is the number of sequences, i.e number of time-slices.
+    corpus_len is the number of documents present.
     time_slice is a list or numpy array which the user must provide which contains the number of documents in each time-slice.
     corpus is any iterable gensim corpus.
 
     """
-    def __init__(self, corpus=None, time_slice=None, id2word=None, max_nterms=None):
+    def __init__(self, corpus=None, time_slice=None, id2word=None):
 
 
         self.id2word = id2word
@@ -46,22 +46,25 @@ class seq_corpus(utils.SaveLoad):
         if self.id2word is None:
             logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
-            self.num_terms = len(self.id2word)
+            self.vocab_len = len(self.id2word)
         elif len(self.id2word) > 0:
-            self.num_terms = 1 + max(self.id2word.keys())
+            self.vocab_len = len(self.id2word)
         else:
-            self.num_terms = 0
+            self.vocab_len = 0
 
         self.corpus = corpus
         if self.corpus is not None:
-            self.num_docs = len(corpus)
+            self.corpus_len = len(corpus)
 
         self.time_slice = time_slice
         if self.time_slice is not None:
-            self.num_sequences = len(time_slice)
+            self.num_time_slices = len(time_slice)
 
-        # need to still figure out way to get max_nterms    
-        self.max_nterms = max_nterms
+        max_doc_len = 0
+        for line_no, line in enumerate(corpus):
+            if len(line) > max_doc_len:
+                max_doc_len = len(line)
+        self.max_doc_len = max_doc_len
 
 
 class Doc(utils.SaveLoad):
@@ -81,32 +84,31 @@ class LdaSeqModel(utils.SaveLoad):
     """
     Class which contains information of our whole DTM model.
     Topic chains contains for each topic a 'state space language model' object which in turn has information about each topic
+    the sslm class is described below and contains information on topic-word probabilities and doc-topic probabilities.
     `alphas`  is a prior of your choice and should be a double or float value. default is 0.01
     `initalize` allows the user to decide how he wants to initialise the DTM model. Default is through gensim LDA.
     if `initalize` is 'blei-lda', then we will use the python port of blei's oriignal LDA code.
     You can use your own sstats of an LDA model previously trained as well by specifying 'own' and passing a numpy matrix through sstats.
     If you wish to just pass a previously used LDA model, pass it through `lda_model` 
-    Shape of sstats is (num_terms, num_topics)
+    Shape of sstats is (vocab_len, num_topics)
     """
 
     def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10, 
-                initialize='gensim', sstats=None,  lda_model=None, obs_variance=0.5, chain_variance=0.005, max_nterms=None):
+                initialize='gensim', sstats=None,  lda_model=None, obs_variance=0.5, chain_variance=0.005):
         
         if corpus is not None:
-            self.corpus = seq_corpus(corpus=corpus, id2word=id2word, time_slice=time_slice, max_nterms=max_nterms)
-            self.num_terms = len(corpus.id2word)
+            self.corpus = seq_corpus(corpus=corpus, id2word=id2word, time_slice=time_slice)
+            self.vocab_len = len(self.corpus.id2word)
 
 
         self.num_topics = num_topics
-        self.num_sequences = len(time_slice)
+        self.num_time_slices = len(time_slice)
         self.alphas = numpy.full(num_topics, alphas)
 
         self.topic_chains = []
         for topic in range(0, num_topics):
-            sslm_ = sslm(num_sequences=self.num_sequences, num_terms=self.num_terms, num_topics=self.num_topics, chain_variance=chain_variance, obs_variance=obs_variance)
+            sslm_ = sslm(num_time_slices=self.num_time_slices, vocab_len=self.vocab_len, num_topics=self.num_topics, chain_variance=chain_variance, obs_variance=obs_variance)
             self.topic_chains.append(sslm_)
-
-
 
         # the following are class variables which are to be integrated during Document Influence Model
         self.top_doc_phis = None
@@ -124,7 +126,7 @@ class LdaSeqModel(utils.SaveLoad):
             if initialize == 'own':
                 self.sstats = sstats
             if initialize == 'blei-lda':
-                self.sstats = lda_sstats(self.corpus, self.num_topics, self.num_terms, self.alphas)
+                self.sstats = lda_sstats(self.corpus, self.num_topics, self.vocab_len, self.alphas)
             # initialize model from sstats
             init_ldaseq_ss(self, chain_variance, obs_variance, self.alphas, self.sstats)
 
@@ -140,22 +142,22 @@ class sslm(utils.SaveLoad):
     variance, fwd_variance contains the variance values to be used for inference for each word in a time_slice
 
     """
-    def __init__(self, num_terms=None, num_sequences=None, num_topics=None, obs_variance=0.5, chain_variance=0.005):
+    def __init__(self, vocab_len=None, num_time_slices=None, num_topics=None, obs_variance=0.5, chain_variance=0.005):
 
 
-        self.num_terms = num_terms
-        self.num_sequences = num_sequences
+        self.vocab_len = vocab_len
+        self.num_time_slices = num_time_slices
         self.obs_variance = obs_variance
         self.chain_variance= chain_variance
         self.num_topics = num_topics
 
-        self.obs = numpy.array(numpy.split(numpy.zeros(num_sequences * num_terms), num_terms))
-        self.e_log_prob = numpy.array(numpy.split(numpy.zeros(num_sequences * num_terms), num_terms))
-        self.mean = numpy.array(numpy.split(numpy.zeros((num_sequences + 1) * num_terms), num_terms))
-        self.fwd_mean = numpy.array(numpy.split(numpy.zeros((num_sequences + 1) * num_terms), num_terms))
-        self.fwd_variance = numpy.array(numpy.split(numpy.zeros((num_sequences + 1) * num_terms), num_terms))
-        self.variance = numpy.array(numpy.split(numpy.zeros((num_sequences + 1) * num_terms), num_terms))
-        self.zeta = numpy.zeros(num_sequences)
+        self.obs = numpy.array(numpy.split(numpy.zeros(num_time_slices * vocab_len), vocab_len))
+        self.e_log_prob = numpy.array(numpy.split(numpy.zeros(num_time_slices * vocab_len), vocab_len))
+        self.mean = numpy.array(numpy.split(numpy.zeros((num_time_slices + 1) * vocab_len), vocab_len))
+        self.fwd_mean = numpy.array(numpy.split(numpy.zeros((num_time_slices + 1) * vocab_len), vocab_len))
+        self.fwd_variance = numpy.array(numpy.split(numpy.zeros((num_time_slices + 1) * vocab_len), vocab_len))
+        self.variance = numpy.array(numpy.split(numpy.zeros((num_time_slices + 1) * vocab_len), vocab_len))
+        self.zeta = numpy.zeros(num_time_slices)
 
         # the following are class variables which are to be integrated during Document Influence Model
         self.m_update_coeff = None
@@ -167,8 +169,6 @@ class sslm(utils.SaveLoad):
         self.w_phi_l_sq = None
         self.m_update_coeff_g = None
 
-        # temp_vect 
-        self.temp_vect = None
 
 class Lda_Post(utils.SaveLoad):
     """
@@ -176,16 +176,16 @@ class Lda_Post(utils.SaveLoad):
 
     """
 
-    def __init__(self, doc=None, lda=None, max_nterms=None, num_topics=None, gamma=None, lhood=None):
+    def __init__(self, doc=None, lda=None, max_doc_len=None, num_topics=None, gamma=None, lhood=None):
 
         self.doc = doc
         self.lda = lda
         self.gamma = gamma
         self.lhood = lhood
 
-        if max_nterms is not None and num_topics is not None:
-            self.phi = numpy.resize(numpy.zeros(max_nterms * num_topics), (max_nterms, num_topics))
-            self.log_phi = numpy.resize(numpy.zeros(max_nterms * num_topics), (max_nterms, num_topics))
+        if max_doc_len is not None and num_topics is not None:
+            self.phi = numpy.resize(numpy.zeros(max_doc_len * num_topics), (max_doc_len, num_topics))
+            self.log_phi = numpy.resize(numpy.zeros(max_doc_len * num_topics), (max_doc_len, num_topics))
 
         # the following are class variables which are to be integrated during Document Influence Model
 
@@ -194,23 +194,25 @@ class Lda_Post(utils.SaveLoad):
 
 def update_zeta(sslm):
 
-    num_terms = sslm.num_terms
-    num_sequences = sslm.num_sequences
-    # making zero and updating
-    sslm.zeta.fill(0)
-    for i in range(0, num_terms):
-        for j in range(0, num_sequences):
+    vocab_len = sslm.vocab_len
+    num_time_slices = sslm.num_time_slices
+    zeta = numpy.zeros(len(sslm.zeta))
+
+    for i in range(0, vocab_len):
+        for j in range(0, num_time_slices):
+
             m = sslm.mean[i][j + 1]
             v = sslm.variance[i][j + 1]
             val = numpy.exp(m + v/2)
-            sslm.zeta[j] = sslm.zeta[j] + val  
-    return
+            zeta[j] = zeta[j] + val  
+
+    return zeta
 
 def compute_post_variance(word, sslm, chain_variance):
 
-    T = sslm.num_sequences
-    variance = sslm.variance[word] # pick wordth row
-    fwd_variance = sslm.fwd_variance[word] # pick wordth row
+    T = sslm.num_time_slices
+    variance = numpy.copy(sslm.variance[word]) # pick wordth row
+    fwd_variance = numpy.copy(sslm.fwd_variance[word]) # pick wordth row
 
     # forward pass. Set initial variance very high
     fwd_variance[0] = chain_variance * 1000
@@ -231,27 +233,23 @@ def compute_post_variance(word, sslm, chain_variance):
             w = 0
         variance[t] = (w * (variance[t + 1] - chain_variance)) + ((1 - w) * fwd_variance[t])
 
-    sslm.variance[word] = variance
-    sslm.fwd_variance[word] = fwd_variance
-    return
+    return variance, fwd_variance
     
 
 def compute_post_mean(word, sslm, chain_variance):
 
-    T = sslm.num_sequences
-    obs = sslm.obs[word] # wordth row
-    mean = sslm.mean[word]
-    fwd_mean = sslm.fwd_mean[word]
+    T = sslm.num_time_slices
+    obs = sslm.obs[word]
     fwd_variance = sslm.fwd_variance[word]
+
+    mean = numpy.copy(sslm.mean[word])
+    fwd_mean = numpy.copy(sslm.fwd_mean[word])
 
     # forward 
     fwd_mean[0] = 0
     for t in range(1, T + 1):
         w = sslm.obs_variance / (fwd_variance[t - 1] + chain_variance + sslm.obs_variance)
         fwd_mean[t] = w * fwd_mean[t - 1] + (1 - w) * obs[t - 1]
-        if fwd_mean[t] is None:
-            # error message
-            pass
 
     # backward pass
     mean[T] = fwd_mean[T]
@@ -261,16 +259,13 @@ def compute_post_mean(word, sslm, chain_variance):
         else:
             w = chain_variance / (fwd_variance[t] + chain_variance)
         mean[t] = w * fwd_mean[t] + (1 - w) * mean[t + 1]
-        if mean[t] is None:
-            # error message
-            pass
- 
-    return
+
+    return mean, fwd_mean
 
 def compute_expected_log_prob(sslm):
 
-    W = sslm.num_terms
-    T = sslm.num_sequences
+    W = sslm.vocab_len
+    T = sslm.num_time_slices
     for t in range(0, T):
         for w in range(0, W):
             sslm.e_log_prob[w][t] = sslm.mean[w][t + 1] - numpy.log(sslm.zeta[t])
@@ -279,8 +274,8 @@ def compute_expected_log_prob(sslm):
 
 def sslm_counts_init(sslm, obs_variance, chain_variance, sstats):
 
-    W = sslm.num_terms
-    T = sslm.num_sequences
+    W = sslm.vocab_len
+    T = sslm.num_time_slices
 
     log_norm_counts = numpy.copy(sstats)
     log_norm_counts = log_norm_counts / sum(log_norm_counts)
@@ -300,12 +295,12 @@ def sslm_counts_init(sslm, obs_variance, chain_variance, sstats):
 
     # compute post variance
     for w in range(0, W):
-       compute_post_variance(w, sslm, sslm.chain_variance)
+       sslm.variance, sslm.fwd_variance = compute_post_variance(w, sslm, sslm.chain_variance)
 
     for w in range(0, W):
-       compute_post_mean(w, sslm, sslm.chain_variance)
+       sslm.mean, sslm.fwd_mean = compute_post_mean(w, sslm, sslm.chain_variance)
 
-    update_zeta(sslm)
+    sslm.zeta = update_zeta(sslm)
     compute_expected_log_prob(sslm)
 
 def init_ldaseq_ss(ldaseq, topic_chain_variance, topic_obs_variance, alpha, init_suffstats):
@@ -317,52 +312,44 @@ def init_ldaseq_ss(ldaseq, topic_chain_variance, topic_obs_variance, alpha, init
         sslm_counts_init(ldaseq.topic_chains[k], topic_obs_variance, topic_chain_variance, sstats)
 
         # initialize the below matrices only if running DIM
-        # ldaseq.topic_chains[k].w_phi_l = numpy.zeros((ldaseq.num_terms, ldaseq.num_sequences))
-        # ldaseq.topic_chains[k].w_phi_sum = numpy.zeros((ldaseq.num_terms, ldaseq.num_sequences))
-        # ldaseq.topic_chains[k].w_phi_sq = numpy.zeros((ldaseq.num_terms, ldaseq.num_sequences))
+        # ldaseq.topic_chains[k].w_phi_l = numpy.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
+        # ldaseq.topic_chains[k].w_phi_sum = numpy.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
+        # ldaseq.topic_chains[k].w_phi_sq = numpy.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
 
 def fit_lda_seq(ldaseq, seq_corpus):
 
-    K = ldaseq.num_topics
-    W = ldaseq.num_terms
-    data_len = seq_corpus.num_sequences
-    num_docs = seq_corpus.num_docs
-    
     LDA_INFERENCE_MAX_ITER = 25
+    LDASQE_EM_THRESHOLD = 1e-4
+    LDA_SEQ_MIN_ITER = 6
+    LDA_SEQ_MAX_ITER = 20
 
+    K = ldaseq.num_topics
+    W = ldaseq.vocab_len
+    data_len = seq_corpus.num_time_slices
+    corpus_len = seq_corpus.corpus_len
+    
     bound = 0
-    heldout_bound = 0
-    ldasqe_em_threshold = 1e-4
-    convergence = ldasqe_em_threshold + 1
+    convergence = LDASQE_EM_THRESHOLD + 1
 
     iter_ = 0
-    final_iters_flag = 0 
-    last_iter = 0
 
     # this is a flag/input do something about it
-    lda_seq_min_iter = 6
-    lda_seq_max_iter = 20
-    
-    while iter_ < lda_seq_min_iter or ((final_iters_flag is 0 or convergence > ldasqe_em_threshold) and iter_ <= lda_seq_max_iter):
-        if not (iter_ < lda_seq_min_iter or ((final_iters_flag is 0 or convergence > ldasqe_em_threshold) and iter_ <= lda_seq_max_iter)):
-            last_iter = 1
 
-        # log
+    
+    while iter_ < LDA_SEQ_MIN_ITER or ((convergence > LDASQE_EM_THRESHOLD) and iter_ <= LDA_SEQ_MAX_ITER):
+
         print (" EM iter " , iter_)
         print ("E Step")
 
-        # writing to file
-        em_log.write(str(bound) + "\t" + str(convergence))
         old_bound = bound
-
         # initiate sufficient statistics
         topic_suffstats = []
         for k in range(0, K):
             topic_suffstats.append(numpy.resize(numpy.zeros(W * data_len), (W, data_len)))
 
         # set up variables
-        gammas = numpy.resize(numpy.zeros(num_docs * K), (num_docs, K))
-        lhoods = numpy.resize(numpy.zeros(num_docs * K + 1), (num_docs, K + 1))
+        gammas = numpy.resize(numpy.zeros(corpus_len * K), (corpus_len, K))
+        lhoods = numpy.resize(numpy.zeros(corpus_len * K + 1), (corpus_len, K + 1))
 
         bound = lda_seq_infer(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, last_iter)
 
@@ -373,21 +360,15 @@ def fit_lda_seq(ldaseq, seq_corpus):
 
 
         if ((bound - old_bound) < 0):
-            if (LDA_INFERENCE_MAX_ITER == 1):
-                LDA_INFERENCE_MAX_ITER = 2
-            if (LDA_INFERENCE_MAX_ITER == 2):
-                LDA_INFERENCE_MAX_ITER = 5
-            if (LDA_INFERENCE_MAX_ITER == 5):
-                LDA_INFERENCE_MAX_ITER = 10
-            if (LDA_INFERENCE_MAX_ITER == 10):
-                LDA_INFERENCE_MAX_ITER = 20
-            print ("Bound went down, increasing it to" , LDA_INFERENCE_MAX_ITER)
+            if LDA_INFERENCE_MAX_ITER < 10:
+                LDA_INFERENCE_MAX_ITER *= 2                
+            print ("Bound went down, increasing iterations to" , LDA_INFERENCE_MAX_ITER)
 
         # check for convergence
         convergence = numpy.fabs((bound - old_bound) / old_bound)
 
-        if convergence < ldasqe_em_threshold:
-            final_iters_flag = 1
+        if convergence < LDASQE_EM_THRESHOLD:
+
             LDA_INFERENCE_MAX_ITER = 500
             print ("Starting final iterations, max iter is", LDA_INFERENCE_MAX_ITER)
             convergence = 1.0
@@ -402,13 +383,13 @@ def fit_lda_seq(ldaseq, seq_corpus):
 def lda_seq_infer(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, last_iter):
 
     K = ldaseq.num_topics
-    W = ldaseq.num_terms
+    W = ldaseq.vocab_len
     bound = 0.0
     
     lda = ldamodel.LdaModel(num_topics=K, alpha=ldaseq.alphas, id2word=seq_corpus.id2word)
     lda.topics = numpy.array(numpy.split(numpy.zeros(W * K), W))
 
-    lda_post = Lda_Post(max_nterms=seq_corpus.max_nterms, num_topics=K, lda=lda)
+    lda_post = Lda_Post(max_doc_len=seq_corpus.max_doc_len, num_topics=K, lda=lda)
 
 
     model = "DTM"
@@ -478,9 +459,10 @@ def inferDTMseq(K, ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_, l
 
 def fit_lda_post(doc_number, time, lda_post, ldaseq, g, g3_matrix, g4_matrix, g5_matrix):
 
+    LDA_INFERENCE_CONVERGED = 1e-8
+    LDA_INFERENCE_MAX_ITER = 25
 
     init_lda_post(lda_post)
-
 
     model = "DTM"
     if model == "DIM":
@@ -491,10 +473,8 @@ def fit_lda_post(doc_number, time, lda_post, ldaseq, g, g3_matrix, g4_matrix, g5
     lhood_old = 0
     converged = 0
     iter_ = 0
-    LDA_INFERENCE_CONVERGED = 1e-8
-    LDA_INFERENCE_MAX_ITER = 25
 
-
+    # first iteration starts here
     iter_ += 1
     lhood_old = lhood
     update_gamma(lda_post)
@@ -576,7 +556,7 @@ def compute_lda_lhood(lda_post):
     N = lda_post.doc.nterms
     gamma_sum = numpy.sum(lda_post.gamma)
 
-    # figure out how to do flags
+    # TODO: flags
     FLAGS_sigma_l = 0
     FLAGS_sigma_d = 0 
 
@@ -673,7 +653,7 @@ def fit_lda_seq_topics(ldaseq, topic_suffstats):
 
 def fit_sslm(sslm, counts):
 
-    W = sslm.num_terms
+    W = sslm.vocab_len
     bound = 0
     old_bound = 0
     sslm_fit_threshold = 1e-6
@@ -683,7 +663,7 @@ def fit_sslm(sslm, counts):
     totals = numpy.zeros(counts.shape[1])
 
     for w in range(0, W):
-        compute_post_variance(w, sslm, sslm.chain_variance)
+        sslm.variance, sslm.fwd_variance = compute_post_variance(w, sslm, sslm.chain_variance)
 
     totals = col_sum(counts, totals)
     iter_ = 0
@@ -727,8 +707,8 @@ def col_sum(matrix, vector):
 
 def compute_bound(word_counts, totals, sslm):
 
-    W = sslm.num_terms
-    T = sslm.num_sequences
+    W = sslm.vocab_len
+    T = sslm.num_time_slices
 
     term_1 = 0
     term_2 = 0
@@ -740,9 +720,9 @@ def compute_bound(word_counts, totals, sslm):
     chain_variance = sslm.chain_variance
 
     for w in range(0, W):
-        compute_post_mean(w, sslm, chain_variance)
+        sslm.mean, sslm.fwd_mean = compute_post_mean(w, sslm, chain_variance)
 
-    update_zeta(sslm)
+    sslm.zeta = update_zeta(sslm)
 
     for w in range(0, W):
         val += (sslm.variance[w][0] - sslm.variance[w][T]) / 2 * chain_variance
@@ -779,9 +759,12 @@ def update_obs(word_counts, totals, sslm):
 
 
     OBS_NORM_CUTOFF = 2
+    STEP_SIZE = 0.01
+    TOL = 1e-3
 
-    W = sslm.num_terms
-    T = sslm.num_sequences
+
+    W = sslm.vocab_len
+    T = sslm.num_time_slices
 
     runs = 0
     mean_deriv_mtx = numpy.resize(numpy.zeros(T * (T + 1)), (T, T + 1))
@@ -811,12 +794,10 @@ def update_obs(word_counts, totals, sslm):
             deriv = numpy.zeros(T)
             args = sslm, w_counts, totals, mean_deriv_mtx, w, deriv
             obs = sslm.obs[w]
-            step_size = 0.01
-            tol = 1e-3
             model = "DTM"
 
             if model == "DTM":
-                obs = optimize.fmin_cg(f=f_obs, fprime=df_obs, x0=obs, gtol=tol, args=args, epsilon=step_size, disp=0)
+                obs = optimize.fmin_cg(f=f_obs, fprime=df_obs, x0=obs, gtol=TOL, args=args, epsilon=STEP_SIZE, disp=0)
             if model == "DIM":
                 pass
             runs += 1
@@ -826,7 +807,7 @@ def update_obs(word_counts, totals, sslm):
 
             sslm.obs[w] = obs
 
-    update_zeta(sslm)
+    sslm.zeta = update_zeta(sslm)
     return
 
 
@@ -835,7 +816,7 @@ def update_obs(word_counts, totals, sslm):
  
 def compute_mean_deriv(word, time, sslm, deriv):
 
-    T = sslm.num_sequences
+    T = sslm.num_time_slices
     fwd_variance = sslm.variance[word]
 
     deriv[0] = 0
@@ -878,7 +859,7 @@ def f_obs(x, *args):
     term4 = 0
 
     sslm.obs[word] = x
-    compute_post_mean(word, sslm, sslm.chain_variance)
+    sslm.mean, sslm.fwd_mean = compute_post_mean(word, sslm, sslm.chain_variance)
 
     mean = sslm.mean[word]
     variance = sslm.variance[word]
@@ -917,7 +898,7 @@ def compute_obs_deriv(word, word_counts, totals, sslm, mean_deriv_mtx, deriv):
     # flag
     init_mult = 1000
 
-    T = sslm.num_sequences
+    T = sslm.num_time_slices
 
     mean = sslm.mean[word]
     variance = sslm.variance[word]
@@ -970,7 +951,7 @@ def df_obs(x, *args):
     sslm, word_counts, totals, mean_deriv_mtx, word, deriv = args
 
     sslm.obs[word] = x
-    compute_post_mean(word, sslm, sslm.chain_variance)
+    sslm.mean, sslm.fwd_mean = compute_post_mean(word, sslm, sslm.chain_variance)
 
     model = "DTM"
     if model == "DTM":
@@ -987,10 +968,9 @@ def df_obs(x, *args):
 
 def lda_sstats(seq_corpus, num_topics, num_terms, alpha):
 
-    lda_model = ldamodel.LdaModel(num_topics=num_topics, id2word=seq_corpus.id2word)
+    lda_model = mockLDA(num_topics=num_topics, num_terms=num_terms)
     lda_model.alpha = alpha # this will have shape equal to  number of topics
     lda_ss = initialize_ss_random(seq_corpus, num_topics)
-
     lda_m_step(lda_model, lda_ss, seq_corpus, num_topics)
     em_iter = 10
     lda_em(lda_model, lda_ss, seq_corpus, em_iter, num_topics)
@@ -1015,7 +995,6 @@ def lda_m_step(lda_model, lda_ss, seq_corpus, num_topics):
     K = num_topics
     W = seq_corpus.num_terms
     lhood = 0
-
     for k in range(0, K):
 
         ss_k = lda_ss[:,k]
@@ -1024,7 +1003,7 @@ def lda_m_step(lda_model, lda_ss, seq_corpus, num_topics):
         LDA_VAR_BAYES = True
         if LDA_VAR_BAYES is True:
 
-            lop_p = numpy.copy(ss_k)
+            numpy.copyto(log_p, ss_k)
             log_p = log_p / sum(log_p)
             log_p = numpy.log(log_p)
 
@@ -1047,7 +1026,6 @@ def lda_em(lda_model, lda_ss, seq_corpus, max_iter, num_topics):
     m_lhood = lda_m_step(lda_model, lda_ss, seq_corpus, num_topics)
 
     # do step starts
-
     iter_ += 1
     old_lhood = lhood
     e_lhood = lda_e_step(lda_model, seq_corpus, lda_ss, num_topics)
@@ -1063,8 +1041,10 @@ def lda_em(lda_model, lda_ss, seq_corpus, max_iter, num_topics):
         m_lhood = lda_m_step(lda_model, lda_ss, seq_corpus, num_topics)
         lhood = e_lhood + m_lhood
         converged = (old_lhood - lhood) / old_lhood
+        print converged
 
     return lhood
+
 
 
 def lda_e_step(lda_model, seq_corpus, lda_ss, num_topics):
@@ -1074,7 +1054,7 @@ def lda_e_step(lda_model, seq_corpus, lda_ss, num_topics):
     if lda_ss is not None:
         lda_ss.fill(0)
 
-    lda_post = Lda_Post(max_nterms=seq_corpus.max_nterms, num_topics=K, lda=lda_model)
+    lda_post = Lda_Post(max_doc_len=seq_corpus.max_doc_len, num_topics=K, lda=lda_model)
     lda_post.gamma = numpy.zeros(K)
     lda_post.lhood = numpy.zeros(K + 1)
 
@@ -1103,6 +1083,24 @@ def lda_e_step(lda_model, seq_corpus, lda_ss, num_topics):
                     lda_ss[lda_post.doc.word[n]][k] += lda_post.phi[n][k] * lda_post.doc.count[n]
 
     return lhood
+
+
+def print_topics(ldaseq, topic, time, top_terms):
+    """
+    Topic is the topic numner
+    Time is for a particular time_slice
+    top_terms is the number of terms to display
+    """
+    topic = ldaseq.topic_chains[topic].e_log_prob[time]
+    topic = numpy.transpose(topic)
+    topic = topic / topic.sum()
+    bestn = matutils.argsort(topic, top_terms, reverse=True)
+    beststr = [(round(topic[id_], 3), ldaseq.corpus.id2word[id_]) for id_ in bestn]
+
+    return beststr
+
+
+
 
 # the fdf used in optimising obs. Can use if we figure a way to use an optimization function which requires this
 
