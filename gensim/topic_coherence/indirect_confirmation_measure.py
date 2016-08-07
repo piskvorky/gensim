@@ -5,7 +5,12 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-This module contains functions to compute confirmation on a pair of words or word subsets.
+This module contains functions to compute confirmation on a pair of words or word subsets. The advantage of indirect
+confirmation measure is that it computes similarity of words in W' and W* with respect to direct confirmations to all words.
+Eg. Suppose x and z are both competing brands of cars, which semantically support each other. However, both brands are
+seldom mentioned together in documents in the reference corpus. But their confirmations to other words like “road”
+or “speed” do strongly correlate. This would be reflected by an indirect confirmation measure. Thus, indirect confirmation
+measures may capture semantic support that direct measures would miss.
 
 The formula used to compute indirect confirmation measure is:
 

@@ -36,9 +36,8 @@ def s_one_pre(topics):
 
     for top_words in topics:
         s_one_pre_t = []
-        for w_prime in top_words[1:]:
-            w_prime_index = int(np.where(top_words == w_prime)[0])  # To get index of w_prime in top_words
-            for w_star in top_words[:w_prime_index]:
+        for w_prime_index, w_prime in enumerate(top_words[1:]):
+            for w_star in top_words[:w_prime_index + 1]:
                 s_one_pre_t.append((w_prime, w_star))
         s_one_pre.append(s_one_pre_t)
 
@@ -67,10 +66,8 @@ def s_one_one(topics):
 
     for top_words in topics:
         s_one_one_t = []
-        for w_prime in top_words:
-            w_prime_index = int(np.where(top_words == int(w_prime))[0])  # To get index of w_prime in top_words
-            for w_star in top_words:
-                w_star_index = int(np.where(top_words == int(w_star))[0])
+        for w_prime_index, w_prime in enumerate(top_words):
+            for w_star_index, w_star in enumerate(top_words):
                 if w_prime_index == w_star_index:
                     continue
                 else:
