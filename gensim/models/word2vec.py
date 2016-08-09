@@ -380,7 +380,10 @@ class NamedVectors(object):
             return self.syn0[self.vocab[words].index]
 
         return vstack([self.syn0[self.vocab[word].index] for word in words])
-    
+
+    def __contains__(self, word):
+        return word in self.vocab
+
 
 class Word2Vec(utils.SaveLoad):
     """
@@ -1517,7 +1520,7 @@ class Word2Vec(utils.SaveLoad):
         return self.named_vectors.__getitem__(words)
 
     def __contains__(self, word):
-        return word in self.named_vectors.vocab
+        return self.named_vectors.__contains__(word)
 
     def similarity(self, w1, w2):
         """
