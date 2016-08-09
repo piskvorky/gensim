@@ -130,7 +130,7 @@ except ImportError:
 
         """
         if word_vectors is None:
-            word_vectors = model.syn0
+            word_vectors = model.named_vectors.syn0
         if word_locks is None:
             word_locks = model.syn0_lockf
         if doctag_vectors is None:
@@ -138,8 +138,8 @@ except ImportError:
         if doctag_locks is None:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
-        word_vocabs = [model.vocab[w] for w in doc_words if w in model.vocab and
-                       model.vocab[w].sample_int > model.random.rand() * 2**32]
+        word_vocabs = [model.named_vectors.vocab[w] for w in doc_words if w in model.named_vectors.vocab and
+                       model.named_vectors.vocab[w].sample_int > model.random.rand() * 2**32]
 
         for pos, word in enumerate(word_vocabs):
             reduced_window = model.random.randint(model.window)  # `b` in the original doc2vec code
@@ -185,7 +185,7 @@ except ImportError:
 
         """
         if word_vectors is None:
-            word_vectors = model.syn0
+            word_vectors = model.named_vectors.syn0
         if word_locks is None:
             word_locks = model.syn0_lockf
         if doctag_vectors is None:
@@ -193,13 +193,13 @@ except ImportError:
         if doctag_locks is None:
             doctag_locks = model.docvecs.doctag_syn0_lockf
 
-        word_vocabs = [model.vocab[w] for w in doc_words if w in model.vocab and
-                       model.vocab[w].sample_int > model.random.rand() * 2**32]
+        word_vocabs = [model.named_vectors.vocab[w] for w in doc_words if w in model.named_vectors.vocab and
+                       model.named_vectors.vocab[w].sample_int > model.random.rand() * 2**32]
         doctag_len = len(doctag_indexes)
         if doctag_len != model.dm_tag_count:
             return 0  # skip doc without expected number of doctag(s) (TODO: warn/pad?)
 
-        null_word = model.vocab['\0']
+        null_word = model.named_vectors.vocab['\0']
         pre_pad_count = model.window
         post_pad_count = model.window
         padded_document_indexes = (
@@ -214,7 +214,7 @@ except ImportError:
                 + padded_document_indexes[(pos + 1):(pos + 1 + post_pad_count)]  # following words
             )
             word_context_len = len(word_context_indexes)
-            predict_word = model.vocab[model.index2word[padded_document_indexes[pos]]]
+            predict_word = model.named_vectors.vocab[model.named_vectors.index2word[padded_document_indexes[pos]]]
             # numpy advanced-indexing copies; concatenate, flatten to 1d
             l1 = concatenate((doctag_vectors[doctag_indexes], word_vectors[word_context_indexes])).ravel()
             neu1e = train_cbow_pair(model, predict_word, None, l1, alpha,
