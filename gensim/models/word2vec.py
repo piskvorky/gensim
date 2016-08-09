@@ -1730,7 +1730,8 @@ class Text8Corpus(object):
             while True:
                 text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
                 if text == rest:  # EOF
-                    sentence.extend(rest.split())  # return the last chunk of words, too (may be shorter/longer)
+                    words = utils.to_unicode(text).split()
+                    sentence.extend(words)  # return the last chunk of words, too (may be shorter/longer)
                     if sentence:
                         yield sentence
                     break
