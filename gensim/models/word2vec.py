@@ -1190,7 +1190,7 @@ class Word2Vec(utils.SaveLoad):
                     if word in self.vocab:
                         overlap_count += 1
                         self.syn0[self.vocab[word].index] = weights
-                        self.syn0_lockf[self.vocab[word].index] = lockf  # lock-factor: 0.0 stopss further changes
+                        self.syn0_lockf[self.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
             else:
                 for line_no, line in enumerate(fin):
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
