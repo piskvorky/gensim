@@ -121,8 +121,8 @@ except ImportError:
         """
         result = 0
         for sentence in sentences:
-            word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab and
-                           model.vocab[w].sample_int > model.random.rand() * 2**32]
+            word_vocabs = [model.named_vectors.vocab[w] for w in sentence if w in model.named_vectors.vocab and
+                           model.named_vectors.vocab[w].sample_int > model.random.rand() * 2**32]
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
 
@@ -131,7 +131,7 @@ except ImportError:
                 for pos2, word2 in enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start):
                     # don't train on the `word` itself
                     if pos2 != pos:
-                        train_sg_pair(model, model.index2word[word.index], word2.index, alpha)
+                        train_sg_pair(model, model.named_vectors.index2word[word.index], word2.index, alpha)
             result += len(word_vocabs)
         return result
 
@@ -148,14 +148,14 @@ except ImportError:
         """
         result = 0
         for sentence in sentences:
-            word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab and
-                           model.vocab[w].sample_int > model.random.rand() * 2**32]
+            word_vocabs = [model.named_vectors.vocab[w] for w in sentence if w in model.named_vectors.vocab and
+                           model.named_vectors.vocab[w].sample_int > model.random.rand() * 2**32]
             for pos, word in enumerate(word_vocabs):
                 reduced_window = model.random.randint(model.window)  # `b` in the original word2vec code
                 start = max(0, pos - model.window + reduced_window)
                 window_pos = enumerate(word_vocabs[start:(pos + model.window + 1 - reduced_window)], start)
                 word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
-                l1 = np_sum(model.syn0[word2_indices], axis=0)  # 1 x vector_size
+                l1 = np_sum(model.named_vectors.syn0[word2_indices], axis=0)  # 1 x vector_size
                 if word2_indices and model.cbow_mean:
                     l1 /= len(word2_indices)
                 train_cbow_pair(model, word, word2_indices, l1, alpha)
@@ -178,7 +178,7 @@ except ImportError:
         if model.negative:
             raise RuntimeError("scoring is only available for HS=True")
 
-        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab]
+        word_vocabs = [model.named_vectors.vocab[w] for w in sentence if w in model.named_vectors.vocab]
         for pos, word in enumerate(word_vocabs):
             if word is None:
                 continue  # OOV word in the input sentence => skip
@@ -207,7 +207,7 @@ except ImportError:
         if model.negative:
             raise RuntimeError("scoring is only available for HS=True")
 
-        word_vocabs = [model.vocab[w] for w in sentence if w in model.vocab]
+        word_vocabs = [model.named_vectors.vocab[w] for w in sentence if w in model.named_vectors.vocab]
         for pos, word in enumerate(word_vocabs):
             if word is None:
                 continue  # OOV word in the input sentence => skip
@@ -215,7 +215,7 @@ except ImportError:
             start = max(0, pos - model.window)
             window_pos = enumerate(word_vocabs[start:(pos + model.window + 1)], start)
             word2_indices = [word2.index for pos2, word2 in window_pos if (word2 is not None and pos2 != pos)]
-            l1 = np_sum(model.syn0[word2_indices], axis=0)  # 1 x layer1_size
+            l1 = np_sum(model.named_vectors.syn0[word2_indices], axis=0)  # 1 x layer1_size
             if word2_indices and model.cbow_mean:
                 l1 /= len(word2_indices)
             log_prob_sentence += score_cbow_pair(model, word, word2_indices, l1)
@@ -233,13 +233,13 @@ except ImportError:
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
                   context_vectors=None, context_locks=None):
     if context_vectors is None:
-        context_vectors = model.syn0
+        context_vectors = model.named_vectors.syn0
     if context_locks is None:
         context_locks = model.syn0_lockf
 
-    if word not in model.vocab:
+    if word not in model.named_vectors.vocab:
         return
-    predict_word = model.vocab[word]  # target word (NN output)
+    predict_word = model.named_vectors.vocab[word]  # target word (NN output)
 
     l1 = context_vectors[context_index]  # input word (NN input/projection layer)
     lock_factor = context_locks[context_index]
@@ -270,7 +270,7 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         neu1e += dot(gb, l2b)  # save error
 
     if learn_vectors:
-        l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.syn0[word2.index], if that is l1)
+        l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.named_vectors.syn0[word2.index], if that is l1)
     return neu1e
 
 
@@ -304,13 +304,13 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
         if not model.cbow_mean and input_word_indices:
             neu1e /= len(input_word_indices)
         for i in input_word_indices:
-            model.syn0[i] += neu1e * model.syn0_lockf[i]
+            model.named_vectors.syn0[i] += neu1e * model.syn0_lockf[i]
 
     return neu1e
 
 
 def score_sg_pair(model, word, word2):
-    l1 = model.syn0[word2.index]
+    l1 = model.named_vectors.syn0[word2.index]
     l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
     sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
     lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
@@ -341,6 +341,46 @@ class Vocab(object):
         vals = ['%s:%r' % (key, self.__dict__[key]) for key in sorted(self.__dict__) if not key.startswith('_')]
         return "%s(%s)" % (self.__class__.__name__, ', '.join(vals))
 
+
+class NamedVectors(object):
+    """
+    Class to contain vectors and vocab for the Word2Vec training class
+    """
+    def __init__(self):
+        self.syn0 = []
+        self.syn0norm = []
+        self.vocab = {}
+        self.index2word = []
+
+    def __getitem__(self, words):
+
+        """
+        Accept a single word or a list of words as input.
+
+        If a single word: returns the word's representations in vector space, as
+        a 1D numpy array.
+
+        Multiple words: return the words' representations in vector space, as a
+        2d numpy array: #words x #vector_size. Matrix rows are in the same order
+        as in input.
+
+        Example::
+
+          >>> trained_model['office']
+          array([ -1.40128313e-02, ...])
+
+          >>> trained_model[['office', 'products']]
+          array([ -1.40128313e-02, ...]
+                [ -1.70425311e-03, ...]
+                 ...)
+
+        """
+        if isinstance(words, string_types):
+            # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
+            return self.syn0[self.vocab[words].index]
+
+        return vstack([self.syn0[self.vocab[word].index] for word in words])
+    
 
 class Word2Vec(utils.SaveLoad):
     """
@@ -424,8 +464,7 @@ class Word2Vec(utils.SaveLoad):
         texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
 
         """
-        self.vocab = {}  # mapping from a word (string) to a Vocab object
-        self.index2word = []  # map from a word's matrix index (int) to word (string)
+        self.named_vectors = NamedVectors()
         self.sg = int(sg)
         self.cum_table = None  # for negative sampling
         self.vector_size = int(size)
@@ -471,13 +510,13 @@ class Word2Vec(utils.SaveLoad):
 
         Called internally from 'build_vocab()'.
         """
-        vocab_size = len(self.index2word)
+        vocab_size = len(self.named_vectors.index2word)
         self.cum_table = zeros(vocab_size, dtype=uint32)
         # compute sum of all power (Z in paper)
-        train_words_pow = float(sum([self.vocab[word].count**power for word in self.vocab]))
+        train_words_pow = float(sum([self.named_vectors.vocab[word].count**power for word in self.named_vectors.vocab]))
         cumulative = 0.0
         for word_index in range(vocab_size):
-            cumulative += self.vocab[self.index2word[word_index]].count**power / train_words_pow
+            cumulative += self.named_vectors.vocab[self.named_vectors.index2word[word_index]].count**power / train_words_pow
             self.cum_table[word_index] = round(cumulative * domain)
         if len(self.cum_table) > 0:
             assert self.cum_table[-1] == domain
@@ -488,27 +527,27 @@ class Word2Vec(utils.SaveLoad):
         will have shorter binary codes. Called internally from `build_vocab()`.
 
         """
-        logger.info("constructing a huffman tree from %i words", len(self.vocab))
+        logger.info("constructing a huffman tree from %i words", len(self.named_vectors.vocab))
 
         # build the huffman tree
-        heap = list(itervalues(self.vocab))
+        heap = list(itervalues(self.named_vectors.vocab))
         heapq.heapify(heap)
-        for i in xrange(len(self.vocab) - 1):
+        for i in xrange(len(self.named_vectors.vocab) - 1):
             min1, min2 = heapq.heappop(heap), heapq.heappop(heap)
-            heapq.heappush(heap, Vocab(count=min1.count + min2.count, index=i + len(self.vocab), left=min1, right=min2))
+            heapq.heappush(heap, Vocab(count=min1.count + min2.count, index=i + len(self.named_vectors.vocab), left=min1, right=min2))
 
         # recurse over the tree, assigning a binary code to each vocabulary word
         if heap:
             max_depth, stack = 0, [(heap[0], [], [])]
             while stack:
                 node, codes, points = stack.pop()
-                if node.index < len(self.vocab):
+                if node.index < len(self.named_vectors.vocab):
                     # leaf node => store its path from the root
                     node.code, node.point = codes, points
                     max_depth = max(len(codes), max_depth)
                 else:
                     # inner node => continue recursion
-                    points = array(list(points) + [node.index - len(self.vocab)], dtype=uint32)
+                    points = array(list(points) + [node.index - len(self.named_vectors.vocab)], dtype=uint32)
                     stack.append((node.left, array(list(codes) + [0], dtype=uint8), points))
                     stack.append((node.right, array(list(codes) + [1], dtype=uint8), points))
 
@@ -573,11 +612,11 @@ class Word2Vec(utils.SaveLoad):
 
         # Discard words less-frequent than min_count
         if not dry_run:
-            self.index2word = []
+            self.named_vectors.index2word = []
             # make stored settings match these applied settings
             self.min_count = min_count
             self.sample = sample
-            self.vocab = {}
+            self.named_vectors.vocab = {}
         drop_unique, drop_total, retain_total, original_total = 0, 0, 0, 0
         retain_words = []
         for word, v in iteritems(self.raw_vocab):
@@ -586,8 +625,8 @@ class Word2Vec(utils.SaveLoad):
                 retain_total += v
                 original_total += v
                 if not dry_run:
-                    self.vocab[word] = Vocab(count=v, index=len(self.index2word))
-                    self.index2word.append(word)
+                    self.named_vectors.vocab[word] = Vocab(count=v, index=len(self.named_vectors.index2word))
+                    self.named_vectors.index2word.append(word)
             else:
                 drop_unique += 1
                 drop_total += v
@@ -619,7 +658,7 @@ class Word2Vec(utils.SaveLoad):
                 word_probability = 1.0
                 downsample_total += v
             if not dry_run:
-                self.vocab[w].sample_int = int(round(word_probability * 2**32))
+                self.named_vectors.vocab[w].sample_int = int(round(word_probability * 2**32))
 
         if not dry_run and not keep_raw_vocab:
             logger.info("deleting the raw counts dictionary of %i items", len(self.raw_vocab))
@@ -640,7 +679,7 @@ class Word2Vec(utils.SaveLoad):
 
     def finalize_vocab(self):
         """Build tables and model weights based on final vocabulary settings."""
-        if not self.index2word:
+        if not self.named_vectors.index2word:
             self.scale_vocab()
         if self.sorted_vocab:
             self.sort_vocab()
@@ -654,9 +693,9 @@ class Word2Vec(utils.SaveLoad):
             # create null pseudo-word for padding when using concatenative L1 (run-of-words)
             # this word is only ever input – never predicted – so count, huffman-point, etc doesn't matter
             word, v = '\0', Vocab(count=1, sample_int=0)
-            v.index = len(self.vocab)
-            self.index2word.append(word)
-            self.vocab[word] = v
+            v.index = len(self.named_vectors.vocab)
+            self.named_vectors.index2word.append(word)
+            self.named_vectors.vocab[word] = v
         # set initial input/projection and hidden weights
         self.reset_weights()
 
@@ -664,17 +703,17 @@ class Word2Vec(utils.SaveLoad):
         """Sort the vocabulary so the most frequent words have the lowest indexes."""
         if hasattr(self, 'syn0'):
             raise RuntimeError("must sort before initializing vectors/weights")
-        self.index2word.sort(key=lambda word: self.vocab[word].count, reverse=True)
-        for i, word in enumerate(self.index2word):
-            self.vocab[word].index = i
+        self.named_vectors.index2word.sort(key=lambda word: self.named_vectors.vocab[word].count, reverse=True)
+        for i, word in enumerate(self.named_vectors.index2word):
+            self.named_vectors.vocab[word].index = i
 
     def reset_from(self, other_model):
         """
         Borrow shareable pre-built structures (like vocab) from the other_model. Useful
         if testing multiple models in parallel on the same corpus.
         """
-        self.vocab = other_model.vocab
-        self.index2word = other_model.index2word
+        self.named_vectors.vocab = other_model.named_vectors.vocab
+        self.named_vectors.index2word = other_model.index2word
         self.cum_table = other_model.cum_table
         self.corpus_count = other_model.corpus_count
         self.reset_weights()
@@ -720,12 +759,12 @@ class Word2Vec(utils.SaveLoad):
         logger.info(
             "training model with %i workers on %i vocabulary and %i features, "
             "using sg=%s hs=%s sample=%s negative=%s",
-            self.workers, len(self.vocab), self.layer1_size, self.sg,
+            self.workers, len(self.named_vectors.vocab), self.layer1_size, self.sg,
             self.hs, self.sample, self.negative)
 
-        if not self.vocab:
+        if not self.named_vectors.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
-        if not hasattr(self, 'syn0'):
+        if not hasattr(self.named_vectors, 'syn0'):
             raise RuntimeError("you must first finalize vocabulary before training the model")
 
         if total_words is None and total_examples is None:
@@ -912,9 +951,9 @@ class Word2Vec(utils.SaveLoad):
         logger.info(
             "scoring sentences with %i workers on %i vocabulary and %i features, "
             "using sg=%s hs=%s sample=%s and negative=%s",
-            self.workers, len(self.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative)
+            self.workers, len(self.named_vectors.vocab), self.layer1_size, self.sg, self.hs, self.sample, self.negative)
 
-        if not self.vocab:
+        if not self.named_vectors.vocab:
             raise RuntimeError("you must first build vocabulary before scoring new data")
 
         if not self.hs:
@@ -1001,23 +1040,23 @@ class Word2Vec(utils.SaveLoad):
         return sentence_scores[:sentence_count]
 
     def clear_sims(self):
-        self.syn0norm = None
+        self.named_vectors.syn0norm = None
 
     def reset_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
         logger.info("resetting layer weights")
-        self.syn0 = empty((len(self.vocab), self.vector_size), dtype=REAL)
+        self.named_vectors.syn0 = empty((len(self.named_vectors.vocab), self.vector_size), dtype=REAL)
         # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
-        for i in xrange(len(self.vocab)):
+        for i in xrange(len(self.named_vectors.vocab)):
             # construct deterministic seed from word AND seed argument
-            self.syn0[i] = self.seeded_vector(self.index2word[i] + str(self.seed))
+            self.named_vectors.syn0[i] = self.seeded_vector(self.named_vectors.index2word[i] + str(self.seed))
         if self.hs:
-            self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
+            self.syn1 = zeros((len(self.named_vectors.vocab), self.layer1_size), dtype=REAL)
         if self.negative:
-            self.syn1neg = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
-        self.syn0norm = None
+            self.syn1neg = zeros((len(self.named_vectors.vocab), self.layer1_size), dtype=REAL)
+        self.named_vectors.syn0norm = None
 
-        self.syn0_lockf = ones(len(self.vocab), dtype=REAL)  # zeros suppress learning
+        self.syn0_lockf = ones(len(self.named_vectors.vocab), dtype=REAL)  # zeros suppress learning
 
     def seeded_vector(self, seed_string):
         """Create one 'random' vector (but deterministic by seed_string)"""
@@ -1039,15 +1078,15 @@ class Word2Vec(utils.SaveLoad):
         if fvocab is not None:
             logger.info("storing vocabulary in %s" % (fvocab))
             with utils.smart_open(fvocab, 'wb') as vout:
-                for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
+                for word, vocab in sorted(iteritems(self.named_vectors.vocab), key=lambda item: -item[1].count):
                     vout.write(utils.to_utf8("%s %s\n" % (word, vocab.count)))
-        logger.info("storing %sx%s projection weights into %s" % (len(self.vocab), self.vector_size, fname))
-        assert (len(self.vocab), self.vector_size) == self.syn0.shape
+        logger.info("storing %sx%s projection weights into %s" % (len(self.named_vectors.vocab), self.vector_size, fname))
+        assert (len(self.named_vectors.vocab), self.vector_size) == self.named_vectors.syn0.shape
         with utils.smart_open(fname, 'wb') as fout:
-            fout.write(utils.to_utf8("%s %s\n" % self.syn0.shape))
+            fout.write(utils.to_utf8("%s %s\n" % self.named_vectors.syn0.shape))
             # store in sorted order: most frequent words at the top
-            for word, vocab in sorted(iteritems(self.vocab), key=lambda item: -item[1].count):
-                row = self.syn0[vocab.index]
+            for word, vocab in sorted(iteritems(self.named_vectors.vocab), key=lambda item: -item[1].count):
+                row = self.named_vectors.syn0[vocab.index]
                 if binary:
                     fout.write(utils.to_utf8(word) + b" " + row.tostring())
                 else:
@@ -1085,25 +1124,25 @@ class Word2Vec(utils.SaveLoad):
             header = utils.to_unicode(fin.readline(), encoding=encoding)
             vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
             result = cls(size=vector_size)
-            result.syn0 = zeros((vocab_size, vector_size), dtype=REAL)
+            result.named_vectors.syn0 = zeros((vocab_size, vector_size), dtype=REAL)
 
             def add_word(word, weights):
-                word_id = len(result.vocab)
-                if word in result.vocab:
+                word_id = len(result.named_vectors.vocab)
+                if word in result.named_vectors.vocab:
                     logger.warning("duplicate word '%s' in %s, ignoring all but first", word, fname)
                     return
                 if counts is None:
                     # most common scenario: no vocab file given. just make up some bogus counts, in descending order
-                    result.vocab[word] = Vocab(index=word_id, count=vocab_size - word_id)
+                    result.named_vectors.vocab[word] = Vocab(index=word_id, count=vocab_size - word_id)
                 elif word in counts:
                     # use count from the vocab file
-                    result.vocab[word] = Vocab(index=word_id, count=counts[word])
+                    result.named_vectors.vocab[word] = Vocab(index=word_id, count=counts[word])
                 else:
                     # vocab file given, but word is missing -- set count to None (TODO: or raise?)
                     logger.warning("vocabulary file is incomplete: '%s' is missing", word)
-                    result.vocab[word] = Vocab(index=word_id, count=None)
-                result.syn0[word_id] = weights
-                result.index2word.append(word)
+                    result.named_vectors.vocab[word] = Vocab(index=word_id, count=None)
+                result.named_vectors.syn0[word_id] = weights
+                result.named_vectors.index2word.append(word)
 
             if binary:
                 binary_len = dtype(REAL).itemsize * vector_size
@@ -1126,15 +1165,15 @@ class Word2Vec(utils.SaveLoad):
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
                     word, weights = parts[0], list(map(REAL, parts[1:]))
                     add_word(word, weights)
-        if result.syn0.shape[0] != len(result.vocab):
+        if result.named_vectors.syn0.shape[0] != len(result.named_vectors.vocab):
             logger.info(
                 "duplicate words detected, shrinking matrix size from %i to %i",
-                result.syn0.shape[0], len(result.vocab)
+                result.named_vectors.syn0.shape[0], len(result.named_vectors.vocab)
             )
-            result.syn0 = ascontiguousarray(result.syn0[: len(result.vocab)])
-        assert (len(result.vocab), result.vector_size) == result.syn0.shape
+            result.named_vectors.syn0 = ascontiguousarray(result.named_vectors.syn0[: len(result.named_vectors.vocab)])
+        assert (len(result.named_vectors.vocab), result.vector_size) == result.named_vectors.syn0.shape
 
-        logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
+        logger.info("loaded %s matrix from %s" % (result.named_vectors.syn0.shape, fname))
         return result
 
     def intersect_word2vec_format(self, fname, binary=False, encoding='utf8', unicode_errors='strict'):
@@ -1167,20 +1206,20 @@ class Word2Vec(utils.SaveLoad):
                             word.append(ch)
                     word = utils.to_unicode(b''.join(word), encoding=encoding, errors=unicode_errors)
                     weights = fromstring(fin.read(binary_len), dtype=REAL)
-                    if word in self.vocab:
+                    if word in self.named_vectors.vocab:
                         overlap_count += 1
-                        self.syn0[self.vocab[word].index] = weights
-                        self.syn0_lockf[self.vocab[word].index] = 0.0  # lock it
+                        self.named_vectors.syn0[self.named_vectors.vocab[word].index] = weights
+                        self.syn0_lockf[self.named_vectors.vocab[word].index] = 0.0  # lock it
             else:
                 for line_no, line in enumerate(fin):
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
                     word, weights = parts[0], list(map(REAL, parts[1:]))
-                    if word in self.vocab:
+                    if word in self.named_vectors.vocab:
                         overlap_count += 1
-                        self.syn0[self.vocab[word].index] = weights
-        logger.info("merged %d vectors into %s matrix from %s" % (overlap_count, self.syn0.shape, fname))
+                        self.named_vectors.syn0[self.named_vectors.vocab[word].index] = weights
+        logger.info("merged %d vectors into %s matrix from %s" % (overlap_count, self.named_vectors.syn0.shape, fname))
 
     def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
         """
@@ -1226,9 +1265,9 @@ class Word2Vec(utils.SaveLoad):
         for word, weight in positive + negative:
             if isinstance(word, ndarray):
                 mean.append(weight * word)
-            elif word in self.vocab:
-                mean.append(weight * self.syn0norm[self.vocab[word].index])
-                all_words.add(self.vocab[word].index)
+            elif word in self.named_vectors.vocab:
+                mean.append(weight * self.named_vectors.syn0norm[self.named_vectors.vocab[word].index])
+                all_words.add(self.named_vectors.vocab[word].index)
             else:
                 raise KeyError("word '%s' not in vocabulary" % word)
         if not mean:
@@ -1238,13 +1277,13 @@ class Word2Vec(utils.SaveLoad):
         if indexer is not None:
             return indexer.most_similar(mean, topn)
 
-        limited = self.syn0norm if restrict_vocab is None else self.syn0norm[:restrict_vocab]
+        limited = self.named_vectors.syn0norm if restrict_vocab is None else self.named_vectors.syn0norm[:restrict_vocab]
         dists = dot(limited, mean)
         if not topn:
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
         # ignore (don't return) words from the input
-        result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
+        result = [(self.named_vectors.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
     def wmdistance(self, document1, document2):
@@ -1367,9 +1406,9 @@ class Word2Vec(utils.SaveLoad):
         def word_vec(word):
             if isinstance(word, ndarray):
                 return word
-            elif word in self.vocab:
-                all_words.add(self.vocab[word].index)
-                return self.syn0norm[self.vocab[word].index]
+            elif word in self.named_vectors.vocab:
+                all_words.add(self.named_vectors.vocab[word].index)
+                return self.named_vectors.syn0norm[self.named_vectors.vocab[word].index]
             else:
                 raise KeyError("word '%s' not in vocabulary" % word)
 
@@ -1380,15 +1419,15 @@ class Word2Vec(utils.SaveLoad):
 
         # equation (4) of Levy & Goldberg "Linguistic Regularities...",
         # with distances shifted to [0,1] per footnote (7)
-        pos_dists = [((1 + dot(self.syn0norm, term)) / 2) for term in positive]
-        neg_dists = [((1 + dot(self.syn0norm, term)) / 2) for term in negative]
+        pos_dists = [((1 + dot(self.named_vectors.syn0norm, term)) / 2) for term in positive]
+        neg_dists = [((1 + dot(self.named_vectors.syn0norm, term)) / 2) for term in negative]
         dists = prod(pos_dists, axis=0) / (prod(neg_dists, axis=0) + 0.000001)
 
         if not topn:
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_words), reverse=True)
         # ignore (don't return) words from the input
-        result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
+        result = [(self.named_vectors.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
@@ -1443,11 +1482,11 @@ class Word2Vec(utils.SaveLoad):
         """
         self.init_sims()
 
-        words = [word for word in words if word in self.vocab]  # filter out OOV words
+        words = [word for word in words if word in self.named_vectors.vocab]  # filter out OOV words
         logger.debug("using words %s" % words)
         if not words:
             raise ValueError("cannot select a word from an empty list")
-        vectors = vstack(self.syn0norm[self.vocab[word].index] for word in words).astype(REAL)
+        vectors = vstack(self.named_vectors.syn0norm[self.named_vectors.vocab[word].index] for word in words).astype(REAL)
         mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
         dists = dot(vectors, mean)
         return sorted(zip(dists, words))[0][1]
@@ -1475,14 +1514,10 @@ class Word2Vec(utils.SaveLoad):
                  ...)
 
         """
-        if isinstance(words, string_types):
-            # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
-            return self.syn0[self.vocab[words].index]
-
-        return vstack([self.syn0[self.vocab[word].index] for word in words])
+        return self.named_vectors.__getitem__(words)
 
     def __contains__(self, word):
-        return word in self.vocab
+        return word in self.named_vectors.vocab
 
     def similarity(self, w1, w2):
         """
@@ -1530,20 +1565,20 @@ class Word2Vec(utils.SaveLoad):
         effectively read-only = you can call `most_similar`, `similarity` etc., but not `train`.
 
         """
-        if getattr(self, 'syn0norm', None) is None or replace:
+        if getattr(self.named_vectors, 'syn0norm', None) is None or replace:
             logger.info("precomputing L2-norms of word weight vectors")
             if replace:
-                for i in xrange(self.syn0.shape[0]):
-                    self.syn0[i, :] /= sqrt((self.syn0[i, :] ** 2).sum(-1))
-                self.syn0norm = self.syn0
+                for i in xrange(self.named_vectors.syn0.shape[0]):
+                    self.named_vectors.syn0[i, :] /= sqrt((self.named_vectors.syn0[i, :] ** 2).sum(-1))
+                self.named_vectors.syn0norm = self.named_vectors.syn0
                 if hasattr(self, 'syn1'):
                     del self.syn1
             else:
-                self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
+                self.named_vectors.syn0norm = (self.named_vectors.syn0 / sqrt((self.named_vectors.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
 
     def estimate_memory(self, vocab_size=None, report=None):
         """Estimate required memory for a model using current settings and provided vocabulary size."""
-        vocab_size = vocab_size or len(self.vocab)
+        vocab_size = vocab_size or len(self.named_vectors.vocab)
         report = report or {}
         report['vocab'] = vocab_size * (700 if self.hs else 500)
         report['syn0'] = vocab_size * self.vector_size * dtype(REAL).itemsize
@@ -1582,7 +1617,7 @@ class Word2Vec(utils.SaveLoad):
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
 
         """
-        ok_vocab = dict(sorted(iteritems(self.vocab),
+        ok_vocab = dict(sorted(iteritems(self.named_vectors.vocab),
                                key=lambda item: -item[1].count)[:restrict_vocab])
         ok_index = set(v.index for v in itervalues(ok_vocab))
 
@@ -1610,13 +1645,13 @@ class Word2Vec(utils.SaveLoad):
                     logger.debug("skipping line #%i with OOV words: %s" % (line_no, line.strip()))
                     continue
 
-                ignore = set(self.vocab[v].index for v in [a, b, c])  # indexes of words to ignore
+                ignore = set(self.named_vectors.vocab[v].index for v in [a, b, c])  # indexes of words to ignore
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
                 sims = most_similar(self, positive=[b, c], negative=[a], topn=False, restrict_vocab=restrict_vocab)
                 for index in matutils.argsort(sims, reverse=True):
                     if index in ok_index and index not in ignore:
-                        predicted = self.index2word[index]
+                        predicted = self.named_vectors.index2word[index]
                         if predicted != expected:
                             logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
                         break
@@ -1639,7 +1674,7 @@ class Word2Vec(utils.SaveLoad):
         return sections
 
     def __str__(self):
-        return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.index2word), self.vector_size, self.alpha)
+        return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.named_vectors.index2word), self.vector_size, self.alpha)
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors, recalculable table
@@ -1658,14 +1693,14 @@ class Word2Vec(utils.SaveLoad):
             model.make_cum_table()  # rebuild cum_table from vocabulary
         if not hasattr(model, 'corpus_count'):
             model.corpus_count = None
-        for v in model.vocab.values():
+        for v in model.named_vectors.vocab.values():
             if hasattr(v, 'sample_int'):
                 break  # already 0.12.0+ style int probabilities
             elif hasattr(v, 'sample_probability'):
                 v.sample_int = int(round(v.sample_probability * 2**32))
                 del v.sample_probability
         if not hasattr(model, 'syn0_lockf') and hasattr(model, 'syn0'):
-            model.syn0_lockf = ones(len(model.syn0), dtype=REAL)
+            model.syn0_lockf = ones(len(model.named_vectors.syn0), dtype=REAL)
         if not hasattr(model, 'random'):
             model.random = random.RandomState(model.seed)
         if not hasattr(model, 'train_count'):
