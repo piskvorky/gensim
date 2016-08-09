@@ -1,6 +1,7 @@
 Changes
 =======
-0.13.2
+
+0.13.2, TBD
 
 * wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, #771) 
   - assigning wordtopics value of word_topics to keep backward compatibility, for now
@@ -11,6 +12,7 @@ Changes
 * Implemented LsiModel.docs_processed attribute
 * Added LdaMallet support. Added LdaVowpalWabbit, LdaMallet example to notebook. Added test suite for coherencemodel and aggregation.
   Added `topics` parameter to coherencemodel. Can now provide tokenized topics to calculate coherence value (@dsquareindia, #750)
+* New parameters `limit`, `datatype` for load_word2vec_format(); `lockf` for intersect_word2vec_format (@gojomo, #817)
 
 0.13.1, 2016-06-22
 
