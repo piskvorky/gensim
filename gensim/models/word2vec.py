@@ -1153,7 +1153,7 @@ class Word2Vec(utils.SaveLoad):
         logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
         return result
 
-    def intersect_word2vec_format(self, fname, binary=False, encoding='utf8', unicode_errors='strict'):
+    def intersect_word2vec_format(self, fname, lockf=0.0, binary=False, encoding='utf8', unicode_errors='strict'):
         """
         Merge the input-hidden weight matrix from the original C word2vec-tool format
         given, where it intersects with the current vocabulary. (No words are added to the
@@ -1161,6 +1161,10 @@ class Word2Vec(utils.SaveLoad):
         non-intersecting words are left alone.)
 
         `binary` is a boolean indicating whether the data is in binary word2vec format.
+
+        `lockf` is a lock-factor value to be set for any imported word-vectors; the
+        default value of 0.0 prevents further updating of the vector during subsequent
+        training. Use 1.0 to allow further training updates of merged vectors.
         """
         overlap_count = 0
         logger.info("loading projection weights from %s" % (fname))
@@ -1186,7 +1190,7 @@ class Word2Vec(utils.SaveLoad):
                     if word in self.vocab:
                         overlap_count += 1
                         self.syn0[self.vocab[word].index] = weights
-                        self.syn0_lockf[self.vocab[word].index] = 0.0  # lock it
+                        self.syn0_lockf[self.vocab[word].index] = lockf  # lock-factor: 0.0 stopss further changes
             else:
                 for line_no, line in enumerate(fin):
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
