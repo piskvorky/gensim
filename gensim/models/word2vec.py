@@ -1054,7 +1054,8 @@ class Word2Vec(utils.SaveLoad):
                     fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
 
     @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict'):
+    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+                             limit=None, datatype=REAL):
         """
         Load the input-hidden weight matrix from the original C word2vec-tool format.
 
@@ -1070,6 +1071,18 @@ class Word2Vec(utils.SaveLoad):
         If you trained the C model using non-utf8 encoding for words, specify that
         encoding in `encoding`.
 
+        `unicode_errors`, default 'strict', is a string suitable to be passed as the `errors`
+        argument to the unicode() (Python 2.x) or str() (Python 3.x) function. If your source
+        file may include word tokens truncated in the middle of a multibyte unicode character
+        (as is common from the original word2vec.c tool), 'ignore' or 'replace' may help.
+
+        `limit` sets a maximum number of word-vectors to read from the file. The default,
+        None, means read all.
+
+        `datatype` (experimental) can coerce dimensions to a non-default float type (such
+        as np.float16) to save memory. (Such types may result in much slower bulk operations
+        or incompatibility with optimized routines.)
+
         """
         counts = None
         if fvocab is not None:
@@ -1084,8 +1097,10 @@ class Word2Vec(utils.SaveLoad):
         with utils.smart_open(fname) as fin:
             header = utils.to_unicode(fin.readline(), encoding=encoding)
             vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
+            if limit:
+                vocab_size = limit
             result = cls(size=vector_size)
-            result.syn0 = zeros((vocab_size, vector_size), dtype=REAL)
+            result.syn0 = zeros((vocab_size, vector_size), dtype=datatype)
 
             def add_word(word, weights):
                 word_id = len(result.vocab)
@@ -1120,7 +1135,8 @@ class Word2Vec(utils.SaveLoad):
                     weights = fromstring(fin.read(binary_len), dtype=REAL)
                     add_word(word, weights)
             else:
-                for line_no, line in enumerate(fin):
+                for line_no in xrange(vocab_size):
+                    line = fin.readline()
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))

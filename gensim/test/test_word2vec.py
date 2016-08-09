@@ -110,6 +110,10 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model.init_sims(replace=True)
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human']))
         self.assertTrue(numpy.allclose(model.syn0norm[model.vocab['human'].index], norm_only_model['human']))
+        truncated_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, limit=3)
+        self.assertEquals(len(truncated_model.syn0), 3)
+        half_precision_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, datatype=numpy.float16)
+        self.assertEquals(binary_model.syn0.nbytes, half_precision_model.syn0.nbytes * 2)
 
     def testPersistenceWord2VecFormatNonBinary(self):
         """Test storing/loading the entire model in word2vec non-binary format."""
