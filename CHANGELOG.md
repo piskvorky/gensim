@@ -11,6 +11,8 @@ Changes
 * Implemented LsiModel.docs_processed attribute
 * Added LdaMallet support. Added LdaVowpalWabbit, LdaMallet example to notebook. Added test suite for coherencemodel and aggregation.
   Added `topics` parameter to coherencemodel. Can now provide tokenized topics to calculate coherence value (@dsquareindia, #750)
+* Added 'c_uci', 'c_npmi' coherence measures. Added window_size parameter to CoherenceModel init. Improved backtracking for
+  indirect confirmation. (@dsquareindia)
 
 0.13.1, 2016-06-22
 
