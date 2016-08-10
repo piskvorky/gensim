@@ -48,6 +48,12 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
+def testRandomState():
+    testcases = [numpy.random.seed(0), None, numpy.random.RandomState(0), 0]
+    for testcase in testcases:
+        assert(isinstance(ldamodel.get_random_state(testcase), numpy.random.RandomState))
+        assertEqual(ldamodel.get_random_state(testcase), numpy.random.RandomState(0))
+
 class TestLdaModel(unittest.TestCase):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
@@ -423,12 +429,6 @@ class TestLdaModel(unittest.TestCase):
 
         # test loading the large model arrays with mmap
         self.assertRaises(IOError, self.class_.load, fname, mmap='r')
-
-    def testRandomState(self):
-        testcases = [numpy.random.seed(0), None, numpy.random.RandomState(0), 0]
-        for testcase in testcases:
-            assert (isinstance(ldamodel.get_random_state(testcase), numpy.random.RandomState))
-            self.assertEqual(ldamodel.get_random_state(testcase), numpy.random.RandomState(0))
 
 #endclass TestLdaModel
 
