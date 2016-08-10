@@ -93,7 +93,7 @@ class DtmModel(utils.SaveLoad):
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
             raise ValueError("cannot compute DTM over an empty corpus")
-        if any([i == 0 for i in [len(text) for text in corpus.get_texts()]]):
+        if any([i == 0 for i in [len(text) for text in corpus.get_texts()]]) and model == "fixed:
             raise ValueError("""There is a text without words in the input corpus.
                     This breaks method='fixed' (The DIM model).""")
         if lencorpus != sum(time_slices):
