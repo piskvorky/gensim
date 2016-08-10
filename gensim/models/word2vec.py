@@ -1098,7 +1098,7 @@ class Word2Vec(utils.SaveLoad):
             header = utils.to_unicode(fin.readline(), encoding=encoding)
             vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
             if limit:
-                vocab_size = limit
+                vocab_size = min(vocab_size, limit)
             result = cls(size=vector_size)
             result.syn0 = zeros((vocab_size, vector_size), dtype=datatype)
 
@@ -1129,6 +1129,8 @@ class Word2Vec(utils.SaveLoad):
                         ch = fin.read(1)
                         if ch == b' ':
                             break
+                        if ch == b'':
+                            raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
                         if ch != b'\n':  # ignore newlines in front of words (some binary files have)
                             word.append(ch)
                     word = utils.to_unicode(b''.join(word), encoding=encoding, errors=unicode_errors)
@@ -1137,6 +1139,8 @@ class Word2Vec(utils.SaveLoad):
             else:
                 for line_no in xrange(vocab_size):
                     line = fin.readline()
+                    if line == b'':
+                        raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
