@@ -72,7 +72,16 @@ class Doc(utils.SaveLoad):
     The doc class contains information used for each document. 
 
     """
-    def __init__(self, nterms=None, word=None, count=None, total=None):
+    def __init__(self, doc=None):
+        
+        nterms = len(doc)
+        words = []
+        counts = []
+        totals = 0
+        for word_id, count in doc:
+            words.append(int(word_id))
+            counts.append(int(count))
+            totals += int(count)
 
         self.nterms = nterms
         self.word = word
@@ -125,7 +134,7 @@ class LdaSeqModel(utils.SaveLoad):
             self.corpus = seq_corpus(corpus=corpus, id2word=id2word, time_slice=time_slice)
             self.vocab_len = len(self.corpus.id2word)
 
-
+        self.time_slice = time_slice
         self.num_topics = num_topics
         self.num_time_slices = len(time_slice)
         self.alphas = numpy.full(num_topics, alphas)
@@ -212,6 +221,10 @@ class LdaPost(utils.SaveLoad):
         self.lda = lda
         self.gamma = gamma
         self.lhood = lhood
+        if self.gamma = None:
+            self.gamma = numpy.zeros(num_topics)
+        if self.lhood = None:
+            self.lhood = numpy.zeros(num_topics)
 
         if max_doc_len is not None and num_topics is not None:
             self.phi = numpy.resize(numpy.zeros(max_doc_len * num_topics), (max_doc_len, num_topics))
@@ -260,14 +273,14 @@ def compute_post_variance(word, sslm, chain_variance):
     = fwd_variance[t - 1] + (fwd_variance[t - 1] / fwd_variance[t - 1] + obs_variance)^2 * (variance[t - 1] - (fwd_variance[t-1] + obs_variance))    
 
     """
-    INIT_VARIANCE = 1000
+    INIT_VARIANCE_CONST = 1000
 
     T = sslm.num_time_slices
     variance = sslm.variance[word]
     fwd_variance = sslm.fwd_variance[word]
 
     # forward pass. Set initial variance very high
-    fwd_variance[0] = chain_variance * INIT_VARIANCE
+    fwd_variance[0] = chain_variance * INIT_VARIANCE_CONST
     
     for t in range(1, T + 1):
         if sslm.obs_variance:
@@ -439,13 +452,14 @@ def sslm_counts_init(sslm, obs_variance, chain_variance, sstats):
 
     # compute post variance
     for w in range(0, W):
-       sslm.variance, sslm.fwd_variance = compute_post_variance(w, sslm, sslm.chain_variance)
+       sslm.variance[w], sslm.fwd_variance[w] = compute_post_variance(w, sslm, sslm.chain_variance)
 
     for w in range(0, W):
-       sslm.mean, sslm.fwd_mean = compute_post_mean(w, sslm, sslm.chain_variance)
+       sslm.mean[w], sslm.fwd_mean[w] = compute_post_mean(w, sslm, sslm.chain_variance)
 
     sslm.zeta = update_zeta(sslm)
     sslm.e_log_prob = compute_expected_log_prob(sslm)
+
 
 def init_ldaseq_ss(ldaseq, topic_chain_variance, topic_obs_variance, alpha, init_suffstats):
 
@@ -462,6 +476,7 @@ def init_ldaseq_ss(ldaseq, topic_chain_variance, topic_obs_variance, alpha, init
         # ldaseq.topic_chains[k].w_phi_l = numpy.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
         # ldaseq.topic_chains[k].w_phi_sum = numpy.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
         # ldaseq.topic_chains[k].w_phi_sq = numpy.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
+
 
 def fit_lda_seq(ldaseq, seq_corpus):
     """
@@ -500,7 +515,7 @@ def fit_lda_seq(ldaseq, seq_corpus):
         old_bound = bound
         # initiate sufficient statistics
         topic_suffstats = []
-        for num_topics in range(0, num_topics):
+        for topic in range(0, num_topics):
             topic_suffstats.append(numpy.resize(numpy.zeros(vocab_len * data_len), (vocab_len, data_len)))
 
         # set up variables
@@ -509,7 +524,8 @@ def fit_lda_seq(ldaseq, seq_corpus):
         # compute the likelihood of a sequential corpus under an LDA
 
         # seq model and find the evidence lower bound. This is the E - Step
-        bound = lda_seq_infer(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_)
+        bound, gammas = lda_seq_infer(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_)
+        ldaseq.gammas = gammas
 
         print ("M Step")
 
@@ -557,15 +573,15 @@ def lda_seq_infer(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, iter_):
 
     model = "DTM"
     if model == "DTM":
-        bound = inferDTMseq(daseq, seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapost)
+        bound, gammas = inferDTMseq(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound)
     elif model == "DIM":
         InfluenceTotalFixed(ldaseq, seq_corpus);
-        bound = inferDIMseq(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapost)
+        bound, gammas = inferDIMseq(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound)
 
-    return bound
+    return bound, gammas
 
 
-def inferDTMseq(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapost):
+def inferDTMseq(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound):
 
     """
     Computes the likelihood of a sequential corpus under an LDA seq model, and return the likelihood bound.
@@ -583,7 +599,7 @@ def inferDTMseq(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapos
 
     for line_no, line in enumerate(seq_corpus.corpus):
         # this is used to update the time_slice and create a new lda_seq slice every new time_slice
-        if doc_index > time_slice[t]:
+        if doc_index > time_slice[time]:
             time += 1
             make_lda_seq_slice(lda, ldaseq, time)    
             doc_num = 0
@@ -591,18 +607,7 @@ def inferDTMseq(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapos
         gam = gammas[doc_index]
         lhood = lhoods[doc_index]
 
-        doc_ = line
-
-        nterms = len(doc_)
-        words = []
-        counts = []
-        totals = 0
-        for word_id, count in doc_:
-            words.append(int(word_id))
-            counts.append(int(count))
-            totals += int(count)
-
-        doc = Doc(word=words, count=counts, total=totals, nterms=int(nterms))
+        doc = Doc(doc=line)
         ldapost.gamma = gam
         ldapost.lhood = lhood
         ldapost.doc = doc
@@ -620,7 +625,8 @@ def inferDTMseq(ldaseq, seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapos
         doc_index += 1
         doc_num += 1
 
-    return bound
+    return bound, gammas
+
 
 def fit_lda_post(doc_number, time, ldapost, ldaseq, g, g3_matrix, g4_matrix, g5_matrix):
 
@@ -691,6 +697,7 @@ def make_lda_seq_slice(lda, ldaseq, time):
 
     return
 
+
 def update_lda_seq_ss(time, doc, ldapost, topic_suffstats):
 
     """
@@ -711,6 +718,7 @@ def update_lda_seq_ss(time, doc, ldapost, topic_suffstats):
 
     return topic_suffstats
 
+
 def init_lda_post(ldapost):
 
     """
@@ -720,14 +728,14 @@ def init_lda_post(ldapost):
     nterms = ldapost.doc.nterms
 
     for k in range(0, num_topics):
-        ldapost.gamma[k] = ldapost.lda.alpha[k] + float(ldapost.doc.total) / K
+        ldapost.gamma[k] = ldapost.lda.alpha[k] + float(ldapost.doc.total) / num_topics
         for n in range(0, nterms):
-            ldapost.phi[n][k] = 1.0 / K
+            ldapost.phi[n][k] = 1.0 / num_topics
    
     # doc_weight used during DIM
     # ldapost.doc_weight = None
-
     return
+
 
 def compute_lda_lhood(ldapost):
     """
@@ -784,6 +792,7 @@ def fit_lda_seq_topics(ldaseq, topic_suffstats):
 
     return lhood
 
+
 def fit_sslm(sslm, counts):
 
     """
@@ -800,7 +809,7 @@ def fit_sslm(sslm, counts):
     totals = numpy.zeros(counts.shape[1])
 
     for w in range(0, W):
-        sslm.variance, sslm.fwd_variance = compute_post_variance(w, sslm, sslm.chain_variance)
+        sslm.variance[w], sslm.fwd_variance[w] = compute_post_variance(w, sslm, sslm.chain_variance)
     
     # column sum of counts
     totals = counts.sum(axis=0)
@@ -853,7 +862,7 @@ def compute_bound(word_counts, totals, sslm):
     chain_variance = sslm.chain_variance
 
     for w in range(0, W):
-        sslm.mean, sslm.fwd_mean = compute_post_mean(w, sslm, chain_variance)
+        sslm.mean[w], sslm.fwd_mean[w] = compute_post_mean(w, sslm, chain_variance)
 
     sslm.zeta = update_zeta(sslm)
 
@@ -897,7 +906,6 @@ def update_obs(word_counts, totals, sslm):
     OBS_NORM_CUTOFF = 2
     STEP_SIZE = 0.01
     TOL = 1e-3
-
 
     W = sslm.vocab_len
     T = sslm.num_time_slices
@@ -983,6 +991,7 @@ def compute_mean_deriv(word, time, sslm, deriv):
 
     return deriv
 
+
 def f_obs(x, *args):
 
     sslm, word_counts, totals, mean_deriv_mtx, word, deriv = args
@@ -999,7 +1008,7 @@ def f_obs(x, *args):
     term4 = 0
 
     sslm.obs[word] = x
-    sslm.mean, sslm.fwd_mean = compute_post_mean(word, sslm, sslm.chain_variance)
+    sslm.mean[word], sslm.fwd_mean[word] = compute_post_mean(word, sslm, sslm.chain_variance)
 
     mean = sslm.mean[word]
     variance = sslm.variance[word]
@@ -1087,12 +1096,13 @@ def compute_obs_deriv(word, word_counts, totals, sslm, mean_deriv_mtx, deriv):
     
     return deriv
 
+
 def df_obs(x, *args):
 
     sslm, word_counts, totals, mean_deriv_mtx, word, deriv = args
 
     sslm.obs[word] = x
-    sslm.mean, sslm.fwd_mean = compute_post_mean(word, sslm, sslm.chain_variance)
+    sslm.mean[word], sslm.fwd_mean[word] = compute_post_mean(word, sslm, sslm.chain_variance)
 
     model = "DTM"
     if model == "DTM":
@@ -1101,7 +1111,6 @@ def df_obs(x, *args):
         deriv = compute_obs_deriv_fixed(p.word, p.word_counts, p.totals, p.sslm, p.mean_deriv_mtx, deriv)
 
     return numpy.negative(deriv)
-
 
 
 # the following code replicates Blei's original LDA, ported to python. 
@@ -1118,6 +1127,7 @@ def lda_sstats(seq_corpus, num_topics, num_terms, alpha):
 
     return lda_ss
 
+
 def initialize_ss_random(seq_corpus, num_topics):
 
     N = seq_corpus.num_terms
@@ -1130,6 +1140,7 @@ def initialize_ss_random(seq_corpus, num_topics):
             topic[n][k] = numpy.random.random() + 0.5 / seq_corpus.num_docs + 4.0
 
     return topic
+
 
 def lda_m_step(lda_model, lda_ss, seq_corpus, num_topics):
 
@@ -1154,6 +1165,7 @@ def lda_m_step(lda_model, lda_ss, seq_corpus, num_topics):
         lda_model.topics[:,k] = log_p
 
     return lhood
+
 
 def lda_em(lda_model, lda_ss, seq_corpus, max_iter, num_topics):
 
@@ -1187,7 +1199,6 @@ def lda_em(lda_model, lda_ss, seq_corpus, max_iter, num_topics):
     return lhood
 
 
-
 def lda_e_step(lda_model, seq_corpus, lda_ss, num_topics):
 
     K = num_topics
@@ -1203,18 +1214,7 @@ def lda_e_step(lda_model, seq_corpus, lda_ss, num_topics):
 
     for line_no, line in enumerate(seq_corpus.corpus):
 
-        doc_ = line
-
-        nterms = len(doc_)
-        words = []
-        counts = []
-        totals = 0
-        for word_id, count in doc_:
-            words.append(int(word_id))
-            counts.append(int(count))
-            totals += int(count)
-
-        doc = Doc(word=words, count=counts, total=totals, nterms=int(nterms))
+        doc = Doc(doc=line)
         ldapost.doc = doc
         lhood += fit_lda_post(d, 0, ldapost, None, None, None, None, None)
 
@@ -1240,6 +1240,35 @@ def print_topics(ldaseq, topic, time=0, top_terms=20):
 
     return beststr
 
+
+def doc_topics(ldaseq, doc_number):
+
+    """
+    On passing the LdaSeqModel trained ldaseq object, the doc_number of your document in the corpus,
+    it returns the doc-topic probabilities of that document.
+    """
+    doc_topic = numpy.copy(ldaseq.gammas)
+    doc_topic /= doc_topic.sum(axis=1)[:, numpy.newaxis]
+
+    return doc_topic[doc_number]
+
+
+def get_item(ldaseq, doc):
+    """
+    Analyse documents on trained DTM model.
+    """
+
+    lda_model = ldamodel.LdaModel(num_topics=num_topics, alpha=ldaseq.alphas, id2word=ldaseq.corpus.id2word)
+    ldapost = LdaPost(num_topics=ldaseq.num_topics, max_doc_len=len(doc), lda=lda_model)
+
+    time_lhoods = []
+    for time in range(0, ldaseq.num_time_slices):
+        make_lda_seq_slice(lda_model, ldaseq, time)
+        ldapost.doc = Doc(doc=doc)
+        lhood = fit_lda_post(0, time, ldapost, ldaseq, None, None, None, None)
+        time_lhoods.append(lhood)
+
+    return time_lhoods
 
 
 
