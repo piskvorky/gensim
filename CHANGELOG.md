@@ -11,7 +11,7 @@ Changes
 * Implemented LsiModel.docs_processed attribute
 * Added LdaMallet support. Added LdaVowpalWabbit, LdaMallet example to notebook. Added test suite for coherencemodel and aggregation.
   Added `topics` parameter to coherencemodel. Can now provide tokenized topics to calculate coherence value (@dsquareindia, #750)
-* Added a check for empty (no words) documents before starting to run the DTM wrapper if model = "fixed" is used (DIM model) as this    causes the an error when such documents are reached in training. (@eickho #806)
+* Added a check for empty (no words) documents before starting to run the DTM wrapper if model = "fixed" is used (DIM model) as this    causes the an error when such documents are reached in training. (@eickho, #806)
 
 0.13.1, 2016-06-22
 
