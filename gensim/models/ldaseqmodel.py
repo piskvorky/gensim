@@ -91,7 +91,7 @@ class LdaSeqModel(utils.SaveLoad):
     """
 
     def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10, 
-                initialize='gensim', sstats=None,  lda_model=None, obs_variance=0.5, chain_variance=0.005):
+                initialize='gensim', sstats=None,  lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10):
         """
         `corpus` is any iterable gensim corpus
 
@@ -110,7 +110,8 @@ class LdaSeqModel(utils.SaveLoad):
 
         `chain_variance` is a constant which dictates how the beta values evolve - it is a gaussian parameter defined in the
         beta distribution. 
-
+        
+        `passes` is the number of passes of the initial LdaModel.
         """
  
         if corpus is not None:
@@ -122,8 +123,8 @@ class LdaSeqModel(utils.SaveLoad):
         self.num_time_slices = len(time_slice)
         self.alphas = numpy.full(num_topics, alphas)
 
-        #topic_chains contains for each topic a 'state space language model' object which in turn has information about each topic
-        #the sslm class is described below and contains information on topic-word probabilities and doc-topic probabilities.
+        # topic_chains contains for each topic a 'state space language model' object which in turn has information about each topic
+        # the sslm class is described below and contains information on topic-word probabilities and doc-topic probabilities.
         self.topic_chains = []
         for topic in range(0, num_topics):
             sslm_ = sslm(num_time_slices=self.num_time_slices, vocab_len=self.vocab_len, num_topics=self.num_topics, chain_variance=chain_variance, obs_variance=obs_variance)
@@ -138,7 +139,7 @@ class LdaSeqModel(utils.SaveLoad):
         # if a corpus and time_slice is provided, depending on the user choice of initializing LDA, we start DTM.
         if self.corpus is not None and time_slice is not None:
             if initialize == 'gensim':
-                lda_model = ldamodel.LdaModel(corpus, id2word=self.corpus.id2word, num_topics=self.num_topics, passes=10, alpha=self.alphas)
+                lda_model = ldamodel.LdaModel(corpus, id2word=self.corpus.id2word, num_topics=self.num_topics, passes=passes, alpha=self.alphas)
                 self.sstats = numpy.transpose(lda_model.state.sstats)
             if initialize == 'ldamodel':
                 self.sstats = numpy.transpose(lda_model.state.sstats)
@@ -302,6 +303,7 @@ class LdaSeqModel(utils.SaveLoad):
             ldapost.lhood = lhood
             ldapost.doc = line
 
+            # TODO: replace fit_lda_post with appropriate ldamodel functions, if possible.
             if iter_ == 0:
                 doc_lhood = LdaPost.fit_lda_post(ldapost, doc_num, time, None, None, None, None, None)
             else:
@@ -311,11 +313,13 @@ class LdaSeqModel(utils.SaveLoad):
             if topic_suffstats != None:
                 topic_suffstats = LdaPost.update_lda_seq_ss(ldapost, time, line, topic_suffstats)
 
+            gammas[doc_index] = ldapost.gamma
             bound += doc_lhood
             doc_index += 1
             doc_num += 1
 
         return bound, gammas
+
 
     def make_lda_seq_slice(self, lda, time):
 
@@ -346,22 +350,35 @@ class LdaSeqModel(utils.SaveLoad):
 
         return lhood
 
-    def print_topics_time(self, topic):
+
+    def print_topic_times(self, topic, top_terms=20):
+
         """
-        prints one topic showing each time-slice
+        Prints one topic showing each time-slice.
         """
+
         for time in range(0, self.num_time_slices):
-            self.print_topics(topic, time)
+            self.print_topic(topic, time, top_terms)
 
 
-    def print_topics(self, topic, time=0, top_terms=20):
+    def print_topics(self, time=0, top_terms=20):
+
+        """
+        Prints all topics in a particular time-slice.
+        """
+        for topic in range(0, self.num_topics):
+            self.print_topic(topic, time, top_terms)
+
+
+    def print_topic(self, topic, time=0, top_terms=20):
         """
         Topic is the topic numner
         Time is for a particular time_slice
         top_terms is the number of terms to display
         """
-        topic = self.topic_chains[topic].e_log_prob[time]
+        topic = self.topic_chains[topic].e_log_prob
         topic = numpy.transpose(topic)
+        topic = numpy.exp(topic[time])
         topic = topic / topic.sum()
         bestn = matutils.argsort(topic, top_terms, reverse=True)
         beststr = [(round(topic[id_], 3), self.corpus.id2word[id_]) for id_ in bestn]
@@ -381,7 +398,7 @@ class LdaSeqModel(utils.SaveLoad):
         return doc_topic[doc_number]
 
 
-    def get_item(self, doc):
+    def __getitem__(self, doc):
         """
         TODO: To mimic the __getitem__ in ldamodel. This method is a work in progress.
         """
@@ -395,7 +412,7 @@ class LdaSeqModel(utils.SaveLoad):
             lhood = fit_lda_post(0, time, ldapost, self, None, None, None, None)
             time_lhoods.append(lhood)
 
-        return time_lhoods
+        return ldapost.gamma, time_lhoods
 
 # endclass LdaSeqModel
 
@@ -545,8 +562,8 @@ class sslm(utils.SaveLoad):
         The appendix describes the Expectation of log-probabilities in equation 5 of the DTM paper;
         The below implementation is the result of solving the equation and is as implemented in the original Blei DTM code.
         """
-        for (w,t), e_log_prob in numpy.ndenumerate(self.e_log_prob):
-            e_log_prob = self.mean[w][t + 1] - numpy.log(self.zeta[t])
+        for (w,t), val in numpy.ndenumerate(self.e_log_prob):
+            self.e_log_prob[w][t] = self.mean[w][t + 1] - numpy.log(self.zeta[t])
 
         return self.e_log_prob
 
@@ -692,7 +709,7 @@ class sslm(utils.SaveLoad):
     def update_obs(self, word_counts, totals):
 
         """
-        Fucntion to perform optimization
+        Fucntion to perform optimization of obs.
         """
 
         OBS_NORM_CUTOFF = 2
@@ -885,9 +902,9 @@ class LdaPost(utils.SaveLoad):
         """
 
         num_topics = self.lda.num_topics
-
         # digamma values
         dig = numpy.zeros(num_topics)
+
         for k in range(0, num_topics):
             dig[k] = digamma(self.gamma[k])
 
@@ -907,7 +924,6 @@ class LdaPost(utils.SaveLoad):
             # subtract every element by v
             log_phi_row = log_phi_row - v 
             phi_row = numpy.exp(log_phi_row)
-
             self.log_phi[n] = log_phi_row
             self.phi[n] = phi_row
             n +=1 # increase iteration
@@ -930,6 +946,7 @@ class LdaPost(utils.SaveLoad):
             phi_row = self.phi[n]
             for k in range(0, self.lda.num_topics):
                 self.gamma[k] += phi_row[k] * count
+            n += 1
 
         return self.gamma
 
@@ -942,9 +959,10 @@ class LdaPost(utils.SaveLoad):
 
         total = sum(count for word_id, count in self.doc)
         self.gamma.fill(self.lda.alpha[0] + float(total) / self.lda.num_topics)
-        self.phi.fill(1.0 / self.lda.num_topics)
+        self.phi[:len(self.doc),:] = 1.0 / self.lda.num_topics
         # doc_weight used during DIM
         # ldapost.doc_weight = None
+
 
     def compute_lda_lhood(self):
         """
