@@ -16,8 +16,9 @@ TODO:
 The next steps to take this forward would be:
 
     1) Include DIM mode. Most of the infrastructure for this is in place.
-    2) Lots of heavy lifting going on in the sslm class - efforts can be made to cythonise mathematical methods.
-    3) Try and make it distributed, especially around the E and M step.
+    2) See if LdaPost can be replaces by LdaModel completely without breakign anything.
+    3) Heavy lifting going on in the sslm class - efforts can be made to cythonise mathematical methods.
+    4) Try and make it distributed, especially around the E and M step.
 
 """
 
@@ -309,7 +310,6 @@ class LdaSeqModel(utils.SaveLoad):
             else:
                 doc_lhood = LdaPost.fit_lda_post(ldapost, doc_num, time, self, None, None, None, None)
            
-
             if topic_suffstats != None:
                 topic_suffstats = LdaPost.update_lda_seq_ss(ldapost, time, line, topic_suffstats)
 
@@ -357,18 +357,23 @@ class LdaSeqModel(utils.SaveLoad):
         Prints one topic showing each time-slice.
         """
 
+        topics = []
         for time in range(0, self.num_time_slices):
-            self.print_topic(topic, time, top_terms)
+            topics.append(self.print_topic(topic, time, top_terms))
 
+        return topics
 
     def print_topics(self, time=0, top_terms=20):
 
         """
         Prints all topics in a particular time-slice.
         """
-        for topic in range(0, self.num_topics):
-            self.print_topic(topic, time, top_terms)
 
+        topics =[]
+        for topic in range(0, self.num_topics):
+            topics.append(self.print_topic(topic, time, top_terms))
+
+        return topics
 
     def print_topic(self, topic, time=0, top_terms=20):
         """
@@ -403,12 +408,12 @@ class LdaSeqModel(utils.SaveLoad):
         TODO: To mimic the __getitem__ in ldamodel. This method is a work in progress.
         """
 
-        lda_model = ldamodel.LdaModel(num_topics=num_topics, alpha=self.alphas, id2word=self.corpus.id2word)
+        lda_model = ldamodel.LdaModel(num_topics=self.num_topics, alpha=self.alphas, id2word=self.corpus.id2word)
         ldapost = LdaPost(num_topics=self.num_topics, max_doc_len=len(doc), lda=lda_model, doc=doc)
 
         time_lhoods = []
         for time in range(0, self.num_time_slices):
-            lda = self.make_lda_seq_slice(lda, time)  # create lda_seq slice
+            lda_model = self.make_lda_seq_slice(lda_model, time)  # create lda_seq slice
             lhood = fit_lda_post(0, time, ldapost, self, None, None, None, None)
             time_lhoods.append(lhood)
 
