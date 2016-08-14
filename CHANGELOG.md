@@ -1,10 +1,24 @@
 Changes
 =======
+0.13.2
+
+* wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, #771) 
+  - assigning wordtopics value of word_topics to keep backward compatibility, for now
+* topics, topn parameters changed to num_topics and num_words in show_topics() and print_topics()(@droudy, #747)
+  - In hdpmodel and dtmmodel
+  - NOT BACKWARDS COMPATIBLE!
+* Added random_state parameter to LdaState initializer and check_random_state() (@droudy, #113)
+* Implemented LsiModel.docs_processed attribute
+* Added LdaMallet support. Added LdaVowpalWabbit, LdaMallet example to notebook. Added test suite for coherencemodel and aggregation.
+  Added `topics` parameter to coherencemodel. Can now provide tokenized topics to calculate coherence value (@dsquareindia, #750)
+* Added a check for empty (no words) documents before starting to run the DTM wrapper if model = "fixed" is used (DIM model) as this    causes the an error when such documents are reached in training. (@eickho, #806)
+
 0.13.1, 2016-06-22
+
 * Topic coherence C_v and U_mass (@dsquareindia, #710)
 
+0.13.0, 2016-06-21
 
-0.13.0, 2016
 * Added Distance Metrics to matutils.pt (@bhargavvader, #656)
 * Tutorials migrated from website to ipynb (@j9chan, #721), (@jesford, #733), (@jesford, #725), (@jesford, #716)
 * New doc2vec intro tutorial (@seanlaw, #730)
@@ -13,7 +27,7 @@ Changes
 * SparseMatrixSimilarity returns a sparse matrix if `maintain_sparsity` is True (@davechallis, #590)
 * added functionality for Topics of Words in document - i.e, dynamic topics. (@bhargavvader, #704)
   - also included tutorial which explains new functionalities, and document word-topic colring.
-* Made normalization an explicit transformation. Added 'l1' norm support (@squareindia, #649)
+* Made normalization an explicit transformation. Added 'l1' norm support (@dsquareindia, #649)
 * added term-topics API for most probable topic for word in vocab. (@bhargavvader, #706)
 * build_vocab takes progress_per parameter for smaller output (@zer0n, #624)
 * Control whether to use lowercase for computing word2vec accuracy. (@alantian, #607)
@@ -31,7 +45,8 @@ Changes
 * Doc2vec pre-processing script translated from bash to Python (@andrewjlm, #720)
 
 
-0.12.4, 29/01/2016
+0.12.4, 2016-01-29
+
 * Better internal handling of job batching in word2vec (#535)
   - up to 300% speed up when training on very short documents (~tweets)
 * Word2vec CLI in line with original word2vec.c (Andrey Kutuzov, #538)
@@ -61,7 +76,7 @@ Changes
     chunks_as_numpy=True/False (defaults to False) that allows controlling
     this behaviour
 
-0.12.3, 05/11/2015
+0.12.3, 2015-11-05
 
 * Make show_topics return value consistent across models (Christopher Corley, #448)
   - All models with the `show_topics` method should return a list of
@@ -81,7 +96,7 @@ Changes
 * OSX wheels (#504)
 * Win build (#492)
 
-0.12.2, 19/09/2015
+0.12.2, 2015-09-19
 
 * tutorial on text summarization (Ólavur Mortensen, #436)
 * more flexible vocabulary construction in word2vec & doc2vec (Philipp Dowling, #434)
@@ -92,7 +107,7 @@ Changes
 * Windows fix for setup.py (#428)
 * fix compatibility for scipy 0.16.0 (#415)
 
-0.12.1, 20/07/2015
+0.12.1, 2015-07-20
 
 * improvements to testing, switch to Travis CI containers
 * support for loading old word2vec models (<=0.11.1) in 0.12+ (Gordon Mohr, #405)
@@ -101,7 +116,7 @@ Changes
 * support for word2vec[['word1', 'word2'...]] convenience API calls (Satish Palaniappan, #395)
 * MatrixSimilarity supports indexing generator corpora (single pass)
 
-0.12.0, 06/07/2015
+0.12.0, 2015-07-06
 
 * complete API, performance, memory overhaul of doc2vec (Gordon Mohr, #356, #373, #380, #384)
   - fast infer_vector(); optional memory-mapped doc vectors; memory savings with int doc IDs
@@ -129,7 +144,7 @@ Changes
 * various doc improvements and fixes (Matti Lyra #331, Hongjoo Lee #334)
 * fixes and improvements to LDA (Christopher Corley #323)
 
-0.11.0 = 0.11.1 = 0.11.1-1, 10/04/2015
+0.11.0 = 0.11.1 = 0.11.1-1, 2015-04-10
 
 * added "topic ranking" to sort topics by coherence in LdaModel (jtmcmc, #311)
 * new fast ShardedCorpus out-of-core corpus (Jan Hajic jr., #284)
@@ -143,7 +158,7 @@ Changes
 * lots of small fixes & py3k compatibility improvements (Chyi-Kwei Yau, Daniel Nouri, Timothy Emerick, Juarez Bochi, Christopher Corley, Chirag Nagpal, Jan Hajic jr., Flávio Codeço Coelho)
 * re-released as 0.11.1 and 0.11.1-1 because of a packaging bug
 
-0.10.3, 17/11/2014
+0.10.3, 2014-11-17
 
 * added streamed phrases = collocation detection (Miguel Cabrera, #258)
 * added param for multiple word2vec epochs (sebastienj, #243)
@@ -155,7 +170,7 @@ Changes
 * fixes to setup.py (Maxim Avanov and Christopher Corley, #260, #251)
 * ...and lots of minor fixes & updates all around
 
-0.10.2, 18/09/2014
+0.10.2, 2014-09-18
 
 * new parallelized, LdaMulticore implementation (Jan Zikes, #232)
 * Dynamic Topic Models (DTM) wrapper (Arttii, #205)
@@ -167,7 +182,7 @@ Changes
 * py3k fix to SparseCorpus (Andreas Madsen, #234)
 * fix to LowCorpus when switching dictionaries (Christopher Corley, #237)
 
-0.10.1, 22/07/2014
+0.10.1, 2014-07-22
 
 * word2vec: new n_similarity method for comparing two sets of words (François Scharffe, #219)
 * make LDA print/show topics parameters consistent with LSI (Bram Vandekerckhove, #201)
@@ -182,7 +197,7 @@ Changes
 * ignore non-articles during wiki parsig
 * utils.lemmatize now (optionally) ignores stopwords
 
-0.10.0 (aka "PY3K port"), 04/06/2014
+0.10.0 (aka "PY3K port"), 2014-06-04
 
 * full Python 3 support (targeting 3.3+, #196)
 * all internal methods now expect & store unicode, instead of utf8
@@ -193,7 +208,7 @@ Changes
 * added py3.3 and 3.4 to Travis CI tests
 * fix a cbow word2vec bug (Liang-Chi Hsieh)
 
-0.9.1, 12/04/2014
+0.9.1, 2014-04-12
 
 * MmCorpus fix for Windows
 * LdaMallet support for printing/showing topics
@@ -203,7 +218,7 @@ Changes
 * more py3k fixes (Lars Buitinck)
 * change order of LDA topic printing (Fayimora Femi-Balogun, #188)
 
-0.9.0, 16/03/2014
+0.9.0, 2014-03-16
 
 * save/load automatically single out large arrays + allow mmap
 * allow .gz/.bz2 corpus filenames => transparently (de)compressed I/O
@@ -221,7 +236,7 @@ Changes
 * parametrize LDA constructor (Christopher Corley, #174)
 * steps toward py3k compatibility (Lars Buitinck, #154)
 
-0.8.9, 26/12/2013
+0.8.9, 2013-12-26
 
 * use travis-ci for continuous integration
 * auto-optimize LDA asymmetric prior (Ben Trahan)
@@ -233,7 +248,7 @@ Changes
 * allow compressed input in LineSentence corpus (Eric Moyer)
 * upgrade ez_setup, doc improvements, minor fixes etc.
 
-0.8.8 (aka "word2vec release"), 03/11/2013
+0.8.8 (aka "word2vec release"), 2013-11-03
 
 * python3 port by Parikshit Samant: https://github.com/samantp/gensimPy3
 * massive optimizations to word2vec (cython, BLAS, multithreading): ~20x-300x speedup
@@ -243,7 +258,7 @@ Changes
 * add context manager support for older Python<=2.6 for gzip and bz2
 * added unittests for word2vec
 
-0.8.7, 18/09/2013
+0.8.7, 2013-09-18
 
 * initial version of word2vec, a neural network deep learning algo
 * make distributed gensim compatible with the new Pyro
@@ -261,7 +276,7 @@ Changes
 * fixes for more robust Windows multiprocessing
 * lots of small fixes, data checks and documentation updates
 
-0.8.6, 15/09/2012
+0.8.6, 2012-09-15
 
 * added HashDictionary (by Homer Strong)
 * support for adding target classes in SVMlight format (by Corrado Monti)
@@ -269,7 +284,7 @@ Changes
 * parallelization of Wikipedia processing + added script version that lemmatizes the input documents
 * added class method to initialize Dictionary from an existing corpus (by Marko Burjek)
 
-0.8.5, 22/07/2012
+0.8.5, 2012-07-22
 
 * improved performance of sharding (similarity queries)
 * better Wikipedia parsing (thx to Alejandro Weinstein and Lars Buitinck)
@@ -277,7 +292,7 @@ Changes
 * several minor fixes (in HDP model thx to Greg Ver Steeg)
 * improvements to documentation
 
-0.8.4, 09/03/2012
+0.8.4, 2012-03-09
 
 * better support for Pandas series input (thx to JT Bates)
 * a new corpus format: UCI bag-of-words (thx to Jonathan Esterhazy)
@@ -286,13 +301,13 @@ Changes
 * lemmatizer support for wikipedia parsing (via the `pattern` python package)
 * extended the lemmatizer for multi-core processing, to improve its performance
 
-0.8.3, 02/12/2011
+0.8.3, 2011-12-02
 
 * fixed Similarity sharding bug (issue #65, thx to Paul Rudin)
 * improved LDA code (clarity & memory footprint)
 * optimized efficiency of Similarity sharding
 
-0.8.2, 31/10/2011
+0.8.2, 2011-10-31
 
 * improved gensim landing page
 * improved accuracy of SVD (Latent Semantic Analysis) (thx to Mark Tygert)
@@ -301,7 +316,7 @@ Changes
 * started using `tox` for testing
 * + several smaller fixes and optimizations
 
-0.8.1, 10/10/2011
+0.8.1, 2011-10-10
 
 * transactional similarity server: see docs/simserver.html
 * website moved from university hosting to radimrehurek.com
@@ -312,7 +327,7 @@ Changes
 * model.print_topics() debug fncs now support std output, in addition to logging (thx to Homer Strong)
 * several smaller fixes and improvements
 
-0.8.0 (Armageddon), 28/06/2011
+0.8.0 (Armageddon), 2011-06-28
 
 * changed all variable and function names to comply with PEP8 (numTopics->num_topics): BREAKS BACKWARD COMPATIBILITY!
 * added support for similarity querying more documents at once (index[query_documents] in addition to index[query_document]; much faster)
@@ -320,14 +335,14 @@ Changes
 * simplified directory structure (src/gensim/ is now only gensim/)
 * several small fixes and optimizations
 
-0.7.8, 26/03/2011
+0.7.8, 2011-03-26
 
 * added `corpora.IndexedCorpus`, a base class for corpus serializers (thx to Dieter Plaetinck). This allows corpus formats that inherit from it (MmCorpus, SvmLightCorpus, BleiCorpus etc.) to retrieve individual documents by their id in O(1), e.g. `corpus[14]` returns document #14.
 * merged new code from the LarKC.eu team (`corpora.textcorpus`, `models.logentropy_model`, lots of unit tests etc.)
 * fixed a bug in `lda[bow]` transformation (was returning gamma distribution instead of theta). LDA model generation was not affected, only transforming new vectors.
 * several small fixes and documentation updates
 
-0.7.7, 13/02/2011
+0.7.7, 2011-02-13
 
 * new LDA implementation after Hoffman et al.: Online Learning for Latent Dirichlet Allocation
 * distributed LDA
@@ -336,12 +351,12 @@ Changes
 * moved code to github
 * started gensim Google group
 
-0.7.6, 10/01/2011
+0.7.6, 2011-01-10
 
 * added workaround for a bug in numpy: pickling a fortran-order array (e.g. LSA model) and then loading it back and using it results in segfault (thx to Brian Merrel)
 * bundled a new version of ez_setup.py: old failed with Python2.6 when setuptools were missing (thx to Alan Salmoni).
 
-0.7.5, 03/11/2010
+0.7.5, 2010-11-03
 
 * further optimization to LSA; this is the version used in my NIPS workshop paper
 * got rid of SVDLIBC dependency (one-pass LSA now uses stochastic algo for base-base decompositions)

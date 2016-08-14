@@ -15,14 +15,21 @@ Example: python -m gensim.models.lda_dispatcher
 
 
 from __future__ import with_statement
-import os, sys, logging, threading, time
+import argparse
+import os
+import sys
+import logging
+import threading
+import time
 from six import iteritems, itervalues
+
 try:
     from Queue import Queue
 except ImportError:
     from queue import Queue
 import Pyro4
 from gensim import utils
+from gensim.models.lda_worker import LDA_WORKER_PREFIX
 
 
 logger = logging.getLogger("gensim.models.lda_dispatcher")
@@ -39,6 +46,7 @@ MAX_JOBS_QUEUE = 10
 # so this is really just a hack, see http://bugs.python.org/issue1360
 HUGE_TIMEOUT = 365 * 24 * 60 * 60 # one year
 
+LDA_DISPATCHER_PREFIX = 'gensim.lda_dispatcher'
 
 
 class Dispatcher(object):
@@ -48,15 +56,16 @@ class Dispatcher(object):
     There should never be more than one dispatcher running at any one time.
     """
 
-    def __init__(self, maxsize=MAX_JOBS_QUEUE):
+    def __init__(self, maxsize=MAX_JOBS_QUEUE, ns_conf={}):
         """
         Note that the constructor does not fully initialize the dispatcher;
         use the `initialize()` function to populate it with workers etc.
         """
         self.maxsize = maxsize
         self.callback = None # a pyro proxy to this object (unknown at init time, but will be set later)
+        self.ns_conf = ns_conf
 
-
+    @Pyro4.expose
     def initialize(self, **model_params):
         """
         `model_params` are parameters used to initialize individual workers (gets
@@ -69,10 +78,9 @@ class Dispatcher(object):
 
         # locate all available workers and store their proxies, for subsequent RMI calls
         self.workers = {}
-        import Pyro4
-        with utils.getNS() as ns:
-            self.callback = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher') # = self
-            for name, uri in iteritems(ns.list(prefix='gensim.lda_worker')):
+        with utils.getNS(**self.ns_conf) as ns:
+            self.callback = Pyro4.Proxy(ns.list(prefix=LDA_DISPATCHER_PREFIX)[LDA_DISPATCHER_PREFIX])
+            for name, uri in iteritems(ns.list(prefix=LDA_WORKER_PREFIX)):
                 try:
                     worker = Pyro4.Proxy(uri)
                     workerid = len(self.workers)
@@ -87,27 +95,27 @@ class Dispatcher(object):
         if not self.workers:
             raise RuntimeError('no workers found; run some lda_worker scripts on your machines first!')
 
-
+    @Pyro4.expose
     def getworkers(self):
         """
         Return pyro URIs of all registered workers.
         """
         return [worker._pyroUri for worker in itervalues(self.workers)]
 
-
+    @Pyro4.expose
     def getjob(self, worker_id):
         logger.info("worker #%i requesting a new job" % worker_id)
         job = self.jobs.get(block=True, timeout=1)
         logger.info("worker #%i got a new job (%i left)" % (worker_id, self.jobs.qsize()))
         return job
 
-
+    @Pyro4.expose
     def putjob(self, job):
         self._jobsreceived += 1
         self.jobs.put(job, block=True, timeout=HUGE_TIMEOUT)
         logger.info("added a new job (len(queue)=%i items)" % self.jobs.qsize())
 
-
+    @Pyro4.expose
     def getstate(self):
         """
         Merge states from across all workers and return the result.
@@ -126,7 +134,7 @@ class Dispatcher(object):
         logger.info("sending out merged state")
         return result
 
-
+    @Pyro4.expose
     def reset(self, state):
         """
         Initialize all workers for a new EM iterations.
@@ -138,7 +146,7 @@ class Dispatcher(object):
         self._jobsdone = 0
         self._jobsreceived = 0
 
-
+    @Pyro4.expose
     @Pyro4.oneway
     @utils.synchronous('lock_update')
     def jobdone(self, workerid):
@@ -172,25 +180,30 @@ class Dispatcher(object):
 #endclass Dispatcher
 
 
-
 def main():
-    logging.basicConfig(format = '%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logger.info("running %s" % " ".join(sys.argv))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--maxsize", help="How many jobs (=chunks of N documents) "
+                                           "to keep 'pre-fetched' in a queue (default: %(default)s)",
+                        type=int, default=MAX_JOBS_QUEUE)
+    parser.add_argument("--host", help="Nameserver hostname (default: %(default)s)", default=None)
+    parser.add_argument("--port", help="Nameserver port (default: %(default)s)", default=None, type=int)
+    parser.add_argument("--no-broadcast", help="Disable broadcast (default: %(default)s)",
+                        action='store_const', default=True, const=False)
+    parser.add_argument("--hmac", help="Nameserver hmac key (default: %(default)s)", default=None)
+    parser.add_argument('-v', '--verbose', help='Verbose flag', action='store_const', dest="loglevel",
+                        const=logging.INFO, default=logging.WARNING)
+    args = parser.parse_args()
 
-    program = os.path.basename(sys.argv[0])
-    # make sure we have enough cmd line parameters
-    if len(sys.argv) < 1:
-        print(globals()["__doc__"] % locals())
-        sys.exit(1)
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=args.loglevel)
+    logger.info("running %s", " ".join(sys.argv))
 
-    if len(sys.argv) < 2:
-        maxsize = MAX_JOBS_QUEUE
-    else:
-        maxsize = int(sys.argv[1])
-    utils.pyro_daemon('gensim.lda_dispatcher', Dispatcher(maxsize=maxsize))
+    ns_conf = {"broadcast": args.no_broadcast,
+               "host": args.host,
+               "port": args.port,
+               "hmac_key": args.hmac}
+    utils.pyro_daemon(LDA_DISPATCHER_PREFIX, Dispatcher(maxsize=args.maxsize, ns_conf=ns_conf), ns_conf=ns_conf)
 
-    logger.info("finished running %s" % program)
-
+    logger.info("finished running %s", " ".join(sys.argv))
 
 
 if __name__ == '__main__':

@@ -2,8 +2,8 @@ recursive-include docs *
 recursive-include gensim/test/test_data *
 recursive-include . *.sh
 prune docs/src*
-include README.rst
-include CHANGELOG.txt
+include README.md
+include CHANGELOG.md
 include COPYING
 include COPYING.LESSER
 include ez_setup.py

@@ -95,6 +95,18 @@ class TestLdaMallet(unittest.TestCase):
                             (i, sorted(vec), sorted(expected)))
         self.assertTrue(passed)
 
+    def testMallet2Model(self):
+        if not self.mallet_path:
+            return
+        passed = False
+        tm1 = ldamallet.LdaMallet(self.mallet_path, corpus=corpus, num_topics=2, id2word=dictionary)
+        tm2 = ldamallet.malletmodel2ldamodel(tm1)
+        for document in corpus:
+            self.assertEqual(tm1[document][0], tm2[document][0])
+            self.assertEqual(tm1[document][1], tm2[document][1])
+            logging.debug('%d %d', tm1[document][0], tm2[document][0])
+            logging.debug('%d %d', tm1[document][1], tm2[document][1])
+
 
     def testPersistence(self):
         if not self.mallet_path:
@@ -104,7 +116,7 @@ class TestLdaMallet(unittest.TestCase):
         model.save(fname)
         model2 = ldamallet.LdaMallet.load(fname)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.wordtopics, model2.wordtopics))
+        self.assertTrue(numpy.allclose(model.word_topics, model2.word_topics))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
@@ -116,7 +128,7 @@ class TestLdaMallet(unittest.TestCase):
         model.save(fname)
         model2 = ldamallet.LdaMallet.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.wordtopics, model2.wordtopics))
+        self.assertTrue(numpy.allclose(model.word_topics, model2.word_topics))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
@@ -132,8 +144,8 @@ class TestLdaMallet(unittest.TestCase):
         # test loading the large model arrays with mmap
         model2 = ldamodel.LdaModel.load(testfile(), mmap='r')
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(isinstance(model2.wordtopics, numpy.memmap))
-        self.assertTrue(numpy.allclose(model.wordtopics, model2.wordtopics))
+        self.assertTrue(isinstance(model2.word_topics, numpy.memmap))
+        self.assertTrue(numpy.allclose(model.word_topics, model2.word_topics))
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 

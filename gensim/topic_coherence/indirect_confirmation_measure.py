@@ -59,10 +59,14 @@ def cosine_similarity(topics, segmented_topics, per_topic_postings, measure, gam
     ----
     topics : Topics obtained from the trained topic model.
     segmented_topics : segmented_topics : Output from the segmentation module of the segmented topics. Is a list of list of tuples.
-    per_topic_postings : per_topic_postings : Output from the probability_estimation module. Is a dictionary of the posting list of all topics.
+    per_topic_postings : Output from the probability_estimation module. Is a dictionary of the posting list of all topics.
     measure : String. Direct confirmation measure to be used. Supported values are "nlr" (normalized log ratio).
     gamma : Gamma value for computing W', W* vectors.
     num_docs : Total number of documents in corresponding corpus.
+
+    Returns:
+    -------
+    s_cos_sim : array of cosine similarity of the context vectors for each segmentation
     """
     if measure == 'nlr':
         measure = direct_confirmation_measure.normalized_log_ratio_measure

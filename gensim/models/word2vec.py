@@ -412,7 +412,7 @@ class Word2Vec(utils.SaveLoad):
         `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
         in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
         Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
-        returns either util.RULE_DISCARD, util.RULE_KEEP or util.RULE_DEFAULT.
+        returns either `utils.RULE_DISCARD`, `utils.RULE_KEEP` or `utils.RULE_DEFAULT`.
         Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
         of the model.
 
@@ -1182,7 +1182,7 @@ class Word2Vec(utils.SaveLoad):
                         self.syn0[self.vocab[word].index] = weights
         logger.info("merged %d vectors into %s matrix from %s" % (overlap_count, self.syn0.shape, fname))
 
-    def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None):
+    def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
         """
         Find the top-N most similar words. Positive words contribute positively towards the
         similarity, negative words negatively.
@@ -1235,6 +1235,9 @@ class Word2Vec(utils.SaveLoad):
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
 
+        if indexer is not None:
+            return indexer.most_similar(mean, topn)
+
         limited = self.syn0norm if restrict_vocab is None else self.syn0norm[:restrict_vocab]
         dists = dot(limited, mean)
         if not topn:
@@ -1244,13 +1247,14 @@ class Word2Vec(utils.SaveLoad):
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
 
-    def wmdistance(self, document1, document2, WCD=False, RWMD=False):
+    def wmdistance(self, document1, document2):
         """
         Compute the Word Mover's Distance between two documents. When using this
         code, please consider citing the following papers:
-        * Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
-        * Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
-        * Matt Kusner et al. "From Word Embeddings To Document Distances".
+
+        .. Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
+        .. Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
+        .. Matt Kusner et al. "From Word Embeddings To Document Distances".
 
         Note that if one of the documents have no words that exist in the
         Word2Vec vocab, `float('inf')` (i.e. infinity) will be returned.
@@ -1258,21 +1262,21 @@ class Word2Vec(utils.SaveLoad):
         This method only works if `pyemd` is installed (can be installed via pip, but requires a C compiler).
 
         Example:
-        > # Train word2vec model.
-        > model = Word2Vec(sentences)
+            >>> # Train word2vec model.
+            >>> model = Word2Vec(sentences)
 
-        > # Some sentences to test.
-        > sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
-        > sentence_president = 'The president greets the press in Chicago'.lower().split()
+            >>> # Some sentences to test.
+            >>> sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
+            >>> sentence_president = 'The president greets the press in Chicago'.lower().split()
 
-        > # Remove their stopwords.
-        > from nltk.corpus import stopwords
-        > stopwords = nltk.corpus.stopwords.words('english')
-        > sentence_obama = [w for w in sentence_obama if w not in stopwords]
-        > sentence_president = [w for w in sentence_president if w not in stopwords]
+            >>> # Remove their stopwords.
+            >>> from nltk.corpus import stopwords
+            >>> stopwords = nltk.corpus.stopwords.words('english')
+            >>> sentence_obama = [w for w in sentence_obama if w not in stopwords]
+            >>> sentence_president = [w for w in sentence_president if w not in stopwords]
 
-        > # Compute WMD.
-        > distance = model.wmdistance(sentence_obama, sentence_president)
+            >>> # Compute WMD.
+            >>> distance = model.wmdistance(sentence_obama, sentence_president)
         """
 
         if not PYEMD_EXT:
@@ -1564,7 +1568,7 @@ class Word2Vec(utils.SaveLoad):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
-        See https://code.google.com/p/word2vec/source/browse/trunk/questions-words.txt for an example.
+        See questions-words.txt in https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/word2vec/source-archive.zip for an example.
 
         The accuracy is reported (=printed to log and returned as a list) for each
         section separately, plus there's one aggregate summary at the end.
