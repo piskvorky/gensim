@@ -91,7 +91,7 @@ class LdaSeqModel(utils.SaveLoad):
     """
 
     def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
-                initialize='gensim', sstats=None,  lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10):
+                initialize='gensim', sstats=None,  lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10, random_state=None):
         """
         `corpus` is any iterable gensim corpus
 
@@ -138,7 +138,7 @@ class LdaSeqModel(utils.SaveLoad):
         # if a corpus and time_slice is provided, depending on the user choice of initializing LDA, we start DTM.
         if self.corpus is not None and time_slice is not None:
             if initialize == 'gensim':
-                lda_model = ldamodel.LdaModel(corpus, id2word=self.corpus.id2word, num_topics=self.num_topics, passes=passes, alpha=self.alphas)
+                lda_model = ldamodel.LdaModel(corpus, id2word=self.corpus.id2word, num_topics=self.num_topics, passes=passes, alpha=self.alphas, random_state=random_state)
                 self.sstats = numpy.transpose(lda_model.state.sstats)
             if initialize == 'ldamodel':
                 self.sstats = numpy.transpose(lda_model.state.sstats)
