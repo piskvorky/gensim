@@ -16,8 +16,9 @@ TODO:
 The next steps to take this forward would be:
 
     1) Include DIM mode. Most of the infrastructure for this is in place.
-    2) See if LdaPost can be replaces by LdaModel completely without breakign anything.
+    2) See if LdaPost can be replaced by LdaModel completely without breaking anything.
     3) Heavy lifting going on in the sslm class - efforts can be made to cythonise mathematical methods.
+        - in particular, update_obs and the optimization takes a lot time.
     4) Try and make it distributed, especially around the E and M step.
 
 """
@@ -237,7 +238,7 @@ class LdaSeqModel(utils.SaveLoad):
 
             if convergence < LDASQE_EM_THRESHOLD:
 
-                lda_inference_max_iter = 500
+                lda_inference_max_iter = numpy.inf
                 logger.info("Starting final iterations, max iter is", lda_inference_max_iter)
                 convergence = 1.0
 
@@ -366,7 +367,7 @@ class LdaSeqModel(utils.SaveLoad):
 
     def print_topic(self, topic, time=0, top_terms=20):
         """
-        Topic is the topic numner
+        Topic is the topic number
         Time is for a particular time_slice
         top_terms is the number of terms to display
         """
@@ -453,10 +454,7 @@ class sslm(utils.SaveLoad):
         Zeta is described in the appendix and is equal to sum (exp(mean[word] + Variance[word] / 2)), over every time-slice.
         It is the value of variational parameter zeta which maximizes the lower bound.
         """
-        vocab_len = self.vocab_len
-        num_time_slices = self.num_time_slices
-        self.zeta.fill(0)
-        for j in range(0, num_time_slices):
+        for j, val in enumerate(self.zeta):
             self.zeta[j] = numpy.sum(numpy.exp(self.mean[:, j + 1] + self.variance[:, j + 1] / 2))
         return self.zeta
 
@@ -550,6 +548,7 @@ class sslm(utils.SaveLoad):
     def sslm_counts_init(self, obs_variance, chain_variance, sstats):
         """
         Initialize State Space Language Model with LDA sufficient statistics.
+        Called for each topic-chain and initializes intial mean, variance and Topic-Word probabilities for the first time-slice.
         """
         W = self.vocab_len
         T = self.num_time_slices
@@ -575,10 +574,12 @@ class sslm(utils.SaveLoad):
         self.e_log_prob = self.compute_expected_log_prob()
 
 
-    def fit_sslm(self, counts):
-
+    def fit_sslm(self, sstats):
         """
-        Fit variational distribution.
+        Fits variational distribution.
+        This is essentially the m-step.
+        Accepts the sstats for a particular topic for input and maximizes values for that topic.
+        Updates the values in the update_obs() and compute_expected_log_prob methods.
         """
         W = self.vocab_len
         bound = 0
@@ -587,32 +588,32 @@ class sslm(utils.SaveLoad):
         sslm_max_iter = 2
         converged = sslm_fit_threshold + 1
 
-        totals = numpy.zeros(counts.shape[1])
+        totals = numpy.zeros(sstats.shape[1])
 
         # computing variance, fwd_variance
         self.variance, self.fwd_variance = map(numpy.array, list(zip(*[self.compute_post_variance(w, self.chain_variance) for w in range(0, W)])))
 
-        # column sum of counts
-        totals = counts.sum(axis=0)
+        # column sum of sstats
+        totals = sstats.sum(axis=0)
         iter_ = 0
 
         model = "DTM"
         if model == "DTM":
-            bound = self.compute_bound(counts, totals)
+            bound = self.compute_bound(sstats, totals)
         if model == "DIM":
-            bound = self.compute_bound_fixed(counts, totals)
+            bound = self.compute_bound_fixed(sstats, totals)
 
         logger.info("initial sslm bound is ", bound)
 
         while converged > sslm_fit_threshold and iter_ < sslm_max_iter:
             iter_ += 1
             old_bound = bound
-            self.obs, self.zeta = self.update_obs(counts, totals)
+            self.obs, self.zeta = self.update_obs(sstats, totals)
 
             if model == "DTM":
-                bound = self.compute_bound(counts, totals)
+                bound = self.compute_bound(sstats, totals)
             if model == "DIM":
-                bound = self.compute_bound_fixed(counts, totals)
+                bound = self.compute_bound_fixed(sstats, totals)
 
             converged = numpy.fabs((bound - old_bound) / old_bound)
             logger.info(iter_, " iteration lda seq bound is ", bound, " convergence is", converged)
@@ -621,10 +622,10 @@ class sslm(utils.SaveLoad):
         return bound
 
 
-    def compute_bound(self, word_counts, totals):
+    def compute_bound(self, sstats, totals):
         """
         Compute log probability bound. 
-        Forumula is as described in appendix of DTM.
+        Forumula is as described in appendix of DTM by Blei. (formula no. 5)
         """
         W = self.vocab_len
         T = self.num_time_slices
@@ -663,7 +664,7 @@ class sslm(utils.SaveLoad):
                 # term_1 += (numpy.power(m - prev_m - (w_phi_l * exp_i), 2) / (2 * chain_variance)) - (v / chain_variance) - numpy.log(chain_variance)
 
                 term_1 += (numpy.power(m - prev_m, 2) / (2 * chain_variance)) - (v / chain_variance) - numpy.log(chain_variance)
-                term_2 += word_counts[w][t - 1] * m
+                term_2 += sstats[w][t - 1] * m
                 ent += numpy.log(v) / 2  # note the 2pi's cancel with term1 (see doc)
 
             term_3 = -totals[t - 1] * numpy.log(self.zeta[t - 1])
@@ -672,12 +673,15 @@ class sslm(utils.SaveLoad):
         return val
         
 
-    def update_obs(self, word_counts, totals):
+    def update_obs(self, sstats, totals):
         """
-        Fucntion to perform optimization of obs.
+        Function to perform optimization of obs. Parameters are suff_stats set up in the fit_sslm method.
+        
+        TODO:
         This is by far the slowest function in the whole algorithm.
         Replacing or improving the performance of this would greatly speed things up.
         """
+
         OBS_NORM_CUTOFF = 2
         STEP_SIZE = 0.01
         TOL = 1e-3
@@ -690,7 +694,7 @@ class sslm(utils.SaveLoad):
 
         norm_cutoff_obs = None
         for w in range(0, W):
-            w_counts = word_counts[w]
+            w_counts = sstats[w]
             counts_norm = 0
             # now we find L2 norm of w_counts
             for i in range(0, len(w_counts)):
@@ -717,6 +721,7 @@ class sslm(utils.SaveLoad):
                 model = "DTM"
 
                 if model == "DTM":
+                    # slowest part of method
                     obs = optimize.fmin_cg(f=f_obs, fprime=df_obs, x0=obs, gtol=TOL, args=args, epsilon=STEP_SIZE, disp=0)
                 if model == "DIM":
                     pass
@@ -1011,6 +1016,7 @@ class LdaPost(utils.SaveLoad):
     def update_lda_seq_ss(self, time, doc, topic_suffstats):
         """
         Update lda sequence sufficient statistics from an lda posterior.
+        This is very similar to the update_gamma method and uses the same formula.
         """
         num_topics = self.lda.num_topics
 
@@ -1018,7 +1024,7 @@ class LdaPost(utils.SaveLoad):
             topic_ss = topic_suffstats[k]
             n = 0
             for word_id, count in self.doc:
-                topic_ss[word_id][time] = topic_ss[word_id][time] + count * self.phi[n][k]
+                topic_ss[word_id][time] += count * self.phi[n][k]
                 n += 1
             topic_suffstats[k] = topic_ss
 
@@ -1028,9 +1034,8 @@ class LdaPost(utils.SaveLoad):
 
 # the following functions are used in update_obs as the function to optimize
 def f_obs(x, *args):
-
     """
-    Function which we are optimising for minimizing obs
+    Function which we are optimising for minimizing obs.
     """
     sslm, word_counts, totals, mean_deriv_mtx, word, deriv = args
     # flag
