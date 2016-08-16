@@ -190,7 +190,10 @@ class LdaSeqModel(utils.SaveLoad):
 
        """
         LDASQE_EM_THRESHOLD = 1e-4
-
+        # if bound is low, then we increase iterations.
+        LOWER_ITER = 10
+        ITER_MULT_LOW = 2
+        MAX_ITER = 500
 
         num_topics = self.num_topics
         vocab_len = self.vocab_len
@@ -205,7 +208,7 @@ class LdaSeqModel(utils.SaveLoad):
 
             logger.info(" EM iter ", iter_)
             logger.info("E Step")
-
+            # TODO: bound is initialized to 0
             old_bound = bound
 
             # initiate sufficient statistics
@@ -229,8 +232,8 @@ class LdaSeqModel(utils.SaveLoad):
 
             if ((bound - old_bound) < 0):
                 # if max_iter is too low, increase iterations.
-                if lda_inference_max_iter < 10:
-                    lda_inference_max_iter *= 2
+                if lda_inference_max_iter < LOWER_ITER:
+                    lda_inference_max_iter *= ITER_MULT_LOW
                 logger.info("Bound went down, increasing iterations to", lda_inference_max_iter)
 
             # check for convergence
@@ -238,7 +241,7 @@ class LdaSeqModel(utils.SaveLoad):
 
             if convergence < LDASQE_EM_THRESHOLD:
 
-                lda_inference_max_iter = numpy.inf
+                lda_inference_max_iter = MAX_ITER
                 logger.info("Starting final iterations, max iter is", lda_inference_max_iter)
                 convergence = 1.0
 
