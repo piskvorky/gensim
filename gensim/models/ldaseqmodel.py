@@ -22,13 +22,14 @@ The next steps to take this forward would be:
 
 """
 
-from gensim import interfaces, utils, matutils
+from gensim import utils, matutils
 from gensim.models import ldamodel
 import numpy
-import math
-from scipy.special import digamma
+from scipy.special import digamma, gammaln
 from scipy import optimize
-import sys
+import logging
+
+logger = logging.getLogger('gensim.models.ldaseqmodel')
 
 
 class seq_corpus(utils.SaveLoad):
@@ -59,7 +60,11 @@ class seq_corpus(utils.SaveLoad):
 
         self.corpus = corpus
         if self.corpus is not None:
-            self.corpus_len = len(corpus)
+            try:
+                self.corpus_len = len(corpus)
+            except:
+                logger.warning("input corpus stream has no len(); counting documents")
+                self.corpus_len = sum(1 for _ in corpus)
 
         self.time_slice = time_slice
         if self.time_slice is not None:
@@ -91,7 +96,8 @@ class LdaSeqModel(utils.SaveLoad):
     """
 
     def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
-                initialize='gensim', sstats=None,  lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10, random_state=None):
+                initialize='gensim', sstats=None,  lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10, 
+                random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20):
         """
         `corpus` is any iterable gensim corpus
 
@@ -112,6 +118,8 @@ class LdaSeqModel(utils.SaveLoad):
         beta distribution.
 
         `passes` is the number of passes of the initial LdaModel.
+
+        `random_state` can be a numpy.random.RandomState object or the seed for one, for the LdaModel.
         """
         if corpus is not None:
             self.corpus = seq_corpus(corpus=corpus, id2word=id2word, time_slice=time_slice)
@@ -149,7 +157,7 @@ class LdaSeqModel(utils.SaveLoad):
             self.init_ldaseq_ss(chain_variance, obs_variance, self.alphas, self.sstats)
 
             # fit DTM
-            self.fit_lda_seq(self.corpus)
+            self.fit_lda_seq(self.corpus, lda_inference_max_iter, em_min_iter, em_max_iter)
 
 
     def init_ldaseq_ss(self, topic_chain_variance, topic_obs_variance, alpha, init_suffstats):
@@ -157,9 +165,9 @@ class LdaSeqModel(utils.SaveLoad):
         Method to initialize State Space Language Model, topic wise.
         """
         self.alphas = alpha
-        for k in range(0, self.num_topics):
+        for k, chain in enumerate(self.topic_chains):
             sstats = init_suffstats[:, k]
-            sslm.sslm_counts_init(self.topic_chains[k], topic_obs_variance, topic_chain_variance, sstats)
+            sslm.sslm_counts_init(chain, topic_obs_variance, topic_chain_variance, sstats)
 
             # initialize the below matrices only if running DIM
             # ldaseq.topic_chains[k].w_phi_l = numpy.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
@@ -167,7 +175,7 @@ class LdaSeqModel(utils.SaveLoad):
             # ldaseq.topic_chains[k].w_phi_sq = numpy.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
 
 
-    def fit_lda_seq(self, seq_corpus):
+    def fit_lda_seq(self, seq_corpus, lda_inference_max_iter, em_min_iter, em_max_iter):
         """
         fit an lda sequence model:
 
@@ -180,10 +188,8 @@ class LdaSeqModel(utils.SaveLoad):
         maximize topics
 
        """
-        LDA_INFERENCE_MAX_ITER = 25
         LDASQE_EM_THRESHOLD = 1e-4
-        LDA_SEQ_MIN_ITER = 6
-        LDA_SEQ_MAX_ITER = 20
+
 
         num_topics = self.num_topics
         vocab_len = self.vocab_len
@@ -194,10 +200,10 @@ class LdaSeqModel(utils.SaveLoad):
         convergence = LDASQE_EM_THRESHOLD + 1
         iter_ = 0
 
-        while iter_ < LDA_SEQ_MIN_ITER or ((convergence > LDASQE_EM_THRESHOLD) and iter_ <= LDA_SEQ_MAX_ITER):
+        while iter_ < em_min_iter or ((convergence > LDASQE_EM_THRESHOLD) and iter_ <= em_max_iter):
 
-            print (" EM iter ", iter_)
-            print ("E Step")
+            logger.info(" EM iter ", iter_)
+            logger.info("E Step")
 
             old_bound = bound
 
@@ -211,37 +217,38 @@ class LdaSeqModel(utils.SaveLoad):
             lhoods = numpy.resize(numpy.zeros(corpus_len * num_topics + 1), (corpus_len, num_topics + 1))
             # compute the likelihood of a sequential corpus under an LDA
             # seq model and find the evidence lower bound. This is the E - Step
-            bound, gammas = self.lda_seq_infer(seq_corpus, topic_suffstats, gammas, lhoods, iter_)
+            bound, gammas = self.lda_seq_infer(seq_corpus, topic_suffstats, gammas, lhoods, iter_, lda_inference_max_iter)
             self.gammas = gammas
 
-            print ("M Step")
+            logger.info("M Step")
 
             # fit the variational distribution. This is the M - Step
             topic_bound = self.fit_lda_seq_topics(topic_suffstats)
             bound += topic_bound
 
             if ((bound - old_bound) < 0):
-                if LDA_INFERENCE_MAX_ITER < 10:
-                    LDA_INFERENCE_MAX_ITER *= 2
-                print ("Bound went down, increasing iterations to", LDA_INFERENCE_MAX_ITER)
+                # if max_iter is too low, increase iterations.
+                if lda_inference_max_iter < 10:
+                    lda_inference_max_iter *= 2
+                logger.info("Bound went down, increasing iterations to", lda_inference_max_iter)
 
             # check for convergence
             convergence = numpy.fabs((bound - old_bound) / old_bound)
 
             if convergence < LDASQE_EM_THRESHOLD:
 
-                LDA_INFERENCE_MAX_ITER = 500
-                print ("Starting final iterations, max iter is", LDA_INFERENCE_MAX_ITER)
+                lda_inference_max_iter = 500
+                logger.info("Starting final iterations, max iter is", lda_inference_max_iter)
                 convergence = 1.0
 
-            print (iter_, "iteration lda seq bound is", bound, ", convergence is ", convergence)
+            logger.info(iter_, "iteration lda seq bound is", bound, ", convergence is ", convergence)
 
             iter_ += 1
 
         return bound
 
 
-    def lda_seq_infer(self, seq_corpus, topic_suffstats, gammas, lhoods, iter_):
+    def lda_seq_infer(self, seq_corpus, topic_suffstats, gammas, lhoods, iter_, lda_inference_max_iter):
         """
         Inference or E- Step.
         This is used to set up the gensim LdaModel to be used for each time-slice.
@@ -257,15 +264,15 @@ class LdaSeqModel(utils.SaveLoad):
 
         model = "DTM"
         if model == "DTM":
-            bound, gammas = self.inferDTMseq(seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound)
+            bound, gammas = self.inferDTMseq(seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter)
         elif model == "DIM":
             self.InfluenceTotalFixed(seq_corpus)
-            bound, gammas = self.inferDIMseq(seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound)
+            bound, gammas = self.inferDIMseq(seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter)
 
         return bound, gammas
 
 
-    def inferDTMseq(self, seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound):
+    def inferDTMseq(self, seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter):
         """
         Computes the likelihood of a sequential corpus under an LDA seq model, and return the likelihood bound.
         Need to pass the LdaSeq model, seq_corpus, sufficient stats, gammas and lhoods matrices previously created,
@@ -295,9 +302,9 @@ class LdaSeqModel(utils.SaveLoad):
 
             # TODO: replace fit_lda_post with appropriate ldamodel functions, if possible.
             if iter_ == 0:
-                doc_lhood = LdaPost.fit_lda_post(ldapost, doc_num, time, None, None, None, None, None)
+                doc_lhood = LdaPost.fit_lda_post(ldapost, doc_num, time, None, lda_inference_max_iter=lda_inference_max_iter)
             else:
-                doc_lhood = LdaPost.fit_lda_post(ldapost, doc_num, time, self, None, None, None, None)
+                doc_lhood = LdaPost.fit_lda_post(ldapost, doc_num, time, self, lda_inference_max_iter=lda_inference_max_iter)
 
             if topic_suffstats is not None:
                 topic_suffstats = LdaPost.update_lda_seq_ss(ldapost, time, line, topic_suffstats)
@@ -314,8 +321,7 @@ class LdaSeqModel(utils.SaveLoad):
         """
         set up the LDA model topic-word values with that of ldaseq.
         """
-        num_topics = self.num_topics
-        for k in range(0, num_topics):
+        for k in range(0, self.num_topics):
             lda.topics[:, k] = numpy.copy(self.topic_chains[k].e_log_prob[:, time])
 
         lda.alpha = numpy.copy(self.alphas)
@@ -329,9 +335,9 @@ class LdaSeqModel(utils.SaveLoad):
         lhood = 0
         lhood_term = 0
 
-        for k in range(0, self.num_topics):
-            print ("Fitting topic number", k)
-            lhood_term = sslm.fit_sslm(self.topic_chains[k], topic_suffstats[k])
+        for k, chain in enumerate(self.topic_chains):
+            logger.info("Fitting topic number", k)
+            lhood_term = sslm.fit_sslm(chain, topic_suffstats[k])
             lhood += lhood_term
 
         return lhood
@@ -394,7 +400,7 @@ class LdaSeqModel(utils.SaveLoad):
         time_lhoods = []
         for time in range(0, self.num_time_slices):
             lda_model = self.make_lda_seq_slice(lda_model, time)  # create lda_seq slice
-            lhood = LdaPost.fit_lda_post(ldapost, 0, time, self, None, None, None, None)
+            lhood = LdaPost.fit_lda_post(ldapost, 0, time, self)
             time_lhoods.append(lhood)
 
         doc_topic = ldapost.gamma / ldapost.gamma.sum()
@@ -477,19 +483,19 @@ class sslm(utils.SaveLoad):
         fwd_variance[0] = chain_variance * INIT_VARIANCE_CONST
         for t in range(1, T + 1):
             if self.obs_variance:
-                w = self.obs_variance / (fwd_variance[t - 1] + chain_variance + self.obs_variance)
+                c = self.obs_variance / (fwd_variance[t - 1] + chain_variance + self.obs_variance)
             else:
-                w = 0
-            fwd_variance[t] = w * (fwd_variance[t - 1] + chain_variance)
+                c = 0
+            fwd_variance[t] = c * (fwd_variance[t - 1] + chain_variance)
 
         # backward pass 
         variance[T] = fwd_variance[T]
         for t in range(T - 1, -1, -1):
             if fwd_variance[t] > 0.0:
-                w = numpy.power((fwd_variance[t] / (fwd_variance[t] + chain_variance)), 2)
+                c = numpy.power((fwd_variance[t] / (fwd_variance[t] + chain_variance)), 2)
             else:
-                w = 0
-            variance[t] = (w * (variance[t + 1] - chain_variance)) + ((1 - w) * fwd_variance[t])
+                c  = 0
+            variance[t] = (c * (variance[t + 1] - chain_variance)) + ((1 - c) * fwd_variance[t])
 
         return variance, fwd_variance
         
@@ -516,17 +522,17 @@ class sslm(utils.SaveLoad):
         # forward 
         fwd_mean[0] = 0
         for t in range(1, T + 1):
-            w = self.obs_variance / (fwd_variance[t - 1] + chain_variance + self.obs_variance)
-            fwd_mean[t] = w * fwd_mean[t - 1] + (1 - w) * obs[t - 1]
+            c = self.obs_variance / (fwd_variance[t - 1] + chain_variance + self.obs_variance)
+            fwd_mean[t] = c * fwd_mean[t - 1] + (1 - c) * obs[t - 1]
 
         # backward pass
         mean[T] = fwd_mean[T]
         for t in range(T - 1, -1, -1):
             if chain_variance == 0.0:
-                w = 0.0
+                c = 0.0
             else:
-                w = chain_variance / (fwd_variance[t] + chain_variance)
-            mean[t] = w * fwd_mean[t] + (1 - w) * mean[t + 1]
+                c = chain_variance / (fwd_variance[t] + chain_variance)
+            mean[t] = c * fwd_mean[t] + (1 - c) * mean[t + 1]
         return mean, fwd_mean
 
 
@@ -560,11 +566,9 @@ class sslm(utils.SaveLoad):
         self.obs_variance = obs_variance
         self.chain_variance = chain_variance
 
-        # compute post variance
+        # compute post variance, mean
         for w in range(0, W):
             self.variance[w], self.fwd_variance[w] = self.compute_post_variance(w, self.chain_variance)
-
-        for w in range(0, W):
             self.mean[w], self.fwd_mean[w] = self.compute_post_mean(w, self.chain_variance)
 
         self.zeta = self.update_zeta()
@@ -585,8 +589,8 @@ class sslm(utils.SaveLoad):
 
         totals = numpy.zeros(counts.shape[1])
 
-        for w in range(0, W):
-            self.variance[w], self.fwd_variance[w] = self.compute_post_variance(w, self.chain_variance)
+        # computing variance, fwd_variance
+        self.variance, self.fwd_variance = map(numpy.array, list(zip(*[self.compute_post_variance(w, self.chain_variance) for w in range(0, W)])))
 
         # column sum of counts
         totals = counts.sum(axis=0)
@@ -598,7 +602,7 @@ class sslm(utils.SaveLoad):
         if model == "DIM":
             bound = self.compute_bound_fixed(counts, totals)
 
-        print ("initial sslm bound is ", bound)
+        logger.info("initial sslm bound is ", bound)
 
         while converged > sslm_fit_threshold and iter_ < sslm_max_iter:
             iter_ += 1
@@ -611,7 +615,7 @@ class sslm(utils.SaveLoad):
                 bound = self.compute_bound_fixed(counts, totals)
 
             converged = numpy.fabs((bound - old_bound) / old_bound)
-            print (iter_, " iteration lda seq bound is ", bound, " convergence is", converged)
+            logger.info(iter_, " iteration lda seq bound is ", bound, " convergence is", converged)
 
         self.e_log_prob = self.compute_expected_log_prob()
         return bound
@@ -633,15 +637,14 @@ class sslm(utils.SaveLoad):
         ent = 0
 
         chain_variance = self.chain_variance
-        for w in range(0, W):
-            self.mean[w], self.fwd_mean[w] = self.compute_post_mean(w, chain_variance)
-
+        # computing mean, fwd_mean
+        self.mean, self.fwd_mean = map(numpy.array, (zip(*[self.compute_post_mean(w, self.chain_variance) for w in range(0, W)])))
         self.zeta = self.update_zeta()
 
         for w in range(0, W):
             val += (self.variance[w][0] - self.variance[w][T]) / 2 * chain_variance
 
-        print ("Computing bound, all times")
+        logger.info("Computing bound, all times")
 
         for t in range(1, T + 1):
             term_1 = 0.0
@@ -672,6 +675,8 @@ class sslm(utils.SaveLoad):
     def update_obs(self, word_counts, totals):
         """
         Fucntion to perform optimization of obs.
+        This is by far the slowest function in the whole algorithm.
+        Replacing or improving the performance of this would greatly speed things up.
         """
         OBS_NORM_CUTOFF = 2
         STEP_SIZE = 0.01
@@ -921,7 +926,7 @@ class LdaPost(utils.SaveLoad):
         # sigma_l = 0
         # sigma_d = 0 
 
-        lhood = math.lgamma(numpy.sum(self.lda.alpha)) - math.lgamma(gamma_sum)
+        lhood = gammaln(numpy.sum(self.lda.alpha)) - gammaln(gamma_sum)
         self.lhood[num_topics] = lhood
 
         # influence_term = 0
@@ -935,7 +940,7 @@ class LdaPost(utils.SaveLoad):
             #     influence_term = - ((influence_topic * influence_topic + sigma_l * sigma_l) / 2.0 / (sigma_d * sigma_d))
 
             e_log_theta_k = digamma(self.gamma[k]) - digsum
-            lhood_term = (self.lda.alpha[k] - self.gamma[k]) * e_log_theta_k + math.lgamma(self.gamma[k]) - math.lgamma(self.lda.alpha[k])
+            lhood_term = (self.lda.alpha[k] - self.gamma[k]) * e_log_theta_k + gammaln(self.gamma[k]) - gammaln(self.lda.alpha[k])
             # TODO: check why there's an IF
             n = 0
             for word_id, count in self.doc:
@@ -949,13 +954,12 @@ class LdaPost(utils.SaveLoad):
 
         return lhood
 
-    def fit_lda_post(self, doc_number, time, ldaseq, g, g3_matrix, g4_matrix, g5_matrix):
+    def fit_lda_post(self, doc_number, time, ldaseq, LDA_INFERENCE_CONVERGED = 1e-8, 
+                    lda_inference_max_iter = 25, g=None, g3_matrix=None, g4_matrix=None, g5_matrix=None):
         """
         Posterior inference for lda.
+        g, g3, g4 and g5 are matrices used in Document Influence Model and not used currently.
         """
-
-        LDA_INFERENCE_CONVERGED = 1e-8
-        LDA_INFERENCE_MAX_ITER = 25
 
         self.init_lda_post()
         # sum of counts in a doc
@@ -986,7 +990,7 @@ class LdaPost(utils.SaveLoad):
         lhood = self.compute_lda_lhood()
         converged = numpy.fabs((lhood_old - lhood) / (lhood_old * total))
 
-        while converged > LDA_INFERENCE_CONVERGED and iter_ <= LDA_INFERENCE_MAX_ITER:
+        while converged > LDA_INFERENCE_CONVERGED and iter_ <= lda_inference_max_iter:
 
             iter_ += 1
             lhood_old = lhood

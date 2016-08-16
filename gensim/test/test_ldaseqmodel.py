@@ -23,22 +23,22 @@ class TestLdaSeq(unittest.TestCase):
         ['bank','river','shore','water'],['river','water','flow','fast','tree'],['bank','water','fall','flow'],['bank','bank','water','rain','river'],
         ['river','water','mud','tree'],['money','transaction','bank','finance'],
         ['bank','borrow','money'], ['bank','finance'], ['finance','money','sell','bank'],['borrow','sell'],['bank','loan','sell']]
-
+        # initializing using own LDA sufficient statistics so that we get same results each time.
+        sstats = numpy.loadtxt(datapath('sstats_test'))
         dictionary = Dictionary(texts)
         corpus = [dictionary.doc2bow(text) for text in texts]
-        self.ldaseq = ldaseqmodel.LdaSeqModel(corpus = corpus , id2word= dictionary, num_topics=2, time_slice=[10, 10, 11], random_state=numpy.random.seed(0))
+        self.ldaseq = ldaseqmodel.LdaSeqModel(corpus = corpus , id2word= dictionary, num_topics=2, time_slice=[10, 10, 11], initialize='own', sstats=sstats)
 
     def testTopicWord(self):
 
         topics = self.ldaseq.print_topics(0)
-        expected_topic_word = [(0.053999999999999999, 'skills')]
+        expected_topic_word = [( 0.035999999999999997, 'skills')]
         self.assertAlmostEqual(topics[0][0][0], expected_topic_word[0][0], places=2)
         self.assertEqual(topics[0][0][1], expected_topic_word[0][1])
 
-
     def testDocTopic(self):
         doc_topic = self.ldaseq.doc_topics(0)
-        expected_doc_topic = 0.99933422103861524
+        expected_doc_topic = 0.00066577896138482028
         self.assertAlmostEqual(doc_topic[0], expected_doc_topic, places=2)
 
 if __name__ == '__main__':
