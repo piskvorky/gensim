@@ -14,7 +14,6 @@ is provided in the interface itself, so that the interfaces can be subclassed).
 from __future__ import with_statement
 
 import logging
-import itertools
 
 from gensim import utils, matutils
 from six.moves import xrange
@@ -54,10 +53,9 @@ class CorpusABC(utils.SaveLoad):
         """
         raise NotImplementedError('cannot instantiate abstract base class')
 
-
     def save(self, *args, **kwargs):
         import warnings
-        warnings.warn("corpus.save() stores only the (tiny) iteration object; "
+        warnings.warn("corpus.save() stores only the (tiny) iteration object; " +
             "to serialize the actual corpus content, use e.g. MmCorpus.serialize(corpus)")
         super(CorpusABC, self).save(*args, **kwargs)
 
