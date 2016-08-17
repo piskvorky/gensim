@@ -12,21 +12,23 @@ Corpus in the Matrix Market format.
 
 import logging
 
-from gensim import interfaces, matutils
+from gensim.matutils import MmReader, MmWriter
 from gensim.corpora import IndexedCorpus
 
 
 logger = logging.getLogger('gensim.corpora.mmcorpus')
 
 
-class MmCorpus(matutils.MmReader, IndexedCorpus):
+class MmCorpus(MmReader, IndexedCorpus):
     """
     Corpus in the Matrix Market format.
     """
-    def __init__(self, fname):
+    def __init__(self, fname, index_fname=None, transposed=True):
         # avoid calling super(), too confusing
-        IndexedCorpus.__init__(self, fname)
-        matutils.MmReader.__init__(self, fname)
+        print('Loading the reader for the main docs file')
+        MmReader.__init__(self, fname, transposed=transposed)
+        print('Now trying to init the index for {} or {}'.format(fname, index_fname))
+        IndexedCorpus.__init__(self, fname, index_fname=index_fname)
 
     def __iter__(self):
         """
@@ -44,8 +46,9 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         This function is automatically called by `MmCorpus.serialize`; don't
         call it directly, call `serialize` instead.
         """
-        logger.info("storing corpus in Matrix Market format to %s" % fname)
         num_terms = len(id2word) if id2word is not None else None
-        return matutils.MmWriter.write_corpus(fname, corpus, num_terms=num_terms, index=True, progress_cnt=progress_cnt, metadata=metadata)
+        logger.info("storing corpus with {} terms in dict, and {} docs in Matrix Market format to file named {}".format(
+                    num_terms, len(corpus), fname))
+        return MmWriter.write_corpus(fname, corpus, num_terms=num_terms, index=True, progress_cnt=progress_cnt, metadata=metadata)
 
 # endclass MmCorpus

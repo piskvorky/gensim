@@ -635,7 +635,7 @@ class MmReader(object):
                 docid, termid, val = utils.to_unicode(line).split()  # needed for python3
                 if not self.transposed:
                     termid, docid = docid, termid
-                docid, termid, val = int(docid) - 1, int(termid) - 1, float(val) # -1 because matrix market indexes are 1-based => convert to 0-based
+                docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)  # -1 because matrix market indexes are 1-based => convert to 0-based
                 assert previd <= docid, "matrix columns must come in ascending order"
                 if docid != previd:
                     # change of document: return the document read so far (its id is prevId)
