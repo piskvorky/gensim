@@ -1054,7 +1054,8 @@ class Word2Vec(utils.SaveLoad):
                     fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
 
     @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict'):
+    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+                             limit=None, datatype=REAL):
         """
         Load the input-hidden weight matrix from the original C word2vec-tool format.
 
@@ -1070,6 +1071,18 @@ class Word2Vec(utils.SaveLoad):
         If you trained the C model using non-utf8 encoding for words, specify that
         encoding in `encoding`.
 
+        `unicode_errors`, default 'strict', is a string suitable to be passed as the `errors`
+        argument to the unicode() (Python 2.x) or str() (Python 3.x) function. If your source
+        file may include word tokens truncated in the middle of a multibyte unicode character
+        (as is common from the original word2vec.c tool), 'ignore' or 'replace' may help.
+
+        `limit` sets a maximum number of word-vectors to read from the file. The default,
+        None, means read all.
+
+        `datatype` (experimental) can coerce dimensions to a non-default float type (such
+        as np.float16) to save memory. (Such types may result in much slower bulk operations
+        or incompatibility with optimized routines.)
+
         """
         counts = None
         if fvocab is not None:
@@ -1084,8 +1097,10 @@ class Word2Vec(utils.SaveLoad):
         with utils.smart_open(fname) as fin:
             header = utils.to_unicode(fin.readline(), encoding=encoding)
             vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
+            if limit:
+                vocab_size = min(vocab_size, limit)
             result = cls(size=vector_size)
-            result.syn0 = zeros((vocab_size, vector_size), dtype=REAL)
+            result.syn0 = zeros((vocab_size, vector_size), dtype=datatype)
 
             def add_word(word, weights):
                 word_id = len(result.vocab)
@@ -1114,13 +1129,18 @@ class Word2Vec(utils.SaveLoad):
                         ch = fin.read(1)
                         if ch == b' ':
                             break
+                        if ch == b'':
+                            raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
                         if ch != b'\n':  # ignore newlines in front of words (some binary files have)
                             word.append(ch)
                     word = utils.to_unicode(b''.join(word), encoding=encoding, errors=unicode_errors)
                     weights = fromstring(fin.read(binary_len), dtype=REAL)
                     add_word(word, weights)
             else:
-                for line_no, line in enumerate(fin):
+                for line_no in xrange(vocab_size):
+                    line = fin.readline()
+                    if line == b'':
+                        raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
@@ -1137,7 +1157,7 @@ class Word2Vec(utils.SaveLoad):
         logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
         return result
 
-    def intersect_word2vec_format(self, fname, binary=False, encoding='utf8', unicode_errors='strict'):
+    def intersect_word2vec_format(self, fname, lockf=0.0, binary=False, encoding='utf8', unicode_errors='strict'):
         """
         Merge the input-hidden weight matrix from the original C word2vec-tool format
         given, where it intersects with the current vocabulary. (No words are added to the
@@ -1145,6 +1165,10 @@ class Word2Vec(utils.SaveLoad):
         non-intersecting words are left alone.)
 
         `binary` is a boolean indicating whether the data is in binary word2vec format.
+
+        `lockf` is a lock-factor value to be set for any imported word-vectors; the
+        default value of 0.0 prevents further updating of the vector during subsequent
+        training. Use 1.0 to allow further training updates of merged vectors.
         """
         overlap_count = 0
         logger.info("loading projection weights from %s" % (fname))
@@ -1170,7 +1194,7 @@ class Word2Vec(utils.SaveLoad):
                     if word in self.vocab:
                         overlap_count += 1
                         self.syn0[self.vocab[word].index] = weights
-                        self.syn0_lockf[self.vocab[word].index] = 0.0  # lock it
+                        self.syn0_lockf[self.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
             else:
                 for line_no, line in enumerate(fin):
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
@@ -1564,7 +1588,7 @@ class Word2Vec(utils.SaveLoad):
                         (section['section'], 100.0 * correct / (correct + incorrect),
                          correct, correct + incorrect))
 
-    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, use_lowercase=True):
+    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, case_insensitive=True):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
@@ -1573,18 +1597,21 @@ class Word2Vec(utils.SaveLoad):
         The accuracy is reported (=printed to log and returned as a list) for each
         section separately, plus there's one aggregate summary at the end.
 
-        Use `restrict_vocab` to ignore all questions containing a word whose frequency
-        is not in the top-N most frequent words (default top 30,000).
+        Use `restrict_vocab` to ignore all questions containing a word not in the first `restrict_vocab`
+        words (default 30,000). This may be meaningful if you've sorted the vocabulary by descending frequency.
+        In case `case_insensitive` is True, the first `restrict_vocab` words are taken first, and then
+        case normalization is performed.
 
-        Use `use_lowercase` to convert all words in questions to thier lowercase form before evaluating
-        the accuracy. It's useful when assuming the text preprocessing also uses lowercase.  (default True).
+        Use `case_insensitive` to convert all words in questions and vocab to their uppercase form before 
+        evaluating the accuracy (default True). Useful in case of case-mismatch between training tokens 
+        and question words. In case of multiple case variants of a single word, the vector for the first
+        occurrence (also the most frequent if vocabulary is sorted) is taken.
 
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
 
         """
-        ok_vocab = dict(sorted(iteritems(self.vocab),
-                               key=lambda item: -item[1].count)[:restrict_vocab])
-        ok_index = set(v.index for v in itervalues(ok_vocab))
+        ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
+        ok_vocab = dict((w.upper(), v) for w, v in reversed(ok_vocab)) if case_insensitive else dict(ok_vocab)
 
         sections, section = [], None
         for line_no, line in enumerate(utils.smart_open(questions)):
@@ -1600,23 +1627,27 @@ class Word2Vec(utils.SaveLoad):
                 if not section:
                     raise ValueError("missing section header before line #%i in %s" % (line_no, questions))
                 try:
-                    if use_lowercase:
-                        a, b, c, expected = [word.lower() for word in line.split()]  # assumes vocabulary preprocessing uses lowercase, too...
+                    if case_insensitive:
+                        a, b, c, expected = [word.upper() for word in line.split()]
                     else:
                         a, b, c, expected = [word for word in line.split()]
                 except:
                     logger.info("skipping invalid line #%i in %s" % (line_no, questions))
+                    continue
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
                     logger.debug("skipping line #%i with OOV words: %s" % (line_no, line.strip()))
                     continue
 
-                ignore = set(self.vocab[v].index for v in [a, b, c])  # indexes of words to ignore
+                original_vocab = self.vocab
+                self.vocab = ok_vocab
+                ignore = set([a, b, c])  # input words to be ignored
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
                 sims = most_similar(self, positive=[b, c], negative=[a], topn=False, restrict_vocab=restrict_vocab)
+                self.vocab = original_vocab
                 for index in matutils.argsort(sims, reverse=True):
-                    if index in ok_index and index not in ignore:
-                        predicted = self.index2word[index]
+                    predicted = self.index2word[index].upper() if case_insensitive else self.index2word[index]
+                    if predicted in ok_vocab and predicted not in ignore:
                         if predicted != expected:
                             logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
                         break
@@ -1710,7 +1741,8 @@ class Text8Corpus(object):
             while True:
                 text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
                 if text == rest:  # EOF
-                    sentence.extend(rest.split())  # return the last chunk of words, too (may be shorter/longer)
+                    words = utils.to_unicode(text).split()
+                    sentence.extend(words)  # return the last chunk of words, too (may be shorter/longer)
                     if sentence:
                         yield sentence
                     break
