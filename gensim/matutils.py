@@ -592,11 +592,16 @@ class MmReader(object):
             for lineno, line in enumerate(lines):
                 line = utils.to_unicode(line)
                 if not line.startswith('%'):
-                    if len(line.split()):
+                    try:
                         self.num_docs, self.num_terms, self.num_nnz = map(int, line.split())
                         if not self.transposed:
                             self.num_docs, self.num_terms = self.num_terms, self.num_docs
                         break
+                    except:
+                        logger.error('Unable to read the metadata row for the pickled corpus.')
+                        logger.error('It should contain 3 space-delimitted ints on the second line (num_docs, num_terms, num_nnz).')
+                        raise
+
 
         logger.info("accepted corpus with %i documents, %i features, %i non-zero entries" %
                     (self.num_docs, self.num_terms, self.num_nnz))
