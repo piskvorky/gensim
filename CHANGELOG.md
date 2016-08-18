@@ -25,7 +25,6 @@ Changes
 * Add LsiModel.docs_processed attribute (@hobson, [#763](https://github.com/RaRe-Technologies/gensim/pull/763))
 * Dynamic Topic Modelling in Python. Google Summer of Code 2016 project. (@bhargavvader, [#739](https://github.com/RaRe-Technologies/gensim/pull/739))
 
-
 0.13.1, 2016-06-22
 
 * Topic coherence C_v and U_mass (@dsquareindia, #710)
