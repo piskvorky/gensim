@@ -1,20 +1,30 @@
 Changes
 =======
 
-0.13.2, TBD
+0.13.2, 2016-08-19
 
-* wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, #771) 
+* wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, [#771](https://github.com/RaRe-Technologies/gensim/pull/771)) 
   - assigning wordtopics value of word_topics to keep backward compatibility, for now
-* topics, topn parameters changed to num_topics and num_words in show_topics() and print_topics()(@droudy, #747)
+* topics, topn parameters changed to num_topics and num_words in show_topics() and print_topics()(@droudy, [#755](https://github.com/RaRe-Technologies/gensim/pull/755))
   - In hdpmodel and dtmmodel
   - NOT BACKWARDS COMPATIBLE!
-* Added random_state parameter to LdaState initializer and check_random_state() (@droudy, #113)
-* Implemented LsiModel.docs_processed attribute
-* Added LdaMallet support. Added LdaVowpalWabbit, LdaMallet example to notebook. Added test suite for coherencemodel and aggregation.
-  Added `topics` parameter to coherencemodel. Can now provide tokenized topics to calculate coherence value (@dsquareindia, #750)
-* Added a check for empty (no words) documents before starting to run the DTM wrapper if model = "fixed" is used (DIM model) as this    causes the an error when such documents are reached in training. (@eickho, #806)
-* New parameters `limit`, `datatype` for load_word2vec_format(); `lockf` for intersect_word2vec_format (@gojomo, #817)
-* Changed `use_lowercase` option in word2vec accuracy to `case_insensitive` to account for case variations in training vocabulary (@jayantj, #714)
+* Added random_state parameter to LdaState initializer and check_random_state() (@droudy, [#113](https://github.com/RaRe-Technologies/gensim/pull/113))
+* Topic coherence update with `c_uci`, `c_npmi` measures.  LdaMallet, LdaVowpalWabbit support. Add `topics` parameter to coherencemodel. Can now provide tokenized topics to calculate coherence value. Faster backtracking. (@dsquareindia, [#750](https://github.com/RaRe-Technologies/gensim/pull/750), [#793](https://github.com/RaRe-Technologies/gensim/pull/793))
+* Added a check for empty (no words) documents before starting to run the DTM wrapper if model = "fixed" is used (DIM model) as this    causes the an error when such documents are reached in training. (@eickho, [#806](https://github.com/RaRe-Technologies/gensim/pull/806))
+* New parameters `limit`, `datatype` for load_word2vec_format(); `lockf` for intersect_word2vec_format (@gojomo, [#817](https://github.com/RaRe-Technologies/gensim/pull/817))
+* Changed `use_lowercase` option in word2vec accuracy to `case_insensitive` to account for case variations in training vocabulary (@jayantj, [#804](https://github.com/RaRe-Technologies/gensim/pull/804)
+* Link to Doc2Vec on airline tweets example in tutorials page (@544895340 , [#823](https://github.com/RaRe-Technologies/gensim/pull/823))
+* Small error on Doc2vec notebook tutorial (@charlessutton, [#816](https://github.com/RaRe-Technologies/gensim/pull/816))
+* Bugfix: Full2sparse clipped to use abs value (@tmylk, [#811](https://github.com/RaRe-Technologies/gensim/pull/811))
+* WMD docstring: add tutorial link and query example (@tmylk, [#813](https://github.com/RaRe-Technologies/gensim/pull/813))
+* Annoy integration to speed word2vec and doc2vec similarity. Tutorial update (@droudy, [#799](https://github.com/RaRe-Technologies/gensim/pull/799),[#792](https://github.com/RaRe-Technologies/gensim/pull/799) )
+* Add converter of LDA model between Mallet, Vowpal Wabit and gensim (@dsquareindia, [#798](https://github.com/RaRe-Technologies/gensim/pull/798), [#766](https://github.com/RaRe-Technologies/gensim/pull/766))
+* Distributed LDA in different network segments without broadcast (@menshikh-iv , [#782](https://github.com/RaRe-Technologies/gensim/pull/782))
+* Update Corpora_and_Vector_Spaces.ipynb (@megansquire, [#772](https://github.com/RaRe-Technologies/gensim/pull/772))
+* DTM wrapper bug fixes caused by renaming num_words in #755 (@bhargavvader,  [#770](https://github.com/RaRe-Technologies/gensim/pull/770))
+* Add LsiModel.docs_processed attribute (@hobson, [#763](https://github.com/RaRe-Technologies/gensim/pull/763))
+* Dynamic Topic Modelling in Python. Google Summer of Code 2016 project. (@bhargavvader, [#739](https://github.com/RaRe-Technologies/gensim/pull/739))
+
 
 0.13.1, 2016-06-22
 
