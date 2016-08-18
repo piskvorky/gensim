@@ -1,17 +1,6 @@
-# these imports probably arent necessary
 from __future__ import division  # py3 "true division"
 
 import logging
-import sys
-import os
-import heapq
-from timeit import default_timer
-from copy import deepcopy
-from collections import defaultdict
-import threading
-import itertools
-
-from gensim.utils import keep_vocab_item
 
 try:
     from queue import Queue, Empty
@@ -24,19 +13,19 @@ from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
-from six import iteritems, itervalues, string_types
+from six import string_types
 from six.moves import xrange
-from types import GeneratorType
+
 
 logger = logging.getLogger(__name__)
 
 
 class KeyedVectors(object):
     """
-    Class to contain vectors and vocab for the Word2Vec training class
+    Class to contain vectors and vocab for the Word2Vec training class and other w2v methods not directly
+    involved in training such as most_similar()
     """
     def __init__(self):
-        #self.syn0 = []
         self.syn0norm = []
         self.vocab = {}
         self.index2word = []
