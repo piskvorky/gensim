@@ -133,7 +133,14 @@ setup(
             include_dirs=[model_dir]),
         Extension('gensim.models.doc2vec_inner',
             sources=['./gensim/models/doc2vec_inner.c'],
+<<<<<<< HEAD
             include_dirs=[model_dir])
+=======
+            include_dirs=[model_dir]),
+        Extension('gensim.models.fastsent_inner',
+            sources=['./gensim/models/fastsent_inner.c'],
+            include_dirs=[model_dir]),
+>>>>>>> 126d8e4710bd5502a3af5d95da6e4d0de5569efc
     ],
     cmdclass=cmdclass,
     packages=find_packages(),
