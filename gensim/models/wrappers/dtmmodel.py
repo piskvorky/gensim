@@ -303,3 +303,44 @@ class DtmModel(utils.SaveLoad):
     def print_topic(self, topicid, time, num_words=10):
         """Return the given topic, formatted as a string."""
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, num_words)])
+
+    def DTMvis(self, corpus, time):
+        """
+        returns term_frequency, doc_lengths, topic-term distributions and doc_topic distributions.
+        all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
+        input parameter is the year to do the visualisation.
+        """
+        topic_term = dtm_model.lambda_[:,:,time]
+        topic_term = numpy.exp(topic_term)
+        topic_term = topic_term / topic_term.sum()
+        topic_term = topic_term * self.num_topics
+
+        doc_topic = dtm_model.gamma_
+
+        term_frequency = [0] * self.num_terms
+        doc_lengths = []
+        for doc in enumerate(corpus):
+            doc_lengths.append(len(doc))
+            for pair in doc:
+                term_frequency[pair[0]] += pair[1]
+
+        # returns numpy arrays for doc_topic proportions, topic_term proportions, and document_lengths, term_frequency.
+        # these should be passed to the `pyLDAvis.prepare` method to visualise one time-slice of DTM topics.
+        return doc_topic, topic_term, doc_lengths, term_frequency
+
+    def DTMcoherence(self, time):
+        """
+        returns all topics of a particular time-slice without probabilitiy values for it to be used 
+        for either "u_mass" or "c_v" coherence.
+        TODO: because of print format right now can only return for 1st time-slice.
+              should we fix the coherence printing or make changes to the print statements to mirror DTM python?  
+        """
+        coherence_topics = []
+        for topic in enumerate(self.show_topics(times=time, formatted=False)):
+            coherence_topic = []
+            for prob, word in topic:
+                coherence_topic.append(word)
+            coherence_topics.append(coherence_topic)
+
+        return coherence_topics
+

@@ -20,6 +20,7 @@ The next steps to take this forward would be:
     3) Heavy lifting going on in the sslm class - efforts can be made to cythonise mathematical methods.
         - in particular, update_obs and the optimization takes a lot time.
     4) Try and make it distributed, especially around the E and M step.
+    5) Remove all C/C++ coding style/syntax.
 
 """
 
@@ -290,6 +291,7 @@ class LdaSeqModel(utils.SaveLoad):
 
         time_slice = numpy.cumsum(numpy.array(self.time_slice))
 
+        # TODO: use chunks similar to ldamodel for constant memory footprint.
         for line_no, line in enumerate(seq_corpus.corpus):
             # this is used to update the time_slice and create a new lda_seq slice every new time_slice
             if doc_index > time_slice[time]:
@@ -379,7 +381,7 @@ class LdaSeqModel(utils.SaveLoad):
         topic = numpy.exp(topic[time])
         topic = topic / topic.sum()
         bestn = matutils.argsort(topic, top_terms, reverse=True)
-        beststr = [(round(topic[id_], 3), self.corpus.id2word[id_]) for id_ in bestn]
+        beststr = [(self.corpus.id2word[id_], round(topic[id_], 3)) for id_ in bestn]
         return beststr
 
 
@@ -392,6 +394,48 @@ class LdaSeqModel(utils.SaveLoad):
         doc_topic /= doc_topic.sum(axis=1)[:, numpy.newaxis]
         return doc_topic[doc_number]
 
+    def DTMvis(self, time):
+        """
+        returns term_frequency, doc_lengths, topic-term distributions and doc_topic distributions.
+        all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
+        input parameter is the year to do the visualisation.
+        """
+
+        doc_topic = numpy.copy(self.gammas)
+        doc_topic /= doc_topic.sum(axis=1)[:, numpy.newaxis]
+
+        topic_term = []
+        for chain in enumerate(self.topic_chains):
+            topic = numpy.transpose(chain.e_log_prob)
+            topic = topic[time]
+            topic = numpy.exp(topic)
+            topic = topic / topic.sum()
+            topic_term.append(topic)
+
+        term_frequency = [0] * self.vocab_len
+        doc_lengths = []
+        for doc in enumerate(self.corpus.corpus):
+            doc_lengths.append(len(doc))
+            for pair in doc:
+                term_frequency[pair[0]] += pair[1]
+
+        # returns numpy arrays for doc_topic proportions, topic_term proportions, and document_lengths, term_frequency.
+        # these should be passed to the `pyLDAvis.prepare` method to visualise one time-slice of DTM topics.
+        return doc_topic, numpy.array(topic_term), doc_lengths, term_frequency
+
+    def DTMcoherence(self, time):
+        """
+        returns all topics of a particular time-slice without probabilitiy values for it to be used 
+        for either "u_mass" or "c_v" coherence.
+        """
+        coherence_topics = []
+        for topics in self.print_topics(time):
+            coherence_topic = []
+            for word, dist in topics:
+                coherence_topic.append(word)
+            coherence_topics.append(coherence_topic)
+
+        return coherence_topics
 
     def __getitem__(self, doc):
         """
