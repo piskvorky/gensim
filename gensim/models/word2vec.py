@@ -58,7 +58,7 @@ import threading
 import itertools
 
 from gensim.utils import keep_vocab_item
-from word2vec_helper import KeyedVectors # bad place to keep keyedvectors
+from keyedvectors import KeyedVectors
 
 try:
     from queue import Queue, Empty
@@ -369,7 +369,7 @@ class Word2Vec(utils.SaveLoad):
         thus cython routines). Default is 10000. (Larger batches will be passed if individual
         texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
         """
-        self.kv = KeyedVectors() # kv --> KeyedVectors
+        self.kv = KeyedVectors()  # kv --> KeyedVectors
         self.sg = int(sg)
         self.cum_table = None  # for negative sampling
         self.vector_size = int(size)
@@ -377,7 +377,7 @@ class Word2Vec(utils.SaveLoad):
         if size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
         self.alpha = float(alpha)
-        self.min_alpha_yet_reached = float(alpha) # To warn user if alpha increases
+        self.min_alpha_yet_reached = float(alpha)  # To warn user if alpha increases
         self.window = int(window)
         self.max_vocab_size = max_vocab_size
         self.seed = seed
@@ -599,7 +599,7 @@ class Word2Vec(utils.SaveLoad):
 
     def sort_vocab(self):
         """Sort the vocabulary so the most frequent words have the lowest indexes."""
-        if hasattr(self.kv, 'syn0'):
+        if self.kv.syn0:
             raise RuntimeError("must sort before initializing vectors/weights")
         self.kv.index2word.sort(key=lambda word: self.kv.vocab[word].count, reverse=True)
         for i, word in enumerate(self.kv.index2word):
@@ -1146,6 +1146,21 @@ class Word2Vec(utils.SaveLoad):
     def __getitem__(self, words):
         return self.kv.__getitem__(words)
 
+    def __getattr__(self, item):
+        """
+        To maintain backwards compatibility, calls such as trained_model.syn0norm won't break but will be
+        rerouted to trained_model.kv.syn0norm
+        """
+        if item == "syn0":
+            return self.kv.syn0
+        if item == "syn0norm":
+            return self.kv.syn0norm
+        if item == "vocab":
+            return self.kv.vocab
+        if item == "index2word":
+            return self.kv.index2word
+        raise AttributeError("'{0}' object has no attribute '{1}'".format(type(self).__name__, item))
+
     def __contains__(self, word):
         return self.kv.__contains__(word)
 
@@ -1157,22 +1172,12 @@ class Word2Vec(utils.SaveLoad):
 
     def init_sims(self, replace=False):
         """
-        Precompute L2-normalized vectors.
-        If `replace` is set, forget the original vectors and only keep the normalized
-        ones = saves lots of memory!
-        Note that you **cannot continue training** after doing a replace. The model becomes
-        effectively read-only = you can call `most_similar`, `similarity` etc., but not `train`.
+        init_sims() resides in KeyedVectors because it deals with syn0 mainly, but because syn1 is not an attribute
+        of KeyedVectors, it has to be deleted in this class, and the normalizing of syn0 happens inside of KeyedVectors
         """
-        if getattr(self, 'syn0norm', None) is None or replace:
-            logger.info("precomputing L2-norms of word weight vectors")
-            if replace:
-                for i in xrange(self.kv.syn0.shape[0]):
-                    self.kv.syn0[i, :] /= sqrt((self.kv.syn0[i, :] ** 2).sum(-1))
-                self.kv.syn0norm = self.kv.syn0
-                if hasattr(self, 'syn1'):
-                    del self.syn1
-            else:
-                self.kv.syn0norm = (self.kv.syn0 / sqrt((self.kv.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
+        if hasattr(self, 'syn1'):
+            del self.syn1
+        return self.kv.init_sims(replace)
 
     def estimate_memory(self, vocab_size=None, report=None):
         """Estimate required memory for a model using current settings and provided vocabulary size."""
