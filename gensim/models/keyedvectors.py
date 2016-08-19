@@ -20,13 +20,14 @@ from six.moves import xrange
 logger = logging.getLogger(__name__)
 
 
-class KeyedVectors(object):
+class KeyedVectors(utils.SaveLoad):
     """
     Class to contain vectors and vocab for the Word2Vec training class and other w2v methods not directly
     involved in training such as most_similar()
     """
     def __init__(self):
-        self.syn0norm = []
+        self.syn0 = []
+        self.syn0norm = None
         self.vocab = {}
         self.index2word = []
 
@@ -397,6 +398,9 @@ class KeyedVectors(object):
         ones = saves lots of memory!
         Note that you **cannot continue training** after doing a replace. The model becomes
         effectively read-only = you can call `most_similar`, `similarity` etc., but not `train`.
+
+        init_sims() is replicated inside of this class without syn1 because many of the methods contained
+        here require normalized vectors
         """
         if getattr(self, 'syn0norm', None) is None or replace:
             logger.info("precomputing L2-norms of word weight vectors")
@@ -404,7 +408,5 @@ class KeyedVectors(object):
                 for i in xrange(self.syn0.shape[0]):
                     self.syn0[i, :] /= sqrt((self.syn0[i, :] ** 2).sum(-1))
                 self.syn0norm = self.syn0
-                if hasattr(self, 'syn1'):
-                    del self.syn1
             else:
                 self.syn0norm = (self.syn0 / sqrt((self.syn0 ** 2).sum(-1))[..., newaxis]).astype(REAL)
