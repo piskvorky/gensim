@@ -20,7 +20,7 @@ The next steps to take this forward would be:
     3) Heavy lifting going on in the sslm class - efforts can be made to cythonise mathematical methods.
         - in particular, update_obs and the optimization takes a lot time.
     4) Try and make it distributed, especially around the E and M step.
-
+    5) Remove all C/C++ coding style/syntax.
 """
 
 from gensim import utils, matutils
@@ -31,54 +31,6 @@ from scipy import optimize
 import logging
 
 logger = logging.getLogger('gensim.models.ldaseqmodel')
-
-
-class seq_corpus(utils.SaveLoad):
-
-    """
-    `seq_corpus` is basically a wrapper class which contains information about the corpus.
-    `vocab_len` is the length of the vocabulary.
-    `max_doc_len` is the maximum number of terms a single document has.
-    `num_time_slices` is the number of sequences, i.e number of time-slices.
-    `corpus_len` is the number of documents present.
-    `time_slice` is a list or numpy array which the user must provide which contains the number of documents in each time-slice.
-    `corpus` is any iterable gensim corpus.
-
-    """
-    def __init__(self, corpus=None, time_slice=None, id2word=None):
-        self.id2word = id2word
-        if corpus is None and self.id2word is None:
-            raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
-
-        if self.id2word is None:
-            logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
-            self.id2word = utils.dict_from_corpus(corpus)
-            self.vocab_len = len(self.id2word)
-        elif len(self.id2word) > 0:
-            self.vocab_len = len(self.id2word)
-        else:
-            self.vocab_len = 0
-
-        self.corpus = corpus
-        if self.corpus is not None:
-            try:
-                self.corpus_len = len(corpus)
-            except:
-                logger.warning("input corpus stream has no len(); counting documents")
-                self.corpus_len = sum(1 for _ in corpus)
-
-        self.time_slice = time_slice
-        if self.time_slice is not None:
-            self.num_time_slices = len(time_slice)
-
-        max_doc_len = 0
-        for line_no, line in enumerate(corpus):
-            if len(line) > max_doc_len:
-                max_doc_len = len(line)
-        self.max_doc_len = max_doc_len
-
-# endclass seq_corpus
-
 
 class LdaSeqModel(utils.SaveLoad):
     """
@@ -122,11 +74,36 @@ class LdaSeqModel(utils.SaveLoad):
 
         `random_state` can be a numpy.random.RandomState object or the seed for one, for the LdaModel.
         """
+        self.id2word = id2word
+        if corpus is None and self.id2word is None:
+            raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
+
+        if self.id2word is None:
+            logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
+            self.id2word = utils.dict_from_corpus(corpus)
+            self.vocab_len = len(self.id2word)
+        elif len(self.id2word) > 0:
+            self.vocab_len = len(self.id2word)
+        else:
+            self.vocab_len = 0
+
         if corpus is not None:
-            self.corpus = seq_corpus(corpus=corpus, id2word=id2word, time_slice=time_slice)
-            self.vocab_len = len(self.corpus.id2word)
+            try:
+                self.corpus_len = len(corpus)
+            except:
+                logger.warning("input corpus stream has no len(); counting documents")
+                self.corpus_len = sum(1 for _ in corpus)
 
         self.time_slice = time_slice
+        if self.time_slice is not None:
+            self.num_time_slices = len(time_slice)
+
+        max_doc_len = 0
+        for line_no, line in enumerate(corpus):
+            if len(line) > max_doc_len:
+                max_doc_len = len(line)
+        self.max_doc_len = max_doc_len
+
         self.num_topics = num_topics
         self.num_time_slices = len(time_slice)
         self.alphas = numpy.full(num_topics, alphas)
@@ -145,9 +122,9 @@ class LdaSeqModel(utils.SaveLoad):
         self.influence_sum_lgl = None
 
         # if a corpus and time_slice is provided, depending on the user choice of initializing LDA, we start DTM.
-        if self.corpus is not None and time_slice is not None:
+        if corpus is not None and time_slice is not None:
             if initialize == 'gensim':
-                lda_model = ldamodel.LdaModel(corpus, id2word=self.corpus.id2word, num_topics=self.num_topics, passes=passes, alpha=self.alphas, random_state=random_state)
+                lda_model = ldamodel.LdaModel(corpus, id2word=self.id2word, num_topics=self.num_topics, passes=passes, alpha=self.alphas, random_state=random_state)
                 self.sstats = numpy.transpose(lda_model.state.sstats)
             if initialize == 'ldamodel':
                 self.sstats = numpy.transpose(lda_model.state.sstats)
@@ -158,7 +135,7 @@ class LdaSeqModel(utils.SaveLoad):
             self.init_ldaseq_ss(chain_variance, obs_variance, self.alphas, self.sstats)
 
             # fit DTM
-            self.fit_lda_seq(self.corpus, lda_inference_max_iter, em_min_iter, em_max_iter)
+            self.fit_lda_seq(corpus, lda_inference_max_iter, em_min_iter, em_max_iter)
 
 
     def init_ldaseq_ss(self, topic_chain_variance, topic_obs_variance, alpha, init_suffstats):
@@ -176,7 +153,7 @@ class LdaSeqModel(utils.SaveLoad):
             # ldaseq.topic_chains[k].w_phi_sq = numpy.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
 
 
-    def fit_lda_seq(self, seq_corpus, lda_inference_max_iter, em_min_iter, em_max_iter):
+    def fit_lda_seq(self, corpus, lda_inference_max_iter, em_min_iter, em_max_iter):
         """
         fit an lda sequence model:
 
@@ -197,8 +174,8 @@ class LdaSeqModel(utils.SaveLoad):
 
         num_topics = self.num_topics
         vocab_len = self.vocab_len
-        data_len = seq_corpus.num_time_slices
-        corpus_len = seq_corpus.corpus_len
+        data_len = self.num_time_slices
+        corpus_len = self.corpus_len
 
         bound = 0
         convergence = LDASQE_EM_THRESHOLD + 1
@@ -221,7 +198,7 @@ class LdaSeqModel(utils.SaveLoad):
             lhoods = numpy.resize(numpy.zeros(corpus_len * num_topics + 1), (corpus_len, num_topics + 1))
             # compute the likelihood of a sequential corpus under an LDA
             # seq model and find the evidence lower bound. This is the E - Step
-            bound, gammas = self.lda_seq_infer(seq_corpus, topic_suffstats, gammas, lhoods, iter_, lda_inference_max_iter)
+            bound, gammas = self.lda_seq_infer(corpus, topic_suffstats, gammas, lhoods, iter_, lda_inference_max_iter)
             self.gammas = gammas
 
             logger.info("M Step")
@@ -252,7 +229,7 @@ class LdaSeqModel(utils.SaveLoad):
         return bound
 
 
-    def lda_seq_infer(self, seq_corpus, topic_suffstats, gammas, lhoods, iter_, lda_inference_max_iter):
+    def lda_seq_infer(self, corpus, topic_suffstats, gammas, lhoods, iter_, lda_inference_max_iter):
         """
         Inference or E- Step.
         This is used to set up the gensim LdaModel to be used for each time-slice.
@@ -262,24 +239,24 @@ class LdaSeqModel(utils.SaveLoad):
         vocab_len = self.vocab_len
         bound = 0.0
 
-        lda = ldamodel.LdaModel(num_topics=num_topics, alpha=self.alphas, id2word=seq_corpus.id2word)
+        lda = ldamodel.LdaModel(num_topics=num_topics, alpha=self.alphas, id2word=self.id2word)
         lda.topics = numpy.array(numpy.split(numpy.zeros(vocab_len * num_topics), vocab_len))
-        ldapost = LdaPost(max_doc_len=seq_corpus.max_doc_len, num_topics=num_topics, lda=lda)
+        ldapost = LdaPost(max_doc_len=self.max_doc_len, num_topics=num_topics, lda=lda)
 
         model = "DTM"
         if model == "DTM":
-            bound, gammas = self.inferDTMseq(seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter)
+            bound, gammas = self.inferDTMseq(corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter)
         elif model == "DIM":
-            self.InfluenceTotalFixed(seq_corpus)
-            bound, gammas = self.inferDIMseq(seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter)
+            self.InfluenceTotalFixed(corpus)
+            bound, gammas = self.inferDIMseq(corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter)
 
         return bound, gammas
 
 
-    def inferDTMseq(self, seq_corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter):
+    def inferDTMseq(self, corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter):
         """
         Computes the likelihood of a sequential corpus under an LDA seq model, and return the likelihood bound.
-        Need to pass the LdaSeq model, seq_corpus, sufficient stats, gammas and lhoods matrices previously created,
+        Need to pass the LdaSeq model, corpus, sufficient stats, gammas and lhoods matrices previously created,
         and LdaModel and LdaPost class objects.
         """
         doc_index = 0 # overall doc_index in corpus
@@ -290,7 +267,8 @@ class LdaSeqModel(utils.SaveLoad):
 
         time_slice = numpy.cumsum(numpy.array(self.time_slice))
 
-        for line_no, line in enumerate(seq_corpus.corpus):
+        # TODO: use chunks similar to ldamodel for constant memory footprint.
+        for line_no, line in enumerate(corpus):
             # this is used to update the time_slice and create a new lda_seq slice every new time_slice
             if doc_index > time_slice[time]:
                 time += 1
@@ -379,7 +357,7 @@ class LdaSeqModel(utils.SaveLoad):
         topic = numpy.exp(topic[time])
         topic = topic / topic.sum()
         bestn = matutils.argsort(topic, top_terms, reverse=True)
-        beststr = [(round(topic[id_], 3), self.corpus.id2word[id_]) for id_ in bestn]
+        beststr = [(round(topic[id_], 3), self.id2word[id_]) for id_ in bestn]
         return beststr
 
 
@@ -397,7 +375,7 @@ class LdaSeqModel(utils.SaveLoad):
         """
         Similar to the LdaModel __getitem__ function, it returns topic proportions of a document passed.
         """
-        lda_model = ldamodel.LdaModel(num_topics=self.num_topics, alpha=self.alphas, id2word=self.corpus.id2word)
+        lda_model = ldamodel.LdaModel(num_topics=self.num_topics, alpha=self.alphas, id2word=self.id2word)
         lda_model.topics = numpy.array(numpy.split(numpy.zeros(self.vocab_len * self.num_topics), self.vocab_len))
         ldapost = LdaPost(num_topics=self.num_topics, max_doc_len=len(doc), lda=lda_model, doc=doc)
 
