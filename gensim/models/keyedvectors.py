@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import division  # py3 "true division"
 
 import logging
@@ -171,7 +172,27 @@ class KeyedVectors(utils.SaveLoad):
         return emd(d1, d2, distance_matrix)
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
-        # TODO put back docstring properly encoded
+        """
+                Find the top-N most similar words, using the multiplicative combination objective
+                proposed by Omer Levy and Yoav Goldberg in [4]_. Positive words still contribute
+                positively towards the similarity, negative words negatively, but with less
+                susceptibility to one large distance dominating the calculation.
+
+                In the common analogy-solving case, of two positive and one negative examples,
+                this method is equivalent to the "3CosMul" objective (equation (4)) of Levy and Goldberg.
+
+                Additional positive or negative examples contribute to the numerator or denominator,
+                respectively – a potentially sensible but untested extension of the method. (With
+                a single positive example, rankings will be the same as in the default most_similar.)
+
+                Example::
+
+                  >>> trained_model.most_similar_cosmul(positive=['baghdad', 'england'], negative=['london'])
+                  [(u'iraq', 0.8488819003105164), ...]
+
+                .. [4] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
+
+                """
         self.init_sims()
 
         if isinstance(positive, string_types) and not negative:
