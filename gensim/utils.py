@@ -376,17 +376,17 @@ class SaveLoad(object):
                 elif isinstance(val, sparse_matrices) and val.nnz >= sep_limit:
                     separately.append(attrib)
 
-        # whatever's in `separately` or `ignore` at this point won't get pickled
         def delete_attribute(object, attribute):
             if hasattr(object, attribute):
                 asides[attribute] = getattr(object, attribute)
                 delattr(object, attribute)
-
+                
+        # whatever's in `separately` or `ignore` at this point won't get pickled
         for attrib in separately + list(ignore):
             # As a result of maintaining backwards compatibility through __getattr__ after refactoring
             # "syn0", "syn0norm", "vocab", and "index2word" out of Word2Vec to KeyedVectors,
             # hasattr(self, "syn0") will return True but delattr(self, "syn0") will fail because it's
-            # not a true attribute of Word2Vec, __getattr__ just reroutes it to KeyedVectors
+            # not a true attribute of Word2Vec, Word2Vec.__getattr__ just reroutes it to KeyedVectors' attributes
             if attrib in ["syn0", "syn0norm", "vocab", "index2word"]:
                 if type(self) == "Word2Vec":  # if saving a Word2Vec model, syn0, etc. are stored in self.kv
                     delete_attribute(self.kv, attrib)
