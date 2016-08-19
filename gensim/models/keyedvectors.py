@@ -36,18 +36,24 @@ class KeyedVectors(utils.SaveLoad):
         """
         Find the top-N most similar words. Positive words contribute positively towards the
         similarity, negative words negatively.
+
         This method computes cosine similarity between a simple mean of the projection
         weight vectors of the given words and the vectors for each word in the model.
         The method corresponds to the `word-analogy` and `distance` scripts in the original
         word2vec implementation.
+
         If topn is False, most_similar returns the vector of similarity scores.
+
         `restrict_vocab` is an optional integer which limits the range of vectors which
         are searched for most-similar values. For example, restrict_vocab=10000 would
         only check the first 10000 word vectors in the vocabulary order. (This may be
         meaningful if you've sorted the vocabulary by descending frequency.)
+
         Example::
+
           >>> trained_model.most_similar(positive=['woman', 'king'], negative=['man'])
           [('queen', 0.50882536), ...]
+
         """
         self.init_sims()
 
@@ -95,23 +101,30 @@ class KeyedVectors(utils.SaveLoad):
         """
         Compute the Word Mover's Distance between two documents. When using this
         code, please consider citing the following papers:
+
         .. Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
         .. Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
         .. Matt Kusner et al. "From Word Embeddings To Document Distances".
+
         Note that if one of the documents have no words that exist in the
         Word2Vec vocab, `float('inf')` (i.e. infinity) will be returned.
+
         This method only works if `pyemd` is installed (can be installed via pip, but requires a C compiler).
+
         Example:
             >>> # Train word2vec model.
             >>> model = Word2Vec(sentences)
+
             >>> # Some sentences to test.
             >>> sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
             >>> sentence_president = 'The president greets the press in Chicago'.lower().split()
+
             >>> # Remove their stopwords.
             >>> from nltk.corpus import stopwords
             >>> stopwords = nltk.corpus.stopwords.words('english')
             >>> sentence_obama = [w for w in sentence_obama if w not in stopwords]
             >>> sentence_president = [w for w in sentence_president if w not in stopwords]
+
             >>> # Compute WMD.
             >>> distance = model.wmdistance(sentence_obama, sentence_president)
         """
@@ -173,26 +186,26 @@ class KeyedVectors(utils.SaveLoad):
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         """
-                Find the top-N most similar words, using the multiplicative combination objective
-                proposed by Omer Levy and Yoav Goldberg in [4]_. Positive words still contribute
-                positively towards the similarity, negative words negatively, but with less
-                susceptibility to one large distance dominating the calculation.
+        Find the top-N most similar words, using the multiplicative combination objective
+        proposed by Omer Levy and Yoav Goldberg in [4]_. Positive words still contribute
+        positively towards the similarity, negative words negatively, but with less
+        susceptibility to one large distance dominating the calculation.
 
-                In the common analogy-solving case, of two positive and one negative examples,
-                this method is equivalent to the "3CosMul" objective (equation (4)) of Levy and Goldberg.
+        In the common analogy-solving case, of two positive and one negative examples,
+        this method is equivalent to the "3CosMul" objective (equation (4)) of Levy and Goldberg.
 
-                Additional positive or negative examples contribute to the numerator or denominator,
-                respectively – a potentially sensible but untested extension of the method. (With
-                a single positive example, rankings will be the same as in the default most_similar.)
+        Additional positive or negative examples contribute to the numerator or denominator,
+        respectively – a potentially sensible but untested extension of the method. (With
+        a single positive example, rankings will be the same as in the default most_similar.)
 
-                Example::
+        Example::
 
-                  >>> trained_model.most_similar_cosmul(positive=['baghdad', 'england'], negative=['london'])
-                  [(u'iraq', 0.8488819003105164), ...]
+          >>> trained_model.most_similar_cosmul(positive=['baghdad', 'england'], negative=['london'])
+          [(u'iraq', 0.8488819003105164), ...]
 
-                .. [4] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
+        .. [4] Omer Levy and Yoav Goldberg. Linguistic Regularities in Sparse and Explicit Word Representations, 2014.
 
-                """
+        """
         self.init_sims()
 
         if isinstance(positive, string_types) and not negative:
@@ -231,14 +244,19 @@ class KeyedVectors(utils.SaveLoad):
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
         """
         Find the top-N most similar words.
+
         If topn is False, similar_by_word returns the vector of similarity scores.
+
         `restrict_vocab` is an optional integer which limits the range of vectors which
         are searched for most-similar values. For example, restrict_vocab=10000 would
         only check the first 10000 word vectors in the vocabulary order. (This may be
         meaningful if you've sorted the vocabulary by descending frequency.)
+
         Example::
+
           >>> trained_model.similar_by_word('graph')
           [('user', 0.9999163150787354), ...]
+
         """
 
         return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
@@ -246,14 +264,19 @@ class KeyedVectors(utils.SaveLoad):
     def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
         """
         Find the top-N most similar words by vector.
+
         If topn is False, similar_by_vector returns the vector of similarity scores.
+
         `restrict_vocab` is an optional integer which limits the range of vectors which
         are searched for most-similar values. For example, restrict_vocab=10000 would
         only check the first 10000 word vectors in the vocabulary order. (This may be
         meaningful if you've sorted the vocabulary by descending frequency.)
+
         Example::
+
           >>> trained_model.similar_by_vector([1,2])
           [('survey', 0.9942699074745178), ...]
+
         """
 
         return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
@@ -261,9 +284,12 @@ class KeyedVectors(utils.SaveLoad):
     def doesnt_match(self, words):
         """
         Which word from the given list doesn't go with the others?
+
         Example::
+
           >>> trained_model.doesnt_match("breakfast cereal dinner lunch".split())
           'cereal'
+
         """
         self.init_sims()
 
@@ -280,18 +306,24 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         Accept a single word or a list of words as input.
+
         If a single word: returns the word's representations in vector space, as
         a 1D numpy array.
+
         Multiple words: return the words' representations in vector space, as a
         2d numpy array: #words x #vector_size. Matrix rows are in the same order
         as in input.
+
         Example::
+
           >>> trained_model['office']
           array([ -1.40128313e-02, ...])
+
           >>> trained_model[['office', 'products']]
           array([ -1.40128313e-02, ...]
                 [ -1.70425311e-03, ...]
                  ...)
+
         """
         if isinstance(words, string_types):
             # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
@@ -305,24 +337,33 @@ class KeyedVectors(utils.SaveLoad):
     def similarity(self, w1, w2):
         """
         Compute cosine similarity between two words.
+
         Example::
+
           >>> trained_model.similarity('woman', 'man')
           0.73723527
+
           >>> trained_model.similarity('woman', 'woman')
           1.0
+
         """
         return dot(matutils.unitvec(self[w1]), matutils.unitvec(self[w2]))
 
     def n_similarity(self, ws1, ws2):
         """
         Compute cosine similarity between two sets of words.
+
         Example::
+
           >>> trained_model.n_similarity(['sushi', 'shop'], ['japanese', 'restaurant'])
           0.61540466561049689
+
           >>> trained_model.n_similarity(['restaurant', 'japanese'], ['japanese', 'restaurant'])
           1.0000000000000004
+
           >>> trained_model.n_similarity(['sushi'], ['restaurant']) == trained_model.similarity('sushi', 'restaurant')
           True
+
         """
         v1 = [self[word] for word in ws1]
         v2 = [self[word] for word in ws2]
@@ -341,17 +382,22 @@ class KeyedVectors(utils.SaveLoad):
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
         See questions-words.txt in https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/word2vec/source-archive.zip for an example.
+
         The accuracy is reported (=printed to log and returned as a list) for each
         section separately, plus there's one aggregate summary at the end.
+
         Use `restrict_vocab` to ignore all questions containing a word not in the first `restrict_vocab`
         words (default 30,000). This may be meaningful if you've sorted the vocabulary by descending frequency.
         In case `case_insensitive` is True, the first `restrict_vocab` words are taken first, and then
         case normalization is performed.
+
         Use `case_insensitive` to convert all words in questions and vocab to their uppercase form before
         evaluating the accuracy (default True). Useful in case of case-mismatch between training tokens
         and question words. In case of multiple case variants of a single word, the vector for the first
         occurrence (also the most frequent if vocabulary is sorted) is taken.
+
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
+
         """
         ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
         ok_vocab = dict((w.upper(), v) for w, v in reversed(ok_vocab)) if case_insensitive else dict(ok_vocab)
@@ -415,13 +461,13 @@ class KeyedVectors(utils.SaveLoad):
     def init_sims(self, replace=False):
         """
         Precompute L2-normalized vectors.
+
         If `replace` is set, forget the original vectors and only keep the normalized
         ones = saves lots of memory!
+
         Note that you **cannot continue training** after doing a replace. The model becomes
         effectively read-only = you can call `most_similar`, `similarity` etc., but not `train`.
 
-        init_sims() is replicated inside of this class without syn1 because many of the methods contained
-        here require normalized vectors
         """
         if getattr(self, 'syn0norm', None) is None or replace:
             logger.info("precomputing L2-norms of word weight vectors")

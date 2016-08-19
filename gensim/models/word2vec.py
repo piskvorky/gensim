@@ -8,38 +8,59 @@
 """
 Deep learning via word2vec's "skip-gram and CBOW models", using either
 hierarchical softmax or negative sampling [1]_ [2]_.
+
 The training algorithms were originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality.
+
 For a blog tutorial on gensim word2vec, with an interactive web app trained on GoogleNews, visit http://radimrehurek.com/2014/02/word2vec-tutorial/
+
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled) word2vec training**
 (70x speedup compared to plain NumPy implementation [3]_).
+
 Initialize a model with e.g.::
+
 >>> model = Word2Vec(sentences, size=100, window=5, min_count=5, workers=4)
+
 Persist a model to disk with::
+
 >>> model.save(fname)
 >>> model = Word2Vec.load(fname)  # you can continue training with the loaded model!
+
 The model can also be instantiated from an existing file on disk in the word2vec C format::
+
   >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.txt', binary=False)  # C text format
   >>> model = Word2Vec.load_word2vec_format('/tmp/vectors.bin', binary=True)  # C binary format
+
 You can perform various syntactic/semantic NLP word tasks with the model. Some of them
 are already built-in::
+
   >>> model.most_similar(positive=['woman', 'king'], negative=['man'])
   [('queen', 0.50882536), ...]
+
   >>> model.doesnt_match("breakfast cereal dinner lunch".split())
   'cereal'
+
   >>> model.similarity('woman', 'man')
   0.73723527
+
   >>> model['computer']  # raw numpy vector of a word
   array([-0.00449447, -0.00310097,  0.02421786, ...], dtype=float32)
+
 and so on.
+
 If you're finished training a model (=no more updates, only querying), you can do
+
   >>> model.init_sims(replace=True)
+
 to trim unneeded model memory = use (much) less RAM.
+
 Note that there is a :mod:`gensim.models.phrases` module which lets you automatically
 detect phrases longer than one word. Using phrases, you can learn a word2vec model
 where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
+
 >>> bigram_transformer = gensim.models.Phrases(sentences)
 >>> model = Word2Vec(bigram_transformer[sentences], size=100, ...)
+
 .. [1] Tomas Mikolov, Kai Chen, Greg Corrado, and Jeffrey Dean. Efficient Estimation of Word Representations in Vector Space. In Proceedings of Workshop at ICLR, 2013.
 .. [2] Tomas Mikolov, Ilya Sutskever, Kai Chen, Greg Corrado, and Jeffrey Dean. Distributed Representations of Words and Phrases and their Compositionality.
        In Proceedings of NIPS, 2013.
@@ -91,10 +112,13 @@ except ImportError:
     def train_batch_sg(model, sentences, alpha, work=None):
         """
         Update skip-gram model by training on a sequence of sentences.
+
         Each sentence is a list of string tokens, which are looked up in the model's
         vocab dictionary. Called internally from `Word2Vec.train()`.
+
         This is the non-optimized, Python version. If you have cython installed, gensim
         will use the optimized version from word2vec_inner instead.
+
         """
         result = 0
         for sentence in sentences:
@@ -115,10 +139,13 @@ except ImportError:
     def train_batch_cbow(model, sentences, alpha, work=None, neu1=None):
         """
         Update CBOW model by training on a sequence of sentences.
+
         Each sentence is a list of string tokens, which are looked up in the model's
         vocab dictionary. Called internally from `Word2Vec.train()`.
+
         This is the non-optimized, Python version. If you have cython installed, gensim
         will use the optimized version from word2vec_inner instead.
+
         """
         result = 0
         for sentence in sentences:
@@ -139,10 +166,13 @@ except ImportError:
     def score_sentence_sg(model, sentence, work=None):
         """
         Obtain likelihood score for a single sentence in a fitted skip-gram representaion.
+
         The sentence is a list of Vocab objects (or None, when the corresponding
         word is not in the vocabulary). Called internally from `Word2Vec.score()`.
+
         This is the non-optimized, Python version. If you have cython installed, gensim
         will use the optimized version from word2vec_inner instead.
+
         """
 
         log_prob_sentence = 0.0
@@ -166,10 +196,13 @@ except ImportError:
     def score_sentence_cbow(model, sentence, alpha, work=None, neu1=None):
         """
         Obtain likelihood score for a single sentence in a fitted CBOW representaion.
+
         The sentence is a list of Vocab objects (or None, where the corresponding
         word is not in the vocabulary. Called internally from `Word2Vec.score()`.
+
         This is the non-optimized, Python version. If you have cython installed, gensim
         will use the optimized version from word2vec_inner instead.
+
         """
         log_prob_sentence = 0.0
         if model.negative:
@@ -296,6 +329,7 @@ class Vocab(object):
     """
     A single vocabulary item, used internally for collecting per-word frequency/sampling info,
     and for constructing binary trees (incl. both word leaves and inner nodes).
+
     """
     def __init__(self, **kwargs):
         self.count = 0
@@ -312,8 +346,10 @@ class Vocab(object):
 class Word2Vec(utils.SaveLoad):
     """
     Class for training, using and evaluating neural networks described in https://code.google.com/p/word2vec/
+
     The model can be stored/loaded via its `save()` and `load()` methods, or stored/loaded in a format
     compatible with the original word2vec implementation via `save_word2vec_format()` and `load_word2vec_format()`.
+
     """
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
@@ -323,51 +359,71 @@ class Word2Vec(utils.SaveLoad):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
+
         The `sentences` iterable can be simply a list, but for larger corpora,
         consider an iterable that streams the sentences directly from disk/network.
         See :class:`BrownCorpus`, :class:`Text8Corpus` or :class:`LineSentence` in
         this module for such examples.
+
         If you don't supply `sentences`, the model is left uninitialized -- use if
         you plan to initialize it in some other way.
+
         `sg` defines the training algorithm. By default (`sg=0`), CBOW is used.
         Otherwise (`sg=1`), skip-gram is employed.
+
         `size` is the dimensionality of the feature vectors.
+
         `window` is the maximum distance between the current and predicted word within a sentence.
+
         `alpha` is the initial learning rate (will linearly drop to `min_alpha` as training progresses).
+
         `seed` = for the random number generator. Initial vectors for each
         word are seeded with a hash of the concatenation of word + str(seed).
         Note that for a fully deterministically-reproducible run, you must also limit the model to
         a single worker thread, to eliminate ordering jitter from OS thread scheduling. (In Python
         3, reproducibility between interpreter launches also requires use of the PYTHONHASHSEED
         environment variable to control hash randomization.)
+
         `min_count` = ignore all words with total frequency lower than this.
+
         `max_vocab_size` = limit RAM during vocabulary building; if there are more unique
         words than this, then prune the infrequent ones. Every 10 million word types
         need about 1GB of RAM. Set to `None` for no limit (default).
+
         `sample` = threshold for configuring which higher-frequency words are randomly downsampled;
             default is 1e-3, useful range is (0, 1e-5).
+
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
+
         `hs` = if 1, hierarchical softmax will be used for model training.
         If set to 0 (default), and `negative` is non-zero, negative sampling will be used.
+
         `negative` = if > 0, negative sampling will be used, the int for negative
         specifies how many "noise words" should be drawn (usually between 5-20).
         Default is 5. If set to 0, no negative samping is used.
+
         `cbow_mean` = if 0, use the sum of the context word vectors. If 1 (default), use the mean.
         Only applies when cbow is used.
+
         `hashfxn` = hash function to use to randomly initialize weights, for increased
         training reproducibility. Default is Python's rudimentary built in hash function.
+
         `iter` = number of iterations (epochs) over the corpus. Default is 5.
+
         `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
         in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
         Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
         returns either `utils.RULE_DISCARD`, `utils.RULE_KEEP` or `utils.RULE_DEFAULT`.
         Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
         of the model.
+
         `sorted_vocab` = if 1 (default), sort the vocabulary by descending frequency before
         assigning word indexes.
+
         `batch_words` = target size (in words) for batches of examples passed to worker threads (and
         thus cython routines). Default is 10000. (Larger batches will be passed if individual
         texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
+
         """
         self.kv = KeyedVectors()  # kv --> KeyedVectors
         self.sg = int(sg)
@@ -407,10 +463,12 @@ class Word2Vec(utils.SaveLoad):
         """
         Create a cumulative-distribution table using stored vocabulary word counts for
         drawing random words in the negative-sampling training routines.
+
         To draw a word index, choose a random integer up to the maximum value in the
         table (cum_table[-1]), then finding that integer's sorted insertion point
         (as if by bisect_left or ndarray.searchsorted()). That insertion point is the
         drawn index, coming up in proportion equal to the increment at that slot.
+
         Called internally from 'build_vocab()'.
         """
         vocab_size = len(self.kv.index2word)
@@ -428,6 +486,7 @@ class Word2Vec(utils.SaveLoad):
         """
         Create a binary Huffman tree using stored vocabulary word counts. Frequent words
         will have shorter binary codes. Called internally from `build_vocab()`.
+
         """
         logger.info("constructing a huffman tree from %i words", len(self.kv.vocab))
 
@@ -459,6 +518,7 @@ class Word2Vec(utils.SaveLoad):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
+
         """
         self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule)  # trim by min_count & precalculate downsampling
@@ -498,12 +558,15 @@ class Word2Vec(utils.SaveLoad):
         """
         Apply vocabulary settings for `min_count` (discarding less-frequent words)
         and `sample` (controlling the downsampling of more-frequent words).
+
         Calling with `dry_run=True` will only simulate the provided settings and
         report the size of the retained vocabulary, effective corpus length, and
         estimated memory requirements. Results are both printed via logging and
         returned as a dict.
+
         Delete the raw vocabulary after the scaling is done to free up RAM,
         unless `keep_raw_vocab` is set.
+
         """
         min_count = min_count or self.min_count
         sample = sample or self.sample
@@ -638,9 +701,11 @@ class Word2Vec(utils.SaveLoad):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         For Word2Vec, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
+
         To support linear learning-rate decay from (initial) alpha to min_alpha, either total_examples
         (count of sentences) or total_words (count of raw words in sentences) should be provided, unless the
         sentences are the same as those that were used to initially build the vocabulary.
+
         """
         if FAST_VERSION < 0:
             import warnings
@@ -826,13 +891,18 @@ class Word2Vec(utils.SaveLoad):
         Score the log probability for a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
         This does not change the fitted model in any way (see Word2Vec.train() for that).
+
         We have currently only implemented score for the hierarchical softmax scheme,
         so you need to have run word2vec with hs=1 and negative=0 for this to work.
+
         Note that you should specify total_sentences; we'll run into problems if you ask to
         score more than this number of sentences but it is inefficient to set the value too high.
+
         See the article by [taddy]_ and the gensim demo at [deepir]_ for examples of how to use such scores in document classification.
+
         .. [taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
         .. [deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
+
         """
         if FAST_VERSION < 0:
             import warnings
@@ -959,10 +1029,12 @@ class Word2Vec(utils.SaveLoad):
         """
         Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
+
          `fname` is the file used to save the vectors in
          `fvocab` is an optional file used to save the vocabulary
          `binary` is an optional boolean indicating whether the data is to be saved
          in binary word2vec format (default: False)
+
         """
         if fvocab is not None:
             logger.info("storing vocabulary in %s" % (fvocab))
@@ -986,24 +1058,31 @@ class Word2Vec(utils.SaveLoad):
                              limit=None, datatype=REAL):
         """
         Load the input-hidden weight matrix from the original C word2vec-tool format.
+
         Note that the information stored in the file is incomplete (the binary tree is missing),
         so while you can query for word similarity etc., you cannot continue training
         with a model loaded this way.
+
         `binary` is a boolean indicating whether the data is in binary word2vec format.
         `norm_only` is a boolean indicating whether to only store normalised word2vec vectors in memory.
         Word counts are read from `fvocab` filename, if set (this is the file generated
         by `-save-vocab` flag of the original C tool).
+
         If you trained the C model using non-utf8 encoding for words, specify that
         encoding in `encoding`.
+
         `unicode_errors`, default 'strict', is a string suitable to be passed as the `errors`
         argument to the unicode() (Python 2.x) or str() (Python 3.x) function. If your source
         file may include word tokens truncated in the middle of a multibyte unicode character
         (as is common from the original word2vec.c tool), 'ignore' or 'replace' may help.
+
         `limit` sets a maximum number of word-vectors to read from the file. The default,
         None, means read all.
+
         `datatype` (experimental) can coerce dimensions to a non-default float type (such
         as np.float16) to save memory. (Such types may result in much slower bulk operations
         or incompatibility with optimized routines.)
+
         """
         counts = None
         if fvocab is not None:
@@ -1084,7 +1163,9 @@ class Word2Vec(utils.SaveLoad):
         given, where it intersects with the current vocabulary. (No words are added to the
         existing vocabulary, but intersecting words adopt the file's weights, and
         non-intersecting words are left alone.)
+
         `binary` is a boolean indicating whether the data is in binary word2vec format.
+
         `lockf` is a lock-factor value to be set for any imported word-vectors; the
         default value of 0.0 prevents further updating of the vector during subsequent
         training. Use 1.0 to allow further training updates of merged vectors.
@@ -1297,11 +1378,16 @@ class LineSentence(object):
         """
         `source` can be either a string or a file object. Clip the file to the first
         `limit` lines (or no clipped if limit is None, the default).
+
         Example::
+
             sentences = LineSentence('myfile.txt')
+
         Or for compressed files::
+
             sentences = LineSentence('compressed_text.txt.bz2')
             sentences = LineSentence('compressed_text.txt.gz')
+
         """
         self.source = source
         self.max_sentence_length = max_sentence_length
