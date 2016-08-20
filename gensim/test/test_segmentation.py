@@ -30,6 +30,14 @@ class TestSegmentation(unittest.TestCase):
                     [(2, 5), (7, 5), (7, 2)]]
         self.assertTrue(np.allclose(actual, expected))
 
+    def testSOneOne(self):
+        """Test s_one_one segmentation."""
+        actual = segmentation.s_one_one(self.topics)
+        expected = [[(9, 4), (9, 6), (4, 9), (4, 6), (6, 9), (6, 4)],
+                    [(9, 10), (9, 7), (10, 9), (10, 7), (7, 9), (7, 10)],
+                    [(5, 2), (5, 7), (2, 5), (2, 7), (7, 5), (7, 2)]]
+        self.assertTrue(np.allclose(actual, expected))
+
     def testSOneSet(self):
         """Test s_one_set segmentation."""
         actual = segmentation.s_one_set(self.topics)
