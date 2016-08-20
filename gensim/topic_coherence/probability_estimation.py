@@ -78,27 +78,26 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     window_id[0] : Total no of windows
     """
     top_ids = _ret_top_ids(segmented_topics)
-    window_id = [0]  # Each window assigned a window id.
+    window_id = 0  # Each window assigned a window id.
     per_topic_postings = {}
     token2id_dict = dictionary.token2id
-    def add_topic_posting():
+    def add_topic_posting(top_ids, window, per_topic_postings, window_id, token2id_dict):
         for word in window:
             word_id = token2id_dict[word]
             if word_id in top_ids:
                 if word_id in per_topic_postings:
-                    per_topic_postings[word_id].add(window_id[0])
+                    per_topic_postings[word_id].add(window_id)
                 else:
-                    per_topic_postings[word_id] = set([window_id[0]])
-        window_id[0] += 1
+                    per_topic_postings[word_id] = set([window_id])
+        window_id += 1
+        return (window_id, per_topic_postings)
     # Apply boolean sliding window to each document in texts.
     for document in texts:
         it = iter(document)
         window = tuple(islice(it, window_size))
-        add_topic_posting()
-        if len(window) <= window_size:
-            pass  # FIXME : Handle case when window size is bigger than length of document
+        window_id, per_topic_postings = add_topic_posting(top_ids, window, per_topic_postings, window_id, token2id_dict)
         for elem in it:
             window = window[1:] + (elem,)
-            add_topic_posting()
+            window_id, per_topic_postings = add_topic_posting(top_ids, window, per_topic_postings, window_id, token2id_dict)
 
-    return (per_topic_postings, window_id[0])
+    return per_topic_postings, window_id
