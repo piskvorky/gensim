@@ -371,6 +371,53 @@ class LdaSeqModel(utils.SaveLoad):
         return doc_topic[doc_number]
 
 
+    def DTMvis(self, time, corpus):
+        """
+        returns term_frequency, vocab, doc_lengths, topic-term distributions and doc_topic distributions, specified by pyLDAvis format.
+        all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
+        input parameter is the year to do the visualisation.
+        """
+
+        doc_topic = numpy.copy(self.gammas)
+        doc_topic /= doc_topic.sum(axis=1)[:, numpy.newaxis]
+
+        topic_term = []
+        for chain in enumerate(self.topic_chains):
+            topic = numpy.transpose(chain.e_log_prob)
+            topic = topic[time]
+            topic = numpy.exp(topic)
+            topic = topic / topic.sum()
+            topic_term.append(topic)
+
+        term_frequency = [0] * self.vocab_len
+        doc_lengths = []
+        for doc_no, doc in enumerate(corpus):
+            doc_lengths.append(len(doc))
+            for pair in doc:
+                term_frequency[pair[0]] += pair[1]
+        
+        vocab = []
+        for i in range(0, len(self.id2word)):
+            vocab.append(self.id2word[i])
+        # returns numpy arrays for doc_topic proportions, topic_term proportions, and document_lengths, term_frequency.
+        # these should be passed to the `pyLDAvis.prepare` method to visualise one time-slice of DTM topics.
+        return doc_topic, numpy.array(topic_term), doc_lengths, term_frequency, vocab
+
+
+    def DTMcoherence(self, time):
+        """
+        returns all topics of a particular time-slice without probabilitiy values for it to be used 
+        for either "u_mass" or "c_v" coherence.
+        """
+        coherence_topics = []
+        for topics in self.print_topics(time):
+            coherence_topic = []
+            for word, dist in topics:
+                coherence_topic.append(word)
+            coherence_topics.append(coherence_topic)
+
+        return coherence_topics
+
     def __getitem__(self, doc):
         """
         Similar to the LdaModel __getitem__ function, it returns topic proportions of a document passed.
