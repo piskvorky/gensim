@@ -34,9 +34,9 @@ class TestLdaSeq(unittest.TestCase):
     def testTopicWord(self):
 
         topics = self.ldaseq.print_topics(0)
-        expected_topic_word = [( 0.035999999999999997, 'skills')]
-        self.assertAlmostEqual(topics[0][0][0], expected_topic_word[0][0], places=2)
-        self.assertEqual(topics[0][0][1], expected_topic_word[0][1])
+        expected_topic_word = [('skills', 0.035999999999999997)]
+        self.assertEqual(topics[0][0][0], expected_topic_word[0][0], places=2)
+        self.assertAlmostEqual(topics[0][0][1], expected_topic_word[0][1])
 
     # testing document-topic proportions
     def testDocTopic(self):
