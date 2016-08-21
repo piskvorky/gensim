@@ -183,7 +183,7 @@ class LdaSeqModel(utils.SaveLoad):
 
         while iter_ < em_min_iter or ((convergence > LDASQE_EM_THRESHOLD) and iter_ <= em_max_iter):
 
-            logger.info(" EM iter ", iter_)
+            logger.info(" EM iter %i", iter_)
             logger.info("E Step")
             # TODO: bound is initialized to 0
             old_bound = bound
@@ -211,7 +211,7 @@ class LdaSeqModel(utils.SaveLoad):
                 # if max_iter is too low, increase iterations.
                 if lda_inference_max_iter < LOWER_ITER:
                     lda_inference_max_iter *= ITER_MULT_LOW
-                logger.info("Bound went down, increasing iterations to", lda_inference_max_iter)
+                logger.info("Bound went down, increasing iterations to %i", lda_inference_max_iter)
 
             # check for convergence
             convergence = numpy.fabs((bound - old_bound) / old_bound)
@@ -219,7 +219,7 @@ class LdaSeqModel(utils.SaveLoad):
             if convergence < LDASQE_EM_THRESHOLD:
 
                 lda_inference_max_iter = MAX_ITER
-                logger.info("Starting final iterations, max iter is", lda_inference_max_iter)
+                logger.info("Starting final iterations, max iter is %i", lda_inference_max_iter)
                 convergence = 1.0
 
             logger.info(iter_, "iteration lda seq bound is", bound, ", convergence is ", convergence)
@@ -318,7 +318,7 @@ class LdaSeqModel(utils.SaveLoad):
         lhood_term = 0
 
         for k, chain in enumerate(self.topic_chains):
-            logger.info("Fitting topic number", k)
+            logger.info("Fitting topic number %i", k)
             lhood_term = sslm.fit_sslm(chain, topic_suffstats[k])
             lhood += lhood_term
 
@@ -631,7 +631,7 @@ class sslm(utils.SaveLoad):
         if model == "DIM":
             bound = self.compute_bound_fixed(sstats, totals)
 
-        logger.info("initial sslm bound is ", bound)
+        logger.info("initial sslm bound is %f", bound)
 
         while converged > sslm_fit_threshold and iter_ < sslm_max_iter:
             iter_ += 1
@@ -644,7 +644,7 @@ class sslm(utils.SaveLoad):
                 bound = self.compute_bound_fixed(sstats, totals)
 
             converged = numpy.fabs((bound - old_bound) / old_bound)
-            logger.info(iter_, " iteration lda seq bound is ", bound, " convergence is", converged)
+            logger.info("iteration %i iteration lda seq bound is %f convergence is %f", iter_, bound, converged)
 
         self.e_log_prob = self.compute_expected_log_prob()
         return bound
