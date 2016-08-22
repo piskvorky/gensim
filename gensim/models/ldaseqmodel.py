@@ -371,7 +371,7 @@ class LdaSeqModel(utils.SaveLoad):
         return doc_topic[doc_number]
 
 
-    def DTMvis(self, time, corpus):
+    def dtm_vis(self, time, corpus):
         """
         returns term_frequency, vocab, doc_lengths, topic-term distributions and doc_topic distributions, specified by pyLDAvis format.
         all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
@@ -382,11 +382,9 @@ class LdaSeqModel(utils.SaveLoad):
         doc_topic /= doc_topic.sum(axis=1)[:, numpy.newaxis]
 
         topic_term = []
-        for chain in enumerate(self.topic_chains):
+        for k, chain in enumerate(self.topic_chains):
             topic = numpy.transpose(chain.e_log_prob)
-            topic = topic[time]
-            topic = numpy.exp(topic)
-            topic = topic / topic.sum()
+            topic = numpy.exp(topic[time]) / numpy.exp(topic[time]).sum()
             topic_term.append(topic)
 
         term_frequency = [0] * self.vocab_len
@@ -404,7 +402,7 @@ class LdaSeqModel(utils.SaveLoad):
         return doc_topic, numpy.array(topic_term), doc_lengths, term_frequency, vocab
 
 
-    def DTMcoherence(self, time):
+    def dtm_coherence(self, time):
         """
         returns all topics of a particular time-slice without probabilitiy values for it to be used 
         for either "u_mass" or "c_v" coherence.
