@@ -218,7 +218,6 @@ class FastSent(Word2Vec):
         # set initial input/projection and hidden weights
         self.reset_weights()
 
-
     def _do_train_job(self, job, alpha, inits):
         work, neu1 = inits
         tally = 0
@@ -238,7 +237,6 @@ class FastSent(Word2Vec):
             else:
                 raw_tally += len(sentences[0]) + len(sentences[2])
         return (tally, raw_tally)
-
 
     def train(self, sentences, total_words=None, word_count=0, chunksize=100, total_examples=None, queue_factor=2, report_delay=1):
         """
@@ -511,7 +509,6 @@ class FastSent(Word2Vec):
         else:
             return array([self.syn0[self.vocab[word].index] for word in sentence.split()]).sum(axis=0)
 
-
     def sentence_similarity(self, s1, s2, delimiter=' '):
         """
         Compute cosine similarity between two sentences (as strings).
@@ -544,7 +541,6 @@ class FastSent(Word2Vec):
         """
         super(FastSent,self).init_sims(replace=replace)
 
-
     def estimate_memory(self, vocab_size=None, report=None):
         """Estimate required memory for a model using current settings and provided vocabulary size."""
         vocab_size = vocab_size or len(self.vocab)
@@ -556,10 +552,6 @@ class FastSent(Word2Vec):
         logger.info("estimated required memory for %i words and %i dimensions: %i bytes",
                     vocab_size, self.vector_size, report['total'])
         return report
-
-
-
-
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors, recalculable table
@@ -603,43 +595,36 @@ class FakeJobQueue(object):
 
 
 if __name__ == "__main__":
-    infile='C:/Users/surface/Documents/Gensim/Gensim/gensim/gensim/test/test_data/testcorpus.txt'
-    model = FastSent(Text8Corpus(infile), size=20, min_count=1, workers=1)
-    #0.85445204187818491
-    #0.17211249916253527
-    outfile = 'C:/Users/surface/Desktop/Test/xxx'
-    model.save(outfile + '.model')
-    model.save_fastsent_format(outfile + '.model.bin', binary=True)
-    model.save_fastsent_format(outfile + '.model.txt', binary=False)
-#    logging.basicConfig(
-#        format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
-#        level=logging.INFO)
-#    logging.info("running %s", " ".join(sys.argv))
-#    logging.info("using optimization %s", FAST_VERSION)
-#
-#    # check and process cmdline input
-#    program = os.path.basename(sys.argv[0])
-#    
-#    if len(sys.argv) < 2:
-#        print(globals()['__doc__'] % locals())
-#        sys.exit(1)
-#    infile = sys.argv[1]
-#    from gensim.models.fastsent import Word2Vec  # avoid referencing __main__ in pickle
-#    
-#
-#    seterr(all='raise')  # don't ignore numpy errors
-#
-#    # model = Word2Vec(LineSentence(infile), size=200, min_count=5, workers=4)
-#    model = FastSent(Text8Corpus(infile), size=200, min_count=5, workers=1)
-#
-#    if len(sys.argv) > 3:
-#        outfile = sys.argv[3]
-#        model.save(outfile + '.model')
-#        model.save_fastsent_format(outfile + '.model.bin', binary=True)
-#        model.save_fastsent_format(outfile + '.model.txt', binary=False)
-#
-#    if len(sys.argv) > 2:
-#        questions_file = sys.argv[2]
-#        model.accuracy(sys.argv[2])
-#
-#    logging.info("finished running %s", program)
+
+    logging.basicConfig(
+        format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
+        level=logging.INFO)
+    logging.info("running %s", " ".join(sys.argv))
+    logging.info("using optimization %s", FAST_VERSION)
+
+    # check and process cmdline input
+    program = os.path.basename(sys.argv[0])
+    
+    if len(sys.argv) < 2:
+        print(globals()['__doc__'] % locals())
+        sys.exit(1)
+    infile = sys.argv[1]
+    from gensim.models.fastsent import Word2Vec  # avoid referencing __main__ in pickle
+    
+
+    seterr(all='raise')  # don't ignore numpy errors
+
+    # model = Word2Vec(LineSentence(infile), size=200, min_count=5, workers=4)
+    model = FastSent(Text8Corpus(infile), size=200, min_count=5, workers=1)
+
+    if len(sys.argv) > 3:
+        outfile = sys.argv[3]
+        model.save(outfile + '.model')
+        model.save_fastsent_format(outfile + '.model.bin', binary=True)
+        model.save_fastsent_format(outfile + '.model.txt', binary=False)
+
+    if len(sys.argv) > 2:
+        questions_file = sys.argv[2]
+        model.accuracy(sys.argv[2])
+
+    logging.info("finished running %s", program)
