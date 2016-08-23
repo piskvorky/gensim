@@ -79,7 +79,7 @@ class Phrases(interfaces.TransformationABC):
 
     """
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
-            max_vocab_size=40000000, delimiter=b'_'):
+                 max_vocab_size=40000000, delimiter=b'_', progress_per=10000):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -119,6 +119,7 @@ class Phrases(interfaces.TransformationABC):
         self.vocab = defaultdict(int)  # mapping between utf8 token => its count
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
+        self.progress_per = progress_per
 
         if sentences is not None:
             self.add_vocab(sentences)
@@ -130,7 +131,7 @@ class Phrases(interfaces.TransformationABC):
             self.threshold, self.max_vocab_size)
 
     @staticmethod
-    def learn_vocab(sentences, max_vocab_size, delimiter=b'_'):
+    def learn_vocab(sentences, max_vocab_size, delimiter=b'_', progress_per=10000):
         """Collect unigram/bigram counts from the `sentences` iterable."""
         sentence_no = -1
         total_words = 0
@@ -138,7 +139,7 @@ class Phrases(interfaces.TransformationABC):
         vocab = defaultdict(int)
         min_reduce = 1
         for sentence_no, sentence in enumerate(sentences):
-            if sentence_no % 10000 == 0:
+            if sentence_no % progress_per == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
                             (sentence_no, total_words, len(vocab)))
             sentence = [utils.any2utf8(w) for w in sentence]
@@ -169,17 +170,20 @@ class Phrases(interfaces.TransformationABC):
         # directly, but gives the new sentences a fighting chance to collect
         # sufficient counts, before being pruned out by the (large) accummulated
         # counts collected in previous learn_vocab runs.
-        min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter)
+        min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter, self.progress_per)
 
-        logger.info("merging %i counts into %s", len(vocab), self)
-        self.min_reduce = max(self.min_reduce, min_reduce)
-        for word, count in iteritems(vocab):
-            self.vocab[word] += count
-        if len(self.vocab) > self.max_vocab_size:
-            utils.prune_vocab(self.vocab, self.min_reduce)
-            self.min_reduce += 1
-
-        logger.info("merged %s", self)
+        if len(self.vocab) > 0:
+            logger.info("merging %i counts into %s", len(vocab), self)
+            self.min_reduce = max(self.min_reduce, min_reduce)
+            for word, count in iteritems(vocab):
+                self.vocab[word] += count
+            if len(self.vocab) > self.max_vocab_size:
+                utils.prune_vocab(self.vocab, self.min_reduce)
+                self.min_reduce += 1
+            logger.info("merged %s", self)
+        else:
+            # in common case, avoid doubling gigantic dict
+            logger.info("using %i counts as vocab in %s", len(vocab), self)
 
     def export_phrases(self, sentences):
         """
