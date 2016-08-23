@@ -39,15 +39,40 @@ class FastKNN():
         self.n_neighbours = n_neighbours
         self.n_jobs = n_jobs
 
-        common_vocab = self._create_embedding(docs) # common_vocab contains words both in word2vec model and the count vectorizer feature names
+        embed_dict = _preprocess(docs)
+        self.word_embedding = check_array(embed_dict.values())
 
+        common_vocab = embed_dict.keys() # common_vocab contains words both in word2vec model and the count vectorizer feature names
         self._create_bow(docs, common_vocab)
-        self.embedding_distances = euclidean_distances(self.word_embedding)
-        print self.word_embedding.shape
-        print len(self.embedding_distances[0])
+        
         
     #         super(FastKNN, self).__init__(n_neighbours = n_neighbours, n_jobs = n_jobs)
-        
+    def _preprocess(self, dataset_data):
+        word_vectors_model = Word2Vec.load_word2vec_format(
+                                        "./GoogleNews-vectors-negative300.bin.gz",
+                                        binary=True
+                                            )
+        punctuation_marks = string.punctuation
+        for doc_idx in range(len(dataset_data)):
+            for punctuation in punctuation_marks:
+                dataset_data[doc_idx] = dataset_data[doc_idx].replace(punctuation,"")
+            dataset_data[doc_idx] = dataset_data[doc_idx].replace("\n"," ")
+            
+        stopwords = open("stopwords.txt", "r").readlines()
+        sopwords = set([word.strip() for word in stopwords])
+        vocab = []
+        embedding = {}
+        [vocab.extend(line.strip().lower().split("\t")[1].split(" ")) for line in dataset_data]
+        for word_idx in range(len(vocab)):
+            if vocab[word_idx] in stopwords:
+                del vocab[word_idx]
+            else:
+                try:
+                    embedding[vocab[word_idx]] = word_vectors_mode[vocab[word_idx]]
+                except Exception:
+                    continue
+        return embedding
+    
     def _create_bow(self,  docs, common_vocabulary):
         """
         This function 
@@ -66,29 +91,6 @@ class FastKNN():
         self.docs = normalize(check_array([doc.toarray().ravel() for doc in self.vectorizer.transform(docs)]), norm='l1') # BOW : Normalised Bag Of Words representation of doc
         self.id2doc = dict([(idx, doc) for idx, doc in enumerate(self.docs)]) # creates doc_index mapping of docs to docs
         
-    def _create_embedding(self, docs):
-        """
-        This function creates a word2vec model over the given data and creates an embedding matrix (self.word_embedding)
-        of dimension (num of docs X dimension of word2vec vector)
-
-        It returns the tokens for BOW
-
-        Parameters
-        ----------
-
-        docs : Input docs conveted to their BOW representation.(no. of docs X vocabulary size)
-        """
-        vectorizer = CountVectorizer(stop_words = "english").fit(docs)
-        tokenizer = vectorizer.build_tokenizer() # sklearn tokenizer to break the sentence into tokens
-        
-        word_embedding_model = Word2Vec([tokenizer(doc) for doc in docs], min_count = 1) # creating word2vec model from the given data
-        model_vocab = word_embedding_model.vocab
-        common_vocab = [word for word in vectorizer.get_feature_names() if word in model_vocab]
-        self.word_embedding = check_array([word_embedding_model[word] for word in common_vocab])  # representation of tokens in model space : no of docs X word2vec vector size
-        self.word_embedding_distance = euclidean_distances(self.word_embedding)
-        # np.fill_diagonal(self.word_embedding_distance, float('inf'))
-    #         print "fdsd", self.word_embedding.shape
-        return common_vocab
 
     def _pairwise_wcd_dist_row(self, test_doc):
         """
