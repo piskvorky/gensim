@@ -38,7 +38,7 @@
 #####Topic Model Tuning
 * [Colouring words by topic in a document, print words in a topics](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_methods.ipynb)
 * [Topic Coherence, a metric that correlates that human judgement on topic quality.](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_coherence_tutorial.ipynb) 
-* [Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities] (https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/similarity_metrics.ipynb)
+* [Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities] (https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/distance_metrics.ipynb)
 * [America's Next Topic Model slides](https://speakerdeck.com/tmylk/americas-next-topic-model?slide=6) -- How to choose your next topic model, presented at Pydata London 5 July 2016 by Lev Konstantinovsky
 
 #####Query Similarities
@@ -49,6 +49,7 @@
 * Model evolution of topics through time
 * [Easy intro to DTM. Evolution of Voldemort topic through the 7 Harry Potter books.](http://rare-technologies.com/understanding-and-coding-dynamic-topic-models/)
 * [Dynamic Topic Modeling and Dynamic Influence Model Tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/dtm_example.ipynb)
+* [Python Dynamic Topic Modelling Theory and Tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/ldaseqmodel.ipynb) 
 
 
 ####Word Embeddings
