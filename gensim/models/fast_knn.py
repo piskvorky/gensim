@@ -48,11 +48,26 @@ class FastKNN():
         
     #         super(FastKNN, self).__init__(n_neighbours = n_neighbours, n_jobs = n_jobs)
     def _preprocess(self, dataset_data):
+        """
+        This function creates a word2vec model from the google news data.
+        The vector size of eacg word vector is 300
+        It
+            removes any kind of punctuation and stopwords according to @wkusner's list.
+            creates an embedding for words specific to a dataset.
+            returns an embedding dictionary.
+
+        Parameters:
+        -----------
+
+        dataset_data : Input Docs - It is  a list of documents
+
+        """
         word_vectors_model = Word2Vec.load_word2vec_format(
                                         "./GoogleNews-vectors-negative300.bin.gz",
                                         binary=True
                                             )
         punctuation_marks = string.punctuation
+
         for doc_idx in range(len(dataset_data)):
             for punctuation in punctuation_marks:
                 dataset_data[doc_idx] = dataset_data[doc_idx].replace(punctuation,"")
@@ -60,12 +75,15 @@ class FastKNN():
             
         stopwords = open("stopwords.txt", "r").readlines()
         sopwords = set([word.strip() for word in stopwords])
-        vocab = []
-        embedding = {}
+
+        vocab = [] # vocabulary array of given data
+        embedding = {} # word2vec embedding of vocab
+
         [vocab.extend(line.strip().lower().split("\t")[1].split(" ")) for line in dataset_data]
+        # get the word embeddings of given docs vocab
         for word_idx in range(len(vocab)):
             if vocab[word_idx] in stopwords:
-                del vocab[word_idx]
+                del vocab[word_idx] # stopwords are not to be a part of Bag Of Words
             else:
                 try:
                     embedding[vocab[word_idx]] = word_vectors_mode[vocab[word_idx]]
@@ -168,6 +186,9 @@ class FastKNN():
     def prune(self, wmd_dist_lst):
         """
         This function helps to place the new neighbor document at its right place.
+        Here misplaced wmd distance is the last element  of the sorted wmd_dist_lst. So, we traverse
+        back from 2nd last element (self.n_neighbours-2) all the way upto  1st element  to keep the list sorted
+        in ascending order.
 
         Parameters:
         -----------
@@ -209,7 +230,45 @@ class FastKNN():
                     wmd_distances = self.prune(wmd_distances)    
         print wmd_distances
 
+    
+    def check_distance_order(self, doc):
+        """
+        This function plots the distance of a test document from all the docs in the reserve
+
+        Parameters:
+        -----------
+
         
+        doc : Sentence to query in string form as follows:
+                "Obama speaks to the media in Illinois"
+        """
+        doc = normalize(np.array(self.vectorizer.transform([doc]).toarray().ravel()), norm='l1')
+        # wcd_dists = self._pairwise_wcd_dist_row(doc)[:self.n_neighbours]
+
+        #plotting the WCD distances
+        wcd_dists = self._pairwise_wcd_dist_row(doc)
+        doc_ids = [pair[0] for pair in wcd_dists]
+        doc_dists = [pair[1] for pair in wcd_dists]
+        plt.scatter(doc_ids, doc_dists)
+#         plt.show()
+
+        # plotting the WMD distances with red colored dots
+        wmd_distances = Parallel(n_jobs = self.n_jobs)(
+                                delayed(self.get_wmd)(doc, self.docs, wcd_dists[doc_idx][0])
+                                for doc_idx in range(20))
+        
+        doc_wmd_ids = [pair[0] for pair in wmd_distances]
+        doc_wmd_dists = [pair[1] for pair in wmd_distances]
+        plt.scatter(doc_wmd_ids, doc_wmd_dists, color = "r")
+
+        #plotting the RWMD distances with green colored dots
+        rwmd_distances = Parallel(n_jobs = self.n_jobs)(
+                                delayed(self.get_rwmd)(doc, self.docs, wcd_dists[doc_idx][0])
+                                for doc_idx in range(20))
+        doc_rwmd_ids = [pair[0] for pair in rwmd_distances]
+        doc_rwmd_dists = [pair[1] for pair in rwmd_distances]
+        plt.scatter(doc_rwmd_ids, doc_rwmd_dists, color = "g")
+            
 
         
     
