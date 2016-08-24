@@ -184,6 +184,7 @@ class Phrases(interfaces.TransformationABC):
         else:
             # in common case, avoid doubling gigantic dict
             logger.info("using %i counts as vocab in %s", len(vocab), self)
+            self.vocab = vocab
 
     def export_phrases(self, sentences):
         """
