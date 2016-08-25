@@ -186,7 +186,7 @@ class Phrases(interfaces.TransformationABC):
             logger.info("using %i counts as vocab in %s", len(vocab), self)
             self.vocab = vocab
 
-    def export_phrases(self, sentences):
+    def export_phrases(self, sentences, delimiter=b' ', as_tuples=False):
         """
         Generate an iterator that contains all phrases in given 'sentences'
 
@@ -217,7 +217,7 @@ class Phrases(interfaces.TransformationABC):
                         # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
                         #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
                         if score > threshold:
-                            yield (b' '.join((word_a, word_b)), score)
+                            yield (delimiter.join((word_a, word_b)), score)
                             last_bigram = True
 
     def __getitem__(self, sentence):
@@ -268,6 +268,73 @@ class Phrases(interfaces.TransformationABC):
                         new_s.append(bigram_word)
                         last_bigram = True
                         continue
+
+            if not last_bigram:
+                new_s.append(word_a)
+            last_bigram = False
+
+        if s:  # add last word skipped by previous loop
+            last_token = s[-1]
+            if not last_bigram:
+                new_s.append(last_token)
+
+        return [utils.to_unicode(w) for w in new_s]
+
+def pseudocorpus(keys, sep):
+    for k in keys:
+        if sep not in k:
+            continue
+        unigrams = k.split(sep)
+        for i in range(1, len(unigrams)):
+            yield [sep.join(unigrams[:i]), sep.join(unigrams[i:])]
+
+class Phraser(interfaces.TransformationABC):
+    """
+    Minimal state & functionality to apply results of a Phrases model. 
+
+    """
+    def __init__(self, phrases_model, ):
+        self.threshold = phrases_model.threshold
+        self.min_count = phrases_model.min_count
+        self.delimiter = phrases_model.delimiter
+        self.phrasegrams = {}
+        corpus = pseudocorpus(phrases_model.vocab.keys(), phrases_model.delimiter)
+        for bigram, score in phrases_model.export_phrases(corpus, self.delimiter):
+            self.phrasegrams[bigram] = (phrases_model.vocab[bigram], score)
+#        for bigram, score in phrases_model.export_phrases(corpus):
+#            bigram = bigram.replace(' ', '|')
+#            self.phrasegrams[bigram] = (phrases_model.vocab[bigram], score)
+
+    def __getitem__(self, sentence):
+        """
+        Convert the input tokens `sentence` (=list of unicode strings) into phrase
+        tokens (=list of unicode strings, where detected phrases are joined by u'_'
+        (or other configured delimiter-character).
+
+        If `sentence` is an entire corpus (iterable of sentences rather than a single
+        sentence), return an iterable that converts each of the corpus' sentences
+        into phrases on the fly, one after another.
+
+        """
+        try:
+            is_single = not sentence or isinstance(sentence[0], string_types)
+        except:
+            is_single = False
+        if not is_single:
+            # if the input is an entire corpus (rather than a single sentence),
+            # return an iterable stream.
+            return self._apply(sentence)
+
+        s, new_s = [utils.any2utf8(w) for w in sentence], []
+        last_bigram = False
+        phrasegrams = self.phrasegrams
+        delimiter = self.delimiter
+        for word_a, word_b in zip(s, s[1:]):
+            bigram_word = delimiter.join((word_a, word_b))
+            if bigram_word in phrasegrams and not last_bigram:
+                new_s.append(bigram_word)
+                last_bigram = True
+                continue
 
             if not last_bigram:
                 new_s.append(word_a)
