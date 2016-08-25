@@ -186,7 +186,7 @@ class Phrases(interfaces.TransformationABC):
             logger.info("using %i counts as vocab in %s", len(vocab), self)
             self.vocab = vocab
 
-    def export_phrases(self, sentences, delimiter=b' ', as_tuples=False):
+    def export_phrases(self, sentences, out_delimiter=b' ', as_tuples=False):
         """
         Generate an iterator that contains all phrases in given 'sentences'
 
@@ -204,7 +204,7 @@ class Phrases(interfaces.TransformationABC):
             last_bigram = False
             vocab = self.vocab
             threshold = self.threshold
-            delimiter = self.delimiter
+            delimiter = self.delimiter  # delimiter used for lookup
             min_count = self.min_count
             for word_a, word_b in zip(s, s[1:]):
                 if word_a in vocab and word_b in vocab:
@@ -220,7 +220,7 @@ class Phrases(interfaces.TransformationABC):
                             if as_tuples:
                                 yield ((word_a, word_b), score)
                             else:
-                                yield (delimiter.join((word_a, word_b)), score)
+                                yield (out_delimiter.join((word_a, word_b)), score)
                             last_bigram = True
 
     def __getitem__(self, sentence):
