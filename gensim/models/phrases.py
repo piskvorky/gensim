@@ -296,13 +296,13 @@ def pseudocorpus(source_vocab, sep):
 
 class Phraser(interfaces.TransformationABC):
     """
-    Minimal state & functionality to apply results of a Phrases model to tokens. 
+    Minimal state & functionality to apply results of a Phrases model to tokens.
 
-    After the one-time initialization, a Phraser will be much smaller and 
-    somewhat faster than using the full Phrases model. 
+    After the one-time initialization, a Phraser will be much smaller and
+    somewhat faster than using the full Phrases model.
 
-    Reflects the results of the source model's `min_count` and `threshold` 
-    settings. (You can tamper with those & create a new Phraser to try 
+    Reflects the results of the source model's `min_count` and `threshold`
+    settings. (You can tamper with those & create a new Phraser to try
     other values.)
 
     """
