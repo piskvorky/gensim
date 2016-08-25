@@ -304,34 +304,30 @@ class DtmModel(utils.SaveLoad):
         """Return the given topic, formatted as a string."""
         return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, num_words)])
 
-    def DTMvis(self, corpus, time):
+    def dtm_vis(self, corpus, time):
         """
         returns term_frequency, vocab, doc_lengths, topic-term distributions and doc_topic distributions, specified by pyLDAvis format.
         all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
         input parameter is the year to do the visualisation.
         """
-        topic_term = self.lambda_[:,:,time]
-        topic_term = np.exp(topic_term)
-        topic_term = topic_term / topic_term.sum()
+        topic_term = np.exp(self.lambda_[:,:,time]) / np.exp(self.lambda_[:,:,time]).sum()
         topic_term = topic_term * self.num_topics
 
         doc_topic = self.gamma_
 
-        term_frequency = [0] * self.num_terms
-        doc_lengths = []
-        for doc_num, doc in enumerate(corpus):
-            doc_lengths.append(len(doc))
+        doc_lengths = [len(doc) for doc_no, doc in enumerate(corpus)]
+
+        term_frequency = np.zeros(len(self.id2word))
+        for doc_no, doc in enumerate(corpus):
             for pair in doc:
                 term_frequency[pair[0]] += pair[1]
 
-        vocab = []
-        for i in range(0, len(self.id2word)):
-            vocab.append(self.id2word[i])
+        vocab = [self.id2word[i] for i in range(0, len(self.id2word))]
         # returns numpy arrays for doc_topic proportions, topic_term proportions, and document_lengths, term_frequency.
         # these should be passed to the `pyLDAvis.prepare` method to visualise one time-slice of DTM topics.
         return doc_topic, topic_term, doc_lengths, term_frequency, vocab
 
-    def DTMcoherence(self, time, num_words=20):
+    def dtm_coherence(self, time, num_words=20):
         """
         returns all topics of a particular time-slice without probabilitiy values for it to be used 
         for either "u_mass" or "c_v" coherence.

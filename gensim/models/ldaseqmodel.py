@@ -50,7 +50,7 @@ class LdaSeqModel(utils.SaveLoad):
 
     def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
                 initialize='gensim', sstats=None,  lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10, 
-                random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20):
+                random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
         """
         `corpus` is any iterable gensim corpus
 
@@ -135,7 +135,7 @@ class LdaSeqModel(utils.SaveLoad):
             self.init_ldaseq_ss(chain_variance, obs_variance, self.alphas, self.sstats)
 
             # fit DTM
-            self.fit_lda_seq(corpus, lda_inference_max_iter, em_min_iter, em_max_iter)
+            self.fit_lda_seq(corpus, lda_inference_max_iter, em_min_iter, em_max_iter, chunksize)
 
 
     def init_ldaseq_ss(self, topic_chain_variance, topic_obs_variance, alpha, init_suffstats):
@@ -153,7 +153,7 @@ class LdaSeqModel(utils.SaveLoad):
             # ldaseq.topic_chains[k].w_phi_sq = numpy.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
 
 
-    def fit_lda_seq(self, corpus, lda_inference_max_iter, em_min_iter, em_max_iter):
+    def fit_lda_seq(self, corpus, lda_inference_max_iter, em_min_iter, em_max_iter, chunksize):
         """
         fit an lda sequence model:
 
@@ -198,7 +198,7 @@ class LdaSeqModel(utils.SaveLoad):
             lhoods = numpy.resize(numpy.zeros(corpus_len * num_topics + 1), (corpus_len, num_topics + 1))
             # compute the likelihood of a sequential corpus under an LDA
             # seq model and find the evidence lower bound. This is the E - Step
-            bound, gammas = self.lda_seq_infer(corpus, topic_suffstats, gammas, lhoods, iter_, lda_inference_max_iter)
+            bound, gammas = self.lda_seq_infer(corpus, topic_suffstats, gammas, lhoods, iter_, lda_inference_max_iter, chunksize)
             self.gammas = gammas
 
             logger.info("M Step")
@@ -229,7 +229,7 @@ class LdaSeqModel(utils.SaveLoad):
         return bound
 
 
-    def lda_seq_infer(self, corpus, topic_suffstats, gammas, lhoods, iter_, lda_inference_max_iter):
+    def lda_seq_infer(self, corpus, topic_suffstats, gammas, lhoods, iter_, lda_inference_max_iter, chunksize):
         """
         Inference or E- Step.
         This is used to set up the gensim LdaModel to be used for each time-slice.
@@ -245,15 +245,15 @@ class LdaSeqModel(utils.SaveLoad):
 
         model = "DTM"
         if model == "DTM":
-            bound, gammas = self.inferDTMseq(corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter)
+            bound, gammas = self.inferDTMseq(corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter, chunksize)
         elif model == "DIM":
             self.InfluenceTotalFixed(corpus)
-            bound, gammas = self.inferDIMseq(corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter)
+            bound, gammas = self.inferDIMseq(corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter, chunksize)
 
         return bound, gammas
 
 
-    def inferDTMseq(self, corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter):
+    def inferDTMseq(self, corpus, topic_suffstats, gammas, lhoods, lda, ldapost, iter_, bound, lda_inference_max_iter, chunksize):
         """
         Computes the likelihood of a sequential corpus under an LDA seq model, and return the likelihood bound.
         Need to pass the LdaSeq model, corpus, sufficient stats, gammas and lhoods matrices previously created,
@@ -267,34 +267,35 @@ class LdaSeqModel(utils.SaveLoad):
 
         time_slice = numpy.cumsum(numpy.array(self.time_slice))
 
-        # TODO: use chunks similar to ldamodel for constant memory footprint.
-        for line_no, line in enumerate(corpus):
-            # this is used to update the time_slice and create a new lda_seq slice every new time_slice
-            if doc_index > time_slice[time]:
-                time += 1
-                lda = self.make_lda_seq_slice(lda, time)  # create lda_seq slice
-                doc_num = 0
+        for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
+            # iterates chunk size for constant memory footprint
+            for doc in chunk:
+                # this is used to update the time_slice and create a new lda_seq slice every new time_slice
+                if doc_index > time_slice[time]:
+                    time += 1
+                    lda = self.make_lda_seq_slice(lda, time)  # create lda_seq slice
+                    doc_num = 0
 
-            gam = gammas[doc_index]
-            lhood = lhoods[doc_index]
+                gam = gammas[doc_index]
+                lhood = lhoods[doc_index]
 
-            ldapost.gamma = gam
-            ldapost.lhood = lhood
-            ldapost.doc = line
+                ldapost.gamma = gam
+                ldapost.lhood = lhood
+                ldapost.doc = doc
 
-            # TODO: replace fit_lda_post with appropriate ldamodel functions, if possible.
-            if iter_ == 0:
-                doc_lhood = LdaPost.fit_lda_post(ldapost, doc_num, time, None, lda_inference_max_iter=lda_inference_max_iter)
-            else:
-                doc_lhood = LdaPost.fit_lda_post(ldapost, doc_num, time, self, lda_inference_max_iter=lda_inference_max_iter)
+                # TODO: replace fit_lda_post with appropriate ldamodel functions, if possible.
+                if iter_ == 0:
+                    doc_lhood = LdaPost.fit_lda_post(ldapost, doc_num, time, None, lda_inference_max_iter=lda_inference_max_iter)
+                else:
+                    doc_lhood = LdaPost.fit_lda_post(ldapost, doc_num, time, self, lda_inference_max_iter=lda_inference_max_iter)
 
-            if topic_suffstats is not None:
-                topic_suffstats = LdaPost.update_lda_seq_ss(ldapost, time, line, topic_suffstats)
+                if topic_suffstats is not None:
+                    topic_suffstats = LdaPost.update_lda_seq_ss(ldapost, time, doc, topic_suffstats)
 
-            gammas[doc_index] = ldapost.gamma
-            bound += doc_lhood
-            doc_index += 1
-            doc_num += 1
+                gammas[doc_index] = ldapost.gamma
+                bound += doc_lhood
+                doc_index += 1
+                doc_num += 1
 
         return bound, gammas
 
@@ -377,26 +378,19 @@ class LdaSeqModel(utils.SaveLoad):
         all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
         input parameter is the year to do the visualisation.
         """
-
         doc_topic = numpy.copy(self.gammas)
         doc_topic /= doc_topic.sum(axis=1)[:, numpy.newaxis]
 
-        topic_term = []
-        for k, chain in enumerate(self.topic_chains):
-            topic = numpy.transpose(chain.e_log_prob)
-            topic = numpy.exp(topic[time]) / numpy.exp(topic[time]).sum()
-            topic_term.append(topic)
+        topic_term = [numpy.exp(numpy.transpose(chain.e_log_prob)[time]) / numpy.exp(numpy.transpose(chain.e_log_prob)[time]).sum() for k, chain in enumerate(self.topic_chains)]
 
-        term_frequency = [0] * self.vocab_len
-        doc_lengths = []
+        doc_lengths = [len(doc) for doc_no, doc in enumerate(corpus)]
+
+        term_frequency = numpy.zeros(self.vocab_len)
         for doc_no, doc in enumerate(corpus):
-            doc_lengths.append(len(doc))
             for pair in doc:
                 term_frequency[pair[0]] += pair[1]
         
-        vocab = []
-        for i in range(0, len(self.id2word)):
-            vocab.append(self.id2word[i])
+        vocab = [self.id2word[i] for i in range(0, len(self.id2word))]
         # returns numpy arrays for doc_topic proportions, topic_term proportions, and document_lengths, term_frequency.
         # these should be passed to the `pyLDAvis.prepare` method to visualise one time-slice of DTM topics.
         return doc_topic, numpy.array(topic_term), doc_lengths, term_frequency, vocab
