@@ -217,7 +217,10 @@ class Phrases(interfaces.TransformationABC):
                         # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
                         #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
                         if score > threshold:
-                            yield (delimiter.join((word_a, word_b)), score)
+                            if as_tuples:
+                                yield ((word_a, word_b), score)
+                            else:
+                                yield (delimiter.join((word_a, word_b)), score)
                             last_bigram = True
 
     def __getitem__(self, sentence):
@@ -280,30 +283,46 @@ class Phrases(interfaces.TransformationABC):
 
         return [utils.to_unicode(w) for w in new_s]
 
-def pseudocorpus(keys, sep):
-    for k in keys:
+
+def pseudocorpus(source_vocab, sep):
+    """Feeds source_vocab's compound keys back to it, to discover phrases"""
+    for k in source_vocab:
         if sep not in k:
             continue
         unigrams = k.split(sep)
         for i in range(1, len(unigrams)):
             yield [sep.join(unigrams[:i]), sep.join(unigrams[i:])]
 
+
 class Phraser(interfaces.TransformationABC):
     """
-    Minimal state & functionality to apply results of a Phrases model. 
+    Minimal state & functionality to apply results of a Phrases model to tokens. 
+
+    After the one-time initialization, a Phraser will be much smaller and 
+    somewhat faster than using the full Phrases model. 
+
+    Reflects the results of the source model's `min_count` and `threshold` 
+    settings. (You can tamper with those & create a new Phraser to try 
+    other values.)
 
     """
-    def __init__(self, phrases_model, ):
+    def __init__(self, phrases_model):
         self.threshold = phrases_model.threshold
         self.min_count = phrases_model.min_count
         self.delimiter = phrases_model.delimiter
         self.phrasegrams = {}
-        corpus = pseudocorpus(phrases_model.vocab.keys(), phrases_model.delimiter)
-        for bigram, score in phrases_model.export_phrases(corpus, self.delimiter):
-            self.phrasegrams[bigram] = (phrases_model.vocab[bigram], score)
-#        for bigram, score in phrases_model.export_phrases(corpus):
-#            bigram = bigram.replace(' ', '|')
-#            self.phrasegrams[bigram] = (phrases_model.vocab[bigram], score)
+        corpus = pseudocorpus(phrases_model.vocab, phrases_model.delimiter)
+        logger.info('source_vocab length %i', len(phrases_model.vocab))
+        count = 0
+        for bigram, score in phrases_model.export_phrases(corpus, self.delimiter, as_tuples=True):
+            if bigram in self.phrasegrams:
+                logger.info('Phraser repeat %s', bigram)
+            self.phrasegrams[bigram] = (phrases_model.vocab[self.delimiter.join(bigram)], score)
+            count += 1
+            if not count % 50000:
+                logger.info('Phraser added %i phrasegrams', count)
+        logger.info('Phraser built with %i %i phrasegrams', count, len(self.phrasegrams))
+
 
     def __getitem__(self, sentence):
         """
@@ -330,8 +349,9 @@ class Phraser(interfaces.TransformationABC):
         phrasegrams = self.phrasegrams
         delimiter = self.delimiter
         for word_a, word_b in zip(s, s[1:]):
-            bigram_word = delimiter.join((word_a, word_b))
-            if bigram_word in phrasegrams and not last_bigram:
+            bigram_tuple = (word_a, word_b)
+            if bigram_tuple in phrasegrams and not last_bigram:
+                bigram_word = delimiter.join((word_a, word_b))
                 new_s.append(bigram_word)
                 last_bigram = True
                 continue
