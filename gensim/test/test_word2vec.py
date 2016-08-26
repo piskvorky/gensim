@@ -110,6 +110,30 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model.init_sims(replace=True)
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human']))
         self.assertTrue(numpy.allclose(model.syn0norm[model.vocab['human'].index], norm_only_model['human']))
+        limited_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, limit=3)
+        self.assertEquals(len(limited_model.syn0), 3)
+        half_precision_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, datatype=numpy.float16)
+        self.assertEquals(binary_model.syn0.nbytes, half_precision_model.syn0.nbytes * 2)
+
+    def testTooShortBinaryWord2VecFormat(self):
+        tfile = testfile()
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        model.save_word2vec_format(tfile, binary=True)
+        f = open(tfile, 'r+b')
+        f.write(b'13')  # write wrong (too-long) vector count
+        f.close()
+        self.assertRaises(EOFError, word2vec.Word2Vec.load_word2vec_format, tfile, binary=True)
+
+    def testTooShortTextWord2VecFormat(self):
+        tfile = testfile()
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        model.save_word2vec_format(tfile, binary=False)
+        f = open(tfile, 'r+b')
+        f.write(b'13')  # write wrong (too-long) vector count
+        f.close()
+        self.assertRaises(EOFError, word2vec.Word2Vec.load_word2vec_format, tfile, binary=False)
 
     def testPersistenceWord2VecFormatNonBinary(self):
         """Test storing/loading the entire model in word2vec non-binary format."""

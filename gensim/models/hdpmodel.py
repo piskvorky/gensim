@@ -134,7 +134,7 @@ class HdpModel(interfaces.TransformationABC):
     on a training corpus:
 
     >>> hdp = HdpModel(corpus, id2word)
-    >>> hdp.print_topics(topics=20, topn=10)
+    >>> hdp.print_topics(show_topics=20, num_words=10)
 
     Inference on new documents is based on the approximately LDA-equivalent topics.
 
@@ -456,15 +456,15 @@ class HdpModel(interfaces.TransformationABC):
         self.m_timestamp[:] = self.m_updatect
         self.m_status_up_to_date = True
 
-    def print_topics(self, topics=20, topn=20):
-        """Alias for `show_topics()` that prints the `topn` most
+    def print_topics(self, num_topics=20, num_words=20):
+        """Alias for `show_topics()` that prints the `num_words` most
         probable words for `topics` number of topics to log.
         Set `topics=-1` to print all topics."""
-        return self.show_topics(topics=topics, topn=topn, log=True)
+        return self.show_topics(num_topics=num_topics, num_words=num_words, log=True)
 
-    def show_topics(self, topics=20, topn=20, log=False, formatted=True):
+    def show_topics(self, num_topics=20, num_words=20, log=False, formatted=True):
         """
-        Print the `topN` most probable words for `topics` number of topics.
+        Print the `num_words` most probable words for `topics` number of topics.
         Set `topics=-1` to print all topics.
 
         Set `formatted=True` to return the topics as a list of strings, or
@@ -475,7 +475,7 @@ class HdpModel(interfaces.TransformationABC):
             self.update_expectations()
         betas = self.m_lambda + self.m_eta
         hdp_formatter = HdpTopicFormatter(self.id2word, betas)
-        return hdp_formatter.show_topics(topics, topn, log, formatted)
+        return hdp_formatter.show_topics(num_topics, num_words, log, formatted)
 
     def save_topics(self, doc_count=None):
         """legacy method; use `self.save()` instead"""
@@ -578,24 +578,24 @@ class HdpTopicFormatter(object):
 
         self.style = style
 
-    def print_topics(self, topics=10, topn=10):
-        return self.show_topics(topics, topn, True)
+    def print_topics(self, num_topics=10, num_words=10):
+        return self.show_topics(num_topics, num_words, True)
 
-    def show_topics(self, topics=10, topn=10, log=False, formatted=True):
+    def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         shown = []
-        if topics < 0:
-            topics = len(self.data)
+        if num_topics < 0:
+            num_topics = len(self.data)
 
-        topics = min(topics, len(self.data))
+        num_topics = min(num_topics, len(self.data))
 
-        for k in xrange(topics):
+        for k in xrange(num_topics):
             lambdak = list(self.data[k, :])
             lambdak = lambdak / sum(lambdak)
 
             temp = zip(lambdak, xrange(len(lambdak)))
             temp = sorted(temp, key=lambda x: x[0], reverse=True)
 
-            topic_terms = self.show_topic_terms(temp, topn)
+            topic_terms = self.show_topic_terms(temp, num_words)
 
             if formatted:
                 topic = self.format_topic(k, topic_terms)
@@ -609,8 +609,8 @@ class HdpTopicFormatter(object):
 
         return shown
 
-    def show_topic_terms(self, topic_data, topn):
-        return [(self.dictionary[wid], weight) for (weight, wid) in topic_data[:topn]]
+    def show_topic_terms(self, topic_data, num_words):
+        return [(self.dictionary[wid], weight) for (weight, wid) in topic_data[:num_words]]
 
     def format_topic(self, topic_id, topic_terms):
         if self.STYLE_GENSIM == self.style:

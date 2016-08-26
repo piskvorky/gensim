@@ -48,6 +48,10 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
+def testRandomState():
+    testcases = [numpy.random.seed(0), None, numpy.random.RandomState(0), 0]
+    for testcase in testcases:
+        assert(isinstance(ldamodel.get_random_state(testcase), numpy.random.RandomState))
 
 class TestLdaModel(unittest.TestCase):
     def setUp(self):
@@ -252,8 +256,7 @@ class TestLdaModel(unittest.TestCase):
 
     def testGetDocumentTopics(self):
 
-        numpy.random.seed(0)
-        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes= 100)
+        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes= 100, random_state=numpy.random.seed(0))
 
         doc_topics = model.get_document_topics(self.corpus)
 
@@ -286,8 +289,7 @@ class TestLdaModel(unittest.TestCase):
 
     def testTermTopics(self):
 
-        numpy.random.seed(0)
-        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes=100)
+        model = self.class_(self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=numpy.random.seed(0))
 
         # check with word_type
         result = model.get_term_topics(2)

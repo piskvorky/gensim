@@ -213,6 +213,18 @@ class TestLdaVowpalWabbit(unittest.TestCase):
         result = '\n'.join(ldavowpalwabbit.corpus_to_vw(corpus))
         self.assertEqual(result, expected)
 
+    def testvwmodel2ldamodel(self):
+        """Test copying of VWModel to LdaModel"""
+        if not self.vw_path:
+            return
+        tm1 = LdaVowpalWabbit(vw_path=self.vw_path, corpus=self.corpus, num_topics=2, id2word=self.dictionary)
+        tm2 = ldavowpalwabbit.vwmodel2ldamodel(tm1)
+        for document in self.corpus:
+            self.assertEqual(tm1[document][0], tm2[document][0])
+            self.assertEqual(tm1[document][1], tm2[document][1])
+            logging.debug('%d %d', tm1[document][0], tm2[document][0])
+            logging.debug('%d %d', tm1[document][1], tm2[document][1])
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

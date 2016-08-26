@@ -93,6 +93,9 @@ class DtmModel(utils.SaveLoad):
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
             raise ValueError("cannot compute DTM over an empty corpus")
+        if model == "fixed" and any([i == 0 for i in [len(text) for text in corpus.get_texts()]]):
+            raise ValueError("""There is a text without words in the input corpus.
+                    This breaks method='fixed' (The DIM model).""")
         if lencorpus != sum(time_slices):
             raise ValueError("mismatched timeslices %{slices} for corpus of len {clen}".format(
                 slices=sum(time_slices), clen=lencorpus))
@@ -173,9 +176,9 @@ class DtmModel(utils.SaveLoad):
         corpora.BleiCorpus.save_corpus(self.fcorpustxt(), corpus)
 
         with utils.smart_open(self.ftimeslices(), 'wb') as fout:
-            fout.write(six.u(str(len(self.time_slices)) + "\n"))
+            fout.write(utils.to_utf8(str(len(self.time_slices)) + "\n"))
             for sl in time_slices:
-                fout.write(six.u(str(sl) + "\n"))
+                fout.write(utils.to_utf8(str(sl) + "\n"))
 
     def train(self, corpus, time_slices, mode, model):
         """
@@ -235,23 +238,23 @@ class DtmModel(utils.SaveLoad):
                 # influence[2,5] influence of document 2 on topic 5
                 self.influences_time.append(influence)
 
-    def print_topics(self, topics=10, times=5, topn=10):
-        return self.show_topics(topics, times, topn, log=True)
+    def print_topics(self, num_topics=10, times=5, num_words=10):
+        return self.show_topics(num_topics, times, num_words, log=True)
 
-    def show_topics(self, topics=10, times=5, topn=10, log=False, formatted=True):
+    def show_topics(self, num_topics=10, times=5, num_words=10, log=False, formatted=True):
         """
-        Print the `topn` most probable words for `topics` number of topics at 'times' time slices.
+        Print the `num_words` most probable words for `num_topics` number of topics at 'times' time slices.
         Set `topics=-1` to print all topics.
 
         Set `formatted=True` to return the topics as a list of strings, or `False` as lists of (weight, word) pairs.
 
         """
-        if topics < 0 or topics >= self.num_topics:
-            topics = self.num_topics
-            chosen_topics = range(topics)
+        if num_topics < 0 or num_topics >= self.num_topics:
+            num_topics = self.num_topics
+            chosen_topics = range(num_topics)
         else:
-            topics = min(topics, self.num_topics)
-            chosen_topics = range(topics)
+            num_topics = min(num_topics, self.num_topics)
+            chosen_topics = range(num_topics)
              # add a little random jitter, to randomize results around the same
             # alpha
             # sort_alpha = self.alpha + 0.0001 * \
@@ -271,18 +274,18 @@ class DtmModel(utils.SaveLoad):
         for time in chosen_times:
             for i in chosen_topics:
                 if formatted:
-                    topic = self.print_topic(i, time, topn=topn)
+                    topic = self.print_topic(i, time, num_words=num_words)
                 else:
-                    topic = self.show_topic(i, time, topn=topn)
+                    topic = self.show_topic(i, time, num_words=num_words)
                 shown.append(topic)
                 # if log:
                 # logger.info("topic #%i (%.3f): %s" % (i, self.alpha[i],
                 #     topic))
         return shown
 
-    def show_topic(self, topicid, time, topn=50):
+    def show_topic(self, topicid, time, num_words=50):
         """
-        Return `topn` most probable words for the given `topicid`, as a list of
+        Return `num_words` most probable words for the given `topicid`, as a list of
         `(word_probability, word)` 2-tuples.
 
         """
@@ -293,10 +296,50 @@ class DtmModel(utils.SaveLoad):
         # normalize to probability dist
         topic = topic / topic.sum()
         # sort according to prob
-        bestn = matutils.argsort(topic, topn, reverse=True)
+        bestn = matutils.argsort(topic, num_words, reverse=True)
         beststr = [(topic[id], self.id2word[id]) for id in bestn]
         return beststr
 
-    def print_topic(self, topicid, time, topn=10):
+    def print_topic(self, topicid, time, num_words=10):
         """Return the given topic, formatted as a string."""
-        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, topn)])
+        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, num_words)])
+
+    def dtm_vis(self, corpus, time):
+        """
+        returns term_frequency, vocab, doc_lengths, topic-term distributions and doc_topic distributions, specified by pyLDAvis format.
+        all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
+        input parameter is the year to do the visualisation.
+        """
+        topic_term = np.exp(self.lambda_[:,:,time]) / np.exp(self.lambda_[:,:,time]).sum()
+        topic_term = topic_term * self.num_topics
+
+        doc_topic = self.gamma_
+
+        doc_lengths = [len(doc) for doc_no, doc in enumerate(corpus)]
+
+        term_frequency = np.zeros(len(self.id2word))
+        for doc_no, doc in enumerate(corpus):
+            for pair in doc:
+                term_frequency[pair[0]] += pair[1]
+
+        vocab = [self.id2word[i] for i in range(0, len(self.id2word))]
+        # returns numpy arrays for doc_topic proportions, topic_term proportions, and document_lengths, term_frequency.
+        # these should be passed to the `pyLDAvis.prepare` method to visualise one time-slice of DTM topics.
+        return doc_topic, topic_term, doc_lengths, term_frequency, vocab
+
+    def dtm_coherence(self, time, num_words=20):
+        """
+        returns all topics of a particular time-slice without probabilitiy values for it to be used 
+        for either "u_mass" or "c_v" coherence.
+        TODO: because of print format right now can only return for 1st time-slice.
+              should we fix the coherence printing or make changes to the print statements to mirror DTM python?  
+        """
+        coherence_topics = []
+        for topic_no in range(0, self.num_topics):
+            topic = self.show_topic(topicid=topic_no, time=time, num_words=num_words)
+            coherence_topic = []
+            for prob, word in topic:
+                coherence_topic.append(word)
+            coherence_topics.append(coherence_topic)
+
+        return coherence_topics
