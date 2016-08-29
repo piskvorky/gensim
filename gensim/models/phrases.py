@@ -350,7 +350,7 @@ class Phraser(interfaces.TransformationABC):
         delimiter = self.delimiter
         for word_a, word_b in zip(s, s[1:]):
             bigram_tuple = (word_a, word_b)
-            if bigram_tuple in phrasegrams and not last_bigram:
+            if phrasegrams.get(bigram_tuple, (-1, -1))[1] > self.threshold and not last_bigram:
                 bigram_word = delimiter.join((word_a, word_b))
                 new_s.append(bigram_word)
                 last_bigram = True
