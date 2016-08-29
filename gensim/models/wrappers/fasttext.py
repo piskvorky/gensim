@@ -25,12 +25,15 @@ Example:
 import logging
 import tempfile
 import os
+import struct
 
-import numpy
+import numpy as np
 
 from gensim import utils
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.models.word2vec import Word2Vec
+
+from six import string_types
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +47,7 @@ class FastText(Word2Vec):
     """
     @classmethod
     def train(cls, ft_path, corpus_file, model='cbow', size=100, alpha=0.025, window=5, min_count=5,
-            loss='ns', sample=1e-3, negative=5, iter=5, min_n=1, max_n=6, sorted_vocab=1, threads=12):
+            loss='ns', sample=1e-3, negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12):
         """
         `ft_path` is the path to the FastText executable, e.g. `/home/kofola/fastText/fasttext`.
 
@@ -106,6 +109,110 @@ class FastText(Word2Vec):
             cmd.append(str(value))
 
         output = utils.check_output(args=cmd)
-        model = cls.load_word2vec_format('%s.vec' % model_file)
-
+        model = cls.load_fasttext_format(model_file)
         return model
+
+    @classmethod
+    def load_fasttext_format(cls, model_file):
+        model = cls.load_word2vec_format('%s.vec' % model_file)
+        model.load_binary_data('%s.bin' % model_file)
+        return model
+
+    def load_binary_data(self, model_file):
+        with open(model_file, 'rb') as f:
+            self.load_model_params(f)
+            self.load_dict(f)
+            self.load_vectors(f)
+
+    def load_model_params(self, f):
+        (dim, ws, epoch, minCount, neg, _, loss, model, bucket, minn, maxn, _, t) = self.struct_unpack(f, '@12i1d')
+        self.size = dim
+        self.window = ws
+        self.iter = epoch
+        self.min_count = minCount
+        self.negative = neg
+        self.loss = loss
+        self.sg = model == 'skipgram'
+        self.bucket = bucket
+        self.min_n = minn
+        self.max_n = maxn
+        self.sample = t
+
+    def load_dict(self, f):
+        (dim, nwords, _) = self.struct_unpack(f, '@3i') 
+        assert len(self.kv.vocab) == nwords, 'mismatch between vocab sizes'
+        ntokens, = self.struct_unpack(f, '@q') 
+        for i in range(nwords):
+            word = ''
+            char, = self.struct_unpack(f, '@c')
+            char = char.decode()
+            while char != '\x00':
+                word += char 
+                char, = self.struct_unpack(f, '@c')
+                char = char.decode()
+            count, _ = self.struct_unpack(f, '@ib')
+            _ = self.struct_unpack(f, '@i')
+            assert self.kv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
+            self.kv.vocab[word].count = count
+            self.init_ngrams(word)
+
+    def load_vectors(self, f):
+        num_vectors, dim = self.struct_unpack(f, '@2q')
+        float_size = struct.calcsize('@f')
+        if float_size == 4:
+            dtype = np.dtype(np.float32)
+        elif float_size == 8:
+            dtype = np.dtype(np.float64)
+
+        self.syn0_all = np.fromstring(f.read(num_vectors * dim * float_size), dtype=dtype)
+        self.syn0_all = self.syn0_all.reshape((num_vectors, dim))
+
+    def struct_unpack(self, f, fmt):
+        num_bytes = struct.calcsize(fmt)
+        return struct.unpack(fmt, f.read(num_bytes))
+
+    def init_ngrams(self, word):
+        assert word in self.kv, 'word absent from gensim vocab'
+        ngrams = [(self.kv.vocab[word].index, word)]
+        ngrams += self.compute_ngrams(word)
+        self.kv.vocab[word].ngrams = ngrams
+
+    def compute_ngrams(self, word):
+        ngram_indices = []
+        BOW, EOW = ('<','>')
+        extended_word = BOW + word + EOW
+        ngrams = set()
+        for i in range(len(extended_word) - self.min_n + 1):
+            for j in range(self.min_n, max(len(extended_word) - self.max_n, self.max_n + 1)):
+                ngrams.add(extended_word[i:i+j])
+
+        ngram_indices += [(len(self.kv.vocab) + (ft_hash(ngram) % self.bucket), ngram) for ngram in ngrams]
+        return ngram_indices
+
+    def __getitem__(self, words):
+        if isinstance(words, string_types):
+            # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
+            return self.word_vector(words)
+
+        return vstack([self.word_vector(word) for word in words])
+
+    def word_vector(self, word):
+        if word in self.kv.vocab:
+            return self.kv[word]
+        else:
+            return self.oov_vector(word)
+
+    def oov_vector(self, word):
+        word_vec = np.zeros(self.size)
+        ngrams = self.compute_ngrams(word)
+        for h, ngram in ngrams:
+            word_vec += self.syn0_all[h]
+        return word_vec/len(ngrams)
+
+def ft_hash(string):
+    # Reproduces hash method used in fastText
+    h = np.uint32(2166136261)
+    for c in string:
+        h = h ^ np.uint32(ord(c))
+        h = h * np.uint32(16777619)
+    return h
