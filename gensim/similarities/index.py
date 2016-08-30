@@ -19,7 +19,7 @@ except ImportError:
 
 class AnnoyIndexer(object):
 
-    def __init__(self, model, num_trees):
+    def __init__(self, model=None, num_trees=None):
         self.model = model
         self.num_trees = num_trees
 
@@ -33,12 +33,13 @@ class AnnoyIndexer(object):
 
     def save(self, fname):
         self.index.save(fname)
-        d = {'f': self.model.vector_size, 'labels': self.labels}
+        d = {'f': self.model.vector_size, 'num_trees': self.num_trees, 'labels': self.labels}
         pickle.dump(d, open(fname+'.d', 'wb'), 2)
 
     def load(self, fname):
         if os.path.exists(fname):
             d = pickle.load(open(fname+'.d', 'rb'))
+            self.num_trees = d['num_trees']
             self.index = AnnoyIndex(d['f'])
             self.index.load(fname)
             self.labels = d['labels']
