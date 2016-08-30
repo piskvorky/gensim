@@ -3,7 +3,11 @@
 #
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
-
+import os
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 from gensim.models.doc2vec import Doc2Vec
 from gensim.models.word2vec import Word2Vec
@@ -19,12 +23,25 @@ class AnnoyIndexer(object):
         self.model = model
         self.num_trees = num_trees
 
-        if isinstance(self.model, Doc2Vec):
-            self.build_from_doc2vec()
-        elif isinstance(self.model, Word2Vec):
-            self.build_from_word2vec()
-        else:
-            raise ValueError("Only a Word2Vec or Doc2Vec instance can be used")
+        if model and num_trees:
+            if isinstance(self.model, Doc2Vec):
+                self.build_from_doc2vec()
+            elif isinstance(self.model, Word2Vec):
+                self.build_from_word2vec()
+            else:
+                raise ValueError("Only a Word2Vec or Doc2Vec instance can be used")
+
+    def save(self, fname):
+        self.index.save(fname)
+        d = {'f': self.model.vector_size, 'labels': self.labels}
+        pickle.dump(d, open(fname+'.d', 'wb'), 2)
+
+    def load(self, fname):
+        if os.path.exists(fname):
+            d = pickle.load(open(fname+'.d', 'rb'))
+            self.index = AnnoyIndex(d['f'])
+            self.index.load(fname)
+            self.labels = d['labels']
 
     def build_from_word2vec(self):
         """Build an Annoy index using word vectors from a Word2Vec model"""
