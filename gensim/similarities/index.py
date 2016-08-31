@@ -20,6 +20,8 @@ except ImportError:
 class AnnoyIndexer(object):
 
     def __init__(self, model=None, num_trees=None):
+        self.index = None
+        self.labels = None
         self.model = model
         self.num_trees = num_trees
 
@@ -37,7 +39,7 @@ class AnnoyIndexer(object):
         pickle.dump(d, open(fname+'.d', 'wb'), 2)
 
     def load(self, fname):
-        if os.path.exists(fname):
+        if os.path.exists(fname) and os.path.exists(fname+'.d'):
             d = pickle.load(open(fname+'.d', 'rb'))
             self.num_trees = d['num_trees']
             self.index = AnnoyIndex(d['f'])
