@@ -1210,7 +1210,7 @@ class Word2Vec(utils.SaveLoad):
         return self.kv.most_similar(positive, negative, topn, restrict_vocab, indexer)
 
     def wmdistance(self, document1, document2):
-        return self.kv.wmdistance(document1. document2)
+        return self.kv.wmdistance(document1, document2)
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         return self.kv.most_similar_cosmul(positive, negative, topn)
