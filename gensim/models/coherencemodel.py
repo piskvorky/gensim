@@ -96,6 +96,12 @@ class CoherenceModel(interfaces.TransformationABC):
                  eg. topics = [['human', 'machine', 'computer', 'interface'],
                                ['graph', 'trees', 'binary', 'widths']]
         texts : Tokenized texts. Needed for coherence models that use sliding window based probability estimator.
+                eg. texts = [['system', 'human', 'system', 'eps'],
+                             ['user', 'response', 'time'],
+                             ['trees'],
+                             ['graph', 'trees'],
+                             ['graph', 'minors', 'trees'],
+                             ['graph', 'minors', 'survey']]
         corpus : Gensim document corpus.
         dictionary : Gensim dictionary mapping of id word to create corpus. If model.id2word is present, this is not needed.
                      If both are provided, dictionary will be used.
