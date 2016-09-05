@@ -1,6 +1,8 @@
 Changes
 =======
 
+* Added Save/Load interface to AnnoyIndexer for ondex persistence (@fortiema, [#845](https://github.com/RaRe-Technologies/gensim/pull/845))
+
 0.13.2, 2016-08-19
 
 * wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, [#771](https://github.com/RaRe-Technologies/gensim/pull/771)) 
