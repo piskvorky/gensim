@@ -42,7 +42,7 @@ import scipy.sparse
 if sys.version_info[0] >= 3:
     unicode = str
 
-from six import iteritems, u, string_types, unichr
+from six import iterkeys, iteritems, u, string_types, unichr
 from six.moves import xrange
 
 try:
@@ -1142,6 +1142,7 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
         else:
             return default_res
 
+
 def check_output(*popenargs, **kwargs):
     r"""Run command with arguments and return its output as a byte string.
     Backported from Python 2.7 as it's implemented as pure python on stdlib.
@@ -1164,3 +1165,13 @@ def check_output(*popenargs, **kwargs):
     except KeyboardInterrupt:
         process.terminate()
         raise
+
+
+def sample_dict(d, n=10, use_random=True):
+    """
+    Pick `n` items from dictionary `d` and return them as a list.
+    The items are picked randomly if `use_random` is True, otherwise picked
+    according to natural dict iteration.
+    """
+    selected_keys = random.sample(d, min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
+    return [(key, d[key]) for key in selected_keys]
