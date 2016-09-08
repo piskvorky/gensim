@@ -223,13 +223,6 @@ except ImportError:
 
         return log_prob_sentence
 
-# If pyemd C extension is available, import it.
-# If pyemd is attempted to be used, but isn't installed, ImportError will be raised.
-try:
-    from pyemd import emd
-    PYEMD_EXT = True
-except ImportError:
-    PYEMD_EXT = False
 
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
                   context_vectors=None, context_locks=None):
