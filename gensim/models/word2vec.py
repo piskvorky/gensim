@@ -1220,20 +1220,53 @@ class Word2Vec(utils.SaveLoad):
     def __getitem__(self, words):
         return self.kv.__getitem__(words)
 
-    def __getattr__(self, item):
-        """
-        To maintain backwards compatibility, calls such as trained_model.syn0norm won't break but will be
-        rerouted to trained_model.kv.syn0norm
-        """
-        if item == "syn0":
-            return self.kv.syn0
-        if item == "syn0norm":
-            return self.kv.syn0norm
-        if item == "vocab":
-            return self.kv.vocab
-        if item == "index2word":
-            return self.kv.index2word
-        raise AttributeError("'{0}' object has no attribute '{1}'".format(type(self).__name__, item))
+    @property
+    def syn0norm(self):
+        return self.kv.syn0norm
+
+    @syn0norm.setter
+    def syn0norm(self, value):
+        self.kv.syn0norm = value
+
+    @syn0norm.deleter
+    def syn0norm(self):
+        del self.kv.syn0norm
+
+    @property
+    def syn0(self):
+        return self.kv.syn0
+
+    @syn0.setter
+    def syn0(self, value):
+        self.kv.syn0 = value
+
+    @syn0.deleter
+    def syn0(self):
+        del self.kv.syn0
+
+    @property
+    def vocab(self):
+        return self.kv.vocab
+
+    @vocab.setter
+    def vocab(self, value):
+        self.kv.vocab = value
+
+    @vocab.deleter
+    def vocab(self):
+        del self.kv.vocab
+
+    @property
+    def index2word(self):
+        return self.kv.index2word
+
+    @index2word.setter
+    def index2word(self, value):
+        self.kv.index2word = value
+
+    @index2word.deleter
+    def index2word(self):
+        del self.kv.index2word
 
     def __contains__(self, word):
         return self.kv.__contains__(word)
