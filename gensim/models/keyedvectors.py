@@ -8,6 +8,14 @@ try:
 except ImportError:
     from Queue import Queue, Empty
 
+# If pyemd C extension is available, import it.
+# If pyemd is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
+try:
+    from pyemd import emd
+    PYEMD_EXT = True
+except ImportError:
+    PYEMD_EXT = False
+
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
     ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
