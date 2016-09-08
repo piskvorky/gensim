@@ -79,7 +79,7 @@ import threading
 import itertools
 
 from gensim.utils import keep_vocab_item
-from keyedvectors import KeyedVectors
+from gensim.models.keyedvectors import KeyedVectors
 
 try:
     from queue import Queue, Empty
