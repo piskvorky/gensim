@@ -1249,7 +1249,7 @@ class Word2Vec(utils.SaveLoad):
         init_sims() resides in KeyedVectors because it deals with syn0 mainly, but because syn1 is not an attribute
         of KeyedVectors, it has to be deleted in this class, and the normalizing of syn0 happens inside of KeyedVectors
         """
-        if hasattr(self, 'syn1'):
+        if replace and hasattr(self, 'syn1'):
             del self.syn1
         return self.kv.init_sims(replace)
 
