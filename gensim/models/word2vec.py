@@ -1344,6 +1344,15 @@ class Word2Vec(utils.SaveLoad):
             model.total_train_time = 0
         return model
 
+    def _load_specials(self, *args, **kwargs):
+        # loading from a pre-KeyedVectors word2vec model
+        if not hasattr(self, 'kv'):
+            kv = KeyedVectors()
+            kv.syn0 = self.__dict__.get('syn0', [])
+            kv.vocab = self.__dict__.get('vocab', {})
+            kv.index2word = self.__dict__.get('index2word', [])
+            self.kv = kv
+        super(Word2Vec, self)._load_specials(*args, **kwargs)
 
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
