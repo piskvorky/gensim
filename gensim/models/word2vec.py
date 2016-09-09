@@ -718,7 +718,7 @@ class Word2Vec(utils.SaveLoad):
 
         if not self.kv.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
-        if not hasattr(self.kv, 'syn0'):
+        if self.kv.syn0 == []:
             raise RuntimeError("you must first finalize vocabulary before training the model")
 
         if total_words is None and total_examples is None:
