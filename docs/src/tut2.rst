@@ -18,9 +18,13 @@ In the previous tutorial on :doc:`tut1`, we created a corpus of documents repres
 as a stream of vectors. To continue, let's fire up gensim and use that corpus:
 
 >>> from gensim import corpora, models, similarities
->>> dictionary = corpora.Dictionary.load('/tmp/deerwester.dict')
->>> corpus = corpora.MmCorpus('/tmp/deerwester.mm')
->>> print(corpus)
+>>> if (os.path.exists("/tmp/deerwester.dict")):
+>>>    dictionary = corpora.Dictionary.load('/tmp/deerwester.dict')
+>>>    corpus = corpora.MmCorpus('/tmp/deerwester.mm')
+>>>    print("Used files generated from first tutorial")
+>>> else:
+>>>    print("Please run first tutorial to generate data set")
+
 MmCorpus(9 documents, 12 features, 28 non-zero entries)
 
 In this tutorial, I will show how to transform documents from one vector representation
@@ -161,7 +165,7 @@ Gensim implements several popular Vector Space Model algorithms:
   the number of dimensions intact. It can also optionally normalize the resulting
   vectors to (Euclidean) unit length.
 
-  >>> model = tfidfmodel.TfidfModel(bow_corpus, normalize=True)
+  >>> model = models.TfidfModel(corpus, normalize=True)
 
 * `Latent Semantic Indexing, LSI (or sometimes LSA) <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
   transforms documents from either bag-of-words or (preferrably) TfIdf-weighted space into
@@ -169,7 +173,7 @@ Gensim implements several popular Vector Space Model algorithms:
   2 latent dimensions, but on real corpora, target dimensionality of 200--500 is recommended
   as a "golden standard" [1]_.
 
-  >>> model = lsimodel.LsiModel(tfidf_corpus, id2word=dictionary, num_topics=300)
+  >>> model = models.LsiModel(tfidf_corpus, id2word=dictionary, num_topics=300)
 
   LSI training is unique in that we can continue "training" at any point, simply
   by providing more training documents. This is done by incremental updates to
@@ -201,7 +205,7 @@ Gensim implements several popular Vector Space Model algorithms:
   CPU-friendly) approach to approximating TfIdf distances between documents, by throwing in a little randomness.
   Recommended target dimensionality is again in the hundreds/thousands, depending on your dataset.
 
-  >>> model = rpmodel.RpModel(tfidf_corpus, num_topics=500)
+  >>> model = models.RpModel(tfidf_corpus, num_topics=500)
 
 * `Latent Dirichlet Allocation, LDA <http://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
   is yet another transformation from bag-of-words counts into a topic space of lower
@@ -210,7 +214,7 @@ Gensim implements several popular Vector Space Model algorithms:
   just like with LSA, inferred automatically from a training corpus. Documents
   are in turn interpreted as a (soft) mixture of these topics (again, just like with LSA).
 
-  >>> model = ldamodel.LdaModel(bow_corpus, id2word=dictionary, num_topics=100)
+  >>> model = models.LdaModel(corpus, id2word=dictionary, num_topics=100)
 
   `gensim` uses a fast implementation of online LDA parameter estimation based on [2]_,
   modified to run in :doc:`distributed mode <distributed>` on a cluster of computers.
@@ -218,7 +222,7 @@ Gensim implements several popular Vector Space Model algorithms:
 * `Hierarchical Dirichlet Process, HDP <http://jmlr.csail.mit.edu/proceedings/papers/v15/wang11a/wang11a.pdf>`_
   is a non-parametric bayesian method (note the missing number of requested topics):
 
-  >>> model = hdpmodel.HdpModel(bow_corpus, id2word=dictionary)
+  >>> model = models.HdpModel(corpus, id2word=dictionary)
 
   `gensim` uses a fast, online implementation based on [3]_.
   The HDP model is a new addition to `gensim`, and still rough around its academic edges -- use with care.

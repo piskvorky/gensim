@@ -60,7 +60,9 @@ logger = logging.getLogger(__name__)
 try:
     from gensim.models.doc2vec_inner import train_document_dbow, train_document_dm, train_document_dm_concat
     from gensim.models.word2vec_inner import FAST_VERSION  # blas-adaptation shared from word2vec
-except:
+    logger.debug('Fast version of {0} is being used'.format(__name__))
+except ImportError:
+    logger.warning('Slow version of {0} is being used'.format(__name__))
     # failed... fall back to plain numpy (20-80x slower training than the above)
     FAST_VERSION = -1
 
@@ -385,8 +387,9 @@ class DocvecsArray(utils.SaveLoad):
         If `replace` is set, forget the original vectors and only keep the normalized
         ones = saves lots of memory!
 
-        Note that you **cannot continue training** after doing a replace. The model becomes
-        effectively read-only = you can call `most_similar`, `similarity` etc., but not `train`.
+        Note that you **cannot continue training or inference** after doing a replace.
+        The model becomes effectively read-only = you can call `most_similar`, `similarity`
+        etc., but not `train` or `infer_vector`.
 
         """
         if getattr(self, 'doctag_syn0norm', None) is None or replace:
@@ -404,7 +407,7 @@ class DocvecsArray(utils.SaveLoad):
                     self.doctag_syn0norm = empty(self.doctag_syn0.shape, dtype=REAL)
                 np_divide(self.doctag_syn0, sqrt((self.doctag_syn0 ** 2).sum(-1))[..., newaxis], self.doctag_syn0norm)
 
-    def most_similar(self, positive=[], negative=[], topn=10, clip_start=0, clip_end=None):
+    def most_similar(self, positive=[], negative=[], topn=10, clip_start=0, clip_end=None, indexer=None):
         """
         Find the top-N most similar docvecs known from training. Positive docs contribute
         positively towards the similarity, negative docs negatively.
@@ -448,6 +451,9 @@ class DocvecsArray(utils.SaveLoad):
         if not mean:
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
+
+        if indexer is not None:
+            return indexer.most_similar(mean, topn)
 
         dists = dot(self.doctag_syn0norm[clip_start:clip_end], mean)
         if not topn:
@@ -493,7 +499,17 @@ class DocvecsArray(utils.SaveLoad):
         v2 = [self[doc] for doc in ds2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
 
+    def similarity_unseen_docs(self, model, doc_words1, doc_words2, alpha=0.1, min_alpha=0.0001, steps=5):
+        """
+        Compute cosine similarity between two post-bulk out of training documents.
 
+        Document should be a list of (word) tokens.
+        """
+        d1 = model.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, steps=steps)
+        d2 = model.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, steps=steps)
+        return dot(matutils.unitvec(d1), matutils.unitvec(d2))
+        
+        
 class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
     """A string document tag discovered during the initial vocabulary
     scan. (The document-vector equivalent of a Vocab object.)
@@ -537,8 +553,11 @@ class Doc2Vec(Word2Vec):
 
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
 
-        `seed` = for the random number generator. Only runs with a single worker will be
-        deterministically reproducible because of the ordering randomness in multi-threaded runs.
+        `seed` = for the random number generator. 
+        Note that for a fully deterministically-reproducible run, you must also limit the model to
+        a single worker thread, to eliminate ordering jitter from OS thread scheduling. (In Python
+        3, reproducibility between interpreter launches also requires use of the PYTHONHASHSEED
+        environment variable to control hash randomization.)
 
         `min_count` = ignore all words with total frequency lower than this.
 
@@ -550,6 +569,9 @@ class Doc2Vec(Word2Vec):
                 default is 0 (off), useful value is 1e-5.
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
+
+        `iter` = number of iterations (epochs) over the corpus. The default inherited from Word2Vec is 5, 
+        but values of 10 or 20 are common in published 'Paragraph Vector' experiments.
 
         `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0).
 
@@ -628,8 +650,14 @@ class Doc2Vec(Word2Vec):
         min_reduce = 1
         interval_start = default_timer() - 0.00001  # guard against next sample being identical
         interval_count = 0
+        checked_string_types = 0
         vocab = defaultdict(int)
         for document_no, document in enumerate(documents):
+            if not checked_string_types:
+                if isinstance(document.words, string_types):
+                    logger.warn("Each 'words' should be a list of words (usually unicode strings)."
+                                "First 'words' here is instead plain %s." % type(document.words))
+                checked_string_types += 1
             if document_no % progress_per == 0:
                 interval_rate = (total_words - interval_count) / (default_timer() - interval_start)
                 logger.info("PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags",

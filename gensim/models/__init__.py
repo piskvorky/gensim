@@ -4,6 +4,7 @@ bag-of-word counts.
 """
 
 # bring model classes directly into package namespace, to save some typing
+from .coherencemodel import CoherenceModel
 from .hdpmodel import HdpModel
 from .ldamodel import LdaModel
 from .lsimodel import LsiModel
@@ -14,6 +15,7 @@ from .word2vec import Word2Vec
 from .doc2vec import Doc2Vec
 from .ldamulticore import LdaMulticore
 from .phrases import Phrases
+from .normmodel import NormModel
 
 from . import wrappers
 

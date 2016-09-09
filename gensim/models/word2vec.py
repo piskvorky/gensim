@@ -86,10 +86,11 @@ except ImportError:
     from Queue import Queue, Empty
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
-    uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
+    double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
     ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
+from gensim.corpora.dictionary import Dictionary
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
@@ -100,8 +101,10 @@ try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
+    logger.debug('Fast version of {0} is being used'.format(__name__))
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
+    logger.warning('Slow version of {0} is being used'.format(__name__))
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
 
@@ -219,6 +222,13 @@ except ImportError:
 
         return log_prob_sentence
 
+# If pyemd C extension is available, import it.
+# If pyemd is attempted to be used, but isn't installed, ImportError will be raised.
+try:
+    from pyemd import emd
+    PYEMD_EXT = True
+except ImportError:
+    PYEMD_EXT = False
 
 def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_hidden=True,
                   context_vectors=None, context_locks=None):
@@ -302,14 +312,14 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
 def score_sg_pair(model, word, word2):
     l1 = model.syn0[word2.index]
     l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
-    sgn = -1.0**word.code  # ch function, 0-> 1, 1 -> -1
+    sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
     lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
     return sum(lprob)
 
 
 def score_cbow_pair(model, word, word2_indices, l1):
     l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
-    sgn = -1.0**word.code  # ch function, 0-> 1, 1 -> -1
+    sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
     lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
     return sum(lprob)
 
@@ -364,10 +374,14 @@ class Word2Vec(utils.SaveLoad):
 
         `window` is the maximum distance between the current and predicted word within a sentence.
 
-        `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
+        `alpha` is the initial learning rate (will linearly drop to `min_alpha` as training progresses).
 
         `seed` = for the random number generator. Initial vectors for each
         word are seeded with a hash of the concatenation of word + str(seed).
+        Note that for a fully deterministically-reproducible run, you must also limit the model to
+        a single worker thread, to eliminate ordering jitter from OS thread scheduling. (In Python
+        3, reproducibility between interpreter launches also requires use of the PYTHONHASHSEED
+        environment variable to control hash randomization.)
 
         `min_count` = ignore all words with total frequency lower than this.
 
@@ -393,12 +407,12 @@ class Word2Vec(utils.SaveLoad):
         `hashfxn` = hash function to use to randomly initialize weights, for increased
         training reproducibility. Default is Python's rudimentary built in hash function.
 
-        `iter` = number of iterations (epochs) over the corpus.
+        `iter` = number of iterations (epochs) over the corpus. Default is 5.
 
         `trim_rule` = vocabulary trimming rule, specifies whether certain words should remain
         in the vocabulary, be trimmed away, or handled using the default (discard if word count < min_count).
         Can be None (min_count will be used), or a callable that accepts parameters (word, count, min_count) and
-        returns either util.RULE_DISCARD, util.RULE_KEEP or util.RULE_DEFAULT.
+        returns either `utils.RULE_DISCARD`, `utils.RULE_KEEP` or `utils.RULE_DEFAULT`.
         Note: The rule, if given, is only used prune vocabulary during build_vocab() and is not stored as part
         of the model.
 
@@ -406,8 +420,8 @@ class Word2Vec(utils.SaveLoad):
         assigning word indexes.
 
         `batch_words` = target size (in words) for batches of examples passed to worker threads (and
-        thus cython routines). Default is 10000. (Larger batches can be passed if individual
-        texts are longer, but the cython code may truncate.)
+        thus cython routines). Default is 10000. (Larger batches will be passed if individual
+        texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
 
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
@@ -419,6 +433,7 @@ class Word2Vec(utils.SaveLoad):
         if size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
         self.alpha = float(alpha)
+        self.min_alpha_yet_reached = float(alpha) # To warn user if alpha increases
         self.window = int(window)
         self.max_vocab_size = max_vocab_size
         self.seed = seed
@@ -499,13 +514,13 @@ class Word2Vec(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i", max_depth)
 
-    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None):
+    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
 
         """
-        self.scan_vocab(sentences, trim_rule=trim_rule)  # initial survey
+        self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
         self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule)  # trim by min_count & precalculate downsampling
         self.finalize_vocab()  # build tables & arrays
 
@@ -516,7 +531,13 @@ class Word2Vec(utils.SaveLoad):
         total_words = 0
         min_reduce = 1
         vocab = defaultdict(int)
+        checked_string_types = 0
         for sentence_no, sentence in enumerate(sentences):
+            if not checked_string_types:
+                if isinstance(sentence, string_types):
+                    logger.warn("Each 'sentences' item should be a list of words (usually unicode strings)."
+                                "First item here is instead plain %s.", type(sentence))
+                checked_string_types += 1
             if sentence_no % progress_per == 0:
                 logger.info("PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
                             sentence_no, sum(itervalues(vocab)) + total_words, len(vocab))
@@ -742,6 +763,9 @@ class Word2Vec(utils.SaveLoad):
             job_batch, batch_size = [], 0
             pushed_words, pushed_examples = 0, 0
             next_alpha = self.alpha
+            if next_alpha > self.min_alpha_yet_reached:
+                logger.warn("Effective 'alpha' higher than previous training cycles")
+            self.min_alpha_yet_reached = next_alpha
             job_no = 0
 
             for sent_idx, sentence in enumerate(sentences):
@@ -866,7 +890,10 @@ class Word2Vec(utils.SaveLoad):
         """
         Score the log probability for a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
-        This does not change the fitted model in any way (see Word2Vec.train() for that)
+        This does not change the fitted model in any way (see Word2Vec.train() for that).
+
+        We have currently only implemented score for the hierarchical softmax scheme,
+        so you need to have run word2vec with hs=1 and negative=0 for this to work.
 
         Note that you should specify total_sentences; we'll run into problems if you ask to
         score more than this number of sentences but it is inefficient to set the value too high.
@@ -874,7 +901,7 @@ class Word2Vec(utils.SaveLoad):
         See the article by [taddy]_ and the gensim demo at [deepir]_ for examples of how to use such scores in document classification.
 
         .. [taddy] Taddy, Matt.  Document Classification by Inversion of Distributed Language Representations, in Proceedings of the 2015 Conference of the Association of Computational Linguistics.
-        .. [deepir] https://github.com/TaddyLab/gensim/blob/deepir/docs/notebooks/deepir.ipynb
+        .. [deepir] https://github.com/piskvorky/gensim/blob/develop/docs/notebooks/deepir.ipynb
 
         """
         if FAST_VERSION < 0:
@@ -1003,6 +1030,11 @@ class Word2Vec(utils.SaveLoad):
         Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
 
+         `fname` is the file used to save the vectors in
+         `fvocab` is an optional file used to save the vocabulary
+         `binary` is an optional boolean indicating whether the data is to be saved
+         in binary word2vec format (default: False)
+
         """
         if fvocab is not None:
             logger.info("storing vocabulary in %s" % (fvocab))
@@ -1022,7 +1054,8 @@ class Word2Vec(utils.SaveLoad):
                     fout.write(utils.to_utf8("%s %s\n" % (word, ' '.join("%f" % val for val in row))))
 
     @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict'):
+    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+                             limit=None, datatype=REAL):
         """
         Load the input-hidden weight matrix from the original C word2vec-tool format.
 
@@ -1038,6 +1071,18 @@ class Word2Vec(utils.SaveLoad):
         If you trained the C model using non-utf8 encoding for words, specify that
         encoding in `encoding`.
 
+        `unicode_errors`, default 'strict', is a string suitable to be passed as the `errors`
+        argument to the unicode() (Python 2.x) or str() (Python 3.x) function. If your source
+        file may include word tokens truncated in the middle of a multibyte unicode character
+        (as is common from the original word2vec.c tool), 'ignore' or 'replace' may help.
+
+        `limit` sets a maximum number of word-vectors to read from the file. The default,
+        None, means read all.
+
+        `datatype` (experimental) can coerce dimensions to a non-default float type (such
+        as np.float16) to save memory. (Such types may result in much slower bulk operations
+        or incompatibility with optimized routines.)
+
         """
         counts = None
         if fvocab is not None:
@@ -1052,8 +1097,10 @@ class Word2Vec(utils.SaveLoad):
         with utils.smart_open(fname) as fin:
             header = utils.to_unicode(fin.readline(), encoding=encoding)
             vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
+            if limit:
+                vocab_size = min(vocab_size, limit)
             result = cls(size=vector_size)
-            result.syn0 = zeros((vocab_size, vector_size), dtype=REAL)
+            result.syn0 = zeros((vocab_size, vector_size), dtype=datatype)
 
             def add_word(word, weights):
                 word_id = len(result.vocab)
@@ -1082,13 +1129,18 @@ class Word2Vec(utils.SaveLoad):
                         ch = fin.read(1)
                         if ch == b' ':
                             break
+                        if ch == b'':
+                            raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
                         if ch != b'\n':  # ignore newlines in front of words (some binary files have)
                             word.append(ch)
                     word = utils.to_unicode(b''.join(word), encoding=encoding, errors=unicode_errors)
                     weights = fromstring(fin.read(binary_len), dtype=REAL)
                     add_word(word, weights)
             else:
-                for line_no, line in enumerate(fin):
+                for line_no in xrange(vocab_size):
+                    line = fin.readline()
+                    if line == b'':
+                        raise EOFError("unexpected end of input; is count incorrect or file otherwise damaged?")
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
                     if len(parts) != vector_size + 1:
                         raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
@@ -1105,7 +1157,7 @@ class Word2Vec(utils.SaveLoad):
         logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
         return result
 
-    def intersect_word2vec_format(self, fname, binary=False, encoding='utf8', unicode_errors='strict'):
+    def intersect_word2vec_format(self, fname, lockf=0.0, binary=False, encoding='utf8', unicode_errors='strict'):
         """
         Merge the input-hidden weight matrix from the original C word2vec-tool format
         given, where it intersects with the current vocabulary. (No words are added to the
@@ -1113,6 +1165,10 @@ class Word2Vec(utils.SaveLoad):
         non-intersecting words are left alone.)
 
         `binary` is a boolean indicating whether the data is in binary word2vec format.
+
+        `lockf` is a lock-factor value to be set for any imported word-vectors; the
+        default value of 0.0 prevents further updating of the vector during subsequent
+        training. Use 1.0 to allow further training updates of merged vectors.
         """
         overlap_count = 0
         logger.info("loading projection weights from %s" % (fname))
@@ -1138,7 +1194,7 @@ class Word2Vec(utils.SaveLoad):
                     if word in self.vocab:
                         overlap_count += 1
                         self.syn0[self.vocab[word].index] = weights
-                        self.syn0_lockf[self.vocab[word].index] = 0.0  # lock it
+                        self.syn0_lockf[self.vocab[word].index] = lockf  # lock-factor: 0.0 stops further changes
             else:
                 for line_no, line in enumerate(fin):
                     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
@@ -1150,7 +1206,7 @@ class Word2Vec(utils.SaveLoad):
                         self.syn0[self.vocab[word].index] = weights
         logger.info("merged %d vectors into %s matrix from %s" % (overlap_count, self.syn0.shape, fname))
 
-    def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None):
+    def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
         """
         Find the top-N most similar words. Positive words contribute positively towards the
         similarity, negative words negatively.
@@ -1203,6 +1259,9 @@ class Word2Vec(utils.SaveLoad):
             raise ValueError("cannot compute similarity with no input")
         mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
 
+        if indexer is not None:
+            return indexer.most_similar(mean, topn)
+
         limited = self.syn0norm if restrict_vocab is None else self.syn0norm[:restrict_vocab]
         dists = dot(limited, mean)
         if not topn:
@@ -1211,6 +1270,93 @@ class Word2Vec(utils.SaveLoad):
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
+
+    def wmdistance(self, document1, document2):
+        """
+        Compute the Word Mover's Distance between two documents. When using this
+        code, please consider citing the following papers:
+
+        .. Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
+        .. Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
+        .. Matt Kusner et al. "From Word Embeddings To Document Distances".
+
+        Note that if one of the documents have no words that exist in the
+        Word2Vec vocab, `float('inf')` (i.e. infinity) will be returned.
+
+        This method only works if `pyemd` is installed (can be installed via pip, but requires a C compiler).
+
+        Example:
+            >>> # Train word2vec model.
+            >>> model = Word2Vec(sentences)
+
+            >>> # Some sentences to test.
+            >>> sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
+            >>> sentence_president = 'The president greets the press in Chicago'.lower().split()
+
+            >>> # Remove their stopwords.
+            >>> from nltk.corpus import stopwords
+            >>> stopwords = nltk.corpus.stopwords.words('english')
+            >>> sentence_obama = [w for w in sentence_obama if w not in stopwords]
+            >>> sentence_president = [w for w in sentence_president if w not in stopwords]
+
+            >>> # Compute WMD.
+            >>> distance = model.wmdistance(sentence_obama, sentence_president)
+        """
+
+        if not PYEMD_EXT:
+            raise ImportError("Please install pyemd Python package to compute WMD.")
+
+        # Remove out-of-vocabulary words.
+        len_pre_oov1 = len(document1)
+        len_pre_oov2 = len(document2)
+        document1 = [token for token in document1 if token in self]
+        document2 = [token for token in document2 if token in self]
+        diff1 = len_pre_oov1 - len(document1)
+        diff2 = len_pre_oov2 - len(document2)
+        if diff1 > 0 or diff2 > 0:
+            logger.info('Removed %d and %d OOV words from document 1 and 2 (respectively).',
+                        diff1, diff2)
+
+        if len(document1) == 0 or len(document2) == 0:
+            logger.info('At least one of the documents had no words that were'
+                        'in the vocabulary. Aborting (returning inf).')
+            return float('inf')
+
+        dictionary = Dictionary(documents=[document1, document2])
+        vocab_len = len(dictionary)
+
+        # Sets for faster look-up.
+        docset1 = set(document1)
+        docset2 = set(document2)
+
+        # Compute distance matrix.
+        distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
+        for i, t1 in dictionary.items():
+            for j, t2 in dictionary.items():
+                if not t1 in docset1 or not t2 in docset2:
+                    continue
+                # Compute Euclidean distance between word vectors.
+                distance_matrix[i, j] = sqrt(np_sum((self[t1] - self[t2])**2))
+
+        if np_sum(distance_matrix) == 0.0:
+            # `emd` gets stuck if the distance matrix contains only zeros.
+            logger.info('The distance matrix is all zeros. Aborting (returning inf).')
+            return float('inf')
+
+        def nbow(document):
+            d = zeros(vocab_len, dtype=double)
+            nbow = dictionary.doc2bow(document)  # Word frequencies.
+            doc_len = len(document)
+            for idx, freq in nbow:
+                d[idx] = freq / float(doc_len)  # Normalized word frequencies.
+            return d
+
+        # Compute nBOW representation of documents.
+        d1 = nbow(document1)
+        d2 = nbow(document2)
+
+        # Compute WMD.
+        return emd(d1, d2, distance_matrix)
 
     def most_similar_cosmul(self, positive=[], negative=[], topn=10):
         """
@@ -1268,6 +1414,46 @@ class Word2Vec(utils.SaveLoad):
         # ignore (don't return) words from the input
         result = [(self.index2word[sim], float(dists[sim])) for sim in best if sim not in all_words]
         return result[:topn]
+
+    def similar_by_word(self, word, topn=10, restrict_vocab=None):
+        """
+        Find the top-N most similar words.
+
+        If topn is False, similar_by_word returns the vector of similarity scores.
+
+        `restrict_vocab` is an optional integer which limits the range of vectors which
+        are searched for most-similar values. For example, restrict_vocab=10000 would
+        only check the first 10000 word vectors in the vocabulary order. (This may be
+        meaningful if you've sorted the vocabulary by descending frequency.)
+
+        Example::
+
+          >>> trained_model.similar_by_word('graph')
+          [('user', 0.9999163150787354), ...]
+
+        """
+
+        return self.most_similar(positive=[word], topn=topn, restrict_vocab=restrict_vocab)
+
+    def similar_by_vector(self, vector, topn=10, restrict_vocab=None):
+        """
+        Find the top-N most similar words by vector.
+
+        If topn is False, similar_by_vector returns the vector of similarity scores.
+
+        `restrict_vocab` is an optional integer which limits the range of vectors which
+        are searched for most-similar values. For example, restrict_vocab=10000 would
+        only check the first 10000 word vectors in the vocabulary order. (This may be
+        meaningful if you've sorted the vocabulary by descending frequency.)
+
+        Example::
+
+          >>> trained_model.similar_by_vector([1,2])
+          [('survey', 0.9942699074745178), ...]
+
+        """
+
+        return self.most_similar(positive=[vector], topn=topn, restrict_vocab=restrict_vocab)
 
     def doesnt_match(self, words):
         """
@@ -1402,24 +1588,30 @@ class Word2Vec(utils.SaveLoad):
                         (section['section'], 100.0 * correct / (correct + incorrect),
                          correct, correct + incorrect))
 
-    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar):
+    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, case_insensitive=True):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
-        See https://code.google.com/p/word2vec/source/browse/trunk/questions-words.txt for an example.
+        See questions-words.txt in https://storage.googleapis.com/google-code-archive-source/v2/code.google.com/word2vec/source-archive.zip for an example.
 
         The accuracy is reported (=printed to log and returned as a list) for each
         section separately, plus there's one aggregate summary at the end.
 
-        Use `restrict_vocab` to ignore all questions containing a word whose frequency
-        is not in the top-N most frequent words (default top 30,000).
+        Use `restrict_vocab` to ignore all questions containing a word not in the first `restrict_vocab`
+        words (default 30,000). This may be meaningful if you've sorted the vocabulary by descending frequency.
+        In case `case_insensitive` is True, the first `restrict_vocab` words are taken first, and then
+        case normalization is performed.
+
+        Use `case_insensitive` to convert all words in questions and vocab to their uppercase form before 
+        evaluating the accuracy (default True). Useful in case of case-mismatch between training tokens 
+        and question words. In case of multiple case variants of a single word, the vector for the first
+        occurrence (also the most frequent if vocabulary is sorted) is taken.
 
         This method corresponds to the `compute-accuracy` script of the original C word2vec.
 
         """
-        ok_vocab = dict(sorted(iteritems(self.vocab),
-                               key=lambda item: -item[1].count)[:restrict_vocab])
-        ok_index = set(v.index for v in itervalues(ok_vocab))
+        ok_vocab = [(w, self.vocab[w]) for w in self.index2word[:restrict_vocab]]
+        ok_vocab = dict((w.upper(), v) for w, v in reversed(ok_vocab)) if case_insensitive else dict(ok_vocab)
 
         sections, section = [], None
         for line_no, line in enumerate(utils.smart_open(questions)):
@@ -1435,20 +1627,27 @@ class Word2Vec(utils.SaveLoad):
                 if not section:
                     raise ValueError("missing section header before line #%i in %s" % (line_no, questions))
                 try:
-                    a, b, c, expected = [word.lower() for word in line.split()]  # TODO assumes vocabulary preprocessing uses lowercase, too...
+                    if case_insensitive:
+                        a, b, c, expected = [word.upper() for word in line.split()]
+                    else:
+                        a, b, c, expected = [word for word in line.split()]
                 except:
                     logger.info("skipping invalid line #%i in %s" % (line_no, questions))
+                    continue
                 if a not in ok_vocab or b not in ok_vocab or c not in ok_vocab or expected not in ok_vocab:
                     logger.debug("skipping line #%i with OOV words: %s" % (line_no, line.strip()))
                     continue
 
-                ignore = set(self.vocab[v].index for v in [a, b, c])  # indexes of words to ignore
+                original_vocab = self.vocab
+                self.vocab = ok_vocab
+                ignore = set([a, b, c])  # input words to be ignored
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
                 sims = most_similar(self, positive=[b, c], negative=[a], topn=False, restrict_vocab=restrict_vocab)
+                self.vocab = original_vocab
                 for index in matutils.argsort(sims, reverse=True):
-                    if index in ok_index and index not in ignore:
-                        predicted = self.index2word[index]
+                    predicted = self.index2word[index].upper() if case_insensitive else self.index2word[index]
+                    if predicted in ok_vocab and predicted not in ignore:
                         if predicted != expected:
                             logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
                         break
@@ -1542,7 +1741,8 @@ class Text8Corpus(object):
             while True:
                 text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
                 if text == rest:  # EOF
-                    sentence.extend(rest.split())  # return the last chunk of words, too (may be shorter/longer)
+                    words = utils.to_unicode(text).split()
+                    sentence.extend(words)  # return the last chunk of words, too (may be shorter/longer)
                     if sentence:
                         yield sentence
                     break
@@ -1611,7 +1811,6 @@ if __name__ == "__main__":
     logging.info("running %s", " ".join(sys.argv))
     logging.info("using optimization %s", FAST_VERSION)
 
-
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
     if len(sys.argv) < 2:
@@ -1646,7 +1845,10 @@ if __name__ == "__main__":
 
     corpus = LineSentence(args.train)
 
-    model = Word2Vec(corpus, size=args.size, min_count=args.min_count, workers=args.threads, window=args.window,sample=args.sample,sg=skipgram,hs=args.hs,negative=args.negative,cbow_mean=1,iter=args.iter)
+    model = Word2Vec(
+        corpus, size=args.size, min_count=args.min_count, workers=args.threads,
+        window=args.window, sample=args.sample, sg=skipgram, hs=args.hs,
+        negative=args.negative, cbow_mean=1, iter=args.iter)
 
     if args.output:
         outfile = args.output
@@ -1660,7 +1862,6 @@ if __name__ == "__main__":
         model.save_word2vec_format(outfile + '.model.txt', binary=False)
 
     if args.accuracy:
-        questions_file = args.accuracy
-        model.accuracy(questions_file)
+        model.accuracy(args.accuracy)
 
     logger.info("finished running %s", program)

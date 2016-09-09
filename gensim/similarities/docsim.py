@@ -149,7 +149,7 @@ class Similarity(interfaces.SimilarityABC):
     The shards themselves are simply stored as files to disk and mmap'ed back as needed.
 
     """
-    def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=256, shardsize=32768):
+    def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=256, shardsize=32768, norm='l2'):
         """
         Construct the index from `corpus`. The index can be later extended by calling
         the `add_documents` method. **Note**: documents are split (internally, transparently)
@@ -163,6 +163,8 @@ class Similarity(interfaces.SimilarityABC):
 
         `num_features` is the number of features in the `corpus` (e.g. size of the
         dictionary, or the number of latent topics for latent semantic models).
+
+        `norm` is the user-chosen normalization to use. Accepted values are: 'l1' and 'l2'.
 
         If `num_best` is left unspecified, similarity queries will return a full
         vector with one float for every document in the index:
@@ -192,7 +194,7 @@ class Similarity(interfaces.SimilarityABC):
         logger.info("starting similarity index under %s", self.output_prefix)
         self.num_features = num_features
         self.num_best = num_best
-        self.normalize = True
+        self.norm = norm
         self.chunksize = int(chunksize)
         self.shardsize = shardsize
         self.shards = []
@@ -227,9 +229,9 @@ class Similarity(interfaces.SimilarityABC):
             else:
                 doclen = len(doc)
                 if doclen < 0.3 * self.num_features:
-                    doc = matutils.unitvec(matutils.corpus2csc([doc], self.num_features).T)
+                    doc = matutils.unitvec(matutils.corpus2csc([doc], self.num_features).T, self.norm)
                 else:
-                    doc = matutils.unitvec(matutils.sparse2full(doc, self.num_features))
+                    doc = matutils.unitvec(matutils.sparse2full(doc, self.num_features), self.norm)
             self.fresh_docs.append(doc)
             self.fresh_nnz += doclen
             if len(self.fresh_docs) >= self.shardsize:
@@ -315,7 +317,7 @@ class Similarity(interfaces.SimilarityABC):
         # reset num_best and normalize parameters, in case they were changed dynamically
         for shard in self.shards:
             shard.num_best = self.num_best
-            shard.normalize = self.normalize
+            shard.normalize = self.norm
 
         # there are 4 distinct code paths, depending on whether input `query` is
         # a corpus (or numpy/scipy matrix) or a single document, and whether the
@@ -377,9 +379,9 @@ class Similarity(interfaces.SimilarityABC):
         of the query document within index.
         """
         query = self.vector_by_id(docpos)
-        norm, self.normalize = self.normalize, False
+        norm, self.norm = self.norm, False
         result = self[query]
-        self.normalize = norm
+        self.norm = norm
         return result
 
     def __iter__(self):
@@ -388,7 +390,7 @@ class Similarity(interfaces.SimilarityABC):
         documents in the index and yield the result.
         """
         # turn off query normalization (vectors in the index are already normalized, save some CPU)
-        norm, self.normalize = self.normalize, False
+        norm, self.norm = self.norm, False
 
         for chunk in self.iter_chunks():
             if chunk.shape[0] > 1:
@@ -397,7 +399,7 @@ class Similarity(interfaces.SimilarityABC):
             else:
                 yield self[chunk]
 
-        self.normalize = norm  # restore normalization
+        self.norm = norm  # restore normalization
 
     def iter_chunks(self, chunksize=None):
         """
@@ -550,6 +552,90 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.index.shape[1])
 #endclass MatrixSimilarity
 
+class WmdSimilarity(interfaces.SimilarityABC):
+    """
+    Document similarity (like MatrixSimilarity) that uses the negative of WMD
+    as a similarity measure. See gensim.models.word2vec.wmdistance for more
+    information.
+
+    When a `num_best` value is provided, only the most similar documents are
+    retrieved.
+
+    When using this code, please consider citing the following papers:
+
+    .. Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching".
+    .. Ofir Pele and Michael Werman, "Fast and robust earth mover's distances".
+    .. Matt Kusner et al. "From Word Embeddings To Document Distances".
+
+    Example:
+        # See Tutorial Notebook for more examples https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb
+        >>> # Given a document collection "corpus", train word2vec model.
+        >>> model = word2vec(corpus)
+        >>> instance = WmdSimilarity(corpus, model, num_best=10)
+
+        >>> # Make query.
+        >>> query = 'Very good, you should seat outdoor.'
+        >>> sims = instance[query]
+    """
+    def __init__(self, corpus, w2v_model, num_best=None, normalize_w2v_and_replace=True, chunksize=256):
+        """
+        corpus:                         List of lists of strings, as in gensim.models.word2vec.
+        w2v_model:                      A trained word2vec model.
+        num_best:                       Number of results to retrieve.
+        normalize_w2v_and_replace:      Whether or not to normalize the word2vec vectors to
+                                        length 1.
+        """
+        self.corpus = corpus
+        self.w2v_model = w2v_model
+        self.num_best = num_best
+        self.chunksize = chunksize
+
+        # Normalization of features is not possible, as corpus is a list (of lists) of strings.
+        self.normalize = False
+
+        # index is simply an array from 0 to size of corpus.
+        self.index = numpy.array(range(len(corpus)))
+
+        if normalize_w2v_and_replace:
+            # Normalize vectors in word2vec class to length 1.
+            w2v_model.init_sims(replace=True)
+
+    def __len__(self):
+        return len(self.corpus)
+
+    def get_similarities(self, query):
+        """
+        **Do not use this function directly; use the self[query] syntax instead.**
+        """
+        if isinstance(query, numpy.ndarray):
+            # Convert document indexes to actual documents.
+            query = [self.corpus[i] for i in query]
+
+        if not isinstance(query[0], list):
+            query = [query]
+
+        n_queries = len(query)
+        result = []
+        for qidx in range(n_queries):
+            # Compute similarity for each query.
+            qresult = [self.w2v_model.wmdistance(document, query[qidx]) for document in self.corpus]
+            qresult = numpy.array(qresult)
+            qresult = 1./(1.+qresult)  # Similarity is the negative of the distance.
+
+            # Append single query result to list of all results.
+            result.append(qresult)
+
+        if len(result) == 1:
+            # Only one query.
+            result = result[0]
+        else:
+            result = numpy.array(result)
+
+        return result
+
+    def __str__(self):
+        return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.w2v_model.syn0.shape[1])
+#endclass WmdSimilarity
 
 class SparseMatrixSimilarity(interfaces.SimilarityABC):
     """
@@ -562,13 +648,18 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
     The matrix is internally stored as a `scipy.sparse.csr` matrix. Unless the entire
     matrix fits into main memory, use `Similarity` instead.
 
+    Takes an optional `maintain_sparsity` argument, setting this to True
+    causes `get_similarities` to return a sparse matrix instead of a
+    dense representation if possible.
+
     See also `Similarity` and `MatrixSimilarity` in this module.
     """
     def __init__(self, corpus, num_features=None, num_terms=None, num_docs=None, num_nnz=None,
-                 num_best=None, chunksize=500, dtype=numpy.float32):
+                 num_best=None, chunksize=500, dtype=numpy.float32, maintain_sparsity=False):
         self.num_best = num_best
         self.normalize = True
         self.chunksize = chunksize
+        self.maintain_sparsity = maintain_sparsity
 
         if corpus is not None:
             logger.info("creating sparse index")
@@ -633,6 +724,9 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         if result.shape[1] == 1 and not is_corpus:
             # for queries of one document, return a 1d array
             result = result.toarray().flatten()
+        elif self.maintain_sparsity:
+            # avoid converting to dense array if maintaining sparsity
+            result = result.T
         else:
             # otherwise, return a 2d matrix (#queries x #index)
             result = result.toarray().T
