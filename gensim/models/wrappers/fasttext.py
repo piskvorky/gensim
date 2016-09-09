@@ -46,7 +46,7 @@ class FastText(Word2Vec):
 
     """
     @classmethod
-    def train(cls, ft_path, corpus_file, model='cbow', size=100, alpha=0.025, window=5, min_count=5,
+    def train(cls, ft_path, corpus_file, output_file=None, model='cbow', size=100, alpha=0.025, window=5, min_count=5,
             loss='ns', sample=1e-3, negative=5, iter=5, min_n=3, max_n=6, sorted_vocab=1, threads=12):
         """
         `ft_path` is the path to the FastText executable, e.g. `/home/kofola/fastText/fasttext`.
@@ -87,10 +87,10 @@ class FastText(Word2Vec):
 
         """
         ft_path = ft_path
-        model_file = os.path.join(tempfile.gettempdir(), 'ft_model')
+        output_file = output_file or os.path.join(tempfile.gettempdir(), 'ft_model')
         ft_args = {
             'input': corpus_file,
-            'output': model_file,
+            'output': output_file,
             'lr': alpha,
             'dim': size,
             'ws': window,
@@ -109,7 +109,7 @@ class FastText(Word2Vec):
             cmd.append(str(value))
 
         output = utils.check_output(args=cmd)
-        model = cls.load_fasttext_format(model_file)
+        model = cls.load_fasttext_format(output_file)
         return model
 
     @classmethod
@@ -164,6 +164,7 @@ class FastText(Word2Vec):
         elif float_size == 8:
             dtype = np.dtype(np.float64)
 
+        self.num_vectors = num_vectors
         self.syn0_all = np.fromstring(f.read(num_vectors * dim * float_size), dtype=dtype)
         self.syn0_all = self.syn0_all.reshape((num_vectors, dim))
 
@@ -194,7 +195,7 @@ class FastText(Word2Vec):
             # allow calls like trained_model['office'], as a shorthand for trained_model[['office']]
             return self.word_vector(words)
 
-        return vstack([self.word_vector(word) for word in words])
+        return np.vstack([self.word_vector(word) for word in words])
 
     def word_vector(self, word):
         if word in self.kv.vocab:
