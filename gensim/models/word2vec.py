@@ -1222,26 +1222,32 @@ class Word2Vec(utils.SaveLoad):
 
     @property
     def syn0norm(self):
+        logger.warning('direct access to syn0norm will not be supported in future gensim releases, please use model.kv.syn0norm')
         return self.kv.syn0norm
 
     @syn0norm.setter
     def syn0norm(self, value):
+        logger.warning('direct access to syn0norm will not be supported in future gensim releases, please use model.kv.syn0norm')
         self.kv.syn0norm = value
 
     @syn0norm.deleter
     def syn0norm(self):
+        logger.warning('direct access to syn0norm will not be supported in future gensim releases, please use model.kv.syn0norm')
         del self.kv.syn0norm
 
     @property
     def syn0(self):
+        logger.warning('direct access to syn0norm will not be supported in future gensim releases, please use model.kv.syn0')
         return self.kv.syn0
 
     @syn0.setter
     def syn0(self, value):
+        logger.warning('direct access to syn0norm will not be supported in future gensim releases, please use model.kv.syn0')
         self.kv.syn0 = value
 
     @syn0.deleter
     def syn0(self):
+        logger.warning('direct access to syn0norm will not be supported in future gensim releases, please use model.kv.syn0')
         del self.kv.syn0
 
     @property
