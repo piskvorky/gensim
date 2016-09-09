@@ -40,6 +40,11 @@ class KeyedVectors(utils.SaveLoad):
         self.vocab = {}
         self.index2word = []
 
+    def save(self, *args, **kwargs):
+        # don't bother storing the cached normalized vectors
+        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm'])
+        super(KeyedVectors, self).save(*args, **kwargs)
+
     def most_similar(self, positive=[], negative=[], topn=10, restrict_vocab=None, indexer=None):
         """
         Find the top-N most similar words. Positive words contribute positively towards the
