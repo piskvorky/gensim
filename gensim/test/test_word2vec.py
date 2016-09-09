@@ -104,8 +104,22 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule)
         self.assertTrue("human" not in model.vocab)
 
+    def testSyn0NormNotSaved(self):
+        """Test syn0norm isn't saved in model file"""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        model.save(testfile())
+        loaded_model = word2vec.Word2Vec.load(testfile())
+        self.assertTrue(loaded_model.kv.syn0norm is None)
+
+        kv = model.kv
+        kv.save(testfile())
+        loaded_kv = keyedvectors.KeyedVectors.load(testfile())
+        self.assertTrue(loaded_kv.syn0norm is None)
+
     def testLoadPreKeyedVectorModel(self):
         """Test loading pre-KeyedVectors word2vec model"""
+
         # Model stored in one file
         model = word2vec.Word2Vec.load(datapath('word2vec_pre_kv'))
         self.assertTrue(model.syn0.shape == (len(model.kv.vocab), model.vector_size))
