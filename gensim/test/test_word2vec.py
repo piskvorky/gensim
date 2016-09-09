@@ -38,7 +38,7 @@ class LeeCorpus(object):
     def __iter__(self):
         with open(datapath('lee_background.cor')) as f:
             for line in f:
-                yield utils.simple_preprocess(line)
+                 yield utils.simple_preprocess(line)
 
 list_corpus = list(LeeCorpus())
 
@@ -123,11 +123,18 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(len(model_neg.vocab), 14)
 
     def onlineSanity(self, model):
-        terro = [l for l in list_corpus if 'terrorism' in l]
-        others = [l for l in list_corpus if 'terrorism' in l]
+        terro, others = [], []
+        for l in list_corpus:
+            if 'terrorism' in l:
+                terro.append(l)
+            else:
+                others.append(l)
+        self.assertTrue(all(['terrorism' not in l for l in others]))
         model.build_vocab(others)
         model.train(others)
+        self.assertFalse('terrorism' in model.vocab)
         model.build_vocab(terro, update=True)
+        self.assertTrue('terrorism' in model.vocab)
         orig0 = numpy.copy(model.syn0)
         model.train(terro)
         self.assertFalse(numpy.allclose(model.syn0, orig0))

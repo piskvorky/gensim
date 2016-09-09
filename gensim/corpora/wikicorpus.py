@@ -214,9 +214,12 @@ def extract_pages(f, filter_namespaces=False):
             title = elem.find(title_path).text
             text = elem.find(text_path).text
 
-            # ns = elem.find(ns_path).text
-            # if filter_namespaces and ns not in filter_namespaces:
-            #     text = None
+            try:
+                ns = elem.find(ns_path).text
+                if filter_namespaces and ns not in filter_namespaces:
+                    text = None
+            except AttributeError:
+                pass
 
             pageid = elem.find(pageid_path).text
             yield title, text or "", pageid     # empty page will yield None
