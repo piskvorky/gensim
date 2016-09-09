@@ -390,7 +390,7 @@ class KeyedVectors(utils.SaveLoad):
                         (section['section'], 100.0 * correct / (correct + incorrect),
                          correct, correct + incorrect))
 
-    def accuracy(self, questions, restrict_vocab=30000, most_similar=most_similar, case_insensitive=True):
+    def accuracy(self, questions, restrict_vocab=30000, case_insensitive=True):
         """
         Compute accuracy of the model. `questions` is a filename where lines are
         4-tuples of words, split into sections by ": SECTION NAME" lines.
@@ -445,7 +445,7 @@ class KeyedVectors(utils.SaveLoad):
                 ignore = set([a, b, c])  # input words to be ignored
                 predicted = None
                 # find the most likely prediction, ignoring OOV words and input words
-                sims = most_similar(self, positive=[b, c], negative=[a], topn=False, restrict_vocab=restrict_vocab)
+                sims = self.most_similar(positive=[b, c], negative=[a], topn=False, restrict_vocab=restrict_vocab)
                 self.vocab = original_vocab
                 for index in matutils.argsort(sims, reverse=True):
                     predicted = self.index2word[index].upper() if case_insensitive else self.index2word[index]

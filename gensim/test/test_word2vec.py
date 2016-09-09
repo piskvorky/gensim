@@ -292,6 +292,13 @@ class TestWord2VecModel(unittest.TestCase):
             self.assertFalse((unlocked1 == model.syn0[1]).all())  # unlocked vector should vary
             self.assertTrue((locked0 == model.syn0[0]).all())  # locked vector should not vary
 
+    def testAccuracy(self):
+        """Test Word2Vec accuracy and KeyedVectors accuracy give the same result"""
+        model = word2vec.Word2Vec(LeeCorpus())
+        w2v_accuracy = model.accuracy(datapath('questions-words.txt'))
+        kv_accuracy = model.kv.accuracy(datapath('questions-words.txt'))
+        self.assertEqual(w2v_accuracy, kv_accuracy)
+
     def model_sanity(self, model, train=True):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
         # run extra before/after training tests if train=True
@@ -483,7 +490,6 @@ class TestWord2VecModel(unittest.TestCase):
         """
         gen = (s for s in sentences)
         self.assertRaises(TypeError, word2vec.Word2Vec, (gen,))
-
 
 class TestWMD(unittest.TestCase):
     def testNonzero(self):
