@@ -38,7 +38,7 @@ class LeeCorpus(object):
     def __iter__(self):
         with open(datapath('lee_background.cor')) as f:
             for line in f:
-                 yield utils.simple_preprocess(line)
+                yield utils.simple_preprocess(line)
 
 list_corpus = list(LeeCorpus())
 
