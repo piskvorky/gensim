@@ -104,6 +104,23 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule)
         self.assertTrue("human" not in model.vocab)
 
+    def testLoadPreKeyedVectorModel(self):
+        """Test loading pre-KeyedVectors word2vec model"""
+        # Model stored in one file
+        model = word2vec.Word2Vec.load(datapath('word2vec_pre_kv'))
+        self.assertTrue(model.syn0.shape == (len(model.kv.vocab), model.vector_size))
+        self.assertTrue(model.syn1neg.shape == (len(model.kv.vocab), model.vector_size))
+
+        # Model stored in multiple files
+        model = word2vec.Word2Vec.load(datapath('word2vec_pre_kv_sep'))
+        self.assertTrue(model.syn0.shape == (len(model.kv.vocab), model.vector_size))
+        self.assertTrue(model.syn1neg.shape == (len(model.kv.vocab), model.vector_size))
+
+    def testLoadPreKeyedVectorModelCFormat(self):
+        """Test loading pre-KeyedVectors word2vec model saved in word2vec format"""
+        model = word2vec.Word2Vec.load_word2vec_format(datapath('word2vec_pre_kv_c'))
+        self.assertTrue(model.syn0.shape[0] == len(model.kv.vocab))
+
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
         model = word2vec.Word2Vec(sentences, min_count=1)
