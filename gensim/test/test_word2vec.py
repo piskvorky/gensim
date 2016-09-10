@@ -21,7 +21,7 @@ import numpy
 from gensim import utils, matutils
 from gensim.utils import check_output
 from subprocess import PIPE
-from gensim.models import word2vec
+from gensim.models import word2vec, keyedvectors
 from testfixtures import log_capture
 
 try:
@@ -33,6 +33,8 @@ except ImportError:
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
+logger = logging.getLogger()
+logger.level = logging.ERROR
 
 class LeeCorpus(object):
     def __iter__(self):
@@ -72,6 +74,12 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.save(testfile())
         self.models_equal(model, word2vec.Word2Vec.load(testfile()))
+        #  test persistence of the KeyedVectors of a model
+        kv = model.kv
+        kv.save(testfile())
+        loaded_kv = keyedvectors.KeyedVectors.load(testfile())
+        self.assertTrue(numpy.allclose(kv.syn0, loaded_kv.syn0))
+        self.assertEqual(len(kv.vocab), len(loaded_kv.vocab))
 
     def testPersistenceWithConstructorRule(self):
         """Test storing/loading the entire model with a vocab trimming rule passed in the constructor."""
@@ -97,6 +105,37 @@ class TestWord2VecModel(unittest.TestCase):
         rule = lambda word, count, min_count: utils.RULE_DISCARD if word == "human" else utils.RULE_DEFAULT
         model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule)
         self.assertTrue("human" not in model.vocab)
+
+    def testSyn0NormNotSaved(self):
+        """Test syn0norm isn't saved in model file"""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        model.save(testfile())
+        loaded_model = word2vec.Word2Vec.load(testfile())
+        self.assertTrue(loaded_model.kv.syn0norm is None)
+
+        kv = model.kv
+        kv.save(testfile())
+        loaded_kv = keyedvectors.KeyedVectors.load(testfile())
+        self.assertTrue(loaded_kv.syn0norm is None)
+
+    def testLoadPreKeyedVectorModel(self):
+        """Test loading pre-KeyedVectors word2vec model"""
+
+        # Model stored in one file
+        model = word2vec.Word2Vec.load(datapath('word2vec_pre_kv'))
+        self.assertTrue(model.syn0.shape == (len(model.kv.vocab), model.vector_size))
+        self.assertTrue(model.syn1neg.shape == (len(model.kv.vocab), model.vector_size))
+
+        # Model stored in multiple files
+        model = word2vec.Word2Vec.load(datapath('word2vec_pre_kv_sep'))
+        self.assertTrue(model.syn0.shape == (len(model.kv.vocab), model.vector_size))
+        self.assertTrue(model.syn1neg.shape == (len(model.kv.vocab), model.vector_size))
+
+    def testLoadPreKeyedVectorModelCFormat(self):
+        """Test loading pre-KeyedVectors word2vec model saved in word2vec format"""
+        model = word2vec.Word2Vec.load_word2vec_format(datapath('word2vec_pre_kv_c'))
+        self.assertTrue(model.syn0.shape[0] == len(model.kv.vocab))
 
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
@@ -146,7 +185,6 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=False)
         norm_only_model.init_sims(True)
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human'], atol=1e-6))
-
         self.assertTrue(numpy.allclose(model.syn0norm[model.vocab['human'].index], norm_only_model['human'], atol=1e-4))
 
     def testPersistenceWord2VecFormatWithVocab(self):
@@ -255,6 +293,13 @@ class TestWord2VecModel(unittest.TestCase):
             model.train(corpus)
             self.assertFalse((unlocked1 == model.syn0[1]).all())  # unlocked vector should vary
             self.assertTrue((locked0 == model.syn0[0]).all())  # locked vector should not vary
+
+    def testAccuracy(self):
+        """Test Word2Vec accuracy and KeyedVectors accuracy give the same result"""
+        model = word2vec.Word2Vec(LeeCorpus())
+        w2v_accuracy = model.accuracy(datapath('questions-words.txt'))
+        kv_accuracy = model.kv.accuracy(datapath('questions-words.txt'))
+        self.assertEqual(w2v_accuracy, kv_accuracy)
 
     def model_sanity(self, model, train=True):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
