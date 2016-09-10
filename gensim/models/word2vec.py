@@ -1311,8 +1311,9 @@ class Word2Vec(utils.SaveLoad):
     def log_accuracy(section):
         return KeyedVectors.log_accuracy(section)
 
-    def accuracy(self, questions, restrict_vocab=30000, case_insensitive=True):
-        return self.kv.accuracy(questions, restrict_vocab, case_insensitive)
+    def accuracy(self, questions, restrict_vocab=30000, most_similar=None, case_insensitive=True):
+        most_similar = most_similar or KeyedVectors.most_similar
+        return self.kv.accuracy(questions, restrict_vocab, most_similar, case_insensitive)
 
     def __str__(self):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.kv.index2word), self.vector_size, self.alpha)
