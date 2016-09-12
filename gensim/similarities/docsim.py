@@ -50,6 +50,8 @@ uses the faster, batch queries internally and **is ideal for all-vs-all pairwise
 """
 
 
+import concurrent.futures
+import functools
 import logging
 import itertools
 import os
@@ -392,12 +394,18 @@ class Similarity(interfaces.SimilarityABC):
         # turn off query normalization (vectors in the index are already normalized, save some CPU)
         norm, self.norm = self.norm, False
 
-        for chunk in self.iter_chunks():
-            if chunk.shape[0] > 1:
-                for sim in self[chunk]:
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            futures = []
+            process_chunk = functools.partial(_query_chunk, index=self)
+
+            chunks = list(self.iter_chunks())
+            for chunk in chunks:
+                futures.append(executor.submit(process_chunk, chunk))
+            del chunks
+
+            for future in concurrent.futures.as_completed(futures):
+                for sim in future.result():
                     yield sim
-            else:
-                yield self[chunk]
 
         self.norm = norm  # restore normalization
 
@@ -456,6 +464,19 @@ class Similarity(interfaces.SimilarityABC):
         for fname in glob.glob(self.output_prefix + '*'):
             logger.info("deleting %s", fname)
             os.remove(fname)
+
+
+def _query_chunk(chunk, index):
+    """ Allow pickling """
+    return list(_query_chunk_gen(chunk, index))
+
+
+def _query_chunk_gen(chunk, index):
+    if chunk.shape[0] > 1:
+        for sim in index[chunk]:
+            yield sim
+    else:
+        yield index[chunk]
 #endclass Similarity
 
 
