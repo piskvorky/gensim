@@ -4,6 +4,7 @@ Changes
 0.13.3, TDB
 * Vectors for word2vec and doc2vec extracted out into `KeyedVectors`, save/load and similarity calcs can be run independent of model
   - Maintains backwards compatibility, `w2v_model.syn0` and `w2v_model.syn0norm` raise a warning
+* FastText wrapper added, can be used for training FastText word representations and performing word2vec operations over it
 
 0.13.2, 2016-08-19
 

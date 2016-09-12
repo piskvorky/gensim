@@ -43,6 +43,9 @@ class FastText(Word2Vec):
     Class for word vector training using FastText. Communication between FastText and Python
     takes place by working with data files on disk and calling the FastText binary with
     subprocess.call().
+    Implements functionality similar to [fasttext.py](https://github.com/salestock/fastText.py),
+    improving speed and scope of functionality like `most_similar`, `accuracy` by extracting vectors
+    into numpy matrix.
 
     """
     @classmethod
