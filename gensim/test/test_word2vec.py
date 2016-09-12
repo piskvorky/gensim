@@ -75,11 +75,11 @@ class TestWord2VecModel(unittest.TestCase):
         model.save(testfile())
         self.models_equal(model, word2vec.Word2Vec.load(testfile()))
         #  test persistence of the KeyedVectors of a model
-        kv = model.kv
-        kv.save(testfile())
-        loaded_kv = keyedvectors.KeyedVectors.load(testfile())
-        self.assertTrue(numpy.allclose(kv.syn0, loaded_kv.syn0))
-        self.assertEqual(len(kv.vocab), len(loaded_kv.vocab))
+        wv = model.wv
+        wv.save(testfile())
+        loaded_wv = keyedvectors.KeyedVectors.load(testfile())
+        self.assertTrue(numpy.allclose(wv.syn0, loaded_wv.syn0))
+        self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
 
     def testPersistenceWithConstructorRule(self):
         """Test storing/loading the entire model with a vocab trimming rule passed in the constructor."""
@@ -112,10 +112,10 @@ class TestWord2VecModel(unittest.TestCase):
         model.init_sims()
         model.save(testfile())
         loaded_model = word2vec.Word2Vec.load(testfile())
-        self.assertTrue(loaded_model.kv.syn0norm is None)
+        self.assertTrue(loaded_model.wv.syn0norm is None)
 
-        kv = model.kv
-        kv.save(testfile())
+        wv = model.wv
+        wv.save(testfile())
         loaded_kv = keyedvectors.KeyedVectors.load(testfile())
         self.assertTrue(loaded_kv.syn0norm is None)
 
@@ -124,18 +124,18 @@ class TestWord2VecModel(unittest.TestCase):
 
         # Model stored in one file
         model = word2vec.Word2Vec.load(datapath('word2vec_pre_kv'))
-        self.assertTrue(model.syn0.shape == (len(model.kv.vocab), model.vector_size))
-        self.assertTrue(model.syn1neg.shape == (len(model.kv.vocab), model.vector_size))
+        self.assertTrue(model.syn0.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
 
         # Model stored in multiple files
         model = word2vec.Word2Vec.load(datapath('word2vec_pre_kv_sep'))
-        self.assertTrue(model.syn0.shape == (len(model.kv.vocab), model.vector_size))
-        self.assertTrue(model.syn1neg.shape == (len(model.kv.vocab), model.vector_size))
+        self.assertTrue(model.syn0.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
 
     def testLoadPreKeyedVectorModelCFormat(self):
         """Test loading pre-KeyedVectors word2vec model saved in word2vec format"""
         model = word2vec.Word2Vec.load_word2vec_format(datapath('word2vec_pre_kv_c'))
-        self.assertTrue(model.syn0.shape[0] == len(model.kv.vocab))
+        self.assertTrue(model.syn0.shape[0] == len(model.wv.vocab))
 
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
@@ -298,7 +298,7 @@ class TestWord2VecModel(unittest.TestCase):
         """Test Word2Vec accuracy and KeyedVectors accuracy give the same result"""
         model = word2vec.Word2Vec(LeeCorpus())
         w2v_accuracy = model.accuracy(datapath('questions-words.txt'))
-        kv_accuracy = model.kv.accuracy(datapath('questions-words.txt'))
+        kv_accuracy = model.wv.accuracy(datapath('questions-words.txt'))
         self.assertEqual(w2v_accuracy, kv_accuracy)
 
     def model_sanity(self, model, train=True):
