@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.13.3, TDB
+* Vectors for word2vec and doc2vec extracted out into `KeyedVectors`, save/load and similarity calcs can be run independent of model
+  - Maintains backwards compatibility, `w2v_model.syn0` and `w2v_model.syn0norm` raise a warning
+
 0.13.2, 2016-08-19
 
 * wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, [#771](https://github.com/RaRe-Technologies/gensim/pull/771)) 
