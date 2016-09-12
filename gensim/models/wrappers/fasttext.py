@@ -143,7 +143,7 @@ class FastText(Word2Vec):
 
     def load_dict(self, f):
         (dim, nwords, _) = self.struct_unpack(f, '@3i') 
-        assert len(self.kv.vocab) == nwords, 'mismatch between vocab sizes'
+        assert len(self.wv.vocab) == nwords, 'mismatch between vocab sizes'
         ntokens, = self.struct_unpack(f, '@q') 
         for i in range(nwords):
             word = ''
@@ -155,8 +155,8 @@ class FastText(Word2Vec):
                 char = char.decode()
             count, _ = self.struct_unpack(f, '@ib')
             _ = self.struct_unpack(f, '@i')
-            assert self.kv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
-            self.kv.vocab[word].count = count
+            assert self.wv.vocab[word].index == i, 'mismatch between gensim word index and fastText word index'
+            self.wv.vocab[word].count = count
 
     def load_vectors(self, f):
         num_vectors, dim = self.struct_unpack(f, '@2q')
@@ -184,7 +184,7 @@ class FastText(Word2Vec):
         ngram_indices = []
         for i, ngram in enumerate(all_ngrams):
             ngram_hash = ft_hash(ngram)
-            ngram_indices.append((len(self.kv.vocab) + ngram_hash) % self.bucket)
+            ngram_indices.append((len(self.wv.vocab) + ngram_hash) % self.bucket)
             self.ngrams[ngram] = i
         self.syn0_all = self.syn0_all.take(ngram_indices, axis=0)
 
@@ -206,8 +206,8 @@ class FastText(Word2Vec):
         return np.vstack([self.word_vector(word) for word in words])
 
     def word_vector(self, word):
-        if word in self.kv.vocab:
-            return self.kv[word]
+        if word in self.wv.vocab:
+            return self.wv[word]
         else:
             return self.oov_vector(word)
 
