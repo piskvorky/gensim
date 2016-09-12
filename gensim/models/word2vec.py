@@ -655,7 +655,7 @@ class Word2Vec(utils.SaveLoad):
 
     def sort_vocab(self):
         """Sort the vocabulary so the most frequent words have the lowest indexes."""
-        if self.wv.syn0:
+        if len(self.wv.syn0):
             raise RuntimeError("must sort before initializing vectors/weights")
         self.wv.index2word.sort(key=lambda word: self.wv.vocab[word].count, reverse=True)
         for i, word in enumerate(self.wv.index2word):
@@ -718,7 +718,7 @@ class Word2Vec(utils.SaveLoad):
 
         if not self.wv.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
-        if self.wv.syn0 == []:
+        if not len(self.wv.syn0):
             raise RuntimeError("you must first finalize vocabulary before training the model")
 
         if total_words is None and total_examples is None:
