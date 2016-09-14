@@ -189,34 +189,12 @@ class FastSent(Word2Vec):
         self.total_train_time = 0
         self.autoencode = autoencode
         self.noverlap = noverlap
+        self.hs, self.negative, self.sorted_vocab = True, False, False   # for inheriting some methods from word2vec
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
             self.build_vocab(sentences)
             self.train(sentences)
-
-    def build_vocab(self, sentences, keep_raw_vocab=False):
-        """
-        Build vocabulary from a sequence of sentences (can be a once-only generator stream).
-        Each sentence must be a list of unicode strings.
-
-        """
-        super(FastSent,self).build_vocab(sentences=sentences, keep_raw_vocab=keep_raw_vocab, trim_rule=None) 
-
-    def finalize_vocab(self):
-        """Build tables and model weights based on final vocabulary settings."""
-        if not self.index2word:
-            self.scale_vocab()
-        self.create_binary_tree()
-        if self.null_word:
-            # create null pseudo-word for padding when using concatenative L1 (run-of-words)
-            # this word is only ever input – never predicted – so count, huffman-point, etc doesn't matter
-            word, v = '\0', Vocab(count=1, sample_int=0)
-            v.index = len(self.vocab)
-            self.index2word.append(word)
-            self.vocab[word] = v
-        # set initial input/projection and hidden weights
-        self.reset_weights()
 
     def _do_train_job(self, job, alpha, inits):
         work, neu1 = inits
@@ -238,7 +216,8 @@ class FastSent(Word2Vec):
                 raw_tally += len(sentences[0]) + len(sentences[2])
         return (tally, raw_tally)
 
-    def train(self, sentences, total_words=None, word_count=0, chunksize=100, total_examples=None, queue_factor=2, report_delay=1):
+    def train(self, sentences, total_words=None, word_count=0, chunksize=100, 
+              total_examples=None, queue_factor=2, report_delay=1.0):
         """
         Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
         For FastSent, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
@@ -372,6 +351,7 @@ class FastSent(Word2Vec):
             except Empty:
                 pass  # already out of loop; continue to next push
 
+        # all done; report the final stats
         elapsed = default_timer() - start
         logger.info(
             "training on %i raw words took %.1fs, %.0f trained words/s",
@@ -387,104 +367,19 @@ class FastSent(Word2Vec):
         self.clear_sims()
         return trained_word_count
 
-    def reset_weights(self):
-        """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
-        logger.info("resetting layer weights")
-        self.syn0 = empty((len(self.vocab), self.vector_size), dtype=REAL)
-        # randomize weights vector by vector, rather than materializing a huge random matrix in RAM at once
-        for i in xrange(len(self.vocab)):
-            # construct deterministic seed from word AND seed argument
-            self.syn0[i] = self.seeded_vector(self.index2word[i] + str(self.seed))
-        self.syn1 = zeros((len(self.vocab), self.layer1_size), dtype=REAL)
-        self.syn0norm = None
-
-        self.syn0_lockf = ones(len(self.vocab), dtype=REAL)  # zeros suppress learning
-
-
     def save_fastsent_format(self, fname, fvocab=None, binary=False):
         """
-        Store the input-hidden weight matrix in the same format used by the original
-        C fastsent-tool, for compatibility.
-
-         `fname` is the file used to save the vectors in
-         `fvocab` is an optional file used to save the vocabulary
-         `binary` is an optional boolean indicating whether the data is to be saved
-         in binary fastsent format (default: False)
-
+        Please refer to Word2Vec.save_word2vec_format
         """
         super(FastSent,self).save_word2vec_format(fname=fname, fvocab=fvocab, binary=binary)
 
     @classmethod
-    def load_fastsent_format(cls, fname, fvocab=None, binary=False, norm_only=True, encoding='utf8'):
+    def load_fastsent_format(cls, fname, fvocab=None, binary=False, norm_only=True, encoding='utf8', unicode_errors='strict',
+                            limit=None, datatype=REAL):
         """
-        Load the input-hidden weight matrix from the original C fastsent-tool format.
-
-        Note that the information stored in the file is incomplete (the binary tree is missing),
-        so while you can query for sentence similarity etc., you cannot continue training
-        with a model loaded this way.
-
-        `binary` is a boolean indicating whether the data is in binary fastsent format.
-        `norm_only` is a boolean indicating whether to only store normalised fastsent vectors in memory.
-        Word counts are read from `fvocab` filename, if set (this is the file generated
-        by `-save-vocab` flag of the original C tool).
-
-        If you trained the C model using non-utf8 encoding for words, specify that
-        encoding in `encoding`.
-
+        Please refer to Word2Vec.load_word2vec_format
         """
-        counts = None
-        if fvocab is not None:
-            logger.info("loading word counts from %s" % (fvocab))
-            counts = {}
-            with utils.smart_open(fvocab) as fin:
-                for line in fin:
-                    word, count = utils.to_unicode(line).strip().split()
-                    counts[word] = int(count)
-
-        logger.info("loading projection weights from %s" % (fname))
-        with utils.smart_open(fname) as fin:
-            header = utils.to_unicode(fin.readline(), encoding=encoding)
-            vocab_size, vector_size = map(int, header.split())  # throws for invalid file format
-            result = FastSent(size=vector_size)
-            result.syn0 = zeros((vocab_size, vector_size), dtype=REAL)
-            if binary:
-                binary_len = dtype(REAL).itemsize * vector_size
-                for line_no in xrange(vocab_size):
-                    # mixed text and binary: read text first, then binary
-                    word = []
-                    while True:
-                        ch = fin.read(1)
-                        if ch == b' ':
-                            break
-                        if ch != b'\n':  # ignore newlines in front of words (some binary files have)
-
-                            word.append(ch)
-                    word = utils.to_unicode(b''.join(word), encoding=encoding)
-                    if counts is None:
-                        result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
-                    elif word in counts:
-                        result.vocab[word] = Vocab(index=line_no, count=counts[word])
-                    else:
-                        logger.warning("vocabulary file is incomplete")
-                        result.vocab[word] = Vocab(index=line_no, count=None)
-                    result.index2word.append(word)
-                    result.syn0[line_no] = fromstring(fin.read(binary_len), dtype=REAL)
-            else:
-                for line_no, line in enumerate(fin):
-                    parts = utils.to_unicode(line.rstrip(), encoding=encoding).split(" ")
-                    if len(parts) != vector_size + 1:
-                        raise ValueError("invalid vector on line %s (is this really the text format?)" % (line_no))
-                    word, weights = parts[0], list(map(REAL, parts[1:]))
-                    if counts is None:
-                        result.vocab[word] = Vocab(index=line_no, count=vocab_size - line_no)
-                    elif word in counts:
-                        result.vocab[word] = Vocab(index=line_no, count=counts[word])
-                    else:
-                        logger.warning("vocabulary file is incomplete")
-                        result.vocab[word] = Vocab(index=line_no, count=None)
-                    result.index2word.append(word)
-                    result.syn0[line_no] = weights
-        logger.info("loaded %s matrix from %s" % (result.syn0.shape, fname))
+        result=super(FastSent,cls).load_word2vec_format(fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors, limit=limit, datatype=datatype) 
         result.init_sims(norm_only)
         return result
 
@@ -528,60 +423,7 @@ class FastSent(Word2Vec):
         else:
             return dot(matutils.unitvec(array(v1).sum(axis=0)), matutils.unitvec(array(v2).sum(axis=0)))
 
-    def init_sims(self, replace=False):
-        """
-        Precompute L2-normalized vectors.
-
-        If `replace` is set, forget the original vectors and only keep the normalized
-        ones = saves lots of memory!
-
-        Note that you **cannot continue training** after doing a replace. The model becomes
-        effectively read-only = you can call `sentence_similarity` etc., but not `train`.
-
-        """
-        super(FastSent,self).init_sims(replace=replace)
-
-    def estimate_memory(self, vocab_size=None, report=None):
-        """Estimate required memory for a model using current settings and provided vocabulary size."""
-        vocab_size = vocab_size or len(self.vocab)
-        report = report or {}
-        report['vocab'] = vocab_size * 700
-        report['syn0'] = vocab_size * self.vector_size * dtype(REAL).itemsize
-        report['syn1'] = vocab_size * self.layer1_size * dtype(REAL).itemsize
-        report['total'] = sum(report.values())
-        logger.info("estimated required memory for %i words and %i dimensions: %i bytes",
-                    vocab_size, self.vector_size, report['total'])
-        return report
-
-    def save(self, *args, **kwargs):
-        # don't bother storing the cached normalized vectors, recalculable table
-        kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'table', 'cum_table'])
-        super(Word2Vec, self).save(*args, **kwargs)
-
     save.__doc__ = utils.SaveLoad.save.__doc__
-
-    @classmethod
-    def load(cls, *args, **kwargs):
-        model = super(Word2Vec, cls).load(*args, **kwargs)
-        # update older models
-        if hasattr(model, 'table'):
-            delattr(model, 'table')  # discard in favor of cum_table
-        if not hasattr(model, 'corpus_count'):
-            model.corpus_count = None
-        for v in model.vocab.values():
-            if hasattr(v, 'sample_int'):
-                break  # already 0.12.0+ style int probabilities
-            else:
-                v.sample_int = int(round(v.sample_probability * 2**32))
-                del v.sample_probability
-        if not hasattr(model, 'syn0_lockf'):
-            model.syn0_lockf = ones(len(model.syn0), dtype=REAL)
-        if not hasattr(model, 'random'):
-            model.random = random.RandomState(model.seed)
-        if not hasattr(model, 'train_count'):
-            model.train_count = 0
-            model.total_train_time = 0
-        return model
 
 
 class FakeJobQueue(object):
