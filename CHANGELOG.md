@@ -23,7 +23,7 @@ Changes
 * Update Corpora_and_Vector_Spaces.ipynb (@megansquire, [#772](https://github.com/RaRe-Technologies/gensim/pull/772))
 * DTM wrapper bug fixes caused by renaming num_words in #755 (@bhargavvader,  [#770](https://github.com/RaRe-Technologies/gensim/pull/770))
 * Add LsiModel.docs_processed attribute (@hobson, [#763](https://github.com/RaRe-Technologies/gensim/pull/763))
-* Dynamic Topic Modelling in Python. Google Summer of Code 2016 project. (@bhargavvader, [#739](https://github.com/RaRe-Technologies/gensim/pull/739))
+* Dynamic Topic Modelling in Python. Google Summer of Code 2016 project. (@bhargavvader, [#739, #831](https://github.com/RaRe-Technologies/gensim/pull/739))
 
 0.13.1, 2016-06-22
 
