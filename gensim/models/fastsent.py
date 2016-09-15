@@ -120,7 +120,8 @@ class FastSent(Word2Vec):
     def __init__(
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
-            fastsent_mean=0, hashfxn=hash, iter=1, null_word=0, autoencode=0, noverlap=0):
+            fastsent_mean=0, hashfxn=hash, iter=1, null_word=0, autoencode=0, 
+            noverlap=0, batch_words=MAX_WORDS_IN_BATCH):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -164,6 +165,9 @@ class FastSent(Word2Vec):
 
         'noverlap' = do not predict target words if found in source sentence
 
+        `batch_words` = target size (in words) for batches of examples passed to worker threads (and
+        thus cython routines). Default is 10000. (Larger batches will be passed if individual
+        texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
         """
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
@@ -173,6 +177,7 @@ class FastSent(Word2Vec):
         if size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
         self.alpha = float(alpha)
+        self.min_alpha_yet_reached = float(alpha) # To warn user if alpha increases
         self.window = int(window)
         self.max_vocab_size = max_vocab_size
         self.seed = seed
@@ -189,7 +194,8 @@ class FastSent(Word2Vec):
         self.total_train_time = 0
         self.autoencode = autoencode
         self.noverlap = noverlap
-        self.hs, self.negative, self.sorted_vocab = True, False, False   # for inheriting some methods from word2vec
+        self.batch_words = batch_words
+        self.hs, self.negative, self.sorted_vocab, self.sg = True, False, False, 0   # for inheriting some methods from word2vec
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -215,157 +221,6 @@ class FastSent(Word2Vec):
             else:
                 raw_tally += len(sentences[0]) + len(sentences[2])
         return (tally, raw_tally)
-
-    def train(self, sentences, total_words=None, word_count=0, chunksize=100, 
-              total_examples=None, queue_factor=2, report_delay=1.0):
-        """
-        Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
-        For FastSent, each sentence must be a list of unicode strings. (Subclasses may accept other examples.)
-
-        To support linear learning-rate decay from (initial) alpha to min_alpha, either total_examples
-        (count of sentences) or total_words (count of raw words in sentences) should be provided, unless the
-        sentences are the same as those that were used to initially build the vocabulary.
-
-        """
-        if FAST_VERSION < 0:
-            import warnings
-            warnings.warn("C extension not loaded for FastSent, training will be slow. "
-                          "Install a C compiler and reinstall gensim for fast training.")
-            self.neg_labels = []
-
-        logger.info(
-            "training model with %i workers on %i vocabulary and %i features, "
-            "using sample=%s",
-            self.workers, len(self.vocab), self.layer1_size,
-            self.sample)
-
-        if not self.vocab:
-            raise RuntimeError("you must first build vocabulary before training the model")
-        if not hasattr(self, 'syn0'):
-            raise RuntimeError("you must first finalize vocabulary before training the model")
-
-        if total_words is None and total_examples is None:
-            if self.corpus_count:
-                total_examples = self.corpus_count
-                logger.info("expecting %i examples, matching count from corpus used for vocabulary survey", total_examples)
-            else:
-                raise ValueError("you must provide either total_words or total_examples, to enable alpha and progress calculations")
-
-        if self.iter > 1:
-            sentences = utils.RepeatCorpusNTimes(sentences, self.iter)
-            total_words = total_words and total_words * self.iter
-            total_examples = total_examples and total_examples * self.iter
-
-        def worker_init():
-            work = matutils.zeros_aligned(self.layer1_size, dtype=REAL)  # per-thread private work memory
-            neu1 = matutils.zeros_aligned(self.layer1_size, dtype=REAL)
-            return (work, neu1)
-
-        def worker_one_job(job, inits):
-            items, alpha = job
-            if items is None:  # signal to finish
-                return False
-            # train & return tally
-            tally, raw_tally = self._do_train_job(items, alpha, inits)
-            progress_queue.put((len(items), tally, raw_tally))  # report progress
-            return True
-
-        # loop of a given worker: fetches the data from the queue and then
-        # launches the worker_one_job function
-        def worker_loop():
-            """Train the model, lifting lists of sentences from the jobs queue."""
-            init = worker_init()
-            while True:
-                job = job_queue.get()
-                if not worker_one_job(job, init):
-                    break
-
-        start, next_report = default_timer(), 1.0
-
-        # buffer ahead only a limited number of jobs.. this is the reason we can't simply use ThreadPool :(
-        if self.workers > 0:
-            job_queue = Queue(maxsize=queue_factor * self.workers)
-        else:
-            job_queue = FakeJobQueue(worker_init, worker_one_job)
-        progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
-
-        workers = [threading.Thread(target=worker_loop) for _ in xrange(self.workers)]
-        for thread in workers:
-            thread.daemon = True  # make interrupting the process with ctrl+c easier
-            thread.start()
-        pushed_words = 0
-        pushed_examples = 0
-        example_count = 0
-        trained_word_count = 0
-        raw_word_count = word_count
-        push_done = False
-        done_jobs = 0
-        next_alpha = self.alpha
-        jobs_source = enumerate(utils.grouper(sentences, chunksize))
-        # fill jobs queue with (sentence, alpha) job tuples
-        while True:
-            try:
-                job_no, items = next(jobs_source)
-                logger.debug("putting job #%i in the queue at alpha %.05f", job_no, next_alpha)
-                job_queue.put((items, next_alpha))
-                # update the learning rate before every next job
-                if self.min_alpha < next_alpha:
-                    if total_examples:
-                        # examples-based decay
-                        pushed_examples += len(items)
-                        next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_examples / total_examples)
-                    else:
-                        # words-based decay
-                        pushed_words += self._raw_word_count(items)
-                        next_alpha = self.alpha - (self.alpha - self.min_alpha) * (pushed_words / total_words)
-                    next_alpha = max(next_alpha, self.min_alpha)
-            except StopIteration:
-                logger.info("reached end of input; waiting to finish %i outstanding jobs",
-                    job_no - done_jobs + 1)
-                for _ in xrange(self.workers):
-                    job_queue.put((None, 0))  # give the workers heads up that they can finish -- no more work!
-                push_done = True
-            try:
-                while done_jobs < (job_no+1) or not push_done:
-                    examples, trained_words, raw_words = progress_queue.get(push_done)  # only block after all jobs pushed
-                    example_count += examples
-                    trained_word_count += trained_words  # only words in vocab & sampled
-                    raw_word_count += raw_words
-                    done_jobs += 1
-                    elapsed = default_timer() - start
-                    if elapsed >= next_report:
-                        if total_examples:
-                            # examples-based progress %
-                            logger.info(
-                                "FASTSENT MODEL PROGRESS: at %.2f%% examples, %.0f words/s",
-                                100.0 * example_count / total_examples, trained_word_count / elapsed)
-                        else:
-                            # words-based progress %
-                            logger.info(
-                                "FASTSENT MODEL PROGRESS: at %.2f%% words, %.0f words/s",
-                                100.0 * raw_word_count / total_words, trained_word_count / elapsed)
-                        next_report = elapsed + report_delay  # don't flood log, wait report_delay seconds
-                else:
-                    # loop ended by job count; really done
-                    break
-            except Empty:
-                pass  # already out of loop; continue to next push
-
-        # all done; report the final stats
-        elapsed = default_timer() - start
-        logger.info(
-            "training on %i raw words took %.1fs, %.0f trained words/s",
-            raw_word_count, elapsed, trained_word_count / elapsed if elapsed else 0.0)
-
-        if total_examples and total_examples != example_count:
-            logger.warn("supplied example count (%i) did not equal expected count (%i)", example_count, total_examples)
-        if total_words and total_words != raw_word_count:
-            logger.warn("supplied raw word count (%i) did not equal expected count (%i)", raw_word_count, total_words)
-
-        self.train_count += 1  # number of times train() has been called
-        self.total_train_time += elapsed
-        self.clear_sims()
-        return trained_word_count
 
     def save_fastsent_format(self, fname, fvocab=None, binary=False):
         """
@@ -422,16 +277,6 @@ class FastSent(Word2Vec):
             return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
         else:
             return dot(matutils.unitvec(array(v1).sum(axis=0)), matutils.unitvec(array(v2).sum(axis=0)))
-
-
-class FakeJobQueue(object):
-    """Pretends to be a Queue; does equivalent of work_loop in calling thread."""
-    def __init__(self, init_fn, job_fn):
-        self.inits = init_fn()
-        self.job_fn = job_fn
-
-    def put(self, job):
-        self.job_fn(job, self.inits)
 
 
 if __name__ == "__main__":
