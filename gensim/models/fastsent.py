@@ -8,10 +8,6 @@
 """
 FastSent model for sentence representation.
 
-The FastSent algorithm was originally inspired by the C package https://code.google.com/p/fastsent/.
-
-For a blog tutorial on gensim fastsent, which is closely related, visit http://radimrehurek.com/2014/02/fastsent-tutorial/
-
 **Make sure you have a C compiler before installing gensim, to use optimized (compiled) fastsent training**
 (70x speedup compared to plain NumPy implementation [3]_).
 
