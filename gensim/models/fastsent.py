@@ -423,8 +423,6 @@ class FastSent(Word2Vec):
         else:
             return dot(matutils.unitvec(array(v1).sum(axis=0)), matutils.unitvec(array(v2).sum(axis=0)))
 
-    save.__doc__ = utils.SaveLoad.save.__doc__
-
 
 class FakeJobQueue(object):
     """Pretends to be a Queue; does equivalent of work_loop in calling thread."""
