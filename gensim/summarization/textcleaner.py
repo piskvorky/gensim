@@ -11,6 +11,7 @@ import re
 import warnings
 import logging
 
+logger = logging.getLogger('summa.preprocessing.cleaner')
 
 try:
     from pattern.en import tag
