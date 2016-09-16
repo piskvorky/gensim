@@ -9,10 +9,12 @@ from gensim.utils import tokenize
 from six.moves import xrange
 import re
 import warnings
+import logging
 
 
 try:
     from pattern.en import tag
+    logger.info("'pattern' package found; tag filters are available for English")
     HAS_PATTERN = True
 except ImportError:
     warnings.warn("'pattern' package not found; tag filters are not available for English")

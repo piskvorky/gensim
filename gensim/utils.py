@@ -837,7 +837,7 @@ class InputQueue(multiprocessing.Process):
 
 
 if os.name == 'nt':
-    warnings.warn("detected Windows; aliasing chunkize to chunkize_serial")
+    logger.info("detected Windows; aliasing chunkize to chunkize_serial")
 
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
