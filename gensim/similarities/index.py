@@ -4,10 +4,12 @@
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 import os
+
+from smart_open import smart_open
 try:
-    import cPickle as pickle
+    import cPickle as _pickle
 except ImportError:
-    import pickle
+    import pickle as _pickle
 
 from gensim.models.doc2vec import Doc2Vec
 from gensim.models.word2vec import Word2Vec
@@ -33,14 +35,21 @@ class AnnoyIndexer(object):
             else:
                 raise ValueError("Only a Word2Vec or Doc2Vec instance can be used")
 
-    def save(self, fname):
+    def save(self, fname, protocol=2):
+        fname_dict = fname + '.d'
         self.index.save(fname)
         d = {'f': self.model.vector_size, 'num_trees': self.num_trees, 'labels': self.labels}
-        pickle.dump(d, open(fname+'.d', 'wb'), 2)
+        with smart_open(fname_dict, 'wb') as fout:
+            _pickle.dump(d, fout, protocol=protocol)
 
     def load(self, fname):
-        if os.path.exists(fname) and os.path.exists(fname+'.d'):
-            d = pickle.load(open(fname+'.d', 'rb'))
+        fname_dict = fname+'.d'
+        if not (os.path.exists(fname) and os.path.exists(fname_dict)):
+            raise IOError("Can't find index files '{}' and '{}' - Unable to restore AnnoyIndexer state."
+                          .format(fname, fname_dict))
+        else:
+            with smart_open(fname_dict) as f:
+                d = _pickle.loads(f.read())
             self.num_trees = d['num_trees']
             self.index = AnnoyIndex(d['f'])
             self.index.load(fname)

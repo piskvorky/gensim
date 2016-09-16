@@ -472,10 +472,9 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
     def testLoadNotExist(self):
         from gensim.similarities.index import AnnoyIndexer
         self.test_index = AnnoyIndexer()
-        self.test_index.load('test-index')
 
-        self.assertEqual(self.test_index.index, None)
-        self.assertEqual(self.test_index.labels, None)
+        with self.assertRaises(IOError):
+            self.test_index.load('test-index')
 
     def testSaveLoad(self):
         from gensim.similarities.index import AnnoyIndexer
@@ -531,10 +530,9 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
     def testLoadNotExist(self):
         from gensim.similarities.index import AnnoyIndexer
         self.test_index = AnnoyIndexer()
-        self.test_index.load('test-index')
 
-        self.assertEqual(self.test_index.index, None)
-        self.assertEqual(self.test_index.labels, None)
+        with self.assertRaises(IOError):
+            self.test_index.load('test-index')
 
     def testSaveLoad(self):
         from gensim.similarities.index import AnnoyIndexer
