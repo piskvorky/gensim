@@ -3,6 +3,7 @@ Changes
 
 0.13.2, 2016-08-19
 
+* Fixed some logging info bugs (issue [#828](https://github.com/RaRe-Technologies/gensim/issues/828)) (@544895340, [#832](https://github.com/RaRe-Technologies/gensim/pull/832))
 * wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, [#771](https://github.com/RaRe-Technologies/gensim/pull/771)) 
   - assigning wordtopics value of word_topics to keep backward compatibility, for now
 * topics, topn parameters changed to num_topics and num_words in show_topics() and print_topics()(@droudy, [#755](https://github.com/RaRe-Technologies/gensim/pull/755))
