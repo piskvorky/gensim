@@ -30,14 +30,16 @@
 * [Docs](https://radimrehurek.com/gensim/models/lsimodel.html), [Source](https://github.com/piskvorky/gensim/blob/develop/gensim/models/lsimodel.py) (very standard LSI implementation)
 * [How to interpret negative LSI values](https://www.researchgate.net/post/LSA_SVD_How_to_statistically_interpret_negative_values_in_U_and_Vt)
 * [Random Projection](https://radimrehurek.com/gensim/models/rpmodel.html) (used as an option to speed up LSI)
+* [Distributed version](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/distributed.md)
 
 #####LDA (Model)
 * [Docs](https://radimrehurek.com/gensim/models/ldamodel.html), [Source](https://github.com/piskvorky/gensim/blob/develop/gensim/models/ldamodel.py)
 * [Example with Android issue reports](http://christop.club/2014/05/06/using-gensim-for-lda/), [Another example](https://rstudio-pubs-static.s3.amazonaws.com/79360_850b2a69980c4488b1db95987a24867a.html), [Another example](http://brandonrose.org/clustering#Latent-Dirichlet-Allocation)
+* [Distributed version](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/distributed.md)
 
 #####Topic Model Tuning
 * [Colouring words by topic in a document, print words in a topics](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_methods.ipynb)
-* [Topic Coherence, a metric that correlates that human judgement on topic quality.](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_coherence_tutorial.ipynb) 
+* [Topic Coherence, a metric that correlates that human judgement on topic quality.](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_coherence_tutorial.ipynb)
 * [Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities] (https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/distance_metrics.ipynb)
 * [America's Next Topic Model slides](https://speakerdeck.com/tmylk/americas-next-topic-model?slide=6) -- How to choose your next topic model, presented at Pydata London 5 July 2016 by Lev Konstantinovsky
 
@@ -45,11 +47,11 @@
 * Tool to get the most similar documents for LDA, LSI
 * [Similarity queries tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/Similarity_Queries.ipynb)
 
-#####Dynamic Topic Modeling      
+#####Dynamic Topic Modeling
 * Model evolution of topics through time
 * [Easy intro to DTM. Evolution of Voldemort topic through the 7 Harry Potter books.](http://rare-technologies.com/understanding-and-coding-dynamic-topic-models/)
 * [Dynamic Topic Modeling and Dynamic Influence Model Tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/dtm_example.ipynb)
-* [Python Dynamic Topic Modelling Theory and Tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/ldaseqmodel.ipynb) 
+* [Python Dynamic Topic Modelling Theory and Tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/ldaseqmodel.ipynb)
 
 
 ####Word Embeddings
@@ -74,19 +76,19 @@
 * Tool to get the most similar documents for word2vec
 * [Word Movers Distance for Yelp Reviews tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb)
 
-#####Deep Inverse Regression      
+#####Deep Inverse Regression
 * Document Classification using Bayesian Inversion and several word2vec models(one for each class)
 * [Deep Inverse Regression with Yelp Reviews](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/deepir.ipynb)
 
 
 ####Other techniques
 
-#####Summarization	
+#####Summarization
 * Extract most important keywords and sentences from the text
 * [Tutorial on TextRank summarisation](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/summarization_tutorial.ipynb)
 
 #####Overviews
-* Tutorial showing API for document classification with various techniques: TF-IDF, word2vec averaging, Deep IR, Word Movers Distance and doc2vec 
+* Tutorial showing API for document classification with various techniques: TF-IDF, word2vec averaging, Deep IR, Word Movers Distance and doc2vec
 * [Movie plots by genre](https://github.com/RaRe-Technologies/movie-plots-by-genre)
 
 
