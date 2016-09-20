@@ -433,7 +433,7 @@ class Word2Vec(utils.SaveLoad):
         if size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
         self.alpha = float(alpha)
-        self.min_alpha_yet_reached = float(alpha) # To warn user if alpha increases
+        self.min_alpha_yet_reached = float(alpha)  # To warn user if alpha increases
         self.window = int(window)
         self.max_vocab_size = max_vocab_size
         self.seed = seed
@@ -719,9 +719,9 @@ class Word2Vec(utils.SaveLoad):
 
         logger.info(
             "training model with %i workers on %i vocabulary and %i features, "
-            "using sg=%s hs=%s sample=%s negative=%s",
+            "using sg=%s hs=%s sample=%s negative=%s window=%s",
             self.workers, len(self.vocab), self.layer1_size, self.sg,
-            self.hs, self.sample, self.negative)
+            self.hs, self.sample, self.negative, self.window)
 
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
@@ -1602,8 +1602,8 @@ class Word2Vec(utils.SaveLoad):
         In case `case_insensitive` is True, the first `restrict_vocab` words are taken first, and then
         case normalization is performed.
 
-        Use `case_insensitive` to convert all words in questions and vocab to their uppercase form before 
-        evaluating the accuracy (default True). Useful in case of case-mismatch between training tokens 
+        Use `case_insensitive` to convert all words in questions and vocab to their uppercase form before
+        evaluating the accuracy (default True). Useful in case of case-mismatch between training tokens
         and question words. In case of multiple case variants of a single word, the vector for the first
         occurrence (also the most frequent if vocabulary is sorted) is taken.
 
