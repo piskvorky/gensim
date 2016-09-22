@@ -7,8 +7,8 @@
 #####Text to Vectors
 * We first need to transform text to vectors
 * [String to vectors tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/Corpora_and_Vector_Spaces.ipynb)
-	* Create a dictionary first that maps words to ids
-	* Transform the text into vectors through ```dictionary.doc2bow(texts)```
+    * Create a dictionary first that maps words to ids
+    * Transform the text into vectors through ```dictionary.doc2bow(texts)```
 * [Corpus streaming tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/Corpora_and_Vector_Spaces.ipynb) (For very large corpuses)
 
 #####Models and Transformation
@@ -30,17 +30,15 @@
 * [Docs](https://radimrehurek.com/gensim/models/lsimodel.html), [Source](https://github.com/piskvorky/gensim/blob/develop/gensim/models/lsimodel.py) (very standard LSI implementation)
 * [How to interpret negative LSI values](https://www.researchgate.net/post/LSA_SVD_How_to_statistically_interpret_negative_values_in_U_and_Vt)
 * [Random Projection](https://radimrehurek.com/gensim/models/rpmodel.html) (used as an option to speed up LSI)
-* [Distributed version](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/distributed.md)
 
 #####LDA (Model)
 * [Docs](https://radimrehurek.com/gensim/models/ldamodel.html), [Source](https://github.com/piskvorky/gensim/blob/develop/gensim/models/ldamodel.py)
 * [Example with Android issue reports](http://christop.club/2014/05/06/using-gensim-for-lda/), [Another example](https://rstudio-pubs-static.s3.amazonaws.com/79360_850b2a69980c4488b1db95987a24867a.html), [Another example](http://brandonrose.org/clustering#Latent-Dirichlet-Allocation)
-* [Distributed version](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/distributed.md)
 
 #####Topic Model Tuning
 * [Colouring words by topic in a document, print words in a topics](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_methods.ipynb)
 * [Topic Coherence, a metric that correlates that human judgement on topic quality.](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_coherence_tutorial.ipynb)
-* [Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities] (https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/distance_metrics.ipynb)
+* [Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/distance_metrics.ipynb)
 * [America's Next Topic Model slides](https://speakerdeck.com/tmylk/americas-next-topic-model?slide=6) -- How to choose your next topic model, presented at Pydata London 5 July 2016 by Lev Konstantinovsky
 
 #####Query Similarities
@@ -59,6 +57,7 @@
 #####Word2Vec (Model)
 * [Docs](https://radimrehurek.com/gensim/models/word2vec.html), [Source](https://github.com/piskvorky/gensim/blob/develop/gensim/models/word2vec.py) (very simple interface)
 * [Simple word2vec tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/word2vec.ipynb) (examples of ```most_similar, similarity, doesnt_match```)
+* [Comparison of FastText and Word2Vec](https://github.com/RaRe-Technologies/gensim/blob/ba1ce894a5192fc493a865c535202695bb3c0424/docs/notebooks/Word2Vec_FastText_Comparison.ipynb)
 
 #####Doc2Vec (Model)
 * [Doc2vec Quick Start on Lee Corpus](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb)
@@ -101,4 +100,3 @@
 
 #Credits
 Based on wonderful [resource](https://github.com/jxieeducation/DIY-Data-Science/blob/master/frameworks/gensim.md) by Jason Xie.
-
