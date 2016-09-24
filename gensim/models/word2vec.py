@@ -477,8 +477,8 @@ class Word2Vec(utils.SaveLoad):
         train_words_pow = float(sum([self.vocab[word].count**power for word in self.vocab]))
         cumulative = 0.0
         for word_index in range(vocab_size):
-            cumulative += self.vocab[self.index2word[word_index]].count**power / train_words_pow
-            self.cum_table[word_index] = round(cumulative * domain)
+            cumulative += self.vocab[self.index2word[word_index]].count**power
+            self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
             assert self.cum_table[-1] == domain
 
