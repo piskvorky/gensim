@@ -83,7 +83,7 @@ class TestUtils(unittest.TestCase):
 
 class TestSampleDict(unittest.TestCase):
     def test_sample_dict(self):
-    	d = {1:2,2:3,3:4,4:5}
+        d = {1:2,2:3,3:4,4:5}
         expected_dict = [(1,2),(2,3)]
         expected_dict_random = [(k,v) for k,v in d.iteritems()]
         sampled_dict = utils.sample_dict(d,2,False)
