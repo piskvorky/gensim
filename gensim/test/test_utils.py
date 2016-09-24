@@ -12,7 +12,7 @@ import logging
 import unittest
 
 from gensim import utils
-
+from six import iteritems
 
 class TestIsCorpus(unittest.TestCase):
     def test_None(self):
