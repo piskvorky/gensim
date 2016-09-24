@@ -83,17 +83,15 @@ class TestUtils(unittest.TestCase):
 
 class TestSampleDict(unittest.TestCase):
     def test_sample_dict(self):
-    	size_dict = [0,1,5,10,100]
-    	n = [0,1,5,100]
-    	use_random = [True,False]
-    	for i in size_dict:
-    	    d = {}
-    	    for j in range(i):
-    	    	d[j] = j+1
-    	    for n_i in n:
-    	    	for rand in use_random:
-    	    	    boolval, dictionary = utils.sample_dict(d,n_i,rand)
-    	    	    self.assertTrue(boolval)
+    	d = {1:2,2:3,3:4,4:5}
+        expected_dict = [(1,2),(2,3)]
+        expected_dict_random = [(k,v) for k,v in d.iteritems()]
+        sampled_dict = utils.sample_dict(d,2,False)
+        self.assertEqual(sampled_dict,expected_dict)
+        sampled_dict_random = utils.sample_dict(d,2)
+        if sampled_dict_random in expected_dict_random:
+            self.assertTrue(True)    
+
 
 
 if __name__ == '__main__':
