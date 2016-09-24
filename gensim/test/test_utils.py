@@ -81,6 +81,19 @@ class TestUtils(unittest.TestCase):
         expected = u'It\x92s the Year of the Horse. YES VIN DIESEL \U0001f64c \U0001f4af'
         self.assertEquals(utils.decode_htmlentities(body), expected)
 
+class TestSampleDict(unittest.TestCase):
+    def test_sample_dict(self):
+    	size_dict = [0,1,5,10,100]
+    	n = [0,1,5,100]
+    	use_random = [True,False]
+    	for i in size_dict:
+    	    d = {}
+    	    for j in range(i):
+    	    	d[j] = j+1
+    	    for n_i in n:
+    	    	for rand in use_random:
+    	    	    self.assertTrue(utils.sample_dict(d,n_i,rand))
+
 
 if __name__ == '__main__':
     logging.root.setLevel(logging.WARNING)
