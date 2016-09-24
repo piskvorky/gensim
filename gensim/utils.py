@@ -1164,4 +1164,4 @@ def sample_dict(d, n=10, use_random=True):
      selected_keys = [(key, d[key]) for key in selected_keys]
      if selected_keys is not None:
 		return True,selected_keys
-     return False	
+     return False,None
