@@ -1161,7 +1161,4 @@ def sample_dict(d, n=10, use_random=True):
      according to natural dict iteration.
      """
      selected_keys = random.sample(d, min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
-     selected_keys = [(key, d[key]) for key in selected_keys]
-     if selected_keys is not None:
-		return True,selected_keys
-     return False,None
+     return [(key, d[key]) for key in selected_keys]
