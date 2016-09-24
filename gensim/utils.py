@@ -42,7 +42,7 @@ import scipy.sparse
 if sys.version_info[0] >= 3:
     unicode = str
 
-from six import iteritems, u, string_types, unichr
+from six import iterkeys, iteritems, u, string_types, unichr
 from six.moves import xrange
 
 try:
