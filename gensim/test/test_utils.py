@@ -92,7 +92,8 @@ class TestSampleDict(unittest.TestCase):
     	    	d[j] = j+1
     	    for n_i in n:
     	    	for rand in use_random:
-    	    	    self.assertTrue(utils.sample_dict(d,n_i,rand))
+    	    	    boolval, dictionary = utils.sample_dict(d,n_i,rand)
+    	    	    self.assertTrue(boolval)
 
 
 if __name__ == '__main__':
