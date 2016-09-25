@@ -5,7 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-
+Author-topic model.
 """
 
 import logging
@@ -28,17 +28,17 @@ except ImportError:
 logger = logging.getLogger('gensim.models.atmodel')
 
 def get_random_state(seed):
-     """ Turn seed into a np.random.RandomState instance.
+    """ Turn seed into a np.random.RandomState instance.
          Method originally from maciejkula/glove-python, and written by @joshloyal
-     """
-     if seed is None or seed is numpy.random:
-         return numpy.random.mtrand._rand
-     if isinstance(seed, (numbers.Integral, numpy.integer)):
-         return numpy.random.RandomState(seed)
-     if isinstance(seed, numpy.random.RandomState):
+    """
+    if seed is None or seed is numpy.random:
+        return numpy.random.mtrand._rand
+    if isinstance(seed, (numbers.Integral, numpy.integer)):
+        return numpy.random.RandomState(seed)
+    if isinstance(seed, numpy.random.RandomState):
         return seed
-     raise ValueError('%r cannot be used to seed a numpy.random.RandomState'
-                      ' instance' % seed)
+    raise ValueError('%r cannot be used to seed a numpy.random.RandomState'
+            ' instance' % seed)
 
 
 class AtVb:
@@ -48,9 +48,9 @@ class AtVb:
     # TODO: inherit interfaces.TransformationABC.
 
     def __init__(self, corpus=None, num_topics=100, id2word=None,
-                 author2doc=None, doc2author=None, threshold=0.001,
-                 iterations=10, alpha=None, eta=None,
-                 eval_every=10):
+            author2doc=None, doc2author=None, threshold=0.001,
+            iterations=10, alpha=None, eta=None,
+            eval_every=10):
 
         if alpha is None:
             alpha = 50 / num_topics
@@ -61,7 +61,7 @@ class AtVb:
         if corpus is None and self.id2word is None:
             raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
 
-	if self.id2word is None:
+        if self.id2word is None:
             logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
@@ -71,7 +71,7 @@ class AtVb:
             self.num_terms = 0
 
         if self.num_terms == 0:
-	    raise ValueError("cannot compute LDA over an empty collection (no terms)")
+            raise ValueError("cannot compute LDA over an empty collection (no terms)")
 
         self.corpus = corpus
         self.iterations = iterations
@@ -90,16 +90,16 @@ class AtVb:
         if corpus is not None and author2doc is not None and doc2author is not None:
             self.inference(corpus, author2doc, doc2author)
 
-    def inference(corpus=None, author2doc=None, doc2author=None):
+    def inference(self, corpus=None, author2doc=None, doc2author=None):
         if corpus is None:
             corpus = self.corpus
 
         # Initial value of gamma and lambda.
         # NOTE: parameters of gamma distribution same as in `ldamodel`.
         var_gamma_init = self.random_state.gamma(100., 1. / 100.,
-                                   (self.num_authors, self.num_topics))
+                (self.num_authors, self.num_topics))
         var_lambda_init = self.random_state.gamma(100., 1. / 100.,
-                                    (self.num_topics, self.num_terms))
+                (self.num_topics, self.num_terms))
 
         var_gamma = numpy.zeros((self.num_authors, self.num_topics))
         for a in xrange(self.num_authors):
@@ -128,7 +128,7 @@ class AtVb:
         Elogtheta = dirichlet_expectation(var_gamma)
         Elogbeta = dirichlet_expectation(var_lambda)
         expElogbeta = numpy.exp(Elogbeta)
-        likelihood = eval_likelihood(docs=corpus, Elogtheta, Elogbeta)
+        likelihood = eval_likelihood(Elogtheta, Elogbeta)
         for iteration in xrange(self.iterations):
             # Update phi.
             for d, doc in enumerate(corpus):
@@ -211,14 +211,14 @@ class AtVb:
             # Evaluate likelihood.
             if (iteration + 1) % self.eval_every == 0:
                 prev_likelihood = likelihood
-                likelihood = eval_likelihood(docs=corpus, Elogtheta, Elogbeta)
+                likelihood = eval_likelihood(Elogtheta, Elogbeta)
                 if numpy.abs(likelihood - prev_likelihood) / prev_likelihood < self.threshold:
                     break
         # End of update loop (iterations).
 
         return var_gamma, var_lambda
 
-    def eval_likelihood(doc_ids=None, Elogtheta, Elogbeta):
+    def eval_likelihood(self, Elogtheta, Elogbeta, doc_ids=None):
         """
         Compute the conditional liklihood of a set of documents,
 
