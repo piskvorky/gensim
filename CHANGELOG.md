@@ -2,8 +2,10 @@ Changes
 =======
 
 0.13.2, 2016-08-19
-
-* wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, [#771](https://github.com/RaRe-Technologies/gensim/pull/771)) 
+* export_phrases in Phrases model changed. Fixed issue #794 and added test cases in test/test_phrases.py(@AadityaJ,
+[#879](https://github.com/RaRe-Technologies/gensim/pull/879))
+    - bigram construction can now support multiple bigrams within one sentence
+* wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, [#771](https://github.com/RaRe-Technologies/gensim/pull/771))
   - assigning wordtopics value of word_topics to keep backward compatibility, for now
 * topics, topn parameters changed to num_topics and num_words in show_topics() and print_topics()(@droudy, [#755](https://github.com/RaRe-Technologies/gensim/pull/755))
   - In hdpmodel and dtmmodel
@@ -45,7 +47,7 @@ Changes
 * Control whether to use lowercase for computing word2vec accuracy. (@alantian, #607)
 * Easy import of GloVe vectors using Gensim (Manas Ranjan Kar, #625)
   - Allow easy port of GloVe vectors into Gensim
-  - Standalone script with command line arguments, compatible with Python>=2.6 
+  - Standalone script with command line arguments, compatible with Python>=2.6
   - Usage: python -m gensim.scripts.glove2word2vec -i glove_vectors.txt -o output_word2vec_compatible.txt
 * Add `similar_by_word()` and `similar_by_vector()` to word2vec (@isohyt, #381)
 * Convenience method for similarity of two out of training sentences to doc2vec (@ellolo, #707)
