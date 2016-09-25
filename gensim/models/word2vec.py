@@ -1539,13 +1539,13 @@ class Word2Vec(utils.SaveLoad):
           True
 
         """
-        try:
-            assert(len(ws1)>0 and len(ws2)>0)
+        if len(ws1) > 0 and len(ws2) > 0:
             v1 = [self[word] for word in ws1]
             v2 = [self[word] for word in ws2]
-            return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
-        except AssertionError:
-            raise ZeroDivisionError("Atleast one of the passed list is empty.")
+            return dot(matutils.unitvec(array(v1).mean(axis=0)),
+                       matutils.unitvec(array(v2).mean(axis=0)))
+        else:
+            raise ZeroDivisionError('Atleast one of the passed list is empty.')
             return
         
 
