@@ -123,8 +123,7 @@ class TestWord2VecModel(unittest.TestCase):
         f = open(tfile, 'r+b')
         f.write(b'13')  # write wrong (too-long) vector count
         f.close()
-        self.
-        (EOFError, word2vec.Word2Vec.load_word2vec_format, tfile, binary=True)
+        self.assertRaises(EOFError, word2vec.Word2Vec.load_word2vec_format, tfile, binary=True)
 
     def testTooShortTextWord2VecFormat(self):
         tfile = testfile()
