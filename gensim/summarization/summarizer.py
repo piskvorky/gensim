@@ -159,7 +159,7 @@ def summarize_corpus(corpus, ratio=0.2):
     _remove_unreachable_nodes(graph)
 
     # If the number of nodes < 3, the function ends.
-    if len(graph.nodes) < 3:
+    if len(graph.nodes()) < 3:
         logger.warning("Please add more sentences to the text. The number of reachable nodes is below 3")
         return
 
