@@ -123,7 +123,8 @@ class TestWord2VecModel(unittest.TestCase):
         f = open(tfile, 'r+b')
         f.write(b'13')  # write wrong (too-long) vector count
         f.close()
-        self.assertRaises(EOFError, word2vec.Word2Vec.load_word2vec_format, tfile, binary=True)
+        self.
+        (EOFError, word2vec.Word2Vec.load_word2vec_format, tfile, binary=True)
 
     def testTooShortTextWord2VecFormat(self):
         tfile = testfile()
@@ -373,9 +374,10 @@ class TestWord2VecModel(unittest.TestCase):
         
         self.assertTrue(model.n_similarity(['graph', 'trees'], ['trees', 'graph']))
         self.assertTrue(model.n_similarity(['graph'], ['trees']) == model.similarity('graph', 'trees'))
-        self.assertRaises(ZeroDivisionError,model.n_similarity(['graph', 'trees'], []))
-        self.assertRaises(ZeroDivisionError,model.n_similarity([], []))
-        self.assertRaises(ZeroDivisionError,model.n_similarity([], ['graph', 'trees']))
+        with self.assertRaises(ZeroDivisionError):
+            model.n_similarity(['graph', 'trees'], [])
+            model.n_similarity([], [])
+            model.n_similarity([], ['graph', 'trees'])
 
     def testSimilarBy(self):
         """Test word2vec similar_by_word and similar_by_vector."""
