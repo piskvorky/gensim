@@ -10,7 +10,7 @@ This module contains various general utility functions.
 
 from __future__ import with_statement
 
-import logging
+import logging, warnings
 
 logger = logging.getLogger(__name__)
 
@@ -836,7 +836,7 @@ class InputQueue(multiprocessing.Process):
 
 
 if os.name == 'nt':
-    logger.info("detected Windows; aliasing chunkize to chunkize_serial")
+    warnings.warn("detected Windows; aliasing chunkize to chunkize_serial")
 
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
@@ -1011,7 +1011,7 @@ def has_pattern():
         from pattern.en import parse
         pattern = True
     except ImportError:
-        logger.info("Pattern library is not installed, lemmatization won't be available.")
+        warnings.warn("Pattern library is not installed, lemmatization won't be available.")
     return pattern
 
 
