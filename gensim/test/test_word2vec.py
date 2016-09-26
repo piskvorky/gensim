@@ -54,6 +54,11 @@ sentences = [
     ['graph', 'minors', 'survey']
 ]
 
+new_sentences = [
+    ['computer', 'artificial', 'intelligence'],
+    ['artificial', 'trees']
+]
+
 def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_word2vec.tst')
@@ -97,6 +102,27 @@ class TestWord2VecModel(unittest.TestCase):
         rule = lambda word, count, min_count: utils.RULE_DISCARD if word == "human" else utils.RULE_DEFAULT
         model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule)
         self.assertTrue("human" not in model.vocab)
+
+class TestWord2VecModel(unittest.TestCase):
+    def testOnlineLearning(self):
+        """Test that the algorithm is able to add new words to the
+        vocabulary and to a trained model"""
+        model = word2vec.Word2Vec(sentences, min_count=1, sorted_vocab=0)
+        model.build_vocab(new_sentences, update=True)
+        model.train(new_sentences)
+        self.assertEqual(len(model.vocab), 14)
+        self.assertEqual(model.syn0.shape[0], 14)
+        self.assertEqual(model.syn0.shape[1], 100)
+
+    def testOnlineLearning(self):
+        """Test that the algorithm is able to add new words to the
+        vocabulary and to a trained model when using a sorted vocabulary"""
+        model = word2vec.Word2Vec(sentences, min_count=0, sorted_vocab=0)
+        model.build_vocab(new_sentences, update=True)
+        model.train(new_sentences)
+        self.assertEqual(len(model.vocab), 14)
+        self.assertEqual(model.syn0.shape[0], 14)
+        self.assertEqual(model.syn0.shape[1], 100)
 
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
