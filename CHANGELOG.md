@@ -1,7 +1,7 @@
 Changes
 =======
 
-0.13.2, 2016-09-25
+0.13.2, 2016-08-19
 
 * Fixed issue #743 , In word2vec's n_similarity method if atleast one empty list is passed ZeroDivisionError is raised.
 * export_phrases in Phrases model changed. Fixed issue #794 and added test cases in test/test_phrases.py(@AadityaJ, #879) bigram construction can now support multiple bigrams within one sentence
