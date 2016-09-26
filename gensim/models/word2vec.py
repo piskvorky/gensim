@@ -1873,7 +1873,7 @@ if __name__ == "__main__":
 
     logger.info("finished running %s", program)
     
-    def methodize(func, instance):
+def methodize(func, instance):
     return MethodType(func, instance, instance.__class__)
 
 
