@@ -55,6 +55,8 @@ from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pa
 from six.moves import xrange, zip
 from six import string_types, integer_types, itervalues
 
+from types import MethodType
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -608,6 +610,10 @@ class Doc2Vec(Word2Vec):
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
+        
+        self.load = methodize(load, self)
+        self.load_word2vec_format = methodize(load, self)
+        
         if self.dm and self.dm_concat:
             self.layer1_size = (self.dm_tag_count + (2 * self.window)) * self.vector_size
         else:
