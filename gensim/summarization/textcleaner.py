@@ -8,6 +8,7 @@ from gensim.parsing.preprocessing import preprocess_documents
 from gensim.utils import tokenize
 from six.moves import xrange
 import re
+import warnings
 import logging
 
 logger = logging.getLogger('summa.preprocessing.cleaner')
@@ -17,7 +18,7 @@ try:
     logger.info("'pattern' package found; tag filters are available for English")
     HAS_PATTERN = True
 except ImportError:
-    logger.info("'pattern' package not found; tag filters are not available for English")
+    warnings.warn("'pattern' package not found; tag filters are not available for English")
     HAS_PATTERN = False
 
 

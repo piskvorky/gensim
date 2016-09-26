@@ -1,8 +1,8 @@
 Changes
 =======
-
 0.13.3, 2016-09-26
 * Fixed issue #743 , In word2vec's n_similarity method if atleast one empty list is passed ZeroDivisionError is raised, added test cases in test/test_word2vec.py(@pranay360, #883)
+* Changed log message to warning as suggested in issue #828 (@544895340, [#832](https://github.com/RaRe-Technologies/gensim/pull/832))
 
 0.13.2, 2016-08-19
 * export_phrases in Phrases model changed. Fixed issue #794 and added test cases in test/test_phrases.py(@AadityaJ,
