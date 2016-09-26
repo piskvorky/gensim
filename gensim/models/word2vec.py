@@ -1539,7 +1539,7 @@ class Word2Vec(utils.SaveLoad):
           True
 
         """
-        if not(len(ws1) > 0 and len(ws2) > 0):
+        if not(len(ws1) and len(ws2)):
             raise ZeroDivisionError('Atleast one of the passed list is empty.')
         v1 = [self[word] for word in ws1]
         v2 = [self[word] for word in ws2]
