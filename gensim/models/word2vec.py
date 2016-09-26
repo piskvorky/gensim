@@ -1876,6 +1876,7 @@ def methodize(func, instance):
 def load(self, *args, **kwargs):
     logger.warn("Load was called on instance. Calling on class instead")
     Word2Vec.load(*args, **kwargs)
+	
 def load_word2vec_format(self, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
                              limit=None, datatype=REAL):
 	logger.warn("Load was called on instance. Calling on class instead")
