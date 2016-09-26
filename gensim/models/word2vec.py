@@ -94,6 +94,7 @@ from gensim.corpora.dictionary import Dictionary
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
+from types import MethodType
 
 logger = logging.getLogger(__name__)
 
