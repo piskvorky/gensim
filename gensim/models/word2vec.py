@@ -87,7 +87,7 @@ except ImportError:
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray
+    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray, concatenate
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
@@ -514,17 +514,17 @@ class Word2Vec(utils.SaveLoad):
 
             logger.info("built huffman tree with maximum node depth %i", max_depth)
 
-    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000):
+    def build_vocab(self, sentences, keep_raw_vocab=False, trim_rule=None, progress_per=10000, update=False):
         """
         Build vocabulary from a sequence of sentences (can be a once-only generator stream).
         Each sentence must be a list of unicode strings.
 
         """
-        self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule)  # initial survey
-        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule)  # trim by min_count & precalculate downsampling
-        self.finalize_vocab()  # build tables & arrays
+        self.scan_vocab(sentences, progress_per=progress_per, trim_rule=trim_rule, update=update)  # initial survey
+        self.scale_vocab(keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, update=update)  # trim by min_count & precalculate downsampling
+        self.finalize_vocab(update=update)  # build tables & arrays
 
-    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None):
+    def scan_vocab(self, sentences, progress_per=10000, trim_rule=None, update=False):
         """Do an initial scan of all words appearing in sentences."""
         logger.info("collecting all words and their counts")
         sentence_no = -1
@@ -544,9 +544,10 @@ class Word2Vec(utils.SaveLoad):
             for word in sentence:
                 vocab[word] += 1
 
-            if self.max_vocab_size and len(vocab) > self.max_vocab_size:
-                total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
-                min_reduce += 1
+            if not update:
+                if self.max_vocab_size and len(vocab) > self.max_vocab_size:
+                    total_words += utils.prune_vocab(vocab, min_reduce, trim_rule=trim_rule)
+                    min_reduce += 1
 
         total_words += sum(itervalues(vocab))
         logger.info("collected %i word types from a corpus of %i raw words and %i sentences",
@@ -554,7 +555,7 @@ class Word2Vec(utils.SaveLoad):
         self.corpus_count = sentence_no + 1
         self.raw_vocab = vocab
 
-    def scale_vocab(self, min_count=None, sample=None, dry_run=False, keep_raw_vocab=False, trim_rule=None):
+    def scale_vocab(self, min_count=None, sample=None, dry_run=False, keep_raw_vocab=False, trim_rule=None, update=False):
         """
         Apply vocabulary settings for `min_count` (discarding less-frequent words)
         and `sample` (controlling the downsampling of more-frequent words).
@@ -570,28 +571,50 @@ class Word2Vec(utils.SaveLoad):
         """
         min_count = min_count or self.min_count
         sample = sample or self.sample
-
-        # Discard words less-frequent than min_count
-        if not dry_run:
-            self.index2word = []
-            # make stored settings match these applied settings
-            self.min_count = min_count
-            self.sample = sample
-            self.vocab = {}
         drop_unique, drop_total, retain_total, original_total = 0, 0, 0, 0
         retain_words = []
-        for word, v in iteritems(self.raw_vocab):
-            if keep_vocab_item(word, v, min_count, trim_rule=trim_rule):
-                retain_words.append(word)
-                retain_total += v
-                original_total += v
-                if not dry_run:
-                    self.vocab[word] = Vocab(count=v, index=len(self.index2word))
-                    self.index2word.append(word)
-            else:
-                drop_unique += 1
-                drop_total += v
-                original_total += v
+
+        if not update:
+            logger.info("Loading a fresh vocabulary")
+            # Discard words less-frequent than min_count
+            if not dry_run:
+                self.index2word = []
+                # make stored settings match these applied settings
+                self.min_count = min_count
+                self.sample = sample
+                self.vocab = {}
+
+            for word, v in iteritems(self.raw_vocab):
+                if keep_vocab_item(word, v, min_count, trim_rule=trim_rule):
+                    retain_words.append(word)
+                    retain_total += v
+                    original_total += v
+                    if not dry_run:
+                        self.vocab[word] = Vocab(count=v,
+                                    index=len(self.index2word))
+                        self.index2word.append(word)
+                else:
+                    drop_unique += 1
+                    drop_total += v
+                    original_total += v
+        else:
+            logger.info("Updating model with new vocabulary")
+            for word, v in iteritems(self.raw_vocab):
+                if keep_vocab_item(word, v, min_count, trim_rule=trim_rule):
+                    retain_words.append(word)
+                    retain_total += v
+                    original_total += v
+                    if not dry_run:
+                        if word in self.vocab:
+                            self.vocab[word].count += v
+                        else:
+                            self.vocab[word] = Vocab(count=v, index=len(self.index2word))
+                            self.index2word.append(word)
+                else:
+                    drop_unique += 1
+                    drop_total += v
+                    original_total += v
+
         logger.info("min_count=%d retains %i unique words (drops %i)",
                     min_count, len(retain_words), drop_unique)
         logger.info("min_count leaves %i word corpus (%i%% of original %i)",
@@ -638,11 +661,11 @@ class Word2Vec(utils.SaveLoad):
 
         return report_values
 
-    def finalize_vocab(self):
+    def finalize_vocab(self, update=False):
         """Build tables and model weights based on final vocabulary settings."""
         if not self.index2word:
-            self.scale_vocab()
-        if self.sorted_vocab:
+            self.scale_vocab(False)
+        if self.sorted_vocab and not update:
             self.sort_vocab()
         if self.hs:
             # add info about each word's Huffman encoding
@@ -658,7 +681,10 @@ class Word2Vec(utils.SaveLoad):
             self.index2word.append(word)
             self.vocab[word] = v
         # set initial input/projection and hidden weights
-        self.reset_weights()
+        if not update:
+            self.reset_weights()
+        else:
+            self.update_weights()
 
     def sort_vocab(self):
         """Sort the vocabulary so the most frequent words have the lowest indexes."""
@@ -1002,6 +1028,30 @@ class Word2Vec(utils.SaveLoad):
 
     def clear_sims(self):
         self.syn0norm = None
+
+    def update_weights(self):
+        """
+        Copy all the existing weights, and reset the weights for the newly
+        added vocabulary.
+        """
+        logger.info("updating layer weights")
+        gained_vocab = len(self.vocab) - len(self.syn0)
+        newsyn0 = empty((gained_vocab, self.vector_size), dtype=REAL)
+
+        # randomize the remaining words
+        for i in xrange(len(self.syn0), len(self.vocab)):
+            # construct deterministic seed from word AND seed argument
+            newsyn0[i-len(self.syn0)] = self.seeded_vector(self.index2word[i] + str(self.seed))
+        self.syn0 = concatenate([self.syn0, newsyn0])
+
+        if self.hs:
+            self.syn1 = concatenate([self.syn1, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
+        if self.negative:
+            self.syn1neg = concatenate([self.syn1neg, zeros((gained_vocab, self.layer1_size), dtype=REAL)])
+        self.syn0norm = None
+
+        # do not suppress learning for already learned words
+        self.syn0_lockf = ones(len(self.vocab), dtype=REAL)  # zeros suppress learning
 
     def reset_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
