@@ -452,6 +452,9 @@ class Word2Vec(utils.SaveLoad):
         self.total_train_time = 0
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
+        
+        self.load = methodize(load, self)
+        self.load_word2vec_format = methodize(load, self)
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
@@ -1869,3 +1872,33 @@ if __name__ == "__main__":
         model.accuracy(args.accuracy)
 
     logger.info("finished running %s", program)
+    
+    def methodize(func, instance):
+    return MethodType(func, instance, instance.__class__)
+
+
+def load(self, *args, **kwargs):
+    logger.warn('Load was called on instance. Calling on class instead')
+    Word2Vec.load(*args, **kwargs)
+
+
+def load_word2vec_format(
+    self,
+    fname,
+    fvocab=None,
+    binary=False,
+    encoding='utf8',
+    unicode_errors='strict',
+    limit=None,
+    datatype=REAL,
+    ):
+    logger.warn('Load was called on instance. Calling on class instead')
+    Word2Vec.load_word2vec_format(
+        fname,
+        fvocab=None,
+        binary=False,
+        encoding='utf8',
+        unicode_errors='strict',
+        limit=None,
+        datatype=REAL,
+        )
