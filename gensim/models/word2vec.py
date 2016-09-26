@@ -94,7 +94,6 @@ from gensim.corpora.dictionary import Dictionary
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
-from types import MethodType
 
 logger = logging.getLogger(__name__)
 
@@ -1543,9 +1542,13 @@ class Word2Vec(utils.SaveLoad):
           True
 
         """
+        if not(len(ws1) and len(ws2)):
+            raise ZeroDivisionError('Atleast one of the passed list is empty.')
         v1 = [self[word] for word in ws1]
         v2 = [self[word] for word in ws2]
-        return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
+        return dot(matutils.unitvec(array(v1).mean(axis=0)),
+                   matutils.unitvec(array(v2).mean(axis=0)))
+        
 
     def init_sims(self, replace=False):
         """
@@ -1684,8 +1687,8 @@ class Word2Vec(utils.SaveLoad):
     save.__doc__ = utils.SaveLoad.save.__doc__
 
     @classmethod
-    def load(cls, *args, **kwargs):        
-		model = super(Word2Vec, cls).load(*args, **kwargs)   
+    def load(cls, *args, **kwargs):
+        model = super(Word2Vec, cls).load(*args, **kwargs)
         # update older models
         if hasattr(model, 'table'):
             delattr(model, 'table')  # discard in favor of cum_table
@@ -1869,17 +1872,33 @@ if __name__ == "__main__":
         model.accuracy(args.accuracy)
 
     logger.info("finished running %s", program)
-    
+
 def methodize(func, instance):
     return MethodType(func, instance, instance.__class__)
 
+
 def load(self, *args, **kwargs):
-    logger.warn("Load was called on instance. Calling on class instead")
+    logger.warn('Load was called on instance. Calling on class instead')
     Word2Vec.load(*args, **kwargs)
-	
-def load_word2vec_format(self, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                             limit=None, datatype=REAL):
-	logger.warn("Load was called on instance. Calling on class instead")
-	Word2Vec.load_word2vec_format(fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                             limit=None, datatype=REAL)
-			
+
+
+def load_word2vec_format(
+    self,
+    fname,
+    fvocab=None,
+    binary=False,
+    encoding='utf8',
+    unicode_errors='strict',
+    limit=None,
+    datatype=REAL,
+    ):
+    logger.warn('Load was called on instance. Calling on class instead')
+    Word2Vec.load_word2vec_format(
+        fname,
+        fvocab=None,
+        binary=False,
+        encoding='utf8',
+        unicode_errors='strict',
+        limit=None,
+        datatype=REAL,
+        )
