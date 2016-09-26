@@ -43,7 +43,7 @@ import scipy.sparse
 if sys.version_info[0] >= 3:
     unicode = str
 
-from six import iteritems, u, string_types, unichr
+from six import iterkeys, iteritems, u, string_types, unichr
 from six.moves import xrange
 
 try:
@@ -1153,3 +1153,12 @@ def check_output(*popenargs, **kwargs):
     except KeyboardInterrupt:
         process.terminate()
         raise
+
+def sample_dict(d, n=10, use_random=True):
+     """
+     Pick `n` items from dictionary `d` and return them as a list.
+     The items are picked randomly if `use_random` is True, otherwise picked
+     according to natural dict iteration.
+     """
+     selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
+     return [(key, d[key]) for key in selected_keys]

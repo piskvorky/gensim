@@ -433,7 +433,7 @@ class Word2Vec(utils.SaveLoad):
         if size % 4 != 0:
             logger.warning("consider setting layer size to a multiple of 4 for greater performance")
         self.alpha = float(alpha)
-        self.min_alpha_yet_reached = float(alpha) # To warn user if alpha increases
+        self.min_alpha_yet_reached = float(alpha)  # To warn user if alpha increases
         self.window = int(window)
         self.max_vocab_size = max_vocab_size
         self.seed = seed
@@ -477,8 +477,8 @@ class Word2Vec(utils.SaveLoad):
         train_words_pow = float(sum([self.vocab[word].count**power for word in self.vocab]))
         cumulative = 0.0
         for word_index in range(vocab_size):
-            cumulative += self.vocab[self.index2word[word_index]].count**power / train_words_pow
-            self.cum_table[word_index] = round(cumulative * domain)
+            cumulative += self.vocab[self.index2word[word_index]].count**power
+            self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
             assert self.cum_table[-1] == domain
 
@@ -719,9 +719,9 @@ class Word2Vec(utils.SaveLoad):
 
         logger.info(
             "training model with %i workers on %i vocabulary and %i features, "
-            "using sg=%s hs=%s sample=%s negative=%s",
+            "using sg=%s hs=%s sample=%s negative=%s window=%s",
             self.workers, len(self.vocab), self.layer1_size, self.sg,
-            self.hs, self.sample, self.negative)
+            self.hs, self.sample, self.negative, self.window)
 
         if not self.vocab:
             raise RuntimeError("you must first build vocabulary before training the model")
@@ -1539,9 +1539,13 @@ class Word2Vec(utils.SaveLoad):
           True
 
         """
+        if not(len(ws1) and len(ws2)):
+            raise ZeroDivisionError('Atleast one of the passed list is empty.')
         v1 = [self[word] for word in ws1]
         v2 = [self[word] for word in ws2]
-        return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
+        return dot(matutils.unitvec(array(v1).mean(axis=0)),
+                   matutils.unitvec(array(v2).mean(axis=0)))
+        
 
     def init_sims(self, replace=False):
         """
@@ -1602,8 +1606,8 @@ class Word2Vec(utils.SaveLoad):
         In case `case_insensitive` is True, the first `restrict_vocab` words are taken first, and then
         case normalization is performed.
 
-        Use `case_insensitive` to convert all words in questions and vocab to their uppercase form before 
-        evaluating the accuracy (default True). Useful in case of case-mismatch between training tokens 
+        Use `case_insensitive` to convert all words in questions and vocab to their uppercase form before
+        evaluating the accuracy (default True). Useful in case of case-mismatch between training tokens
         and question words. In case of multiple case variants of a single word, the vector for the first
         occurrence (also the most frequent if vocabulary is sorted) is taken.
 

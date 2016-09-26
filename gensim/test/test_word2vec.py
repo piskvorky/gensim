@@ -370,9 +370,12 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(size=2, min_count=1, sg=0, hs=0, negative=2)
         model.build_vocab(sentences)
         model.train(sentences)
-
+        
         self.assertTrue(model.n_similarity(['graph', 'trees'], ['trees', 'graph']))
         self.assertTrue(model.n_similarity(['graph'], ['trees']) == model.similarity('graph', 'trees'))
+        self.assertRaises(ZeroDivisionError, model.n_similarity, ['graph', 'trees'], [])
+        self.assertRaises(ZeroDivisionError, model.n_similarity, [], ['graph', 'trees'])
+        self.assertRaises(ZeroDivisionError, model.n_similarity, [], [])
 
     def testSimilarBy(self):
         """Test word2vec similar_by_word and similar_by_vector."""

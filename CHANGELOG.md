@@ -8,7 +8,7 @@ Changes
 * export_phrases in Phrases model changed. Fixed issue #794 and added test cases in test/test_phrases.py(@AadityaJ,
 [#879](https://github.com/RaRe-Technologies/gensim/pull/879))
     - bigram construction can now support multiple bigrams within one sentence
-* wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, [#771](https://github.com/RaRe-Technologies/gensim/pull/771)) 
+* wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, [#771](https://github.com/RaRe-Technologies/gensim/pull/771))
   - assigning wordtopics value of word_topics to keep backward compatibility, for now
 * topics, topn parameters changed to num_topics and num_words in show_topics() and print_topics()(@droudy, [#755](https://github.com/RaRe-Technologies/gensim/pull/755))
   - In hdpmodel and dtmmodel
@@ -28,7 +28,7 @@ Changes
 * Update Corpora_and_Vector_Spaces.ipynb (@megansquire, [#772](https://github.com/RaRe-Technologies/gensim/pull/772))
 * DTM wrapper bug fixes caused by renaming num_words in #755 (@bhargavvader,  [#770](https://github.com/RaRe-Technologies/gensim/pull/770))
 * Add LsiModel.docs_processed attribute (@hobson, [#763](https://github.com/RaRe-Technologies/gensim/pull/763))
-* Dynamic Topic Modelling in Python. Google Summer of Code 2016 project. (@bhargavvader, [#739](https://github.com/RaRe-Technologies/gensim/pull/739))
+* Dynamic Topic Modelling in Python. Google Summer of Code 2016 project. (@bhargavvader, [#739, #831](https://github.com/RaRe-Technologies/gensim/pull/739))
 
 0.13.1, 2016-06-22
 
@@ -50,7 +50,7 @@ Changes
 * Control whether to use lowercase for computing word2vec accuracy. (@alantian, #607)
 * Easy import of GloVe vectors using Gensim (Manas Ranjan Kar, #625)
   - Allow easy port of GloVe vectors into Gensim
-  - Standalone script with command line arguments, compatible with Python>=2.6 
+  - Standalone script with command line arguments, compatible with Python>=2.6
   - Usage: python -m gensim.scripts.glove2word2vec -i glove_vectors.txt -o output_word2vec_compatible.txt
 * Add `similar_by_word()` and `similar_by_vector()` to word2vec (@isohyt, #381)
 * Convenience method for similarity of two out of training sentences to doc2vec (@ellolo, #707)
