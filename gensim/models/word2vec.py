@@ -94,6 +94,7 @@ from gensim.corpora.dictionary import Dictionary
 from six import iteritems, itervalues, string_types
 from six.moves import xrange
 from types import GeneratorType
+from types import MethodType
 
 logger = logging.getLogger(__name__)
 
@@ -452,6 +453,9 @@ class Word2Vec(utils.SaveLoad):
         self.total_train_time = 0
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
+        
+        self.load = methodize(load, self)
+        self.load_word2vec_format = methodize(load, self)
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
@@ -1680,8 +1684,8 @@ class Word2Vec(utils.SaveLoad):
     save.__doc__ = utils.SaveLoad.save.__doc__
 
     @classmethod
-    def load(cls, *args, **kwargs):
-        model = super(Word2Vec, cls).load(*args, **kwargs)
+    def load(cls, *args, **kwargs):        
+		model = super(Word2Vec, cls).load(*args, **kwargs)   
         # update older models
         if hasattr(model, 'table'):
             delattr(model, 'table')  # discard in favor of cum_table
@@ -1865,3 +1869,13 @@ if __name__ == "__main__":
         model.accuracy(args.accuracy)
 
     logger.info("finished running %s", program)
+    
+def methodize(func, instance):
+    return MethodType(func, instance, instance.__class__)
+
+def load(self):
+    logger.warn("Load was called on instanc. Calling on class instead")
+    Word2Vec.load()
+def load_word2vec_format(self):
+	logger.warn("Load was called on instanc. Calling on class instead")
+	Word2Vec.load_word2vec_format()
