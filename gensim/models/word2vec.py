@@ -273,7 +273,14 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.syn0[word2.index], if that is l1)
     return neu1e
 
-
+def sigmoid(p):
+    if p > 0:
+        return 1. / (1. + exp(-p))
+    elif p <= 0:
+        exp(p) / (1 + exp(p))
+    else:
+        raise ValueError
+        
 def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
     neu1e = zeros(l1.shape)
 
@@ -293,7 +300,7 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
             if w != word.index:
                 word_indices.append(w)
         l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
-        fb = 1. / (1. + exp(-dot(l1, l2b.T)))  # propagate hidden -> output
+        fb = sigmoid(dot(l1, l2b.T))  # propagate hidden -> output
         gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
