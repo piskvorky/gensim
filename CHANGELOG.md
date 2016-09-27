@@ -2,12 +2,15 @@ Changes
 =======
 
 0.13.3, 2016-09-26
-* Fixed issue #743 , In word2vec's n_similarity method if atleast one empty list is passed ZeroDivisionError is raised, added test cases in test/test_word2vec.py(@pranay360, #883)
 
-0.13.2, 2016-08-19
-* export_phrases in Phrases model changed. Fixed issue #794 and added test cases in test/test_phrases.py(@AadityaJ,
+* Fixed issue #743 , In word2vec's n_similarity method if atleast one empty list is passed ZeroDivisionError is raised, added test cases in test/test_word2vec.py(@pranay360, #883)
+* Added Save/Load interface to AnnoyIndexer for ondex persistence (@fortiema, [#845](https://github.com/RaRe-Technologies/gensim/pull/845))
+* Change export_phrases in Phrases model. Fix issue #794 (@AadityaJ,
 [#879](https://github.com/RaRe-Technologies/gensim/pull/879))
     - bigram construction can now support multiple bigrams within one sentence
+
+0.13.2, 2016-08-19
+
 * wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, [#771](https://github.com/RaRe-Technologies/gensim/pull/771))
   - assigning wordtopics value of word_topics to keep backward compatibility, for now
 * topics, topn parameters changed to num_topics and num_words in show_topics() and print_topics()(@droudy, [#755](https://github.com/RaRe-Technologies/gensim/pull/755))
