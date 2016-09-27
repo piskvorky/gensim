@@ -277,7 +277,7 @@ def sigmoid(p):
     if p > 0:
         return 1. / (1. + exp(-p))
     elif p <= 0:
-        exp(p) / (1 + exp(p))
+        return exp(p) / (1 + exp(p))
     else:
         raise ValueError
         
