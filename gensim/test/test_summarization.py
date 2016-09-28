@@ -167,7 +167,7 @@ class TestSummarizationTest(unittest.TestCase):
             text = f.read()
 
         # Generate the corpus.
-        sentences = text.split(b'\n')
+        sentences = text.split("\n")
         tokens = [sentence.split() for sentence in sentences]
         dictionary = Dictionary(tokens)
         corpus = [dictionary.doc2bow(sentence_tokens) for sentence_tokens in tokens]
