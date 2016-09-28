@@ -163,11 +163,11 @@ class TestSummarizationTest(unittest.TestCase):
     def test_low_distinct_words_corpus_summarization_is_none(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
-        with utils.smart_open(os.path.join(pre_path, "testlowdistinctwords.txt")) as f:
+        with utils.smart_open(os.path.join(pre_path, "testlowdistinctwords.txt"), mode="r") as f:
             text = f.read()
 
         # Generate the corpus.
-        sentences = text.split('\n')
+        sentences = text.split(b'\n')
         tokens = [sentence.split() for sentence in sentences]
         dictionary = Dictionary(tokens)
         corpus = [dictionary.doc2bow(sentence_tokens) for sentence_tokens in tokens]
