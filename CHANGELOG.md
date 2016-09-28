@@ -9,6 +9,8 @@ Changes
 [#879](https://github.com/RaRe-Technologies/gensim/pull/879))
     - bigram construction can now support multiple bigrams within one sentence
 * Fixed issue #838, RuntimeWarning: overflow encountered in exp  (@markroxor, [#895](https://github.com/RaRe-Technologies/gensim/pull/895))
+*  Changed some log messages to warnings as suggested in issue #828. (@rhnvrm, [#884](https://github.com/RaRe-Technologies/gensim/pull/884))
+
 
 0.13.2, 2016-08-19
 
