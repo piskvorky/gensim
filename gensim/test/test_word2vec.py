@@ -54,6 +54,15 @@ sentences = [
     ['graph', 'minors', 'survey']
 ]
 
+new_sentences = [
+    ['computer', 'artificial', 'intelligence'],
+    ['artificial', 'trees'],
+    ['human', 'intelligence'],
+    ['artificial', 'graph'],
+    ['intelligence'],
+    ['artificial', 'intelligence', 'system']
+]
+
 def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_word2vec.tst')
@@ -98,6 +107,62 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule)
         self.assertTrue("human" not in model.vocab)
 
+class TestWord2VecModel(unittest.TestCase):
+    def testOnlineLearning(self):
+        """Test that the algorithm is able to add new words to the
+        vocabulary and to a trained model when using a sorted vocabulary"""
+        model_hs = word2vec.Word2Vec(sentences, size=10, min_count=0, seed=42, hs=1, negative=0)
+        model_neg = word2vec.Word2Vec(sentences, size=10, min_count=0, seed=42, hs=0, negative=5)
+        self.assertTrue(len(model_hs.vocab), 12)
+        self.assertTrue(model_hs.vocab['graph'].count, 3)
+        model_hs.build_vocab(new_sentences, update=True)
+        model_neg.build_vocab(new_sentences, update=True)
+        self.assertTrue(model_hs.vocab['graph'].count, 4)
+        self.assertTrue(model_hs.vocab['artificial'].count, 4)
+        self.assertEqual(len(model_hs.vocab), 14)
+        self.assertEqual(len(model_neg.vocab), 14)
+
+    def onlineSanity(self, model):
+        terro, others = [], []
+        for l in list_corpus:
+            if 'terrorism' in l:
+                terro.append(l)
+            else:
+                others.append(l)
+        self.assertTrue(all(['terrorism' not in l for l in others]))
+        model.build_vocab(others)
+        model.train(others)
+        self.assertFalse('terrorism' in model.vocab)
+        model.build_vocab(terro, update=True)
+        self.assertTrue('terrorism' in model.vocab)
+        orig0 = numpy.copy(model.syn0)
+        model.train(terro)
+        self.assertFalse(numpy.allclose(model.syn0, orig0))
+        sim = model.n_similarity(['war'], ['terrorism'])
+        self.assertLess(0., sim)
+
+    def test_sg_hs_online(self):
+        """Test skipgram w/ hierarchical softmax"""
+        model = word2vec.Word2Vec(sg=1, window=4, hs=1, negative=0, min_count=5, iter=10, seed=42, workers=2)
+        self.onlineSanity(model)
+
+    def test_sg_neg_online(self):
+        """Test skipgram w/ negative sampling"""
+        model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=15, min_count=5, iter=10, seed=42, workers=2)
+        self.onlineSanity(model)
+
+    def test_cbow_hs_online(self):
+        """Test CBOW w/ hierarchical softmax"""
+        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=1, hs=1, negative=0,
+                                  min_count=5, iter=10, seed=42, workers=2, batch_words=1000)
+        self.onlineSanity(model)
+
+    def test_cbow_neg_online(self):
+        """Test CBOW w/ negative sampling"""
+        model = word2vec.Word2Vec(sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
+                                  min_count=5, iter=10, seed=42, workers=2, sample=0)
+        self.onlineSanity(model)
+
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
         model = word2vec.Word2Vec(sentences, min_count=1)
@@ -110,30 +175,6 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model.init_sims(replace=True)
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human']))
         self.assertTrue(numpy.allclose(model.syn0norm[model.vocab['human'].index], norm_only_model['human']))
-        limited_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, limit=3)
-        self.assertEquals(len(limited_model.syn0), 3)
-        half_precision_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, datatype=numpy.float16)
-        self.assertEquals(binary_model.syn0.nbytes, half_precision_model.syn0.nbytes * 2)
-
-    def testTooShortBinaryWord2VecFormat(self):
-        tfile = testfile()
-        model = word2vec.Word2Vec(sentences, min_count=1)
-        model.init_sims()
-        model.save_word2vec_format(tfile, binary=True)
-        f = open(tfile, 'r+b')
-        f.write(b'13')  # write wrong (too-long) vector count
-        f.close()
-        self.assertRaises(EOFError, word2vec.Word2Vec.load_word2vec_format, tfile, binary=True)
-
-    def testTooShortTextWord2VecFormat(self):
-        tfile = testfile()
-        model = word2vec.Word2Vec(sentences, min_count=1)
-        model.init_sims()
-        model.save_word2vec_format(tfile, binary=False)
-        f = open(tfile, 'r+b')
-        f.write(b'13')  # write wrong (too-long) vector count
-        f.close()
-        self.assertRaises(EOFError, word2vec.Word2Vec.load_word2vec_format, tfile, binary=False)
 
     def testPersistenceWord2VecFormatNonBinary(self):
         """Test storing/loading the entire model in word2vec non-binary format."""
@@ -370,12 +411,9 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(size=2, min_count=1, sg=0, hs=0, negative=2)
         model.build_vocab(sentences)
         model.train(sentences)
-        
+
         self.assertTrue(model.n_similarity(['graph', 'trees'], ['trees', 'graph']))
         self.assertTrue(model.n_similarity(['graph'], ['trees']) == model.similarity('graph', 'trees'))
-        self.assertRaises(ZeroDivisionError, model.n_similarity, ['graph', 'trees'], [])
-        self.assertRaises(ZeroDivisionError, model.n_similarity, [], ['graph', 'trees'])
-        self.assertRaises(ZeroDivisionError, model.n_similarity, [], [])
 
     def testSimilarBy(self):
         """Test word2vec similar_by_word and similar_by_vector."""
