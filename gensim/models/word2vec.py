@@ -273,7 +273,14 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.syn0[word2.index], if that is l1)
     return neu1e
 
-
+def sigmoid(p):
+    if p > 0:
+        return 1. / (1. + exp(-p))
+    elif p <= 0:
+        return exp(p) / (1 + exp(p))
+    else:
+        raise ValueError
+        
 def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
     neu1e = zeros(l1.shape)
 
@@ -293,7 +300,7 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
             if w != word.index:
                 word_indices.append(w)
         l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
-        fb = 1. / (1. + exp(-dot(l1, l2b.T)))  # propagate hidden -> output
+        fb = sigmoid(dot(l1, l2b.T))  # propagate hidden -> output
         gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
@@ -578,24 +585,26 @@ class Word2Vec(utils.SaveLoad):
             self.min_count = min_count
             self.sample = sample
             self.vocab = {}
-        drop_unique, drop_total, retain_total, original_total = 0, 0, 0, 0
+        retain_total = drop_total = drop_unique = 0
         retain_words = []
         for word, v in iteritems(self.raw_vocab):
             if keep_vocab_item(word, v, min_count, trim_rule=trim_rule):
                 retain_words.append(word)
                 retain_total += v
-                original_total += v
                 if not dry_run:
                     self.vocab[word] = Vocab(count=v, index=len(self.index2word))
                     self.index2word.append(word)
             else:
                 drop_unique += 1
                 drop_total += v
-                original_total += v
-        logger.info("min_count=%d retains %i unique words (drops %i)",
-                    min_count, len(retain_words), drop_unique)
-        logger.info("min_count leaves %i word corpus (%i%% of original %i)",
-                    retain_total, retain_total * 100 / max(original_total, 1), original_total)
+        original_unique_total = len(retain_words) + drop_unique
+        retain_unique_pct = len(retain_words) * 100 / max(original_unique_total, 1)
+        logger.info("min_count=%d retains %i unique words (%i%% of original %i, drops %i)",
+                    min_count, len(retain_words), retain_unique_pct, original_unique_total, drop_unique)
+        original_total = retain_total + drop_total
+        retain_pct = retain_total * 100 / max(original_total, 1)
+        logger.info("min_count=%d leaves %i word corpus (%i%% of original %i, drops %i)",
+                    min_count, retain_total, retain_pct, original_total, drop_total)
 
         # Precalculate each vocabulary item's threshold for sampling
         if not sample:
