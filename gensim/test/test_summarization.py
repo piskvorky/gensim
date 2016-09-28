@@ -88,6 +88,17 @@ class TestSummarizationTest(unittest.TestCase):
 
         self.assertTrue(summarize(text) is not None)
 
+    def test_text_summarization_returns_input_on_single_input_sentence(self):
+        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
+
+        with utils.smart_open(os.path.join(pre_path, "testsummarization_unrelated.txt"), mode="r") as f:
+            text = f.read()
+
+        # Keeps the first sentence only.
+        text = "\n".join(text.split('\n')[:1])
+
+        self.assertTrue(summarize(text) is not None)
+
     def test_corpus_summarization_raises_exception_on_short_input_text(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
