@@ -195,7 +195,7 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
 
     # If only one sentence is present, the function raises an error (Avoids ZeroDivisionError). 
     if len(sentences) == 1:
-        raise RunTimeError("input must have more than one sentence")
+        raise ValueError("input must have more than one sentence")
     
     # Warns if the text is too short.
     if len(sentences) < INPUT_MIN_LENGTH:
