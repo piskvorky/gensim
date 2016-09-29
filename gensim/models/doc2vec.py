@@ -51,7 +51,7 @@ from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
     sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_batch_sg
+from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_batch_sg, methodize
 from six.moves import xrange, zip
 from six import string_types, integer_types, itervalues
 
