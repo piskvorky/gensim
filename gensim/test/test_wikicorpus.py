@@ -12,9 +12,11 @@ Automated tests for checking the WikiCorpus
 import os
 import sys
 import types
+
 import unittest
 
 from gensim.corpora.wikicorpus import WikiCorpus
+
 
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
@@ -29,6 +31,7 @@ class TestWikiCorpus(unittest.TestCase):
 
 
     def test_get_texts_returns_generator_of_lists(self):
+        
         if sys.version_info < (2, 7, 0):
             return
         wc = WikiCorpus(datapath(FILENAME))

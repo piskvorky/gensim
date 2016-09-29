@@ -10,6 +10,7 @@ Changes
     - bigram construction can now support multiple bigrams within one sentence
 * Fixed issue #838, RuntimeWarning: overflow encountered in exp  (@markroxor, [#895](https://github.com/RaRe-Technologies/gensim/pull/895))
 *  Changed some log messages to warnings as suggested in issue #828. (@rhnvrm, [#884](https://github.com/RaRe-Technologies/gensim/pull/884))
+*  Fixed issue #851, In summarizer.py, check for single sentence as an input added to avoid ZeroDivionError, added test cases in test/test_summarization.py(@metalaman, #887)
 
 
 0.13.2, 2016-08-19
