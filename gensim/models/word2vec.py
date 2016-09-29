@@ -1875,31 +1875,13 @@ if __name__ == "__main__":
     logger.info("finished running %s", program)
     
 def methodize(func, instance):
-    return MethodType(func, instance, instance.__class__)
+    return MethodType(func, instance.__class__)
 
 
 def load(self, *args, **kwargs):
-    logger.warn('Load was called on instance. Calling on class instead')
-    Word2Vec.load(*args, **kwargs)
+    raise TypeError("Call to load must be made using class")
 
 
-def load_word2vec_format(
-    self,
-    fname,
-    fvocab=None,
-    binary=False,
-    encoding='utf8',
-    unicode_errors='strict',
-    limit=None,
-    datatype=REAL,
-    ):
-    logger.warn('Load was called on instance. Calling on class instead')
-    Word2Vec.load_word2vec_format(
-        fname,
-        fvocab=None,
-        binary=False,
-        encoding='utf8',
-        unicode_errors='strict',
-        limit=None,
-        datatype=REAL,
-        )
+def load_word2vec_format(self, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+                         limit=None, datatype=REAL):
+    raise TypeError("Call to load must be made using class")
