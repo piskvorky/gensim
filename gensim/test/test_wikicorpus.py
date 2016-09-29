@@ -12,17 +12,17 @@ Automated tests for checking the WikiCorpus
 import os
 import sys
 import types
-
+import logging
 import unittest
 
 from gensim.corpora.wikicorpus import WikiCorpus
-
 
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 FILENAME = 'enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2'
 
+logger = logging.getLogger(__name__)
 
 class TestWikiCorpus(unittest.TestCase):
 
@@ -30,7 +30,7 @@ class TestWikiCorpus(unittest.TestCase):
         wc = WikiCorpus(datapath(FILENAME))
 
     def test_get_texts_returns_generator_of_lists(self):
-        
+        logger.debug("Current Python Version is "+str(sys.version_info))
         if sys.version_info < (2, 7, 0):
             return
         
