@@ -15,8 +15,9 @@ import logging
 import numpy
 import numbers
 
-from gensim import utils
+from gensim import utils, matutils
 from gensim.models.ldamodel import dirichlet_expectation, get_random_state
+from gensim.models import LdaModel
 from gensim.models.hdpmodel import log_normalize  # For efficient normalization of variational parameters.
 from six.moves import xrange
 
@@ -31,7 +32,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class OnlineAtVb:
+class OnlineAtVb(LdaModel):
     """
     Train the author-topic model using online variational Bayes.
     """
@@ -65,6 +66,11 @@ class OnlineAtVb:
         if self.num_terms == 0:
             raise ValueError("cannot compute LDA over an empty collection (no terms)")
 
+        logger.info('Vocabulary consists of %d words.', self.num_terms)
+
+        if author2doc is None or doc2author is None:
+            raise ValueError('author2doc and doc2author must be supplied.')
+
         self.corpus = corpus
         self.iterations = iterations
         self.num_topics = num_topics
@@ -75,10 +81,15 @@ class OnlineAtVb:
         self.offset = offset
         self.author2doc = author2doc
         self.doc2author = doc2author
-        self.num_docs = len(corpus)
         self.num_authors = len(author2doc)
         self.eval_every = eval_every
         self.random_state = random_state
+
+        # Some of the methods in LdaModel are used in this class.
+        # I.e. composition is used instead of inheriting the LdaModel class.
+        self.ldamodel = LdaModel(id2word=self.id2word)
+
+        logger.info('Number of authors: %d.', self.num_authors)
 
         # TODO: find a way out of this nonsense.
         self.authorid2idx = dict(zip(list(author2doc.keys()), xrange(self.num_authors)))
@@ -86,8 +97,11 @@ class OnlineAtVb:
 
         self.random_state = get_random_state(random_state)
 
-        if corpus is not None and author2doc is not None and doc2author is not None:
-            self.inference(corpus, author2doc, doc2author)
+        if corpus is not None:
+            (self.var_gamma, self.var_lambda) = self.inference(corpus, author2doc, doc2author)
+        else:
+            self.var_lambda = self.random_state.gamma(100., 1. / 100.,
+                    (self.num_topics, self.num_terms))
 
     def rho(self, iteration):
         return pow(self.offset + iteration, -self.decay)
@@ -95,6 +109,10 @@ class OnlineAtVb:
     def inference(self, corpus=None, author2doc=None, doc2author=None):
         if corpus is None:
             corpus = self.corpus.copy()
+
+        self.num_docs = len(corpus)  # TODO: this needs to be different if the algorithm is truly online.
+
+        logger.info('Starting inference. Training on %d documents.', len(corpus))
 
         # Initial values of gamma and lambda.
         # NOTE: parameters of gamma distribution same as in `ldamodel`.
@@ -118,7 +136,6 @@ class OnlineAtVb:
         Elogtheta = dirichlet_expectation(var_gamma)
         Elogbeta = dirichlet_expectation(var_lambda)
         expElogbeta = numpy.exp(Elogbeta)
-        st()
         for d, doc in enumerate(corpus):
             ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
             cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
@@ -197,11 +214,12 @@ class OnlineAtVb:
                 # Check for convergence.
                 # Criterion is mean change in "local" gamma and lambda.
                 if iteration > 0:
-                    meanchange_gamma = numpy.mean(abs(tilde_gamma - lastgamma))
-                    meanchange_lambda = numpy.mean(abs(tilde_lambda - lastlambda))
-                    #logger.info('Mean change in gamma: %.3e', meanchange_gamma)
-                    #logger.info('Mean change in lambda: %.3e', meanchange_lambda)
-                    if meanchange_gamma < self.threshold and meanchange_lambda < self.threshold:
+                    maxchange_gamma = numpy.max(abs(tilde_gamma - lastgamma))
+                    maxchange_lambda = numpy.max(abs(tilde_lambda - lastlambda))
+                    # logger.info('Max change in gamma: %.3e', maxchange_gamma)
+                    # logger.info('Max change in lambda: %.3e', maxchange_lambda)
+                    if maxchange_gamma < self.threshold and maxchange_lambda < self.threshold:
+                        logger.info('Converged after %d iterations.', iteration)
                         converged += 1
                         break
             # End of iterations loop.
@@ -220,25 +238,74 @@ class OnlineAtVb:
             Elogbeta = dirichlet_expectation(var_lambda)
             expElogbeta = numpy.exp(Elogbeta)
 
-            word_prob = self.eval_word_prob(Elogtheta, Elogbeta)
-            logger.info('Word probabilities: %.3e', word_prob)
-            logger.info('Converged documents: %d', converged)
+            word_prob = self.eval_likelihood(var_gamma, var_lambda)
+            logger.info('Likelihood: %.3e', word_prob)
+            logger.info('Converged documents: %d/%d', converged, d + 1)
         # End of corpus loop.
 
         return var_gamma, var_lambda
 
-    def eval_word_prob(self, Elogtheta, Elogbeta, doc_ids=None):
+    def eval_likelihood(self, Elogtheta, Elogbeta, doc_ids=None):
         """
-        Compute the conditional liklihood of a set of documents,
+        Note that this is not strictly speaking a likelihood.
 
-            p(D | theta, beta, A).
+        Compute the expectation of the log conditional likelihood of the data,
 
-        theta and beta are estimated by exponentiating the expectations of
-        log theta and log beta.
+            E_q[log p(w_d | theta, beta, A_d)],
+
+        where p(w_d | theta, beta, A_d) is the log conditional likelihood of the data.
         """
+        
+        # TODO: call this something other than "likelihood".
 
         # TODO: allow for evaluating test corpus. This will require inferring on unseen documents.
 
+        if doc_ids is None:
+            docs = self.corpus
+        else:
+            docs = [self.corpus[d] for d in doc_ids]
+
+        likelihood = 0.0
+        for d, doc in enumerate(docs):
+            ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
+            cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
+            authors_d = self.doc2author[d]
+            likelihood_d = 0.0
+            for vi, v in enumerate(ids):
+                for k in xrange(self.num_topics):
+                    for aid in authors_d:
+                        a = self.authorid2idx[aid]
+                        likelihood_d += numpy.log(cts[vi]) + Elogtheta[a, k] + Elogbeta[k, v]
+            author_prior_prob = 1.0 / len(authors_d)
+            likelihood_d += numpy.log(author_prior_prob)
+            likelihood += likelihood_d
+
+        # For per-word likelihood, do:
+        # likelihood *= 1 /sum(len(doc) for doc in docs)
+
+        # TODO: can I do something along the lines of:
+        # likelihood += author_prior_prob * numpy.sum(cnt * sum(logsumexp(Elogtheta[authors_d, :] + Elogbeta[:, id])) for id, cnt in doc)
+
+        return likelihood
+
+    def eval_word_prob(self, var_gamma, var_lambda, doc_ids=None):
+        """
+        Compute the liklihood of the corpus under the model, by first 
+        computing the conditional probabilities of the words in a
+        document d,
+
+            p(w_d | theta, beta, A_d),
+
+        summing over all documents, and dividing by the number of documents.
+        """
+        # NOTE: unsure if this is correct.
+
+        norm_gamma = var_gamma.copy()
+        norm_lambda = var_lambda.copy()
+        for a in xrange(self.num_authors):
+            norm_gamma[a, :] = var_gamma[a, :] / var_gamma.sum(axis=1)[a]
+        for k in xrange(self.num_topics):
+            norm_lambda[k, :] = var_lambda[k, :] / var_lambda.sum(axis=1)[k]
 
         if doc_ids is None:
             docs = self.corpus
@@ -255,15 +322,25 @@ class OnlineAtVb:
                 for k in xrange(self.num_topics):
                     for aid in authors_d:
                         a = self.authorid2idx[aid]
-                        word_prob_d += cts[vi] * numpy.exp(Elogtheta[a, k] + Elogbeta[k, v])
+                        word_prob_d += cts[vi] * norm_gamma[a, k] * norm_lambda[k, v]
             author_prior_prob = 1.0 / len(authors_d)
-            word_prob_d *= author_prior_prob
+            word_prob_d += numpy.log(author_prior_prob)
             word_prob += word_prob_d
-
-            # TODO: can I do this?
-            # bound += author_prior_prob * numpy.sum(cnt * sum(logsumexp(Elogtheta[authors_d, :] + Elogbeta[:, id])) for id, cnt in doc)
+        word_prob *= 1 / len(docs)
 
         return word_prob
+        
+    # Overriding LdaModel.get_topic_terms.
+    def get_topic_terms(self, topicid, topn=10):
+        """
+        Return a list of `(word_id, probability)` 2-tuples for the most
+        probable words in topic `topicid`.
+        Only return 2-tuples for the topn most probable words (ignore the rest).
+        """
+        topic = self.var_lambda[topicid, :]
+        topic = topic / topic.sum()  # normalize to probability distribution
+        bestn = matutils.argsort(topic, topn, reverse=True)
+        return [(id, topic[id]) for id in bestn]
 
 
 
