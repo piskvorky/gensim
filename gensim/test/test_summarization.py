@@ -95,7 +95,7 @@ class TestSummarizationTest(unittest.TestCase):
             text = f.read()
 
         # Keeps the first sentence only.
-        text = text.split('\n')[:1]
+        text = text.split('\n')[0]
 
         self.assertTrue(summarize(text) is not None)
 
