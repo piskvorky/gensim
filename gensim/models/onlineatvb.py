@@ -21,6 +21,8 @@ from gensim.models import LdaModel
 from gensim.models.hdpmodel import log_normalize  # For efficient normalization of variational parameters.
 from six.moves import xrange
 
+from pprint import pprint
+
 # log(sum(exp(x))) that tries to avoid overflow
 try:
     # try importing from here if older scipy is installed
@@ -125,7 +127,6 @@ class OnlineAtVb(LdaModel):
 
         # TODO: consider making phi and mu sparse.
         var_phi = numpy.zeros((self.num_terms, self.num_topics))
-        var_mu = numpy.zeros((self.num_terms, self.num_authors))
 
         var_gamma = init_gamma.copy()
         var_lambda = init_lambda.copy()
@@ -144,9 +145,10 @@ class OnlineAtVb(LdaModel):
             # Initialize mu.
             # mu is 1/|A_d| if a is in A_d, zero otherwise.
             # NOTE: I could do random initialization instead.
+            # NOTE: maybe not the best idea that mu changes shape every iteration.
+            var_mu = numpy.zeros((self.num_terms, len(authors_d)))
             for v in ids:
-                for aid in authors_d:
-                    a = self.authorid2idx[aid]
+                for a in xrange(len(authors_d)):
                     var_mu[v, a] = 1 / len(authors_d)
 
             for iteration in xrange(self.iterations):
@@ -160,14 +162,13 @@ class OnlineAtVb(LdaModel):
                     for k in xrange(self.num_topics):
                         # Average Elogtheta over authors a in document d.
                         avgElogtheta = 0.0
-                        for ad in authors_d:
-                            a = self.authorid2idx[aid]
+                        for a in xrange(len(authors_d)):
                             avgElogtheta += var_mu[v, a] * Elogtheta[a, k]
                         expavgElogtheta = numpy.exp(avgElogtheta)
 
                         # Compute phi.
                         # TODO: avoid computing phi if possible.
-                        var_phi[v, k] = expavgElogtheta * expElogbeta[k, v]  # FIXME: may have an alignment issue here.
+                        var_phi[v, k] = expavgElogtheta * expElogbeta[k, v]
 
                     # Normalize phi over k.
                     (log_var_phi_v, _) = log_normalize(var_phi[v, :])  # NOTE: it might be possible to do this out of the v loop.
@@ -178,8 +179,7 @@ class OnlineAtVb(LdaModel):
                     # Prior probability of observing author a in document d is one
                     # over the number of authors in document d.
                     author_prior_prob = 1.0 / len(authors_d)
-                    for aid in authors_d:
-                        a = self.authorid2idx[aid]
+                    for a in xrange(len(authors_d)):
                         # Average Elogtheta over topics k.
                         avgElogtheta = 0.0
                         for k in xrange(self.num_topics):
@@ -196,7 +196,7 @@ class OnlineAtVb(LdaModel):
 
 
                 # Update gamma.
-                for a in xrange(self.num_authors):
+                for a in xrange(len(authors_d)):
                     for k in xrange(self.num_topics):
                         tilde_gamma[a, k] = 0.0
                         for vi, v in enumerate(ids):
@@ -238,9 +238,16 @@ class OnlineAtVb(LdaModel):
             Elogbeta = dirichlet_expectation(var_lambda)
             expElogbeta = numpy.exp(Elogbeta)
 
-            word_prob = self.eval_likelihood(var_gamma, var_lambda)
-            logger.info('Likelihood: %.3e', word_prob)
+
+            # Print topics:
+            # self.var_lambda = var_lambda
+            # pprint(self.show_topics())
+
+            likelihood = self.eval_likelihood(Elogtheta, Elogbeta)
+            logger.info('Likelihood: %.3e', likelihood)
             logger.info('Converged documents: %d/%d', converged, d + 1)
+            # Evaluating word probabilities:
+            # likelihood = self.eval_word_prob(var_gamma, var_lambda)
         # End of corpus loop.
 
         return var_gamma, var_lambda
