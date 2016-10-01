@@ -76,38 +76,6 @@ def _rule(word, count, min_count):
 
 
 class TestWord2VecModel(unittest.TestCase):
-    def testPersistence(self):
-        """Test storing/loading the entire model."""
-        model = word2vec.Word2Vec(sentences, min_count=1)
-        model.save(testfile())
-        self.models_equal(model, word2vec.Word2Vec.load(testfile()))
-
-    def testPersistenceWithConstructorRule(self):
-        """Test storing/loading the entire model with a vocab trimming rule passed in the constructor."""
-        model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=_rule)
-        model.save(testfile())
-        self.models_equal(model, word2vec.Word2Vec.load(testfile()))
-
-    def testRuleWithMinCount(self):
-        """Test that returning RULE_DEFAULT from trim_rule triggers min_count."""
-        model = word2vec.Word2Vec(sentences + [["occurs_only_once"]], min_count=2, trim_rule=_rule)
-        self.assertTrue("human" not in model.vocab)
-        self.assertTrue("occurs_only_once" not in model.vocab)
-        self.assertTrue("interface" in model.vocab)
-
-    def testRule(self):
-        """Test applying vocab trim_rule to build_vocab instead of constructor."""
-        model = word2vec.Word2Vec(min_count=1)
-        model.build_vocab(sentences, trim_rule=_rule)
-        self.assertTrue("human" not in model.vocab)
-
-    def testLambdaRule(self):
-        """Test that lambda trim_rule works."""
-        rule = lambda word, count, min_count: utils.RULE_DISCARD if word == "human" else utils.RULE_DEFAULT
-        model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule)
-        self.assertTrue("human" not in model.vocab)
-
-class TestWord2VecModel(unittest.TestCase):
     def testOnlineLearning(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
@@ -163,6 +131,37 @@ class TestWord2VecModel(unittest.TestCase):
                                   min_count=5, iter=10, seed=42, workers=2, sample=0)
         self.onlineSanity(model)
 
+    def testPersistence(self):
+        """Test storing/loading the entire model."""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.save(testfile())
+        self.models_equal(model, word2vec.Word2Vec.load(testfile()))
+
+    def testPersistenceWithConstructorRule(self):
+        """Test storing/loading the entire model with a vocab trimming rule passed in the constructor."""
+        model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=_rule)
+        model.save(testfile())
+        self.models_equal(model, word2vec.Word2Vec.load(testfile()))
+
+    def testRuleWithMinCount(self):
+        """Test that returning RULE_DEFAULT from trim_rule triggers min_count."""
+        model = word2vec.Word2Vec(sentences + [["occurs_only_once"]], min_count=2, trim_rule=_rule)
+        self.assertTrue("human" not in model.vocab)
+        self.assertTrue("occurs_only_once" not in model.vocab)
+        self.assertTrue("interface" in model.vocab)
+
+    def testRule(self):
+        """Test applying vocab trim_rule to build_vocab instead of constructor."""
+        model = word2vec.Word2Vec(min_count=1)
+        model.build_vocab(sentences, trim_rule=_rule)
+        self.assertTrue("human" not in model.vocab)
+
+    def testLambdaRule(self):
+        """Test that lambda trim_rule works."""
+        rule = lambda word, count, min_count: utils.RULE_DISCARD if word == "human" else utils.RULE_DEFAULT
+        model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule)
+        self.assertTrue("human" not in model.vocab)
+
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
         model = word2vec.Word2Vec(sentences, min_count=1)
@@ -175,6 +174,30 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model.init_sims(replace=True)
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human']))
         self.assertTrue(numpy.allclose(model.syn0norm[model.vocab['human'].index], norm_only_model['human']))
+        limited_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, limit=3)
+        self.assertEquals(len(limited_model.syn0), 3)
+        half_precision_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, datatype=numpy.float16)
+        self.assertEquals(binary_model.syn0.nbytes, half_precision_model.syn0.nbytes * 2)
+
+    def testTooShortBinaryWord2VecFormat(self):
+        tfile = testfile()
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        model.save_word2vec_format(tfile, binary=True)
+        f = open(tfile, 'r+b')
+        f.write(b'13')  # write wrong (too-long) vector count
+        f.close()
+        self.assertRaises(EOFError, word2vec.Word2Vec.load_word2vec_format, tfile, binary=True)
+
+    def testTooShortTextWord2VecFormat(self):
+        tfile = testfile()
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        model.save_word2vec_format(tfile, binary=False)
+        f = open(tfile, 'r+b')
+        f.write(b'13')  # write wrong (too-long) vector count
+        f.close()
+        self.assertRaises(EOFError, word2vec.Word2Vec.load_word2vec_format, tfile, binary=False)
 
     def testPersistenceWord2VecFormatNonBinary(self):
         """Test storing/loading the entire model in word2vec non-binary format."""
@@ -411,9 +434,12 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(size=2, min_count=1, sg=0, hs=0, negative=2)
         model.build_vocab(sentences)
         model.train(sentences)
-
+        
         self.assertTrue(model.n_similarity(['graph', 'trees'], ['trees', 'graph']))
         self.assertTrue(model.n_similarity(['graph'], ['trees']) == model.similarity('graph', 'trees'))
+        self.assertRaises(ZeroDivisionError, model.n_similarity, ['graph', 'trees'], [])
+        self.assertRaises(ZeroDivisionError, model.n_similarity, [], ['graph', 'trees'])
+        self.assertRaises(ZeroDivisionError, model.n_similarity, [], [])
 
     def testSimilarBy(self):
         """Test word2vec similar_by_word and similar_by_vector."""
