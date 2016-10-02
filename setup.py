@@ -180,7 +180,7 @@ setup(
         'smart_open >= 1.2.1',
         python_2_6_backports,
     ],
-    test_require=[
+    tests_require=[
     	'testfixtures',
     ],
     extras_require={
