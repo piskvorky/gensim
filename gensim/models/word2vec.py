@@ -577,11 +577,11 @@ class Word2Vec(utils.SaveLoad):
         """
         min_count = min_count or self.min_count
         sample = sample or self.sample
-        retain_total = drop_total = drop_unique = 0
-        retain_words = []
+        drop_total = drop_unique = 0
 
         if not update:
             logger.info("Loading a fresh vocabulary")
+            retain_total, retain_words = 0, []
             # Discard words less-frequent than min_count
             if not dry_run:
                 self.index2word = []
@@ -600,29 +600,41 @@ class Word2Vec(utils.SaveLoad):
                 else:
                     drop_unique += 1
                     drop_total += v
+            original_unique_total = len(retain_words) + drop_unique
+            retain_unique_pct = len(retain_words) * 100 / max(original_unique_total, 1)
+            logger.info("min_count=%d retains %i unique words (%i%% of original %i, drops %i)",
+                        min_count, len(retain_words), retain_unique_pct, original_unique_total, drop_unique)
+            original_total = retain_total + drop_total
+            retain_pct = retain_total * 100 / max(original_total, 1)
+            logger.info("min_count=%d leaves %i word corpus (%i%% of original %i, drops %i)",
+                        min_count, retain_total, retain_pct, original_total, drop_total)
         else:
             logger.info("Updating model with new vocabulary")
+            new_total = pre_exist_total = 0
+            new_words = pre_exist_words = []
             for word, v in iteritems(self.raw_vocab):
                 if keep_vocab_item(word, v, min_count, trim_rule=trim_rule):
-                    retain_words.append(word)
-                    retain_total += v
-                    if not dry_run:
-                        if word in self.vocab:
+                    if word in self.vocab:
+                        pre_exist_words.append(word)
+                        pre_exist_total += v
+                        if not dry_run:
                             self.vocab[word].count += v
-                        else:
+                    else:
+                        new_words.append(word)
+                        new_total += v
+                        if not dry_run:
                             self.vocab[word] = Vocab(count=v, index=len(self.index2word))
                             self.index2word.append(word)
                 else:
                     drop_unique += 1
                     drop_total += v
-        original_unique_total = len(retain_words) + drop_unique
-        retain_unique_pct = len(retain_words) * 100 / max(original_unique_total, 1)
-        logger.info("min_count=%d retains %i unique words (%i%% of original %i, drops %i)",
-                    min_count, len(retain_words), retain_unique_pct, original_unique_total, drop_unique)
-        original_total = retain_total + drop_total
-        retain_pct = retain_total * 100 / max(original_total, 1)
-        logger.info("min_count=%d leaves %i word corpus (%i%% of original %i, drops %i)",
-                    min_count, retain_total, retain_pct, original_total, drop_total)
+            original_unique_total = len(pre_exist_words) + len(new_words) + drop_unique
+            pre_exist_unique_pct = len(pre_exist_words) * 100 / max(original_unique_total, 1)
+            new_unique_pct = len(new_words) * 100 / max(original_unique_total, 1)
+            logger.info("""New added %i unique words (%i%% of original %i)
+                        and increased the count of %i pre-existing words (%i%% of original %i)""",
+                        len(new_words), new_unique_pct, original_unique_total,
+                        len(pre_exist_words), pre_exist_unique_pct, original_unique_total)
 
         # Precalculate each vocabulary item's threshold for sampling
         if not sample:
