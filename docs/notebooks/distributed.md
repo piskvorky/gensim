@@ -36,7 +36,7 @@ What you need to do is run a [worker][5] script (*see below*) on each of your cl
 A logical working unit. Can correspond to a single physical machine, but you can also run multiple workers on one machine, resulting in multiple logical nodes.
 
 **Cluster**
-Several nodes which communicate over TCP/IP. Currently, network broadcasting is used to discover and connect all communicating nodes, so the nodes must lie within the same [broadcast domain][6].
+Several nodes which communicate over TCP/IP. Nodes can lie in different [broadcast domains][6]. Here is how to [configure](https://github.com/RaRe-Technologies/gensim/pull/782).
 
 **Worker**
 A process which is created on each node. To remove a node from your cluster, simply kill its worker process.
