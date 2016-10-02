@@ -635,6 +635,8 @@ class Word2Vec(utils.SaveLoad):
                         and increased the count of %i pre-existing words (%i%% of original %i)""",
                         len(new_words), new_unique_pct, original_unique_total,
                         len(pre_exist_words), pre_exist_unique_pct, original_unique_total)
+            retain_words = new_words + pre_exist_words
+            retain_total = len(new_words) + len(pre_exist_words)
 
         # Precalculate each vocabulary item's threshold for sampling
         if not sample:
