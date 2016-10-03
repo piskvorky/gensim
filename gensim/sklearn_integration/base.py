@@ -6,4 +6,4 @@ class BaseClass(object):
     def __init__(self):
         """init"""
     def run(self):
-        return return np.array([0,0,0])
+        return np.array([0,0,0])
