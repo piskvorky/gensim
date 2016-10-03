@@ -1,7 +1,7 @@
 gensim – Topic Modelling in Python
 ==================================
 
-![Travis]![Wheel]
+[![Build Status](https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop)](https://travis-ci.org/RaRe-Technologies/gensim)![Wheel]
 
 Gensim is a Python library for *topic modelling*, *document indexing*
 and *similarity retrieval* with large corpora. Target audience is the
@@ -162,7 +162,7 @@ BibTeX entry:
   [Talentpair]: https://avatars3.githubusercontent.com/u/8418395?v=3&s=100
   [citing gensim in academic papers and theses]: https://scholar.google.cz/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:u-x6o8ySG0sC
 
-  [Travis]: https://img.shields.io/travis/RaRe-Technologies/gensim/develop.svg
+  
   [Wheel]: https://img.shields.io/pypi/wheel/gensim.svg
   [documentation and Jupyter Notebook tutorials]: https://github.com/RaRe-Technologies/gensim/#documentation
   [Vector Space Model]: http://en.wikipedia.org/wiki/Vector_space_model
