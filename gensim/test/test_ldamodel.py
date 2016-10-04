@@ -366,8 +366,8 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
-    #     #Method used to save LDA models in Python 2.7 and 3.5 environments.
-    # def testrandom(self):
+    #     # Method used to save LDA models in Python 2.7 and 3.5 environments.
+    # def testSaveModelsForPythonVersion(self):
     #     fname = os.path.join(os.path.dirname(__file__), 'ldamodel_python3_5.tst')
     #     model = self.model
     #     model.save(fname)
