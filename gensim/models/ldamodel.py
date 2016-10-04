@@ -1050,7 +1050,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # Save the dictionary separately in json.
         id2word_fname = utils.smart_extension(fname, '.json')   
         try:
-            with utils.smart_open(id2word_fname, 'wb') as fout:
+            with utils.smart_open(id2word_fname, 'w', encoding='utf-8') as fout:
                 json.dump(id2word, fout)
         except Exception as e:
             logging.warning("failed to save id2words dictionary in %s: %s", id2word_fname, e)
@@ -1072,7 +1072,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         try:
             with utils.smart_open(id2word_fname, 'r') as fin:
                 id2word = json.load(fin)
-            # id2word = {int(k):v for k, v in id2word.items()}
             if id2word is not None:
                 result.id2word = utils.FakeDict(id2word)
             else:
