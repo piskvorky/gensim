@@ -238,7 +238,7 @@ class TestWord2VecModel(unittest.TestCase):
     #     fname = os.path.join(os.path.dirname(__file__), 'word2vecmodel_python_2_7')
     #     model = word2vec.Word2Vec(sentences, min_count=1, seed = 1000007)
     #     model.init_sims()
-    #     model.save(fname, binary=True)
+    #     model.save(fname)
     #     logging.warning("Word2Vec model saved")
     
     def testModelCompatibilityWithPythonVersions(self):
