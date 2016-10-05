@@ -1030,7 +1030,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or len(self.eta.shape) != 1:
             separately_explicit.append('eta')
         # Merge separately_explicit with separately.
-        if separately is not None and separately:
+        if separately:
             if isinstance(separately, six.string_types):
                 separately = [separately]
             separately = [e for e in separately if e] # make sure None and '' are not in the list
