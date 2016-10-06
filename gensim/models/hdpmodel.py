@@ -38,6 +38,7 @@ import numpy as np
 import scipy.special as sp
 
 from gensim import interfaces, utils, matutils
+from gensim.models import ldamodel
 from six.moves import xrange
 
 logger = logging.getLogger(__name__)
@@ -507,9 +508,13 @@ class HdpModel(interfaces.TransformationABC):
             fout.write('eta: %s\n' % str(self.m_eta))
             fout.write('gamma: %s\n' % str(self.m_gamma))
 
-    def hdp_to_lda(self):
+    def hdp_to_lda(self, model=False):
         """
         Compute the LDA almost equivalent HDP.
+        By default returns the corresponding alpha and beta values, where alpha can be set as the ldamodel init,
+        and ldam.expElogbeta[:] can be set as the beta in the new LdaModel.
+        This is the default value to be returned as this method is used in the HDP update methods.
+        If explicitly mentioned that a model is required to be returned, it returns the corresponding model.
         """
         # alpha
         sticks = self.m_var_sticks[0] / (self.m_var_sticks[0] + self.m_var_sticks[1])
@@ -524,6 +529,12 @@ class HdpModel(interfaces.TransformationABC):
         # beta
         beta = (self.m_lambda + self.m_eta) / (self.m_W * self.m_eta + \
                 self.m_lambda_sum[:, np.newaxis])
+
+        # if the user requests to return an ldamodel instead, it is returned with the appropriate alpha and beta values
+        if model:
+            ldam = ldamodel.LdaModel(num_topics=150, alpha=alpha, id2word=self.id2word)
+            ldam.expElogbeta[:] = beta
+            return ldam
 
         return (alpha, beta)
 
