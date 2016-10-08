@@ -96,6 +96,7 @@ from six.moves import xrange
 from types import GeneratorType
 
 logger = logging.getLogger(__name__)
+logging.basicConfig()
 
 try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
