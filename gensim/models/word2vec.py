@@ -280,7 +280,7 @@ def sigmoid(p):
         return exp(p) / (1 + exp(p))
     else:
         raise ValueError
-        
+
 def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
     neu1e = zeros(l1.shape)
 
@@ -459,6 +459,7 @@ class Word2Vec(utils.SaveLoad):
         self.total_train_time = 0
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
+        self.size = size
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
@@ -1613,7 +1614,7 @@ class Word2Vec(utils.SaveLoad):
         v2 = [self[word] for word in ws2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)),
                    matutils.unitvec(array(v2).mean(axis=0)))
-        
+
 
     def init_sims(self, replace=False):
         """
