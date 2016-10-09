@@ -277,6 +277,13 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.syn0[word2.index], if that is l1)
     return neu1e
 
+def sigmoid(p):
+    if p > 0:
+        return 1. / (1. + exp(-p))
+    elif p <= 0:
+        return exp(p) / (1 + exp(p))
+    else:
+        raise ValueError
 
 def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
     neu1e = zeros(l1.shape)
@@ -462,6 +469,7 @@ class Word2Vec(utils.SaveLoad):
         self.total_train_time = 0
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
+        self.size = size
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
