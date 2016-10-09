@@ -607,7 +607,7 @@ class Doc2Vec(Word2Vec):
         if self.dm and self.dm_concat:
             self.layer1_size = (self.dm_tag_count + (2 * self.window)) * self.vector_size
         else:
-            self.layer1_size = size
+            self.layer1_size = self.size
         self.docvecs = docvecs or DocvecsArray(docvecs_mapfile)
         self.comment = comment
         if documents is not None:
