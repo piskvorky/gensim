@@ -529,7 +529,9 @@ class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
 
 class Doc2Vec(Word2Vec):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
-    def __init__(self, documents=None, dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1,
+    def __init__(self, documents=None, size=300, alpha=0.025, window=8, min_count=5,
+                 max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
+                 dm=1, hs=1, negative=0, dbow_words=0, dm_mean=0, dm_concat=0, dm_tag_count=1,
                  docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, **kwargs):
         """
         Initialize the model from an iterable of `documents`. Each document is a
