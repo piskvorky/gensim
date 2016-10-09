@@ -48,9 +48,9 @@ class OnlineAtVb(LdaModel):
         # TODO: require only author2doc OR doc2author, and construct the missing one automatically.
 
         if alpha is None:
-            alpha = 50 / num_topics
+            alpha = 1.0 / num_topics
         if eta is None:
-            eta = 0.01
+            eta = 1.0 / num_topics
 
         self.id2word = id2word
         if corpus is None and self.id2word is None:
@@ -171,7 +171,7 @@ class OnlineAtVb(LdaModel):
                         var_phi[v, k] = expavgElogtheta * expElogbeta[k, v]
 
                     # Normalize phi over k.
-                    (log_var_phi_v, _) = log_normalize(var_phi[v, :])  # NOTE: it might be possible to do this out of the v loop.
+                    (log_var_phi_v, _) = log_normalize(numpy.log(var_phi[v, :]))  # NOTE: it might be possible to do this out of the v loop.
                     var_phi[v, :] = numpy.exp(log_var_phi_v)
 
                 # Update mu.
@@ -191,7 +191,7 @@ class OnlineAtVb(LdaModel):
                         var_mu[v, a] = author_prior_prob * expavgElogtheta
 
                     # Normalize mu.
-                    (log_var_mu_v, _) = log_normalize(var_mu[v, :])
+                    (log_var_mu_v, _) = log_normalize(numpy.log(var_mu[v, :]))
                     var_mu[v, :] = numpy.exp(log_var_mu_v)
 
 
@@ -209,7 +209,9 @@ class OnlineAtVb(LdaModel):
                 #tilde_lambda = self.eta + self.num_docs * cts * var_phi[ids, :].T
                 for k in xrange(self.num_topics):
                     for vi, v in enumerate(ids):
-                        tilde_lambda[k, v] = self.eta + self.num_docs * cts[vi] * var_phi[v, k]
+                        cnt = dict(doc).get(v, 0)
+                        var_lambda[k, v] = self.eta + cnt * var_phi[v, k]
+                        #tilde_lambda[k, v] = self.eta + self.num_docs * cts[vi] * var_phi[v, k]
 
                 # Check for convergence.
                 # Criterion is mean change in "local" gamma and lambda.

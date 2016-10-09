@@ -38,7 +38,7 @@ class AtVb(LdaModel):
     """
     Train the author-topic model using variational Bayes.
     """
-    # TODO: inherit interfaces.TransformationABC.
+    # TODO: inherit interfaces.TransformationABC. Probably not necessary if I'm inheriting LdaModel.
 
     def __init__(self, corpus=None, num_topics=100, id2word=None,
             author2doc=None, doc2author=None, threshold=0.001,
@@ -48,9 +48,9 @@ class AtVb(LdaModel):
         # TODO: require only author2doc OR doc2author, and construct the missing one automatically.
 
         if alpha is None:
-            alpha = 50 / num_topics
+            alpha = 1.0 / num_topics
         if eta is None:
-            eta = 0.01
+            eta = 1.0 / num_topics
 
         self.id2word = id2word
         if corpus is None and self.id2word is None:
@@ -111,6 +111,7 @@ class AtVb(LdaModel):
         # mu is 1/|A_d| if a is in A_d, zero otherwise.
         # var_mu is essentially a (self.num_docs, self.num_terms, self.num_authors) sparse matrix,
         # which we represent using a dictionary.
+        # TODO: consider initializing mu randomly.
         var_mu = dict()
         for d, doc in enumerate(corpus):
             ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
@@ -118,7 +119,18 @@ class AtVb(LdaModel):
                 authors_d = doc2author[d]  # List of author IDs for document d.
                 for aid in authors_d:
                     a = self.authorid2idx[aid]
+                    # Draw mu from gamma distribution.
+                    # var_mu[(d, v, a)] = self.random_state.gamma(100., 1. / 100., (1,))[0]
                     var_mu[(d, v, a)] = 1 / len(authors_d)
+                # Normalize mu.
+                # mu_sum = 0.0
+                # for aid_prime in authors_d:
+                #     a_prime = self.authorid2idx[aid]
+                #     mu_sum += var_mu[(d, v, a)]
+
+                # for aid_prime in authors_d:
+                #     a_prime = self.authorid2idx[aid]
+                #     var_mu[(d, v, a)] *= 1 / mu_sum
 
         var_phi = numpy.zeros((self.num_docs, self.num_terms, self.num_topics))
 
@@ -138,8 +150,6 @@ class AtVb(LdaModel):
                 ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
                 authors_d = doc2author[d]  # List of author IDs for document d.
 
-                #expElogbetad = expElogbeta[:, ids]
-
                 # Update phi.
                 for v in ids:
                     for k in xrange(self.num_topics):
@@ -153,16 +163,18 @@ class AtVb(LdaModel):
                         # Compute phi.
                         # TODO: avoid computing phi if possible.
                         var_phi[d, v, k] = expavgElogtheta * expElogbeta[k, v]
-                        # Normalize phi.
-                    (log_var_phi_dv, _) = log_normalize(var_phi[d, v, :])
+                    # Normalize phi.
+                    #(log_var_phi_dv, _) = log_normalize(var_phi[d, v, :])
+                    (log_var_phi_dv, _) = log_normalize(numpy.log(var_phi[d, v, :]))
                     var_phi[d, v, :] = numpy.exp(log_var_phi_dv)
 
-
-                # Update mu.
+            # Update mu.
+            for d, doc in enumerate(corpus):
+                ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
+                authors_d = doc2author[d]  # List of author IDs for document d.
+                # author_prior_prob = 1. / len(authors_d)
                 for v in ids:
-                    # Prior probability of observing author a in document d is one
-                    # over the number of authors in document d.
-                    author_prior_prob = 1.0 / len(authors_d)
+                    mu_sum = 0.0
                     for aid in authors_d:
                         a = self.authorid2idx[aid]
                         # Average Elogtheta over topics k.
@@ -173,17 +185,14 @@ class AtVb(LdaModel):
 
                         # Compute mu.
                         # TODO: avoid computing mu if possible.
-                        var_mu[(d, v, a)] = author_prior_prob * expavgElogtheta
-
-                    # Normalize mu.
-                    mu_sum = 0.0
-                    for aid_prime in authors_d:
-                        a_prime = self.authorid2idx[aid]
+                        # var_mu[(d, v, a)] = author_prior_prob * expavgElogtheta
+                        var_mu[(d, v, a)] = expavgElogtheta
                         mu_sum += var_mu[(d, v, a)]
 
-                    for aid_prime in authors_d:
-                        a_prime = self.authorid2idx[aid]
-                        var_mu[(d, v, a)] *= 1 / mu_sum
+                    mu_norm_const = 1.0 / mu_sum
+                    for aid in authors_d:
+                        a = self.authorid2idx[aid]
+                        var_mu[(d, v, a)] *= mu_norm_const
 
             # Update gamma.
             for a in xrange(self.num_authors):
@@ -206,13 +215,18 @@ class AtVb(LdaModel):
             # Update lambda.
             for k in xrange(self.num_topics):
                 for v in xrange(self.num_terms):
+                    # TODO: highly unnecessary:
                     var_lambda[k, v] = 0.0
                     var_lambda[k, v] += self.eta
                     for d, doc in enumerate(corpus):
-                        ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
-                        cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
-                        for vi, v in enumerate(ids):
-                            var_lambda[k, v] += cts[vi] * var_phi[d, v, k]
+                        # Get the count of v in doc. If v is not in doc, return 0.
+                        cnt = dict(doc).get(v, 0)
+                        var_lambda[k, v] += cnt * var_phi[d, v, k]
+                        #ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
+                        #cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
+                        #for vi, v in enumerate(ids):
+                        #    # FIXME: I'm 90% sure this is wrong.
+                        #    var_lambda[k, v] += cts[vi] * var_phi[d, v, k]
 
             # Update Elogbeta, since lambda has been updated.
             Elogbeta = dirichlet_expectation(var_lambda)
@@ -223,7 +237,7 @@ class AtVb(LdaModel):
 
             # Print topics:
             self.var_lambda = var_lambda
-            pprint(self.show_topics())
+            #pprint(self.show_topics())
 
             # Evaluate likelihood.
             if (iteration + 1) % self.eval_every == 0:
