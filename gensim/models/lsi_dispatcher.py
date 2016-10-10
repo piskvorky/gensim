@@ -57,7 +57,7 @@ class Dispatcher(object):
         self.workers = {}
         self.callback = None # a pyro proxy to this object (unknown at init time, but will be set later)
 
-
+    @Pyro4.expose
     def initialize(self, **model_params):
         """
         `model_params` are parameters used to initialize individual workers (gets
@@ -87,27 +87,27 @@ class Dispatcher(object):
         if not self.workers:
             raise RuntimeError('no workers found; run some lsi_worker scripts on your machines first!')
 
-
+    @Pyro4.expose
     def getworkers(self):
         """
         Return pyro URIs of all registered workers.
         """
         return [worker._pyroUri for worker in itervalues(self.workers)]
 
-
+    @Pyro4.expose
     def getjob(self, worker_id):
         logger.info("worker #%i requesting a new job" % worker_id)
         job = self.jobs.get(block=True, timeout=1)
         logger.info("worker #%i got a new job (%i left)" % (worker_id, self.jobs.qsize()))
         return job
 
-
+    @Pyro4.expose
     def putjob(self, job):
         self._jobsreceived += 1
         self.jobs.put(job, block=True, timeout=HUGE_TIMEOUT)
         logger.info("added a new job (len(queue)=%i items)" % self.jobs.qsize())
 
-
+    @Pyro4.expose
     def getstate(self):
         """
         Merge projections from across all workers and return the final projection.
@@ -130,7 +130,7 @@ class Dispatcher(object):
         logger.info("sending out merged projection")
         return result
 
-
+    @Pyro4.expose
     def reset(self):
         """
         Initialize all workers for a new decomposition.
@@ -142,6 +142,7 @@ class Dispatcher(object):
         self._jobsdone = 0
         self._jobsreceived = 0
 
+    @Pyro4.expose
     @Pyro4.oneway
     @utils.synchronous('lock_update')
     def jobdone(self, workerid):
