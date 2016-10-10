@@ -31,18 +31,18 @@ except ImportError:
     # maxentropy has been removed in recent releases, logsumexp now in misc
     from scipy.misc import logsumexp
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('gensim.models.atmodel')
 
 
 class AtVb(LdaModel):
     """
-    Train the author-topic model using online variational Bayes.
+    Train the author-topic model using variational Bayes.
     """
-    # TODO: inherit interfaces.TransformationABC.
+    # TODO: inherit interfaces.TransformationABC. Probably not necessary if I'm inheriting LdaModel.
 
     def __init__(self, corpus=None, num_topics=100, id2word=None,
             author2doc=None, doc2author=None, threshold=0.001,
-            iterations=10, alpha=None, eta=None, decay=0.5, offset=1.0,
+            iterations=10, alpha=None, eta=None,
             eval_every=1, random_state=None):
 
         # TODO: require only author2doc OR doc2author, and construct the missing one automatically.
@@ -67,11 +67,8 @@ class AtVb(LdaModel):
 
         if self.num_terms == 0:
             raise ValueError("cannot compute LDA over an empty collection (no terms)")
-
+        
         logger.info('Vocabulary consists of %d words.', self.num_terms)
-
-        if author2doc is None or doc2author is None:
-            raise ValueError('author2doc and doc2author must be supplied.')
 
         self.corpus = corpus
         self.iterations = iterations
@@ -79,17 +76,12 @@ class AtVb(LdaModel):
         self.threshold = threshold
         self.alpha = alpha
         self.eta = eta
-        self.decay = decay
-        self.offset = offset
         self.author2doc = author2doc
         self.doc2author = doc2author
+        self.num_docs = len(corpus)
         self.num_authors = len(author2doc)
         self.eval_every = eval_every
         self.random_state = random_state
-
-        # Some of the methods in LdaModel are used in this class.
-        # I.e. composition is used instead of inheriting the LdaModel class.
-        self.ldamodel = LdaModel(id2word=self.id2word)
 
         logger.info('Number of authors: %d.', self.num_authors)
 
@@ -100,156 +92,161 @@ class AtVb(LdaModel):
         self.random_state = get_random_state(random_state)
 
         if corpus is not None:
-            (self.var_gamma, self.var_lambda) = self.inference(corpus, author2doc, doc2author)
-        else:
-            self.var_lambda = self.random_state.gamma(100., 1. / 100.,
-                    (self.num_topics, self.num_terms))
-
-    def rho(self, iteration):
-        return pow(self.offset + iteration, -self.decay)
+            self.inference(corpus, author2doc, doc2author)
 
     def inference(self, corpus=None, author2doc=None, doc2author=None):
         if corpus is None:
-            corpus = self.corpus.copy()
-
-        self.num_docs = len(corpus)  # TODO: this needs to be different if the algorithm is truly online.
+            corpus = self.corpus
 
         logger.info('Starting inference. Training on %d documents.', len(corpus))
 
-        # Initial values of gamma and lambda.
+        # Initial value of gamma and lambda.
         # NOTE: parameters of gamma distribution same as in `ldamodel`.
-        init_gamma = self.random_state.gamma(100., 1. / 100.,
+        var_gamma = self.random_state.gamma(100., 1. / 100.,
                 (self.num_authors, self.num_topics))
-        init_lambda = self.random_state.gamma(100., 1. / 100.,
+        var_lambda = self.random_state.gamma(100., 1. / 100.,
                 (self.num_topics, self.num_terms))
 
-        converged = 0
+        # Initialize mu.
+        # mu is 1/|A_d| if a is in A_d, zero otherwise.
+        # var_mu is essentially a (self.num_docs, self.num_terms, self.num_authors) sparse matrix,
+        # which we represent using a dictionary.
+        # TODO: consider initializing mu randomly.
+        var_mu = dict()
+        for d, doc in enumerate(corpus):
+            ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
+            for v in ids:
+                authors_d = doc2author[d]  # List of author IDs for document d.
+                for aid in authors_d:
+                    a = self.authorid2idx[aid]
+                    # Draw mu from gamma distribution.
+                    # var_mu[(d, v, a)] = self.random_state.gamma(100., 1. / 100., (1,))[0]
+                    var_mu[(d, v, a)] = 1 / len(authors_d)
+                # Normalize mu.
+                # mu_sum = 0.0
+                # for aid_prime in authors_d:
+                #     a_prime = self.authorid2idx[aid]
+                #     mu_sum += var_mu[(d, v, a)]
 
-        # TODO: consider making phi and mu sparse.
-        var_phi = numpy.zeros((self.num_terms, self.num_topics))
+                # for aid_prime in authors_d:
+                #     a_prime = self.authorid2idx[aid]
+                #     var_mu[(d, v, a)] *= 1 / mu_sum
 
-        var_gamma = init_gamma.copy()
-        var_lambda = init_lambda.copy()
-        tilde_gamma = init_gamma.copy()
-        tilde_lambda = init_lambda.copy()
+        var_phi = numpy.zeros((self.num_docs, self.num_terms, self.num_topics))
 
-        # Initialize dirichlet expectations.
+        # TODO: consider how to vectorize opterations as much as
+        # possible.
+        # TODO: check vector and matrix dimensions, and ensure that
+        # things are multiplied along the correct dimensions.
+
         Elogtheta = dirichlet_expectation(var_gamma)
         Elogbeta = dirichlet_expectation(var_lambda)
         expElogbeta = numpy.exp(Elogbeta)
-        for d, doc in enumerate(corpus):
-            ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
-            cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
-            authors_d = doc2author[d]  # List of author IDs for document d.
-
-            # Initialize mu.
-            # mu is 1/|A_d| if a is in A_d, zero otherwise.
-            # NOTE: I could do random initialization instead.
-            # NOTE: maybe not the best idea that mu changes shape every iteration.
-            var_mu = numpy.zeros((self.num_terms, len(authors_d)))
-            for v in ids:
-                for a in xrange(len(authors_d)):
-                    var_mu[v, a] = 1 / len(authors_d)
-
-            for iteration in xrange(self.iterations):
-                #logger.info('iteration %i', iteration)
-
-                lastgamma = tilde_gamma.copy()
-                lastlambda = tilde_lambda.copy()
+        likelihood = self.eval_likelihood(Elogtheta, Elogbeta)
+        logger.info('Likelihood: %.3e', likelihood)
+        for iteration in xrange(self.iterations):
+            # Update phi.
+            for d, doc in enumerate(corpus):
+                ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
+                authors_d = doc2author[d]  # List of author IDs for document d.
 
                 # Update phi.
                 for v in ids:
                     for k in xrange(self.num_topics):
                         # Average Elogtheta over authors a in document d.
                         avgElogtheta = 0.0
-                        for a in xrange(len(authors_d)):
-                            avgElogtheta += var_mu[v, a] * Elogtheta[a, k]
+                        for aid in authors_d:
+                            a = self.authorid2idx[aid]
+                            avgElogtheta += var_mu[(d, v, a)] * Elogtheta[a, k]
                         expavgElogtheta = numpy.exp(avgElogtheta)
 
                         # Compute phi.
                         # TODO: avoid computing phi if possible.
-                        var_phi[v, k] = expavgElogtheta * expElogbeta[k, v]
+                        var_phi[d, v, k] = expavgElogtheta * expElogbeta[k, v]
+                    # Normalize phi.
+                    #(log_var_phi_dv, _) = log_normalize(var_phi[d, v, :])
+                    (log_var_phi_dv, _) = log_normalize(numpy.log(var_phi[d, v, :]))
+                    var_phi[d, v, :] = numpy.exp(log_var_phi_dv)
 
-                    # Normalize phi over k.
-                    (log_var_phi_v, _) = log_normalize(numpy.log(var_phi[v, :]))  # NOTE: it might be possible to do this out of the v loop.
-                    var_phi[v, :] = numpy.exp(log_var_phi_v)
-
-                # Update mu.
+            # Update mu.
+            for d, doc in enumerate(corpus):
+                ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
+                authors_d = doc2author[d]  # List of author IDs for document d.
+                # author_prior_prob = 1. / len(authors_d)
                 for v in ids:
-                    # Prior probability of observing author a in document d is one
-                    # over the number of authors in document d.
-                    author_prior_prob = 1.0 / len(authors_d)
-                    for a in xrange(len(authors_d)):
+                    mu_sum = 0.0
+                    for aid in authors_d:
+                        a = self.authorid2idx[aid]
                         # Average Elogtheta over topics k.
                         avgElogtheta = 0.0
                         for k in xrange(self.num_topics):
-                            avgElogtheta += var_phi[v, k] * Elogtheta[a, k]
+                            avgElogtheta += var_phi[d, v, k] * Elogtheta[a, k]
                         expavgElogtheta = numpy.exp(avgElogtheta)
 
-                        # Compute mu over a.
+                        # Compute mu.
                         # TODO: avoid computing mu if possible.
-                        var_mu[v, a] = author_prior_prob * expavgElogtheta
+                        # var_mu[(d, v, a)] = author_prior_prob * expavgElogtheta
+                        var_mu[(d, v, a)] = expavgElogtheta
+                        mu_sum += var_mu[(d, v, a)]
 
-                    # Normalize mu.
-                    (log_var_mu_v, _) = log_normalize(numpy.log(var_mu[v, :]))
-                    var_mu[v, :] = numpy.exp(log_var_mu_v)
+                    mu_norm_const = 1.0 / mu_sum
+                    for aid in authors_d:
+                        a = self.authorid2idx[aid]
+                        var_mu[(d, v, a)] *= mu_norm_const
 
-                # Update gamma.
-                for a in xrange(len(authors_d)):
-                    for k in xrange(self.num_topics):
-                        tilde_gamma[a, k] = 0.0
-                        for vi, v in enumerate(ids):
-                            tilde_gamma[a, k] += cts[vi] * var_mu[v, a] * var_phi[v, k]
-                        aid = self.authoridx2id[a]
-                        tilde_gamma[a, k] *= len(author2doc[aid])
-                        tilde_gamma[a, k] += self.alpha
-
-                # Update lambda.
-                #tilde_lambda = self.eta + self.num_docs * cts * var_phi[ids, :].T
+            # Update gamma.
+            for a in xrange(self.num_authors):
                 for k in xrange(self.num_topics):
-                    for vi, v in enumerate(ids):
-                        cnt = dict(doc).get(v, 0)
-                        var_lambda[k, v] = self.eta + cnt * var_phi[v, k]
-                        #tilde_lambda[k, v] = self.eta + self.num_docs * cts[vi] * var_phi[v, k]
+                    aid = self.authoridx2id[a]
+                    docs_a = self.author2doc[aid]
+                    var_gamma[a, k] = 0.0
+                    var_gamma[a, k] += self.alpha
+                    for d in docs_a:
+                        # TODO: if this document doesn't exist, we will have problems here. Could to an "if corpus.get(d)" type of thing.
+                        doc = corpus[d]
+                        ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
+                        cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
+                        for vi, v in enumerate(ids):
+                            var_gamma[a, k] += cts[vi] * var_mu[(d, v, a)] * var_phi[d, v, k]
 
-                # Check for convergence.
-                # Criterion is mean change in "local" gamma and lambda.
-                if iteration > 0:
-                    maxchange_gamma = numpy.max(abs(tilde_gamma - lastgamma))
-                    maxchange_lambda = numpy.max(abs(tilde_lambda - lastlambda))
-                    # logger.info('Max change in gamma: %.3e', maxchange_gamma)
-                    # logger.info('Max change in lambda: %.3e', maxchange_lambda)
-                    if maxchange_gamma < self.threshold and maxchange_lambda < self.threshold:
-                        logger.info('Converged after %d iterations.', iteration)
-                        converged += 1
-                        break
-            # End of iterations loop.
-
-            # Update gamma and lambda.
-            # Interpolation between document d's "local" gamma (tilde_gamma),
-            # and "global" gamma (var_gamma). Same goes for lambda.
-            rhot = self.rho(d)
-            var_gamma = (1 - rhot) * var_gamma + rhot * tilde_gamma
-            # Note that we only changed the elements in lambda corresponding to 
-            # the words in document d, hence the [:, ids] indexing.
-            var_lambda[:, ids] = (1 - rhot) * var_lambda[:, ids] + rhot * tilde_lambda[:, ids]
-
-            # Update Elogtheta and Elogbeta, since gamma and lambda have been updated.
+            # Update Elogtheta, since gamma has been updated.
             Elogtheta = dirichlet_expectation(var_gamma)
+
+            # Update lambda.
+            for k in xrange(self.num_topics):
+                for v in xrange(self.num_terms):
+                    # TODO: highly unnecessary:
+                    var_lambda[k, v] = 0.0
+                    var_lambda[k, v] += self.eta
+                    for d, doc in enumerate(corpus):
+                        # Get the count of v in doc. If v is not in doc, return 0.
+                        cnt = dict(doc).get(v, 0)
+                        var_lambda[k, v] += cnt * var_phi[d, v, k]
+                        #ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
+                        #cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
+                        #for vi, v in enumerate(ids):
+                        #    # FIXME: I'm 90% sure this is wrong.
+                        #    var_lambda[k, v] += cts[vi] * var_phi[d, v, k]
+
+            # Update Elogbeta, since lambda has been updated.
             Elogbeta = dirichlet_expectation(var_lambda)
             expElogbeta = numpy.exp(Elogbeta)
 
 
-            # Print topics:
-            # self.var_lambda = var_lambda
-            # pprint(self.show_topics())
+            logger.info('All variables updated.')
 
-            likelihood = self.eval_likelihood(Elogtheta, Elogbeta)
-            logger.info('Likelihood: %.3e', likelihood)
-            logger.info('Converged documents: %d/%d', converged, d + 1)
-            # Evaluating word probabilities:
-            # likelihood = self.eval_word_prob(var_gamma, var_lambda)
-        # End of corpus loop.
+            # Print topics:
+            self.var_lambda = var_lambda
+            #pprint(self.show_topics())
+
+            # Evaluate likelihood.
+            if (iteration + 1) % self.eval_every == 0:
+                prev_likelihood = likelihood
+                likelihood = self.eval_likelihood(Elogtheta, Elogbeta)
+                logger.info('Likelihood: %.3e', likelihood)
+                if numpy.abs(likelihood - prev_likelihood) / abs(prev_likelihood) < self.threshold:
+                    break
+        # End of update loop (iterations).
 
         return var_gamma, var_lambda
 
@@ -275,68 +272,27 @@ class AtVb(LdaModel):
 
         likelihood = 0.0
         for d, doc in enumerate(docs):
-            authors_d = self.doc2author[d]
             ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
             cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
+            authors_d = self.doc2author[d]
             likelihood_d = 0.0
             for vi, v in enumerate(ids):
-                likelihood_v = 0.0
                 for k in xrange(self.num_topics):
                     for aid in authors_d:
                         a = self.authorid2idx[aid]
-                        likelihood_v += numpy.exp(Elogtheta[a, k] + Elogbeta[k, v])
-                likelihood_d += cts[vi] * numpy.log(likelihood_v)
-            likelihood += numpy.log(1.0 / len(authors_d)) + likelihood_d
-            #authors_idxs = [self.authorid2idx[aid] for aid in authors_d]
-            #likelihood += author_prior_prob * numpy.sum(cnt * numpy.log(numpy.sum(numpy.exp(logsumexp(Elogtheta[a, :] + Elogbeta[:, id])) for a in authors_idxs)) for id, cnt in doc)
+                        likelihood_d += numpy.log(cts[vi]) + Elogtheta[a, k] + Elogbeta[k, v]
+            author_prior_prob = 1.0 / len(authors_d)
+            likelihood_d += numpy.log(author_prior_prob)
+            likelihood += likelihood_d
 
         # For per-word likelihood, do:
         # likelihood *= 1 /sum(len(doc) for doc in docs)
 
+        # TODO: can I do something along the lines of:
+        # likelihood += author_prior_prob * numpy.sum(cnt * sum(logsumexp(Elogtheta[authors_d, :] + Elogbeta[:, id])) for id, cnt in doc)
+
         return likelihood
 
-    def eval_word_prob(self, var_gamma, var_lambda, doc_ids=None):
-        """
-        Compute the liklihood of the corpus under the model, by first 
-        computing the conditional probabilities of the words in a
-        document d,
-
-            p(w_d | theta, beta, A_d),
-
-        summing over all documents, and dividing by the number of documents.
-        """
-        # NOTE: unsure if this is correct.
-
-        norm_gamma = var_gamma.copy()
-        norm_lambda = var_lambda.copy()
-        for a in xrange(self.num_authors):
-            norm_gamma[a, :] = var_gamma[a, :] / var_gamma.sum(axis=1)[a]
-        for k in xrange(self.num_topics):
-            norm_lambda[k, :] = var_lambda[k, :] / var_lambda.sum(axis=1)[k]
-
-        if doc_ids is None:
-            docs = self.corpus
-        else:
-            docs = [self.corpus[d] for d in doc_ids]
-
-        word_prob = 0.0
-        for d, doc in enumerate(docs):
-            ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
-            cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
-            authors_d = self.doc2author[d]
-            word_prob_d = 0.0
-            for vi, v in enumerate(ids):
-                for k in xrange(self.num_topics):
-                    for aid in authors_d:
-                        a = self.authorid2idx[aid]
-                        word_prob_d += cts[vi] * norm_gamma[a, k] * norm_lambda[k, v]
-            author_prior_prob = 1.0 / len(authors_d)
-            word_prob_d += numpy.log(author_prior_prob)
-            word_prob += word_prob_d
-        word_prob *= 1 / len(docs)
-
-        return word_prob
-        
     # Overriding LdaModel.get_topic_terms.
     def get_topic_terms(self, topicid, topn=10):
         """
