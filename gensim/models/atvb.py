@@ -194,7 +194,6 @@ class AtVb(LdaModel):
                     (log_var_mu_v, _) = log_normalize(numpy.log(var_mu[v, :]))
                     var_mu[v, :] = numpy.exp(log_var_mu_v)
 
-
                 # Update gamma.
                 for a in xrange(len(authors_d)):
                     for k in xrange(self.num_topics):
@@ -276,24 +275,23 @@ class AtVb(LdaModel):
 
         likelihood = 0.0
         for d, doc in enumerate(docs):
+            authors_d = self.doc2author[d]
             ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
             cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
-            authors_d = self.doc2author[d]
             likelihood_d = 0.0
             for vi, v in enumerate(ids):
+                likelihood_v = 0.0
                 for k in xrange(self.num_topics):
                     for aid in authors_d:
                         a = self.authorid2idx[aid]
-                        likelihood_d += numpy.log(cts[vi]) + Elogtheta[a, k] + Elogbeta[k, v]
-            author_prior_prob = 1.0 / len(authors_d)
-            likelihood_d += numpy.log(author_prior_prob)
-            likelihood += likelihood_d
+                        likelihood_v += numpy.exp(Elogtheta[a, k] + Elogbeta[k, v])
+                likelihood_d += cts[vi] * numpy.log(likelihood_v)
+            likelihood += numpy.log(1.0 / len(authors_d)) + likelihood_d
+            #authors_idxs = [self.authorid2idx[aid] for aid in authors_d]
+            #likelihood += author_prior_prob * numpy.sum(cnt * numpy.log(numpy.sum(numpy.exp(logsumexp(Elogtheta[a, :] + Elogbeta[:, id])) for a in authors_idxs)) for id, cnt in doc)
 
         # For per-word likelihood, do:
         # likelihood *= 1 /sum(len(doc) for doc in docs)
-
-        # TODO: can I do something along the lines of:
-        # likelihood += author_prior_prob * numpy.sum(cnt * sum(logsumexp(Elogtheta[authors_d, :] + Elogbeta[:, id])) for id, cnt in doc)
 
         return likelihood
 
