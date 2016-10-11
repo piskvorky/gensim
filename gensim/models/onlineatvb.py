@@ -20,6 +20,7 @@ from gensim.models.ldamodel import dirichlet_expectation, get_random_state
 from gensim.models import LdaModel
 from gensim.models.hdpmodel import log_normalize  # For efficient normalization of variational parameters.
 from six.moves import xrange
+from scipy.special import gammaln
 
 from pprint import pprint
 
@@ -244,16 +245,20 @@ class OnlineAtVb(LdaModel):
             # self.var_lambda = var_lambda
             # pprint(self.show_topics())
 
-            likelihood = self.eval_likelihood(Elogtheta, Elogbeta)
-            logger.info('Likelihood: %.3e', likelihood)
+            # Evaluate bound.
+            word_bound = self.word_bound(Elogtheta, Elogbeta)
+            theta_bound = self.theta_bound(Elogtheta, var_gamma)
+            beta_bound = self.beta_bound(Elogbeta, var_lambda)
+            bound = word_bound + theta_bound + beta_bound
+            #likelihood = self.log_word_prob(var_gamma, var_lambda)
+            logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
+
             logger.info('Converged documents: %d/%d', converged, d + 1)
-            # Evaluating word probabilities:
-            # likelihood = self.eval_word_prob(var_gamma, var_lambda)
         # End of corpus loop.
 
         return var_gamma, var_lambda
 
-    def eval_likelihood(self, Elogtheta, Elogbeta, doc_ids=None):
+    def word_bound(self, Elogtheta, Elogbeta, doc_ids=None):
         """
         Note that this is not strictly speaking a likelihood.
 
@@ -263,8 +268,6 @@ class OnlineAtVb(LdaModel):
 
         where p(w_d | theta, beta, A_d) is the log conditional likelihood of the data.
         """
-        
-        # TODO: call this something other than "likelihood".
 
         # TODO: allow for evaluating test corpus. This will require inferring on unseen documents.
 
@@ -273,29 +276,58 @@ class OnlineAtVb(LdaModel):
         else:
             docs = [self.corpus[d] for d in doc_ids]
 
-        likelihood = 0.0
+        bound= 0.0
         for d, doc in enumerate(docs):
             authors_d = self.doc2author[d]
             ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
             cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
-            likelihood_d = 0.0
+            bound_d = 0.0
             for vi, v in enumerate(ids):
-                likelihood_v = 0.0
+                bound_v = 0.0
                 for k in xrange(self.num_topics):
                     for aid in authors_d:
                         a = self.authorid2idx[aid]
-                        likelihood_v += numpy.exp(Elogtheta[a, k] + Elogbeta[k, v])
-                likelihood_d += cts[vi] * numpy.log(likelihood_v)
-            likelihood += numpy.log(1.0 / len(authors_d)) + likelihood_d
-            #authors_idxs = [self.authorid2idx[aid] for aid in authors_d]
-            #likelihood += author_prior_prob * numpy.sum(cnt * numpy.log(numpy.sum(numpy.exp(logsumexp(Elogtheta[a, :] + Elogbeta[:, id])) for a in authors_idxs)) for id, cnt in doc)
+                        bound_v += numpy.exp(Elogtheta[a, k] + Elogbeta[k, v])
+                bound_d += cts[vi] * numpy.log(bound_v)
+            bound += numpy.log(1.0 / len(authors_d)) + bound_d
 
         # For per-word likelihood, do:
         # likelihood *= 1 /sum(len(doc) for doc in docs)
 
-        return likelihood
+        # TODO: can I do something along the lines of (as in ldamodel):
+        # likelihood += numpy.sum(cnt * logsumexp(Elogthetad + Elogbeta[:, id]) for id, cnt in doc)
 
-    def eval_word_prob(self, var_gamma, var_lambda, doc_ids=None):
+        return bound
+
+    def theta_bound(self, Elogtheta, var_gamma, doc_ids=None):
+        """
+        """
+
+        if doc_ids is None:
+            docs = self.corpus
+        else:
+            docs = [self.corpus[d] for d in doc_ids]
+
+        bound = 0.0
+        for a in xrange(self.num_authors):
+            var_gamma_a = var_gamma[a, :]
+            Elogtheta_a = Elogtheta[a, :]
+            # E[log p(theta | alpha) - log q(theta | gamma)]; assumes alpha is a vector
+            bound += numpy.sum((self.alpha - var_gamma_a) * Elogtheta_a)
+            bound += numpy.sum(gammaln(var_gamma_a) - gammaln(self.alpha))
+            bound += gammaln(numpy.sum(self.alpha)) - gammaln(numpy.sum(var_gamma_a))
+
+        return bound
+
+    def beta_bound(self, Elogbeta, var_lambda, doc_ids=None):
+        bound = 0.0
+        bound += numpy.sum((self.eta - var_lambda) * Elogbeta)
+        bound += numpy.sum(gammaln(var_lambda) - gammaln(self.eta))
+        bound += numpy.sum(gammaln(numpy.sum(self.eta)) - gammaln(numpy.sum(var_lambda, 1)))
+
+        return bound
+
+    def log_word_prob(self, var_gamma, var_lambda, doc_ids=None):
         """
         Compute the liklihood of the corpus under the model, by first 
         computing the conditional probabilities of the words in a
@@ -305,7 +337,6 @@ class OnlineAtVb(LdaModel):
 
         summing over all documents, and dividing by the number of documents.
         """
-        # NOTE: unsure if this is correct.
 
         norm_gamma = var_gamma.copy()
         norm_lambda = var_lambda.copy()
@@ -319,24 +350,25 @@ class OnlineAtVb(LdaModel):
         else:
             docs = [self.corpus[d] for d in doc_ids]
 
-        word_prob = 0.0
+        log_word_prob = 0.0
         for d, doc in enumerate(docs):
             ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
             cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
             authors_d = self.doc2author[d]
-            word_prob_d = 0.0
+            log_word_prob_d = 0.0
             for vi, v in enumerate(ids):
+                log_word_prob_v = 0.0
                 for k in xrange(self.num_topics):
                     for aid in authors_d:
                         a = self.authorid2idx[aid]
-                        word_prob_d += cts[vi] * norm_gamma[a, k] * norm_lambda[k, v]
-            author_prior_prob = 1.0 / len(authors_d)
-            word_prob_d += numpy.log(author_prior_prob)
-            word_prob += word_prob_d
-        word_prob *= 1 / len(docs)
+                        log_word_prob_v += norm_gamma[a, k] * norm_lambda[k, v]
+                log_word_prob_d += cts[vi] * numpy.log(log_word_prob_v)
+            log_word_prob += numpy.log(1.0 / len(authors_d)) + log_word_prob_d
+            #authors_idxs = [self.authorid2idx[aid] for aid in authors_d]
+            #likelihood += author_prior_prob * numpy.sum(cnt * numpy.log(numpy.sum(numpy.exp(logsumexp(Elogtheta[a, :] + Elogbeta[:, id])) for a in authors_idxs)) for id, cnt in doc)
 
-        return word_prob
-        
+        return log_word_prob
+
     # Overriding LdaModel.get_topic_terms.
     def get_topic_terms(self, topicid, topn=10):
         """
