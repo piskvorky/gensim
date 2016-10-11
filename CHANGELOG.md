@@ -2,7 +2,10 @@ Changes
 =======
 
 0.13.3, 2016-09-26
-
+* Added sklearn wrapper for LdaModel (Basic LDA Model) along with relevant test cases and ipynb draft. (@AadityaJ,
+[#932](https://github.com/RaRe-Technologies/gensim/pull/932))
+* Add online learning feature to word2vec. (@isohyt [#900](https://github.com/RaRe-Technologies/gensim/pull/900))
+* Tutorial: Reproducing Doc2vec paper result on wikipedia. (@isohyt, [#654](https://github.com/RaRe-Technologies/gensim/pull/654))
 * Fixed issue #743 , In word2vec's n_similarity method if atleast one empty list is passed ZeroDivisionError is raised, added test cases in test/test_word2vec.py(@pranay360, #883)
 * Added Save/Load interface to AnnoyIndexer for ondex persistence (@fortiema, [#845](https://github.com/RaRe-Technologies/gensim/pull/845))
 * Change export_phrases in Phrases model. Fix issue #794 (@AadityaJ,
