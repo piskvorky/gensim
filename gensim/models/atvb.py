@@ -41,13 +41,12 @@ class AtVb(LdaModel):
     """
     # TODO: inherit interfaces.TransformationABC. Probably not necessary if I'm inheriting LdaModel.
 
-    def __init__(self, corpus=None, num_topics=100, id2word=None,
+    def __init__(self, corpus=None, num_topics=100, id2word=None, id2author=None,
             author2doc=None, doc2author=None, threshold=0.001,
             iterations=10, alpha=None, eta=None,
             eval_every=1, random_state=None):
 
-        # TODO: require only author2doc OR doc2author, and construct the missing one automatically.
-
+        # TODO: allow for asymmetric priors.
         if alpha is None:
             alpha = 1.0 / num_topics
         if eta is None:
@@ -57,6 +56,7 @@ class AtVb(LdaModel):
         if corpus is None and self.id2word is None:
             raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
 
+        # NOTE: this stuff is confusing to me (from LDA code). Why would id2word not be none, but have length 0?
         if self.id2word is None:
             logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
@@ -71,20 +71,61 @@ class AtVb(LdaModel):
         
         logger.info('Vocabulary consists of %d words.', self.num_terms)
 
+        if doc2author is None and author2doc is None:
+            raise ValueError('at least one of author2doc/doc2author must be specified, to establish input space dimensionality')
+
+        # TODO: consider whether there is a more elegant way of doing this (more importantly, a more efficient way).
+        # If either doc2author or author2doc is missing, construct them from the other.
+        if doc2author is None:
+            # Make a mapping from document IDs to author IDs.
+            doc2author = {}
+            for d, _ in enumerate(corpus):
+                author_ids = []
+                for a, a_doc_ids in author2doc.items():
+                    if d in a_doc_ids:
+                        author_ids.append(a)
+                doc2author[d] = author_ids
+        elif author2doc is None:
+            # Make a mapping from author IDs to document IDs.
+
+            # First get a set of all authors.
+            authors_ids = set()
+            for d, a_doc_ids in doc2author.items():
+                for a in a_doc_ids:
+                    authors_ids.add(a)
+
+            # Now construct the dictionary.
+            author2doc = {}
+            for a in range(len(authors_ids)):
+                author2doc[a] = []
+                for d, a_ids in doc2author.items():
+                    if a in a_ids:
+                        author2doc[a].append(d)
+
+        self.author2doc = author2doc
+        self.doc2author = doc2author
+
+        self.num_authors = len(self.author2doc)
+        logger.info('Number of authors: %d.', self.num_authors)
+
+        # TODO: finish this. Initialize id2author with integer "names" if actual names are not provided.
+        self.id2author = id2author
+        if self.id2author is None:
+            logger.warning("no author id mapping provided; initializing from corpus, assuming identity")
+            author_integer_ids = [str(i) for i in range(len(author2doc))]
+            self.id2author = dict(zip(range(len(author2doc)), author_integer_ids))
+
         self.corpus = corpus
         self.iterations = iterations
         self.num_topics = num_topics
         self.threshold = threshold
         self.alpha = alpha
         self.eta = eta
-        self.author2doc = author2doc
-        self.doc2author = doc2author
         self.num_docs = len(corpus)
         self.num_authors = len(author2doc)
         self.eval_every = eval_every
         self.random_state = random_state
 
-        logger.info('Number of authors: %d.', self.num_authors)
 
         # TODO: find a way out of this nonsense.
         self.authorid2idx = dict(zip(list(author2doc.keys()), xrange(self.num_authors)))
