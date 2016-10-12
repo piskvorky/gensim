@@ -43,7 +43,7 @@ class AtVb(LdaModel):
 
     def __init__(self, corpus=None, num_topics=100, id2word=None, id2author=None,
             author2doc=None, doc2author=None, threshold=0.001,
-            iterations=10, alpha=None, eta=None,
+            iterations=10, alpha=None, eta=None, minimum_probability=0.01,
             eval_every=1, random_state=None):
 
         # TODO: allow for asymmetric priors.
@@ -119,17 +119,13 @@ class AtVb(LdaModel):
         self.iterations = iterations
         self.num_topics = num_topics
         self.threshold = threshold
+        self.minimum_probability = minimum_probability 
         self.alpha = alpha
         self.eta = eta
         self.num_docs = len(corpus)
         self.num_authors = len(author2doc)
         self.eval_every = eval_every
         self.random_state = random_state
-
-
-        # TODO: find a way out of this nonsense.
-        self.authorid2idx = dict(zip(list(author2doc.keys()), xrange(self.num_authors)))
-        self.authoridx2id = dict(zip(xrange(self.num_authors), list(author2doc.keys())))
 
         self.random_state = get_random_state(random_state)
 
@@ -159,8 +155,7 @@ class AtVb(LdaModel):
             ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
             for v in ids:
                 authors_d = doc2author[d]  # List of author IDs for document d.
-                for aid in authors_d:
-                    a = self.authorid2idx[aid]
+                for a in authors_d:
                     # Draw mu from gamma distribution.
                     # var_mu[(d, v, a)] = self.random_state.gamma(100., 1. / 100., (1,))[0]
                     var_mu[(d, v, a)] = 1 / len(authors_d)
@@ -202,8 +197,7 @@ class AtVb(LdaModel):
                     for k in xrange(self.num_topics):
                         # Average Elogtheta over authors a in document d.
                         avgElogtheta = 0.0
-                        for aid in authors_d:
-                            a = self.authorid2idx[aid]
+                        for a in authors_d:
                             avgElogtheta += var_mu[(d, v, a)] * Elogtheta[a, k]
                         expavgElogtheta = numpy.exp(avgElogtheta)
 
@@ -222,8 +216,7 @@ class AtVb(LdaModel):
                 # author_prior_prob = 1. / len(authors_d)
                 for v in ids:
                     mu_sum = 0.0
-                    for aid in authors_d:
-                        a = self.authorid2idx[aid]
+                    for a in authors_d:
                         # Average Elogtheta over topics k.
                         avgElogtheta = 0.0
                         for k in xrange(self.num_topics):
@@ -237,15 +230,13 @@ class AtVb(LdaModel):
                         mu_sum += var_mu[(d, v, a)]
 
                     mu_norm_const = 1.0 / mu_sum
-                    for aid in authors_d:
-                        a = self.authorid2idx[aid]
+                    for a in authors_d:
                         var_mu[(d, v, a)] *= mu_norm_const
 
             # Update gamma.
             for a in xrange(self.num_authors):
                 for k in xrange(self.num_topics):
-                    aid = self.authoridx2id[a]
-                    docs_a = self.author2doc[aid]
+                    docs_a = self.author2doc[a]
                     var_gamma[a, k] = 0.0
                     var_gamma[a, k] += self.alpha
                     for d in docs_a:
@@ -279,12 +270,13 @@ class AtVb(LdaModel):
             Elogbeta = dirichlet_expectation(var_lambda)
             expElogbeta = numpy.exp(Elogbeta)
 
-
             logger.info('All variables updated.')
 
             # Print topics:
             self.var_lambda = var_lambda
             #pprint(self.show_topics())
+
+            self.var_gamma = var_gamma
 
             # Evaluate bound.
             if (iteration + 1) % self.eval_every == 0:
@@ -328,8 +320,7 @@ class AtVb(LdaModel):
             for vi, v in enumerate(ids):
                 bound_v = 0.0
                 for k in xrange(self.num_topics):
-                    for aid in authors_d:
-                        a = self.authorid2idx[aid]
+                    for a in authors_d:
                         bound_v += numpy.exp(Elogtheta[a, k] + Elogbeta[k, v])
                 bound_d += cts[vi] * numpy.log(bound_v)
             bound += numpy.log(1.0 / len(authors_d)) + bound_d
@@ -402,8 +393,7 @@ class AtVb(LdaModel):
             for vi, v in enumerate(ids):
                 log_word_prob_v = 0.0
                 for k in xrange(self.num_topics):
-                    for aid in authors_d:
-                        a = self.authorid2idx[aid]
+                    for a in authors_d:
                         log_word_prob_v += norm_gamma[a, k] * norm_lambda[k, v]
                 log_word_prob_d += cts[vi] * numpy.log(log_word_prob_v)
             log_word_prob += numpy.log(1.0 / len(authors_d)) + log_word_prob_d
@@ -424,6 +414,23 @@ class AtVb(LdaModel):
         bestn = matutils.argsort(topic, topn, reverse=True)
         return [(id, topic[id]) for id in bestn]
 
+
+    def get_author_topics(self, author_id, minimum_probability=None):
+        """
+        Return topic distribution the given author, as a list of
+        (topic_id, topic_probability) 2-tuples.
+        Ignore topics with very low probability (below `minimum_probability`).
+        """
+        if minimum_probability is None:
+            minimum_probability = self.minimum_probability
+        minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
+
+        topic_dist = self.var_gamma[author_id, :] / sum(self.var_gamma[author_id, :])
+
+        author_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
+                if topicvalue >= minimum_probability]
+
+        return author_topics
 
 
 
