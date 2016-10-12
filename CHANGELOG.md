@@ -1,5 +1,9 @@
 Changes
 =======
+0.13.4, 2016-10-12
+
+* Fixed issue in ldamodel.py by adding a parameter per_word_topics to apply call (@saksham15082, #908)
+
 
 0.13.3, 2016-09-26
 
