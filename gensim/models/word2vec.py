@@ -96,6 +96,7 @@ from six.moves import xrange
 from types import GeneratorType
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
 
 try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
@@ -280,7 +281,7 @@ def sigmoid(p):
         return exp(p) / (1 + exp(p))
     else:
         raise ValueError
-        
+
 def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
     neu1e = zeros(l1.shape)
 
@@ -1613,7 +1614,7 @@ class Word2Vec(utils.SaveLoad):
         v2 = [self[word] for word in ws2]
         return dot(matutils.unitvec(array(v1).mean(axis=0)),
                    matutils.unitvec(array(v2).mean(axis=0)))
-        
+
 
     def init_sims(self, replace=False):
         """
