@@ -244,7 +244,7 @@ class TestLdaModel(unittest.TestCase):
             self.assertTrue(isinstance(v, float))
 
     def testShowTopics(self):
-        
+
         #testing show_topic
         topics = self.model.show_topics(formatted=False)
 
@@ -257,9 +257,7 @@ class TestLdaModel(unittest.TestCase):
 
         #testing print_topic
         topics = self.model.show_topics(formatted=True)
-        print type(topics)
         for topic_no, topic in topics:
-            print type(topic_no),type(topic)
             self.assertTrue(isinstance(topic_no, int))
             self.assertTrue(isinstance(topic, str))
 
