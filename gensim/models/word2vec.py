@@ -96,7 +96,7 @@ from six.moves import xrange
 from types import GeneratorType
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s') is better
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
 
 try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
