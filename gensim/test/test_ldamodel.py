@@ -244,6 +244,8 @@ class TestLdaModel(unittest.TestCase):
             self.assertTrue(isinstance(v, float))
 
     def testShowTopics(self):
+        
+        #testing show_topic
         topics = self.model.show_topics(formatted=False)
 
         for topic_no, topic in topics:
@@ -252,6 +254,14 @@ class TestLdaModel(unittest.TestCase):
             for k, v in topic:
                 self.assertTrue(isinstance(k, six.string_types))
                 self.assertTrue(isinstance(v, float))
+
+        #testing print_topic
+        topics = self.model.show_topics(formatted=True)
+        print type(topics)
+        for topic_no, topic in topics:
+            print type(topic_no),type(topic)
+            self.assertTrue(isinstance(topic_no, int))
+            self.assertTrue(isinstance(topic, str))
 
 
     def testGetDocumentTopics(self):
@@ -278,7 +288,7 @@ class TestLdaModel(unittest.TestCase):
 
         for w, phi_values in word_phis:
             self.assertTrue(isinstance(w, int))
-            self.assertTrue(isinstance(phi_values, list))            
+            self.assertTrue(isinstance(phi_values, list))
 
         # word_topics looks like this: ({word_id => [topic_id_most_probable, topic_id_second_most_probable, ...]).
         # we check one case in word_topics, i.e of the first word in the doc, and it's likely topics.
