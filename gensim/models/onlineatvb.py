@@ -41,13 +41,12 @@ class OnlineAtVb(LdaModel):
     """
     # TODO: inherit interfaces.TransformationABC.
 
-    def __init__(self, corpus=None, num_topics=100, id2word=None,
-            author2doc=None, doc2author=None, threshold=0.001,
+    def __init__(self, corpus=None, num_topics=100, id2word=None, id2author=None,
+            author2doc=None, doc2author=None, threshold=0.001, minimum_probability=0.01,
             iterations=10, alpha=None, eta=None, decay=0.5, offset=1.0,
             eval_every=1, random_state=None):
 
-        # TODO: require only author2doc OR doc2author, and construct the missing one automatically.
-
+        # TODO: allow for asymmetric priors.
         if alpha is None:
             alpha = 1.0 / num_topics
         if eta is None:
@@ -57,6 +56,7 @@ class OnlineAtVb(LdaModel):
         if corpus is None and self.id2word is None:
             raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
 
+        # NOTE: this stuff is confusing to me (from LDA code). Why would id2word not be none, but have length 0?
         if self.id2word is None:
             logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
@@ -71,40 +71,67 @@ class OnlineAtVb(LdaModel):
 
         logger.info('Vocabulary consists of %d words.', self.num_terms)
 
-        if author2doc is None or doc2author is None:
-            raise ValueError('author2doc and doc2author must be supplied.')
+        if doc2author is None and author2doc is None:
+            raise ValueError('at least one of author2doc/doc2author must be specified, to establish input space dimensionality')
+
+        # TODO: consider whether there is a more elegant way of doing this (more importantly, a more efficient way).
+        # If either doc2author or author2doc is missing, construct them from the other.
+        if doc2author is None:
+            # Make a mapping from document IDs to author IDs.
+            doc2author = {}
+            for d, _ in enumerate(corpus):
+                author_ids = []
+                for a, a_doc_ids in author2doc.items():
+                    if d in a_doc_ids:
+                        author_ids.append(a)
+                doc2author[d] = author_ids
+        elif author2doc is None:
+            # Make a mapping from author IDs to document IDs.
+
+            # First get a set of all authors.
+            authors_ids = set()
+            for d, a_doc_ids in doc2author.items():
+                for a in a_doc_ids:
+                    authors_ids.add(a)
+
+            # Now construct the dictionary.
+            author2doc = {}
+            for a in range(len(authors_ids)):
+                author2doc[a] = []
+                for d, a_ids in doc2author.items():
+                    if a in a_ids:
+                        author2doc[a].append(d)
+
+        self.author2doc = author2doc
+        self.doc2author = doc2author
+
+        self.num_authors = len(self.author2doc)
+        logger.info('Number of authors: %d.', self.num_authors)
+
+        self.id2author = id2author
+        if self.id2author is None:
+            logger.warning("no author id mapping provided; initializing from corpus, assuming identity")
+            author_integer_ids = [str(i) for i in range(len(author2doc))]
+            self.id2author = dict(zip(range(len(author2doc)), author_integer_ids))
 
         self.corpus = corpus
         self.iterations = iterations
         self.num_topics = num_topics
         self.threshold = threshold
+        self.minimum_probability = minimum_probability 
         self.alpha = alpha
         self.eta = eta
         self.decay = decay
         self.offset = offset
-        self.author2doc = author2doc
-        self.doc2author = doc2author
+        self.num_docs = len(corpus)
         self.num_authors = len(author2doc)
         self.eval_every = eval_every
         self.random_state = random_state
 
-        # Some of the methods in LdaModel are used in this class.
-        # I.e. composition is used instead of inheriting the LdaModel class.
-        self.ldamodel = LdaModel(id2word=self.id2word)
-
-        logger.info('Number of authors: %d.', self.num_authors)
-
-        # TODO: find a way out of this nonsense.
-        self.authorid2idx = dict(zip(list(author2doc.keys()), xrange(self.num_authors)))
-        self.authoridx2id = dict(zip(xrange(self.num_authors), list(author2doc.keys())))
-
         self.random_state = get_random_state(random_state)
 
         if corpus is not None:
-            (self.var_gamma, self.var_lambda) = self.inference(corpus, author2doc, doc2author)
-        else:
-            self.var_lambda = self.random_state.gamma(100., 1. / 100.,
-                    (self.num_topics, self.num_terms))
+            self.inference(corpus, author2doc, doc2author)
 
     def rho(self, iteration):
         return pow(self.offset + iteration, -self.decay)
@@ -149,7 +176,7 @@ class OnlineAtVb(LdaModel):
             # NOTE: maybe not the best idea that mu changes shape every iteration.
             var_mu = numpy.zeros((self.num_terms, len(authors_d)))
             for v in ids:
-                for a in xrange(len(authors_d)):
+                for a in xrange(len(authors_d)):  # TODO: not 100% sure this makes sense.
                     var_mu[v, a] = 1 / len(authors_d)
 
             for iteration in xrange(self.iterations):
@@ -172,6 +199,7 @@ class OnlineAtVb(LdaModel):
                         var_phi[v, k] = expavgElogtheta * expElogbeta[k, v]
 
                     # Normalize phi over k.
+                    # TODO: replace log_normalization. Also in offline algo.
                     (log_var_phi_v, _) = log_normalize(numpy.log(var_phi[v, :]))  # NOTE: it might be possible to do this out of the v loop.
                     var_phi[v, :] = numpy.exp(log_var_phi_v)
 
@@ -192,6 +220,7 @@ class OnlineAtVb(LdaModel):
                         var_mu[v, a] = author_prior_prob * expavgElogtheta
 
                     # Normalize mu.
+                    # TODO: replace log_normalization. Also in offline algo.
                     (log_var_mu_v, _) = log_normalize(numpy.log(var_mu[v, :]))
                     var_mu[v, :] = numpy.exp(log_var_mu_v)
 
@@ -201,8 +230,7 @@ class OnlineAtVb(LdaModel):
                         tilde_gamma[a, k] = 0.0
                         for vi, v in enumerate(ids):
                             tilde_gamma[a, k] += cts[vi] * var_mu[v, a] * var_phi[v, k]
-                        aid = self.authoridx2id[a]
-                        tilde_gamma[a, k] *= len(author2doc[aid])
+                        tilde_gamma[a, k] *= len(author2doc[a])
                         tilde_gamma[a, k] += self.alpha
 
                 # Update lambda.
@@ -210,11 +238,13 @@ class OnlineAtVb(LdaModel):
                 for k in xrange(self.num_topics):
                     for vi, v in enumerate(ids):
                         cnt = dict(doc).get(v, 0)
+                        # TODO: I'm supposed to multiply the "sufficient statistic" by the size of the corpus.
                         var_lambda[k, v] = self.eta + cnt * var_phi[v, k]
                         #tilde_lambda[k, v] = self.eta + self.num_docs * cts[vi] * var_phi[v, k]
 
+                # TODO: probably use mean change, since that is used in LDA.
                 # Check for convergence.
-                # Criterion is mean change in "local" gamma and lambda.
+                # Criterion is max change in "local" gamma and lambda.
                 if iteration > 0:
                     maxchange_gamma = numpy.max(abs(tilde_gamma - lastgamma))
                     maxchange_lambda = numpy.max(abs(tilde_lambda - lastlambda))
@@ -240,7 +270,6 @@ class OnlineAtVb(LdaModel):
             Elogbeta = dirichlet_expectation(var_lambda)
             expElogbeta = numpy.exp(Elogbeta)
 
-
             # Print topics:
             # self.var_lambda = var_lambda
             # pprint(self.show_topics())
@@ -255,6 +284,9 @@ class OnlineAtVb(LdaModel):
 
             logger.info('Converged documents: %d/%d', converged, d + 1)
         # End of corpus loop.
+
+        self.var_lambda = var_lambda
+        self.var_gamma = var_gamma
 
         return var_gamma, var_lambda
 
@@ -285,8 +317,7 @@ class OnlineAtVb(LdaModel):
             for vi, v in enumerate(ids):
                 bound_v = 0.0
                 for k in xrange(self.num_topics):
-                    for aid in authors_d:
-                        a = self.authorid2idx[aid]
+                    for a in authors_d:
                         bound_v += numpy.exp(Elogtheta[a, k] + Elogbeta[k, v])
                 bound_d += cts[vi] * numpy.log(bound_v)
             bound += numpy.log(1.0 / len(authors_d)) + bound_d
@@ -359,8 +390,7 @@ class OnlineAtVb(LdaModel):
             for vi, v in enumerate(ids):
                 log_word_prob_v = 0.0
                 for k in xrange(self.num_topics):
-                    for aid in authors_d:
-                        a = self.authorid2idx[aid]
+                    for a in authors_d:
                         log_word_prob_v += norm_gamma[a, k] * norm_lambda[k, v]
                 log_word_prob_d += cts[vi] * numpy.log(log_word_prob_v)
             log_word_prob += numpy.log(1.0 / len(authors_d)) + log_word_prob_d
@@ -380,6 +410,25 @@ class OnlineAtVb(LdaModel):
         topic = topic / topic.sum()  # normalize to probability distribution
         bestn = matutils.argsort(topic, topn, reverse=True)
         return [(id, topic[id]) for id in bestn]
+
+    def get_author_topics(self, author_id, minimum_probability=None):
+        """
+        Return topic distribution the given author, as a list of
+        (topic_id, topic_probability) 2-tuples.
+        Ignore topics with very low probability (below `minimum_probability`).
+        """
+        if minimum_probability is None:
+            minimum_probability = self.minimum_probability
+        minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
+
+        topic_dist = self.var_gamma[author_id, :] / sum(self.var_gamma[author_id, :])
+
+        author_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
+                if topicvalue >= minimum_probability]
+
+        # author_name = self.id2author[author_id]
+
+        return author_topics
 
 
 
