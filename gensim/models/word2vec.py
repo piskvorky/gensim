@@ -96,7 +96,6 @@ from six.moves import xrange
 from types import GeneratorType
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
 
 try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
@@ -432,6 +431,7 @@ class Word2Vec(utils.SaveLoad):
         texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
 
         """
+        logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
         self.vocab = {}  # mapping from a word (string) to a Vocab object
         self.index2word = []  # map from a word's matrix index (int) to word (string)
         self.sg = int(sg)
@@ -1938,3 +1938,5 @@ if __name__ == "__main__":
         model.accuracy(args.accuracy)
 
     logger.info("finished running %s", program)
+else:
+    print ("Please run basicConfig.")
