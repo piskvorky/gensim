@@ -46,25 +46,6 @@ meanchangethresh = 0.00001
 rhot_bound = 0.0
 
 
-def log_normalize(v):
-    log_max = 100.0
-    if len(v.shape) == 1:
-        max_val = np.max(v)
-        log_shift = log_max - np.log(len(v) + 1.0) - max_val
-        tot = np.sum(np.exp(v + log_shift))
-        log_norm = np.log(tot) - log_shift
-        v = v - log_norm
-    else:
-        max_val = np.max(v, 1)
-        log_shift = log_max - np.log(v.shape[1] + 1.0) - max_val
-        tot = np.sum(np.exp(v + log_shift[:, np.newaxis]), 1)
-
-        log_norm = np.log(tot) - log_shift
-        v = v - log_norm[:, np.newaxis]
-
-    return (v, log_norm)
-
-
 def dirichlet_expectation(alpha):
     """
     For a vector theta ~ Dir(alpha), compute E[log(theta)] given alpha.
@@ -339,21 +320,21 @@ class HdpModel(interfaces.TransformationABC):
             # var_phi
             if iter < 3:
                 var_phi = np.dot(phi.T,  (Elogbeta_doc * doc_word_counts).T)
-                (log_var_phi, log_norm) = log_normalize(var_phi)
+                (log_var_phi, log_norm) = matutils.ret_log_normalize_vec(var_phi)
                 var_phi = np.exp(log_var_phi)
             else:
                 var_phi = np.dot(phi.T,  (Elogbeta_doc * doc_word_counts).T) + Elogsticks_1st
-                (log_var_phi, log_norm) = log_normalize(var_phi)
+                (log_var_phi, log_norm) = matutils.ret_log_normalize_vec(var_phi)
                 var_phi = np.exp(log_var_phi)
 
             # phi
             if iter < 3:
                 phi = np.dot(var_phi, Elogbeta_doc).T
-                (log_phi, log_norm) = log_normalize(phi)
+                (log_phi, log_norm) = matutils.ret_log_normalize_vec(phi)
                 phi = np.exp(log_phi)
             else:
                 phi = np.dot(var_phi, Elogbeta_doc).T + Elogsticks_2nd
-                (log_phi, log_norm) = log_normalize(phi)
+                (log_phi, log_norm) = matutils.ret_log_normalize_vec(phi)
                 phi = np.exp(log_phi)
 
             # v
