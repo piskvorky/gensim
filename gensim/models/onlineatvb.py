@@ -153,7 +153,7 @@ class OnlineAtVb(LdaModel):
 
         converged = 0
 
-        # TODO: consider making phi and mu sparse.
+        # TODO: consider making phi sparse. Each document does not contain all terms.
         var_phi = numpy.zeros((self.num_terms, self.num_topics))
 
         var_gamma = init_gamma.copy()
@@ -172,7 +172,8 @@ class OnlineAtVb(LdaModel):
 
             # Initialize mu.
             # mu is 1/|A_d| if a is in A_d, zero otherwise.
-            # NOTE: I could do random initialization instead.
+            # TODO: consider doing random initialization instead.
+            # TODO: consider making mu a sparse matrix instead of a dictionary.
             var_mu = dict()
             for v in ids:
                 for a in authors_d:
@@ -206,7 +207,6 @@ class OnlineAtVb(LdaModel):
                 for v in ids:
                     # Prior probability of observing author a in document d is one
                     # over the number of authors in document d.
-                    author_prior_prob = 1.0 / len(authors_d)
                     mu_sum = 0.0
                     for a in authors_d:
                         # Average Elogtheta over topics k.
@@ -217,7 +217,7 @@ class OnlineAtVb(LdaModel):
 
                         # Compute mu over a.
                         # TODO: avoid computing mu if possible.
-                        var_mu[(v, a)] = author_prior_prob * expavgElogtheta
+                        var_mu[(v, a)] = expavgElogtheta
                         mu_sum += var_mu[(v, a)]
 
                     # Normalize mu.
@@ -239,9 +239,7 @@ class OnlineAtVb(LdaModel):
                 for k in xrange(self.num_topics):
                     for vi, v in enumerate(ids):
                         cnt = dict(doc).get(v, 0)
-                        # TODO: I'm supposed to multiply the "sufficient statistic" by the size of the corpus.
-                        var_lambda[k, v] = self.eta + cnt * var_phi[v, k]
-                        #tilde_lambda[k, v] = self.eta + self.num_docs * cts[vi] * var_phi[v, k]
+                        var_lambda[k, v] = self.eta + self.num_docs * cnt * var_phi[v, k]
 
                 # TODO: probably use mean change, since that is used in LDA.
                 # Check for convergence.
