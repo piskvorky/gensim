@@ -348,6 +348,7 @@ def ret_log_normalize_vec(vec, axis = 1):
             raise ValueError("'%d' is not a supported axis" % axis)
     return (vec, log_norm)
 
+
 blas_nrm2 = blas('nrm2', numpy.array([], dtype=float))
 blas_scal = blas('scal', numpy.array([], dtype=float))
 
