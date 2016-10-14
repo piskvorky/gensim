@@ -262,7 +262,7 @@ class OnlineAtVb(LdaModel):
                         # logger.info('Mean change in gamma: %.3e', meanchange_gamma)
                         # logger.info('Mean change in lambda: %.3e', meanchange_lambda)
                         if meanchange_gamma < self.threshold and meanchange_lambda < self.threshold:
-                            logger.info('Converged after %d iterations.', iteration)
+                            # logger.info('Converged after %d iterations.', iteration)
                             converged += 1
                             break
                 # End of iterations loop.
@@ -285,14 +285,15 @@ class OnlineAtVb(LdaModel):
                 # self.var_lambda = var_lambda
                 # pprint(self.show_topics())
 
-                # Evaluate bound.
-                word_bound = self.word_bound(Elogtheta, Elogbeta)
-                theta_bound = self.theta_bound(Elogtheta, var_gamma)
-                beta_bound = self.beta_bound(Elogbeta, var_lambda)
-                bound = word_bound + theta_bound + beta_bound
-                #likelihood = self.log_word_prob(var_gamma, var_lambda)
-                logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
             # End of corpus loop.
+
+            # Evaluate bound.
+            word_bound = self.word_bound(Elogtheta, Elogbeta)
+            theta_bound = self.theta_bound(Elogtheta, var_gamma)
+            beta_bound = self.beta_bound(Elogbeta, var_lambda)
+            bound = word_bound + theta_bound + beta_bound
+            #likelihood = self.log_word_prob(var_gamma, var_lambda)
+            logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
 
             logger.info('Converged documents: %d/%d', converged, self.num_docs)
 
