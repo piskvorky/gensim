@@ -173,11 +173,10 @@ class OnlineAtVb(LdaModel):
             # Initialize mu.
             # mu is 1/|A_d| if a is in A_d, zero otherwise.
             # NOTE: I could do random initialization instead.
-            # NOTE: maybe not the best idea that mu changes shape every iteration.
-            var_mu = numpy.zeros((self.num_terms, len(authors_d)))
+            var_mu = dict()
             for v in ids:
-                for a in xrange(len(authors_d)):  # TODO: not 100% sure this makes sense.
-                    var_mu[v, a] = 1 / len(authors_d)
+                for a in authors_d:
+                    var_mu[(v, a)] = 1 / len(authors_d)
 
             for iteration in xrange(self.iterations):
                 #logger.info('iteration %i', iteration)
@@ -190,8 +189,8 @@ class OnlineAtVb(LdaModel):
                     for k in xrange(self.num_topics):
                         # Average Elogtheta over authors a in document d.
                         avgElogtheta = 0.0
-                        for a in xrange(len(authors_d)):
-                            avgElogtheta += var_mu[v, a] * Elogtheta[a, k]
+                        for a in authors_d:
+                            avgElogtheta += var_mu[(v, a)] * Elogtheta[a, k]
                         expavgElogtheta = numpy.exp(avgElogtheta)
 
                         # Compute phi.
@@ -208,7 +207,8 @@ class OnlineAtVb(LdaModel):
                     # Prior probability of observing author a in document d is one
                     # over the number of authors in document d.
                     author_prior_prob = 1.0 / len(authors_d)
-                    for a in xrange(len(authors_d)):
+                    mu_sum = 0.0
+                    for a in authors_d:
                         # Average Elogtheta over topics k.
                         avgElogtheta = 0.0
                         for k in xrange(self.num_topics):
@@ -217,19 +217,20 @@ class OnlineAtVb(LdaModel):
 
                         # Compute mu over a.
                         # TODO: avoid computing mu if possible.
-                        var_mu[v, a] = author_prior_prob * expavgElogtheta
+                        var_mu[(v, a)] = author_prior_prob * expavgElogtheta
+                        mu_sum += var_mu[(v, a)]
 
                     # Normalize mu.
-                    # TODO: replace log_normalization. Also in offline algo.
-                    (log_var_mu_v, _) = log_normalize(numpy.log(var_mu[v, :]))
-                    var_mu[v, :] = numpy.exp(log_var_mu_v)
+                    mu_norm_const = 1.0 / mu_sum
+                    for a in authors_d:
+                        var_mu[(v, a)] *= mu_norm_const
 
                 # Update gamma.
-                for a in xrange(len(authors_d)):
+                for a in authors_d:
                     for k in xrange(self.num_topics):
                         tilde_gamma[a, k] = 0.0
                         for vi, v in enumerate(ids):
-                            tilde_gamma[a, k] += cts[vi] * var_mu[v, a] * var_phi[v, k]
+                            tilde_gamma[a, k] += cts[vi] * var_mu[(v, a)] * var_phi[v, k]
                         tilde_gamma[a, k] *= len(author2doc[a])
                         tilde_gamma[a, k] += self.alpha
 
