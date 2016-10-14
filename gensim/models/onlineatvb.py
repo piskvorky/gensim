@@ -137,8 +137,8 @@ class OnlineAtVb(LdaModel):
         if corpus is not None:
             self.inference(corpus)
 
-    def rho(self, iteration):
-        return pow(self.offset + iteration, -self.decay)
+    def rho(self, t):
+        return pow(self.offset + t, -self.decay)
 
     def inference(self, corpus=None):
         if corpus is None:
@@ -176,7 +176,8 @@ class OnlineAtVb(LdaModel):
         bound = word_bound + theta_bound + beta_bound
         #likelihood = self.log_word_prob(var_gamma, var_lambda)
         logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
-        for _ in xrange(self.passes):
+        t = 0
+        for _pass in xrange(self.passes):
             converged = 0  # Number of documents converged for current pass over corpus.
             prev_bound = bound
             for d, doc in enumerate(corpus):
@@ -267,10 +268,16 @@ class OnlineAtVb(LdaModel):
                             break
                 # End of iterations loop.
 
+                # TODO: I don't need to update the entire gamma, as I only updated a few rows of it,
+                # corresponding to the authors in the document. The same goes for Elogtheta.
+
                 # Update gamma and lambda.
                 # Interpolation between document d's "local" gamma (tilde_gamma),
                 # and "global" gamma (var_gamma). Same goes for lambda.
-                rhot = self.rho(d)
+                # TODO: I may need to be smarter about computing rho. In ldamodel,
+                # it's: pow(offset + pass_ + (self.num_updates / chunksize), -decay).
+                rhot = self.rho(t)
+                t += 1
                 var_gamma = (1 - rhot) * var_gamma + rhot * tilde_gamma
                 # Note that we only changed the elements in lambda corresponding to 
                 # the words in document d, hence the [:, ids] indexing.
@@ -288,12 +295,13 @@ class OnlineAtVb(LdaModel):
             # End of corpus loop.
 
             # Evaluate bound.
-            word_bound = self.word_bound(Elogtheta, Elogbeta)
-            theta_bound = self.theta_bound(Elogtheta, var_gamma)
-            beta_bound = self.beta_bound(Elogbeta, var_lambda)
-            bound = word_bound + theta_bound + beta_bound
-            #likelihood = self.log_word_prob(var_gamma, var_lambda)
-            logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
+            if _pass % self.eval_every == 0:
+                word_bound = self.word_bound(Elogtheta, Elogbeta)
+                theta_bound = self.theta_bound(Elogtheta, var_gamma)
+                beta_bound = self.beta_bound(Elogbeta, var_lambda)
+                bound = word_bound + theta_bound + beta_bound
+                #likelihood = self.log_word_prob(var_gamma, var_lambda)
+                logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
 
             logger.info('Converged documents: %d/%d', converged, self.num_docs)
 
