@@ -68,3 +68,6 @@ data
 *.model
 *~
 *_out.txt
+*.html
+*.inv
+*.js
