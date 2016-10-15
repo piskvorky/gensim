@@ -23,6 +23,7 @@ import scipy.linalg
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import ldamodel, ldamulticore
 from gensim import matutils
+from gensim.test import test_basemodel
 
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
@@ -53,7 +54,8 @@ def testRandomState():
     for testcase in testcases:
         assert(isinstance(ldamodel.get_random_state(testcase), numpy.random.RandomState))
 
-class TestLdaModel(unittest.TestCase):
+
+class TestLdaModel(unittest.TestCase, test_basemodel.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = ldamodel.LdaModel
@@ -217,7 +219,6 @@ class TestLdaModel(unittest.TestCase):
         kwargs['eta'] = "gensim is cool"
         self.assertRaises(ValueError, self.class_, **kwargs)
 
-
     def testTopTopics(self):
         top_topics = self.model.top_topics(self.corpus)
 
@@ -235,32 +236,6 @@ class TestLdaModel(unittest.TestCase):
         for k, v in topic_terms:
             self.assertTrue(isinstance(k, numbers.Integral))
             self.assertTrue(isinstance(v, float))
-
-    def testShowTopic(self):
-        topic = self.model.show_topic(1)
-
-        for k, v in topic:
-            self.assertTrue(isinstance(k, six.string_types))
-            self.assertTrue(isinstance(v, float))
-
-    def testShowTopics(self):
-
-        #testing show_topic
-        topics = self.model.show_topics(formatted=False)
-
-        for topic_no, topic in topics:
-            self.assertTrue(isinstance(topic_no, int))
-            self.assertTrue(isinstance(topic, list))
-            for k, v in topic:
-                self.assertTrue(isinstance(k, six.string_types))
-                self.assertTrue(isinstance(v, float))
-
-        #testing print_topic
-        topics = self.model.show_topics(formatted=True)
-        for topic_no, topic in topics:
-            self.assertTrue(isinstance(topic_no, int))
-            self.assertTrue(isinstance(topic, str) or isinstance(topic, unicode))
-
 
     def testGetDocumentTopics(self):
 

@@ -47,7 +47,6 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
-
 class TestHdpModel(unittest.TestCase):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
@@ -63,7 +62,6 @@ class TestHdpModel(unittest.TestCase):
             for k, v in topic:
                 self.assertTrue(isinstance(k, six.string_types))
                 self.assertTrue(isinstance(v, float))
-
 
 
 if __name__ == '__main__':
