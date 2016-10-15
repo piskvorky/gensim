@@ -508,8 +508,8 @@ class DocvecsArray(utils.SaveLoad):
         d1 = model.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, steps=steps)
         d2 = model.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, steps=steps)
         return dot(matutils.unitvec(d1), matutils.unitvec(d2))
-        
-        
+
+
 class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
     """A string document tag discovered during the initial vocabulary
     scan. (The document-vector equivalent of a Vocab object.)
@@ -553,7 +553,7 @@ class Doc2Vec(Word2Vec):
 
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
 
-        `seed` = for the random number generator. 
+        `seed` = for the random number generator.
         Note that for a fully deterministically-reproducible run, you must also limit the model to
         a single worker thread, to eliminate ordering jitter from OS thread scheduling. (In Python
         3, reproducibility between interpreter launches also requires use of the PYTHONHASHSEED
@@ -570,7 +570,7 @@ class Doc2Vec(Word2Vec):
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
 
-        `iter` = number of iterations (epochs) over the corpus. The default inherited from Word2Vec is 5, 
+        `iter` = number of iterations (epochs) over the corpus. The default inherited from Word2Vec is 5,
         but values of 10 or 20 are common in published 'Paragraph Vector' experiments.
 
         `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0).
@@ -601,8 +601,11 @@ class Doc2Vec(Word2Vec):
 
         """
         super(Doc2Vec, self).__init__(
-            sg=(1+dm) % 2,
+            size=size, window=window, min_count=min_count,
+            sample=sample, workers=workers,
+            sg=(1 + dm) % 2,
             null_word=dm_concat, **kwargs)
+
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
