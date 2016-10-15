@@ -223,7 +223,7 @@ class Projection(utils.SaveLoad):
 #endclass Projection
 
 
-class LsiModel(interfaces.TransformationABC,basemodel.BaseTopicModel):
+class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """
     Objects of this class allow building and maintaining a model for Latent
     Semantic Indexing (also known as Latent Semantic Analysis).
@@ -516,10 +516,6 @@ class LsiModel(interfaces.TransformationABC,basemodel.BaseTopicModel):
                 if log:
                     logger.info("topic #%i(%.3f): %s", i, self.projection.s[i], topic)
         return shown
-
-    def print_topics(self, num_topics=5, num_words=10):
-        """Alias for `show_topics()` which prints the top 5 topics to log."""
-        return self.show_topics(num_topics=num_topics, num_words=num_words, log=True)
 
     def print_debug(self, num_topics=5, num_words=10):
         """

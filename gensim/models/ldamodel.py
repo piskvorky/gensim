@@ -195,7 +195,7 @@ class LdaState(utils.SaveLoad):
 # endclass LdaState
 
 
-class LdaModel(interfaces.TransformationABC,basemodel.BaseTopicModel):
+class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """
     The constructor estimates Latent Dirichlet Allocation model parameters based
     on a training corpus:
@@ -768,9 +768,6 @@ class LdaModel(interfaces.TransformationABC,basemodel.BaseTopicModel):
 
         score += numpy.sum(gammaln(sum_eta) - gammaln(numpy.sum(_lambda, 1)))
         return score
-
-    def print_topics(self, num_topics=10, num_words=10):
-        return self.show_topics(num_topics, num_words, log=True)
 
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         """

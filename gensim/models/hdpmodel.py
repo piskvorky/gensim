@@ -38,6 +38,7 @@ import numpy as np
 import scipy.special as sp
 
 from gensim import interfaces, utils, matutils
+from gensim.models import basemodel
 from six.moves import xrange
 
 logger = logging.getLogger(__name__)
@@ -125,7 +126,7 @@ class SuffStats(object):
         self.m_var_beta_ss.fill(0.0)
 
 
-class HdpModel(interfaces.TransformationABC):
+class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """
     The constructor estimates Hierachical Dirichlet Process model parameters based
     on a training corpus:
@@ -453,12 +454,6 @@ class HdpModel(interfaces.TransformationABC):
         self.m_timestamp[:] = self.m_updatect
         self.m_status_up_to_date = True
 
-    def print_topics(self, num_topics=20, num_words=20):
-        """Alias for `show_topics()` that prints the `num_words` most
-        probable words for `topics` number of topics to log.
-        Set `topics=-1` to print all topics."""
-        return self.show_topics(num_topics=num_topics, num_words=num_words, log=True)
-
     def show_topics(self, num_topics=20, num_words=20, log=False, formatted=True):
         """
         Print the `num_words` most probable words for `topics` number of topics.
@@ -574,9 +569,6 @@ class HdpTopicFormatter(object):
             style = self.STYLE_GENSIM
 
         self.style = style
-
-    def print_topics(self, num_topics=10, num_words=10):
-        return self.show_topics(num_topics, num_words, True)
 
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         shown = []

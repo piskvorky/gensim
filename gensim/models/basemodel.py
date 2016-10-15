@@ -8,3 +8,9 @@ class BaseTopicModel():
 
         """
         return ' + '.join(['%.3f*"%s"' % (v, k) for k, v in self.show_topic(topicno, topn)])
+
+    def print_topics(self, num_topics=20, num_words=10):
+        """Alias for `show_topics()` that prints the `num_words` most
+        probable words for `topics` number of topics to log.
+        Set `topics=-1` to print all topics."""
+        return self.show_topics(num_topics=num_topics, num_words=num_words, log=True)
