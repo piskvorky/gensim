@@ -601,8 +601,11 @@ class Doc2Vec(Word2Vec):
 
         """
         super(Doc2Vec, self).__init__(
-            sg=(1+dm) % 2,
+            size=size, window=window, min_count=min_count,
+            sample=sample, workers=workers,
+            sg=(1 + dm) % 2,
             null_word=dm_concat, **kwargs)
+
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
