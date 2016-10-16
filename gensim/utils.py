@@ -247,6 +247,7 @@ class SaveLoad(object):
 
         obj = unpickle(fname)
         obj._load_specials(fname, mmap, compress, subname)
+        logger.info("loaded %s", fname)
         return obj
 
 
@@ -354,6 +355,7 @@ class SaveLoad(object):
             for obj, asides in restores:
                 for attrib, val in iteritems(asides):
                     setattr(obj, attrib, val)
+        logger.info("saved %s", fname)
 
 
     def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
