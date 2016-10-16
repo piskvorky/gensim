@@ -600,6 +600,7 @@ class Doc2Vec(Word2Vec):
           of the model.
 
         """
+
         super(Doc2Vec, self).__init__(
             size=size, window=window, min_count=min_count,
             sample=sample, workers=workers,
