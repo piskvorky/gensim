@@ -105,6 +105,7 @@ try:
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
+    # Can't log here because logger is usually not configured at import time
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
 
