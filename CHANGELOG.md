@@ -1,13 +1,27 @@
 Changes
 =======
 
-0.13.3, TDB
+0.13.4, TDB
 * Vectors for word2vec and doc2vec extracted out into `KeyedVectors`, save/load and similarity calcs can be run independent of model
   - Maintains backwards compatibility, `w2v_model.syn0` and `w2v_model.syn0norm` raise a warning
 
+0.13.3, 2016-09-26
+
+* Add online learning feature to word2vec. (@isohyt [#900](https://github.com/RaRe-Technologies/gensim/pull/900))
+* Tutorial: Reproducing Doc2vec paper result on wikipedia. (@isohyt, [#654](https://github.com/RaRe-Technologies/gensim/pull/654))
+* Fixed issue #743 , In word2vec's n_similarity method if atleast one empty list is passed ZeroDivisionError is raised, added test cases in test/test_word2vec.py(@pranay360, #883)
+* Added Save/Load interface to AnnoyIndexer for ondex persistence (@fortiema, [#845](https://github.com/RaRe-Technologies/gensim/pull/845))
+* Change export_phrases in Phrases model. Fix issue #794 (@AadityaJ,
+[#879](https://github.com/RaRe-Technologies/gensim/pull/879))
+    - bigram construction can now support multiple bigrams within one sentence
+* Fixed issue #838, RuntimeWarning: overflow encountered in exp  (@markroxor, [#895](https://github.com/RaRe-Technologies/gensim/pull/895))
+*  Changed some log messages to warnings as suggested in issue #828. (@rhnvrm, [#884](https://github.com/RaRe-Technologies/gensim/pull/884))
+*  Fixed issue #851, In summarizer.py, RunTimeError is raised if single sentence input is provided to avoid ZeroDivionError. (@metalaman, #887)
+* Fixed issue [#791](https://github.com/RaRe-Technologies/gensim/issues/791), correct logic for iterating over SimilarityABC interface. ([@MridulS](https://github.com/MridulS), [#839](https://github.com/RaRe-Technologies/gensim/pull/839)
+
 0.13.2, 2016-08-19
 
-* wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, [#771](https://github.com/RaRe-Technologies/gensim/pull/771)) 
+* wordtopics has changed to word_topics in ldamallet, and fixed issue #764. (@bhargavvader, [#771](https://github.com/RaRe-Technologies/gensim/pull/771))
   - assigning wordtopics value of word_topics to keep backward compatibility, for now
 * topics, topn parameters changed to num_topics and num_words in show_topics() and print_topics()(@droudy, [#755](https://github.com/RaRe-Technologies/gensim/pull/755))
   - In hdpmodel and dtmmodel
@@ -49,7 +63,7 @@ Changes
 * Control whether to use lowercase for computing word2vec accuracy. (@alantian, #607)
 * Easy import of GloVe vectors using Gensim (Manas Ranjan Kar, #625)
   - Allow easy port of GloVe vectors into Gensim
-  - Standalone script with command line arguments, compatible with Python>=2.6 
+  - Standalone script with command line arguments, compatible with Python>=2.6
   - Usage: python -m gensim.scripts.glove2word2vec -i glove_vectors.txt -o output_word2vec_compatible.txt
 * Add `similar_by_word()` and `similar_by_vector()` to word2vec (@isohyt, #381)
 * Convenience method for similarity of two out of training sentences to doc2vec (@ellolo, #707)

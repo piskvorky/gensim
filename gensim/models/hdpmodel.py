@@ -8,9 +8,6 @@
 # Chong Wang (chongw at cs.princeton.edu).
 # http://www.cs.princeton.edu/~chongw/software/onlinehdp.tar.gz
 #
-# Some show/print topics code is adapted from Dr. Hoffman's online lda sample code,
-# (C) 2010  Matthew D. Hoffman, GNU GPL 3.0
-# http://www.cs.princeton.edu/~mdhoffma/code/onlineldavb.tar
 
 
 """
