@@ -98,7 +98,6 @@ from types import GeneratorType
 logger = logging.getLogger(__name__)
 
 
-# Logger should be configured by this time.
 try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
