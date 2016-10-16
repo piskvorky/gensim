@@ -270,7 +270,7 @@ class TestDoc2VecModel(unittest.TestCase):
     def models_equal(self, model, model2):
         # check words/hidden-weights
         self.assertEqual(len(model.vocab), len(model2.vocab))
-        self.assertTrue(np.allclose(model.syn0, model2.syn0))
+        self.assertTrue(np.allclose(model.wv.syn0, model2.wv.syn0))
         if model.hs:
             self.assertTrue(np.allclose(model.syn1, model2.syn1))
         if model.negative:

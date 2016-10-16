@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.13.4, TDB
+* Vectors for word2vec and doc2vec extracted out into `KeyedVectors`, save/load and similarity calcs can be run independent of model
+  - Maintains backwards compatibility, `w2v_model.syn0` and `w2v_model.syn0norm` raise a warning
+
 0.13.3, 2016-09-26
 
 * Add online learning feature to word2vec. (@isohyt [#900](https://github.com/RaRe-Technologies/gensim/pull/900))
@@ -14,7 +18,6 @@ Changes
 *  Changed some log messages to warnings as suggested in issue #828. (@rhnvrm, [#884](https://github.com/RaRe-Technologies/gensim/pull/884))
 *  Fixed issue #851, In summarizer.py, RunTimeError is raised if single sentence input is provided to avoid ZeroDivionError. (@metalaman, #887)
 * Fixed issue [#791](https://github.com/RaRe-Technologies/gensim/issues/791), correct logic for iterating over SimilarityABC interface. ([@MridulS](https://github.com/MridulS), [#839](https://github.com/RaRe-Technologies/gensim/pull/839)
-
 
 0.13.2, 2016-08-19
 
