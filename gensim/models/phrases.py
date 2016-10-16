@@ -244,6 +244,7 @@ class Phrases(interfaces.TransformationABC):
             nonviolence leo_tolstoy
 
         """
+        logger.info("For a faster implementation, use the gensim.models.phrases.Phraser class")
         try:
             is_single = not sentence or isinstance(sentence[0], string_types)
         except:
