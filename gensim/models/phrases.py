@@ -60,6 +60,7 @@ two tokens (e.g. `new_york_times`):
 import sys
 import os
 import logging
+import warnings
 from collections import defaultdict
 
 from six import iteritems, string_types
@@ -244,7 +245,7 @@ class Phrases(interfaces.TransformationABC):
             nonviolence leo_tolstoy
 
         """
-        logger.info("For a faster implementation, use the gensim.models.phrases.Phraser class")
+        warnings.warn("For a faster implementation, use the gensim.models.phrases.Phraser class")
         try:
             is_single = not sentence or isinstance(sentence[0], string_types)
         except:
