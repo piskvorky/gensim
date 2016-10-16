@@ -73,7 +73,7 @@ class TestPhrasesCommon(unittest.TestCase):
         self.assertTrue(u'response_time' in self.bigram[sentences[4]])
         self.assertTrue(u'graph_minors' in self.bigram[sentences[-2]])
         self.assertTrue(u'graph_minors' in self.bigram[sentences[-1]])
-	self.assertTrue(u'human_interface' in bigram[sentences[-1]])
+        self.assertTrue(u'human_interface' in self.bigram[sentences[-1]])
 
     def testEncoding(self):
         """Test that both utf8 and unicode input work; output must be unicode."""
