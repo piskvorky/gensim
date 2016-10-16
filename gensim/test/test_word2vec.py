@@ -15,6 +15,7 @@ import os
 import tempfile
 import itertools
 import bz2
+import sys
 
 import numpy
 
@@ -186,13 +187,19 @@ class TestWord2VecModel(unittest.TestCase):
     def testLoadPreKeyedVectorModel(self):
         """Test loading pre-KeyedVectors word2vec model"""
 
-        # Model stored in one file
-        model = word2vec.Word2Vec.load(datapath('word2vec_pre_kv'))
-        self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), model.vector_size))
-        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        if sys.version_info < (3,):
+            model_file_suffix = '_py2'
+            # Model stored in one file
+            model_file = 'word2vec_pre_kv%s' % model_file_suffix
+            model = word2vec.Word2Vec.load(datapath(model_file))
+            self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), model.vector_size))
+            self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        else:
+            model_file_suffix = '_py3'
 
         # Model stored in multiple files
-        model = word2vec.Word2Vec.load(datapath('word2vec_pre_kv_sep'))
+        model_file = 'word2vec_pre_kv_sep%s' % model_file_suffix
+        model = word2vec.Word2Vec.load(datapath(model_file))
         self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), model.vector_size))
         self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
 
