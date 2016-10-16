@@ -222,6 +222,8 @@ class Phrases(interfaces.TransformationABC):
                             else:
                                 yield (out_delimiter.join((word_a, word_b)), score)
                             last_bigram = True
+                            continue
+                        last_bigram = False
 
     def __getitem__(self, sentence):
         """

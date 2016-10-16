@@ -92,10 +92,18 @@ class CoherenceModel(interfaces.TransformationABC):
         Args:
         ----
         model : Pre-trained topic model. Should be provided if topics is not provided.
+                Currently supports LdaModel, LdaMallet wrapper and LdaVowpalWabbit wrapper. Use 'topics'
+                parameter to plug in an as yet unsupported model.
         topics : List of tokenized topics. If this is preferred over model, dictionary should be provided.
                  eg. topics = [['human', 'machine', 'computer', 'interface'],
                                ['graph', 'trees', 'binary', 'widths']]
         texts : Tokenized texts. Needed for coherence models that use sliding window based probability estimator.
+                eg. texts = [['system', 'human', 'system', 'eps'],
+                             ['user', 'response', 'time'],
+                             ['trees'],
+                             ['graph', 'trees'],
+                             ['graph', 'minors', 'trees'],
+                             ['graph', 'minors', 'survey']]
         corpus : Gensim document corpus.
         dictionary : Gensim dictionary mapping of id word to create corpus. If model.id2word is present, this is not needed.
                      If both are provided, dictionary will be used.

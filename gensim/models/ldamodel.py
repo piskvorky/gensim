@@ -4,8 +4,6 @@
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 #
-# Parts of the LDA inference code come from Dr. Hoffman's `onlineldavb.py` script,
-# (C) 2010  Matthew D. Hoffman, GNU GPL 3.0
 
 
 """

@@ -32,7 +32,8 @@ sentences = [
     ['trees'],
     ['graph', 'trees'],
     ['graph', 'minors', 'trees'],
-    ['graph', 'minors', 'survey']
+    ['graph', 'minors', 'survey'],
+    ['graph', 'minors', 'survey','human','interface'] #test bigrams within same sentence
 ]
 unicode_sentences = [[utils.to_unicode(w) for w in sentence] for sentence in sentences]
 
@@ -67,10 +68,12 @@ class TestPhrasesCommon(unittest.TestCase):
         self.assertTrue(bigram1_seen and bigram2_seen)
 
         # check the same thing, this time using single doc transformation
+        # last sentence should contain both graph_minors and human_interface
         self.assertTrue(u'response_time' in self.bigram[sentences[1]])
         self.assertTrue(u'response_time' in self.bigram[sentences[4]])
         self.assertTrue(u'graph_minors' in self.bigram[sentences[-2]])
         self.assertTrue(u'graph_minors' in self.bigram[sentences[-1]])
+	self.assertTrue(u'human_interface' in bigram[sentences[-1]])
 
     def testEncoding(self):
         """Test that both utf8 and unicode input work; output must be unicode."""
@@ -87,11 +90,11 @@ class TestPhrasesModel(unittest.TestCase):
     def testExportPhrases(self):
         """Test Phrases bigram export_phrases functionality."""
         bigram = Phrases(sentences, min_count=1, threshold=1)
-        
+
         # with this setting we should get response_time and graph_minors
         bigram1_seen = False
         bigram2_seen = False
-        
+
         for phrase, score in bigram.export_phrases(sentences):
             if not bigram1_seen and b'response time' == phrase:
                 bigram1_seen = True
@@ -99,10 +102,10 @@ class TestPhrasesModel(unittest.TestCase):
                 bigram2_seen = True
             if bigram1_seen and bigram2_seen:
                 break
-        
+
         self.assertTrue(bigram1_seen)
         self.assertTrue(bigram2_seen)
-        
+
     def testBadParameters(self):
         """Test the phrases module with bad parameters."""
         # should fail with something less or equal than 0
