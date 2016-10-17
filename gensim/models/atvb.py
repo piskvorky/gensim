@@ -18,8 +18,9 @@ import numbers
 from gensim import utils, matutils
 from gensim.models.ldamodel import dirichlet_expectation, get_random_state
 from gensim.models import LdaModel
-from gensim.models.hdpmodel import log_normalize  # For efficient normalization of variational parameters.
-from scipy.special import gammaln
+from scipy.special import gammaln, psi  # gamma function utils
+from scipy.special import polygamma
+
 from six.moves import xrange
 
 from pprint import pprint
@@ -34,6 +35,31 @@ except ImportError:
 
 logger = logging.getLogger('gensim.models.atmodel')
 
+def update_dir_prior(prior, N, logphat, rho):
+    """
+    Updates a given prior using Newton's method, described in
+    **Huang: Maximum Likelihood Estimation of Dirichlet Distribution Parameters.**
+    http://jonathan-huang.org/research/dirichlet/dirichlet.pdf
+    """
+    dprior = numpy.copy(prior)
+    gradf = N * (psi(numpy.sum(prior)) - psi(prior) + logphat)
+
+    c = N * polygamma(1, numpy.sum(prior))
+    q = -N * polygamma(1, prior)
+
+    b = numpy.sum(gradf / q) / (1 / c + numpy.sum(1 / q))
+
+    dprior = -(gradf - b) / q
+
+    # NOTE: in the LDA code, the criterion below is:
+    # if all(rho * dprior + prior > 0)
+    # But this causes an error for me, but the below criterion works.
+    if (rho * dprior + prior > 0).all():
+        prior += rho * dprior
+    else:
+        logger.warning("updated prior not positive")
+
+    return prior
 
 class AtVb(LdaModel):
     """
@@ -42,14 +68,8 @@ class AtVb(LdaModel):
 
     def __init__(self, corpus=None, num_topics=100, id2word=None, id2author=None,
             author2doc=None, doc2author=None, threshold=0.001,
-            iterations=10, alpha=None, eta=None, minimum_probability=0.01,
+            iterations=10, alpha='symmetric', eta='symmetric', minimum_probability=0.01,
             eval_every=1, random_state=None):
-
-        # TODO: allow for asymmetric priors.
-        if alpha is None:
-            alpha = 1.0 / num_topics
-        if eta is None:
-            eta = 1.0 / num_topics
 
         self.id2word = id2word
         if corpus is None and self.id2word is None:
@@ -118,8 +138,6 @@ class AtVb(LdaModel):
         self.num_topics = num_topics
         self.threshold = threshold
         self.minimum_probability = minimum_probability 
-        self.alpha = alpha
-        self.eta = eta
         self.num_docs = len(corpus)
         self.num_authors = len(author2doc)
         self.eval_every = eval_every
@@ -127,8 +145,56 @@ class AtVb(LdaModel):
 
         self.random_state = get_random_state(random_state)
 
+        # NOTE: I don't think this necessarily is a good way to initialize the topics.
+        self.alpha = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
+        self.eta = numpy.asarray([1.0 / self.num_terms for i in xrange(self.num_terms)])
+
+        if alpha == 'auto':
+            self.optimize_alpha = True
+        else:
+            self.optimize_alpha = False
+
+        if  eta == 'auto':
+            self.optimize_eta = True
+        else:
+            self.optimize_eta = False
+
         if corpus is not None:
             self.inference(corpus, author2doc, doc2author)
+
+    def update_alpha(self, var_gamma, rho):
+        """
+        Update parameters for the Dirichlet prior on the per-document
+        topic weights `alpha` given the last `var_gamma`.
+        """
+        N = float(len(var_gamma))
+
+        logphat = 0.0
+        for a in xrange(self.num_authors):
+            logphat += dirichlet_expectation(var_gamma[a, :])
+        logphat *= 1 / N
+
+        self.alpha = update_dir_prior(self.alpha, N, logphat, rho)
+        # logger.info("optimized eta %s", list(self.alpha))
+
+        return self.alpha
+
+    def update_eta(self, var_lambda, rho):
+        """
+        Update parameters for the Dirichlet prior on the per-document
+        topic weights `eta` given the last `var_lambda`.
+        """
+        N = float(len(var_lambda))
+
+        logphat = 0.0
+        for k in xrange(self.num_topics):
+            logphat += dirichlet_expectation(var_lambda[k, :])
+        logphat *= 1 / N
+
+        self.eta = update_dir_prior(self.eta, N, logphat, rho)
+        # logger.info("optimized eta %s", list(self.eta))
+
+        return self.eta
 
     def inference(self, corpus=None, author2doc=None, doc2author=None):
         if corpus is None:
@@ -194,8 +260,7 @@ class AtVb(LdaModel):
                         # TODO: avoid computing phi if possible.
                         var_phi[d, v, k] = expavgElogtheta * expElogbeta[k, v]
                     # Normalize phi.
-                    (log_var_phi_dv, _) = log_normalize(numpy.log(var_phi[d, v, :]))
-                    var_phi[d, v, :] = numpy.exp(log_var_phi_dv)
+                    var_phi[d, v, :] = var_phi[d, v, :] / var_phi[d, v, :].sum()
 
             # Update mu.
             for d, doc in enumerate(corpus):
@@ -224,7 +289,7 @@ class AtVb(LdaModel):
                 for k in xrange(self.num_topics):
                     docs_a = self.author2doc[a]
                     var_gamma[a, k] = 0.0
-                    var_gamma[a, k] += self.alpha
+                    var_gamma[a, k] += self.alpha[k]
                     for d in docs_a:
                         # TODO: if this document doesn't exist, we will have problems here. Could to an "if corpus.get(d)" type of thing.
                         doc = corpus[d]
@@ -233,18 +298,29 @@ class AtVb(LdaModel):
                         for vi, v in enumerate(ids):
                             var_gamma[a, k] += cts[vi] * var_mu[(d, v, a)] * var_phi[d, v, k]
 
+            if self.optimize_alpha:
+                # NOTE: taking a full Newton step seems to yield good results.
+                # In the LDA code, they use rho() as step size. This seems 
+                # very arbitrary; if a carefully chosen stepsize is needed,
+                # linesearch would probably be better.
+                stepsize = 1  
+                self.update_alpha(var_gamma, stepsize)
+
             # Update Elogtheta, since gamma has been updated.
             Elogtheta = dirichlet_expectation(var_gamma)
 
             # Update lambda.
             for k in xrange(self.num_topics):
                 for v in xrange(self.num_terms):
-                    # TODO: highly unnecessary:
-                    var_lambda[k, v] = self.eta
+                    var_lambda[k, v] = self.eta[v]
                     for d, doc in enumerate(corpus):
                         # Get the count of v in doc. If v is not in doc, return 0.
                         cnt = dict(doc).get(v, 0)
                         var_lambda[k, v] += cnt * var_phi[d, v, k]
+
+            if self.optimize_eta:
+                stepsize = 1
+                self.update_eta(var_lambda, stepsize)
 
             # Update Elogbeta, since lambda has been updated.
             Elogbeta = dirichlet_expectation(var_lambda)
@@ -252,11 +328,12 @@ class AtVb(LdaModel):
 
             logger.info('All variables updated.')
 
-            # Print topics:
+            self.var_gamma = var_gamma
             self.var_lambda = var_lambda
+
+            # Print topics:
             #pprint(self.show_topics())
 
-            self.var_gamma = var_gamma
 
             # Evaluate bound.
             if (iteration + 1) % self.eval_every == 0:
@@ -283,7 +360,7 @@ class AtVb(LdaModel):
 
         where p(w_d | theta, beta, A_d) is the log conditional likelihood of the data.
         """
-        
+
         # TODO: allow for evaluating test corpus. This will require inferring on unseen documents.
 
         if doc_ids is None:
