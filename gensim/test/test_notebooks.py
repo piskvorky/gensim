@@ -37,15 +37,6 @@ def _notebook_run(path):
             else:
                 raise e
 
-        # except TimeoutError as e: 
-        #     print(e)                                  
-
-        # except RuntimeError as e:
-        #     if "Cell execution timed out" in e.message:  
-        #         print(e)
-        #     else:
-        #         raise e
-
     return nb, errors
 
 
