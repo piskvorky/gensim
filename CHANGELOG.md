@@ -14,7 +14,7 @@ Changes
 *  Changed some log messages to warnings as suggested in issue #828. (@rhnvrm, [#884](https://github.com/RaRe-Technologies/gensim/pull/884))
 *  Fixed issue #851, In summarizer.py, RunTimeError is raised if single sentence input is provided to avoid ZeroDivionError. (@metalaman, #887)
 * Fixed issue [#791](https://github.com/RaRe-Technologies/gensim/issues/791), correct logic for iterating over SimilarityABC interface. ([@MridulS](https://github.com/MridulS), [#839](https://github.com/RaRe-Technologies/gensim/pull/839)
-
+* Fixed issue #908, In ldamodel.py, Added per_word_topics parameter to function call. (@SND96, #923)
 
 0.13.2, 2016-08-19
 

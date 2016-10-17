@@ -921,7 +921,7 @@ class LdaModel(interfaces.TransformationABC):
         # if the input vector is a corpus, return a transformed corpus
         is_corpus, corpus = utils.is_corpus(bow)
         if is_corpus:
-            return self._apply(corpus)
+            return self._apply(corpus, per_word_topics)
 
         gamma, phis = self.inference([bow], collect_sstats=True)
         topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
