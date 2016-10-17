@@ -10,7 +10,6 @@ Automated tests for checking transformation algorithms (the models package).
 
 import six
 
-
 class TestBaseTopicModel():
     def testPrintTopic(self):
         topics = self.model.show_topics(formatted=True)

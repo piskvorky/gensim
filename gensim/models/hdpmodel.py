@@ -570,6 +570,9 @@ class HdpTopicFormatter(object):
 
         self.style = style
 
+    def print_topics(self, num_topics=10, num_words=10):
+        return self.show_topics(num_topics, num_words, True)
+        
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         shown = []
         if num_topics < 0:
@@ -610,4 +613,4 @@ class HdpTopicFormatter(object):
             fmt = 'topic %i:\n%s' % (topic_id, fmt)
 
         return fmt
-#endclass HdpTopicFormatter
+# endclass HdpTopicFormatter
