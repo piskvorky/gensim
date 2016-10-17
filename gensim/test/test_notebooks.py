@@ -11,11 +11,7 @@ import unittest
 import os
 import os.path
 import tempfile
-import numbers
-import codecs   
-
-class TimeoutError(Exception):
-    pass
+import numbers 
 
 def _notebook_run(path):
     """
@@ -26,38 +22,29 @@ def _notebook_run(path):
     this_file_directory = os.path.dirname(__file__)
     errors = []
 
-    fl = tempfile.NamedTemporaryFile(suffix=".ipynb", mode='wt', delete=False)
-    fname = fl.name
-    fl.close()
 
-    with codecs.open(fname, 'w+b', encoding='utf-8') as fout:
-        with open(path) as f:
-            nb = nbformat.read(f, as_version=4)
-            nb.metadata.get('kernelspec', {})['name'] = kernel_name
-            ep = ExecutePreprocessor(kernel_name=kernel_name, timeout=10) #, allow_errors=True
+    with open(path) as f:
+        nb = nbformat.read(f, as_version=4)
+        nb.metadata.get('kernelspec', {})['name'] = kernel_name
+        ep = ExecutePreprocessor(kernel_name=kernel_name, timeout=10) #, allow_errors=True
 
-            try:
-                ep.preprocess(nb, {'metadata': {'path': this_file_directory}})
+        try:
+            ep.preprocess(nb, {'metadata': {'path': this_file_directory}})
 
-            except CellExecutionError as e: 
-                if "SKIP" in e.traceback:
-                    print(str(e.traceback).split("\n")[-2])
-                else:
-                    raise e
+        except CellExecutionError as e: 
+            if "SKIP" in e.traceback:
+                print(str(e.traceback).split("\n")[-2])
+            else:
+                raise e
 
-            except TimeoutError as e: 
-                print(e)                                  
+        # except TimeoutError as e: 
+        #     print(e)                                  
 
-            except RuntimeError as e:
-                if "Cell execution timed out" in e.message:  
-                    print(e)
-                else:
-                    raise e
-
-            finally:
-                nbformat.write(nb, fout)
-
-    os.unlink(fname)
+        # except RuntimeError as e:
+        #     if "Cell execution timed out" in e.message:  
+        #         print(e)
+        #     else:
+        #         raise e
 
     return nb, errors
 
