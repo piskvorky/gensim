@@ -24,6 +24,7 @@ from scipy.special import polygamma
 from six.moves import xrange
 
 from pprint import pprint
+from random import sample
 
 # log(sum(exp(x))) that tries to avoid overflow
 try:
@@ -69,7 +70,7 @@ class AtVb(LdaModel):
     def __init__(self, corpus=None, num_topics=100, id2word=None, id2author=None,
             author2doc=None, doc2author=None, threshold=0.001,
             iterations=10, alpha='symmetric', eta='symmetric', minimum_probability=0.01,
-            eval_every=1, random_state=None):
+            eval_every=1, random_state=None, var_lambda=None):
 
         self.id2word = id2word
         if corpus is None and self.id2word is None:
@@ -160,7 +161,7 @@ class AtVb(LdaModel):
             self.optimize_eta = False
 
         if corpus is not None:
-            self.inference(corpus, author2doc, doc2author)
+            self.inference(corpus, author2doc, doc2author, var_lambda)
 
     def update_alpha(self, var_gamma, rho):
         """
@@ -196,7 +197,7 @@ class AtVb(LdaModel):
 
         return self.eta
 
-    def inference(self, corpus=None, author2doc=None, doc2author=None):
+    def inference(self, corpus=None, author2doc=None, doc2author=None, var_lambda=None):
         if corpus is None:
             corpus = self.corpus
 
@@ -206,8 +207,10 @@ class AtVb(LdaModel):
         # NOTE: parameters of gamma distribution same as in `ldamodel`.
         var_gamma = self.random_state.gamma(100., 1. / 100.,
                 (self.num_authors, self.num_topics))
-        var_lambda = self.random_state.gamma(100., 1. / 100.,
-                (self.num_topics, self.num_terms))
+
+        if var_lambda is None:
+            var_lambda = self.random_state.gamma(100., 1. / 100.,
+                    (self.num_topics, self.num_terms))
 
         # Initialize mu.
         # mu is 1/|A_d| if a is in A_d, zero otherwise.
@@ -242,8 +245,10 @@ class AtVb(LdaModel):
         #likelihood = self.log_word_prob(var_gamma, var_lambda)
         logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
         for iteration in xrange(self.iterations):
+            #logger.info('Starting iteration %d.', iteration)
             # Update phi.
             for d, doc in enumerate(corpus):
+                #logger.info('Updating phi, document %d.', d)
                 ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
                 authors_d = doc2author[d]  # List of author IDs for document d.
 
@@ -264,6 +269,7 @@ class AtVb(LdaModel):
 
             # Update mu.
             for d, doc in enumerate(corpus):
+                #logger.info('Updating mu, document %d.', d)
                 ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
                 authors_d = doc2author[d]  # List of author IDs for document d.
                 for v in ids:
@@ -285,6 +291,7 @@ class AtVb(LdaModel):
                         var_mu[(d, v, a)] *= mu_norm_const
 
             # Update gamma.
+            #logger.info('Updating gamma.')
             for a in xrange(self.num_authors):
                 for k in xrange(self.num_topics):
                     docs_a = self.author2doc[a]
@@ -310,10 +317,17 @@ class AtVb(LdaModel):
             Elogtheta = dirichlet_expectation(var_gamma)
 
             # Update lambda.
+            #logger.info('Updating lambda.')
             for k in xrange(self.num_topics):
+                #logger.info('k = %d.', k)
                 for v in xrange(self.num_terms):
+                    #logger.info('v = %d.', v)
                     var_lambda[k, v] = self.eta[v]
-                    for d, doc in enumerate(corpus):
+                    sample_ratio = 1.0  # When sample_ratio is 1.0, the whole dataset is used.
+                    nsamples = int(numpy.ceil(self.num_docs * sample_ratio))
+                    doc_idxs = sample(xrange(self.num_docs), nsamples)
+                    for d in doc_idxs:
+                        doc = corpus[d]
                         # Get the count of v in doc. If v is not in doc, return 0.
                         cnt = dict(doc).get(v, 0)
                         var_lambda[k, v] += cnt * var_phi[d, v, k]
@@ -326,8 +340,6 @@ class AtVb(LdaModel):
             Elogbeta = dirichlet_expectation(var_lambda)
             expElogbeta = numpy.exp(Elogbeta)
 
-            logger.info('All variables updated.')
-
             self.var_gamma = var_gamma
             self.var_lambda = var_lambda
 
@@ -337,6 +349,7 @@ class AtVb(LdaModel):
 
             # Evaluate bound.
             if (iteration + 1) % self.eval_every == 0:
+                #logger.info('Computing bound.')
                 prev_bound = bound
                 word_bound = self.word_bound(Elogtheta, Elogbeta)
                 theta_bound = self.theta_bound(Elogtheta, var_gamma)
