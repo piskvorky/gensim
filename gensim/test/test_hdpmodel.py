@@ -20,7 +20,7 @@ import numpy
 import scipy.linalg
 
 from gensim.corpora import mmcorpus, Dictionary
-from gensim.models import hdpmodel
+from gensim.models import hdpmodel, ldamodel
 from gensim import matutils
 
 
@@ -64,6 +64,9 @@ class TestHdpModel(unittest.TestCase):
                 self.assertTrue(isinstance(k, six.string_types))
                 self.assertTrue(isinstance(v, float))
 
+    def testHDP_LDA(self):
+        ldam = self.model.hdp_to_lda(model=True)
+        self.assertEqual(ldam.expElogbeta.shape, self.model.lda_beta.shape)
 
 
 if __name__ == '__main__':
