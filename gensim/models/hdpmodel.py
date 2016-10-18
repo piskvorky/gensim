@@ -572,7 +572,7 @@ class HdpTopicFormatter(object):
 
     def print_topics(self, num_topics=10, num_words=10):
         return self.show_topics(num_topics, num_words, True)
-        
+
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         shown = []
         if num_topics < 0:
@@ -607,10 +607,9 @@ class HdpTopicFormatter(object):
     def format_topic(self, topic_id, topic_terms):
         if self.STYLE_GENSIM == self.style:
             fmt = ' + '.join(['%.3f*%s' % (weight, word) for (word, weight) in topic_terms])
-            fmt = 'topic %i: %s' % (topic_id, fmt)
         else:
             fmt = '\n'.join(['    %20s    %.8f' % (word, weight) for (word, weight) in topic_terms])
-            fmt = 'topic %i:\n%s' % (topic_id, fmt)
 
+        fmt = (topic_id,fmt)
         return fmt
 # endclass HdpTopicFormatter
