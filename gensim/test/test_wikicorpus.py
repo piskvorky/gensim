@@ -41,6 +41,19 @@ class TestWikiCorpus(unittest.TestCase):
     #     first = next(l)
     #     self.assertEqual(type(first), list)
     #     self.assertTrue(isinstance(first[0], bytes) or isinstance(first[0], str))
+    def test_get_texts_returns_generator_of_lists(self):
+
+        logger.debug("Current Python Version is "+str(sys.version_info))
+        if sys.version_info < (2, 7, 0):
+            return
+
+        wc = WikiCorpus(datapath(FILENAME))
+        l = wc.get_texts()
+        self.assertEqual(type(l), types.GeneratorType)
+        first = next(l)
+        self.assertEqual(type(first), list)
+        self.assertTrue(isinstance(first[0], bytes) or isinstance(first[0], str))
+>>>>>>> added empty line to test_wikicorpus
 
     def test_first_element(self):
         """
@@ -49,6 +62,7 @@ class TestWikiCorpus(unittest.TestCase):
         2) autism
 
         """
+
         if sys.version_info < (2, 7, 0):
             return
         wc = WikiCorpus(datapath(FILENAME))
