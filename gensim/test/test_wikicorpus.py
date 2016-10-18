@@ -33,7 +33,7 @@ class TestWikiCorpus(unittest.TestCase):
         logger.debug("Current Python Version is "+str(sys.version_info))
         if sys.version_info < (2, 7, 0):
             return
-        
+
         wc = WikiCorpus(datapath(FILENAME))
         l = wc.get_texts()
         self.assertEqual(type(l), types.GeneratorType)
@@ -55,3 +55,8 @@ class TestWikiCorpus(unittest.TestCase):
         l = wc.get_texts()
         self.assertTrue(b"anarchism" in next(l))
         self.assertTrue(b"autism" in next(l))
+
+
+if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    unittest.main()
