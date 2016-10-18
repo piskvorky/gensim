@@ -30,10 +30,11 @@ class TestWikiCorpus(unittest.TestCase):
         wc = WikiCorpus(datapath(FILENAME))
 
     def test_get_texts_returns_generator_of_lists(self):
+
         logger.debug("Current Python Version is "+str(sys.version_info))
         if sys.version_info < (2, 7, 0):
             return
-        
+
         wc = WikiCorpus(datapath(FILENAME))
         l = wc.get_texts()
         self.assertEqual(type(l), types.GeneratorType)
@@ -48,6 +49,7 @@ class TestWikiCorpus(unittest.TestCase):
         2) autism
 
         """
+
         if sys.version_info < (2, 7, 0):
             return
         wc = WikiCorpus(datapath(FILENAME))
