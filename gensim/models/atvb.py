@@ -170,6 +170,8 @@ class AtVb(LdaModel):
         """
         N = float(len(var_gamma))
 
+        # NOTE: there might be possibility for overflow if number
+        # of authors is very high.
         logphat = 0.0
         for a in xrange(self.num_authors):
             logphat += dirichlet_expectation(var_gamma[a, :])
@@ -203,6 +205,12 @@ class AtVb(LdaModel):
 
         logger.info('Starting inference. Training on %d documents.', len(corpus))
 
+        if var_lambda is None:
+            optimize_lambda = True
+        else:
+            # We have topics from LDA, thus we do not train the topics.
+            optimize_lambda = False
+
         # Initial value of gamma and lambda.
         # NOTE: parameters of gamma distribution same as in `ldamodel`.
         var_gamma = self.random_state.gamma(100., 1. / 100.,
@@ -211,6 +219,9 @@ class AtVb(LdaModel):
         if var_lambda is None:
             var_lambda = self.random_state.gamma(100., 1. / 100.,
                     (self.num_topics, self.num_terms))
+
+        self.var_lambda = var_lambda
+        self.var_gamma = var_gamma
 
         # Initialize mu.
         # mu is 1/|A_d| if a is in A_d, zero otherwise.
@@ -235,6 +246,9 @@ class AtVb(LdaModel):
         # things are multiplied along the correct dimensions.
 
         Elogtheta = dirichlet_expectation(var_gamma)
+        # NOTE: computing the Dirichlet expectation of lambda may
+        # cause overflow when the vocabulary is very large, as it
+        # requires a sum over vocab words.
         Elogbeta = dirichlet_expectation(var_lambda)
         expElogbeta = numpy.exp(Elogbeta)
 
@@ -256,6 +270,11 @@ class AtVb(LdaModel):
                 for v in ids:
                     for k in xrange(self.num_topics):
                         # Average Elogtheta over authors a in document d.
+                        # NOTE: avgElogtheta may become numerically unsable. If
+                        # it is a large positive number, exponentiating it may
+                        # cause overflow, which probably results in the value 
+                        # "inf". If it is a large negative number, exponentiating
+                        # it may result in 0.0.
                         avgElogtheta = 0.0
                         for a in authors_d:
                             avgElogtheta += var_mu[(d, v, a)] * Elogtheta[a, k]
@@ -265,7 +284,7 @@ class AtVb(LdaModel):
                         # TODO: avoid computing phi if possible.
                         var_phi[d, v, k] = expavgElogtheta * expElogbeta[k, v]
                     # Normalize phi.
-                    var_phi[d, v, :] = var_phi[d, v, :] / var_phi[d, v, :].sum()
+                    var_phi[d, v, :] = var_phi[d, v, :] / (var_phi[d, v, :].sum() + 1e-100)
 
             # Update mu.
             for d, doc in enumerate(corpus):
@@ -276,6 +295,7 @@ class AtVb(LdaModel):
                     mu_sum = 0.0
                     for a in authors_d:
                         # Average Elogtheta over topics k.
+                        # NOTE: we may have same problems as with phi update, above.
                         avgElogtheta = 0.0
                         for k in xrange(self.num_topics):
                             avgElogtheta += var_phi[d, v, k] * Elogtheta[a, k]
@@ -286,7 +306,7 @@ class AtVb(LdaModel):
                         var_mu[(d, v, a)] = expavgElogtheta
                         mu_sum += var_mu[(d, v, a)]
 
-                    mu_norm_const = 1.0 / mu_sum
+                    mu_norm_const = 1.0 / (mu_sum + 1e-100)
                     for a in authors_d:
                         var_mu[(d, v, a)] *= mu_norm_const
 
@@ -317,31 +337,41 @@ class AtVb(LdaModel):
             Elogtheta = dirichlet_expectation(var_gamma)
 
             # Update lambda.
-            #logger.info('Updating lambda.')
-            for k in xrange(self.num_topics):
-                #logger.info('k = %d.', k)
-                for v in xrange(self.num_terms):
-                    #logger.info('v = %d.', v)
-                    var_lambda[k, v] = self.eta[v]
-                    sample_ratio = 1.0  # When sample_ratio is 1.0, the whole dataset is used.
-                    nsamples = int(numpy.ceil(self.num_docs * sample_ratio))
-                    doc_idxs = sample(xrange(self.num_docs), nsamples)
-                    for d in doc_idxs:
-                        doc = corpus[d]
-                        # Get the count of v in doc. If v is not in doc, return 0.
-                        cnt = dict(doc).get(v, 0)
-                        var_lambda[k, v] += cnt * var_phi[d, v, k]
+            if optimize_lambda:
+                #logger.info('Updating lambda.')
+                for k in xrange(self.num_topics):
+                    #logger.info('k = %d.', k)
+                    for v in xrange(self.num_terms):
+                        #logger.info('v = %d.', v)
+                        var_lambda[k, v] = self.eta[v]
 
-            if self.optimize_eta:
-                stepsize = 1
-                self.update_eta(var_lambda, stepsize)
+                        # The following commented-out code is used for "sampling" documents when
+                        # updating lambda:
+                        # sample_ratio = 1.0  # When sample_ratio is 1.0, the whole dataset is used.
+                        # nsamples = int(numpy.ceil(self.num_docs * sample_ratio))
+                        # doc_idxs = sample(xrange(self.num_docs), nsamples)
 
-            # Update Elogbeta, since lambda has been updated.
-            Elogbeta = dirichlet_expectation(var_lambda)
-            expElogbeta = numpy.exp(Elogbeta)
+                        # TODO: this would be more efficient if there was a mapping from words
+                        # to the documents that contain that word, although that mapping would be
+                        # very large.
+                        # NOTE: the below might cause overflow if number of documents is very large,
+                        # although it seems somewhat unlikely.
+                        for d, doc in enumerate(corpus):
+                            # Get the count of v in doc. If v is not in doc, return 0.
+                            cnt = dict(doc).get(v, 0)
+                            var_lambda[k, v] += cnt * var_phi[d, v, k]
+
+                if self.optimize_eta:
+                    stepsize = 1
+                    self.update_eta(var_lambda, stepsize)
+
+                # Update Elogbeta, since lambda has been updated.
+                Elogbeta = dirichlet_expectation(var_lambda)
+                expElogbeta = numpy.exp(Elogbeta)
+
+                self.var_lambda = var_lambda
 
             self.var_gamma = var_gamma
-            self.var_lambda = var_lambda
 
             # Print topics:
             #pprint(self.show_topics())
@@ -381,6 +411,8 @@ class AtVb(LdaModel):
         else:
             docs = [self.corpus[d] for d in doc_ids]
 
+        # NOTE: computing the bound this way is very numerically unstable, which is why
+        # "logsumexp" is used in the LDA code.
         bound= 0.0
         for d, doc in enumerate(docs):
             authors_d = self.doc2author[d]
@@ -400,6 +432,18 @@ class AtVb(LdaModel):
 
         # TODO: can I do something along the lines of (as in ldamodel):
         # likelihood += numpy.sum(cnt * logsumexp(Elogthetad + Elogbeta[:, id]) for id, cnt in doc)
+        # If I computed the LDA bound the way I compute the author-topic bound above:
+        # bound = 0.0
+        # for d, doc in enumerate(docs):
+        #     ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
+        #     cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
+        #     bound_d = 0.0
+        #     for vi, v in enumerate(ids):
+        #         bound_v = 0.0
+        #         for k in xrange(self.num_topics):
+        #             bound_v += numpy.exp(Elogtheta[d, k] + Elogbeta[k, v])
+        #         bound_d += cts[vi] * numpy.log(bound_v)
+        #     bound += bound_d
 
         return bound
 
