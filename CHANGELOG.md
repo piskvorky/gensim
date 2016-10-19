@@ -1,21 +1,26 @@
 Changes
 =======
 
-0.13.3, 2016-09-26
+0.13.3, 2016-10-16
 
-* Add online learning feature to word2vec. (@isohyt [#900](https://github.com/RaRe-Technologies/gensim/pull/900))
+* Add vocabulary expansion feature to word2vec. (@isohyt, [#900](https://github.com/RaRe-Technologies/gensim/pull/900))
 * Tutorial: Reproducing Doc2vec paper result on wikipedia. (@isohyt, [#654](https://github.com/RaRe-Technologies/gensim/pull/654))
-* Fixed issue #743 , In word2vec's n_similarity method if atleast one empty list is passed ZeroDivisionError is raised, added test cases in test/test_word2vec.py(@pranay360, #883)
-* Added Save/Load interface to AnnoyIndexer for ondex persistence (@fortiema, [#845](https://github.com/RaRe-Technologies/gensim/pull/845))
+* Added Save/Load interface to AnnoyIndexer for index persistence (@fortiema, [#845](https://github.com/RaRe-Technologies/gensim/pull/845))
+* Add Phraser for Phrases optimization. ( @gojomo & @anujkhare , [#837](https://github.com/RaRe-Technologies/gensim/pull/837))
+* Fix issue #743 , in word2vec's n_similarity method if atleast one empty list is passed ZeroDivisionError is raised, added test cases in test/test_word2vec.py(@pranay360, [#883](https://github.com/RaRe-Technologies/gensim/pull/883))
 * Change export_phrases in Phrases model. Fix issue #794 (@AadityaJ,
 [#879](https://github.com/RaRe-Technologies/gensim/pull/879))
     - bigram construction can now support multiple bigrams within one sentence
-* Fixed issue [#838](https://github.com/RaRe-Technologies/gensim/issues/838), RuntimeWarning: overflow encountered in exp  ([@markroxor](https://github.com/markroxor), [#895](https://github.com/RaRe-Technologies/gensim/pull/895))
+* Fix issue [#838](https://github.com/RaRe-Technologies/gensim/issues/838), RuntimeWarning: overflow encountered in exp  ([@markroxor](https://github.com/markroxor), [#895](https://github.com/RaRe-Technologies/gensim/pull/895))
 *  Changed some log messages to warnings as suggested in issue #828. (@rhnvrm, [#884](https://github.com/RaRe-Technologies/gensim/pull/884))
 *  Fixed issue #851, In summarizer.py, RunTimeError is raised if single sentence input is provided to avoid ZeroDivionError. (@metalaman, #887)
 * Fixed issue [#791](https://github.com/RaRe-Technologies/gensim/issues/791), correct logic for iterating over SimilarityABC interface. ([@MridulS](https://github.com/MridulS), [#839](https://github.com/RaRe-Technologies/gensim/pull/839))
 * Fixed issue [#938](https://github.com/RaRe-Technologies/gensim/issues/938),Creating a unified base class for all topic models. ([@markroxor](https://github.com/markroxor), [#946](https://github.com/RaRe-Technologies/gensim/pull/946))
     -  _breaking change - may break HdpTopicFormatter.show_\__topics_
+* Fix RP model loading for large Fortran-order arrays (@piskvorky, [#605](https://github.com/RaRe-Technologies/gensim/issues/938))
+* Remove ShardedCorpus from init because of Theano dependency (@tmylk, [#919](https://github.com/RaRe-Technologies/gensim/pull/919))
+* Documentation improvements ( @dsquareindia & @tmylk, [#914](https://github.com/RaRe-Technologies/gensim/pull/914), [#906](https://github.com/RaRe-Technologies/gensim/pull/906) )
+* Add Annoy memory-mapping example (@harshul1610, [#899](https://github.com/RaRe-Technologies/gensim/pull/899))
 
 0.13.2, 2016-08-19
 
