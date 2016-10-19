@@ -247,6 +247,7 @@ class SaveLoad(object):
 
         obj = unpickle(fname)
         obj._load_specials(fname, mmap, compress, subname)
+        logger.info("loaded %s", fname)
         return obj
 
 
@@ -256,7 +257,6 @@ class SaveLoad(object):
         opportunity to recursively included SaveLoad instances.
 
         """
-
         mmap_error = lambda x, y: IOError(
             'Cannot mmap compressed object %s in file %s. ' % (x, y) +
             'Use `load(fname, mmap=None)` or uncompress files manually.')
@@ -354,6 +354,7 @@ class SaveLoad(object):
             for obj, asides in restores:
                 for attrib, val in iteritems(asides):
                     setattr(obj, attrib, val)
+        logger.info("saved %s", fname)
 
 
     def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):

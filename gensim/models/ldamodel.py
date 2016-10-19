@@ -36,6 +36,8 @@ import numpy  # for arrays, array broadcasting etc.
 import numbers
 
 from gensim import interfaces, utils, matutils
+from gensim.models import basemodel
+
 from itertools import chain
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
@@ -193,7 +195,7 @@ class LdaState(utils.SaveLoad):
 # endclass LdaState
 
 
-class LdaModel(interfaces.TransformationABC):
+class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """
     The constructor estimates Latent Dirichlet Allocation model parameters based
     on a training corpus:
@@ -767,9 +769,6 @@ class LdaModel(interfaces.TransformationABC):
         score += numpy.sum(gammaln(sum_eta) - gammaln(numpy.sum(_lambda, 1)))
         return score
 
-    def print_topics(self, num_topics=10, num_words=10):
-        return self.show_topics(num_topics, num_words, log=True)
-
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
         """
         For `num_topics` number of topics, return `num_words` most significant words
@@ -832,10 +831,6 @@ class LdaModel(interfaces.TransformationABC):
         topic = topic / topic.sum()  # normalize to probability distribution
         bestn = matutils.argsort(topic, topn, reverse=True)
         return [(id, topic[id]) for id in bestn]
-
-    def print_topic(self, topicid, topn=10):
-        """Return the result of `show_topic`, but formatted as a single string."""
-        return ' + '.join(['%.3f*%s' % (v, k) for k, v in self.show_topic(topicid, topn)])
 
     def top_topics(self, corpus, num_words=20):
         """

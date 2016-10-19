@@ -432,6 +432,15 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
         # to be mmaped!
 
 
+    def testChunksize(self):
+        index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        expected = [sim for sim in index]
+        index.chunksize = len(index) - 1
+        sims = [sim for sim in index]
+        self.assertTrue(numpy.allclose(expected, sims))
+        index.destroy()
+
+
 class TestWord2VecAnnoyIndexer(unittest.TestCase):
 
     def setUp(self):

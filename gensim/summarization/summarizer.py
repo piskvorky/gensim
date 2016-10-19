@@ -158,6 +158,11 @@ def summarize_corpus(corpus, ratio=0.2):
     _set_graph_edge_weights(graph)
     _remove_unreachable_nodes(graph)
 
+    # Cannot calculate eigenvectors if number of unique words in text < 3. Warns user to add more text. The function ends.
+    if len(graph.nodes()) < 3:
+        logger.warning("Please add more sentences to the text. The number of reachable nodes is below 3")
+        return
+
     pagerank_scores = _pagerank(graph)
 
     hashable_corpus.sort(key=lambda doc: pagerank_scores.get(doc, 0), reverse=True)
@@ -193,10 +198,9 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
         logger.warning("Input text is empty.")
         return
 
-    # If only one sentence is present, the function return the input text (Avoids ZeroDivisionError). 
+    # If only one sentence is present, the function raises an error (Avoids ZeroDivisionError). 
     if len(sentences) == 1:
-        logger.warning("Summarization not performed since the document has only one sentence.")
-        return text
+        raise ValueError("input must have more than one sentence")
     
     # Warns if the text is too short.
     if len(sentences) < INPUT_MIN_LENGTH:

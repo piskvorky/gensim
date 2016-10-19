@@ -15,4 +15,3 @@ from .wikicorpus import WikiCorpus
 from .textcorpus import TextCorpus
 from .ucicorpus import UciCorpus
 from .malletcorpus import MalletCorpus
-from .sharded_corpus import ShardedCorpus
