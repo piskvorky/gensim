@@ -51,11 +51,6 @@ Modules:
     topic_coherence/probability_estimation
     topic_coherence/segmentation
     scripts/glove2word2vec
-    scripts/make_wiki
-    scripts/make_wiki_lemma
-    scripts/make_wiki_online
-    scripts/make_wiki_online_lemma
-    scripts/make_wiki_online_nodebug
     scripts/make_wikicorpus
     scripts/word2vec_standalone 
     parsing/porter
