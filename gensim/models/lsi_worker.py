@@ -39,7 +39,7 @@ class Worker(object):
     def __init__(self):
         self.model = None
 
-
+    @Pyro4.expose
     def initialize(self, myid, dispatcher, **model_params):
         self.lock_update = threading.Lock()
         self.jobsdone = 0 # how many jobs has this worker completed?
@@ -49,7 +49,7 @@ class Worker(object):
         logger.info("initializing worker #%s" % myid)
         self.model = lsimodel.LsiModel(**model_params)
 
-
+    @Pyro4.expose
     @Pyro4.oneway
     def requestjob(self):
         """
@@ -81,7 +81,7 @@ class Worker(object):
             fname = os.path.join(tempfile.gettempdir(), 'lsi_worker.pkl')
             self.model.save(fname)
 
-
+    @Pyro4.expose
     @utils.synchronous('lock_update')
     def getstate(self):
         logger.info("worker #%i returning its state after %s jobs" %
@@ -90,7 +90,7 @@ class Worker(object):
         self.finished = True
         return self.model.projection
 
-
+    @Pyro4.expose
     @utils.synchronous('lock_update')
     def reset(self):
         logger.info("resetting worker #%i" % self.myid)
