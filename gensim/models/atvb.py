@@ -20,11 +20,13 @@ from gensim.models.ldamodel import dirichlet_expectation, get_random_state
 from gensim.models import LdaModel
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
+from scipy.optimize import line_search
 
 from six.moves import xrange
 
 from pprint import pprint
 from random import sample
+from copy import deepcopy
 
 # log(sum(exp(x))) that tries to avoid overflow
 try:
@@ -61,6 +63,24 @@ def update_dir_prior(prior, N, logphat, rho):
         logger.warning("updated prior not positive")
 
     return prior
+
+def dir_mle_search_direction(prior, N, logphat):
+    """
+    Updates a given prior using Newton's method, described in
+    **Huang: Maximum Likelihood Estimation of Dirichlet Distribution Parameters.**
+    http://jonathan-huang.org/research/dirichlet/dirichlet.pdf
+    """
+    dprior = numpy.copy(prior)
+    gradf = N * (psi(numpy.sum(prior)) - psi(prior) + logphat)
+
+    c = N * polygamma(1, numpy.sum(prior))
+    q = -N * polygamma(1, prior)
+
+    b = numpy.sum(gradf / q) / (1 / c + numpy.sum(1 / q))
+
+    dprior = -(gradf - b) / q
+
+    return dprior
 
 class AtVb(LdaModel):
     """
@@ -163,12 +183,12 @@ class AtVb(LdaModel):
         if corpus is not None:
             self.inference(corpus, author2doc, doc2author, var_lambda)
 
-    def update_alpha(self, var_gamma, rho):
+    def update_alpha(self, var_gamma):
         """
         Update parameters for the Dirichlet prior on the per-document
         topic weights `alpha` given the last `var_gamma`.
         """
-        N = float(len(var_gamma))
+        N = float(var_gamma.shape[0])
 
         # NOTE: there might be possibility for overflow if number
         # of authors is very high.
@@ -177,12 +197,57 @@ class AtVb(LdaModel):
             logphat += dirichlet_expectation(var_gamma[a, :])
         logphat *= 1 / N
 
-        self.alpha = update_dir_prior(self.alpha, N, logphat, rho)
+        self.alpha = update_dir_prior(self.alpha, N, logphat, 1)
+
+    def update_alpha_ls(self, var_gamma):
+        """
+        Work in progress.
+        MLE of alpha with line search.
+        """
+        N = float(var_gamma.shape[0])
+
+        # NOTE: there might be possibility for overflow if number
+        # of authors is very high.
+        logphat = 0.0
+        for a in xrange(self.num_authors):
+            logphat += dirichlet_expectation(var_gamma[a, :])
+        logphat *= 1 / N
+
+        def f(alpha):
+            '''Compute the Dirichlet likelihood.'''
+            return -N * (gammaln(numpy.sum(alpha)) - numpy.sum(gammaln(alpha)) + numpy.sum((alpha - 1) * logphat))
+
+        def g(alpha):
+            '''Compute the first derivative of the Dirichlet likelihood.'''
+            return -N * (psi(numpy.sum(alpha)) - psi(alpha) + logphat)
+
+
+        # TODO: consider what stopping criterion to use here, and
+        # how many maximum iterations to use.
+        # TODO: consider using line search.
+        f1 = f(self.alpha)
+        #print(f1)
+        #print(0)
+        for i in xrange(10):
+            # Obtain search direction for Newton step.
+            pk = dir_mle_search_direction(self.alpha, N, logphat)
+            # Obtain stepsize using Wolfe condition.
+            stepsize = line_search(f, g, self.alpha, pk)[0]
+            # Update alpha.
+            # NOTE: need to check that update is positive.
+            self.alpha += stepsize * pk
+            f2 = f(self.alpha)
+            if (f2 - f1) / f1 < 0.01:
+                break
+            else:
+                f1 = f2
+            #print(f2)
+
         # logger.info("optimized eta %s", list(self.alpha))
 
         return self.alpha
 
-    def update_eta(self, var_lambda, rho):
+    def update_eta(self, var_lambda):
         """
         Update parameters for the Dirichlet prior on the per-document
         topic weights `eta` given the last `var_lambda`.
@@ -331,7 +396,7 @@ class AtVb(LdaModel):
                 # very arbitrary; if a carefully chosen stepsize is needed,
                 # linesearch would probably be better.
                 stepsize = 1  
-                self.update_alpha(var_gamma, stepsize)
+                self.update_alpha(var_gamma)
 
             # Update Elogtheta, since gamma has been updated.
             Elogtheta = dirichlet_expectation(var_gamma)
@@ -363,7 +428,7 @@ class AtVb(LdaModel):
 
                 if self.optimize_eta:
                     stepsize = 1
-                    self.update_eta(var_lambda, stepsize)
+                    self.update_eta(var_lambda)
 
                 # Update Elogbeta, since lambda has been updated.
                 Elogbeta = dirichlet_expectation(var_lambda)
