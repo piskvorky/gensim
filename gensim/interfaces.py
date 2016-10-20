@@ -261,11 +261,8 @@ class SimilarityABC(utils.SaveLoad):
                 # scipy.sparse happy
                 chunk_end = min(self.index.shape[0], chunk_start + self.chunksize)
                 chunk = self.index[chunk_start : chunk_end]
-                if chunk.shape[0] > 1:
-                    for sim in self[chunk]:
-                        yield sim
-                else:
-                    yield self[chunk]
+                for sim in self[chunk]:
+                    yield sim
         else:
             for doc in self.index:
                 yield self[doc]

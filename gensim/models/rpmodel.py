@@ -6,10 +6,8 @@
 
 
 import logging
-import itertools
 
 import numpy
-import scipy
 
 from gensim import interfaces, matutils, utils
 
@@ -47,10 +45,8 @@ class RpModel(interfaces.TransformationABC):
         if corpus is not None:
             self.initialize(corpus)
 
-
     def __str__(self):
         return "RpModel(num_terms=%s, num_topics=%s)" % (self.num_terms, self.num_topics)
-
 
     def initialize(self, corpus):
         """
@@ -68,9 +64,11 @@ class RpModel(interfaces.TransformationABC):
         # Now construct the projection matrix itself.
         # Here i use a particular form, derived in "Achlioptas: Database-friendly random projection",
         # and his (1) scenario of Theorem 1.1 in particular (all entries are +1/-1).
-        randmat = 1 - 2 * numpy.random.binomial(1, 0.5, shape) # convert from 0/1 to +1/-1
-        self.projection = numpy.asfortranarray(randmat, dtype=numpy.float32) # convert from int32 to floats, for faster multiplications
-
+        randmat = 1 - 2 * numpy.random.binomial(1, 0.5, shape)  # convert from 0/1 to +1/-1
+        self.projection = numpy.asfortranarray(randmat, dtype=numpy.float32)  # convert from int32 to floats, for faster multiplications
+        # TODO: check whether the Fortran-order shenanigans still make sense. In the original
+        # code (~2010), this made a BIG difference for numpy BLAS implementations; perhaps now the wrappers
+        # are smarter and this is no longer needed?
 
     def __getitem__(self, bow):
         """
@@ -81,19 +79,19 @@ class RpModel(interfaces.TransformationABC):
         if is_corpus:
             return self._apply(bow)
 
+        if getattr(self, 'freshly_loaded', False):
+            # This is a hack to work around a bug in numpy, where a FORTRAN-order array
+            # unpickled from disk segfaults on using it.
+            self.freshly_loaded = False
+            self.projection = self.projection.copy('F')  # simply making a fresh copy fixes the broken array
+
         vec = matutils.sparse2full(bow, self.num_terms).reshape(self.num_terms, 1) / numpy.sqrt(self.num_topics)
         vec = numpy.asfortranarray(vec, dtype=numpy.float32)
-        topic_dist = numpy.dot(self.projection, vec) # (k, d) * (d, 1) = (k, 1)
+        topic_dist = numpy.dot(self.projection, vec)  # (k, d) * (d, 1) = (k, 1)
         return [(topicid, float(topicvalue)) for topicid, topicvalue in enumerate(topic_dist.flat)
                 if numpy.isfinite(topicvalue) and not numpy.allclose(topicvalue, 0.0)]
 
-
     def __setstate__(self, state):
-        """
-        This is a hack to work around a bug in numpy, where a FORTRAN-order array
-        unpickled from disk segfaults on using it.
-        """
         self.__dict__ = state
-        if self.projection is not None:
-            self.projection = self.projection.copy('F') # simply making a fresh copy fixes the broken array
+        self.freshly_loaded = True
 #endclass RpModel

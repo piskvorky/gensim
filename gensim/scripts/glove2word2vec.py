@@ -6,8 +6,12 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-USAGE: %(program)s --input <GloVe vector file> --output <Word2vec vector file>.
-Convert GloVe vectors in text format into the word2vec text format.
+USAGE: $ python -m gensim.scripts.glove2word2vec --input <GloVe vector file> --output <Word2vec vector file>
+Where:
+    <GloVe vector file>: Input GloVe .txt file
+    <Word2vec vector file>: Desired name of output Word2vec .txt file
+
+This script is used to convert GloVe vectors in text format into the word2vec text format.
 The only difference between the two formats is an extra header line in word2vec,
 which contains the number of vectors and their dimensionality (two integers).
 """
