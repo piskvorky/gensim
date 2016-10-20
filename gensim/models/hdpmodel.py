@@ -591,6 +591,6 @@ class HdpTopicFormatter(object):
         else:
             fmt = '\n'.join(['    %20s    %.8f' % (word, weight) for (word, weight) in topic_terms])
 
-        fmt = (topic_id,fmt)
+        fmt = (topic_id, fmt)
         return fmt
 # endclass HdpTopicFormatter
