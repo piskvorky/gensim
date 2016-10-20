@@ -84,7 +84,7 @@ class TestDoc2VecModel(unittest.TestCase):
         """Test doc2vec doctag alternatives"""
         corpus = DocsLeeCorpus()
 
-        size = 300
+        size = 100
         model = doc2vec.Doc2Vec(min_count=1, size=size)
         model.build_vocab(corpus)
         self.assertEqual(len(model.docvecs.doctag_syn0), size)
@@ -107,7 +107,7 @@ class TestDoc2VecModel(unittest.TestCase):
         # force duplicated tags
         corpus = corpus[0:10] + corpus
 
-        size = 300
+        size = 100
         model = doc2vec.Doc2Vec(size=size, min_count=1)
         model.build_vocab(corpus)
 
