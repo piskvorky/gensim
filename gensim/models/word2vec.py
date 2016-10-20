@@ -365,7 +365,7 @@ class Word2Vec(utils.SaveLoad):
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
-            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH):
+            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH,**kwargs):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -461,7 +461,6 @@ class Word2Vec(utils.SaveLoad):
         self.min_alpha = float(min_alpha)
         self.hs = hs
         self.negative = negative
-        self.cbow_mean = int(cbow_mean)
         self.hashfxn = hashfxn
         self.iter = iter
         self.null_word = null_word
@@ -469,8 +468,12 @@ class Word2Vec(utils.SaveLoad):
         self.total_train_time = 0
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
-        self.size = size
 
+        if "dm_mean" in kwargs:
+            self.cbow_mean = int(kwargs["dm_mean"])
+        else:
+            self.cbow_mean = int(cbow_mean)
+            
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")

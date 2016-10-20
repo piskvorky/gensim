@@ -529,9 +529,8 @@ class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
 
 class Doc2Vec(Word2Vec):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
-    def __init__(self, documents=None, size=300, alpha=0.025, window=8, min_count=5,
-                 max_vocab_size=None, sample=0, seed=1, workers=1, min_alpha=0.0001,
-                 dm=1, hs=1, negative=0, dbow_words=0, dm_mean=0, dm_concat=0, dm_tag_count=1,
+    def __init__(self, documents=None,
+                 dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1,
                  docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, **kwargs):
         """
         Initialize the model from an iterable of `documents`. Each document is a
@@ -601,9 +600,8 @@ class Doc2Vec(Word2Vec):
 
         """
 
+
         super(Doc2Vec, self).__init__(
-            size=size, window=window, min_count=min_count,
-            sample=sample, workers=workers,
             sg=(1 + dm) % 2,
             null_word=dm_concat, **kwargs)
 
@@ -612,8 +610,7 @@ class Doc2Vec(Word2Vec):
         self.dm_tag_count = dm_tag_count
         if self.dm and self.dm_concat:
             self.layer1_size = (self.dm_tag_count + (2 * self.window)) * self.vector_size
-        else:
-            self.layer1_size = self.size
+
         self.docvecs = docvecs or DocvecsArray(docvecs_mapfile)
         self.comment = comment
         if documents is not None:
