@@ -277,13 +277,6 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.syn0[word2.index], if that is l1)
     return neu1e
 
-def sigmoid(p):
-    if p > 0:
-        return 1. / (1. + exp(-p))
-    elif p <= 0:
-        return exp(p) / (1 + exp(p))
-    else:
-        raise ValueError
 
 def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
     neu1e = zeros(l1.shape)
@@ -365,7 +358,7 @@ class Word2Vec(utils.SaveLoad):
             self, sentences=None, size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, cbow_mean=1, hashfxn=hash, iter=5, null_word=0,
-            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH,**kwargs):
+            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH):
         """
         Initialize the model from an iterable of `sentences`. Each sentence is a
         list of words (unicode strings) that will be used for training.
@@ -461,6 +454,7 @@ class Word2Vec(utils.SaveLoad):
         self.min_alpha = float(min_alpha)
         self.hs = hs
         self.negative = negative
+        self.cbow_mean = int(cbow_mean)
         self.hashfxn = hashfxn
         self.iter = iter
         self.null_word = null_word
@@ -468,11 +462,6 @@ class Word2Vec(utils.SaveLoad):
         self.total_train_time = 0
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
-
-        if "dm_mean" in kwargs and kwargs["dm_mean"] is not None:
-            self.cbow_mean = int(kwargs["dm_mean"])
-        else:
-            self.cbow_mean = int(cbow_mean)
 
         if sentences is not None:
             if isinstance(sentences, GeneratorType):

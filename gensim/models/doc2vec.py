@@ -529,7 +529,7 @@ class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
 
 class Doc2Vec(Word2Vec):
     """Class for training, using and evaluating neural networks described in http://arxiv.org/pdf/1405.4053v2.pdf"""
-    def __init__(self, documents=None,dm_mean=None,
+    def __init__(self, documents=None, dm_mean=None,
                  dm=1, dbow_words=0, dm_concat=0, dm_tag_count=1,
                  docvecs=None, docvecs_mapfile=None, comment=None, trim_rule=None, **kwargs):
         """
@@ -601,8 +601,11 @@ class Doc2Vec(Word2Vec):
         """
 
         super(Doc2Vec, self).__init__(
-            sg=(1 + dm) % 2, dm_mean=dm_mean,
+            sg=(1 + dm) % 2,
             null_word=dm_concat, **kwargs)
+
+        if dm_mean is not None:
+            self.cbow_mean = dm_mean
 
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat

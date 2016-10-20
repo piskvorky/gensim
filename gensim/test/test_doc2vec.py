@@ -84,11 +84,10 @@ class TestDoc2VecModel(unittest.TestCase):
         """Test doc2vec doctag alternatives"""
         corpus = DocsLeeCorpus()
 
-        size = 300
-        model = doc2vec.Doc2Vec(min_count=1, size=size)
+        model = doc2vec.Doc2Vec(min_count=1)
         model.build_vocab(corpus)
-        self.assertEqual(len(model.docvecs.doctag_syn0), size)
-        self.assertEqual(model.docvecs[0].shape, (size,))
+        self.assertEqual(len(model.docvecs.doctag_syn0), 300)
+        self.assertEqual(model.docvecs[0].shape, (100,))
         self.assertRaises(KeyError, model.__getitem__, '_*0')
 
     def test_missing_string_doctag(self):
@@ -107,13 +106,12 @@ class TestDoc2VecModel(unittest.TestCase):
         # force duplicated tags
         corpus = corpus[0:10] + corpus
 
-        size = 300
-        model = doc2vec.Doc2Vec(size=size, min_count=1)
+        model = doc2vec.Doc2Vec(min_count=1)
         model.build_vocab(corpus)
 
-        self.assertEqual(len(model.docvecs.doctag_syn0), size)
-        self.assertEqual(model.docvecs[0].shape, (size,))
-        self.assertEqual(model.docvecs['_*0'].shape, (size,))
+        self.assertEqual(len(model.docvecs.doctag_syn0), 300)
+        self.assertEqual(model.docvecs[0].shape, (100,))
+        self.assertEqual(model.docvecs['_*0'].shape, (100,))
         self.assertTrue(all(model.docvecs['_*0'] == model.docvecs[0]))
         self.assertTrue(max(d.offset for d in model.docvecs.doctags.values()) < len(model.docvecs.doctags))
         self.assertTrue(max(model.docvecs._int_index(str_key) for str_key in model.docvecs.doctags.keys()) < len(model.docvecs.doctag_syn0))
