@@ -23,7 +23,7 @@ import scipy.linalg
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import ldamodel, ldamulticore
 from gensim import matutils
-from gensim.test import test_basemodel
+from gensim.test import basetests
 
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
@@ -55,7 +55,7 @@ def testRandomState():
         assert(isinstance(ldamodel.get_random_state(testcase), numpy.random.RandomState))
 
 
-class TestLdaModel(unittest.TestCase, test_basemodel.TestBaseTopicModel):
+class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = ldamodel.LdaModel
