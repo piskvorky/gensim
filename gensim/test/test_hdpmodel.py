@@ -22,7 +22,7 @@ import scipy.linalg
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import hdpmodel
 from gensim import matutils
-from gensim.test import test_basemodel
+from gensim.test import basetests
 
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
@@ -48,7 +48,7 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
-class TestHdpModel(unittest.TestCase, test_basemodel.TestBaseTopicModel):
+class TestHdpModel(unittest.TestCase, basetests.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = hdpmodel.HdpModel
