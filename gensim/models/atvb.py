@@ -259,7 +259,7 @@ class AtVb(LdaModel):
             logphat += dirichlet_expectation(var_lambda[k, :])
         logphat *= 1 / N
 
-        self.eta = update_dir_prior(self.eta, N, logphat, rho)
+        self.eta = update_dir_prior(self.eta, N, logphat, 1)
         # logger.info("optimized eta %s", list(self.eta))
 
         return self.eta
@@ -270,11 +270,15 @@ class AtVb(LdaModel):
 
         logger.info('Starting inference. Training on %d documents.', len(corpus))
 
+        # Whether or not to evaluate bound and log probability, respectively.
+        bound_eval = False
+        logprob_eval = True
+
         if var_lambda is None:
-            optimize_lambda = True
+            self.optimize_lambda = True
         else:
             # We have topics from LDA, thus we do not train the topics.
-            optimize_lambda = False
+            self.optimize_lambda = False
 
         # Initial value of gamma and lambda.
         # NOTE: parameters of gamma distribution same as in `ldamodel`.
@@ -284,6 +288,10 @@ class AtVb(LdaModel):
         if var_lambda is None:
             var_lambda = self.random_state.gamma(100., 1. / 100.,
                     (self.num_topics, self.num_terms))
+        else:
+            self.norm_lambda = var_lambda.copy()
+            for k in xrange(self.num_topics):
+                self.norm_lambda[k, :] = var_lambda[k, :] / var_lambda.sum(axis=1)[k]
 
         self.var_lambda = var_lambda
         self.var_gamma = var_gamma
@@ -317,12 +325,16 @@ class AtVb(LdaModel):
         Elogbeta = dirichlet_expectation(var_lambda)
         expElogbeta = numpy.exp(Elogbeta)
 
-        word_bound = self.word_bound(Elogtheta, Elogbeta)
-        theta_bound = self.theta_bound(Elogtheta, var_gamma)
-        beta_bound = self.beta_bound(Elogbeta, var_lambda)
-        bound = word_bound + theta_bound + beta_bound
-        #likelihood = self.log_word_prob(var_gamma, var_lambda)
-        logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
+        if self.eval_every > 0:
+            if bound_eval:
+                word_bound = self.word_bound(Elogtheta, Elogbeta)
+                theta_bound = self.theta_bound(Elogtheta)
+                beta_bound = self.beta_bound(Elogbeta)
+                bound = word_bound + theta_bound + beta_bound
+                logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
+            if logprob_eval:
+                logprob = self.eval_logprob()
+                logger.info('Log prob: %.3e.', logprob)
         for iteration in xrange(self.iterations):
             #logger.info('Starting iteration %d.', iteration)
             # Update phi.
@@ -402,7 +414,7 @@ class AtVb(LdaModel):
             Elogtheta = dirichlet_expectation(var_gamma)
 
             # Update lambda.
-            if optimize_lambda:
+            if self.optimize_lambda:
                 #logger.info('Updating lambda.')
                 for k in xrange(self.num_topics):
                     #logger.info('k = %d.', k)
@@ -441,27 +453,27 @@ class AtVb(LdaModel):
             # Print topics:
             #pprint(self.show_topics())
 
-
             # Evaluate bound.
             if (iteration + 1) % self.eval_every == 0:
-                #logger.info('Computing bound.')
-                prev_bound = bound
-                word_bound = self.word_bound(Elogtheta, Elogbeta)
-                theta_bound = self.theta_bound(Elogtheta, var_gamma)
-                beta_bound = self.beta_bound(Elogbeta, var_lambda)
-                bound = word_bound + theta_bound + beta_bound
-                #likelihood = self.log_word_prob(var_gamma, var_lambda)
-                logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
-                if numpy.abs(bound - prev_bound) / abs(prev_bound) < self.threshold:
-                    break
+                if bound_eval:
+                    prev_bound = deepcopy(bound)
+                    word_bound = self.word_bound(Elogtheta, Elogbeta)
+                    theta_bound = self.theta_bound(Elogtheta)
+                    beta_bound = self.beta_bound(Elogbeta)
+                    bound = word_bound + theta_bound + beta_bound
+                    logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
+                if logprob_eval:
+                    logprob = self.eval_logprob()
+                    logger.info('Log prob: %.3e.', logprob)
+                if bound_eval:
+                    if numpy.abs(bound - prev_bound) / abs(prev_bound) < self.threshold:
+                        break
         # End of update loop (iterations).
 
         return var_gamma, var_lambda
 
     def word_bound(self, Elogtheta, Elogbeta, doc_ids=None):
         """
-        Note that this is not strictly speaking a likelihood.
-
         Compute the expectation of the log conditional likelihood of the data,
 
             E_q[log p(w_d | theta, beta, A_d)],
@@ -512,18 +524,10 @@ class AtVb(LdaModel):
 
         return bound
 
-    def theta_bound(self, Elogtheta, var_gamma, doc_ids=None):
-        """
-        """
-
-        if doc_ids is None:
-            docs = self.corpus
-        else:
-            docs = [self.corpus[d] for d in doc_ids]
-
+    def theta_bound(self, Elogtheta):
         bound = 0.0
         for a in xrange(self.num_authors):
-            var_gamma_a = var_gamma[a, :]
+            var_gamma_a = self.var_gamma[a, :]
             Elogtheta_a = Elogtheta[a, :]
             # E[log p(theta | alpha) - log q(theta | gamma)]; assumes alpha is a vector
             bound += numpy.sum((self.alpha - var_gamma_a) * Elogtheta_a)
@@ -532,15 +536,15 @@ class AtVb(LdaModel):
 
         return bound
 
-    def beta_bound(self, Elogbeta, var_lambda, doc_ids=None):
+    def beta_bound(self, Elogbeta):
         bound = 0.0
-        bound += numpy.sum((self.eta - var_lambda) * Elogbeta)
-        bound += numpy.sum(gammaln(var_lambda) - gammaln(self.eta))
-        bound += numpy.sum(gammaln(numpy.sum(self.eta)) - gammaln(numpy.sum(var_lambda, 1)))
+        bound += numpy.sum((self.eta - self.var_lambda) * Elogbeta)
+        bound += numpy.sum(gammaln(self.var_lambda) - gammaln(self.eta))
+        bound += numpy.sum(gammaln(numpy.sum(self.eta)) - gammaln(numpy.sum(self.var_lambda, 1)))
 
         return bound
 
-    def log_word_prob(self, var_gamma, var_lambda, doc_ids=None):
+    def eval_logprob(self, doc_ids=None):
         """
         Compute the liklihood of the corpus under the model, by first 
         computing the conditional probabilities of the words in a
@@ -551,35 +555,39 @@ class AtVb(LdaModel):
         summing over all documents, and dividing by the number of documents.
         """
 
-        norm_gamma = var_gamma.copy()
-        norm_lambda = var_lambda.copy()
+        # TODO: if var_lambda is supplied from LDA, normalizing it every time
+        # is unnecessary.
+        norm_gamma = self.var_gamma.copy()
         for a in xrange(self.num_authors):
-            norm_gamma[a, :] = var_gamma[a, :] / var_gamma.sum(axis=1)[a]
-        for k in xrange(self.num_topics):
-            norm_lambda[k, :] = var_lambda[k, :] / var_lambda.sum(axis=1)[k]
+            norm_gamma[a, :] = self.var_gamma[a, :] / self.var_gamma.sum(axis=1)[a]
+
+        if self.optimize_lambda:
+            norm_lambda = self.var_lambda.copy()
+            for k in xrange(self.num_topics):
+                norm_lambda[k, :] = self.var_lambda[k, :] / self.var_lambda.sum(axis=1)[k]
+        else:
+            norm_lambda = self.norm_lambda
 
         if doc_ids is None:
             docs = self.corpus
         else:
             docs = [self.corpus[d] for d in doc_ids]
 
-        log_word_prob = 0.0
+        logprob = 0.0
         for d, doc in enumerate(docs):
             ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
             cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
             authors_d = self.doc2author[d]
-            log_word_prob_d = 0.0
+            logprob_d = 0.0
             for vi, v in enumerate(ids):
-                log_word_prob_v = 0.0
+                logprob_v = 0.0
                 for k in xrange(self.num_topics):
                     for a in authors_d:
-                        log_word_prob_v += norm_gamma[a, k] * norm_lambda[k, v]
-                log_word_prob_d += cts[vi] * numpy.log(log_word_prob_v)
-            log_word_prob += numpy.log(1.0 / len(authors_d)) + log_word_prob_d
-            #authors_idxs = [self.authorid2idx[aid] for aid in authors_d]
-            #likelihood += author_prior_prob * numpy.sum(cnt * numpy.log(numpy.sum(numpy.exp(logsumexp(Elogtheta[a, :] + Elogbeta[:, id])) for a in authors_idxs)) for id, cnt in doc)
+                        logprob_v += norm_gamma[a, k] * norm_lambda[k, v]
+                logprob_d += cts[vi] * numpy.log(logprob_v)
+            logprob += numpy.log(1.0 / len(authors_d)) + logprob_d
 
-        return log_word_prob
+        return logprob
 
     # Overriding LdaModel.get_topic_terms.
     def get_topic_terms(self, topicid, topn=10):
