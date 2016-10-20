@@ -1,4 +1,4 @@
-class BaseTopicModel():
+class BaseTopicModel(object):
     def print_topic(self, topicno, topn=10):
         """
         Return a single topic as a formatted string. See `show_topic()` for parameters.
