@@ -923,7 +923,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         )
         
         if is_corpus:
-          return self._apply(corpus, per_word_topics, **kwargs)
+          return self._apply(corpus, per_word_topics,  **kwargs)
 
         gamma, phis = self.inference([bow], collect_sstats=True)
         topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
