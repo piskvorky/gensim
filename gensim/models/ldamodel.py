@@ -894,7 +894,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         top_topics = sorted(coherence_scores, key=lambda t: t[1], reverse=True)
         return top_topics
 
-    def get_document_topics(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
+    def get_document_topics(self, bow, per_word_topics=False, minimum_probability=None, minimum_phi_value=None):
         """
         Return topic distribution for the given document `bow`, as a list of
         (topic_id, topic_probability) 2-tuples.
@@ -915,8 +915,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         # if the input vector is a corpus, return a transformed corpus
         is_corpus, corpus = utils.is_corpus(bow)
+        
+        # Define the extra parameters to be passed in kwargs
+        kwargs = dict(
+            minimum_probability=minimum_probability,
+            minimum_phi_value=minimum_phi_value
+        )
+        
         if is_corpus:
-          return self._apply(corpus, minimum_probability, minimum_phi_value, per_word_topics)
+          return self._apply(corpus, per_word_topics, **kwargs)
 
         gamma, phis = self.inference([bow], collect_sstats=True)
         topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
