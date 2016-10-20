@@ -459,11 +459,11 @@ class Word2Vec(utils.SaveLoad):
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
 
-        if "dm_mean" in kwargs:
+        if "dm_mean" in kwargs and kwargs["dm_mean"] is not None:
             self.cbow_mean = int(kwargs["dm_mean"])
         else:
             self.cbow_mean = int(cbow_mean)
-            
+
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
