@@ -18,6 +18,7 @@ import numbers
 from gensim import utils, matutils
 from gensim.models.ldamodel import dirichlet_expectation, get_random_state
 from gensim.models import LdaModel
+from gensim.models import AtVb
 from gensim.models.hdpmodel import log_normalize  # For efficient normalization of variational parameters.
 from six.moves import xrange
 from scipy.special import gammaln
@@ -35,7 +36,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class OnlineAtVb(LdaModel):
+class OnlineAtVb(AtVb):
     """
     Train the author-topic model using online variational Bayes.
     """
@@ -45,12 +46,6 @@ class OnlineAtVb(LdaModel):
             author2doc=None, doc2author=None, threshold=0.001, minimum_probability=0.01,
             iterations=10, passes=1, alpha=None, eta=None, decay=0.5, offset=1.0,
             eval_every=1, random_state=None):
-
-        # TODO: allow for asymmetric priors.
-        if alpha is None:
-            alpha = 1.0 / num_topics
-        if eta is None:
-            eta = 1.0 / num_topics
 
         self.id2word = id2word
         if corpus is None and self.id2word is None:
@@ -117,14 +112,16 @@ class OnlineAtVb(LdaModel):
         # Make the reverse mapping, from author names to author IDs.
         self.author2id = dict(zip(self.id2author.values(), self.id2author.keys()))
 
+        # NOTE: I don't think this necessarily is a good way to initialize the topics.
+        self.alpha = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
+        self.eta = numpy.asarray([1.0 / self.num_terms for i in xrange(self.num_terms)])
+
         self.corpus = corpus
         self.iterations = iterations
         self.passes = passes
         self.num_topics = num_topics
         self.threshold = threshold
         self.minimum_probability = minimum_probability 
-        self.alpha = alpha
-        self.eta = eta
         self.decay = decay
         self.offset = offset
         self.num_docs = len(corpus)
