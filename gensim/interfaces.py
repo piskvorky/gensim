@@ -105,7 +105,7 @@ class CorpusABC(utils.SaveLoad):
 
 
 class TransformedCorpus(CorpusABC):
-    def __init__(self, obj, corpus, chunksize=None, , **kwargs):
+    def __init__(self, obj, corpus, chunksize=None, **kwargs):
         self.obj, self.corpus, self.chunksize = obj, corpus, chunksize
         self.metadata = False
 
