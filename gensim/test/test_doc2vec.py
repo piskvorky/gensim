@@ -84,10 +84,11 @@ class TestDoc2VecModel(unittest.TestCase):
         """Test doc2vec doctag alternatives"""
         corpus = DocsLeeCorpus()
 
-        model = doc2vec.Doc2Vec(min_count=1)
+        size = 300
+        model = doc2vec.Doc2Vec(min_count=1, size=size)
         model.build_vocab(corpus)
-        self.assertEqual(len(model.docvecs.doctag_syn0), 300)
-        self.assertEqual(model.docvecs[0].shape, (300,))
+        self.assertEqual(len(model.docvecs.doctag_syn0), size)
+        self.assertEqual(model.docvecs[0].shape, (size,))
         self.assertRaises(KeyError, model.__getitem__, '_*0')
 
     def test_missing_string_doctag(self):
@@ -106,11 +107,13 @@ class TestDoc2VecModel(unittest.TestCase):
         # force duplicated tags
         corpus = corpus[0:10] + corpus
 
-        model = doc2vec.Doc2Vec(min_count=1)
+        size = 300
+        model = doc2vec.Doc2Vec(size=size, min_count=1)
         model.build_vocab(corpus)
-        self.assertEqual(len(model.docvecs.doctag_syn0), 300)
-        self.assertEqual(model.docvecs[0].shape, (300,))
-        self.assertEqual(model.docvecs['_*0'].shape, (300,))
+
+        self.assertEqual(len(model.docvecs.doctag_syn0), size)
+        self.assertEqual(model.docvecs[0].shape, (size,))
+        self.assertEqual(model.docvecs['_*0'].shape, (size,))
         self.assertTrue(all(model.docvecs['_*0'] == model.docvecs[0]))
         self.assertTrue(max(d.offset for d in model.docvecs.doctags.values()) < len(model.docvecs.doctags))
         self.assertTrue(max(model.docvecs._int_index(str_key) for str_key in model.docvecs.doctags.keys()) < len(model.docvecs.doctag_syn0))
@@ -168,7 +171,7 @@ class TestDoc2VecModel(unittest.TestCase):
     def test_training(self):
         """Test doc2vec training."""
         corpus = DocsLeeCorpus()
-        model = doc2vec.Doc2Vec(size=100, min_count=2, iter=20)
+        model = doc2vec.Doc2Vec(size=100, min_count=2, iter=20, window=8, sample=0.01, workers=1)
         model.build_vocab(corpus)
         self.assertEqual(model.docvecs.doctag_syn0.shape, (300, 100))
         model.train(corpus)
@@ -176,7 +179,7 @@ class TestDoc2VecModel(unittest.TestCase):
         self.model_sanity(model)
 
         # build vocab and train in one step; must be the same as above
-        model2 = doc2vec.Doc2Vec(corpus, size=100, min_count=2, iter=20)
+        model2 = doc2vec.Doc2Vec(corpus, size=100, min_count=2, iter=20, window=8, sample=0.01, workers=1)
         self.models_equal(model, model2)
 
     def test_dbow_hs(self):
