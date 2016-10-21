@@ -19,9 +19,11 @@ def pagerank_weighted(graph, damping=0.85):
     adjacency_matrix = build_adjacency_matrix(graph)
     probability_matrix = build_probability_matrix(graph)
 
-    pagerank_matrix = damping * adjacency_matrix.todense() + (1 - damping) * probability_matrix
+    pagerank_matrix = damping * adjacency_matrix.todense() + (1 - damping) * \
+        probability_matrix
 
-    vals, vecs = eigs(pagerank_matrix.T, k=1)  # TODO raise an error if matrix has complex eigenvectors?
+    # TODO raise an error if matrix has complex eigenvectors?
+    vals, vecs = eigs(pagerank_matrix.T, k=1)
 
     return process_results(graph, vecs.real)
 
@@ -35,7 +37,8 @@ def build_adjacency_matrix(graph):
 
     for i in xrange(length):
         current_node = nodes[i]
-        neighbors_sum = sum(graph.edge_weight((current_node, neighbor)) for neighbor in graph.neighbors(current_node))
+        neighbors_sum = sum(graph.edge_weight((current_node, neighbor))
+                            for neighbor in graph.neighbors(current_node))
         for j in xrange(length):
             edge_weight = float(graph.edge_weight((current_node, nodes[j])))
             if i != j and edge_weight != 0.0:

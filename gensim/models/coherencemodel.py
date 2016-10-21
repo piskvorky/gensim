@@ -21,9 +21,12 @@ coherence measures. http://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public
 import logging
 
 from gensim import interfaces
-from gensim.topic_coherence import (segmentation, probability_estimation,
-                                    direct_confirmation_measure, indirect_confirmation_measure,
-                                    aggregation)
+from gensim.topic_coherence import (
+    segmentation,
+    probability_estimation,
+    direct_confirmation_measure,
+    indirect_confirmation_measure,
+    aggregation)
 from gensim.matutils import argsort
 from gensim.utils import is_corpus, FakeDict
 from gensim.models.ldamodel import LdaModel
@@ -40,22 +43,26 @@ sliding_window_based = ['c_v', 'c_uci', 'c_npmi']
 make_pipeline = namedtuple('Coherence_Measure', 'seg, prob, conf, aggr')
 
 coherence_dict = {
-    'u_mass': make_pipeline(segmentation.s_one_pre,
-                            probability_estimation.p_boolean_document,
-                            direct_confirmation_measure.log_conditional_probability,
-                            aggregation.arithmetic_mean),
-    'c_v': make_pipeline(segmentation.s_one_set,
-                         probability_estimation.p_boolean_sliding_window,
-                         indirect_confirmation_measure.cosine_similarity,
-                         aggregation.arithmetic_mean),
-    'c_uci': make_pipeline(segmentation.s_one_one,
-                           probability_estimation.p_boolean_sliding_window,
-                           direct_confirmation_measure.log_ratio_measure,
-                           aggregation.arithmetic_mean),
-    'c_npmi': make_pipeline(segmentation.s_one_one,
-                            probability_estimation.p_boolean_sliding_window,
-                            direct_confirmation_measure.log_ratio_measure,
-                            aggregation.arithmetic_mean),
+    'u_mass': make_pipeline(
+        segmentation.s_one_pre,
+        probability_estimation.p_boolean_document,
+        direct_confirmation_measure.log_conditional_probability,
+        aggregation.arithmetic_mean),
+    'c_v': make_pipeline(
+        segmentation.s_one_set,
+        probability_estimation.p_boolean_sliding_window,
+        indirect_confirmation_measure.cosine_similarity,
+        aggregation.arithmetic_mean),
+    'c_uci': make_pipeline(
+        segmentation.s_one_one,
+        probability_estimation.p_boolean_sliding_window,
+        direct_confirmation_measure.log_ratio_measure,
+        aggregation.arithmetic_mean),
+    'c_npmi': make_pipeline(
+        segmentation.s_one_one,
+        probability_estimation.p_boolean_sliding_window,
+        direct_confirmation_measure.log_ratio_measure,
+        aggregation.arithmetic_mean),
 }
 
 sliding_windows_dict = {
@@ -63,6 +70,7 @@ sliding_windows_dict = {
     'c_uci': 10,
     'c_npmi': 10
 }
+
 
 class CoherenceModel(interfaces.TransformationABC):
     """
@@ -87,7 +95,17 @@ class CoherenceModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
-    def __init__(self, model=None, topics=None, texts=None, corpus=None, dictionary=None, window_size=None, coherence='c_v', topn=10):
+
+    def __init__(
+            self,
+            model=None,
+            topics=None,
+            texts=None,
+            corpus=None,
+            dictionary=None,
+            window_size=None,
+            coherence='c_v',
+            topn=10):
         """
         Args:
         ----
@@ -125,14 +143,16 @@ class CoherenceModel(interfaces.TransformationABC):
         if model is None and topics is None:
             raise ValueError("One of model or topics has to be provided.")
         elif topics is not None and dictionary is None:
-            raise ValueError("dictionary has to be provided if topics are to be used.")
+            raise ValueError(
+                "dictionary has to be provided if topics are to be used.")
         if texts is None and corpus is None:
             raise ValueError("One of texts or corpus has to be provided.")
         # Check if associated dictionary is provided.
         if dictionary is None:
             if isinstance(model.id2word, FakeDict):
-                raise ValueError("The associated dictionary should be provided with the corpus or 'id2word' for topic model"
-                                 " should be set as the associated dictionary.")
+                raise ValueError(
+                    "The associated dictionary should be provided with the corpus or 'id2word' for topic model"
+                    " should be set as the associated dictionary.")
             else:
                 self.dictionary = model.id2word
         else:
@@ -143,18 +163,25 @@ class CoherenceModel(interfaces.TransformationABC):
                 self.corpus = corpus
             elif texts is not None:
                 self.texts = texts
-                self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
+                self.corpus = [
+                    self.dictionary.doc2bow(text) for text in self.texts]
             else:
-                raise ValueError("Either 'corpus' with 'dictionary' or 'texts' should be provided for %s coherence." % coherence)
+                raise ValueError(
+                    "Either 'corpus' with 'dictionary' or 'texts' should be provided for %s coherence." %
+                    coherence)
         # Check for correct inputs for c_v coherence measure.
         elif coherence in sliding_window_based:
             self.window_size = window_size
             if texts is None:
-                raise ValueError("'texts' should be provided for %s coherence." % coherence)
+                raise ValueError(
+                    "'texts' should be provided for %s coherence." %
+                    coherence)
             else:
                 self.texts = texts
         else:
-            raise ValueError("%s coherence is not currently supported." % coherence)
+            raise ValueError(
+                "%s coherence is not currently supported." %
+                coherence)
         self.topn = topn
         self.model = model
         if model is not None:
@@ -187,8 +214,9 @@ class CoherenceModel(interfaces.TransformationABC):
                 bestn = argsort(topic, topn=self.topn, reverse=True)
                 topics.append(bestn)
         else:
-            raise ValueError("This topic model is not currently supported. Supported topic models are"
-                             "LdaModel, LdaVowpalWabbit and LdaMallet.")
+            raise ValueError(
+                "This topic model is not currently supported. Supported topic models are"
+                "LdaModel, LdaVowpalWabbit and LdaMallet.")
         return topics
 
     def get_coherence(self):
@@ -198,20 +226,24 @@ class CoherenceModel(interfaces.TransformationABC):
         measure = coherence_dict[self.coherence]
         segmented_topics = measure.seg(self.topics)
         if self.coherence in boolean_document_based:
-            per_topic_postings, num_docs = measure.prob(self.corpus, segmented_topics)
-            confirmed_measures = measure.conf(segmented_topics, per_topic_postings, num_docs)
+            per_topic_postings, num_docs = measure.prob(
+                self.corpus, segmented_topics)
+            confirmed_measures = measure.conf(
+                segmented_topics, per_topic_postings, num_docs)
         elif self.coherence in sliding_window_based:
             if self.window_size is not None:
                 self.window_size = sliding_windows_dict[self.coherence]
-            per_topic_postings, num_windows = measure.prob(texts=self.texts, segmented_topics=segmented_topics,
-                                                           dictionary=self.dictionary, window_size=self.window_size)
+            per_topic_postings, num_windows = measure.prob(
+                texts=self.texts, segmented_topics=segmented_topics, dictionary=self.dictionary, window_size=self.window_size)
             if self.coherence == 'c_v':
-                confirmed_measures = measure.conf(self.topics, segmented_topics, per_topic_postings, 'nlr', 1, num_windows)
+                confirmed_measures = measure.conf(
+                    self.topics, segmented_topics, per_topic_postings, 'nlr', 1, num_windows)
             else:
                 if self.coherence == 'c_npmi':
                     normalize = True
                 else:
                     # For c_uci
                     normalize = False
-                confirmed_measures = measure.conf(segmented_topics, per_topic_postings, num_windows, normalize=normalize)
+                confirmed_measures = measure.conf(
+                    segmented_topics, per_topic_postings, num_windows, normalize=normalize)
         return measure.aggr(confirmed_measures)

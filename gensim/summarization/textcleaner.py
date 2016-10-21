@@ -17,22 +17,29 @@ try:
     logger.info("'pattern' package found; tag filters are available for English")
     HAS_PATTERN = True
 except ImportError:
-    logger.info("'pattern' package not found; tag filters are not available for English")
+    logger.info(
+        "'pattern' package not found; tag filters are not available for English")
     HAS_PATTERN = False
 
 
 SEPARATOR = r"@"
-RE_SENTENCE = re.compile('(\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)', re.UNICODE)  # backup (\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)
+# backup (\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)
+RE_SENTENCE = re.compile('(\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)', re.UNICODE)
 AB_SENIOR = re.compile("([A-Z][a-z]{1,2}\.)\s(\w)", re.UNICODE)
 AB_ACRONYM = re.compile("(\.[a-zA-Z]\.)\s(\w)", re.UNICODE)
 AB_ACRONYM_LETTERS = re.compile("([a-zA-Z])\.([a-zA-Z])\.", re.UNICODE)
-UNDO_AB_SENIOR = re.compile("([A-Z][a-z]{1,2}\.)" + SEPARATOR + "(\w)", re.UNICODE)
+UNDO_AB_SENIOR = re.compile(
+    "([A-Z][a-z]{1,2}\.)" +
+    SEPARATOR +
+    "(\w)",
+    re.UNICODE)
 UNDO_AB_ACRONYM = re.compile("(\.[a-zA-Z]\.)" + SEPARATOR + "(\w)", re.UNICODE)
 
 
 def split_sentences(text):
     processed = replace_abbreviations(text)
-    return [undo_replacement(sentence) for sentence in get_sentences(processed)]
+    return [undo_replacement(sentence)
+            for sentence in get_sentences(processed)]
 
 
 def replace_abbreviations(text):
@@ -40,7 +47,9 @@ def replace_abbreviations(text):
 
 
 def undo_replacement(sentence):
-    return replace_with_separator(sentence, r" ", [UNDO_AB_SENIOR, UNDO_AB_ACRONYM])
+    return replace_with_separator(
+        sentence, r" ", [
+            UNDO_AB_SENIOR, UNDO_AB_ACRONYM])
 
 
 def replace_with_separator(text, separator, regexs):
@@ -81,7 +90,8 @@ def clean_text_by_sentences(text):
     """ Tokenizes a given text into sentences, applying filters and lemmatizing them.
     Returns a SyntacticUnit list. """
     original_sentences = split_sentences(text)
-    filtered_sentences = [join_words(sentence) for sentence in preprocess_documents(original_sentences)]
+    filtered_sentences = [
+        join_words(sentence) for sentence in preprocess_documents(original_sentences)]
 
     return merge_syntactic_units(original_sentences, filtered_sentences)
 
@@ -89,11 +99,18 @@ def clean_text_by_sentences(text):
 def clean_text_by_word(text):
     """ Tokenizes a given text into words, applying filters and lemmatizing them.
     Returns a dict of word -> syntacticUnit. """
-    text_without_acronyms = replace_with_separator(text, "", [AB_ACRONYM_LETTERS])
-    original_words = list(tokenize(text_without_acronyms, to_lower=True, deacc=True))
-    filtered_words = [join_words(word_list, "") for word_list in preprocess_documents(original_words)]
+    text_without_acronyms = replace_with_separator(
+        text, "", [AB_ACRONYM_LETTERS])
+    original_words = list(
+        tokenize(
+            text_without_acronyms,
+            to_lower=True,
+            deacc=True))
+    filtered_words = [join_words(word_list, "")
+                      for word_list in preprocess_documents(original_words)]
     if HAS_PATTERN:
-        tags = tag(join_words(original_words))  # tag needs the context of the words in the text
+        # tag needs the context of the words in the text
+        tags = tag(join_words(original_words))
     else:
         tags = None
     units = merge_syntactic_units(original_words, filtered_words, tags)
@@ -101,5 +118,6 @@ def clean_text_by_word(text):
 
 
 def tokenize_by_word(text):
-    text_without_acronyms = replace_with_separator(text, "", [AB_ACRONYM_LETTERS])
+    text_without_acronyms = replace_with_separator(
+        text, "", [AB_ACRONYM_LETTERS])
     return tokenize(text_without_acronyms, to_lower=True, deacc=True)

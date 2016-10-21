@@ -77,6 +77,7 @@ class LdaMulticore(LdaModel):
     Model persistency is achieved through its `load`/`save` methods.
 
     """
+
     def __init__(self, corpus=None, num_topics=100, id2word=None, workers=None,
                  chunksize=2000, passes=1, batch=False, alpha='symmetric',
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50,
@@ -124,7 +125,7 @@ class LdaMulticore(LdaModel):
 
         `decay` and `offset` parameters are the same as Kappa and Tau_0 in
         Hoffman et al, respectively.
-        
+
         `random_state` can be a numpy.random.RandomState object or the seed for one
 
         Example:
@@ -139,13 +140,25 @@ class LdaMulticore(LdaModel):
         self.batch = batch
 
         if isinstance(alpha, six.string_types) and alpha == 'auto':
-            raise NotImplementedError("auto-tuning alpha not implemented in multicore LDA; use plain LdaModel.")
+            raise NotImplementedError(
+                "auto-tuning alpha not implemented in multicore LDA; use plain LdaModel.")
 
-        super(LdaMulticore, self).__init__(corpus=corpus, num_topics=num_topics,
-            id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
-            decay=decay, offset=offset, eval_every=eval_every, iterations=iterations,
-            gamma_threshold=gamma_threshold, random_state=random_state)
-
+        super(
+            LdaMulticore,
+            self).__init__(
+            corpus=corpus,
+            num_topics=num_topics,
+            id2word=id2word,
+            chunksize=chunksize,
+            passes=passes,
+            alpha=alpha,
+            eta=eta,
+            decay=decay,
+            offset=offset,
+            eval_every=eval_every,
+            iterations=iterations,
+            gamma_threshold=gamma_threshold,
+            random_state=random_state)
 
     def update(self, corpus, chunks_as_numpy=False):
         """
@@ -168,7 +181,8 @@ class LdaMulticore(LdaModel):
         try:
             lencorpus = len(corpus)
         except:
-            logger.warning("input corpus stream has no len(); counting documents")
+            logger.warning(
+                "input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
             logger.warning("LdaMulticore.update() called with an empty corpus")
@@ -185,14 +199,22 @@ class LdaMulticore(LdaModel):
         evalafter = min(lencorpus, (self.eval_every or 0) * updateafter)
 
         updates_per_pass = max(1, lencorpus / updateafter)
-        logger.info("running %s LDA training, %s topics, %i passes over the"
+        logger.info(
+            "running %s LDA training, %s topics, %i passes over the"
             " supplied corpus of %i documents, updating every %i documents,"
             " evaluating every ~%i documents, iterating %ix with a convergence threshold of %f",
-            updatetype, self.num_topics, self.passes, lencorpus, updateafter, evalafter,
-            self.iterations, self.gamma_threshold)
+            updatetype,
+            self.num_topics,
+            self.passes,
+            lencorpus,
+            updateafter,
+            evalafter,
+            self.iterations,
+            self.gamma_threshold)
 
         if updates_per_pass * self.passes < 10:
-            logger.warning("too few updates, training might not converge; consider "
+            logger.warning(
+                "too few updates, training might not converge; consider "
                 "increasing the number of passes or iterations to improve accuracy")
 
         job_queue = Queue(maxsize=2 * self.workers)
@@ -202,7 +224,8 @@ class LdaMulticore(LdaModel):
         # pass_ + num_updates handles increasing the starting t for each pass,
         # while allowing it to "reset" on the first pass of each update
         def rho():
-            return pow(self.offset + pass_ + (self.num_updates / self.chunksize), -self.decay)
+            return pow(self.offset + pass_ +
+                       (self.num_updates / self.chunksize), -self.decay)
 
         logger.info("training LDA model using %i processes", self.workers)
         pool = Pool(self.workers, worker_e_step, (job_queue, result_queue,))
@@ -221,41 +244,57 @@ class LdaMulticore(LdaModel):
                     other.merge(result_queue.get())
                     queue_size[0] -= 1
                     merged_new = True
-                if (force and merged_new and queue_size[0] == 0) or (not self.batch and (other.numdocs >= updateafter)):
+                if (force and merged_new and queue_size[0] == 0) or (
+                        not self.batch and (other.numdocs >= updateafter)):
                     self.do_mstep(rho(), other, pass_ > 0)
                     other.reset()
-                    if self.eval_every is not None and ((force and queue_size[0] == 0) or (self.eval_every != 0 and (self.num_updates / updateafter) % self.eval_every == 0)):
+                    if self.eval_every is not None and (
+                        (force and queue_size[0] == 0) or (
+                            self.eval_every != 0 and (
+                                self.num_updates / updateafter) %
+                            self.eval_every == 0)):
                         self.log_perplexity(chunk, total_docs=lencorpus)
 
-            chunk_stream = utils.grouper(corpus, self.chunksize, as_numpy=chunks_as_numpy)
+            chunk_stream = utils.grouper(
+                corpus, self.chunksize, as_numpy=chunks_as_numpy)
             for chunk_no, chunk in enumerate(chunk_stream):
-                reallen += len(chunk)  # keep track of how many documents we've processed so far
+                # keep track of how many documents we've processed so far
+                reallen += len(chunk)
 
                 # put the chunk into the workers' input job queue
                 chunk_put = False
                 while not chunk_put:
                     try:
-                        job_queue.put((chunk_no, chunk, self), block=False, timeout=0.1)
+                        job_queue.put(
+                            (chunk_no, chunk, self), block=False, timeout=0.1)
                         chunk_put = True
                         queue_size[0] += 1
-                        logger.info('PROGRESS: pass %i, dispatched chunk #%i = '
+                        logger.info(
+                            'PROGRESS: pass %i, dispatched chunk #%i = '
                             'documents up to #%i/%i, outstanding queue size %i',
-                            pass_, chunk_no, chunk_no * self.chunksize + len(chunk), lencorpus, queue_size[0])
+                            pass_,
+                            chunk_no,
+                            chunk_no *
+                            self.chunksize +
+                            len(chunk),
+                            lencorpus,
+                            queue_size[0])
                     except queue.Full:
                         # in case the input job queue is full, keep clearing the
                         # result queue, to make sure we don't deadlock
                         process_result_queue()
 
                 process_result_queue()
-            #endfor single corpus pass
+            # endfor single corpus pass
 
             # wait for all outstanding jobs to finish
             while queue_size[0] > 0:
                 process_result_queue(force=True)
 
             if reallen != lencorpus:
-                raise RuntimeError("input corpus size changed during training (don't use generators as input)")
-        #endfor entire update
+                raise RuntimeError(
+                    "input corpus size changed during training (don't use generators as input)")
+        # endfor entire update
 
         pool.terminate()
 
@@ -270,7 +309,10 @@ def worker_e_step(input_queue, result_queue):
     while True:
         logger.debug("getting a new job")
         chunk_no, chunk, worker_lda = input_queue.get()
-        logger.debug("processing chunk #%i of %i documents", chunk_no, len(chunk))
+        logger.debug(
+            "processing chunk #%i of %i documents",
+            chunk_no,
+            len(chunk))
         worker_lda.state.reset()
         worker_lda.do_estep(chunk)  # TODO: auto-tune alpha?
         del chunk

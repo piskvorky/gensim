@@ -15,7 +15,11 @@ Example: python -m gensim.models.lsi_dispatcher
 
 
 from __future__ import with_statement
-import os, sys, logging, threading, time
+import os
+import sys
+import logging
+import threading
+import time
 from six import iteritems, itervalues
 try:
     from Queue import Queue
@@ -37,8 +41,7 @@ MAX_JOBS_QUEUE = 10
 # timeout for the Queue object put/get blocking methods.
 # it should really be infinity, but then keyboard interrupts don't work.
 # so this is really just a hack, see http://bugs.python.org/issue1360
-HUGE_TIMEOUT = 365 * 24 * 60 * 60 # one year
-
+HUGE_TIMEOUT = 365 * 24 * 60 * 60  # one year
 
 
 class Dispatcher(object):
@@ -55,7 +58,9 @@ class Dispatcher(object):
         """
         self.maxsize = maxsize
         self.workers = {}
-        self.callback = None # a pyro proxy to this object (unknown at init time, but will be set later)
+        # a pyro proxy to this object (unknown at init time, but will be set
+        # later)
+        self.callback = None
 
     @Pyro4.expose
     def initialize(self, **model_params):
@@ -68,24 +73,32 @@ class Dispatcher(object):
         self._jobsdone = 0
         self._jobsreceived = 0
 
-        # locate all available workers and store their proxies, for subsequent RMI calls
+        # locate all available workers and store their proxies, for subsequent
+        # RMI calls
         self.workers = {}
         with utils.getNS() as ns:
-            self.callback = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher') # = self
+            self.callback = Pyro4.Proxy(
+                'PYRONAME:gensim.lsi_dispatcher')  # = self
             for name, uri in iteritems(ns.list(prefix='gensim.lsi_worker')):
                 try:
                     worker = Pyro4.Proxy(uri)
                     workerid = len(self.workers)
                     # make time consuming methods work asynchronously
-                    logger.info("registering worker #%i from %s" % (workerid, uri))
-                    worker.initialize(workerid, dispatcher=self.callback, **model_params)
+                    logger.info(
+                        "registering worker #%i from %s" %
+                        (workerid, uri))
+                    worker.initialize(
+                        workerid, dispatcher=self.callback, **model_params)
                     self.workers[workerid] = worker
                 except Pyro4.errors.PyroError:
-                    logger.exception("unresponsive worker at %s, deleting it from the name server" % uri)
+                    logger.exception(
+                        "unresponsive worker at %s, deleting it from the name server" %
+                        uri)
                     ns.remove(name)
 
         if not self.workers:
-            raise RuntimeError('no workers found; run some lsi_worker scripts on your machines first!')
+            raise RuntimeError(
+                'no workers found; run some lsi_worker scripts on your machines first!')
 
     @Pyro4.expose
     def getworkers(self):
@@ -98,14 +111,18 @@ class Dispatcher(object):
     def getjob(self, worker_id):
         logger.info("worker #%i requesting a new job" % worker_id)
         job = self.jobs.get(block=True, timeout=1)
-        logger.info("worker #%i got a new job (%i left)" % (worker_id, self.jobs.qsize()))
+        logger.info(
+            "worker #%i got a new job (%i left)" %
+            (worker_id, self.jobs.qsize()))
         return job
 
     @Pyro4.expose
     def putjob(self, job):
         self._jobsreceived += 1
         self.jobs.put(job, block=True, timeout=HUGE_TIMEOUT)
-        logger.info("added a new job (len(queue)=%i items)" % self.jobs.qsize())
+        logger.info(
+            "added a new job (len(queue)=%i items)" %
+            self.jobs.qsize())
 
     @Pyro4.expose
     def getstate(self):
@@ -113,14 +130,17 @@ class Dispatcher(object):
         Merge projections from across all workers and return the final projection.
         """
         logger.info("end of input, assigning all remaining jobs")
-        logger.debug("jobs done: %s, jobs received: %s" % (self._jobsdone, self._jobsreceived))
+        logger.debug(
+            "jobs done: %s, jobs received: %s" %
+            (self._jobsdone, self._jobsreceived))
         while self._jobsdone < self._jobsreceived:
-            time.sleep(0.5) # check every half a second
+            time.sleep(0.5)  # check every half a second
 
         # TODO: merge in parallel, so that we're done in `log_2(workers)` merges,
         # and not `workers - 1` merges!
         # but merging only takes place once, after all input data has been processed,
-        # so the overall effect would be small... compared to the amount of coding :-)
+        # so the overall effect would be small... compared to the amount of
+        # coding :-)
         logger.info("merging states from %i workers" % len(self.workers))
         workers = list(self.workers.items())
         result = workers[0][1].getstate()
@@ -156,13 +176,11 @@ class Dispatcher(object):
         self._jobsdone += 1
         logger.info("worker #%s finished job #%i" % (workerid, self._jobsdone))
         worker = self.workers[workerid]
-        worker.requestjob() # tell the worker to ask for another job, asynchronously (one-way)
-
+        worker.requestjob()  # tell the worker to ask for another job, asynchronously (one-way)
 
     def jobsdone(self):
         """Wrap self._jobsdone, needed for remote access through proxies"""
         return self._jobsdone
-
 
     @Pyro4.oneway
     def exit(self):
@@ -173,13 +191,15 @@ class Dispatcher(object):
             logger.info("terminating worker %s" % workerid)
             worker.exit()
         logger.info("terminating dispatcher")
-        os._exit(0) # exit the whole process (not just this thread ala sys.exit())
-#endclass Dispatcher
-
+        # exit the whole process (not just this thread ala sys.exit())
+        os._exit(0)
+# endclass Dispatcher
 
 
 def main():
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    logging.basicConfig(
+        format='%(asctime)s : %(levelname)s : %(message)s',
+        level=logging.INFO)
     logger.info("running %s" % " ".join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
@@ -195,7 +215,6 @@ def main():
     utils.pyro_daemon('gensim.lsi_dispatcher', Dispatcher(maxsize=maxsize))
 
     logger.info("finished running %s" % program)
-
 
 
 if __name__ == '__main__':

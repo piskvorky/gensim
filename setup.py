@@ -81,24 +81,23 @@ http://api.mongodb.org/python/current/installation.html#osx
             e = sys.exc_info()[1]
             sys.stdout.write('%s\n' % str(e))
             warnings.warn(
-                self.warning_message +
-                "The %s extension module" % (name,) +
-                "The output above this warning shows how the compilation failed.")
+                self.warning_message + "The %s extension module" %
+                (name,) + "The output above this warning shows how the compilation failed.")
 
     # the following is needed to be able to add numpy's include dirs... without
     # importing numpy directly in this script, before it's actually installed!
     # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
     def finalize_options(self):
-            build_ext.finalize_options(self)
-            # Prevent numpy from thinking it is still in its setup process:
-            # https://docs.python.org/2/library/__builtin__.html#module-__builtin__
-            if isinstance(__builtins__, dict):
-                __builtins__["__NUMPY_SETUP__"] = False
-            else:
-                __builtins__.__NUMPY_SETUP__ = False
+        build_ext.finalize_options(self)
+        # Prevent numpy from thinking it is still in its setup process:
+        # https://docs.python.org/2/library/__builtin__.html#module-__builtin__
+        if isinstance(__builtins__, dict):
+            __builtins__["__NUMPY_SETUP__"] = False
+        else:
+            __builtins__.__NUMPY_SETUP__ = False
 
-            import numpy
-            self.include_dirs.append(numpy.get_include())
+        import numpy
+        self.include_dirs.append(numpy.get_include())
 
 
 def readfile(fname):
@@ -129,11 +128,11 @@ setup(
 
     ext_modules=[
         Extension('gensim.models.word2vec_inner',
-            sources=['./gensim/models/word2vec_inner.c'],
-            include_dirs=[model_dir]),
+                  sources=['./gensim/models/word2vec_inner.c'],
+                  include_dirs=[model_dir]),
         Extension('gensim.models.doc2vec_inner',
-            sources=['./gensim/models/doc2vec_inner.c'],
-            include_dirs=[model_dir])
+                  sources=['./gensim/models/doc2vec_inner.c'],
+                  include_dirs=[model_dir])
     ],
     cmdclass=cmdclass,
     packages=find_packages(),
@@ -181,7 +180,7 @@ setup(
         python_2_6_backports,
     ],
     tests_require=[
-    	'testfixtures',
+        'testfixtures',
     ],
     extras_require={
         'distributed': ['Pyro4 >= 4.27'],

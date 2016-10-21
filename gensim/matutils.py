@@ -26,7 +26,8 @@ from six import iteritems, itervalues, string_types
 from six.moves import xrange, zip as izip
 
 # scipy is not a stable package yet, locations change, so try to work
-# around differences (currently only concerns location of 'triu' in scipy 0.7 vs. 0.8)
+# around differences (currently only concerns location of 'triu' in scipy
+# 0.7 vs. 0.8)
 try:
     from scipy.linalg.basic import triu
 except ImportError:
@@ -41,7 +42,8 @@ except ImportError:
         a = triu(m, k)
         return numpy.where(a != 0)
 
-blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[0]
+blas = lambda name, ndarray: scipy.linalg.get_blas_funcs((name,), (ndarray,))[
+    0]
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +55,8 @@ def argsort(x, topn=None, reverse=False):
     If reverse is True, return the greatest elements instead, in descending order.
 
     """
-    x = numpy.asarray(x)  # unify code path for when `x` is not a numpy array (list, tuple...)
+    x = numpy.asarray(
+        x)  # unify code path for when `x` is not a numpy array (list, tuple...)
     if topn is None:
         topn = x.size
     if topn <= 0:
@@ -64,10 +67,18 @@ def argsort(x, topn=None, reverse=False):
         return numpy.argsort(x)[:topn]
     # numpy >= 1.8 has a fast partial argsort, use that!
     most_extreme = numpy.argpartition(x, topn)[:topn]
-    return most_extreme.take(numpy.argsort(x.take(most_extreme)))  # resort topn into order
+    return most_extreme.take(
+        numpy.argsort(
+            x.take(most_extreme)))  # resort topn into order
 
 
-def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_nnz=None, printprogress=0):
+def corpus2csc(
+        corpus,
+        num_terms=None,
+        dtype=numpy.float64,
+        num_docs=None,
+        num_nnz=None,
+        printprogress=0):
     """
     Convert a streamed corpus into a sparse matrix, in scipy.sparse.csc_matrix format,
     with documents as columns.
@@ -90,26 +101,34 @@ def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_n
         if num_nnz is None:
             num_nnz = corpus.num_nnz
     except AttributeError:
-        pass # not a MmCorpus...
+        pass  # not a MmCorpus...
     if printprogress:
         logger.info("creating sparse matrix from corpus")
     if num_terms is not None and num_docs is not None and num_nnz is not None:
-        # faster and much more memory-friendly version of creating the sparse csc
+        # faster and much more memory-friendly version of creating the sparse
+        # csc
         posnow, indptr = 0, [0]
-        indices = numpy.empty((num_nnz,), dtype=numpy.int32) # HACK assume feature ids fit in 32bit integer
+        # HACK assume feature ids fit in 32bit integer
+        indices = numpy.empty((num_nnz,), dtype=numpy.int32)
         data = numpy.empty((num_nnz,), dtype=dtype)
         for docno, doc in enumerate(corpus):
             if printprogress and docno % printprogress == 0:
                 logger.info("PROGRESS: at document #%i/%i" % (docno, num_docs))
             posnext = posnow + len(doc)
             indices[posnow: posnext] = [feature_id for feature_id, _ in doc]
-            data[posnow: posnext] = [feature_weight for _, feature_weight in doc]
+            data[
+                posnow: posnext] = [
+                feature_weight for _,
+                feature_weight in doc]
             indptr.append(posnext)
             posnow = posnext
         assert posnow == num_nnz, "mismatch between supplied and computed number of non-zeros"
-        result = scipy.sparse.csc_matrix((data, indices, indptr), shape=(num_terms, num_docs), dtype=dtype)
+        result = scipy.sparse.csc_matrix(
+            (data, indices, indptr), shape=(
+                num_terms, num_docs), dtype=dtype)
     else:
-        # slower version; determine the sparse matrix parameters during iteration
+        # slower version; determine the sparse matrix parameters during
+        # iteration
         num_nnz, data, indices, indptr = 0, [], [], [0]
         for docno, doc in enumerate(corpus):
             if printprogress and docno % printprogress == 0:
@@ -124,7 +143,9 @@ def corpus2csc(corpus, num_terms=None, dtype=numpy.float64, num_docs=None, num_n
         # now num_docs, num_terms and num_nnz contain the correct values
         data = numpy.asarray(data, dtype=dtype)
         indices = numpy.asarray(indices)
-        result = scipy.sparse.csc_matrix((data, indices, indptr), shape=(num_terms, num_docs), dtype=dtype)
+        result = scipy.sparse.csc_matrix(
+            (data, indices, indptr), shape=(
+                num_terms, num_docs), dtype=dtype)
     return result
 
 
@@ -139,19 +160,25 @@ def pad(mat, padrow, padcol):
         padcol = 0
     rows, cols = mat.shape
     return numpy.bmat([[mat, numpy.matrix(numpy.zeros((rows, padcol)))],
-                      [numpy.matrix(numpy.zeros((padrow, cols + padcol)))]])
+                       [numpy.matrix(numpy.zeros((padrow, cols + padcol)))]])
 
 
 def zeros_aligned(shape, dtype, order='C', align=128):
     """Like `numpy.zeros()`, but the array will be aligned at `align` byte boundary."""
     nbytes = numpy.prod(shape, dtype=numpy.int64) * numpy.dtype(dtype).itemsize
-    buffer = numpy.zeros(nbytes + align, dtype=numpy.uint8)  # problematic on win64 ("maximum allowed dimension exceeded")
+    # problematic on win64 ("maximum allowed dimension exceeded")
+    buffer = numpy.zeros(nbytes + align, dtype=numpy.uint8)
     start_index = -buffer.ctypes.data % align
-    return buffer[start_index : start_index + nbytes].view(dtype).reshape(shape, order=order)
+    return buffer[
+        start_index: start_index +
+        nbytes].view(dtype).reshape(
+        shape,
+        order=order)
 
 
 def ismatrix(m):
-    return isinstance(m, numpy.ndarray) and m.ndim == 2 or scipy.sparse.issparse(m)
+    return isinstance(
+        m, numpy.ndarray) and m.ndim == 2 or scipy.sparse.issparse(m)
 
 
 def any2sparse(vec, eps=1e-9):
@@ -167,7 +194,8 @@ def scipy2sparse(vec, eps=1e-9):
     """Convert a scipy.sparse vector into gensim document format (=list of 2-tuples)."""
     vec = vec.tocsr()
     assert vec.shape[0] == 1
-    return [(int(pos), float(val)) for pos, val in zip(vec.indices, vec.data) if numpy.abs(val) > eps]
+    return [(int(pos), float(val))
+            for pos, val in zip(vec.indices, vec.data) if numpy.abs(val) > eps]
 
 
 class Scipy2Corpus(object):
@@ -177,6 +205,7 @@ class Scipy2Corpus(object):
     This is the mirror function to `corpus2csc`.
 
     """
+
     def __init__(self, vecs):
         """
         `vecs` is a sequence of dense and/or sparse vectors, such as a 2d numpy array,
@@ -204,7 +233,8 @@ def sparse2full(doc, length):
     This is the mirror function to `full2sparse`.
 
     """
-    result = numpy.zeros(length, dtype=numpy.float32)  # fill with zeroes (default value)
+    result = numpy.zeros(
+        length, dtype=numpy.float32)  # fill with zeroes (default value)
     doc = dict(doc)
     # overwrite some of the zeroes with explicit values
     result[list(doc)] = list(itervalues(doc))
@@ -233,7 +263,8 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
 
     """
     # use numpy.argpartition/argsort and only form tuples that are actually returned.
-    # this is about 40x faster than explicitly forming all 2-tuples to run sort() or heapq.nlargest() on.
+    # this is about 40x faster than explicitly forming all 2-tuples to run
+    # sort() or heapq.nlargest() on.
     if topn <= 0:
         return []
     vec = numpy.asarray(vec, dtype=float)
@@ -261,9 +292,9 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=numpy.float32):
             result[:, docno] = sparse2full(doc, num_terms)
         assert docno + 1 == num_docs
     else:
-        result = numpy.column_stack(sparse2full(doc, num_terms) for doc in corpus)
+        result = numpy.column_stack(
+            sparse2full(doc, num_terms) for doc in corpus)
     return result.astype(dtype)
-
 
 
 class Dense2Corpus(object):
@@ -276,6 +307,7 @@ class Dense2Corpus(object):
     This is the mirror function to `corpus2dense`.
 
     """
+
     def __init__(self, dense, documents_columns=True):
         if documents_columns:
             self.dense = dense.T
@@ -288,7 +320,7 @@ class Dense2Corpus(object):
 
     def __len__(self):
         return len(self.dense)
-#endclass DenseCorpus
+# endclass DenseCorpus
 
 
 class Sparse2Corpus(object):
@@ -298,19 +330,23 @@ class Sparse2Corpus(object):
     This is the mirror function to `corpus2csc`.
 
     """
+
     def __init__(self, sparse, documents_columns=True):
         if documents_columns:
             self.sparse = sparse.tocsc()
         else:
-            self.sparse = sparse.tocsr().T # make sure shape[1]=number of docs (needed in len())
+            # make sure shape[1]=number of docs (needed in len())
+            self.sparse = sparse.tocsr().T
 
     def __iter__(self):
-        for indprev, indnow in izip(self.sparse.indptr, self.sparse.indptr[1:]):
+        for indprev, indnow in izip(
+            self.sparse.indptr, self.sparse.indptr[
+                1:]):
             yield list(zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow]))
 
     def __len__(self):
         return self.sparse.shape[1]
-#endclass Sparse2Corpus
+# endclass Sparse2Corpus
 
 
 def veclen(vec):
@@ -320,11 +356,13 @@ def veclen(vec):
     assert length > 0.0, "sparse documents must not contain any explicit zero entries"
     return length
 
+
 def ret_normalized_vec(vec, length):
     if length != 1.0:
         return [(termid, val / length) for termid, val in vec]
     else:
         return list(vec)
+
 
 def ret_log_normalize_vec(vec, axis=1):
     log_max = 100.0
@@ -362,7 +400,9 @@ def unitvec(vec, norm='l2'):
     or numpy array=>numpy array, scipy.sparse=>scipy.sparse).
     """
     if norm not in ('l1', 'l2'):
-        raise ValueError("'%s' is not a supported norm. Currently supported norms are 'l1' and 'l2'." % norm)
+        raise ValueError(
+            "'%s' is not a supported norm. Currently supported norms are 'l1' and 'l2'." %
+            norm)
     if scipy.sparse.issparse(vec):
         vec = vec.tocsr()
         if norm == 'l1':
@@ -390,7 +430,8 @@ def unitvec(vec, norm='l2'):
     except:
         return vec
 
-    if isinstance(first, (tuple, list)) and len(first) == 2: # gensim sparse format
+    if isinstance(first, (tuple, list)) and len(
+            first) == 2:  # gensim sparse format
         if norm == 'l1':
             length = float(sum(abs(val) for _, val in vec))
         if norm == 'l2':
@@ -413,9 +454,10 @@ def cossim(vec1, vec2):
     vec2len = 1.0 * math.sqrt(sum(val * val for val in itervalues(vec2)))
     assert vec1len > 0.0 and vec2len > 0.0, "sparse documents must not contain any explicit zero entries"
     if len(vec2) < len(vec1):
-        vec1, vec2 = vec2, vec1 # swap references so that we iterate over the shorter vector
-    result = sum(value * vec2.get(index, 0.0) for index, value in iteritems(vec1))
-    result /= vec1len * vec2len # rescale by vector lengths
+        vec1, vec2 = vec2, vec1  # swap references so that we iterate over the shorter vector
+    result = sum(value * vec2.get(index, 0.0)
+                 for index, value in iteritems(vec1))
+    result /= vec1len * vec2len  # rescale by vector lengths
     return result
 
 
@@ -427,10 +469,12 @@ def isbow(vec):
     if scipy.sparse.issparse(vec):
         vec = vec.todense().tolist()
     try:
-        id_, val_ = vec[0] # checking first value to see if it is in bag of words format by unpacking
+        # checking first value to see if it is in bag of words format by
+        # unpacking
+        id_, val_ = vec[0]
         id_, val_ = int(id_), float(val_)
     except IndexError:
-        return True # this is to handle the empty input case
+        return True  # this is to handle the empty input case
     except Exception:
         return False
     return True
@@ -446,9 +490,12 @@ def kullback_leibler(vec1, vec2, num_features=None):
     if scipy.sparse.issparse(vec1):
         vec1 = vec1.toarray()
     if scipy.sparse.issparse(vec2):
-        vec2 = vec2.toarray() # converted both the vectors to dense in case they were in sparse matrix 
-    if isbow(vec1) and isbow(vec2): # if they are in bag of words format we make it dense
-        if num_features != None: # if not None, make as large as the documents drawing from
+        # converted both the vectors to dense in case they were in sparse
+        # matrix
+        vec2 = vec2.toarray()
+    if isbow(vec1) and isbow(
+            vec2):  # if they are in bag of words format we make it dense
+        if num_features is not None:  # if not None, make as large as the documents drawing from
             dense1 = sparse2full(vec1, num_features)
             dense2 = sparse2full(vec2, num_features)
             return entropy(dense1, dense2)
@@ -459,7 +506,8 @@ def kullback_leibler(vec1, vec2, num_features=None):
             return entropy(dense1, dense2)
     else:
         # this conversion is made because if it is not in bow format, it might be a list within a list after conversion
-        # the scipy implementation of Kullback fails in such a case so we pick up only the nested list.
+        # the scipy implementation of Kullback fails in such a case so we pick
+        # up only the nested list.
         if len(vec1) == 1:
             vec1 = vec1[0]
         if len(vec2) == 1:
@@ -476,15 +524,25 @@ def hellinger(vec1, vec2):
         vec1 = vec1.toarray()
     if scipy.sparse.issparse(vec2):
         vec2 = vec2.toarray()
-    if isbow(vec1) and isbow(vec2): 
-        # if it is a bag of words format, instead of converting to dense we use dictionaries to calculate appropriate distance
+    if isbow(vec1) and isbow(vec2):
+        # if it is a bag of words format, instead of converting to dense we use
+        # dictionaries to calculate appropriate distance
         vec1, vec2 = dict(vec1), dict(vec2)
-        if len(vec2) < len(vec1): 
-            vec1, vec2 = vec2, vec1 # swap references so that we iterate over the shorter vector
-        sim = numpy.sqrt(0.5*sum((numpy.sqrt(value) - numpy.sqrt(vec2.get(index, 0.0)))**2 for index, value in iteritems(vec1)))
+        if len(vec2) < len(vec1):
+            vec1, vec2 = vec2, vec1  # swap references so that we iterate over the shorter vector
+        sim = numpy.sqrt(
+            0.5 *
+            sum(
+                (numpy.sqrt(value) -
+                 numpy.sqrt(
+                    vec2.get(
+                        index,
+                        0.0)))**2 for index,
+                value in iteritems(vec1)))
         return sim
     else:
-        sim = numpy.sqrt(0.5 * ((numpy.sqrt(vec1) - numpy.sqrt(vec2))**2).sum())
+        sim = numpy.sqrt(
+            0.5 * ((numpy.sqrt(vec1) - numpy.sqrt(vec2))**2).sum())
         return sim
 
 
@@ -502,18 +560,21 @@ def jaccard(vec1, vec2):
         vec1 = vec1.toarray()
     if scipy.sparse.issparse(vec2):
         vec2 = vec2.toarray()
-    if isbow(vec1) and isbow(vec2): 
+    if isbow(vec1) and isbow(vec2):
         # if it's in bow format, we use the following definitions:
         # union = sum of the 'weights' of both the bags
-        # intersection = lowest weight for a particular id; basically the number of common words or items 
-        union = sum(weight for id_, weight in vec1) + sum(weight for id_, weight in vec2)
+        # intersection = lowest weight for a particular id; basically the
+        # number of common words or items
+        union = sum(weight for id_, weight in vec1) + \
+            sum(weight for id_, weight in vec2)
         vec1, vec2 = dict(vec1), dict(vec2)
         intersection = 0.0
         for feature_id, feature_weight in iteritems(vec1):
             intersection += min(feature_weight, vec2.get(feature_id, 0.0))
         return 1 - float(intersection) / float(union)
     else:
-        # if it isn't in bag of words format, we can use sets to calculate intersection and union
+        # if it isn't in bag of words format, we can use sets to calculate
+        # intersection and union
         if isinstance(vec1, numpy.ndarray):
             vec1 = vec1.tolist()
         if isinstance(vec2, numpy.ndarray):
@@ -533,25 +594,24 @@ def qr_destroy(la):
     because the memory used in `la[0]` is reclaimed earlier.
     """
     a = numpy.asfortranarray(la[0])
-    del la[0], la # now `a` is the only reference to the input matrix
+    del la[0], la  # now `a` is the only reference to the input matrix
     m, n = a.shape
     # perform q, r = QR(a); code hacked out of scipy.linalg.qr
     logger.debug("computing QR of %s dense matrix" % str(a.shape))
     geqrf, = get_lapack_funcs(('geqrf',), (a,))
     qr, tau, work, info = geqrf(a, lwork=-1, overwrite_a=True)
     qr, tau, work, info = geqrf(a, lwork=work[0], overwrite_a=True)
-    del a # free up mem
+    del a  # free up mem
     assert info >= 0
     r = triu(qr[:n, :n])
-    if m < n: # rare case, #features < #topics
-        qr = qr[:, :m] # retains fortran order
+    if m < n:  # rare case, #features < #topics
+        qr = qr[:, :m]  # retains fortran order
     gorgqr, = get_lapack_funcs(('orgqr',), (qr,))
     q, work, info = gorgqr(qr, tau, lwork=-1, overwrite_a=True)
     q, work, info = gorgqr(qr, tau, lwork=work[0], overwrite_a=True)
     assert info >= 0, "qr failed"
     assert q.flags.f_contiguous
     return q, r
-
 
 
 class MmWriter(object):
@@ -570,30 +630,37 @@ class MmWriter(object):
 
     """
 
-    HEADER_LINE = b'%%MatrixMarket matrix coordinate real general\n' # the only supported MM format
+    # the only supported MM format
+    HEADER_LINE = b'%%MatrixMarket matrix coordinate real general\n'
 
     def __init__(self, fname):
         self.fname = fname
         if fname.endswith(".gz") or fname.endswith('.bz2'):
-            raise NotImplementedError("compressed output not supported with MmWriter")
-        self.fout = utils.smart_open(self.fname, 'wb+') # open for both reading and writing
+            raise NotImplementedError(
+                "compressed output not supported with MmWriter")
+        # open for both reading and writing
+        self.fout = utils.smart_open(self.fname, 'wb+')
         self.headers_written = False
-
 
     def write_headers(self, num_docs, num_terms, num_nnz):
         self.fout.write(MmWriter.HEADER_LINE)
 
         if num_nnz < 0:
-            # we don't know the matrix shape/density yet, so only log a general line
+            # we don't know the matrix shape/density yet, so only log a general
+            # line
             logger.info("saving sparse matrix to %s" % self.fname)
-            self.fout.write(utils.to_utf8(' ' * 50 + '\n')) # 48 digits must be enough for everybody
+            # 48 digits must be enough for everybody
+            self.fout.write(utils.to_utf8(' ' * 50 + '\n'))
         else:
-            logger.info("saving sparse %sx%s matrix with %i non-zero entries to %s" %
-                         (num_docs, num_terms, num_nnz, self.fname))
-            self.fout.write(utils.to_utf8('%s %s %s\n' % (num_docs, num_terms, num_nnz)))
+            logger.info(
+                "saving sparse %sx%s matrix with %i non-zero entries to %s" %
+                (num_docs, num_terms, num_nnz, self.fname))
+            self.fout.write(
+                utils.to_utf8(
+                    '%s %s %s\n' %
+                    (num_docs, num_terms, num_nnz)))
         self.last_docno = -1
         self.headers_written = True
-
 
     def fake_headers(self, num_docs, num_terms, num_nnz):
         stats = '%i %i %i' % (num_docs, num_terms, num_nnz)
@@ -602,7 +669,6 @@ class MmWriter(object):
         self.fout.seek(len(MmWriter.HEADER_LINE))
         self.fout.write(utils.to_utf8(stats))
 
-
     def write_vector(self, docno, vector):
         """
         Write a single sparse vector to the file.
@@ -610,16 +676,27 @@ class MmWriter(object):
         Sparse vector is any iterable yielding (field id, field value) pairs.
         """
         assert self.headers_written, "must write Matrix Market file headers before writing data!"
-        assert self.last_docno < docno, "documents %i and %i not in sequential order!" % (self.last_docno, docno)
-        vector = sorted((i, w) for i, w in vector if abs(w) > 1e-12) # ignore near-zero entries
-        for termid, weight in vector: # write term ids in sorted order
-            self.fout.write(utils.to_utf8("%i %i %s\n" % (docno + 1, termid + 1, weight))) # +1 because MM format starts counting from 1
+        assert self.last_docno < docno, "documents %i and %i not in sequential order!" % (
+            self.last_docno, docno)
+        vector = sorted((i, w) for i, w in vector if abs(w)
+                        > 1e-12)  # ignore near-zero entries
+        for termid, weight in vector:  # write term ids in sorted order
+            # +1 because MM format starts counting from 1
+            self.fout.write(
+                utils.to_utf8(
+                    "%i %i %s\n" %
+                    (docno + 1, termid + 1, weight)))
         self.last_docno = docno
         return (vector[-1][0], len(vector)) if vector else (-1, 0)
 
-
     @staticmethod
-    def write_corpus(fname, corpus, progress_cnt=1000, index=False, num_terms=None, metadata=False):
+    def write_corpus(
+            fname,
+            corpus,
+            progress_cnt=1000,
+            index=False,
+            num_terms=None,
+            metadata=False):
         """
         Save the vector space representation of an entire corpus to disk.
 
@@ -628,10 +705,13 @@ class MmWriter(object):
         """
         mw = MmWriter(fname)
 
-        # write empty headers to the file (with enough space to be overwritten later)
-        mw.write_headers(-1, -1, -1) # will print 50 spaces followed by newline on the stats line
+        # write empty headers to the file (with enough space to be overwritten
+        # later)
+        # will print 50 spaces followed by newline on the stats line
+        mw.write_headers(-1, -1, -1)
 
-        # calculate necessary header info (nnz elements, num terms, num docs) while writing out vectors
+        # calculate necessary header info (nnz elements, num terms, num docs)
+        # while writing out vectors
         _num_terms, num_nnz = 0, 0
         docno, poslast = -1, -1
         offsets = []
@@ -673,13 +753,13 @@ class MmWriter(object):
                 num_nnz,
                 num_docs * num_terms))
 
-        # now write proper headers, by seeking and overwriting the spaces written earlier
+        # now write proper headers, by seeking and overwriting the spaces
+        # written earlier
         mw.fake_headers(num_docs, num_terms, num_nnz)
 
         mw.close()
         if index:
             return offsets
-
 
     def __del__(self):
         """
@@ -689,15 +769,13 @@ class MmWriter(object):
         to work! Closing the file explicitly via the close() method is preferred
         and safer.
         """
-        self.close() # does nothing if called twice (on an already closed file), so no worries
-
+        self.close()  # does nothing if called twice (on an already closed file), so no worries
 
     def close(self):
         logger.debug("closing %s" % self.fname)
         if hasattr(self, 'fout'):
             self.fout.close()
-#endclass MmWriter
-
+# endclass MmWriter
 
 
 class MmReader(object):
@@ -709,6 +787,7 @@ class MmReader(object):
     matrix at once (unlike scipy.io.mmread). This allows us to process corpora
     which are larger than the available RAM.
     """
+
     def __init__(self, input, transposed=True):
         """
         Initialize the matrix reader.
@@ -726,8 +805,9 @@ class MmReader(object):
             try:
                 header = utils.to_unicode(next(lines)).strip()
                 if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
-                    raise ValueError("File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
-                                    (self.input, header))
+                    raise ValueError(
+                        "File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
+                        (self.input, header))
             except StopIteration:
                 pass
 
@@ -735,13 +815,15 @@ class MmReader(object):
             for lineno, line in enumerate(lines):
                 line = utils.to_unicode(line)
                 if not line.startswith('%'):
-                    self.num_docs, self.num_terms, self.num_nnz = map(int, line.split())
+                    self.num_docs, self.num_terms, self.num_nnz = map(
+                        int, line.split())
                     if not self.transposed:
                         self.num_docs, self.num_terms = self.num_terms, self.num_docs
                     break
 
-        logger.info("accepted corpus with %i documents, %i features, %i non-zero entries" %
-                     (self.num_docs, self.num_terms, self.num_nnz))
+        logger.info(
+            "accepted corpus with %i documents, %i features, %i non-zero entries" %
+            (self.num_docs, self.num_terms, self.num_nnz))
 
     def __len__(self):
         return self.num_docs
@@ -774,26 +856,33 @@ class MmReader(object):
 
             previd = -1
             for line in lines:
-                docid, termid, val = utils.to_unicode(line).split()  # needed for python3
+                docid, termid, val = utils.to_unicode(
+                    line).split()  # needed for python3
                 if not self.transposed:
                     termid, docid = docid, termid
-                docid, termid, val = int(docid) - 1, int(termid) - 1, float(val) # -1 because matrix market indexes are 1-based => convert to 0-based
+                # -1 because matrix market indexes are 1-based => convert to 0-based
+                docid, termid, val = int(
+                    docid) - 1, int(termid) - 1, float(val)
                 assert previd <= docid, "matrix columns must come in ascending order"
                 if docid != previd:
-                    # change of document: return the document read so far (its id is prevId)
+                    # change of document: return the document read so far (its
+                    # id is prevId)
                     if previd >= 0:
                         yield previd, document
 
                     # return implicit (empty) documents between previous id and new id
-                    # too, to keep consistent document numbering and corpus length
+                    # too, to keep consistent document numbering and corpus
+                    # length
                     for previd in xrange(previd + 1, docid):
                         yield previd, []
 
-                    # from now on start adding fields to a new document, with a new id
+                    # from now on start adding fields to a new document, with a
+                    # new id
                     previd = docid
                     document = []
 
-                document.append((termid, val,)) # add another field to the current document
+                # add another field to the current document
+                document.append((termid, val,))
 
         # handle the last document, as a special case
         if previd >= 0:
@@ -803,7 +892,6 @@ class MmReader(object):
         # of documents as specified in the header
         for previd in xrange(previd + 1, self.num_docs):
             yield previd, []
-
 
     def docbyoffset(self, offset):
         """Return document at file offset `offset` (in bytes)"""
@@ -816,19 +904,21 @@ class MmReader(object):
         else:
             fin = self.input
 
-        fin.seek(offset) # works for gzip/bz2 input, too
+        fin.seek(offset)  # works for gzip/bz2 input, too
         previd, document = -1, []
         for line in fin:
             docid, termid, val = line.split()
             if not self.transposed:
                 termid, docid = docid, termid
-            docid, termid, val = int(docid) - 1, int(termid) - 1, float(val) # -1 because matrix market indexes are 1-based => convert to 0-based
+            # -1 because matrix market indexes are 1-based => convert to 0-based
+            docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)
             assert previd <= docid, "matrix columns must come in ascending order"
             if docid != previd:
                 if previd >= 0:
                     return document
                 previd = docid
 
-            document.append((termid, val,)) # add another field to the current document
+            # add another field to the current document
+            document.append((termid, val,))
         return document
-#endclass MmReader
+# endclass MmReader
