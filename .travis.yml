@@ -12,6 +12,11 @@ before_install:
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda2/bin:$PATH
   - conda update --yes conda
+  - sudo apt-get update
+  - sudo apt-get -y install python-pip
+  - sudo pip install --upgrade pip
+  - pip install --upgrade pip
+  - pip install pep8
 install:
   - conda create --yes -n gensim-test python=$TRAVIS_PYTHON_VERSION pip atlas numpy scipy
   - source activate gensim-test
@@ -19,4 +24,8 @@ install:
   - pip install annoy
   - pip install testfixtures
   - python setup.py install
-script: python setup.py test
+
+script:
+  - python setup.py test
+  - find . -name \*.py -exec pep8 --ignore=E402 {} + | wc -l
+
