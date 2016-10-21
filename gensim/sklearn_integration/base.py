@@ -26,7 +26,7 @@ class LdaModel(object):
     Base LDA module
     """
     def __init__(self, n_topics=5, n_iter=2000, alpha=0.1, eta=0.01, random_state=None,
-                 refresh=10,lda_model=None,id2word=None,passes=20,ex=None):
+                 refresh=10, lda_model=None, id2word=None, passes=20, ex=None):
         """
         base LDA code . Uses mapper function
         n_topics : num_topics
@@ -45,8 +45,8 @@ class LdaModel(object):
         self.eta = eta
         self.random_state = random_state
         self.refresh = refresh
-        self.id2word=id2word
-        self.passes=passes
+        self.id2word = id2word
+        self.passes = passes
         # use lda_model variable as object
         self.lda_model = lda_model
         # perform appropriate checks
@@ -57,14 +57,15 @@ class LdaModel(object):
 
     def get_params(self, deep=True):
         if deep:
-            return {"alpha": self.alpha, "n_iter": self.n_iter,"eta":self.eta,"random_state":self.random_state,"lda_model":self.lda_model,"id2word":self.id2word,"passes":self.passes}
+            return {"alpha": self.alpha, "n_iter": self.n_iter, "eta": self.eta, "random_state": self.random_state,
+                    "lda_model": self.lda_model, "id2word": self.id2word, "passes": self.passes}
 
     def set_params(self, **parameters):
         for parameter, value in parameters.items():
             self.setattr(parameter, value)
         return self
 
-    def fit(self,X,y=None):
+    def fit(self, X, y=None):
         """
         call gensim.model.LdaModel from this
         // todo: convert fit and relevant,corpus still requires gensim preprocessing
@@ -73,36 +74,37 @@ class LdaModel(object):
         """
         if X is None:
             raise AttributeError("Corpus defined as none")
-        self.lda_model = gensim.models.LdaModel(corpus=X,num_topics=self.n_topics, id2word=self.id2word, passes=self.passes,
-                                                update_every=self.refresh,alpha=self.alpha, iterations=self.n_iter,
-                                                eta=self.eta,random_state=self.random_state)
-        return  self.lda_model
+        self.lda_model = gensim.models.LdaModel(
+                         corpus=X, num_topics=self.n_topics, id2word=self.id2word, passes=self.passes,
+                         update_every=self.refresh, alpha=self.alpha, iterations=self.n_iter,
+                         eta=self.eta, random_state=self.random_state)
+        return self.lda_model
 
-    def print_topics(self,n_topics=20,num_words=20,log=True):
+    def print_topics(self, n_topics=20, num_words=20, log=True):
         """
         print all the topics
         using the object lda_model
         """
-        return self.lda_model.show_topics(num_topics=n_topics,num_words=num_words,log=log)
+        return self.lda_model.show_topics(num_topics=n_topics, num_words=num_words, log=log)
 
     def transform(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
         """
         takes as an input a new document (bow) and
         Return topic distribution for the given document bow, as a list of (topic_id, topic_probability) 2-tuples.
         """
-        return self.lda_model.get_document_topics(bow,minimum_probability=minimum_probability,minimum_phi_value=minimum_phi_value,
-                                                  per_word_topics=per_word_topics)
-        # might need to do more
-    def get_term_topics(self,wordid,minimum_probability=None):
+        return self.lda_model.get_document_topics(bow, minimum_probability=minimum_probability,
+                                                  minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics)
+
+    def get_term_topics(self, wordid, minimum_probability=None):
         """
         returns the most likely topic associated with a particular word
         use wordid or simply pass the word itself
         """
-        return self.lda_model.get_term_topics(wordid,minimum_probability=minimum_probability)
+        return self.lda_model.get_term_topics(wordid, minimum_probability=minimum_probability)
 
-    def get_topic_terms(self,topicid,topn=10):
+    def get_topic_terms(self, topicid, topn=10):
         """
         return a tuple of (wordid,probability) for given topic
         topn can be used to restrict
         """
-        return self.lda_model.get_topic_terms(topicid=topicid,topn=topn)
+        return self.lda_model.get_topic_terms(topicid=topicid, topn=topn)

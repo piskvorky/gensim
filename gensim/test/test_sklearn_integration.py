@@ -16,7 +16,7 @@ dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
 
-class TestLdaModel:
+class TestLdaModel(object):
     def __init__(self):
         self.model=base.LdaModel(id2word=dictionary,n_topics=2,passes=100)
         self.model.fit(corpus)
