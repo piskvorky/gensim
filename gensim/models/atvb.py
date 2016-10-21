@@ -327,6 +327,7 @@ class AtVb(LdaModel):
 
         if self.eval_every > 0:
             if bound_eval:
+                # TODO: compute per-word bound.
                 word_bound = self.word_bound(Elogtheta, Elogbeta)
                 theta_bound = self.theta_bound(Elogtheta)
                 beta_bound = self.beta_bound(Elogbeta)

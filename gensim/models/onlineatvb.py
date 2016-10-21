@@ -18,8 +18,6 @@ import numbers
 from gensim import utils, matutils
 from gensim.models.ldamodel import dirichlet_expectation, get_random_state
 from gensim.models import LdaModel
-from gensim.models import AtVb
-from gensim.models.hdpmodel import log_normalize  # For efficient normalization of variational parameters.
 from six.moves import xrange
 from scipy.special import gammaln
 
@@ -36,7 +34,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class OnlineAtVb(AtVb):
+class OnlineAtVb(LdaModel):
     """
     Train the author-topic model using online variational Bayes.
     """
@@ -45,7 +43,7 @@ class OnlineAtVb(AtVb):
     def __init__(self, corpus=None, num_topics=100, id2word=None, id2author=None,
             author2doc=None, doc2author=None, threshold=0.001, minimum_probability=0.01,
             iterations=10, passes=1, alpha=None, eta=None, decay=0.5, offset=1.0,
-            eval_every=1, random_state=None):
+            eval_every=1, random_state=None, var_lambda=None):
 
         self.id2word = id2word
         if corpus is None and self.id2word is None:
@@ -112,10 +110,6 @@ class OnlineAtVb(AtVb):
         # Make the reverse mapping, from author names to author IDs.
         self.author2id = dict(zip(self.id2author.values(), self.id2author.keys()))
 
-        # NOTE: I don't think this necessarily is a good way to initialize the topics.
-        self.alpha = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
-        self.eta = numpy.asarray([1.0 / self.num_terms for i in xrange(self.num_terms)])
-
         self.corpus = corpus
         self.iterations = iterations
         self.passes = passes
@@ -129,15 +123,19 @@ class OnlineAtVb(AtVb):
         self.eval_every = eval_every
         self.random_state = random_state
 
+        # NOTE: I don't think this necessarily is a good way to initialize the topics.
+        self.alpha = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
+        self.eta = numpy.asarray([1.0 / self.num_terms for i in xrange(self.num_terms)])
+
         self.random_state = get_random_state(random_state)
 
         if corpus is not None:
-            self.inference(corpus)
+            self.inference(corpus, var_lambda=var_lambda)
 
     def rho(self, t):
         return pow(self.offset + t, -self.decay)
 
-    def inference(self, corpus=None):
+    def inference(self, corpus=None, var_lambda=None):
         if corpus is None:
             # TODO: I can't remember why I used "copy()" here.
             corpus = self.corpus.copy()
@@ -146,37 +144,55 @@ class OnlineAtVb(AtVb):
 
         logger.info('Starting inference. Training on %d documents.', len(corpus))
 
+        # Whether or not to evaluate bound and log probability, respectively.
+        bound_eval = False
+        logprob_eval = True
+
+        if var_lambda is None:
+            self.optimize_lambda = True
+        else:
+            # We have topics from LDA, thus we do not train the topics.
+            self.optimize_lambda = False
+
         # Initial values of gamma and lambda.
         # NOTE: parameters of gamma distribution same as in `ldamodel`.
-        init_gamma = self.random_state.gamma(100., 1. / 100.,
+        var_gamma = self.random_state.gamma(100., 1. / 100.,
                 (self.num_authors, self.num_topics))
-        init_lambda = self.random_state.gamma(100., 1. / 100.,
-                (self.num_topics, self.num_terms))
+        tilde_gamma = var_gamma.copy()
+        self.var_gamma = var_gamma
+
+        if var_lambda is None:
+            var_lambda = self.random_state.gamma(100., 1. / 100.,
+                    (self.num_topics, self.num_terms))
+            tilde_lambda = var_lambda.copy()
+        else:
+            self.norm_lambda = var_lambda.copy()
+            for k in xrange(self.num_topics):
+                self.norm_lambda[k, :] = var_lambda[k, :] / var_lambda.sum(axis=1)[k]
+        
+        self.var_lambda = var_lambda
 
         # TODO: consider making phi sparse. Each document does not contain all terms.
         var_phi = numpy.zeros((self.num_terms, self.num_topics))
-
-        var_gamma = init_gamma.copy()
-        var_lambda = init_lambda.copy()
-        tilde_gamma = init_gamma.copy()
-        tilde_lambda = init_lambda.copy()
 
         # Initialize dirichlet expectations.
         Elogtheta = dirichlet_expectation(var_gamma)
         Elogbeta = dirichlet_expectation(var_lambda)
         expElogbeta = numpy.exp(Elogbeta)
 
-        # Evaluate bound.
-        word_bound = self.word_bound(Elogtheta, Elogbeta)
-        theta_bound = self.theta_bound(Elogtheta, var_gamma)
-        beta_bound = self.beta_bound(Elogbeta, var_lambda)
-        bound = word_bound + theta_bound + beta_bound
-        #likelihood = self.log_word_prob(var_gamma, var_lambda)
-        logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
         t = 0
+        if self.eval_every > 0:
+            if bound_eval:
+                word_bound = self.word_bound(Elogtheta, Elogbeta)
+                theta_bound = self.theta_bound(Elogtheta)
+                beta_bound = self.beta_bound(Elogbeta)
+                bound = word_bound + theta_bound + beta_bound
+                logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
+            if logprob_eval:
+                logprob = self.eval_logprob()
+                logger.info('Log prob: %.3e.', logprob)
         for _pass in xrange(self.passes):
             converged = 0  # Number of documents converged for current pass over corpus.
-            prev_bound = bound
             for d, doc in enumerate(corpus):
                 ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
                 cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
@@ -195,7 +211,8 @@ class OnlineAtVb(AtVb):
                     #logger.info('iteration %i', iteration)
 
                     lastgamma = tilde_gamma.copy()
-                    lastlambda = tilde_lambda.copy()
+                    if self.optimize_lambda:
+                        lastlambda = tilde_lambda.copy()
 
                     # Update phi.
                     for v in ids:
@@ -211,7 +228,7 @@ class OnlineAtVb(AtVb):
                             var_phi[v, k] = expavgElogtheta * expElogbeta[k, v]
 
                         # Normalize phi over k.
-                        var_phi[v, :] = var_phi[v, :] / var_phi[v, :].sum()
+                        var_phi[v, :] = var_phi[v, :] / (var_phi[v, :].sum() + 1e-100)
 
                     # Update mu.
                     for v in ids:
@@ -231,7 +248,7 @@ class OnlineAtVb(AtVb):
                             mu_sum += var_mu[(v, a)]
 
                         # Normalize mu.
-                        mu_norm_const = 1.0 / mu_sum
+                        mu_norm_const = 1.0 / (mu_sum + 1e-100)
                         for a in authors_d:
                             var_mu[(v, a)] *= mu_norm_const
 
@@ -242,24 +259,30 @@ class OnlineAtVb(AtVb):
                             for vi, v in enumerate(ids):
                                 tilde_gamma[a, k] += cts[vi] * var_mu[(v, a)] * var_phi[v, k]
                             tilde_gamma[a, k] *= len(self.author2doc[a])
-                            tilde_gamma[a, k] += self.alpha
+                            tilde_gamma[a, k] += self.alpha[k]
 
-                    # Update lambda.
-                    #tilde_lambda = self.eta + self.num_docs * cts * var_phi[ids, :].T
-                    for k in xrange(self.num_topics):
-                        for vi, v in enumerate(ids):
-                            cnt = dict(doc).get(v, 0)
-                            var_lambda[k, v] = self.eta + self.num_docs * cnt * var_phi[v, k]
+                    if self.optimize_lambda:
+                        # Update lambda.
+                        #tilde_lambda = self.eta + self.num_docs * cts * var_phi[ids, :].T
+                        for k in xrange(self.num_topics):
+                            for vi, v in enumerate(ids):
+                                cnt = dict(doc).get(v, 0)
+                                var_lambda[k, v] = self.eta[v] + self.num_docs * cnt * var_phi[v, k]
 
                     # Check for convergence.
                     # Criterion is mean change in "local" gamma and lambda.
                     # TODO: consider using separate thresholds for lambda and gamma.
                     if iteration > 0:
                         meanchange_gamma = numpy.mean(abs(tilde_gamma - lastgamma))
-                        meanchange_lambda = numpy.mean(abs(tilde_lambda - lastlambda))
+                        gamma_condition = meanchange_gamma < self.threshold
+                        if self.optimize_lambda:
+                            meanchange_lambda = numpy.mean(abs(tilde_lambda - lastlambda))
+                            lambda_condition = meanchange_lambda < self.threshold
+                        else:
+                            lambda_condition = True
                         # logger.info('Mean change in gamma: %.3e', meanchange_gamma)
                         # logger.info('Mean change in lambda: %.3e', meanchange_lambda)
-                        if meanchange_gamma < self.threshold and meanchange_lambda < self.threshold:
+                        if gamma_condition and lambda_condition:
                             # logger.info('Converged after %d iterations.', iteration)
                             converged += 1
                             break
@@ -273,12 +296,14 @@ class OnlineAtVb(AtVb):
                 # and "global" gamma (var_gamma). Same goes for lambda.
                 # TODO: I may need to be smarter about computing rho. In ldamodel,
                 # it's: pow(offset + pass_ + (self.num_updates / chunksize), -decay).
-                rhot = self.rho(t)
+                rhot = self.rho(iteration + _pass)
                 t += 1
                 var_gamma = (1 - rhot) * var_gamma + rhot * tilde_gamma
-                # Note that we only changed the elements in lambda corresponding to 
-                # the words in document d, hence the [:, ids] indexing.
-                var_lambda[:, ids] = (1 - rhot) * var_lambda[:, ids] + rhot * tilde_lambda[:, ids]
+                
+                if self.optimize_lambda:
+                    # Note that we only changed the elements in lambda corresponding to 
+                    # the words in document d, hence the [:, ids] indexing.
+                    var_lambda[:, ids] = (1 - rhot) * var_lambda[:, ids] + rhot * tilde_lambda[:, ids]
 
                 # Update Elogtheta and Elogbeta, since gamma and lambda have been updated.
                 Elogtheta = dirichlet_expectation(var_gamma)
@@ -286,19 +311,25 @@ class OnlineAtVb(AtVb):
                 expElogbeta = numpy.exp(Elogbeta)
 
                 # Print topics:
-                # self.var_lambda = var_lambda
                 # pprint(self.show_topics())
 
             # End of corpus loop.
 
-            # Evaluate bound.
+            self.var_gamma = var_gamma
+            self.var_lambda = var_lambda
+
             if _pass % self.eval_every == 0:
-                word_bound = self.word_bound(Elogtheta, Elogbeta)
-                theta_bound = self.theta_bound(Elogtheta, var_gamma)
-                beta_bound = self.beta_bound(Elogbeta, var_lambda)
-                bound = word_bound + theta_bound + beta_bound
-                #likelihood = self.log_word_prob(var_gamma, var_lambda)
-                logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
+                if self.eval_every > 0:
+                    if bound_eval:
+                        prev_bound = bound
+                        word_bound = self.word_bound(Elogtheta, Elogbeta)
+                        theta_bound = self.theta_bound(Elogtheta)
+                        beta_bound = self.beta_bound(Elogbeta)
+                        bound = word_bound + theta_bound + beta_bound
+                        logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
+                    if logprob_eval:
+                        logprob = self.eval_logprob()
+                        logger.info('Log prob: %.3e.', logprob)
 
             logger.info('Converged documents: %d/%d', converged, self.num_docs)
 
@@ -315,8 +346,6 @@ class OnlineAtVb(AtVb):
 
     def word_bound(self, Elogtheta, Elogbeta, doc_ids=None):
         """
-        Note that this is not strictly speaking a likelihood.
-
         Compute the expectation of the log conditional likelihood of the data,
 
             E_q[log p(w_d | theta, beta, A_d)],
@@ -331,6 +360,8 @@ class OnlineAtVb(AtVb):
         else:
             docs = [self.corpus[d] for d in doc_ids]
 
+        # NOTE: computing the bound this way is very numerically unstable, which is why
+        # "logsumexp" is used in the LDA code.
         bound= 0.0
         for d, doc in enumerate(docs):
             authors_d = self.doc2author[d]
@@ -350,21 +381,25 @@ class OnlineAtVb(AtVb):
 
         # TODO: can I do something along the lines of (as in ldamodel):
         # likelihood += numpy.sum(cnt * logsumexp(Elogthetad + Elogbeta[:, id]) for id, cnt in doc)
+        # If I computed the LDA bound the way I compute the author-topic bound above:
+        # bound = 0.0
+        # for d, doc in enumerate(docs):
+        #     ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
+        #     cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
+        #     bound_d = 0.0
+        #     for vi, v in enumerate(ids):
+        #         bound_v = 0.0
+        #         for k in xrange(self.num_topics):
+        #             bound_v += numpy.exp(Elogtheta[d, k] + Elogbeta[k, v])
+        #         bound_d += cts[vi] * numpy.log(bound_v)
+        #     bound += bound_d
 
         return bound
 
-    def theta_bound(self, Elogtheta, var_gamma, doc_ids=None):
-        """
-        """
-
-        if doc_ids is None:
-            docs = self.corpus
-        else:
-            docs = [self.corpus[d] for d in doc_ids]
-
+    def theta_bound(self, Elogtheta):
         bound = 0.0
         for a in xrange(self.num_authors):
-            var_gamma_a = var_gamma[a, :]
+            var_gamma_a = self.var_gamma[a, :]
             Elogtheta_a = Elogtheta[a, :]
             # E[log p(theta | alpha) - log q(theta | gamma)]; assumes alpha is a vector
             bound += numpy.sum((self.alpha - var_gamma_a) * Elogtheta_a)
@@ -373,15 +408,15 @@ class OnlineAtVb(AtVb):
 
         return bound
 
-    def beta_bound(self, Elogbeta, var_lambda, doc_ids=None):
+    def beta_bound(self, Elogbeta):
         bound = 0.0
-        bound += numpy.sum((self.eta - var_lambda) * Elogbeta)
-        bound += numpy.sum(gammaln(var_lambda) - gammaln(self.eta))
-        bound += numpy.sum(gammaln(numpy.sum(self.eta)) - gammaln(numpy.sum(var_lambda, 1)))
+        bound += numpy.sum((self.eta - self.var_lambda) * Elogbeta)
+        bound += numpy.sum(gammaln(self.var_lambda) - gammaln(self.eta))
+        bound += numpy.sum(gammaln(numpy.sum(self.eta)) - gammaln(numpy.sum(self.var_lambda, 1)))
 
         return bound
 
-    def log_word_prob(self, var_gamma, var_lambda, doc_ids=None):
+    def eval_logprob(self, doc_ids=None):
         """
         Compute the liklihood of the corpus under the model, by first 
         computing the conditional probabilities of the words in a
@@ -392,35 +427,39 @@ class OnlineAtVb(AtVb):
         summing over all documents, and dividing by the number of documents.
         """
 
-        norm_gamma = var_gamma.copy()
-        norm_lambda = var_lambda.copy()
+        # TODO: if var_lambda is supplied from LDA, normalizing it every time
+        # is unnecessary.
+        norm_gamma = self.var_gamma.copy()
         for a in xrange(self.num_authors):
-            norm_gamma[a, :] = var_gamma[a, :] / var_gamma.sum(axis=1)[a]
-        for k in xrange(self.num_topics):
-            norm_lambda[k, :] = var_lambda[k, :] / var_lambda.sum(axis=1)[k]
+            norm_gamma[a, :] = self.var_gamma[a, :] / self.var_gamma.sum(axis=1)[a]
+
+        if self.optimize_lambda:
+            norm_lambda = self.var_lambda.copy()
+            for k in xrange(self.num_topics):
+                norm_lambda[k, :] = self.var_lambda[k, :] / self.var_lambda.sum(axis=1)[k]
+        else:
+            norm_lambda = self.norm_lambda
 
         if doc_ids is None:
             docs = self.corpus
         else:
             docs = [self.corpus[d] for d in doc_ids]
 
-        log_word_prob = 0.0
+        logprob = 0.0
         for d, doc in enumerate(docs):
             ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
             cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
             authors_d = self.doc2author[d]
-            log_word_prob_d = 0.0
+            logprob_d = 0.0
             for vi, v in enumerate(ids):
-                log_word_prob_v = 0.0
+                logprob_v = 0.0
                 for k in xrange(self.num_topics):
                     for a in authors_d:
-                        log_word_prob_v += norm_gamma[a, k] * norm_lambda[k, v]
-                log_word_prob_d += cts[vi] * numpy.log(log_word_prob_v)
-            log_word_prob += numpy.log(1.0 / len(authors_d)) + log_word_prob_d
-            #authors_idxs = [self.authorid2idx[aid] for aid in authors_d]
-            #likelihood += author_prior_prob * numpy.sum(cnt * numpy.log(numpy.sum(numpy.exp(logsumexp(Elogtheta[a, :] + Elogbeta[:, id])) for a in authors_idxs)) for id, cnt in doc)
+                        logprob_v += norm_gamma[a, k] * norm_lambda[k, v]
+                logprob_d += cts[vi] * numpy.log(logprob_v)
+            logprob += numpy.log(1.0 / len(authors_d)) + logprob_d
 
-        return log_word_prob
+        return logprob
 
     # Overriding LdaModel.get_topic_terms.
     def get_topic_terms(self, topicid, topn=10):
@@ -433,6 +472,7 @@ class OnlineAtVb(AtVb):
         topic = topic / topic.sum()  # normalize to probability distribution
         bestn = matutils.argsort(topic, topn, reverse=True)
         return [(id, topic[id]) for id in bestn]
+
 
     def get_author_topics(self, author_id, minimum_probability=None):
         """
@@ -452,10 +492,6 @@ class OnlineAtVb(AtVb):
         # author_name = self.id2author[author_id]
 
         return author_topics
-
-
-
-
 
 
 
