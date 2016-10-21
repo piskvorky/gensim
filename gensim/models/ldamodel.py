@@ -907,7 +907,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         if chunksize is None:
             chunksize = self.chunksize
-        chunksize = min(chunksize, 2) # chunksize should be > 1
+        chunksize = max(chunksize, 2) # chunksize should be > 1
             
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
