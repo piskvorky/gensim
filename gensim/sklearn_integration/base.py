@@ -80,14 +80,14 @@ class LdaModel(object):
                          eta=self.eta, random_state=self.random_state)
         return self.lda_model
 
-    def print_topics(self, n_topics=20, num_words=20, log=True):
+    def print_topics(self, n_topics, num_words, log):
         """
         print all the topics
         using the object lda_model
         """
         return self.lda_model.show_topics(num_topics=n_topics, num_words=num_words, log=log)
 
-    def transform(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
+    def transform(self, bow, minimum_probability, minimum_phi_value, per_word_topics):
         """
         takes as an input a new document (bow) and
         Return topic distribution for the given document bow, as a list of (topic_id, topic_probability) 2-tuples.
@@ -95,14 +95,14 @@ class LdaModel(object):
         return self.lda_model.get_document_topics(bow, minimum_probability=minimum_probability,
                                                   minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics)
 
-    def get_term_topics(self, wordid, minimum_probability=None):
+    def get_term_topics(self, wordid, minimum_probability):
         """
         returns the most likely topic associated with a particular word
         use wordid or simply pass the word itself
         """
         return self.lda_model.get_term_topics(wordid, minimum_probability=minimum_probability)
 
-    def get_topic_terms(self, topicid, topn=10):
+    def get_topic_terms(self, topicid, topn):
         """
         return a tuple of (wordid,probability) for given topic
         topn can be used to restrict
