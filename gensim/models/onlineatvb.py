@@ -194,6 +194,7 @@ class OnlineAtVb(LdaModel):
         for _pass in xrange(self.passes):
             converged = 0  # Number of documents converged for current pass over corpus.
             for d, doc in enumerate(corpus):
+                rhot = self.rho(d + _pass)
                 ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
                 cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
                 authors_d = self.doc2author[d]  # List of author IDs for document d.
@@ -261,13 +262,35 @@ class OnlineAtVb(LdaModel):
                             tilde_gamma[a, k] *= len(self.author2doc[a])
                             tilde_gamma[a, k] += self.alpha[k]
 
+                    # TODO: see what happens if we put the lambda update outside this loop (i.e. 
+                    # only one update per document).
                     if self.optimize_lambda:
                         # Update lambda.
                         #tilde_lambda = self.eta + self.num_docs * cts * var_phi[ids, :].T
                         for k in xrange(self.num_topics):
                             for vi, v in enumerate(ids):
                                 cnt = dict(doc).get(v, 0)
-                                var_lambda[k, v] = self.eta[v] + self.num_docs * cnt * var_phi[v, k]
+                                tilde_lambda[k, v] = self.eta[v] + self.num_docs * cnt * var_phi[v, k]
+
+                    # FIXME: I don't need to update the entire gamma, as I only updated a few rows of it,
+                    # corresponding to the authors in the document. The same goes for Elogtheta.
+
+                    # Update gamma and lambda.
+                    # Interpolation between document d's "local" gamma (tilde_gamma),
+                    # and "global" gamma (var_gamma). Same goes for lambda.
+                    # TODO: I may need to be smarter about computing rho. In ldamodel,
+                    # it's: pow(offset + pass_ + (self.num_updates / chunksize), -decay).
+                    tilde_gamma = (1 - rhot) * var_gamma + rhot * tilde_gamma
+
+                    # Update Elogtheta and Elogbeta, since gamma and lambda have been updated.
+                    Elogtheta = dirichlet_expectation(tilde_gamma)
+                    
+                    if self.optimize_lambda:
+                        # Note that we only changed the elements in lambda corresponding to 
+                        # the words in document d, hence the [:, ids] indexing.
+                        tilde_lambda[:, ids] = (1 - rhot) * var_lambda[:, ids] + rhot * tilde_lambda[:, ids]
+                        Elogbeta = dirichlet_expectation(tilde_lambda)
+                        expElogbeta = numpy.exp(Elogbeta)
 
                     # Check for convergence.
                     # Criterion is mean change in "local" gamma and lambda.
@@ -288,27 +311,10 @@ class OnlineAtVb(LdaModel):
                             break
                 # End of iterations loop.
 
-                # TODO: I don't need to update the entire gamma, as I only updated a few rows of it,
-                # corresponding to the authors in the document. The same goes for Elogtheta.
+                var_gamma = tilde_gamma.copy()
 
-                # Update gamma and lambda.
-                # Interpolation between document d's "local" gamma (tilde_gamma),
-                # and "global" gamma (var_gamma). Same goes for lambda.
-                # TODO: I may need to be smarter about computing rho. In ldamodel,
-                # it's: pow(offset + pass_ + (self.num_updates / chunksize), -decay).
-                rhot = self.rho(iteration + _pass)
-                t += 1
-                var_gamma = (1 - rhot) * var_gamma + rhot * tilde_gamma
-                
                 if self.optimize_lambda:
-                    # Note that we only changed the elements in lambda corresponding to 
-                    # the words in document d, hence the [:, ids] indexing.
-                    var_lambda[:, ids] = (1 - rhot) * var_lambda[:, ids] + rhot * tilde_lambda[:, ids]
-
-                # Update Elogtheta and Elogbeta, since gamma and lambda have been updated.
-                Elogtheta = dirichlet_expectation(var_gamma)
-                Elogbeta = dirichlet_expectation(var_lambda)
-                expElogbeta = numpy.exp(Elogbeta)
+                    var_lambda = tilde_lambda.copy()
 
                 # Print topics:
                 # pprint(self.show_topics())
