@@ -249,15 +249,6 @@ class TestLdaModel(unittest.TestCase, test_basemodel.TestBaseTopicModel):
                 self.assertTrue(isinstance(k, int))
                 self.assertTrue(isinstance(v, float))
 
-        #Attempt test case to use the per_word_topics through the corpus
-        doc_topics = model.get_document_topics(self.corpus, , per_word_topics=True)
-       
-        for topic in doc_topics:
-            self.assertTrue(isinstance(topic, list))
-            for k, v in topic:
-                self.assertTrue(isinstance(k, int))
-                self.assertTrue(isinstance(v, float))
-        
         doc_topics, word_topics, word_phis = model.get_document_topics(self.corpus[1], per_word_topics=True)
 
         for k, v in doc_topics:
@@ -272,6 +263,20 @@ class TestLdaModel(unittest.TestCase, test_basemodel.TestBaseTopicModel):
             self.assertTrue(isinstance(w, int))
             self.assertTrue(isinstance(phi_values, list))
 
+        #Attempt test case to use the get_document_topic function through the corpus
+        doc_topics, word_topics, word_phis = model.get_document_topics(self.corpus, per_word_topics=True)
+
+        for k, v in doc_topics:
+            self.assertTrue(isinstance(k, int))
+            self.assertTrue(isinstance(v, float))
+
+        for w, topic_list in word_topics:
+            self.assertTrue(isinstance(w, int))
+            self.assertTrue(isinstance(topic_list, list))
+
+        for w, phi_values in word_phis:
+            self.assertTrue(isinstance(w, int))
+            self.assertTrue(isinstance(phi_values, list))
         # word_topics looks like this: ({word_id => [topic_id_most_probable, topic_id_second_most_probable, ...]).
         # we check one case in word_topics, i.e of the first word in the doc, and it's likely topics.
         expected_word = 0
