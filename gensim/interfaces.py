@@ -156,7 +156,7 @@ class TransformationABC(utils.SaveLoad):
         raise NotImplementedError('cannot instantiate abstract base class')
 
 
-    def _apply(self, corpus, chinksize=None, **kwargs):
+    def _apply(self, corpus, chunksize=None, **kwargs):
         """
         Apply the transformation to a whole corpus (as opposed to a single document)
         and return the result as another corpus.
