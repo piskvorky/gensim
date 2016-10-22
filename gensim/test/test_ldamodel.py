@@ -250,7 +250,7 @@ class TestLdaModel(unittest.TestCase, test_basemodel.TestBaseTopicModel):
                 self.assertTrue(isinstance(v, float))
 
         #Attempt test case to use the per_word_topics through the corpus
-        doc_topics = model.get_document_topics(self.corpus, , per_word_topics=True)
+        doc_topics = model.get_document_topics(self.corpus, per_word_topics=True)
        
         for topic in doc_topics:
             self.assertTrue(isinstance(topic, list))
