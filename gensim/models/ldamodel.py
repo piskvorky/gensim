@@ -894,7 +894,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         top_topics = sorted(coherence_scores, key=lambda t: t[1], reverse=True)
         return top_topics
 
-    def get_document_topics(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False, chunksize=None):
+    def get_document_topics(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
         """
         Return topic distribution for the given document `bow`, as a list of
         (topic_id, topic_probability) 2-tuples.
@@ -905,10 +905,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         It also returns a list of word_ids and each words corresponding topics' phi_values, multiplied by feature length (i.e, word count)
 
         """
-        if chunksize is None:
-            chunksize = self.chunksize
-        chunksize = max(chunksize, 2) # chunksize should be > 1
-            
+        
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
         minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
@@ -921,7 +918,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         is_corpus, corpus = utils.is_corpus(bow)
 
         kwargs = dict(
-            chunksize=chunksize,
             per_word_topics = per_word_topics,
             minimum_probability = minimum_probability,
             minimum_phi_value = minimum_phi_value
