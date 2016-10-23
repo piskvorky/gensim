@@ -905,6 +905,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         It also returns a list of word_ids and each words corresponding topics' phi_values, multiplied by feature length (i.e, word count)
 
         """
+        
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
         minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
@@ -915,8 +916,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         # if the input vector is a corpus, return a transformed corpus
         is_corpus, corpus = utils.is_corpus(bow)
+
+        kwargs = dict(
+            per_word_topics = per_word_topics,
+            minimum_probability = minimum_probability,
+            minimum_phi_value = minimum_phi_value
+        )
+
         if is_corpus:
-            return self._apply(corpus)
+            return self._apply(corpus, **kwargs)
 
         gamma, phis = self.inference([bow], collect_sstats=True)
         topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
