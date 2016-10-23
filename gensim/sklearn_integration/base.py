@@ -108,3 +108,10 @@ class LdaModel(object):
         topn can be used to restrict
         """
         return self.lda_model.get_topic_terms(topicid=topicid, topn=topn)
+
+    def partial_fit(self, X, y=None):
+        """
+        train model over X
+        """
+        self.lda_model.update(corpus=X)
+
