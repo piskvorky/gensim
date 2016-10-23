@@ -16,6 +16,7 @@ Changes
 * Fixed issue [#791](https://github.com/RaRe-Technologies/gensim/issues/791), correct logic for iterating over SimilarityABC interface. ([@MridulS](https://github.com/MridulS), [#839](https://github.com/RaRe-Technologies/gensim/pull/839))
 * Fixed issue [#938](https://github.com/RaRe-Technologies/gensim/issues/938),Creating a unified base class for all topic models. ([@markroxor](https://github.com/markroxor), [#946](https://github.com/RaRe-Technologies/gensim/pull/946))
     -  _breaking change - may break HdpTopicFormatter.show_\__topics_
+* Passed all the params through the apply call in lda.get_document_topics(), attempt test case to use the per_word_topics through the corpus in test_ldamodel (@parthoiiitm, [#963](https://github.com/RaRe-Technologies/gensim/pull/963))
 
 0.13.2, 2016-08-19
 
