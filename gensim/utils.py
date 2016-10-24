@@ -10,7 +10,7 @@ This module contains various general utility functions.
 
 from __future__ import with_statement
 
-import logging
+import logging, warnings
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,7 @@ import shutil
 import sys
 from contextlib import contextmanager
 import subprocess
+import inspect
 
 import numpy
 import scipy.sparse
@@ -217,6 +218,13 @@ def any2unicode(text, encoding='utf8', errors='strict'):
     return unicode(text, encoding, errors=errors)
 to_unicode = any2unicode
 
+def parse_func_call(func_call):
+    """
+    Parse a string containing the function call to extract specific
+    sub-string lying between '= ' and '('
+    """
+    return func_call.partition('= ')[-1].rpartition('(')[0].encode('ascii')
+
 
 class SaveLoad(object):
     """
@@ -241,12 +249,25 @@ class SaveLoad(object):
         is encountered.
 
         """
+
+        calling_function = inspect.getouterframes(inspect.currentframe())[2][4]
+        calling_function = map(lambda func_call: parse_func_call(func_call), calling_function)
+        
+        valid_calls = ['Word2Vec.load', 'Doc2Vec.load']
+        
+        for func in calling_function:
+            if func not in valid_calls:
+                logger.warn('Warning: load() should only be called on the class object')
+            else:
+                continue
+
         logger.info("loading %s object from %s" % (cls.__name__, fname))
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
         obj = unpickle(fname)
         obj._load_specials(fname, mmap, compress, subname)
+        logger.info("loaded %s", fname)
         return obj
 
 
@@ -256,7 +277,6 @@ class SaveLoad(object):
         opportunity to recursively included SaveLoad instances.
 
         """
-
         mmap_error = lambda x, y: IOError(
             'Cannot mmap compressed object %s in file %s. ' % (x, y) +
             'Use `load(fname, mmap=None)` or uncompress files manually.')
@@ -354,6 +374,7 @@ class SaveLoad(object):
             for obj, asides in restores:
                 for attrib, val in iteritems(asides):
                     setattr(obj, attrib, val)
+        logger.info("saved %s", fname)
 
 
     def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
@@ -836,7 +857,7 @@ class InputQueue(multiprocessing.Process):
 
 
 if os.name == 'nt':
-    logger.info("detected Windows; aliasing chunkize to chunkize_serial")
+    warnings.warn("detected Windows; aliasing chunkize to chunkize_serial")
 
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
@@ -1011,7 +1032,7 @@ def has_pattern():
         from pattern.en import parse
         pattern = True
     except ImportError:
-        logger.info("Pattern library is not installed, lemmatization won't be available.")
+        warnings.warn("Pattern library is not installed, lemmatization won't be available.")
     return pattern
 
 
