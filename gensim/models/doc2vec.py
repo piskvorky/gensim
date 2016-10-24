@@ -37,6 +37,7 @@ The model can also be instantiated from an existing file on disk in the word2vec
 import logging
 import os
 import warnings
+import inspect
 
 try:
     from queue import Queue
@@ -50,12 +51,12 @@ from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
     repeat as np_repeat, array, float32 as REAL, empty, ones, memmap as np_memmap, \
     sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide
 
+from gensim.utils import parse_func_call
+
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_batch_sg, methodize
+from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_batch_sg
 from six.moves import xrange, zip
 from six import string_types, integer_types, itervalues
-
-from types import MethodType
 
 logger = logging.getLogger(__name__)
 
@@ -610,10 +611,6 @@ class Doc2Vec(Word2Vec):
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
-        
-        self.load = methodize(load, self)
-        self.load_word2vec_format = methodize(load, self)
-        
         if self.dm and self.dm_concat:
             self.layer1_size = (self.dm_tag_count + (2 * self.window)) * self.vector_size
         else:
@@ -649,7 +646,7 @@ class Doc2Vec(Word2Vec):
         self.docvecs.borrow_from(other_model.docvecs)
         super(Doc2Vec, self).reset_from(other_model)
 
-    def scan_vocab(self, documents, progress_per=10000, trim_rule=None):
+    def scan_vocab(self, documents, progress_per=10000, trim_rule=None, update=False):
         logger.info("collecting all words and their counts")
         document_no = -1
         total_words = 0
