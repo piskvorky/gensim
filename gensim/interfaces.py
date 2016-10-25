@@ -105,8 +105,8 @@ class CorpusABC(utils.SaveLoad):
 
 
 class TransformedCorpus(CorpusABC):
-    def __init__(self, obj, corpus, **kwargs):
-        self.obj, self.corpus, self.chunksize = obj, corpus, kwargs.get('chunksize', None)
+    def __init__(self, obj, corpus, chunksize=None, **kwargs):
+        self.obj, self.corpus, self.chunksize = obj, corpus, chunksize
         self.metadata = False
 
     def __len__(self):
@@ -156,12 +156,12 @@ class TransformationABC(utils.SaveLoad):
         raise NotImplementedError('cannot instantiate abstract base class')
 
 
-    def _apply(self, corpus, **kwargs):
+    def _apply(self, corpus, chunksize=None, **kwargs):
         """
         Apply the transformation to a whole corpus (as opposed to a single document)
         and return the result as another corpus.
         """
-        return TransformedCorpus(self, corpus, **kwargs)
+        return TransformedCorpus(self, corpus, chunksize, **kwargs)
 #endclass TransformationABC
 
 
