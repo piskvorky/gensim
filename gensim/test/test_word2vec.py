@@ -15,13 +15,14 @@ import os
 import tempfile
 import itertools
 import bz2
+import sys
 
 import numpy
 
 from gensim import utils, matutils
 from gensim.utils import check_output
 from subprocess import PIPE
-from gensim.models import word2vec
+from gensim.models import word2vec, keyedvectors
 from testfixtures import log_capture
 
 try:
@@ -33,6 +34,8 @@ except ImportError:
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
+logger = logging.getLogger()
+logger.level = logging.ERROR
 
 class LeeCorpus(object):
     def __iter__(self):
@@ -136,6 +139,12 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.save(testfile())
         self.models_equal(model, word2vec.Word2Vec.load(testfile()))
+        #  test persistence of the KeyedVectors of a model
+        wv = model.wv
+        wv.save(testfile())
+        loaded_wv = keyedvectors.KeyedVectors.load(testfile())
+        self.assertTrue(numpy.allclose(wv.syn0, loaded_wv.syn0))
+        self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
 
     def testPersistenceWithConstructorRule(self):
         """Test storing/loading the entire model with a vocab trimming rule passed in the constructor."""
@@ -162,6 +171,43 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1, trim_rule=rule)
         self.assertTrue("human" not in model.vocab)
 
+    def testSyn0NormNotSaved(self):
+        """Test syn0norm isn't saved in model file"""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        model.save(testfile())
+        loaded_model = word2vec.Word2Vec.load(testfile())
+        self.assertTrue(loaded_model.wv.syn0norm is None)
+
+        wv = model.wv
+        wv.save(testfile())
+        loaded_kv = keyedvectors.KeyedVectors.load(testfile())
+        self.assertTrue(loaded_kv.syn0norm is None)
+
+    def testLoadPreKeyedVectorModel(self):
+        """Test loading pre-KeyedVectors word2vec model"""
+
+        if sys.version_info < (3,):
+            model_file_suffix = '_py2'
+            # Model stored in one file
+            model_file = 'word2vec_pre_kv%s' % model_file_suffix
+            model = word2vec.Word2Vec.load(datapath(model_file))
+            self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), model.vector_size))
+            self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+        else:
+            model_file_suffix = '_py3'
+
+        # Model stored in multiple files
+        model_file = 'word2vec_pre_kv_sep%s' % model_file_suffix
+        model = word2vec.Word2Vec.load(datapath(model_file))
+        self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
+
+    def testLoadPreKeyedVectorModelCFormat(self):
+        """Test loading pre-KeyedVectors word2vec model saved in word2vec format"""
+        model = word2vec.Word2Vec.load_word2vec_format(datapath('word2vec_pre_kv_c'))
+        self.assertTrue(model.wv.syn0.shape[0] == len(model.wv.vocab))
+
     def testPersistenceWord2VecFormat(self):
         """Test storing/loading the entire model in word2vec format."""
         model = word2vec.Word2Vec(sentences, min_count=1)
@@ -173,11 +219,11 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
         norm_only_model.init_sims(replace=True)
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human']))
-        self.assertTrue(numpy.allclose(model.syn0norm[model.vocab['human'].index], norm_only_model['human']))
+        self.assertTrue(numpy.allclose(model.wv.syn0norm[model.vocab['human'].index], norm_only_model['human']))
         limited_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, limit=3)
-        self.assertEquals(len(limited_model.syn0), 3)
+        self.assertEquals(len(limited_model.wv.syn0), 3)
         half_precision_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, datatype=numpy.float16)
-        self.assertEquals(binary_model.syn0.nbytes, half_precision_model.syn0.nbytes * 2)
+        self.assertEquals(binary_model.wv.syn0.nbytes, half_precision_model.wv.syn0.nbytes * 2)
 
     def testTooShortBinaryWord2VecFormat(self):
         tfile = testfile()
@@ -210,8 +256,7 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=False)
         norm_only_model.init_sims(True)
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human'], atol=1e-6))
-
-        self.assertTrue(numpy.allclose(model.syn0norm[model.vocab['human'].index], norm_only_model['human'], atol=1e-4))
+        self.assertTrue(numpy.allclose(model.wv.syn0norm[model.vocab['human'].index], norm_only_model['human'], atol=1e-4))
 
     def testPersistenceWord2VecFormatWithVocab(self):
         """Test storing/loading the entire model and vocabulary in word2vec format."""
@@ -277,7 +322,7 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(size=2, min_count=1, hs=1, negative=0)
         model.build_vocab(sentences)
 
-        self.assertTrue(model.syn0.shape == (len(model.vocab), 2))
+        self.assertTrue(model.wv.syn0.shape == (len(model.vocab), 2))
         self.assertTrue(model.syn1.shape == (len(model.vocab), 2))
 
         model.train(sentences)
@@ -285,7 +330,7 @@ class TestWord2VecModel(unittest.TestCase):
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.syn0norm[model.vocab['graph'].index]
+        graph_vector = model.wv.syn0norm[model.vocab['graph'].index]
         sims2 = model.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
@@ -311,23 +356,30 @@ class TestWord2VecModel(unittest.TestCase):
             model.build_vocab(corpus)
 
             # remember two vectors
-            locked0 = numpy.copy(model.syn0[0])
-            unlocked1 = numpy.copy(model.syn0[1])
+            locked0 = numpy.copy(model.wv.syn0[0])
+            unlocked1 = numpy.copy(model.wv.syn0[1])
             # lock the vector in slot 0 against change
             model.syn0_lockf[0] = 0.0
 
             model.train(corpus)
-            self.assertFalse((unlocked1 == model.syn0[1]).all())  # unlocked vector should vary
-            self.assertTrue((locked0 == model.syn0[0]).all())  # locked vector should not vary
+            self.assertFalse((unlocked1 == model.wv.syn0[1]).all())  # unlocked vector should vary
+            self.assertTrue((locked0 == model.wv.syn0[0]).all())  # locked vector should not vary
+
+    def testAccuracy(self):
+        """Test Word2Vec accuracy and KeyedVectors accuracy give the same result"""
+        model = word2vec.Word2Vec(LeeCorpus())
+        w2v_accuracy = model.accuracy(datapath('questions-words.txt'))
+        kv_accuracy = model.wv.accuracy(datapath('questions-words.txt'))
+        self.assertEqual(w2v_accuracy, kv_accuracy)
 
     def model_sanity(self, model, train=True):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
         # run extra before/after training tests if train=True
         if train:
             model.build_vocab(list_corpus)
-            orig0 = numpy.copy(model.syn0[0])
+            orig0 = numpy.copy(model.wv.syn0[0])
             model.train(list_corpus)
-            self.assertFalse((orig0 == model.syn0[1]).all())  # vector should vary after training
+            self.assertFalse((orig0 == model.wv.syn0[1]).all())  # vector should vary after training
         sims = model.most_similar('war', topn=len(model.index2word))
         t_rank = [word for word, score in sims].index('terrorism')
         # in >200 calibration runs w/ calling parameters, 'terrorism' in 50-most_sim for 'war'
@@ -365,7 +417,7 @@ class TestWord2VecModel(unittest.TestCase):
         # build vocabulary, don't train yet
         model = word2vec.Word2Vec(size=2, min_count=1, sg=0, hs=1, negative=0)
         model.build_vocab(sentences)
-        self.assertTrue(model.syn0.shape == (len(model.vocab), 2))
+        self.assertTrue(model.wv.syn0.shape == (len(model.vocab), 2))
         self.assertTrue(model.syn1.shape == (len(model.vocab), 2))
 
         model.train(sentences)
@@ -373,7 +425,7 @@ class TestWord2VecModel(unittest.TestCase):
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.syn0norm[model.vocab['graph'].index]
+        graph_vector = model.wv.syn0norm[model.vocab['graph'].index]
         sims2 = model.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
@@ -388,7 +440,7 @@ class TestWord2VecModel(unittest.TestCase):
         # build vocabulary, don't train yet
         model = word2vec.Word2Vec(size=2, min_count=1, hs=0, negative=2)
         model.build_vocab(sentences)
-        self.assertTrue(model.syn0.shape == (len(model.vocab), 2))
+        self.assertTrue(model.wv.syn0.shape == (len(model.vocab), 2))
         self.assertTrue(model.syn1neg.shape == (len(model.vocab), 2))
 
         model.train(sentences)
@@ -396,7 +448,7 @@ class TestWord2VecModel(unittest.TestCase):
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.syn0norm[model.vocab['graph'].index]
+        graph_vector = model.wv.syn0norm[model.vocab['graph'].index]
         sims2 = model.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
@@ -411,7 +463,7 @@ class TestWord2VecModel(unittest.TestCase):
         # build vocabulary, don't train yet
         model = word2vec.Word2Vec(size=2, min_count=1, sg=0, hs=0, negative=2)
         model.build_vocab(sentences)
-        self.assertTrue(model.syn0.shape == (len(model.vocab), 2))
+        self.assertTrue(model.wv.syn0.shape == (len(model.vocab), 2))
         self.assertTrue(model.syn1neg.shape == (len(model.vocab), 2))
 
         model.train(sentences)
@@ -419,7 +471,7 @@ class TestWord2VecModel(unittest.TestCase):
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.syn0norm[model.vocab['graph'].index]
+        graph_vector = model.wv.syn0norm[model.vocab['graph'].index]
         sims2 = model.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
@@ -474,7 +526,7 @@ class TestWord2VecModel(unittest.TestCase):
 
     def models_equal(self, model, model2):
         self.assertEqual(len(model.vocab), len(model2.vocab))
-        self.assertTrue(numpy.allclose(model.syn0, model2.syn0))
+        self.assertTrue(numpy.allclose(model.wv.syn0, model2.wv.syn0))
         if model.hs:
             self.assertTrue(numpy.allclose(model.syn1, model2.syn1))
         if model.negative:

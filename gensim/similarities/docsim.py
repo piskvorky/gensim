@@ -634,7 +634,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         return result
 
     def __str__(self):
-        return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.w2v_model.syn0.shape[1])
+        return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.w2v_model.wv.syn0.shape[1])
 #endclass WmdSimilarity
 
 class SparseMatrixSimilarity(interfaces.SimilarityABC):
