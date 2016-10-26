@@ -1,6 +1,9 @@
 Changes
 =======
 
+0.13.3, 2016-10-25
+* Passed all the params through the apply call in lda.get_document_topics(), attempt test case to use the per_word_topics through the corpus in test_ldamodel (@parthoiiitm, [#978](https://github.com/RaRe-Technologies/gensim/pull/978))
+
 0.13.3, 2016-10-20
 
 * Add vocabulary expansion feature to word2vec. (@isohyt, [#900](https://github.com/RaRe-Technologies/gensim/pull/900))
