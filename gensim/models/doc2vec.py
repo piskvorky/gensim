@@ -37,7 +37,6 @@ The model can also be instantiated from an existing file on disk in the word2vec
 import logging
 import os
 import warnings
-import inspect
 
 try:
     from queue import Queue
@@ -50,8 +49,6 @@ from timeit import default_timer
 from numpy import zeros, random, sum as np_sum, add as np_add, concatenate, \
     repeat as np_repeat, array, float32 as REAL, empty, ones, memmap as np_memmap, \
     sqrt, newaxis, ndarray, dot, vstack, dtype, divide as np_divide
-
-from gensim.utils import parse_func_call
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.models.word2vec import Word2Vec, Vocab, train_cbow_pair, train_sg_pair, train_batch_sg
@@ -608,6 +605,10 @@ class Doc2Vec(Word2Vec):
             sample=sample, seed=seed, workers=workers, min_alpha=min_alpha,
             sg=(1+dm) % 2, hs=hs, negative=negative, cbow_mean=dm_mean,
             null_word=dm_concat, **kwargs)
+        
+        self.load = call_on_class_only
+        self.load_word2vec_format = call_on_class_only
+
         self.dbow_words = dbow_words
         self.dm_concat = dm_concat
         self.dm_tag_count = dm_tag_count
