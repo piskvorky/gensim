@@ -46,7 +46,6 @@ class TestWikiCorpus(unittest.TestCase):
         First two articles in this sample are
         1) anarchism
         2) autism
-
         """
         if sys.version_info < (2, 7, 0):
             return
