@@ -77,9 +77,8 @@ from copy import deepcopy
 from collections import defaultdict
 import threading
 import itertools
-import inspect
 
-from gensim.utils import keep_vocab_item, parse_func_call
+from gensim.utils import keep_vocab_item
 
 try:
     from queue import Queue, Empty
@@ -432,6 +431,9 @@ class Word2Vec(utils.SaveLoad):
         texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
 
         """
+
+        self.load = call_on_class_only
+        self.load_word2vec_format = call_on_class_only
 
         if FAST_VERSION == -1:
             logger.warning('Slow version of {0} is being used'.format(__name__))
@@ -1159,18 +1161,6 @@ class Word2Vec(utils.SaveLoad):
         or incompatibility with optimized routines.)
 
         """
-        
-        calling_function = inspect.getouterframes(inspect.currentframe())[2][4]
-        calling_function = map(lambda func_call: parse_func_call(func_call), calling_function)
-        
-        valid_calls = ['Word2Vec.load_word2vec_format', 'Doc2Vec.load_word2vec_format']
-        
-        for func in calling_function:
-            if func not in valid_calls:
-                logger.warn('Warning: load() should only be called on the class object')
-            else:
-                continue
-
         counts = None
         if fvocab is not None:
             logger.info("loading word counts from %s", fvocab)
