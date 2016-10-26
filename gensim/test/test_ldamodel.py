@@ -249,6 +249,24 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
                 self.assertTrue(isinstance(k, int))
                 self.assertTrue(isinstance(v, float))
 
+        #Attempt test case to use the get_document_topic function for the corpus
+        doc_topics, word_topics, word_phis = model.get_document_topics(self.corpus, per_word_topics=True)
+
+        self.assertEqual(model.state.numdocs, len(corpus))
+
+        for k, v in doc_topics:
+            self.assertTrue(isinstance(k, int))
+            self.assertTrue(isinstance(v, float))
+
+        for w, topic_list in word_topics:
+            self.assertTrue(isinstance(w, int))
+            self.assertTrue(isinstance(topic_list, list))
+
+        for w, phi_values in word_phis:
+            self.assertTrue(isinstance(w, int))
+            self.assertTrue(isinstance(phi_values, list))
+
+        
         doc_topics, word_topics, word_phis = model.get_document_topics(self.corpus[1], per_word_topics=True)
 
         for k, v in doc_topics:

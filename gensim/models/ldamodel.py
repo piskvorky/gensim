@@ -216,7 +216,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                  distributed=False, chunksize=2000, passes=1, update_every=1,
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0,
                  eval_every=10, iterations=50, gamma_threshold=0.001,
-                 minimum_probability=0.01, random_state=None, ns_conf={}):
+                 minimum_probability=0.01, random_state=None, ns_conf={},
+                 minimum_phi_value=0.01, per_word_topics=False):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -297,6 +298,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.passes = passes
         self.update_every = update_every
         self.eval_every = eval_every
+        self.minimum_phi_value = minimum_phi_value
+        self.per_word_topics = per_word_topics
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
@@ -916,7 +919,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # if the input vector is a corpus, return a transformed corpus
         is_corpus, corpus = utils.is_corpus(bow)
         if is_corpus:
-            return self._apply(corpus)
+            kwargs = dict(
+                per_word_topics = per_word_topics,
+                minimum_probability = minimum_probability,
+                minimum_phi_value = minimum_phi_value
+            )
+            return self._apply(corpus, **kwargs)
 
         gamma, phis = self.inference([bow], collect_sstats=True)
         topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
@@ -977,7 +985,9 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Ignore topics with very low probability (below `eps`).
 
         """
-        return self.get_document_topics(bow, eps)
+        #Is eps equivalent to minimum_probability?
+        eps = self.minimum_probability
+        return self.get_document_topics(bow, eps, self.minimum_phi_value, self.per_word_topics)
 
     def save(self, fname, ignore=['state', 'dispatcher'], *args, **kwargs):
         """
