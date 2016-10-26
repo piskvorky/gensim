@@ -187,16 +187,18 @@ class TestWord2VecModel(unittest.TestCase):
     def testLoadPreKeyedVectorModel(self):
         """Test loading pre-KeyedVectors word2vec model"""
 
-        if sys.version_info < (3,):
+        if sys.version_info[:2] == (3,4):
+            model_file_suffix = '_py3_4'
+        elif sys.version_info < (3,):
             model_file_suffix = '_py2'
-            # Model stored in one file
-            model_file = 'word2vec_pre_kv%s' % model_file_suffix
-            model = word2vec.Word2Vec.load(datapath(model_file))
-            self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), model.vector_size))
-            self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
         else:
             model_file_suffix = '_py3'
-
+        
+        # Model stored in one file
+        model_file = 'word2vec_pre_kv%s' % model_file_suffix
+        model = word2vec.Word2Vec.load(datapath(model_file))
+        self.assertTrue(model.wv.syn0.shape == (len(model.wv.vocab), model.vector_size))
+        self.assertTrue(model.syn1neg.shape == (len(model.wv.vocab), model.vector_size))
         # Model stored in multiple files
         model_file = 'word2vec_pre_kv_sep%s' % model_file_suffix
         model = word2vec.Word2Vec.load(datapath(model_file))
