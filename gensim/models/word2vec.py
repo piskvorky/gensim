@@ -78,7 +78,7 @@ from collections import defaultdict
 import threading
 import itertools
 
-from gensim.utils import keep_vocab_item
+from gensim.utils import keep_vocab_item, call_on_class_only
 
 try:
     from queue import Queue, Empty
