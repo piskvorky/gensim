@@ -114,7 +114,7 @@ class TestWord2VecModel(unittest.TestCase):
 
     def test_sg_hs_online(self):
         """Test skipgram w/ hierarchical softmax"""
-        model = word2vec.Word2Vec(sg=1, window=4, hs=1, negative=0, min_count=3, iter=10, seed=42, workers=2)
+        model = word2vec.Word2Vec(sg=1, window=5, hs=1, negative=0, min_count=3, iter=10, seed=42, workers=2)
         self.onlineSanity(model)
 
     def test_sg_neg_online(self):
