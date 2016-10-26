@@ -35,7 +35,6 @@ import shutil
 import sys
 from contextlib import contextmanager
 import subprocess
-import inspect
 
 import numpy
 import scipy.sparse
@@ -218,12 +217,9 @@ def any2unicode(text, encoding='utf8', errors='strict'):
     return unicode(text, encoding, errors=errors)
 to_unicode = any2unicode
 
-def parse_func_call(func_call):
-    """
-    Parse a string containing the function call to extract specific
-    sub-string lying between '= ' and '('
-    """
-    return func_call.partition('= ')[-1].rpartition('(')[0].encode('ascii')
+def call_on_class_only(*args, **kwargs):
+    """Warns when load methods are called on instance"""
+    logger.warn('this method name should only be called on class objects')
 
 
 class SaveLoad(object):
@@ -249,18 +245,6 @@ class SaveLoad(object):
         is encountered.
 
         """
-
-        calling_function = inspect.getouterframes(inspect.currentframe())[2][4]
-        calling_function = map(lambda func_call: parse_func_call(func_call), calling_function)
-        
-        valid_calls = ['Word2Vec.load', 'Doc2Vec.load']
-        
-        for func in calling_function:
-            if func not in valid_calls:
-                logger.warn('Warning: load() should only be called on the class object')
-            else:
-                continue
-
         logger.info("loading %s object from %s" % (cls.__name__, fname))
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
