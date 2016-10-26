@@ -22,6 +22,7 @@ import scipy.linalg
 from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import lsimodel
 from gensim import matutils
+from gensim.test import basetests
 
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
@@ -50,7 +51,7 @@ def testfile():
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
 
-class TestLsiModel(unittest.TestCase):
+class TestLsiModel(unittest.TestCase, basetests.TestBaseTopicModel):
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.model = lsimodel.LsiModel(self.corpus, num_topics=2)
@@ -71,23 +72,6 @@ class TestLsiModel(unittest.TestCase):
         expected = numpy.array([-0.6594664, 0.142115444])  # scaled LSI version
         # expected = numpy.array([-0.1973928, 0.05591352])  # non-scaled LSI version
         self.assertTrue(numpy.allclose(abs(vec), abs(expected)))  # transformed entries must be equal up to sign
-
-    def testShowTopic(self):
-        topic = self.model.show_topic(1)
-
-        for k, v in topic:
-            self.assertTrue(isinstance(k, six.string_types))
-            self.assertTrue(isinstance(v, float))
-
-    def testShowTopics(self):
-        topics = self.model.show_topics(formatted=False)
-
-        for topic_no, topic in topics:
-            self.assertTrue(isinstance(topic_no, int))
-            self.assertTrue(isinstance(topic, list))
-            for k, v in topic:
-                self.assertTrue(isinstance(k, six.string_types))
-                self.assertTrue(isinstance(v, float))
 
     def testCorpusTransform(self):
         """Test lsi[corpus] transformation."""

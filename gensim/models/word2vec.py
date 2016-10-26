@@ -434,7 +434,6 @@ class Word2Vec(utils.SaveLoad):
 
         self.load = call_on_class_only
         self.load_word2vec_format = call_on_class_only
-
         if FAST_VERSION == -1:
             logger.warning('Slow version of {0} is being used'.format(__name__))
         else:

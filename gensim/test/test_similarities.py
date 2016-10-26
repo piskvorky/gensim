@@ -432,6 +432,15 @@ class TestSimilarity(unittest.TestCase, _TestSimilarityABC):
         # to be mmaped!
 
 
+    def testChunksize(self):
+        index = self.cls(None, corpus, num_features=len(dictionary), shardsize=5)
+        expected = [sim for sim in index]
+        index.chunksize = len(index) - 1
+        sims = [sim for sim in index]
+        self.assertTrue(numpy.allclose(expected, sims))
+        index.destroy()
+
+
 class TestWord2VecAnnoyIndexer(unittest.TestCase):
 
     def setUp(self):
@@ -463,6 +472,30 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         exact_words = [neighbor[0] for neighbor in exact_neighbors]
 
         self.assertEqual(approx_words, exact_words)
+
+    def testSave(self):
+        self.index.save('index')
+        self.assertTrue(os.path.exists('index'))
+        self.assertTrue(os.path.exists('index.d'))
+
+    def testLoadNotExist(self):
+        from gensim.similarities.index import AnnoyIndexer
+        self.test_index = AnnoyIndexer()
+
+        self.assertRaises(IOError, self.test_index.load, fname='test-index')
+
+    def testSaveLoad(self):
+        from gensim.similarities.index import AnnoyIndexer
+
+        self.index.save('index')
+
+        self.index2 = AnnoyIndexer()
+        self.index2.load('index')
+        self.index2.model = self.model
+
+        self.assertEqual(self.index.index.f, self.index2.index.f)
+        self.assertEqual(self.index.labels, self.index2.labels)
+        self.assertEqual(self.index.num_trees, self.index2.num_trees)
 
 
 class TestDoc2VecAnnoyIndexer(unittest.TestCase):
@@ -496,6 +529,30 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         exact_words = [neighbor[0] for neighbor in exact_neighbors]
 
         self.assertEqual(approx_words, exact_words)
+
+    def testSave(self):
+        self.index.save('index')
+        self.assertTrue(os.path.exists('index'))
+        self.assertTrue(os.path.exists('index.d'))
+
+    def testLoadNotExist(self):
+        from gensim.similarities.index import AnnoyIndexer
+        self.test_index = AnnoyIndexer()
+
+        self.assertRaises(IOError, self.test_index.load, fname='test-index')
+
+    def testSaveLoad(self):
+        from gensim.similarities.index import AnnoyIndexer
+
+        self.index.save('index')
+
+        self.index2 = AnnoyIndexer()
+        self.index2.load('index')
+        self.index2.model = self.model
+
+        self.assertEqual(self.index.index.f, self.index2.index.f)
+        self.assertEqual(self.index.labels, self.index2.labels)
+        self.assertEqual(self.index.num_trees, self.index2.num_trees)
 
 
 if __name__ == '__main__':

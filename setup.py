@@ -123,7 +123,7 @@ if sys.version_info[:2] < (2, 7):
 
 setup(
     name='gensim',
-    version='0.13.2',
+    version='0.13.3',
     description='Python framework for fast Vector Space Modelling',
     long_description=readfile('README.md'),
 
@@ -180,7 +180,7 @@ setup(
         'smart_open >= 1.2.1',
         python_2_6_backports,
     ],
-    test_require=[
+    tests_require=[
     	'testfixtures',
     ],
     extras_require={

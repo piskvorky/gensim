@@ -38,31 +38,13 @@ import numpy as np
 import scipy.special as sp
 
 from gensim import interfaces, utils, matutils
+from gensim.models import basemodel
 from six.moves import xrange
 
 logger = logging.getLogger(__name__)
 
 meanchangethresh = 0.00001
 rhot_bound = 0.0
-
-
-def log_normalize(v):
-    log_max = 100.0
-    if len(v.shape) == 1:
-        max_val = np.max(v)
-        log_shift = log_max - np.log(len(v) + 1.0) - max_val
-        tot = np.sum(np.exp(v + log_shift))
-        log_norm = np.log(tot) - log_shift
-        v = v - log_norm
-    else:
-        max_val = np.max(v, 1)
-        log_shift = log_max - np.log(v.shape[1] + 1.0) - max_val
-        tot = np.sum(np.exp(v + log_shift[:, np.newaxis]), 1)
-
-        log_norm = np.log(tot) - log_shift
-        v = v - log_norm[:, np.newaxis]
-
-    return (v, log_norm)
 
 
 def dirichlet_expectation(alpha):
@@ -125,7 +107,7 @@ class SuffStats(object):
         self.m_var_beta_ss.fill(0.0)
 
 
-class HdpModel(interfaces.TransformationABC):
+class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     """
     The constructor estimates Hierachical Dirichlet Process model parameters based
     on a training corpus:
@@ -339,21 +321,21 @@ class HdpModel(interfaces.TransformationABC):
             # var_phi
             if iter < 3:
                 var_phi = np.dot(phi.T,  (Elogbeta_doc * doc_word_counts).T)
-                (log_var_phi, log_norm) = log_normalize(var_phi)
+                (log_var_phi, log_norm) = matutils.ret_log_normalize_vec(var_phi)
                 var_phi = np.exp(log_var_phi)
             else:
                 var_phi = np.dot(phi.T,  (Elogbeta_doc * doc_word_counts).T) + Elogsticks_1st
-                (log_var_phi, log_norm) = log_normalize(var_phi)
+                (log_var_phi, log_norm) = matutils.ret_log_normalize_vec(var_phi)
                 var_phi = np.exp(log_var_phi)
 
             # phi
             if iter < 3:
                 phi = np.dot(var_phi, Elogbeta_doc).T
-                (log_phi, log_norm) = log_normalize(phi)
+                (log_phi, log_norm) = matutils.ret_log_normalize_vec(phi)
                 phi = np.exp(log_phi)
             else:
                 phi = np.dot(var_phi, Elogbeta_doc).T + Elogsticks_2nd
-                (log_phi, log_norm) = log_normalize(phi)
+                (log_phi, log_norm) = matutils.ret_log_normalize_vec(phi)
                 phi = np.exp(log_phi)
 
             # v
@@ -452,12 +434,6 @@ class HdpModel(interfaces.TransformationABC):
 
         self.m_timestamp[:] = self.m_updatect
         self.m_status_up_to_date = True
-
-    def print_topics(self, num_topics=20, num_words=20):
-        """Alias for `show_topics()` that prints the `num_words` most
-        probable words for `topics` number of topics to log.
-        Set `topics=-1` to print all topics."""
-        return self.show_topics(num_topics=num_topics, num_words=num_words, log=True)
 
     def show_topics(self, num_topics=20, num_words=20, log=False, formatted=True):
         """
@@ -612,10 +588,9 @@ class HdpTopicFormatter(object):
     def format_topic(self, topic_id, topic_terms):
         if self.STYLE_GENSIM == self.style:
             fmt = ' + '.join(['%.3f*%s' % (weight, word) for (word, weight) in topic_terms])
-            fmt = 'topic %i: %s' % (topic_id, fmt)
         else:
             fmt = '\n'.join(['    %20s    %.8f' % (word, weight) for (word, weight) in topic_terms])
-            fmt = 'topic %i:\n%s' % (topic_id, fmt)
 
+        fmt = (topic_id, fmt)
         return fmt
-#endclass HdpTopicFormatter
+# endclass HdpTopicFormatter
