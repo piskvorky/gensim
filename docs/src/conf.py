@@ -24,7 +24,12 @@ html_theme = 'gensim_theme'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc', 'sphinx_gallery.gen_gallery', ]
+sphinx_gallery_conf = {
+    # path to your examples scripts
+    'examples_dirs': '../notebooks',
+    # path where to save gallery generated examples
+    'gallery_dirs': 'auto_examples'}
 autoclass_content = "both"
 
 # Add any paths that contain templates here, relative to this directory.
@@ -41,7 +46,7 @@ master_doc = 'indextoc'
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-html_additional_pages = {'index': './docs/src/_templates/indexcontent.html'}
+html_additional_pages = {'index': './_templates/indexcontent.html'}
 
 # General information about the project.
 project = u'gensim'
