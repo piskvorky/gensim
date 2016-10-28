@@ -41,7 +41,7 @@ master_doc = 'indextoc'
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-html_additional_pages = {'index': './_templates/indexcontent.html'}
+html_additional_pages = {'index': './docs/src/_templates/indexcontent.html'}
 
 # General information about the project.
 project = u'gensim'

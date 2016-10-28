@@ -24,4 +24,4 @@ script:
   - travis-sphinx --source=docs/src --branches=develop -n build
   - python setup.py test
 after_success:
-    - travis-sphinx deploy
+  - travis-sphinx --branches=develop -n deploy
