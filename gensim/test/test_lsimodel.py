@@ -25,7 +25,8 @@ from gensim import matutils
 from gensim.test import basetests
 
 
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
+# needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)
 
 
 def datapath(fname):
@@ -52,6 +53,7 @@ def testfile():
 
 
 class TestLsiModel(unittest.TestCase, basetests.TestBaseTopicModel):
+
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.model = lsimodel.LsiModel(self.corpus, num_topics=2)
@@ -62,66 +64,89 @@ class TestLsiModel(unittest.TestCase, basetests.TestBaseTopicModel):
         model = self.model
 
         # make sure the decomposition is enough accurate
-        u, s, vt = scipy.linalg.svd(matutils.corpus2dense(self.corpus, self.corpus.num_terms), full_matrices=False)
-        self.assertTrue(numpy.allclose(s[:2], model.projection.s))  # singular values must match
+        u, s, vt = scipy.linalg.svd(matutils.corpus2dense(
+            self.corpus, self.corpus.num_terms), full_matrices=False)
+        # singular values must match
+        self.assertTrue(numpy.allclose(s[:2], model.projection.s))
 
         # transform one document
         doc = list(self.corpus)[0]
         transformed = model[doc]
-        vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
+        # convert to dense vector, for easier equality tests
+        vec = matutils.sparse2full(transformed, 2)
         expected = numpy.array([-0.6594664, 0.142115444])  # scaled LSI version
-        # expected = numpy.array([-0.1973928, 0.05591352])  # non-scaled LSI version
-        self.assertTrue(numpy.allclose(abs(vec), abs(expected)))  # transformed entries must be equal up to sign
+        # expected = numpy.array([-0.1973928, 0.05591352])  # non-scaled LSI
+        # version
+        # transformed entries must be equal up to sign
+        self.assertTrue(numpy.allclose(abs(vec), abs(expected)))
 
     def testCorpusTransform(self):
         """Test lsi[corpus] transformation."""
         model = self.model
-        got = numpy.vstack(matutils.sparse2full(doc, 2) for doc in model[self.corpus])
+        got = numpy.vstack(matutils.sparse2full(doc, 2)
+                           for doc in model[self.corpus])
         expected = numpy.array([
-            [0.65946639,  0.14211544],
+            [0.65946639, 0.14211544],
             [2.02454305, -0.42088759],
-            [1.54655361,  0.32358921],
-            [1.81114125,  0.5890525 ],
-            [0.9336738 , -0.27138939],
+            [1.54655361, 0.32358921],
+            [1.81114125, 0.5890525],
+            [0.9336738, -0.27138939],
             [0.01274618, -0.49016181],
             [0.04888203, -1.11294699],
             [0.08063836, -1.56345594],
             [0.27381003, -1.34694159]])
-        self.assertTrue(numpy.allclose(abs(got), abs(expected)))  # must equal up to sign
+        self.assertTrue(
+            numpy.allclose(
+                abs(got),
+                abs(expected)))  # must equal up to sign
 
     def testOnlineTransform(self):
         corpus = list(self.corpus)
         doc = corpus[0]  # use the corpus' first document for testing
 
         # create the transformation model
-        model2 = lsimodel.LsiModel(corpus=corpus, num_topics=5)  # compute everything at once
-        model = lsimodel.LsiModel(corpus=None, id2word=model2.id2word, num_topics=5)  # start with no documents, we will add them later
+        model2 = lsimodel.LsiModel(corpus=corpus,
+                                   num_topics=5)  # compute everything at once
+        # start with no documents, we will add them later
+        model = lsimodel.LsiModel(
+            corpus=None,
+            id2word=model2.id2word,
+            num_topics=5)
 
         # train model on a single document
         model.add_documents([corpus[0]])
 
         # transform the testing document with this partial transformation
         transformed = model[doc]
-        vec = matutils.sparse2full(transformed, model.num_topics)  # convert to dense vector, for easier equality tests
-        expected = numpy.array([-1.73205078, 0.0, 0.0, 0.0, 0.0])  # scaled LSI version
-        self.assertTrue(numpy.allclose(abs(vec), abs(expected), atol=1e-6))  # transformed entries must be equal up to sign
+        # convert to dense vector, for easier equality tests
+        vec = matutils.sparse2full(transformed, model.num_topics)
+        # scaled LSI version
+        expected = numpy.array([-1.73205078, 0.0, 0.0, 0.0, 0.0])
+        # transformed entries must be equal up to sign
+        self.assertTrue(numpy.allclose(abs(vec), abs(expected), atol=1e-6))
 
         # train on another 4 documents
-        model.add_documents(corpus[1:5], chunksize=2)  # train on 4 extra docs, in chunks of 2 documents, for the lols
+        # train on 4 extra docs, in chunks of 2 documents, for the lols
+        model.add_documents(corpus[1:5], chunksize=2)
 
         # transform a document with this partial transformation
         transformed = model[doc]
-        vec = matutils.sparse2full(transformed, model.num_topics)  # convert to dense vector, for easier equality tests
-        expected = numpy.array([-0.66493785, -0.28314203, -1.56376302, 0.05488682, 0.17123269])  # scaled LSI version
-        self.assertTrue(numpy.allclose(abs(vec), abs(expected), atol=1e-6))  # transformed entries must be equal up to sign
+        # convert to dense vector, for easier equality tests
+        vec = matutils.sparse2full(transformed, model.num_topics)
+        expected = numpy.array(
+            [-0.66493785, -0.28314203, -1.56376302, 0.05488682, 0.17123269])  # scaled LSI version
+        # transformed entries must be equal up to sign
+        self.assertTrue(numpy.allclose(abs(vec), abs(expected), atol=1e-6))
 
         # train on the rest of documents
         model.add_documents(corpus[5:])
 
-        # make sure the final transformation is the same as if we had decomposed the whole corpus at once
+        # make sure the final transformation is the same as if we had
+        # decomposed the whole corpus at once
         vec1 = matutils.sparse2full(model[doc], model.num_topics)
         vec2 = matutils.sparse2full(model2[doc], model2.num_topics)
-        self.assertTrue(numpy.allclose(abs(vec1), abs(vec2), atol=1e-5))  # the two LSI representations must equal up to sign
+        # the two LSI representations must equal up to sign
+        self.assertTrue(numpy.allclose(abs(vec1), abs(vec2), atol=1e-5))
 
     def testPersistence(self):
         fname = testfile()
@@ -129,10 +154,17 @@ class TestLsiModel(unittest.TestCase, basetests.TestBaseTopicModel):
         model.save(fname)
         model2 = lsimodel.LsiModel.load(fname)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.projection.u, model2.projection.u))
-        self.assertTrue(numpy.allclose(model.projection.s, model2.projection.s))
+        self.assertTrue(
+            numpy.allclose(
+                model.projection.u,
+                model2.projection.u))
+        self.assertTrue(
+            numpy.allclose(
+                model.projection.s,
+                model2.projection.s))
         tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
+        # try projecting an empty vector
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec]))
 
     def testPersistenceCompressed(self):
         fname = testfile() + '.gz'
@@ -140,10 +172,17 @@ class TestLsiModel(unittest.TestCase, basetests.TestBaseTopicModel):
         model.save(fname)
         model2 = lsimodel.LsiModel.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.projection.u, model2.projection.u))
-        self.assertTrue(numpy.allclose(model.projection.s, model2.projection.s))
+        self.assertTrue(
+            numpy.allclose(
+                model.projection.u,
+                model2.projection.u))
+        self.assertTrue(
+            numpy.allclose(
+                model.projection.s,
+                model2.projection.s))
         tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
+        # try projecting an empty vector
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec]))
 
     def testLargeMmap(self):
         fname = testfile()
@@ -157,10 +196,17 @@ class TestLsiModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(isinstance(model2.projection.u, numpy.memmap))
         self.assertTrue(isinstance(model2.projection.s, numpy.memmap))
-        self.assertTrue(numpy.allclose(model.projection.u, model2.projection.u))
-        self.assertTrue(numpy.allclose(model.projection.s, model2.projection.s))
+        self.assertTrue(
+            numpy.allclose(
+                model.projection.u,
+                model2.projection.u))
+        self.assertTrue(
+            numpy.allclose(
+                model.projection.s,
+                model2.projection.s))
         tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
+        # try projecting an empty vector
+        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec]))
 
     def testLargeMmapCompressed(self):
         fname = testfile() + '.gz'
@@ -184,5 +230,7 @@ class TestLsiModel(unittest.TestCase, basetests.TestBaseTopicModel):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(
+        format='%(asctime)s : %(levelname)s : %(message)s',
+        level=logging.DEBUG)
     unittest.main()

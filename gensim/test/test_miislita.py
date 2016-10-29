@@ -48,17 +48,19 @@ class CorpusMiislita(corpora.TextCorpus):
         with self.getstream() as stream:
             for doc in stream:
                 yield [word for word in utils.to_unicode(doc).lower().split()
-                        if word not in CorpusMiislita.stoplist]
+                       if word not in CorpusMiislita.stoplist]
 
     def __len__(self):
         """Define this so we can use `len(corpus)`"""
         if 'length' not in self.__dict__:
-            logger.info("caching corpus size (calculating number of documents)")
+            logger.info(
+                "caching corpus size (calculating number of documents)")
             self.length = sum(1 for doc in self.get_texts())
         return self.length
 
 
 class TestMiislita(unittest.TestCase):
+
     def test_textcorpus(self):
         """Make sure TextCorpus can be serialized to disk. """
         # construct corpus from file
@@ -72,7 +74,6 @@ class TestMiislita(unittest.TestCase):
         # make sure deserializing gives the same result
         miislita2 = corpora.MmCorpus(ftmp)
         self.assertEqual(list(miislita), list(miislita2))
-
 
     def test_save_load_ability(self):
         """
@@ -90,16 +91,19 @@ class TestMiislita(unittest.TestCase):
         miislita2 = CorpusMiislita.load(tmpf)
 
         self.assertEqual(len(miislita), len(miislita2))
-        self.assertEqual(miislita.dictionary.token2id, miislita2.dictionary.token2id)
-
+        self.assertEqual(
+            miislita.dictionary.token2id,
+            miislita2.dictionary.token2id)
 
     def test_miislita_high_level(self):
         # construct corpus from file
         miislita = CorpusMiislita(datapath('miIslita.cor'))
 
         # initialize tfidf transformation and similarity index
-        tfidf = models.TfidfModel(miislita, miislita.dictionary, normalize=False)
-        index = similarities.SparseMatrixSimilarity(tfidf[miislita], num_features=len(miislita.dictionary))
+        tfidf = models.TfidfModel(
+            miislita, miislita.dictionary, normalize=False)
+        index = similarities.SparseMatrixSimilarity(
+            tfidf[miislita], num_features=len(miislita.dictionary))
 
         # compare to query
         query = 'latent semantic indexing'

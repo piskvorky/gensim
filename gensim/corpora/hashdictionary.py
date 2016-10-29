@@ -47,7 +47,13 @@ class HashDictionary(utils.SaveLoad, dict):
     bag-of-words representation: a list of (word_id, word_frequency) 2-tuples.
 
     """
-    def __init__(self, documents=None, id_range=32000, myhash=zlib.adler32, debug=True):
+
+    def __init__(
+            self,
+            documents=None,
+            id_range=32000,
+            myhash=zlib.adler32,
+            debug=True):
         """
         By default, keep track of debug statistics and mappings. If you find yourself
         running out of memory (or are sure you don't need the debug info), set
@@ -57,7 +63,8 @@ class HashDictionary(utils.SaveLoad, dict):
         self.id_range = id_range  # hash range: id = myhash(key) % id_range
         self.debug = debug
 
-        # the following (potentially massive!) dictionaries are only formed if `debug` is True
+        # the following (potentially massive!) dictionaries are only formed if
+        # `debug` is True
         self.token2id = {}
         self.id2token = {}  # reverse mapping int->set(words)
         self.dfs = {}  # token_id -> how many documents this token_id appeared in
@@ -118,7 +125,8 @@ class HashDictionary(utils.SaveLoad, dict):
         for docno, document in enumerate(documents):
             if docno % 10000 == 0:
                 logger.info("adding document #%i to %s" % (docno, self))
-            _ = self.doc2bow(document, allow_update=True)  # ignore the result, here we only care about updating token ids
+            # ignore the result, here we only care about updating token ids
+            _ = self.doc2bow(document, allow_update=True)
         logger.info(
             "built %s from %i documents (total %i corpus positions)",
             self, self.num_docs, self.num_pos)
@@ -139,14 +147,18 @@ class HashDictionary(utils.SaveLoad, dict):
         """
         result = {}
         missing = {}
-        document = sorted(document)  # convert the input to plain list (needed below)
+        # convert the input to plain list (needed below)
+        document = sorted(document)
         for word_norm, group in itertools.groupby(document):
-            frequency = len(list(group))  # how many times does this word appear in the input document
+            # how many times does this word appear in the input document
+            frequency = len(list(group))
             tokenid = self.restricted_hash(word_norm)
             result[tokenid] = result.get(tokenid, 0) + frequency
             if self.debug:
-                # increment document count for each unique token that appeared in the document
-                self.dfs_debug[word_norm] = self.dfs_debug.get(word_norm, 0) + 1
+                # increment document count for each unique token that appeared
+                # in the document
+                self.dfs_debug[word_norm] = self.dfs_debug.get(
+                    word_norm, 0) + 1
 
         if allow_update or self.allow_update:
             self.num_docs += 1
@@ -180,9 +192,18 @@ class HashDictionary(utils.SaveLoad, dict):
         clears some supplementary statistics, for easier debugging and a smaller RAM
         footprint.
         """
-        no_above_abs = int(no_above * self.num_docs)  # convert fractional threshold to absolute threshold
-        ok = [item for item in iteritems(self.dfs_debug) if no_below <= item[1] <= no_above_abs]
-        ok = frozenset(word for word, freq in sorted(ok, key=lambda item: -item[1])[:keep_n])
+        no_above_abs = int(
+            no_above *
+            self.num_docs)  # convert fractional threshold to absolute threshold
+        ok = [item for item in iteritems(self.dfs_debug) if no_below <= item[
+            1] <= no_above_abs]
+        ok = frozenset(
+            word for word,
+            freq in sorted(
+                ok,
+                key=lambda item: -
+                item[1])[
+                :keep_n])
 
         self.dfs_debug = dict((word, freq)
                               for word, freq in iteritems(self.dfs_debug)
@@ -190,8 +211,10 @@ class HashDictionary(utils.SaveLoad, dict):
         self.token2id = dict((token, tokenid)
                              for token, tokenid in iteritems(self.token2id)
                              if token in self.dfs_debug)
-        self.id2token = dict((tokenid, set(token for token in tokens if token in self.dfs_debug))
-                             for tokenid, tokens in iteritems(self.id2token))
+        self.id2token = dict(
+            (tokenid, set(
+                token for token in tokens if token in self.dfs_debug)) for tokenid, tokens in iteritems(
+                self.id2token))
         self.dfs = dict((tokenid, freq)
                         for tokenid, freq in iteritems(self.dfs)
                         if self.id2token.get(tokenid, set()))
@@ -199,7 +222,10 @@ class HashDictionary(utils.SaveLoad, dict):
         # for word->document frequency
         logger.info(
             "kept statistics for which were in no less than %i and no more than %i (=%.1f%%) documents",
-            no_below, no_above_abs, 100.0 * no_above)
+            no_below,
+            no_above_abs,
+            100.0 *
+            no_above)
 
     def save_as_text(self, fname):
         """
@@ -215,7 +241,20 @@ class HashDictionary(utils.SaveLoad, dict):
             for tokenid in self.keys():
                 words = sorted(self[tokenid])
                 if words:
-                    words_df = [(word, self.dfs_debug.get(word, 0)) for word in words]
-                    words_df = ["%s(%i)" % item for item in sorted(words_df, key=lambda item: -item[1])]
+                    words_df = [(word, self.dfs_debug.get(word, 0))
+                                for word in words]
+                    words_df = [
+                        "%s(%i)" %
+                        item for item in sorted(
+                            words_df,
+                            key=lambda item: -
+                            item[1])]
                     words_df = '\t'.join(words_df)
-                    fout.write(utils.to_utf8("%i\t%i\t%s\n" % (tokenid, self.dfs.get(tokenid, 0), words_df)))
+                    fout.write(
+                        utils.to_utf8(
+                            "%i\t%i\t%s\n" %
+                            (tokenid,
+                             self.dfs.get(
+                                 tokenid,
+                                 0),
+                                words_df)))

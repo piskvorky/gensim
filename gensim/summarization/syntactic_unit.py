@@ -14,7 +14,8 @@ class SyntacticUnit(object):
         self.score = -1
 
     def __str__(self):
-        return "Original unit: '" + self.text + "' *-*-*-* " + "Processed unit: '" + self.token + "'"
+        return "Original unit: '" + self.text + "' *-*-*-* " + \
+            "Processed unit: '" + self.token + "'"
 
     def __repr__(self):
         return str(self)

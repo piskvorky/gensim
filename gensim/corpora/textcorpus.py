@@ -52,6 +52,7 @@ class TextCorpus(interfaces.CorpusABC):
     implementation.
 
     """
+
     def __init__(self, input=None):
         super(TextCorpus, self).__init__()
         self.input = input
@@ -89,7 +90,8 @@ class TextCorpus(interfaces.CorpusABC):
         """
         # Instead of raising NotImplementedError, let's provide a sample implementation:
         # assume documents are lines in a single file (one document per line).
-        # Yield each document as a list of lowercase tokens, via `utils.tokenize`.
+        # Yield each document as a list of lowercase tokens, via
+        # `utils.tokenize`.
         with self.getstream() as lines:
             for lineno, line in enumerate(lines):
                 if self.metadata:

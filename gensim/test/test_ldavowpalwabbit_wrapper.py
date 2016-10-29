@@ -27,18 +27,18 @@ import gensim.models.wrappers.ldavowpalwabbit as ldavowpalwabbit
 from gensim.models.wrappers.ldavowpalwabbit import LdaVowpalWabbit
 
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+# needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 TOPIC_WORDS = [
-'cat lion leopard mouse jaguar lynx cheetah tiger kitten puppy'.split(),
-'engine car wheel brakes tyre motor suspension cylinder exhaust clutch'.split(),
-'alice bob robert tim sue rachel dave harry alex jim'.split(),
-'c cplusplus go python haskell scala java ruby csharp erlang'.split(),
-'eggs ham mushrooms cereal coffee beans tea juice sausages bacon'.split()
-]
+    'cat lion leopard mouse jaguar lynx cheetah tiger kitten puppy'.split(),
+    'engine car wheel brakes tyre motor suspension cylinder exhaust clutch'.split(),
+    'alice bob robert tim sue rachel dave harry alex jim'.split(),
+    'c cplusplus go python haskell scala java ruby csharp erlang'.split(),
+    'eggs ham mushrooms cereal coffee beans tea juice sausages bacon'.split()]
 
 
 def get_corpus():
@@ -51,6 +51,7 @@ def get_corpus():
 
 
 class TestLdaVowpalWabbit(unittest.TestCase):
+
     def setUp(self):
         vw_path = os.environ.get('VOWPAL_WABBIT_PATH', None)
         if not vw_path:
@@ -69,7 +70,7 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
     def test_save_load(self):
         """Test loading/saving LdaVowpalWabbit model."""
-        if not self.vw_path: # for python 2.6
+        if not self.vw_path:  # for python 2.6
             return
         lda = LdaVowpalWabbit(self.vw_path,
                               corpus=self.corpus,
@@ -104,7 +105,7 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
     def test_model_update(self):
         """Test updating existing LdaVowpalWabbit model."""
-        if not self.vw_path: # for python 2.6
+        if not self.vw_path:  # for python 2.6
             return
         lda = LdaVowpalWabbit(self.vw_path,
                               corpus=[self.corpus[0]],
@@ -124,7 +125,7 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
     def test_perplexity(self):
         """Test LdaVowpalWabbit perplexity is within expected range."""
-        if not self.vw_path: # for python 2.6
+        if not self.vw_path:  # for python 2.6
             return
         lda = LdaVowpalWabbit(self.vw_path,
                               corpus=self.corpus,
@@ -144,7 +145,7 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
     def test_topic_coherence(self):
         """Test LdaVowpalWabbit topic coherence."""
-        if not self.vw_path: # for python 2.6
+        if not self.vw_path:  # for python 2.6
             return
         corpus, dictionary = get_corpus()
         lda = LdaVowpalWabbit(self.vw_path,
@@ -183,7 +184,8 @@ class TestLdaVowpalWabbit(unittest.TestCase):
             for found_topic_id in ids:
                 counts[found_topic_id] += 1
 
-            # if at least 6/10 words assigned to same topic, consider it coherent
+            # if at least 6/10 words assigned to same topic, consider it
+            # coherent
             max_count = 0
             for count in six.itervalues(counts):
                 max_count = max(max_count, count)
@@ -196,7 +198,7 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
     def test_corpus_to_vw(self):
         """Test corpus to Vowpal Wabbit format conversion."""
-        if not self.vw_path: # for python 2.6
+        if not self.vw_path:  # for python 2.6
             return
         corpus = [[(0, 5), (7, 1), (5, 3), (0, 2)],
                   [(7, 2), (2, 1), (3, 11)],
@@ -217,7 +219,11 @@ class TestLdaVowpalWabbit(unittest.TestCase):
         """Test copying of VWModel to LdaModel"""
         if not self.vw_path:
             return
-        tm1 = LdaVowpalWabbit(vw_path=self.vw_path, corpus=self.corpus, num_topics=2, id2word=self.dictionary)
+        tm1 = LdaVowpalWabbit(
+            vw_path=self.vw_path,
+            corpus=self.corpus,
+            num_topics=2,
+            id2word=self.dictionary)
         tm2 = ldavowpalwabbit.vwmodel2ldamodel(tm1)
         for document in self.corpus:
             self.assertEqual(tm1[document][0], tm2[document][0])
@@ -227,5 +233,7 @@ class TestLdaVowpalWabbit(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(
+        format='%(asctime)s : %(levelname)s : %(message)s',
+        level=logging.DEBUG)
     unittest.main()

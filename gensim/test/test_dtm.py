@@ -26,7 +26,8 @@ class TestDtmModel(unittest.TestCase):
         self.time_slices = [3, 7]
         self.corpus = corpora.mmcorpus.MmCorpus(datapath('dtm_test.mm'))
         self.id2word = corpora.Dictionary.load(datapath('dtm_test.dict'))
-        # first you need to setup the environment variable $DTM_PATH for the dtm executable file
+        # first you need to setup the environment variable $DTM_PATH for the
+        # dtm executable file
         self.dtm_path = os.environ.get('DTM_PATH', None)
         if self.dtm_path is None:
             if sys.version_info >= (2, 7, 0):
@@ -60,7 +61,8 @@ class TestDtmModel(unittest.TestCase):
             self.assertEqual(len(one_topic), 10)
             self.assertEqual(one_topic[0][1], u'skills')
 
-    # In stderr expect "Error opening file /tmp/a65419_train_out/initial-lda-ss.dat. Failing."
+    # In stderr expect "Error opening file
+    # /tmp/a65419_train_out/initial-lda-ss.dat. Failing."
     def testCalledProcessError(self):
         if self.dtm_path is not None:
             with self.assertRaises(CalledProcessError):

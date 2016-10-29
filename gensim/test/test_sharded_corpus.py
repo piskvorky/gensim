@@ -24,9 +24,7 @@ from gensim.utils import mock_data, xrange
 #############################################################################
 
 
-
 class TestShardedCorpus(unittest.TestCase):
-
 
     # @classmethod
     # def setUpClass(cls):
@@ -47,7 +45,8 @@ class TestShardedCorpus(unittest.TestCase):
 
     def setUp(self):
         self.dim = 1000
-        self.random_string = ''.join([random.choice('1234567890') for _ in xrange(8)])
+        self.random_string = ''.join(
+            [random.choice('1234567890') for _ in xrange(8)])
         self.tmp_dir = 'test-temp-' + self.random_string
         os.makedirs(self.tmp_dir)
 
@@ -89,7 +88,7 @@ class TestShardedCorpus(unittest.TestCase):
         self.assertEqual(self.corpus.current_shard_n, 2)
 
         for i in xrange(220, 227):
-            self.assertTrue(numpy.array_equal(self.corpus[i], item[i-220]))
+            self.assertTrue(numpy.array_equal(self.corpus[i], item[i - 220]))
 
     def test_sparse_serialization(self):
 
@@ -241,7 +240,6 @@ class TestShardedCorpus(unittest.TestCase):
                                  "ilist[%d][%d] = %s ,dslice[%d][%d] = %s" % (
                                      i, j, str(ilist[i][j]), i, j,
                                      str(dslice[i][j])))
-
 
         iscorp, _ = is_corpus(ilist)
         self.assertTrue(iscorp, "Is the object returned by list notation "

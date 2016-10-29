@@ -18,11 +18,13 @@ import unittest
 from gensim.corpora.wikicorpus import WikiCorpus
 
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+# needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 FILENAME = 'enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2'
 
 logger = logging.getLogger(__name__)
+
 
 class TestWikiCorpus(unittest.TestCase):
 
@@ -30,7 +32,7 @@ class TestWikiCorpus(unittest.TestCase):
         wc = WikiCorpus(datapath(FILENAME))
 
     def test_get_texts_returns_generator_of_lists(self):
-        logger.debug("Current Python Version is "+str(sys.version_info))
+        logger.debug("Current Python Version is " + str(sys.version_info))
         if sys.version_info < (2, 7, 0):
             return
 
@@ -39,7 +41,12 @@ class TestWikiCorpus(unittest.TestCase):
         self.assertEqual(type(l), types.GeneratorType)
         first = next(l)
         self.assertEqual(type(first), list)
-        self.assertTrue(isinstance(first[0], bytes) or isinstance(first[0], str))
+        self.assertTrue(
+            isinstance(
+                first[0],
+                bytes) or isinstance(
+                first[0],
+                str))
 
     def test_first_element(self):
         """
@@ -58,5 +65,7 @@ class TestWikiCorpus(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(
+        format='%(asctime)s : %(levelname)s : %(message)s',
+        level=logging.DEBUG)
     unittest.main()

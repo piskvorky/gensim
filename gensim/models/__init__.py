@@ -40,20 +40,22 @@ class VocabTransform(interfaces.TransformationABC):
     >>>     ...
 
     """
+
     def __init__(self, old2new, id2token=None):
         # id2word = dict((newid, oldid2word[oldid]) for oldid, newid in old2new.iteritems())
         self.old2new = old2new
         self.id2token = id2token
 
-
     def __getitem__(self, bow):
         """
         Return representation with the ids transformed.
         """
-        # if the input vector is in fact a corpus, return a transformed corpus as a result
+        # if the input vector is in fact a corpus, return a transformed corpus
+        # as a result
         is_corpus, bow = utils.is_corpus(bow)
         if is_corpus:
             return self._apply(bow)
 
-        return sorted((self.old2new[oldid], weight) for oldid, weight in bow if oldid in self.old2new)
-#endclass VocabTransform
+        return sorted((self.old2new[oldid], weight)
+                      for oldid, weight in bow if oldid in self.old2new)
+# endclass VocabTransform

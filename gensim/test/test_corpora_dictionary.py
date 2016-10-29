@@ -31,17 +31,18 @@ def get_tmpfile(suffix):
 
 
 class TestDictionary(unittest.TestCase):
+
     def setUp(self):
         self.texts = [
-                ['human', 'interface', 'computer'],
-                ['survey', 'user', 'computer', 'system', 'response', 'time'],
-                ['eps', 'user', 'interface', 'system'],
-                ['system', 'human', 'system', 'eps'],
-                ['user', 'response', 'time'],
-                ['trees'],
-                ['graph', 'trees'],
-                ['graph', 'minors', 'trees'],
-                ['graph', 'minors', 'survey']]
+            ['human', 'interface', 'computer'],
+            ['survey', 'user', 'computer', 'system', 'response', 'time'],
+            ['eps', 'user', 'interface', 'system'],
+            ['system', 'human', 'system', 'eps'],
+            ['user', 'response', 'time'],
+            ['trees'],
+            ['graph', 'trees'],
+            ['graph', 'minors', 'trees'],
+            ['graph', 'minors', 'survey']]
 
     def testDocFreqOneDoc(self):
         texts = [['human', 'interface', 'computer']]
@@ -122,12 +123,11 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(d.dfs, expected)
 
     def testFilterMostFrequent(self):
-    	d = Dictionary(self.texts)
-    	d.filter_n_most_frequent(4)
-    	expected = {0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2}
-    	self.assertEqual(d.dfs, expected)
-    	
-    	
+        d = Dictionary(self.texts)
+        d.filter_n_most_frequent(4)
+        expected = {0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2}
+        self.assertEqual(d.dfs, expected)
+
     def testFilterTokens(self):
         self.maxDiff = 10000
         d = Dictionary(self.texts)
@@ -136,8 +136,8 @@ class TestDictionary(unittest.TestCase):
         d.filter_tokens([0])
 
         expected = {'computer': 0, 'eps': 8, 'graph': 10, 'human': 1,
-                'interface': 2, 'minors': 11, 'response': 3, 'survey': 4,
-                'system': 5, 'time': 6, 'trees': 9, 'user': 7}
+                    'interface': 2, 'minors': 11, 'response': 3, 'survey': 4,
+                    'system': 5, 'time': 6, 'trees': 9, 'user': 7}
         del expected[removed_word]
         self.assertEqual(sorted(d.token2id.keys()), sorted(expected.keys()))
 
@@ -145,14 +145,14 @@ class TestDictionary(unittest.TestCase):
         d.add_documents([[removed_word]])
         self.assertEqual(sorted(d.token2id.keys()), sorted(expected.keys()))
 
-
     def test_doc2bow(self):
         d = Dictionary([["žluťoučký"], ["žluťoučký"]])
 
         # pass a utf8 string
         self.assertEqual(d.doc2bow(["žluťoučký"]), [(0, 1)])
 
-        # doc2bow must raise a TypeError if passed a string instead of array of strings by accident
+        # doc2bow must raise a TypeError if passed a string instead of array of
+        # strings by accident
         self.assertRaises(TypeError, d.doc2bow, "žluťoučký")
 
         # unicode must be converted to utf8
@@ -173,24 +173,26 @@ class TestDictionary(unittest.TestCase):
     def test_from_corpus(self):
         """build `Dictionary` from an existing corpus"""
 
-        documents = ["Human machine interface for lab abc computer applications",
-                "A survey of user opinion of computer system response time",
-                "The EPS user interface management system",
-                "System and human system engineering testing of EPS",
-                "Relation of user perceived response time to error measurement",
-                "The generation of random binary unordered trees",
-                "The intersection graph of paths in trees",
-                "Graph minors IV Widths of trees and well quasi ordering",
-                "Graph minors A survey"]
+        documents = [
+            "Human machine interface for lab abc computer applications",
+            "A survey of user opinion of computer system response time",
+            "The EPS user interface management system",
+            "System and human system engineering testing of EPS",
+            "Relation of user perceived response time to error measurement",
+            "The generation of random binary unordered trees",
+            "The intersection graph of paths in trees",
+            "Graph minors IV Widths of trees and well quasi ordering",
+            "Graph minors A survey"]
         stoplist = set('for a of the and to in'.split())
         texts = [[word for word in document.lower().split() if word not in stoplist]
-                for document in documents]
+                 for document in documents]
 
         # remove words that appear only once
         all_tokens = sum(texts, [])
-        tokens_once = set(word for word in set(all_tokens) if all_tokens.count(word) == 1)
+        tokens_once = set(word for word in set(all_tokens)
+                          if all_tokens.count(word) == 1)
         texts = [[word for word in text if word not in tokens_once]
-                for text in texts]
+                 for text in texts]
 
         dictionary = Dictionary(texts)
         corpus = [dictionary.doc2bow(text) for text in texts]
@@ -199,7 +201,8 @@ class TestDictionary(unittest.TestCase):
         dictionary_from_corpus = Dictionary.from_corpus(corpus)
 
         dict_token2id_vals = sorted(dictionary.token2id.values())
-        dict_from_corpus_vals = sorted(dictionary_from_corpus.token2id.values())
+        dict_from_corpus_vals = sorted(
+            dictionary_from_corpus.token2id.values())
         self.assertEqual(dict_token2id_vals, dict_from_corpus_vals)
         self.assertEqual(dictionary.dfs, dictionary_from_corpus.dfs)
         self.assertEqual(dictionary.num_docs, dictionary_from_corpus.num_docs)
@@ -207,11 +210,16 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(dictionary.num_nnz, dictionary_from_corpus.num_nnz)
 
         # Create dictionary from corpus with an id=>token map
-        dictionary_from_corpus_2 = Dictionary.from_corpus(corpus, id2word=dictionary)
+        dictionary_from_corpus_2 = Dictionary.from_corpus(
+            corpus, id2word=dictionary)
 
-        self.assertEqual(dictionary.token2id, dictionary_from_corpus_2.token2id)
+        self.assertEqual(
+            dictionary.token2id,
+            dictionary_from_corpus_2.token2id)
         self.assertEqual(dictionary.dfs, dictionary_from_corpus_2.dfs)
-        self.assertEqual(dictionary.num_docs, dictionary_from_corpus_2.num_docs)
+        self.assertEqual(
+            dictionary.num_docs,
+            dictionary_from_corpus_2.num_docs)
         self.assertEqual(dictionary.num_pos, dictionary_from_corpus_2.num_pos)
         self.assertEqual(dictionary.num_nnz, dictionary_from_corpus_2.num_nnz)
 
@@ -239,7 +247,7 @@ class TestDictionary(unittest.TestCase):
             self.assertTrue(isinstance(d.keys(), list))
             self.assertTrue(isinstance(d.values(), list))
 
-#endclass TestDictionary
+# endclass TestDictionary
 
 
 if __name__ == '__main__':

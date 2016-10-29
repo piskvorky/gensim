@@ -19,7 +19,8 @@ from gensim.models.phrases import Phrases, Phraser
 if sys.version_info[0] >= 3:
     unicode = str
 
-module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
+# needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
@@ -33,23 +34,28 @@ sentences = [
     ['graph', 'trees'],
     ['graph', 'minors', 'trees'],
     ['graph', 'minors', 'survey'],
-    ['graph', 'minors', 'survey','human','interface'] #test bigrams within same sentence
+    # test bigrams within same sentence
+    ['graph', 'minors', 'survey', 'human', 'interface']
 ]
-unicode_sentences = [[utils.to_unicode(w) for w in sentence] for sentence in sentences]
+unicode_sentences = [
+    [utils.to_unicode(w) for w in sentence] for sentence in sentences]
 
 
 class TestPhrasesCommon(unittest.TestCase):
     """ Tests that need to be run for both Prases and Phraser classes."""
+
     def setUp(self):
         self.bigram = Phrases(sentences, min_count=1, threshold=1)
         self.bigram_default = Phrases(sentences)
         self.bigram_utf8 = Phrases(sentences, min_count=1, threshold=1)
-        self.bigram_unicode = Phrases(unicode_sentences, min_count=1, threshold=1)
+        self.bigram_unicode = Phrases(
+            unicode_sentences, min_count=1, threshold=1)
 
     def testSentenceGeneration(self):
         """Test basic bigram using a dummy corpus."""
         # test that we generate the same amount of sentences as the input
-        self.assertEqual(len(sentences), len(list(self.bigram_default[sentences])))
+        self.assertEqual(len(sentences), len(
+            list(self.bigram_default[sentences])))
 
     def testBigramConstruction(self):
         """Test Phrases bigram construction building."""
@@ -77,7 +83,12 @@ class TestPhrasesCommon(unittest.TestCase):
 
     def testEncoding(self):
         """Test that both utf8 and unicode input work; output must be unicode."""
-        expected = [u'survey', u'user', u'computer', u'system', u'response_time']
+        expected = [
+            u'survey',
+            u'user',
+            u'computer',
+            u'system',
+            u'response_time']
 
         self.assertEqual(self.bigram_utf8[sentences[1]], expected)
         self.assertEqual(self.bigram_unicode[sentences[1]], expected)
@@ -87,6 +98,7 @@ class TestPhrasesCommon(unittest.TestCase):
 
 
 class TestPhrasesModel(unittest.TestCase):
+
     def testExportPhrases(self):
         """Test Phrases bigram export_phrases functionality."""
         bigram = Phrases(sentences, min_count=1, threshold=1)
@@ -118,11 +130,12 @@ class TestPhrasesModel(unittest.TestCase):
         """Test that max_vocab_size parameter is respected."""
         bigram = Phrases(sentences, max_vocab_size=5)
         self.assertTrue(len(bigram.vocab) <= 5)
-#endclass TestPhrasesModel
+# endclass TestPhrasesModel
 
 
 class TestPhraserModel(TestPhrasesCommon):
     """ Test Phraser models."""
+
     def setUp(self):
         """Set up Phraser models for the tests."""
         bigram_phrases = Phrases(sentences, min_count=1, threshold=1)
@@ -134,10 +147,13 @@ class TestPhraserModel(TestPhrasesCommon):
         bigram_utf8_phrases = Phrases(sentences, min_count=1, threshold=1)
         self.bigram_utf8 = Phraser(bigram_utf8_phrases)
 
-        bigram_unicode_phrases = Phrases(unicode_sentences, min_count=1, threshold=1)
+        bigram_unicode_phrases = Phrases(
+            unicode_sentences, min_count=1, threshold=1)
         self.bigram_unicode = Phraser(bigram_unicode_phrases)
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(
+        format='%(asctime)s : %(levelname)s : %(message)s',
+        level=logging.DEBUG)
     unittest.main()

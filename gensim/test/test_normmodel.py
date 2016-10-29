@@ -22,7 +22,8 @@ from scipy.sparse import issparse
 from gensim.corpora import mmcorpus
 from gensim.models import normmodel
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+# needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
@@ -32,6 +33,7 @@ def testfile():
 
 
 class TestNormModel(unittest.TestCase):
+
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         # Choose doc to be normalized. [3] chosen to demonstrate different results for l1 and l2 norm.
@@ -80,12 +82,14 @@ class TestNormModel(unittest.TestCase):
         self.assertTrue(numpy.allclose(normalized, expected))
 
         # Test if error is raised on unsupported input type
-        self.assertRaises(ValueError, lambda model, doc: model.normalize(doc), self.model_l1, [1, 2, 3])
+        self.assertRaises(ValueError, lambda model,
+                          doc: model.normalize(doc), self.model_l1, [1, 2, 3])
 
     def test_tupleInput_l2(self):
         """Test tuple input for l2 transformation"""
         normalized = self.model_l2.normalize(self.doc)
-        expected = [(1, 0.4082482904638631), (5, 0.8164965809277261), (8, 0.4082482904638631)]
+        expected = [(1, 0.4082482904638631),
+                    (5, 0.8164965809277261), (8, 0.4082482904638631)]
         self.assertTrue(numpy.allclose(normalized, expected))
 
     def test_sparseCSRInput_l2(self):
@@ -123,7 +127,8 @@ class TestNormModel(unittest.TestCase):
         self.assertTrue(numpy.allclose(normalized, expected))
 
         # Test if error is raised on unsupported input type
-        self.assertRaises(ValueError, lambda model, doc: model.normalize(doc), self.model_l2, [1, 2, 3])
+        self.assertRaises(ValueError, lambda model,
+                          doc: model.normalize(doc), self.model_l2, [1, 2, 3])
 
     def testInit(self):
         """Test if error messages raised on unsupported norm"""
@@ -136,7 +141,10 @@ class TestNormModel(unittest.TestCase):
         model2 = normmodel.NormModel.load(fname)
         self.assertTrue(model.norms == model2.norms)
         tstvec = []
-        self.assertTrue(numpy.allclose(model.normalize(tstvec), model2.normalize(tstvec))) # try projecting an empty vector
+        self.assertTrue(
+            numpy.allclose(
+                model.normalize(tstvec),
+                model2.normalize(tstvec)))  # try projecting an empty vector
 
     def testPersistenceCompressed(self):
         fname = testfile() + '.gz'
@@ -145,9 +153,14 @@ class TestNormModel(unittest.TestCase):
         model2 = normmodel.NormModel.load(fname, mmap=None)
         self.assertTrue(model.norms == model2.norms)
         tstvec = []
-        self.assertTrue(numpy.allclose(model.normalize(tstvec), model2.normalize(tstvec))) # try projecting an empty vector
+        self.assertTrue(
+            numpy.allclose(
+                model.normalize(tstvec),
+                model2.normalize(tstvec)))  # try projecting an empty vector
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(
+        format='%(asctime)s : %(levelname)s : %(message)s',
+        level=logging.DEBUG)
     unittest.main()

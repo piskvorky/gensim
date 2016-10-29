@@ -161,10 +161,13 @@ class Graph(IGraph):
 
     def has_edge(self, edge):
         u, v = edge
-        return (u, v) in self.edge_properties and (v, u) in self.edge_properties
+        return (
+            u, v) in self.edge_properties and (
+            v, u) in self.edge_properties
 
     def edge_weight(self, edge):
-        return self.get_edge_properties(edge).setdefault(self.WEIGHT_ATTRIBUTE_NAME, self.DEFAULT_WEIGHT)
+        return self.get_edge_properties(edge).setdefault(
+            self.WEIGHT_ATTRIBUTE_NAME, self.DEFAULT_WEIGHT)
 
     def neighbors(self, node):
         return self.node_neighbors[node]
@@ -218,7 +221,9 @@ class Graph(IGraph):
         self.edge_attr[edge] = self.edge_attributes(edge) + [attr]
 
         if edge[0] != edge[1]:
-            self.edge_attr[(edge[1], edge[0])] = self.edge_attributes((edge[1], edge[0])) + [attr]
+            self.edge_attr[
+                (edge[1], edge[0])] = self.edge_attributes(
+                (edge[1], edge[0])) + [attr]
 
     def edge_attributes(self, edge):
         try:
@@ -229,7 +234,8 @@ class Graph(IGraph):
     def set_edge_properties(self, edge, **properties):
         self.edge_properties.setdefault(edge, {}).update(properties)
         if edge[0] != edge[1]:
-            self.edge_properties.setdefault((edge[1], edge[0]), {}).update(properties)
+            self.edge_properties.setdefault(
+                (edge[1], edge[0]), {}).update(properties)
 
     def del_edge(self, edge):
         u, v = edge

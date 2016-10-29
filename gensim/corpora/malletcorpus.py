@@ -36,6 +36,7 @@ class MalletCorpus(LowCorpus):
     Note that language/label is *not* considered in Gensim.
 
     """
+
     def __init__(self, fname, id2word=None, metadata=False):
         self.metadata = metadata
         LowCorpus.__init__(self, fname, id2word)
@@ -56,7 +57,8 @@ class MalletCorpus(LowCorpus):
                 yield self.line2doc(line)
 
     def line2doc(self, line):
-        l = [word for word in utils.to_unicode(line).strip().split(' ') if word]
+        l = [word for word in utils.to_unicode(
+            line).strip().split(' ') if word]
         docid, doclang, words = l[0], l[1], l[2:]
 
         doc = super(MalletCorpus, self).line2doc(' '.join(words))
@@ -82,7 +84,8 @@ class MalletCorpus(LowCorpus):
 
         """
         if id2word is None:
-            logger.info("no word id mapping provided; initializing from corpus")
+            logger.info(
+                "no word id mapping provided; initializing from corpus")
             id2word = utils.dict_from_corpus(corpus)
 
         logger.info("storing corpus in Mallet format into %s" % fname)
@@ -101,14 +104,19 @@ class MalletCorpus(LowCorpus):
                 for wordid, value in doc:
                     if abs(int(value) - value) > 1e-6:
                         truncated += 1
-                    words.extend([utils.to_unicode(id2word[wordid])] * int(value))
+                    words.extend(
+                        [utils.to_unicode(id2word[wordid])] * int(value))
                 offsets.append(fout.tell())
-                fout.write(utils.to_utf8('%s %s %s\n' % (doc_id, doc_lang, ' '.join(words))))
+                fout.write(
+                    utils.to_utf8(
+                        '%s %s %s\n' %
+                        (doc_id, doc_lang, ' '.join(words))))
 
         if truncated:
-            logger.warning("Mallet format can only save vectors with "
-                            "integer elements; %i float entries were truncated to integer value" %
-                            truncated)
+            logger.warning(
+                "Mallet format can only save vectors with "
+                "integer elements; %i float entries were truncated to integer value" %
+                truncated)
 
         return offsets
 
