@@ -24,7 +24,7 @@ import fnmatch
 
 EXTENSIONS = ['*.py']
 EXECUTABLE = 'nosetests test/'
-DEFAULTARGS = '--with-color -exe'# -w tests'
+DEFAULTARGS = '--with-color -exe'  # -w tests'
 
 
 def checkSum():
@@ -46,7 +46,7 @@ if __name__ == '__main__':
             if checkSum() != val:
                 val = checkSum()
                 os.system('%s %s %s' % (EXECUTABLE, DEFAULTARGS,
-                    ' '.join(sys.argv[1:])))
+                                        ' '.join(sys.argv[1:])))
                 print(datetime.datetime.now().__str__())
                 print('=' * 77)
             time.sleep(1)

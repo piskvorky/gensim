@@ -29,6 +29,7 @@ class NormModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods
     """
+
     def __init__(self, corpus=None, norm='l2'):
         """
         Compute the 'l1' or 'l2' normalization by normalizing separately
@@ -48,7 +49,8 @@ class NormModel(interfaces.TransformationABC):
             pass
 
     def __str__(self):
-        return "NormModel(num_docs=%s, num_nnz=%s, norm=%s)" % (self.num_docs, self.num_nnz, self.norm)
+        return "NormModel(num_docs=%s, num_nnz=%s, norm=%s)" % (
+            self.num_docs, self.num_nnz, self.norm)
 
     def calc_norm(self, corpus):
         """
@@ -72,4 +74,4 @@ class NormModel(interfaces.TransformationABC):
 
     def __getitem__(self, bow):
         return self.normalize(bow)
-#endclass NormModel
+# endclass NormModel

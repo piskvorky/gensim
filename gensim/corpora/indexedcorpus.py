@@ -28,6 +28,7 @@ logger = logging.getLogger('gensim.corpora.indexedcorpus')
 
 
 class IndexedCorpus(interfaces.CorpusABC):
+
     def __init__(self, fname, index_fname=None):
         """
         Initialize this abstract base class, by loading a previously saved index
@@ -56,7 +57,15 @@ class IndexedCorpus(interfaces.CorpusABC):
         self.length = None
 
     @classmethod
-    def serialize(serializer, fname, corpus, id2word=None, index_fname=None, progress_cnt=None, labels=None, metadata=False):
+    def serialize(
+            serializer,
+            fname,
+            corpus,
+            id2word=None,
+            index_fname=None,
+            progress_cnt=None,
+            labels=None,
+            metadata=False):
         """
         Iterate through the document stream `corpus`, saving the documents to `fname`
         and recording byte offset of each document. Save the resulting index
@@ -77,24 +86,36 @@ class IndexedCorpus(interfaces.CorpusABC):
         >>> print(mm[42]) # retrieve document no. 42, etc.
         """
         if getattr(corpus, 'fname', None) == fname:
-            raise ValueError("identical input vs. output corpus filename, refusing to serialize: %s" % fname)
+            raise ValueError(
+                "identical input vs. output corpus filename, refusing to serialize: %s" %
+                fname)
 
         if index_fname is None:
             index_fname = utils.smart_extension(fname, '.index')
 
         if progress_cnt is not None:
             if labels is not None:
-                offsets = serializer.save_corpus(fname, corpus, id2word, labels=labels, progress_cnt=progress_cnt, metadata=metadata)
+                offsets = serializer.save_corpus(
+                    fname,
+                    corpus,
+                    id2word,
+                    labels=labels,
+                    progress_cnt=progress_cnt,
+                    metadata=metadata)
             else:
-                offsets = serializer.save_corpus(fname, corpus, id2word, progress_cnt=progress_cnt, metadata=metadata)
+                offsets = serializer.save_corpus(
+                    fname, corpus, id2word, progress_cnt=progress_cnt, metadata=metadata)
         else:
             if labels is not None:
-                offsets = serializer.save_corpus(fname, corpus, id2word, labels=labels, metadata=metadata)
+                offsets = serializer.save_corpus(
+                    fname, corpus, id2word, labels=labels, metadata=metadata)
             else:
-                offsets = serializer.save_corpus(fname, corpus, id2word, metadata=metadata)
+                offsets = serializer.save_corpus(
+                    fname, corpus, id2word, metadata=metadata)
 
         if offsets is None:
-            raise NotImplementedError("called serialize on class %s which doesn't support indexing!" %
+            raise NotImplementedError(
+                "called serialize on class %s which doesn't support indexing!" %
                 serializer.__name__)
 
         # store offsets persistently, using pickle
@@ -102,7 +123,9 @@ class IndexedCorpus(interfaces.CorpusABC):
         # the offsets that are actually stored on disk - we're not storing self.index in any case, the
         # load just needs to turn whatever is loaded from disk back into a ndarray - this should also ensure
         # backwards compatibility
-        logger.info("saving %s index to %s" % (serializer.__name__, index_fname))
+        logger.info(
+            "saving %s index to %s" %
+            (serializer.__name__, index_fname))
         utils.pickle(offsets, index_fname)
 
     def __len__(self):
@@ -126,8 +149,8 @@ class IndexedCorpus(interfaces.CorpusABC):
         elif isinstance(docno, (int, numpy.integer)):
             return self.docbyoffset(self.index[docno])
         else:
-            raise ValueError('Unrecognised value for docno, use either a single integer, a slice or a numpy.ndarray')
-
+            raise ValueError(
+                'Unrecognised value for docno, use either a single integer, a slice or a numpy.ndarray')
 
 
 # endclass IndexedCorpus

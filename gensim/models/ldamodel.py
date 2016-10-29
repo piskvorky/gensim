@@ -91,19 +91,21 @@ def update_dir_prior(prior, N, logphat, rho):
 
     return prior
 
-def get_random_state(seed):
-     """ Turn seed into a np.random.RandomState instance.
 
-         Method originally from maciejkula/glove-python, and written by @joshloyal
-     """
-     if seed is None or seed is numpy.random:
-         return numpy.random.mtrand._rand
-     if isinstance(seed, (numbers.Integral, numpy.integer)):
-         return numpy.random.RandomState(seed)
-     if isinstance(seed, numpy.random.RandomState):
+def get_random_state(seed):
+    """ Turn seed into a np.random.RandomState instance.
+
+        Method originally from maciejkula/glove-python, and written by @joshloyal
+    """
+    if seed is None or seed is numpy.random:
+        return numpy.random.mtrand._rand
+    if isinstance(seed, (numbers.Integral, numpy.integer)):
+        return numpy.random.RandomState(seed)
+    if isinstance(seed, numpy.random.RandomState):
         return seed
-     raise ValueError('%r cannot be used to seed a numpy.random.RandomState'
-                      ' instance' % seed)
+    raise ValueError('%r cannot be used to seed a numpy.random.RandomState'
+                     ' instance' % seed)
+
 
 class LdaState(utils.SaveLoad):
     """
@@ -113,6 +115,7 @@ class LdaState(utils.SaveLoad):
     reduce traffic.
 
     """
+
     def __init__(self, eta, shape):
         self.eta = eta
         self.sstats = numpy.zeros(shape)
@@ -168,8 +171,10 @@ class LdaState(utils.SaveLoad):
         if other.numdocs == 0 or targetsize == other.numdocs:
             scale = 1.0
         else:
-            logger.info("merging changes from %i documents into a model of %i documents",
-                        other.numdocs, targetsize)
+            logger.info(
+                "merging changes from %i documents into a model of %i documents",
+                other.numdocs,
+                targetsize)
             scale = 1.0 * targetsize / other.numdocs
         self.sstats += rhot * scale * other.sstats
 
@@ -212,6 +217,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     Model persistency is achieved through its `load`/`save` methods.
     """
+
     def __init__(self, corpus=None, num_topics=100, id2word=None,
                  distributed=False, chunksize=2000, passes=1, update_every=1,
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0,
@@ -272,10 +278,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # store user-supplied parameters
         self.id2word = id2word
         if corpus is None and self.id2word is None:
-            raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
+            raise ValueError(
+                'at least one of corpus/id2word must be specified, to establish input space dimensionality')
 
         if self.id2word is None:
-            logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
+            logger.warning(
+                "no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
         elif len(self.id2word) > 0:
@@ -284,7 +292,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.num_terms = 0
 
         if self.num_terms == 0:
-            raise ValueError("cannot compute LDA over an empty collection (no terms)")
+            raise ValueError(
+                "cannot compute LDA over an empty collection (no terms)")
 
         self.distributed = bool(distributed)
         self.num_topics = int(num_topics)
@@ -300,7 +309,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
 
-        assert self.alpha.shape == (self.num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
+        assert self.alpha.shape == (self.num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (
+            str(self.alpha.shape), self.num_topics)
 
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
 
@@ -321,28 +331,42 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             self.numworkers = 1
         else:
             if self.optimize_alpha:
-                raise NotImplementedError("auto-optimizing alpha not implemented in distributed LDA")
+                raise NotImplementedError(
+                    "auto-optimizing alpha not implemented in distributed LDA")
             # set up distributed version
             try:
                 import Pyro4
                 with utils.getNS(**ns_conf) as ns:
                     from gensim.models.lda_dispatcher import LDA_DISPATCHER_PREFIX
-                    self.dispatcher = Pyro4.Proxy(ns.list(prefix=LDA_DISPATCHER_PREFIX)[LDA_DISPATCHER_PREFIX])
-                    logger.debug("looking for dispatcher at %s" % str(self.dispatcher._pyroUri))
-                    self.dispatcher.initialize(id2word=self.id2word, num_topics=self.num_topics,
-                                               chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
+                    self.dispatcher = Pyro4.Proxy(
+                        ns.list(prefix=LDA_DISPATCHER_PREFIX)[LDA_DISPATCHER_PREFIX])
+                    logger.debug("looking for dispatcher at %s" %
+                                 str(self.dispatcher._pyroUri))
+                    self.dispatcher.initialize(
+                        id2word=self.id2word,
+                        num_topics=self.num_topics,
+                        chunksize=chunksize,
+                        alpha=alpha,
+                        eta=eta,
+                        distributed=False)
                     self.numworkers = len(self.dispatcher.getworkers())
-                    logger.info("using distributed version with %i workers" % self.numworkers)
+                    logger.info(
+                        "using distributed version with %i workers" %
+                        self.numworkers)
             except Exception as err:
                 logger.error("failed to initialize distributed LDA (%s)", err)
-                raise RuntimeError("failed to initialize distributed LDA (%s)" % err)
+                raise RuntimeError(
+                    "failed to initialize distributed LDA (%s)" %
+                    err)
 
         # Initialize the variational distribution q(beta|lambda)
         self.state = LdaState(self.eta, (self.num_topics, self.num_terms))
-        self.state.sstats = self.random_state.gamma(100., 1. / 100., (self.num_topics, self.num_terms))
+        self.state.sstats = self.random_state.gamma(
+            100., 1. / 100., (self.num_topics, self.num_terms))
         self.expElogbeta = numpy.exp(dirichlet_expectation(self.state.sstats))
 
-        # if a training corpus was provided, start estimating the model right away
+        # if a training corpus was provided, start estimating the model right
+        # away
         if corpus is not None:
             use_numpy = self.dispatcher is not None
             self.update(corpus, chunks_as_numpy=use_numpy)
@@ -355,18 +379,29 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if isinstance(prior, six.string_types):
             if prior == 'symmetric':
-                logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
-                init_prior = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
+                logger.info(
+                    "using symmetric %s at %s",
+                    name,
+                    1.0 / self.num_topics)
+                init_prior = numpy.asarray(
+                    [1.0 / self.num_topics for i in xrange(self.num_topics)])
             elif prior == 'asymmetric':
-                init_prior = numpy.asarray([1.0 / (i + numpy.sqrt(self.num_topics)) for i in xrange(self.num_topics)])
+                init_prior = numpy.asarray(
+                    [1.0 / (i + numpy.sqrt(self.num_topics)) for i in xrange(self.num_topics)])
                 init_prior /= init_prior.sum()
                 logger.info("using asymmetric %s %s", name, list(init_prior))
             elif prior == 'auto':
                 is_auto = True
-                init_prior = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
-                logger.info("using autotuned %s, starting with %s", name, list(init_prior))
+                init_prior = numpy.asarray(
+                    [1.0 / self.num_topics for i in xrange(self.num_topics)])
+                logger.info(
+                    "using autotuned %s, starting with %s",
+                    name,
+                    list(init_prior))
             else:
-                raise ValueError("Unable to determine proper %s value given '%s'" % (name, prior))
+                raise ValueError(
+                    "Unable to determine proper %s value given '%s'" %
+                    (name, prior))
         elif isinstance(prior, list):
             init_prior = numpy.asarray(prior)
         elif isinstance(prior, numpy.ndarray):
@@ -374,21 +409,29 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         elif isinstance(prior, numpy.number) or isinstance(prior, numbers.Real):
             init_prior = numpy.asarray([prior] * self.num_topics)
         else:
-            raise ValueError("%s must be either a numpy array of scalars, list of scalars, or scalar" % name)
+            raise ValueError(
+                "%s must be either a numpy array of scalars, list of scalars, or scalar" %
+                name)
 
         if name == 'eta':
             # please note the difference in shapes between alpha and eta:
             # alpha is a row: [0.1, 0.1]
             # eta is a column: [[0.1],
             #                   [0.1]]
-            if init_prior.shape == (self.num_topics,) or init_prior.shape == (1, self.num_topics):
-                init_prior = init_prior.reshape((self.num_topics, 1))  # this statement throws ValueError if eta did not match self.num_topics
+            if init_prior.shape == (
+                self.num_topics,
+            ) or init_prior.shape == (
+                    1,
+                    self.num_topics):
+                # this statement throws ValueError if eta did not match
+                # self.num_topics
+                init_prior = init_prior.reshape((self.num_topics, 1))
 
         return init_prior, is_auto
 
     def __str__(self):
-        return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % \
-            (self.num_terms, self.num_topics, self.decay, self.chunksize)
+        return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % (
+            self.num_terms, self.num_topics, self.decay, self.chunksize)
 
     def sync_state(self):
         self.expElogbeta = numpy.exp(self.state.get_Elogbeta())
@@ -422,10 +465,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # convert iterators/generators to plain list, so we have len() etc.
             chunk = list(chunk)
         if len(chunk) > 1:
-            logger.debug("performing inference on a chunk of %i documents", len(chunk))
+            logger.debug(
+                "performing inference on a chunk of %i documents",
+                len(chunk))
 
         # Initialize the variational distribution q(theta|gamma) for the chunk
-        gamma = self.random_state.gamma(100., 1. / 100., (len(chunk), self.num_topics))
+        gamma = self.random_state.gamma(
+            100., 1. / 100., (len(chunk), self.num_topics))
         Elogtheta = dirichlet_expectation(gamma)
         expElogtheta = numpy.exp(Elogtheta)
         if collect_sstats:
@@ -440,7 +486,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # to Blei's original LDA-C code, cool!).
         for d, doc in enumerate(chunk):
             if doc and not isinstance(doc[0][0], six.integer_types):
-                # make sure the term IDs are ints, otherwise numpy will get upset
+                # make sure the term IDs are ints, otherwise numpy will get
+                # upset
                 ids = [int(id) for id, _ in doc]
             else:
                 ids = [id for id, _ in doc]
@@ -461,7 +508,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 # We represent phi implicitly to save memory and time.
                 # Substituting the value of the optimal phi back into
                 # the update for gamma gives this update. Cf. Lee&Seung 2001.
-                gammad = self.alpha + expElogthetad * numpy.dot(cts / phinorm, expElogbetad.T)
+                gammad = self.alpha + expElogthetad * \
+                    numpy.dot(cts / phinorm, expElogbetad.T)
                 Elogthetad = dirichlet_expectation(gammad)
                 expElogthetad = numpy.exp(Elogthetad)
                 phinorm = numpy.dot(expElogthetad, expElogbetad) + 1e-100
@@ -498,7 +546,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             state = self.state
         gamma, sstats = self.inference(chunk, collect_sstats=True)
         state.sstats += sstats
-        state.numdocs += gamma.shape[0]  # avoids calling len(chunk) on a generator
+        # avoids calling len(chunk) on a generator
+        state.numdocs += gamma.shape[0]
         return gamma
 
     def update_alpha(self, gammat, rho):
@@ -520,12 +569,17 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         word weights `eta` given the last `lambdat`.
         """
         if self.eta.shape[1] != 1:
-            raise ValueError("Can't use update_eta with eta matrices, only column vectors.")
+            raise ValueError(
+                "Can't use update_eta with eta matrices, only column vectors.")
         N = float(lambdat.shape[1])
-        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat.transpose()) / N).reshape((self.num_topics, 1))
+        logphat = (sum(dirichlet_expectation(lambda_)
+                       for lambda_ in lambdat.transpose()) / N).reshape((self.num_topics, 1))
 
         self.eta = update_dir_prior(self.eta, N, logphat, rho)
-        logger.info("optimized eta %s", list(self.eta.reshape((self.num_topics))))
+        logger.info(
+            "optimized eta %s", list(
+                self.eta.reshape(
+                    (self.num_topics))))
 
         return self.eta
 
@@ -540,14 +594,24 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             total_docs = len(chunk)
         corpus_words = sum(cnt for document in chunk for _, cnt in document)
         subsample_ratio = 1.0 * total_docs / len(chunk)
-        perwordbound = self.bound(chunk, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
+        perwordbound = self.bound(
+            chunk, subsample_ratio=subsample_ratio) / (subsample_ratio * corpus_words)
         logger.info("%.3f per-word bound, %.1f perplexity estimate based on a held-out corpus of %i documents with %i words" %
                     (perwordbound, numpy.exp2(-perwordbound), len(chunk), corpus_words))
         return perwordbound
 
-    def update(self, corpus, chunksize=None, decay=None, offset=None,
-               passes=None, update_every=None, eval_every=None, iterations=None,
-               gamma_threshold=None, chunks_as_numpy=False):
+    def update(
+            self,
+            corpus,
+            chunksize=None,
+            decay=None,
+            offset=None,
+            passes=None,
+            update_every=None,
+            eval_every=None,
+            iterations=None,
+            gamma_threshold=None,
+            chunks_as_numpy=False):
         """
         Train the model with new documents, by EM-iterating over `corpus` until
         the topics converge (or until the maximum number of allowed iterations
@@ -579,7 +643,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         For other parameter settings, see :class:`LdaModel` constructor.
 
         """
-        # use parameters given in constructor, unless user explicitly overrode them
+        # use parameters given in constructor, unless user explicitly overrode
+        # them
         if decay is None:
             decay = self.decay
         if offset is None:
@@ -598,7 +663,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         try:
             lencorpus = len(corpus)
         except:
-            logger.warning("input corpus stream has no len(); counting documents")
+            logger.warning(
+                "input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
             logger.warning("LdaModel.update() called with an empty corpus")
@@ -611,24 +677,39 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if update_every:
             updatetype = "online"
-            updateafter = min(lencorpus, update_every * self.numworkers * chunksize)
+            updateafter = min(
+                lencorpus,
+                update_every *
+                self.numworkers *
+                chunksize)
         else:
             updatetype = "batch"
             updateafter = lencorpus
-        evalafter = min(lencorpus, (eval_every or 0) * self.numworkers * chunksize)
+        evalafter = min(
+            lencorpus,
+            (eval_every or 0) *
+            self.numworkers *
+            chunksize)
 
         updates_per_pass = max(1, lencorpus / updateafter)
-        logger.info("running %s LDA training, %s topics, %i passes over "
-                    "the supplied corpus of %i documents, updating model once "
-                    "every %i documents, evaluating perplexity every %i documents, "
-                    "iterating %ix with a convergence threshold of %f",
-                    updatetype, self.num_topics, passes, lencorpus,
-                        updateafter, evalafter, iterations,
-                        gamma_threshold)
+        logger.info(
+            "running %s LDA training, %s topics, %i passes over "
+            "the supplied corpus of %i documents, updating model once "
+            "every %i documents, evaluating perplexity every %i documents, "
+            "iterating %ix with a convergence threshold of %f",
+            updatetype,
+            self.num_topics,
+            passes,
+            lencorpus,
+            updateafter,
+            evalafter,
+            iterations,
+            gamma_threshold)
 
         if updates_per_pass * passes < 10:
-            logger.warning("too few updates, training might not converge; consider "
-                           "increasing the number of passes or iterations to improve accuracy")
+            logger.warning(
+                "too few updates, training might not converge; consider "
+                "increasing the number of passes or iterations to improve accuracy")
 
         # rho is the "speed" of updating; TODO try other fncs
         # pass_ + num_updates handles increasing the starting t for each pass,
@@ -645,21 +726,38 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             dirty = False
 
             reallen = 0
-            for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize, as_numpy=chunks_as_numpy)):
-                reallen += len(chunk)  # keep track of how many documents we've processed so far
+            for chunk_no, chunk in enumerate(utils.grouper(
+                    corpus, chunksize, as_numpy=chunks_as_numpy)):
+                # keep track of how many documents we've processed so far
+                reallen += len(chunk)
 
-                if eval_every and ((reallen == lencorpus) or ((chunk_no + 1) % (eval_every * self.numworkers) == 0)):
+                if eval_every and (
+                    (reallen == lencorpus) or (
+                        (chunk_no + 1) %
+                        (eval_every * self.numworkers) == 0)):
                     self.log_perplexity(chunk, total_docs=lencorpus)
 
                 if self.dispatcher:
-                    # add the chunk to dispatcher's job queue, so workers can munch on it
-                    logger.info('PROGRESS: pass %i, dispatching documents up to #%i/%i',
-                                pass_, chunk_no * chunksize + len(chunk), lencorpus)
-                    # this will eventually block until some jobs finish, because the queue has a small finite length
+                    # add the chunk to dispatcher's job queue, so workers can
+                    # munch on it
+                    logger.info(
+                        'PROGRESS: pass %i, dispatching documents up to #%i/%i',
+                        pass_,
+                        chunk_no *
+                        chunksize +
+                        len(chunk),
+                        lencorpus)
+                    # this will eventually block until some jobs finish,
+                    # because the queue has a small finite length
                     self.dispatcher.putjob(chunk)
                 else:
-                    logger.info('PROGRESS: pass %i, at document #%i/%i',
-                                pass_, chunk_no * chunksize + len(chunk), lencorpus)
+                    logger.info(
+                        'PROGRESS: pass %i, at document #%i/%i',
+                        pass_,
+                        chunk_no *
+                        chunksize +
+                        len(chunk),
+                        lencorpus)
                     gammat = self.do_estep(chunk, other)
 
                     if self.optimize_alpha:
@@ -668,11 +766,14 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 dirty = True
                 del chunk
 
-                # perform an M step. determine when based on update_every, don't do this after every chunk
-                if update_every and (chunk_no + 1) % (update_every * self.numworkers) == 0:
+                # perform an M step. determine when based on update_every,
+                # don't do this after every chunk
+                if update_every and (
+                        chunk_no + 1) % (update_every * self.numworkers) == 0:
                     if self.dispatcher:
                         # distributed mode: wait for all workers to finish
-                        logger.info("reached the end of input; now waiting for all remaining jobs to finish")
+                        logger.info(
+                            "reached the end of input; now waiting for all remaining jobs to finish")
                         other = self.dispatcher.getstate()
                     self.do_mstep(rho(), other, pass_ > 0)
                     del other  # frees up memory
@@ -685,13 +786,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     dirty = False
             # endfor single corpus iteration
             if reallen != lencorpus:
-                raise RuntimeError("input corpus size changed during training (don't use generators as input)")
+                raise RuntimeError(
+                    "input corpus size changed during training (don't use generators as input)")
 
             if dirty:
                 # finish any remaining updates
                 if self.dispatcher:
                     # distributed mode: wait for all workers to finish
-                    logger.info("reached the end of input; now waiting for all remaining jobs to finish")
+                    logger.info(
+                        "reached the end of input; now waiting for all remaining jobs to finish")
                     other = self.dispatcher.getstate()
                 self.do_mstep(rho(), other, pass_ > 0)
                 del other
@@ -737,7 +840,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         _lambda = self.state.get_lambda()
         Elogbeta = dirichlet_expectation(_lambda)
 
-        for d, doc in enumerate(corpus):  # stream the input doc-by-doc, in case it's too large to fit in RAM
+        for d, doc in enumerate(
+                corpus):  # stream the input doc-by-doc, in case it's too large to fit in RAM
             if d % self.chunksize == 0:
                 logger.debug("bound: at document #%i", d)
             if gamma is None:
@@ -747,14 +851,18 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Elogthetad = dirichlet_expectation(gammad)
 
             # E[log p(doc | theta, beta)]
-            score += numpy.sum(cnt * logsumexp(Elogthetad + Elogbeta[:, id]) for id, cnt in doc)
+            score += numpy.sum(cnt * logsumexp(Elogthetad +
+                                               Elogbeta[:, id]) for id, cnt in doc)
 
-            # E[log p(theta | alpha) - log q(theta | gamma)]; assumes alpha is a vector
+            # E[log p(theta | alpha) - log q(theta | gamma)]; assumes alpha is
+            # a vector
             score += numpy.sum((self.alpha - gammad) * Elogthetad)
             score += numpy.sum(gammaln(gammad) - gammaln(self.alpha))
-            score += gammaln(numpy.sum(self.alpha)) - gammaln(numpy.sum(gammad))
+            score += gammaln(numpy.sum(self.alpha)) - \
+                gammaln(numpy.sum(gammad))
 
-        # compensate likelihood for when `corpus` above is only a sample of the whole corpus
+        # compensate likelihood for when `corpus` above is only a sample of the
+        # whole corpus
         score *= subsample_ratio
 
         # E[log p(beta | eta) - log q (beta | lambda)]; assumes eta is a scalar
@@ -769,7 +877,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         score += numpy.sum(gammaln(sum_eta) - gammaln(numpy.sum(_lambda, 1)))
         return score
 
-    def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
+    def show_topics(
+            self,
+            num_topics=10,
+            num_words=10,
+            log=False,
+            formatted=True):
         """
         For `num_topics` number of topics, return `num_words` most significant words
         (10 words per topic, by default).
@@ -790,11 +903,14 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         else:
             num_topics = min(num_topics, self.num_topics)
 
-            # add a little random jitter, to randomize results around the same alpha
-            sort_alpha = self.alpha + 0.0001 * self.random_state.rand(len(self.alpha))
+            # add a little random jitter, to randomize results around the same
+            # alpha
+            sort_alpha = self.alpha + 0.0001 * \
+                self.random_state.rand(len(self.alpha))
 
             sorted_topics = list(matutils.argsort(sort_alpha))
-            chosen_topics = sorted_topics[:num_topics // 2] + sorted_topics[-num_topics // 2:]
+            chosen_topics = sorted_topics[
+                :num_topics // 2] + sorted_topics[-num_topics // 2:]
 
         shown = []
         for i in chosen_topics:
@@ -817,7 +933,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Only return 2-tuples for the topn most probable words (ignore the rest).
 
         """
-        return [(self.id2word[id], value) for id, value in self.get_topic_terms(topicid, topn)]
+        return [(self.id2word[id], value)
+                for id, value in self.get_topic_terms(topicid, topn)]
 
     def get_topic_terms(self, topicid, topn=10):
         """
@@ -887,14 +1004,20 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         co_doc_frequency = len(m_docs.intersection(l_docs))
 
                         # add to the coherence sum for these two words m, l
-                        coherence += numpy.log((co_doc_frequency + 1.0) / len(l_docs))
+                        coherence += numpy.log((co_doc_frequency +
+                                                1.0) / len(l_docs))
 
             coherence_scores.append((str_topics[t], coherence))
 
         top_topics = sorted(coherence_scores, key=lambda t: t[1], reverse=True)
         return top_topics
 
-    def get_document_topics(self, bow, minimum_probability=None, minimum_phi_value=None, per_word_topics=False):
+    def get_document_topics(
+            self,
+            bow,
+            minimum_probability=None,
+            minimum_phi_value=None,
+            per_word_topics=False):
         """
         Return topic distribution for the given document `bow`, as a list of
         (topic_id, topic_probability) 2-tuples.
@@ -907,11 +1030,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
-        minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
+        # never allow zero values in sparse output
+        minimum_probability = max(minimum_probability, 1e-8)
 
         if minimum_phi_value is None:
             minimum_phi_value = self.minimum_probability
-        minimum_phi_value = max(minimum_phi_value, 1e-8)  # never allow zero values in sparse output
+        # never allow zero values in sparse output
+        minimum_phi_value = max(minimum_phi_value, 1e-8)
 
         # if the input vector is a corpus, return a transformed corpus
         is_corpus, corpus = utils.is_corpus(bow)
@@ -921,32 +1046,36 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         gamma, phis = self.inference([bow], collect_sstats=True)
         topic_dist = gamma[0] / sum(gamma[0])  # normalize distribution
 
-        document_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
-                    if topicvalue >= minimum_probability]
+        document_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(
+            topic_dist) if topicvalue >= minimum_probability]
 
         if not per_word_topics:
             return document_topics
         else:
-            word_topic = [] # contains word and corresponding topic
-            word_phi = [] # contains word and phi values
+            word_topic = []  # contains word and corresponding topic
+            word_phi = []  # contains word and phi values
             for word_type, weight in bow:
-                phi_values = [] # contains (phi_value, topic) pairing to later be sorted
-                phi_topic = [] # contains topic and corresponding phi value to be returned 'raw' to user
+                # contains (phi_value, topic) pairing to later be sorted
+                phi_values = []
+                phi_topic = []  # contains topic and corresponding phi value to be returned 'raw' to user
                 for topic_id in range(0, self.num_topics):
                     if phis[topic_id][word_type] >= minimum_phi_value:
                         # appends phi values for each topic for that word
                         # these phi values are scaled by feature length
-                        phi_values.append((phis[topic_id][word_type], topic_id))
+                        phi_values.append(
+                            (phis[topic_id][word_type], topic_id))
                         phi_topic.append((topic_id, phis[topic_id][word_type]))
 
-                # list with ({word_id => [(topic_0, phi_value), (topic_1, phi_value) ...]).
+                # list with ({word_id => [(topic_0, phi_value), (topic_1,
+                # phi_value) ...]).
                 word_phi.append((word_type, phi_topic))
                 # sorts the topics based on most likely topic
-                # returns a list like ({word_id => [topic_id_most_probable, topic_id_second_most_probable, ...]).
+                # returns a list like ({word_id => [topic_id_most_probable,
+                # topic_id_second_most_probable, ...]).
                 sorted_phi_values = sorted(phi_values, reverse=True)
                 topics_sorted = [x[1] for x in sorted_phi_values]
                 word_topic.append((word_type, topics_sorted))
-            return (document_topics, word_topic, word_phi) # returns 2-tuple
+            return (document_topics, word_topic, word_phi)  # returns 2-tuple
 
     def get_term_topics(self, word_id, minimum_probability=None):
         """
@@ -955,7 +1084,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """
         if minimum_probability is None:
             minimum_probability = self.minimum_probability
-        minimum_probability = max(minimum_probability, 1e-8)  # never allow zero values in sparse output
+        # never allow zero values in sparse output
+        minimum_probability = max(minimum_probability, 1e-8)
 
         # if user enters word instead of id in vocab, change to get id
         if isinstance(word_id, str):
@@ -967,7 +1097,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 values.append((topic_id, self.expElogbeta[topic_id][word_id]))
 
         return values
-
 
     def __getitem__(self, bow, eps=None):
         """
@@ -1007,14 +1136,20 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         for an example on how to work around these issues.
         """
         if self.state is not None:
-            self.state.save(utils.smart_extension(fname, '.state'), *args, **kwargs)
+            self.state.save(
+                utils.smart_extension(
+                    fname,
+                    '.state'),
+                *args,
+                **kwargs)
 
         # make sure 'state' and 'dispatcher' are ignored from the pickled object, even if
         # someone sets the ignore list themselves
         if ignore is not None and ignore:
             if isinstance(ignore, six.string_types):
                 ignore = [ignore]
-            ignore = [e for e in ignore if e] # make sure None and '' are not in the list
+            # make sure None and '' are not in the list
+            ignore = [e for e in ignore if e]
             ignore = list(set(['state', 'dispatcher']) | set(ignore))
         else:
             ignore = ['state', 'dispatcher']
@@ -1034,7 +1169,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         result = super(LdaModel, cls).load(fname, *args, **kwargs)
         state_fname = utils.smart_extension(fname, '.state')
         try:
-            result.state = super(LdaModel, cls).load(state_fname, *args, **kwargs)
+            result.state = super(
+                LdaModel,
+                cls).load(
+                state_fname,
+                *args,
+                **kwargs)
         except Exception as e:
             logging.warning("failed to load state from %s: %s", state_fname, e)
         return result

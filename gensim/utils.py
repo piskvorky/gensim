@@ -10,7 +10,8 @@ This module contains various general utility functions.
 
 from __future__ import with_statement
 
-import logging, warnings
+import logging
+import warnings
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,8 @@ from six.moves import xrange
 try:
     from smart_open import smart_open
 except ImportError:
-    logger.info("smart_open library not found; falling back to local-filesystem-only")
+    logger.info(
+        "smart_open library not found; falling back to local-filesystem-only")
 
     def make_closing(base, **attrs):
         """
@@ -80,7 +82,6 @@ PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
-
 def synchronous(tlockname):
     """
     A decorator to place an instance-based lock around a method.
@@ -91,24 +92,34 @@ def synchronous(tlockname):
         @wraps(func)
         def _synchronizer(self, *args, **kwargs):
             tlock = getattr(self, tlockname)
-            logger.debug("acquiring lock %r for %s" % (tlockname, func.__name__))
+            logger.debug(
+                "acquiring lock %r for %s" %
+                (tlockname, func.__name__))
 
-            with tlock: # use lock as a context manager to perform safe acquire/release pairs
-                logger.debug("acquired lock %r for %s" % (tlockname, func.__name__))
+            with tlock:  # use lock as a context manager to perform safe acquire/release pairs
+                logger.debug(
+                    "acquired lock %r for %s" %
+                    (tlockname, func.__name__))
                 result = func(self, *args, **kwargs)
-                logger.debug("releasing lock %r for %s" % (tlockname, func.__name__))
+                logger.debug(
+                    "releasing lock %r for %s" %
+                    (tlockname, func.__name__))
                 return result
         return _synchronizer
     return _synched
 
 
 class NoCM(object):
+
     def acquire(self):
         pass
+
     def release(self):
         pass
+
     def __enter__(self):
         pass
+
     def __exit__(self, type, value, traceback):
         pass
 nocm = NoCM()
@@ -161,7 +172,13 @@ def copytree_hardlink(source, dest):
         shutil.copy2 = copy2
 
 
-def tokenize(text, lowercase=False, deacc=False, errors="strict", to_lower=False, lower=False):
+def tokenize(
+        text,
+        lowercase=False,
+        deacc=False,
+        errors="strict",
+        to_lower=False,
+        lower=False):
     """
     Iteratively yield tokens as unicode strings, removing accent marks
     and optionally lowercasing the unidoce string by assigning True
@@ -250,7 +267,6 @@ class SaveLoad(object):
         logger.info("loaded %s", fname)
         return obj
 
-
     def _load_specials(self, fname, mmap, compress, subname):
         """
         Loads any attributes that were stored specially, and gives the same
@@ -265,7 +281,13 @@ class SaveLoad(object):
             cfname = '.'.join((fname, attrib))
             logger.info("loading %s recursively from %s.* with mmap=%s" % (
                 attrib, cfname, mmap))
-            getattr(self, attrib)._load_specials(cfname, mmap, compress, subname)
+            getattr(
+                self,
+                attrib)._load_specials(
+                cfname,
+                mmap,
+                compress,
+                subname)
 
         for attrib in getattr(self, '__numpys', []):
             logger.info("loading %s from %s with mmap=%s" % (
@@ -294,16 +316,30 @@ class SaveLoad(object):
                     sparse.indptr = f['indptr']
                     sparse.indices = f['indices']
             else:
-                sparse.data = numpy.load(subname(fname, attrib, 'data'), mmap_mode=mmap)
-                sparse.indptr = numpy.load(subname(fname, attrib, 'indptr'), mmap_mode=mmap)
-                sparse.indices = numpy.load(subname(fname, attrib, 'indices'), mmap_mode=mmap)
+                sparse.data = numpy.load(
+                    subname(
+                        fname,
+                        attrib,
+                        'data'),
+                    mmap_mode=mmap)
+                sparse.indptr = numpy.load(
+                    subname(
+                        fname,
+                        attrib,
+                        'indptr'),
+                    mmap_mode=mmap)
+                sparse.indices = numpy.load(
+                    subname(
+                        fname,
+                        attrib,
+                        'indices'),
+                    mmap_mode=mmap)
 
             setattr(self, attrib, sparse)
 
         for attrib in getattr(self, '__ignoreds', []):
             logger.info("setting ignored attribute %s to None" % (attrib))
             setattr(self, attrib, None)
-
 
     @staticmethod
     def _adapt_by_suffix(fname):
@@ -315,7 +351,6 @@ class SaveLoad(object):
             compress = False
             subname = lambda *args: '.'.join(list(args) + ['npy'])
         return (compress, subname)
-
 
     def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2,
                     ignore=frozenset(), pickle_protocol=2):
@@ -345,8 +380,14 @@ class SaveLoad(object):
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
-        restores = self._save_specials(fname, separately, sep_limit, ignore, pickle_protocol,
-                                       compress, subname)
+        restores = self._save_specials(
+            fname,
+            separately,
+            sep_limit,
+            ignore,
+            pickle_protocol,
+            compress,
+            subname)
         try:
             pickle(self, fname, protocol=pickle_protocol)
         finally:
@@ -356,8 +397,15 @@ class SaveLoad(object):
                     setattr(obj, attrib, val)
         logger.info("saved %s", fname)
 
-
-    def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
+    def _save_specials(
+            self,
+            fname,
+            separately,
+            sep_limit,
+            ignore,
+            pickle_protocol,
+            compress,
+            subname):
         """
         Save aside any attributes that need to be handled separately, including
         by recursion any attributes that are themselves SaveLoad instances.
@@ -377,7 +425,8 @@ class SaveLoad(object):
                 elif isinstance(val, sparse_matrices) and val.nnz >= sep_limit:
                     separately.append(attrib)
 
-        # whatever's in `separately` or `ignore` at this point won't get pickled
+        # whatever's in `separately` or `ignore` at this point won't get
+        # pickled
         for attrib in separately + list(ignore):
             if hasattr(self, attrib):
                 asides[attrib] = getattr(self, attrib)
@@ -386,11 +435,20 @@ class SaveLoad(object):
         recursive_saveloads = []
         restores = []
         for attrib, val in iteritems(self.__dict__):
-            if hasattr(val, '_save_specials'):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
+            if hasattr(
+                    val,
+                    '_save_specials'):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
                 recursive_saveloads.append(attrib)
-                cfname = '.'.join((fname,attrib))
-                restores.extend(val._save_specials(cfname, None, sep_limit, ignore,
-                                                   pickle_protocol, compress, subname))
+                cfname = '.'.join((fname, attrib))
+                restores.extend(
+                    val._save_specials(
+                        cfname,
+                        None,
+                        sep_limit,
+                        ignore,
+                        pickle_protocol,
+                        compress,
+                        subname))
 
         try:
             numpys, scipys, ignoreds = [], [], []
@@ -401,9 +459,17 @@ class SaveLoad(object):
                         attrib, subname(fname, attrib)))
 
                     if compress:
-                        numpy.savez_compressed(subname(fname, attrib), val=numpy.ascontiguousarray(val))
+                        numpy.savez_compressed(
+                            subname(
+                                fname,
+                                attrib),
+                            val=numpy.ascontiguousarray(val))
                     else:
-                        numpy.save(subname(fname, attrib), numpy.ascontiguousarray(val))
+                        numpy.save(
+                            subname(
+                                fname,
+                                attrib),
+                            numpy.ascontiguousarray(val))
 
                 elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and attrib not in ignore:
                     scipys.append(attrib)
@@ -411,21 +477,36 @@ class SaveLoad(object):
                         attrib, subname(fname, attrib)))
 
                     if compress:
-                        numpy.savez_compressed(subname(fname, attrib, 'sparse'),
-                                               data=val.data,
-                                               indptr=val.indptr,
-                                               indices=val.indices)
+                        numpy.savez_compressed(
+                            subname(
+                                fname,
+                                attrib,
+                                'sparse'),
+                            data=val.data,
+                            indptr=val.indptr,
+                            indices=val.indices)
                     else:
                         numpy.save(subname(fname, attrib, 'data'), val.data)
-                        numpy.save(subname(fname, attrib, 'indptr'), val.indptr)
-                        numpy.save(subname(fname, attrib, 'indices'), val.indices)
+                        numpy.save(
+                            subname(
+                                fname,
+                                attrib,
+                                'indptr'),
+                            val.indptr)
+                        numpy.save(
+                            subname(
+                                fname,
+                                attrib,
+                                'indices'),
+                            val.indices)
 
                     data, indptr, indices = val.data, val.indptr, val.indices
                     val.data, val.indptr, val.indices = None, None, None
 
                     try:
                         # store array-less object
-                        pickle(val, subname(fname, attrib), protocol=pickle_protocol)
+                        pickle(val, subname(fname, attrib),
+                               protocol=pickle_protocol)
                     finally:
                         val.data, val.indptr, val.indices = data, indptr, indices
                 else:
@@ -442,7 +523,6 @@ class SaveLoad(object):
                 setattr(self, attrib, val)
             raise
         return restores + [(self, asides)]
-
 
     def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2,
              ignore=frozenset(), pickle_protocol=2):
@@ -477,7 +557,7 @@ class SaveLoad(object):
         except TypeError:  # `fname_or_handle` does not have write attribute
             self._smart_save(fname_or_handle, separately, sep_limit, ignore,
                              pickle_protocol=pickle_protocol)
-#endclass SaveLoad
+# endclass SaveLoad
 
 
 def identity(p):
@@ -494,7 +574,8 @@ def get_max_id(corpus):
     """
     maxid = -1
     for document in corpus:
-        maxid = max(maxid, max([-1] + [fieldid for fieldid, _ in document])) # [-1] to avoid exceptions from max(empty)
+        # [-1] to avoid exceptions from max(empty)
+        maxid = max(maxid, max([-1] + [fieldid for fieldid, _ in document]))
     return maxid
 
 
@@ -507,13 +588,12 @@ class FakeDict(object):
     is a waste of memory.
 
     """
+
     def __init__(self, num_terms):
         self.num_terms = num_terms
 
-
     def __str__(self):
         return "FakeDict(num_terms=%s)" % self.num_terms
-
 
     def __getitem__(self, val):
         if 0 <= val < self.num_terms:
@@ -587,9 +667,11 @@ def is_corpus(obj):
             obj = itertools.chain([doc1], obj)
         else:
             doc1 = next(iter(obj))  # empty corpus is resolved to False here
-        if len(doc1) == 0:  # sparse documents must have a __len__ function (list, tuple...)
+        if len(
+                doc1) == 0:  # sparse documents must have a __len__ function (list, tuple...)
             return True, obj  # the first document is empty=>assume this is a corpus
-        id1, val1 = next(iter(doc1))  # if obj is a numpy array, it resolves to False here
+        # if obj is a numpy array, it resolves to False here
+        id1, val1 = next(iter(doc1))
         id1, val1 = int(id1), float(val1)  # must be a 2-tuple (integer, float)
     except Exception:
         return False, obj
@@ -618,7 +700,8 @@ def get_my_ip():
         try:
             # see what ifconfig says about our default interface
             import commands
-            result = commands.getoutput("ifconfig").split("\n")[1].split()[1][5:]
+            result = commands.getoutput("ifconfig").split("\n")[
+                1].split()[1][5:]
             if len(result.split('.')) != 4:
                 raise Exception()
         except:
@@ -632,6 +715,7 @@ class RepeatCorpus(SaveLoad):
     Used in the tutorial on distributed computing and likely not useful anywhere else.
 
     """
+
     def __init__(self, corpus, reps):
         """
         Wrap a `corpus` as another corpus of length `reps`. This is achieved by
@@ -649,6 +733,7 @@ class RepeatCorpus(SaveLoad):
 
     def __iter__(self):
         return itertools.islice(itertools.cycle(self.corpus), self.reps)
+
 
 class RepeatCorpusNTimes(SaveLoad):
 
@@ -668,7 +753,9 @@ class RepeatCorpusNTimes(SaveLoad):
             for document in self.corpus:
                 yield document
 
+
 class ClippedCorpus(SaveLoad):
+
     def __init__(self, corpus, max_docs=None):
         """
         Return a corpus that is the "head" of input iterable `corpus`.
@@ -687,7 +774,9 @@ class ClippedCorpus(SaveLoad):
     def __len__(self):
         return min(self.max_docs, len(self.corpus))
 
+
 class SlicedCorpus(SaveLoad):
+
     def __init__(self, corpus, slice_):
         """
         Return a corpus that is the slice of input iterable `corpus`.
@@ -724,6 +813,7 @@ class SlicedCorpus(SaveLoad):
 
         return self.length
 
+
 def safe_unichr(intval):
     try:
         return unichr(intval)
@@ -732,6 +822,7 @@ def safe_unichr(intval):
         s = "\\U%08x" % intval
         # return UTF16 surrogate pair
         return s.decode('unicode-escape')
+
 
 def decode_htmlentities(text):
     """
@@ -788,18 +879,21 @@ def chunkize_serial(iterable, chunksize, as_numpy=False):
         if as_numpy:
             # convert each document to a 2d numpy array (~6x faster when transmitting
             # chunk data over the wire, in Pyro)
-            wrapped_chunk = [[numpy.array(doc) for doc in itertools.islice(it, int(chunksize))]]
+            wrapped_chunk = [
+                [numpy.array(doc) for doc in itertools.islice(it, int(chunksize))]]
         else:
             wrapped_chunk = [list(itertools.islice(it, int(chunksize)))]
         if not wrapped_chunk[0]:
             break
-        # memory opt: wrap the chunk and then pop(), to avoid leaving behind a dangling reference
+        # memory opt: wrap the chunk and then pop(), to avoid leaving behind a
+        # dangling reference
         yield wrapped_chunk.pop()
 
 grouper = chunkize_serial
 
 
 class InputQueue(multiprocessing.Process):
+
     def __init__(self, q, corpus, chunksize, maxsize, as_numpy):
         super(InputQueue, self).__init__()
         self.q = q
@@ -810,7 +904,7 @@ class InputQueue(multiprocessing.Process):
 
     def run(self):
         if self.as_numpy:
-            import numpy # don't clutter the global namespace with a dependency on numpy
+            import numpy  # don't clutter the global namespace with a dependency on numpy
         it = iter(self.corpus)
         while True:
             chunk = itertools.islice(it, self.chunksize)
@@ -831,9 +925,9 @@ class InputQueue(multiprocessing.Process):
             except NotImplementedError:
                 qsize = '?'
             logger.debug("prepared another chunk of %i documents (qsize=%s)" %
-                        (len(wrapped_chunk[0]), qsize))
+                         (len(wrapped_chunk[0]), qsize))
             self.q.put(wrapped_chunk.pop(), block=True)
-#endclass InputQueue
+# endclass InputQueue
 
 
 if os.name == 'nt':
@@ -869,7 +963,12 @@ else:
 
         if maxsize > 0:
             q = multiprocessing.Queue(maxsize=maxsize)
-            worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy)
+            worker = InputQueue(
+                q,
+                corpus,
+                chunksize,
+                maxsize=maxsize,
+                as_numpy=as_numpy)
             worker.daemon = True
             worker.start()
             while True:
@@ -908,7 +1007,8 @@ def pickle(obj, fname, protocol=2):
 def unpickle(fname):
     """Load pickled object from `fname`"""
     with smart_open(fname) as f:
-        # Because of loading from S3 load can't be used (missing readline in smart_open)
+        # Because of loading from S3 load can't be used (missing readline in
+        # smart_open)
         return _pickle.loads(f.read())
 
 
@@ -934,11 +1034,11 @@ def toptexts(query, texts, index, n=10):
     Return a list of 3-tuples (docid, doc's similarity to the query, texts[docid]).
 
     """
-    sims = index[query] # perform a similarity query against the corpus
+    sims = index[query]  # perform a similarity query against the corpus
     sims = sorted(enumerate(sims), key=lambda item: -item[1])
 
     result = []
-    for topid, topcosine in sims[:n]: # only consider top-n most similar docs
+    for topid, topcosine in sims[:n]:  # only consider top-n most similar docs
         result.append((topid, topcosine, texts[topid]))
     return result
 
@@ -983,7 +1083,13 @@ def getNS(host=None, port=None, broadcast=True, hmac_key=None):
         raise RuntimeError("Pyro name server not found")
 
 
-def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf={}):
+def pyro_daemon(
+        name,
+        obj,
+        random_suffix=False,
+        ip=None,
+        port=None,
+        ns_conf={}):
     """
     Register object with name server (starting the name server if not running
     yet) and block until the daemon is terminated. The object is registered under
@@ -999,7 +1105,9 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf={}):
             uri = daemon.register(obj, name)
             ns.remove(name)
             ns.register(name, uri)
-            logger.info("%s registered with nameserver (URI '%s')" % (name, uri))
+            logger.info(
+                "%s registered with nameserver (URI '%s')" %
+                (name, uri))
             daemon.requestLoop()
 
 
@@ -1012,12 +1120,13 @@ def has_pattern():
         from pattern.en import parse
         pattern = True
     except ImportError:
-        warnings.warn("Pattern library is not installed, lemmatization won't be available.")
+        warnings.warn(
+            "Pattern library is not installed, lemmatization won't be available.")
     return pattern
 
 
 def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
-        stopwords=frozenset(), min_length=2, max_length=15):
+              stopwords=frozenset(), min_length=2, max_length=15):
     """
     This function is only available when the optional 'pattern' package is installed.
 
@@ -1056,7 +1165,8 @@ def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
     result = []
     for sentence in parsed:
         for token, tag, _, _, lemma in sentence:
-            if min_length <= len(lemma) <= max_length and not lemma.startswith('_') and lemma not in stopwords:
+            if min_length <= len(lemma) <= max_length and not lemma.startswith(
+                    '_') and lemma not in stopwords:
                 if allowed_tags.match(tag):
                     lemma += "/" + tag[:2]
                     result.append(lemma.encode('utf8'))
@@ -1097,7 +1207,11 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
     result = 0
     old_len = len(vocab)
     for w in list(vocab):  # make a copy of dict's keys
-        if not keep_vocab_item(w, vocab[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
+        if not keep_vocab_item(
+                w,
+                vocab[w],
+                min_reduce,
+                trim_rule):  # vocab[w] <= min_reduce:
             result += vocab[w]
             del vocab[w]
     logger.info("pruned out %i tokens with count <=%i (before %i, after %i)",
@@ -1132,6 +1246,7 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
         else:
             return default_res
 
+
 def check_output(*popenargs, **kwargs):
     r"""Run command with arguments and return its output as a byte string.
     Backported from Python 2.7 as it's implemented as pure python on stdlib.
@@ -1140,7 +1255,8 @@ def check_output(*popenargs, **kwargs):
     Added extra KeyboardInterrupt handling
     """
     try:
-        process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+        process = subprocess.Popen(
+            stdout=subprocess.PIPE, *popenargs, **kwargs)
         output, unused_err = process.communicate()
         retcode = process.poll()
         if retcode:
@@ -1155,11 +1271,15 @@ def check_output(*popenargs, **kwargs):
         process.terminate()
         raise
 
+
 def sample_dict(d, n=10, use_random=True):
-     """
-     Pick `n` items from dictionary `d` and return them as a list.
-     The items are picked randomly if `use_random` is True, otherwise picked
-     according to natural dict iteration.
-     """
-     selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
-     return [(key, d[key]) for key in selected_keys]
+    """
+    Pick `n` items from dictionary `d` and return them as a list.
+    The items are picked randomly if `use_random` is True, otherwise picked
+    according to natural dict iteration.
+    """
+    selected_keys = random.sample(
+        list(d), min(
+            len(d), n)) if use_random else itertools.islice(
+        iterkeys(d), n)
+    return [(key, d[key]) for key in selected_keys]

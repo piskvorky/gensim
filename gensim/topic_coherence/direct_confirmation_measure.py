@@ -15,7 +15,11 @@ logger = logging.getLogger(__name__)
 
 EPSILON = 1e-12  # Should be small. Value as suggested in paper.
 
-def log_conditional_probability(segmented_topics, per_topic_postings, num_docs):
+
+def log_conditional_probability(
+        segmented_topics,
+        per_topic_postings,
+        num_docs):
     """
     This function calculates the log-conditional-probability measure
     which is used by coherence measures such as U_mass.
@@ -37,12 +41,18 @@ def log_conditional_probability(segmented_topics, per_topic_postings, num_docs):
             w_prime_docs = per_topic_postings[w_prime]
             w_star_docs = per_topic_postings[w_star]
             co_docs = w_prime_docs.intersection(w_star_docs)
-            m_lc_i = np.log(((len(co_docs) / float(num_docs)) + EPSILON) / (len(w_star_docs) / float(num_docs)))
+            m_lc_i = np.log(((len(co_docs) / float(num_docs)) +
+                             EPSILON) / (len(w_star_docs) / float(num_docs)))
             m_lc.append(m_lc_i)
 
     return m_lc
 
-def log_ratio_measure(segmented_topics, per_topic_postings, num_docs, normalize=False):
+
+def log_ratio_measure(
+        segmented_topics,
+        per_topic_postings,
+        num_docs,
+        normalize=False):
     """
     If normalize=False:
         Popularly known as PMI.
@@ -73,13 +83,15 @@ def log_ratio_measure(segmented_topics, per_topic_postings, num_docs, normalize=
             co_docs = w_prime_docs.intersection(w_star_docs)
             if normalize:
                 # For normalized log ratio measure
-                numerator = log_ratio_measure([[(w_prime, w_star)]], per_topic_postings, num_docs)[0]
+                numerator = log_ratio_measure(
+                    [[(w_prime, w_star)]], per_topic_postings, num_docs)[0]
                 co_doc_prob = len(co_docs) / float(num_docs)
                 m_lr_i = numerator / (-np.log(co_doc_prob + EPSILON))
             else:
                 # For log ratio measure without normalization
                 numerator = (len(co_docs) / float(num_docs)) + EPSILON
-                denominator = (len(w_prime_docs) / float(num_docs)) * (len(w_star_docs) / float(num_docs))
+                denominator = (len(w_prime_docs) / float(num_docs)
+                               ) * (len(w_star_docs) / float(num_docs))
                 m_lr_i = np.log(numerator / denominator)
             m_lr.append(m_lr_i)
 

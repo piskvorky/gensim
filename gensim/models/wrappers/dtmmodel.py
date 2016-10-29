@@ -42,8 +42,22 @@ class DtmModel(utils.SaveLoad):
     """
 
     def __init__(
-            self, dtm_path, corpus=None, time_slices=None, mode='fit', model='dtm', num_topics=100, id2word=None, prefix=None,
-            lda_sequence_min_iter=6, lda_sequence_max_iter=20, lda_max_em_iter=10, alpha=0.01, top_chain_var=0.005, rng_seed=0, initialize_lda=True):
+            self,
+            dtm_path,
+            corpus=None,
+            time_slices=None,
+            mode='fit',
+            model='dtm',
+            num_topics=100,
+            id2word=None,
+            prefix=None,
+            lda_sequence_min_iter=6,
+            lda_sequence_max_iter=20,
+            lda_max_em_iter=10,
+            alpha=0.01,
+            top_chain_var=0.005,
+            rng_seed=0,
+            initialize_lda=True):
         """
         `dtm_path` is path to the dtm executable, e.g. `C:/dtm/dtm-win64.exe`.
 
@@ -72,33 +86,40 @@ class DtmModel(utils.SaveLoad):
 
         """
         if not os.path.isfile(dtm_path):
-            raise ValueError("dtm_path must point to the binary file, not to a folder")
+            raise ValueError(
+                "dtm_path must point to the binary file, not to a folder")
 
         self.dtm_path = dtm_path
         self.id2word = id2word
         if self.id2word is None:
-            logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
+            logger.warning(
+                "no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
         else:
-            self.num_terms = 0 if not self.id2word else 1 + max(self.id2word.keys())
+            self.num_terms = 0 if not self.id2word else 1 + \
+                max(self.id2word.keys())
         if self.num_terms == 0:
-            raise ValueError("cannot compute DTM over an empty collection (no terms)")
+            raise ValueError(
+                "cannot compute DTM over an empty collection (no terms)")
         self.num_topics = num_topics
 
         try:
             lencorpus = len(corpus)
         except:
-            logger.warning("input corpus stream has no len(); counting documents")
+            logger.warning(
+                "input corpus stream has no len(); counting documents")
             lencorpus = sum(1 for _ in corpus)
         if lencorpus == 0:
             raise ValueError("cannot compute DTM over an empty corpus")
-        if model == "fixed" and any([i == 0 for i in [len(text) for text in corpus.get_texts()]]):
+        if model == "fixed" and any(
+                [i == 0 for i in [len(text) for text in corpus.get_texts()]]):
             raise ValueError("""There is a text without words in the input corpus.
                     This breaks method='fixed' (The DIM model).""")
         if lencorpus != sum(time_slices):
-            raise ValueError("mismatched timeslices %{slices} for corpus of len {clen}".format(
-                slices=sum(time_slices), clen=lencorpus))
+            raise ValueError(
+                "mismatched timeslices %{slices} for corpus of len {clen}".format(
+                    slices=sum(time_slices), clen=lencorpus))
         self.lencorpus = lencorpus
         if prefix is None:
             rand_prefix = hex(random.randint(0, 0xffffff))[2:] + '_'
@@ -134,7 +155,8 @@ class DtmModel(utils.SaveLoad):
         return self.prefix + 'train_out/lda-seq/' + 'gam.dat'
 
     def fout_prob(self):
-        return self.prefix + 'train_out/lda-seq/' + 'topic-{i}-var-e-log-prob.dat'
+        return self.prefix + 'train_out/lda-seq/' + \
+            'topic-{i}-var-e-log-prob.dat'
 
     def fout_observations(self):
         return self.prefix + 'train_out/lda-seq/' + 'topic-{i}-var-obs.dat'
@@ -217,17 +239,24 @@ class DtmModel(utils.SaveLoad):
         # normalize proportions
         self.gamma_ /= self.gamma_.sum(axis=1)[:, np.newaxis]
 
-        self.lambda_ = np.zeros((self.num_topics, self.num_terms * len(self.time_slices)))
-        self.obs_ = np.zeros((self.num_topics, self.num_terms * len(self.time_slices)))
+        self.lambda_ = np.zeros(
+            (self.num_topics, self.num_terms * len(self.time_slices)))
+        self.obs_ = np.zeros(
+            (self.num_topics, self.num_terms * len(self.time_slices)))
 
         for t in range(self.num_topics):
-                topic = "%03d" % t
-                self.lambda_[t, :] = np.loadtxt(self.fout_prob().format(i=topic))
-                self.obs_[t, :] = np.loadtxt(self.fout_observations().format(i=topic))
+            topic = "%03d" % t
+            self.lambda_[t, :] = np.loadtxt(self.fout_prob().format(i=topic))
+            self.obs_[t, :] = np.loadtxt(
+                self.fout_observations().format(i=topic))
         # cast to correct shape, lambda[5,10,0] is the proportion of the 10th
         # topic in doc 5 at time 0
-        self.lambda_.shape = (self.num_topics, self.num_terms, len(self.time_slices))
-        self.obs_.shape = (self.num_topics, self.num_terms, len(self.time_slices))
+        self.lambda_.shape = (
+            self.num_topics, self.num_terms, len(
+                self.time_slices))
+        self.obs_.shape = (
+            self.num_topics, self.num_terms, len(
+                self.time_slices))
         # extract document influence on topics for each time slice
         # influences_time[0] , influences at time 0
         if model == 'fixed':
@@ -241,7 +270,13 @@ class DtmModel(utils.SaveLoad):
     def print_topics(self, num_topics=10, times=5, num_words=10):
         return self.show_topics(num_topics, times, num_words, log=True)
 
-    def show_topics(self, num_topics=10, times=5, num_words=10, log=False, formatted=True):
+    def show_topics(
+            self,
+            num_topics=10,
+            times=5,
+            num_words=10,
+            log=False,
+            formatted=True):
         """
         Print the `num_words` most probable words for `num_topics` number of topics at 'times' time slices.
         Set `topics=-1` to print all topics.
@@ -255,7 +290,7 @@ class DtmModel(utils.SaveLoad):
         else:
             num_topics = min(num_topics, self.num_topics)
             chosen_topics = range(num_topics)
-             # add a little random jitter, to randomize results around the same
+            # add a little random jitter, to randomize results around the same
             # alpha
             # sort_alpha = self.alpha + 0.0001 * \
             #     numpy.random.rand(len(self.alpha))
@@ -302,7 +337,8 @@ class DtmModel(utils.SaveLoad):
 
     def print_topic(self, topicid, time, num_words=10):
         """Return the given topic, formatted as a string."""
-        return ' + '.join(['%.3f*%s' % v for v in self.show_topic(topicid, time, num_words)])
+        return ' + '.join(['%.3f*%s' %
+                           v for v in self.show_topic(topicid, time, num_words)])
 
     def dtm_vis(self, corpus, time):
         """
@@ -310,7 +346,8 @@ class DtmModel(utils.SaveLoad):
         all of these are needed to visualise topics for DTM for a particular time-slice via pyLDAvis.
         input parameter is the year to do the visualisation.
         """
-        topic_term = np.exp(self.lambda_[:,:,time]) / np.exp(self.lambda_[:,:,time]).sum()
+        topic_term = np.exp(
+            self.lambda_[:, :, time]) / np.exp(self.lambda_[:, :, time]).sum()
         topic_term = topic_term * self.num_topics
 
         doc_topic = self.gamma_
@@ -324,19 +361,21 @@ class DtmModel(utils.SaveLoad):
 
         vocab = [self.id2word[i] for i in range(0, len(self.id2word))]
         # returns numpy arrays for doc_topic proportions, topic_term proportions, and document_lengths, term_frequency.
-        # these should be passed to the `pyLDAvis.prepare` method to visualise one time-slice of DTM topics.
+        # these should be passed to the `pyLDAvis.prepare` method to visualise
+        # one time-slice of DTM topics.
         return doc_topic, topic_term, doc_lengths, term_frequency, vocab
 
     def dtm_coherence(self, time, num_words=20):
         """
-        returns all topics of a particular time-slice without probabilitiy values for it to be used 
+        returns all topics of a particular time-slice without probabilitiy values for it to be used
         for either "u_mass" or "c_v" coherence.
         TODO: because of print format right now can only return for 1st time-slice.
-              should we fix the coherence printing or make changes to the print statements to mirror DTM python?  
+              should we fix the coherence printing or make changes to the print statements to mirror DTM python?
         """
         coherence_topics = []
         for topic_no in range(0, self.num_topics):
-            topic = self.show_topic(topicid=topic_no, time=time, num_words=num_words)
+            topic = self.show_topic(
+                topicid=topic_no, time=time, num_words=num_words)
             coherence_topic = []
             for prob, word in topic:
                 coherence_topic.append(word)

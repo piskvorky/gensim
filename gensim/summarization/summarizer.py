@@ -72,7 +72,8 @@ def _get_similarity(doc1, doc2, vec1, vec2):
     length_1 = _get_doc_length(doc1)
     length_2 = _get_doc_length(doc2)
 
-    denominator = _log10(length_1) + _log10(length_2) if length_1 > 0 and length_2 > 0 else 0
+    denominator = _log10(
+        length_1) + _log10(length_2) if length_1 > 0 and length_2 > 0 else 0
 
     return numerator / denominator if denominator != 0 else 0
 
@@ -86,7 +87,8 @@ def _build_corpus(sentences):
 def _get_important_sentences(sentences, corpus, important_docs):
     hashable_corpus = _build_hasheable_corpus(corpus)
     sentences_by_corpus = dict(zip(hashable_corpus, sentences))
-    return [sentences_by_corpus[tuple(important_doc)] for important_doc in important_docs]
+    return [sentences_by_corpus[tuple(important_doc)]
+            for important_doc in important_docs]
 
 
 def _get_sentences_with_word_count(sentences, word_count):
@@ -101,7 +103,12 @@ def _get_sentences_with_word_count(sentences, word_count):
 
         # Checks if the inclusion of the sentence gives a better approximation
         # to the word parameter.
-        if abs(word_count - length - words_in_sentence) > abs(word_count - length):
+        if abs(
+                word_count -
+                length -
+                words_in_sentence) > abs(
+                word_count -
+                length):
             return selected_sentences
 
         selected_sentences.append(sentence)
@@ -110,12 +117,18 @@ def _get_sentences_with_word_count(sentences, word_count):
     return selected_sentences
 
 
-def _extract_important_sentences(sentences, corpus, important_docs, word_count):
-    important_sentences = _get_important_sentences(sentences, corpus, important_docs)
+def _extract_important_sentences(
+        sentences,
+        corpus,
+        important_docs,
+        word_count):
+    important_sentences = _get_important_sentences(
+        sentences, corpus, important_docs)
 
     # If no "word_count" option is provided, the number of sentences is
     # reduced by the provided ratio. Else, the ratio is ignored.
-    return important_sentences if word_count is None else _get_sentences_with_word_count(important_sentences, word_count)
+    return important_sentences if word_count is None else _get_sentences_with_word_count(
+        important_sentences, word_count)
 
 
 def _format_results(extracted_sentences, split):
@@ -152,20 +165,27 @@ def summarize_corpus(corpus, ratio=0.2):
 
     # Warns the user if there are too few documents.
     if len(corpus) < INPUT_MIN_LENGTH:
-        logger.warning("Input corpus is expected to have at least " + str(INPUT_MIN_LENGTH) + " documents.")
+        logger.warning(
+            "Input corpus is expected to have at least " +
+            str(INPUT_MIN_LENGTH) +
+            " documents.")
 
     graph = _build_graph(hashable_corpus)
     _set_graph_edge_weights(graph)
     _remove_unreachable_nodes(graph)
 
-    # Cannot calculate eigenvectors if number of unique words in text < 3. Warns user to add more text. The function ends.
+    # Cannot calculate eigenvectors if number of unique words in text < 3.
+    # Warns user to add more text. The function ends.
     if len(graph.nodes()) < 3:
-        logger.warning("Please add more sentences to the text. The number of reachable nodes is below 3")
+        logger.warning(
+            "Please add more sentences to the text. The number of reachable nodes is below 3")
         return
 
     pagerank_scores = _pagerank(graph)
 
-    hashable_corpus.sort(key=lambda doc: pagerank_scores.get(doc, 0), reverse=True)
+    hashable_corpus.sort(
+        key=lambda doc: pagerank_scores.get(
+            doc, 0), reverse=True)
 
     return [list(doc) for doc in hashable_corpus[:int(len(corpus) * ratio)]]
 
@@ -198,20 +218,26 @@ def summarize(text, ratio=0.2, word_count=None, split=False):
         logger.warning("Input text is empty.")
         return
 
-    # If only one sentence is present, the function raises an error (Avoids ZeroDivisionError). 
+    # If only one sentence is present, the function raises an error (Avoids
+    # ZeroDivisionError).
     if len(sentences) == 1:
         raise ValueError("input must have more than one sentence")
-    
+
     # Warns if the text is too short.
     if len(sentences) < INPUT_MIN_LENGTH:
-        logger.warning("Input text is expected to have at least " + str(INPUT_MIN_LENGTH) + " sentences.")
+        logger.warning(
+            "Input text is expected to have at least " +
+            str(INPUT_MIN_LENGTH) +
+            " sentences.")
 
     corpus = _build_corpus(sentences)
 
-    most_important_docs = summarize_corpus(corpus, ratio=ratio if word_count is None else 1)
+    most_important_docs = summarize_corpus(
+        corpus, ratio=ratio if word_count is None else 1)
 
     # Extracts the most important sentences with the selected criterion.
-    extracted_sentences = _extract_important_sentences(sentences, corpus, most_important_docs, word_count)
+    extracted_sentences = _extract_important_sentences(
+        sentences, corpus, most_important_docs, word_count)
 
     # Sorts the extracted sentences by apparition order in the original text.
     extracted_sentences.sort(key=lambda s: s.index)

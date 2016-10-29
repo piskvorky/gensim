@@ -82,8 +82,8 @@ class LogEntropyModel(interfaces.TransformationABC):
 
         # and finally compute the global weights
         logger.info("calculating global log entropy weights for %i "
-                     "documents and %i features (%i matrix non-zeros)"
-                     % (self.n_docs, len(glob_freq), self.n_words))
+                    "documents and %i features (%i matrix non-zeros)"
+                    % (self.n_docs, len(glob_freq), self.n_words))
         logger.debug('iterating over corpus')
         for doc_no2, bow in enumerate(corpus):
             for key, freq in bow:
@@ -91,7 +91,8 @@ class LogEntropyModel(interfaces.TransformationABC):
                                                               glob_freq[key])
                 self.entr[key] = self.entr.get(key, 0.0) + p
         if doc_no2 != doc_no:
-            raise ValueError("LogEntropyModel doesn't support generators as training data")
+            raise ValueError(
+                "LogEntropyModel doesn't support generators as training data")
 
         logger.debug('iterating over keys')
         for key in self.entr:

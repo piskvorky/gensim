@@ -48,16 +48,17 @@ class CorpusABC(utils.SaveLoad):
     state, and **not** the documents themselves. See the `save_corpus` static method
     for serializing the actual stream content.
     """
+
     def __iter__(self):
         """
         Iterate over the corpus, yielding one document at a time.
         """
         raise NotImplementedError('cannot instantiate abstract base class')
 
-
     def save(self, *args, **kwargs):
         import warnings
-        warnings.warn("corpus.save() stores only the (tiny) iteration object; "
+        warnings.warn(
+            "corpus.save() stores only the (tiny) iteration object; "
             "to serialize the actual corpus content, use e.g. MmCorpus.serialize(corpus)")
         super(CorpusABC, self).save(*args, **kwargs)
 
@@ -68,9 +69,11 @@ class CorpusABC(utils.SaveLoad):
         This method is just the least common denominator and should really be
         overridden when possible.
         """
-        raise NotImplementedError("must override __len__() before calling len(corpus)")
+        raise NotImplementedError(
+            "must override __len__() before calling len(corpus)")
 #        logger.warning("performing full corpus scan to determine its length; was this intended?")
-#        return sum(1 for doc in self) # sum(empty generator) == 0, so this works even for an empty corpus
+# return sum(1 for doc in self) # sum(empty generator) == 0, so this works
+# even for an empty corpus
 
     @staticmethod
     def save_corpus(fname, corpus, id2word=None, metadata=False):
@@ -98,13 +101,15 @@ class CorpusABC(utils.SaveLoad):
         # example code:
         logger.info("converting corpus to ??? format: %s" % fname)
         with utils.smart_open(fname, 'wb') as fout:
-            for doc in corpus: # iterate over the document stream
-                fmt = str(doc) # format the document appropriately...
-                fout.write(utils.to_utf8("%s\n" % fmt)) # serialize the formatted document to disk
-#endclass CorpusABC
+            for doc in corpus:  # iterate over the document stream
+                fmt = str(doc)  # format the document appropriately...
+                # serialize the formatted document to disk
+                fout.write(utils.to_utf8("%s\n" % fmt))
+# endclass CorpusABC
 
 
 class TransformedCorpus(CorpusABC):
+
     def __init__(self, obj, corpus, chunksize=None):
         self.obj, self.corpus, self.chunksize = obj, corpus, chunksize
         self.metadata = False
@@ -123,10 +128,13 @@ class TransformedCorpus(CorpusABC):
 
     def __getitem__(self, docno):
         if hasattr(self.corpus, '__getitem__'):
-           return self.obj[self.corpus[docno]]
+            return self.obj[self.corpus[docno]]
         else:
-            raise RuntimeError('Type {} does not support slicing.'.format(type(self.corpus)))
-#endclass TransformedCorpus
+            raise RuntimeError(
+                'Type {} does not support slicing.'.format(
+                    type(
+                        self.corpus)))
+# endclass TransformedCorpus
 
 
 class TransformationABC(utils.SaveLoad):
@@ -155,14 +163,13 @@ class TransformationABC(utils.SaveLoad):
         """
         raise NotImplementedError('cannot instantiate abstract base class')
 
-
     def _apply(self, corpus, chunksize=None):
         """
         Apply the transformation to a whole corpus (as opposed to a single document)
         and return the result as another corpus.
         """
         return TransformedCorpus(self, corpus, chunksize)
-#endclass TransformationABC
+# endclass TransformationABC
 
 
 class SimilarityABC(utils.SaveLoad):
@@ -181,15 +188,14 @@ class SimilarityABC(utils.SaveLoad):
     similarities of each document in the corpus against the whole corpus (ie.,
     the query is each corpus document in turn).
     """
+
     def __init__(self, corpus):
         raise NotImplementedError("cannot instantiate Abstract Base Class")
-
 
     def get_similarities(self, doc):
         # (Sparse)MatrixSimilarity override this method so that they both use the
         # same  __getitem__ method, defined below
         raise NotImplementedError("cannot instantiate Abstract Base Class")
-
 
     def __getitem__(self, query):
         """Get similarities of document `query` to all documents in the corpus.
@@ -223,18 +229,20 @@ class SimilarityABC(utils.SaveLoad):
         # if the input query was a corpus (=more documents), compute the top-n
         # most similar for each document in turn
         if matutils.ismatrix(result):
-            return [matutils.full2sparse_clipped(v, self.num_best) for v in result]
+            return [
+                matutils.full2sparse_clipped(
+                    v, self.num_best) for v in result]
         else:
             # otherwise, return top-n of the single input document
             return matutils.full2sparse_clipped(result, self.num_best)
-
 
     def __iter__(self):
         """
         For each index document, compute cosine similarity against all other
         documents in the index and yield the result.
         """
-        # turn off query normalization (vectors in the index are assumed to be already normalized)
+        # turn off query normalization (vectors in the index are assumed to be
+        # already normalized)
         norm = self.normalize
         self.normalize = False
 
@@ -245,11 +253,13 @@ class SimilarityABC(utils.SaveLoad):
         #
         # After computing similarities of the bigger query in `self[chunk]`,
         # yield the resulting similarities one after another, so that it looks
-        # exactly the same as if they had been computed with many small queries.
+        # exactly the same as if they had been computed with many small
+        # queries.
         try:
             chunking = self.chunksize > 1
         except AttributeError:
-            # chunking not supported; fall back to the (slower) mode of 1 query=1 document
+            # chunking not supported; fall back to the (slower) mode of 1
+            # query=1 document
             chunking = False
         if chunking:
             # assumes `self.corpus` holds the index as a 2-d numpy array.
@@ -259,8 +269,10 @@ class SimilarityABC(utils.SaveLoad):
                 # scipy.sparse doesn't allow slicing beyond real size of the matrix
                 # (unlike numpy). so, clip the end of the chunk explicitly to make
                 # scipy.sparse happy
-                chunk_end = min(self.index.shape[0], chunk_start + self.chunksize)
-                chunk = self.index[chunk_start : chunk_end]
+                chunk_end = min(
+                    self.index.shape[0],
+                    chunk_start + self.chunksize)
+                chunk = self.index[chunk_start: chunk_end]
                 for sim in self[chunk]:
                     yield sim
         else:
@@ -269,4 +281,4 @@ class SimilarityABC(utils.SaveLoad):
 
         # restore old normalization value
         self.normalize = norm
-#endclass SimilarityABC
+# endclass SimilarityABC
