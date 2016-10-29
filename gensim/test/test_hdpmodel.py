@@ -25,20 +25,21 @@ from gensim import matutils
 from gensim.test import basetests
 
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+# needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [['human', 'interface', 'computer'],
- ['survey', 'user', 'computer', 'system', 'response', 'time'],
- ['eps', 'user', 'interface', 'system'],
- ['system', 'human', 'system', 'eps'],
- ['user', 'response', 'time'],
- ['trees'],
- ['graph', 'trees'],
- ['graph', 'minors', 'trees'],
- ['graph', 'minors', 'survey']]
+         ['survey', 'user', 'computer', 'system', 'response', 'time'],
+         ['eps', 'user', 'interface', 'system'],
+         ['system', 'human', 'system', 'eps'],
+         ['user', 'response', 'time'],
+         ['trees'],
+         ['graph', 'trees'],
+         ['graph', 'minors', 'trees'],
+         ['graph', 'minors', 'survey']]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
@@ -49,6 +50,7 @@ def testfile():
 
 
 class TestHdpModel(unittest.TestCase, basetests.TestBaseTopicModel):
+
     def setUp(self):
         self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         self.class_ = hdpmodel.HdpModel
@@ -59,5 +61,7 @@ class TestHdpModel(unittest.TestCase, basetests.TestBaseTopicModel):
         return
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(
+        format='%(asctime)s : %(levelname)s : %(message)s',
+        level=logging.DEBUG)
     unittest.main()

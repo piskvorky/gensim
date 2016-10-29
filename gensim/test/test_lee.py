@@ -40,6 +40,7 @@ human_sim_vector = None
 
 
 class TestLeeTest(unittest.TestCase):
+
     def setUp(self):
         """setup lee test corpora"""
         global bg_corpus, corpus, human_sim_vector, bg_corpus2, corpus2
@@ -56,15 +57,22 @@ class TestLeeTest(unittest.TestCase):
         with utils.smart_open(os.path.join(pre_path, corpus_file)) as f:
             corpus = preprocess_documents(latin1(line) for line in f)
         with utils.smart_open(os.path.join(pre_path, bg_corpus_file)) as f:
-            bg_corpus2 = [preprocess_string(latin1(s), filters=DEFAULT_FILTERS[:-1]) for s in f]
+            bg_corpus2 = [
+                preprocess_string(
+                    latin1(s),
+                    filters=DEFAULT_FILTERS[
+                        :-1]) for s in f]
         with utils.smart_open(os.path.join(pre_path, corpus_file)) as f:
-            corpus2 = [preprocess_string(latin1(s), filters=DEFAULT_FILTERS[:-1]) for s in f]
+            corpus2 = [
+                preprocess_string(
+                    latin1(s),
+                    filters=DEFAULT_FILTERS[
+                        :-1]) for s in f]
 
         # read the human similarity data
         sim_matrix = np.loadtxt(os.path.join(pre_path, sim_file))
         sim_m_size = np.shape(sim_matrix)[0]
         human_sim_vector = sim_matrix[matutils.triu_indices(sim_m_size, 1)]
-
 
     def test_corpus(self):
         """availability and integrity of corpus"""
@@ -74,7 +82,6 @@ class TestLeeTest(unittest.TestCase):
         self.assertEqual(len(bg_corpus), documents_in_bg_corpus)
         self.assertEqual(len(corpus), documents_in_corpus)
         self.assertEqual(len(human_sim_vector), len_sim_vector)
-
 
     def test_lee(self):
         """correlation with human data > 0.6
@@ -93,7 +100,10 @@ class TestLeeTest(unittest.TestCase):
         bg_corpus_ent = log_ent[bg_corpus]
 
         # initialize an LSI transformation from background corpus
-        lsi = models.LsiModel(bg_corpus_ent, id2word=dictionary, num_topics=200)
+        lsi = models.LsiModel(
+            bg_corpus_ent,
+            id2word=dictionary,
+            num_topics=200)
         # transform small corpus to lsi bow->log_ent->fold-in-lsi
         corpus_lsi = lsi[log_ent[corpus]]
 
@@ -107,7 +117,6 @@ class TestLeeTest(unittest.TestCase):
         cor = np.corrcoef(flat, human_sim_vector)[0, 1]
         logging.info("LSI correlation coefficient is %s" % cor)
         self.assertTrue(cor > 0.6)
-
 
     # def test_lee_mallet(self):
     #     global bg_corpus, corpus, bg_corpus2, corpus2
@@ -134,7 +143,8 @@ class TestLeeTest(unittest.TestCase):
     #     self.assertTrue(cor > 0.35)
 
 
-
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(
+        format='%(asctime)s : %(levelname)s : %(message)s',
+        level=logging.DEBUG)
     unittest.main()

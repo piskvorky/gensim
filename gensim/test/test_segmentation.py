@@ -19,6 +19,7 @@ from numpy import array
 
 
 class TestSegmentation(unittest.TestCase):
+
     def setUp(self):
         self.topics = [array([9, 4, 6]), array([9, 10, 7]), array([5, 2, 7])]
 
@@ -47,7 +48,10 @@ class TestSegmentation(unittest.TestCase):
         for s_i in range(len(actual)):
             for j in range(len(actual[s_i])):
                 self.assertEqual(actual[s_i][j][0], expected[s_i][j][0])
-                self.assertTrue(np.allclose(actual[s_i][j][1], expected[s_i][j][1]))
+                self.assertTrue(
+                    np.allclose(
+                        actual[s_i][j][1],
+                        expected[s_i][j][1]))
 
 if __name__ == '__main__':
     logging.root.setLevel(logging.WARNING)

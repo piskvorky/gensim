@@ -23,20 +23,21 @@ from gensim.corpora import mmcorpus, Dictionary
 from gensim.models import logentropy_model
 from gensim import matutils
 
-module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
+# needed because sample data files are located in the same folder
+module_path = os.path.dirname(__file__)
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
 
 
 # set up vars used in testing ("Deerwester" from the web tutorial)
 texts = [['human', 'interface', 'computer'],
- ['survey', 'user', 'computer', 'system', 'response', 'time'],
- ['eps', 'user', 'interface', 'system'],
- ['system', 'human', 'system', 'eps'],
- ['user', 'response', 'time'],
- ['trees'],
- ['graph', 'trees'],
- ['graph', 'minors', 'trees'],
- ['graph', 'minors', 'survey']]
+         ['survey', 'user', 'computer', 'system', 'response', 'time'],
+         ['eps', 'user', 'interface', 'system'],
+         ['system', 'human', 'system', 'eps'],
+         ['user', 'response', 'time'],
+         ['trees'],
+         ['graph', 'trees'],
+         ['graph', 'minors', 'trees'],
+         ['graph', 'minors', 'survey']]
 dictionary = Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
 
@@ -47,14 +48,15 @@ def testfile():
 
 
 class TestLogEntropyModel(unittest.TestCase):
+
     def setUp(self):
         self.corpus_small = mmcorpus.MmCorpus(datapath('test_corpus_small.mm'))
         self.corpus_ok = mmcorpus.MmCorpus(datapath('test_corpus_ok.mm'))
 
-
     def testTransform(self):
         # create the transformation model
-        model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=False)
+        model = logentropy_model.LogEntropyModel(
+            self.corpus_ok, normalize=False)
 
         # transform one document
         doc = list(self.corpus_ok)[0]
@@ -65,10 +67,10 @@ class TestLogEntropyModel(unittest.TestCase):
                     (3, 1.20941755462856)]
         self.assertTrue(numpy.allclose(transformed, expected))
 
-
     def testPersistence(self):
         fname = testfile()
-        model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=True)
+        model = logentropy_model.LogEntropyModel(
+            self.corpus_ok, normalize=True)
         model.save(fname)
         model2 = logentropy_model.LogEntropyModel.load(fname)
         self.assertTrue(model.entr == model2.entr)
@@ -77,15 +79,18 @@ class TestLogEntropyModel(unittest.TestCase):
 
     def testPersistenceCompressed(self):
         fname = testfile() + '.gz'
-        model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=True)
+        model = logentropy_model.LogEntropyModel(
+            self.corpus_ok, normalize=True)
         model.save(fname)
         model2 = logentropy_model.LogEntropyModel.load(fname, mmap=None)
         self.assertTrue(model.entr == model2.entr)
         tstvec = []
         self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec]))
-#endclass TestLogEntropyModel
+# endclass TestLogEntropyModel
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(
+        format='%(asctime)s : %(levelname)s : %(message)s',
+        level=logging.DEBUG)
     unittest.main()

@@ -16,7 +16,9 @@ from gensim.topic_coherence import indirect_confirmation_measure
 import numpy as np
 from numpy import array
 
+
 class TestIndirectConfirmation(unittest.TestCase):
+
     def setUp(self):
         # Set up toy example for better understanding and testing
         # of this module. See the modules for the mathematical formulas
@@ -30,9 +32,13 @@ class TestIndirectConfirmation(unittest.TestCase):
 
     def testCosineSimilarity(self):
         """Test cosine_similarity()"""
-        obtained = indirect_confirmation_measure.cosine_similarity(self.topics, self.segmentation,
-                                                                   self.posting_list, self.measure,
-                                                                   self.gamma, self.num_docs)
+        obtained = indirect_confirmation_measure.cosine_similarity(
+            self.topics,
+            self.segmentation,
+            self.posting_list,
+            self.measure,
+            self.gamma,
+            self.num_docs)
         # The steps involved in this calculation are as follows:
         # 1. Take (1, array([1, 2]). Take w' which is 1.
         # 2. Calculate nlr(1, 1), nlr(1, 2). This is our first vector.

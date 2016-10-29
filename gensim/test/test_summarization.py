@@ -48,7 +48,8 @@ class TestSummarizationTest(unittest.TestCase):
         sentences = text.split("\n")
         tokens = [sentence.split() for sentence in sentences]
         dictionary = Dictionary(tokens)
-        corpus = [dictionary.doc2bow(sentence_tokens) for sentence_tokens in tokens]
+        corpus = [dictionary.doc2bow(sentence_tokens)
+                  for sentence_tokens in tokens]
 
         # Extract the most important documents.
         selected_documents = summarize_corpus(corpus)
@@ -58,16 +59,20 @@ class TestSummarizationTest(unittest.TestCase):
             summary = f.read()
             summary = summary.split('\n')
 
-        # Each sentence in the document selection has to be in the model summary.
+        # Each sentence in the document selection has to be in the model
+        # summary.
         for doc_number, document in enumerate(selected_documents):
             # Retrieves all words from the document.
             words = [dictionary[token_id] for (token_id, count) in document]
 
-            # Asserts that all of them are in a sentence from the model reference.
-            self.assertTrue(any(all(word in sentence for word in words)) for sentence in summary)
+            # Asserts that all of them are in a sentence from the model
+            # reference.
+            self.assertTrue(any(all(word in sentence for word in words))
+                            for sentence in summary)
 
     def test_summary_from_unrelated_sentences(self):
-        # Tests that the summarization of a text with unrelated sentences does not raise an exception.
+        # Tests that the summarization of a text with unrelated sentences does
+        # not raise an exception.
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
         with utils.smart_open(os.path.join(pre_path, "testsummarization_unrelated.txt"), mode="r") as f:
@@ -87,7 +92,7 @@ class TestSummarizationTest(unittest.TestCase):
         text = "\n".join(text.split('\n')[:8])
 
         self.assertTrue(summarize(text) is not None)
-        
+
     def test_text_summarization_returns_input_on_single_input_sentence(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
 
@@ -97,7 +102,7 @@ class TestSummarizationTest(unittest.TestCase):
         # Keeps the first sentence only.
         text = text.split('\n')[0]
 
-        self.assertRaises(ValueError,summarize,text)
+        self.assertRaises(ValueError, summarize, text)
 
     def test_corpus_summarization_raises_exception_on_short_input_text(self):
         pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
@@ -111,7 +116,8 @@ class TestSummarizationTest(unittest.TestCase):
         # Generate the corpus.
         tokens = [sentence.split() for sentence in sentences]
         dictionary = Dictionary(tokens)
-        corpus = [dictionary.doc2bow(sentence_tokens) for sentence_tokens in tokens]
+        corpus = [dictionary.doc2bow(sentence_tokens)
+                  for sentence_tokens in tokens]
 
         self.assertTrue(summarize_corpus(corpus) is not None)
 
@@ -131,7 +137,8 @@ class TestSummarizationTest(unittest.TestCase):
         sentences = text.split('\n')
         tokens = [sentence.split() for sentence in sentences]
         dictionary = Dictionary(tokens)
-        corpus = [dictionary.doc2bow(sentence_tokens) for sentence_tokens in tokens]
+        corpus = [dictionary.doc2bow(sentence_tokens)
+                  for sentence_tokens in tokens]
 
         # Makes summaries of the text using different ratio parameters.
         for x in range(1, 10):
@@ -181,10 +188,13 @@ class TestSummarizationTest(unittest.TestCase):
         sentences = text.split("\n")
         tokens = [sentence.split() for sentence in sentences]
         dictionary = Dictionary(tokens)
-        corpus = [dictionary.doc2bow(sentence_tokens) for sentence_tokens in tokens]
+        corpus = [dictionary.doc2bow(sentence_tokens)
+                  for sentence_tokens in tokens]
 
         self.assertTrue(summarize_corpus(corpus) is None)
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+    logging.basicConfig(
+        format='%(asctime)s : %(levelname)s : %(message)s',
+        level=logging.DEBUG)
     unittest.main()
