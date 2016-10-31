@@ -164,6 +164,10 @@ class KeyedVectors(utils.SaveLoad):
         dictionary = Dictionary(documents=[document1, document2])
         vocab_len = len(dictionary)
 
+        if vocab_len == 1:
+            # Both documents are composed by a single unique token
+            return 0.0
+
         # Sets for faster look-up.
         docset1 = set(document1)
         docset2 = set(document2)
