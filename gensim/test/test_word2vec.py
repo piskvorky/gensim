@@ -434,7 +434,7 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(size=2, min_count=1, sg=0, hs=0, negative=2)
         model.build_vocab(sentences)
         model.train(sentences)
-        
+
         self.assertTrue(model.n_similarity(['graph', 'trees'], ['trees', 'graph']))
         self.assertTrue(model.n_similarity(['graph'], ['trees']) == model.similarity('graph', 'trees'))
         self.assertRaises(ZeroDivisionError, model.n_similarity, ['graph', 'trees'], [])
@@ -481,6 +481,20 @@ class TestWord2VecModel(unittest.TestCase):
             self.assertTrue(numpy.allclose(model.syn1neg, model2.syn1neg))
         most_common_word = max(model.vocab.items(), key=lambda item: item[1].count)[0]
         self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
+
+    def testFinishedTraining(self):
+        """Test word2vec model after finishing training"""
+        for i in [0, 1]:
+            for j in [0, 1]:
+                model = word2vec.Word2Vec(sentences, size=10, min_count=0, seed=42, hs=i, negative=j)
+                model.finished_training()
+                self.assertTrue(len(model.vocab), 12)
+        self.assertTrue(model.vocab['graph'].count, 3)
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.save_word2vec_format(testfile(), binary=True)
+        norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
+        norm_only_model.finished_training()
+        self.assertFalse(numpy.allclose(model['human'], norm_only_model['human']))
 
     @log_capture()
     def testBuildVocabWarning(self, l):

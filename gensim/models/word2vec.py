@@ -1750,6 +1750,17 @@ class Word2Vec(utils.SaveLoad):
     def __str__(self):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.index2word), self.vector_size, self.alpha)
 
+    def finished_training(self):
+        """
+        Discard parametrs that are used in training and score. Use if you're sure you're done training a model,
+        """
+        self.training_finished = True
+        self.init_sims(replace = True)
+        if hasattr(self, 'syn1neg'):
+            del self.syn1neg
+        if hasattr(self, 'syn0_lockf'):
+            del self.syn0_lockf
+
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors, recalculable table
         kwargs['ignore'] = kwargs.get('ignore', ['syn0norm', 'table', 'cum_table'])

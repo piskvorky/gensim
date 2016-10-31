@@ -280,6 +280,14 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(len(model.docvecs.offset2doctag), len(model2.docvecs.offset2doctag))
         self.assertTrue(np.allclose(model.docvecs.doctag_syn0, model2.docvecs.doctag_syn0))
 
+    def test_finished_training(self):
+        """Test doc2vec model after finishing training"""
+        for i in [0, 1]:
+            for j in [0, 1]:
+                model = doc2vec.Doc2Vec(sentences, size=5, min_count=1, negative=i, hs=j)
+                model.finished_training()
+                self.assertTrue(len(model.infer_vector(['graph'])), 5)
+
     @log_capture()
     def testBuildVocabWarning(self, l):
         """Test if logger warning is raised on non-ideal input to a doc2vec model"""
