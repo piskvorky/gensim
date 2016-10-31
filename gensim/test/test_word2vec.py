@@ -513,7 +513,7 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.save(testfile())
         load_on_instance = word2vec.Word2Vec()
-        self.models_equal(model, load_on_instance.load(testfile()))
+        model = load_on_instance.load(testfile()))
         warning = "Load methods should be called on a class object."
         self.assertTrue(warning in str(l))
 

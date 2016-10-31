@@ -313,7 +313,7 @@ class TestDoc2VecModel(unittest.TestCase):
         model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
         model.save(testfile())
         load_on_instance = doc2vec.Doc2Vec()
-        self.models_equal(model, load_on_instance.load(testfile()))
+        model = load_on_instance.load(testfile()))
         warning = "Load methods should be called on a class object."
         self.assertTrue(warning in str(l))
 #endclass TestDoc2VecModel
