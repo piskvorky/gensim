@@ -507,7 +507,7 @@ class TestWord2VecModel(unittest.TestCase):
         warning = "Effective 'alpha' higher than previous training cycles"
         self.assertTrue(warning in str(l))
 
-    @log_capture
+    @log_capture()
     def testLoadOnClassWarning(self):
         """Test if logger warning is raised when loading doc2vec model on instance"""
         model = word2vec.Word2Vec(sentences, min_count=1)
@@ -517,7 +517,7 @@ class TestWord2VecModel(unittest.TestCase):
         warning = "Load methods should be called on a class object."
         self.assertTrue(warning in str(l))
 
-    @log_capture
+    @log_capture()
     def testLoadWord2VecOnClassWarning(self):
         """Test if logger warning is raised when loading doc2vec model on instance"""
         model = word2vec.Word2Vec(sentences, min_count=1)
