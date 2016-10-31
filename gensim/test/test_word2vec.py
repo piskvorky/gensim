@@ -528,7 +528,7 @@ class TestWord2VecModel(unittest.TestCase):
         load_on_instance = binary_model.load(testfile())
         warning = "Load methods should be called on a class object."
         self.assertTrue(warning in str(l))
-#endclass TestWord2VecModel
+
 
     def test_sentences_should_not_be_a_generator(self):
         """
@@ -536,6 +536,8 @@ class TestWord2VecModel(unittest.TestCase):
         """
         gen = (s for s in sentences)
         self.assertRaises(TypeError, word2vec.Word2Vec, (gen,))
+
+#endclass TestWord2VecModel
 
 class TestWMD(unittest.TestCase):
     def testNonzero(self):
