@@ -512,8 +512,8 @@ class TestWord2VecModel(unittest.TestCase):
         """Test if logger warning is raised when loading doc2vec model on instance"""
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.save(testfile())
-        model = word2vec.Word2Vec()
-        self.models_equal(load_on_instance, model.load(testfile()))
+        load_on_instance = word2vec.Word2Vec()
+        self.models_equal(model, load_on_instance.load(testfile()))
         warning = "Load methods should be called on a class object."
         self.assertTrue(warning in str(l))
 
@@ -524,7 +524,7 @@ class TestWord2VecModel(unittest.TestCase):
         model.init_sims()
         model.save_word2vec_format(testfile(), binary=True)
         binary_model = word2vec.Word2Vec()
-        load_on_instance = load_word2vec_format(testfile(), binary=True)
+        load_on_instance = binary_model.load_word2vec_format(testfile(), binary=True)
         warning = "Load methods should be called on a class object."
         self.assertTrue(warning in str(l))
 

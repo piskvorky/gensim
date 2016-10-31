@@ -312,8 +312,8 @@ class TestDoc2VecModel(unittest.TestCase):
         """Test if logger warning is raised when loading doc2vec model on instance"""
         model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
         model.save(testfile())
-        model = doc2vec.Doc2Vec()
-        self.models_equal(load_on_instance, model.load(testfile()))
+        load_on_instance = doc2vec.Doc2Vec()
+        self.models_equal(model, load_on_instance.load(testfile()))
         warning = "Load methods should be called on a class object."
         self.assertTrue(warning in str(l))
 #endclass TestDoc2VecModel
