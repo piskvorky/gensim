@@ -506,6 +506,28 @@ class TestWord2VecModel(unittest.TestCase):
                 model.alpha += 0.05
         warning = "Effective 'alpha' higher than previous training cycles"
         self.assertTrue(warning in str(l))
+
+    @log_capture
+    def testLoadOnClassWarning(self):
+        """Test if logger warning is raised when loading doc2vec model on instance"""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.save(testfile())
+
+        model = word2vec.Word2Vec()
+        load_on_instance = model.load(testfile())
+        warning = "Load methods should be called on a class object."
+        self.assertTrue(warning in str(l))
+
+    @log_capture
+    def testLoadWord2VecOnClassWarning(self):
+        """Test if logger warning is raised when loading doc2vec model on instance"""
+        model = word2vec.Word2Vec(sentences, min_count=1)
+        model.init_sims()
+        model.save_word2vec_format(testfile(), binary=True)
+        binary_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
+        load_on_instance = binary_model.load(testfile())
+        warning = "Load methods should be called on a class object."
+        self.assertTrue(warning in str(l))
 #endclass TestWord2VecModel
 
     def test_sentences_should_not_be_a_generator(self):
