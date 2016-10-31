@@ -218,7 +218,7 @@ def any2unicode(text, encoding='utf8', errors='strict'):
 to_unicode = any2unicode
 
 def call_on_class_only(*args, **kwargs):
-    """Warns when load methods are called on instance."""
+    """Warns when load methods are called on instance"""
     logger.warn('This method should be called on a class object.')
 
 
