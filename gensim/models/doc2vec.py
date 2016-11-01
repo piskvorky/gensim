@@ -392,6 +392,7 @@ class DocvecsArray(utils.SaveLoad):
         etc., but not `train` or `infer_vector`.
 
         """
+        print ('HELLO DOC!!!')
         if getattr(self, 'doctag_syn0norm', None) is None or replace:
             logger.info("precomputing L2-norms of doc weight vectors")
             if replace:
@@ -780,13 +781,9 @@ class Doc2Vec(Word2Vec):
 
     def finished_training(self):
         """
-        Discard parametrs that are used in training and score. Use if you're sure you're done training a model,
+        Discard parametrs that are used in training and score. Use if you're sure you're done training a model.
         """
-        self.training_finished = True
-        if hasattr(self, 'syn1') and not self.hs:
-            del self.syn1
-        if hasattr(self, 'syn1neg') and not self.negative:
-            del self.syn1neg
+        self._minimize_model(self.hs, self.negative > 0, True)
         if hasattr(self, 'doctag_syn0'):
             del self.doctag_syn0
         if hasattr(self, 'doctag_syn0_lockf'):

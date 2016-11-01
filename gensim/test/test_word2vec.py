@@ -488,8 +488,12 @@ class TestWord2VecModel(unittest.TestCase):
             for j in [0, 1]:
                 model = word2vec.Word2Vec(sentences, size=10, min_count=0, seed=42, hs=i, negative=j)
                 model.finished_training()
+                self.assertTrue(len(model['human']), 10)
                 self.assertTrue(len(model.vocab), 12)
-        self.assertTrue(model.vocab['graph'].count, 3)
+                self.assertTrue(model.vocab['graph'].count, 3)
+                self.assertTrue(not hasattr(model, 'syn1'))
+                self.assertTrue(not hasattr(model, 'syn1neg'))
+                self.assertTrue(not hasattr(model, 'syn0_lockf'))
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.save_word2vec_format(testfile(), binary=True)
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)

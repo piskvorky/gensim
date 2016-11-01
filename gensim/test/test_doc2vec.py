@@ -284,9 +284,19 @@ class TestDoc2VecModel(unittest.TestCase):
         """Test doc2vec model after finishing training"""
         for i in [0, 1]:
             for j in [0, 1]:
-                model = doc2vec.Doc2Vec(sentences, size=5, min_count=1, negative=i, hs=j)
+                model = doc2vec.Doc2Vec(sentences, size=5, min_count=1, hs=i, negative=j)
                 model.finished_training()
-                self.assertTrue(len(model.infer_vector(['graph'])), 5)
+                self.assertTrue(len(model['human']), 10)
+                self.assertTrue(model.vocab['graph'].count, 5)
+                if (i == 1):
+                    self.assertTrue(hasattr(model, 'syn1'))
+                else:
+                    self.assertTrue(not hasattr(model, 'syn1'))
+                if (j == 1):
+                    self.assertTrue(hasattr(model, 'syn1neg'))
+                else:
+                    self.assertTrue(not hasattr(model, 'syn1neg'))
+                self.assertTrue(hasattr(model, 'syn0_lockf'))
 
     @log_capture()
     def testBuildVocabWarning(self, l):
