@@ -87,7 +87,7 @@ except ImportError:
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray, vstack
+    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray, vstack, logaddexp
 
 from scipy.special import expit
 
@@ -315,14 +315,14 @@ def score_sg_pair(model, word, word2):
     l1 = model.syn0[word2.index]
     l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
     sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
-    lprob = log(expit(sgn * dot(l1, l2a.T)))
+    lprob = -logaddexp(0, -sgn * dot(l1, l2a.T))
     return sum(lprob)
 
 
 def score_cbow_pair(model, word, word2_indices, l1):
     l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
     sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
-    lprob = log(expit(sgn * dot(l1, l2a.T)))
+    lprob = -logaddexp(0, -sgn * dot(l1, l2a.T))
     return sum(lprob)
 
 
