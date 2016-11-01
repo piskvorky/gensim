@@ -392,7 +392,6 @@ class DocvecsArray(utils.SaveLoad):
         etc., but not `train` or `infer_vector`.
 
         """
-        print ('HELLO DOC!!!')
         if getattr(self, 'doctag_syn0norm', None) is None or replace:
             logger.info("precomputing L2-norms of doc weight vectors")
             if replace:
