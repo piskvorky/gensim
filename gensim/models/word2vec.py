@@ -1751,6 +1751,7 @@ class Word2Vec(utils.SaveLoad):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.index2word), self.vector_size, self.alpha)
 
     def _minimize_model(self, save_syn1 = False, save_syn1neg = False, save_syn0_lockf = False):
+        self.training_finished = True
         if hasattr(self, 'syn1') and not save_syn1:
             del self.syn1
         if hasattr(self, 'syn1neg') and not save_syn1neg:
@@ -1762,7 +1763,6 @@ class Word2Vec(utils.SaveLoad):
         """
         Discard parametrs that are used in training and score. Use if you're sure you're done training a model.
         """
-        self.training_finished = True
         for i in xrange(self.syn0.shape[0]):
             self.syn0[i, :] /= sqrt((self.syn0[i, :] ** 2).sum(-1))
         self.syn0norm = self.syn0
