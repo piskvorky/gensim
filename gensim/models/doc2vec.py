@@ -58,7 +58,6 @@ from six import string_types, integer_types, itervalues
 logger = logging.getLogger(__name__)
 
 try:
-    raise ImportError
     from gensim.models.doc2vec_inner import train_document_dbow, train_document_dm, train_document_dm_concat
     from gensim.models.word2vec_inner import FAST_VERSION  # blas-adaptation shared from word2vec
     logger.debug('Fast version of {0} is being used'.format(__name__))
