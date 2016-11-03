@@ -280,12 +280,12 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertEqual(len(model.docvecs.offset2doctag), len(model2.docvecs.offset2doctag))
         self.assertTrue(np.allclose(model.docvecs.doctag_syn0, model2.docvecs.doctag_syn0))
 
-    def test_finished_training(self):
-        """Test doc2vec model after finishing training"""
+    def test_discard_model_parameters(self):
+        """Test doc2vec model after discard_model_parameters"""
         for i in [0, 1]:
             for j in [0, 1]:
                 model = doc2vec.Doc2Vec(sentences, size=5, min_count=1, hs=i, negative=j)
-                model.finished_training()
+                model.discard_model_parameters(remove_doctags_vectors=True)
                 self.assertTrue(len(model['human']), 10)
                 self.assertTrue(model.vocab['graph'].count, 5)
                 if (i == 1):

@@ -465,7 +465,7 @@ class Word2Vec(utils.SaveLoad):
         self.total_train_time = 0
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
-
+        self.training_finished = False
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -757,6 +757,8 @@ class Word2Vec(utils.SaveLoad):
         sentences are the same as those that were used to initially build the vocabulary.
 
         """
+        if (self.training_finished):
+            raise RuntimeError("parameters for training were discarded")
         if FAST_VERSION < 0:
             import warnings
             warnings.warn("C extension not loaded for Word2Vec, training will be slow. "
@@ -1759,13 +1761,16 @@ class Word2Vec(utils.SaveLoad):
         if hasattr(self, 'syn0_lockf') and not save_syn0_lockf:
             del self.syn0_lockf
 
-    def finished_training(self):
+    def discard_model_parameters(self, replace=False):
         """
-        Discard parametrs that are used in training and score. Use if you're sure you're done training a model.
+        Discard parameters that are used in training and score. Use if you're sure you're done training a model.
+        If `replace` is set, forget the original vectors and only keep the normalized
+        ones = saves lots of memory!
         """
-        for i in xrange(self.syn0.shape[0]):
-            self.syn0[i, :] /= sqrt((self.syn0[i, :] ** 2).sum(-1))
-        self.syn0norm = self.syn0
+        if replace:
+            for i in xrange(self.syn0.shape[0]):
+                self.syn0[i, :] /= sqrt((self.syn0[i, :] ** 2).sum(-1))
+            self.syn0norm = self.syn0
         self._minimize_model()
 
     def save(self, *args, **kwargs):
