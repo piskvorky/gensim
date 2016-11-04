@@ -266,11 +266,14 @@ class OnlineAtVb(LdaModel):
                     # only one update per document).
                     if self.optimize_lambda:
                         # Update lambda.
-                        #tilde_lambda = self.eta + self.num_docs * cts * var_phi[ids, :].T
                         for k in xrange(self.num_topics):
                             for vi, v in enumerate(ids):
-                                cnt = dict(doc).get(v, 0)
+                                # cnt = dict(doc).get(v, 0)
+                                cnt = cts[vi]
                                 tilde_lambda[k, v] = self.eta[v] + self.num_docs * cnt * var_phi[v, k]
+
+                        # This is a little bit faster:
+                        # tilde_lambda[:, ids] = self.eta[ids] + self.num_docs * cts * var_phi[ids, :].T
 
                     # FIXME: I don't need to update the entire gamma, as I only updated a few rows of it,
                     # corresponding to the authors in the document. The same goes for Elogtheta.
