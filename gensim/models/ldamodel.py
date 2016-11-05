@@ -877,7 +877,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 # Sum of top words l=1..m-1
                 # i.e., all words ranked higher than the current word m
-                for l in top_words[:m_index - 1]:
+                for l in top_words[:m_index]:
                     # l_docs is v_l^(t)
                     l_docs = doc_word_list[l]
 
