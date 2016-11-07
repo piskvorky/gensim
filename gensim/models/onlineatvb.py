@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
+# Copyright (C) 2016 Radim Rehurek <radimrehurek@seznam.cz>
+# Copyright (C) 2016 Olavur Mortensen <olavurmortensen@gmail.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
 Author-topic model.
 """
+
+# NOTE: from what I understand, my name as well as Radim's should be attributed copyright above?
 
 import pdb
 from pdb import set_trace as st
@@ -145,8 +148,8 @@ class OnlineAtVb(LdaModel):
         logger.info('Starting inference. Training on %d documents.', len(corpus))
 
         # Whether or not to evaluate bound and log probability, respectively.
-        bound_eval = False
-        logprob_eval = True
+        bound_eval = True
+        logprob_eval = False
 
         if var_lambda is None:
             self.optimize_lambda = True
@@ -155,7 +158,7 @@ class OnlineAtVb(LdaModel):
             self.optimize_lambda = False
 
         # Initial values of gamma and lambda.
-        # NOTE: parameters of gamma distribution same as in `ldamodel`.
+        # Parameters of gamma distribution same as in `ldamodel`.
         var_gamma = self.random_state.gamma(100., 1. / 100.,
                 (self.num_authors, self.num_topics))
         tilde_gamma = var_gamma.copy()
@@ -202,7 +205,6 @@ class OnlineAtVb(LdaModel):
                 # Initialize mu.
                 # mu is 1/|A_d| if a is in A_d, zero otherwise.
                 # TODO: consider doing random initialization instead.
-                # TODO: consider making mu a sparse matrix instead of a dictionary.
                 var_mu = dict()
                 for v in ids:
                     for a in authors_d:
@@ -225,7 +227,6 @@ class OnlineAtVb(LdaModel):
                             expavgElogtheta = numpy.exp(avgElogtheta)
 
                             # Compute phi.
-                            # TODO: avoid computing phi if possible.
                             var_phi[v, k] = expavgElogtheta * expElogbeta[k, v]
 
                         # Normalize phi over k.
@@ -244,7 +245,6 @@ class OnlineAtVb(LdaModel):
                             expavgElogtheta = numpy.exp(avgElogtheta)
 
                             # Compute mu over a.
-                            # TODO: avoid computing mu if possible.
                             var_mu[(v, a)] = expavgElogtheta
                             mu_sum += var_mu[(v, a)]
 
@@ -275,17 +275,18 @@ class OnlineAtVb(LdaModel):
                         # This is a little bit faster:
                         # tilde_lambda[:, ids] = self.eta[ids] + self.num_docs * cts * var_phi[ids, :].T
 
-                    # FIXME: I don't need to update the entire gamma, as I only updated a few rows of it,
-                    # corresponding to the authors in the document. The same goes for Elogtheta.
-
                     # Update gamma and lambda.
                     # Interpolation between document d's "local" gamma (tilde_gamma),
                     # and "global" gamma (var_gamma). Same goes for lambda.
                     # TODO: I may need to be smarter about computing rho. In ldamodel,
                     # it's: pow(offset + pass_ + (self.num_updates / chunksize), -decay).
+                    # FIXME: if tilde_gamma is computed like this in every iteration, then I can't compare
+                    # lastgamma to it for convergence test. FIXME.
                     tilde_gamma = (1 - rhot) * var_gamma + rhot * tilde_gamma
 
                     # Update Elogtheta and Elogbeta, since gamma and lambda have been updated.
+                    # FIXME: I don't need to update the entire gamma, as I only updated a few rows of it,
+                    # corresponding to the authors in the document. The same goes for Elogtheta.
                     Elogtheta = dirichlet_expectation(tilde_gamma)
                     
                     if self.optimize_lambda:
@@ -324,10 +325,9 @@ class OnlineAtVb(LdaModel):
 
             # End of corpus loop.
 
-            self.var_gamma = var_gamma
-            self.var_lambda = var_lambda
-
             if _pass % self.eval_every == 0:
+                self.var_gamma = var_gamma
+                self.var_lambda = var_lambda
                 if self.eval_every > 0:
                     if bound_eval:
                         prev_bound = bound
@@ -340,12 +340,30 @@ class OnlineAtVb(LdaModel):
                         logprob = self.eval_logprob()
                         logger.info('Log prob: %.3e.', logprob)
 
-            logger.info('Converged documents: %d/%d', converged, self.num_docs)
+            #logger.info('Converged documents: %d/%d', converged, self.num_docs)
 
             # TODO: consider whether to include somthing like this:
             #if numpy.abs(bound - prev_bound) / abs(prev_bound) < self.bound_threshold:
             #    break
         # End of pass over corpus loop.
+
+        # Ensure that the bound (or log probabilities) is computed at the very last pass.
+        if self.eval_every != 0 and not _pass % self.eval_every == 0:
+            # If the bound should be computed, and it wasn't computed at the last pass,
+            # then compute the bound.
+            self.var_gamma = var_gamma
+            self.var_lambda = var_lambda
+            if self.eval_every > 0:
+                if bound_eval:
+                    prev_bound = bound
+                    word_bound = self.word_bound(Elogtheta, Elogbeta)
+                    theta_bound = self.theta_bound(Elogtheta)
+                    beta_bound = self.beta_bound(Elogbeta)
+                    bound = word_bound + theta_bound + beta_bound
+                    logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
+                if logprob_eval:
+                    logprob = self.eval_logprob()
+                    logger.info('Log prob: %.3e.', logprob)
 
 
         self.var_lambda = var_lambda
@@ -371,6 +389,8 @@ class OnlineAtVb(LdaModel):
 
         # NOTE: computing the bound this way is very numerically unstable, which is why
         # "logsumexp" is used in the LDA code.
+        # NOTE: computing bound is very very computationally intensive. I could, for example,
+        # only use a portion of the data to do that (even a held-out set).
         bound= 0.0
         for d, doc in enumerate(docs):
             authors_d = self.doc2author[d]

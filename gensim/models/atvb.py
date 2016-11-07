@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
+# Copyright (C) 2016 Radim Rehurek <radimrehurek@seznam.cz>
+# Copyright (C) 2016 Olavur Mortensen <olavurmortensen@gmail.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
@@ -271,8 +272,8 @@ class AtVb(LdaModel):
         logger.info('Starting inference. Training on %d documents.', len(corpus))
 
         # Whether or not to evaluate bound and log probability, respectively.
-        bound_eval = False
-        logprob_eval = True
+        bound_eval = True
+        logprob_eval = False
 
         if var_lambda is None:
             self.optimize_lambda = True
@@ -360,6 +361,8 @@ class AtVb(LdaModel):
 
                         # Compute phi.
                         # TODO: avoid computing phi if possible.
+                        # NOTE: computation can be made more stable by adding the maximal value
+                        # inside the exponential, which will disappear in the normalization.
                         var_phi[d, v, k] = expavgElogtheta * expElogbeta[k, v]
                     # Normalize phi.
                     var_phi[d, v, :] = var_phi[d, v, :] / (var_phi[d, v, :].sum() + 1e-100)
@@ -470,6 +473,19 @@ class AtVb(LdaModel):
                     if numpy.abs(bound - prev_bound) / abs(prev_bound) < self.threshold:
                         break
         # End of update loop (iterations).
+
+        # Ensure that the bound (or log probabilities) is computed after the last iteration.
+        if self.eval_every != 0 and not (iteration + 1) % self.eval_every == 0:
+            if bound_eval:
+                prev_bound = deepcopy(bound)
+                word_bound = self.word_bound(Elogtheta, Elogbeta)
+                theta_bound = self.theta_bound(Elogtheta)
+                beta_bound = self.beta_bound(Elogbeta)
+                bound = word_bound + theta_bound + beta_bound
+                logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
+            if logprob_eval:
+                logprob = self.eval_logprob()
+                logger.info('Log prob: %.3e.', logprob)
 
         return var_gamma, var_lambda
 
