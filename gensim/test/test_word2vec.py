@@ -235,9 +235,8 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(model.vocab['human'].count, binary_model_with_vocab.vocab['human'].count)
     
     # def testSaveModelsForPythonVersion(self):
-    #     fname = os.path.join(os.path.dirname(__file__), 'word2vecmodel_python_2_7')
-    #     model = word2vec.Word2Vec(sentences, min_count=1, seed = 1000007)
-    #     model.init_sims()
+    #     fname = os.path.join(os.path.dirname(__file__), 'word2vecmodel_python_3_5')
+    #     model = word2vec.Word2Vec(sentences, size=10, min_count=0, seed=42, hs=1, negative=0)
     #     model.save(fname)
     #     logging.warning("Word2Vec model saved")
     
@@ -488,11 +487,11 @@ class TestWord2VecModel(unittest.TestCase):
 
     def models_equal(self, model, model2):
         self.assertEqual(len(model.vocab), len(model2.vocab))
-        self.assertTrue(numpy.allclose(model.syn0, model2.syn0))
+        self.assertTrue(numpy.allclose(model.syn0, model2.syn0, atol=1e-4))
         if model.hs:
-            self.assertTrue(numpy.allclose(model.syn1, model2.syn1))
+            self.assertTrue(numpy.allclose(model.syn1, model2.syn1, atol=1e-4))
         if model.negative:
-            self.assertTrue(numpy.allclose(model.syn1neg, model2.syn1neg))
+            self.assertTrue(numpy.allclose(model.syn1neg, model2.syn1neg, atol=1e-4))
         most_common_word = max(model.vocab.items(), key=lambda item: item[1].count)[0]
         self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
 
