@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#
+#h
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
@@ -10,7 +10,7 @@ Automated tests for checking transformation algorithms (the models package).
 
 
 import logging
-import unittest
+import unittest2 as unittest
 import os
 import os.path
 import tempfile
