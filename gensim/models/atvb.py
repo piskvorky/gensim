@@ -338,6 +338,8 @@ class AtVb(LdaModel):
                 logprob = self.eval_logprob()
                 logger.info('Log prob: %.3e.', logprob)
         for iteration in xrange(self.iterations):
+            lastgamma = var_gamma.copy()
+            lastlambda = var_lambda.copy()
             #logger.info('Starting iteration %d.', iteration)
             # Update phi.
             for d, doc in enumerate(corpus):
@@ -453,6 +455,11 @@ class AtVb(LdaModel):
                 self.var_lambda = var_lambda
 
             self.var_gamma = var_gamma
+
+            #meanchange = numpy.mean(abs(var_gamma - lastgamma))
+            #logger.info('meanchange in gamma: %.3e', meanchange)
+            #meanchange = numpy.mean(abs(var_lambda - lastlambda))
+            #logger.info('meanchange in lambda: %.3e', meanchange)
 
             # Print topics:
             #pprint(self.show_topics())

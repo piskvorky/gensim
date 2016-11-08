@@ -214,8 +214,6 @@ class OnlineAtVb(LdaModel):
                     #logger.info('iteration %i', iteration)
 
                     lastgamma = tilde_gamma.copy()
-                    if self.optimize_lambda:
-                        lastlambda = tilde_lambda.copy()
 
                     # Update phi.
                     for v in ids:
@@ -262,19 +260,6 @@ class OnlineAtVb(LdaModel):
                             tilde_gamma[a, k] *= len(self.author2doc[a])
                             tilde_gamma[a, k] += self.alpha[k]
 
-                    # TODO: see what happens if we put the lambda update outside this loop (i.e. 
-                    # only one update per document).
-                    if self.optimize_lambda:
-                        # Update lambda.
-                        for k in xrange(self.num_topics):
-                            for vi, v in enumerate(ids):
-                                # cnt = dict(doc).get(v, 0)
-                                cnt = cts[vi]
-                                tilde_lambda[k, v] = self.eta[v] + self.num_docs * cnt * var_phi[v, k]
-
-                        # This is a little bit faster:
-                        # tilde_lambda[:, ids] = self.eta[ids] + self.num_docs * cts * var_phi[ids, :].T
-
                     # Update gamma and lambda.
                     # Interpolation between document d's "local" gamma (tilde_gamma),
                     # and "global" gamma (var_gamma). Same goes for lambda.
@@ -282,43 +267,46 @@ class OnlineAtVb(LdaModel):
                     # it's: pow(offset + pass_ + (self.num_updates / chunksize), -decay).
                     # FIXME: if tilde_gamma is computed like this in every iteration, then I can't compare
                     # lastgamma to it for convergence test. FIXME.
-                    tilde_gamma = (1 - rhot) * var_gamma + rhot * tilde_gamma
+                    var_gamma_temp = (1 - rhot) * var_gamma + rhot * tilde_gamma
 
                     # Update Elogtheta and Elogbeta, since gamma and lambda have been updated.
                     # FIXME: I don't need to update the entire gamma, as I only updated a few rows of it,
                     # corresponding to the authors in the document. The same goes for Elogtheta.
-                    Elogtheta = dirichlet_expectation(tilde_gamma)
+                    Elogtheta = dirichlet_expectation(var_gamma_temp)
                     
-                    if self.optimize_lambda:
-                        # Note that we only changed the elements in lambda corresponding to 
-                        # the words in document d, hence the [:, ids] indexing.
-                        tilde_lambda[:, ids] = (1 - rhot) * var_lambda[:, ids] + rhot * tilde_lambda[:, ids]
-                        Elogbeta = dirichlet_expectation(tilde_lambda)
-                        expElogbeta = numpy.exp(Elogbeta)
-
                     # Check for convergence.
                     # Criterion is mean change in "local" gamma and lambda.
-                    # TODO: consider using separate thresholds for lambda and gamma.
                     if iteration > 0:
-                        meanchange_gamma = numpy.mean(abs(tilde_gamma - lastgamma))
+                        meanchange_gamma = numpy.mean(abs(var_gamma_temp - lastgamma))
                         gamma_condition = meanchange_gamma < self.threshold
-                        if self.optimize_lambda:
-                            meanchange_lambda = numpy.mean(abs(tilde_lambda - lastlambda))
-                            lambda_condition = meanchange_lambda < self.threshold
-                        else:
-                            lambda_condition = True
                         # logger.info('Mean change in gamma: %.3e', meanchange_gamma)
-                        # logger.info('Mean change in lambda: %.3e', meanchange_lambda)
-                        if gamma_condition and lambda_condition:
+                        if gamma_condition:
                             # logger.info('Converged after %d iterations.', iteration)
                             converged += 1
                             break
                 # End of iterations loop.
 
-                var_gamma = tilde_gamma.copy()
+                # FIXME: there are too many different gamma variables!
+                var_gamma = var_gamma_temp.copy()
 
                 if self.optimize_lambda:
-                    var_lambda = tilde_lambda.copy()
+                     # Update lambda.
+                     # only one update per document).
+                     for k in xrange(self.num_topics):
+                         for vi, v in enumerate(ids):
+                             # cnt = dict(doc).get(v, 0)
+                             cnt = cts[vi]
+                             tilde_lambda[k, v] = self.eta[v] + self.num_docs * cnt * var_phi[v, k]
+
+                     # This is a little bit faster:
+                     # tilde_lambda[:, ids] = self.eta[ids] + self.num_docs * cts * var_phi[ids, :].T
+
+                     # Note that we only changed the elements in lambda corresponding to 
+                     # the words in document d, hence the [:, ids] indexing.
+                     var_lambda[:, ids] = (1 - rhot) * var_lambda[:, ids] + rhot * tilde_lambda[:, ids]
+                     Elogbeta = dirichlet_expectation(var_lambda)
+                     expElogbeta = numpy.exp(Elogbeta)
+                     var_lambda = var_lambda.copy()
 
                 # Print topics:
                 # pprint(self.show_topics())
