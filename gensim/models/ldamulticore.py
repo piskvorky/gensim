@@ -80,7 +80,7 @@ class LdaMulticore(LdaModel):
     def __init__(self, corpus=None, num_topics=100, id2word=None, workers=None,
                  chunksize=2000, passes=1, batch=False, alpha='symmetric',
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50,
-                 gamma_threshold=0.001, random_state=None, minimium_probability=0.01,
+                 gamma_threshold=0.001, random_state=None, minimum_probability=0.01,
                  minimum_phi_value=0.01, per_word_topics=False):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
@@ -145,7 +145,7 @@ class LdaMulticore(LdaModel):
         super(LdaMulticore, self).__init__(corpus=corpus, num_topics=num_topics,
             id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
             decay=decay, offset=offset, eval_every=eval_every, iterations=iterations,
-            gamma_threshold=gamma_threshold, random_state=random_state, minimium_probability= minimium_probability,
+            gamma_threshold=gamma_threshold, random_state=random_state, minimum_probability= minimum_probability,
             minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics)
 
 
