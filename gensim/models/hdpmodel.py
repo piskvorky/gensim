@@ -38,7 +38,7 @@ import numpy
 from scipy.special import gammaln, psi  # gamma function utils
 
 from gensim import interfaces, utils, matutils
-from gensim.models import basemodel
+from gensim.models import basemodel, ldamodel
 from six.moves import xrange
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,6 @@ rhot_bound = 0.0
 def dirichlet_expectation(alpha):
     """
     For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
-
     """
     if (len(alpha.shape) == 1):
         result = psi(alpha) - psi(numpy.sum(alpha))
@@ -486,6 +485,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             fout.write('eta: %s\n' % str(self.m_eta))
             fout.write('gamma: %s\n' % str(self.m_gamma))
 
+
     def hdp_to_lda(self):
         """
         Compute the LDA almost equivalent HDP.
@@ -506,6 +506,17 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return (alpha, beta)
 
+
+    def suggested_lda_model(self):
+        """
+        Returns closest corresponding ldamodel object corresponding to current hdp model.
+        """
+        alpha, beta = self.hdp_to_lda()
+        ldam = ldamodel.LdaModel(num_topics=150, alpha=alpha, id2word=self.id2word)
+        ldam.expElogbeta[:] = beta
+        return ldam
+
+        
     def evaluate_test_corpus(self, corpus):
         logger.info('TEST: evaluating test corpus')
         if self.lda_alpha is None or self.lda_beta is None:
