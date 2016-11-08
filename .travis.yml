@@ -18,5 +18,5 @@ install:
   - pip install pyemd
   - pip install annoy
   - pip install testfixtures
-  - python setup.py install
+  - pip install .
 script: python setup.py test
