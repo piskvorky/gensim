@@ -250,7 +250,7 @@ class TestLdaModel(unittest.TestCase, basetests.TestBaseTopicModel):
                 self.assertTrue(isinstance(v, float))
 
         #Test case to use the get_document_topic function for the corpus
-        all_topics = model.get_document_topics(self.corpus, per_word_topics=True)
+        all_topics = model.get_document_topics(self.corpus, minimum_probability=0.5, minimum_phi_value=0.3, per_word_topics=True)
         
         self.assertEqual(model.state.numdocs, len(corpus))
         

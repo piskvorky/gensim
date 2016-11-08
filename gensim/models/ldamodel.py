@@ -985,8 +985,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Ignore topics with very low probability (below `eps`).
 
         """
-        #Is eps equivalent to minimum_probability?
-        eps = self.minimum_probability
         return self.get_document_topics(bow, eps, self.minimum_phi_value, self.per_word_topics)
 
     def save(self, fname, ignore=['state', 'dispatcher'], *args, **kwargs):
