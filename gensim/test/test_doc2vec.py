@@ -8,6 +8,7 @@
 Automated tests for checking transformation algorithms (the models package).
 """
 
+
 from __future__ import with_statement
 
 import logging
@@ -158,6 +159,12 @@ class TestDoc2VecModel(unittest.TestCase):
         sims = sims[:20]
         self.assertEqual(list(zip(*sims))[0], list(zip(*sims2))[0])  # same doc ids
         self.assertTrue(np.allclose(list(zip(*sims))[1], list(zip(*sims2))[1]))  # close-enough dists
+
+        # sim results should be in clip range if given
+        clip_sims = model.docvecs.most_similar(fire1, clip_start=len(model.docvecs)//2, clip_end=len(model.docvecs))
+        sims_doc_id = [docid for docid, sim in clip_sims]
+        for s_id in sims_doc_id:
+            self.assertTrue(len(model.docvecs)//2 <= s_id <= len(model.docvecs))
 
         # tennis doc should be out-of-place among fire news
         self.assertEqual(model.docvecs.doesnt_match([fire1, tennis1, fire2]), tennis1)
