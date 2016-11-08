@@ -24,7 +24,7 @@ from gensim.corpora import mmcorpus, Dictionary
 from gensim.models.wrappers import ldamallet
 from gensim import matutils
 from gensim.models import ldamodel
-
+from gensim.test import basetests
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
@@ -49,11 +49,16 @@ def testfile():
     # temporary data will be stored to this file
     return os.path.join(tempfile.gettempdir(), 'gensim_models.tst')
 
-class TestLdaMallet(unittest.TestCase):
+class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
     def setUp(self):
-        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
         mallet_home = os.environ.get('MALLET_HOME', None)
         self.mallet_path = os.path.join(mallet_home, 'bin', 'mallet') if mallet_home else None
+        if not self.mallet_path:
+            raise unittest.SkipTest("MALLET_HOME not specified. Skipping Mallet tests.")
+        self.corpus = mmcorpus.MmCorpus(datapath('testcorpus.mm'))
+
+        # self.model is used in TestBaseTopicModel
+        self.model = ldamallet.LdaMallet(self.mallet_path, corpus, id2word=dictionary, num_topics=2, iterations=1)
 
 
     def testTransform(self):
