@@ -758,7 +758,7 @@ class Word2Vec(utils.SaveLoad):
 
         """
         if (self.model_trimmed_post_training):
-            raise RuntimeError("parameters for training were discarded")
+            raise RuntimeError("Parameters for training were discarded using model_trimmed_post_training method")
         if FAST_VERSION < 0:
             import warnings
             warnings.warn("C extension not loaded for Word2Vec, training will be slow. "
