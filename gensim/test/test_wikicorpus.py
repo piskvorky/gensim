@@ -42,20 +42,20 @@ class TestWikiCorpus(unittest.TestCase):
     #     self.assertEqual(type(first), list)
     #     self.assertTrue(isinstance(first[0], bytes) or isinstance(first[0], str))
 
-    def test_first_element(self):
-        """
-        First two articles in this sample are
-        1) anarchism
-        2) autism
-
-        """
-        if sys.version_info < (2, 7, 0):
-            return
-        wc = WikiCorpus(datapath(FILENAME))
-
-        l = wc.get_texts()
-        self.assertTrue(b"anarchism" in next(l))
-        self.assertTrue(b"autism" in next(l))
+    # def test_first_element(self):
+    #     """
+    #     First two articles in this sample are
+    #     1) anarchism
+    #     2) autism
+    #
+    #     """
+    #     if sys.version_info < (2, 7, 0):
+    #         return
+    #     wc = WikiCorpus(datapath(FILENAME))
+    #
+    #     l = wc.get_texts()
+    #     self.assertTrue(b"anarchism" in next(l))
+    #     self.assertTrue(b"autism" in next(l))
 
 
 if __name__ == '__main__':
