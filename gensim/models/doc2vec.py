@@ -460,7 +460,7 @@ class DocvecsArray(utils.SaveLoad):
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_docs), reverse=True)
         # ignore (don't return) docs from the input
-        result = [(self.index_to_doctag(sim), float(dists[sim])) for sim in best if sim not in all_docs]
+        result = [(self.index_to_doctag(sim + clip_start), float(dists[sim])) for sim in best if (sim + clip_start) not in all_docs]
         return result[:topn]
 
     def doesnt_match(self, docs):
