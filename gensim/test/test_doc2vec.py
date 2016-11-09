@@ -161,10 +161,10 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(np.allclose(list(zip(*sims))[1], list(zip(*sims2))[1]))  # close-enough dists
 
         # sim results should be in clip range if given
-        clip_sims = model.docvecs.most_similar(fire1, clip_start=len(model.docvecs)//2, clip_end=len(model.docvecs))
+        clip_sims = model.docvecs.most_similar(fire1, clip_start=len(model.docvecs) // 2, clip_end=len(model.docvecs) * 2 // 3)
         sims_doc_id = [docid for docid, sim in clip_sims]
         for s_id in sims_doc_id:
-            self.assertTrue(len(model.docvecs)//2 <= s_id <= len(model.docvecs))
+            self.assertTrue(len(model.docvecs) // 2 <= s_id <= len(model.docvecs) * 2 // 3)
 
         # tennis doc should be out-of-place among fire news
         self.assertEqual(model.docvecs.doesnt_match([fire1, tennis1, fire2]), tennis1)
