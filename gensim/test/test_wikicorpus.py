@@ -26,9 +26,6 @@ logger = logging.getLogger(__name__)
 
 class TestWikiCorpus(unittest.TestCase):
 
-    def setUp(self):
-        wc = WikiCorpus(datapath(FILENAME))
-
     # #TODO: sporadic failure to be investigated
     # def test_get_texts_returns_generator_of_lists(self):
     #     logger.debug("Current Python Version is " + str(sys.version_info))
