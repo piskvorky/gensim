@@ -17,6 +17,7 @@ from .ldamulticore import LdaMulticore
 from .phrases import Phrases
 from .normmodel import NormModel
 from .onlineatvb import OnlineAtVb
+from .minibatchatvb import MinibatchAtVb
 from .atvb import AtVb
 
 from . import wrappers
