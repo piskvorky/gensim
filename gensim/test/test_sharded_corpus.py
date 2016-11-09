@@ -12,7 +12,7 @@ import os
 import unittest
 
 import random
-import numpy
+import numpy as np
 import shutil
 
 from scipy import sparse
@@ -89,7 +89,7 @@ class TestShardedCorpus(unittest.TestCase):
         self.assertEqual(self.corpus.current_shard_n, 2)
 
         for i in xrange(220, 227):
-            self.assertTrue(numpy.array_equal(self.corpus[i], item[i-220]))
+            self.assertTrue(numpy as np.array_equal(self.corpus[i], item[i-220]))
 
     def test_sparse_serialization(self):
 
@@ -110,15 +110,15 @@ class TestShardedCorpus(unittest.TestCase):
                                sparse_retrieval=False)
 
         item = corpus[3]
-        self.assertTrue(isinstance(item, numpy.ndarray))
+        self.assertTrue(isinstance(item, numpy as np.ndarray))
         self.assertEqual(item.shape, (corpus.dim,))
 
         dslice = corpus[2:6]
-        self.assertTrue(isinstance(dslice, numpy.ndarray))
+        self.assertTrue(isinstance(dslice, numpy as np.ndarray))
         self.assertEqual(dslice.shape, (4, corpus.dim))
 
         ilist = corpus[[2, 3, 4, 5]]
-        self.assertTrue(isinstance(ilist, numpy.ndarray))
+        self.assertTrue(isinstance(ilist, numpy as np.ndarray))
         self.assertEqual(ilist.shape, (4, corpus.dim))
 
         self.assertEqual(ilist.all(), dslice.all())
@@ -185,15 +185,15 @@ class TestShardedCorpus(unittest.TestCase):
                                      sparse_retrieval=False)
 
         item = corpus[3]
-        self.assertTrue(isinstance(item, numpy.ndarray))
+        self.assertTrue(isinstance(item, numpy as np.ndarray))
         self.assertEqual(item.shape, (1, corpus.dim))
 
         dslice = corpus[2:6]
-        self.assertTrue(isinstance(dslice, numpy.ndarray))
+        self.assertTrue(isinstance(dslice, numpy as np.ndarray))
         self.assertEqual(dslice.shape, (4, corpus.dim))
 
         ilist = corpus[[2, 3, 4, 5]]
-        self.assertTrue(isinstance(ilist, numpy.ndarray))
+        self.assertTrue(isinstance(ilist, numpy as np.ndarray))
         self.assertEqual(ilist.shape, (4, corpus.dim))
 
         # Also compare with what the dense dataset is giving us

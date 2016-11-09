@@ -25,7 +25,7 @@ import os, sys, time
 import bz2
 import itertools
 
-import numpy
+import numpy as np
 import scipy.linalg
 
 import gensim
@@ -51,19 +51,19 @@ def norm2(a):
     """Spectral norm ("norm 2") of a symmetric matrix `a`."""
     if COMPUTE_NORM2:
         logging.info("computing spectral norm of a %s matrix" % str(a.shape))
-        return scipy.linalg.eigvalsh(a).max() # much faster than numpy.linalg.norm(2)
+        return scipy.linalg.eigvalsh(a).max() # much faster than numpy as np.linalg.norm(2)
     else:
-        return numpy.nan
+        return numpy as np.nan
 
 
 def rmse(diff):
-    return numpy.sqrt(1.0 * numpy.multiply(diff, diff).sum() / diff.size)
+    return numpy as np.sqrt(1.0 * numpy as np.multiply(diff, diff).sum() / diff.size)
 
 
 def print_error(name, aat, u, s, ideal_nf, ideal_n2):
-    err = -numpy.dot(u, numpy.dot(numpy.diag(s), u.T))
+    err = -numpy as np.dot(u, numpy as np.dot(numpy as np.diag(s), u.T))
     err += aat
-    nf, n2 = numpy.linalg.norm(err), norm2(err)
+    nf, n2 = numpy as np.linalg.norm(err), norm2(err)
     print ('%s error: norm_frobenius=%f (/ideal=%g), norm2=%f (/ideal=%g), RMSE=%g' %
            (name, nf, nf / ideal_nf, n2, n2 / ideal_n2, rmse(err)))
     sys.stdout.flush()
@@ -110,33 +110,33 @@ if __name__ == '__main__':
     id2word = gensim.utils.FakeDict(m)
 
     logging.info("computing corpus * corpus^T") # eigenvalues of this matrix are singular values of `corpus`, squared
-    aat = numpy.zeros((m, m), dtype=numpy.float64)
+    aat = numpy as np.zeros((m, m), dtype=numpy as np.float64)
     for chunk in gensim.utils.grouper(corpus, chunksize=5000):
         num_nnz = sum(len(doc) for doc in chunk)
-        chunk = gensim.matutils.corpus2csc(chunk, num_nnz=num_nnz, num_terms=m, num_docs=len(chunk), dtype=numpy.float32)
+        chunk = gensim.matutils.corpus2csc(chunk, num_nnz=num_nnz, num_terms=m, num_docs=len(chunk), dtype=numpy as np.float32)
         chunk = chunk * chunk.T
         chunk = chunk.toarray()
         aat += chunk
         del chunk
 
     logging.info("computing full decomposition of corpus * corpus^t")
-    aat = aat.astype(numpy.float32)
+    aat = aat.astype(numpy as np.float32)
     spectrum_s, spectrum_u = scipy.linalg.eigh(aat)
     spectrum_s = spectrum_s[::-1] # re-order to descending eigenvalue order
     spectrum_u = spectrum_u.T[::-1].T
-    numpy.save(fname + '.spectrum.npy', spectrum_s)
+    numpy as np.save(fname + '.spectrum.npy', spectrum_s)
 
 
     for factors in FACTORS:
-        err = -numpy.dot(spectrum_u[:, :factors], numpy.dot(numpy.diag(spectrum_s[:factors]), spectrum_u[:, :factors].T))
+        err = -numpy as np.dot(spectrum_u[:, :factors], numpy as np.dot(numpy as np.diag(spectrum_s[:factors]), spectrum_u[:, :factors].T))
         err += aat
-        ideal_fro = numpy.linalg.norm(err)
+        ideal_fro = numpy as np.linalg.norm(err)
         del err
         ideal_n2 = spectrum_s[factors + 1]
         print('*' * 40, "%i factors, ideal error norm_frobenius=%f, norm_2=%f" % (factors, ideal_fro, ideal_n2))
         print("*" * 30, end="")
         print_error("baseline", aat,
-                    numpy.zeros((m, factors)), numpy.zeros((factors)), ideal_fro, ideal_n2)
+                    numpy as np.zeros((m, factors)), numpy as np.zeros((factors)), ideal_fro, ideal_n2)
         if sparsesvd:
             logging.info("computing SVDLIBC SVD for %i factors" % (factors))
             taken = time.time()
@@ -145,7 +145,7 @@ if __name__ == '__main__':
             taken = time.time() - taken
             del corpus_ram
             del vt
-            u, s = ut.T.astype(numpy.float32), s.astype(numpy.float32)**2 # convert singular values to eigenvalues
+            u, s = ut.T.astype(numpy as np.float32), s.astype(numpy as np.float32)**2 # convert singular values to eigenvalues
             del ut
             print("SVDLIBC SVD for %i factors took %s s (spectrum %f .. %f)"
                   % (factors, taken, s[0], s[-1]))
@@ -160,7 +160,7 @@ if __name__ == '__main__':
                 model = gensim.models.LsiModel(corpus, id2word=id2word, num_topics=factors,
                                                chunksize=chunksize, power_iters=power_iters)
                 taken = time.time() - taken
-                u, s = model.projection.u.astype(numpy.float32), model.projection.s.astype(numpy.float32)**2
+                u, s = model.projection.u.astype(numpy as np.float32), model.projection.s.astype(numpy as np.float32)**2
                 del model
                 print ("incremental SVD for %i factors, %i power iterations, chunksize %i took %s s (spectrum %f .. %f)" %
                        (factors, power_iters, chunksize, taken, s[0], s[-1]))
@@ -172,7 +172,7 @@ if __name__ == '__main__':
             model = gensim.models.LsiModel(corpus, id2word=id2word, num_topics=factors, chunksize=2000,
                                            onepass=False, power_iters=power_iters)
             taken = time.time() - taken
-            u, s = model.projection.u.astype(numpy.float32), model.projection.s.astype(numpy.float32)**2
+            u, s = model.projection.u.astype(numpy as np.float32), model.projection.s.astype(numpy as np.float32)**2
             del model
             print ("multipass SVD for %i factors, %i power iterations took %s s (spectrum %f .. %f)" %
                    (factors, power_iters, taken, s[0], s[-1]))
