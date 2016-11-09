@@ -245,7 +245,7 @@ class ShardedCorpus(IndexedCorpus):
             # and retain information about how the corpus
             # was serialized.
             logger.info('Saving ShardedCorpus object to '
-                        '{0}'.format(self.output_prefix))
+                         '{0}'.format(self.output_prefix))
             self.save()
         else:
             logger.info('Cloning existing...')
@@ -262,7 +262,7 @@ class ShardedCorpus(IndexedCorpus):
         if proposed_dim != self.dim:
             if self.dim is None:
                 logger.info('Deriving dataset dimension from corpus: '
-                            '{0}'.format(proposed_dim))
+                             '{0}'.format(proposed_dim))
             else:
                 logger.warn('Dataset dimension derived from input corpus diffe'
                             'rs from initialization argument, using corpus.'
