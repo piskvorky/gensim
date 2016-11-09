@@ -16,7 +16,7 @@ import os.path
 import tempfile
 
 import six
-import numpy
+import numpy as np
 import scipy.linalg
 
 
@@ -73,7 +73,7 @@ class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
             transformed = model[doc]
             vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
             expected = [0.49, 0.51]
-            passed = numpy.allclose(sorted(vec), sorted(expected), atol=1e-1) # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1) # must contain the same values, up to re-ordering
             if passed:
                 break
             logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)" %
@@ -93,7 +93,7 @@ class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
             transformed = model[doc]
             vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
             expected = [1.0, 0.0]
-            passed = numpy.allclose(sorted(vec), sorted(expected), atol=1e-2) # must contain the same values, up to re-ordering
+            passed = np.allclose(sorted(vec), sorted(expected), atol=1e-2) # must contain the same values, up to re-ordering
             if passed:
                 break
             logging.warning("LDA failed to converge on attempt %i (got %s, expected %s)" %
@@ -121,9 +121,9 @@ class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
         model.save(fname)
         model2 = ldamallet.LdaMallet.load(fname)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.word_topics, model2.word_topics))
+        self.assertTrue(np.allclose(model.word_topics, model2.word_topics))
         tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
     def testPersistenceCompressed(self):
         if not self.mallet_path:
@@ -133,9 +133,9 @@ class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
         model.save(fname)
         model2 = ldamallet.LdaMallet.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy.allclose(model.word_topics, model2.word_topics))
+        self.assertTrue(np.allclose(model.word_topics, model2.word_topics))
         tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
     def testLargeMmap(self):
         if not self.mallet_path:
@@ -149,10 +149,10 @@ class TestLdaMallet(unittest.TestCase, basetests.TestBaseTopicModel):
         # test loading the large model arrays with mmap
         model2 = ldamodel.LdaModel.load(testfile(), mmap='r')
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(isinstance(model2.word_topics, numpy.memmap))
-        self.assertTrue(numpy.allclose(model.word_topics, model2.word_topics))
+        self.assertTrue(isinstance(model2.word_topics, np.memmap))
+        self.assertTrue(np.allclose(model.word_topics, model2.word_topics))
         tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
     def testLargeMmapCompressed(self):
         if not self.mallet_path:

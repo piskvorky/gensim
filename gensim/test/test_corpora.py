@@ -197,7 +197,7 @@ class CorpusTestCase(unittest.TestCase):
         self.assertEquals([d for i, d in enumerate(docs) if i in [1, 3, 4]], list(c))
         self.assertEquals([d for i, d in enumerate(docs) if i in [1, 3, 4]], list(c))
         self.assertEquals(len(corpus[[0, 1, -1]]), 3)
-        self.assertEquals(len(corpus[numpy as np.asarray([0, 1, -1])]), 3)
+        self.assertEquals(len(corpus[np.asarray([0, 1, -1])]), 3)
 
         # check that TransformedCorpus supports indexing when the underlying
         # corpus does, and throws an error otherwise

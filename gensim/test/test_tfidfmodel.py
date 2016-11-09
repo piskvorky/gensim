@@ -60,7 +60,7 @@ class TestTfidfModel(unittest.TestCase):
         transformed = model[doc]
 
         expected = [(0, 0.57735026918962573), (1, 0.57735026918962573), (2, 0.57735026918962573)]
-        self.assertTrue(numpy as np.allclose(transformed, expected))
+        self.assertTrue(np.allclose(transformed, expected))
 
 
     def testInit(self):
@@ -85,7 +85,7 @@ class TestTfidfModel(unittest.TestCase):
         model2 = tfidfmodel.TfidfModel.load(fname)
         self.assertTrue(model.idfs == model2.idfs)
         tstvec = []
-        self.assertTrue(numpy as np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
     def testPersistenceCompressed(self):
         fname = testfile() + '.gz'
@@ -94,7 +94,7 @@ class TestTfidfModel(unittest.TestCase):
         model2 = tfidfmodel.TfidfModel.load(fname, mmap=None)
         self.assertTrue(model.idfs == model2.idfs)
         tstvec = []
-        self.assertTrue(numpy as np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 #endclass TestTfidfModel
 
 

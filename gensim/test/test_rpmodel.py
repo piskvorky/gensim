@@ -53,7 +53,7 @@ class TestRpModel(unittest.TestCase):
 
     def testTransform(self):
         # create the transformation model
-        numpy as np.random.seed(13) # HACK; set fixed seed so that we always get the same random matrix (and can compare against expected results)
+        np.random.seed(13) # HACK; set fixed seed so that we always get the same random matrix (and can compare against expected results)
         model = rpmodel.RpModel(self.corpus, num_topics=2)
 
         # transform one document
@@ -61,8 +61,8 @@ class TestRpModel(unittest.TestCase):
         transformed = model[doc]
         vec = matutils.sparse2full(transformed, 2) # convert to dense vector, for easier equality tests
 
-        expected = numpy as np.array([-0.70710677, 0.70710677])
-        self.assertTrue(numpy as np.allclose(vec, expected)) # transformed entries must be equal up to sign
+        expected = np.array([-0.70710677, 0.70710677])
+        self.assertTrue(np.allclose(vec, expected)) # transformed entries must be equal up to sign
 
 
     def testPersistence(self):
@@ -71,9 +71,9 @@ class TestRpModel(unittest.TestCase):
         model.save(fname)
         model2 = rpmodel.RpModel.load(fname)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy as np.allclose(model.projection, model2.projection))
+        self.assertTrue(np.allclose(model.projection, model2.projection))
         tstvec = []
-        self.assertTrue(numpy as np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 
     def testPersistenceCompressed(self):
         fname = testfile() + '.gz'
@@ -81,9 +81,9 @@ class TestRpModel(unittest.TestCase):
         model.save(fname)
         model2 = rpmodel.RpModel.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
-        self.assertTrue(numpy as np.allclose(model.projection, model2.projection))
+        self.assertTrue(np.allclose(model.projection, model2.projection))
         tstvec = []
-        self.assertTrue(numpy as np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec])) # try projecting an empty vector
 #endclass TestRpModel
 
 
