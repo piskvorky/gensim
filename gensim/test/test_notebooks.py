@@ -50,6 +50,7 @@ class TestNotebooks(unittest.TestCase):
             nb, errors = _notebook_run(notebook)
             num_notebooks_tested = num_notebooks_tested + 1
             assert errors == []
+
         print('Tested {} notebooks in gensim/docs/notebooks').format(num_notebooks_tested)
 
 #endclass TestNotebooks
