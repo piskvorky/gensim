@@ -83,9 +83,9 @@ def clip_spectrum(s, k, discard=0.001):
     The returned value is clipped against `k` (= never return more than `k`).
     """
     # compute relative contribution of eigenvalues towards the energy spectrum
-    rel_spectrum = numpy as np.abs(1.0 - numpy as np.cumsum(s / numpy as np.sum(s)))
+    rel_spectrum = np.abs(1.0 - np.cumsum(s / np.sum(s)))
     # ignore the last `discard` mass (or 1/k, whichever is smaller) of the spectrum
-    small = 1 + len(numpy as np.where(rel_spectrum > min(discard, 1.0 / k))[0])
+    small = 1 + len(np.where(rel_spectrum > min(discard, 1.0 / k))[0])
     k = min(k, small)  # clip against k
     logger.info("keeping %i factors (discarding %.3f%% of energy spectrum)",
                 k, 100 * rel_spectrum[k - 1])
@@ -95,14 +95,14 @@ def clip_spectrum(s, k, discard=0.001):
 def asfarray(a, name=''):
     if not a.flags.f_contiguous:
         logger.debug("converting %s array %s to FORTRAN order", a.shape, name)
-        a = numpy as np.asfortranarray(a)
+        a = np.asfortranarray(a)
     return a
 
 
 def ascarray(a, name=''):
     if not a.flags.contiguous:
         logger.debug("converting %s array %s to C order", a.shape, name)
-        a = numpy as np.ascontiguousarray(a)
+        a = np.ascontiguousarray(a)
     return a
 
 
@@ -175,42 +175,42 @@ class Projection(utils.SaveLoad):
         # find component of u2 orthogonal to u1
         logger.debug("constructing orthogonal component")
         self.u = asfarray(self.u, 'self.u')
-        c = numpy as np.dot(self.u.T, other.u)
+        c = np.dot(self.u.T, other.u)
         self.u = ascarray(self.u, 'self.u')
-        other.u -= numpy as np.dot(self.u, c)
+        other.u -= np.dot(self.u, c)
 
         other.u = [other.u]  # do some reference magic and call qr_destroy, to save RAM
         q, r = matutils.qr_destroy(other.u)  # q, r = QR(component)
         assert not other.u
 
         # find the rotation that diagonalizes r
-        k = numpy as np.bmat([[numpy as np.diag(decay * self.s), numpy as np.multiply(c, other.s)],
-                        [matutils.pad(numpy as np.array([]).reshape(0, 0), min(m, n2), n1), numpy as np.multiply(r, other.s)]])
+        k = np.bmat([[np.diag(decay * self.s), np.multiply(c, other.s)],
+                        [matutils.pad(np.array([]).reshape(0, 0), min(m, n2), n1), np.multiply(r, other.s)]])
         logger.debug("computing SVD of %s dense matrix", k.shape)
         try:
-            # in numpy as np < 1.1.0, running SVD sometimes results in "LinAlgError: SVD did not converge'.
-            # for these early versions of numpy as np, catch the error and try to compute
+            # in np < 1.1.0, running SVD sometimes results in "LinAlgError: SVD did not converge'.
+            # for these early versions of np, catch the error and try to compute
             # SVD again, but over k*k^T.
-            # see http://www.mail-archive.com/numpy as np-discussion@scipy.org/msg07224.html and
-            # bug ticket http://projects.scipy.org/numpy as np/ticket/706
-            # sdoering: replaced numpy as np's linalg.svd with scipy's linalg.svd:
-            u_k, s_k, _ = scipy.linalg.svd(k, full_matrices=False)  # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK wrapper for partial svd/eigendecomp in numpy as np :( //sdoering: maybe there is one in scipy?
+            # see http://www.mail-archive.com/np-discussion@scipy.org/msg07224.html and
+            # bug ticket http://projects.scipy.org/np/ticket/706
+            # sdoering: replaced np's linalg.svd with scipy's linalg.svd:
+            u_k, s_k, _ = scipy.linalg.svd(k, full_matrices=False)  # TODO *ugly overkill*!! only need first self.k SVD factors... but there is no LAPACK wrapper for partial svd/eigendecomp in np :( //sdoering: maybe there is one in scipy?
         except scipy.linalg.LinAlgError:
             logger.error("SVD(A) failed; trying SVD(A * A^T)")
-            u_k, s_k, _ = scipy.linalg.svd(numpy as np.dot(k, k.T), full_matrices=False)  # if this fails too, give up with an exception
-            s_k = numpy as np.sqrt(s_k)  # go back from eigen values to singular values
+            u_k, s_k, _ = scipy.linalg.svd(np.dot(k, k.T), full_matrices=False)  # if this fails too, give up with an exception
+            s_k = np.sqrt(s_k)  # go back from eigen values to singular values
 
         k = clip_spectrum(s_k**2, self.k)
-        u1_k, u2_k, s_k = numpy as np.array(u_k[:n1, :k]), numpy as np.array(u_k[n1:, :k]), s_k[:k]
+        u1_k, u2_k, s_k = np.array(u_k[:n1, :k]), np.array(u_k[n1:, :k]), s_k[:k]
 
         # update & rotate current basis U = [U, U']*[U1_k, U2_k]
         logger.debug("updating orthonormal basis U")
         self.s = s_k
         self.u = ascarray(self.u, 'self.u')
-        self.u = numpy as np.dot(self.u, u1_k)
+        self.u = np.dot(self.u, u1_k)
 
         q = ascarray(q, 'q')
-        q = numpy as np.dot(q, u2_k)
+        q = np.dot(q, u2_k)
         self.u += q
 
         # make each column of U start with a non-negative number (to force canonical decomposition)
@@ -218,8 +218,8 @@ class Projection(utils.SaveLoad):
             for i in xrange(self.u.shape[1]):
                 if self.u[0, i] < 0.0:
                     self.u[:, i] *= -1.0
-#        diff = numpy as np.dot(self.u.T, self.u) - numpy as np.eye(self.u.shape[1])
-#        logger.info('orth error after=%f' % numpy as np.sum(diff * diff))
+#        diff = np.dot(self.u.T, self.u) - np.eye(self.u.shape[1])
+#        logger.info('orth error after=%f' % np.sum(diff * diff))
 #endclass Projection
 
 
@@ -443,15 +443,15 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # # convert input to dense, then do dense * dense multiplication
         # # ± same performance as above (BLAS dense * dense is better optimized than scipy.sparse), but consumes more memory
         # vec = matutils.corpus2dense(bow, num_terms=self.num_terms, num_docs=len(bow))
-        # topic_dist = numpy as np.dot(self.projection.u[:, :self.num_topics].T, vec)
+        # topic_dist = np.dot(self.projection.u[:, :self.num_topics].T, vec)
 
-        # # use numpy as np's advanced indexing to simulate sparse * dense
+        # # use np's advanced indexing to simulate sparse * dense
         # # ± same speed again
         # u = self.projection.u[:, :self.num_topics]
-        # topic_dist = numpy as np.empty((u.shape[1], len(bow)), dtype=u.dtype)
+        # topic_dist = np.empty((u.shape[1], len(bow)), dtype=u.dtype)
         # for vecno, vec in enumerate(bow):
         #     indices, data = zip(*vec) if vec else ([], [])
-        #     topic_dist[:, vecno] = numpy as np.dot(u.take(indices, axis=0).T, numpy as np.array(data, dtype=u.dtype))
+        #     topic_dist[:, vecno] = np.dot(u.take(indices, axis=0).T, np.array(data, dtype=u.dtype))
 
         if not is_corpus:
             # convert back from matrix into a 1d vec
@@ -460,7 +460,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if scaled:
             topic_dist = (1.0 / self.projection.s[:self.num_topics]) * topic_dist  # s^-1 * u^-1 * x
 
-        # convert a numpy as np array to gensim sparse vector = tuples of (feature_id, feature_weight),
+        # convert a np array to gensim sparse vector = tuples of (feature_id, feature_weight),
         # with no zero weights.
         if not is_corpus:
             # lsi[single_document]
@@ -487,9 +487,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # `self.num_topics`). in that case, return an empty string
         if topicno >= len(self.projection.u.T):
             return ''
-        c = numpy as np.asarray(self.projection.u.T[topicno, :]).flatten()
-        norm = numpy as np.sqrt(numpy as np.sum(numpy as np.dot(c, c)))
-        most = matutils.argsort(numpy as np.abs(c), topn, reverse=True)
+        c = np.asarray(self.projection.u.T[topicno, :]).flatten()
+        norm = np.sqrt(np.sum(np.dot(c, c)))
+        most = matutils.argsort(np.abs(c), topn, reverse=True)
         return [(self.id2word[val], 1.0 * c[val] / norm) for val in most]
 
     def show_topics(self, num_topics=-1, num_words=10, log=False, formatted=True):
@@ -575,8 +575,8 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
     topics, result = set(topics), {}
     # TODO speed up by block computation
     for uvecno, uvec in enumerate(u):
-        uvec = numpy as np.abs(numpy as np.asarray(uvec).flatten())
-        udiff = uvec / numpy as np.sqrt(numpy as np.sum(numpy as np.dot(uvec, uvec)))
+        uvec = np.abs(np.asarray(uvec).flatten())
+        udiff = uvec / np.sqrt(np.sum(np.dot(uvec, uvec)))
         for topic in topics:
             result.setdefault(topic, []).append((udiff[topic], uvecno))
 
@@ -607,7 +607,7 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
 
 
 def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
-                   power_iters=0, dtype=numpy as np.float64, eps=1e-6):
+                   power_iters=0, dtype=np.float64, eps=1e-6):
     """
     Run truncated Singular Value Decomposition (SVD) on a sparse input.
 
@@ -640,18 +640,18 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
     # first phase: construct the orthonormal action matrix Q = orth(Y) = orth((A * A.T)^q * A * O)
     # build Y in blocks of `chunksize` documents (much faster than going one-by-one
     # and more memory friendly than processing all documents at once)
-    y = numpy as np.zeros(dtype=dtype, shape=(num_terms, samples))
+    y = np.zeros(dtype=dtype, shape=(num_terms, samples))
     logger.info("1st phase: constructing %s action matrix", str(y.shape))
 
     if scipy.sparse.issparse(corpus):
         m, n = corpus.shape
         assert num_terms == m, "mismatch in number of features: %i in sparse matrix vs. %i parameter" % (m, num_terms)
-        o = numpy as np.random.normal(0.0, 1.0, (n, samples)).astype(y.dtype)  # draw a random gaussian matrix
+        o = np.random.normal(0.0, 1.0, (n, samples)).astype(y.dtype)  # draw a random gaussian matrix
         sparsetools.csc_matvecs(m, n, samples, corpus.indptr, corpus.indices,
                                 corpus.data, o.ravel(), y.ravel())  # y = corpus * o
         del o
 
-        # unlike numpy as np, scipy.sparse `astype()` copies everything, even if there is no change to dtype!
+        # unlike np, scipy.sparse `astype()` copies everything, even if there is no change to dtype!
         # so check for equal dtype explicitly, to avoid the extra memory footprint if possible
         if y.dtype != dtype:
             y = y.astype(dtype)
@@ -678,7 +678,7 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
             assert n <= chunksize  # the very last chunk of A is allowed to be smaller in size
             num_docs += n
             logger.debug("multiplying chunk * gauss")
-            o = numpy as np.random.normal(0.0, 1.0, (n, samples)).astype(dtype)  # draw a random gaussian matrix
+            o = np.random.normal(0.0, 1.0, (n, samples)).astype(dtype)  # draw a random gaussian matrix
             sparsetools.csc_matvecs(m, n, samples, chunk.indptr, chunk.indices,  # y = y + chunk * o
                                     chunk.data, o.ravel(), y.ravel())
             del chunk, o
@@ -712,20 +712,20 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         # second phase: construct the covariance matrix X = B * B.T, where B = Q.T * A
         # again, construct X incrementally, in chunks of `chunksize` documents from the streaming
         # input corpus A, to avoid using O(number of documents) memory
-        x = numpy as np.zeros(shape=(qt.shape[0], qt.shape[0]), dtype=numpy as np.float64)
+        x = np.zeros(shape=(qt.shape[0], qt.shape[0]), dtype=np.float64)
         logger.info("2nd phase: constructing %s covariance matrix", str(x.shape))
         for chunk_no, chunk in enumerate(utils.grouper(corpus, chunksize)):
             logger.info('PROGRESS: at document #%i/%i', chunk_no * chunksize, num_docs)
             chunk = matutils.corpus2csc(chunk, num_terms=num_terms, dtype=qt.dtype)
             b = qt * chunk  # dense * sparse matrix multiply
             del chunk
-            x += numpy as np.dot(b, b.T)  # TODO should call the BLAS routine SYRK, but there is no SYRK wrapper in scipy :(
+            x += np.dot(b, b.T)  # TODO should call the BLAS routine SYRK, but there is no SYRK wrapper in scipy :(
             del b
 
         # now we're ready to compute decomposition of the small matrix X
         logger.info("running dense decomposition on %s covariance matrix", str(x.shape))
         u, s, vt = scipy.linalg.svd(x)  # could use linalg.eigh, but who cares... and svd returns the factors already sorted :)
-        s = numpy as np.sqrt(s)  # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
+        s = np.sqrt(s)  # sqrt to go back from singular values of X to singular values of B = singular values of the corpus
     q = qt.T.copy()
     del qt
 
@@ -733,5 +733,5 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
     keep = clip_spectrum(s**2, rank, discard=eps)
     u = u[:, :keep].copy()
     s = s[:keep]
-    u = numpy as np.dot(q, u)
+    u = np.dot(q, u)
     return u.astype(dtype), s.astype(dtype)
