@@ -465,7 +465,7 @@ class Word2Vec(utils.SaveLoad):
         self.total_train_time = 0
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
-        self.training_finished = False
+        self.model_trimmed_post_training = False
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -757,7 +757,7 @@ class Word2Vec(utils.SaveLoad):
         sentences are the same as those that were used to initially build the vocabulary.
 
         """
-        if (self.training_finished):
+        if (self.model_trimmed_post_training):
             raise RuntimeError("parameters for training were discarded")
         if FAST_VERSION < 0:
             import warnings
@@ -1753,13 +1753,13 @@ class Word2Vec(utils.SaveLoad):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.index2word), self.vector_size, self.alpha)
 
     def _minimize_model(self, save_syn1 = False, save_syn1neg = False, save_syn0_lockf = False):
-        self.training_finished = True
         if hasattr(self, 'syn1') and not save_syn1:
             del self.syn1
         if hasattr(self, 'syn1neg') and not save_syn1neg:
             del self.syn1neg
         if hasattr(self, 'syn0_lockf') and not save_syn0_lockf:
             del self.syn0_lockf
+        self.model_trimmed_post_training = True
 
     def discard_model_parameters(self, replace=False):
         """
@@ -1768,9 +1768,7 @@ class Word2Vec(utils.SaveLoad):
         ones = saves lots of memory!
         """
         if replace:
-            for i in xrange(self.syn0.shape[0]):
-                self.syn0[i, :] /= sqrt((self.syn0[i, :] ** 2).sum(-1))
-            self.syn0norm = self.syn0
+            self.init_sims(replace=True)
         self._minimize_model()
 
     def save(self, *args, **kwargs):
