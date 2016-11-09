@@ -119,7 +119,7 @@ class LowCorpus(IndexedCorpus):
                     marker.add(word)
             # construct a list of (wordIndex, wordFrequency) 2-tuples
             doc = list(zip(map(self.word2id.get, use_words),
-                           map(words.count, use_words)))
+                       map(words.count, use_words)))
         else:
             uniq_words = set(words)
             # construct a list of (word, wordFrequency) 2-tuples
@@ -166,8 +166,8 @@ class LowCorpus(IndexedCorpus):
 
         if truncated:
             logger.warning("List-of-words format can only save vectors with "
-                           "integer elements; %i float entries were truncated to integer value" %
-                           truncated)
+                            "integer elements; %i float entries were truncated to integer value" 
+                            truncated)
         return offsets
 
     def docbyoffset(self, offset):
