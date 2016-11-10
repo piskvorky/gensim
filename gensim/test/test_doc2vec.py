@@ -284,7 +284,7 @@ class TestDoc2VecModel(unittest.TestCase):
         """Test doc2vec model after delete_temporary_training_data"""
         for i in [0, 1]:
             for j in [0, 1]:
-                if i == 0 and j == 0:
+                if i != j:
                     continue
                 model = doc2vec.Doc2Vec(sentences, size=5, min_count=1, window=4, hs=i, negative=j)
                 model.delete_temporary_training_data(keep_doctags_vectors=False, keep_inference=False)
