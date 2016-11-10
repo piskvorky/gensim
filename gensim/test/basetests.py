@@ -9,6 +9,7 @@ Automated tests for checking transformation algorithms (the models package).
 """
 
 import six
+import numpy as np
 
 class TestBaseTopicModel(object):
     def testPrintTopic(self):
@@ -29,7 +30,7 @@ class TestBaseTopicModel(object):
 
         for k, v in topic:
             self.assertTrue(isinstance(k, six.string_types))
-            self.assertTrue(isinstance(v, float))
+            self.assertTrue(isinstance(v, (np.floating, float)))
 
     def testShowTopics(self):
         topics = self.model.show_topics(formatted=False)
@@ -39,4 +40,4 @@ class TestBaseTopicModel(object):
             self.assertTrue(isinstance(topic, list))
             for k, v in topic:
                 self.assertTrue(isinstance(k, six.string_types))
-                self.assertTrue(isinstance(v, float))
+                self.assertTrue(isinstance(v, (np.floating, float)))

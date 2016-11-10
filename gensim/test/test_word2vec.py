@@ -17,7 +17,7 @@ import itertools
 import bz2
 import sys
 
-import numpy
+import numpy as np
 
 from gensim import utils, matutils
 from gensim.utils import check_output
@@ -106,9 +106,9 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertFalse('terrorism' in model.vocab)
         model.build_vocab(terro, update=True)
         self.assertTrue('terrorism' in model.vocab)
-        orig0 = numpy.copy(model.syn0)
+        orig0 = np.copy(model.syn0)
         model.train(terro)
-        self.assertFalse(numpy.allclose(model.syn0, orig0))
+        self.assertFalse(np.allclose(model.syn0, orig0))
         sim = model.n_similarity(['war'], ['terrorism'])
         self.assertLess(0., sim)
 
@@ -217,7 +217,7 @@ class TestWord2VecModel(unittest.TestCase):
         model.save_word2vec_format(testfile(), binary=True)
         binary_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
         binary_model.init_sims(replace=False)
-        self.assertTrue(numpy.allclose(model['human'], binary_model['human']))
+        self.assertTrue(np.allclose(model['human'], binary_model['human']))
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
         norm_only_model.init_sims(replace=True)
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human']))
@@ -254,7 +254,7 @@ class TestWord2VecModel(unittest.TestCase):
         model.save_word2vec_format(testfile(), binary=False)
         text_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=False)
         text_model.init_sims(False)
-        self.assertTrue(numpy.allclose(model['human'], text_model['human'], atol=1e-6))
+        self.assertTrue(np.allclose(model['human'], text_model['human'], atol=1e-6))
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=False)
         norm_only_model.init_sims(True)
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human'], atol=1e-6))
@@ -304,13 +304,13 @@ class TestWord2VecModel(unittest.TestCase):
         # with min_count=1, we're not throwing away anything, so make sure the word counts add up to be the entire corpus
         self.assertEqual(sum(v.count for v in model.vocab.values()), total_words)
         # make sure the binary codes are correct
-        numpy.allclose(model.vocab['the'].code, [1, 1, 0, 0])
+        np.allclose(model.vocab['the'].code, [1, 1, 0, 0])
 
         # test building vocab with default params
         model = word2vec.Word2Vec(hs=1, negative=0)
         model.build_vocab(corpus)
         self.assertTrue(len(model.vocab) == 1750)
-        numpy.allclose(model.vocab['the'].code, [1, 1, 1, 0])
+        np.allclose(model.vocab['the'].code, [1, 1, 1, 0])
 
         # no input => "RuntimeError: you must first build vocabulary before training the model"
         self.assertRaises(RuntimeError, word2vec.Word2Vec, [])
@@ -507,7 +507,7 @@ class TestWord2VecModel(unittest.TestCase):
 
     def testParallel(self):
         """Test word2vec parallel training."""
-        if word2vec.FAST_VERSION < 0:  # don't test the plain NumPy version for parallelism (too slow)
+        if word2vec.FAST_VERSION < 0:  # don't test the plain np version for parallelism (too slow)
             return
 
         corpus = utils.RepeatCorpus(LeeCorpus(), 10000)
@@ -530,11 +530,11 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertEqual(len(model.vocab), len(model2.vocab))
         self.assertTrue(numpy.allclose(model.wv.syn0, model2.wv.syn0))
         if model.hs:
-            self.assertTrue(numpy.allclose(model.syn1, model2.syn1))
+            self.assertTrue(np.allclose(model.syn1, model2.syn1))
         if model.negative:
-            self.assertTrue(numpy.allclose(model.syn1neg, model2.syn1neg))
+            self.assertTrue(np.allclose(model.syn1neg, model2.syn1neg))
         most_common_word = max(model.vocab.items(), key=lambda item: item[1].count)[0]
-        self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
+        self.assertTrue(np.allclose(model[most_common_word], model2[most_common_word]))
 
     @log_capture()
     def testBuildVocabWarning(self, l):
@@ -595,7 +595,7 @@ class TestWMD(unittest.TestCase):
         sentence2 = ['survey', 'user', 'computer', 'system', 'response', 'time']
         distance1 = model.wmdistance(sentence1, sentence2)
         distance2 = model.wmdistance(sentence2, sentence1)
-        self.assertTrue(numpy.allclose(distance1, distance2))
+        self.assertTrue(np.allclose(distance1, distance2))
 
     def testIdenticalSentences(self):
         '''Check that the distance from a sentence to itself is zero.'''
