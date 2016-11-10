@@ -143,7 +143,7 @@ class TestWord2VecModel(unittest.TestCase):
         wv = model.wv
         wv.save(testfile())
         loaded_wv = keyedvectors.KeyedVectors.load(testfile())
-        self.assertTrue(numpy.allclose(wv.syn0, loaded_wv.syn0))
+        self.assertTrue(np.allclose(wv.syn0, loaded_wv.syn0))
         self.assertEqual(len(wv.vocab), len(loaded_wv.vocab))
 
     def testPersistenceWithConstructorRule(self):
@@ -220,11 +220,11 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(np.allclose(model['human'], binary_model['human']))
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
         norm_only_model.init_sims(replace=True)
-        self.assertFalse(numpy.allclose(model['human'], norm_only_model['human']))
-        self.assertTrue(numpy.allclose(model.wv.syn0norm[model.vocab['human'].index], norm_only_model['human']))
+        self.assertFalse(np.allclose(model['human'], norm_only_model['human']))
+        self.assertTrue(np.allclose(model.wv.syn0norm[model.vocab['human'].index], norm_only_model['human']))
         limited_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, limit=3)
         self.assertEquals(len(limited_model.wv.syn0), 3)
-        half_precision_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, datatype=numpy.float16)
+        half_precision_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True, datatype=np.float16)
         self.assertEquals(binary_model.wv.syn0.nbytes, half_precision_model.wv.syn0.nbytes * 2)
 
     def testTooShortBinaryWord2VecFormat(self):
@@ -257,8 +257,8 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(np.allclose(model['human'], text_model['human'], atol=1e-6))
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=False)
         norm_only_model.init_sims(True)
-        self.assertFalse(numpy.allclose(model['human'], norm_only_model['human'], atol=1e-6))
-        self.assertTrue(numpy.allclose(model.wv.syn0norm[model.vocab['human'].index], norm_only_model['human'], atol=1e-4))
+        self.assertFalse(np.allclose(model['human'], norm_only_model['human'], atol=1e-6))
+        self.assertTrue(np.allclose(model.wv.syn0norm[model.vocab['human'].index], norm_only_model['human'], atol=1e-4))
 
     def testPersistenceWord2VecFormatWithVocab(self):
         """Test storing/loading the entire model and vocabulary in word2vec format."""
@@ -358,8 +358,8 @@ class TestWord2VecModel(unittest.TestCase):
             model.build_vocab(corpus)
 
             # remember two vectors
-            locked0 = numpy.copy(model.wv.syn0[0])
-            unlocked1 = numpy.copy(model.wv.syn0[1])
+            locked0 = np.copy(model.wv.syn0[0])
+            unlocked1 = np.copy(model.wv.syn0[1])
             # lock the vector in slot 0 against change
             model.syn0_lockf[0] = 0.0
 
@@ -379,7 +379,7 @@ class TestWord2VecModel(unittest.TestCase):
         # run extra before/after training tests if train=True
         if train:
             model.build_vocab(list_corpus)
-            orig0 = numpy.copy(model.wv.syn0[0])
+            orig0 = np.copy(model.wv.syn0[0])
             model.train(list_corpus)
             self.assertFalse((orig0 == model.wv.syn0[1]).all())  # vector should vary after training
         sims = model.most_similar('war', topn=len(model.index2word))
@@ -528,7 +528,7 @@ class TestWord2VecModel(unittest.TestCase):
 
     def models_equal(self, model, model2):
         self.assertEqual(len(model.vocab), len(model2.vocab))
-        self.assertTrue(numpy.allclose(model.wv.syn0, model2.wv.syn0))
+        self.assertTrue(np.allclose(model.wv.syn0, model2.wv.syn0))
         if model.hs:
             self.assertTrue(np.allclose(model.syn1, model2.syn1))
         if model.negative:
