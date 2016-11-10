@@ -88,7 +88,11 @@ except ImportError:
 
 from numpy import exp, log, dot, zeros, outer, random, dtype, float32 as REAL,\
     double, uint32, seterr, array, uint8, vstack, fromstring, sqrt, newaxis,\
-    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray, vstack
+    ndarray, empty, sum as np_sum, prod, ones, ascontiguousarray, vstack, logaddexp
+
+from scipy.special import expit
+
+from scipy.special import expit
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
@@ -244,7 +248,7 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
     if model.hs:
         # work on the entire tree at once, to push as much work into numpy's C routines as possible (performance)
         l2a = deepcopy(model.syn1[predict_word.point])  # 2d matrix, codelen x layer1_size
-        fa = 1.0 / (1.0 + exp(-dot(l1, l2a.T)))  # propagate hidden -> output
+        fa = expit(dot(l1, l2a.T))  # propagate hidden -> output
         ga = (1 - predict_word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1[predict_word.point] += outer(ga, l1)  # learn hidden -> output
@@ -258,7 +262,7 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
             if w != predict_word.index:
                 word_indices.append(w)
         l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
-        fb = 1. / (1. + exp(-dot(l1, l2b.T)))  # propagate hidden -> output
+        fb = expit(dot(l1, l2b.T))  # propagate hidden -> output
         gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
@@ -268,20 +272,13 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
         l1 += neu1e * lock_factor  # learn input -> hidden (mutates model.wv.syn0[word2.index], if that is l1)
     return neu1e
 
-def sigmoid(p):
-    if p > 0:
-        return 1. / (1. + exp(-p))
-    elif p <= 0:
-        return exp(p) / (1 + exp(p))
-    else:
-        raise ValueError
 
 def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=True, learn_hidden=True):
     neu1e = zeros(l1.shape)
 
     if model.hs:
         l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
-        fa = 1. / (1. + exp(-dot(l1, l2a.T)))  # propagate hidden -> output
+        fa = expit(dot(l1, l2a.T))  # propagate hidden -> output
         ga = (1. - word.code - fa) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
@@ -295,7 +292,7 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
             if w != word.index:
                 word_indices.append(w)
         l2b = model.syn1neg[word_indices]  # 2d matrix, k+1 x layer1_size
-        fb = sigmoid(dot(l1, l2b.T))  # propagate hidden -> output
+        fb = expit(dot(l1, l2b.T))  # propagate hidden -> output
         gb = (model.neg_labels - fb) * alpha  # vector of error gradients multiplied by the learning rate
         if learn_hidden:
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
@@ -315,14 +312,14 @@ def score_sg_pair(model, word, word2):
     l1 = model.wv.syn0[word2.index]
     l2a = deepcopy(model.syn1[word.point])  # 2d matrix, codelen x layer1_size
     sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
-    lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
+    lprob = -logaddexp(0, -sgn * dot(l1, l2a.T))
     return sum(lprob)
 
 
 def score_cbow_pair(model, word, word2_indices, l1):
     l2a = model.syn1[word.point]  # 2d matrix, codelen x layer1_size
     sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
-    lprob = -log(1.0 + exp(-sgn*dot(l1, l2a.T)))
+    lprob = -logaddexp(0, -sgn * dot(l1, l2a.T))
     return sum(lprob)
 
 

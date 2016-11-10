@@ -16,7 +16,7 @@ import os.path
 import tempfile
 
 import six
-import numpy
+import numpy as np
 import scipy.linalg
 
 from gensim.corpora import mmcorpus, Dictionary
@@ -63,7 +63,7 @@ class TestLogEntropyModel(unittest.TestCase):
         expected = [(0, 0.3748900964125389),
                     (1, 0.30730215324230725),
                     (3, 1.20941755462856)]
-        self.assertTrue(numpy.allclose(transformed, expected))
+        self.assertTrue(np.allclose(transformed, expected))
 
 
     def testPersistence(self):
@@ -73,7 +73,7 @@ class TestLogEntropyModel(unittest.TestCase):
         model2 = logentropy_model.LogEntropyModel.load(fname)
         self.assertTrue(model.entr == model2.entr)
         tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec]))
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))
 
     def testPersistenceCompressed(self):
         fname = testfile() + '.gz'
@@ -82,7 +82,7 @@ class TestLogEntropyModel(unittest.TestCase):
         model2 = logentropy_model.LogEntropyModel.load(fname, mmap=None)
         self.assertTrue(model.entr == model2.entr)
         tstvec = []
-        self.assertTrue(numpy.allclose(model[tstvec], model2[tstvec]))
+        self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))
 #endclass TestLogEntropyModel
 
 
