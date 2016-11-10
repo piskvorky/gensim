@@ -20,7 +20,7 @@ import os
 import math
 from time import time
 
-import numpy
+import numpy as np
 import scipy.sparse
 
 import gensim
@@ -51,8 +51,8 @@ if __name__ == '__main__':
     density = 100.0 * index_sparse.index.nnz / (index_sparse.index.shape[0] * index_sparse.index.shape[1])
 
     # Difference between test #1 and test #3 is that the query in #1 is a gensim iterable
-    # corpus, while in #3, the index is used directly (numpy arrays). So #1 is slower,
-    # because it needs to convert sparse vecs to numpy arrays and normalize them to
+    # corpus, while in #3, the index is used directly (np arrays). So #1 is slower,
+    # because it needs to convert sparse vecs to np arrays and normalize them to
     # unit length=extra work, which #3 avoids.
     query = list(itertools.islice(corpus_dense, 1000))
     logging.info("test 1 (dense): dense corpus of %i docs vs. index (%i documents, %i dense features)" %
@@ -101,13 +101,13 @@ if __name__ == '__main__':
         # (=report mean diff below)
         sims = [sim for sim in index_dense]
         taken = time() - start
-        sims = numpy.asarray(sims)
+        sims = np.asarray(sims)
         if chunksize == 0:
             logging.info("chunksize=%i, time=%.4fs (%.2f docs/s)" % (chunksize, taken, len(corpus_dense) / taken))
             unchunksizeed = sims
         else:
             queries = math.ceil(1.0 * len(corpus_dense) / chunksize)
-            diff = numpy.mean(numpy.abs(unchunksizeed - sims))
+            diff = np.mean(np.abs(unchunksizeed - sims))
             logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s), meandiff=%.3e" %
                          (chunksize, taken, len(corpus_dense) / taken, queries / taken, diff))
         del sims
@@ -134,13 +134,13 @@ if __name__ == '__main__':
         start = time()
         sims = [sim for sim in index_sparse]
         taken = time() - start
-        sims = numpy.asarray(sims)
+        sims = np.asarray(sims)
         if chunksize == 0:
             logging.info("chunksize=%i, time=%.4fs (%.2f docs/s)" % (chunksize, taken, len(corpus_sparse) / taken))
             unchunksizeed = sims
         else:
             queries = math.ceil(1.0 * len(corpus_sparse) / chunksize)
-            diff = numpy.mean(numpy.abs(unchunksizeed - sims))
+            diff = np.mean(np.abs(unchunksizeed - sims))
             logging.info("chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s), meandiff=%.3e" %
                          (chunksize, taken, len(corpus_sparse) / taken, queries / taken, diff))
         del sims
