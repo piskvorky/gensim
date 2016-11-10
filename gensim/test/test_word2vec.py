@@ -500,7 +500,7 @@ class TestWord2VecModel(unittest.TestCase):
         model.save_word2vec_format(testfile(), binary=True)
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
         norm_only_model.delete_temporary_training_data(replace=True)
-        self.assertFalse(numpy.allclose(model['human'], norm_only_model['human']))
+        self.assertFalse(np.allclose(model['human'], norm_only_model['human']))
 
     @log_capture()
     def testBuildVocabWarning(self, l):
