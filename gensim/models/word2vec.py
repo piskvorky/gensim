@@ -1321,26 +1321,32 @@ class Word2Vec(utils.SaveLoad):
 
     @property
     def vocab(self):
+        logger.warning('direct access to vocab will not be supported in future gensim releases, please use model.wv.vocab')
         return self.wv.vocab
 
     @vocab.setter
     def vocab(self, value):
+        logger.warning('direct access to vocab will not be supported in future gensim releases, please use model.wv.vocab')
         self.wv.vocab = value
 
     @vocab.deleter
     def vocab(self):
+        logger.warning('direct access to vocab will not be supported in future gensim releases, please use model.wv.vocab')
         del self.wv.vocab
 
     @property
     def index2word(self):
+        logger.warning('direct access to index2word will not be supported in future gensim releases, please use model.wv.index2word')
         return self.wv.index2word
 
     @index2word.setter
     def index2word(self, value):
+        logger.warning('direct access to index2word will not be supported in future gensim releases, please use model.wv.index2word')
         self.wv.index2word = value
 
     @index2word.deleter
     def index2word(self):
+        logger.warning('direct access to index2word will not be supported in future gensim releases, please use model.wv.index2word')
         del self.wv.index2word
 
     def __contains__(self, word):
