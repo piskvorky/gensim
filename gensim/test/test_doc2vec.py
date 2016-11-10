@@ -302,6 +302,7 @@ class TestDoc2VecModel(unittest.TestCase):
         self.model_sanity(model)
         model = doc2vec.Doc2Vec(list_corpus, dm=1, dm_mean=1, size=24, window=4, hs=0, negative=1, alpha=0.05, min_count=2, iter=20)
         model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
+        self.model_sanity(model)
         self.assertTrue(hasattr(model, 'syn1neg'))
 
     @log_capture()
