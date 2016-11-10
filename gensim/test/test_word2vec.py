@@ -482,22 +482,24 @@ class TestWord2VecModel(unittest.TestCase):
         most_common_word = max(model.vocab.items(), key=lambda item: item[1].count)[0]
         self.assertTrue(numpy.allclose(model[most_common_word], model2[most_common_word]))
 
-    def testDiscardModelParameters(self):
-        """Test word2vec model after discard_model_parameters"""
+    def testDeleteTemporaryTrainingData(self):
+        """Test word2vec model after delete_temporary_training_data"""
         for i in [0, 1]:
             for j in [0, 1]:
                 model = word2vec.Word2Vec(sentences, size=10, min_count=0, seed=42, hs=i, negative=j)
-                model.discard_model_parameters(replace=True)
+                model.delete_temporary_training_data(replace=True)
                 self.assertTrue(len(model['human']), 10)
                 self.assertTrue(len(model.vocab), 12)
                 self.assertTrue(model.vocab['graph'].count, 3)
                 self.assertTrue(not hasattr(model, 'syn1'))
                 self.assertTrue(not hasattr(model, 'syn1neg'))
                 self.assertTrue(not hasattr(model, 'syn0_lockf'))
+
+    def testNormalizeAfterTrainingData(self):
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.save_word2vec_format(testfile(), binary=True)
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
-        norm_only_model.discard_model_parameters(replace=True)
+        norm_only_model.delete_temporary_training_data(replace=True)
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human']))
 
     @log_capture()

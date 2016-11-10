@@ -1761,7 +1761,7 @@ class Word2Vec(utils.SaveLoad):
             del self.syn0_lockf
         self.model_trimmed_post_training = True
 
-    def discard_model_parameters(self, replace=False):
+    def delete_temporary_training_data(self, replace=False):
         """
         Discard parameters that are used in training and score. Use if you're sure you're done training a model.
         If `replace` is set, forget the original vectors and only keep the normalized

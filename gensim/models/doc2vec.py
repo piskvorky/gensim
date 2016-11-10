@@ -778,15 +778,18 @@ class Doc2Vec(Word2Vec):
             segments.append('t%d' % self.workers)
         return '%s(%s)' % (self.__class__.__name__, ','.join(segments))
 
-    def discard_model_parameters(self, remove_doctags_vectors=False):
+    def delete_temporary_training_data(self, keep_doctags_vectors=True, keep_inference=True):
         """
         Discard parameters that are used in training and score. Use if you're sure you're done training a model.
-        Use `remove_doctags_vectors` if you don't want to save doctags vectors.
-        Useful in case when you only need to use infer_vector,
-        but don't want to use docvecs's most_similar, similarity etc. methods.
+        Use `remove_doctags_vectors` if you don't want to save doctags vectors,
+        in this case you can't to use docvecs's most_similar, similarity etc. methods.
+        Use `no_inference` if you don't want to store parameters that is used for infer_vector method (you will not be able to use infer_vector)
         """
-        self._minimize_model(self.hs, self.negative > 0, True)
-        if self.docvecs and hasattr(self.docvecs, 'doctag_syn0') and remove_doctags_vectors:
+        if keep_inference:
+            self._minimize_model(self.hs, self.negative > 0, True)
+        else:
+            self._minimize_model(False, False, False)
+        if self.docvecs and hasattr(self.docvecs, 'doctag_syn0') and not keep_doctags_vectors:
             del self.docvecs.doctag_syn0
         if self.docvecs and hasattr(self.docvecs, 'doctag_syn0_lockf'):
             del self.docvecs.doctag_syn0_lockf
