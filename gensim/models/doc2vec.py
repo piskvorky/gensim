@@ -785,9 +785,7 @@ class Doc2Vec(Word2Vec):
         in this case you can't to use docvecs's most_similar, similarity etc. methods.
         Use `no_inference` if you don't want to store parameters that is used for infer_vector method (you will not be able to use infer_vector)
         """
-        if keep_inference:
-            self._minimize_model(self.hs, self.negative > 0, True)
-        else:
+        if not keep_inference:
             self._minimize_model(False, False, False)
         if self.docvecs and hasattr(self.docvecs, 'doctag_syn0') and not keep_doctags_vectors:
             del self.docvecs.doctag_syn0
