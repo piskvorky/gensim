@@ -257,8 +257,14 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(np.allclose(model['human'], text_model['human'], atol=1e-6))
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=False)
         norm_only_model.init_sims(True)
+<<<<<<< HEAD
         self.assertFalse(numpy.allclose(model['human'], norm_only_model['human'], atol=1e-6))
         self.assertTrue(numpy.allclose(model.wv.syn0norm[model.vocab['human'].index], norm_only_model['human'], atol=1e-4))
+=======
+        self.assertFalse(np.allclose(model['human'], norm_only_model['human'], atol=1e-6))
+
+        self.assertTrue(np.allclose(model.syn0norm[model.vocab['human'].index], norm_only_model['human'], atol=1e-4))
+>>>>>>> rare/develop
 
     def testPersistenceWord2VecFormatWithVocab(self):
         """Test storing/loading the entire model and vocabulary in word2vec format."""
@@ -358,8 +364,13 @@ class TestWord2VecModel(unittest.TestCase):
             model.build_vocab(corpus)
 
             # remember two vectors
+<<<<<<< HEAD
             locked0 = numpy.copy(model.wv.syn0[0])
             unlocked1 = numpy.copy(model.wv.syn0[1])
+=======
+            locked0 = np.copy(model.syn0[0])
+            unlocked1 = np.copy(model.syn0[1])
+>>>>>>> rare/develop
             # lock the vector in slot 0 against change
             model.syn0_lockf[0] = 0.0
 
@@ -379,7 +390,11 @@ class TestWord2VecModel(unittest.TestCase):
         # run extra before/after training tests if train=True
         if train:
             model.build_vocab(list_corpus)
+<<<<<<< HEAD
             orig0 = numpy.copy(model.wv.syn0[0])
+=======
+            orig0 = np.copy(model.syn0[0])
+>>>>>>> rare/develop
             model.train(list_corpus)
             self.assertFalse((orig0 == model.wv.syn0[1]).all())  # vector should vary after training
         sims = model.most_similar('war', topn=len(model.index2word))
@@ -528,7 +543,11 @@ class TestWord2VecModel(unittest.TestCase):
 
     def models_equal(self, model, model2):
         self.assertEqual(len(model.vocab), len(model2.vocab))
+<<<<<<< HEAD
         self.assertTrue(numpy.allclose(model.wv.syn0, model2.wv.syn0))
+=======
+        self.assertTrue(np.allclose(model.syn0, model2.syn0))
+>>>>>>> rare/develop
         if model.hs:
             self.assertTrue(np.allclose(model.syn1, model2.syn1))
         if model.negative:
