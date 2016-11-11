@@ -11,6 +11,7 @@ Author-topic model.
 
 # NOTE: from what I understand, my name as well as Radim's should be attributed copyright above?
 
+from time import time
 import pdb
 from pdb import set_trace as st
 
@@ -196,6 +197,7 @@ class OnlineAtVb(LdaModel):
                 logger.info('Log prob: %.3e.', logprob)
         for _pass in xrange(self.passes):
             converged = 0  # Number of documents converged for current pass over corpus.
+            start = time()
             for d, doc in enumerate(corpus):
                 rhot = self.rho(d + _pass)
                 ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
@@ -265,14 +267,12 @@ class OnlineAtVb(LdaModel):
                     # and "global" gamma (var_gamma). Same goes for lambda.
                     # TODO: I may need to be smarter about computing rho. In ldamodel,
                     # it's: pow(offset + pass_ + (self.num_updates / chunksize), -decay).
-                    # FIXME: if tilde_gamma is computed like this in every iteration, then I can't compare
-                    # lastgamma to it for convergence test. FIXME.
                     var_gamma_temp = (1 - rhot) * var_gamma + rhot * tilde_gamma
 
                     # Update Elogtheta and Elogbeta, since gamma and lambda have been updated.
                     # FIXME: I don't need to update the entire gamma, as I only updated a few rows of it,
                     # corresponding to the authors in the document. The same goes for Elogtheta.
-                    Elogtheta = dirichlet_expectation(var_gamma_temp)
+                    Elogtheta[authors_d, :] = dirichlet_expectation(var_gamma_temp[authors_d, :])
                     
                     # Check for convergence.
                     # Criterion is mean change in "local" gamma and lambda.
@@ -313,35 +313,9 @@ class OnlineAtVb(LdaModel):
 
             # End of corpus loop.
 
-            if _pass % self.eval_every == 0:
+            if self.eval_every > 0 and (_pass + 1) % self.eval_every == 0:
                 self.var_gamma = var_gamma
                 self.var_lambda = var_lambda
-                if self.eval_every > 0:
-                    if bound_eval:
-                        prev_bound = bound
-                        word_bound = self.word_bound(Elogtheta, Elogbeta)
-                        theta_bound = self.theta_bound(Elogtheta)
-                        beta_bound = self.beta_bound(Elogbeta)
-                        bound = word_bound + theta_bound + beta_bound
-                        logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
-                    if logprob_eval:
-                        logprob = self.eval_logprob()
-                        logger.info('Log prob: %.3e.', logprob)
-
-            #logger.info('Converged documents: %d/%d', converged, self.num_docs)
-
-            # TODO: consider whether to include somthing like this:
-            #if numpy.abs(bound - prev_bound) / abs(prev_bound) < self.bound_threshold:
-            #    break
-        # End of pass over corpus loop.
-
-        # Ensure that the bound (or log probabilities) is computed at the very last pass.
-        if self.eval_every != 0 and not _pass % self.eval_every == 0:
-            # If the bound should be computed, and it wasn't computed at the last pass,
-            # then compute the bound.
-            self.var_gamma = var_gamma
-            self.var_lambda = var_lambda
-            if self.eval_every > 0:
                 if bound_eval:
                     prev_bound = bound
                     word_bound = self.word_bound(Elogtheta, Elogbeta)
@@ -352,6 +326,30 @@ class OnlineAtVb(LdaModel):
                 if logprob_eval:
                     logprob = self.eval_logprob()
                     logger.info('Log prob: %.3e.', logprob)
+
+            #logger.info('Converged documents: %d/%d', converged, self.num_docs)
+
+            # TODO: consider whether to include somthing like this:
+            #if numpy.abs(bound - prev_bound) / abs(prev_bound) < self.bound_threshold:
+            #    break
+        # End of pass over corpus loop.
+
+        # Ensure that the bound (or log probabilities) is computed at the very last pass.
+        if self.eval_every > 0 and not (_pass + 1) % self.eval_every == 0:
+            # If the bound should be computed, and it wasn't computed at the last pass,
+            # then compute the bound.
+            self.var_gamma = var_gamma
+            self.var_lambda = var_lambda
+            if bound_eval:
+                prev_bound = bound
+                word_bound = self.word_bound(Elogtheta, Elogbeta)
+                theta_bound = self.theta_bound(Elogtheta)
+                beta_bound = self.beta_bound(Elogbeta)
+                bound = word_bound + theta_bound + beta_bound
+                logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
+            if logprob_eval:
+                logprob = self.eval_logprob()
+                logger.info('Log prob: %.3e.', logprob)
 
 
         self.var_lambda = var_lambda
