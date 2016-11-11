@@ -1,7 +1,7 @@
 gensim – Topic Modelling in Python
 ==================================
 
-![Travis]![Wheel]
+[![Build Status](https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop)](https://travis-ci.org/RaRe-Technologies/gensim)[![GitHub release](https://img.shields.io/github/release/rare-technologies/gensim.svg?maxAge=2592000)]()![Wheel] 
 
 Gensim is a Python library for *topic modelling*, *document indexing*
 and *similarity retrieval* with large corpora. Target audience is the
@@ -30,6 +30,20 @@ Features
 If this feature list left you scratching your head, you can first read
 more about the [Vector Space Model] and [unsupervised document analysis]
 on Wikipedia.
+
+Support
+------------
+
+Please raise potential bugs on [github](https://github.com/RaRe-Technologies/gensim/blob/develop/CONTRIBUTING.md). See [Contribution Guide](https://github.com/RaRe-Technologies/gensim/blob/develop/CONTRIBUTING.md) prior to raising an issue.
+
+If you have an open-ended or a research question:
+
+-   [Mailing List] is the best option
+-   [Gitter chat room] is also available
+
+  [Mailing List]: https://groups.google.com/forum/#!forum/gensim
+  [Gitter chat room]: https://gitter.im/RaRe-Technologies/gensim
+
 
 Installation
 ------------
@@ -85,7 +99,7 @@ Documentation
 -   [QuickStart]
 -   [Tutorials]
 -   [Tutorial Videos]
--   [Official Documentation and Walkthrough]
+-   [Official API Documentation]
 
   [QuickStart]: https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/gensim%20Quick%20Start.ipynb
   [Tutorials]: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials
@@ -101,11 +115,11 @@ Adopters
 
 | Name                                   | Logo                                                                                                                           | URL                                                                                              | Description                                                                                                                                                                                                           |
 |----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|                                                                                                                         
-| RaRe Technologies                            | <img src="http://rare-technologies.com/wp-content/uploads/2016/02/rare_image_only.png" width="100"> | [rare-technologies.com](http://rare-technologies.com)                                                           | Machine learning & NLP consulting and training. Gensim creators. |
+| RaRe Technologies                            | <img src="http://rare-technologies.com/wp-content/uploads/2016/02/rare_image_only.png" width="100"> | [rare-technologies.com](http://rare-technologies.com)                                                           | Machine learning & NLP consulting and training. Creators and maintainers of Gensim. |
 | Talentpair                            | ![Talentpair](https://avatars3.githubusercontent.com/u/8418395?v=3&s=100)                                                 | [talentpair.com](http://talentpair.com)                                                           | Data science driving high-touch recruiting                                                    | 
 | Tailwind          | <img src="http://blog.tailwindapp.com/wp-content/uploads/2013/10/Tailwind-Square-Logo-Blue-White-300x300.png" width="100"> | [Tailwindapp.com](https://www.tailwindapp.com/)| Post interesting and relevant content to Pinterest              |
 | Issuu          | <img src="https://static.isu.pub/fe/issuu-brandpages/s3/155/press/assets/brand_package_zip/issuu%20logos/png/issuu-logo-stacked-colour.png" width="100"> | [Issuu.com](https://issuu.com/)| Gensim’s LDA module lies at the very core of the analysis we perform on each uploaded publication to figure out what it’s all about.
-| Sports Authority        | <img src="http://www.sportsauthority.com/images/tsa_logo_red_bg.gif" width="100"> | [sportsauthority.com](http://www.sportsauthority.com)| Text mining of customer surveys and social media sources |
+| Sports Authority        | <img src="https://upload.wikimedia.org/wikipedia/commons/6/6c/Sports_Authority_logo2011.jpg" width="100"> | [sportsauthority.com](https://en.wikipedia.org/wiki/Sports_Authority)| Text mining of customer surveys and social media sources |
 | Search Metrics        | <img src="http://www.searchmetrics.com/wp-content/uploads/Logo_searchmetrics_Webversion.png" width="100"> | [searchmetrics.com](http://www.searchmetrics.com/)| Gensim word2vec used for entity disambiguation in Search Engine Optimisation
 | Cisco Security        | <img src="https://supportforums.cisco.com/sites/default/files/legacy/1/6/1/2161-CiscoSystems.gif" width="100"> | [cisco.com](http://www.cisco.com/c/en/us/products/security/index.html)|  Large-scale fraud detection
 |  12K Research         | <img src="https://techberlin.com/media/CACHE/images/threesixty/FtA5ANuJ/1aa5b8517ec65ef1c7d69c9bda5f9a3c.jpg" width="100"> | [12k.co](https://12k.co/)|   Document similarity analysis on media articles
@@ -148,7 +162,7 @@ BibTeX entry:
   [Talentpair]: https://avatars3.githubusercontent.com/u/8418395?v=3&s=100
   [citing gensim in academic papers and theses]: https://scholar.google.cz/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:u-x6o8ySG0sC
 
-  [Travis]: https://img.shields.io/travis/RaRe-Technologies/gensim/develop.svg
+  
   [Wheel]: https://img.shields.io/pypi/wheel/gensim.svg
   [documentation and Jupyter Notebook tutorials]: https://github.com/RaRe-Technologies/gensim/#documentation
   [Vector Space Model]: http://en.wikipedia.org/wiki/Vector_space_model

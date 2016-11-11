@@ -7,8 +7,8 @@
 #####Text to Vectors
 * We first need to transform text to vectors
 * [String to vectors tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/Corpora_and_Vector_Spaces.ipynb)
-	* Create a dictionary first that maps words to ids
-	* Transform the text into vectors through ```dictionary.doc2bow(texts)```
+    * Create a dictionary first that maps words to ids
+    * Transform the text into vectors through ```dictionary.doc2bow(texts)```
 * [Corpus streaming tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/Corpora_and_Vector_Spaces.ipynb) (For very large corpuses)
 
 #####Models and Transformation
@@ -37,20 +37,21 @@
 
 #####Topic Model Tuning
 * [Colouring words by topic in a document, print words in a topics](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_methods.ipynb)
-* [Topic Coherence, a metric that correlates that human judgement on topic quality.](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_coherence_tutorial.ipynb) 
-* [Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities] (https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/distance_metrics.ipynb)
+* [Topic Coherence, a metric that correlates that human judgement on topic quality.](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_coherence_tutorial.ipynb)
+* [Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/distance_metrics.ipynb)
 * [America's Next Topic Model slides](https://speakerdeck.com/tmylk/americas-next-topic-model?slide=6) -- How to choose your next topic model, presented at Pydata London 5 July 2016 by Lev Konstantinovsky
+* [Classification of News Articles using Topic Modeling](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/gensim_news_classification.ipynb)
 * [LDA: pre-processing and training tips](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/lda_training_tips.ipynb)
 
 #####Query Similarities
 * Tool to get the most similar documents for LDA, LSI
 * [Similarity queries tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/Similarity_Queries.ipynb)
 
-#####Dynamic Topic Modeling      
+#####Dynamic Topic Modeling
 * Model evolution of topics through time
 * [Easy intro to DTM. Evolution of Voldemort topic through the 7 Harry Potter books.](http://rare-technologies.com/understanding-and-coding-dynamic-topic-models/)
 * [Dynamic Topic Modeling and Dynamic Influence Model Tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/dtm_example.ipynb)
-* [Python Dynamic Topic Modelling Theory and Tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/ldaseqmodel.ipynb) 
+* [Python Dynamic Topic Modelling Theory and Tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/ldaseqmodel.ipynb)
 
 
 ####Word Embeddings
@@ -58,6 +59,7 @@
 #####Word2Vec (Model)
 * [Docs](https://radimrehurek.com/gensim/models/word2vec.html), [Source](https://github.com/piskvorky/gensim/blob/develop/gensim/models/word2vec.py) (very simple interface)
 * [Simple word2vec tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/word2vec.ipynb) (examples of ```most_similar, similarity, doesnt_match```)
+* [Comparison of FastText and Word2Vec](https://github.com/RaRe-Technologies/gensim/blob/ba1ce894a5192fc493a865c535202695bb3c0424/docs/notebooks/Word2Vec_FastText_Comparison.ipynb)
 
 #####Doc2Vec (Model)
 * [Doc2vec Quick Start on Lee Corpus](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb)
@@ -75,19 +77,19 @@
 * Tool to get the most similar documents for word2vec
 * [Word Movers Distance for Yelp Reviews tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb)
 
-#####Deep Inverse Regression      
+#####Deep Inverse Regression
 * Document Classification using Bayesian Inversion and several word2vec models(one for each class)
 * [Deep Inverse Regression with Yelp Reviews](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/deepir.ipynb)
 
 
 ####Other techniques
 
-#####Summarization	
+#####Summarization
 * Extract most important keywords and sentences from the text
 * [Tutorial on TextRank summarisation](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/summarization_tutorial.ipynb)
 
 #####Overviews
-* Tutorial showing API for document classification with various techniques: TF-IDF, word2vec averaging, Deep IR, Word Movers Distance and doc2vec 
+* Tutorial showing API for document classification with various techniques: TF-IDF, word2vec averaging, Deep IR, Word Movers Distance and doc2vec
 * [Movie plots by genre](https://github.com/RaRe-Technologies/movie-plots-by-genre)
 
 
@@ -100,4 +102,3 @@
 
 #Credits
 Based on wonderful [resource](https://github.com/jxieeducation/DIY-Data-Science/blob/master/frameworks/gensim.md) by Jason Xie.
-

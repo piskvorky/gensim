@@ -460,7 +460,7 @@ class DocvecsArray(utils.SaveLoad):
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_docs), reverse=True)
         # ignore (don't return) docs from the input
-        result = [(self.index_to_doctag(sim), float(dists[sim])) for sim in best if sim not in all_docs]
+        result = [(self.index_to_doctag(sim + clip_start), float(dists[sim])) for sim in best if (sim + clip_start) not in all_docs]
         return result[:topn]
 
     def doesnt_match(self, docs):
@@ -508,8 +508,8 @@ class DocvecsArray(utils.SaveLoad):
         d1 = model.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, steps=steps)
         d2 = model.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, steps=steps)
         return dot(matutils.unitvec(d1), matutils.unitvec(d2))
-        
-        
+
+
 class Doctag(namedtuple('Doctag', 'offset, word_count, doc_count')):
     """A string document tag discovered during the initial vocabulary
     scan. (The document-vector equivalent of a Vocab object.)
@@ -553,7 +553,7 @@ class Doc2Vec(Word2Vec):
 
         `alpha` is the initial learning rate (will linearly drop to zero as training progresses).
 
-        `seed` = for the random number generator. 
+        `seed` = for the random number generator.
         Note that for a fully deterministically-reproducible run, you must also limit the model to
         a single worker thread, to eliminate ordering jitter from OS thread scheduling. (In Python
         3, reproducibility between interpreter launches also requires use of the PYTHONHASHSEED
@@ -570,7 +570,7 @@ class Doc2Vec(Word2Vec):
 
         `workers` = use this many worker threads to train the model (=faster training with multicore machines).
 
-        `iter` = number of iterations (epochs) over the corpus. The default inherited from Word2Vec is 5, 
+        `iter` = number of iterations (epochs) over the corpus. The default inherited from Word2Vec is 5,
         but values of 10 or 20 are common in published 'Paragraph Vector' experiments.
 
         `hs` = if 1 (default), hierarchical sampling will be used for model training (else set to 0).
@@ -643,7 +643,7 @@ class Doc2Vec(Word2Vec):
         self.docvecs.borrow_from(other_model.docvecs)
         super(Doc2Vec, self).reset_from(other_model)
 
-    def scan_vocab(self, documents, progress_per=10000, trim_rule=None):
+    def scan_vocab(self, documents, progress_per=10000, trim_rule=None, update=False):
         logger.info("collecting all words and their counts")
         document_no = -1
         total_words = 0
