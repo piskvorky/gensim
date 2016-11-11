@@ -487,6 +487,11 @@ class TestWord2VecModel(unittest.TestCase):
         for i in [0, 1]:
             for j in [0, 1]:
                 model = word2vec.Word2Vec(sentences, size=10, min_count=0, seed=42, hs=i, negative=j)
+                if i:
+                    self.assertTrue(hasattr(model, 'syn1'))
+                if j:
+                    self.assertTrue(hasattr(model, 'syn1neg'))
+                self.assertTrue(hasattr(model, 'syn0_lockf'))
                 model.delete_temporary_training_data(replace=True)
                 self.assertTrue(len(model['human']), 10)
                 self.assertTrue(len(model.vocab), 12)
