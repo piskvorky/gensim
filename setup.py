@@ -182,9 +182,9 @@ setup(
     ],
     tests_require=[
     	'testfixtures',
-        'unittest2'
-    	'testfixtures',
+        'unittest2',
         'nbconvert',
+        'jupyter_client',
     ],
     extras_require={
         'distributed': ['Pyro4 >= 4.27'],
