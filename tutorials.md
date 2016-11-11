@@ -38,7 +38,8 @@
 #####Topic Model Tuning
 * [Colouring words by topic in a document, print words in a topics](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_methods.ipynb)
 * [Topic Coherence, a metric that correlates that human judgement on topic quality.](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_coherence_tutorial.ipynb) 
-* [Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities] (https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/similarity_metrics.ipynb)
+* [Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities] (https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/distance_metrics.ipynb)
+* [America's Next Topic Model slides](https://speakerdeck.com/tmylk/americas-next-topic-model?slide=6) -- How to choose your next topic model, presented at Pydata London 5 July 2016 by Lev Konstantinovsky
 * [LDA: pre-processing and training tips](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/lda_training_tips.ipynb)
 
 #####Query Similarities
@@ -49,6 +50,7 @@
 * Model evolution of topics through time
 * [Easy intro to DTM. Evolution of Voldemort topic through the 7 Harry Potter books.](http://rare-technologies.com/understanding-and-coding-dynamic-topic-models/)
 * [Dynamic Topic Modeling and Dynamic Influence Model Tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/dtm_example.ipynb)
+* [Python Dynamic Topic Modelling Theory and Tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/ldaseqmodel.ipynb) 
 
 
 ####Word Embeddings
@@ -63,7 +65,11 @@
 * Doc2Vec requires a non-standard corpus (need sentiment label for each document)
 * [Great illustration of corpus preparation](https://linanqiu.github.io/2015/10/07/word2vec-sentiment/), [Code](https://github.com/linanqiu/word2vec-sentiments) ([Alternative](https://medium.com/@klintcho/doc2vec-tutorial-using-gensim-ab3ac03d3a1#.nv2lxvbj1), [Alternative 2](https://districtdatalabs.silvrback.com/modern-methods-for-sentiment-analysis))
 * [Doc2Vec on customer review](http://multithreaded.stitchfix.com/blog/2015/03/11/word-is-worth-a-thousand-vectors/) (example)
+* [Doc2Vec on Airline Tweets Sentiment Analysis](https://www.zybuluo.com/HaomingJiang/note/462804)
 * [Doc2vec to predict IMDB review star rating. Reproducing the Google paper](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-IMDB.ipynb)
+
+#####Similarity Queries
+* [Similarity queries using Annoy with word2vec and doc2vec](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/annoytutorial.ipynb)
 
 #####Word Movers Distance
 * Tool to get the most similar documents for word2vec

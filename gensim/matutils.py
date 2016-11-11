@@ -238,7 +238,7 @@ def full2sparse_clipped(vec, topn, eps=1e-9):
         return []
     vec = numpy.asarray(vec, dtype=float)
     nnz = numpy.nonzero(abs(vec) > eps)[0]
-    biggest = nnz.take(argsort(vec.take(nnz), topn, reverse=True))
+    biggest = nnz.take(argsort(abs(vec).take(nnz), topn, reverse=True))
     return list(zip(biggest, vec.take(biggest)))
 
 

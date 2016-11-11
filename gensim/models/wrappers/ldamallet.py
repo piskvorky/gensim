@@ -95,7 +95,6 @@ class LdaMallet(utils.SaveLoad):
         self.workers = workers
         self.optimize_interval = optimize_interval
         self.iterations = iterations
-
         if corpus is not None:
             self.train(corpus)
 
@@ -204,7 +203,6 @@ class LdaMallet(utils.SaveLoad):
                     continue
                 tokenid = word2id[token]
                 word_topics[int(topic), tokenid] += 1.0
-        self.print_topics(15)
         return word_topics
 
     def print_topics(self, num_topics=10, num_words=10):

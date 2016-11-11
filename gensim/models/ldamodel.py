@@ -216,7 +216,7 @@ class LdaModel(interfaces.TransformationABC):
                  distributed=False, chunksize=2000, passes=1, update_every=1,
                  alpha='symmetric', eta=None, decay=0.5, offset=1.0,
                  eval_every=10, iterations=50, gamma_threshold=0.001,
-                 minimum_probability=0.01, random_state=None):
+                 minimum_probability=0.01, random_state=None, ns_conf={}):
         """
         If given, start training from the iterable `corpus` straight away. If not given,
         the model is left untrained (presumably because you want to call `update()` manually).
@@ -256,7 +256,7 @@ class LdaModel(interfaces.TransformationABC):
         Hoffman et al, respectively.
 
         `minimum_probability` controls filtering the topics returned for a document (bow).
-        
+
         `random_state` can be a numpy.random.RandomState object or the seed for one
 
         Example:
@@ -303,7 +303,7 @@ class LdaModel(interfaces.TransformationABC):
         assert self.alpha.shape == (self.num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
-        
+
         self.random_state = get_random_state(random_state)
 
         assert (self.eta.shape == (self.num_topics, 1) or self.eta.shape == (self.num_topics, self.num_terms)), (
@@ -325,13 +325,14 @@ class LdaModel(interfaces.TransformationABC):
             # set up distributed version
             try:
                 import Pyro4
-                dispatcher = Pyro4.Proxy('PYRONAME:gensim.lda_dispatcher')
-                logger.debug("looking for dispatcher at %s" % str(dispatcher._pyroUri))
-                dispatcher.initialize(id2word=self.id2word, num_topics=self.num_topics,
-                                      chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
-                self.dispatcher = dispatcher
-                self.numworkers = len(dispatcher.getworkers())
-                logger.info("using distributed version with %i workers" % self.numworkers)
+                with utils.getNS(**ns_conf) as ns:
+                    from gensim.models.lda_dispatcher import LDA_DISPATCHER_PREFIX
+                    self.dispatcher = Pyro4.Proxy(ns.list(prefix=LDA_DISPATCHER_PREFIX)[LDA_DISPATCHER_PREFIX])
+                    logger.debug("looking for dispatcher at %s" % str(self.dispatcher._pyroUri))
+                    self.dispatcher.initialize(id2word=self.id2word, num_topics=self.num_topics,
+                                               chunksize=chunksize, alpha=alpha, eta=eta, distributed=False)
+                    self.numworkers = len(self.dispatcher.getworkers())
+                    logger.info("using distributed version with %i workers" % self.numworkers)
             except Exception as err:
                 logger.error("failed to initialize distributed LDA (%s)", err)
                 raise RuntimeError("failed to initialize distributed LDA (%s)" % err)
@@ -907,7 +908,7 @@ class LdaModel(interfaces.TransformationABC):
 
         Ignore topics with very low probability (below `minimum_probability`).
 
-        If per_word_topics is True, it also returns a list of topics, sorted in descending order of most likely topics for that word. 
+        If per_word_topics is True, it also returns a list of topics, sorted in descending order of most likely topics for that word.
         It also returns a list of word_ids and each words corresponding topics' phi_values, multiplied by feature length (i.e, word count)
 
         """
@@ -929,7 +930,7 @@ class LdaModel(interfaces.TransformationABC):
 
         document_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                     if topicvalue >= minimum_probability]
-     
+
         if not per_word_topics:
             return document_topics
         else:
@@ -941,10 +942,10 @@ class LdaModel(interfaces.TransformationABC):
                 for topic_id in range(0, self.num_topics):
                     if phis[topic_id][word_type] >= minimum_phi_value:
                         # appends phi values for each topic for that word
-                        # these phi values are scaled by feature length 
+                        # these phi values are scaled by feature length
                         phi_values.append((phis[topic_id][word_type], topic_id))
                         phi_topic.append((topic_id, phis[topic_id][word_type]))
-               
+
                 # list with ({word_id => [(topic_0, phi_value), (topic_1, phi_value) ...]).
                 word_phi.append((word_type, phi_topic))
                 # sorts the topics based on most likely topic
@@ -974,7 +975,7 @@ class LdaModel(interfaces.TransformationABC):
 
         return values
 
-        
+
     def __getitem__(self, bow, eps=None):
         """
         Return topic distribution for the given document `bow`, as a list of
