@@ -167,7 +167,7 @@ class LowCorpus(IndexedCorpus):
         if truncated:
             logger.warning("List-of-words format can only save vectors with "
                             "integer elements; %i float entries were truncated to integer value" 
-                            truncated)
+                            , truncated)
         return offsets
 
     def docbyoffset(self, offset):
