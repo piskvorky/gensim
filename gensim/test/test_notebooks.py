@@ -11,6 +11,7 @@ import unittest
 import os
 import os.path
 import tempfile
+
 import numbers 
 
 def _notebook_run(path):
@@ -21,7 +22,6 @@ def _notebook_run(path):
     kernel_name = 'python%d' % sys.version_info[0]
     this_file_directory = os.path.dirname(__file__)
     errors = []
-
 
     with open(path) as f:
         nb = nbformat.read(f, as_version=4)
