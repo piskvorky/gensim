@@ -101,16 +101,13 @@ from six.moves import xrange
 from types import GeneratorType
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
 
 try:
     from gensim.models.word2vec_inner import train_batch_sg, train_batch_cbow
     from gensim.models.word2vec_inner import score_sentence_sg, score_sentence_cbow
     from gensim.models.word2vec_inner import FAST_VERSION, MAX_WORDS_IN_BATCH
-    logger.debug('Fast version of {0} is being used'.format(__name__))
 except ImportError:
     # failed... fall back to plain numpy (20-80x slower training than the above)
-    logger.warning('Slow version of {0} is being used'.format(__name__))
     FAST_VERSION = -1
     MAX_WORDS_IN_BATCH = 10000
 
@@ -423,6 +420,12 @@ class Word2Vec(utils.SaveLoad):
         texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
 
         """
+        
+        if FAST_VERSION == -1:
+            logger.warning('Slow version of {0} is being used'.format(__name__))
+        else:
+            logger.debug('Fast version of {0} is being used'.format(__name__))
+
         self.wv = KeyedVectors()  # wv --> KeyedVectors
         self.sg = int(sg)
         self.cum_table = None  # for negative sampling
