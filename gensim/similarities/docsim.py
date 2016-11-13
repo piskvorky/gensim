@@ -68,7 +68,8 @@ PARALLEL_SHARDS = False
 try:
     import multiprocessing
     # by default, don't parallelize queries. uncomment the following line if you want that.
-#    PARALLEL_SHARDS = multiprocessing.cpu_count() # use #parallel processes = #CPus
+# PARALLEL_SHARDS = multiprocessing.cpu_count() # use #parallel processes
+# = #CPus
 except ImportError:
     pass
 
@@ -82,6 +83,7 @@ class Shard(utils.SaveLoad):
     request (query).
 
     """
+
     def __init__(self, fname, index):
         self.dirname, self.fname = os.path.split(fname)
         self.length = len(index)
@@ -104,7 +106,8 @@ class Shard(utils.SaveLoad):
         return result
 
     def __str__(self):
-        return ("%s Shard(%i documents in %s)" % (self.cls.__name__, len(self), self.fullname()))
+        return ("%s Shard(%i documents in %s)" %
+                (self.cls.__name__, len(self), self.fullname()))
 
     def get_index(self):
         if not hasattr(self, 'index'):
@@ -127,15 +130,21 @@ class Shard(utils.SaveLoad):
             index.num_best = self.num_best
             index.normalize = self.normalize
         except:
-            raise ValueError("num_best and normalize have to be set before querying a proxy Shard object")
+            raise ValueError(
+                "num_best and normalize have to be set before querying a proxy Shard object")
         return index[query]
 
 
 def query_shard(args):
-    query, shard = args  # simulate starmap (not part of multiprocessing in older Pythons)
-    logger.debug("querying shard %s num_best=%s in process %s", shard, shard.num_best, os.getpid())
+    # simulate starmap (not part of multiprocessing in older Pythons)
+    query, shard = args
+    logger.debug("querying shard %s num_best=%s in process %s",
+                 shard, shard.num_best, os.getpid())
     result = shard[query]
-    logger.debug("finished querying shard %s in process %s", shard, os.getpid())
+    logger.debug(
+        "finished querying shard %s in process %s",
+        shard,
+        os.getpid())
     return result
 
 
@@ -149,7 +158,16 @@ class Similarity(interfaces.SimilarityABC):
     The shards themselves are simply stored as files to disk and mmap'ed back as needed.
 
     """
-    def __init__(self, output_prefix, corpus, num_features, num_best=None, chunksize=256, shardsize=32768, norm='l2'):
+
+    def __init__(
+            self,
+            output_prefix,
+            corpus,
+            num_features,
+            num_best=None,
+            chunksize=256,
+            shardsize=32768,
+            norm='l2'):
         """
         Construct the index from `corpus`. The index can be later extended by calling
         the `add_documents` method. **Note**: documents are split (internally, transparently)
@@ -187,7 +205,8 @@ class Similarity(interfaces.SimilarityABC):
 
         """
         if output_prefix is None:
-            # undocumented feature: set output_prefix=None to create the server in temp
+            # undocumented feature: set output_prefix=None to create the server
+            # in temp
             self.output_prefix = utils.randfname(prefix='simserver')
         else:
             self.output_prefix = output_prefix
@@ -204,7 +223,8 @@ class Similarity(interfaces.SimilarityABC):
             self.add_documents(corpus)
 
     def __len__(self):
-        return len(self.fresh_docs) + sum([len(shard) for shard in self.shards])
+        return len(self.fresh_docs) + \
+            sum([len(shard) for shard in self.shards])
 
     def __str__(self):
         return ("Similarity index with %i documents in %i shards (stored under %s)" %
@@ -219,7 +239,8 @@ class Similarity(interfaces.SimilarityABC):
         """
         min_ratio = 1.0  # 0.5 to only reopen shards that are <50% complete
         if self.shards and len(self.shards[-1]) < min_ratio * self.shardsize:
-            # The last shard was incomplete (<; load it back and add the documents there, don't start a new shard
+            # The last shard was incomplete (<; load it back and add the
+            # documents there, don't start a new shard
             self.reopen_shard()
         for doc in corpus:
             if isinstance(doc, numpy.ndarray):
@@ -229,15 +250,20 @@ class Similarity(interfaces.SimilarityABC):
             else:
                 doclen = len(doc)
                 if doclen < 0.3 * self.num_features:
-                    doc = matutils.unitvec(matutils.corpus2csc([doc], self.num_features).T, self.norm)
+                    doc = matutils.unitvec(matutils.corpus2csc(
+                        [doc], self.num_features).T, self.norm)
                 else:
-                    doc = matutils.unitvec(matutils.sparse2full(doc, self.num_features), self.norm)
+                    doc = matutils.unitvec(
+                        matutils.sparse2full(
+                            doc, self.num_features), self.norm)
             self.fresh_docs.append(doc)
             self.fresh_nnz += doclen
             if len(self.fresh_docs) >= self.shardsize:
                 self.close_shard()
             if len(self.fresh_docs) % 10000 == 0:
-                logger.info("PROGRESS: fresh_shard size=%i", len(self.fresh_docs))
+                logger.info(
+                    "PROGRESS: fresh_shard size=%i", len(
+                        self.fresh_docs))
 
     def shardid2filename(self, shardid):
         if self.output_prefix.endswith('.'):
@@ -258,13 +284,19 @@ class Similarity(interfaces.SimilarityABC):
             return
         shardid = len(self.shards)
         # consider the shard sparse if its density is < 30%
-        issparse = 0.3 > 1.0 * self.fresh_nnz / (len(self.fresh_docs) * self.num_features)
+        issparse = 0.3 > 1.0 * self.fresh_nnz / \
+            (len(self.fresh_docs) * self.num_features)
         if issparse:
-            index = SparseMatrixSimilarity(self.fresh_docs, num_terms=self.num_features,
-                                           num_docs=len(self.fresh_docs), num_nnz=self.fresh_nnz)
+            index = SparseMatrixSimilarity(
+                self.fresh_docs, num_terms=self.num_features, num_docs=len(
+                    self.fresh_docs), num_nnz=self.fresh_nnz)
         else:
-            index = MatrixSimilarity(self.fresh_docs, num_features=self.num_features)
-        logger.info("creating %s shard #%s", 'sparse' if issparse else 'dense', shardid)
+            index = MatrixSimilarity(
+                self.fresh_docs, num_features=self.num_features)
+        logger.info(
+            "creating %s shard #%s",
+            'sparse' if issparse else 'dense',
+            shardid)
         shard = Shard(self.shardid2filename(shardid), index)
         shard.num_best = self.num_best
         shard.num_nnz = self.fresh_nnz
@@ -274,14 +306,18 @@ class Similarity(interfaces.SimilarityABC):
     def reopen_shard(self):
         assert self.shards
         if self.fresh_docs:
-            raise ValueError("cannot reopen a shard with fresh documents in index")
+            raise ValueError(
+                "cannot reopen a shard with fresh documents in index")
         last_shard = self.shards[-1]
         last_index = last_shard.get_index()
-        logger.info("reopening an incomplete shard of %i documents", len(last_shard))
+        logger.info(
+            "reopening an incomplete shard of %i documents",
+            len(last_shard))
 
         self.fresh_docs = list(last_index.index)
         self.fresh_nnz = last_shard.num_nnz
-        del self.shards[-1]  # remove the shard from index, *but its file on disk is not deleted*
+        # remove the shard from index, *but its file on disk is not deleted*
+        del self.shards[-1]
         logger.debug("reopen complete")
 
     def query_shards(self, query):
@@ -296,7 +332,12 @@ class Similarity(interfaces.SimilarityABC):
         if PARALLEL_SHARDS and PARALLEL_SHARDS > 1:
             logger.debug("spawning %i query processes", PARALLEL_SHARDS)
             pool = multiprocessing.Pool(PARALLEL_SHARDS)
-            result = pool.imap(query_shard, args, chunksize=1 + len(args) / PARALLEL_SHARDS)
+            result = pool.imap(
+                query_shard,
+                args,
+                chunksize=1 +
+                len(args) /
+                PARALLEL_SHARDS)
         else:
             # serial processing, one shard after another
             pool = None
@@ -314,7 +355,8 @@ class Similarity(interfaces.SimilarityABC):
         """
         self.close_shard()  # no-op if no documents added to index since last query
 
-        # reset num_best and normalize parameters, in case they were changed dynamically
+        # reset num_best and normalize parameters, in case they were changed
+        # dynamically
         for shard in self.shards:
             shard.num_best = self.num_best
             shard.normalize = self.norm
@@ -330,25 +372,34 @@ class Similarity(interfaces.SimilarityABC):
             result = numpy.hstack(shard_results)
         else:
             # the following uses a lot of lazy evaluation and (optionally) parallel
-            # processing, to improve query latency and minimize memory footprint.
+            # processing, to improve query latency and minimize memory
+            # footprint.
             offsets = numpy.cumsum([0] + [len(shard) for shard in self.shards])
-            convert = lambda doc, shard_no: [(doc_index + offsets[shard_no], sim)
-                                             for doc_index, sim in doc]
+            convert = lambda doc, shard_no: [
+                (doc_index + offsets[shard_no], sim) for doc_index, sim in doc]
             is_corpus, query = utils.is_corpus(query)
-            is_corpus = is_corpus or hasattr(query, 'ndim') and query.ndim > 1 and query.shape[0] > 1
+            is_corpus = is_corpus or hasattr(
+                query, 'ndim') and query.ndim > 1 and query.shape[0] > 1
             if not is_corpus:
-                # user asked for num_best most similar and query is a single doc
-                results = (convert(result, shard_no) for shard_no, result in enumerate(shard_results))
-                result = heapq.nlargest(self.num_best, itertools.chain(*results), key=lambda item: item[1])
+                # user asked for num_best most similar and query is a single
+                # doc
+                results = (convert(result, shard_no)
+                           for shard_no, result in enumerate(shard_results))
+                result = heapq.nlargest(
+                    self.num_best, itertools.chain(
+                        *results), key=lambda item: item[1])
             else:
-                # the trickiest combination: returning num_best results when query was a corpus
+                # the trickiest combination: returning num_best results when
+                # query was a corpus
                 results = []
                 for shard_no, result in enumerate(shard_results):
                     shard_result = [convert(doc, shard_no) for doc in result]
                     results.append(shard_result)
                 result = []
                 for parts in izip(*results):
-                    merged = heapq.nlargest(self.num_best, itertools.chain(*parts), key=lambda item: item[1])
+                    merged = heapq.nlargest(
+                        self.num_best, itertools.chain(
+                            *parts), key=lambda item: item[1])
                     result.append(merged)
         if pool:
             # gc doesn't seem to collect the Pools, eventually leading to
@@ -368,8 +419,9 @@ class Similarity(interfaces.SimilarityABC):
             if docpos < pos:
                 break
         if not self.shards or docpos < 0 or docpos >= pos:
-            raise ValueError("invalid document position: %s (must be 0 <= x < %s)" %
-                             (docpos, len(self)))
+            raise ValueError(
+                "invalid document position: %s (must be 0 <= x < %s)" %
+                (docpos, len(self)))
         result = shard.get_document_id(docpos - pos + len(shard))
         return result
 
@@ -389,7 +441,8 @@ class Similarity(interfaces.SimilarityABC):
         For each index document, compute cosine similarity against all other
         documents in the index and yield the result.
         """
-        # turn off query normalization (vectors in the index are already normalized, save some CPU)
+        # turn off query normalization (vectors in the index are already
+        # normalized, save some CPU)
         norm, self.norm = self.norm, False
 
         for chunk in self.iter_chunks():
@@ -412,7 +465,8 @@ class Similarity(interfaces.SimilarityABC):
         self.close_shard()
 
         if chunksize is None:
-            # if not explicitly specified, use the chunksize from the constructor
+            # if not explicitly specified, use the chunksize from the
+            # constructor
             chunksize = self.chunksize
 
         for shard in self.shards:
@@ -456,7 +510,7 @@ class Similarity(interfaces.SimilarityABC):
         for fname in glob.glob(self.output_prefix + '*'):
             logger.info("deleting %s", fname)
             os.remove(fname)
-#endclass Similarity
+# endclass Similarity
 
 
 class MatrixSimilarity(interfaces.SimilarityABC):
@@ -473,7 +527,15 @@ class MatrixSimilarity(interfaces.SimilarityABC):
     See also `Similarity` and `SparseMatrixSimilarity` in this module.
 
     """
-    def __init__(self, corpus, num_best=None, dtype=numpy.float32, num_features=None, chunksize=256, corpus_len=None):
+
+    def __init__(
+            self,
+            corpus,
+            num_best=None,
+            dtype=numpy.float32,
+            num_features=None,
+            chunksize=256,
+            corpus_len=None):
         """
         `num_features` is the number of features in the corpus (will be determined
         automatically by scanning the corpus if not specified). See `Similarity`
@@ -481,7 +543,8 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
         """
         if num_features is None:
-            logger.warning("scanning corpus to determine the number of features (consider setting `num_features` explicitly)")
+            logger.warning(
+                "scanning corpus to determine the number of features (consider setting `num_features` explicitly)")
             num_features = 1 + utils.get_max_id(corpus)
 
         self.num_features = num_features
@@ -493,14 +556,23 @@ class MatrixSimilarity(interfaces.SimilarityABC):
 
         if corpus is not None:
             if self.num_features <= 0:
-                raise ValueError("cannot index a corpus with zero features (you must specify either `num_features` or a non-empty corpus in the constructor)")
-            logger.info("creating matrix with %i documents and %i features", corpus_len, num_features)
-            self.index = numpy.empty(shape=(corpus_len, num_features), dtype=dtype)
+                raise ValueError(
+                    "cannot index a corpus with zero features (you must specify either `num_features` or a non-empty corpus in the constructor)")
+            logger.info(
+                "creating matrix with %i documents and %i features",
+                corpus_len,
+                num_features)
+            self.index = numpy.empty(
+                shape=(
+                    corpus_len,
+                    num_features),
+                dtype=dtype)
             # iterate over corpus, populating the numpy index matrix with (normalized)
             # document vectors
             for docno, vector in enumerate(corpus):
                 if docno % 1000 == 0:
-                    logger.debug("PROGRESS: at document #%i/%i", docno, corpus_len)
+                    logger.debug(
+                        "PROGRESS: at document #%i/%i", docno, corpus_len)
                 # individual documents in fact may be in numpy.scipy.sparse format as well.
                 # it's not documented because other it's not fully supported throughout.
                 # the user better know what he's doing (no normalization, must
@@ -510,7 +582,9 @@ class MatrixSimilarity(interfaces.SimilarityABC):
                 elif scipy.sparse.issparse(vector):
                     vector = vector.toarray().flatten()
                 else:
-                    vector = matutils.unitvec(matutils.sparse2full(vector, num_features))
+                    vector = matutils.unitvec(
+                        matutils.sparse2full(
+                            vector, num_features))
                 self.index[docno] = vector
 
     def __len__(self):
@@ -539,7 +613,8 @@ class MatrixSimilarity(interfaces.SimilarityABC):
             elif isinstance(query, numpy.ndarray):
                 pass
             else:
-                # default case: query is a single vector in sparse gensim format
+                # default case: query is a single vector in sparse gensim
+                # format
                 query = matutils.sparse2full(query, self.num_features)
             query = numpy.asarray(query, dtype=self.index.dtype)
 
@@ -549,8 +624,10 @@ class MatrixSimilarity(interfaces.SimilarityABC):
         return result  # XXX: removed casting the result from array to list; does anyone care?
 
     def __str__(self):
-        return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.index.shape[1])
-#endclass MatrixSimilarity
+        return "%s<%i docs, %i features>" % (
+            self.__class__.__name__, len(self), self.index.shape[1])
+# endclass MatrixSimilarity
+
 
 class WmdSimilarity(interfaces.SimilarityABC):
     """
@@ -577,7 +654,14 @@ class WmdSimilarity(interfaces.SimilarityABC):
         >>> query = 'Very good, you should seat outdoor.'
         >>> sims = instance[query]
     """
-    def __init__(self, corpus, w2v_model, num_best=None, normalize_w2v_and_replace=True, chunksize=256):
+
+    def __init__(
+            self,
+            corpus,
+            w2v_model,
+            num_best=None,
+            normalize_w2v_and_replace=True,
+            chunksize=256):
         """
         corpus:                         List of lists of strings, as in gensim.models.word2vec.
         w2v_model:                      A trained word2vec model.
@@ -590,7 +674,8 @@ class WmdSimilarity(interfaces.SimilarityABC):
         self.num_best = num_best
         self.chunksize = chunksize
 
-        # Normalization of features is not possible, as corpus is a list (of lists) of strings.
+        # Normalization of features is not possible, as corpus is a list (of
+        # lists) of strings.
         self.normalize = False
 
         # index is simply an array from 0 to size of corpus.
@@ -618,9 +703,13 @@ class WmdSimilarity(interfaces.SimilarityABC):
         result = []
         for qidx in range(n_queries):
             # Compute similarity for each query.
-            qresult = [self.w2v_model.wmdistance(document, query[qidx]) for document in self.corpus]
+            qresult = [
+                self.w2v_model.wmdistance(
+                    document,
+                    query[qidx]) for document in self.corpus]
             qresult = numpy.array(qresult)
-            qresult = 1./(1.+qresult)  # Similarity is the negative of the distance.
+            # Similarity is the negative of the distance.
+            qresult = 1. / (1. + qresult)
 
             # Append single query result to list of all results.
             result.append(qresult)
@@ -634,8 +723,10 @@ class WmdSimilarity(interfaces.SimilarityABC):
         return result
 
     def __str__(self):
-        return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.w2v_model.syn0.shape[1])
-#endclass WmdSimilarity
+        return "%s<%i docs, %i features>" % (
+            self.__class__.__name__, len(self), self.w2v_model.syn0.shape[1])
+# endclass WmdSimilarity
+
 
 class SparseMatrixSimilarity(interfaces.SimilarityABC):
     """
@@ -654,8 +745,18 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
     See also `Similarity` and `MatrixSimilarity` in this module.
     """
-    def __init__(self, corpus, num_features=None, num_terms=None, num_docs=None, num_nnz=None,
-                 num_best=None, chunksize=500, dtype=numpy.float32, maintain_sparsity=False):
+
+    def __init__(
+            self,
+            corpus,
+            num_features=None,
+            num_terms=None,
+            num_docs=None,
+            num_nnz=None,
+            num_best=None,
+            chunksize=500,
+            dtype=numpy.float32,
+            maintain_sparsity=False):
         self.num_best = num_best
         self.normalize = True
         self.chunksize = chunksize
@@ -675,18 +776,26 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
                 # num_* params in constructor)
                 pass
             if num_features is not None:
-                # num_terms is just an alias for num_features, for compatibility with MatrixSimilarity
+                # num_terms is just an alias for num_features, for
+                # compatibility with MatrixSimilarity
                 num_terms = num_features
             if num_terms is None:
-                raise ValueError("refusing to guess the number of sparse features: specify num_features explicitly")
-            corpus = (matutils.scipy2sparse(v) if scipy.sparse.issparse(v) else
-                      (matutils.full2sparse(v) if isinstance(v, numpy.ndarray) else
-                       matutils.unitvec(v)) for v in corpus)
+                raise ValueError(
+                    "refusing to guess the number of sparse features: specify num_features explicitly")
+            corpus = (
+                matutils.scipy2sparse(v) if scipy.sparse.issparse(v) else (
+                    matutils.full2sparse(v) if isinstance(
+                        v, numpy.ndarray) else matutils.unitvec(v)) for v in corpus)
             self.index = matutils.corpus2csc(
-                corpus, num_terms=num_terms, num_docs=num_docs, num_nnz=num_nnz,
-                dtype=dtype, printprogress=10000).T
+                corpus,
+                num_terms=num_terms,
+                num_docs=num_docs,
+                num_nnz=num_nnz,
+                dtype=dtype,
+                printprogress=10000).T
 
-            # convert to Compressed Sparse Row for efficient row slicing and multiplications
+            # convert to Compressed Sparse Row for efficient row slicing and
+            # multiplications
             self.index = self.index.tocsr()  # currently no-op, CSC.T is already CSR
             logger.info("created %r", self.index)
 
@@ -707,19 +816,24 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
         """
         is_corpus, query = utils.is_corpus(query)
         if is_corpus:
-            query = matutils.corpus2csc(query, self.index.shape[1], dtype=self.index.dtype)
+            query = matutils.corpus2csc(
+                query, self.index.shape[1], dtype=self.index.dtype)
         else:
             if scipy.sparse.issparse(query):
                 query = query.T  # convert documents=rows to documents=columns
             elif isinstance(query, numpy.ndarray):
                 if query.ndim == 1:
                     query.shape = (1, len(query))
-                query = scipy.sparse.csr_matrix(query, dtype=self.index.dtype).T
+                query = scipy.sparse.csr_matrix(
+                    query, dtype=self.index.dtype).T
             else:
-                # default case: query is a single vector, in sparse gensim format
-                query = matutils.corpus2csc([query], self.index.shape[1], dtype=self.index.dtype)
+                # default case: query is a single vector, in sparse gensim
+                # format
+                query = matutils.corpus2csc(
+                    [query], self.index.shape[1], dtype=self.index.dtype)
 
-        # compute cosine similarity against every other document in the collection
+        # compute cosine similarity against every other document in the
+        # collection
         result = self.index * query.tocsc()  # N x T * T x C = N x C
         if result.shape[1] == 1 and not is_corpus:
             # for queries of one document, return a 1d array
@@ -731,4 +845,4 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
             # otherwise, return a 2d matrix (#queries x #index)
             result = result.toarray().T
         return result
-#endclass SparseMatrixSimilarity
+# endclass SparseMatrixSimilarity
