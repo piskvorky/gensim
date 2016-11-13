@@ -19,6 +19,8 @@ from .normmodel import NormModel
 from .onlineatvb import OnlineAtVb
 from .minibatchatvb import MinibatchAtVb
 from .atvb import AtVb
+from .atvb2 import AtVb2
+from .onlineatvb2 import OnlineAtVb2
 
 from . import wrappers
 
