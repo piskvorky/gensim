@@ -19,5 +19,6 @@ install:
   - pip install annoy
   - pip install testfixtures
   - pip install entrypoints
+  - pip install jupyter
   - pip install .
 script: python setup.py test
