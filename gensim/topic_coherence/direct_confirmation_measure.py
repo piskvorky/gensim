@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 EPSILON = 1e-12  # Should be small. Value as suggested in paper.
 
-
 def log_conditional_probability(segmented_topics, per_topic_postings, num_docs):
     """
     This function calculates the log-conditional-probability measure
@@ -42,7 +41,6 @@ def log_conditional_probability(segmented_topics, per_topic_postings, num_docs):
             m_lc.append(m_lc_i)
 
     return m_lc
-
 
 def log_ratio_measure(segmented_topics, per_topic_postings, num_docs, normalize=False):
     """

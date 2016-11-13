@@ -48,7 +48,6 @@ def _present(w_prime_star, w, w_backtrack):
         return -1
     return index
 
-
 def _make_seg(w_prime, w, per_topic_postings, measure, gamma, backtrack, num_docs):
     """
     Internal helper function to return context vectors for segmentations.
@@ -69,7 +68,6 @@ def _make_seg(w_prime, w, per_topic_postings, measure, gamma, backtrack, num_doc
                 backtrack[(w_prime, w_j)] = measure[0]([[(w_prime, w_j)]], per_topic_postings, num_docs, measure[1])[0]
             context_vectors[w_j] = backtrack[(w_prime, w_j)] ** gamma
     return (context_vectors, backtrack)
-
 
 def cosine_similarity(topics, segmented_topics, per_topic_postings, measure, gamma, num_docs):
     """
