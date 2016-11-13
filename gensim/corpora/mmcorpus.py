@@ -23,6 +23,7 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
     """
     Corpus in the Matrix Market format.
     """
+
     def __init__(self, fname):
         # avoid calling super(), too confusing
         IndexedCorpus.__init__(self, fname)
@@ -37,7 +38,12 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
             yield doc  # get rid of doc id, return the sparse vector only
 
     @staticmethod
-    def save_corpus(fname, corpus, id2word=None, progress_cnt=1000, metadata=False):
+    def save_corpus(
+            fname,
+            corpus,
+            id2word=None,
+            progress_cnt=1000,
+            metadata=False):
         """
         Save a corpus in the Matrix Market format to disk.
 
@@ -46,6 +52,12 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         """
         logger.info("storing corpus in Matrix Market format to %s" % fname)
         num_terms = len(id2word) if id2word is not None else None
-        return matutils.MmWriter.write_corpus(fname, corpus, num_terms=num_terms, index=True, progress_cnt=progress_cnt, metadata=metadata)
+        return matutils.MmWriter.write_corpus(
+            fname,
+            corpus,
+            num_terms=num_terms,
+            index=True,
+            progress_cnt=progress_cnt,
+            metadata=metadata)
 
 # endclass MmCorpus

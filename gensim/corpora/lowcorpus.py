@@ -50,6 +50,7 @@ class LowCorpus(IndexedCorpus):
         in which all [wordij] (i=1..M, j=1..Ni) are text strings and they are separated
         by the blank character.
     """
+
     def __init__(self, fname, id2word=None, line2words=split_on_space):
         """
         Initialize the corpus from a file.
@@ -65,30 +66,36 @@ class LowCorpus(IndexedCorpus):
         IndexedCorpus.__init__(self, fname)
         logger.info("loading corpus from %s" % fname)
 
-        self.fname = fname # input file, see class doc for format
-        self.line2words = line2words # how to translate lines into words (simply split on space by default)
+        self.fname = fname  # input file, see class doc for format
+        # how to translate lines into words (simply split on space by default)
+        self.line2words = line2words
         self.num_docs = self._calculate_num_docs()
 
         if not id2word:
             # build a list of all word types in the corpus (distinct words)
             logger.info("extracting vocabulary from the corpus")
             all_terms = set()
-            self.use_wordids = False # return documents as (word, wordCount) 2-tuples
+            # return documents as (word, wordCount) 2-tuples
+            self.use_wordids = False
             for doc in self:
                 all_terms.update(word for word, wordCnt in doc)
-            all_terms = sorted(all_terms) # sort the list of all words; rank in that list = word's integer id
-            self.id2word = dict(izip(xrange(len(all_terms)), all_terms)) # build a mapping of word id(int) -> word (string)
+            # sort the list of all words; rank in that list = word's integer id
+            all_terms = sorted(all_terms)
+            # build a mapping of word id(int) -> word (string)
+            self.id2word = dict(izip(xrange(len(all_terms)), all_terms))
         else:
             logger.info("using provided word mapping (%i ids)" % len(id2word))
             self.id2word = id2word
         self.num_terms = len(self.word2id)
-        self.use_wordids = True # return documents as (wordIndex, wordCount) 2-tuples
+        # return documents as (wordIndex, wordCount) 2-tuples
+        self.use_wordids = True
 
         logger.info("loaded corpus with %i documents and %i terms from %s" %
-                     (self.num_docs, self.num_terms, fname))
+                    (self.num_docs, self.num_terms, fname))
 
     def _calculate_num_docs(self):
-        # the first line in input data is the number of documents (integer). throws exception on bad input.
+        # the first line in input data is the number of documents (integer).
+        # throws exception on bad input.
         with utils.smart_open(self.fname) as fin:
             try:
                 result = int(next(fin))
@@ -111,7 +118,8 @@ class LowCorpus(IndexedCorpus):
             # as they were in the input. when iterating over the documents,
             # the (word, count) pairs will appear in the same order as they
             # were in the input (bar duplicates), which looks better.
-            # if this was not needed, we might as well have used useWords = set(words)
+            # if this was not needed, we might as well have used useWords =
+            # set(words)
             use_words, marker = [], set()
             for word in words:
                 if (word in uniq_words) and (word not in marker):
@@ -119,14 +127,15 @@ class LowCorpus(IndexedCorpus):
                     marker.add(word)
             # construct a list of (wordIndex, wordFrequency) 2-tuples
             doc = list(zip(map(self.word2id.get, use_words),
-                      map(words.count, use_words)))
+                           map(words.count, use_words)))
         else:
             uniq_words = set(words)
             # construct a list of (word, wordFrequency) 2-tuples
             doc = list(zip(uniq_words, map(words.count, uniq_words)))
 
         # return the document, then forget it and move on to the next one
-        # note that this way, only one doc is stored in memory at a time, not the whole corpus
+        # note that this way, only one doc is stored in memory at a time, not
+        # the whole corpus
         return doc
 
     def __iter__(self):
@@ -135,7 +144,7 @@ class LowCorpus(IndexedCorpus):
         """
         with utils.smart_open(self.fname) as fin:
             for lineno, line in enumerate(fin):
-                if lineno > 0: # ignore the first line = number of documents
+                if lineno > 0:  # ignore the first line = number of documents
                     yield self.line2doc(line)
 
     @staticmethod
@@ -147,7 +156,8 @@ class LowCorpus(IndexedCorpus):
         call it directly, call `serialize` instead.
         """
         if id2word is None:
-            logger.info("no word id mapping provided; initializing from corpus")
+            logger.info(
+                "no word id mapping provided; initializing from corpus")
             id2word = utils.dict_from_corpus(corpus)
 
         logger.info("storing corpus in List-Of-Words format into %s" % fname)
@@ -160,14 +170,16 @@ class LowCorpus(IndexedCorpus):
                 for wordid, value in doc:
                     if abs(int(value) - value) > 1e-6:
                         truncated += 1
-                    words.extend([utils.to_unicode(id2word[wordid])] * int(value))
+                    words.extend(
+                        [utils.to_unicode(id2word[wordid])] * int(value))
                 offsets.append(fout.tell())
                 fout.write(utils.to_utf8('%s\n' % ' '.join(words)))
 
         if truncated:
-            logger.warning("List-of-words format can only save vectors with "
-                            "integer elements; %i float entries were truncated to integer value" %
-                            truncated)
+            logger.warning(
+                "List-of-words format can only save vectors with "
+                "integer elements; %i float entries were truncated to integer value" %
+                truncated)
         return offsets
 
     def docbyoffset(self, offset):

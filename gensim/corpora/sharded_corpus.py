@@ -34,7 +34,8 @@ try:
     import theano
     _default_dtype = theano.config.floatX
 except ImportError:
-    logger.info('Could not import Theano, will use standard float for default ShardedCorpus dtype.')
+    logger.info(
+        'Could not import Theano, will use standard float for default ShardedCorpus dtype.')
 
 
 from six.moves import xrange
@@ -140,6 +141,7 @@ class ShardedCorpus(IndexedCorpus):
     the current shard, or opens a new one. The shard size is constant, except
     for the last shard.
     """
+
     def __init__(self, output_prefix, corpus, dim=None,
                  shardsize=4096, overwrite=False, sparse_serialization=False,
                  sparse_retrieval=False, gensim=False):
@@ -233,10 +235,10 @@ class ShardedCorpus(IndexedCorpus):
         self.current_shard = None    # The current shard itself (numpy ndarray)
         self.current_shard_n = None  # Current shard is the current_shard_n-th
         self.current_offset = None   # The index into the dataset which
-                                     # corresponds to index 0 of current shard
+        # corresponds to index 0 of current shard
 
         logger.info('Initializing sharded corpus with prefix '
-                     '{0}'.format(output_prefix))
+                    '{0}'.format(output_prefix))
         if (not os.path.isfile(output_prefix)) or overwrite:
             logger.info('Building from corpus...')
             self.init_shards(output_prefix, corpus, shardsize)
@@ -245,29 +247,36 @@ class ShardedCorpus(IndexedCorpus):
             # and retain information about how the corpus
             # was serialized.
             logger.info('Saving ShardedCorpus object to '
-                         '{0}'.format(self.output_prefix))
+                        '{0}'.format(self.output_prefix))
             self.save()
         else:
             logger.info('Cloning existing...')
             self.init_by_clone()
 
-    def init_shards(self, output_prefix, corpus, shardsize=4096, dtype=_default_dtype):
+    def init_shards(
+            self,
+            output_prefix,
+            corpus,
+            shardsize=4096,
+            dtype=_default_dtype):
         """Initialize shards from the corpus."""
 
         if not gensim.utils.is_corpus(corpus):
-            raise ValueError('Cannot initialize shards without a corpus to read'
-                             ' from! (Got corpus type: {0})'.format(type(corpus)))
+            raise ValueError(
+                'Cannot initialize shards without a corpus to read'
+                ' from! (Got corpus type: {0})'.format(
+                    type(corpus)))
 
         proposed_dim = self._guess_n_features(corpus)
         if proposed_dim != self.dim:
             if self.dim is None:
                 logger.info('Deriving dataset dimension from corpus: '
-                             '{0}'.format(proposed_dim))
+                            '{0}'.format(proposed_dim))
             else:
                 logger.warn('Dataset dimension derived from input corpus diffe'
-                             'rs from initialization argument, using corpus.'
-                             '(corpus {0}, init arg {1})'.format(proposed_dim,
-                                                                 self.dim))
+                            'rs from initialization argument, using corpus.'
+                            '(corpus {0}, init arg {1})'.format(proposed_dim,
+                                                                self.dim))
 
         self.dim = proposed_dim
         self.offsets = [0]
@@ -276,16 +285,22 @@ class ShardedCorpus(IndexedCorpus):
 
         logger.info('Running init from corpus.')
 
-        for n, doc_chunk in enumerate(gensim.utils.grouper(corpus, chunksize=shardsize)):
-            logger.info('Chunk no. {0} at {1} s'.format(n, time.clock() - start_time))
+        for n, doc_chunk in enumerate(
+            gensim.utils.grouper(
+                corpus, chunksize=shardsize)):
+            logger.info(
+                'Chunk no. {0} at {1} s'.format(
+                    n, time.clock() - start_time))
 
-            current_shard = numpy.zeros((len(doc_chunk), self.dim), dtype=dtype)
+            current_shard = numpy.zeros(
+                (len(doc_chunk), self.dim), dtype=dtype)
             logger.debug('Current chunk dimension: '
-                          '{0} x {1}'.format(len(doc_chunk), self.dim))
+                         '{0} x {1}'.format(len(doc_chunk), self.dim))
 
             for i, doc in enumerate(doc_chunk):
                 doc = dict(doc)
-                current_shard[i][list(doc)] = list(gensim.matutils.itervalues(doc))
+                current_shard[i][list(doc)] = list(
+                    gensim.matutils.itervalues(doc))
 
             # Handles the updating as well.
             if self.sparse_serialization:
@@ -294,7 +309,10 @@ class ShardedCorpus(IndexedCorpus):
             self.save_shard(current_shard)
 
         end_time = time.clock()
-        logger.info('Built {0} shards in {1} s.'.format(self.n_shards, end_time - start_time))
+        logger.info(
+            'Built {0} shards in {1} s.'.format(
+                self.n_shards,
+                end_time - start_time))
 
     def init_by_clone(self):
         """
@@ -311,9 +329,11 @@ class ShardedCorpus(IndexedCorpus):
             if self.dim is None:
                 logger.info('Loaded dataset dimension: {0}'.format(temp.dim))
             else:
-                logger.warn('Loaded dataset dimension differs from init arg '
-                             'dimension, using loaded dim. '
-                             '(loaded {0}, init {1})'.format(temp.dim, self.dim))
+                logger.warn(
+                    'Loaded dataset dimension differs from init arg '
+                    'dimension, using loaded dim. '
+                    '(loaded {0}, init {1})'.format(
+                        temp.dim, self.dim))
 
         self.dim = temp.dim  # To be consistent with the loaded data!
 
@@ -328,7 +348,7 @@ class ShardedCorpus(IndexedCorpus):
         """
         new_shard = False
         if n is None:
-            n = self.n_shards # Saving the *next* one by default.
+            n = self.n_shards  # Saving the *next* one by default.
             new_shard = True
 
         if not filename:
@@ -344,7 +364,7 @@ class ShardedCorpus(IndexedCorpus):
         """
         Load (unpickle) the n-th shard as the "live" part of the dataset
         into the Dataset object."""
-        #logger.debug('ShardedCorpus loading shard {0}, '
+        # logger.debug('ShardedCorpus loading shard {0}, '
         #              'current shard: {1}'.format(n, self.current_shard_n))
 
         # No-op if the shard is already open.
@@ -353,7 +373,8 @@ class ShardedCorpus(IndexedCorpus):
 
         filename = self._shard_name(n)
         if not os.path.isfile(filename):
-            raise ValueError('Attempting to load nonexistent shard no. {0}'.format(n))
+            raise ValueError(
+                'Attempting to load nonexistent shard no. {0}'.format(n))
         shard = gensim.utils.unpickle(filename)
 
         self.current_shard = shard
@@ -402,7 +423,7 @@ class ShardedCorpus(IndexedCorpus):
 
         """
         return (self.current_offset <= offset) \
-                and (offset < self.offsets[self.current_shard_n + 1])
+            and (offset < self.offsets[self.current_shard_n + 1])
 
     def in_next(self, offset):
         """
@@ -413,9 +434,9 @@ class ShardedCorpus(IndexedCorpus):
 
         """
         if self.current_shard_n == self.n_shards:
-            return False # There's no next shard.
+            return False  # There's no next shard.
         return (self.offsets[self.current_shard_n + 1] <= offset) \
-               and (offset < self.offsets[self.current_shard_n + 2])
+            and (offset < self.offsets[self.current_shard_n + 2])
 
     def resize_shards(self, shardsize):
         """
@@ -471,8 +492,8 @@ class ShardedCorpus(IndexedCorpus):
                 os.remove(old_shard_name)
         except Exception as e:
             logger.error('Exception occurred during old shard no. {0} '
-                          'removal: {1}.\nAttempting to at least move '
-                          'new shards in.'.format(old_shard_n, str(e)))
+                         'removal: {1}.\nAttempting to at least move '
+                         'new shards in.'.format(old_shard_n, str(e)))
         finally:
             # If something happens with cleaning up - try to at least get the
             # new guys in.
@@ -482,8 +503,9 @@ class ShardedCorpus(IndexedCorpus):
             # If something happens when we're in this stage, we're screwed.
             except Exception as e:
                 print(e)
-                raise RuntimeError('Resizing completely failed for some reason.'
-                                   ' Sorry, dataset is probably ruined...')
+                raise RuntimeError(
+                    'Resizing completely failed for some reason.'
+                    ' Sorry, dataset is probably ruined...')
             finally:
                 # Sets the new shard stats.
                 self.n_shards = n_new_shards
@@ -527,18 +549,22 @@ class ShardedCorpus(IndexedCorpus):
                 return self._guess_n_features(corpus.corpus)
         else:
             if not self.dim:
-                raise TypeError('Couldn\'t find number of features, '
-                                 'refusing to guess (dimension set to {0},'
-                                 'type of corpus: {1}).'.format(self.dim, type(corpus)))
+                raise TypeError(
+                    'Couldn\'t find number of features, '
+                    'refusing to guess (dimension set to {0},'
+                    'type of corpus: {1}).'.format(
+                        self.dim, type(corpus)))
             else:
                 logger.warn('Couldn\'t find number of features, trusting '
-                             'supplied dimension ({0})'.format(self.dim))
+                            'supplied dimension ({0})'.format(self.dim))
                 n_features = self.dim
 
         if self.dim and n_features != self.dim:
-            logger.warn('Discovered inconsistent dataset dim ({0}) and '
-                         'feature count from corpus ({1}). Coercing to dimension'
-                         ' given by argument.'.format(self.dim, n_features))
+            logger.warn(
+                'Discovered inconsistent dataset dim ({0}) and '
+                'feature count from corpus ({1}). Coercing to dimension'
+                ' given by argument.'.format(
+                    self.dim, n_features))
 
         return n_features
 
@@ -604,7 +630,7 @@ class ShardedCorpus(IndexedCorpus):
                 # This fails on one-past
                 # slice indexing; that's why there's a code branch here.
 
-            #logger.debug('ShardedCorpus: Retrieving slice {0}: '
+            # logger.debug('ShardedCorpus: Retrieving slice {0}: '
             #              'shard {1}'.format((offset.start, offset.stop),
             #                                 (first_shard, last_shard)))
 
@@ -613,7 +639,7 @@ class ShardedCorpus(IndexedCorpus):
             # The easy case: both in one shard.
             if first_shard == last_shard:
                 s_result = self.current_shard[start - self.current_offset:
-                                            stop - self.current_offset]
+                                              stop - self.current_offset]
                 # Handle different sparsity settings:
                 s_result = self._getitem_format(s_result)
 
@@ -647,15 +673,15 @@ class ShardedCorpus(IndexedCorpus):
             #    to (stop - current_offset)
             shard_start = start - self.current_offset
             shard_stop = self.offsets[self.current_shard_n + 1] - \
-                         self.current_offset
+                self.current_offset
 
-            #s_result[result_start:result_stop] = self.current_shard[
+            # s_result[result_start:result_stop] = self.current_shard[
             #                                         shard_start:shard_stop]
             s_result = self.__add_to_slice(s_result, result_start, result_stop,
                                            shard_start, shard_stop)
 
             # First and last get special treatment, these are in between
-            for shard_n in xrange(first_shard+1, last_shard):
+            for shard_n in xrange(first_shard + 1, last_shard):
                 self.load_shard(shard_n)
 
                 result_start = result_stop
@@ -746,11 +772,16 @@ class ShardedCorpus(IndexedCorpus):
 
         """
         def row_sparse2gensim(row_idx, csr_matrix):
-            indices = csr_matrix.indices[csr_matrix.indptr[row_idx]:csr_matrix.indptr[row_idx+1]]
-            g_row = [(col_idx, csr_matrix[row_idx, col_idx]) for col_idx in indices]
+            indices = csr_matrix.indices[csr_matrix.indptr[
+                row_idx]:csr_matrix.indptr[row_idx + 1]]
+            g_row = [(col_idx, csr_matrix[row_idx, col_idx])
+                     for col_idx in indices]
             return g_row
 
-        output = (row_sparse2gensim(i, result) for i in xrange(result.shape[0]))
+        output = (
+            row_sparse2gensim(
+                i, result) for i in xrange(
+                result.shape[0]))
 
         return output
 

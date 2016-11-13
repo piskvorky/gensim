@@ -51,11 +51,11 @@ class BleiCorpus(IndexedCorpus):
             fname_base, _ = path.splitext(fname)
             fname_dir = path.dirname(fname)
             for fname_vocab in [
-                        utils.smart_extension(fname, '.vocab'),
-                        utils.smart_extension(fname, '/vocab.txt'),
-                        utils.smart_extension(fname_base, '.vocab'),
-                        utils.smart_extension(fname_dir, '/vocab.txt'),
-                        ]:
+                utils.smart_extension(fname, '.vocab'),
+                utils.smart_extension(fname, '/vocab.txt'),
+                utils.smart_extension(fname_base, '.vocab'),
+                utils.smart_extension(fname_dir, '/vocab.txt'),
+            ]:
                 if path.exists(fname_vocab):
                     break
             else:
@@ -79,7 +79,9 @@ class BleiCorpus(IndexedCorpus):
     def line2doc(self, line):
         parts = utils.to_unicode(line).split()
         if int(parts[0]) != len(parts) - 1:
-            raise ValueError("invalid format in %s: %s" % (self.fname, repr(line)))
+            raise ValueError(
+                "invalid format in %s: %s" %
+                (self.fname, repr(line)))
         doc = [part.rsplit(':', 1) for part in parts[1:]]
         doc = [(int(p1), float(p2)) for p1, p2 in doc]
         return doc
@@ -96,7 +98,8 @@ class BleiCorpus(IndexedCorpus):
         call it directly, call `serialize` instead.
         """
         if id2word is None:
-            logger.info("no word id mapping provided; initializing from corpus")
+            logger.info(
+                "no word id mapping provided; initializing from corpus")
             id2word = utils.dict_from_corpus(corpus)
             num_terms = len(id2word)
         else:
@@ -109,14 +112,25 @@ class BleiCorpus(IndexedCorpus):
                 doc = list(doc)
                 offsets.append(fout.tell())
                 parts = ["%i:%g" % p for p in doc if abs(p[1]) > 1e-7]
-                fout.write(utils.to_utf8("%i %s\n" % (len(doc), ' '.join(parts))))
+                fout.write(
+                    utils.to_utf8(
+                        "%i %s\n" %
+                        (len(doc), ' '.join(parts))))
 
-        # write out vocabulary, in a format compatible with Blei's topics.py script
+        # write out vocabulary, in a format compatible with Blei's topics.py
+        # script
         fname_vocab = utils.smart_extension(fname, '.vocab')
-        logger.info("saving vocabulary of %i words to %s" % (num_terms, fname_vocab))
+        logger.info(
+            "saving vocabulary of %i words to %s" %
+            (num_terms, fname_vocab))
         with utils.smart_open(fname_vocab, 'wb') as fout:
             for featureid in xrange(num_terms):
-                fout.write(utils.to_utf8("%s\n" % id2word.get(featureid, '---')))
+                fout.write(
+                    utils.to_utf8(
+                        "%s\n" %
+                        id2word.get(
+                            featureid,
+                            '---')))
 
         return offsets
 

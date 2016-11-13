@@ -29,6 +29,7 @@ logger = logging.getLogger('gensim.corpora.ucicorpus')
 
 
 class UciReader(MmReader):
+
     def __init__(self, input):
         """
         Initialize the reader.
@@ -50,7 +51,8 @@ class UciReader(MmReader):
             except StopIteration:
                 pass
 
-        logger.info('accepted corpus with %i documents, %i features, %i non-zero entries' %
+        logger.info(
+            'accepted corpus with %i documents, %i features, %i non-zero entries' %
             (self.num_docs, self.num_terms, self.num_nnz))
 
     def skip_headers(self, input_file):
@@ -91,7 +93,8 @@ class UciWriter(MmWriter):
         Update headers with actual values.
         """
         offset = 0
-        values = [utils.to_utf8(str(n)) for n in [num_docs, num_terms, num_nnz]]
+        values = [utils.to_utf8(str(n))
+                  for n in [num_docs, num_terms, num_nnz]]
 
         for value in values:
             if len(value) > len(self.FAKE_HEADER):
@@ -118,7 +121,8 @@ class UciWriter(MmWriter):
                 offsets.append(posnow)
                 poslast = posnow
 
-            vector = [(x, int(y)) for (x, y) in bow if int(y) != 0] # integer count, not floating weights
+            # integer count, not floating weights
+            vector = [(x, int(y)) for (x, y) in bow if int(y) != 0]
             max_id, veclen = writer.write_vector(docno, vector)
             num_terms = max(num_terms, 1 + max_id)
             num_nnz += veclen
@@ -126,12 +130,13 @@ class UciWriter(MmWriter):
 
         if num_docs * num_terms != 0:
             logger.info("saved %ix%i matrix, density=%.3f%% (%i/%i)" %
-                         (num_docs, num_terms,
-                          100.0 * num_nnz / (num_docs * num_terms),
-                          num_nnz,
-                          num_docs * num_terms))
+                        (num_docs, num_terms,
+                         100.0 * num_nnz / (num_docs * num_terms),
+                         num_nnz,
+                         num_docs * num_terms))
 
-        # now write proper headers, by seeking and overwriting the spaces written earlier
+        # now write proper headers, by seeking and overwriting the spaces
+        # written earlier
         writer.update_headers(num_docs, num_terms, num_nnz)
 
         writer.close()
@@ -145,6 +150,7 @@ class UciCorpus(UciReader, IndexedCorpus):
     """
     Corpus in the UCI bag-of-words format.
     """
+
     def __init__(self, fname, fname_vocab=None):
         IndexedCorpus.__init__(self, fname)
         UciReader.__init__(self, fname)
@@ -165,7 +171,7 @@ class UciCorpus(UciReader, IndexedCorpus):
         (yielding one document at a time).
         """
         for docId, doc in super(UciCorpus, self).__iter__():
-            yield doc # get rid of docId, return the sparse vector only
+            yield doc  # get rid of docId, return the sparse vector only
 
     def create_dictionary(self):
         """
@@ -175,7 +181,8 @@ class UciCorpus(UciReader, IndexedCorpus):
         dictionary = Dictionary()
 
         # replace dfs with defaultdict to avoid downstream KeyErrors
-        # uci vocabularies may contain terms that are not used in the document data
+        # uci vocabularies may contain terms that are not used in the document
+        # data
         dictionary.dfs = defaultdict(int)
 
         dictionary.id2token = self.id2word
@@ -186,7 +193,9 @@ class UciCorpus(UciReader, IndexedCorpus):
 
         for docno, doc in enumerate(self):
             if docno % 10000 == 0:
-                logger.info('PROGRESS: processing document %i of %i' % (docno, self.num_docs))
+                logger.info(
+                    'PROGRESS: processing document %i of %i' %
+                    (docno, self.num_docs))
 
             for word, count in doc:
                 dictionary.dfs[word] += 1
@@ -195,7 +204,12 @@ class UciCorpus(UciReader, IndexedCorpus):
         return dictionary
 
     @staticmethod
-    def save_corpus(fname, corpus, id2word=None, progress_cnt=10000, metadata=False):
+    def save_corpus(
+            fname,
+            corpus,
+            id2word=None,
+            progress_cnt=10000,
+            metadata=False):
         """
         Save a corpus in the UCI Bag-of-Words format.
 
@@ -206,7 +220,8 @@ class UciCorpus(UciReader, IndexedCorpus):
         call it directly, call `serialize` instead.
         """
         if id2word is None:
-            logger.info("no word id mapping provided; initializing from corpus")
+            logger.info(
+                "no word id mapping provided; initializing from corpus")
             id2word = utils.dict_from_corpus(corpus)
             num_terms = len(id2word)
         else:
@@ -214,13 +229,21 @@ class UciCorpus(UciReader, IndexedCorpus):
 
         # write out vocabulary
         fname_vocab = utils.smart_extension(fname, '.vocab')
-        logger.info("saving vocabulary of %i words to %s" % (num_terms, fname_vocab))
+        logger.info(
+            "saving vocabulary of %i words to %s" %
+            (num_terms, fname_vocab))
         with utils.smart_open(fname_vocab, 'wb') as fout:
             for featureid in xrange(num_terms):
-                fout.write(utils.to_utf8("%s\n" % id2word.get(featureid, '---')))
+                fout.write(
+                    utils.to_utf8(
+                        "%s\n" %
+                        id2word.get(
+                            featureid,
+                            '---')))
 
         logger.info("storing corpus in UCI Bag-of-Words format: %s" % fname)
 
-        return UciWriter.write_corpus(fname, corpus, index=True, progress_cnt=progress_cnt)
+        return UciWriter.write_corpus(
+            fname, corpus, index=True, progress_cnt=progress_cnt)
 
 # endclass UciCorpus

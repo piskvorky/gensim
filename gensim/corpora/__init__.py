@@ -3,7 +3,8 @@ This package contains implementations of various streaming corpus I/O format.
 """
 
 # bring corpus classes directly into package namespace, to save some typing
-from .indexedcorpus import IndexedCorpus # must appear before the other classes
+# must appear before the other classes
+from .indexedcorpus import IndexedCorpus
 
 from .mmcorpus import MmCorpus
 from .bleicorpus import BleiCorpus

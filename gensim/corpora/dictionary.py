@@ -10,8 +10,10 @@ This module implements the concept of Dictionary -- a mapping between words and
 their integer ids.
 
 Dictionaries can be created from a corpus and can later be pruned according to
-document frequency (removing (un)common words via the :func:`Dictionary.filter_extremes` method),
-save/loaded from disk (via :func:`Dictionary.save` and :func:`Dictionary.load` methods), merged
+document frequency (removing (un)common words
+via the :func:`Dictionary.filter_extremes` method),
+save/loaded from disk (via :func:`Dictionary.save`
+and :func:`Dictionary.load` methods), merged
 with other dictionary (:func:`Dictionary.merge_with`) etc.
 """
 
@@ -37,11 +39,13 @@ logger = logging.getLogger('gensim.corpora.dictionary')
 
 class Dictionary(utils.SaveLoad, Mapping):
     """
-    Dictionary encapsulates the mapping between normalized words and their integer ids.
+    Dictionary encapsulates the mapping between normalized words
+    and their integer ids.
 
     The main function is `doc2bow`, which converts a collection of words to its
     bag-of-words representation: a list of (word_id, word_frequency) 2-tuples.
     """
+
     def __init__(self, documents=None, prune_at=2000000):
         """
         If `documents` are given, use them to initialize Dictionary (see `add_documents()`).
@@ -89,7 +93,8 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     def __str__(self):
         some_keys = list(itertools.islice(iterkeys(self.token2id), 5))
-        return "Dictionary(%i unique tokens: %s%s)" % (len(self), some_keys, '...' if len(self) > 5 else '')
+        return "Dictionary(%i unique tokens: %s%s)" % (
+            len(self), some_keys, '...' if len(self) > 5 else '')
 
     @staticmethod
     def from_documents(documents):
@@ -109,14 +114,17 @@ class Dictionary(utils.SaveLoad, Mapping):
         Dictionary(5 unique tokens)
         """
         for docno, document in enumerate(documents):
-            # log progress & run a regular check for pruning, once every 10k docs
+            # log progress & run a regular check for pruning, once every 10k
+            # docs
             if docno % 10000 == 0:
                 if prune_at is not None and len(self) > prune_at:
-                    self.filter_extremes(no_below=0, no_above=1.0, keep_n=prune_at)
+                    self.filter_extremes(
+                        no_below=0, no_above=1.0, keep_n=prune_at)
                 logger.info("adding document #%i to %s", docno, self)
 
             # update Dictionary with the document
-            self.doc2bow(document, allow_update=True)  # ignore the result, here we only care about updating token ids
+            # ignore the result, here we only care about updating token ids
+            self.doc2bow(document, allow_update=True)
 
         logger.info(
             "built %s from %i documents (total %i corpus positions)",
@@ -138,7 +146,8 @@ class Dictionary(utils.SaveLoad, Mapping):
         If `allow_update` is **not** set, this function is `const`, aka read-only.
         """
         if isinstance(document, string_types):
-            raise TypeError("doc2bow expects an array of unicode tokens on input, not a single string")
+            raise TypeError(
+                "doc2bow expects an array of unicode tokens on input, not a single string")
 
         # Construct (word, frequency) mapping.
         counter = defaultdict(int)
@@ -147,20 +156,23 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         token2id = self.token2id
         if allow_update or return_missing:
-            missing = dict((w, freq) for w, freq in iteritems(counter) if w not in token2id)
+            missing = dict((w, freq)
+                           for w, freq in iteritems(counter) if w not in token2id)
             if allow_update:
                 for w in missing:
                     # new id = number of ids made so far;
                     # NOTE this assumes there are no gaps in the id sequence!
                     token2id[w] = len(token2id)
 
-        result = dict((token2id[w], freq) for w, freq in iteritems(counter) if w in token2id)
+        result = dict((token2id[w], freq)
+                      for w, freq in iteritems(counter) if w in token2id)
 
         if allow_update:
             self.num_docs += 1
             self.num_pos += sum(itervalues(counter))
             self.num_nnz += len(result)
-            # increase document count for each unique token that appeared in the document
+            # increase document count for each unique token that appeared in
+            # the document
             dfs = self.dfs
             for tokenid in iterkeys(result):
                 dfs[tokenid] = dfs.get(tokenid, 0) + 1
@@ -187,7 +199,9 @@ class Dictionary(utils.SaveLoad, Mapping):
         **Note**: Due to the gap shrinking, the same word may have a different
         word id before and after the call to this function!
         """
-        no_above_abs = int(no_above * self.num_docs)  # convert fractional threshold to absolute threshold
+        no_above_abs = int(
+            no_above *
+            self.num_docs)  # convert fractional threshold to absolute threshold
 
         # determine which tokens to keep
         good_ids = (
@@ -196,13 +210,20 @@ class Dictionary(utils.SaveLoad, Mapping):
         good_ids = sorted(good_ids, key=self.dfs.get, reverse=True)
         if keep_n is not None:
             good_ids = good_ids[:keep_n]
-        bad_words = [(self[id], self.dfs.get(id, 0)) for id in set(self).difference(good_ids)]
-        logger.info("discarding %i tokens: %s...", len(self) - len(good_ids), bad_words[:10])
+        bad_words = [(self[id], self.dfs.get(id, 0))
+                     for id in set(self).difference(good_ids)]
+        logger.info("discarding %i tokens: %s...", len(
+            self) - len(good_ids), bad_words[:10])
         logger.info(
             "keeping %i tokens which were in no less than %i and no more than %i (=%.1f%%) documents",
-            len(good_ids), no_below, no_above_abs, 100.0 * no_above)
+            len(good_ids),
+            no_below,
+            no_above_abs,
+            100.0 *
+            no_above)
 
-        # do the actual filtering, then rebuild dictionary to remove gaps in ids
+        # do the actual filtering, then rebuild dictionary to remove gaps in
+        # ids
         self.filter_tokens(good_ids=good_ids)
         logger.info("resulting dictionary: %s", self)
 
@@ -217,12 +238,16 @@ class Dictionary(utils.SaveLoad, Mapping):
         """
         # determine which tokens to keep
         most_frequent_ids = (v for v in itervalues(self.token2id))
-        most_frequent_ids = sorted(most_frequent_ids, key=self.dfs.get, reverse=True)
+        most_frequent_ids = sorted(
+            most_frequent_ids, key=self.dfs.get, reverse=True)
         most_frequent_ids = most_frequent_ids[:remove_n]
-        # do the actual filtering, then rebuild dictionary to remove gaps in ids
-        most_frequent_words = [(self[id], self.dfs.get(id, 0)) for id in most_frequent_ids]
-        logger.info("discarding %i tokens: %s...", len(most_frequent_ids), most_frequent_words[:10])
-        
+        # do the actual filtering, then rebuild dictionary to remove gaps in
+        # ids
+        most_frequent_words = [(self[id], self.dfs.get(id, 0))
+                               for id in most_frequent_ids]
+        logger.info("discarding %i tokens: %s...", len(
+            most_frequent_ids), most_frequent_words[:10])
+
         self.filter_tokens(bad_ids=most_frequent_ids)
         logger.info("resulting dictionary: %s" % self)
 
@@ -262,12 +287,15 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.debug("rebuilding dictionary, shrinking gaps")
 
         # build mapping from old id -> new id
-        idmap = dict(izip(itervalues(self.token2id), xrange(len(self.token2id))))
+        idmap = dict(izip(itervalues(self.token2id),
+                          xrange(len(self.token2id))))
 
         # reassign mappings to new ids
-        self.token2id = dict((token, idmap[tokenid]) for token, tokenid in iteritems(self.token2id))
+        self.token2id = dict((token, idmap[tokenid])
+                             for token, tokenid in iteritems(self.token2id))
         self.id2token = {}
-        self.dfs = dict((idmap[tokenid], freq) for tokenid, freq in iteritems(self.dfs))
+        self.dfs = dict((idmap[tokenid], freq)
+                        for tokenid, freq in iteritems(self.dfs))
 
     def save_as_text(self, fname, sort_by_word=True):
         """
@@ -282,10 +310,12 @@ class Dictionary(utils.SaveLoad, Mapping):
         with utils.smart_open(fname, 'wb') as fout:
             if sort_by_word:
                 for token, tokenid in sorted(iteritems(self.token2id)):
-                    line = "%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0))
+                    line = "%i\t%s\t%i\n" % (
+                        tokenid, token, self.dfs.get(tokenid, 0))
                     fout.write(utils.to_utf8(line))
             else:
-                for tokenid, freq in sorted(iteritems(self.dfs), key=lambda item: -item[1]):
+                for tokenid, freq in sorted(
+                        iteritems(self.dfs), key=lambda item: -item[1]):
                     line = "%i\t%s\t%i\n" % (tokenid, self[tokenid], freq)
                     fout.write(utils.to_utf8(line))
 
@@ -351,7 +381,9 @@ class Dictionary(utils.SaveLoad, Mapping):
                                      % (fname, line.strip()))
                 wordid = int(wordid)
                 if word in result.token2id:
-                    raise KeyError('token %s is defined as ID %d and as ID %d' % (word, wordid, result.token2id[word]))
+                    raise KeyError(
+                        'token %s is defined as ID %d and as ID %d' %
+                        (word, wordid, result.token2id[word]))
                 result.token2id[word] = wordid
                 result.dfs[wordid] = int(docfreq)
         return result
@@ -389,7 +421,8 @@ class Dictionary(utils.SaveLoad, Mapping):
             result.token2id = dict((unicode(i), i) for i in xrange(max_id + 1))
         else:
             # id=>word mapping given: simply copy it
-            result.token2id = dict((utils.to_unicode(token), id) for id, token in iteritems(id2word))
+            result.token2id = dict((utils.to_unicode(token), id)
+                                   for id, token in iteritems(id2word))
         for id in itervalues(result.token2id):
             # make sure all token ids have a valid `dfs` entry
             result.dfs[id] = result.dfs.get(id, 0)
