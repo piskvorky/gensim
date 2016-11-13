@@ -185,6 +185,7 @@ setup(
         'unittest2',
         'nbconvert',
         'jupyter_client',
+        'ipykernel',
     ],
     extras_require={
         'distributed': ['Pyro4 >= 4.27'],
