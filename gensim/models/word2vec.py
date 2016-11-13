@@ -453,7 +453,7 @@ class Word2Vec(utils.SaveLoad):
         self.total_train_time = 0
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
-
+        self.model_trimmed_post_training = False
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -745,6 +745,8 @@ class Word2Vec(utils.SaveLoad):
         sentences are the same as those that were used to initially build the vocabulary.
 
         """
+        if (self.model_trimmed_post_training):
+            raise RuntimeError("Parameters for training were discarded using model_trimmed_post_training method")
         if FAST_VERSION < 0:
             import warnings
             warnings.warn("C extension not loaded for Word2Vec, training will be slow. "
@@ -1392,6 +1394,25 @@ class Word2Vec(utils.SaveLoad):
 
     def __str__(self):
         return "%s(vocab=%s, size=%s, alpha=%s)" % (self.__class__.__name__, len(self.wv.index2word), self.vector_size, self.alpha)
+
+    def _minimize_model(self, save_syn1 = False, save_syn1neg = False, save_syn0_lockf = False):
+        if hasattr(self, 'syn1') and not save_syn1:
+            del self.syn1
+        if hasattr(self, 'syn1neg') and not save_syn1neg:
+            del self.syn1neg
+        if hasattr(self, 'syn0_lockf') and not save_syn0_lockf:
+            del self.syn0_lockf
+        self.model_trimmed_post_training = True
+
+    def delete_temporary_training_data(self, replace_word_vectors_with_normalized=False):
+        """
+        Discard parameters that are used in training and score. Use if you're sure you're done training a model.
+        If `replace_word_vectors_with_normalized` is set, forget the original vectors and only keep the normalized
+        ones = saves lots of memory!
+        """
+        if replace_word_vectors_with_normalized:
+            self.init_sims(replace=True)
+        self._minimize_model()
 
     def save(self, *args, **kwargs):
         # don't bother storing the cached normalized vectors, recalculable table

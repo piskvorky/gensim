@@ -778,6 +778,19 @@ class Doc2Vec(Word2Vec):
             segments.append('t%d' % self.workers)
         return '%s(%s)' % (self.__class__.__name__, ','.join(segments))
 
+    def delete_temporary_training_data(self, keep_doctags_vectors=True, keep_inference=True):
+        """
+        Discard parameters that are used in training and score. Use if you're sure you're done training a model.
+        Set `keep_doctags_vectors` to False if you don't want to save doctags vectors,
+        in this case you can't to use docvecs's most_similar, similarity etc. methods.
+        Set `keep_inference` to False if you don't want to store parameters that is used for infer_vector method
+        """
+        if not keep_inference:
+            self._minimize_model(False, False, False)
+        if self.docvecs and hasattr(self.docvecs, 'doctag_syn0') and not keep_doctags_vectors:
+            del self.docvecs.doctag_syn0
+        if self.docvecs and hasattr(self.docvecs, 'doctag_syn0_lockf'):
+            del self.docvecs.doctag_syn0_lockf
 
 class TaggedBrownCorpus(object):
     """Iterate over documents from the Brown corpus (part of NLTK data), yielding
