@@ -36,6 +36,7 @@ class RpModel(interfaces.TransformationABC):
 
     Model persistency is achieved via its load/save methods.
     """
+
     def __init__(self, corpus, id2word=None, num_topics=300):
         """
         `id2word` is a mapping from word ids (integers) to words (strings). It is
@@ -47,17 +48,17 @@ class RpModel(interfaces.TransformationABC):
         if corpus is not None:
             self.initialize(corpus)
 
-
     def __str__(self):
-        return "RpModel(num_terms=%s, num_topics=%s)" % (self.num_terms, self.num_topics)
-
+        return "RpModel(num_terms=%s, num_topics=%s)" % (
+            self.num_terms, self.num_topics)
 
     def initialize(self, corpus):
         """
         Initialize the random projection matrix.
         """
         if self.id2word is None:
-            logger.info("no word id mapping provided; initializing from corpus, assuming identity")
+            logger.info(
+                "no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
         else:
@@ -67,26 +68,31 @@ class RpModel(interfaces.TransformationABC):
         logger.info("constructing %s random matrix" % str(shape))
         # Now construct the projection matrix itself.
         # Here i use a particular form, derived in "Achlioptas: Database-friendly random projection",
-        # and his (1) scenario of Theorem 1.1 in particular (all entries are +1/-1).
-        randmat = 1 - 2 * numpy.random.binomial(1, 0.5, shape) # convert from 0/1 to +1/-1
-        self.projection = numpy.asfortranarray(randmat, dtype=numpy.float32) # convert from int32 to floats, for faster multiplications
-
+        # and his (1) scenario of Theorem 1.1 in particular (all entries are
+        # +1/-1).
+        # convert from 0/1 to +1/-1
+        randmat = 1 - 2 * numpy.random.binomial(1, 0.5, shape)
+        # convert from int32 to floats, for faster multiplications
+        self.projection = numpy.asfortranarray(randmat, dtype=numpy.float32)
 
     def __getitem__(self, bow):
         """
         Return RP representation of the input vector and/or corpus.
         """
-        # if the input vector is in fact a corpus, return a transformed corpus as result
+        # if the input vector is in fact a corpus, return a transformed corpus
+        # as result
         is_corpus, bow = utils.is_corpus(bow)
         if is_corpus:
             return self._apply(bow)
 
-        vec = matutils.sparse2full(bow, self.num_terms).reshape(self.num_terms, 1) / numpy.sqrt(self.num_topics)
+        vec = matutils.sparse2full(bow, self.num_terms).reshape(
+            self.num_terms, 1) / numpy.sqrt(self.num_topics)
         vec = numpy.asfortranarray(vec, dtype=numpy.float32)
-        topic_dist = numpy.dot(self.projection, vec) # (k, d) * (d, 1) = (k, 1)
+        topic_dist = numpy.dot(
+            self.projection,
+            vec)  # (k, d) * (d, 1) = (k, 1)
         return [(topicid, float(topicvalue)) for topicid, topicvalue in enumerate(topic_dist.flat)
                 if numpy.isfinite(topicvalue) and not numpy.allclose(topicvalue, 0.0)]
-
 
     def __setstate__(self, state):
         """
@@ -95,5 +101,6 @@ class RpModel(interfaces.TransformationABC):
         """
         self.__dict__ = state
         if self.projection is not None:
-            self.projection = self.projection.copy('F') # simply making a fresh copy fixes the broken array
-#endclass RpModel
+            # simply making a fresh copy fixes the broken array
+            self.projection = self.projection.copy('F')
+# endclass RpModel

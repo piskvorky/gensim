@@ -78,8 +78,9 @@ class Phrases(interfaces.TransformationABC):
     and `phrases[corpus]` syntax.
 
     """
+
     def __init__(self, sentences=None, min_count=5, threshold=10.0,
-            max_vocab_size=40000000, delimiter=b'_'):
+                 max_vocab_size=40000000, delimiter=b'_'):
         """
         Initialize the model from an iterable of `sentences`. Each sentence must be
         a list of words (unicode strings) that will be used for training.
@@ -116,7 +117,8 @@ class Phrases(interfaces.TransformationABC):
         self.min_count = min_count
         self.threshold = threshold
         self.max_vocab_size = max_vocab_size
-        self.vocab = defaultdict(int)  # mapping between utf8 token => its count
+        # mapping between utf8 token => its count
+        self.vocab = defaultdict(int)
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
 
@@ -139,8 +141,9 @@ class Phrases(interfaces.TransformationABC):
         min_reduce = 1
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % 10000 == 0:
-                logger.info("PROGRESS: at sentence #%i, processed %i words and %i word types" %
-                            (sentence_no, total_words, len(vocab)))
+                logger.info(
+                    "PROGRESS: at sentence #%i, processed %i words and %i word types" %
+                    (sentence_no, total_words, len(vocab)))
             sentence = [utils.any2utf8(w) for w in sentence]
             for bigram in zip(sentence, sentence[1:]):
                 vocab[bigram[0]] += 1
@@ -155,8 +158,9 @@ class Phrases(interfaces.TransformationABC):
                 utils.prune_vocab(vocab, min_reduce)
                 min_reduce += 1
 
-        logger.info("collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
-                    (len(vocab), total_words, sentence_no + 1))
+        logger.info(
+            "collected %i word types from a corpus of %i words (unigram + bigrams) and %i sentences" %
+            (len(vocab), total_words, sentence_no + 1))
         return min_reduce, vocab
 
     def add_vocab(self, sentences):
@@ -169,7 +173,8 @@ class Phrases(interfaces.TransformationABC):
         # directly, but gives the new sentences a fighting chance to collect
         # sufficient counts, before being pruned out by the (large) accummulated
         # counts collected in previous learn_vocab runs.
-        min_reduce, vocab = self.learn_vocab(sentences, self.max_vocab_size, self.delimiter)
+        min_reduce, vocab = self.learn_vocab(
+            sentences, self.max_vocab_size, self.delimiter)
 
         logger.info("merging %i counts into %s", len(vocab), self)
         self.min_reduce = max(self.min_reduce, min_reduce)
@@ -210,7 +215,8 @@ class Phrases(interfaces.TransformationABC):
                         pab = float(vocab[bigram_word])
                         score = (pab - min_count) / pa / pb * len(vocab)
                         # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
-                        #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
+                        # bigram_word, pab, self.min_count, pa, pb,
+                        # len(self.vocab), score)
                         if score > threshold:
                             yield (b' '.join((word_a, word_b)), score)
                             last_bigram = True
@@ -260,7 +266,8 @@ class Phrases(interfaces.TransformationABC):
                     pab = float(vocab[bigram_word])
                     score = (pab - min_count) / pa / pb * len(vocab)
                     # logger.debug("score for %s: (pab=%s - min_count=%s) / pa=%s / pb=%s * vocab_size=%s = %s",
-                    #     bigram_word, pab, self.min_count, pa, pb, len(self.vocab), score)
+                    # bigram_word, pab, self.min_count, pa, pb,
+                    # len(self.vocab), score)
                     if score > threshold:
                         new_s.append(bigram_word)
                         last_bigram = True
@@ -279,7 +286,9 @@ class Phrases(interfaces.TransformationABC):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
+    logging.basicConfig(
+        format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s',
+        level=logging.INFO)
     logging.info("running %s" % " ".join(sys.argv))
 
     # check and process cmdline input
