@@ -31,6 +31,7 @@ from six import PY3, iteritems, iterkeys, itervalues, string_types
 from six.moves import xrange
 from six.moves import zip as izip
 
+
 logger = logging.getLogger('gensim.corpora.dictionary')
 
 
@@ -221,6 +222,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
         most_frequent_words = [(self[id], self.dfs.get(id, 0)) for id in most_frequent_ids]
         logger.info("discarding %i tokens: %s...", len(most_frequent_ids), most_frequent_words[:10])
+        
         self.filter_tokens(bad_ids=most_frequent_ids)
         logger.info("resulting dictionary: %s" % self)
 

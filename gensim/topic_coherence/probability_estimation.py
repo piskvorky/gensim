@@ -17,7 +17,6 @@ from itertools import chain, islice
 
 logger = logging.getLogger(__name__)
 
-
 def _ret_top_ids(segmented_topics):
     """
     Helper function to return a set of all the unique topic ids in segmented topics.
@@ -31,7 +30,6 @@ def _ret_top_ids(segmented_topics):
             else:
                 top_ids.add(id)
     return top_ids
-
 
 def p_boolean_document(corpus, segmented_topics):
     """
@@ -59,7 +57,6 @@ def p_boolean_document(corpus, segmented_topics):
         per_topic_postings[id] = id_list
     num_docs = len(corpus)
     return (per_topic_postings, num_docs)
-
 
 def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size):
     """
