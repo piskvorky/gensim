@@ -781,9 +781,9 @@ class Doc2Vec(Word2Vec):
     def delete_temporary_training_data(self, keep_doctags_vectors=True, keep_inference=True):
         """
         Discard parameters that are used in training and score. Use if you're sure you're done training a model.
-        Use `remove_doctags_vectors` if you don't want to save doctags vectors,
+        Set `keep_doctags_vectors` to False if you don't want to save doctags vectors,
         in this case you can't to use docvecs's most_similar, similarity etc. methods.
-        Use `no_inference` if you don't want to store parameters that is used for infer_vector method (you will not be able to use infer_vector)
+        Set `keep_inference` to False if you don't want to store parameters that is used for infer_vector method
         """
         if not keep_inference:
             self._minimize_model(False, False, False)

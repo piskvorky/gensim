@@ -1762,13 +1762,13 @@ class Word2Vec(utils.SaveLoad):
             del self.syn0_lockf
         self.model_trimmed_post_training = True
 
-    def delete_temporary_training_data(self, replace=False):
+    def delete_temporary_training_data(self, replace_word_vectors_with_normalized=False):
         """
         Discard parameters that are used in training and score. Use if you're sure you're done training a model.
-        If `replace` is set, forget the original vectors and only keep the normalized
+        If `replace_word_vectors_with_normalized` is set, forget the original vectors and only keep the normalized
         ones = saves lots of memory!
         """
-        if replace:
+        if replace_word_vectors_with_normalized:
             self.init_sims(replace=True)
         self._minimize_model()
 

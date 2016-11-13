@@ -492,7 +492,7 @@ class TestWord2VecModel(unittest.TestCase):
                 if j:
                     self.assertTrue(hasattr(model, 'syn1neg'))
                 self.assertTrue(hasattr(model, 'syn0_lockf'))
-                model.delete_temporary_training_data(replace=True)
+                model.delete_temporary_training_data(replace_word_vectors_with_normalized=True)
                 self.assertTrue(len(model['human']), 10)
                 self.assertTrue(len(model.vocab), 12)
                 self.assertTrue(model.vocab['graph'].count, 3)
@@ -504,7 +504,7 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sentences, min_count=1)
         model.save_word2vec_format(testfile(), binary=True)
         norm_only_model = word2vec.Word2Vec.load_word2vec_format(testfile(), binary=True)
-        norm_only_model.delete_temporary_training_data(replace=True)
+        norm_only_model.delete_temporary_training_data(replace_word_vectors_with_normalized=True)
         self.assertFalse(np.allclose(model['human'], norm_only_model['human']))
 
     @log_capture()
