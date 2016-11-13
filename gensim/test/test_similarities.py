@@ -454,7 +454,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.model = word2vec.Word2Vec(texts, min_count=1)
         self.model.init_sims()
         self.index = AnnoyIndexer(self.model, 10)
-        self.vector = self.model.syn0norm[0]
+        self.vector = self.model.wv.syn0norm[0]
 
     def testVectorIsSimilarToItself(self):
         label = self.model.index2word[0]
