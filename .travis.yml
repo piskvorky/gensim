@@ -21,5 +21,6 @@ install:
   - pip install entrypoints
   - pip install jupyter
   - pip install nltk
+  - pip install matplotlib
   - pip install .
 script: python setup.py test
