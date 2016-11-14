@@ -258,7 +258,7 @@ class WikiCorpus(TextCorpus):
     >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
 
     """
-    def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None, filter_namespaces=('0',)):
+    def __init__(self, fname, processes=None, lemmatize=False, dictionary=None, filter_namespaces=('0',)):
         """
         Initialize the corpus. Unless a dictionary is provided, this scans the
         corpus once, to determine its vocabulary.
@@ -274,7 +274,16 @@ class WikiCorpus(TextCorpus):
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
-        self.lemmatize = lemmatize
+        # if the user has set lemmatize flag as True, check if installed
+        if lemmatize == True:
+            try:
+                from pattern.en import parse
+                self.lemmatize = True
+            except ImportError:
+                self.lemmatize = False
+                warnings.warn("Pattern library is not installed, falling back to regexp based lemmatization.")
+        else:
+            self.lemmatize = False
         if dictionary is None:
             self.dictionary = Dictionary(self.get_texts())
         else:
