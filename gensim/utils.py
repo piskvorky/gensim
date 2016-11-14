@@ -1034,7 +1034,7 @@ def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
     ['rank/NN', 'study/VB', 'hard/RB']
 
     """
-    if not has_pattern()
+    if not has_pattern():
         raise ImportError("Pattern library is not installed. Pattern library is needed in order to use lemmatize function")
     from pattern.en import parse
 
