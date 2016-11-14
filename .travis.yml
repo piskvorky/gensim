@@ -22,5 +22,6 @@ install:
   - pip install jupyter
   - pip install nltk
   - pip install matplotlib
+  - pip install pattern
   - pip install .
 script: python setup.py test
