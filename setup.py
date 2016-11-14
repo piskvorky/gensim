@@ -186,6 +186,7 @@ setup(
         'nbconvert',
         'jupyter_client',
         'ipykernel',
+        'nltk',
     ],
     extras_require={
         'distributed': ['Pyro4 >= 4.27'],
