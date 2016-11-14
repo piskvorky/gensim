@@ -26,7 +26,7 @@ def _notebook_run(path):
     with open(path) as f:
         nb = nbformat.read(f, as_version=4)
         nb.metadata.get('kernelspec', {})['name'] = kernel_name
-        ep = ExecutePreprocessor(kernel_name=kernel_name, timeout=60) #, allow_errors=True
+        ep = ExecutePreprocessor(kernel_name=kernel_name, timeout=180) #, allow_errors=True
 
         try:
             ep.preprocess(nb, {'metadata': {'path': this_file_directory}})
@@ -47,9 +47,13 @@ class TestNotebooks(unittest.TestCase):
             temporary_not_tested = ["topic_methods.ipynb", "distance_metrics.ipynb", "doc2vec-IMDB.ipynb"]
             if " " in notebook: # temporary: ignore these files as they need to be corrected
                 continue
+            flag = 0
             for nb in temporary_not_tested:
                 if nb in notebook:
-                    continue 
+                    flag = 1
+                    break
+            if flag == 1:
+                continue
             print("Testing {}".format(notebook))
             nb, errors = _notebook_run(notebook)
             num_notebooks_tested = num_notebooks_tested + 1
