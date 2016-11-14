@@ -1002,6 +1002,17 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf={}):
             daemon.requestLoop()
 
 
+def has_pattern():
+    """
+    Function which returns a flag indicating whether pattern is installed or not
+    """
+    try:
+        import pattern
+        return True
+    except:
+        return False
+
+
 def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
         stopwords=frozenset(), min_length=2, max_length=15):
     """
