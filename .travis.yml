@@ -20,5 +20,6 @@ install:
   - pip install testfixtures
   - pip install entrypoints
   - pip install jupyter
+  - pip install nltk
   - pip install .
 script: python setup.py test
