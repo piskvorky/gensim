@@ -274,16 +274,7 @@ class WikiCorpus(TextCorpus):
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
-        # if the user has set lemmatize flag as True, check if installed
-        if lemmatize == True:
-            try:
-                from pattern.en import parse
-                self.lemmatize = True
-            except ImportError:
-                self.lemmatize = False
-                warnings.warn("Pattern library is not installed, falling back to regexp based lemmatization.")
-        else:
-            self.lemmatize = False
+        self.lemmatize = lemmatize
         if dictionary is None:
             self.dictionary = Dictionary(self.get_texts())
         else:
