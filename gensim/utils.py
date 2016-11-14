@@ -1009,7 +1009,7 @@ def has_pattern():
     try:
         import pattern
         return True
-    except:
+    except ImportError:
         return False
 
 
@@ -1034,10 +1034,9 @@ def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
     ['rank/NN', 'study/VB', 'hard/RB']
 
     """
-    try:
-        from pattern.en import parse
-    except:
+    if not has_pattern()
         raise ImportError("Pattern library is not installed. Pattern library is needed in order to use lemmatize function")
+    from pattern.en import parse
 
     if light:
         import warnings
