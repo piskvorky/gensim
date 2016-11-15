@@ -16,11 +16,7 @@ from .doc2vec import Doc2Vec
 from .ldamulticore import LdaMulticore
 from .phrases import Phrases
 from .normmodel import NormModel
-from .onlineatvb import OnlineAtVb
-from .minibatchatvb import MinibatchAtVb
-from .atvb import AtVb
-from .atvb2 import AtVb2
-from .onlineatvb2 import OnlineAtVb2
+from .atmodel import AuthorTopicModel
 
 from . import wrappers
 

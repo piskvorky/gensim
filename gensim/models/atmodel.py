@@ -38,7 +38,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class OnlineAtVb2(LdaModel):
+class AuthorTopicModel(LdaModel):
     """
     Train the author-topic model using online variational Bayes.
     """
