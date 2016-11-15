@@ -1007,7 +1007,7 @@ def has_pattern():
     Function which returns a flag indicating whether pattern is installed or not
     """
     try:
-        import pattern
+        from pattern.en import parse
         return True
     except ImportError:
         return False
