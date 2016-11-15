@@ -44,8 +44,9 @@ class TestNotebooks(unittest.TestCase):
     def test_notebooks(self):
         num_notebooks_tested = 0
         for notebook in glob("./docs/notebooks/*.ipynb"):
-            temporary_not_tested = ["topic_methods.ipynb", "distance_metrics.ipynb", "doc2vec-IMDB.ipynb"]
-            if " " in notebook: # temporary: ignore these files as they need to be corrected
+            # temporary: ignore these files as they need to be corrected
+            temporary_not_tested = ["topic_methods.ipynb", "distance_metrics.ipynb", "doc2vec-IMDB.ipynb", "lda_training_tips.ipynb"]
+            if " " in notebook: 
                 continue
             flag = 0
             for nb in temporary_not_tested:
