@@ -26,7 +26,7 @@ def _notebook_run(path):
     with open(path) as f:
         nb = nbformat.read(f, as_version=4)
         nb.metadata.get('kernelspec', {})['name'] = kernel_name
-        ep = ExecutePreprocessor(kernel_name=kernel_name, timeout=180) #, allow_errors=True
+        ep = ExecutePreprocessor(kernel_name=kernel_name, timeout=300) # 
 
         try:
             ep.preprocess(nb, {'metadata': {'path': this_file_directory}})
