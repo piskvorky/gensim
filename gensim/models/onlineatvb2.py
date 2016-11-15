@@ -150,7 +150,9 @@ class OnlineAtVb2(LdaModel):
 
         # Whether or not to evaluate bound and log probability, respectively.
         bound_eval = True
-        logprob_eval = False
+        logprob_eval = False  # TODO: remove log prob evaluation, but keep the method.
+
+        vectorized = True # FIXME: set to True.
 
         if var_lambda is None:
             self.optimize_lambda = True
@@ -207,11 +209,13 @@ class OnlineAtVb2(LdaModel):
                 expElogthetad = expElogtheta[authors_d, :]
                 expElogbetad = expElogbeta[:, ids]
 
-                #var_phi = dict()
 
-                phinorm = numpy.zeros(len(ids))
-                for a in authors_d:
-                    phinorm += numpy.dot(expElogtheta[a, :], expElogbetad)
+                if vectorized:
+                    phinorm = numpy.zeros(len(ids))
+                    for a in authors_d:
+                        phinorm += numpy.dot(expElogtheta[a, :], expElogbetad)
+                else:
+                    var_phi = dict()
 
                 for iteration in xrange(self.iterations):
                     #logger.info('iteration %i', iteration)
@@ -219,28 +223,31 @@ class OnlineAtVb2(LdaModel):
                     lastgamma = tilde_gamma.copy()
 
                     ## Update phi.
-                    #for v in ids:
-                    #    phi_sum = 0.0
-                    #    for a in authors_d:
-                    #        for k in xrange(self.num_topics):
-                    #            var_phi[(v, a, k)] = expElogtheta[a, k] * expElogbeta[k, v]
-                    #            phi_sum += var_phi[(v, a, k)]
+                    if not vectorized:
+                        for v in ids:
+                            phi_sum = 0.0
+                            for a in authors_d:
+                                for k in xrange(self.num_topics):
+                                    var_phi[(v, a, k)] = expElogtheta[a, k] * expElogbeta[k, v]
+                                    phi_sum += var_phi[(v, a, k)]
 
-                    #    # Normalize phi over k.
-                    #    phi_norm_const = 1.0 / (phi_sum + 1e-100)
-                    #    for a in authors_d:
-                    #        for k in xrange(self.num_topics):
-                    #            var_phi[(v, a, k)] *= phi_norm_const
+                            # Normalize phi over k.
+                            phi_norm_const = 1.0 / (phi_sum + 1e-100)
+                            for a in authors_d:
+                                for k in xrange(self.num_topics):
+                                    var_phi[(v, a, k)] *= phi_norm_const
 
-                    # Update gamma.
-                    for a in authors_d:
-                        tilde_gamma[a, :] = self.alpha + len(self.author2doc[a]) * expElogtheta[a, :] * numpy.dot(cts / phinorm, expElogbetad.T)
-                        #for k in xrange(self.num_topics):
-                        #    tilde_gamma[a, k] = 0.0
-                        #    for vi, v in enumerate(ids):
-                        #        tilde_gamma[a, k] += cts[vi] * var_phi[v, a, k]
-                        #    tilde_gamma[a, k] *= len(self.author2doc[a])
-                        #    tilde_gamma[a, k] += self.alpha[k]
+                        for a in authors_d:
+                            for k in xrange(self.num_topics):
+                                tilde_gamma[a, k] = 0.0
+                                for vi, v in enumerate(ids):
+                                    tilde_gamma[a, k] += cts[vi] * var_phi[(v, a, k)]
+                                tilde_gamma[a, k] *= len(self.author2doc[a])
+                                tilde_gamma[a, k] += self.alpha[k]
+                    else:
+                        # Update gamma.
+                        for a in authors_d:
+                            tilde_gamma[a, :] = self.alpha + len(self.author2doc[a]) * expElogtheta[a, :] * numpy.dot(cts / phinorm, expElogbetad.T)
 
                     # Update gamma and lambda.
                     # Interpolation between document d's "local" gamma (tilde_gamma),
@@ -255,9 +262,10 @@ class OnlineAtVb2(LdaModel):
                     Elogtheta[authors_d, :] = dirichlet_expectation(var_gamma_temp[authors_d, :])
                     expElogtheta[authors_d, :] = numpy.exp(Elogtheta[authors_d, :])
 
-                    phinorm = numpy.zeros(len(ids))
-                    for a in authors_d:
-                        phinorm += numpy.dot(expElogtheta[a, :], expElogbetad)
+                    if vectorized:
+                        phinorm = numpy.zeros(len(ids))
+                        for a in authors_d:
+                            phinorm += numpy.dot(expElogtheta[a, :], expElogbetad)
                     
                     # Check for convergence.
                     # Criterion is mean change in "local" gamma and lambda.
@@ -278,26 +286,24 @@ class OnlineAtVb2(LdaModel):
                     # Update lambda.
                     # only one update per document).
 
-                    phi_sum = numpy.zeros((self.num_topics, len(ids)))
-                    phinorm_rep = numpy.tile(phinorm, [self.num_topics, 1])
-                    for a in authors_d:
-                        expElogtheta_a_rep = numpy.tile(expElogtheta[a, :], [len(ids), 1])
-                        phi_sum += expElogtheta_a_rep.T * expElogbetad / phinorm_rep
-                    eta_rep = numpy.tile(self.eta[ids], [self.num_topics, 1])
-                    cts_rep = numpy.tile(cts, [self.num_topics, 1])
-                    tilde_lambda[:, ids] =  eta_rep + self.num_docs * cts_rep * phi_sum
-
-                    #for k in xrange(self.num_topics):
-                    #    for vi, v in enumerate(ids):
-                    #        # cnt = dict(doc).get(v, 0)
-                    #        cnt = cts[vi]
-                    #        phi_sum = 0.0
-                    #        for a in authors_d:
-                    #            phi_sum += expElogtheta[a, k] * expElogbeta[k, v] / phinorm[vi]
-                    #        tilde_lambda[k, v] = self.eta[v] + self.num_docs * cnt * phi_sum
-
-                    # This is a little bit faster (from old algorithm):
-                    # tilde_lambda[:, ids] = self.eta[ids] + self.num_docs * cts * var_phi[ids, :].T
+                    if vectorized:
+                        phi_sum = numpy.zeros((self.num_topics, len(ids)))
+                        phinorm_rep = numpy.tile(phinorm, [self.num_topics, 1])
+                        for a in authors_d:
+                            expElogtheta_a_rep = numpy.tile(expElogtheta[a, :], [len(ids), 1])
+                            phi_sum += expElogtheta_a_rep.T * expElogbetad / phinorm_rep
+                        eta_rep = numpy.tile(self.eta[ids], [self.num_topics, 1])
+                        cts_rep = numpy.tile(cts, [self.num_topics, 1])
+                        tilde_lambda[:, ids] =  eta_rep + self.num_docs * cts_rep * phi_sum
+                    else:
+                        for k in xrange(self.num_topics):
+                            for vi, v in enumerate(ids):
+                                # cnt = dict(doc).get(v, 0)
+                                cnt = cts[vi]
+                                phi_sum = 0.0
+                                for a in authors_d:
+                                    phi_sum += var_phi[(v, a, k)]
+                                tilde_lambda[k, v] = self.eta[v] + self.num_docs * cnt * phi_sum
 
                     # Note that we only changed the elements in lambda corresponding to 
                     # the words in document d, hence the [:, ids] indexing.
