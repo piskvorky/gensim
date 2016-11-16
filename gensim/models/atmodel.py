@@ -9,9 +9,6 @@
 Author-topic model.
 """
 
-# NOTE: from what I understand, my name as well as Radim's should be attributed copyright above?
-
-from time import time
 import pdb
 from pdb import set_trace as st
 
@@ -27,7 +24,7 @@ from scipy.special import gammaln
 
 from pprint import pprint
 
-# log(sum(exp(x))) that tries to avoid overflow
+# log(sum(exp(x))) that tries to avoid overflow. NOTE: not used at the moment.
 try:
     # try importing from here if older scipy is installed
     from scipy.maxentropy import logsumexp
@@ -42,7 +39,6 @@ class AuthorTopicModel(LdaModel):
     """
     Train the author-topic model using online variational Bayes.
     """
-    # TODO: inherit interfaces.TransformationABC.
 
     def __init__(self, corpus=None, num_topics=100, id2word=None, id2author=None,
             author2doc=None, doc2author=None, threshold=0.001, minimum_probability=0.01,
@@ -53,7 +49,7 @@ class AuthorTopicModel(LdaModel):
         if corpus is None and self.id2word is None:
             raise ValueError('at least one of corpus/id2word must be specified, to establish input space dimensionality')
 
-        # NOTE: this stuff is confusing to me (from LDA code). Why would id2word not be none, but have length 0?
+        # NOTE: Why would id2word not be none, but have length 0? (From LDA code)
         if self.id2word is None:
             logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
             self.id2word = utils.dict_from_corpus(corpus)
@@ -127,7 +123,7 @@ class AuthorTopicModel(LdaModel):
         self.eval_every = eval_every
         self.random_state = random_state
 
-        # NOTE: I don't think this necessarily is a good way to initialize the topics.
+        # NOTE: this is not necessarily a good way to initialize the topics.
         self.alpha = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
         self.eta = numpy.asarray([1.0 / self.num_terms for i in xrange(self.num_terms)])
 
@@ -141,16 +137,12 @@ class AuthorTopicModel(LdaModel):
 
     def inference(self, corpus=None, var_lambda=None):
         if corpus is None:
-            # TODO: I can't remember why I used "copy()" here.
+            # TODO: is copy necessary here?
             corpus = self.corpus.copy()
 
         self.num_docs = len(corpus)  # TODO: this needs to be different if the algorithm is truly online.
 
         logger.info('Starting inference. Training on %d documents.', len(corpus))
-
-        # Whether or not to evaluate bound and log probability, respectively.
-        bound_eval = True
-        logprob_eval = False  # TODO: remove log prob evaluation, but keep the method.
 
         vectorized = True # FIXME: set to True.
 
@@ -178,7 +170,7 @@ class AuthorTopicModel(LdaModel):
         
         self.var_lambda = var_lambda
 
-        var_phi = dict()
+        var_phi = dict()  # TODO: remove once non-vectorized code is not used anymore.
 
         # Initialize dirichlet expectations.
         Elogtheta = dirichlet_expectation(var_gamma)
@@ -186,21 +178,17 @@ class AuthorTopicModel(LdaModel):
         Elogbeta = dirichlet_expectation(var_lambda)
         expElogbeta = numpy.exp(Elogbeta)
 
-        t = 0
         if self.eval_every > 0:
-            if bound_eval:
-                word_bound = self.word_bound(Elogtheta, Elogbeta)
-                theta_bound = self.theta_bound(Elogtheta)
-                beta_bound = self.beta_bound(Elogbeta)
-                bound = word_bound + theta_bound + beta_bound
-                logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
-            if logprob_eval:
-                logprob = self.eval_logprob()
-                logger.info('Log prob: %.3e.', logprob)
+            word_bound = self.word_bound(Elogtheta, Elogbeta)
+            theta_bound = self.theta_bound(Elogtheta)
+            beta_bound = self.beta_bound(Elogbeta)
+            bound = word_bound + theta_bound + beta_bound
+            logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
         for _pass in xrange(self.passes):
             converged = 0  # Number of documents converged for current pass over corpus.
-            start = time()
             for d, doc in enumerate(corpus):
+                # TODO: a smarter of computing rho may be necessary. In ldamodel,
+                # it's: pow(offset + pass_ + (self.num_updates / chunksize), -decay).
                 rhot = self.rho(d + _pass)
                 ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
                 cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
@@ -208,7 +196,6 @@ class AuthorTopicModel(LdaModel):
 
                 expElogthetad = expElogtheta[authors_d, :]
                 expElogbetad = expElogbeta[:, ids]
-
 
                 if vectorized:
                     phinorm = numpy.zeros(len(ids))
@@ -252,13 +239,9 @@ class AuthorTopicModel(LdaModel):
                     # Update gamma and lambda.
                     # Interpolation between document d's "local" gamma (tilde_gamma),
                     # and "global" gamma (var_gamma). Same goes for lambda.
-                    # TODO: I may need to be smarter about computing rho. In ldamodel,
-                    # it's: pow(offset + pass_ + (self.num_updates / chunksize), -decay).
                     var_gamma_temp = (1 - rhot) * var_gamma + rhot * tilde_gamma
 
                     # Update Elogtheta and Elogbeta, since gamma and lambda have been updated.
-                    # FIXME: I don't need to update the entire gamma, as I only updated a few rows of it,
-                    # corresponding to the authors in the document. The same goes for Elogtheta.
                     Elogtheta[authors_d, :] = dirichlet_expectation(var_gamma_temp[authors_d, :])
                     expElogtheta[authors_d, :] = numpy.exp(Elogtheta[authors_d, :])
 
@@ -320,20 +303,18 @@ class AuthorTopicModel(LdaModel):
             if self.eval_every > 0 and (_pass + 1) % self.eval_every == 0:
                 self.var_gamma = var_gamma
                 self.var_lambda = var_lambda
-                if bound_eval:
-                    prev_bound = bound
-                    word_bound = self.word_bound(Elogtheta, Elogbeta)
-                    theta_bound = self.theta_bound(Elogtheta)
-                    beta_bound = self.beta_bound(Elogbeta)
-                    bound = word_bound + theta_bound + beta_bound
-                    logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
-                if logprob_eval:
-                    logprob = self.eval_logprob()
-                    logger.info('Log prob: %.3e.', logprob)
+                prev_bound = bound
+                word_bound = self.word_bound(Elogtheta, Elogbeta)
+                theta_bound = self.theta_bound(Elogtheta)
+                beta_bound = self.beta_bound(Elogbeta)
+                bound = word_bound + theta_bound + beta_bound
+                logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
+                # NOTE: bound can be computed as below. We compute each term for now because it can be useful for debugging.
+                bound = self.eval_bound(Elogtheta, Elogbeta)
 
             #logger.info('Converged documents: %d/%d', converged, self.num_docs)
 
-            # TODO: consider whether to include somthing like this:
+            # TODO: consider whether to include bound convergence criterion, something like this:
             #if numpy.abs(bound - prev_bound) / abs(prev_bound) < self.bound_threshold:
             #    break
         # End of pass over corpus loop.
@@ -344,22 +325,25 @@ class AuthorTopicModel(LdaModel):
             # then compute the bound.
             self.var_gamma = var_gamma
             self.var_lambda = var_lambda
-            if bound_eval:
-                prev_bound = bound
-                word_bound = self.word_bound(Elogtheta, Elogbeta)
-                theta_bound = self.theta_bound(Elogtheta)
-                beta_bound = self.beta_bound(Elogbeta)
-                bound = word_bound + theta_bound + beta_bound
-                logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
-            if logprob_eval:
-                logprob = self.eval_logprob()
-                logger.info('Log prob: %.3e.', logprob)
+            prev_bound = bound
+            word_bound = self.word_bound(Elogtheta, Elogbeta)
+            theta_bound = self.theta_bound(Elogtheta)
+            beta_bound = self.beta_bound(Elogbeta)
+            bound = word_bound + theta_bound + beta_bound
+            logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
 
 
         self.var_lambda = var_lambda
         self.var_gamma = var_gamma
 
         return var_gamma, var_lambda
+
+    def eval_bound(self, Elogtheta, Elogbeta, doc_ids=None):
+            word_bound = self.word_bound(Elogtheta, Elogbeta)
+            theta_bound = self.theta_bound(Elogtheta)
+            beta_bound = self.beta_bound(Elogbeta)
+            bound = word_bound + theta_bound + beta_bound
+            return bound
 
     def word_bound(self, Elogtheta, Elogbeta, doc_ids=None):
         """
@@ -371,16 +355,16 @@ class AuthorTopicModel(LdaModel):
         """
 
         # TODO: allow for evaluating test corpus. This will require inferring on unseen documents.
+        # NOTE: computing bound is very very computationally intensive. I could, for example,
+        # only use a portion of the data to do that (even a held-out set).
 
         if doc_ids is None:
             docs = self.corpus
         else:
             docs = [self.corpus[d] for d in doc_ids]
 
-        # NOTE: computing the bound this way is very numerically unstable, which is why
+        # NOTE: computing the bound this way may be numerically unstable, which is why
         # "logsumexp" is used in the LDA code.
-        # NOTE: computing bound is very very computationally intensive. I could, for example,
-        # only use a portion of the data to do that (even a held-out set).
         bound= 0.0
         for d, doc in enumerate(docs):
             authors_d = self.doc2author[d]
@@ -395,23 +379,8 @@ class AuthorTopicModel(LdaModel):
                 bound_d += cts[vi] * numpy.log(bound_v)
             bound += numpy.log(1.0 / len(authors_d)) + bound_d
 
-        # For per-word likelihood, do:
+        # TODO: consider using per-word bound, i.e.
         # likelihood *= 1 /sum(len(doc) for doc in docs)
-
-        # TODO: can I do something along the lines of (as in ldamodel):
-        # likelihood += numpy.sum(cnt * logsumexp(Elogthetad + Elogbeta[:, id]) for id, cnt in doc)
-        # If I computed the LDA bound the way I compute the author-topic bound above:
-        # bound = 0.0
-        # for d, doc in enumerate(docs):
-        #     ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
-        #     cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
-        #     bound_d = 0.0
-        #     for vi, v in enumerate(ids):
-        #         bound_v = 0.0
-        #         for k in xrange(self.num_topics):
-        #             bound_v += numpy.exp(Elogtheta[d, k] + Elogbeta[k, v])
-        #         bound_d += cts[vi] * numpy.log(bound_v)
-        #     bound += bound_d
 
         return bound
 
@@ -420,7 +389,6 @@ class AuthorTopicModel(LdaModel):
         for a in xrange(self.num_authors):
             var_gamma_a = self.var_gamma[a, :]
             Elogtheta_a = Elogtheta[a, :]
-            # E[log p(theta | alpha) - log q(theta | gamma)]; assumes alpha is a vector
             bound += numpy.sum((self.alpha - var_gamma_a) * Elogtheta_a)
             bound += numpy.sum(gammaln(var_gamma_a) - gammaln(self.alpha))
             bound += gammaln(numpy.sum(self.alpha)) - gammaln(numpy.sum(var_gamma_a))
@@ -446,8 +414,6 @@ class AuthorTopicModel(LdaModel):
         summing over all documents, and dividing by the number of documents.
         """
 
-        # TODO: if var_lambda is supplied from LDA, normalizing it every time
-        # is unnecessary.
         norm_gamma = self.var_gamma.copy()
         for a in xrange(self.num_authors):
             norm_gamma[a, :] = self.var_gamma[a, :] / self.var_gamma.sum(axis=1)[a]
@@ -507,8 +473,6 @@ class AuthorTopicModel(LdaModel):
 
         author_topics = [(topicid, topicvalue) for topicid, topicvalue in enumerate(topic_dist)
                 if topicvalue >= minimum_probability]
-
-        # author_name = self.id2author[author_id]
 
         return author_topics
 
