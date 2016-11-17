@@ -7,6 +7,7 @@ bag-of-word counts.
 from .coherencemodel import CoherenceModel
 from .hdpmodel import HdpModel
 from .ldamodel import LdaModel
+from .ldamodel2 import LdaModel2
 from .lsimodel import LsiModel
 from .tfidfmodel import TfidfModel
 from .rpmodel import RpModel
