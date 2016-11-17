@@ -84,7 +84,7 @@ def update_dir_prior(prior, N, logphat, rho):
 
     dprior = -(gradf - b) / q
 
-    if all(rho * dprior + prior > 0):
+    if (rho * dprior + prior > 0).all():
         prior += rho * dprior
     else:
         logger.warning("updated prior not positive")
@@ -270,6 +270,8 @@ class LdaModel2(interfaces.TransformationABC, basemodel.BaseTopicModel):
         >>> lda = LdaModel(corpus, num_topics=50, alpha='auto', eval_every=5)  # train asymmetric alpha from data
 
         """
+        # FIXME: update docstring w.r.t. changes done to eta param.
+
         # store user-supplied parameters
         self.id2word = id2word
         if corpus is None and self.id2word is None:
@@ -309,9 +311,10 @@ class LdaModel2(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.random_state = get_random_state(random_state)
 
-        assert (self.eta.shape == (self.num_topics, 1) or self.eta.shape == (self.num_topics, self.num_terms)), (
-            "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
-            (str(self.eta.shape), self.num_topics, self.num_topics, self.num_terms))
+        # TODO: make shape checks for both eta and alpha, in case the user input incorrect shapes.
+        #assert (self.eta.shape == (self.num_terms, 1)), (
+        #    "Invalid eta shape. Got shape %s, but expected (%d, 1)" %
+        #    (str(self.eta.shape), self.num_topics))
 
         # VB constants
         self.iterations = iterations
@@ -354,19 +357,31 @@ class LdaModel2(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if prior is None:
             prior = 'symmetric'
 
+        # NOTE: using 1 / num_topics constant in both alpha and eta. Using 1 / num_terms in eta
+        # leads to poor convergence when chunksize is less than corpus size. It should be
+        # considered whether a completely different initialization procedure would be better,
+        # for both alpha and eta.
+
+        if name == 'alpha':
+            prior_shape = self.num_topics
+        elif name == 'eta':
+            prior_shape = self.num_terms
+        else:
+            raise ValueError("'name' must be 'alpha' or 'eta'")
+
         is_auto = False
 
         if isinstance(prior, six.string_types):
             if prior == 'symmetric':
-                logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
-                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
+                logger.info("using symmetric %s at %s", name, 1.0 / prior_shape)
+                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)])
             elif prior == 'asymmetric':
-                init_prior = np.asarray([1.0 / (i + np.sqrt(self.num_topics)) for i in xrange(self.num_topics)])
+                init_prior = np.asarray([1.0 / (i + np.sqrt(self.num_topics)) for i in xrange(prior_shape)])
                 init_prior /= init_prior.sum()
                 logger.info("using asymmetric %s %s", name, list(init_prior))
             elif prior == 'auto':
                 is_auto = True
-                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
+                init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)])
                 logger.info("using autotuned %s, starting with %s", name, list(init_prior))
             else:
                 raise ValueError("Unable to determine proper %s value given '%s'" % (name, prior))
@@ -375,17 +390,9 @@ class LdaModel2(interfaces.TransformationABC, basemodel.BaseTopicModel):
         elif isinstance(prior, np.ndarray):
             init_prior = prior
         elif isinstance(prior, np.number) or isinstance(prior, numbers.Real):
-            init_prior = np.asarray([prior] * self.num_topics)
+            init_prior = np.asarray([prior] * prior_shape)
         else:
             raise ValueError("%s must be either a np array of scalars, list of scalars, or scalar" % name)
-
-        if name == 'eta':
-            # please note the difference in shapes between alpha and eta:
-            # alpha is a row: [0.1, 0.1]
-            # eta is a column: [[0.1],
-            #                   [0.1]]
-            if init_prior.shape == (self.num_topics,) or init_prior.shape == (1, self.num_topics):
-                init_prior = init_prior.reshape((self.num_topics, 1))  # this statement throws ValueError if eta did not match self.num_topics
 
         return init_prior, is_auto
 
@@ -522,13 +529,13 @@ class LdaModel2(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Update parameters for the Dirichlet prior on the per-topic
         word weights `eta` given the last `lambdat`.
         """
-        if self.eta.shape[1] != 1:
-            raise ValueError("Can't use update_eta with eta matrices, only column vectors.")
-        N = float(lambdat.shape[1])
-        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat.transpose()) / N).reshape((self.num_topics, 1))
+        #if self.eta.shape[1] != 1:
+        #    raise ValueError("Can't use update_eta with eta matrices, only column vectors.")
+        N = float(lambdat.shape[0])
+        logphat = (sum(dirichlet_expectation(lambda_) for lambda_ in lambdat) / N).reshape((self.num_terms,))
 
         self.eta = update_dir_prior(self.eta, N, logphat, rho)
-        logger.info("optimized eta %s", list(self.eta.reshape((self.num_topics))))
+        logger.info("optimized eta %s", list(self.eta.reshape((self.num_terms))))
 
         return self.eta
 
@@ -767,9 +774,10 @@ class LdaModel2(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if np.ndim(self.eta) == 0:
             sum_eta = self.eta * self.num_terms
         else:
-            sum_eta = np.sum(self.eta, 1)
+            sum_eta = np.sum(self.eta)
 
         score += np.sum(gammaln(sum_eta) - gammaln(np.sum(_lambda, 1)))
+
         return score
 
     def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True):
