@@ -309,12 +309,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         assert self.alpha.shape == (self.num_topics,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
+        if isinstance(eta, six.string_types):
+            if eta == 'asymmetric':
+                raise ValueError("The 'asymmetric' option cannot be used for eta")
+
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
 
-        # TODO: make shape checks for both eta and alpha, in case the user input incorrect shapes.
-        #assert (self.eta.shape == (self.num_terms, 1)), (
-        #    "Invalid eta shape. Got shape %s, but expected (%d, 1)" %
-        #    (str(self.eta.shape), self.num_topics))
+        assert self.eta.shape == (self.num_terms,), "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.eta.shape), self.num_terms)
 
         # VB constants
         self.iterations = iterations
@@ -357,11 +358,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if prior is None:
             prior = 'symmetric'
 
-        # NOTE: using 1 / num_topics constant in both alpha and eta. Using 1 / num_terms in eta
-        # leads to poor convergence when chunksize is less than corpus size. It should be
-        # considered whether a completely different initialization procedure would be better,
-        # for both alpha and eta.
-
         if name == 'alpha':
             prior_shape = self.num_topics
         elif name == 'eta':
@@ -376,7 +372,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 logger.info("using symmetric %s at %s", name, 1.0 / prior_shape)
                 init_prior = np.asarray([1.0 / self.num_topics for i in xrange(prior_shape)])
             elif prior == 'asymmetric':
-                init_prior = self.random_state.gamma(100., 1. / 100., (prior_shape))
+                init_prior = np.asarray([1.0 / (i + np.sqrt(prior_shape)) for i in xrange(prior_shape)])
+                init_prior /= init_prior.sum()
                 logger.info("using asymmetric %s %s", name, list(init_prior))
             elif prior == 'auto':
                 is_auto = True
