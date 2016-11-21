@@ -49,9 +49,9 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
                     fout.write(line)
         return num_lines, num_dims
     else:
-        with smart_open(word2vec_output_file, 'w') as fout:
+        with smart_open(word2vec_output_file, 'w', encoding='utf-8') as fout:
             fout.write("%s %s\n" % (num_lines, num_dims))
-            with smart_open(glove_input_file, 'r') as fin:
+            with smart_open(glove_input_file, 'r', encoding='utf-8') as fin:
                 for line in fin:
                     fout.write(line)
         return num_lines, num_dims
@@ -89,7 +89,7 @@ if __name__ == "__main__":
             with smart_open(args.output, 'rb') as f:
                 seed_word1, seed_word2 = random.sample([line.split()[0] for line in f], 2)
         else:
-            with smart_open(args.output, 'r') as f:
+            with smart_open(args.output, 'r', encoding='utf-8') as f:
                 seed_word1, seed_word2 = random.sample([line.split()[0] for line in f], 2)
         logger.info('top-10 most similar words to "%s" are: %s', seed_word1, model.most_similar(positive=[seed_word1], topn=10))
         logger.info('similarity score between %s and %s: %s', seed_word1, seed_word2, model.similarity(seed_word1, seed_word2))
