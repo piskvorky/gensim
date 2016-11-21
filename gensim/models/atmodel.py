@@ -132,8 +132,25 @@ class AuthorTopicModel(LdaModel):
         if corpus is not None:
             self.inference(corpus, var_lambda=var_lambda)
 
+    def __str__(self):
+        return "AuthorTopicModel(num_terms=%s, num_topics=%s, num_authors=%s, decay=%s)" % \
+            (self.num_terms, self.num_topics, self.num_authors, self.decay)
+
     def rho(self, t):
         return pow(self.offset + t, -self.decay)
+
+    def compute_phinorm(self, ids, authors_d, Elogtheta, Elogbeta, maxElogtheta=None, maxElogbeta=None):
+        phinorm = numpy.zeros(len(ids))
+        if self.numstable_sm:
+            for a in authors_d:
+                for k in xrange(self.num_topics):
+                    phinorm += numpy.exp(Elogtheta[a, :] - maxElogtheta) * numpy.exp(Elogbeta[:, ids] - maxElogbeta)
+        else:
+            for a in authors_d:
+                for k in xrange(self.num_topics):
+                    phinorm += numpy.exp(Elogtheta[a, :]) * numpy.exp(Elogbeta[:, ids])
+
+        return phinorm
 
     def inference(self, corpus=None, var_lambda=None):
         if corpus is None:
@@ -145,6 +162,8 @@ class AuthorTopicModel(LdaModel):
         logger.info('Starting inference. Training on %d documents.', len(corpus))
 
         vectorized = True # FIXME: set to True.
+        numstable_sm = False # FIXME: set to True.
+        self.numstable_sm = numstable_sm
 
         if var_lambda is None:
             self.optimize_lambda = True
@@ -174,9 +193,15 @@ class AuthorTopicModel(LdaModel):
 
         # Initialize dirichlet expectations.
         Elogtheta = dirichlet_expectation(var_gamma)
-        expElogtheta = numpy.exp(Elogtheta)
         Elogbeta = dirichlet_expectation(var_lambda)
-        expElogbeta = numpy.exp(Elogbeta)
+        if numstable_sm:
+            maxElogtheta = Elogtheta.max()
+            maxElogbeta = Elogbeta.max(axis=0)
+            expElogtheta = numpy.exp(Elogtheta - maxElogtheta)
+            expElogbeta = numpy.exp(Elogbeta - maxElogbeta)
+        else:
+            expElogtheta = numpy.exp(Elogtheta)
+            expElogbeta = numpy.exp(Elogbeta)
 
         if self.eval_every > 0:
             word_bound = self.word_bound(Elogtheta, Elogbeta)
@@ -194,20 +219,21 @@ class AuthorTopicModel(LdaModel):
                 cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
                 authors_d = self.doc2author[d]  # List of author IDs for document d.
 
-                expElogthetad = expElogtheta[authors_d, :]
-                expElogbetad = expElogbeta[:, ids]
-
                 if vectorized:
-                    phinorm = numpy.zeros(len(ids))
-                    for a in authors_d:
-                        phinorm += numpy.dot(expElogtheta[a, :], expElogbetad)
+                    if not numstable_sm:
+                        maxElogbeta = None
+                        maxElogtheta = None
+                    phinorm = self.compute_phinorm(ids, authors_d, Elogtheta, Elogbeta, maxElogtheta, maxElogbeta)
                 else:
                     var_phi = dict()
+
+                expElogthetad = expElogtheta[authors_d, :]
+                expElogbetad = expElogbeta[:, ids]
 
                 for iteration in xrange(self.iterations):
                     #logger.info('iteration %i', iteration)
 
-                    lastgamma = tilde_gamma.copy()
+                    lastgamma = tilde_gamma[authors_d, :]
 
                     ## Update phi.
                     if not vectorized:
@@ -236,24 +262,28 @@ class AuthorTopicModel(LdaModel):
                         for a in authors_d:
                             tilde_gamma[a, :] = self.alpha + len(self.author2doc[a]) * expElogtheta[a, :] * numpy.dot(cts / phinorm, expElogbetad.T)
 
+
                     # Update gamma and lambda.
                     # Interpolation between document d's "local" gamma (tilde_gamma),
                     # and "global" gamma (var_gamma). Same goes for lambda.
-                    var_gamma_temp = (1 - rhot) * var_gamma + rhot * tilde_gamma
+                    tilde_gamma[authors_d, :] = (1 - rhot) * var_gamma[authors_d, :] + rhot * tilde_gamma[authors_d, :]
 
                     # Update Elogtheta and Elogbeta, since gamma and lambda have been updated.
-                    Elogtheta[authors_d, :] = dirichlet_expectation(var_gamma_temp[authors_d, :])
-                    expElogtheta[authors_d, :] = numpy.exp(Elogtheta[authors_d, :])
+                    Elogtheta[authors_d, :] = dirichlet_expectation(tilde_gamma[authors_d, :])
+                    if numstable_sm:
+                        temp_max = Elogtheta[authors_d, :].max()
+                        maxElogtheta = temp_max if temp_max > maxElogtheta else maxElogtheta
+                        expElogtheta[authors_d, :] = numpy.exp(Elogtheta[authors_d, :] - maxElogtheta)
+                    else:
+                        expElogtheta[authors_d, :] = numpy.exp(Elogtheta[authors_d, :])
 
                     if vectorized:
-                        phinorm = numpy.zeros(len(ids))
-                        for a in authors_d:
-                            phinorm += numpy.dot(expElogtheta[a, :], expElogbetad)
-                    
+                        phinorm = self.compute_phinorm(ids, authors_d, Elogtheta, Elogbeta, maxElogtheta, maxElogbeta)
+
                     # Check for convergence.
                     # Criterion is mean change in "local" gamma and lambda.
                     if iteration > 0:
-                        meanchange_gamma = numpy.mean(abs(var_gamma_temp - lastgamma))
+                        meanchange_gamma = numpy.mean(abs(tilde_gamma[authors_d, :] - lastgamma))
                         gamma_condition = meanchange_gamma < self.threshold
                         # logger.info('Mean change in gamma: %.3e', meanchange_gamma)
                         if gamma_condition:
@@ -263,21 +293,19 @@ class AuthorTopicModel(LdaModel):
                 # End of iterations loop.
 
                 # FIXME: there are too many different gamma variables!
-                var_gamma = var_gamma_temp.copy()
+                var_gamma = tilde_gamma.copy()
 
                 if self.optimize_lambda:
                     # Update lambda.
                     # only one update per document).
 
                     if vectorized:
-                        phi_sum = numpy.zeros((self.num_topics, len(ids)))
-                        phinorm_rep = numpy.tile(phinorm, [self.num_topics, 1])
-                        for a in authors_d:
-                            expElogtheta_a_rep = numpy.tile(expElogtheta[a, :], [len(ids), 1])
-                            phi_sum += expElogtheta_a_rep.T * expElogbetad / phinorm_rep
+                        # NOTE: summing up sstats style of updating lambda.
+                        expElogtheta_sum_a = expElogtheta[authors_d, :].sum(axis=0)
+                        sstats = numpy.outer(expElogtheta_sum_a.T, cts/phinorm)
+                        sstats *= expElogbeta[:, ids]
                         eta_rep = numpy.tile(self.eta[ids], [self.num_topics, 1])
-                        cts_rep = numpy.tile(cts, [self.num_topics, 1])
-                        tilde_lambda[:, ids] =  eta_rep + self.num_docs * cts_rep * phi_sum
+                        tilde_lambda[:, ids] = eta_rep + self.num_docs * sstats
                     else:
                         for k in xrange(self.num_topics):
                             for vi, v in enumerate(ids):
@@ -292,13 +320,18 @@ class AuthorTopicModel(LdaModel):
                     # the words in document d, hence the [:, ids] indexing.
                     var_lambda[:, ids] = (1 - rhot) * var_lambda[:, ids] + rhot * tilde_lambda[:, ids]
                     Elogbeta = dirichlet_expectation(var_lambda)
-                    expElogbeta = numpy.exp(Elogbeta)
+                    if numstable_sm:
+                        temp_max = Elogbeta[:, ids].max(axis=0)
+                        maxElogbeta[ids][temp_max > maxElogbeta[ids]] = temp_max[temp_max > maxElogbeta[ids]]
+                        expElogbeta = numpy.exp(Elogbeta - maxElogbeta)
+                    else:
+                        expElogbeta = numpy.exp(Elogbeta)
                     var_lambda = var_lambda.copy()
 
                 # Print topics:
                 # pprint(self.show_topics())
-
             # End of corpus loop.
+
 
             if self.eval_every > 0 and (_pass + 1) % self.eval_every == 0:
                 self.var_gamma = var_gamma
@@ -376,6 +409,8 @@ class AuthorTopicModel(LdaModel):
                 for k in xrange(self.num_topics):
                     for a in authors_d:
                         bound_v += numpy.exp(Elogtheta[a, k] + Elogbeta[k, v])
+                #if bound_v == 0.0:
+                #    st()
                 bound_d += cts[vi] * numpy.log(bound_v)
             bound += numpy.log(1.0 / len(authors_d)) + bound_d
 
