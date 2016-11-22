@@ -80,7 +80,6 @@ PAT_ALPHABETIC = re.compile('(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 
-
 def synchronous(tlockname):
     """
     A decorator to place an instance-based lock around a method.
@@ -1005,15 +1004,13 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf={}):
 
 def has_pattern():
     """
-    Function to check if there is installed pattern library
+    Function which returns a flag indicating whether pattern is installed or not
     """
-    pattern = False
     try:
         from pattern.en import parse
-        pattern = True
+        return True
     except ImportError:
-        warnings.warn("Pattern library is not installed, lemmatization won't be available.")
-    return pattern
+        return False
 
 
 def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
@@ -1038,8 +1035,7 @@ def lemmatize(content, allowed_tags=re.compile('(NN|VB|JJ|RB)'), light=False,
 
     """
     if not has_pattern():
-        raise ImportError("Pattern library is not installed. Pattern library is needed in order  \
-         to use lemmatize function")
+        raise ImportError("Pattern library is not installed. Pattern library is needed in order to use lemmatize function")
     from pattern.en import parse
 
     if light:

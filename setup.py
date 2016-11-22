@@ -182,6 +182,7 @@ setup(
     ],
     tests_require=[
     	'testfixtures',
+        'unittest2'
     ],
     extras_require={
         'distributed': ['Pyro4 >= 4.27'],

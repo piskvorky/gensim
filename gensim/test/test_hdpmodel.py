@@ -16,7 +16,6 @@ import os.path
 import tempfile
 
 import six
-import numpy as np
 import scipy.linalg
 
 from gensim.corpora import mmcorpus, Dictionary

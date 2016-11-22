@@ -259,7 +259,7 @@ def train_batch_sg(model, sentences, alpha, _work):
     cdef int negative = model.negative
     cdef int sample = (model.sample != 0)
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.syn0))
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
     cdef REAL_t *work
     cdef REAL_t _alpha = alpha
@@ -363,7 +363,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
     cdef int sample = (model.sample != 0)
     cdef int cbow_mean = model.cbow_mean
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.syn0))
     cdef REAL_t *word_locks = <REAL_t *>(np.PyArray_DATA(model.syn0_lockf))
     cdef REAL_t *work
     cdef REAL_t _alpha = alpha
@@ -462,7 +462,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
 # Score is only implemented for hierarchical softmax
 def score_sentence_sg(model, sentence, _work):
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.syn0))
     cdef REAL_t *work
     cdef int size = model.layer1_size
 
@@ -542,7 +542,7 @@ def score_sentence_cbow(model, sentence, _work, _neu1):
 
     cdef int cbow_mean = model.cbow_mean
 
-    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.syn0))
+    cdef REAL_t *syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.syn0))
     cdef REAL_t *work
     cdef REAL_t *neu1
     cdef int size = model.layer1_size
