@@ -23,6 +23,7 @@ from gensim.models import hdpmodel
 from gensim import matutils
 from gensim.test import basetests
 
+import numpy as np
 
 module_path = os.path.dirname(__file__) # needed because sample data files are located in the same folder
 datapath = lambda fname: os.path.join(module_path, 'test_data', fname)
