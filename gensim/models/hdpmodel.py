@@ -58,6 +58,20 @@ def dirichlet_expectation(alpha):
     return result.astype(alpha.dtype)  # keep the same precision as input
 
 
+def get_random_state(seed):
+    """ 
+        Turn seed into a np.random.RandomState instance.
+        Method originally from maciejkula/glove-python, and written by @joshloyal
+    """
+    if seed is None or seed is np.random:
+        return np.random.mtrand._rand
+    if isinstance(seed, (numbers.Integral, np.integer)):
+        return np.random.RandomState(seed)
+    if isinstance(seed, np.random.RandomState):
+        return seed
+    raise ValueError('%r cannot be used to seed a np.random.RandomState'' instance' % seed)
+
+
 def expect_log_sticks(sticks):
     """
     For stick-breaking hdp, return the E[log(sticks)]
@@ -125,7 +139,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def __init__(self, corpus, id2word, max_chunks=None, max_time=None,
                  chunksize=256, kappa=1.0, tau=64.0, K=15, T=150, alpha=1,
                  gamma=1, eta=0.01, scale=1.0, var_converge=0.0001,
-                 outputdir=None):
+                 outputdir=None, random_state=None):
         """
         `gamma`: first level concentration
         `alpha`: second level concentration
@@ -146,6 +160,8 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.max_time = max_time
         self.outputdir = outputdir
 
+        self.random_state = get_random_state(random_state)
+
         self.lda_alpha = None
         self.lda_beta = None
 
@@ -164,7 +180,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.m_var_sticks[1] = range(T - 1, 0, -1)
         self.m_varphi_ss = np.zeros(T)
 
-        self.m_lambda = np.random.gamma(1.0, 1.0, (T, self.m_W)) * self.m_D * 100 / (T * self.m_W) - eta
+        self.m_lambda = self.random_state.gamma(1.0, 1.0, (T, self.m_W)) * self.m_D * 100 / (T * self.m_W) - eta
         self.m_eta = eta
         self.m_Elogbeta = dirichlet_expectation(self.m_eta + self.m_lambda)
 
@@ -512,7 +528,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Returns closest corresponding ldamodel object corresponding to current hdp model.
         """
         alpha, beta = self.hdp_to_lda()
-        ldam = ldamodel.LdaModel(num_topics=150, alpha=alpha, id2word=self.id2word)
+        ldam = ldamodel.LdaModel(num_topics=150, alpha=alpha, id2word=self.id2word, random_state=self.random_state)
         ldam.expElogbeta[:] = beta
         return ldam
 
@@ -536,6 +552,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 total_words += sum(doc_word_counts)
         logger.info('TEST: average score: %.5f, total score: %.5f,  test docs: %d' % (score / total_words, score, len(corpus)))
         return score
+
 #endclass HdpModel
 
 
