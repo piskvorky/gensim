@@ -19,7 +19,7 @@ def pagerank_weighted(graph, damping=0.85):
     adjacency_matrix = build_adjacency_matrix(graph)
     probability_matrix = build_probability_matrix(graph)
 
-    pagerank_matrix = damping * adjacency_matrix.todense() + (1 - damping) * \ probability_matrix
+    pagerank_matrix = damping * adjacency_matrix.todense() + (1 - damping) * probability_matrix
 
     # TODO raise an error if matrix has complex eigenvectors?
     vals, vecs = eigs(pagerank_matrix.T, k=1)
