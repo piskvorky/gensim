@@ -46,8 +46,10 @@ class TestNotebooks(unittest.TestCase):
         for notebook in glob("./docs/notebooks/*.ipynb"):
             # temporary: ignore these files as they need to be corrected
             temporary_not_tested = ["topic_methods.ipynb", "distance_metrics.ipynb", "doc2vec-IMDB.ipynb", "lda_training_tips.ipynb", "Corpora_and_Vector_Spaces.ipynb", "online_w2v_tutorial.ipynb", "gensim_news_classification.ipynb", "Word2Vec_FastText_Comparison.ipynb"]
+            
             if " " in notebook: 
                 continue
+            
             flag = 0
             for nb in temporary_not_tested:
                 if nb in notebook:
