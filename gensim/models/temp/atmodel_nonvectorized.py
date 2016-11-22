@@ -35,7 +35,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class AuthorTopicModel(LdaModel):
+class AuthorTopicModelNonvectorized(LdaModel):
     """
     Train the author-topic model using online variational Bayes.
     """
@@ -147,10 +147,6 @@ class AuthorTopicModel(LdaModel):
 
         logger.info('Starting inference. Training on %d documents.', len(corpus))
 
-        if not numstable_sm:
-            maxElogbeta = None
-            maxElogtheta = None
-
         if var_lambda is None:
             self.optimize_lambda = True
         else:
@@ -184,7 +180,7 @@ class AuthorTopicModel(LdaModel):
         expElogbeta = numpy.exp(Elogbeta)
 
         if self.eval_every > 0:
-            word_bound = self.word_bound(corpus, expElogtheta, expElogbeta, maxElogtheta, maxElogbeta)
+            word_bound = self.word_bound(corpus, expElogtheta, expElogbeta)
             theta_bound = self.theta_bound(Elogtheta)
             beta_bound = self.beta_bound(Elogbeta)
             bound = word_bound + theta_bound + beta_bound
@@ -284,13 +280,11 @@ class AuthorTopicModel(LdaModel):
                 self.var_gamma = var_gamma
                 self.var_lambda = var_lambda
                 prev_bound = bound
-                word_bound = self.word_bound(corpus, expElogtheta, expElogbeta, maxElogtheta, maxElogbeta)
+                word_bound = self.word_bound(corpus, expElogtheta, expElogbeta)
                 theta_bound = self.theta_bound(Elogtheta)
                 beta_bound = self.beta_bound(Elogbeta)
                 bound = word_bound + theta_bound + beta_bound
                 logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
-                # NOTE: bound can be computed as below. We compute each term for now because it can be useful for debugging.
-                # bound = eval_bound(corpus, Elogtheta, Elogbeta, expElogtheta, expElogtheta, maxElogtheta=maxElogtheta, maxElogbeta=maxElogbeta):
 
             #logger.info('Converged documents: %d/%d', converged, self.num_docs)
 
@@ -306,7 +300,7 @@ class AuthorTopicModel(LdaModel):
             self.var_gamma = var_gamma
             self.var_lambda = var_lambda
             prev_bound = bound
-            word_bound = self.word_bound(corpus, expElogtheta, expElogbeta, maxElogtheta, maxElogbeta)
+            word_bound = self.word_bound(corpus, expElogtheta, expElogbeta)
             theta_bound = self.theta_bound(Elogtheta)
             beta_bound = self.beta_bound(Elogbeta)
             bound = word_bound + theta_bound + beta_bound
@@ -318,7 +312,7 @@ class AuthorTopicModel(LdaModel):
 
         return var_gamma, var_lambda
 
-    def eval_bound(self, corpus, Elogtheta, Elogbeta, expElogtheta, expElogtheta):
+    def eval_bound(self, corpus, Elogtheta, Elogbeta, expElogtheta, expElogbeta):
             word_bound = self.word_bound(corpus, expElogtheta, expElogbeta)
             theta_bound = self.theta_bound(Elogtheta)
             beta_bound = self.beta_bound(Elogbeta)
