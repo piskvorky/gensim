@@ -43,7 +43,7 @@ class AuthorTopicModel(LdaModel):
     def __init__(self, corpus=None, num_topics=100, id2word=None, id2author=None,
             author2doc=None, doc2author=None, threshold=0.001, minimum_probability=0.01,
             iterations=10, passes=1, alpha=None, eta=None, decay=0.5, offset=1.0,
-            eval_every=1, random_state=None, var_lambda=None):
+            eval_every=1, random_state=None, var_lambda=None, chunksize=1):
 
         self.id2word = id2word
         if corpus is None and self.id2word is None:
@@ -121,6 +121,7 @@ class AuthorTopicModel(LdaModel):
         self.num_authors = len(author2doc)
         self.eval_every = eval_every
         self.random_state = random_state
+        self.chunksize = chunksize
 
         # NOTE: this is not necessarily a good way to initialize the topics.
         self.alpha = numpy.asarray([1.0 / self.num_topics for i in xrange(self.num_topics)])
@@ -154,7 +155,10 @@ class AuthorTopicModel(LdaModel):
 
         logger.info('Starting inference. Training on %d documents.', len(corpus))
 
-        numstable_sm = True # FIXME: set to True.
+        # NOTE: as the numerically stable phi update (and bound evaluation) causes
+        # the bound to converge a bit differently (faster, actually), it is not used
+        # for now until it is fully understood.
+        numstable_sm = False
 
         if not numstable_sm:
             maxElogbeta = None
@@ -204,77 +208,79 @@ class AuthorTopicModel(LdaModel):
             logger.info('Total bound: %.3e. Word bound: %.3e. theta bound: %.3e. beta bound: %.3e.', bound, word_bound, theta_bound, beta_bound)
         for _pass in xrange(self.passes):
             converged = 0  # Number of documents converged for current pass over corpus.
-            for d, doc in enumerate(corpus):
+            for chunk_no, chunk in enumerate(utils.grouper(corpus, self.chunksize, as_numpy=False)):
                 # TODO: a smarter of computing rho may be necessary. In ldamodel,
                 # it's: pow(offset + pass_ + (self.num_updates / chunksize), -decay).
-                rhot = self.rho(d + _pass)
-                ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
-                cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
-                authors_d = self.doc2author[d]  # List of author IDs for document d.
-
-                phinorm = self.compute_phinorm(ids, authors_d, expElogtheta, expElogbeta)
-
-                # TODO: if not used, get rid of these.
-                expElogthetad = expElogtheta[authors_d, :]
-                expElogbetad = expElogbeta[:, ids]
-
-                for iteration in xrange(self.iterations):
-                    #logger.info('iteration %i', iteration)
-
-                    lastgamma = tilde_gamma[authors_d, :]
-
-                    # Update gamma.
-                    for a in authors_d:
-                        tilde_gamma[a, :] = self.alpha + len(self.author2doc[a]) * expElogtheta[a, :] * numpy.dot(cts / phinorm, expElogbetad.T)
-
-                    # Update gamma and lambda.
-                    # Interpolation between document d's "local" gamma (tilde_gamma),
-                    # and "global" gamma (var_gamma). Same goes for lambda.
-                    tilde_gamma[authors_d, :] = (1 - rhot) * var_gamma[authors_d, :] + rhot * tilde_gamma[authors_d, :]
-
-                    # Update Elogtheta and Elogbeta, since gamma and lambda have been updated.
-                    Elogtheta[authors_d, :] = dirichlet_expectation(tilde_gamma[authors_d, :])
-                    if numstable_sm:
-                        temp_max = Elogtheta[authors_d, :].max()
-                        maxElogtheta = temp_max if temp_max > maxElogtheta else maxElogtheta
-                        expElogtheta[authors_d, :] = numpy.exp(Elogtheta[authors_d, :] - maxElogtheta)
-                    else:
-                        expElogtheta[authors_d, :] = numpy.exp(Elogtheta[authors_d, :])
+                rhot = self.rho(chunk_no + _pass)
+                sstats = numpy.zeros(var_lambda.shape)
+                for d, doc in enumerate(chunk):
+                    doc_no = chunk_no + d
+                    ids = numpy.array([id for id, _ in doc])  # Word IDs in doc.
+                    cts = numpy.array([cnt for _, cnt in doc])  # Word counts.
+                    authors_d = self.doc2author[doc_no]  # List of author IDs for the current document.
 
                     phinorm = self.compute_phinorm(ids, authors_d, expElogtheta, expElogbeta)
 
-                    # Check for convergence.
-                    # Criterion is mean change in "local" gamma and lambda.
-                    if iteration > 0:
-                        meanchange_gamma = numpy.mean(abs(tilde_gamma[authors_d, :] - lastgamma))
-                        gamma_condition = meanchange_gamma < self.threshold
-                        # logger.info('Mean change in gamma: %.3e', meanchange_gamma)
-                        if gamma_condition:
-                            # logger.info('Converged after %d iterations.', iteration)
-                            converged += 1
-                            break
-                # End of iterations loop.
+                    # TODO: if not used, get rid of these.
+                    expElogthetad = expElogtheta[authors_d, :]
+                    expElogbetad = expElogbeta[:, ids]
 
-                # FIXME: there are too many different gamma variables!
-                var_gamma = tilde_gamma.copy()
+                    for iteration in xrange(self.iterations):
+                        #logger.info('iteration %i', iteration)
+
+                        lastgamma = tilde_gamma[authors_d, :]
+
+                        # Update gamma.
+                        for a in authors_d:
+                            tilde_gamma[a, :] = self.alpha + len(self.author2doc[a]) * expElogtheta[a, :] * numpy.dot(cts / phinorm, expElogbetad.T)
+
+                        # Update gamma and lambda.
+                        # Interpolation between document d's "local" gamma (tilde_gamma),
+                        # and "global" gamma (var_gamma). Same goes for lambda.
+                        tilde_gamma[authors_d, :] = (1 - rhot) * var_gamma[authors_d, :] + rhot * tilde_gamma[authors_d, :]
+
+                        # Update Elogtheta and Elogbeta, since gamma and lambda have been updated.
+                        Elogtheta[authors_d, :] = dirichlet_expectation(tilde_gamma[authors_d, :])
+                        if numstable_sm:
+                            temp_max = Elogtheta[authors_d, :].max()
+                            maxElogtheta = temp_max if temp_max > maxElogtheta else maxElogtheta
+                            expElogtheta[authors_d, :] = numpy.exp(Elogtheta[authors_d, :] - maxElogtheta)
+                        else:
+                            expElogtheta[authors_d, :] = numpy.exp(Elogtheta[authors_d, :])
+
+                        phinorm = self.compute_phinorm(ids, authors_d, expElogtheta, expElogbeta)
+
+                        # Check for convergence.
+                        # Criterion is mean change in "local" gamma and lambda.
+                        if iteration > 0:
+                            meanchange_gamma = numpy.mean(abs(tilde_gamma[authors_d, :] - lastgamma))
+                            gamma_condition = meanchange_gamma < self.threshold
+                            # logger.info('Mean change in gamma: %.3e', meanchange_gamma)
+                            if gamma_condition:
+                                # logger.info('Converged after %d iterations.', iteration)
+                                converged += 1
+                                break
+                    # End of iterations loop.
+
+                    var_gamma = tilde_gamma.copy()
+
+                    expElogtheta_sum_a = expElogtheta[authors_d, :].sum(axis=0)
+                    sstats[:, ids] += numpy.outer(expElogtheta_sum_a.T, cts/phinorm)
+                # End of chunk loop.
 
                 if self.optimize_lambda:
                     # Update lambda.
                     # only one update per document.
 
-                    # NOTE: probably not much speed-up is gained here. Consider
-                    # whether it can be done better.
-                    # NOTE: use summing up sstats style of updating lambda, if
-                    # minibatch is used.
-                    expElogtheta_sum_a = expElogtheta[authors_d, :].sum(axis=0)
-                    sstats = numpy.outer(expElogtheta_sum_a.T, cts/phinorm)
-                    sstats *= expElogbeta[:, ids]
-                    eta_rep = numpy.tile(self.eta[ids], [self.num_topics, 1])
-                    tilde_lambda[:, ids] = eta_rep + self.num_docs * sstats
+                    # NOTE: sstats[:, ids] *= expElogbeta[:, ids] type of thing may be appropriate
+                    # (although one would need to be clever). Not only would this be faster, it 
+                    # would be more correct, as not the entire expElogbeta has been updated.
+                    # NOTE: is eta_rep necessary here?
+                    sstats *= expElogbeta
+                    eta_rep = numpy.tile(self.eta, [self.num_topics, 1])
+                    tilde_lambda = eta_rep + self.num_docs * sstats / self.chunksize
 
-                    # Note that we only changed the elements in lambda corresponding to 
-                    # the words in document d, hence the [:, ids] indexing.
-                    var_lambda[:, ids] = (1 - rhot) * var_lambda[:, ids] + rhot * tilde_lambda[:, ids]
+                    var_lambda = (1 - rhot) * var_lambda + rhot * tilde_lambda
                     Elogbeta = dirichlet_expectation(var_lambda)
                     if numstable_sm:
                         # NOTE: can it be assumed that only Elogbeta[:, ids] have changed?
