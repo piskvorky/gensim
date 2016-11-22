@@ -526,9 +526,10 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def suggested_lda_model(self):
         """
         Returns closest corresponding ldamodel object corresponding to current hdp model.
+        The num_topics is m_T (default is 150) so as to preserve the matrice shapes when we assign alpha and beta.
         """
         alpha, beta = self.hdp_to_lda()
-        ldam = ldamodel.LdaModel(num_topics=150, alpha=alpha, id2word=self.id2word, random_state=self.random_state)
+        ldam = ldamodel.LdaModel(num_topics=self.m_T, alpha=alpha, id2word=self.id2word, random_state=self.random_state)
         ldam.expElogbeta[:] = beta
         return ldam
 

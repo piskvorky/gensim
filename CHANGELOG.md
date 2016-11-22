@@ -1,5 +1,8 @@
 Changes
 =======
+
+* Add suggested_lda_model to HDP class and clean HDP class. (@bhargavvader, #996)
+
 0.13.5, 2016-11-12
 * Add delete_temporary_training_data() function to word2vec and doc2vec models. (@deepmipt-VladZhukov, [#987](https://github.com/RaRe-Technologies/gensim/pull/987))
 
