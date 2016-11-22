@@ -37,8 +37,7 @@ def _get_words_for_graph(tokens, pos_filter):
         include_filters = set(pos_filter)
         exclude_filters = frozenset([])
     if include_filters and exclude_filters:
-        raise ValueError(
-            "Can't use both include and exclude filters, should use only one")
+        raise ValueError("Can't use both include and exclude filters, should use only one")
 
     result = []
     for word, unit in iteritems(tokens):
@@ -59,8 +58,7 @@ def _set_graph_edge(graph, tokens, word_a, word_b):
         lemma_b = tokens[word_b].token
         edge = (lemma_a, lemma_b)
 
-        if graph.has_node(lemma_a) and graph.has_node(
-                lemma_b) and not graph.has_edge(edge):
+        if graph.has_node(lemma_a) and graph.has_node(lemma_b) and not graph.has_edge(edge):
             graph.add_edge(edge)
 
 
@@ -167,8 +165,7 @@ def _get_combined_keywords(_keywords, split_text):
                 result.append(word)
             for j in xrange(i + 1, len_text):
                 other_word = _strip_word(split_text[j])
-                if other_word in _keywords and other_word == split_text[
-                        j] and not other_word in combined_word:
+                if other_word in _keywords and other_word == split_text[j] and not other_word in combined_word:
                     combined_word.append(other_word)
                 else:
                     for keyword in combined_word:
@@ -193,12 +190,9 @@ def _format_results(_keywords, combined_keywords, split, scores):
     :param keywords:dict of keywords:scores
     :param combined_keywords:list of word/s
     """
-    combined_keywords.sort(
-        key=lambda w: _get_average_score(
-            w, _keywords), reverse=True)
+    combined_keywords.sort(key=lambda w: _get_average_score(w, _keywords), reverse=True)
     if scores:
-        return [(word, _get_average_score(word, _keywords))
-                for word in combined_keywords]
+        return [(word, _get_average_score(word, _keywords)) for word in combined_keywords]
     if split:
         return combined_keywords
     return "\n".join(combined_keywords)
@@ -230,8 +224,7 @@ def keywords(
     # score
     pagerank_scores = _pagerank(graph)
 
-    extracted_lemmas = _extract_tokens(
-        graph.nodes(), pagerank_scores, ratio, words)
+    extracted_lemmas = _extract_tokens(graph.nodes(), pagerank_scores, ratio, words)
 
     # The results can be polluted by many variations of the same word
     if lemmatize:
