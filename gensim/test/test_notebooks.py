@@ -45,7 +45,7 @@ class TestNotebooks(unittest.TestCase):
         num_notebooks_tested = 0
         for notebook in glob("./docs/notebooks/*.ipynb"):
             # temporary: ignore these files as they need to be corrected
-            temporary_not_tested = ["topic_methods.ipynb", "distance_metrics.ipynb", "doc2vec-IMDB.ipynb", "lda_training_tips.ipynb"]
+            temporary_not_tested = ["topic_methods.ipynb", "distance_metrics.ipynb", "doc2vec-IMDB.ipynb", "lda_training_tips.ipynb", "Corpora_and_Vector_Spaces.ipynb", "online_w2v_tutorial.ipynb", "gensim_news_classification.ipynb", "Word2Vec_FastText_Comparison.ipynb"]
             if " " in notebook: 
                 continue
             flag = 0
@@ -67,4 +67,5 @@ class TestNotebooks(unittest.TestCase):
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
+
 
