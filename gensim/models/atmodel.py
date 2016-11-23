@@ -270,17 +270,19 @@ class AuthorTopicModel(LdaModel):
 
                 if self.optimize_lambda:
                     # Update lambda.
-                    # only one update per document.
 
-                    # NOTE: sstats[:, ids] *= expElogbeta[:, ids] type of thing may be appropriate
-                    # (although one would need to be clever). Not only would this be faster, it 
-                    # would be more correct, as not the entire expElogbeta has been updated.
-                    # NOTE: is eta_rep necessary here?
                     sstats *= expElogbeta
-                    eta_rep = numpy.tile(self.eta, [self.num_topics, 1])
-                    tilde_lambda = eta_rep + self.num_docs * sstats / self.chunksize
+                    # Find the ids of the words that are to be updated per this chunk, and update 
+                    # only those terms.
+                    # NOTE: this is not necessarily more efficient than just updating all terms, but 
+                    # doing that may cause problems.
+                    # NOTE: this assumes that if a single value in a row of sstats is zero, then the
+                    # entire column is zero. This *should* be the case (if not, something else has gone
+                    # wrong).
+                    chunk_ids = sstats[0, :].nonzero()
+                    tilde_lambda[:, chunk_ids] = self.eta[chunk_ids] + self.num_docs * sstats[:, chunk_ids] / self.chunksize
 
-                    var_lambda = (1 - rhot) * var_lambda + rhot * tilde_lambda
+                    var_lambda[:, chunk_ids] = (1 - rhot) * var_lambda[:, chunk_ids] + rhot * tilde_lambda[:, chunk_ids]
                     Elogbeta = dirichlet_expectation(var_lambda)
                     if numstable_sm:
                         # NOTE: can it be assumed that only Elogbeta[:, ids] have changed?
