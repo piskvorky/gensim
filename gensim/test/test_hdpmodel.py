@@ -54,7 +54,7 @@ class TestHdpModel(unittest.TestCase, basetests.TestBaseTopicModel):
         self.class_ = hdpmodel.HdpModel
         self.model = self.class_(corpus, id2word=dictionary, random_state=np.random.seed(0))
 
-    def testShowTopic(self):
+    def testTopicValues(self):
         """
         Check show topics method
         """

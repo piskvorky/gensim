@@ -44,6 +44,8 @@ from scipy.special import polygamma
 from six.moves import xrange
 import six
 
+from gensim.matutils import dirichlet_expectation
+from gensim.utils import get_random_state
 # log(sum(exp(x))) that tries to avoid overflow
 try:
     # try importing from here if older scipy is installed
@@ -55,17 +57,6 @@ except ImportError:
 
 logger = logging.getLogger('gensim.models.ldamodel')
 
-
-def dirichlet_expectation(alpha):
-    """
-    For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
-
-    """
-    if (len(alpha.shape) == 1):
-        result = psi(alpha) - psi(np.sum(alpha))
-    else:
-        result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
-    return result.astype(alpha.dtype)  # keep the same precision as input
 
 
 def update_dir_prior(prior, N, logphat, rho):
@@ -91,19 +82,6 @@ def update_dir_prior(prior, N, logphat, rho):
 
     return prior
 
-def get_random_state(seed):
-     """ Turn seed into a np.random.RandomState instance.
-
-         Method originally from maciejkula/glove-python, and written by @joshloyal
-     """
-     if seed is None or seed is np.random:
-         return np.random.mtrand._rand
-     if isinstance(seed, (numbers.Integral, np.integer)):
-         return np.random.RandomState(seed)
-     if isinstance(seed, np.random.RandomState):
-        return seed
-     raise ValueError('%r cannot be used to seed a np.random.RandomState'
-                      ' instance' % seed)
 
 class LdaState(utils.SaveLoad):
     """

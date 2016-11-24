@@ -41,35 +41,14 @@ from gensim import interfaces, utils, matutils
 from gensim.models import basemodel, ldamodel
 from six.moves import xrange
 
+from gensim.matutils import dirichlet_expectation
+from gensim.utils import get_random_state
+
 logger = logging.getLogger(__name__)
 
 meanchangethresh = 0.00001
 rhot_bound = 0.0
 
-
-def dirichlet_expectation(alpha):
-    """
-    For a vector `theta~Dir(alpha)`, compute `E[log(theta)]`.
-    """
-    if (len(alpha.shape) == 1):
-        result = psi(alpha) - psi(np.sum(alpha))
-    else:
-        result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
-    return result.astype(alpha.dtype)  # keep the same precision as input
-
-
-def get_random_state(seed):
-    """ 
-        Turn seed into a np.random.RandomState instance.
-        Method originally from maciejkula/glove-python, and written by @joshloyal
-    """
-    if seed is None or seed is np.random:
-        return np.random.mtrand._rand
-    if isinstance(seed, (numbers.Integral, np.integer)):
-        return np.random.RandomState(seed)
-    if isinstance(seed, np.random.RandomState):
-        return seed
-    raise ValueError('%r cannot be used to seed a np.random.RandomState'' instance' % seed)
 
 
 def expect_log_sticks(sticks):
