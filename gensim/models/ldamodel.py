@@ -803,10 +803,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         topic = self.state.get_lambda()
         for i in chosen_topics:
-                topic_ = topic[i]
-                topic_ = topic_ / topic_.sum()  # normalize to probability distribution
-                bestn = matutils.argsort(topic_, num_words, reverse=True)
-                topic_ = [(self.id2word[id], topic_[id]) for id in bestn]
+            topic_ = topic[i]
+            topic_ = topic_ / topic_.sum()  # normalize to probability distribution
+            bestn = matutils.argsort(topic_, num_words, reverse=True)
+            topic_ = [(self.id2word[id], topic_[id]) for id in bestn]
             if formatted:
                 topic_ = ' + '.join(['%.3f*"%s"' % (v, k) for k, v in topic_])
 
