@@ -102,4 +102,4 @@ def clean_text_by_word(text):
 
 def tokenize_by_word(text):
     text_without_acronyms = replace_with_separator(text, "", [AB_ACRONYM_LETTERS])
-return tokenize(text_without_acronyms, to_lower=True, deacc=True)
+    return tokenize(text_without_acronyms, to_lower=True, deacc=True)
